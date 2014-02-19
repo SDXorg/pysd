@@ -20,11 +20,6 @@ We should probably shoot for the minimum number of features:
 
 Also, we probably want to emphasize readability. 
 
-Plan:
+#### Possible Feature list
 
-1. Start by planning out what we need to include, and what can be successfully left to other libraries
-2. Make the minimum set of features needed to use the library
-3. Make sure it works
-4. Ship it, get feedback
-5. Add anything that is still necessary
-6. Take out anything that is unneccessary
+- manage parameters that include units of time in a natural fashion
