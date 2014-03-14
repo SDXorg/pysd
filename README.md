@@ -23,3 +23,7 @@ Also, we probably want to emphasize readability.
 #### Possible Feature list
 
 - manage parameters that include units of time in a natural fashion
+
+
+Similar Projects:
+It would be worth seeing if any of [these](http://www.scipy.org/topical-software.html#dynamical-systems) fit the bill.
