@@ -71,7 +71,7 @@ An excellent javascript library called [sd.js](https://github.com/bpowers/sd.js/
 
 ####Version 2:
 
-1. Python computation engine may replace SD.js backend for tighter/faster integration
+1. Python computation engine may replace SD.js backend for to remove dependance on extra JS components
 2. Python methods for programmatically creating and manipulating SD models
 3. Python hooks/control of SD.js frontend widget
 2. Python methods for loading and saving to XMILE
