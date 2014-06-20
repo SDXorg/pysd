@@ -11,11 +11,11 @@ There are a number of great SD programs out there ([Vensim](http://vensim.com/),
 
 That reason is this: There is a whole world of computational tools being developed in the larger technical community. **We should directly use the tools that other people are building, instead of replicating their functionality in SD specific software.** The best way to do this is to bring specific SD functionality to the domain where those other tools are being developed. 
 
-The major benefit of this approach is that SD modelers will be able to take advantage of all the most recent developments in data science, and will be able to focus our efforts on improving the part of the stack that is unique to System Dynamics modeling.
+This approach allows SD modelers to take advantage of the most recent developments in data science, and focus our efforts on improving the part of the stack that is unique to System Dynamics modeling.
 
 #### What other tools are we talking about?
 
-System dynamics and other programming and analysis techniques share a need for some common components:
+System dynamics and other programming and analysis techniques require some common components:
 
 Data components:
 
@@ -56,33 +56,31 @@ The Future...
 5. Units and bounds checking
 4. Future Developments in SD modeling (Stochastic Sims?)
 
-These are the components that will be included in PySD.
+These are the components that should be included in PySD.
 
+## SD.js
+An excellent javascript library called [sd.js](https://github.com/bpowers/sd.js/tree/master) created by Bobby Powers ar [SDlabs](http://sdlabs.io/) which includes a method for importing XMILE format models, a computation engine, and a well developed front end.  Using some subset of these to support PySD could get things off the ground quickly, and provide a long-term solution for model visualization.
 
 ## Notional Capabilities Development Pathway
-
-####Version 0:
-1. Read [xmile](https://www.oasis-open.org/committees/tc_home.php?wg_abbrev=xmile) format models
-2. Run model over arbitrary timescales, including single steps
-4. Output to [pandas](http://pandas.pydata.org/)
-3. Modify parameters
-
 ####Version 1:
 
-2. Input SD model components in a natural, code-based way
-3. Write xmile in order to save models
-1. Display SD model diagrams
+1. Python wrapper to SD.js backend (possibly using pyV8 or similar)
+1. Embed SD.js front end in iPython widget
+2. Exchange data between SD.js and [pandas](http://pandas.pydata.org/)
+4. Hooks for Machine Learning/Monte Carlo/Statistical Methods
 
 ####Version 2:
 
-4. Check model units
-1. Value limit checking (ie, chicken population only valid on integers $0\rightarrow \infty$
+1. Python computation engine may replace SD.js backend for tighter/faster integration
+2. Python methods for programmatically creating and manipulating SD models
+3. Python hooks/control of SD.js frontend widget
+2. Python methods for loading and saving to XMILE
 
 ####Version 3:
 
-1. Modify locations of SD model diagram components using click-drag, save those modifications
-2. Run Stochastic Models
-3. High Performance Computing Support
+4. Additional SD tools: checks for model units, value limits, etc.
+2. Support for Stochastic Models
+3. Demonstrate parallelization, other High Performance Computing tools
 
 ####Someday/Maybe
 
@@ -94,7 +92,6 @@ These are the components that will be included in PySD.
 - Infer units when possible from other areas
 - Hover over stock/flow elements to get things like units, descriptions, values, etc.
 - Output DataFrame including tags for units
-
 
 
 ## PySD Design Philosophy
