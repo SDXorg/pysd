@@ -83,7 +83,7 @@ The initial use case would be to import a fully developed SD model (created in V
 4. Simulation using existing python integration tools
 5. Basic demonstrations of integration with python Data Science functionality
 
-STATUS: Version 0.0.1 complete. For a demonstration see [this example notebook](http://nbviewer.ipython.org/github/JamesPHoughton/pysd/blob/master/0.0.1/PySD%20Demo.ipynb).
+STATUS: Version 0.0.2 complete. For a demonstration see [this example notebook](http://nbviewer.ipython.org/github/JamesPHoughton/pysd/blob/master/0.0.2/PySD%20Demo.ipynb).
 
 ####Version 1: Basic Utility
 
