@@ -1,0 +1,191 @@
+{UTF-8}
+Dummy= INTEG (
+	flow,
+		0)
+	~	
+	~		|
+
+flow=
+	test step
+	~	
+	~		|
+
+test abs=
+	ABS(-5)
+	~	
+	~		|
+
+test exp=
+	EXP(test abs)
+	~	
+	~		|
+
+test if then else=
+	IF THEN ELSE(test exp > 0, 65.5 , -9.2 )
+	~	
+	~		|
+
+test integer=
+	INTEGER(test if then else)
+	~	
+	~		|
+
+test ln=
+	LN(test integer)
+	~	
+	~		|
+
+test max=
+	MAX(test ln, 4)
+	~	
+	~		|
+
+test min=
+	MIN(test max, 71.993)
+	~	
+	~		|
+
+test modulo=
+	MODULO(test min, 17)
+	~	
+	~		|
+
+test pulse=
+	PULSE(test modulo, 5 )
+	~	
+	~		|
+
+test pulse train=
+	PULSE TRAIN(test min, 2 , 5 , 50 )
+	~	
+	~		|
+
+test ramp=
+	RAMP( test max , 5 , 10 )
+	~	
+	~		|
+
+test random normal=
+	RANDOM NORMAL( 0 , 1000 , test ln , 5 , 0 )
+	~	
+	~		|
+
+test random uniform=
+	RANDOM UNIFORM(test integer, 2* test integer, 0 )
+	~	
+	~		|
+
+test sin=
+	SIN(test if then else)
+	~	
+	~		|
+
+test sqrt=
+	SQRT(test exp)
+	~	
+	~		|
+
+test step=
+	STEP(test abs, 10 )
+	~	
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 100
+	~	Month
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Month
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP 
+	~	Month [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 1
+	~	Month [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,test abs,196,112,22,7,8,131,0,0,0,0,0,0
+10,2,test exp,291,112,22,8,8,131,0,0,0,0,0,0
+10,3,test if then else,405,112,41,9,8,131,0,0,0,0,0,0
+1,4,1,2,0,0,0,0,0,64,0,-1--1--1,,1|(236,112)|
+1,5,2,3,0,0,0,0,0,64,0,-1--1--1,,1|(331,112)|
+10,6,test integer,526,112,29,8,8,3,0,0,0,0,0,0
+1,7,3,6,0,0,0,0,0,64,0,-1--1--1,,1|(464,112)|
+10,8,test ln,623,112,17,8,8,3,0,0,0,0,0,0
+10,9,test max,713,112,22,8,8,3,0,0,0,0,0,0
+10,10,test min,812,112,21,8,8,3,0,0,0,0,0,0
+10,11,test modulo,897,113,30,8,8,3,0,0,0,0,0,0
+1,12,6,8,0,0,0,0,0,64,0,-1--1--1,,1|(573,112)|
+1,13,8,9,0,0,0,0,0,64,0,-1--1--1,,1|(658,112)|
+1,14,9,10,0,0,0,0,0,64,0,-1--1--1,,1|(756,112)|
+1,15,10,11,0,0,0,0,0,64,0,-1--1--1,,1|(843,112)|
+10,16,test pulse,898,163,25,8,8,3,0,0,0,0,0,0
+10,17,test pulse train,790,163,37,8,8,3,0,0,0,0,0,0
+10,18,test ramp,683,163,24,8,8,3,0,0,0,0,0,0
+1,19,11,16,0,0,0,0,0,64,0,-1--1--1,,1|(897,131)|
+1,22,10,17,0,0,0,0,0,64,0,-1--1--1,,1|(803,131)|
+1,23,9,18,0,0,0,0,0,64,0,-1--1--1,,1|(701,131)|
+10,24,test random normal,582,163,31,16,8,131,0,0,0,0,0,0
+1,25,8,24,0,0,0,0,0,64,0,-1--1--1,,1|(610,128)|
+10,26,test random uniform,472,163,33,16,8,131,0,0,0,0,0,0
+1,27,6,26,0,0,0,0,0,64,0,-1--1--1,,1|(508,128)|
+10,28,test sin,374,163,19,8,8,3,0,0,0,0,0,0
+10,29,test sqrt,288,163,21,8,8,3,0,0,0,0,0,0
+10,30,test step,199,163,22,8,8,3,0,0,0,0,0,0
+1,31,3,28,0,0,0,0,0,64,0,-1--1--1,,1|(392,132)|
+1,32,2,29,0,0,0,0,0,64,0,-1--1--1,,1|(290,130)|
+1,33,1,30,0,0,0,0,0,64,0,-1--1--1,,1|(196,130)|
+10,34,Dummy,287,216,40,20,3,3,0,0,0,0,0,0
+12,35,48,147,215,10,8,0,3,0,0,-1,0,0,0
+1,37,39,34,4,0,0,22,0,0,0,-1--1--1,,1|(227,215)|
+1,38,39,35,100,0,0,22,0,0,0,-1--1--1,,1|(176,215)|
+11,39,0,202,215,6,8,34,3,0,0,1,0,0,0
+10,40,flow,202,231,13,8,40,3,0,0,-1,0,0,0
+1,42,30,39,0,0,0,0,0,64,0,-1--1--1,,1|(199,183)|
+1,43,29,34,0,0,0,0,0,64,0,-1--1--1,,1|(287,176)|
+///---\\\
+:L<%^E!@
+1:Current.vdf
+9:Current
+22:$,Dollar,Dollars,$s
+22:Hour,Hours
+22:Month,Months
+22:Person,People,Persons
+22:Unit,Units
+22:Week,Weeks
+22:Year,Years
+22:Day,Days
+15:0,0,0,0,0,0
+19:100,0
+27:2,
+34:0,
+4:Time
+5:test random normal
+35:Date
+36:YYYY-MM-DD
+37:2000
+38:1
+39:1
+40:2
+41:0
+42:1
+24:0
+25:100
+26:100

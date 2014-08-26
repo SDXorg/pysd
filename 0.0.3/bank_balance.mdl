@@ -1,0 +1,98 @@
+{UTF-8}
+Balance= INTEG (
+	Income,
+		100)
+	~	Dollars
+	~		|
+
+Deposits=
+	5
+	~	Dollars/Day
+	~		|
+
+Income=
+	Deposits+Interest
+	~	Dollars/Day
+	~		|
+
+Interest=
+	Balance*Interest Rate
+	~	Dollars/Day
+	~		|
+
+Interest Rate=
+	0.001
+	~	Dollars/Dollar/Day
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 100
+	~	Day
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Day
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP 
+	~	Day [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 1
+	~	Day [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Balance,324,192,40,20,3,3,0,0,0,0,0,0
+12,2,48,170,192,10,8,0,3,0,0,-1,0,0,0
+1,4,6,1,4,0,0,22,0,0,0,-1--1--1,,1|(261,192)|
+1,5,6,2,100,0,0,22,0,0,0,-1--1--1,,1|(203,192)|
+11,6,0,232,192,6,8,34,3,0,0,1,0,0,0
+10,7,Income,232,208,20,8,40,3,0,0,-1,0,0,0
+10,8,Deposits,231,250,23,8,8,3,0,0,0,0,0,0
+10,9,Interest,265,134,20,8,8,3,0,0,0,0,0,0
+10,10,Interest Rate,184,135,33,8,8,3,0,0,0,0,0,0
+1,11,1,9,1,0,0,0,0,64,0,-1--1--1,,1|(314,151)|
+1,12,9,6,1,0,0,0,0,64,0,-1--1--1,,1|(242,157)|
+1,13,10,9,1,0,0,0,0,64,0,-1--1--1,,1|(227,134)|
+1,14,8,7,0,0,0,0,0,64,0,-1--1--1,,1|(231,236)|
+///---\\\
+:L<%^E!@
+9:Current
+22:$,Dollar,Dollars,$s
+22:Hour,Hours
+22:Month,Months
+22:Person,People,Persons
+22:Unit,Units
+22:Week,Weeks
+22:Year,Years
+22:Day,Days
+15:0,0,0,0,0,0
+19:100,0
+27:2,
+34:0,
+5:Income
+35:Date
+36:YYYY-MM-DD
+37:2000
+38:1
+39:1
+40:4
+41:0
+42:1
+24:0
+25:0
+26:0
