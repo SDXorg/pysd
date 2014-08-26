@@ -3,9 +3,42 @@ PySD
 
 System Dynamics Modeling in Python
 
+## Status
+Version [0.0.3](https://github.com/JamesPHoughton/pysd/tree/master/0.0.3) complete, see [here](http://nbviewer.ipython.org/github/JamesPHoughton/pysd/blob/master/0.0.3/PySD%200.0.3%20Demo.ipynb) for a demo.
+
+## Usage
+To get started, download the files in the [0.0.3](https://github.com/JamesPHoughton/pysd/tree/master/0.0.3) directory to a place that python will find them. 
+
+To import a model from XMILE:
+
+    import pysd
+    model = pysd.read_XMILE('xmile_model_file.xmile')
+ 
+To import a model from Vensim:
+
+    import pysd
+    model = pysd.read_vensim('vensim_model_file.mdl')
+
+To run the model:
+
+    model.run()
+
+To run the model with modified parameters:
+
+    model.run(params={'parameter_name':value})
+
+Model results are given as pandas dataframes, so to plot output:
+
+    stocks = model.run()
+    stocks.plot()
+
+![Example Plot](https://raw.githubusercontent.com/JamesPHoughton/pysd/master/example_models/example_plot.png)
+
+
+## About the project
 This project will create simple library for running [System Dynamics](http://en.wikipedia.org/wiki/System_dynamics) models in python, with the purpose of improving integration of *Big Data* and *Machine Learning* into the SD workflow. 
 
-## Why create a new SD modeling engine?
+### Why create a new SD modeling engine?
 
 There are a number of great SD programs out there ([Vensim](http://vensim.com/), [iThink](http://www.iseesystems.com/Softwares/Business/ithinkSoftware.aspx), [AnyLogic](http://www.anylogic.com/system-dynamics), [Insight Maker](http://insightmaker.com/), [Forio](http://forio.com/), and [others](http://en.wikipedia.org/wiki/List_of_system_dynamics_software)). Additionally, there are a number of existing python-based dynamic system modeling tools, such as [PyDSTool](http://www.ni.gsu.edu/~rclewley/PyDSTool/FrontPage.html) and [others](http://www.scipy.org/topical-software.html#dynamical-systems). In order not to waste our effort, or fall victim to the [Not-Invented-Here](http://en.wikipedia.org/wiki/Not_invented_here) fallacy, we should have a very good reason for starting a new project. 
 
@@ -60,7 +93,7 @@ The Future...
 
 These are the components that should be included in PySD.
 
-## Complementary Projects
+### Complementary Projects
 
 The most valuable component for better integrating models with *basically anything else* is a standard language for communicating the structure of those models. That language is [XMILE](http://www.iseesystems.com/community/support/XMILE.aspx). The draft specifications for this have been finalized and the standard should be approved in the next few months.
 
@@ -70,7 +103,7 @@ An excellent javascript library called [sd.js](https://github.com/bpowers/sd.js/
 
 The [Behavior Analysis and Testing Software(BATS)](http://www.ie.boun.edu.tr/labs/sesdyn/projects/bats/index.html) delveloped by [Gönenç Yücel](http://www.ie.boun.edu.tr/people/pages/yucel.html) includes a really neat method for categorizing behavior modes and exploring parameter space to determine the boundaries between them.
 
-## Notional Capabilities Development Pathway
+### Notional Capabilities Development Pathway
 
 The initial use case would be to import a fully developed SD model (created in Vensim, or Stella/iThink, etc.) into PySD via the XMILE format; and then use third party tools to perform statistical analysis and inference, and to interface with external data.
 
@@ -115,7 +148,7 @@ STATUS: Version 0.0.2 complete. For a demonstration see [this example notebook](
 - Output DataFrame including tags for units
 
 
-## PySD Design Philosophy
+### PySD Design Philosophy
 
 - Do as little as possible. 
  - Anything that is not endemic to System Dynamics (such as plotting, integration, fitting, etc) should either be implemented using external tools, or omitted. 
