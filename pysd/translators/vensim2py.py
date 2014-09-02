@@ -3,7 +3,6 @@
 
 # In[1]:
 
-import functions
 import parsimonious
 import re
 import networkx as nx
