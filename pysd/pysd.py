@@ -15,7 +15,7 @@ import functions
 
 def read_XMILE(XMILE_file):
     """
-        As of pysd v0.0.4, we only support a subset of the full XMILE standard.
+        As of pysd v0.1.0, we only support a subset of the full XMILE standard.
         Supported functions include:
         """
     
@@ -24,7 +24,7 @@ def read_XMILE(XMILE_file):
 
 def read_vensim(mdl_file):
     """
-        As of pysd v0.0.4, we only support a subset of Vensim's capabilities.
+        As of pysd v0.1.0, we only support a subset of Vensim's capabilities.
         Supported functions include:
         """
     model, params = _translators.import_vensim(mdl_file)
@@ -37,10 +37,13 @@ class pysd:
         self.tstart = params['tstart']
         self.tstop = params['tstop']
         self.dt = params['dt']
-        self.stocknames = params['stocknames']
-        self.initial_values = params['initial_values']
+        self.stocknames = params['stocknames'] #this should come to us sorted
         self.debug=False
         self.stock_values = 'Run model first'
+        if params['initial_values'][0]:
+            self.initial_values = params['initial_values']
+        else:
+            self.initial_values = self._get_initial_values(self.stocknames)
     
     def __str__(self):
         string  = '\n'.join(self._stringify_necessary_equations())
@@ -50,6 +53,9 @@ class pysd:
         
         return string
     
+    def _get_initial_values(self, stocknames):
+        init_values_func = self._build_model_function(elements=[stock+'_init' for stock in stocknames])
+        return init_values_func(stocknames, 0)
     
     def _draw_model_network(self):
         _nx.draw(self._execution_network, with_labels=True)
@@ -116,6 +122,8 @@ class pysd:
             
             format for params should be:
             params={'parameter1':value, 'parameter2':value}
+            
+            return_type can be: 'pandas' or 'numpy' or 'none'
             """
         if params:
             self._modify_execution_network(params)
@@ -146,19 +154,30 @@ class pysd:
             This also lets us sample at arbitrary times, which may not have been included in the original tseries
             I'm not sure if this is a good way to deal with these issues, as it requires
             recomputing values, the interpolation is inefficient, and the
+            
+            This still has issues with duplicate values, etc
+            Also, this code is really ugly
             """
         
-        model_function = self._build_model_function(elements)
-        
         #this part does a weird interpolation to estimate the stock values at the given times
-        ts = _pd.DataFrame(index=timestamps, columns=self.stock_values.columns)
-        lookup_stocks = _pd.concat([self.stock_values, ts]).sort_index().interpolate().loc[ts.index]
+        ts = _pd.DataFrame(index=list(set(timestamps)-set(self.stock_values.index)), columns=self.stock_values.columns)
+        #the set arithmetic means we should only add values that arent in the dataset
+        # need to work out why we have duplicate timestamps AND EXTERMINATE THEM
+        lookup_stocks = _pd.concat([self.stock_values, ts]).sort_index().interpolate().loc[timestamps]
         
+        
+        stock_elements = [element for element in elements if element in self.stocknames]
+        return_stocks = lookup_stocks[stock_elements]
+        
+        non_stock_elements = [element for element in elements if element not in self.stocknames]
+        model_function = self._build_model_function(non_stock_elements)
         measurement_list = [] #this is awful, there has to be a more elegant solution
         for index, stocks in lookup_stocks.iterrows():
-            measurement_list.append(dict(zip(elements, model_function(stocks[self.stocknames].values, index))))
+            measurement_list.append(dict(zip(non_stock_elements, model_function(stocks[self.stocknames].values, index))))
         
-        return _pd.DataFrame(measurement_list, index=lookup_stocks.index)
+        return_non_stocks =_pd.DataFrame(measurement_list, index=lookup_stocks.index)
+
+        return return_non_stocks.join(return_stocks)
     
     
     def _modify_execution_network(self, params={}):

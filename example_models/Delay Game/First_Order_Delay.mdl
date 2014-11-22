@@ -1,0 +1,96 @@
+{UTF-8}
+Input=
+	test input
+	~	
+	~		|
+
+test input=
+	5
+	~	
+	~		|
+
+Delay=
+	3
+	~	
+	~		|
+
+Delay Buffer= INTEG (
+	Input-Output,
+		Input * Delay)
+	~	
+	~		|
+
+Output=
+	Delay Buffer/Delay
+	~	
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 100
+	~	Month
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Month
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP
+	~	Month [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 1
+	~	Month [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Delay Buffer,291,247,40,20,3,3,0,0,0,0,0,0
+12,2,48,144,245,10,8,0,3,0,0,-1,0,0,0
+1,3,5,1,4,0,0,22,0,0,0,-1--1--1,,1|(229,245)|
+1,4,5,2,100,0,0,22,0,0,0,-1--1--1,,1|(175,245)|
+11,5,48,202,245,6,8,34,3,0,0,1,0,0,0
+10,6,Input,202,261,15,8,40,3,0,0,-1,0,0,0
+12,7,48,462,247,10,8,0,3,0,0,-1,0,0,0
+1,8,10,7,4,0,0,22,0,0,0,-1--1--1,,1|(424,247)|
+1,9,10,1,100,0,0,22,0,0,0,-1--1--1,,1|(358,247)|
+11,10,48,391,247,6,8,34,3,0,0,1,0,0,0
+10,11,Output,391,263,19,8,40,3,0,0,-1,0,0,0
+1,12,1,10,1,0,0,0,0,64,0,-1--1--1,,1|(333,192)|
+10,13,Delay,465,156,17,8,8,3,0,0,0,0,0,0
+1,14,13,10,0,0,0,0,0,64,0,-1--1--1,,1|(430,197)|
+10,15,test input,137,164,24,8,8,3,0,0,0,0,0,0
+1,16,15,5,0,0,0,0,0,64,0,-1--1--1,,1|(166,200)|
+1,17,13,1,0,0,0,0,0,64,1,-1--1--1,,1|(395,192)|
+///---\\\
+:L<%^E!@
+1:Current.vdf
+9:Current
+22:$,Dollar,Dollars,$s
+22:Hour,Hours
+22:Month,Months
+22:Person,People,Persons
+22:Unit,Units
+22:Week,Weeks
+22:Year,Years
+22:Day,Days
+15:0,0,0,0,0,0
+19:100,0
+27:2,
+34:0,
+4:Time
+5:Delay
+24:0
+25:100
+26:100
