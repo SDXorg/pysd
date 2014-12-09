@@ -3,40 +3,57 @@ PySD
 
 System Dynamics Modeling in Python
 
-## Status
-Version [0.0.3](https://github.com/JamesPHoughton/pysd/tree/master/0.0.3) complete, see [here](http://nbviewer.ipython.org/github/JamesPHoughton/pysd/blob/master/0.0.3/PySD%200.0.3%20Demo.ipynb) for a demo.
+### Status
+Version 0.1.1 complete
+
+### Installation
+To install via python package index:
+```
+    pip install pysd
+```
 
 ## Usage
-To get started, download the files in the [0.0.3](https://github.com/JamesPHoughton/pysd/tree/master/0.0.3) directory to a place that python will find them. 
-
 To import a model from XMILE:
-
+```
     import pysd
     model = pysd.read_XMILE('xmile_model_file.xmile')
- 
+``` 
 To import a model from Vensim:
-
+```
     import pysd
     model = pysd.read_vensim('vensim_model_file.mdl')
-
+```
 To run the model:
-
+```
     model.run()
-
+```
 To run the model with modified parameters:
-
+```
     model.run(params={'parameter_name':value})
-
-Model results are given as pandas dataframes, so to plot output:
-
+```
+Model results are by default given as pandas dataframes, so to plot output:
+```
     stocks = model.run()
     stocks.plot()
+```
+To measure model values as arbitrary timestamps:
+```
+    measurements = model.measure(elements=['stock1','flow1'], timestamps=range(1,20))
+```
+To print debugging output when running or measuring models:
+``` 
+    model.debug = True
+    model.run()
+```
 
-![Example Plot](https://raw.githubusercontent.com/JamesPHoughton/pysd/master/example_models/example_plot.png)
+### Examples
+
+- running models interactively in real-time: [Delay Game](https://github.com/JamesPHoughton/pysd/tree/master/example_models/Delay%20Game)
+- creating many instances of the same vensim model [Penny Jar]()
 
 
 ## About the project
-This project will create simple library for running [System Dynamics](http://en.wikipedia.org/wiki/System_dynamics) models in python, with the purpose of improving integration of *Big Data* and *Machine Learning* into the SD workflow. 
+This project is a simple library for running [System Dynamics](http://en.wikipedia.org/wiki/System_dynamics) models in python, with the purpose of improving integration of *Big Data* and *Machine Learning* into the SD workflow. 
 
 ### Why create a new SD modeling engine?
 
@@ -107,34 +124,28 @@ The [Behavior Analysis and Testing Software(BATS)](http://www.ie.boun.edu.tr/lab
 
 The initial use case would be to import a fully developed SD model (created in Vensim, or Stella/iThink, etc.) into PySD via the XMILE format; and then use third party tools to perform statistical analysis and inference, and to interface with external data.
 
-####Version 0: Proof of Concept
+####Current Features
 
-1. Basic XMILE parser (possibly limited to subset of XMILE functions for which the Markov Property holds)
-2. Provision of derivatives function based upon stock values
-3. Stock initialization from XMILE
+1. Basic XMILE and Vensim parser, limited to a subset of functions for which the Markov Property holds
 4. Established library structure and data formats
 4. Simulation using existing python integration tools
 5. Basic demonstrations of integration with python Data Science functionality
+6. Run-at-a-time parameter modification
 
-STATUS: Version 0.0.2 complete. For a demonstration see [this example notebook](http://nbviewer.ipython.org/github/JamesPHoughton/pysd/blob/master/0.0.2/PySD%20Demo.ipynb).
+####Planned Features
 
-####Version 1: Basic Utility
-
-1. Parameter modification (run-at-a-time, step-at-a-time)
+1. Step-at-a-time parameter modification / time-variant exogenous inputs
 2. Extended backends for storing parameters and output values
-3. Full XMILE model component parser
+3. More extensive XMILE and Vensim model parsers
 4. Demonstration of integration with Machine Learning/Monte Carlo/Statistical Methods
 5. Integration with EMA Workbench
 
-####Version 2: Maturity
+####Possible features
 
-1. Embed SD.js front end in iPython widget
-2. XMILE display component parser
-4. Customizations of external Data Science tools for dynamic systems
-3. Incorporation of analysis tools specific to dynamic systems
-
-####Someday/Maybe
-
+- Embed SD.js front end in iPython widget
+- XMILE display component parser
+- Customizations of external Data Science tools for dynamic systems
+- Incorporation of analysis tools specific to dynamic systems
 - Python methods for programmatically manipulating SD model structure
 - Additional SD tools: checks for model units, value limits, etc.
 - Python methods for saving XMILE models
