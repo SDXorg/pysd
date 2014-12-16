@@ -48,7 +48,7 @@ To print debugging output when running or measuring models:
 
 ### Examples
 
-- running models interactively in real-time: [Delay Game](https://github.com/JamesPHoughton/pysd/tree/master/example_models/Delay%20Game)
+- running models interactively in real-time: [Delay Game](http://nbviewer.ipython.org/github/JamesPHoughton/pysd/blob/master/example_models/Delay%20Game/Nth%20Order%20Delay%20Demo.ipynb)
 - creating many instances of the same vensim model [Penny Jar]()
 
 
