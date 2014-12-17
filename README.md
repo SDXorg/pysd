@@ -49,7 +49,7 @@ To print debugging output when running or measuring models:
 ### Examples
 
 - running models interactively in real-time: [Delay Game](http://nbviewer.ipython.org/github/JamesPHoughton/pysd/blob/master/example_models/Delay%20Game/Nth%20Order%20Delay%20Demo.ipynb)
-- creating many instances of the same vensim model [Penny Jar]()
+- using ipython's [parallelization capability](http://ipython.org/ipython-doc/dev/parallel/parallel_intro.html) to speed up Monte Carlo Analysis: [Bank Balance Example](http://nbviewer.ipython.org/github/JamesPHoughton/pysd/blob/master/example_models/Bank%20Balance/Parallel%20Monte%20Carlo%20Simulation.ipynb)
 
 
 ## About the project
