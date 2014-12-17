@@ -43,7 +43,8 @@ _dictionary = {"abs":"abs", "int":"int", "exp":"np.exp", "inf":"np.inf", "log10"
               "lognormal":"np.random.lognormal", "normal":"np.random.normal", 
               "poisson":"np.random.poisson", "ln":"np.ln", "exprnd":"np.random.exponential",
               "random":"np.random.rand", "min":"min", "max":"max", "arccos":"np.arccos",
-              "arcsin":"np.arcsin", "arctan":"np.arctan", "if_then_else":"if_then_else",
+              "arcsin":"np.arcsin", "arctan":"np.arctan", "if_then_else":"functions.if_then_else",
+              "step":"functions.step", "pulse":"functions.pulse",
               "=":"==", "<=":"<=", "<":"<", ">=":">=", ">":">", "^":"**"}
 
 def _translate_tree(node):

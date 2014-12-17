@@ -126,13 +126,13 @@ class pysd:
             return_type can be: 'pandas' or 'numpy' or 'none'
             """
         if params:
-            self._modify_execution_network(params)
+            self.set_eqn(params)
         
         # we need our function to only return the derivatives, and in the correct order!
         elements = ['d'+stock+'_dt' for stock in sorted(self.stocknames)]
         dstocks_dt = self._build_model_function(elements)
         tseries = np.arange(self.tstart, self.tstop, self.dt)
-        res = _odeint(dstocks_dt, self.initial_values, tseries)
+        res = _odeint(dstocks_dt, self.initial_values, tseries, hmax=self.dt)
         
         self.stock_values = _pd.DataFrame(data=res, index=tseries, columns=self.stocknames)
         
@@ -180,7 +180,14 @@ class pysd:
         return return_non_stocks.join(return_stocks)
     
     
-    def _modify_execution_network(self, params={}):
+    def set_eqn(self, params={}):
+        """
+           sets the equation of a model element matching the dictionary 
+           key to the dictionary value:
+           
+           set({'delay':4})
+           
+        """
         for key, value in params.iteritems():
             self._execution_network.node[key]['eqn'] = value
         
