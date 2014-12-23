@@ -1,17 +1,13 @@
 
 # coding: utf-8
 
-# In[1]:
-
 import parsimonious
 import re
 import networkx as nx
 
 
 # Need to add:
-#
-
-# In[2]:
+#  - Table functions
 
 # parsing components
 #this is challenging as we have to account for spaces...
@@ -59,12 +55,11 @@ _dictionary = {"abs":"abs", "integer":"int", "exp":"np.exp", "inf":"np.inf", "lo
 _add_t_param_list = ["step", "ramp", "pulse train", "pulse"]
 
 def _clean_identifier(string):
-    #at the moment, we may have training spaces on an identifier that need to be dealt with
+    #at the moment, we may have trailing spaces on an identifier that need to be dealt with
     #in the future, it would be better to improve the parser so that it handles that whitespace properly
     string = string.strip()
     string = string.replace(' ', '_')
     return string
-
 
 
 def _get_identifiers(node):
@@ -85,6 +80,7 @@ def _get_identifiers(node):
 
 def _translate_tree(node):
     """
+        This passes an abstract syntax tree for a single equation into python.
         At some point in the future, it may make sense to consolidate code that is
         repeated between the various parsers - XMILE, vensim, etc.
         """
@@ -146,10 +142,15 @@ def _build_execution_tree(string):
         components.add_node(name, attr_dict={'eqn':pyeqn})
         for dependency in dependencies:
             components.add_edge(name, dependency)
-    
+
+    # capture the text that makes up the model - ie, before the row of *******'s
+    # then split by pipe into chunks we can process
     for definition in re.findall("\{.*\}(?P<capture>(.*\r?\n)+?)\*{3,}", string)[0][0].split('|'):
         
         name = re.findall('\r?\n(?P<name>.*)=', definition)
+        
+        
+        # we should do this differently, because the previous regex may fail on a lookup table, which we should deal with more intelligently
         
         if name: #this is a really ugly way to pass on strings that don't even have a name (probably whitespace at the end of the section)
             name, _ = _translate(name[0].strip()) # if the name exists, we clean it up...
