@@ -1,0 +1,134 @@
+{UTF-8}
+Entering Circulation=
+	Post Production * Entry Rate
+	~	Penny/Year
+	~		|
+
+Entry Rate=
+	0.1
+	~	Penny/Penny/Year
+	~		|
+
+In Circulation= INTEG (
+	Entering Circulation-Loss,
+		0)
+	~	Penny
+	~		|
+
+Loss=
+	In Circulation * Loss Rate
+	~	Penny/Year
+	~		|
+
+Loss Rate=
+	0.01
+	~	Penny/Penny/Year
+	~		|
+
+Post Production= INTEG (
+	Production-Entering Circulation,
+		0)
+	~	Penny
+	~		|
+
+Production=
+	PULSE( Production Year , 1 ) * Production Volume
+	~	Penny/Year
+	~		|
+
+Production Volume=
+	10000
+	~	Penny/Year
+	~		|
+
+Production Year=
+	1990
+	~	Year
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 2014
+	~	Year
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 1930
+	~	Year
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP
+	~	Year [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 0.03125
+	~	Year [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Post Production,328,260,40,20,3,3,0,8,0,0,0,0,0-0-0,0-0-0,|16||0-0-0
+10,2,In Circulation,536,259,40,20,3,3,0,8,0,0,0,0,0-0-0,0-0-0,|16||0-0-0
+12,3,48,178,257,10,8,0,3,0,0,-1,0,0,0
+1,4,6,1,4,0,0,22,0,0,0,-1--1--1,,1|(262,257)|
+1,5,6,3,100,0,0,22,0,0,0,-1--1--1,,1|(206,257)|
+11,6,48,230,257,6,8,34,3,0,0,1,0,0,0
+10,7,Production,230,275,37,10,40,3,0,8,-1,0,0,0,0-0-0,0-0-0,|16||0-0-0
+1,8,10,2,4,0,0,22,0,0,0,-1--1--1,,1|(467,259)|
+1,9,10,1,100,0,0,22,0,0,0,-1--1--1,,1|(397,259)|
+11,10,236,432,259,6,8,34,3,0,0,1,0,0,0
+10,11,Entering Circulation,432,285,39,18,40,3,0,8,-1,0,0,0,0-0-0,0-0-0,|16||0-0-0
+12,12,48,692,260,10,8,0,3,0,0,-1,0,0,0
+1,13,15,12,4,0,0,22,0,0,0,-1--1--1,,1|(658,260)|
+1,14,15,2,100,0,0,22,0,0,0,-1--1--1,,1|(599,260)|
+11,15,48,629,260,6,8,34,3,0,0,1,0,0,0
+10,16,Loss,629,278,17,10,40,3,0,8,-1,0,0,0,0-0-0,0-0-0,|16||0-0-0
+1,17,1,10,1,0,0,0,0,64,0,-1--1--1,,1|(380,211)|
+1,18,2,15,1,0,0,0,0,64,0,-1--1--1,,1|(586,210)|
+10,19,Entry Rate,456,191,37,10,8,3,0,8,0,0,0,0,0-0-0,0-0-0,|16||0-0-0
+10,20,Loss Rate,658,188,34,10,8,3,0,8,0,0,0,0,0-0-0,0-0-0,|16||0-0-0
+1,21,19,10,1,0,0,0,0,64,0,-1--1--1,,1|(449,223)|
+1,22,20,15,1,0,0,0,0,64,0,-1--1--1,,1|(651,218)|
+10,23,Production Year,170,187,54,10,8,3,0,8,0,0,0,0,0-0-0,0-0-0,|16||0-0-0
+10,24,Production Volume,282,183,37,18,8,3,0,8,0,0,0,0,0-0-0,0-0-0,|16||0-0-0
+1,25,23,6,1,0,0,0,0,64,0,-1--1--1,,1|(202,211)|
+1,26,24,6,1,0,0,0,0,64,0,-1--1--1,,1|(253,215)|
+///---\\\
+:L<%^E!@
+1:Current.vdf
+9:Current
+22:$,Dollar,Dollars,$s
+22:Hour,Hours
+22:Month,Months
+22:Person,People,Persons
+22:Unit,Units
+22:Week,Weeks
+22:Year,Years
+22:Day,Days
+15:0,0,0,0,0,0
+19:100,0
+27:2,
+34:0,
+4:Time
+5:Post Production
+35:Date
+36:YYYY-MM-DD
+37:2000
+38:1
+39:1
+40:0
+41:0
+42:1
+24:1930
+25:2014
+26:2014
