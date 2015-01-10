@@ -52,7 +52,7 @@ To print debugging output when running or measuring models:
 - running models interactively in real-time: [Delay Game](http://nbviewer.ipython.org/github/JamesPHoughton/pysd/blob/master/example_models/Delay%20Game/Nth%20Order%20Delay%20Demo.ipynb)
 - using ipython's [parallelization capability](http://ipython.org/ipython-doc/dev/parallel/parallel_intro.html) to speed up Monte Carlo Analysis: [Bank Balance Example](http://nbviewer.ipython.org/github/JamesPHoughton/pysd/blob/master/example_models/Bank%20Balance/Parallel%20Monte%20Carlo%20Simulation.ipynb)
 - performing Markov Chain Monte Carlo using [pymc](http://pymc-devs.github.io/pymc/README.html) to estimate the number of pennies in circulation from data collected in a penny jar: [Penny Jar Inference](http://nbviewer.ipython.org/github/JamesPHoughton/pysd/blob/master/example_models/Penny%20Jar/Penny%20Jar.ipynb)
-
+- several optimization methods using [scipy.optimize](http://docs.scipy.org/doc/scipy-0.14.0/reference/optimize.html): [Predator-Prey Model](http://nbviewer.ipython.org/github/JamesPHoughton/pysd/blob/master/example_models/Predator-Prey/Predator%20-%20Prey.ipynb)
 
 ## About the project
 This project is a simple library for running [System Dynamics](http://en.wikipedia.org/wiki/System_dynamics) models in python, with the purpose of improving integration of *Big Data* and *Machine Learning* into the SD workflow. 
