@@ -11,7 +11,7 @@ import networkx as _nx
 import numpy as np
 import functions
 
-#version 0.0.4
+#version 0.1.1
 
 def read_XMILE(XMILE_file):
     """
@@ -57,7 +57,7 @@ class pysd:
         init_values_func = self._build_model_function(elements=[stock+'_init' for stock in stocknames])
         return init_values_func(stocknames, 0)
     
-    def _draw_model_network(self):
+    def draw_model_network(self):
         _nx.draw(self._execution_network, with_labels=True)
     
     
@@ -124,7 +124,27 @@ class pysd:
             params={'parameter1':value, 'parameter2':value}
             
             return_type can be: 'pandas' or 'numpy' or 'none'
+            
+        
             """
+        
+        """
+            Issues:
+            - I don't like the fact that you have to recreate the model function every time you call
+            this method. We may want to build a derivative function that relies on variables
+            scoped outside the function, ie, in this run function. 
+            
+            Todo: 
+            - Change the way the integrator operates to also return requested non-stock columns
+            in the return dataframe - the easiest way to do this would be to
+            
+            - Add the ability to ask for results at specific timestamps and return only those.
+            The integrator is doing adaptive timesteps and making interpolations anyways, 
+            so this should be alright.
+            
+            """
+        
+        
         if params:
             self.set_eqn(params)
         
@@ -132,7 +152,8 @@ class pysd:
         elements = ['d'+stock+'_dt' for stock in sorted(self.stocknames)]
         dstocks_dt = self._build_model_function(elements)
         tseries = np.arange(self.tstart, self.tstop, self.dt)
-        res = _odeint(dstocks_dt, self.initial_values, tseries, hmax=self.dt)
+        res = _odeint(dstocks_dt, self.initial_values, tseries, hmax=self.dt, mxstep=5000000)
+        #mxstep here is to handle stiff systems (possibly due to discontinuities - step, or pulse functions)
         
         self.stock_values = _pd.DataFrame(data=res, index=tseries, columns=self.stocknames)
         
@@ -143,7 +164,23 @@ class pysd:
             return self.stock_values
         elif return_type == 'none':
             pass #we might do this if we're planning to use the 'measure' function to get most of our results
+
+    def step(self, params={}, return_type='pandas'):
+        """
+        Runs the model forward one step.
+        The challenge with how we have this worked out right now is that we have to 
+        call the 'build model function' routine every time we make a change, or a step.
+        We might refactor so that the network holds actual functions, which make their own calls.
+        This would mean that we wouldn't spend time each step (or each run) rebuilding
+        a derivative function. The downside is that we'd have to keep track of all of the
+        things that get passed into the function, such as the stock values and the timestamp
+        as parameters in each of those functions.
+        
+        """
+        return "not yet implemented"
     
+    
+
     def measure(self, elements, timestamps):
         """
             This function lets us come back and measure values that we didn't return during
