@@ -1,0 +1,50 @@
+We have to make a choice about whetehr to make the class stateless, or to track the state of the system - the stocks - as internal components during the course of the integration. 
+
+If we make it stateless, then we have to have each function look to its inputs for state information - the parameters are passed into the methods as a dictionary. When we build the class methods, they then have to know something about which components are in the state, and this makes the code a bit more complex.
+
+If we make it statefull, then we may have issues of concurrency if we're trying to do multiple sets of calculations using the same methods.
+
+But, if we're including a step function in the larger model class, then there is inherently some notion of state present in the  outside class. 
+
+What is this all going to look like:
+A model class with methods:
+
+ - run
+ - step
+ - 
+ 
+ 
+The other thing we could do would be to include all of the state information in the components subclass. The subclass would essentially be a full representation of the system, and we'd leave it up to the superclass to keep track of histories.
+
+A step method would take the current state of the subclass and integrate forward to the desired time.
+The run method would reset the model to its initial conditions, and run forward from there. 
+
+In this case, time, and the state of the model need to be objects in the model - perhaps functions, so that they evaluate each execution.
+
+
+Need to build a function which can interface with the integrator - ie, it should take a state vector, update the state of the sytem, and return a derivative vector. This requires us to know what the stocks are in the model
+
+Because we have a statefull system, and we have multiple stocks to compute, and each element is represented with its own function, we may evaluate some pathways multiple times. This could become quite slow.
+
+If instead we had a stateless system, then we could cache function responses based upon the inputs, and not have to crawl up the tree...
+
+
+We could create a python class, with methods for each value or function,
+
+or we could write a new python module that corresponds directly to the .mdl file we've imported. This would be more of a human-readable file, which we then import using the standard python import mechanisms. Its not quite teh same as a complete translation of the .mdl file
+
+If we abandon the network diagram, we may have more trouble later on adding the visuals, as we don't have a structure of nodes to attach additional information to.
+
+
+the elements class is completely stateless, so each function takes the state of the system - the stocks (Array? Dictionary? Class?) and calculates its values based upon those states and the parameters of the system.
+
+Perhaps we make even the parameters functions of the stocks and time - everything is the same - then 
+
+    
+maybe should work out how to protect functions from being overwritten?
+either that or allow the other functions that call them to just reference a value?
+or just make everything a function, and force overwriting to take the same parameters somehow...
+that could let us set it based upon another model, actually, if we could sync the integration...
+
+
+translate into a python module is kinda nice, gives it some legs.

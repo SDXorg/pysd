@@ -1,249 +1,235 @@
 '''
-    created: August 15, 2014
-    last update: September 2, 2014
-    James Houghton <james.p.houghton@gmail.com>
-    '''
+created: August 15, 2014
+last update: February, 17 2015
+version 0.2.0
+James Houghton <james.p.houghton@gmail.com>
+'''
 
+#pysd specific imports
 import translators as _translators
-from scipy.integrate import odeint as _odeint
-import pandas as _pd
-import networkx as _nx
-import numpy as np
 import functions
 
-#version 0.1.1
+#third party imports
+from scipy.integrate import odeint as _odeint
+import pandas as _pd
+import numpy as np
 
+
+######################################################
+# Todo:
+#
+# - add a function to simplify parameter modification
+# - we may think about passing optional arguments to the run command through to the integrator,
+# to give a finer level of control to those who know what to do with it.
+# - It would be neat to have a logical way to run two or more models together, using the same integrator.
+# - it might help with debugging if we did cross compile to an actual class or module, in an actual text file somewhere.
+#
+#
+######################################################
+
+
+######################################################
+# Issues:
+#
+# If two model components (A, and B) depend on the same third model component (C)
+# then C will get computed twice. If C itself is dependant on many upstream components (D, E, F, etc)
+# then these will also be computed multiple times.
+#
+# As the model class depends on its internal state for calculating
+# the values of each element, instead of passing that state
+# through the function execution network, we can't use caching
+# to prevent multiple execution, as we don't know when to update the cache
+# (maybe in the calling function?)
+#
+# Also, this multi-calculation bears the risk that if the state is
+# changed during an execution step, the resulting calculation will be
+# corrupted, and we won't have any indication of this corruption.
+######################################################
+
+
+# need to re-implement xmile translator
 def read_XMILE(XMILE_file):
     """
-        As of pysd v0.1.0, we only support a subset of the full XMILE standard.
-        Supported functions include:
+        This is currently broken =(
         """
-    
-    model, params = _translators.import_XMILE(XMILE_file)
-    return pysd(model, params)
+    pass
 
 def read_vensim(mdl_file):
     """
-        As of pysd v0.1.0, we only support a subset of Vensim's capabilities.
-        Supported functions include:
+        Only a subset of vensim functions are supported.
         """
-    model, params = _translators.import_vensim(mdl_file)
-    return pysd(model, params)
+    component_class = _translators.import_vensim(mdl_file)
+    return pysd(component_class)
+
+def help():
+    print_supported_vensim_functions()
+
+def print_supported_vensim_functions():
+    print 'Vensim'.ljust(25) + 'Python'
+    print ''.ljust(50,'-')
+    for key, value in _translators.vensim2py.dictionary.iteritems():
+        print key.ljust(25) + value
 
 
 class pysd:
-    def __init__(self, model, params):
-        self._execution_network = model
-        self.tstart = params['tstart']
-        self.tstop = params['tstop']
-        self.dt = params['dt']
-        self.stocknames = params['stocknames'] #this should come to us sorted
-        self.debug=False
-        self.stock_values = 'Run model first'
-        if params['initial_values'][0]:
-            self.initial_values = params['initial_values']
-        else:
-            self.initial_values = self._get_initial_values(self.stocknames)
+    def __init__(self, component_class):
+        self.components = component_class() #this is where we create an instance of the model subclass
+        self.record = []
     
     def __str__(self):
-        string  = '\n'.join(self._stringify_necessary_equations())
-        string += '\n\ninitial values: [' + \
-            ', '.join([str(key) + ':' + str(value) for key, value in zip(self.stocknames, self.initial_values)]) + \
-            ']\ntstart: ' + str(self.tstart) + '\ntstop: ' + str(self.tstop) + '\ndt: ' + str(self.dt)
-        
-        return string
-    
-    def _get_initial_values(self, stocknames):
-        init_values_func = self._build_model_function(elements=[stock+'_init' for stock in stocknames])
-        return init_values_func(stocknames, 0)
-    
-    def draw_model_network(self):
-        _nx.draw(self._execution_network, with_labels=True)
-    
-    
-    def _stringify_necessary_equations(self, elements=[]):
         """
-            Return a sorted list of strings of equations necessary to calculate elements.
-            
-            if elements left as empty list, returns full network.
-            
-            Want to take a slice of the network containing only the elements and
-            the components that the elements depend on, and then sort that slice
+            Build this up to return a string with model equations in it
             """
-        if elements: #if the function is called for a subset of the model, take the right subgraph
-            relevant_nodes = set(elements)
-            for element in elements:
-                relevant_nodes = relevant_nodes.union(_nx.descendants(self._execution_network, element))
-            subgraph = _nx.subgraph(self._execution_network, list(relevant_nodes)) #if this turns out to be an empty set, returns all nodes.
-        else:
-            subgraph = self._execution_network
-        
-        #topo sorting the graph returns the nodes in an acceptable order for execution
-        string_list = []
-        for node_name in _nx.algorithms.topological_sort(subgraph, reverse=True):
-            if subgraph.node[node_name]: #the leaves will return empty dicts - leaves are stocks
-                string_list.append(node_name + ' = ' + str(subgraph.node[node_name]['eqn']) )
-        
-        return string_list
+        return self.components.__str__
     
     
-    def _build_model_function(self, elements=[]):
+    def run(self, params={}, return_columns=[], return_timestamps=[], initial_condition='original',
+            collect=False):
         """
-            We may even pre-compute elements which are not dependent on stock values
-            ie. only elements that are ancestors of (ie, depend on) stocks get included, while
-            the remaining values get precomputed.
-            """
-        num_stocks = len(self.stocknames)
-        func_string = "def model_function(stocks, t): \n\n"
-        #the additional comma forces it to unpack even single stocks
-        #otherwise, they would remain in the list.
-        func_string += "    "+', '.join(sorted(self.stocknames)) + ','
-        func_string += " = stocks\n\n"
-        for string in self._stringify_necessary_equations(elements):
-            func_string += "    " + string + "\n"
-        
-        outputs = elements #['d'+stock+'_dt' for stock in sorted(self.stocknames)]
-        func_string += "\n    return ["+ ', '.join(outputs)+']'
-        
-        if self.debug:
-            print func_string
-        
-        exec(func_string)
-        return model_function
-    
-    
-    def run(self, params={}, return_type='pandas', return_columns=[]):
-        """
-            Runs the model, returning either a numpy array of stock values,
-            or a pandas dataframe (with labels and timestamps).
+            Runs the model from the initial time all the way through the
+            final time, returning a pandas dataframe of results.
             
-            if params is set, modifies the model according to parameters
+            If ::return_timestamps:: is set, the dataframe will have these as
+            its index. Otherwise, the index will be every timestep from the start
+            of simulation to the finish.
+            
+            if ::return_columns:: is set, the dataframe will have these columns.
+            Otherwise, it will return the value of the stocks.
+            
+            If ::params:: is set, modifies the model according to parameters
             before execution.
             
             format for params should be:
             params={'parameter1':value, 'parameter2':value}
             
-            return_type can be: 'pandas' or 'numpy' or 'none'
-            
-        
+            initial_condition can take a variety of values:
+            - None or 'original' reinitializes the model at the initial conditions 
+                 specified in the model file, and resets the simulation time accordingly
+            - 'current' preserves the current state of the model, including the simulaion time
+            - a tuple (t, dict) sets the simulation time to t, and the
             """
         
-        """
-            Issues:
-            - I don't like the fact that you have to recreate the model function every time you call
-            this method. We may want to build a derivative function that relies on variables
-            scoped outside the function, ie, in this run function. 
-            
-            Todo: 
-            - Change the way the integrator operates to also return requested non-stock columns
-            in the return dataframe - the easiest way to do this would be to
-            
-            - Add the ability to ask for results at specific timestamps and return only those.
-            The integrator is doing adaptive timesteps and making interpolations anyways, 
-            so this should be alright.
-            
-            """
-        
+        ### Todo:
+        #
+        # - check that the return_timestamps is a collection - a list of timestamps, or something.
+        #      if not(ie, a single value), make it one.
         
         if params:
-            self.set_eqn(params)
-        
-        # we need our function to only return the derivatives, and in the correct order!
-        elements = ['d'+stock+'_dt' for stock in sorted(self.stocknames)]
-        dstocks_dt = self._build_model_function(elements)
-        tseries = np.arange(self.tstart, self.tstop, self.dt)
-        res = _odeint(dstocks_dt, self.initial_values, tseries, hmax=self.dt, mxstep=5000000)
-        #mxstep here is to handle stiff systems (possibly due to discontinuities - step, or pulse functions)
-        
-        self.stock_values = _pd.DataFrame(data=res, index=tseries, columns=self.stocknames)
+            self.set_components(params)
         
         
-        if return_type == 'numpy':
-            return res
-        elif return_type == 'pandas':
-            return self.stock_values
-        elif return_type == 'none':
-            pass #we might do this if we're planning to use the 'measure' function to get most of our results
+        ##### Setting timestamp options
+        if return_timestamps:
+            tseries = return_timestamps
+        else:
+            tseries = np.arange(self.components.initial_time(),
+                                self.components.final_time(),
+                                self.components.time_step())
+        
+        ##### Setting initial condition options
+        if isinstance(initial_condition, tuple):
+            self.components.t = initial_condition[0] #this is brittle!
+            self.components.state.update(initial_condition[1]) #this is also brittle. Assumes that the dictionary passed in has valid values
+        elif isinstance(initial_condition, str):
+            if initial_condition.lower() in ['original','o']:
+                self.components.reset_state() #resets the state of the system to what the model contains (but not the parameters)
+            elif initial_condition.lower() in ['current', 'c']:
+                pass #placeholder - this is a valid option, but we don't modify anything
+            else:
+                assert False #we should throw an error if there is an unrecognized option
+        else:
+            assert False
 
-    def step(self, params={}, return_type='pandas'):
-        """
-        Runs the model forward one step.
-        The challenge with how we have this worked out right now is that we have to 
-        call the 'build model function' routine every time we make a change, or a step.
-        We might refactor so that the network holds actual functions, which make their own calls.
-        This would mean that we wouldn't spend time each step (or each run) rebuilding
-        a derivative function. The downside is that we'd have to keep track of all of the
-        things that get passed into the function, such as the stock values and the timestamp
-        as parameters in each of those functions.
-        
-        """
-        return "not yet implemented"
-    
-    
+        initial_values = self.components.state_vector()
 
-    def measure(self, elements, timestamps):
+        addtflag = False
+        if tseries[0] != self.components.t:
+            tseries = [self.components.t]+tseries
+            addtflag = True
+
+        ######Setting integrator options:
+        #
+        # - we may choose to use the odeint parameter ::tcrit::, which identifies singularities
+        # near which the integrator should exercise additional caution.
+        # we could get these values from any time-type parameters passed to a step/pulse type function
+        #
+        # - there may be a better way to use the integrator that lets us report additional values at
+        # different timestamps. We may also want to use pydstool.
+        #
+        # the odeint expects the first timestamp in the tseries to be the initial condition,
+        # so we may need to add the t0 if it is not present in the tseries array
+        res = _odeint(self.components.d_dt, initial_values, tseries, hmax=self.components.time_step())
+        
+        stocknames = sorted(self.components.state.keys())
+        values = _pd.DataFrame(data=res, index=tseries, columns=stocknames)
+
+
+        if return_columns:
+            # this is a super slow, super bad way to do this. Recode ASAP
+            out = []
+            for t, row in zip(values.index, values.to_dict(orient='records')):
+                self.components.state.update(row)
+                self.components.t = t
+        
+                for column in return_columns:
+                    func = getattr(self.components, column)
+                    row[column] = func()
+        
+                out.append(row)
+        
+            values = _pd.DataFrame(data=out, index=values.index)[return_columns] #this is ugly
+
+        if addtflag:
+            values = values.iloc[1:] #there is probably a faster way to drop the initial row
+
+        if collect:
+            self.record.append(values)
+        
+        return values
+
+    def get_record(self):
         """
-            This function lets us come back and measure values that we didn't return during
-            the run. This is necessary because scipy's odeint only lets you return derivatives
-            of values to the function, and its complicated to find extra ways
-            to return additional values from the derivatives calculation function.
-            
-            This also lets us sample at arbitrary times, which may not have been included in the original tseries
-            I'm not sure if this is a good way to deal with these issues, as it requires
-            recomputing values, the interpolation is inefficient, and the
-            
-            This still has issues with duplicate values, etc
-            Also, this code is really ugly
+        returns the recorded model information
+        """
+        return _pd.concat(self.record)
+    
+    def clear_record(self):
+        """
+        Resets the recorder
             """
-        
-        #this part does a weird interpolation to estimate the stock values at the given times
-        ts = _pd.DataFrame(index=list(set(timestamps)-set(self.stock_values.index)), columns=self.stock_values.columns)
-        #the set arithmetic means we should only add values that arent in the dataset
-        # need to work out why we have duplicate timestamps AND EXTERMINATE THEM
-        lookup_stocks = _pd.concat([self.stock_values, ts]).sort_index().interpolate().loc[timestamps]
-        
-        
-        stock_elements = [element for element in elements if element in self.stocknames]
-        return_stocks = lookup_stocks[stock_elements]
-        
-        non_stock_elements = [element for element in elements if element not in self.stocknames]
-        model_function = self._build_model_function(non_stock_elements)
-        measurement_list = [] #this is awful, there has to be a more elegant solution
-        for index, stocks in lookup_stocks.iterrows():
-            measurement_list.append(dict(zip(non_stock_elements, model_function(stocks[self.stocknames].values, index))))
-        
-        return_non_stocks =_pd.DataFrame(measurement_list, index=lookup_stocks.index)
+        self.record = []
 
-        return return_non_stocks.join(return_stocks)
-    
-    
-    def set_eqn(self, params={}):
+
+    def set_components(self, params={}):
         """
            sets the equation of a model element matching the dictionary 
            key to the dictionary value:
            
            set({'delay':4})
+           if given a pandas series, allows for interpolation amongst that series.
+           
            
         """
-        for key, value in params.iteritems():
-            self._execution_network.node[key]['eqn'] = value
+        # Todo:
+        # - Update the function docstring
+        # - Make this able to handle states
         
-        self._validate_execution_graph(self._execution_network)
+        
+        for key, value in params.iteritems():
+            if isinstance(value, _pd.Series):
+                self.components.__dict__.update({key:self._timeseries_component(value)})
+            else:
+                self.components.__dict__.update({key:self._constant_component(value)})
     
     
-    def _validate_execution_graph(self, components):
-        """
-            if its a well formed set of equations, it should be a directed acyclic graph
-            there may be other checks that we want to run in the future
-            """
-        assert _nx.algorithms.is_directed_acyclic_graph(components)
+    def _timeseries_component(self, series):
+        return lambda: np.interp(self.components.t, series.index, series.values)
     
-    
-    def get_free_parameters(self):
-        """
-            return the components with no dependencies, that are not stocks.
-            these are parameters that can be modified without changing the model structurally.
-            """
-        param_name_list = [node for node, out_degree in self._execution_network.out_degree_iter() \
-                           if out_degree == 0 and node not in self.stocknames]
-        return dict([(nodename, self._execution_network.node[nodename]['eqn']) for nodename in param_name_list])
+    def _constant_component(self, value):
+        return lambda: value
+
+#def run_togeter(models=[], initial_conditions='original', collect=False)
+#
+# to make this work, we have to be comfortable reaching into a model class, running the integration ourseves, etc
+
+
