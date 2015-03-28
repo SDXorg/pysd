@@ -1,11 +1,11 @@
 '''
     created: August 13, 2014
-    last update: February, 19 2015
+    last update: March 28 2015
     James Houghton <james.p.houghton@gmail.com>
 '''
 import parsimonious
+from parsimonious.nodes import NodeVisitor
 from pysd import functions
-import inspect
 from helpers import *
 import component_class_template
 
@@ -14,7 +14,8 @@ import component_class_template
 ###############################################################
 #Updates:
 #
-# - Feb 16: brought parsing of full sections of the model into the PEG parser.
+# - Feb 16, 2015: brought parsing of full sections of the model into the PEG parser.
+# - March 28, 2015: incorporated parsimonious's node walker to take care of class construction.
 ###############################################################
 
 
@@ -22,79 +23,88 @@ import component_class_template
 ###############################################################
 #Todo:
 #
-# - what we should probably be doing here is extending the components class
 # - parse geometry information
 # - parser can't handle multi-line equations
 # - check that the identifiers discovered are not the same as python keywords
-# - we don't necessarily need to force everything to lowercase before parsing it. It would be nice, at least, to preserve the case of the docstring
 # - parse excessive spaces out of docstrings
-# - add functions that let us make changes to variables, override things, etc.
+
 # - It would be good to include the original vensim/xmile non-python-safed identifiers for model components in the docstring, along with the cleaned version
 # - also, include the  original equation, and the python clean version
 # - maybe we add elements to the functions which represent the pre and post translation components (one each?)
 # - model documentation shouldn't include the 'self' parts of a descriptor
+
+# should build in a mechanism to fail gracefully
+# maybe want to make the node visitor intelligently add spaces around things
+# should check that sin/cos are using the same units in vensim and numpy
+# the 'pi' keyword is broken
+
+# are we parsing model control components properly? We may need to change the grammar so that identifiers that if we find an
+# identifier that is a control
+
 ###############################################################
 
-
-###############################################################
-# Notes on PEG parser:
+######################################################
+#Dictionary:
 #
+# This is the vensim to python translation dictionary. Many expressions (+-/*, etc)
+# translate directly, but some need to have their names changed, etc. This is
+# how we decide that. If it isn't in the dictionary, it probably won't work
+#
+######################################################
+
+dictionary = {"ABS":"abs", "INTEGER":"int", "EXP":"np.exp", "INF":"np.inf", "LOG10":"np.log10",
+    "PI":"np.pi", "SIN":"np.sin", "COS":"np.cos", "SQRT":"np.sqrt", "TAN":"np.tan",
+    "LOGNORMAL":"np.random.lognormal", "RANDOM NORMAL":"functions.bounded_normal",
+    "POISSON":"np.random.poisson", "LN":"np.log", "EXPRND":"np.random.exponential",
+    "RANDOM UNIFORM":"np.random.rand", "MIN":"min", "MAX":"max", "ARCCOS":"np.arccos",
+    "ARCSIN":"np.arcsin", "ARCTAN":"np.arctan", "IF THEN ELSE":"functions.if_then_else",
+    "STEP":"functions.step", "MODULO":"np.mod", "PULSE":"functions.pulse",
+    "PULSE TRAIN":"functions.pulse_train", "RAMP":"functions.ramp",
+    "=":"==", "<=":"<=", "<":"<", ">=":">=", ">":">", "^":"**"}
+
+
+
+###############################################################
+# General Notes on PEG parser:
+#
+# - we separate the grammar out into chunks to simplify testing.
+#     This way, in the unit tests we can construct a parser based upon a subset of the grammar
+#     and test that subset on its own.
+
 #  - backslashes in the .mdl file get removed by python  before they go into parsimonious, as python interprets them as
-# a line continuation character. This is probably ok, as that is how vensim is using them as well, but
-# if the user includes backslashes anywhere, will give them trouble.
-#
-# - for some reason, 'Factor' is consuming newlines, which it shouldn't. This might give issues
-# if an equation is long enough to go to multiple lines
-#
-# - The docstring parser also consumes trailing newlines. This is probably ok, but
-# something to keep in mind if we have problems later.
-#
-# - The docstring parser contains a lookahead to make sure we don't consume starlines
-#
-# - separated out single space characters from the _ entry, so that it can have any number or combination of space characters.
+#     a line continuation character. This is probably ok, as that is how vensim is using them as well, but
+#     if the user includes backslashes anywhere, will give them trouble.
 #
 # - unfortunately the \s in the identifier can match newline characters - do we want this?
 #
-# - copair means 'coordinate pair'
-#
 # - # If you put a *+? quantifier on a node listing (ie: Docstring?) then it creates an anonymous
-# node, which makes it hard to match up later in the tree crawler
+#     node, which makes it hard to match up later in the tree crawler
 #
-# - 'Flaux' represents either a flow or an auxiliary, as the syntax is the same
+# - we could think about putting the dictionary and the grammars within the class, because the class uses them exclusively
 #
-# - we may need to have seperate identifiers for the 'Condition' elements in the Stock element.
-# the first represents the expression, the second represents the initial condition
-# but I'm not sure if the order is guaranteed.
-#
-# -
-
 ################################################################
 
 
 
-grammar = """
-    Model = _ NL* _ "{utf-8}" Content ~"...---///" Rubbish*
-    
-    Content = Entry+
-    
-    Entry = MetaEntry / ModelEntry
-    Rubbish = ~"."* NL*
-    
-    MetaEntry  = _ NL* _ starline _ NL* _ Docstring _ NL* _ starline _ "~" NL* Docstring NL* "|" NL*
-    ModelEntry = _ NL* _ Component _ NL* _ "~" _ Unit _ NL* _ "~" _ Docstring _ NL* _ "|" NL*
-    
-    Unit      = ~"[^~|]"*
-    Docstring = (~"[^~|]" !~"(\*{3,})")*
-    Component = Stock / Flaux / Lookup
-    
-    Lookup     = Identifier _ "(" _ NL _ Range _ AddCopair* _ NL _ ")"
-    Range      = "[" _ Copair _ "-" _ Copair _ "]"
-    AddCopair  = "," _ Copair
-    Copair     = "(" _ Primary _ "," _ Primary _ ")"
-    
-    Stock     = Identifier _ "=" _ "integ" _ "(" _ NL _ Condition _ "," _ NL _ Condition _ ")"
-    Flaux     = Identifier _ "=" _ NL* _ Condition
-    
+
+#################################################################
+# Notes on Expression Grammar
+#
+# - we have to break 'reference' out from identifier, because in reference situations we'll want to add self.<name>(), but
+#      we also need to be able to clean and access the identifier independently. To force parsimonious to handle the reference as
+#      a seperate object from the Identifier, we add a trailing optional space character
+#
+# - we separated out single space characters from the _ entry, so that it can have any number or combination of space characters.
+#
+# - for some reason, 'Factor' is consuming newlines, which it shouldn't. This gives issues
+#      if an equation is long enough to go to multiple lines, which happens sometimes
+#
+# - we have to sort keywords in decreasing order of length so that the peg parser doesnt quit early when finding a partial keyword
+#################################################################
+
+keywords = ' / '.join(['"%s"'%key for key in reversed(sorted(dictionary.keys(), key=len))])
+
+expression_grammar = """
     Condition   = Term _ Conditional*
     Conditional = ("<=" / "<" / ">=" / ">" / "=") _ Term
     
@@ -107,145 +117,183 @@ grammar = """
     ExpBase  = Primary _ Exponentive*
     Exponentive = "^" _ Primary
     
-    Primary  = Call / Parens / Signed / Number / Identifier
+    Primary  = Call / Parens / Signed / Number / Reference
     Parens   = "(" _ Condition _ ")"
-    Call     = Keyword _ "(" _ Condition _ ("," _ Condition)* ")"
+    Call     = Keyword _ "(" _ Condition _ ("," _ Condition)* _ ")"
     Signed   = ("-"/"+") Primary
+    Reference = Identifier _
+
     Number   = ((~"[0-9]"+ "."? ~"[0-9]"*) / ("." ~"[0-9]"+)) (("e"/"E") ("-"/"+") ~"[0-9]"+)?
-    Identifier =  ~"[a-z]" ~"[a-z0-9_\$\s]"*
+    Identifier =  ~"[a-zA-Z]" ~"[a-zA-Z0-9_\$\s]"*
     
-    Keyword = "exprnd" / "exp" / "sin" / "cos" / "abs" / "integer" / "inf" / "log10" / "pi" /
-    "sqrt" / "tan" / "lognormal" / "random normal" / "poisson" / "ln" / "min" / "max" /
-    "random uniform" / "arccos" / "arcsin" / "arctan" / "if then else" / "step" / "modulo" /
-    "pulse train" / "pulse" / "ramp"
-    
-    NL = _ ~"[\\r\\n]" _
     _ = spacechar*
     spacechar = " "* ~"\t"*
+    
+    Keyword = """ + keywords
+
+#################################################################
+# Notes on Entry Gramamr
+#
+# - meta entry is the first entry, if there is model documentation, or the partition separating model control parameters.
+#
+# - SNL means 'spaced newline'
+#
+# - 'Flaux' represents either a flow or an auxiliary, as the syntax is the same
+#
+# - 'copair' represents a coordinate pair
+#
+# - The docstring parser also consumes trailing newlines. This is probably ok, but
+#      something to keep in mind if we have problems later.
+#
+# - The docstring parser contains a lookahead to make sure we don't consume starlines
+#
+#################################################################
+
+entry_grammar = """
+    Entry = MetaEntry / ModelEntry
+    
+    MetaEntry  = SNL starline SNL Docstring SNL starline _ "~" SNL Docstring SNL "|" SNL*
+    ModelEntry = SNL Component SNL "~" _ Unit SNL "~" _ Docstring SNL "|" SNL*
+    
+    Unit      = ~"[^~|]"*
+    Docstring = (~"[^~|]" !~"(\*{3,})")*
+    Component = Stock / Flaux / Lookup
+    
+    Lookup     = Identifier _ "(" _ NL _ Range _ AddCopair* _ NL _ ")"
+    Range      = "[" _ Copair _ "-" _ Copair _ "]"
+    AddCopair  = "," _ Copair
+    Copair     = "(" _ Primary _ "," _ Primary _ ")"
+    
+    Stock     = Identifier _ "=" _ "INTEG" _ "(" _ NL _ Condition _ "," _ NL _ Condition _ ")"
+    Flaux     = Identifier _ "=" SNL Condition
+    
+    SNL = _ NL* _
+    NL = _ ~"[\\r\\n]" _
     starline = ~"\*{3,}"
-    """
-g = parsimonious.Grammar(grammar)
+    """ + expression_grammar
 
-
-######################################################
-#Dictionary:
+#################################################################
+# Notes on File Grammar
 #
-# This is the vensim to python translation dictionary. Many expressions (+-/*, etc)
-# translate directly, but some need to have their names changed, etc. This is
-# how we decide that. If it isn't in the dictionary, it probably won't work
+# - In the 'Model' definiton, we use arbitrary characters (.) to represent the backslashes, because escaping in here is a nightmare
 #
-######################################################
+#################################################################
 
-dictionary = {"abs":"abs", "integer":"int", "exp":"np.exp", "inf":"np.inf", "log10":"np.log10",
-    "pi":"np.pi", "sin":"np.sin", "cos":"np.cos", "sqrt":"np.sqrt", "tan":"np.tan",
-    "lognormal":"np.random.lognormal", "random normal":"functions.bounded_normal",
-    "poisson":"np.random.poisson", "ln":"np.log", "exprnd":"np.random.exponential",
-    "random uniform":"np.random.rand", "min":"min", "max":"max", "arccos":"np.arccos",
-    "arcsin":"np.arcsin", "arctan":"np.arctan", "if then else":"functions.if_then_else",
-    "step":"functions.step", "modulo":"np.mod", "pulse":"functions.pulse",
-    "pulse train":"functions.pulse_train", "ramp":"functions.ramp",
-    "=":"==", "<=":"<=", "<":"<", ">=":">=", ">":">", "^":"**"}
-
-add_t_param_list = ["step", "ramp", "pulse train", "pulse"]
+file_grammar = """
+    Model = SNL "{UTF-8}" Content ~"...---///" Rubbish*
+    
+    Content = Entry+
+    
+    Rubbish = ~"."* NL*
+    """ + entry_grammar
 
 
+#################################################################
+# Notes on node visitor
+#
+# - each function in the parser takes an argument which is the result of having visited each of the children
+#
+# - we separate the parse function from the class initialization to facilitate unit testing,
+#      although in practice, they will most certainly always be called sequentially
+#################################################################
 
 
-def translate_expr(node):
-    """
-        This translates the AST below the structural level, at the expression level
+class TextParser(NodeVisitor):
+    def __init__(self, grammar):
+        class component_class(component_class_template.component_class_template):
+            self.__str__ = 'Undefined'
+
+        self.component_class = component_class
+        self.grammar = parsimonious.Grammar(grammar)
+
+    def parse(self, text):
+        self.ast = self.grammar.parse(text)
+        return self.visit(self.ast)
+
+    ############# 'entry' level translators ############################
+    visit_Entry = visit_Component = NodeVisitor.lift_child
+
+    def visit_ModelEntry(self, n, (_1, Component_Identifier, _2, tld1, _3, Unit, _4, tld2, _5, Docstring, _6, pipe, _7)):
         """
-    if node.expr_name in ['Exponentive', 'Conditional']: #non-terminal lookup
-        return dictionary[node.children[0].text] + ''.join([translate_expr(child) for child in node.children[1:]])
-    
-    elif node.expr_name == "Call":
-        if node.children[0].text in add_t_param_list:
-            return ''.join([translate_expr(child) for child in node if child.text != ")"]+[', self.t)']) #add a t parameter
-        else:
-            return ''.join([translate_expr(child) for child in node])  #just normal
-
-    elif node.expr_name == "Keyword": #terminal lookup
-        return dictionary[node.text]
-
-    elif node.expr_name == "Identifier":
-        return 'self.'+clean_identifier(node.text)+'()'
-
-    else:
-        if node.children:
-            return ''.join([translate_expr(child) for child in node])
-        else:
-            return node.text
-
-
-
-def translate_modelentry(node):
-    """
-        Takes a node of the AST that corresponds to a ModelEntry
-        and returns a dictionary containing either just the function,
-        in case of flow/aux variables or lookups, or a derivative
-        function and an initial condition in the case of a stock
+            All we have to do here is add to the docstring of the relevant function the things that arent 
+            available at lower levels. The stock/flaux/lookup visitors will take care of adding methods to the class
         """
-    docnode = getChildren(node, 'Docstring')
-    docs = docnode[0].text.strip()
-    
-    unitnode = getChildren(node, 'Unit')
-    unit = unitnode[0].text.strip()
-    
-    # This method of dealing with different types of elements is rather inelegant,
-    # and I would like to change it in the future
-    component = getChildren(node, 'Component')[0]
-    stocknode = getChildren(component, 'Stock')
-    flauxnode = getChildren(component, 'Flaux')
-    lookupnode = getChildren(component, 'Lookup')
-    
-    ret_dict = {}
-    
-    if len(stocknode):
-        
-        identifier = clean_identifier(getChildren(stocknode[0], 'Identifier')[0].text)
-        
-        exprnode, initnode = getChildren(stocknode[0], 'Condition')
-        expr = translate_expr(exprnode).strip()
-        init = translate_expr(initnode).strip()
-        
-        docstring = docs + "\n Units: " + unit + "\n Equation: " + expr + "\n Init: " + init
-        
-        ret_dict['d'+identifier+'_dt'] = lambda self: eval(expr) # the fact that this is a lambda function makes debugging harder.
-        ret_dict['d'+identifier+'_dt'].func_name = 'd'+identifier+'_dt'
-        ret_dict['d'+identifier+'_dt'].func_doc = docstring
-        ret_dict['d'+identifier+'_dt'].units = unit
-        ret_dict['d'+identifier+'_dt'].__str__ = 'd'+identifier+'_dt'+"()\n"+expr
-        
-        ret_dict['state'] = {identifier:0}
-        ret_dict['_'+identifier+'_init'] = lambda self: eval(init)
-        ret_dict[identifier] = lambda self: self.state[identifier]
-    
-    
-    elif len(flauxnode):
-        identifier = clean_identifier(getChildren(flauxnode[0], 'Identifier')[0].text)
-        exprnode = getChildren(flauxnode[0], 'Condition')[0]
-        expr = translate_expr(exprnode).strip()
-        
-        docstring = docs + "\n Units: " + unit + "\n Equation: " + expr + "\n"
-        
-        ret_dict[identifier] = lambda self: eval(expr)
-        ret_dict[identifier].func_name = identifier
-        ret_dict[identifier].func_doc = docstring
-        ret_dict[identifier].units = unit
-        ret_dict[identifier].__str__ = identifier+"()\n"+expr
-    
-    elif len(lookupnode):
-        identifier = clean_identifier(getChildren(lookupnode[0], 'Identifier'))
-        
-    # do this later
-    
-    return ret_dict
+        getattr(self.component_class, Component_Identifier).im_func.func_doc += 'Units: %s \n'%Unit + Docstring
+        getattr(self.component_class, Component_Identifier).im_func.unit = Unit
+            
+                         
+    def visit_Stock(self, n, (Identifier, _1, eq, _2, integ, _3,
+                              lparen, _4, NL1, _5, expression, _6,
+                              comma, _7, NL2, _8, initial_condition, _9, rparen)):
 
+        #create a place to store the stock's current value
+        self.component_class.state[Identifier] = None
+        
+        #create a 'derivative function' that can be
+        # called by the d_dt boilerplate function and passed to the integrator
+        funcstr = ('def d%s_dt(self):\n'%Identifier +
+                   '    return %s'%expression   )
+        exec funcstr in self.component_class.__dict__
+             
+        #create an 'intialization function' of the form '<stock>_init()' that 
+        # can be called when the model is reset to initialize the state variable
+        funcstr = ('def %s_init(self):\n'%Identifier +
+                   '    return %s'%initial_condition)
+        exec funcstr in self.component_class.__dict__
+        
+        #create a function that points to the state dictionary, to let other
+        # components reference the state without explicitly having to know that
+        # it is a stock. This is the function that gets an elaborated docstring
+        funcstr = ('def %s(self):\n'%Identifier +
+                   '    return self.state["%s"]'%Identifier)
+        exec funcstr in self.component_class.__dict__
+        getattr(self.component_class, Identifier).im_func.func_doc = ('%s = %s \n'%(Identifier, expression) +
+                                                                      'Initial Value: %s \n'%initial_condition +
+                                                                      'Type: Stock \n' +
+                                                                      'Do not overwrite this function')
+        return Identifier
+    
+    
+    def visit_Flaux(self, n, (Identifier, _1, eq, SNL, expression)):
 
+        funcstr = ('def %s(self):\n'%Identifier +
+                   '    return %s'%expression)
+        exec funcstr in self.component_class.__dict__
+             
+        getattr(self.component_class, Identifier).im_func.func_doc = ('%s = %s \n'%(Identifier, expression) +
+                                                                      'Type: Flow or Auxiliary \n')
+        
+        return Identifier
+    
+    
+    def visit_Lookup(self, n, (Identifier, _1, lparen, _2, NL1, _3, Range, _4, AddCopair, _5, NL2, _6, rparen)):
+        #yet to be implemented
+        pass
 
+    ######### 'expression' level visitors ###############################
+    def visit_Keyword(self, n, vc):
+        return dictionary[n.text]
+    
+    def visit_Reference(self, n, (Identifier, _)):
+        return 'self.'+Identifier+'()'
+    
+    def visit_Identifier(self, n, vc):
+        #we should check here that identifiers are not python keywords...
+        return clean_identifier(n.text)
 
-class component_class(component_class_template.component_class_template):
-    pass
+    def visit_Conditional(self, n, (condition, _, term)):
+        return dictionary[condition] + term
+
+    visit_Exponentive = visit_Conditional
+    
+    def generic_visit(self, n, vc):
+        """
+        Replace childbearing nodes with a list of their children;
+        for leaves, return the node text;
+        for empty nodes, return an empty string.
+        """
+        return ''.join(filter(None, vc)) or n.text or ''
+
 
 
 
@@ -255,25 +303,13 @@ def import_vensim(mdl_file):
         class representing that model to be a subclass in the pysd
         main class.
         """
-
-    #at some point in the future, this should be expanded to include the model-level description.
-    component_class.__str__ = 'Import of '+mdl_file
-    
     with open(mdl_file) as file:
-        filetext = file.read().lower()
+        text = file.read()
 
-    ast = g.parse(filetext) #abstract syntax tree for the whole file! may or may not be a good strategy, but its what we got.
+    parser = TextParser(file_grammar)
+    parser.parse(text)
 
-    content = getChildren(ast, 'Content')[0]
-    entries = getChildren(content, 'Entry')
-    for entry in entries:
-        child = entry.children[0] # this is brittle, assumes that the entry will have exactly one child. Syntactically it should, but...
-        if child.expr_name == 'MetaEntry':
-            pass
-            # this is where we should get some of the information about model
-        elif child.expr_name == 'ModelEntry':
-            elements = translate_modelentry(child)
-            update(component_class.__dict__, elements) #use our own (nested recursive) dictionary update
-    
+    component_class = parser.component_class
+    component_class.__str__ = 'Import of '+mdl_file
+
     return component_class
-

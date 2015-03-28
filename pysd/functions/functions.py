@@ -1,8 +1,4 @@
 
-# coding: utf-8
-
-# In[5]:
-
 import numpy as np
 
 def if_then_else(condition, val_if_true, val_if_false):
@@ -12,18 +8,22 @@ def if_then_else(condition, val_if_true, val_if_false):
         return val_if_false
     
     
-def step(value, tstep, t):
+def step(value, tstep):
+    t = self.components.state['t']
     return value if t >=tstep else 0
 
 
-def pulse(start, duration, t):
+def pulse(start, duration):
+    t = self.components.state['t']
     return 1 if t>=start and t<start+duration else 0
 
 # I'm not totally sure if this is correct
-def pulse_train(start, duration, repeattime, end, t):
+def pulse_train(start, duration, repeattime, end):
+    t = self.components.state['t']
     return 1 if t>=start and (t-start)%repeattime < duration else 0
 
-def ramp(slope, start, finish, t):
+def ramp(slope, start, finish):
+    t = self.components.state['t']
     if t<start:
         return 0
     elif t>finish:
@@ -39,8 +39,6 @@ def bounded_normal(minimum, maximum, mean, std, seed):
         if value > minimum and value < maximum:
             return value
 
-
-# In[ ]:
 
 
 
