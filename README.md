@@ -51,6 +51,9 @@ To return simulation values at timestamps other than the default (specified in t
 
 
 ### Examples
+For a simple 'Hello World' type demonstration, see:
+- hello world: [Teacup Model](http://nbviewer.ipython.org/github/JamesPHoughton/pysd/blob/master/example_models/Teacup/Teacup.ipynb)
+
 For advanced usage, see some of these examples:
 
 - parameter space exploration: [SIR Model](http://nbviewer.ipython.org/github/JamesPHoughton/pysd/blob/master/example_models/SIR/SIR%20Exploration.ipynb)
