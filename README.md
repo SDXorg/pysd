@@ -4,7 +4,7 @@ PySD
 System Dynamics Modeling in Python
 
 ### Status
-Version 0.1.1 complete
+Version 0.2.1 complete
 
 ### Installation
 To install via python package index:
@@ -13,11 +13,6 @@ To install via python package index:
 ```
 
 ## Usage
-To import a model from XMILE:
-```
-    import pysd
-    model = pysd.read_XMILE('xmile_model_file.xmile')
-``` 
 To import a model from Vensim:
 ```
     import pysd
@@ -27,26 +22,36 @@ To run the model:
 ```
     model.run()
 ```
-To run the model with modified parameters:
-```
-    model.run(params={'parameter_name':value})
-```
 Model results are by default given as pandas dataframes, so to plot output:
 ```
     stocks = model.run()
     stocks.plot()
 ```
-To measure model values as arbitrary timestamps:
+
+#### Making Changes to the model
+To run the model with new constant values for parameters:
 ```
-    measurements = model.measure(elements=['stock1','flow1'], timestamps=range(1,20))
+    model.run(params={'parameter_name':value})
 ```
-To print debugging output when running or measuring models:
-``` 
-    model.debug = True
-    model.run()
+To run the model with timeseries values for parameters:
+```
+    parameter_tseries = pd.Series(index=range(30), data=range(20,80,2)) #increasing over 30 timeperiods from 20 to 80
+    model.run(params={'parameter_name':parameter_tseries})
 ```
 
+#### Specifying simulation elements to return
+To return model elements other than the default (stocks):
+```
+    model.run(return_columns=['stock_name', 'flow_name', 'aux_name'])
+```
+To return simulation values at timestamps other than the default (specified in the model file):
+```
+    model.run(return_timestamps=[0,1,3,7,9.5,13.178,21,25,30])
+```
+
+
 ### Examples
+For advanced usage, see some of these examples:
 
 - parameter space exploration: [SIR Model](http://nbviewer.ipython.org/github/JamesPHoughton/pysd/blob/master/example_models/SIR/SIR%20Exploration.ipynb)
 - running models interactively in real-time: [Delay Game](http://nbviewer.ipython.org/github/JamesPHoughton/pysd/blob/master/example_models/Delay%20Game/Nth%20Order%20Delay%20Demo.ipynb)
