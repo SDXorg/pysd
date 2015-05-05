@@ -50,17 +50,10 @@ To return simulation values at timestamps other than the default (specified in t
 ```
 
 
-### Examples
-For a simple 'Hello World' type demonstration, see:
-- hello world: [Teacup Model](http://nbviewer.ipython.org/github/JamesPHoughton/pysd/blob/master/example_models/Teacup/Teacup.ipynb)
+### Resources
+The [PySD Cookbook](http://jamesphoughton.github.io/PySD-Cookbook/) is a collection of 'standard methods' for doing a variety of data and modeling tasks using PySD. Each 'recipe' covers a particular analysis task (such as model fitting, or Monte Carlo simulation) and is designed such that the user can download a single example file and modify it to suit their needs.
 
-For advanced usage, see some of these examples:
-
-- parameter space exploration: [SIR Model](http://nbviewer.ipython.org/github/JamesPHoughton/pysd/blob/master/example_models/SIR/SIR%20Exploration.ipynb)
-- running models interactively in real-time: [Delay Game](http://nbviewer.ipython.org/github/JamesPHoughton/pysd/blob/master/example_models/Delay%20Game/Nth%20Order%20Delay%20Demo.ipynb)
-- using ipython's [parallelization capability](http://ipython.org/ipython-doc/dev/parallel/parallel_intro.html) to speed up Monte Carlo Analysis: [Bank Balance Example](http://nbviewer.ipython.org/github/JamesPHoughton/pysd/blob/master/example_models/Bank%20Balance/Parallel%20Monte%20Carlo%20Simulation.ipynb)
-- performing Markov Chain Monte Carlo using [pymc](http://pymc-devs.github.io/pymc/README.html) to estimate the number of pennies in circulation from data collected in a penny jar: [Penny Jar Inference](http://nbviewer.ipython.org/github/JamesPHoughton/pysd/blob/master/example_models/Penny%20Jar/Penny%20Jar.ipynb)
-- several optimization methods using [scipy.optimize](http://docs.scipy.org/doc/scipy-0.14.0/reference/optimize.html): [Predator-Prey Model](http://nbviewer.ipython.org/github/JamesPHoughton/pysd/blob/master/example_models/Predator-Prey/Predator%20-%20Prey.ipynb)
+An introductory [paper](https://github.com/JamesPHoughton/pysd/blob/master/docs/PySD%20Intro%20Paper%20Preprint.pdf) gives a general overview of the motivation, structure, and use of PySD.
 
 ## About the project
 This project is a simple library for running [System Dynamics](http://en.wikipedia.org/wiki/System_dynamics) models in python, with the purpose of improving integration of *Big Data* and *Machine Learning* into the SD workflow. 
