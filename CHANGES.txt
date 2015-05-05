@@ -1,1 +1,2 @@
 v0.0.4, September 2 2014 -- First packaged release.
+v0.2.1, March 28 2015 —- upgrade to class-based model structure.

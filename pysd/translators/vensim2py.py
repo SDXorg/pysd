@@ -19,7 +19,6 @@ import component_class_template
 ###############################################################
 
 
-
 ###############################################################
 #Todo:
 #
@@ -42,6 +41,7 @@ import component_class_template
 # identifier that is a control
 
 ###############################################################
+
 
 ######################################################
 #Dictionary:
@@ -96,6 +96,9 @@ dictionary = {"ABS":"abs", "INTEGER":"int", "EXP":"np.exp", "INF":"np.inf", "LOG
 #
 # - we separated out single space characters from the _ entry, so that it can have any number or combination of space characters.
 #
+# - Vensim uses a 'backslash, newline' syntax as a way to split an equation onto multiple lines. We address this by including it as
+#      an allowed space character.
+#
 # - for some reason, 'Factor' is consuming newlines, which it shouldn't. This gives issues
 #      if an equation is long enough to go to multiple lines, which happens sometimes
 #
@@ -127,7 +130,7 @@ expression_grammar = """
     Identifier =  ~"[a-zA-Z]" ~"[a-zA-Z0-9_\$\s]"*
     
     _ = spacechar*
-    spacechar = " "* ~"\t"*
+    spacechar = " "* ~"\t"* (~r"\\\\" NL)*
     
     Keyword = """ + keywords
 
@@ -250,7 +253,7 @@ class TextParser(NodeVisitor):
         getattr(self.component_class, Identifier).im_func.func_doc = ('%s = %s \n'%(Identifier, expression) +
                                                                       'Initial Value: %s \n'%initial_condition +
                                                                       'Type: Stock \n' +
-                                                                      'Do not overwrite this function')
+                                                                      'Do not overwrite this function\n')
         return Identifier
     
     
@@ -265,10 +268,33 @@ class TextParser(NodeVisitor):
         
         return Identifier
     
-    
-    def visit_Lookup(self, n, (Identifier, _1, lparen, _2, NL1, _3, Range, _4, AddCopair, _5, NL2, _6, rparen)):
-        #yet to be implemented
+
+    def visit_Lookup(self, n, (Identifier, _1, lparen, _2, NL1, _3, Range, _4, CopairList, _5, NL2, _6, rparen)):
+        """
+            This is pretty complex, as we need to create a function that will be called elsewhere. We've
+            created a structure in which function calls can only come from a very limited set of keywords,
+            but the syntax that we expect to see with lookups is such that the keyword will fail, and the syntax
+            be ambiguous.
+        """
+        # we'll need to make sure that the exec..in syntax works here, as we reference local variables in the function definition
+        #xs =
+        #ys =
+        #funcstr = ('def %s(self):\n'%Identifier +
+        #           '    return np.interp(')
         pass
+    
+    def visit_Macro(self, n, vc):
+        """
+            When we take on the task of implementing delay functions, this will be where
+            we choose to deal with them. Delay functions require programmatically creating additional stocks.
+        """
+        pass
+    
+    
+    def visit_Unit(self, n, vc):
+        return n.text.strip()
+    
+    visit_Docstring = visit_Unit
 
     ######### 'expression' level visitors ###############################
     def visit_Keyword(self, n, vc):
@@ -279,7 +305,11 @@ class TextParser(NodeVisitor):
     
     def visit_Identifier(self, n, vc):
         #we should check here that identifiers are not python keywords...
-        return clean_identifier(n.text)
+        string = n.text
+        string = string.lower()
+        string = string.strip()
+        string = string.replace(' ', '_')
+        return string
 
     def visit_Conditional(self, n, (condition, _, term)):
         return dictionary[condition] + term
@@ -303,10 +333,11 @@ def import_vensim(mdl_file):
         class representing that model to be a subclass in the pysd
         main class.
         """
-    with open(mdl_file) as file:
-        text = file.read()
-
     parser = TextParser(file_grammar)
+    
+    with open(mdl_file, 'rU') as file:
+        text = file.read().decode('utf-8')
+
     parser.parse(text)
 
     component_class = parser.component_class

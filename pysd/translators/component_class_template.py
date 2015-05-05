@@ -7,7 +7,7 @@
 # it would be nice to dynamically generate the docstring (or some sortof 'help' string)
 # so that if the model is modified, the user can see the current state of modifications
 
-
+import inspect
 
 class component_class_template:
     """
@@ -32,9 +32,10 @@ class component_class_template:
     
     def __init__(self):
         self.reset_state()
+        self.__doc__ = self.doc()
     
     
-    def __doc__(self):
+    def doc(self):
         docstring = self.__str__ + '\n\n'
         for method in dir(self):
             if method not in ['__doc__', '__init__', '__module__', '__str__', 't',
@@ -42,7 +43,7 @@ class component_class_template:
                               'state', 'state_vector']:
                 if method[0] not in ['_']:
                     try:
-                        docstring += method + '\n' + inspect.getdoc(getattr(self, method)) + '\n\n'
+                        docstring +=  inspect.getdoc(getattr(self, method)) + '\n\n'
                     except:
                         pass
 

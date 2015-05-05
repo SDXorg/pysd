@@ -8,4 +8,6 @@ pysd/functions/functions.py
 pysd/translators/SMILE2Py.py
 pysd/translators/XMILE2Py.py
 pysd/translators/__init__.py
+pysd/translators/component_class_template.py
+pysd/translators/helpers.py
 pysd/translators/vensim2py.py

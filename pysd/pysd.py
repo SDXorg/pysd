@@ -1,7 +1,7 @@
 '''
 created: August 15, 2014
-last update: February, 17 2015
-version 0.2.0
+last update: March 28 2015
+version 0.2.1
 James Houghton <james.p.houghton@gmail.com>
 '''
 
@@ -23,7 +23,7 @@ import numpy as np
 # to give a finer level of control to those who know what to do with it.
 # - It would be neat to have a logical way to run two or more models together, using the same integrator.
 # - it might help with debugging if we did cross compile to an actual class or module, in an actual text file somewhere.
-#
+# - Add support for cython
 #
 ######################################################
 
