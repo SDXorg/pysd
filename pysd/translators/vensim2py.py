@@ -99,6 +99,8 @@ dictionary = {"ABS":"abs", "INTEGER":"int", "EXP":"np.exp", "INF":"np.inf", "LOG
 # - Vensim uses a 'backslash, newline' syntax as a way to split an equation onto multiple lines. We address this by including it as
 #      an allowed space character.
 #
+# - calls to lookup functions don't use keywords, so we have to use identifiers. They take only one parameter.
+#
 # - for some reason, 'Factor' is consuming newlines, which it shouldn't. This gives issues
 #      if an equation is long enough to go to multiple lines, which happens sometimes
 #
@@ -120,9 +122,10 @@ expression_grammar = """
     ExpBase  = Primary _ Exponentive*
     Exponentive = "^" _ Primary
     
-    Primary  = Call / Parens / Signed / Number / Reference
+    Primary  = Call / LUCall / Parens / Signed / Number / Reference
     Parens   = "(" _ Condition _ ")"
     Call     = Keyword _ "(" _ Condition _ ("," _ Condition)* _ ")"
+    LUCall   = Identifier _ "(" _ Condition _ ")"
     Signed   = ("-"/"+") Primary
     Reference = Identifier _
 
@@ -162,8 +165,9 @@ entry_grammar = """
     Docstring = (~"[^~|]" !~"(\*{3,})")*
     Component = Stock / Flaux / Lookup
     
-    Lookup     = Identifier _ "(" _ NL _ Range _ AddCopair* _ NL _ ")"
+    Lookup     = Identifier _ "(" _ NL _ Range _ CopairList _ ")"
     Range      = "[" _ Copair _ "-" _ Copair _ "]"
+    CopairList = AddCopair*
     AddCopair  = "," _ Copair
     Copair     = "(" _ Primary _ "," _ Primary _ ")"
     
@@ -221,9 +225,14 @@ class TextParser(NodeVisitor):
             All we have to do here is add to the docstring of the relevant function the things that arent 
             available at lower levels. The stock/flaux/lookup visitors will take care of adding methods to the class
         """
-        getattr(self.component_class, Component_Identifier).im_func.func_doc += 'Units: %s \n'%Unit + Docstring
-        getattr(self.component_class, Component_Identifier).im_func.unit = Unit
-            
+        ds = 'Units: %s \n'%Unit + Docstring
+        entry = getattr(self.component_class, Component_Identifier)
+        
+        if hasattr(entry, 'im_func'): #most functions
+            entry.im_func.func_doc += ds
+        else: #the lookups - which are represented as callable classes, instead of functions
+            entry.__doc__ += ds
+
                          
     def visit_Stock(self, n, (Identifier, _1, eq, _2, integ, _3,
                               lparen, _4, NL1, _5, expression, _6,
@@ -248,40 +257,46 @@ class TextParser(NodeVisitor):
         # components reference the state without explicitly having to know that
         # it is a stock. This is the function that gets an elaborated docstring
         funcstr = ('def %s(self):\n'%Identifier +
+                   '    """    %s = %s \n'%(Identifier, expression) + #include the docstring
+                   '        Initial Value: %s \n'%initial_condition +
+                   '        Type: Stock \n' +
+                   '        Do not overwrite this function\n' +
+                   '    """\n' +
                    '    return self.state["%s"]'%Identifier)
         exec funcstr in self.component_class.__dict__
-        getattr(self.component_class, Identifier).im_func.func_doc = ('%s = %s \n'%(Identifier, expression) +
-                                                                      'Initial Value: %s \n'%initial_condition +
-                                                                      'Type: Stock \n' +
-                                                                      'Do not overwrite this function\n')
         return Identifier
     
     
     def visit_Flaux(self, n, (Identifier, _1, eq, SNL, expression)):
-
-        funcstr = ('def %s(self):\n'%Identifier +
+        funcstr = ('def    %s(self):\n'%Identifier +
+                   '    """%s = %s \n'%(Identifier, expression) +
+                   '       Type: Flow or Auxiliary \n ' +
+                   '    """\n' +
                    '    return %s'%expression)
         exec funcstr in self.component_class.__dict__
-             
-        getattr(self.component_class, Identifier).im_func.func_doc = ('%s = %s \n'%(Identifier, expression) +
-                                                                      'Type: Flow or Auxiliary \n')
-        
+
         return Identifier
     
 
-    def visit_Lookup(self, n, (Identifier, _1, lparen, _2, NL1, _3, Range, _4, CopairList, _5, NL2, _6, rparen)):
+    def visit_Lookup(self, n, (Identifier, _1, lparen, _2, NL1, _3, Range, _4, CopairList, _5, rparen)):
         """
             This is pretty complex, as we need to create a function that will be called elsewhere. We've
             created a structure in which function calls can only come from a very limited set of keywords,
             but the syntax that we expect to see with lookups is such that the keyword will fail, and the syntax
             be ambiguous.
         """
-        # we'll need to make sure that the exec..in syntax works here, as we reference local variables in the function definition
-        #xs =
-        #ys =
-        #funcstr = ('def %s(self):\n'%Identifier +
-        #           '    return np.interp(')
-        pass
+        # if we want to include range checking, we need to parse the range. for now, lazy...
+        
+        xs, ys = zip(*CopairList)
+        self.component_class.__dict__.update({Identifier:functions.lookup(xs, ys)})
+        
+        #This docstring approach could be improved
+        getattr(self.component_class, Identifier).__doc__ = ('%s is lookup with coordinates:\n%s'%(Identifier, CopairList) +
+                                                             'Type: Flow or Auxiliary \n')
+        
+        return Identifier
+    
+    
     
     def visit_Macro(self, n, vc):
         """
@@ -304,12 +319,27 @@ class TextParser(NodeVisitor):
         return 'self.'+Identifier+'()'
     
     def visit_Identifier(self, n, vc):
-        #we should check here that identifiers are not python keywords...
+        #todo: should check here that identifiers are not python keywords...
         string = n.text
         string = string.lower()
         string = string.strip()
         string = string.replace(' ', '_')
         return string
+
+    def visit_LUCall(self, n, (Identifier, _1, lparen, _2, Condition, _3,  rparen)):
+        return 'self.'+Identifier+'('+Condition+')'
+        
+    def visit_Copair(self, n, (lparen, _1, xcoord, _2, comma, _3, ycoord, _, rparen)):
+        return (float(xcoord), float(ycoord))
+        
+    def visit_AddCopair(self, n, (comma, _1, Copair)):
+        return Copair
+
+    def visit_Range(self, n, copairs):
+        pass
+    
+    def visit_CopairList(self, n, copairs):
+        return copairs
 
     def visit_Conditional(self, n, (condition, _, term)):
         return dictionary[condition] + term

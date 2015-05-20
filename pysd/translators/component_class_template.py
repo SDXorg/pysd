@@ -92,3 +92,5 @@ class component_class_template:
             """
         return [self.state[key] for key in sorted(self.state.keys())]
 
+
+

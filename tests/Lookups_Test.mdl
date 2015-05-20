@@ -1,0 +1,92 @@
+{UTF-8}
+flow=
+	Lookup Function Call
+	~	
+	~		|
+
+Integrate Lookup= INTEG (
+	flow,
+		0)
+	~	
+	~		|
+
+Lookup Function Call=
+	Lookup Function Table(Lookup Function Parameter)
+	~	
+	~		|
+
+Lookup Function Parameter=
+	0.345
+	~	
+	~		|
+
+Lookup Function Table(
+	[(0,0)-(1,1)],(0,0),(0.144603,0.0428572),(0.262729,0.133333),(0.413442,0.295238),(0.5\
+		,0.5),(0.625255,0.761905),(0.835031,0.942857),(1,1))
+	~	
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 100
+	~	Month
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Month
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP
+	~	Month [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 1
+	~	Month [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Lookup Function Table,330,350,58,8,8,3,0,0,0,0,0,0
+10,2,Lookup Function Call,450,269,55,8,8,3,0,0,0,0,0,0
+10,3,Lookup Function Parameter,343,209,44,14,8,3,0,0,0,0,0,0
+1,4,3,2,0,0,0,0,0,64,0,-1--1--1,,1|(394,238)|
+1,5,1,2,0,0,0,0,0,64,0,-1--1--1,,1|(383,313)|
+10,6,Integrate Lookup,676,270,40,20,3,3,0,0,0,0,0,0
+12,7,48,532,271,10,8,0,3,0,0,-1,0,0,0
+1,9,11,6,4,0,0,22,0,0,0,-1--1--1,,1|(611,271)|
+1,10,11,7,100,0,0,22,0,0,0,-1--1--1,,1|(558,271)|
+11,11,0,580,271,6,8,34,3,0,0,1,0,0,0
+10,12,flow,580,287,13,8,40,3,0,0,-1,0,0,0
+1,13,2,11,1,0,0,0,0,64,0,-1--1--1,,1|(541,228)|
+///---\\\
+:L<%^E!@
+1:/Applications/Current.vdf
+9:Current
+22:$,Dollar,Dollars,$s
+22:Hour,Hours
+22:Month,Months
+22:Person,People,Persons
+22:Unit,Units
+22:Week,Weeks
+22:Year,Years
+22:Day,Days
+15:0,0,0,0,0,0
+19:100,0
+27:2,
+34:0,
+4:Time
+5:flow
+24:0
+25:100
+26:100

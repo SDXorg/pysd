@@ -40,5 +40,17 @@ def bounded_normal(minimum, maximum, mean, std, seed):
             return value
 
 
+class lookup():
+    """Different from the standard pysd pattern: requires a value"""
+    #at some point in the future, we should add bounds checking.
+    # also, should intelligently handle the error where a value is not submitted,
+    # as this is a likely mistake in the pysd pattern
+    def __init__(self, xs, ys):
+        self.xs, self.ys = xs, ys
+        
+    def sample(self, x):
+        return np.interp(x, self.xs, self.ys)
 
-
+    def __call__(self, x): #this lets us use a simple calling expression on the class. May be a bad idea?
+        """ different from the standard pysd pattern, requires a value """
+        return self.sample(x)
