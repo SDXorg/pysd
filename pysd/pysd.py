@@ -109,22 +109,19 @@ class pysd:
             - a tuple (t, dict) sets the simulation time to t, and the
             """
         
-        ### Todo:
-        #
-        # - check that the return_timestamps is a collection - a list of timestamps, or something.
-        #      if not(ie, a single value), make it one.
-        
         if params:
             self.set_components(params)
+    
         
-        
-        ##### Setting timestamp options
-        if return_timestamps:
-            tseries = return_timestamps
-        else:
+        ##### Setting timeseries options
+        if return_timestamps == []: #default option
             tseries = np.arange(self.components.initial_time(),
                                 self.components.final_time(),
                                 self.components.time_step())
+        elif isinstance(return_timestamps, (list, int, float, long, np.ndarray)):
+            tseries = np.asarray(return_timestamps)
+        else:
+            raise TypeError('The `return_timestamps` parameter expects a list, array, or numeric value')
         
         ##### Setting initial condition options
         if isinstance(initial_condition, tuple):
@@ -144,10 +141,10 @@ class pysd:
 
         addtflag = False
         if tseries[0] != self.components.t:
-            tseries = [self.components.t]+tseries
+            tseries = np.insert(tseries, 0, self.components.t)
             addtflag = True
 
-        ######Setting integrator options:
+        ######Perform the integration:
         #
         # - we may choose to use the odeint parameter ::tcrit::, which identifies singularities
         # near which the integrator should exercise additional caution.
@@ -163,7 +160,7 @@ class pysd:
         stocknames = sorted(self.components.state.keys())
         values = _pd.DataFrame(data=res, index=tseries, columns=stocknames)
 
-
+        ##### Postprocess the integration result
         if return_columns:
             # this is a super slow, super bad way to do this. Recode ASAP
             out = []
