@@ -85,12 +85,17 @@ class component_class_template:
     def state_vector(self):
         """
             This function interacts with the integrator by setting the 
-            initial values of the state vector.
+            initial values of the integrator to the state vector.
             
             It returns the values of the state dictionary, sorted 
             alphabetically by key.
             """
         return [self.state[key] for key in sorted(self.state.keys())]
 
-
+    def time(self):
+        """
+            This helper function allows the model components to 
+            access the time component directly.
+        """
+        return self.t
 

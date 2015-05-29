@@ -119,7 +119,7 @@ class pysd:
                                 self.components.final_time(),
                                 self.components.time_step())
         elif isinstance(return_timestamps, (list, int, float, long, np.ndarray)):
-            tseries = np.asarray(return_timestamps)
+            tseries = np.array(return_timestamps, ndmin=1)
         else:
             raise TypeError('The `return_timestamps` parameter expects a list, array, or numeric value')
         
