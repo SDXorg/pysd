@@ -11,6 +11,12 @@ To install via python package index:
 ```
     pip install pysd
 ```
+To install the latest version from this repository:
+```
+    git clone https://github.com/JamesPHoughton/pysd.git
+    cd pysd
+    python setup.py install
+```
 
 ## Usage
 To import a model from Vensim:
