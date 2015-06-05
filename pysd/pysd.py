@@ -73,7 +73,7 @@ def print_supported_vensim_functions():
 
 class pysd:
     def __init__(self, component_class):
-        self.components = component_class() #this is where we create an instance of the model subclass
+        self.components = component_class()
         self.record = []
     
     def __str__(self):

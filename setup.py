@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='pysd',
-    version='0.2.4',
+    version='0.2.5',
     author='James Houghton',
     author_email='james.p.houghton@gmail.com',
     packages=['pysd', 'pysd.translators', 'pysd.functions'],

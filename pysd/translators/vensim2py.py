@@ -40,6 +40,8 @@ import component_class_template
 # are we parsing model control components properly? We may need to change the grammar so that identifiers that if we find an
 # identifier that is a control
 
+# we should factor out the code that constructs the class from the visitors, so that we can share it with the eventual xmile translator.
+
 ###############################################################
 
 
@@ -208,7 +210,8 @@ file_grammar = """
 class TextParser(NodeVisitor):
     def __init__(self, grammar):
         class component_class(component_class_template.component_class_template):
-            self.__str__ = 'Undefined'
+            __str__ = 'Undefined'
+            state = {} #this is defined as a class variable (not instance) so we can modify its contents before we instantiate. But have to be careful, because if we put it as a class variable in the super class, it messes up the next time we extend the class
 
         self.component_class = component_class
         self.grammar = parsimonious.Grammar(grammar)

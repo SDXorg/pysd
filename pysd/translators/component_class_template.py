@@ -27,16 +27,16 @@ class component_class_template:
     
     This docstring will be rewritten and dynamically generated.
     """
-
-    state = {}
     
     def __init__(self):
         self.reset_state()
         self.__doc__ = self.doc()
+        
     
     
     def doc(self):
-        docstring = self.__str__ + '\n\n'
+        #docstring = self.__str__ + '\n\n'
+        docstring = ''
         for method in dir(self):
             if method not in ['__doc__', '__init__', '__module__', '__str__', 't',
                               'd_dt', 'reset_state', 'model_description', 'saveper',

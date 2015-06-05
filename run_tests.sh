@@ -1,2 +1,3 @@
 #!/bin/bash
-python tests/tests.py
+
+python test_pysd.py
