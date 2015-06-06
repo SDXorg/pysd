@@ -1,7 +1,7 @@
 '''
 created: August 15, 2014
-last update: March 28 2015
-version 0.2.1
+last update: June 6 2015
+version 0.2.5
 James Houghton <james.p.houghton@gmail.com>
 '''
 
@@ -17,14 +17,10 @@ import numpy as np
 
 ######################################################
 # Todo:
-#
-# - add a function to simplify parameter modification
-# - we may think about passing optional arguments to the run command through to the integrator,
-# to give a finer level of control to those who know what to do with it.
-# - It would be neat to have a logical way to run two or more models together, using the same integrator.
+# - passing optional arguments in the run command through to the integrator,
+#       to give a finer level of control to those who know what to do with them. (such as `tcrit`)
+# - add a logical way to run two or more models together, using the same integrator.
 # - it might help with debugging if we did cross compile to an actual class or module, in an actual text file somewhere.
-# - Add support for cython
-#
 ######################################################
 
 
@@ -46,20 +42,205 @@ import numpy as np
 # corrupted, and we won't have any indication of this corruption.
 ######################################################
 
-
-# need to re-implement xmile translator
 def read_XMILE(XMILE_file):
-    """
-        This is currently broken =(
-        """
-    pass
+    """ Construct a model object from XMILE source """
+    pass #to be updated when we actually have xmile files to test against...
 
 def read_vensim(mdl_file):
-    """
-        Only a subset of vensim functions are supported.
-        """
+    """ Construct a model from Vensim .mdl file """
     component_class = _translators.import_vensim(mdl_file)
     return pysd(component_class)
+
+
+class pysd:
+    def __init__(self, component_class):
+        self.components = component_class()
+        self.record = []
+    
+    def __str__(self):
+        """ Return model source file """
+        return self.components.__str__
+    
+    
+    def run(self, params={}, return_columns=[], return_timestamps=[],
+                  initial_condition='original', collect=False):
+        
+        """ Simulate the model's behavior over time.
+        Return a pandas dataframe with timestamps as rows,
+        model elements as columns.
+        
+        Parameters
+        ----------
+        
+        params : dictionary
+            Keys are strings of model component names.
+            Values are numeric or pandas Series.
+                Numeric values represent constants over the model integration.
+                Timeseries will be interpolated to give time-varying input.
+        
+        return_timestamps : list, numeric, numpy array(1-D)
+            Timestamps in model execution at which to return state information.
+            Defaults to model-file specified timesteps.
+            
+        return_columns : list of string model component names
+            Returned dataframe will have corresponding columns.
+            Defaults to model stock values.
+            
+        initial_condition : 'original'/'o', 'current'/'c', (t, {state})
+            'original' (default) uses model-file specified initial condition
+            'current' uses the state of the model after the previous execution
+            (t, {state}) lets the user specify a starting time and (possibly partial)
+                list of stock values.
+        
+            
+        Examples
+        --------
+        
+        >>> model.run(params={'exogenous_constant':42})
+        >>> model.run(params={'exogenous_variable':timeseries_input})
+        >>> model.run(return_timestamps=[1,2,3.1415,4,10])
+        >>> model.run(return_timestamps=10)
+        >>> model.run(return_timestamps=np.linspace(1,10,20))
+        
+        See Also
+        --------
+        pysd.set_components : handles setting model parameters
+        pysd.set_initial_condition : handles setting initial conditions
+        """
+        
+        if params:
+            self.set_components(params)
+    
+        if initial_condition != 'current':
+            self.set_initial_condition(initial_condition)
+
+        tseries = self._build_timeseries(return_timestamps)
+
+        # the odeint expects the first timestamp in the tseries to be the initial condition,
+        # so we may need to add the t0 if it is not present in the tseries array
+        addtflag = tseries[0] != self.components.t
+        if addtflag:
+            tseries = np.insert(tseries, 0, self.components.t)
+
+        res = _odeint(func=self.components.d_dt,
+                      y0=self.components.state_vector(),
+                      t=tseries,
+                      hmax=self.components.time_step())
+        
+        state_df = _pd.DataFrame(data=res,
+                                 index=tseries,
+                                 columns=self.components._stocknames)
+
+        return_df = self.extend_dataframe(state_df, return_columns) if return_columns else state_df
+
+        if addtflag:
+            return_df.drop(return_df.index[0], inplace=True)
+
+        if collect:
+            self.record.append(return_df) #we could alternately just record the state, and expand it later...
+        
+        return return_df
+
+
+    def get_record(self):
+        """ Return the recorded model information. """
+        return _pd.concat(self.record)
+    
+    def clear_record(self):
+        """ Reset the recorder. """
+        self.record = []
+
+
+    def set_components(self, params):
+        """ Set the value of exogenous model elements.
+        Element values can be passed as keyword=value pairs in the function call.
+        Values can be numeric type or pandas Series.
+            Series will be interpolated by integrator.
+            
+        Examples
+        --------
+        >>> set_components(birth_rate=10)
+            
+        >>> br = pandas.Series(index=range(30), values=np.sin(range(30))
+        >>> set_components(birth_rate=br)
+        """
+        updates_dict = {}
+        for key, value in params.iteritems():
+            if isinstance(value, _pd.Series):
+                updates_dict[key] = self._timeseries_component(value)
+            else: #could check here for valid value...
+                updates_dict[key] = self._constant_component(value)
+    
+        self.components.__dict__.update(updates_dict)
+
+
+    def extend_dataframe(self, state_df, return_columns):
+        """ Calculates model values at given system states """
+        #there may be a better way to use the integrator that lets us report
+        #more values than just the stocks. In the meantime, we have to go
+        #through the returned values again, set up the model, and measure them.
+        
+        def get_values(row):
+            t = row.name
+            state = dict(row)
+            self.set_state(t,state)
+        
+            return_vals = {}
+            for column in return_columns: #there must be a faster way to do this...
+                func = getattr(self.components, column)
+                return_vals[column] = func()
+    
+            return _pd.Series(return_vals)
+        
+        return state_df.apply(get_values, axis=1)
+        
+
+    def set_state(self, t, state):
+        """ Set the system state 
+        t : numeric, system time
+        state: complete dictionary of system state
+        """
+        self.components.t = t
+        self.components.state.update(state)
+
+
+    def set_initial_condition(self, initial_condition):
+        """ Set the initial conditions of the integration """
+    
+        if isinstance(initial_condition, tuple):
+            self.set_state(*initial_condition) #we should probably check the values more than just seeing if they are a tuple.
+        elif isinstance(initial_condition, str):
+            if initial_condition.lower() in ['original','o']:
+                self.components.reset_state()
+            elif initial_condition.lower() in ['current', 'c']:
+                pass
+            else:
+                raise ValueError('Valid initial condition strings include:\n"original"/"o",\n"current"/"c"')
+        else:
+            raise TypeError('Check documentation for valid entries')
+
+
+    def _build_timeseries(self, return_timestamps):
+        """ Build up array of timestamps """
+        if return_timestamps == []:
+            tseries = np.arange(self.components.initial_time(),
+                                self.components.final_time(),
+                                self.components.time_step())
+        elif isinstance(return_timestamps, (list, int, float, long, np.ndarray)):
+            tseries = np.array(return_timestamps, ndmin=1)
+        else:
+            raise TypeError('The `return_timestamps` parameter expects a list, array, or numeric value')
+        return tseries
+
+
+    #these could be better off in a model creation class
+    def _timeseries_component(self, series):
+        return lambda: np.interp(self.components.t, series.index, series.values)
+    
+    def _constant_component(self, value):
+        return lambda: value
+
+
 
 def help():
     print_supported_vensim_functions()
@@ -69,164 +250,4 @@ def print_supported_vensim_functions():
     print ''.ljust(50,'-')
     for key, value in _translators.vensim2py.dictionary.iteritems():
         print key.ljust(25) + value
-
-
-class pysd:
-    def __init__(self, component_class):
-        self.components = component_class()
-        self.record = []
-    
-    def __str__(self):
-        """
-            Build this up to return a string with model equations in it
-            """
-        return self.components.__str__
-    
-    
-    def run(self, params={}, return_columns=[], return_timestamps=[], initial_condition='original',
-            collect=False):
-        """
-            Runs the model from the initial time all the way through the
-            final time, returning a pandas dataframe of results.
-            
-            If ::return_timestamps:: is set, the dataframe will have these as
-            its index. Otherwise, the index will be every timestep from the start
-            of simulation to the finish.
-            
-            if ::return_columns:: is set, the dataframe will have these columns.
-            Otherwise, it will return the value of the stocks.
-            
-            If ::params:: is set, modifies the model according to parameters
-            before execution.
-            
-            format for params should be:
-            params={'parameter1':value, 'parameter2':value}
-            
-            initial_condition can take a variety of values:
-            - None or 'original' reinitializes the model at the initial conditions 
-                 specified in the model file, and resets the simulation time accordingly
-            - 'current' preserves the current state of the model, including the simulaion time
-            - a tuple (t, dict) sets the simulation time to t, and the
-            """
-        
-        if params:
-            self.set_components(params)
-    
-        
-        ##### Setting timeseries options
-        if return_timestamps == []: #default option
-            tseries = np.arange(self.components.initial_time(),
-                                self.components.final_time(),
-                                self.components.time_step())
-        elif isinstance(return_timestamps, (list, int, float, long, np.ndarray)):
-            tseries = np.array(return_timestamps, ndmin=1)
-        else:
-            raise TypeError('The `return_timestamps` parameter expects a list, array, or numeric value')
-        
-        ##### Setting initial condition options
-        if isinstance(initial_condition, tuple):
-            self.components.t = initial_condition[0] #this is brittle!
-            self.components.state.update(initial_condition[1]) #this is also brittle. Assumes that the dictionary passed in has valid values
-        elif isinstance(initial_condition, str):
-            if initial_condition.lower() in ['original','o']:
-                self.components.reset_state() #resets the state of the system to what the model contains (but not the parameters)
-            elif initial_condition.lower() in ['current', 'c']:
-                pass #placeholder - this is a valid option, but we don't modify anything
-            else:
-                assert False #we should throw an error if there is an unrecognized option
-        else:
-            assert False
-
-        initial_values = self.components.state_vector()
-
-        addtflag = False
-        if tseries[0] != self.components.t:
-            tseries = np.insert(tseries, 0, self.components.t)
-            addtflag = True
-
-        ######Perform the integration:
-        #
-        # - we may choose to use the odeint parameter ::tcrit::, which identifies singularities
-        # near which the integrator should exercise additional caution.
-        # we could get these values from any time-type parameters passed to a step/pulse type function
-        #
-        # - there may be a better way to use the integrator that lets us report additional values at
-        # different timestamps. We may also want to use pydstool.
-        #
-        # the odeint expects the first timestamp in the tseries to be the initial condition,
-        # so we may need to add the t0 if it is not present in the tseries array
-        res = _odeint(self.components.d_dt, initial_values, tseries, hmax=self.components.time_step())
-        
-        stocknames = sorted(self.components.state.keys())
-        values = _pd.DataFrame(data=res, index=tseries, columns=stocknames)
-
-        ##### Postprocess the integration result
-        if return_columns:
-            # this is a super slow, super bad way to do this. Recode ASAP
-            out = []
-            for t, row in zip(values.index, values.to_dict(orient='records')):
-                self.components.state.update(row)
-                self.components.t = t
-        
-                for column in return_columns:
-                    func = getattr(self.components, column)
-                    row[column] = func()
-        
-                out.append(row)
-        
-            values = _pd.DataFrame(data=out, index=values.index)[return_columns] #this is ugly
-
-        if addtflag:
-            values = values.iloc[1:] #there is probably a faster way to drop the initial row
-
-        if collect:
-            self.record.append(values)
-        
-        return values
-
-    def get_record(self):
-        """
-        returns the recorded model information
-        """
-        return _pd.concat(self.record)
-    
-    def clear_record(self):
-        """
-        Resets the recorder
-            """
-        self.record = []
-
-
-    def set_components(self, params={}):
-        """
-           sets the equation of a model element matching the dictionary 
-           key to the dictionary value:
-           
-           set({'delay':4})
-           if given a pandas series, allows for interpolation amongst that series.
-           
-           
-        """
-        # Todo:
-        # - Update the function docstring
-        # - Make this able to handle states
-        
-        
-        for key, value in params.iteritems():
-            if isinstance(value, _pd.Series):
-                self.components.__dict__.update({key:self._timeseries_component(value)})
-            else:
-                self.components.__dict__.update({key:self._constant_component(value)})
-    
-    
-    def _timeseries_component(self, series):
-        return lambda: np.interp(self.components.t, series.index, series.values)
-    
-    def _constant_component(self, value):
-        return lambda: value
-
-#def run_togeter(models=[], initial_conditions='original', collect=False)
-#
-# to make this work, we have to be comfortable reaching into a model class, running the integration ourseves, etc
-
 

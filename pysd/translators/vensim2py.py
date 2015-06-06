@@ -1,14 +1,12 @@
 '''
     created: August 13, 2014
-    last update: March 28 2015
+    last update: June 6 2015
     James Houghton <james.p.houghton@gmail.com>
 '''
 import parsimonious
 from parsimonious.nodes import NodeVisitor
 from pysd import functions
-from helpers import *
-import component_class_template
-
+from pysd import builder
 
 
 ###############################################################
@@ -16,14 +14,13 @@ import component_class_template
 #
 # - Feb 16, 2015: brought parsing of full sections of the model into the PEG parser.
 # - March 28, 2015: incorporated parsimonious's node walker to take care of class construction.
+# - June 6, 2015: factored out component class construction code.
 ###############################################################
 
 
 ###############################################################
 #Todo:
 #
-# - parse geometry information
-# - parser can't handle multi-line equations
 # - check that the identifiers discovered are not the same as python keywords
 # - parse excessive spaces out of docstrings
 
@@ -37,11 +34,7 @@ import component_class_template
 # should check that sin/cos are using the same units in vensim and numpy
 # the 'pi' keyword is broken
 
-# are we parsing model control components properly? We may need to change the grammar so that identifiers that if we find an
-# identifier that is a control
-
-# we should factor out the code that constructs the class from the visitors, so that we can share it with the eventual xmile translator.
-
+# are we parsing model control components properly?
 ###############################################################
 
 
@@ -209,11 +202,11 @@ file_grammar = """
 
 class TextParser(NodeVisitor):
     def __init__(self, grammar):
-        class component_class(component_class_template.component_class_template):
+        class Components(builder.ComponentClass):
             __str__ = 'Undefined'
-            state = {} #this is defined as a class variable (not instance) so we can modify its contents before we instantiate. But have to be careful, because if we put it as a class variable in the super class, it messes up the next time we extend the class
-
-        self.component_class = component_class
+            _stocknames = []
+        
+        self.component_class = Components
         self.grammar = parsimonious.Grammar(grammar)
 
     def parse(self, text):
@@ -223,83 +216,31 @@ class TextParser(NodeVisitor):
     ############# 'entry' level translators ############################
     visit_Entry = visit_Component = NodeVisitor.lift_child
 
-    def visit_ModelEntry(self, n, (_1, Component_Identifier, _2, tld1, _3, Unit, _4, tld2, _5, Docstring, _6, pipe, _7)):
+    def visit_ModelEntry(self, n, (_1, Identifier, _2, tld1, _3, Unit, _4, tld2, _5, Docstring, _6, pipe, _7)):
         """
             All we have to do here is add to the docstring of the relevant function the things that arent 
             available at lower levels. The stock/flaux/lookup visitors will take care of adding methods to the class
         """
-        ds = 'Units: %s \n'%Unit + Docstring
-        entry = getattr(self.component_class, Component_Identifier)
-        
-        if hasattr(entry, 'im_func'): #most functions
-            entry.im_func.func_doc += ds
-        else: #the lookups - which are represented as callable classes, instead of functions
-            entry.__doc__ += ds
-
-                         
+        string = 'Units: %s \n'%Unit + Docstring
+        builder.add_to_element_docstring(self.component_class, Identifier, string)
+    
+    
     def visit_Stock(self, n, (Identifier, _1, eq, _2, integ, _3,
                               lparen, _4, NL1, _5, expression, _6,
                               comma, _7, NL2, _8, initial_condition, _9, rparen)):
-
-        #create a place to store the stock's current value
-        self.component_class.state[Identifier] = None
-        
-        #create a 'derivative function' that can be
-        # called by the d_dt boilerplate function and passed to the integrator
-        funcstr = ('def d%s_dt(self):\n'%Identifier +
-                   '    return %s'%expression   )
-        exec funcstr in self.component_class.__dict__
-             
-        #create an 'intialization function' of the form '<stock>_init()' that 
-        # can be called when the model is reset to initialize the state variable
-        funcstr = ('def %s_init(self):\n'%Identifier +
-                   '    return %s'%initial_condition)
-        exec funcstr in self.component_class.__dict__
-        
-        #create a function that points to the state dictionary, to let other
-        # components reference the state without explicitly having to know that
-        # it is a stock. This is the function that gets an elaborated docstring
-        funcstr = ('def %s(self):\n'%Identifier +
-                   '    """    %s = %s \n'%(Identifier, expression) + #include the docstring
-                   '        Initial Value: %s \n'%initial_condition +
-                   '        Type: Stock \n' +
-                   '        Do not overwrite this function\n' +
-                   '    """\n' +
-                   '    return self.state["%s"]'%Identifier)
-        exec funcstr in self.component_class.__dict__
+        builder.add_stock(self.component_class, Identifier, expression, initial_condition)
         return Identifier
     
     
     def visit_Flaux(self, n, (Identifier, _1, eq, SNL, expression)):
-        funcstr = ('def    %s(self):\n'%Identifier +
-                   '    """%s = %s \n'%(Identifier, expression) +
-                   '       Type: Flow or Auxiliary \n ' +
-                   '    """\n' +
-                   '    return %s'%expression)
-        exec funcstr in self.component_class.__dict__
-
+        builder.add_flaux(self.component_class, Identifier, expression)
         return Identifier
     
 
     def visit_Lookup(self, n, (Identifier, _1, lparen, _2, NL1, _3, Range, _4, CopairList, _5, rparen)):
-        """
-            This is pretty complex, as we need to create a function that will be called elsewhere. We've
-            created a structure in which function calls can only come from a very limited set of keywords,
-            but the syntax that we expect to see with lookups is such that the keyword will fail, and the syntax
-            be ambiguous.
-        """
-        # if we want to include range checking, we need to parse the range. for now, lazy...
-        
-        xs, ys = zip(*CopairList)
-        self.component_class.__dict__.update({Identifier:functions.lookup(xs, ys)})
-        
-        #This docstring approach could be improved
-        getattr(self.component_class, Identifier).__doc__ = ('%s is lookup with coordinates:\n%s'%(Identifier, CopairList) +
-                                                             'Type: Flow or Auxiliary \n')
-        
+        builder.add_lookup(self.component_class, Identifier, Range, CopairList)
         return Identifier
-    
-    
+
     
     def visit_Macro(self, n, vc):
         """

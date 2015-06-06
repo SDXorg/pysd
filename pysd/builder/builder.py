@@ -8,11 +8,11 @@
 # so that if the model is modified, the user can see the current state of modifications
 
 import inspect
+from pysd import functions
 
-class component_class_template:
+class ComponentClass:
     """
     This is a template class to be subclassed and fleshed out by the translation tools.
-    The state dictionary should be expanded to include all of the model stocks.
     
     A function should be added for every flow or auxiliary variable, having the name of that 
     variable, taking no parameters, which calculates the value of the variable.
@@ -23,15 +23,20 @@ class component_class_template:
     A function should be added for each stock called <stockname>_init() which calculates
     the (potentially dynamically generated) initial value for the stock.
     
-    
-    
     This docstring will be rewritten and dynamically generated.
+    
+    Example:
+    --------
+    >>> class Components(builder.ComponentClass):
+    >>>     __str__ = 'Undefined'
+    >>>     _stocknames = []
+    
     """
     
     def __init__(self):
+        self.state = dict(zip(self._stocknames, [None]*len(self._stocknames) ))
         self.reset_state()
         self.__doc__ = self.doc()
-        
     
     
     def doc(self):
@@ -48,7 +53,6 @@ class component_class_template:
                         pass
 
         return docstring
-    
     
     def initial_time(self):
         """
@@ -98,4 +102,67 @@ class component_class_template:
             access the time component directly.
         """
         return self.t
+
+
+def add_stock(component_class, identifier, expression, initial_condition):
+    
+    #Add the identifier to the list of stocks, in order
+    component_class._stocknames.append(identifier)
+    component_class._stocknames = sorted(component_class._stocknames)
+    
+    #create a 'derivative function' that can be
+    # called by the d_dt boilerplate function and passed to the integrator
+    funcstr = ('def d%s_dt(self):\n'%identifier +
+               '    return %s'%expression   )
+    exec funcstr in component_class.__dict__
+         
+    #create an 'intialization function' of the form '<stock>_init()' that 
+    # can be called when the model is reset to initialize the state variable
+    funcstr = ('def %s_init(self):\n'%identifier +
+               '    return %s'%initial_condition)
+    exec funcstr in component_class.__dict__
+    
+    #create a function that points to the state dictionary, to let other
+    # components reference the state without explicitly having to know that
+    # it is a stock. This is the function that gets an elaborated docstring
+    funcstr = ('def %s(self):\n'%identifier +
+               '    """    %s = %s \n'%(identifier, expression) + #include the docstring
+               '        Initial Value: %s \n'%initial_condition +
+               '        Type: Stock \n' +
+               '        Do not overwrite this function\n' +
+               '    """\n' +
+               '    return self.state["%s"]'%identifier)
+    exec funcstr in component_class.__dict__
+
+
+def add_flaux(component_class, identifier, expression):
+
+    funcstr = ('def    %s(self):\n'%identifier +
+               '    """%s = %s \n'%(identifier, expression) +
+               '       Type: Flow or Auxiliary \n ' +
+               '    """\n' +
+               '    return %s'%expression)
+    exec funcstr in component_class.__dict__
+
+def add_to_element_docstring(component_class, identifier, string):
+    
+        entry = getattr(component_class, identifier)
+        
+        if hasattr(entry, 'im_func'): #most functions
+            entry.im_func.func_doc += string
+        else: #the lookups - which are represented as callable classes, instead of functions
+            entry.__doc__ += string
+
+def add_lookup(component_class, identifier, range, copair_list):
+    # in the future, we may want to check in bounds for the range. for now, lazy...
+    xs, ys = zip(*copair_list)
+    lookup_func = functions.lookup(xs, ys)
+    lookup_func.__doc__ = \
+            ('%s is lookup with coordinates:\n%s'%(identifier, copair_list) +
+             'Type: Flow or Auxiliary \n')
+    
+    component_class.__dict__.update({identifier:lookup_func})
+
+    
+
 
