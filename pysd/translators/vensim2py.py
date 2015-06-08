@@ -205,6 +205,7 @@ class TextParser(NodeVisitor):
         class Components(builder.ComponentClass):
             __str__ = 'Undefined'
             _stocknames = []
+            _dfuncs = [] #list of derivative functions corresponding to the stocks.
         
         self.component_class = Components
         self.grammar = parsimonious.Grammar(grammar)

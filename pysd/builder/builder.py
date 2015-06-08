@@ -30,6 +30,7 @@ class ComponentClass:
     >>> class Components(builder.ComponentClass):
     >>>     __str__ = 'Undefined'
     >>>     _stocknames = []
+    >>>     _dfuncs = []
     
     """
     
@@ -67,7 +68,6 @@ class ComponentClass:
         
         for key in self.state.keys():
             self.state[key] = eval('self.'+key+'_init()') #set the initial state
-        pass
 
 
     def d_dt(self, state_vector, t):
@@ -76,14 +76,12 @@ class ComponentClass:
             It takes a state vector, sets the state of the system based on that vector,
             and returns a derivative of the state vector
             """
-        sorted_keys = sorted(self.state.keys())
-        
-        for key, newval in zip(sorted_keys,state_vector):
-            self.state[key] = newval
-        
+        state = dict(zip(self._stocknames, state_vector))
+        self.state.update(state)
         self.t = t
         
-        return [eval('self.d'+key+'_dt()') for key in sorted_keys]
+        return [func(self) for func in self._dfuncs]
+    
     
     
     def state_vector(self):
@@ -94,7 +92,8 @@ class ComponentClass:
             It returns the values of the state dictionary, sorted 
             alphabetically by key.
             """
-        return [self.state[key] for key in sorted(self.state.keys())]
+        return [self.state[key] for key in self._stocknames]
+
 
     def time(self):
         """
@@ -105,10 +104,10 @@ class ComponentClass:
 
 
 def add_stock(component_class, identifier, expression, initial_condition):
-    
     #Add the identifier to the list of stocks, in order
     component_class._stocknames.append(identifier)
-    component_class._stocknames = sorted(component_class._stocknames)
+    component_class._stocknames.sort()
+    index = component_class._stocknames.index(identifier)
     
     #create a 'derivative function' that can be
     # called by the d_dt boilerplate function and passed to the integrator
@@ -133,6 +132,8 @@ def add_stock(component_class, identifier, expression, initial_condition):
                '    """\n' +
                '    return self.state["%s"]'%identifier)
     exec funcstr in component_class.__dict__
+    component_class._dfuncs.insert(index, getattr(component_class, 'd%s_dt'%identifier))
+
 
 
 def add_flaux(component_class, identifier, expression):
