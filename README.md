@@ -57,7 +57,7 @@ To return simulation values at timestamps other than the default (specified in t
 
 
 ### Resources
-The [PySD Cookbook](http://jamesphoughton.github.io/PySD-Cookbook/) is a collection of 'standard methods' for doing a variety of data and modeling tasks using PySD. Each 'recipe' covers a particular analysis task (such as model fitting, or Monte Carlo simulation) and is designed such that the user can download a single example file and modify it to suit their needs.
+The [PySD Cookbook](https://github.com/JamesPHoughton/PySD-Cookbook) is a collection of 'standard methods' for doing a variety of data and modeling tasks using PySD. Each 'recipe' covers a particular analysis task (such as model fitting, or Monte Carlo simulation) and is designed such that the user can download a single example file and modify it to suit their needs.
 
 An introductory [paper](https://github.com/JamesPHoughton/pysd/blob/master/docs/PySD%20Intro%20Paper%20Preprint.pdf) gives a general overview of the motivation, structure, and use of PySD.
 
