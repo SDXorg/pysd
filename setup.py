@@ -1,8 +1,11 @@
 from distutils.core import setup
 
+exec(open('pysd/_version.py').read())
+print __version__
+
 setup(
     name='pysd',
-    version='0.2.6',
+    version=__version__,
     author='James Houghton',
     author_email='james.p.houghton@gmail.com',
     packages=['pysd', 'pysd.translators', 'pysd.functions', 'pysd.builder'],

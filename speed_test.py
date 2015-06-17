@@ -1,6 +1,14 @@
 import timeit
+import time
 
-times = {}
+times = { }
+
+###################
+from pysd._version import __version__
+
+times['version'] = __version__
+times['timestamp'] = time.time()
+
 
 ####################
 
@@ -34,6 +42,5 @@ times['run teacup modify params'] = timeit.timeit("model.run(params={'room_tempe
 print 'Run Teacup Mofifying Params:', times['run teacup modify params']
 
 
-
-
-#times
+with open('tests/speedtest_results.json', 'a') as outfile:
+    outfile.write(str(times)+'\n')

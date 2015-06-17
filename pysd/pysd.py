@@ -62,7 +62,7 @@ class pysd:
         return self.components.__str__
     
     def run(self, params={}, return_columns=[], return_timestamps=[],
-                  initial_condition='original', collect=False):
+                  initial_condition='original', collect=False, **intg_kwargs):
         
         """ Simulate the model's behavior over time.
         Return a pandas dataframe with timestamps as rows,
@@ -124,7 +124,8 @@ class pysd:
         res = _odeint(func=self.components.d_dt,
                       y0=self.components.state_vector(),
                       t=tseries,
-                      hmax=self.components.time_step())
+                      **intg_kwargs)
+                      #hmax=self.components.time_step())
         
         state_df = _pd.DataFrame(data=res,
                                  index=tseries,

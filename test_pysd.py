@@ -2,6 +2,8 @@ import pysd
 import unittest
 import inspect
 import pandas as pd
+import numpy as np
+
 
 
 print 'Testing module at location:', pysd.__file__
@@ -101,8 +103,10 @@ class Test_Specific_Models(unittest.TestCase):
         self.assertEqual(model.components.particularly_efflusive_auxilliary_descriptor(),2)
 
     def test_vensim_functions(self):
-        model = pysd.read_vensim('tests/vensim/test_long_variable_names.mdl')
-        self.assertEqual(model.components.particularly_efflusive_auxilliary_descriptor(),2)
+        model = pysd.read_vensim('tests/vensim/test_vensim_functions.mdl')
+        testval = model.run(return_columns=['flow']).loc[10].values
+        self.assertTrue(testval >= 1.556 and testval <= 1.558)
+    
 
     def test_time(self):
         #re: https://github.com/JamesPHoughton/pysd/issues/25
@@ -114,7 +118,7 @@ class Test_Specific_Models(unittest.TestCase):
         model = pysd.read_vensim('tests/vensim/test_multi_views.mdl')
         model.run()
 
-    @unittest.skip("feature not added yet")
+    @unittest.skip("in development")
     def test_delays(self):
         #re: https://github.com/JamesPHoughton/pysd/issues/18
         model = pysd.read_vensim('tests/vensim/test_delays.mdl')
