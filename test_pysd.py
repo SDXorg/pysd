@@ -76,7 +76,7 @@ class Test_PySD(unittest.TestCase):
 
 
 
-class Test_Macro_Stuff(unittest.TestCase):
+class Test_Meta_Stuff(unittest.TestCase):
     """ The tests in this class test pysd's interaction with itself
         and other modules. """
 
@@ -118,7 +118,7 @@ class Test_Specific_Models(unittest.TestCase):
         model = pysd.read_vensim('tests/vensim/test_multi_views.mdl')
         model.run()
 
-    @unittest.skip("in development")
+    #@unittest.skip("in development")
     def test_delays(self):
         #re: https://github.com/JamesPHoughton/pysd/issues/18
         model = pysd.read_vensim('tests/vensim/test_delays.mdl')
