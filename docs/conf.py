@@ -20,7 +20,7 @@ import shlex
 import mock
  
 MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot', 'scipy.stats',
-                'scipy.integrate', 'pandas']
+                'scipy.integrate', 'pandas', 'parsimonious', 'parsimonious.nodes']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.Mock()
 
