@@ -3,3 +3,4 @@
 build/
 *.vdf
 *.2mdl
+tests/vensim/*.py

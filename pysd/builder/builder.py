@@ -7,6 +7,7 @@
 import inspect
 from pysd import functions
 import numpy as np
+from itertools import izip
 
 
 class ComponentClass(object):
@@ -80,8 +81,10 @@ class ComponentClass(object):
             It takes a state vector, sets the state of the system based on that vector,
             and returns a derivative of the state vector
             """
-        state = dict(zip(self._stocknames, state_vector))
+        #state = dict(zip(self._stocknames, state_vector))
+        state = dict(izip(self._stocknames, state_vector)) #izip seems to be about 5% faster
         self.state.update(state)
+        
         self.t = t
         
         #return map(lambda x: x(), self._dfuncs)
