@@ -240,11 +240,11 @@ class TextParser(NodeVisitor):
     def visit_ConCall(self, n, (ConKeyword, _1, lparen, _2, args, _4, rparen)):
         pass
         if ConKeyword == 'DELAY1': #DELAY3(Inflow, Delay)
-            return builder.add_n_delay(self.component_class, args[0], args[1], str(0), 1)
+            return builder.add_n_delay(self.filename, args[0], args[1], str(0), 1)
         elif ConKeyword == 'DELAY3':
-            return builder.add_n_delay(self.component_class, args[0], args[1], str(0), 3)
+            return builder.add_n_delay(self.filename, args[0], args[1], str(0), 3)
         elif ConKeyword == 'DELAY N':#DELAY N(Inflow, Delay, init, order)
-            return builder.add_n_delay(self.component_class, args[0], args[1], args[2], args[3])
+            return builder.add_n_delay(self.filename, args[0], args[1], args[2], args[3])
         elif ConKeyword == 'SMOOTH':
             pass
         elif ConKeyword == 'SMOOT3':

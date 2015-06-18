@@ -168,6 +168,7 @@ def add_flaux(filename, identifier, expression):
     with open(filename, 'a') as outfile:
         outfile.write(funcstr)
 
+    return 'self.%s()'%identifier
 
 
 def add_to_element_docstring(component_class, identifier, string):
@@ -228,11 +229,11 @@ def add_n_delay(filename, input, delay_time, initial_value, order):
         flowlist.append(add_flaux(filename,
                                   identifier='%s_flow_%i_of_%i'%(delay_name, i, order+1),
                                   expression='self.%s_stock_%i_of_%i()/(1.*%s/%i)'%(
-                                              delay_name, i, order+1, delay_time, order)))
+                                              delay_name, i-1, order, delay_time, order)))
 
     for i in range(1, order+1):
         add_stock(filename,
-                  identifier='%s_stock_%i_of_%i'%(delay_name, i, order+1),
+                  identifier='%s_stock_%i_of_%i'%(delay_name, i, order),
                   expression=flowlist[i-1]+' - '+flowlist[i],
                   initial_condition='%s * (%s / %i)'%(initial_value, delay_time, order))
 
