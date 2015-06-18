@@ -3,8 +3,8 @@ PySD
 
 System Dynamics Modeling in Python
 
-### Status
-Version 0.2.1 complete
+See the [Full(er) Documentation](http://pysd.readthedocs.org/en/latest/)
+
 
 ### Installation
 To install via python package index:
