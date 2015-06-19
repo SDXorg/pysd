@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 PySD
-================================
+====
 System Dynamics Modeling in Python
 
 
@@ -12,11 +12,14 @@ Contents:
 
 .. toctree::
    :maxdepth: 2
+   :glob:
 
    installation
    basic_usage
-   functions   
-
+   advanced_usage
+   functions
+   development/developer
+   development/internal_functions
 
 Indices and tables
 ==================

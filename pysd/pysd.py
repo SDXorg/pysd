@@ -7,7 +7,7 @@ James Houghton <james.p.houghton@gmail.com>
 
 #pysd specific imports
 import translators as _translators
-import functions
+#import functions
 
 #third party imports
 from scipy.integrate import odeint as _odeint
@@ -49,7 +49,9 @@ def read_XMILE(XMILE_file):
 def read_vensim(mdl_file):
     """ Construct a model from Vensim .mdl file """
     component_class = _translators.import_vensim(mdl_file)
-    return pysd(component_class)
+    model = pysd(component_class)
+    model.__str__ = 'Import of '+mdl_file
+    return model
 
 
 class pysd:
@@ -74,8 +76,8 @@ class pysd:
         params : dictionary
             Keys are strings of model component names.
             Values are numeric or pandas Series.
-                Numeric values represent constants over the model integration.
-                Timeseries will be interpolated to give time-varying input.
+            Numeric values represent constants over the model integration.
+            Timeseries will be interpolated to give time-varying input.
         
         return_timestamps : list, numeric, numpy array(1-D)
             Timestamps in model execution at which to return state information.
@@ -86,10 +88,22 @@ class pysd:
             Defaults to model stock values.
             
         initial_condition : 'original'/'o', 'current'/'c', (t, {state})
-            'original' (default) uses model-file specified initial condition
-            'current' uses the state of the model after the previous execution
-            (t, {state}) lets the user specify a starting time and (possibly partial)
-                list of stock values.
+            The starting time, and the state of the system (the values of all the stocks) 
+            at that starting time.
+            
+            * 'original' (default) uses model-file specified initial condition
+            * 'current' uses the state of the model after the previous execution
+            * (t, {state}) lets the user specify a starting time and (possibly partial)
+              list of stock values.
+                
+        collect: binary (T/F)
+            When running multiple simulations, collect the results in a way 
+            that we can access down the road.
+            
+        intg_kwargs: keyword arguments for odeint
+            Provides precice control over the integrator by passing through 
+            keyword arguments to scipy's odeint function. The most interesting
+            of these will be `tcrit`, `hmax`, `mxstep`.
         
             
         Examples
@@ -105,6 +119,7 @@ class pysd:
         --------
         pysd.set_components : handles setting model parameters
         pysd.set_initial_condition : handles setting initial conditions
+        
         """
         
         if params:
@@ -143,11 +158,17 @@ class pysd:
 
 
     def get_record(self):
-        """ Return the recorded model information. """
+        """ Return the recorded model information. 
+        
+        >>> model.get_record()
+        """
         return _pd.concat(self.record)
     
     def clear_record(self):
-        """ Reset the recorder. """
+        """ Reset the recorder. 
+        
+        >>> model.clear_record()
+        """
         self.record = []
 
 
@@ -155,14 +176,14 @@ class pysd:
         """ Set the value of exogenous model elements.
         Element values can be passed as keyword=value pairs in the function call.
         Values can be numeric type or pandas Series.
-            Series will be interpolated by integrator.
+        Series will be interpolated by integrator.
             
         Examples
         --------
-        >>> set_components(birth_rate=10)
-            
         >>> br = pandas.Series(index=range(30), values=np.sin(range(30))
         >>> set_components(birth_rate=br)
+        >>> set_components(birth_rate=10)
+
         """
         updates_dict = {}
         for key, value in params.iteritems():
@@ -175,14 +196,19 @@ class pysd:
 
 
     def extend_dataframe(self, state_df, return_columns):
-        """ Calculates model values at given system states """
+        """ Calculates model values at given system states 
+        
+        This is primarily an internal method used by the run function
+        
+        
+        """
         #there may be a better way to use the integrator that lets us report
         #more values than just the stocks. In the meantime, we have to go
         #through the returned values again, set up the model, and measure them.
         
         def get_values(row):
             t = row.name
-            state = dict(row)
+            state = dict(row[self.components.state.keys()])
             self.set_state(t,state)
         
             return_vals = {}
@@ -196,16 +222,37 @@ class pysd:
         
 
     def set_state(self, t, state):
-        """ Set the system state 
-        t : numeric, system time
-        state: complete dictionary of system state
+        """ Set the system state.
+        
+        t : numeric
+            The system time
+        
+        state: dict
+            Idelly a complete dictionary of system state, but a partial 
+            state dictionary will work if you're confident that the remaining
+            state elements are correct.
         """
         self.components.t = t
         self.components.state.update(state)
 
 
     def set_initial_condition(self, initial_condition):
-        """ Set the initial conditions of the integration """
+        """ Set the initial conditions of the integration.
+        There are several ways to do this:
+            
+        * 'original'/'o' : Reset to the model-file specified initial condition.
+        * 'current'/'c' : Use the current state of the system to start
+          the next simulation. This includes the simulation time, so this
+          initial condition must be paired with new return timestamps
+        * (t, {state}) : Lets the user specify a starting time and (possibly partial) list of stock values.
+              
+        >>> model.set_initial_condition('original')
+        >>> model.set_initial_condition('current')
+        >>> model.set_initial_condition( (10,{teacup_temperature:50}) )
+        
+        See also:
+        pysd.set_state()
+        """
     
         if isinstance(initial_condition, tuple):
             self.set_state(*initial_condition) #we should probably check the values more than just seeing if they are a tuple.
@@ -246,6 +293,9 @@ def help():
     print_supported_vensim_functions()
 
 def print_supported_vensim_functions():
+    """prints a list of all of the vensim functions that are supported
+    by the translator.
+    """
     print 'Vensim'.ljust(25) + 'Python'
     print ''.ljust(50,'-')
     for key, value in _translators.vensim2py.dictionary.iteritems():

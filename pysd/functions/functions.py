@@ -9,6 +9,7 @@ class Functions():
 
 
     def if_then_else(self, condition, val_if_true, val_if_false):
+        """Replicates vensim's IF THEN ELSE function. """
         if condition:
             return val_if_true
         else:

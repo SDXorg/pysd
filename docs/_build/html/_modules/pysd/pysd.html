@@ -1,42 +1,150 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
 
-<html xmlns="http://www.w3.org/1999/xhtml">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    
-    <title>pysd.pysd &mdash; PySD 0.3.0 documentation</title>
-    
-    <link rel="stylesheet" href="../../_static/alabaster.css" type="text/css" />
-    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-    
-    <script type="text/javascript">
-      var DOCUMENTATION_OPTIONS = {
-        URL_ROOT:    '../../',
-        VERSION:     '0.3.0',
-        COLLAPSE_INDEX: false,
-        FILE_SUFFIX: '.html',
-        HAS_SOURCE:  true
-      };
-    </script>
-    <script type="text/javascript" src="../../_static/jquery.js"></script>
-    <script type="text/javascript" src="../../_static/underscore.js"></script>
-    <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-    <link rel="top" title="PySD 0.3.0 documentation" href="../../index.html" />
-    <link rel="up" title="Module code" href="../index.html" />
-   
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
   
-  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pysd.pysd &mdash; PySD 0.3.0 documentation</title>
+  
 
-  </head>
-  <body role="document">  
+  
+  
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="PySD 0.3.0 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="../../index.html" class="icon icon-home"> PySD
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#installing-via-pip">Installing via pip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#installing-from-source">Installing from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#required-dependencies">Required Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#optional-dependencies">Optional Dependencies</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../basic_usage.html">Basic Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../basic_usage.html#importing-a-model-and-getting-started">Importing a model and getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../basic_usage.html#running-the-model">Running the Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../basic_usage.html#outputting-various-run-information">Outputting various run information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../basic_usage.html#setting-parameter-values">Setting parameter values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../basic_usage.html#setting-simulation-initial-conditions">Setting simulation initial conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../basic_usage.html#querying-current-values">Querying current values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../basic_usage.html#collecting-a-history-of-returned-values">Collecting a history of returned values</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../advanced_usage.html">Advanced Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../advanced_usage.html#replacing-model-components-with-more-complex-objects">Replacing model components with more complex objects</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../functions.html">User Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/developer.html">Developer Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../development/developer.html#motivation-the-coming-of-age-of-big-data">Motivation: The (coming of) age of Big Data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../development/developer.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../development/developer.html#structure-of-the-pysd-module">Structure of the PySD module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../development/developer.html#builder">Builder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../development/developer.html#translation">Translation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../development/developer.html#the-model-class">The model class</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../development/internal_functions.html">Internal Functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../development/internal_functions.html#special-functions-needed-for-model-execution">Special functions needed for model execution</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../development/internal_functions.html#building-the-python-model-file">Building the python model file</a></li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">PySD</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+    <li>pysd.pysd</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
             
   <h1>Source code for pysd.pysd</h1><div class="highlight"><pre>
 <span class="sd">&#39;&#39;&#39;</span>
@@ -48,7 +156,7 @@
 
 <span class="c">#pysd specific imports</span>
 <span class="kn">import</span> <span class="nn">translators</span> <span class="kn">as</span> <span class="nn">_translators</span>
-<span class="kn">import</span> <span class="nn">functions</span>
+<span class="c">#import functions</span>
 
 <span class="c">#third party imports</span>
 <span class="kn">from</span> <span class="nn">scipy.integrate</span> <span class="kn">import</span> <span class="n">odeint</span> <span class="k">as</span> <span class="n">_odeint</span>
@@ -90,7 +198,9 @@
 <div class="viewcode-block" id="read_vensim"><a class="viewcode-back" href="../../functions.html#pysd.read_vensim">[docs]</a><span class="k">def</span> <span class="nf">read_vensim</span><span class="p">(</span><span class="n">mdl_file</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot; Construct a model from Vensim .mdl file &quot;&quot;&quot;</span>
     <span class="n">component_class</span> <span class="o">=</span> <span class="n">_translators</span><span class="o">.</span><span class="n">import_vensim</span><span class="p">(</span><span class="n">mdl_file</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">pysd</span><span class="p">(</span><span class="n">component_class</span><span class="p">)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">pysd</span><span class="p">(</span><span class="n">component_class</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">__str__</span> <span class="o">=</span> <span class="s">&#39;Import of &#39;</span><span class="o">+</span><span class="n">mdl_file</span>
+    <span class="k">return</span> <span class="n">model</span>
 
 </div>
 <div class="viewcode-block" id="pysd"><a class="viewcode-back" href="../../functions.html#pysd.pysd">[docs]</a><span class="k">class</span> <span class="nc">pysd</span><span class="p">:</span>
@@ -115,8 +225,8 @@
 <span class="sd">        params : dictionary</span>
 <span class="sd">            Keys are strings of model component names.</span>
 <span class="sd">            Values are numeric or pandas Series.</span>
-<span class="sd">                Numeric values represent constants over the model integration.</span>
-<span class="sd">                Timeseries will be interpolated to give time-varying input.</span>
+<span class="sd">            Numeric values represent constants over the model integration.</span>
+<span class="sd">            Timeseries will be interpolated to give time-varying input.</span>
 <span class="sd">        </span>
 <span class="sd">        return_timestamps : list, numeric, numpy array(1-D)</span>
 <span class="sd">            Timestamps in model execution at which to return state information.</span>
@@ -127,10 +237,22 @@
 <span class="sd">            Defaults to model stock values.</span>
 <span class="sd">            </span>
 <span class="sd">        initial_condition : &#39;original&#39;/&#39;o&#39;, &#39;current&#39;/&#39;c&#39;, (t, {state})</span>
-<span class="sd">            &#39;original&#39; (default) uses model-file specified initial condition</span>
-<span class="sd">            &#39;current&#39; uses the state of the model after the previous execution</span>
-<span class="sd">            (t, {state}) lets the user specify a starting time and (possibly partial)</span>
-<span class="sd">                list of stock values.</span>
+<span class="sd">            The starting time, and the state of the system (the values of all the stocks) </span>
+<span class="sd">            at that starting time.</span>
+<span class="sd">            </span>
+<span class="sd">            * &#39;original&#39; (default) uses model-file specified initial condition</span>
+<span class="sd">            * &#39;current&#39; uses the state of the model after the previous execution</span>
+<span class="sd">            * (t, {state}) lets the user specify a starting time and (possibly partial)</span>
+<span class="sd">              list of stock values.</span>
+<span class="sd">                </span>
+<span class="sd">        collect: binary (T/F)</span>
+<span class="sd">            When running multiple simulations, collect the results in a way </span>
+<span class="sd">            that we can access down the road.</span>
+<span class="sd">            </span>
+<span class="sd">        intg_kwargs: keyword arguments for odeint</span>
+<span class="sd">            Provides precice control over the integrator by passing through </span>
+<span class="sd">            keyword arguments to scipy&#39;s odeint function. The most interesting</span>
+<span class="sd">            of these will be `tcrit`, `hmax`, `mxstep`.</span>
 <span class="sd">        </span>
 <span class="sd">            </span>
 <span class="sd">        Examples</span>
@@ -146,6 +268,7 @@
 <span class="sd">        --------</span>
 <span class="sd">        pysd.set_components : handles setting model parameters</span>
 <span class="sd">        pysd.set_initial_condition : handles setting initial conditions</span>
+<span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
         
         <span class="k">if</span> <span class="n">params</span><span class="p">:</span>
@@ -184,11 +307,17 @@
 
 </div>
 <div class="viewcode-block" id="pysd.get_record"><a class="viewcode-back" href="../../functions.html#pysd.pysd.get_record">[docs]</a>    <span class="k">def</span> <span class="nf">get_record</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Return the recorded model information. &quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot; Return the recorded model information. </span>
+<span class="sd">        </span>
+<span class="sd">        &gt;&gt;&gt; model.get_record()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">_pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">record</span><span class="p">)</span>
     </div>
 <div class="viewcode-block" id="pysd.clear_record"><a class="viewcode-back" href="../../functions.html#pysd.pysd.clear_record">[docs]</a>    <span class="k">def</span> <span class="nf">clear_record</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Reset the recorder. &quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot; Reset the recorder. </span>
+<span class="sd">        </span>
+<span class="sd">        &gt;&gt;&gt; model.clear_record()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">record</span> <span class="o">=</span> <span class="p">[]</span>
 
 </div>
@@ -196,14 +325,14 @@
         <span class="sd">&quot;&quot;&quot; Set the value of exogenous model elements.</span>
 <span class="sd">        Element values can be passed as keyword=value pairs in the function call.</span>
 <span class="sd">        Values can be numeric type or pandas Series.</span>
-<span class="sd">            Series will be interpolated by integrator.</span>
+<span class="sd">        Series will be interpolated by integrator.</span>
 <span class="sd">            </span>
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
-<span class="sd">        &gt;&gt;&gt; set_components(birth_rate=10)</span>
-<span class="sd">            </span>
 <span class="sd">        &gt;&gt;&gt; br = pandas.Series(index=range(30), values=np.sin(range(30))</span>
 <span class="sd">        &gt;&gt;&gt; set_components(birth_rate=br)</span>
+<span class="sd">        &gt;&gt;&gt; set_components(birth_rate=10)</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="n">updates_dict</span> <span class="o">=</span> <span class="p">{}</span>
         <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
@@ -216,14 +345,19 @@
 
 </div>
 <div class="viewcode-block" id="pysd.extend_dataframe"><a class="viewcode-back" href="../../functions.html#pysd.pysd.extend_dataframe">[docs]</a>    <span class="k">def</span> <span class="nf">extend_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_df</span><span class="p">,</span> <span class="n">return_columns</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Calculates model values at given system states &quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot; Calculates model values at given system states </span>
+<span class="sd">        </span>
+<span class="sd">        This is primarily an internal method used by the run function</span>
+<span class="sd">        </span>
+<span class="sd">        </span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="c">#there may be a better way to use the integrator that lets us report</span>
         <span class="c">#more values than just the stocks. In the meantime, we have to go</span>
         <span class="c">#through the returned values again, set up the model, and measure them.</span>
         
         <span class="k">def</span> <span class="nf">get_values</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
             <span class="n">t</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">name</span>
-            <span class="n">state</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+            <span class="n">state</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">keys</span><span class="p">()])</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="n">t</span><span class="p">,</span><span class="n">state</span><span class="p">)</span>
         
             <span class="n">return_vals</span> <span class="o">=</span> <span class="p">{}</span>
@@ -237,16 +371,37 @@
         
 </div>
 <div class="viewcode-block" id="pysd.set_state"><a class="viewcode-back" href="../../functions.html#pysd.pysd.set_state">[docs]</a>    <span class="k">def</span> <span class="nf">set_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Set the system state </span>
-<span class="sd">        t : numeric, system time</span>
-<span class="sd">        state: complete dictionary of system state</span>
+        <span class="sd">&quot;&quot;&quot; Set the system state.</span>
+<span class="sd">        </span>
+<span class="sd">        t : numeric</span>
+<span class="sd">            The system time</span>
+<span class="sd">        </span>
+<span class="sd">        state: dict</span>
+<span class="sd">            Idelly a complete dictionary of system state, but a partial </span>
+<span class="sd">            state dictionary will work if you&#39;re confident that the remaining</span>
+<span class="sd">            state elements are correct.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="n">t</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
 
 </div>
 <div class="viewcode-block" id="pysd.set_initial_condition"><a class="viewcode-back" href="../../functions.html#pysd.pysd.set_initial_condition">[docs]</a>    <span class="k">def</span> <span class="nf">set_initial_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial_condition</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Set the initial conditions of the integration &quot;&quot;&quot;</span>
+        <span class="sd">&quot;&quot;&quot; Set the initial conditions of the integration.</span>
+<span class="sd">        There are several ways to do this:</span>
+<span class="sd">            </span>
+<span class="sd">        * &#39;original&#39;/&#39;o&#39; : Reset to the model-file specified initial condition.</span>
+<span class="sd">        * &#39;current&#39;/&#39;c&#39; : Use the current state of the system to start</span>
+<span class="sd">          the next simulation. This includes the simulation time, so this</span>
+<span class="sd">          initial condition must be paired with new return timestamps</span>
+<span class="sd">        * (t, {state}) : Lets the user specify a starting time and (possibly partial) list of stock values.</span>
+<span class="sd">              </span>
+<span class="sd">        &gt;&gt;&gt; model.set_initial_condition(&#39;original&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; model.set_initial_condition(&#39;current&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; model.set_initial_condition( (10,{teacup_temperature:50}) )</span>
+<span class="sd">        </span>
+<span class="sd">        See also:</span>
+<span class="sd">        pysd.set_state()</span>
+<span class="sd">        &quot;&quot;&quot;</span>
     
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_condition</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="o">*</span><span class="n">initial_condition</span><span class="p">)</span> <span class="c">#we should probably check the values more than just seeing if they are a tuple.</span>
@@ -287,6 +442,9 @@
     <span class="n">print_supported_vensim_functions</span><span class="p">()</span>
 
 <span class="k">def</span> <span class="nf">print_supported_vensim_functions</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;prints a list of all of the vensim functions that are supported</span>
+<span class="sd">    by the translator.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">print</span> <span class="s">&#39;Vensim&#39;</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;Python&#39;</span>
     <span class="k">print</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span><span class="s">&#39;-&#39;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_translators</span><span class="o">.</span><span class="n">vensim2py</span><span class="o">.</span><span class="n">dictionary</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
@@ -294,46 +452,60 @@
 </pre></div>
 
           </div>
-        </div>
-      </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper"><div class="relations">
-<h3>Related Topics</h3>
-<ul>
-  <li><a href="../../index.html">Documentation overview</a><ul>
-  <li><a href="../index.html">Module code</a><ul>
-  </ul></li>
-  </ul></li>
-</ul>
-</div>
-<div id="searchbox" style="display: none" role="search">
-  <h3>Quick search</h3>
-    <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" />
-      <input type="submit" value="Go" />
-      <input type="hidden" name="check_keywords" value="yes" />
-      <input type="hidden" name="area" value="default" />
-    </form>
-    <p class="searchtip" style="font-size: 90%">
-    Enter search terms or a module, class or function name.
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, James Houghton.
     </p>
-</div>
-<script type="text/javascript">$('#searchbox').show(0);</script>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
         </div>
       </div>
-      <div class="clearer"></div>
-    </div>
-    <div class="footer">
-      &copy;2015, James Houghton.
-      
-      |
-      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.3.1</a>
-      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.5</a>
-      
-    </div>
 
-    
+    </section>
 
-    
-  </body>
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.3.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
 </html>

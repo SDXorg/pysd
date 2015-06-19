@@ -1,3 +1,5 @@
 {'load teacup': 0.037853310108184816, 'run teacup modify params': 0.0005658998489379883, 'timestamp': 1434549779.28975, 'run teacup baseline': 0.0005028769969940186, 'version': '0.3.0', 'import': 0.00011143922805786133}
 {'load teacup': 0.03805053949356079, 'run teacup modify params': 0.0005696699619293213, 'timestamp': 1434549789.435706, 'run teacup baseline': 0.0004908139705657959, 'version': '0.3.0', 'import': 8.753061294555664e-05}
 {'load teacup': 0.03747905969619751, 'run teacup modify params': 0.000566490888595581, 'timestamp': 1434573980.06803, 'run teacup baseline': 0.00047881007194519045, 'version': '0.3.0', 'import': 9.690046310424805e-05}
+{'load teacup': 0.03485664129257202, 'run teacup modify params': 0.0005416679382324219, 'timestamp': 1434732405.951639, 'run teacup baseline': 0.00048586106300354, 'version': '0.3.0', 'import': 0.00010151147842407226}
+{'load teacup': 0.035723378658294676, 'run teacup modify params': 0.000568547010421753, 'timestamp': 1434732421.050234, 'run teacup baseline': 0.0004905781745910645, 'version': '0.3.0', 'import': 0.00010200023651123047}

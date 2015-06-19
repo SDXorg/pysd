@@ -47,7 +47,7 @@ class Test_PySD(unittest.TestCase):
         #re: https://github.com/JamesPHoughton/pysd/issues/26
         result = self.model.run(return_columns=['room_temperature','teacup_temperature'])
         self.assertEqual(set(result.columns), set(['room_temperature','teacup_temperature']))
-        #self.model.run(return_columns='room_temperature')
+        #self.model.run(return_columns='room_temperature') #still to develop
 
 
     def test_initial_conditions(self):
@@ -73,6 +73,14 @@ class Test_PySD(unittest.TestCase):
         values = self.model.run(params={'room_temperature':temp_timeseries},
                                 return_columns=['teacup_temperature', 'room_temperature'])
         self.assertEqual(values['room_temperature'].loc[29], temp_timeseries.iloc[-1])
+
+    @unittest.skip("in development")
+    def test_docs(self):
+        #test that the model prints the documentation
+        print model #tests model.__str__
+        print model.doc() #tests the function we wrote
+        model.doc(short=True) #tests condensed model function printing.
+        pass
 
 
 
@@ -118,7 +126,6 @@ class Test_Specific_Models(unittest.TestCase):
         model = pysd.read_vensim('tests/vensim/test_multi_views.mdl')
         model.run()
 
-    #@unittest.skip("in development")
     def test_delays(self):
         #re: https://github.com/JamesPHoughton/pysd/issues/18
         model = pysd.read_vensim('tests/vensim/test_delays.mdl')
