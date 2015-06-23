@@ -1,6 +1,6 @@
 Installation
 ============
-/Users/houghton/Google_Drive/Academic Projects/PYSD/pysd/docs/installation.rst
+
 Installing via pip
 ------------------
 To install the PySD package from the Python package index into an established
