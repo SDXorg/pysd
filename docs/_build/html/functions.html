@@ -31,7 +31,7 @@
 
   
     <link rel="top" title="PySD 0.3.0 documentation" href="index.html"/>
-        <link rel="next" title="Translation" href="translation.html"/>
+        <link rel="next" title="Developer Documentation" href="development/developer.html"/>
         <link rel="prev" title="Advanced Usage" href="advanced_usage.html"/> 
 
   
@@ -95,7 +95,6 @@
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">User Functions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="translation.html">Translation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="development/developer.html">Developer Documentation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="development/developer.html#motivation-the-coming-of-age-of-big-data">Motivation: The (coming of) age of Big Data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="development/developer.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
@@ -110,6 +109,11 @@
 <li class="toctree-l1"><a class="reference internal" href="development/internal_functions.html">Internal Functions</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="development/internal_functions.html#special-functions-needed-for-model-execution">Special functions needed for model execution</a></li>
 <li class="toctree-l2"><a class="reference internal" href="development/internal_functions.html#building-the-python-model-file">Building the python model file</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="development/translation.html">Translation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="development/translation.html#types">Types</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/translation.html#functions">Functions</a></li>
 </ul>
 </li>
 </ul>
@@ -157,130 +161,10 @@
 <dd><p>Construct a model from Vensim .mdl file</p>
 </dd></dl>
 
-<dl class="class">
+<dl class="attribute">
 <dt id="pysd.pysd">
-<em class="property">class </em><code class="descclassname">pysd.</code><code class="descname">pysd</code><span class="sig-paren">(</span><em>component_class</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#pysd"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.pysd" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
-<dt id="pysd.pysd.clear_record">
-<code class="descname">clear_record</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#pysd.clear_record"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.pysd.clear_record" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reset the recorder.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">clear_record</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysd.pysd.extend_dataframe">
-<code class="descname">extend_dataframe</code><span class="sig-paren">(</span><em>state_df</em>, <em>return_columns</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#pysd.extend_dataframe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.pysd.extend_dataframe" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates model values at given system states</p>
-<p>This is primarily an internal method used by the run function</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysd.pysd.get_record">
-<code class="descname">get_record</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#pysd.get_record"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.pysd.get_record" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the recorded model information.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">get_record</span><span class="p">()</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysd.pysd.run">
-<code class="descname">run</code><span class="sig-paren">(</span><em>params={}</em>, <em>return_columns=[]</em>, <em>return_timestamps=[]</em>, <em>initial_condition='original'</em>, <em>collect=False</em>, <em>**intg_kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#pysd.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.pysd.run" title="Permalink to this definition">¶</a></dt>
-<dd><p>Simulate the model&#8217;s behavior over time.
-Return a pandas dataframe with timestamps as rows,
-model elements as columns.</p>
-<dl class="docutils">
-<dt>params <span class="classifier-delimiter">:</span> <span class="classifier">dictionary</span></dt>
-<dd>Keys are strings of model component names.
-Values are numeric or pandas Series.
-Numeric values represent constants over the model integration.
-Timeseries will be interpolated to give time-varying input.</dd>
-<dt>return_timestamps <span class="classifier-delimiter">:</span> <span class="classifier">list, numeric, numpy array(1-D)</span></dt>
-<dd>Timestamps in model execution at which to return state information.
-Defaults to model-file specified timesteps.</dd>
-<dt>return_columns <span class="classifier-delimiter">:</span> <span class="classifier">list of string model component names</span></dt>
-<dd>Returned dataframe will have corresponding columns.
-Defaults to model stock values.</dd>
-<dt>initial_condition <span class="classifier-delimiter">:</span> <span class="classifier">&#8216;original&#8217;/&#8217;o&#8217;, &#8216;current&#8217;/&#8217;c&#8217;, (t, {state})</span></dt>
-<dd><p class="first">The starting time, and the state of the system (the values of all the stocks) 
-at that starting time.</p>
-<ul class="last simple">
-<li>&#8216;original&#8217; (default) uses model-file specified initial condition</li>
-<li>&#8216;current&#8217; uses the state of the model after the previous execution</li>
-<li>(t, {state}) lets the user specify a starting time and (possibly partial)
-list of stock values.</li>
-</ul>
-</dd>
-<dt>collect: binary (T/F)</dt>
-<dd>When running multiple simulations, collect the results in a way 
-that we can access down the road.</dd>
-<dt>intg_kwargs: keyword arguments for odeint</dt>
-<dd>Provides precice control over the integrator by passing through 
-keyword arguments to scipy&#8217;s odeint function. The most interesting
-of these will be <cite>tcrit</cite>, <cite>hmax</cite>, <cite>mxstep</cite>.</dd>
-</dl>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;exogenous_constant&#39;</span><span class="p">:</span><span class="mi">42</span><span class="p">})</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;exogenous_variable&#39;</span><span class="p">:</span><span class="n">timeseries_input</span><span class="p">})</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">return_timestamps</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mf">3.1415</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">10</span><span class="p">])</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">return_timestamps</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">return_timestamps</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">20</span><span class="p">))</span>
-</pre></div>
-</div>
-<p>pysd.set_components : handles setting model parameters
-pysd.set_initial_condition : handles setting initial conditions</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysd.pysd.set_components">
-<code class="descname">set_components</code><span class="sig-paren">(</span><em>params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#pysd.set_components"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.pysd.set_components" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the value of exogenous model elements.
-Element values can be passed as keyword=value pairs in the function call.
-Values can be numeric type or pandas Series.
-Series will be interpolated by integrator.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">br</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">),</span> <span class="n">values</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">set_components</span><span class="p">(</span><span class="n">birth_rate</span><span class="o">=</span><span class="n">br</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">set_components</span><span class="p">(</span><span class="n">birth_rate</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-</pre></div>
-</div>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysd.pysd.set_initial_condition">
-<code class="descname">set_initial_condition</code><span class="sig-paren">(</span><em>initial_condition</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#pysd.set_initial_condition"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.pysd.set_initial_condition" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the initial conditions of the integration.
-There are several ways to do this:</p>
-<ul class="simple">
-<li>&#8216;original&#8217;/&#8217;o&#8217; : Reset to the model-file specified initial condition.</li>
-<li>&#8216;current&#8217;/&#8217;c&#8217; : Use the current state of the system to start
-the next simulation. This includes the simulation time, so this
-initial condition must be paired with new return timestamps</li>
-<li>(t, {state}) : Lets the user specify a starting time and (possibly partial) list of stock values.</li>
-</ul>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">set_initial_condition</span><span class="p">(</span><span class="s">&#39;original&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">set_initial_condition</span><span class="p">(</span><span class="s">&#39;current&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">set_initial_condition</span><span class="p">(</span> <span class="p">(</span><span class="mi">10</span><span class="p">,{</span><span class="n">teacup_temperature</span><span class="p">:</span><span class="mi">50</span><span class="p">})</span> <span class="p">)</span>
-</pre></div>
-</div>
-<p>See also:
-pysd.set_state()</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysd.pysd.set_state">
-<code class="descname">set_state</code><span class="sig-paren">(</span><em>t</em>, <em>state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#pysd.set_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.pysd.set_state" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the system state.</p>
-<dl class="docutils">
-<dt>t <span class="classifier-delimiter">:</span> <span class="classifier">numeric</span></dt>
-<dd>The system time</dd>
-<dt>state: dict</dt>
-<dd>Idelly a complete dictionary of system state, but a partial 
-state dictionary will work if you&#8217;re confident that the remaining
-state elements are correct.</dd>
-</dl>
-</dd></dl>
-
+<code class="descclassname">pysd.</code><code class="descname">pysd</code><a class="headerlink" href="#pysd.pysd" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#pysd.pysd" title="pysd.pysd"><code class="xref py py-class docutils literal"><span class="pre">pysd.pysd</span></code></a></p>
 </dd></dl>
 
 </div>
@@ -291,7 +175,7 @@ state elements are correct.</dd>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="translation.html" class="btn btn-neutral float-right" title="Translation" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="development/developer.html" class="btn btn-neutral float-right" title="Developer Documentation" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="advanced_usage.html" class="btn btn-neutral" title="Advanced Usage" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>

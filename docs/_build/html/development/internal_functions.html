@@ -94,7 +94,6 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../functions.html">User Functions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../translation.html">Translation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="developer.html">Developer Documentation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="developer.html#motivation-the-coming-of-age-of-big-data">Motivation: The (coming of) age of Big Data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="developer.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
@@ -176,7 +175,11 @@
 <dl class="method">
 <dt id="pysd.functions.Functions.pulse">
 <code class="descname">pulse</code><span class="sig-paren">(</span><em>start</em>, <em>duration</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/functions/functions.html#Functions.pulse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.functions.Functions.pulse" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Implements vensim&#8217;s PULSE function</p>
+<p>In range [-inf, start) returns 0
+In range [start, start+duration) returns 1
+In range [start+duration, +inf] returns 0</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="pysd.functions.Functions.pulse_train">
@@ -191,7 +194,10 @@
 <dl class="method">
 <dt id="pysd.functions.Functions.step">
 <code class="descname">step</code><span class="sig-paren">(</span><em>value</em>, <em>tstep</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/functions/functions.html#Functions.step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.functions.Functions.step" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>&#8221; Impliments vensim&#8217;s STEP function</p>
+<p>In range [-inf, tstep) returns 0
+In range [tstep, +inf] returns <cite>value</cite></p>
+</dd></dl>
 
 </dd></dl>
 
@@ -270,7 +276,7 @@ the vensim model file or XMILE model file will be implemented as a python class.
 for the initial condition.</p>
 <dl class="docutils">
 <dt>identifier: &lt;string&gt; valid python identifier</dt>
-<dd>Our translators are responsible for translating the model identifiers into 
+<dd>Our translators are responsible for translating the model identifiers into
 something that python can use as a function name.</dd>
 <dt>expression: &lt;string&gt;</dt>
 <dd>Note that these expressions will be added as a function body within the model class.
@@ -288,7 +294,7 @@ is initialized. This may be a constant, or a call to other model elements.</dd>
 <dd><p>Adds a flow or auxiliary element to the model.</p>
 <dl class="docutils">
 <dt>identifier: &lt;string&gt; valid python identifier</dt>
-<dd>Our translators are responsible for translating the model identifiers into 
+<dd>Our translators are responsible for translating the model identifiers into
 something that python can use as a function name.</dd>
 <dt>expression: &lt;string&gt;</dt>
 <dd>Note that these expressions will be added as a function body within the model class.
@@ -299,12 +305,12 @@ They need to be written with with appropriate syntax, ie:
 
 <dl class="function">
 <dt id="pysd.builder.add_lookup">
-<code class="descclassname">pysd.builder.</code><code class="descname">add_lookup</code><span class="sig-paren">(</span><em>filename</em>, <em>identifier</em>, <em>range</em>, <em>copair_list</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/builder/builder.html#add_lookup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.builder.add_lookup" title="Permalink to this definition">¶</a></dt>
-<dd><p>Constructs a function that implements a lookup. 
+<code class="descclassname">pysd.builder.</code><code class="descname">add_lookup</code><span class="sig-paren">(</span><em>filename</em>, <em>identifier</em>, <em>valid_range</em>, <em>copair_list</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/builder/builder.html#add_lookup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.builder.add_lookup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructs a function that implements a lookup.
 The function encodes the coordinate pairs as numeric values in the python file.</p>
 <dl class="docutils">
 <dt>identifier: &lt;string&gt; valid python identifier</dt>
-<dd>Our translators are responsible for translating the model identifiers into 
+<dd>Our translators are responsible for translating the model identifiers into
 something that python can use as a function name.</dd>
 <dt>range: tuple</dt>
 <dd>Minimum and maximum bounds on the lookup. Currently, we don&#8217;t do anything
@@ -316,19 +322,19 @@ with this, but in the future, may use it to implement some error checking.</dd>
 
 <dl class="function">
 <dt id="pysd.builder.add_n_delay">
-<code class="descclassname">pysd.builder.</code><code class="descname">add_n_delay</code><span class="sig-paren">(</span><em>filename</em>, <em>input</em>, <em>delay_time</em>, <em>initial_value</em>, <em>order</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/builder/builder.html#add_n_delay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.builder.add_n_delay" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pysd.builder.</code><code class="descname">add_n_delay</code><span class="sig-paren">(</span><em>filename</em>, <em>delay_input</em>, <em>delay_time</em>, <em>initial_value</em>, <em>order</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/builder/builder.html#add_n_delay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.builder.add_n_delay" title="Permalink to this definition">¶</a></dt>
 <dd><p>Constructs stock and flow chains that implement the calculation of
 a delay.</p>
 <dl class="docutils">
-<dt>input: &lt;string&gt; </dt>
+<dt>delay_input: &lt;string&gt;</dt>
 <dd>Reference to the model component that is the input to the delay</dd>
 <dt>delay_time: &lt;string&gt;</dt>
 <dd>Can be a number (in string format) or a reference to another model element
 which will calculate the delay. This is calculated throughout the simulation
 at runtime.</dd>
 <dt>initial_value: &lt;string&gt;</dt>
-<dd>This is used to initialize the stocks that are present in the delay. We 
-initialize the stocks with equal values so that the outflow in the first 
+<dd>This is used to initialize the stocks that are present in the delay. We
+initialize the stocks with equal values so that the outflow in the first
 timestep is equal to this value.</dd>
 <dt>order: int</dt>
 <dd>The number of stocks in the delay pipeline. As we construct the delays at
