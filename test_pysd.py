@@ -3,6 +3,7 @@ import unittest
 import inspect
 import pandas as pd
 import numpy as np
+from pandas.util.testing import assert_series_equal
 
 
 
@@ -36,9 +37,10 @@ class Test_PySD(unittest.TestCase):
         
     def test_run_return_timestamps(self):
         #re: https://github.com/JamesPHoughton/pysd/issues/17
+
         stocks = self.model.run(return_timestamps=[1,5,7])
         self.assertEqual(stocks.index[0],1)
-        
+    
         stocks = self.model.run(return_timestamps=5)
         self.assertEqual(stocks.index[0],5)
 
@@ -58,7 +60,7 @@ class Test_PySD(unittest.TestCase):
         self.assertGreater(stocks['teacup_temperature'].loc[44], 0)
     
         with self.assertRaises(ValueError):
-          self.model.run(initial_condition='bad value')
+            self.model.run(initial_condition='bad value')
 
     def test_set_constant_parameter(self):
         #re: https://github.com/JamesPHoughton/pysd/issues/5
@@ -80,7 +82,16 @@ class Test_PySD(unittest.TestCase):
         print model #tests model.__str__
         print model.doc() #tests the function we wrote
         model.doc(short=True) #tests condensed model function printing.
-        pass
+
+    def test_collection(self):
+        self.model.run(params={'room_temperature':75},
+                  return_timestamps=range(0,30), collect=True)
+        self.model.run(params={'room_temperature':25}, initial_condition='current',
+                  return_timestamps=range(30,60), collect=True)
+        stocks = self.model.get_record()
+        self.assertTrue(all(stocks.index.values == np.array(range(0,60))))
+        #We may drop this use case, as its relatively low value, and meeting it makes things slower.
+    
 
 
 
@@ -99,6 +110,13 @@ class Test_Meta_Stuff(unittest.TestCase):
 class Test_Specific_Models(unittest.TestCase):
     """ All of the tests here call upon a specific model file 
         that matches the name of the function """
+    
+    
+    def test_number_handling(self):
+        model = pysd.read_vensim('tests/vensim/test_number_handling.mdl')
+        
+        #test integer division
+        self.assertEqual(model.components.quotient(), model.components.quotient_target())
 
     def test_lookups(self):
         model = pysd.read_vensim('tests/vensim/test_lookups.mdl')
@@ -130,6 +148,17 @@ class Test_Specific_Models(unittest.TestCase):
         #re: https://github.com/JamesPHoughton/pysd/issues/18
         model = pysd.read_vensim('tests/vensim/test_delays.mdl')
         model.run()
+
+    def test_smooth(self):
+        #re: https://github.com/JamesPHoughton/pysd/issues/18
+        model = pysd.read_vensim('tests/vensim/test_smooth.mdl')
+        results = model.run(return_columns=['function_output','structure_output'])
+        assert_series_equal(results['function_output'], results['structure_output'])
+
+    def test_initial(self):
+        model = pysd.read_vensim('tests/vensim/test_initial.mdl')
+        results = model.run(return_columns=['fleau', 'test_initial_fleau'])
+        self.assertEqual(results.iloc[5]['test_initial_fleau'], results.iloc[0]['fleau'])
 
 if __name__ == '__main__':
     unittest.main()

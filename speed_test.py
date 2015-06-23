@@ -42,5 +42,14 @@ times['run teacup modify params'] = timeit.timeit("model.run(params={'room_tempe
 print 'Run Teacup Mofifying Params:', times['run teacup modify params']
 
 
+###########
+
+times['run teacup return extra columns'] = timeit.timeit("model.run(return_columns=['teacup_temperature','heat_loss_to_room'])",
+                                    setup="import pysd; model = pysd.read_vensim('tests/vensim/Teacup.mdl')",
+                                    number=100)/100
+
+print 'Run Teacup Returning Extra Columns:', times['run teacup return extra columns']
+
+
 with open('tests/speedtest_results.json', 'a') as outfile:
     outfile.write(str(times)+'\n')

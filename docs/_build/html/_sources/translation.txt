@@ -1,0 +1,20 @@
+Translation
+===========
+
+PySD currently supports basic vensim functionality including:
+
+=============      ============   =======
+Vensim             Supported       Notes
+=============      ============   =======
+**Types**
+Auxiliary          y
+Constant           n
+Data               n
+Initial            n
+Level              y
+Lookup             y
+Reality Check      n
+String             n
+Subscript          n
+Time Base          n
+=============      ============   =======

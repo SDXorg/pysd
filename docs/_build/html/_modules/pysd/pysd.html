@@ -72,10 +72,10 @@
           
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../installation.html#installing-via-pip">Installing via pip</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../installation.html#installing-from-source">Installing from source</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../installation.html#required-dependencies">Required Dependencies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../installation.html#optional-dependencies">Optional Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../installation.html#additional-resources">Additional Resources</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../basic_usage.html">Basic Usage</a><ul>
@@ -90,9 +90,11 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../advanced_usage.html">Advanced Usage</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../advanced_usage.html#replacing-model-components-with-more-complex-objects">Replacing model components with more complex objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../advanced_usage.html#supplying-additional-arguments-to-the-integrator">Supplying additional arguments to the integrator</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../functions.html">User Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../translation.html">Translation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../development/developer.html">Developer Documentation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../development/developer.html#motivation-the-coming-of-age-of-big-data">Motivation: The (coming of) age of Big Data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../development/developer.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
@@ -303,6 +305,11 @@
         <span class="k">if</span> <span class="n">collect</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">return_df</span><span class="p">)</span> <span class="c">#we could alternately just record the state, and expand it later...</span>
         
+        <span class="c"># the integrator takes us past the last point in the tseries. Go back to it, in order to maintain</span>
+        <span class="c"># the state at a predictable location. this may take up more time than we&#39;re willing to spend...</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">t</span> <span class="o">!=</span> <span class="n">tseries</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="n">tseries</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="nb">dict</span><span class="p">(</span><span class="n">state_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+        
         <span class="k">return</span> <span class="n">return_df</span>
 
 </div>
@@ -449,6 +456,8 @@
     <span class="k">print</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">50</span><span class="p">,</span><span class="s">&#39;-&#39;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">_translators</span><span class="o">.</span><span class="n">vensim2py</span><span class="o">.</span><span class="n">dictionary</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
         <span class="k">print</span> <span class="n">key</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span> <span class="o">+</span> <span class="n">value</span>
+    <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">_translators</span><span class="o">.</span><span class="n">vensim2py</span><span class="o">.</span><span class="n">construction_functions</span><span class="p">:</span>
+        <span class="k">print</span> <span class="n">item</span><span class="o">.</span><span class="n">ljust</span><span class="p">(</span><span class="mi">25</span><span class="p">)</span> <span class="o">+</span> <span class="s">&#39;model construction&#39;</span>
 </pre></div>
 
           </div>

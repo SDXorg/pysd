@@ -2,6 +2,7 @@
 setup.cfg
 setup.py
 pysd/__init__.py
+pysd/_version.py
 pysd/pysd.py
 pysd/builder/__init__.py
 pysd/builder/builder.py

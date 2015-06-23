@@ -72,10 +72,10 @@
           
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#installing-via-pip">Installing via pip</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#installing-from-source">Installing from source</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#required-dependencies">Required Dependencies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#optional-dependencies">Optional Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#additional-resources">Additional Resources</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="basic_usage.html">Basic Usage</a><ul>
@@ -90,9 +90,11 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">Advanced Usage</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="advanced_usage.html#replacing-model-components-with-more-complex-objects">Replacing model components with more complex objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_usage.html#supplying-additional-arguments-to-the-integrator">Supplying additional arguments to the integrator</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="functions.html">User Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="translation.html">Translation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="development/developer.html">Developer Documentation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="development/developer.html#motivation-the-coming-of-age-of-big-data">Motivation: The (coming of) age of Big Data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="development/developer.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
@@ -153,10 +155,10 @@
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#installing-via-pip">Installing via pip</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#installing-from-source">Installing from source</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#required-dependencies">Required Dependencies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#optional-dependencies">Optional Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#additional-resources">Additional Resources</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="basic_usage.html">Basic Usage</a><ul>
@@ -171,9 +173,11 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">Advanced Usage</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="advanced_usage.html#replacing-model-components-with-more-complex-objects">Replacing model components with more complex objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_usage.html#supplying-additional-arguments-to-the-integrator">Supplying additional arguments to the integrator</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="functions.html">User Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="translation.html">Translation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="development/developer.html">Developer Documentation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="development/developer.html#motivation-the-coming-of-age-of-big-data">Motivation: The (coming of) age of Big Data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="development/developer.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
@@ -187,13 +191,25 @@
 </li>
 </ul>
 </div>
+<div class="section" id="pysd-cookbook">
+<h2>PySD-Cookbook<a class="headerlink" href="#pysd-cookbook" title="Permalink to this headline">¶</a></h2>
+<p>A collection of simple recipes for advanced data analytics using PySD is available at: <a class="reference external" href="https://github.com/JamesPHoughton/PySD-Cookbook">https://github.com/JamesPHoughton/PySD-Cookbook</a></p>
+<p>The cookbook includes models, sample data, and code in the form of ipython notebooks that demonstrate a variety of data integration and analysis tasks, including:</p>
+<ul class="simple">
+<li><a class="reference external" href="http://nbviewer.ipython.org/github/JamesPHoughton/PySD-Cookbook/blob/master/1_2_Installation_and_Setup.ipynb">Getting started with PySD and the Python data analytics stack</a></li>
+<li><a class="reference external" href="'http://nbviewer.ipython.org/github/JamesPHoughton/PySD-Cookbook/blob/master/1_3_Hello_World_Teacup.ipynb">Basic PySD usage&#8217;</a></li>
+<li><a class="reference external" href="http://nbviewer.ipython.org/github/JamesPHoughton/PySD-Cookbook/blob/master/2_1_Fitting_with_Optimization.ipynb">Optimizing models with run-at-a-time data fitting</a></li>
+<li><a class="reference external" href="http://nbviewer.ipython.org/github/JamesPHoughton/PySD-Cookbook/blob/master/2_2_Step_at_a_time_optimization.ipynb">Optimizing models with step-at-a-time data fitting</a></li>
+<li><a class="reference external" href="http://nbviewer.ipython.org/github/JamesPHoughton/PySD-Cookbook/blob/master/Exploring%20models%20across%20geographic%20scales.ipynb">Fitting and exploring models across geographic scales</a></li>
+<li><a class="reference external" href="http://nbviewer.ipython.org/github/JamesPHoughton/PySD-Cookbook/blob/master/6_1_Surrogating_with_regression.ipynb">Surrogating SD model components with machine learning regression models</a></li>
+</ul>
+<p>These models can be executed on your local machine, and modified to suit your particular analysis requirements.</p>
+</div>
 </div>
 <div class="section" id="indices-and-tables">
 <h1>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h1>
 <ul class="simple">
 <li><a class="reference internal" href="genindex.html"><span>Index</span></a></li>
-<li><a class="reference internal" href="py-modindex.html"><span>Module Index</span></a></li>
-<li><a class="reference internal" href="search.html"><span>Search Page</span></a></li>
 </ul>
 </div>
 

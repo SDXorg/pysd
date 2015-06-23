@@ -39,3 +39,7 @@ We can substitute this function directly for the heat_loss_to_room model compone
 ::
    model.components.heat_loss_to_room = new_heatflow_function
 
+
+Supplying additional arguments to the integrator
+------------------------------------------------
+the :py:func:`run` function's argument `intg_kwargs` is a pass-through for keyword arguments to scipy's odeint function, and as such can take on any of the keywords that odeint recognizes. 

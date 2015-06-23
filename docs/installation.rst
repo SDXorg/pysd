@@ -1,6 +1,6 @@
 Installation
 ============
-
+/Users/houghton/Google_Drive/Academic Projects/PYSD/pysd/docs/installation.rst
 Installing via pip
 ------------------
 To install the PySD package from the Python package index into an established
@@ -31,6 +31,8 @@ In the source directory use the command
 
 Required Dependencies
 ---------------------
+PySD is built on python 2.7, and may not work as advertized on 3.x.
+
 PySD calls on the core Python data analytics stack, and a third party parsing library:
 
 * Numpy
@@ -53,3 +55,8 @@ These Python libraries bring additional data analytics capabilities to the analy
 Additionally, the System Dynamics Translator utility developed by Robert Ward is useful for translating models from other system dynamics formats into the XMILE standard, to be read by PySD.
 
 These modules can be installed using pip with syntax similar to the above.
+
+Additional Resources
+--------------------
+The PySD Cookbook contains `a tutorial <http://nbviewer.ipython.org/github/JamesPHoughton/PySD-Cookbook/blob/master/1_2_Installation_and_Setup.ipynb>`_ on getting started with the python data analytics stack, and integrating with PySD.
+

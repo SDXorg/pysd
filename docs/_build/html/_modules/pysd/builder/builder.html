@@ -72,10 +72,10 @@
           
               <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#installing-via-pip">Installing via pip</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../installation.html#installing-from-source">Installing from source</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../installation.html#required-dependencies">Required Dependencies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../installation.html#optional-dependencies">Optional Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#additional-resources">Additional Resources</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../basic_usage.html">Basic Usage</a><ul>
@@ -90,9 +90,11 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../advanced_usage.html">Advanced Usage</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../advanced_usage.html#replacing-model-components-with-more-complex-objects">Replacing model components with more complex objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../advanced_usage.html#supplying-additional-arguments-to-the-integrator">Supplying additional arguments to the integrator</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../functions.html">User Functions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../translation.html">Translation</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../development/developer.html">Developer Documentation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../../../development/developer.html#motivation-the-coming-of-age-of-big-data">Motivation: The (coming of) age of Big Data</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../../development/developer.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
@@ -434,7 +436,69 @@
                   <span class="n">initial_condition</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> * (</span><span class="si">%s</span><span class="s"> / </span><span class="si">%i</span><span class="s">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">initial_value</span><span class="p">,</span> <span class="n">delay_time</span><span class="p">,</span> <span class="n">order</span><span class="p">))</span>
 
     <span class="k">return</span> <span class="n">flowlist</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-</pre></div></div>
+
+
+</div>
+<span class="k">def</span> <span class="nf">add_n_smooth</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="nb">input</span><span class="p">,</span> <span class="n">smooth_time</span><span class="p">,</span> <span class="n">initial_value</span><span class="p">,</span> <span class="n">order</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Constructs stock and flow chains that implement the calculation of</span>
+<span class="sd">    a smoothing function.</span>
+<span class="sd">    </span>
+<span class="sd">    input: &lt;string&gt; </span>
+<span class="sd">        Reference to the model component that is the input to the smoothing function</span>
+<span class="sd">    </span>
+<span class="sd">    smooth_time: &lt;string&gt;</span>
+<span class="sd">        Can be a number (in string format) or a reference to another model element</span>
+<span class="sd">        which will calculate the delay. This is calculated throughout the simulation</span>
+<span class="sd">        at runtime.</span>
+<span class="sd">        </span>
+<span class="sd">    initial_value: &lt;string&gt;</span>
+<span class="sd">        This is used to initialize the stocks that are present in the delay. We </span>
+<span class="sd">        initialize the stocks with equal values so that the outflow in the first </span>
+<span class="sd">        timestep is equal to this value.</span>
+<span class="sd">        </span>
+<span class="sd">    order: int</span>
+<span class="sd">        The number of stocks in the delay pipeline. As we construct the delays at</span>
+<span class="sd">        build time, this must be an integer and cannot be calculated from other</span>
+<span class="sd">        model components. Anything else will yield a ValueError.</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&quot;Order of delay must be an int. (Can&#39;t even be a reference to an int. Sorry...)&quot;</span>
+        <span class="k">raise</span>
+
+         <span class="c">#depending in these cases on input to be formatted as &#39;self.input()&#39; (or number)</span>
+    <span class="n">naked_input</span> <span class="o">=</span> <span class="nb">input</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">naked_smooth</span> <span class="o">=</span> <span class="n">smooth_time</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="k">if</span> <span class="n">smooth_time</span><span class="p">[:</span><span class="mi">5</span><span class="p">]</span><span class="o">==</span><span class="s">&#39;self.&#39;</span> <span class="k">else</span> <span class="n">smooth_time</span>
+    <span class="n">smooth_name</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">_smooth_</span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">naked_input</span><span class="p">,</span> <span class="n">naked_smooth</span><span class="p">)</span>
+
+
+    <span class="n">flowlist</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c">#use 1-based indexing for stocks in the delay chain so that (n of m) makes sense.</span>
+    <span class="n">prev</span> <span class="o">=</span> <span class="nb">input</span>
+    <span class="n">current</span> <span class="o">=</span><span class="s">&#39;self.</span><span class="si">%s</span><span class="s">_stock_1_of_</span><span class="si">%i</span><span class="s">()&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">smooth_name</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span>
+    <span class="n">flowlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">add_flaux</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span>
+                              <span class="n">identifier</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">_flow_1_of_</span><span class="si">%i</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">smooth_name</span><span class="p">,</span> <span class="n">order</span><span class="p">),</span>
+                              <span class="n">expression</span><span class="o">=</span><span class="s">&#39;(</span><span class="si">%s</span><span class="s"> - </span><span class="si">%s</span><span class="s">) / (1.*</span><span class="si">%s</span><span class="s">/</span><span class="si">%i</span><span class="s">)&#39;</span><span class="o">%</span><span class="p">(</span>
+                                           <span class="n">prev</span><span class="p">,</span> <span class="n">current</span><span class="p">,</span> <span class="n">smooth_time</span><span class="p">,</span> <span class="n">order</span><span class="p">)))</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">prev</span> <span class="o">=</span> <span class="s">&#39;self.</span><span class="si">%s</span><span class="s">_stock_</span><span class="si">%i</span><span class="s">_of_</span><span class="si">%i</span><span class="s">()&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">smooth_name</span><span class="p">,</span> <span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span>
+        <span class="n">current</span> <span class="o">=</span><span class="s">&#39;self.</span><span class="si">%s</span><span class="s">_stock_</span><span class="si">%i</span><span class="s">_of_</span><span class="si">%i</span><span class="s">()&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">smooth_name</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span>
+        <span class="n">flowlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">add_flaux</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span>
+                                  <span class="n">identifier</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">_flow_</span><span class="si">%i</span><span class="s">_of_</span><span class="si">%i</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">smooth_name</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">order</span><span class="p">),</span>
+                                  <span class="n">expression</span><span class="o">=</span><span class="s">&#39;(</span><span class="si">%s</span><span class="s"> - </span><span class="si">%s</span><span class="s">)/(1.*</span><span class="si">%s</span><span class="s">/</span><span class="si">%i</span><span class="s">)&#39;</span><span class="o">%</span><span class="p">(</span>
+                                              <span class="n">prev</span><span class="p">,</span> <span class="n">current</span><span class="p">,</span> <span class="n">smooth_time</span><span class="p">,</span> <span class="n">order</span><span class="p">)))</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">add_stock</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span>
+                  <span class="n">identifier</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">_stock_</span><span class="si">%i</span><span class="s">_of_</span><span class="si">%i</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">smooth_name</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">order</span><span class="p">),</span>
+                  <span class="n">expression</span><span class="o">=</span><span class="n">flowlist</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                  <span class="n">initial_condition</span><span class="o">=</span><span class="n">initial_value</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">flowlist</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</pre></div>
 
           </div>
           <footer>

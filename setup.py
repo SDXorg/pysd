@@ -3,6 +3,9 @@ from distutils.core import setup
 exec(open('pysd/_version.py').read())
 print __version__
 
+long_description ="""Project Documentation: http://pysd.readthedocs.org/"""
+
+
 setup(
     name='pysd',
     version=__version__,
@@ -12,7 +15,7 @@ setup(
     url='https://github.com/JamesPHoughton/pysd',
     license='LICENSE.txt',
     description='System Dynamics Modeling in Python',
-    long_description='see https://github.com/JamesPHoughton/pysd',
+    long_description=long_description,
     keywords=['System Dynamics', 'XMILE', 'Vensim'],
     classifiers=[
         'Development Status :: 3 - Alpha',
@@ -20,4 +23,10 @@ setup(
         'Topic :: Scientific/Engineering :: Mathematics',
         'Topic :: Scientific/Engineering :: Information Analysis',
     ],
+    install_requires=[
+        'pandas',
+        'numpy',
+        'parsimonious',
+        'scipy'
+    ]
 )

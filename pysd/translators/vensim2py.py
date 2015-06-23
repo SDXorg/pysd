@@ -59,7 +59,8 @@ dictionary = {"ABS":"abs", "INTEGER":"int", "EXP":"np.exp",
     "=":"==", "<=":"<=", "<":"<", ">=":">=", ">":">", "^":"**"}
 
 construction_functions = ['DELAY1', 'DELAY3', 'DELAY N',
-                          'SMOOTH', 'SMOOTH3', 'SMOOTH N']
+                          'SMOOTH3I', 'SMOOTH3', 'SMOOTH N', 'SMOOTH',
+                          'INITIAL'] #order is important for peg parser
 
 ###############################################################
 # General Notes on PEG parser:
@@ -136,7 +137,6 @@ file_grammar = (
     'Primary  = Call / ConCall / LUCall / Parens / Signed / Number / Reference                     \n'+
     'Parens   = "(" _ Condition _ ")"                                                              \n'+
     
-    ##'Call     = Keyword _ "(" _ Condition _ ("," _ Condition)* _ ")"                               \n'+
     'Call     = Keyword _ "(" _ ArgList _ ")"                                                      \n'+
     'ArgList  = AddArg+                                                                            \n'+
     'AddArg   = ","* _ Condition                                                                   \n'+
@@ -247,10 +247,14 @@ class TextParser(NodeVisitor):
             return builder.add_n_delay(self.filename, args[0], args[1], args[2], args[3])
         elif ConKeyword == 'SMOOTH':
             pass
-        elif ConKeyword == 'SMOOT3':
-            pass
+        elif ConKeyword == 'SMOOTH3':
+            return builder.add_n_delay
+        elif ConKeyword == 'SMOOTH3I': #SMOOTH3I( _in_ , _stime_ , _inival_ )
+            return builder.add_n_smooth(self.filename, args[0], args[1], args[2], 3)
         elif ConKeyword == 'SMOOTH N':
             pass
+        elif ConKeyword == 'INITIAL':
+            return builder.add_initial(self.filename, args[0])
 
         #need to return whatever you call to get the final stage in the construction
     
@@ -314,7 +318,8 @@ def import_vensim(mdl_file):
         This takes the filename of a vensim model and builds a
         class representing that model to be a subclass in the pysd
         main class.
-        """
+    """
+
     parser = TextParser(file_grammar, mdl_file)
     
     modulename = parser.filename[:-3]
