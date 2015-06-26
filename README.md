@@ -3,66 +3,27 @@ PySD
 
 System Dynamics Modeling in Python
 
-See the [Full(er) Documentation](http://pysd.readthedocs.org/en/latest/)
+This project is a simple library for running [System Dynamics](http://en.wikipedia.org/wiki/System_dynamics) models in python, with the purpose of improving integration of *Big Data* and *Machine Learning* into the SD workflow. 
 
+## Resources
+See the [project documentation](http://pysd.readthedocs.org/) for information about:
 
-### Installation
-To install via python package index:
-```
-    pip install pysd
-```
-To install the latest version from this repository:
-```
-    git clone https://github.com/JamesPHoughton/pysd.git
-    cd pysd
-    python setup.py install
-```
+- [Installation](http://pysd.readthedocs.org/en/latest/installation.html)
+- [Basic Usage](http://pysd.readthedocs.org/en/latest/basic_usage.html)
+- [Function Reference](http://pysd.readthedocs.org/en/latest/functions.html)
 
-## Usage
-To import a model from Vensim:
-```
-    import pysd
-    model = pysd.read_vensim('vensim_model_file.mdl')
-```
-To run the model:
-```
-    model.run()
-```
-Model results are by default given as pandas dataframes, so to plot output:
-```
-    stocks = model.run()
-    stocks.plot()
-```
+For standard methods for data analysis with SD models, see the  [PySD Cookbook](https://github.com/JamesPHoughton/PySD-Cookbook), containing (for example):
 
-#### Making Changes to the model
-To run the model with new constant values for parameters:
-```
-    model.run(params={'parameter_name':value})
-```
-To run the model with timeseries values for parameters:
-```
-    parameter_tseries = pd.Series(index=range(30), data=range(20,80,2)) #increasing over 30 timeperiods from 20 to 80
-    model.run(params={'parameter_name':parameter_tseries})
-```
+- [Model Fitting](http://nbviewer.ipython.org/github/JamesPHoughton/PySD-Cookbook/blob/master/2_1_Fitting_with_Optimization.ipynb)
+- [Surrogating model components with machine learning regressions](http://nbviewer.ipython.org/github/JamesPHoughton/PySD-Cookbook/blob/master/6_1_Surrogating_with_regression.ipynb)
+- [Multi-Scale geographic comparison of model predictions](http://nbviewer.ipython.org/github/JamesPHoughton/PySD-Cookbook/blob/master/Exploring%20models%20across%20geographic%20scales.ipynb)
 
-#### Specifying simulation elements to return
-To return model elements other than the default (stocks):
-```
-    model.run(return_columns=['stock_name', 'flow_name', 'aux_name'])
-```
-To return simulation values at timestamps other than the default (specified in the model file):
-```
-    model.run(return_timestamps=[0,1,3,7,9.5,13.178,21,25,30])
-```
+If you use PySD in any published work, consider citing the [PySD Introductory Paper](https://github.com/JamesPHoughton/pysd/blob/master/docs/PySD%20Intro%20Paper%20Preprint.pdf):
 
+>Houghton, James; Siegel, Michael. "Advanced data analytics for system dynamics models using PySD." *Proceedings of the 33rd International Conference of the System Dynamics Society.* 2015.
 
-### Resources
-The [PySD Cookbook](https://github.com/JamesPHoughton/PySD-Cookbook) is a collection of 'standard methods' for doing a variety of data and modeling tasks using PySD. Each 'recipe' covers a particular analysis task (such as model fitting, or Monte Carlo simulation) and is designed such that the user can download a single example file and modify it to suit their needs.
-
-An introductory [paper](https://github.com/JamesPHoughton/pysd/blob/master/docs/PySD%20Intro%20Paper%20Preprint.pdf) gives a general overview of the motivation, structure, and use of PySD.
 
 ## About the project
-This project is a simple library for running [System Dynamics](http://en.wikipedia.org/wiki/System_dynamics) models in python, with the purpose of improving integration of *Big Data* and *Machine Learning* into the SD workflow. 
 
 ### Why create a new SD modeling engine?
 
@@ -129,53 +90,4 @@ An excellent javascript library called [sd.js](https://github.com/bpowers/sd.js/
 
 The [Behavior Analysis and Testing Software(BATS)](http://www.ie.boun.edu.tr/labs/sesdyn/projects/bats/index.html) delveloped by [Gönenç Yücel](http://www.ie.boun.edu.tr/people/pages/yucel.html) includes a really neat method for categorizing behavior modes and exploring parameter space to determine the boundaries between them.
 
-### Notional Capabilities Development Pathway
-
-The initial use case would be to import a fully developed SD model (created in Vensim, or Stella/iThink, etc.) into PySD via the XMILE format; and then use third party tools to perform statistical analysis and inference, and to interface with external data.
-
-####Current Features
-
-1. Basic XMILE and Vensim parser, limited to a subset of functions for which the Markov Property holds
-4. Established library structure and data formats
-4. Simulation using existing python integration tools
-5. Basic demonstrations of integration with python Data Science functionality
-6. Run-at-a-time parameter modification
-
-####Planned Features
-
-1. Step-at-a-time parameter modification / time-variant exogenous inputs
-2. Extended backends for storing parameters and output values
-3. More extensive XMILE and Vensim model parsers
-4. Demonstration of integration with Machine Learning/Monte Carlo/Statistical Methods
-5. Integration with EMA Workbench
-
-####Possible features
-
-- Embed SD.js front end in iPython widget
-- XMILE display component parser
-- Customizations of external Data Science tools for dynamic systems
-- Incorporation of analysis tools specific to dynamic systems
-- Python methods for programmatically manipulating SD model structure
-- Additional SD tools: checks for model units, value limits, etc.
-- Python methods for saving XMILE models
-- Manage varying the time step of integration/adaptive integration time step
-- Infer logical ways to automatically lay out stock and flow diagrams
-- Add hooks to vensim, other SD programs, to allow running models with other engines
-- Turn off and on 'traces' or records of the values of variables
-- Show different 'submodels' in the model diagram
-- Infer units when possible from other areas
-- Hover over stock/flow elements to get things like units, descriptions, values, etc.
-- Output DataFrame including tags for units
-
-
-### PySD Design Philosophy
-
-- Do as little as possible. 
- - Anything that is not endemic to System Dynamics (such as plotting, integration, fitting, etc) should either be implemented using external tools, or omitted. 
- - Stick to SD. Let other disciplines (ABM, Discrete Event Simulation, etc) create their own tools.
- - Use external model creation tools
-- Use the language of system dynamics.
-- Be simple to use. Let SD practitioners who haven't used python before understand the basics.
-- Take advantage of general python constructions and best practices.
-- Be simple to maintain.    
 
