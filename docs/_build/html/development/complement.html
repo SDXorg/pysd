@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Structure of the PySD module &mdash; PySD 0.3.0 documentation</title>
+  <title>Complementary Projects &mdash; PySD 0.3.0 documentation</title>
   
 
   
@@ -32,8 +32,7 @@
   
     <link rel="top" title="PySD 0.3.0 documentation" href="../index.html"/>
         <link rel="up" title="Developer Documentation" href="development_index.html"/>
-        <link rel="next" title="Internal Functions" href="internal_functions.html"/>
-        <link rel="prev" title="PySD Design Philosophy" href="philosophy.html"/> 
+        <link rel="prev" title="PySD Development Pathway" href="pathway.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -104,10 +103,10 @@
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="philosophy.html">PySD Design Philosophy</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Structure of the PySD module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#builder">Builder</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#translation">Translation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#the-model-class">The model class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="structure.html">Structure of the PySD module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="structure.html#builder">Builder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="structure.html#translation">Translation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="structure.html#the-model-class">The model class</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="internal_functions.html">Internal Functions</a><ul>
@@ -126,7 +125,7 @@
 <li class="toctree-l3"><a class="reference internal" href="pathway.html#possible-future-features">Possible Future features</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="complement.html">Complementary Projects</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Complementary Projects</a></li>
 </ul>
 </li>
 </ul>
@@ -155,11 +154,11 @@
       
           <li><a href="development_index.html">Developer Documentation</a> &raquo;</li>
       
-    <li>Structure of the PySD module</li>
+    <li>Complementary Projects</li>
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="../_sources/development/structure.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/development/complement.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -168,31 +167,12 @@
 </div>
           <div role="main" class="document">
             
-  <div class="section" id="structure-of-the-pysd-module">
-<h1>Structure of the PySD module<a class="headerlink" href="#structure-of-the-pysd-module" title="Permalink to this headline">¶</a></h1>
-<p>PySD provides a set of translators that interpret a Vensim or XMILE format model into a Python native class. The model components object represents the state of the system, and contains methods that compute auxiliary and flow variables based upon the current state.</p>
-<p>The components object is wrapped within a Python class that provides methods for modifying and executing the model. These three pieces constitute the core functionality of the PySD module, and allow it to interact with the Python data analytics stack.</p>
-<div class="section" id="builder">
-<h2>Builder<a class="headerlink" href="#builder" title="Permalink to this headline">¶</a></h2>
-</div>
-<div class="section" id="translation">
-<h2>Translation<a class="headerlink" href="#translation" title="Permalink to this headline">¶</a></h2>
-<p>The PySD module is capable of importing models from a Vensim model file (*.mdl) or an XMILE format xml file. Translation makes use of a Parsing Expression Grammar parser, using the third party Python library Parsimonious13 to construct an abstract syntax tree based upon the full model file (in the case of Vensim) or individual expressions (in the case of XMILE).</p>
-<p>The translators then crawl the tree, using a dictionary to translate Vensim or Xmile syntax into its appropriate Python equivalent. The use of a translation dictionary for all syntactic and programmatic components prevents execution of arbitrary code from unverified model files, and ensures that we only translate commands that PySD is equipped to handle. Any unsupported model functionality should therefore be discovered at import, instead of at runtime.</p>
-<p>The use of a one-to-one dictionary in translation means that the breadth of functionality is inherently limited. In the case where no direct Python equivalent is available, PySD provides a library of functions such as pulse, step, etc. that are specific to dynamic model behavior.</p>
-<p>In addition to translating individual commands between Vensim/XMILE and Python, PySD reworks component identifiers to be Python-safe by replacing spaces with underscores. The translator allows source identifiers to make use of alphanumeric characters, spaces, or the $ symbol.</p>
-</div>
-<div class="section" id="the-model-class">
-<h2>The model class<a class="headerlink" href="#the-model-class" title="Permalink to this headline">¶</a></h2>
-<p>The translator constructs a Python class that represents the system dynamics model. The class maintains a dictionary representing the current values of each of the system stocks, and the current simulation time, making it a ‘statefull’ model in much the same way that the system itself has a specific state at any point in time.</p>
-<p>The model class also contains a function for each of the model components, representing the essential model equations. The docstring for each function contains the model documentation and units as translated from the original model file. A query to any of the model functions will calculate and return its value according to the stored state of the system.</p>
-<p>The model class maintains only a single state of the system in memory, meaning that all functions must obey the Markov property  - that the future state of the system can be calculated entirely based upon its current state. In addition to simplifying integration, this requirement enables analyses that interact with the model at a step-by-step level. The downside to this design choice is that several components of Vensim or XMILE functionality – the most significant being the infinite order delay – are intentionally not supported. In many cases similar behavior can be approximated through other constructs.</p>
-<p>Lastly, the model class provides a set of methods that are used to facilitate simulation. PySD uses the standard ordinary differential equations solver provided in the well-established Python library Scipy, which expects the state and its derivative to be represented as an ordered list. The model class provides the function .d_dt() that takes a state vector from the integrator and uses it to update the model state, and then calculates the derivative of each stock, returning them in a corresponding vector. A complementary function .state_vector() creates an ordered vector of states for use in initializing the integrator.
-The PySD class
-The PySD class provides the machinery to get the model moving, supply it with data, or modify its parameters. In addition, this class is the primary way that users interact with the PySD module.</p>
-<p>The basic function for executing a model is appropriately named.run(). This function passes the model into scipy’s odeint() ordinary differential equations solver. The scipy integrator is itself utilizing the lsoda integrator from the Fortran library odepack14, and so integration takes advantage of highly optimized low-level routines to improve speed. We use the model’s timestep to set the maximum step size for the integrator’s adaptive solver to ensure that the integrator properly accounts for discontinuities.</p>
-<p>The .run() function returns to the user a Pandas dataframe representing the output of their simulation run. A variety of options allow the user to specify which components of the model they would like returned, and the timestamps at which they would like those measurements. Additional parameters make parameter changes to the model, modify its starting conditions, or specify how simulation results should be logged.</p>
-</div>
+  <div class="section" id="complementary-projects">
+<h1>Complementary Projects<a class="headerlink" href="#complementary-projects" title="Permalink to this headline">¶</a></h1>
+<p>The most valuable component for better integrating models with <em>basically anything else</em> is a standard language for communicating the structure of those models. That language is <a class="reference external" href="http://www.iseesystems.com/community/support/XMILE.aspx">XMILE</a>. The draft specifications for this have been finalized and the standard should be approved in the next few months.</p>
+<p>A python library for analyzing system dynamics models called the <a class="reference external" href="http://simulation.tbm.tudelft.nl/ema-workbench/contents.html">Exploratory Modeling and Analysis (EMA) Workbench</a> is being developed by <a class="reference external" href="http://www.tbm.tudelft.nl/en/about-faculty/departments/multi-actor-systems/policy-analysis/people/erik-pruyt/">Erik Pruyt</a> and <a class="reference external" href="https://github.com/quaquel">Jan Kwakkel</a> at TU Delft. This package implements a variety of analysis methods that are unique to dynamic models, and could work very tightly with PySD.</p>
+<p>An excellent javascript library called <a class="reference external" href="https://github.com/bpowers/sd.js/tree/master">sd.js</a> created by Bobby Powers at <a class="reference external" href="http://sdlabs.io/">SDlabs</a> exists as a standalone SD engine, and provides a beautiful front end. This front end could be rendered as an iPython widget to facilitate display of SD models.</p>
+<p>The <a class="reference external" href="http://www.ie.boun.edu.tr/labs/sesdyn/projects/bats/index.html">Behavior Analysis and Testing Software(BATS)</a> delveloped by <a class="reference external" href="http://www.ie.boun.edu.tr/people/pages/yucel.html">Gönenç Yücel</a> includes a really neat method for categorizing behavior modes and exploring parameter space to determine the boundaries between them.</p>
 </div>
 
 
@@ -201,10 +181,8 @@ The PySD class provides the machinery to get the model moving, supply it with da
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="internal_functions.html" class="btn btn-neutral float-right" title="Internal Functions" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
-      
-        <a href="philosophy.html" class="btn btn-neutral" title="PySD Design Philosophy" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="pathway.html" class="btn btn-neutral" title="PySD Development Pathway" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
