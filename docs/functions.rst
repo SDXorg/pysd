@@ -1,9 +1,13 @@
-User Functions
-==============
+User Functions Reference
+========================
+
+These are the primary functions that control model import and execution.
+
+.. autoclass:: pysd.PySD
+    :members:
 
 .. autofunction:: pysd.read_vensim
 
-.. autofunction:: pysd.print_supported_vensim_functions
+.. autofunction:: pysd.read_xmile
 
-.. autoclass:: pysd.pysd
-    :members:
+.. autofunction:: pysd.load

@@ -34,7 +34,7 @@ class Test_PySD(unittest.TestCase):
         stocks = self.model.run()
         self.assertTrue(stocks['teacup_temperature'].loc[29]<100)
 
-        
+
     def test_run_return_timestamps(self):
         #re: https://github.com/JamesPHoughton/pysd/issues/17
 
@@ -50,7 +50,6 @@ class Test_PySD(unittest.TestCase):
         result = self.model.run(return_columns=['room_temperature','teacup_temperature'])
         self.assertEqual(set(result.columns), set(['room_temperature','teacup_temperature']))
         #self.model.run(return_columns='room_temperature') #still to develop
-
 
     def test_initial_conditions(self):
         stocks = self.model.run(initial_condition=(0, {'teacup_temperature':33}))
@@ -91,8 +90,6 @@ class Test_PySD(unittest.TestCase):
         stocks = self.model.get_record()
         self.assertTrue(all(stocks.index.values == np.array(range(0,60))))
         #We may drop this use case, as its relatively low value, and meeting it makes things slower.
-    
-
 
 
 class Test_Meta_Stuff(unittest.TestCase):
@@ -107,10 +104,9 @@ class Test_Meta_Stuff(unittest.TestCase):
         model_2.run()
 
 
-class Test_Specific_Models(unittest.TestCase):
+class Test_Vensim_Models(unittest.TestCase):
     """ All of the tests here call upon a specific model file 
         that matches the name of the function """
-    
     
     def test_number_handling(self):
         model = pysd.read_vensim('tests/vensim/test_number_handling.mdl')
@@ -132,7 +128,6 @@ class Test_Specific_Models(unittest.TestCase):
         model = pysd.read_vensim('tests/vensim/test_vensim_functions.mdl')
         testval = model.run(return_columns=['flow']).loc[10].values
         self.assertTrue(testval >= 1.556 and testval <= 1.558)
-    
 
     def test_time(self):
         #re: https://github.com/JamesPHoughton/pysd/issues/25
@@ -159,6 +154,13 @@ class Test_Specific_Models(unittest.TestCase):
         model = pysd.read_vensim('tests/vensim/test_initial.mdl')
         results = model.run(return_columns=['fleau', 'test_initial_fleau'])
         self.assertEqual(results.iloc[5]['test_initial_fleau'], results.iloc[0]['fleau'])
+
+
+class Test_Xmile_Models(unittest.TestCase):
+
+    def test_teacup(self):
+        model = pysd.read_xmile('tests/xmile/teacup.xmile')
+        model.run()
 
 if __name__ == '__main__':
     unittest.main()

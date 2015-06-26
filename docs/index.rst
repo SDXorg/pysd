@@ -12,15 +12,12 @@ Contents:
 
 .. toctree::
    :maxdepth: 2
-   :glob:
 
    installation
    basic_usage
    advanced_usage
    functions
-   development/developer
-   development/internal_functions
-   development/translation
+   development/development_index
 
 PySD-Cookbook
 -------------

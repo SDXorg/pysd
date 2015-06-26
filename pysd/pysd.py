@@ -12,7 +12,7 @@ import translators as _translators
 from scipy.integrate import odeint as _odeint
 import pandas as _pd
 import numpy as np
-
+import imp
 
 ######################################################
 # Todo:
@@ -41,17 +41,29 @@ import numpy as np
 # corrupted, and we won't have any indication of this corruption.
 ######################################################
 
-def read_XMILE(XMILE_file):
-    """ Construct a model object from XMILE source """
-    pass #to be updated when we actually have xmile files to test against...
+def read_xmile(xmile_file):
+    """ Construct a model object from `.xmile` file. """
+    py_model_file = _translators.translate_xmile(xmile_file)
+    model = load(py_model_file)
+    model.__str__ = 'Import of ' + xmile_file
+    return model
+read_xmile.__doc__ += _translators.translate_xmile.__doc__
 
 def read_vensim(mdl_file):
-    """ Construct a model from Vensim .mdl file """
-    component_class = _translators.import_vensim(mdl_file)
-    model = PySD(component_class)
-    model.__str__ = 'Import of '+mdl_file
+    """ Construct a model from Vensim `.mdl` file. """
+    py_model_file = _translators.translate_vensim(mdl_file)
+    model = load(py_model_file)
+    model.__str__ = 'Import of ' + mdl_file
     return model
+read_vensim.__doc__ += _translators.translate_vensim.__doc__
 
+def load(py_model_file):
+    """ Load a python-converted model file. """
+    module = imp.load_source('modulename', py_model_file)
+    component_class = module.Components
+    model = PySD(component_class)
+    model.__str__ = 'Import of ' + py_model_file
+    return model
 
 
 class PySD(object):
@@ -305,13 +317,4 @@ class PySD(object):
         return lambda: value
 
 
-def print_supported_vensim_functions():
-    """prints a list of all of the vensim functions that are supported
-    by the translator.
-    """
-    print 'Vensim'.ljust(25) + 'Python'
-    print ''.ljust(50, '-')
-    for key, value in _translators.vensim2py.dictionary.iteritems():
-        print key.ljust(25) + value
-    for item in _translators.vensim2py.construction_functions:
-        print item.ljust(25) + 'model construction'
+

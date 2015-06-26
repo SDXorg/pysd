@@ -73,6 +73,7 @@
           
               <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#installing-via-pip">Installing via pip</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#installing-from-source">Installing from source</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#required-dependencies">Required Dependencies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#optional-dependencies">Optional Dependencies</a></li>
@@ -95,21 +96,29 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="functions.html">User Functions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="translation.html">Translation</a></li>
-<li class="toctree-l1"><a class="reference internal" href="development/developer.html">Developer Documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="development/developer.html#motivation-the-coming-of-age-of-big-data">Motivation: The (coming of) age of Big Data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="development/developer.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="development/developer.html#structure-of-the-pysd-module">Structure of the PySD module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="development/developer.html#builder">Builder</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/developer.html#translation">Translation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/developer.html#the-model-class">The model class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/development_index.html">Developer Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="development/motivation.html">Motivation of PySD</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="development/motivation.html#the-coming-of-age-of-big-data">The (coming of) age of Big Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/motivation.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="development/structure.html">Structure of the PySD module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="development/structure.html#builder">Builder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/structure.html#translation">Translation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/structure.html#the-model-class">The model class</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="development/internal_functions.html">Internal Functions</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="development/internal_functions.html#special-functions-needed-for-model-execution">Special functions needed for model execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="development/internal_functions.html#building-the-python-model-file">Building the python model file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/internal_functions.html">Internal Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="development/internal_functions.html#special-functions-needed-for-model-execution">Special functions needed for model execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/internal_functions.html#building-the-python-model-file">Building the python model file</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="development/vensim_translation.html">Vensim Translation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="development/vensim_translation.html#types">Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/vensim_translation.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="development/xmile_translation.html">XMILE Translation</a></li>
 </ul>
 </li>
 </ul>
@@ -166,13 +175,13 @@
 </div>
 <p>This drew on the internal state of the system, namely the time t, and the time-series data series that that we wanted to variable to represent. This process of substitution is available to the user, and we can replace functions ourselves, if we are careful.</p>
 <p>Because PySD assumes that all components in a model are represented as functions taking no arguments, any component that we wish to modify must be replaced with a function taking no arguments. As the state of the system and all auxiliary or flow methods are public, our replacement function can call these methods as part of its internal structure.</p>
-<p>In our teacup example, suppose we didn’t know the functional form for calculating the heat lost to the room, but instead had a lot of data of teacup temperatures and heat flow rates. We could use a regression model (here a support vector regression from Scikit-Learn) in place of the analytic function.</p>
+<p>In our teacup example, suppose we didn’t know the functional form for calculating the heat lost to the room, but instead had a lot of data of teacup temperatures and heat flow rates. We could use a regression model (here a support vector regression from Scikit-Learn) in place of the analytic function:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">sklearn.svm</span> <span class="kn">import</span> <span class="n">SVR</span>
 <span class="n">regression</span> <span class="o">=</span> <span class="n">SVR</span><span class="p">()</span>
 <span class="n">regression</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_training</span><span class="p">,</span> <span class="n">Y_training</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>Once the regression model is fit, we write a wrapper function for its predict method that accesses the input components of the model and formats the prediction for PySD.</p>
+<p>Once the regression model is fit, we write a wrapper function for its predict method that accesses the input components of the model and formats the prediction for PySD:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">new_heatflow_function</span><span class="p">():</span>
    <span class="sd">&quot;&quot;&quot; Replaces the original flowrate equation</span>
 <span class="sd">       with a regression model&quot;&quot;&quot;</span>
@@ -181,14 +190,14 @@
    <span class="k">return</span> <span class="n">regression</span><span class="o">.</span><span class="n">predict</span><span class="p">([</span><span class="n">room_temp</span><span class="p">,</span> <span class="n">tea_temp</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
 </pre></div>
 </div>
-<p>We can substitute this function directly for the heat_loss_to_room model component.</p>
+<p>We can substitute this function directly for the heat_loss_to_room model component:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">model</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">heat_loss_to_room</span> <span class="o">=</span> <span class="n">new_heatflow_function</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="supplying-additional-arguments-to-the-integrator">
 <h2>Supplying additional arguments to the integrator<a class="headerlink" href="#supplying-additional-arguments-to-the-integrator" title="Permalink to this headline">¶</a></h2>
-<p>the <code class="xref py py-func docutils literal"><span class="pre">run()</span></code> function&#8217;s argument <cite>intg_kwargs</cite> is a pass-through for keyword arguments to scipy&#8217;s odeint function, and as such can take on any of the keywords that odeint recognizes.</p>
+<p>the <tt class="xref py py-func docutils literal"><span class="pre">run()</span></tt> function&#8217;s argument <cite>intg_kwargs</cite> is a pass-through for keyword arguments to scipy&#8217;s odeint function, and as such can take on any of the keywords that odeint recognizes.</p>
 </div>
 </div>
 
@@ -240,7 +249,7 @@
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

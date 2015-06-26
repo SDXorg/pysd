@@ -5,7 +5,6 @@
 '''
 import parsimonious
 from parsimonious.nodes import NodeVisitor
-import imp
 
 from pysd import builder
 
@@ -311,18 +310,37 @@ class TextParser(NodeVisitor):
         return ''.join(filter(None, vc)) or n.text or ''
 
 
-
-
-def import_vensim(mdl_file):
+def doc_supported_vensim_functions():
+    """prints a list of all of the vensim functions that are supported
+    by the translator.
     """
-        This takes the filename of a vensim model and builds a
-        class representing that model to be a subclass in the pysd
-        main class.
-    """
+    rowline     = '+------------------------------+------------------------------+\n'
+    headers     = '|           Vensim             |       Python Translation     |\n'
+    underline   = '+==============================+==============================+\n'
+    string = rowline + headers + underline
+    for key, value in dictionary.iteritems():
+        string += '|'   + key.center(30) +  '|'  + value.center(30) + '|\n'
+        string += rowline
+    for item in construction_functions:
+        string += '|'   + item.center(30) + '|      Model Construction      |\n'
+        string += rowline
 
+    string += '\n `np` corresponds to the numpy package'
+
+    return string
+
+
+def translate_vensim(mdl_file):
+    """
+    Translate a vensim model file into a python class.
+
+    Supported functionality:\n\n"""
     parser = TextParser(file_grammar, mdl_file)
-    
-    modulename = parser.filename[:-3]
-    module = imp.load_source('modulename', parser.filename)
+    #module = imp.load_source('modulename', parser.filename)
 
-    return module.Components
+    return parser.filename #module.Components
+
+translate_vensim.__doc__ += doc_supported_vensim_functions()
+
+
+

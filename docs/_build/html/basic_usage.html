@@ -77,6 +77,7 @@
 <li class="toctree-l2"><a class="reference internal" href="installation.html#installing-from-source">Installing from source</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#required-dependencies">Required Dependencies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#optional-dependencies">Optional Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#additional-resources">Additional Resources</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Basic Usage</a><ul>
@@ -91,23 +92,33 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">Advanced Usage</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="advanced_usage.html#replacing-model-components-with-more-complex-objects">Replacing model components with more complex objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_usage.html#supplying-additional-arguments-to-the-integrator">Supplying additional arguments to the integrator</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="functions.html">User Functions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="development/developer.html">Developer Documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="development/developer.html#motivation-the-coming-of-age-of-big-data">Motivation: The (coming of) age of Big Data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="development/developer.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="development/developer.html#structure-of-the-pysd-module">Structure of the PySD module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="development/developer.html#builder">Builder</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/developer.html#translation">Translation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/developer.html#the-model-class">The model class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/development_index.html">Developer Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="development/motivation.html">Motivation of PySD</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="development/motivation.html#the-coming-of-age-of-big-data">The (coming of) age of Big Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/motivation.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="development/structure.html">Structure of the PySD module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="development/structure.html#builder">Builder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/structure.html#translation">Translation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/structure.html#the-model-class">The model class</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="development/internal_functions.html">Internal Functions</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="development/internal_functions.html#special-functions-needed-for-model-execution">Special functions needed for model execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="development/internal_functions.html#building-the-python-model-file">Building the python model file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/internal_functions.html">Internal Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="development/internal_functions.html#special-functions-needed-for-model-execution">Special functions needed for model execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/internal_functions.html#building-the-python-model-file">Building the python model file</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="development/vensim_translation.html">Vensim Translation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="development/vensim_translation.html#types">Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/vensim_translation.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="development/xmile_translation.html">XMILE Translation</a></li>
 </ul>
 </li>
 </ul>
@@ -158,7 +169,7 @@
 </div>
 <p>This code creates an instance of the PySD class loaded with an example model that we will use as the system dynamics equivalent of ‘Hello World’: a cup of tea cooling to room temperature.</p>
 <a class="reference internal image-reference" href="_images/Teacup.png"><img alt="_images/Teacup.png" class="align-center" src="_images/Teacup.png" style="width: 350px;" /></a>
-<p>To view a synopsis of the model equations and documentation, call the <code class="xref py py-func docutils literal"><span class="pre">components.doc()</span></code> method of the model class. This will generate a listing of all the model elements, their documentation, units, equations, and initial values, where appropriate. Here is a sample from the teacup model:</p>
+<p>To view a synopsis of the model equations and documentation, call the <tt class="xref py py-func docutils literal"><span class="pre">components.doc()</span></tt> method of the model class. This will generate a listing of all the model elements, their documentation, units, equations, and initial values, where appropriate. Here is a sample from the teacup model:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">model</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">doc</span><span class="p">()</span>
 
 <span class="go">Import of Teacup.mdl</span>
@@ -182,7 +193,7 @@
 </div>
 <div class="section" id="running-the-model">
 <h2>Running the Model<a class="headerlink" href="#running-the-model" title="Permalink to this headline">¶</a></h2>
-<p>The simplest way to simulate the model is to use the <code class="xref py py-func docutils literal"><span class="pre">run()</span></code> command with no options. This runs the model with the default parameters supplied by the model file, and returns a Pandas dataframe of the values of the stocks at every timestamp.</p>
+<p>The simplest way to simulate the model is to use the <tt class="xref py py-func docutils literal"><span class="pre">run()</span></tt> command with no options. This runs the model with the default parameters supplied by the model file, and returns a Pandas dataframe of the values of the stocks at every timestamp:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">stocks</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 
 <span class="go">t        teacup_temperature</span>
@@ -203,7 +214,7 @@
 </div>
 <div class="section" id="outputting-various-run-information">
 <h2>Outputting various run information<a class="headerlink" href="#outputting-various-run-information" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="xref py py-func docutils literal"><span class="pre">run()</span></code> command has a few options that make it more useful. In many situations we want to access components of the model other than merely the stocks – we can specify which components of the model should be included in the returned dataframe by including them in a list that we pass to the <code class="xref py py-func docutils literal"><span class="pre">run()</span></code> command, using the return_columns keyword argument.</p>
+<p>The <tt class="xref py py-func docutils literal"><span class="pre">run()</span></tt> command has a few options that make it more useful. In many situations we want to access components of the model other than merely the stocks – we can specify which components of the model should be included in the returned dataframe by including them in a list that we pass to the <tt class="xref py py-func docutils literal"><span class="pre">run()</span></tt> command, using the return_columns keyword argument:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">return_columns</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;teacup_temperature&#39;</span><span class="p">,</span> <span class="s">&#39;room_temperature&#39;</span><span class="p">])</span>
 
 <span class="go">t         teacup_temperature    room_temperature</span>
@@ -214,7 +225,7 @@
 <span class="go">…</span>
 </pre></div>
 </div>
-<p>If the measured data that we are comparing with our model comes in at irregular timestamps, we may want to sample the model at timestamps to match. The .run() function gives us this ability with the return_timestamps keyword argument.</p>
+<p>If the measured data that we are comparing with our model comes in at irregular timestamps, we may want to sample the model at timestamps to match. The .run() function gives us this ability with the return_timestamps keyword argument:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">return_timestamps</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mf">9.5</span><span class="p">,</span><span class="mf">13.178</span><span class="p">,</span><span class="mi">21</span><span class="p">,</span><span class="mi">25</span><span class="p">,</span><span class="mi">30</span><span class="p">])</span>
 
 <span class="go">t       teacup_temperature</span>
@@ -234,13 +245,13 @@
 <div class="highlight-python"><div class="highlight"><pre><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;room_temperature&#39;</span><span class="p">:</span><span class="mi">20</span><span class="p">})</span>
 </pre></div>
 </div>
-<p>Alternately, if we believe the room temperature is changing over the course of the simulation, we can give the run function a set of time-series values in the form of a Pandas series, and PySD will linearly interpolate between the given values in the course of its integration.</p>
+<p>Alternately, if we believe the room temperature is changing over the course of the simulation, we can give the run function a set of time-series values in the form of a Pandas series, and PySD will linearly interpolate between the given values in the course of its integration:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
 <span class="n">temp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">),</span> <span class="n">data</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="mi">80</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
 <span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;room_temperature&#39;</span><span class="p">:</span><span class="n">temp</span><span class="p">})</span>
 </pre></div>
 </div>
-<p>Note that once parameters are set by the run command, they are permanently changed within the model. We can also change model parameters without running the model, using PySD’s <code class="xref py py-func docutils literal"><span class="pre">set_components(params={})()</span></code> method, which takes the same params dictionary as the run function. We might choose to do this in situations where we’ll be running the model many times, and only want to spend time setting the parameters once.</p>
+<p>Note that once parameters are set by the run command, they are permanently changed within the model. We can also change model parameters without running the model, using PySD’s <tt class="xref py py-func docutils literal"><span class="pre">set_components(params={})()</span></tt> method, which takes the same params dictionary as the run function. We might choose to do this in situations where we’ll be running the model many times, and only want to spend time setting the parameters once.</p>
 </div>
 <div class="section" id="setting-simulation-initial-conditions">
 <h2>Setting simulation initial conditions<a class="headerlink" href="#setting-simulation-initial-conditions" title="Permalink to this headline">¶</a></h2>
@@ -264,8 +275,8 @@
 </div>
 <div class="section" id="collecting-a-history-of-returned-values">
 <h2>Collecting a history of returned values<a class="headerlink" href="#collecting-a-history-of-returned-values" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="xref py py-func docutils literal"><span class="pre">run()</span></code> function provides a flag named collect that instructs PySD to collect all output from a series of run commands into a record. This can be helpful when running the model forwards for a period of time, then returning control to the user, who will specify changes to the model, and continue the integration forwards.</p>
-<p>The record is stored as a list of Pandas dataframes, one from each run. To access this record in its raw form, the user can access the <code class="xref py py-func docutils literal"><span class="pre">record()</span></code> attribute of the PySD class. It is usually more helpful to have a single dataframe which stitches together all of these pieces. We can access this via the <code class="xref py py-func docutils literal"><span class="pre">get_record()</span></code> method.</p>
+<p>The <tt class="xref py py-func docutils literal"><span class="pre">run()</span></tt> function provides a flag named collect that instructs PySD to collect all output from a series of run commands into a record. This can be helpful when running the model forwards for a period of time, then returning control to the user, who will specify changes to the model, and continue the integration forwards.</p>
+<p>The record is stored as a list of Pandas dataframes, one from each run. To access this record in its raw form, the user can access the <tt class="xref py py-func docutils literal"><span class="pre">record()</span></tt> attribute of the PySD class. It is usually more helpful to have a single dataframe which stitches together all of these pieces. We can access this via the <tt class="xref py py-func docutils literal"><span class="pre">get_record()</span></tt> method.</p>
 </div>
 </div>
 
@@ -317,7 +328,7 @@
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

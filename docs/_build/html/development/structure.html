@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Developer Documentation &mdash; PySD 0.3.0 documentation</title>
+  <title>Structure of the PySD module &mdash; PySD 0.3.0 documentation</title>
   
 
   
@@ -31,8 +31,9 @@
 
   
     <link rel="top" title="PySD 0.3.0 documentation" href="../index.html"/>
+        <link rel="up" title="Developer Documentation" href="development_index.html"/>
         <link rel="next" title="Internal Functions" href="internal_functions.html"/>
-        <link rel="prev" title="User Functions" href="../functions.html"/> 
+        <link rel="prev" title="Motivation of PySD" href="motivation.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -77,6 +78,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../installation.html#installing-from-source">Installing from source</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../installation.html#required-dependencies">Required Dependencies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../installation.html#optional-dependencies">Optional Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../installation.html#additional-resources">Additional Resources</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../basic_usage.html">Basic Usage</a><ul>
@@ -91,23 +93,33 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced_usage.html">Advanced Usage</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../advanced_usage.html#replacing-model-components-with-more-complex-objects">Replacing model components with more complex objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../advanced_usage.html#supplying-additional-arguments-to-the-integrator">Supplying additional arguments to the integrator</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../functions.html">User Functions</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Developer Documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#motivation-the-coming-of-age-of-big-data">Motivation: The (coming of) age of Big Data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#structure-of-the-pysd-module">Structure of the PySD module</a><ul>
+<li class="toctree-l1 current"><a class="reference internal" href="development_index.html">Developer Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="motivation.html">Motivation of PySD</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="motivation.html#the-coming-of-age-of-big-data">The (coming of) age of Big Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="motivation.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
+</ul>
+</li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Structure of the PySD module</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#builder">Builder</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#translation">Translation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#the-model-class">The model class</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="internal_functions.html">Internal Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="internal_functions.html#special-functions-needed-for-model-execution">Special functions needed for model execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="internal_functions.html#building-the-python-model-file">Building the python model file</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="internal_functions.html">Internal Functions</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="internal_functions.html#special-functions-needed-for-model-execution">Special functions needed for model execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="internal_functions.html#building-the-python-model-file">Building the python model file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vensim_translation.html">Vensim Translation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="vensim_translation.html#types">Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="vensim_translation.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="xmile_translation.html">XMILE Translation</a></li>
 </ul>
 </li>
 </ul>
@@ -134,11 +146,13 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../index.html">Docs</a> &raquo;</li>
       
-    <li>Developer Documentation</li>
+          <li><a href="development_index.html">Developer Documentation</a> &raquo;</li>
+      
+    <li>Structure of the PySD module</li>
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="../_sources/development/developer.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/development/structure.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -147,41 +161,22 @@
 </div>
           <div role="main" class="document">
             
-  <div class="section" id="developer-documentation">
-<h1>Developer Documentation<a class="headerlink" href="#developer-documentation" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="motivation-the-coming-of-age-of-big-data">
-<h2>Motivation: The (coming of) age of Big Data<a class="headerlink" href="#motivation-the-coming-of-age-of-big-data" title="Permalink to this headline">¶</a></h2>
-<p>The last few years have witnessed a massive growth in the collection of social and business data, and a corresponding boom of interest in learning about the behavior of social and business systems using this data. The field of ‘data science’ is developing a host of new techniques for dealing with and analyzing data, responding to an increase in demand for insights and the increased power of computing resources.</p>
-<p>So far, however, these new techniques are largely confined to variants of statistical summary, categorization, and inference; and if causal models are used, they are generally static in nature, ignoring the dynamic complexity and feedback structures of the systems in question. As the field of data science matures, there will be increasing demand for insights beyond those available through analysis unstructured by causal understanding. At that point data scientists may seek to add dynamic models of system structure to their toolbox.</p>
-<p>The field of system dynamics has always been interested in learning about social systems, and specializes in understanding dynamic complexity. There is likewise a long tradition of incorporating various forms of data into system dynamics models.3 While system dynamics practice has much to gain from the emergence of new volumes of social data, the community has yet to benefit fully from the data science revolution.</p>
-<p>There are a variety of reasons for this, the largest likely being that the two communities have yet to commingle to a great extent. A further, and ultimately more tractable reason is that the tools of system dynamics and the tools of data analytics are not tightly integrated, making joint method analysis unwieldy. There is a rich problem space that depends upon the ability of these fields to support one another, and so there is a need for tools that help the two methodologies work together. PySD is designed to meet this need.</p>
-</div>
-<div class="section" id="general-approaches-for-integrating-system-dynamic-models-and-data-analytics">
-<h2>General approaches for integrating system dynamic models and data analytics<a class="headerlink" href="#general-approaches-for-integrating-system-dynamic-models-and-data-analytics" title="Permalink to this headline">¶</a></h2>
-<p>Before considering how system dynamics techniques can be used in data science applications, we should consider the variety of ways in which the system dynamics community has traditionally dealt with integration of data and models.</p>
-<p>The first paradigm for using numerical data in support of modeling efforts is to import data into system dynamics modeling software. Algorithms for comparing models with data are built into the tool itself, and are usable through a graphical front-end interface as with model fitting in Vensim, or through a programming environment unique to the tool. When new techniques such as Markov chain Monte Carlo analysis become relevant to the system dynamics community, they are often brought into the SD tool.</p>
-<p>This approach appropriately caters to system dynamics modelers who want to take advantage of well-established data science techniques without needing to learn a programming language, and extends the functionality of system dynamics to the basics of integrated model analysis.</p>
-<p>A second category of tools uses a standard system dynamics tool as a computation engine for analysis performed in a coding environment. This is the approach taken by the Exploratory Modeling Analysis (EMA) Workbench6, or the Behavior Analysis and Testing Software (BATS)7. This first step towards bringing system dynamics to a more inclusive analysis environment enables many new types of model understanding, but imposes limits on the depth of interaction with models and the ability to scale simulation to support large analysis.</p>
-<p>A third category of tools imports the models created by traditional tools to perform analyses independently of the original modeling tool. An example of this is SDM-Doc8, a model documentation tool, or Abdel-Gawad et. al.’s eigenvector analysis tool9. It is this third category to which PySD belongs.</p>
-<p>The central paradigm of PySD is that it is more efficient to bring the mature capabilities of system dynamics into an environment in use for active development in data science, than to attempt to bring each new development in inference and machine learning into the system dynamics enclave.</p>
-<p>PySD reads a model file – the product of a modeling program such as Vensim10 or Stella/iThink11 – and cross compiles it into Python, providing a simulation engine that can run these models natively in the Python environment. It is not a substitute for these tools, and cannot be used to replace a visual model construction environment.</p>
-</div>
-<div class="section" id="structure-of-the-pysd-module">
-<h2>Structure of the PySD module<a class="headerlink" href="#structure-of-the-pysd-module" title="Permalink to this headline">¶</a></h2>
-<p>PySD provides a set of translators that interpret a Vensim or XMILE12 format model into a Python native class. The model components object represents the state of the system, and contains methods that compute auxiliary and flow variables based upon the current state.</p>
+  <div class="section" id="structure-of-the-pysd-module">
+<h1>Structure of the PySD module<a class="headerlink" href="#structure-of-the-pysd-module" title="Permalink to this headline">¶</a></h1>
+<p>PySD provides a set of translators that interpret a Vensim or XMILE format model into a Python native class. The model components object represents the state of the system, and contains methods that compute auxiliary and flow variables based upon the current state.</p>
 <p>The components object is wrapped within a Python class that provides methods for modifying and executing the model. These three pieces constitute the core functionality of the PySD module, and allow it to interact with the Python data analytics stack.</p>
 <div class="section" id="builder">
-<h3>Builder<a class="headerlink" href="#builder" title="Permalink to this headline">¶</a></h3>
+<h2>Builder<a class="headerlink" href="#builder" title="Permalink to this headline">¶</a></h2>
 </div>
 <div class="section" id="translation">
-<h3>Translation<a class="headerlink" href="#translation" title="Permalink to this headline">¶</a></h3>
-<p>The PySD module is capable of importing models from a Vensim model file (<a href="#id1"><span class="problematic" id="id2">*</span></a>.mdl) or an XMILE format xml file. Translation makes use of a Parsing Expression Grammar parser, using the third party Python library Parsimonious13 to construct an abstract syntax tree based upon the full model file (in the case of Vensim) or individual expressions (in the case of XMILE).</p>
+<h2>Translation<a class="headerlink" href="#translation" title="Permalink to this headline">¶</a></h2>
+<p>The PySD module is capable of importing models from a Vensim model file (*.mdl) or an XMILE format xml file. Translation makes use of a Parsing Expression Grammar parser, using the third party Python library Parsimonious13 to construct an abstract syntax tree based upon the full model file (in the case of Vensim) or individual expressions (in the case of XMILE).</p>
 <p>The translators then crawl the tree, using a dictionary to translate Vensim or Xmile syntax into its appropriate Python equivalent. The use of a translation dictionary for all syntactic and programmatic components prevents execution of arbitrary code from unverified model files, and ensures that we only translate commands that PySD is equipped to handle. Any unsupported model functionality should therefore be discovered at import, instead of at runtime.</p>
 <p>The use of a one-to-one dictionary in translation means that the breadth of functionality is inherently limited. In the case where no direct Python equivalent is available, PySD provides a library of functions such as pulse, step, etc. that are specific to dynamic model behavior.</p>
 <p>In addition to translating individual commands between Vensim/XMILE and Python, PySD reworks component identifiers to be Python-safe by replacing spaces with underscores. The translator allows source identifiers to make use of alphanumeric characters, spaces, or the $ symbol.</p>
 </div>
 <div class="section" id="the-model-class">
-<h3>The model class<a class="headerlink" href="#the-model-class" title="Permalink to this headline">¶</a></h3>
+<h2>The model class<a class="headerlink" href="#the-model-class" title="Permalink to this headline">¶</a></h2>
 <p>The translator constructs a Python class that represents the system dynamics model. The class maintains a dictionary representing the current values of each of the system stocks, and the current simulation time, making it a ‘statefull’ model in much the same way that the system itself has a specific state at any point in time.</p>
 <p>The model class also contains a function for each of the model components, representing the essential model equations. The docstring for each function contains the model documentation and units as translated from the original model file. A query to any of the model functions will calculate and return its value according to the stored state of the system.</p>
 <p>The model class maintains only a single state of the system in memory, meaning that all functions must obey the Markov property  - that the future state of the system can be calculated entirely based upon its current state. In addition to simplifying integration, this requirement enables analyses that interact with the model at a step-by-step level. The downside to this design choice is that several components of Vensim or XMILE functionality – the most significant being the infinite order delay – are intentionally not supported. In many cases similar behavior can be approximated through other constructs.</p>
@@ -190,7 +185,6 @@ The PySD class
 The PySD class provides the machinery to get the model moving, supply it with data, or modify its parameters. In addition, this class is the primary way that users interact with the PySD module.</p>
 <p>The basic function for executing a model is appropriately named.run(). This function passes the model into scipy’s odeint() ordinary differential equations solver. The scipy integrator is itself utilizing the lsoda integrator from the Fortran library odepack14, and so integration takes advantage of highly optimized low-level routines to improve speed. We use the model’s timestep to set the maximum step size for the integrator’s adaptive solver to ensure that the integrator properly accounts for discontinuities.</p>
 <p>The .run() function returns to the user a Pandas dataframe representing the output of their simulation run. A variety of options allow the user to specify which components of the model they would like returned, and the timestamps at which they would like those measurements. Additional parameters make parameter changes to the model, modify its starting conditions, or specify how simulation results should be logged.</p>
-</div>
 </div>
 </div>
 
@@ -203,7 +197,7 @@ The PySD class provides the machinery to get the model moving, supply it with da
         <a href="internal_functions.html" class="btn btn-neutral float-right" title="Internal Functions" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../functions.html" class="btn btn-neutral" title="User Functions" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="motivation.html" class="btn btn-neutral" title="Motivation of PySD" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -242,7 +236,7 @@ The PySD class provides the machinery to get the model moving, supply it with da
       <script type="text/javascript" src="../_static/jquery.js"></script>
       <script type="text/javascript" src="../_static/underscore.js"></script>
       <script type="text/javascript" src="../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

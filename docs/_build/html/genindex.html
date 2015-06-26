@@ -95,25 +95,29 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="functions.html">User Functions</a></li>
-<li class="toctree-l1"><a class="reference internal" href="development/developer.html">Developer Documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="development/developer.html#motivation-the-coming-of-age-of-big-data">Motivation: The (coming of) age of Big Data</a></li>
-<li class="toctree-l2"><a class="reference internal" href="development/developer.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
-<li class="toctree-l2"><a class="reference internal" href="development/developer.html#structure-of-the-pysd-module">Structure of the PySD module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="development/developer.html#builder">Builder</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/developer.html#translation">Translation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/developer.html#the-model-class">The model class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="development/development_index.html">Developer Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="development/motivation.html">Motivation of PySD</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="development/motivation.html#the-coming-of-age-of-big-data">The (coming of) age of Big Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/motivation.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
 </ul>
 </li>
+<li class="toctree-l2"><a class="reference internal" href="development/structure.html">Structure of the PySD module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="development/structure.html#builder">Builder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/structure.html#translation">Translation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/structure.html#the-model-class">The model class</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="development/internal_functions.html">Internal Functions</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="development/internal_functions.html#special-functions-needed-for-model-execution">Special functions needed for model execution</a></li>
-<li class="toctree-l2"><a class="reference internal" href="development/internal_functions.html#building-the-python-model-file">Building the python model file</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/internal_functions.html">Internal Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="development/internal_functions.html#special-functions-needed-for-model-execution">Special functions needed for model execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/internal_functions.html#building-the-python-model-file">Building the python model file</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="development/translation.html">Translation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="development/translation.html#types">Types</a></li>
-<li class="toctree-l2"><a class="reference internal" href="development/translation.html#functions">Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/vensim_translation.html">Vensim Translation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="development/vensim_translation.html#types">Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development/vensim_translation.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="development/xmile_translation.html">XMILE Translation</a></li>
 </ul>
 </li>
 </ul>
@@ -155,11 +159,14 @@
 <h1 id="index">Index</h1>
 
 <div class="genindex-jumpbox">
- <a href="#A"><strong>A</strong></a>
+ <a href="#_"><strong>_</strong></a>
+ | <a href="#A"><strong>A</strong></a>
  | <a href="#B"><strong>B</strong></a>
  | <a href="#C"><strong>C</strong></a>
  | <a href="#D"><strong>D</strong></a>
+ | <a href="#E"><strong>E</strong></a>
  | <a href="#F"><strong>F</strong></a>
+ | <a href="#G"><strong>G</strong></a>
  | <a href="#I"><strong>I</strong></a>
  | <a href="#L"><strong>L</strong></a>
  | <a href="#N"><strong>N</strong></a>
@@ -169,6 +176,16 @@
  | <a href="#T"><strong>T</strong></a>
  
 </div>
+<h2 id="_">_</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="functions.html#pysd.PySD.__str__">__str__() (pysd.PySD method)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
 <h2 id="A">A</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
@@ -207,6 +224,12 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
+  <dt><a href="functions.html#pysd.PySD.clear_record">clear_record() (pysd.PySD method)</a>
+  </dt>
+
+  </dl></td>
+  <td style="width: 33%" valign="top"><dl>
+      
   <dt><a href="development/internal_functions.html#pysd.builder.ComponentClass">ComponentClass (class in pysd.builder)</a>
   </dt>
 
@@ -229,11 +252,31 @@
   </dl></td>
 </tr></table>
 
+<h2 id="E">E</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="functions.html#pysd.PySD.extend_dataframe">extend_dataframe() (pysd.PySD method)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="development/internal_functions.html#pysd.functions.Functions">Functions (class in pysd.functions)</a>
+  </dt>
+
+  </dl></td>
+</tr></table>
+
+<h2 id="G">G</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="functions.html#pysd.PySD.get_record">get_record() (pysd.PySD method)</a>
   </dt>
 
   </dl></td>
@@ -257,6 +300,12 @@
 
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="functions.html#pysd.load">load() (in module pysd)</a>
+  </dt>
+
+  </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="development/internal_functions.html#pysd.functions.Functions.lookup">lookup() (pysd.functions.Functions method)</a>
@@ -289,7 +338,7 @@
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="functions.html#pysd.pysd">pysd (in module pysd)</a>
+  <dt><a href="functions.html#pysd.PySD">PySD (class in pysd)</a>
   </dt>
 
   </dl></td>
@@ -306,10 +355,18 @@
   <dt><a href="functions.html#pysd.read_vensim">read_vensim() (in module pysd)</a>
   </dt>
 
+      
+  <dt><a href="functions.html#pysd.read_xmile">read_xmile() (in module pysd)</a>
+  </dt>
+
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
       
   <dt><a href="development/internal_functions.html#pysd.builder.ComponentClass.reset_state">reset_state() (pysd.builder.ComponentClass method)</a>
+  </dt>
+
+      
+  <dt><a href="functions.html#pysd.PySD.run">run() (pysd.PySD method)</a>
   </dt>
 
   </dl></td>
@@ -319,11 +376,23 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%" valign="top"><dl>
       
-  <dt><a href="development/internal_functions.html#pysd.builder.ComponentClass.state_vector">state_vector() (pysd.builder.ComponentClass method)</a>
+  <dt><a href="functions.html#pysd.PySD.set_components">set_components() (pysd.PySD method)</a>
+  </dt>
+
+      
+  <dt><a href="functions.html#pysd.PySD.set_initial_condition">set_initial_condition() (pysd.PySD method)</a>
+  </dt>
+
+      
+  <dt><a href="functions.html#pysd.PySD.set_state">set_state() (pysd.PySD method)</a>
   </dt>
 
   </dl></td>
   <td style="width: 33%" valign="top"><dl>
+      
+  <dt><a href="development/internal_functions.html#pysd.builder.ComponentClass.state_vector">state_vector() (pysd.builder.ComponentClass method)</a>
+  </dt>
+
       
   <dt><a href="development/internal_functions.html#pysd.functions.Functions.step">step() (pysd.functions.Functions method)</a>
   </dt>
@@ -381,7 +450,7 @@
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

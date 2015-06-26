@@ -1,5 +1,5 @@
-Translation
-===========
+Vensim Translation
+==================
 
 PySD currently supports basic vensim functionality including:
 
@@ -34,3 +34,5 @@ Vensim             Supported       Notes
 
 Not supported:
 tagging variables as 'supplementary'
+
+
