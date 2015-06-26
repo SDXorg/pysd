@@ -170,19 +170,19 @@
 <p>These are the primary functions that control model import and execution.</p>
 <dl class="class">
 <dt id="pysd.PySD">
-<em class="property">class </em><tt class="descclassname">pysd.</tt><tt class="descname">PySD</tt><big>(</big><em>component_class</em><big>)</big><a class="headerlink" href="#pysd.PySD" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">pysd.</code><code class="descname">PySD</code><span class="sig-paren">(</span><em>component_class</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#PySD"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.PySD" title="Permalink to this definition">¶</a></dt>
 <dd><p>PySD is the default class charged with running a model.</p>
 <p>It can be initialized by passing an existing component class.</p>
 <p>The import functions pull models and create this class.</p>
 <dl class="method">
 <dt id="pysd.PySD.__str__">
-<tt class="descname">__str__</tt><big>(</big><big>)</big><a class="headerlink" href="#pysd.PySD.__str__" title="Permalink to this definition">¶</a></dt>
+<code class="descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#PySD.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.PySD.__str__" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return model source file</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="pysd.PySD.clear_record">
-<tt class="descname">clear_record</tt><big>(</big><big>)</big><a class="headerlink" href="#pysd.PySD.clear_record" title="Permalink to this definition">¶</a></dt>
+<code class="descname">clear_record</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#PySD.clear_record"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.PySD.clear_record" title="Permalink to this definition">¶</a></dt>
 <dd><p>Reset the recorder.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">clear_record</span><span class="p">()</span>
 </pre></div>
@@ -191,14 +191,14 @@
 
 <dl class="method">
 <dt id="pysd.PySD.extend_dataframe">
-<tt class="descname">extend_dataframe</tt><big>(</big><em>state_df</em>, <em>return_columns</em><big>)</big><a class="headerlink" href="#pysd.PySD.extend_dataframe" title="Permalink to this definition">¶</a></dt>
+<code class="descname">extend_dataframe</code><span class="sig-paren">(</span><em>state_df</em>, <em>return_columns</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#PySD.extend_dataframe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.PySD.extend_dataframe" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculates model values at given system states
 This is primarily an internal method used by the run function</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="pysd.PySD.get_record">
-<tt class="descname">get_record</tt><big>(</big><big>)</big><a class="headerlink" href="#pysd.PySD.get_record" title="Permalink to this definition">¶</a></dt>
+<code class="descname">get_record</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#PySD.get_record"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.PySD.get_record" title="Permalink to this definition">¶</a></dt>
 <dd><p>Return the recorded model information.</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">get_record</span><span class="p">()</span>
 </pre></div>
@@ -207,7 +207,7 @@ This is primarily an internal method used by the run function</p>
 
 <dl class="method">
 <dt id="pysd.PySD.run">
-<tt class="descname">run</tt><big>(</big><em>params={}</em>, <em>return_columns=[]</em>, <em>return_timestamps=[]</em>, <em>initial_condition='original'</em>, <em>collect=False</em>, <em>**intg_kwargs</em><big>)</big><a class="headerlink" href="#pysd.PySD.run" title="Permalink to this definition">¶</a></dt>
+<code class="descname">run</code><span class="sig-paren">(</span><em>params={}</em>, <em>return_columns=[]</em>, <em>return_timestamps=[]</em>, <em>initial_condition='original'</em>, <em>collect=False</em>, <em>**intg_kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#PySD.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.PySD.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simulate the model&#8217;s behavior over time.
 Return a pandas dataframe with timestamps as rows,
 model elements as columns.</p>
@@ -254,9 +254,9 @@ of these will be <cite>tcrit</cite>, <cite>hmax</cite>, <cite>mxstep</cite>.</li
 <div class="admonition seealso">
 <p class="first admonition-title">See also</p>
 <dl class="last docutils">
-<dt><tt class="xref py py-meth docutils literal"><span class="pre">pysd.set_components()</span></tt></dt>
+<dt><code class="xref py py-meth docutils literal"><span class="pre">pysd.set_components()</span></code></dt>
 <dd>handles setting model parameters</dd>
-<dt><tt class="xref py py-meth docutils literal"><span class="pre">pysd.set_initial_condition()</span></tt></dt>
+<dt><code class="xref py py-meth docutils literal"><span class="pre">pysd.set_initial_condition()</span></code></dt>
 <dd>handles setting initial conditions</dd>
 </dl>
 </div>
@@ -264,7 +264,7 @@ of these will be <cite>tcrit</cite>, <cite>hmax</cite>, <cite>mxstep</cite>.</li
 
 <dl class="method">
 <dt id="pysd.PySD.set_components">
-<tt class="descname">set_components</tt><big>(</big><em>params</em><big>)</big><a class="headerlink" href="#pysd.PySD.set_components" title="Permalink to this definition">¶</a></dt>
+<code class="descname">set_components</code><span class="sig-paren">(</span><em>params</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#PySD.set_components"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.PySD.set_components" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the value of exogenous model elements.
 Element values can be passed as keyword=value pairs in the function call.
 Values can be numeric type or pandas Series.
@@ -279,7 +279,7 @@ Series will be interpolated by integrator.</p>
 
 <dl class="method">
 <dt id="pysd.PySD.set_initial_condition">
-<tt class="descname">set_initial_condition</tt><big>(</big><em>initial_condition</em><big>)</big><a class="headerlink" href="#pysd.PySD.set_initial_condition" title="Permalink to this definition">¶</a></dt>
+<code class="descname">set_initial_condition</code><span class="sig-paren">(</span><em>initial_condition</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#PySD.set_initial_condition"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.PySD.set_initial_condition" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the initial conditions of the integration.
 There are several ways to do this:</p>
 <ul class="simple">
@@ -300,7 +300,7 @@ pysd.set_state()</p>
 
 <dl class="method">
 <dt id="pysd.PySD.set_state">
-<tt class="descname">set_state</tt><big>(</big><em>t</em>, <em>state</em><big>)</big><a class="headerlink" href="#pysd.PySD.set_state" title="Permalink to this definition">¶</a></dt>
+<code class="descname">set_state</code><span class="sig-paren">(</span><em>t</em>, <em>state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#PySD.set_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.PySD.set_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the system state.</p>
 <dl class="docutils">
 <dt>t <span class="classifier-delimiter">:</span> <span class="classifier">numeric</span></dt>
@@ -316,7 +316,7 @@ state elements are correct.</dd>
 
 <dl class="function">
 <dt id="pysd.read_vensim">
-<tt class="descclassname">pysd.</tt><tt class="descname">read_vensim</tt><big>(</big><em>mdl_file</em><big>)</big><a class="headerlink" href="#pysd.read_vensim" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pysd.</code><code class="descname">read_vensim</code><span class="sig-paren">(</span><em>mdl_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#read_vensim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.read_vensim" title="Permalink to this definition">¶</a></dt>
 <dd><dl class="docutils">
 <dt>Construct a model from Vensim <cite>.mdl</cite> file.</dt>
 <dd><p class="first">Translate a vensim model file into a python class.</p>
@@ -459,14 +459,14 @@ state elements are correct.</dd>
 
 <dl class="function">
 <dt id="pysd.read_xmile">
-<tt class="descclassname">pysd.</tt><tt class="descname">read_xmile</tt><big>(</big><em>xmile_file</em><big>)</big><a class="headerlink" href="#pysd.read_xmile" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pysd.</code><code class="descname">read_xmile</code><span class="sig-paren">(</span><em>xmile_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#read_xmile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.read_xmile" title="Permalink to this definition">¶</a></dt>
 <dd><p>Construct a model object from <cite>.xmile</cite> file.  Translate an xmile model file into a python class.
 Functionality is currently limited.</p>
 </dd></dl>
 
 <dl class="function">
 <dt id="pysd.load">
-<tt class="descclassname">pysd.</tt><tt class="descname">load</tt><big>(</big><em>py_model_file</em><big>)</big><a class="headerlink" href="#pysd.load" title="Permalink to this definition">¶</a></dt>
+<code class="descclassname">pysd.</code><code class="descname">load</code><span class="sig-paren">(</span><em>py_model_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.load" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load a python-converted model file.</p>
 </dd></dl>
 
@@ -520,7 +520,7 @@ Functionality is currently limited.</p>
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

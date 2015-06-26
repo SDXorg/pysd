@@ -1,0 +1,285 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pysd.functions.functions &mdash; PySD 0.3.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="PySD 0.3.0 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="../../../index.html" class="icon icon-home"> PySD
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#installing-via-pip">Installing via pip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#installing-from-source">Installing from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#required-dependencies">Required Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#optional-dependencies">Optional Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#additional-resources">Additional Resources</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../basic_usage.html">Basic Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../basic_usage.html#importing-a-model-and-getting-started">Importing a model and getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basic_usage.html#running-the-model">Running the Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basic_usage.html#outputting-various-run-information">Outputting various run information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basic_usage.html#setting-parameter-values">Setting parameter values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basic_usage.html#setting-simulation-initial-conditions">Setting simulation initial conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basic_usage.html#querying-current-values">Querying current values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basic_usage.html#collecting-a-history-of-returned-values">Collecting a history of returned values</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../advanced_usage.html">Advanced Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../advanced_usage.html#replacing-model-components-with-more-complex-objects">Replacing model components with more complex objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../advanced_usage.html#supplying-additional-arguments-to-the-integrator">Supplying additional arguments to the integrator</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../functions.html">User Functions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/development_index.html">Developer Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../development/motivation.html">Motivation of PySD</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../development/motivation.html#the-coming-of-age-of-big-data">The (coming of) age of Big Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../development/motivation.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../development/philosophy.html">PySD Design Philosophy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../development/structure.html">Structure of the PySD module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../development/structure.html#builder">Builder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../development/structure.html#translation">Translation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../development/structure.html#the-model-class">The model class</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../development/internal_functions.html">Internal Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../development/internal_functions.html#special-functions-needed-for-model-execution">Special functions needed for model execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../development/internal_functions.html#building-the-python-model-file">Building the python model file</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../development/vensim_translation.html">Vensim Translation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../development/vensim_translation.html#types">Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../development/vensim_translation.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../development/xmile_translation.html">XMILE Translation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../development/pathway.html">PySD Development Pathway</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../development/pathway.html#current-features">Current Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../development/pathway.html#possible-future-features">Possible Future features</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../development/complement.html">Complementary Projects</a></li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">PySD</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>pysd.functions.functions</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <h1>Source code for pysd.functions.functions</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">scipy.stats</span> <span class="kn">as</span> <span class="nn">stats</span>
+
+
+<div class="viewcode-block" id="Functions"><a class="viewcode-back" href="../../../development/internal_functions.html#pysd.functions.Functions">[docs]</a><span class="k">class</span> <span class="nc">Functions</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">component_class</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">components</span> <span class="o">=</span> <span class="n">component_class</span>
+
+
+<div class="viewcode-block" id="Functions.if_then_else"><a class="viewcode-back" href="../../../development/internal_functions.html#pysd.functions.Functions.if_then_else">[docs]</a>    <span class="k">def</span> <span class="nf">if_then_else</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">condition</span><span class="p">,</span> <span class="n">val_if_true</span><span class="p">,</span> <span class="n">val_if_false</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Replicates vensim&#39;s IF THEN ELSE function. &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">condition</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">val_if_true</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">val_if_false</span>
+
+</div>
+<div class="viewcode-block" id="Functions.step"><a class="viewcode-back" href="../../../development/internal_functions.html#pysd.functions.Functions.step">[docs]</a>    <span class="k">def</span> <span class="nf">step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">tstep</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;&quot; Impliments vensim&#39;s STEP function</span>
+<span class="sd">        </span>
+<span class="sd">        In range [-inf, tstep) returns 0</span>
+<span class="sd">        In range [tstep, +inf] returns `value`</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">t</span>
+        <span class="k">return</span> <span class="n">value</span> <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;=</span><span class="n">tstep</span> <span class="k">else</span> <span class="mi">0</span>
+
+</div>
+<div class="viewcode-block" id="Functions.pulse"><a class="viewcode-back" href="../../../development/internal_functions.html#pysd.functions.Functions.pulse">[docs]</a>    <span class="k">def</span> <span class="nf">pulse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">duration</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Implements vensim&#39;s PULSE function</span>
+<span class="sd">        </span>
+<span class="sd">        In range [-inf, start) returns 0</span>
+<span class="sd">        In range [start, start+duration) returns 1</span>
+<span class="sd">        In range [start+duration, +inf] returns 0</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">t</span>
+        <span class="k">return</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;=</span> <span class="n">start</span> <span class="ow">and</span> <span class="n">t</span> <span class="o">&lt;</span> <span class="n">start</span><span class="o">+</span><span class="n">duration</span> <span class="k">else</span> <span class="mi">0</span>
+
+    <span class="c"># Warning: I&#39;m not totally sure if this is correct</span></div>
+<div class="viewcode-block" id="Functions.pulse_train"><a class="viewcode-back" href="../../../development/internal_functions.html#pysd.functions.Functions.pulse_train">[docs]</a>    <span class="k">def</span> <span class="nf">pulse_train</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">duration</span><span class="p">,</span> <span class="n">repeattime</span><span class="p">,</span> <span class="n">end</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">t</span>
+        <span class="k">return</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">t</span> <span class="o">&gt;=</span> <span class="n">start</span> <span class="ow">and</span> <span class="p">(</span><span class="n">t</span><span class="o">-</span><span class="n">start</span><span class="p">)</span><span class="o">%</span><span class="n">repeattime</span> <span class="o">&lt;</span> <span class="n">duration</span> <span class="k">else</span> <span class="mi">0</span>
+</div>
+<div class="viewcode-block" id="Functions.ramp"><a class="viewcode-back" href="../../../development/internal_functions.html#pysd.functions.Functions.ramp">[docs]</a>    <span class="k">def</span> <span class="nf">ramp</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">slope</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">finish</span><span class="p">):</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">t</span>
+        <span class="k">if</span> <span class="n">t</span> <span class="o">&lt;</span> <span class="n">start</span><span class="p">:</span>
+            <span class="k">return</span> <span class="mi">0</span>
+        <span class="k">elif</span> <span class="n">t</span> <span class="o">&gt;</span> <span class="n">finish</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">slope</span> <span class="o">*</span> <span class="p">(</span><span class="n">start</span><span class="o">-</span><span class="n">finish</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">slope</span> <span class="o">*</span> <span class="p">(</span><span class="n">t</span><span class="o">-</span><span class="n">start</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Functions.bounded_normal"><a class="viewcode-back" href="../../../development/internal_functions.html#pysd.functions.Functions.bounded_normal">[docs]</a>    <span class="k">def</span> <span class="nf">bounded_normal</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">minimum</span><span class="p">,</span> <span class="n">maximum</span><span class="p">,</span> <span class="n">mean</span><span class="p">,</span> <span class="n">std</span><span class="p">,</span> <span class="n">seed</span><span class="p">):</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">seed</span><span class="p">(</span><span class="n">seed</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">stats</span><span class="o">.</span><span class="n">truncnorm</span><span class="o">.</span><span class="n">rvs</span><span class="p">(</span><span class="n">minimum</span><span class="p">,</span> <span class="n">maximum</span><span class="p">,</span> <span class="n">loc</span><span class="o">=</span><span class="n">mean</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">std</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Functions.lookup"><a class="viewcode-back" href="../../../development/internal_functions.html#pysd.functions.Functions.lookup">[docs]</a>    <span class="k">def</span> <span class="nf">lookup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span><span class="p">)</span>
+</pre></div></div></div>
+
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, James Houghton.
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.3.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

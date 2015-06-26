@@ -1,0 +1,612 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pysd.builder.builder &mdash; PySD 0.3.0 documentation</title>
+  
+
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+    <link rel="top" title="PySD 0.3.0 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+
+        
+          <a href="../../../index.html" class="icon icon-home"> PySD
+        
+
+        
+        </a>
+
+        
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+        
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+          
+          
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#installing-via-pip">Installing via pip</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#installing-from-source">Installing from source</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#required-dependencies">Required Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#optional-dependencies">Optional Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../installation.html#additional-resources">Additional Resources</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../basic_usage.html">Basic Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../basic_usage.html#importing-a-model-and-getting-started">Importing a model and getting started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basic_usage.html#running-the-model">Running the Model</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basic_usage.html#outputting-various-run-information">Outputting various run information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basic_usage.html#setting-parameter-values">Setting parameter values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basic_usage.html#setting-simulation-initial-conditions">Setting simulation initial conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basic_usage.html#querying-current-values">Querying current values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../basic_usage.html#collecting-a-history-of-returned-values">Collecting a history of returned values</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../advanced_usage.html">Advanced Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../advanced_usage.html#replacing-model-components-with-more-complex-objects">Replacing model components with more complex objects</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../advanced_usage.html#supplying-additional-arguments-to-the-integrator">Supplying additional arguments to the integrator</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../functions.html">User Functions Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../development/development_index.html">Developer Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../development/motivation.html">Motivation of PySD</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../development/motivation.html#the-coming-of-age-of-big-data">The (coming of) age of Big Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../development/motivation.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../development/philosophy.html">PySD Design Philosophy</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../development/structure.html">Structure of the PySD module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../development/structure.html#builder">Builder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../development/structure.html#translation">Translation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../development/structure.html#the-model-class">The model class</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../development/internal_functions.html">Internal Functions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../development/internal_functions.html#special-functions-needed-for-model-execution">Special functions needed for model execution</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../development/internal_functions.html#building-the-python-model-file">Building the python model file</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../development/vensim_translation.html">Vensim Translation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../development/vensim_translation.html#types">Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../development/vensim_translation.html#functions">Functions</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../development/xmile_translation.html">XMILE Translation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../../development/pathway.html">PySD Development Pathway</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../development/pathway.html#current-features">Current Features</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../development/pathway.html#possible-future-features">Possible Future features</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../../../development/complement.html">Complementary Projects</a></li>
+</ul>
+</li>
+</ul>
+
+          
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">PySD</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>pysd.builder.builder</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <h1>Source code for pysd.builder.builder</h1><div class="highlight"><pre>
+<span class="c"># This is the base class that gets built up into a model by addition of functions.</span>
+
+<span class="c"># Todo:</span>
+<span class="c"># - the __doc__ attribute isn&#39;t something that you can call, need to rework it,</span>
+<span class="c"># along with the __str_ method</span>
+<span class="c"># - make the doc function accept a &#39;short&#39; argument.</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+<span class="kn">import</span> <span class="nn">inspect</span>
+<span class="kn">from</span> <span class="nn">pysd</span> <span class="kn">import</span> <span class="n">functions</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">izip</span>
+
+
+
+<div class="viewcode-block" id="ComponentClass"><a class="viewcode-back" href="../../../development/internal_functions.html#pysd.builder.ComponentClass">[docs]</a><span class="k">class</span> <span class="nc">ComponentClass</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This is a template class to be subclassed and fleshed out by the translation tools.</span>
+
+<span class="sd">    A function should be added for every flow or auxiliary variable, having the name of that </span>
+<span class="sd">    variable, taking no parameters, which calculates the value of the variable.</span>
+
+<span class="sd">    A function should be added for each stock called d&lt;stockname&gt;_dt() which calculates</span>
+<span class="sd">    the net inflow to the stock as a function of the flows.</span>
+
+<span class="sd">    A function should be added for each stock called &lt;stockname&gt;_init() which calculates</span>
+<span class="sd">    the (potentially dynamically generated) initial value for the stock.</span>
+
+<span class="sd">    This docstring will be rewritten and dynamically generated.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stocknames</span> <span class="o">=</span> <span class="p">[</span><span class="n">name</span><span class="p">[:</span><span class="o">-</span><span class="mi">5</span><span class="p">]</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="k">if</span> <span class="n">name</span><span class="p">[</span><span class="o">-</span><span class="mi">5</span><span class="p">:]</span> <span class="o">==</span> <span class="s">&#39;_init&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stocknames</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span> <span class="c">#inplace</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_dfuncs</span> <span class="o">=</span> <span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;d</span><span class="si">%s</span><span class="s">_dt&#39;</span><span class="o">%</span><span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stocknames</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stocknames</span><span class="p">,</span> <span class="p">[</span><span class="bp">None</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stocknames</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reset_state</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__doc__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">doc</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">functions</span> <span class="o">=</span> <span class="n">functions</span><span class="o">.</span><span class="n">Functions</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ComponentClass.doc"><a class="viewcode-back" href="../../../development/internal_functions.html#pysd.builder.ComponentClass.doc">[docs]</a>    <span class="k">def</span> <span class="nf">doc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This function returns an aggregation of all of the docstrings of all of the</span>
+<span class="sd">        elements in the model.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">#docstring = self.__str__ + &#39;\n\n&#39;</span>
+        <span class="c">#this needs to have a way to make a &#39;short&#39; docstring...</span>
+        <span class="n">docstring</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+        <span class="k">for</span> <span class="n">method</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">method</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;__doc__&#39;</span><span class="p">,</span> <span class="s">&#39;__init__&#39;</span><span class="p">,</span> <span class="s">&#39;__module__&#39;</span><span class="p">,</span> <span class="s">&#39;__str__&#39;</span><span class="p">,</span> <span class="s">&#39;t&#39;</span><span class="p">,</span>
+                              <span class="s">&#39;d_dt&#39;</span><span class="p">,</span> <span class="s">&#39;reset_state&#39;</span><span class="p">,</span> <span class="s">&#39;model_description&#39;</span><span class="p">,</span> <span class="s">&#39;saveper&#39;</span><span class="p">,</span>
+                              <span class="s">&#39;state&#39;</span><span class="p">,</span> <span class="s">&#39;state_vector&#39;</span><span class="p">]:</span>
+                <span class="k">if</span> <span class="n">method</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;_&#39;</span><span class="p">]:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">docstring</span> <span class="o">+=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getdoc</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">))</span> <span class="o">+</span> <span class="s">&#39;</span><span class="se">\n\n</span><span class="s">&#39;</span>
+                    <span class="k">except</span><span class="p">:</span>
+                        <span class="k">pass</span>
+
+        <span class="k">return</span> <span class="n">docstring</span>
+</div>
+<div class="viewcode-block" id="ComponentClass.initial_time"><a class="viewcode-back" href="../../../development/internal_functions.html#pysd.builder.ComponentClass.initial_time">[docs]</a>    <span class="k">def</span> <span class="nf">initial_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This function represents the initial time as set in the model file</span>
+<span class="sd">        It should be overwritten during the class extension.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="mi">0</span>
+</div>
+<div class="viewcode-block" id="ComponentClass.reset_state"><a class="viewcode-back" href="../../../development/internal_functions.html#pysd.builder.ComponentClass.reset_state">[docs]</a>    <span class="k">def</span> <span class="nf">reset_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sets the model state to the state described in the model file. &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">initial_time</span><span class="p">()</span> <span class="c">#set the initial time</span>
+        <span class="n">retry_flag</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">eval</span><span class="p">(</span><span class="s">&#39;self.&#39;</span><span class="o">+</span><span class="n">key</span><span class="o">+</span><span class="s">&#39;_init()&#39;</span><span class="p">)</span> <span class="c">#set the initial state</span>
+            <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                <span class="n">retry_flag</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">if</span> <span class="n">retry_flag</span><span class="p">:</span>
+            <span class="c">#this is so that if a stock references the initial value of another stock,</span>
+            <span class="c">#we can try all of the stocks that don&#39;t have that type of reference, and</span>
+            <span class="c">#then come back to try it again</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reset_state</span><span class="p">()</span> <span class="c">#potential for infinite loop!</span>
+</div>
+<div class="viewcode-block" id="ComponentClass.d_dt"><a class="viewcode-back" href="../../../development/internal_functions.html#pysd.builder.ComponentClass.d_dt">[docs]</a>    <span class="k">def</span> <span class="nf">d_dt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_vector</span><span class="p">,</span> <span class="n">t</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;The primary purpose of this function is to interact with the integrator.</span>
+<span class="sd">        It takes a state vector, sets the state of the system based on that vector,</span>
+<span class="sd">        and returns a derivative of the state vector</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">#state = dict(zip(self._stocknames, state_vector))</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">izip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stocknames</span><span class="p">,</span> <span class="n">state_vector</span><span class="p">))</span> <span class="c">#izip seems to be about 5% faster</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="n">t</span>
+
+        <span class="c">#return map(lambda x: x(), self._dfuncs)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">func</span><span class="p">()</span> <span class="k">for</span> <span class="n">func</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dfuncs</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="ComponentClass.state_vector"><a class="viewcode-back" href="../../../development/internal_functions.html#pysd.builder.ComponentClass.state_vector">[docs]</a>    <span class="k">def</span> <span class="nf">state_vector</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This function interacts with the integrator by setting the</span>
+<span class="sd">        initial values of the integrator to the state vector.</span>
+<span class="sd">        It returns the values of the state dictionary, sorted</span>
+<span class="sd">        alphabetically by key.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c">#return [self.state[key] for key in self._stocknames]</span>
+        <span class="k">return</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="n">x</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stocknames</span><span class="p">)</span>
+        <span class="c">#should test that &#39;map&#39; is actually faster, because list comprehension is clearer</span>
+</div>
+<div class="viewcode-block" id="ComponentClass.time"><a class="viewcode-back" href="../../../development/internal_functions.html#pysd.builder.ComponentClass.time">[docs]</a>    <span class="k">def</span> <span class="nf">time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;This helper function allows the model components to</span>
+<span class="sd">        access the time component directly.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">t</span>
+
+</div></div>
+<div class="viewcode-block" id="new_model"><a class="viewcode-back" href="../../../development/internal_functions.html#pysd.builder.new_model">[docs]</a><span class="k">def</span> <span class="nf">new_model</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Starts a new python file (saved under `filename`) where translations from</span>
+<span class="sd">    the vensim model file or XMILE model file will be implemented as a python class.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">string</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;from __future__ import division                                 </span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span>
+              <span class="s">&#39;import numpy as np                                              </span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span>
+              <span class="s">&#39;from pysd import functions                                      </span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span>
+              <span class="s">&#39;from pysd import builder                                        </span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span>
+              <span class="s">&#39;                                                                </span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span>
+              <span class="s">&#39;class Components(builder.ComponentClass):                       </span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span>
+              <span class="s">&#39;                                                                </span><span class="se">\n</span><span class="s">&#39;</span>
+             <span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span> <span class="c">#the &#39;w&#39; setting gives us a clean slate.</span>
+        <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">string</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="add_stock"><a class="viewcode-back" href="../../../development/internal_functions.html#pysd.builder.add_stock">[docs]</a><span class="k">def</span> <span class="nf">add_stock</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">expression</span><span class="p">,</span> <span class="n">initial_condition</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds a stock to the python model file based upon the interpreted expressions</span>
+<span class="sd">    for the initial condition.</span>
+
+<span class="sd">    identifier: &lt;string&gt; valid python identifier</span>
+<span class="sd">        Our translators are responsible for translating the model identifiers into</span>
+<span class="sd">        something that python can use as a function name.</span>
+
+<span class="sd">    expression: &lt;string&gt;</span>
+<span class="sd">        Note that these expressions will be added as a function body within the model class.</span>
+<span class="sd">        They need to be written with with appropriate syntax, ie:</span>
+<span class="sd">        `self.functioncall() * self.otherfunctioncall()`</span>
+
+<span class="sd">    initial_condition: &lt;string&gt;</span>
+<span class="sd">        An expression that defines the value that the stock should take on when the model</span>
+<span class="sd">        is initialized. This may be a constant, or a call to other model elements.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c">#create a &#39;derivative function&#39; that can be</span>
+    <span class="c"># called by the d_dt boilerplate function and passed to the integrator</span>
+    <span class="n">dfuncstr</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;    def d</span><span class="si">%s</span><span class="s">_dt(self):                       </span><span class="se">\n</span><span class="s">&#39;</span><span class="o">%</span><span class="n">identifier</span> <span class="o">+</span>
+                <span class="s">&#39;        return </span><span class="si">%s</span><span class="s">                           </span><span class="se">\n\n</span><span class="s">&#39;</span><span class="o">%</span><span class="n">expression</span>
+               <span class="p">)</span>
+
+    <span class="c">#create an &#39;intialization function&#39; of the form &#39;&lt;stock&gt;_init()&#39; that</span>
+    <span class="c"># can be called when the model is reset to initialize the state variable</span>
+    <span class="n">ifuncstr</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;    def </span><span class="si">%s</span><span class="s">_init(self):                      </span><span class="se">\n</span><span class="s">&#39;</span><span class="o">%</span><span class="n">identifier</span> <span class="o">+</span>
+                <span class="s">&#39;        return </span><span class="si">%s</span><span class="s">                           </span><span class="se">\n\n</span><span class="s">&#39;</span><span class="o">%</span><span class="n">initial_condition</span>
+               <span class="p">)</span>
+
+    <span class="c">#create a function that points to the state dictionary, to let other</span>
+    <span class="c"># components reference the state without explicitly having to know that</span>
+    <span class="c"># it is a stock. This is the function that gets an elaborated docstring</span>
+    <span class="n">sfuncstr</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;    def </span><span class="si">%s</span><span class="s">(self):                            </span><span class="se">\n</span><span class="s">&#39;</span><span class="o">%</span><span class="n">identifier</span> <span class="o">+</span>
+                <span class="s">&#39;        &quot;&quot;&quot; Stock: </span><span class="si">%s</span><span class="s"> =                      </span><span class="se">\n</span><span class="s">&#39;</span><span class="o">%</span><span class="n">identifier</span> <span class="o">+</span>
+                <span class="s">&#39;                 </span><span class="si">%s</span><span class="s">                          </span><span class="se">\n</span><span class="s">&#39;</span><span class="o">%</span><span class="n">expression</span> <span class="o">+</span>
+                <span class="s">&#39;                                             </span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span>
+                <span class="s">&#39;        Initial Value: </span><span class="si">%s</span><span class="s">                    </span><span class="se">\n</span><span class="s">&#39;</span><span class="o">%</span><span class="n">initial_condition</span> <span class="o">+</span>
+                <span class="s">&#39;        Do not overwrite this function       </span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span>
+                <span class="s">&#39;        &quot;&quot;&quot;                                  </span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span>
+                <span class="s">&#39;        return self.state[&quot;</span><span class="si">%s</span><span class="s">&quot;]              </span><span class="se">\n</span><span class="s">&#39;</span><span class="o">%</span><span class="n">identifier</span> <span class="o">+</span>
+                <span class="s">&#39;                                             </span><span class="se">\n</span><span class="s">&#39;</span>
+               <span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+        <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">dfuncstr</span><span class="p">)</span>
+        <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">ifuncstr</span><span class="p">)</span>
+        <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">sfuncstr</span><span class="p">)</span>
+
+
+</div>
+<div class="viewcode-block" id="add_flaux"><a class="viewcode-back" href="../../../development/internal_functions.html#pysd.builder.add_flaux">[docs]</a><span class="k">def</span> <span class="nf">add_flaux</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">expression</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Adds a flow or auxiliary element to the model.</span>
+
+<span class="sd">    identifier: &lt;string&gt; valid python identifier</span>
+<span class="sd">        Our translators are responsible for translating the model identifiers into</span>
+<span class="sd">        something that python can use as a function name.</span>
+
+<span class="sd">    expression: &lt;string&gt;</span>
+<span class="sd">        Note that these expressions will be added as a function body within the model class.</span>
+<span class="sd">        They need to be written with with appropriate syntax, ie:</span>
+<span class="sd">        `self.functioncall() * self.otherfunctioncall()`</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">funcstr</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;    def </span><span class="si">%s</span><span class="s">(self):</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">%</span><span class="n">identifier</span> <span class="o">+</span>
+               <span class="s">&#39;        &quot;&quot;&quot;</span><span class="si">%s</span><span class="s"> = </span><span class="si">%s</span><span class="s"> </span><span class="se">\n</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">expression</span><span class="p">)</span> <span class="o">+</span>
+               <span class="s">&#39;        Type: Flow or Auxiliary </span><span class="se">\n</span><span class="s"> &#39;</span> <span class="o">+</span>
+               <span class="s">&#39;        &quot;&quot;&quot;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span>
+               <span class="s">&#39;        return </span><span class="si">%s</span><span class="s"> </span><span class="se">\n\n</span><span class="s">&#39;</span><span class="o">%</span><span class="n">expression</span><span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+        <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">funcstr</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="s">&#39;self.</span><span class="si">%s</span><span class="s">()&#39;</span><span class="o">%</span><span class="n">identifier</span>
+
+</div>
+<div class="viewcode-block" id="add_lookup"><a class="viewcode-back" href="../../../development/internal_functions.html#pysd.builder.add_lookup">[docs]</a><span class="k">def</span> <span class="nf">add_lookup</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">valid_range</span><span class="p">,</span> <span class="n">copair_list</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Constructs a function that implements a lookup.</span>
+<span class="sd">    The function encodes the coordinate pairs as numeric values in the python file.</span>
+
+<span class="sd">    identifier: &lt;string&gt; valid python identifier</span>
+<span class="sd">        Our translators are responsible for translating the model identifiers into</span>
+<span class="sd">        something that python can use as a function name.</span>
+
+<span class="sd">    range: tuple</span>
+<span class="sd">        Minimum and maximum bounds on the lookup. Currently, we don&#39;t do anything</span>
+<span class="sd">        with this, but in the future, may use it to implement some error checking.</span>
+
+<span class="sd">    copair_list: a list of tuples, eg. [(0, 1), (1, 5), (2, 15)]</span>
+<span class="sd">        The coordinates of the lookup formatted in coordinate pairs.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># in the future, we may want to check in bounds for the range. for now, lazy...</span>
+    <span class="n">xs</span><span class="p">,</span> <span class="n">ys</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">copair_list</span><span class="p">)</span>
+    <span class="n">xs_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">xs</span><span class="p">))</span>
+    <span class="n">ys_str</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">ys</span><span class="p">))</span>
+
+    <span class="c">#warning: this may create a class attribute of the function for the lookups, when what we want</span>
+    <span class="c"># is an instance attribute. Not sure...</span>
+
+    <span class="n">funcstr</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;    def </span><span class="si">%s</span><span class="s">(self, x):                                      </span><span class="se">\n</span><span class="s">&#39;</span><span class="o">%</span><span class="n">identifier</span> <span class="o">+</span>
+               <span class="s">&#39;        return self.functions.lookup(x,                   </span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span>
+               <span class="s">&#39;                                     self.</span><span class="si">%s</span><span class="s">.xs,          </span><span class="se">\n</span><span class="s">&#39;</span><span class="o">%</span><span class="n">identifier</span> <span class="o">+</span>
+               <span class="s">&#39;                                     self.</span><span class="si">%s</span><span class="s">.ys)          </span><span class="se">\n</span><span class="s">&#39;</span><span class="o">%</span><span class="n">identifier</span> <span class="o">+</span>
+               <span class="s">&#39;                                                          </span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span>
+               <span class="s">&#39;    </span><span class="si">%s</span><span class="s">.xs = </span><span class="si">%s</span><span class="s">                                            </span><span class="se">\n</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">xs_str</span><span class="p">)</span> <span class="o">+</span>
+               <span class="s">&#39;    </span><span class="si">%s</span><span class="s">.ys = </span><span class="si">%s</span><span class="s">                                            </span><span class="se">\n</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">ys_str</span><span class="p">)</span> <span class="o">+</span>
+               <span class="s">&#39;                                                          </span><span class="se">\n</span><span class="s">&#39;</span>
+              <span class="p">)</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+        <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">funcstr</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">add_initial</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">component</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Implement vensim&#39;s `INITIAL` command as a build-time function. </span>
+<span class="sd">        component cannot be a full expression, must be a reference to </span>
+<span class="sd">        a single external element.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<span class="c">#        This is a bit of a weird construction. For a simpler demo, try:</span>
+<span class="c">#        class test:</span>
+<span class="c">#            def method(self, inval):</span>
+<span class="c">#                if not hasattr(self.method, &#39;value&#39;):</span>
+<span class="c">#                    self.method.im_func.value = inval</span>
+<span class="c">#                return self.method.value</span>
+<span class="c">#</span>
+<span class="c">#        a = test()</span>
+<span class="c">#        print a.method(&#39;hi&#39;)</span>
+<span class="c">#        print a.method(&#39;there&#39;)</span>
+
+    <span class="n">naked_component</span> <span class="o">=</span> <span class="n">component</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">funcstr</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;    def initial_</span><span class="si">%s</span><span class="s">(self, inval):                  </span><span class="se">\n</span><span class="s">&#39;</span><span class="o">%</span><span class="n">naked_component</span> <span class="o">+</span>
+               <span class="s">&#39;        if not hasattr(self.initial_</span><span class="si">%s</span><span class="s">, &quot;value&quot;): </span><span class="se">\n</span><span class="s">&#39;</span><span class="o">%</span><span class="n">naked_component</span> <span class="o">+</span>
+               <span class="s">&#39;            self.initial_</span><span class="si">%s</span><span class="s">.im_func.value = inval </span><span class="se">\n</span><span class="s">&#39;</span><span class="o">%</span><span class="n">naked_component</span> <span class="o">+</span>
+               <span class="s">&#39;        return self.initial_</span><span class="si">%s</span><span class="s">.value             </span><span class="se">\n\n</span><span class="s">&#39;</span><span class="o">%</span><span class="n">naked_component</span>
+              <span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
+        <span class="n">outfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">funcstr</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="s">&#39;self.initial_</span><span class="si">%s</span><span class="s">(</span><span class="si">%s</span><span class="s">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">naked_component</span><span class="p">,</span> <span class="n">component</span><span class="p">)</span>
+
+
+
+<div class="viewcode-block" id="add_n_delay"><a class="viewcode-back" href="../../../development/internal_functions.html#pysd.builder.add_n_delay">[docs]</a><span class="k">def</span> <span class="nf">add_n_delay</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">delay_input</span><span class="p">,</span> <span class="n">delay_time</span><span class="p">,</span> <span class="n">initial_value</span><span class="p">,</span> <span class="n">order</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Constructs stock and flow chains that implement the calculation of</span>
+<span class="sd">    a delay.</span>
+
+<span class="sd">    delay_input: &lt;string&gt;</span>
+<span class="sd">        Reference to the model component that is the input to the delay</span>
+
+<span class="sd">    delay_time: &lt;string&gt;</span>
+<span class="sd">        Can be a number (in string format) or a reference to another model element</span>
+<span class="sd">        which will calculate the delay. This is calculated throughout the simulation</span>
+<span class="sd">        at runtime.</span>
+
+<span class="sd">    initial_value: &lt;string&gt;</span>
+<span class="sd">        This is used to initialize the stocks that are present in the delay. We</span>
+<span class="sd">        initialize the stocks with equal values so that the outflow in the first</span>
+<span class="sd">        timestep is equal to this value.</span>
+
+<span class="sd">    order: int</span>
+<span class="sd">        The number of stocks in the delay pipeline. As we construct the delays at</span>
+<span class="sd">        build time, this must be an integer and cannot be calculated from other</span>
+<span class="sd">        model components. Anything else will yield a ValueError.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&quot;Order of delay must be an int. (Can&#39;t even be a reference to an int. Sorry...)&quot;</span>
+        <span class="k">raise</span>
+
+    <span class="c">#depending in these cases on input to be formatted as &#39;self.variable()&#39; (or number)</span>
+    <span class="n">naked_input</span> <span class="o">=</span> <span class="n">delay_input</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">naked_delay</span> <span class="o">=</span> <span class="n">delay_time</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="k">if</span> <span class="n">delay_time</span><span class="p">[:</span><span class="mi">5</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;self.&#39;</span> <span class="k">else</span> <span class="n">delay_time</span>
+    <span class="n">delay_name</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">_delay_</span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">naked_input</span><span class="p">,</span> <span class="n">naked_delay</span><span class="p">)</span>
+
+
+    <span class="n">flowlist</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c">#use 1-based indexing for stocks in the delay chain so that (n of m) makes sense.</span>
+    <span class="n">flowlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">add_flaux</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span>
+                              <span class="n">identifier</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">_flow_1_of_</span><span class="si">%i</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">delay_name</span><span class="p">,</span> <span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span>
+                              <span class="n">expression</span><span class="o">=</span><span class="n">delay_input</span><span class="p">))</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">order</span><span class="o">+</span><span class="mi">2</span><span class="p">):</span>
+        <span class="n">flowlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">add_flaux</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span>
+                                  <span class="n">identifier</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">_flow_</span><span class="si">%i</span><span class="s">_of_</span><span class="si">%i</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">delay_name</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">),</span>
+                                  <span class="n">expression</span><span class="o">=</span><span class="s">&#39;self.</span><span class="si">%s</span><span class="s">_stock_</span><span class="si">%i</span><span class="s">_of_</span><span class="si">%i</span><span class="s">()/(1.*</span><span class="si">%s</span><span class="s">/</span><span class="si">%i</span><span class="s">)&#39;</span><span class="o">%</span><span class="p">(</span>
+                                              <span class="n">delay_name</span><span class="p">,</span> <span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">delay_time</span><span class="p">,</span> <span class="n">order</span><span class="p">)))</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">add_stock</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span>
+                  <span class="n">identifier</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">_stock_</span><span class="si">%i</span><span class="s">_of_</span><span class="si">%i</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">delay_name</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">order</span><span class="p">),</span>
+                  <span class="n">expression</span><span class="o">=</span><span class="n">flowlist</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="s">&#39; - &#39;</span><span class="o">+</span><span class="n">flowlist</span><span class="p">[</span><span class="n">i</span><span class="p">],</span>
+                  <span class="n">initial_condition</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> * (</span><span class="si">%s</span><span class="s"> / </span><span class="si">%i</span><span class="s">)&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">initial_value</span><span class="p">,</span> <span class="n">delay_time</span><span class="p">,</span> <span class="n">order</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">flowlist</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+
+</div>
+<span class="k">def</span> <span class="nf">add_n_smooth</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">smooth_input</span><span class="p">,</span> <span class="n">smooth_time</span><span class="p">,</span> <span class="n">initial_value</span><span class="p">,</span> <span class="n">order</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Constructs stock and flow chains that implement the calculation of</span>
+<span class="sd">    a smoothing function.</span>
+
+<span class="sd">    delay_input: &lt;string&gt;</span>
+<span class="sd">        Reference to the model component that is the input to the smoothing function</span>
+
+<span class="sd">    smooth_time: &lt;string&gt;</span>
+<span class="sd">        Can be a number (in string format) or a reference to another model element</span>
+<span class="sd">        which will calculate the delay. This is calculated throughout the simulation</span>
+<span class="sd">        at runtime.</span>
+
+<span class="sd">    initial_value: &lt;string&gt;</span>
+<span class="sd">        This is used to initialize the stocks that are present in the delay. We</span>
+<span class="sd">        initialize the stocks with equal values so that the outflow in the first</span>
+<span class="sd">        timestep is equal to this value.</span>
+
+<span class="sd">    order: int</span>
+<span class="sd">        The number of stocks in the delay pipeline. As we construct the delays at</span>
+<span class="sd">        build time, this must be an integer and cannot be calculated from other</span>
+<span class="sd">        model components. Anything else will yield a ValueError.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">order</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">order</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&quot;Order of delay must be an int. (Can&#39;t even be a reference to an int. Sorry...)&quot;</span>
+        <span class="k">raise</span>
+
+         <span class="c">#depending in these cases on input to be formatted as &#39;self.smooth_input()&#39; (or number)</span>
+    <span class="n">naked_input</span> <span class="o">=</span> <span class="n">smooth_input</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">naked_smooth</span> <span class="o">=</span> <span class="n">smooth_time</span><span class="p">[</span><span class="mi">5</span><span class="p">:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="k">if</span> <span class="n">smooth_time</span><span class="p">[:</span><span class="mi">5</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;self.&#39;</span> <span class="k">else</span> <span class="n">smooth_time</span>
+    <span class="n">smooth_name</span> <span class="o">=</span> <span class="s">&#39;</span><span class="si">%s</span><span class="s">_smooth_</span><span class="si">%s</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">naked_input</span><span class="p">,</span> <span class="n">naked_smooth</span><span class="p">)</span>
+
+
+    <span class="n">flowlist</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="c">#use 1-based indexing for stocks in the delay chain so that (n of m) makes sense.</span>
+    <span class="n">prev</span> <span class="o">=</span> <span class="n">smooth_input</span>
+    <span class="n">current</span> <span class="o">=</span> <span class="s">&#39;self.</span><span class="si">%s</span><span class="s">_stock_1_of_</span><span class="si">%i</span><span class="s">()&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">smooth_name</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span>
+    <span class="n">flowlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">add_flaux</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span>
+                              <span class="n">identifier</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">_flow_1_of_</span><span class="si">%i</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">smooth_name</span><span class="p">,</span> <span class="n">order</span><span class="p">),</span>
+                              <span class="n">expression</span><span class="o">=</span><span class="s">&#39;(</span><span class="si">%s</span><span class="s"> - </span><span class="si">%s</span><span class="s">) / (1.*</span><span class="si">%s</span><span class="s">/</span><span class="si">%i</span><span class="s">)&#39;</span><span class="o">%</span><span class="p">(</span>
+                                           <span class="n">prev</span><span class="p">,</span> <span class="n">current</span><span class="p">,</span> <span class="n">smooth_time</span><span class="p">,</span> <span class="n">order</span><span class="p">)))</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">prev</span> <span class="o">=</span> <span class="s">&#39;self.</span><span class="si">%s</span><span class="s">_stock_</span><span class="si">%i</span><span class="s">_of_</span><span class="si">%i</span><span class="s">()&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">smooth_name</span><span class="p">,</span> <span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span>
+        <span class="n">current</span> <span class="o">=</span><span class="s">&#39;self.</span><span class="si">%s</span><span class="s">_stock_</span><span class="si">%i</span><span class="s">_of_</span><span class="si">%i</span><span class="s">()&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">smooth_name</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span>
+        <span class="n">flowlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">add_flaux</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span>
+                                  <span class="n">identifier</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">_flow_</span><span class="si">%i</span><span class="s">_of_</span><span class="si">%i</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">smooth_name</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">order</span><span class="p">),</span>
+                                  <span class="n">expression</span><span class="o">=</span><span class="s">&#39;(</span><span class="si">%s</span><span class="s"> - </span><span class="si">%s</span><span class="s">)/(1.*</span><span class="si">%s</span><span class="s">/</span><span class="si">%i</span><span class="s">)&#39;</span><span class="o">%</span><span class="p">(</span>
+                                              <span class="n">prev</span><span class="p">,</span> <span class="n">current</span><span class="p">,</span> <span class="n">smooth_time</span><span class="p">,</span> <span class="n">order</span><span class="p">)))</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">add_stock</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span>
+                  <span class="n">identifier</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">_stock_</span><span class="si">%i</span><span class="s">_of_</span><span class="si">%i</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">smooth_name</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">order</span><span class="p">),</span>
+                  <span class="n">expression</span><span class="o">=</span><span class="n">flowlist</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span>
+                  <span class="n">initial_condition</span><span class="o">=</span><span class="n">initial_value</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">flowlist</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</pre></div>
+
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2015, James Houghton.
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.3.0',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

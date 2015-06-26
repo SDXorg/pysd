@@ -176,7 +176,7 @@
 </div>
 <p>This code creates an instance of the PySD class loaded with an example model that we will use as the system dynamics equivalent of ‘Hello World’: a cup of tea cooling to room temperature.</p>
 <a class="reference internal image-reference" href="_images/Teacup.png"><img alt="_images/Teacup.png" class="align-center" src="_images/Teacup.png" style="width: 350px;" /></a>
-<p>To view a synopsis of the model equations and documentation, call the <tt class="xref py py-func docutils literal"><span class="pre">components.doc()</span></tt> method of the model class. This will generate a listing of all the model elements, their documentation, units, equations, and initial values, where appropriate. Here is a sample from the teacup model:</p>
+<p>To view a synopsis of the model equations and documentation, call the <code class="xref py py-func docutils literal"><span class="pre">components.doc()</span></code> method of the model class. This will generate a listing of all the model elements, their documentation, units, equations, and initial values, where appropriate. Here is a sample from the teacup model:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">model</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">doc</span><span class="p">()</span>
 
 <span class="go">Import of Teacup.mdl</span>
@@ -200,7 +200,7 @@
 </div>
 <div class="section" id="running-the-model">
 <h2>Running the Model<a class="headerlink" href="#running-the-model" title="Permalink to this headline">¶</a></h2>
-<p>The simplest way to simulate the model is to use the <tt class="xref py py-func docutils literal"><span class="pre">run()</span></tt> command with no options. This runs the model with the default parameters supplied by the model file, and returns a Pandas dataframe of the values of the stocks at every timestamp:</p>
+<p>The simplest way to simulate the model is to use the <code class="xref py py-func docutils literal"><span class="pre">run()</span></code> command with no options. This runs the model with the default parameters supplied by the model file, and returns a Pandas dataframe of the values of the stocks at every timestamp:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">stocks</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 
 <span class="go">t        teacup_temperature</span>
@@ -221,7 +221,7 @@
 </div>
 <div class="section" id="outputting-various-run-information">
 <h2>Outputting various run information<a class="headerlink" href="#outputting-various-run-information" title="Permalink to this headline">¶</a></h2>
-<p>The <tt class="xref py py-func docutils literal"><span class="pre">run()</span></tt> command has a few options that make it more useful. In many situations we want to access components of the model other than merely the stocks – we can specify which components of the model should be included in the returned dataframe by including them in a list that we pass to the <tt class="xref py py-func docutils literal"><span class="pre">run()</span></tt> command, using the return_columns keyword argument:</p>
+<p>The <code class="xref py py-func docutils literal"><span class="pre">run()</span></code> command has a few options that make it more useful. In many situations we want to access components of the model other than merely the stocks – we can specify which components of the model should be included in the returned dataframe by including them in a list that we pass to the <code class="xref py py-func docutils literal"><span class="pre">run()</span></code> command, using the return_columns keyword argument:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">return_columns</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;teacup_temperature&#39;</span><span class="p">,</span> <span class="s">&#39;room_temperature&#39;</span><span class="p">])</span>
 
 <span class="go">t         teacup_temperature    room_temperature</span>
@@ -258,7 +258,7 @@
 <span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;room_temperature&#39;</span><span class="p">:</span><span class="n">temp</span><span class="p">})</span>
 </pre></div>
 </div>
-<p>Note that once parameters are set by the run command, they are permanently changed within the model. We can also change model parameters without running the model, using PySD’s <tt class="xref py py-func docutils literal"><span class="pre">set_components(params={})()</span></tt> method, which takes the same params dictionary as the run function. We might choose to do this in situations where we’ll be running the model many times, and only want to spend time setting the parameters once.</p>
+<p>Note that once parameters are set by the run command, they are permanently changed within the model. We can also change model parameters without running the model, using PySD’s <code class="xref py py-func docutils literal"><span class="pre">set_components(params={})()</span></code> method, which takes the same params dictionary as the run function. We might choose to do this in situations where we’ll be running the model many times, and only want to spend time setting the parameters once.</p>
 </div>
 <div class="section" id="setting-simulation-initial-conditions">
 <h2>Setting simulation initial conditions<a class="headerlink" href="#setting-simulation-initial-conditions" title="Permalink to this headline">¶</a></h2>
@@ -282,8 +282,8 @@
 </div>
 <div class="section" id="collecting-a-history-of-returned-values">
 <h2>Collecting a history of returned values<a class="headerlink" href="#collecting-a-history-of-returned-values" title="Permalink to this headline">¶</a></h2>
-<p>The <tt class="xref py py-func docutils literal"><span class="pre">run()</span></tt> function provides a flag named collect that instructs PySD to collect all output from a series of run commands into a record. This can be helpful when running the model forwards for a period of time, then returning control to the user, who will specify changes to the model, and continue the integration forwards.</p>
-<p>The record is stored as a list of Pandas dataframes, one from each run. To access this record in its raw form, the user can access the <tt class="xref py py-func docutils literal"><span class="pre">record()</span></tt> attribute of the PySD class. It is usually more helpful to have a single dataframe which stitches together all of these pieces. We can access this via the <tt class="xref py py-func docutils literal"><span class="pre">get_record()</span></tt> method.</p>
+<p>The <code class="xref py py-func docutils literal"><span class="pre">run()</span></code> function provides a flag named collect that instructs PySD to collect all output from a series of run commands into a record. This can be helpful when running the model forwards for a period of time, then returning control to the user, who will specify changes to the model, and continue the integration forwards.</p>
+<p>The record is stored as a list of Pandas dataframes, one from each run. To access this record in its raw form, the user can access the <code class="xref py py-func docutils literal"><span class="pre">record()</span></code> attribute of the PySD class. It is usually more helpful to have a single dataframe which stitches together all of these pieces. We can access this via the <code class="xref py py-func docutils literal"><span class="pre">get_record()</span></code> method.</p>
 </div>
 </div>
 
@@ -335,7 +335,7 @@
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 
