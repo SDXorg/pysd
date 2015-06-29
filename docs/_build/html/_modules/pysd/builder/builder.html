@@ -165,7 +165,19 @@
           <div role="main" class="document">
             
   <h1>Source code for pysd.builder.builder</h1><div class="highlight"><pre>
-<span class="c"># This is the base class that gets built up into a model by addition of functions.</span>
+<span class="sd">&quot;&quot;&quot;builder.py</span>
+<span class="sd">Modified June 26 2015</span>
+<span class="sd">James Houghton</span>
+<span class="sd">james.p.houghton@gmail.com</span>
+
+<span class="sd">This submodule contains everything that is needed to construct a system dynamics model</span>
+<span class="sd">in python, using syntax that is compatible with the pysd model simulation functionality.</span>
+
+<span class="sd">These functions could be used to construct a system dynamics model from scratch, in a</span>
+<span class="sd">pinch. Due to the highly visual structure of system dynamics models, I still recommend</span>
+<span class="sd">using an external model construction tool such as vensim or stella/iThink to build and</span>
+<span class="sd">debug models.</span>
+<span class="sd">&quot;&quot;&quot;</span>
 
 <span class="c"># Todo:</span>
 <span class="c"># - the __doc__ attribute isn&#39;t something that you can call, need to rework it,</span>
@@ -175,7 +187,6 @@
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
 <span class="kn">import</span> <span class="nn">inspect</span>
 <span class="kn">from</span> <span class="nn">pysd</span> <span class="kn">import</span> <span class="n">functions</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">izip</span>
 
 
@@ -184,7 +195,7 @@
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    This is a template class to be subclassed and fleshed out by the translation tools.</span>
 
-<span class="sd">    A function should be added for every flow or auxiliary variable, having the name of that </span>
+<span class="sd">    A function should be added for every flow or auxiliary variable, having the name of that</span>
 <span class="sd">    variable, taking no parameters, which calculates the value of the variable.</span>
 
 <span class="sd">    A function should be added for each stock called d&lt;stockname&gt;_dt() which calculates</span>
@@ -405,8 +416,8 @@
 
 </div>
 <span class="k">def</span> <span class="nf">add_initial</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">component</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Implement vensim&#39;s `INITIAL` command as a build-time function. </span>
-<span class="sd">        component cannot be a full expression, must be a reference to </span>
+    <span class="sd">&quot;&quot;&quot; Implement vensim&#39;s `INITIAL` command as a build-time function.</span>
+<span class="sd">        component cannot be a full expression, must be a reference to</span>
 <span class="sd">        a single external element.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
@@ -537,7 +548,7 @@
 
     <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">order</span><span class="o">+</span><span class="mi">1</span><span class="p">):</span>
         <span class="n">prev</span> <span class="o">=</span> <span class="s">&#39;self.</span><span class="si">%s</span><span class="s">_stock_</span><span class="si">%i</span><span class="s">_of_</span><span class="si">%i</span><span class="s">()&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">smooth_name</span><span class="p">,</span> <span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span>
-        <span class="n">current</span> <span class="o">=</span><span class="s">&#39;self.</span><span class="si">%s</span><span class="s">_stock_</span><span class="si">%i</span><span class="s">_of_</span><span class="si">%i</span><span class="s">()&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">smooth_name</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="s">&#39;self.</span><span class="si">%s</span><span class="s">_stock_</span><span class="si">%i</span><span class="s">_of_</span><span class="si">%i</span><span class="s">()&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">smooth_name</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">order</span><span class="p">)</span>
         <span class="n">flowlist</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">add_flaux</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span>
                                   <span class="n">identifier</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%s</span><span class="s">_flow_</span><span class="si">%i</span><span class="s">_of_</span><span class="si">%i</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">smooth_name</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">order</span><span class="p">),</span>
                                   <span class="n">expression</span><span class="o">=</span><span class="s">&#39;(</span><span class="si">%s</span><span class="s"> - </span><span class="si">%s</span><span class="s">)/(1.*</span><span class="si">%s</span><span class="s">/</span><span class="si">%i</span><span class="s">)&#39;</span><span class="o">%</span><span class="p">(</span>

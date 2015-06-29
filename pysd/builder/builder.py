@@ -1,4 +1,16 @@
-# This is the base class that gets built up into a model by addition of functions.
+"""builder.py
+Modified June 26 2015
+James Houghton
+james.p.houghton@gmail.com
+
+This submodule contains everything that is needed to construct a system dynamics model
+in python, using syntax that is compatible with the pysd model simulation functionality.
+
+These functions could be used to construct a system dynamics model from scratch, in a
+pinch. Due to the highly visual structure of system dynamics models, I still recommend
+using an external model construction tool such as vensim or stella/iThink to build and
+debug models.
+"""
 
 # Todo:
 # - the __doc__ attribute isn't something that you can call, need to rework it,
@@ -8,7 +20,6 @@
 from __future__ import division
 import inspect
 from pysd import functions
-import numpy as np
 from itertools import izip
 
 
@@ -17,7 +28,7 @@ class ComponentClass(object):
     """
     This is a template class to be subclassed and fleshed out by the translation tools.
 
-    A function should be added for every flow or auxiliary variable, having the name of that 
+    A function should be added for every flow or auxiliary variable, having the name of that
     variable, taking no parameters, which calculates the value of the variable.
 
     A function should be added for each stock called d<stockname>_dt() which calculates
@@ -175,7 +186,7 @@ def add_stock(filename, identifier, expression, initial_condition):
 
 
 
-def add_flaux(filename, identifier, expression):
+def add_flaux(filename, identifier, expression, doc=''):
     """Adds a flow or auxiliary element to the model.
 
     identifier: <string> valid python identifier
@@ -187,6 +198,7 @@ def add_flaux(filename, identifier, expression):
         They need to be written with with appropriate syntax, ie:
         `self.functioncall() * self.otherfunctioncall()`
     """
+    docstring =
     funcstr = ('    def %s(self):\n'%identifier +
                '        """%s = %s \n'%(identifier, expression) +
                '        Type: Flow or Auxiliary \n ' +
@@ -238,8 +250,8 @@ def add_lookup(filename, identifier, valid_range, copair_list):
 
 
 def add_initial(filename, component):
-    """ Implement vensim's `INITIAL` command as a build-time function. 
-        component cannot be a full expression, must be a reference to 
+    """ Implement vensim's `INITIAL` command as a build-time function.
+        component cannot be a full expression, must be a reference to
         a single external element.
     """
 
@@ -370,7 +382,7 @@ def add_n_smooth(filename, smooth_input, smooth_time, initial_value, order):
 
     for i in range(2, order+1):
         prev = 'self.%s_stock_%i_of_%i()'%(smooth_name, i-1, order)
-        current ='self.%s_stock_%i_of_%i()'%(smooth_name, i, order)
+        current = 'self.%s_stock_%i_of_%i()'%(smooth_name, i, order)
         flowlist.append(add_flaux(filename,
                                   identifier='%s_flow_%i_of_%i'%(smooth_name, i, order),
                                   expression='(%s - %s)/(1.*%s/%i)'%(

@@ -177,10 +177,17 @@
 <dl class="class">
 <dt id="pysd.functions.Functions">
 <em class="property">class </em><code class="descclassname">pysd.functions.</code><code class="descname">Functions</code><span class="sig-paren">(</span><em>component_class</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/functions/functions.html#Functions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.functions.Functions" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="method">
+<dd><p>Provides SD-specific calculations that are not available in python standard libraries,
+or have a different functional form to those specified in the libraries, and therefore
+are in need of translation.</p>
+<p>This is implemented as a class, with a local pointer to the model components class,
+because some of these functions need to reference the internal state of the model.
+Mostly they are just referencing the simulation time.</p>
+<dl class="method">
 <dt id="pysd.functions.Functions.bounded_normal">
 <code class="descname">bounded_normal</code><span class="sig-paren">(</span><em>minimum</em>, <em>maximum</em>, <em>mean</em>, <em>std</em>, <em>seed</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/functions/functions.html#Functions.bounded_normal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.functions.Functions.bounded_normal" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Implements vensim&#8217;s BOUNDED NORMAL function</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="pysd.functions.Functions.if_then_else">
@@ -191,7 +198,8 @@
 <dl class="method">
 <dt id="pysd.functions.Functions.lookup">
 <code class="descname">lookup</code><span class="sig-paren">(</span><em>x</em>, <em>xs</em>, <em>ys</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/functions/functions.html#Functions.lookup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.functions.Functions.lookup" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Provides the working mechanism for lookup functions the builder builds</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="pysd.functions.Functions.pulse">
@@ -205,12 +213,14 @@ In range [start+duration, +inf] returns 0</p>
 <dl class="method">
 <dt id="pysd.functions.Functions.pulse_train">
 <code class="descname">pulse_train</code><span class="sig-paren">(</span><em>start</em>, <em>duration</em>, <em>repeattime</em>, <em>end</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/functions/functions.html#Functions.pulse_train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.functions.Functions.pulse_train" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Implements vensim&#8217;s PULSE TRAIN function</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="pysd.functions.Functions.ramp">
 <code class="descname">ramp</code><span class="sig-paren">(</span><em>slope</em>, <em>start</em>, <em>finish</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/functions/functions.html#Functions.ramp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.functions.Functions.ramp" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Implements vensim&#8217;s RAMP function</p>
+</dd></dl>
 
 <dl class="method">
 <dt id="pysd.functions.Functions.step">
