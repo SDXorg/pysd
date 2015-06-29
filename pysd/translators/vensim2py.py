@@ -1,8 +1,8 @@
-'''
+"""vensim2py
     created: August 13, 2014
     last update: June 6 2015
     James Houghton <james.p.houghton@gmail.com>
-'''
+"""
 import parsimonious
 from parsimonious.nodes import NodeVisitor
 
@@ -24,9 +24,10 @@ from pysd import builder
 # - check that the identifiers discovered are not the same as python keywords
 # - parse excessive spaces out of docstrings
 
-# - It would be good to include the original vensim/xmile non-python-safed identifiers for model components in the docstring, along with the cleaned version
+# - It would be good to include the original vensim/xmile non-python-safed identifiers for
+#   model components in the docstring, along with the cleaned version
 # - also, include the  original equation, and the python clean version
-# - maybe we add elements to the functions which represent the pre and post translation components (one each?)
+# - maybe we add elements to the functions which represent the pre and post translation components?
 # - model documentation shouldn't include the 'self' parts of a descriptor
 
 # should build in a mechanism to fail gracefully
@@ -88,79 +89,79 @@ con_keywords = ' / '.join(['"%s"'%key for key in reversed(sorted(construction_fu
 file_grammar = (
     # In the 'Model' definiton, we use arbitrary characters (.) to represent the backslashes,
     #    because escaping in here is a nightmare
-    'Model = SNL "{UTF-8}" Content ~"...---///" Rubbish*                                            \n'+
-    'Content = Entry+                                                                               \n'+
-    'Rubbish = ~"."* NL*                                                                            \n'+
+    'Model = SNL "{UTF-8}" Content ~"...---///" Rubbish*                                        \n'+
+    'Content = Entry+                                                                           \n'+
+    'Rubbish = ~"."* NL*                                                                        \n'+
 
-    'Entry = MetaEntry / ModelEntry                                                                 \n'+
-    
-    # meta entry recognizes model documentation, or the partition separating model control parameters.
-    'MetaEntry  = SNL starline SNL Docstring SNL starline _ "~" SNL Docstring SNL "|" SNL*          \n'+
-    'ModelEntry = SNL Component SNL "~" _ Unit SNL "~" _ Docstring SNL "|" SNL*                     \n'+
-    
-    'Unit      = ~"[^~|]"*                                                                          \n'+
+    'Entry = MetaEntry / ModelEntry                                                             \n'+
+
+    # meta entry recognizes model documentation, or the partition separating model control params.
+    'MetaEntry  = SNL starline SNL Docstring SNL starline _ "~" SNL Docstring SNL "|" SNL*      \n'+
+    'ModelEntry = SNL Component SNL "~" _ Unit SNL "~" _ Docstring SNL "|" SNL*                 \n'+
+
+    'Unit      = ~"[^~|]"*                                                                      \n'+
     # The docstring parser also consumes trailing newlines. Not sure if we want this?
     # The second half of the docstring parser is a lookahead to make sure we don't consume starlines
-    'Docstring = (~"[^~|]" !~"(\*{3,})")*                                                           \n'+
-    'Component = Stock / Flaux / Lookup                                                             \n'+
-    
-    'Lookup     = Identifier _ "(" _ NL _ Range _ CopairList _ ")"                                  \n'+
-    'Range      = "[" _ Copair _ "-" _ Copair _ "]"                                                 \n'+
-    'CopairList = AddCopair*                                                                        \n'+
-    'AddCopair  = "," _ Copair                                                                      \n'+
-    # 'Copair' represents a coordinate pair
-    'Copair     = "(" _ Primary _ "," _ Primary _ ")"                                               \n'+
-    
-    'Stock     = Identifier _ "=" _ "INTEG" _ "(" _ NL _ Condition _ "," _ NL _ Condition _ ")"     \n'+
-    # 'Flaux' represents either a flow or an auxiliary, as the syntax is the same
-    'Flaux     = Identifier _ "=" SNL Condition                                                     \n'+
-    
-    # SNL means 'spaced newline'
-    'SNL = _ NL* _                                                                                  \n'+
-    'NL = _ ~"[\\r\\n]" _                                                                           \n'+
-    'starline = ~"\*{3,}"                                                                           \n'+
+    'Docstring = (~"[^~|]" !~"(\*{3,})")*                                                       \n'+
+    'Component = Stock / Flaux / Lookup                                                         \n'+
 
-    'Condition   = Term _ Conditional*                                                             \n'+
-    'Conditional = ("<=" / "<" / ">=" / ">" / "=") _ Term                                          \n'+
-    
-    'Term     = Factor _ Additive*                                                                 \n'+
-    'Additive = ("+"/"-") _ Factor                                                                 \n'+
-    
+    'Lookup     = Identifier _ "(" _ NL _ Range _ CopairList _ ")"                              \n'+
+    'Range      = "[" _ Copair _ "-" _ Copair _ "]"                                             \n'+
+    'CopairList = AddCopair*                                                                    \n'+
+    'AddCopair  = "," _ Copair                                                                  \n'+
+    # 'Copair' represents a coordinate pair
+    'Copair     = "(" _ Primary _ "," _ Primary _ ")"                                           \n'+
+
+    'Stock     = Identifier _ "=" _ "INTEG" _ "(" _ NL _ Condition _ "," _ NL _ Condition _ ")" \n'+
+    # 'Flaux' represents either a flow or an auxiliary, as the syntax is the same
+    'Flaux     = Identifier _ "=" SNL Condition                                                 \n'+
+
+    # SNL means 'spaced newline'
+    'SNL = _ NL* _                                                                              \n'+
+    'NL = _ ~"[\\r\\n]" _                                                                       \n'+
+    'starline = ~"\*{3,}"                                                                       \n'+
+
+    'Condition   = Term _ Conditional*                                                          \n'+
+    'Conditional = ("<=" / "<" / ">=" / ">" / "=") _ Term                                       \n'+
+
+    'Term     = Factor _ Additive*                                                              \n'+
+    'Additive = ("+"/"-") _ Factor                                                              \n'+
+
     # Factor may be consuming newlines? don't want it to...
-    'Factor   = ExpBase _ Multiplicative*                                                          \n'+
-    'Multiplicative = ("*" / "/") _ ExpBase                                                        \n'+
-    
-    'ExpBase  = Primary _ Exponentive*                                                             \n'+
-    'Exponentive = "^" _ Primary                                                                   \n'+
-    
-    'Primary  = Call / ConCall / LUCall / Parens / Signed / Number / Reference                     \n'+
-    'Parens   = "(" _ Condition _ ")"                                                              \n'+
-    
-    'Call     = Keyword _ "(" _ ArgList _ ")"                                                      \n'+
-    'ArgList  = AddArg+                                                                            \n'+
-    'AddArg   = ","* _ Condition                                                                   \n'+
+    'Factor   = ExpBase _ Multiplicative*                                                       \n'+
+    'Multiplicative = ("*" / "/") _ ExpBase                                                     \n'+
+
+    'ExpBase  = Primary _ Exponentive*                                                          \n'+
+    'Exponentive = "^" _ Primary                                                                \n'+
+
+    'Primary  = Call / ConCall / LUCall / Parens / Signed / Number / Reference                  \n'+
+    'Parens   = "(" _ Condition _ ")"                                                           \n'+
+
+    'Call     = Keyword _ "(" _ ArgList _ ")"                                                   \n'+
+    'ArgList  = AddArg+                                                                         \n'+
+    'AddArg   = ","* _ Condition                                                                \n'+
     # Calls to lookup functions don't use keywords, so we have to use identifiers.
     #    They take only one parameter. This could cause problems.
-    'LUCall   = Identifier _ "(" _ Condition _ ")"                                                 \n'+
-    'Signed   = ("-"/"+") Primary                                                                  \n'+
+    'LUCall   = Identifier _ "(" _ Condition _ ")"                                              \n'+
+    'Signed   = ("-"/"+") Primary                                                               \n'+
     # We have to break 'reference' out from identifier, because in reference situations
     #    we'll want to add self.<name>(), but we also need to be able to clean and access
     #    the identifier independently. To force parsimonious to handle the reference as
     #    a seperate object from the Identifier, we add a trailing optional space character
-    'Reference = Identifier _                                                                      \n'+
+    'Reference = Identifier _                                                                   \n'+
 
-    'ConCall  = ConKeyword _ "(" _ ArgList _ ")"                                                       \n'+
+    'ConCall  = ConKeyword _ "(" _ ArgList _ ")"                                                \n'+
 
-    'Number   = ((~"[0-9]"+ "."? ~"[0-9]"*) / ("." ~"[0-9]"+)) (("e"/"E") ("-"/"+") ~"[0-9]"+)?    \n'+
-    'Identifier =  ~"[a-zA-Z]" ~"[a-zA-Z0-9_\$\s]"*                                                \n'+
-    
+    'Number   = ((~"[0-9]"+ "."? ~"[0-9]"*) / ("." ~"[0-9]"+)) (("e"/"E") ("-"/"+") ~"[0-9]"+)? \n'+
+    'Identifier =  ~"[a-zA-Z]" ~"[a-zA-Z0-9_\$\s]"*                                             \n'+
+
     # We separated out single space characters from the _ entry, so that it can have any number or
     #   combination of space characters.
-    '_ = spacechar*                                                                                \n'+
+    '_ = spacechar*                                                                             \n'+
     # Vensim uses a 'backslash, newline' syntax as a way to split an equation onto multiple lines.
     #   We address this by including it as  an allowed space character.
-    'spacechar = " "* ~"\t"* (~r"\\\\" NL)*                                                        \n'+
-    
+    'spacechar = " "* ~"\t"* (~r"\\\\" NL)*                                                     \n'+
+
     'Keyword = %s  \n'%keywords +
     'ConKeyword = %s  \n'%con_keywords
     )
@@ -169,16 +170,16 @@ file_grammar = (
 #################################################################
 # Notes on node visitor
 #
-# - each function in the parser takes an argument which is the result of having visited each of the children
+# - each function in the parser takes an argument which is the result of having visited
+#   each of the children
 #
 # - we separate the parse function from the class initialization to facilitate unit testing,
-#      although in practice, they will most certainly always be called sequentially
+#   although in practice, they will most certainly always be called sequentially
 #################################################################
 
 
 class TextParser(NodeVisitor):
     def __init__(self, grammar, infilename):
-        
         self.filename = infilename[:-4]+'.py'
         builder.new_model(self.filename)
         self.grammar = parsimonious.Grammar(grammar)
@@ -187,55 +188,48 @@ class TextParser(NodeVisitor):
     def parse(self, filename):
         with open(filename, 'rU') as file:
             text = file.read().decode('utf-8')
-    
+
         self.ast = self.grammar.parse(text)
         return self.visit(self.ast)
 
     ############# 'entry' level translators ############################
     visit_Entry = visit_Component = NodeVisitor.lift_child
 
-    def visit_ModelEntry(self, n, (_1, Identifier, _2, tld1, _3, Unit, _4, tld2, _5, Docstring, _6, pipe, _7)):
-        """
-            All we have to do here is add to the docstring of the relevant function the things that arent 
-            available at lower levels. The stock/flaux/lookup visitors will take care of adding methods to the class
+    def visit_ModelEntry(self, n, (_1, Identifier, _2, tld1, _3, Unit, _4,
+                                   tld2, _5, Docstring, _6, pipe, _7)):
+        """All we have to do here is add to the docstring of the relevant 
+        function the things that arent available at lower levels. 
+        The stock/flaux/lookup visitors will take care of adding methods to the class
         """
         #string = 'Units: %s \n'%Unit + Docstring
         #builder.add_to_element_docstring(self.component_class, Identifier, string)
         pass
-    
-    
+
+
     def visit_Stock(self, n, (Identifier, _1, eq, _2, integ, _3,
                               lparen, _4, NL1, _5, expression, _6,
                               comma, _7, NL2, _8, initial_condition, _9, rparen)):
         builder.add_stock(self.filename, Identifier, expression, initial_condition)
         return Identifier
-    
-    
+
+
     def visit_Flaux(self, n, (Identifier, _1, eq, SNL, expression)):
         builder.add_flaux(self.filename, Identifier, expression)
         return Identifier
-    
 
-    def visit_Lookup(self, n, (Identifier, _1, lparen, _2, NL1, _3, Range, _4, CopairList, _5, rparen)):
+
+    def visit_Lookup(self, n, (Identifier, _1, lparen, _2, NL1, _3, Range,
+                               _4, CopairList, _5, rparen)):
         builder.add_lookup(self.filename, Identifier, Range, CopairList)
         return Identifier
 
-    
-    def visit_Macro(self, n, vc):
-        """
-            When we take on the task of implementing delay functions, this will be where
-            we choose to deal with them. Delay functions require programmatically creating additional stocks.
-        """
-        pass
-    
-    
     def visit_Unit(self, n, vc):
         return n.text.strip()
-    
+
     visit_Docstring = visit_Unit
 
     ######### 'expression' level visitors ###############################
-    
+
     def visit_ConCall(self, n, (ConKeyword, _1, lparen, _2, args, _4, rparen)):
         pass
         if ConKeyword == 'DELAY1': #DELAY3(Inflow, Delay)
@@ -256,14 +250,14 @@ class TextParser(NodeVisitor):
             return builder.add_initial(self.filename, args[0])
 
         #need to return whatever you call to get the final stage in the construction
-    
-    
+
+
     def visit_Keyword(self, n, vc):
         return dictionary[n.text]
-    
+
     def visit_Reference(self, n, (Identifier, _)):
         return 'self.'+Identifier+'()'
-    
+
     def visit_Identifier(self, n, vc):
         #todo: should check here that identifiers are not python keywords...
         string = n.text
@@ -277,10 +271,10 @@ class TextParser(NodeVisitor):
 
     def visit_LUCall(self, n, (Identifier, _1, lparen, _2, Condition, _3,  rparen)):
         return 'self.'+Identifier+'('+Condition+')'
-        
+
     def visit_Copair(self, n, (lparen, _1, xcoord, _2, comma, _3, ycoord, _, rparen)):
         return (float(xcoord), float(ycoord))
-        
+
     def visit_AddCopair(self, n, (comma, _1, Copair)):
         return Copair
 
@@ -292,7 +286,7 @@ class TextParser(NodeVisitor):
 
     def visit_Range(self, n, copairs):
         pass
-    
+
     def visit_CopairList(self, n, copairs):
         return copairs
 
@@ -300,7 +294,7 @@ class TextParser(NodeVisitor):
         return dictionary[condition] + term
 
     visit_Exponentive = visit_Conditional
-    
+
     def generic_visit(self, n, vc):
         """
         Replace childbearing nodes with a list of their children;
@@ -341,6 +335,3 @@ def translate_vensim(mdl_file):
     return parser.filename #module.Components
 
 translate_vensim.__doc__ += doc_supported_vensim_functions()
-
-
-

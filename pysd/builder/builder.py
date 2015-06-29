@@ -198,11 +198,11 @@ def add_flaux(filename, identifier, expression, doc=''):
         They need to be written with with appropriate syntax, ie:
         `self.functioncall() * self.otherfunctioncall()`
     """
-    docstring =
+    docstring = ('Type: Flow or Auxiliary\n        '+
+                 '\n        '.join(doc.split('\n')))
+
     funcstr = ('    def %s(self):\n'%identifier +
-               '        """%s = %s \n'%(identifier, expression) +
-               '        Type: Flow or Auxiliary \n ' +
-               '        """\n' +
+               '        """%s"""\n'%docstring +
                '        return %s \n\n'%expression)
 
     with open(filename, 'a') as outfile:

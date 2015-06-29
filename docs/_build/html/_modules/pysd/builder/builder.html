@@ -353,7 +353,7 @@
 
 
 </div>
-<div class="viewcode-block" id="add_flaux"><a class="viewcode-back" href="../../../development/internal_functions.html#pysd.builder.add_flaux">[docs]</a><span class="k">def</span> <span class="nf">add_flaux</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">expression</span><span class="p">):</span>
+<div class="viewcode-block" id="add_flaux"><a class="viewcode-back" href="../../../development/internal_functions.html#pysd.builder.add_flaux">[docs]</a><span class="k">def</span> <span class="nf">add_flaux</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">expression</span><span class="p">,</span> <span class="n">doc</span><span class="o">=</span><span class="s">&#39;&#39;</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;Adds a flow or auxiliary element to the model.</span>
 
 <span class="sd">    identifier: &lt;string&gt; valid python identifier</span>
@@ -365,10 +365,11 @@
 <span class="sd">        They need to be written with with appropriate syntax, ie:</span>
 <span class="sd">        `self.functioncall() * self.otherfunctioncall()`</span>
 <span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">docstring</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;Type: Flow or Auxiliary</span><span class="se">\n</span><span class="s">        &#39;</span><span class="o">+</span>
+                 <span class="s">&#39;</span><span class="se">\n</span><span class="s">        &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">doc</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)))</span>
+
     <span class="n">funcstr</span> <span class="o">=</span> <span class="p">(</span><span class="s">&#39;    def </span><span class="si">%s</span><span class="s">(self):</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">%</span><span class="n">identifier</span> <span class="o">+</span>
-               <span class="s">&#39;        &quot;&quot;&quot;</span><span class="si">%s</span><span class="s"> = </span><span class="si">%s</span><span class="s"> </span><span class="se">\n</span><span class="s">&#39;</span><span class="o">%</span><span class="p">(</span><span class="n">identifier</span><span class="p">,</span> <span class="n">expression</span><span class="p">)</span> <span class="o">+</span>
-               <span class="s">&#39;        Type: Flow or Auxiliary </span><span class="se">\n</span><span class="s"> &#39;</span> <span class="o">+</span>
-               <span class="s">&#39;        &quot;&quot;&quot;</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span>
+               <span class="s">&#39;        &quot;&quot;&quot;</span><span class="si">%s</span><span class="s">&quot;&quot;&quot;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">%</span><span class="n">docstring</span> <span class="o">+</span>
                <span class="s">&#39;        return </span><span class="si">%s</span><span class="s"> </span><span class="se">\n\n</span><span class="s">&#39;</span><span class="o">%</span><span class="n">expression</span><span class="p">)</span>
 
     <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s">&#39;a&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>
