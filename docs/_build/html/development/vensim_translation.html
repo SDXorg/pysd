@@ -115,11 +115,7 @@
 <li class="toctree-l3"><a class="reference internal" href="internal_functions.html#building-the-python-model-file">Building the python model file</a></li>
 </ul>
 </li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Vensim Translation</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#types">Types</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#functions">Functions</a></li>
-</ul>
-</li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Vensim Translation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="xmile_translation.html">XMILE Translation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pathway.html">PySD Development Pathway</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="pathway.html#current-features">Current Features</a></li>
@@ -170,85 +166,10 @@
             
   <div class="section" id="vensim-translation">
 <h1>Vensim Translation<a class="headerlink" href="#vensim-translation" title="Permalink to this headline">¶</a></h1>
-<p>PySD currently supports basic vensim functionality including:</p>
-<div class="section" id="types">
-<h2>Types<a class="headerlink" href="#types" title="Permalink to this headline">¶</a></h2>
-<table border="1" class="docutils">
-<colgroup>
-<col width="41%" />
-<col width="38%" />
-<col width="22%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Vensim</th>
-<th class="head">Supported</th>
-<th class="head">Notes</th>
-</tr>
-</thead>
-<tbody valign="top">
-<tr class="row-even"><td>Auxiliary</td>
-<td>y</td>
-<td>&nbsp;</td>
-</tr>
-<tr class="row-odd"><td>Constant</td>
-<td>n</td>
-<td>&nbsp;</td>
-</tr>
-<tr class="row-even"><td>Data</td>
-<td>n</td>
-<td>&nbsp;</td>
-</tr>
-<tr class="row-odd"><td>Initial</td>
-<td>n</td>
-<td>&nbsp;</td>
-</tr>
-<tr class="row-even"><td>Level</td>
-<td>y</td>
-<td>&nbsp;</td>
-</tr>
-<tr class="row-odd"><td>Lookup</td>
-<td>y</td>
-<td>&nbsp;</td>
-</tr>
-<tr class="row-even"><td>Reality Check</td>
-<td>n</td>
-<td>&nbsp;</td>
-</tr>
-<tr class="row-odd"><td>String</td>
-<td>n</td>
-<td>&nbsp;</td>
-</tr>
-<tr class="row-even"><td>Subscript</td>
-<td>n</td>
-<td>&nbsp;</td>
-</tr>
-<tr class="row-odd"><td>Time Base</td>
-<td>n</td>
-<td>&nbsp;</td>
-</tr>
-</tbody>
-</table>
-<p>PySD only supports the basic functional types, although many of these can be replaced in a vensim model with functions operating on one of the supported types without loss of effect.
-For instance, the type initial can be replaced with an auxiliary type and the function &#8216;INITIAL&#8217;</p>
-</div>
-<div class="section" id="functions">
-<h2>Functions<a class="headerlink" href="#functions" title="Permalink to this headline">¶</a></h2>
-<table border="1" class="docutils">
-<colgroup>
-<col width="41%" />
-<col width="38%" />
-<col width="22%" />
-</colgroup>
-<tbody valign="top">
-<tr class="row-odd"><td>Vensim</td>
-<td>Supported</td>
-<td>Notes</td>
-</tr>
-</tbody>
-</table>
-<p>Not supported:
-tagging variables as &#8216;supplementary&#8217;</p>
-</div>
+<p>My goal is to translate the subset of Vensim functionality that has an equivalent in XMILE.
+There are some constructs (such as tagging variables as &#8216;suplementary&#8217; which are not currently
+parsed.</p>
+<p>The vensim import function <a class="reference internal" href="../functions.html#pysd.read_vensim" title="pysd.read_vensim"><code class="xref py py-func docutils literal"><span class="pre">pysd.read_vensim()</span></code></a> lists currently supported functionality.</p>
 </div>
 
 
