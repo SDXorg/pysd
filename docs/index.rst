@@ -2,7 +2,12 @@ PySD
 ====
 *Simulating System Dynamics Models in Python*
 
-This project is a simple library for running System Dynamics models in python, with the purpose of improving integration of Big Data and Machine Learning into the SD workflow.
+This project is a simple library for running System Dynamics models in python, with the purpose of
+improving integration of Big Data and Machine Learning into the SD workflow.
+
+PySD translates :doc:`Vensim <development/vensim_translation>` or
+:doc:`XMILE <development/xmile_translation>` model files into python modules,
+and provides methods to modify, simulate, and observe those translated models.
 
 
 Contents:
