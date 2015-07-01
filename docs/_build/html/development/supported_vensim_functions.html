@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Vensim Translation &mdash; PySD 0.3.0 documentation</title>
+  <title>&lt;no title&gt; &mdash; PySD 0.3.0 documentation</title>
   
 
   
@@ -30,10 +30,7 @@
   
 
   
-    <link rel="top" title="PySD 0.3.0 documentation" href="../index.html"/>
-        <link rel="up" title="Developer Documentation" href="development_index.html"/>
-        <link rel="next" title="XMILE Translation" href="xmile_translation.html"/>
-        <link rel="prev" title="Internal Functions" href="internal_functions.html"/> 
+    <link rel="top" title="PySD 0.3.0 documentation" href="../index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -72,7 +69,7 @@
         
           
           
-              <ul class="current">
+              <ul>
 <li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="../installation.html#installing-via-pip">Installing via pip</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../installation.html#installing-from-source">Installing from source</a></li>
@@ -97,7 +94,7 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../functions.html">User Functions Reference</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="development_index.html">Developer Documentation</a><ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="development_index.html">Developer Documentation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="motivation.html">Motivation of PySD</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="motivation.html#the-coming-of-age-of-big-data">The (coming of) age of Big Data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="motivation.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
@@ -115,8 +112,8 @@
 <li class="toctree-l3"><a class="reference internal" href="internal_functions.html#building-the-python-model-file">Building the python model file</a></li>
 </ul>
 </li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Vensim Translation</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#translated-functions">Translated Functions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vensim_translation.html">Vensim Translation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="vensim_translation.html#translated-functions">Translated Functions</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="xmile_translation.html">XMILE Translation</a></li>
@@ -152,13 +149,11 @@
   <ul class="wy-breadcrumbs">
     <li><a href="../index.html">Docs</a> &raquo;</li>
       
-          <li><a href="development_index.html">Developer Documentation</a> &raquo;</li>
-      
-    <li>Vensim Translation</li>
+    <li>&lt;no title&gt;</li>
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="../_sources/development/vensim_translation.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/development/supported_vensim_functions.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -167,130 +162,7 @@
 </div>
           <div role="main" class="document">
             
-  <div class="section" id="vensim-translation">
-<h1>Vensim Translation<a class="headerlink" href="#vensim-translation" title="Permalink to this headline">¶</a></h1>
-<p>PySD parses a vensim &#8216;.mdl&#8217; file and translates the result into python, creating a new file in the
-same directory as the original. For example, the Vensim file <a class="reference download internal" href="../_downloads/Teacup.mdl"><code class="xref download docutils literal"><span class="pre">Teacup.mdl</span></code></a>:</p>
-<div class="highlight-python"><div class="highlight"><pre>{UTF-8}
-Characteristic Time=
-	10
-	~	Minutes
-	~		|
-
-Heat Loss to Room=
-	(Teacup Temperature - Room Temperature) / Characteristic Time
-	~	Degrees/Minute
-	~	This is the rate at which heat flows from the cup into the room. We can \
-		ignore it at this point.
-	|
-
-Room Temperature=
-	70
-	~	
-	~		|
-
-Teacup Temperature= INTEG (
-	-Heat Loss to Room,
-		180)
-	~	Degrees
-	~		|
-
-********************************************************
-	.Control
-********************************************************~
-		Simulation Control Parameters
-	|
-
-FINAL TIME  = 30
-	~	Minute
-	~	The final time for the simulation.
-	|
-
-INITIAL TIME  = 0
-	~	Minute
-	~	The initial time for the simulation.
-	|
-
-SAVEPER  = 
-        TIME STEP
-	~	Minute [0,?]
-	~	The frequency with which output is stored.
-	|
-
-TIME STEP  = 0.125
-	~	Minute [0,?]
-	~	The time step for the simulation.
-	|
-</pre></div>
-</div>
-<p>becomes <a class="reference download internal" href="../_downloads/Teacup.py"><code class="xref download docutils literal"><span class="pre">Teacup.py</span></code></a>:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>                                 
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>                                              
-<span class="kn">from</span> <span class="nn">pysd</span> <span class="kn">import</span> <span class="n">functions</span>                                      
-<span class="kn">from</span> <span class="nn">pysd</span> <span class="kn">import</span> <span class="n">builder</span>                                        
-                                                                
-<span class="k">class</span> <span class="nc">Components</span><span class="p">(</span><span class="n">builder</span><span class="o">.</span><span class="n">ComponentClass</span><span class="p">):</span>                       
-                                                                
-    <span class="k">def</span> <span class="nf">characteristic_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Type: Flow or Auxiliary</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="mi">10</span> 
-
-    <span class="k">def</span> <span class="nf">heat_loss_to_room</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Type: Flow or Auxiliary</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">teacup_temperature</span><span class="p">()</span><span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">room_temperature</span><span class="p">())</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">characteristic_time</span><span class="p">()</span> 
-
-    <span class="k">def</span> <span class="nf">room_temperature</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Type: Flow or Auxiliary</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="mi">70</span> 
-
-    <span class="k">def</span> <span class="nf">dteacup_temperature_dt</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>                       
-        <span class="k">return</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">heat_loss_to_room</span><span class="p">()</span>                           
-
-    <span class="k">def</span> <span class="nf">teacup_temperature_init</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>                      
-        <span class="k">return</span> <span class="mi">180</span>                           
-
-    <span class="k">def</span> <span class="nf">teacup_temperature</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>                            
-        <span class="sd">&quot;&quot;&quot; Stock: teacup_temperature =                      </span>
-<span class="sd">                 -self.heat_loss_to_room()                          </span>
-<span class="sd">                                             </span>
-<span class="sd">        Initial Value: 180                    </span>
-<span class="sd">        Do not overwrite this function       </span>
-<span class="sd">        &quot;&quot;&quot;</span>                                  
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">[</span><span class="s">&quot;teacup_temperature&quot;</span><span class="p">]</span>              
-                                             
-    <span class="k">def</span> <span class="nf">final_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Type: Flow or Auxiliary</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="mi">30</span> 
-
-    <span class="k">def</span> <span class="nf">initial_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Type: Flow or Auxiliary</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="mi">0</span> 
-
-    <span class="k">def</span> <span class="nf">saveper</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Type: Flow or Auxiliary</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">time_step</span><span class="p">()</span> 
-
-    <span class="k">def</span> <span class="nf">time_step</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Type: Flow or Auxiliary</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="mf">0.125</span> 
-</pre></div>
-</div>
-<p>This allows model execution independent of the Vensim environment, which can be handy for deploying
-models as backends to other products, or for performing massively parallel distributed computation.</p>
-<p>These translated model files are read by PySD, which provides methods for modifying or running the
-model and conveniently accessing simulation results.</p>
-<div class="section" id="translated-functions">
-<h2>Translated Functions<a class="headerlink" href="#translated-functions" title="Permalink to this headline">¶</a></h2>
-<p>Ongoing development of the translator will support the full subset of Vensim functionality that
-has an equivalent in XMILE. The current release supports the following functionality:</p>
-<table border="1" class="docutils">
+  <table border="1" class="docutils">
 <colgroup>
 <col width="50%" />
 <col width="50%" />
@@ -422,30 +294,10 @@ has an equivalent in XMILE. The current release supports the following functiona
 </table>
 <blockquote>
 <div><cite>np</cite> corresponds to the numpy package</div></blockquote>
-<p>Additionally, identifiers are currently limited to alphanumeric characters and the dollar sign $.</p>
-<p>Future releases will include support for:</p>
-<ul class="simple">
-<li>subscripts</li>
-<li>arrays</li>
-<li>arbitrary identifiers</li>
-</ul>
-<p>There are some constructs (such as tagging variables as &#8216;suplementary&#8217;) which are not currently
-parsed, and may throw an error. Future releases will handle this with more grace.</p>
-</div>
-</div>
 
 
           </div>
           <footer>
-  
-    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
-      
-        <a href="xmile_translation.html" class="btn btn-neutral float-right" title="XMILE Translation" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
-      
-      
-        <a href="internal_functions.html" class="btn btn-neutral" title="Internal Functions" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
-      
-    </div>
   
 
   <hr/>

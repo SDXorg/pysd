@@ -17,6 +17,12 @@ import os
 import shlex
 
 
+# Build the translated functions file
+from pysd.translators import vensim2py
+with open('development/supported_vensim_functions.rst', 'w') as fout:
+    fout.write(vensim2py.doc_supported_vensim_functions())
+
+
 import mock
  
 MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot', 'scipy.stats',
