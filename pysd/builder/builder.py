@@ -21,6 +21,9 @@ from __future__ import division
 import inspect
 from pysd import functions
 from itertools import izip
+import re
+import keyword
+
 
 
 
@@ -397,3 +400,32 @@ def add_n_smooth(filename, smooth_input, smooth_time, initial_value, order):
     return flowlist[-1]
 
 
+
+def make_python_identifier(string):
+    """Takes an arbitrary string and creates a valid Python identifier.
+    
+    Identifiers must follow the convention outlined here:
+    https://docs.python.org/2/reference/lexical_analysis.html#identifiers
+    """
+    #Todo:
+    # It is possible that this will create non-unique variable names that we'll
+    # need to deal with
+
+    string = string.lower()
+
+    # remove leading and trailing whitespace
+    string = string.strip()
+
+    # Make spaces into underscores
+    string = string.replace(' ', '_')
+
+    # Remove invalid characters
+    string = re.sub('[^0-9a-zA-Z_]', '', string)
+
+    # Remove leading characters until we find a letter or underscore
+    string = re.sub('^[^a-zA-Z_]+', '', string)
+
+    if string in keyword.kwlist:
+        string += '_element'
+
+    return string

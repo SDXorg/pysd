@@ -155,6 +155,9 @@ class Test_Vensim_Models(unittest.TestCase):
         results = model.run(return_columns=['fleau', 'test_initial_fleau'])
         self.assertEqual(results.iloc[5]['test_initial_fleau'], results.iloc[0]['fleau'])
 
+    def test_special_variable_names(self):
+        model = pysd.read_vensim('tests/vensim/test_special_variable_names.mdl')
+        model.run()
 
 class Test_Xmile_Models(unittest.TestCase):
 

@@ -153,7 +153,11 @@ file_grammar = (
     'ConCall  = ConKeyword _ "(" _ ArgList _ ")"                                                \n'+
 
     'Number   = ((~"[0-9]"+ "."? ~"[0-9]"*) / ("." ~"[0-9]"+)) (("e"/"E") ("-"/"+") ~"[0-9]"+)? \n'+
-    'Identifier =  ~"[a-zA-Z]" ~"[a-zA-Z0-9_\$\s]"*                                             \n'+
+    'Identifier = Basic_Id / Special_Id                                                         \n'+
+    'Basic_Id = Letter (Letter / Digit / ~"[_\s]")*                                             \n'+
+    'Special_Id = "\\""  ~"[^\\\"]"*  "\\""                                                     \n'+
+    'Letter   = ~"[a-zA-Z]"                                                                     \n'+
+    'Digit    = ~"[0-9]"                                                                        \n'+
 
     # We separated out single space characters from the _ entry, so that it can have any number or
     #   combination of space characters.
@@ -259,12 +263,8 @@ class TextParser(NodeVisitor):
         return 'self.'+Identifier+'()'
 
     def visit_Identifier(self, n, vc):
-        #todo: should check here that identifiers are not python keywords...
         string = n.text
-        string = string.lower()
-        string = string.strip()
-        string = string.replace(' ', '_')
-        return string
+        return builder.make_python_identifier(string)
 
     def visit_Call(self, n, (Translated_Keyword, _1, lparen, _2, args, _3, rparen)):
         return Translated_Keyword+'('+', '.join(args)+')'
