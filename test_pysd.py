@@ -159,6 +159,10 @@ class Test_Vensim_Models(unittest.TestCase):
         model = pysd.read_vensim('tests/vensim/test_special_variable_names.mdl')
         model.run()
 
+    def test_variable_names_with_quotes(self):
+        model = pysd.read_vensim('tests/vensim/test_variable_names_with_quotes.mdl')
+        model.run()
+
 class Test_Xmile_Models(unittest.TestCase):
 
     def test_teacup(self):
