@@ -32,7 +32,7 @@
   
     <link rel="top" title="PySD 0.3.2 documentation" href="../index.html"/>
         <link rel="up" title="Developer Documentation" href="development_index.html"/>
-        <link rel="prev" title="PySD Development Pathway" href="pathway.html"/> 
+        <link rel="prev" title="Internal Functions" href="internal_functions.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -97,37 +97,41 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../functions.html">User Functions Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="development_index.html">Developer Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="about.html">About the Project</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="about.html#motivation-the-coming-of-age-of-big-data">Motivation: The (coming of) age of Big Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="about.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="contributing.html">Contributing to PySD</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="contributing.html#test-suite">Test Suite</a></li>
-<li class="toctree-l3"><a class="reference internal" href="contributing.html#speed-tests">Speed Tests</a></li>
-<li class="toctree-l3"><a class="reference internal" href="contributing.html#profiler">Profiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="contributing.html#development-tools">Development Tools</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="contributing.html#test-suite">Test Suite</a></li>
+<li class="toctree-l4"><a class="reference internal" href="contributing.html#speed-tests">Speed Tests</a></li>
+<li class="toctree-l4"><a class="reference internal" href="contributing.html#profiler">Profiler</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="motivation.html">Motivation of PySD</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="motivation.html#the-coming-of-age-of-big-data">The (coming of) age of Big Data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="motivation.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="contributing.html#pysd-design-philosophy">PySD Design Philosophy</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="philosophy.html">PySD Design Philosophy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="structure.html">Structure of the PySD module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="structure.html#builder">Builder</a></li>
-<li class="toctree-l3"><a class="reference internal" href="structure.html#translation">Translation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="structure.html#the-model-class">The model class</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="internal_functions.html">Internal Functions</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="internal_functions.html#special-functions-needed-for-model-execution">Special functions needed for model execution</a></li>
-<li class="toctree-l3"><a class="reference internal" href="internal_functions.html#building-the-python-model-file">Building the python model file</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="vensim_translation.html">Vensim Translation</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="vensim_translation.html#translated-functions">Translated Functions</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="xmile_translation.html">XMILE Translation</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pathway.html">PySD Development Pathway</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="pathway.html#high-priority">High Priority</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pathway.html#medium-priority">Medium Priority</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pathway.html#low-priority">Low Priority</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pathway.html#not-planned">Not Planned</a></li>
+<li class="toctree-l3"><a class="reference internal" href="pathway.html#ideas-for-other-projects">Ideas for Other Projects</a></li>
 <li class="toctree-l3"><a class="reference internal" href="pathway.html#current-features">Current Features</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pathway.html#possible-future-features">Possible Future features</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="structure.html">Structure of the PySD module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="structure.html#translation">Translation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="vensim_translation.html">Vensim Translation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="xmile_translation.html">XMILE Translation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="structure.html#the-model-class">The model class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="structure.html#the-pysd-class">The PySD class</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="internal_functions.html">Internal Functions</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2 current"><a class="current reference internal" href="">Complementary Projects</a></li>
@@ -187,7 +191,7 @@
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
       
-        <a href="pathway.html" class="btn btn-neutral" title="PySD Development Pathway" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="internal_functions.html" class="btn btn-neutral" title="Internal Functions" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

@@ -5,12 +5,8 @@ Developer Documentation
 .. toctree::
    :maxdepth: 2
 
+   about
    contributing
-   motivation
-   philosophy
-   structure
-   internal_functions
-   vensim_translation
-   xmile_translation
    pathway
+   structure
    complement

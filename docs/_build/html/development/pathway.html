@@ -32,8 +32,8 @@
   
     <link rel="top" title="PySD 0.3.2 documentation" href="../index.html"/>
         <link rel="up" title="Developer Documentation" href="development_index.html"/>
-        <link rel="next" title="Complementary Projects" href="complement.html"/>
-        <link rel="prev" title="XMILE Translation" href="xmile_translation.html"/> 
+        <link rel="next" title="Structure of the PySD module" href="structure.html"/>
+        <link rel="prev" title="Contributing to PySD" href="contributing.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -98,37 +98,41 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../functions.html">User Functions Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="development_index.html">Developer Documentation</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="about.html">About the Project</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="about.html#motivation-the-coming-of-age-of-big-data">Motivation: The (coming of) age of Big Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="about.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="contributing.html">Contributing to PySD</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="contributing.html#test-suite">Test Suite</a></li>
-<li class="toctree-l3"><a class="reference internal" href="contributing.html#speed-tests">Speed Tests</a></li>
-<li class="toctree-l3"><a class="reference internal" href="contributing.html#profiler">Profiler</a></li>
+<li class="toctree-l3"><a class="reference internal" href="contributing.html#development-tools">Development Tools</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="contributing.html#test-suite">Test Suite</a></li>
+<li class="toctree-l4"><a class="reference internal" href="contributing.html#speed-tests">Speed Tests</a></li>
+<li class="toctree-l4"><a class="reference internal" href="contributing.html#profiler">Profiler</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="motivation.html">Motivation of PySD</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="motivation.html#the-coming-of-age-of-big-data">The (coming of) age of Big Data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="motivation.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
+<li class="toctree-l3"><a class="reference internal" href="contributing.html#pysd-design-philosophy">PySD Design Philosophy</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="philosophy.html">PySD Design Philosophy</a></li>
-<li class="toctree-l2"><a class="reference internal" href="structure.html">Structure of the PySD module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="structure.html#builder">Builder</a></li>
-<li class="toctree-l3"><a class="reference internal" href="structure.html#translation">Translation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="structure.html#the-model-class">The model class</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="internal_functions.html">Internal Functions</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="internal_functions.html#special-functions-needed-for-model-execution">Special functions needed for model execution</a></li>
-<li class="toctree-l3"><a class="reference internal" href="internal_functions.html#building-the-python-model-file">Building the python model file</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="vensim_translation.html">Vensim Translation</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="vensim_translation.html#translated-functions">Translated Functions</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="xmile_translation.html">XMILE Translation</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="">PySD Development Pathway</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#high-priority">High Priority</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#medium-priority">Medium Priority</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#low-priority">Low Priority</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#not-planned">Not Planned</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ideas-for-other-projects">Ideas for Other Projects</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#current-features">Current Features</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#possible-future-features">Possible Future features</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="structure.html">Structure of the PySD module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="structure.html#translation">Translation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="vensim_translation.html">Vensim Translation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="xmile_translation.html">XMILE Translation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="structure.html#the-model-class">The model class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="structure.html#the-pysd-class">The PySD class</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="internal_functions.html">Internal Functions</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="complement.html">Complementary Projects</a></li>
@@ -175,34 +179,61 @@
             
   <div class="section" id="pysd-development-pathway">
 <h1>PySD Development Pathway<a class="headerlink" href="#pysd-development-pathway" title="Permalink to this headline">¶</a></h1>
-<p>The basic use case of PySD is for a user to import a fully developed SD model (created in Vensim, or Stella/iThink, etc.) into python; and then use third party tools to perform statistical analysis and inference, and to interface with external data.</p>
+<p>High priority features, bugs, and other elements of active effort are listed on the <a class="reference external" href="https://github.com/JamesPHoughton/pysd/issues">github issue
+tracker.</a> To get involved see <a class="reference internal" href="contributing.html"><em>Contributing to PySD</em></a>.</p>
+<div class="section" id="high-priority">
+<h2>High Priority<a class="headerlink" href="#high-priority" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Subscripts/arrays</li>
+<li>Refactor delays to take advantage of array architecture</li>
+</ul>
+</div>
+<div class="section" id="medium-priority">
+<h2>Medium Priority<a class="headerlink" href="#medium-priority" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Outsource model translation to <a class="reference external" href="https://github.com/SDXchange">SDXchange</a> model translation toolset</li>
+<li>Improve model exexution speed using cython, theano, numba, or another package</li>
+</ul>
+</div>
+<div class="section" id="low-priority">
+<h2>Low Priority<a class="headerlink" href="#low-priority" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Import model component documentation in a way that enables doctest, to enable writing unit tests
+within the modeling environment.</li>
+<li>Handle simulating over timeseries</li>
+<li>Implement run memoization to improve speed of larger analyses</li>
+<li>Implement an interface for running the model over a range of conditions, build in intelligent
+parallelization.</li>
+</ul>
+</div>
+<div class="section" id="not-planned">
+<h2>Not Planned<a class="headerlink" href="#not-planned" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>Model Construction</li>
+<li>Display of Model Diagrams</li>
+<li>Outputting models to XMILE or other formats</li>
+</ul>
+</div>
+<div class="section" id="ideas-for-other-projects">
+<h2>Ideas for Other Projects<a class="headerlink" href="#ideas-for-other-projects" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li>SD-lint checker (units, modeling conventions, bounds/limits, etc)</li>
+<li>Contribution to external Data Science tools to make them more appropriate for dynamic assistant</li>
+</ul>
+</div>
 <div class="section" id="current-features">
 <h2>Current Features<a class="headerlink" href="#current-features" title="Permalink to this headline">¶</a></h2>
 <ul class="simple">
-<li>Basic XMILE and Vensim parser,</li>
+<li>Basic XMILE and Vensim parser</li>
 <li>Established library structure and data formats</li>
 <li>Simulation using existing python integration tools</li>
-<li>Basic demonstrations of integration with python Data Science functionality</li>
+<li>Integration with basic python Data Science functionality</li>
 <li>Run-at-a-time parameter modification</li>
-<li>Step-at-a-time parameter modification / time-variant exogenous inputs</li>
+<li>Time-variant exogenous inputs</li>
 <li>Extended backends for storing parameters and output values</li>
 <li>Demonstration of integration with Machine Learning/Monte Carlo/Statistical Methods</li>
 <li>Python methods for programmatically manipulating SD model structure</li>
 <li>Turn off and on &#8216;traces&#8217; or records of the values of variables</li>
-</ul>
-</div>
-<div class="section" id="possible-future-features">
-<h2>Possible Future features<a class="headerlink" href="#possible-future-features" title="Permalink to this headline">¶</a></h2>
-<ul class="simple">
-<li>Complete parsers (including subscripting, etc)</li>
-<li>Embed SD.js front end in iPython widget</li>
-<li>XMILE display component parser</li>
-<li>Customizations of external Data Science tools for dynamic systems</li>
-<li>Incorporation of analysis tools specific to dynamic systems</li>
-<li>Additional SD tools: checks for model units, value limits, etc.</li>
-<li>Python methods for saving XMILE models</li>
-<li>Hover over stock/flow elements to get things like units, descriptions, values, etc.</li>
-<li>Output DataFrame including tags for units</li>
 </ul>
 </div>
 </div>
@@ -213,10 +244,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="complement.html" class="btn btn-neutral float-right" title="Complementary Projects" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="structure.html" class="btn btn-neutral float-right" title="Structure of the PySD module" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="xmile_translation.html" class="btn btn-neutral" title="XMILE Translation" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="contributing.html" class="btn btn-neutral" title="Contributing to PySD" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

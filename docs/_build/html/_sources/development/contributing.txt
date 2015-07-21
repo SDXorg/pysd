@@ -2,11 +2,18 @@ Contributing to PySD
 ====================
 
 
-If you are interested in helping to develop PySD, there are a number of tools that you might find
-helpful. The :doc:`pathway` lists areas that are ripe for contribution.
+If you are interested in helping to develop PySD, the :doc:`pathway` lists areas that are ripe
+for contribution.
+
+To get started, you can fork the repository and make contributions to your own version.
+When you're happy with your edits, submit a pull request to the main branch.
+
+Development Tools
+-----------------
+There are a number of tools that you might find helpful in development:
 
 Test Suite
-----------
+^^^^^^^^^^
 The test suite is found in the main repository in the `test_pysd.py` module. These tests run
 quickly and should be executed when any changes are made to ensure that current functionality
 remains intact.
@@ -18,7 +25,7 @@ The test suite depends on the standard python :py:mod:`unittest` library.
 
 
 Speed Tests
------------
+^^^^^^^^^^^
 A set of speed tests are found in the `speed_test.py` module. These speed tests help understand how
 changes to the PySD module influence the speed of execution. These tests take a little longer to run
 than the basic test suite, but are not onerous. They should be run before any submission to the
@@ -29,13 +36,32 @@ information, so that before and after comparisons can be made.
 
 The speed tests depend on the standard python :py:mod:`timeit` library.
 
+
 Profiler
---------
+^^^^^^^^
 Profiling the code can help to identify bottlenecks in operation. To understand how changes to the
 code influence its speed, we should construct a profiling test that executes the PySD components in
 question. The file 'profile_pysd.py' gives an example for how this profiling can be conducted, and
 the file 'run_profiler.sh' executes the profiler and launches a view of the results that can be
 explored in the browser.
 
-The profiler depends on :py:mod:`cProfile` and `cprofilev<https://github.com/ymichael/cprofilev>`_
+The profiler depends on :py:mod:`cProfile` and `cprofilev <https://github.com/ymichael/cprofilev>`_
 
+
+
+PySD Design Philosophy
+----------------------
+Understanding that a focussed project is both more robust and maintainable, PySD aspires to the
+following philosophy:
+
+
+* Do as little as possible.
+ * Anything that is not endemic to System Dynamics (such as plotting, integration, fitting, etc) should either be implemented using external tools, or omitted.
+ * Stick to SD. Let other disciplines (ABM, Discrete Event Simulation, etc) create their own tools.
+ * Use external model creation tools
+* Use the core language of system dynamics.
+ * Implementation to the basic XMILE standard
+ * Resisting the urge to include everything that shows up in all vendors' tools.
+* Be simple to use. Let SD practitioners who haven't used python before understand the basics.
+* Take advantage of general python constructions and best practices.
+* Develop and use strong testing and profiling components.

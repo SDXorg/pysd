@@ -1,33 +1,55 @@
 PySD Development Pathway
 ========================
 
-The basic use case of PySD is for a user to import a fully developed SD model (created in Vensim, or Stella/iThink, etc.) into python; and then use third party tools to perform statistical analysis and inference, and to interface with external data.
+High priority features, bugs, and other elements of active effort are listed on the `github issue
+tracker. <https://github.com/JamesPHoughton/pysd/issues>`_ To get involved see :doc:`contributing`.
+
+
+High Priority
+-------------
+* Subscripts/arrays
+* Refactor delays to take advantage of array architecture
+
+
+Medium Priority
+---------------
+* Outsource model translation to `SDXchange <https://github.com/SDXchange>`_ model translation toolset
+* Improve model exexution speed using cython, theano, numba, or another package
+
+
+Low Priority
+------------
+* Import model component documentation in a way that enables doctest, to enable writing unit tests
+  within the modeling environment.
+* Handle simulating over timeseries
+* Implement run memoization to improve speed of larger analyses
+* Implement an interface for running the model over a range of conditions, build in intelligent
+  parallelization.
+
+
+Not Planned
+-----------
+* Model Construction
+* Display of Model Diagrams
+* Outputting models to XMILE or other formats
+
+
+Ideas for Other Projects
+------------------------
+* SD-lint checker (units, modeling conventions, bounds/limits, etc)
+* Contribution to external Data Science tools to make them more appropriate for dynamic assistant
+
 
 Current Features
 ----------------
 
-* Basic XMILE and Vensim parser,
+* Basic XMILE and Vensim parser
 * Established library structure and data formats
 * Simulation using existing python integration tools
-* Basic demonstrations of integration with python Data Science functionality
+* Integration with basic python Data Science functionality
 * Run-at-a-time parameter modification
-* Step-at-a-time parameter modification / time-variant exogenous inputs
+* Time-variant exogenous inputs
 * Extended backends for storing parameters and output values
 * Demonstration of integration with Machine Learning/Monte Carlo/Statistical Methods
 * Python methods for programmatically manipulating SD model structure
 * Turn off and on 'traces' or records of the values of variables
-
-Possible Future features
-------------------------
-
-* Complete parsers (including subscripting, etc)
-* Embed SD.js front end in iPython widget
-* XMILE display component parser
-* Customizations of external Data Science tools for dynamic systems
-* Incorporation of analysis tools specific to dynamic systems
-* Additional SD tools: checks for model units, value limits, etc.
-* Python methods for saving XMILE models
-* Hover over stock/flow elements to get things like units, descriptions, values, etc.
-* Output DataFrame including tags for units
-
-
