@@ -8,7 +8,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Motivation of PySD &mdash; PySD 0.3.2 documentation</title>
+  <title>Contributing to PySD &mdash; PySD 0.3.2 documentation</title>
   
 
   
@@ -32,8 +32,8 @@
   
     <link rel="top" title="PySD 0.3.2 documentation" href="../index.html"/>
         <link rel="up" title="Developer Documentation" href="development_index.html"/>
-        <link rel="next" title="PySD Design Philosophy" href="philosophy.html"/>
-        <link rel="prev" title="Contributing to PySD" href="contributing.html"/> 
+        <link rel="next" title="Motivation of PySD" href="motivation.html"/>
+        <link rel="prev" title="Developer Documentation" href="development_index.html"/> 
 
   
   <script src="_static/js/modernizr.min.js"></script>
@@ -98,15 +98,15 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../functions.html">User Functions Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="development_index.html">Developer Documentation</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="contributing.html">Contributing to PySD</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="contributing.html#test-suite">Test Suite</a></li>
-<li class="toctree-l3"><a class="reference internal" href="contributing.html#speed-tests">Speed Tests</a></li>
-<li class="toctree-l3"><a class="reference internal" href="contributing.html#profiler">Profiler</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="">Contributing to PySD</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#test-suite">Test Suite</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#speed-tests">Speed Tests</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#profiler">Profiler</a></li>
 </ul>
 </li>
-<li class="toctree-l2 current"><a class="current reference internal" href="">Motivation of PySD</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#the-coming-of-age-of-big-data">The (coming of) age of Big Data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="motivation.html">Motivation of PySD</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="motivation.html#the-coming-of-age-of-big-data">The (coming of) age of Big Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="motivation.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="philosophy.html">PySD Design Philosophy</a></li>
@@ -160,11 +160,11 @@
       
           <li><a href="development_index.html">Developer Documentation</a> &raquo;</li>
       
-    <li>Motivation of PySD</li>
+    <li>Contributing to PySD</li>
       <li class="wy-breadcrumbs-aside">
         
           
-            <a href="../_sources/development/motivation.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/development/contributing.txt" rel="nofollow"> View page source</a>
           
         
       </li>
@@ -173,24 +173,37 @@
 </div>
           <div role="main" class="document">
             
-  <div class="section" id="motivation-of-pysd">
-<h1>Motivation of PySD<a class="headerlink" href="#motivation-of-pysd" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="the-coming-of-age-of-big-data">
-<h2>The (coming of) age of Big Data<a class="headerlink" href="#the-coming-of-age-of-big-data" title="Permalink to this headline">¶</a></h2>
-<p>The last few years have witnessed a massive growth in the collection of social and business data, and a corresponding boom of interest in learning about the behavior of social and business systems using this data. The field of ‘data science’ is developing a host of new techniques for dealing with and analyzing data, responding to an increase in demand for insights and the increased power of computing resources.</p>
-<p>So far, however, these new techniques are largely confined to variants of statistical summary, categorization, and inference; and if causal models are used, they are generally static in nature, ignoring the dynamic complexity and feedback structures of the systems in question. As the field of data science matures, there will be increasing demand for insights beyond those available through analysis unstructured by causal understanding. At that point data scientists may seek to add dynamic models of system structure to their toolbox.</p>
-<p>The field of system dynamics has always been interested in learning about social systems, and specializes in understanding dynamic complexity. There is likewise a long tradition of incorporating various forms of data into system dynamics models.3 While system dynamics practice has much to gain from the emergence of new volumes of social data, the community has yet to benefit fully from the data science revolution.</p>
-<p>There are a variety of reasons for this, the largest likely being that the two communities have yet to commingle to a great extent. A further, and ultimately more tractable reason is that the tools of system dynamics and the tools of data analytics are not tightly integrated, making joint method analysis unwieldy. There is a rich problem space that depends upon the ability of these fields to support one another, and so there is a need for tools that help the two methodologies work together. PySD is designed to meet this need.</p>
+  <div class="section" id="contributing-to-pysd">
+<h1>Contributing to PySD<a class="headerlink" href="#contributing-to-pysd" title="Permalink to this headline">¶</a></h1>
+<p>If you are interested in helping to develop PySD, there are a number of tools that you might find
+helpful. The <a class="reference internal" href="pathway.html"><em>PySD Development Pathway</em></a> lists areas that are ripe for contribution.</p>
+<div class="section" id="test-suite">
+<h2>Test Suite<a class="headerlink" href="#test-suite" title="Permalink to this headline">¶</a></h2>
+<p>The test suite is found in the main repository in the <cite>test_pysd.py</cite> module. These tests run
+quickly and should be executed when any changes are made to ensure that current functionality
+remains intact.</p>
+<p>The tests outlined in this file depend on a set of models present in the <cite>tests</cite> directory of the
+main repository that are categorized by model source.</p>
+<p>The test suite depends on the standard python <a class="reference external" href="https://docs.python.org/2.7/library/unittest.html#module-unittest" title="(in Python v2.7)"><code class="xref py py-mod docutils literal"><span class="pre">unittest</span></code></a> library.</p>
 </div>
-<div class="section" id="general-approaches-for-integrating-system-dynamic-models-and-data-analytics">
-<h2>General approaches for integrating system dynamic models and data analytics<a class="headerlink" href="#general-approaches-for-integrating-system-dynamic-models-and-data-analytics" title="Permalink to this headline">¶</a></h2>
-<p>Before considering how system dynamics techniques can be used in data science applications, we should consider the variety of ways in which the system dynamics community has traditionally dealt with integration of data and models.</p>
-<p>The first paradigm for using numerical data in support of modeling efforts is to import data into system dynamics modeling software. Algorithms for comparing models with data are built into the tool itself, and are usable through a graphical front-end interface as with model fitting in Vensim, or through a programming environment unique to the tool. When new techniques such as Markov chain Monte Carlo analysis become relevant to the system dynamics community, they are often brought into the SD tool.</p>
-<p>This approach appropriately caters to system dynamics modelers who want to take advantage of well-established data science techniques without needing to learn a programming language, and extends the functionality of system dynamics to the basics of integrated model analysis.</p>
-<p>A second category of tools uses a standard system dynamics tool as a computation engine for analysis performed in a coding environment. This is the approach taken by the Exploratory Modeling Analysis (EMA) Workbench6, or the Behavior Analysis and Testing Software (BATS)7. This first step towards bringing system dynamics to a more inclusive analysis environment enables many new types of model understanding, but imposes limits on the depth of interaction with models and the ability to scale simulation to support large analysis.</p>
-<p>A third category of tools imports the models created by traditional tools to perform analyses independently of the original modeling tool. An example of this is SDM-Doc8, a model documentation tool, or Abdel-Gawad et. al.’s eigenvector analysis tool9. It is this third category to which PySD belongs.</p>
-<p>The central paradigm of PySD is that it is more efficient to bring the mature capabilities of system dynamics into an environment in use for active development in data science, than to attempt to bring each new development in inference and machine learning into the system dynamics enclave.</p>
-<p>PySD reads a model file – the product of a modeling program such as Vensim10 or Stella/iThink11 – and cross compiles it into Python, providing a simulation engine that can run these models natively in the Python environment. It is not a substitute for these tools, and cannot be used to replace a visual model construction environment.</p>
+<div class="section" id="speed-tests">
+<h2>Speed Tests<a class="headerlink" href="#speed-tests" title="Permalink to this headline">¶</a></h2>
+<p>A set of speed tests are found in the <cite>speed_test.py</cite> module. These speed tests help understand how
+changes to the PySD module influence the speed of execution. These tests take a little longer to run
+than the basic test suite, but are not onerous. They should be run before any submission to the
+repository.</p>
+<p>The speed test results are appended to &#8216;speedtest_results.json&#8217;, along with version and date
+information, so that before and after comparisons can be made.</p>
+<p>The speed tests depend on the standard python <a class="reference external" href="https://docs.python.org/2.7/library/timeit.html#module-timeit" title="(in Python v2.7)"><code class="xref py py-mod docutils literal"><span class="pre">timeit</span></code></a> library.</p>
+</div>
+<div class="section" id="profiler">
+<h2>Profiler<a class="headerlink" href="#profiler" title="Permalink to this headline">¶</a></h2>
+<p>Profiling the code can help to identify bottlenecks in operation. To understand how changes to the
+code influence its speed, we should construct a profiling test that executes the PySD components in
+question. The file &#8216;profile_pysd.py&#8217; gives an example for how this profiling can be conducted, and
+the file &#8216;run_profiler.sh&#8217; executes the profiler and launches a view of the results that can be
+explored in the browser.</p>
+<p>The profiler depends on <a class="reference external" href="https://docs.python.org/2.7/library/profile.html#module-cProfile" title="(in Python v2.7)"><code class="xref py py-mod docutils literal"><span class="pre">cProfile</span></code></a> and <a href="#id1"><span class="problematic" id="id2">`cprofilev&lt;https://github.com/ymichael/cprofilev&gt;`_</span></a></p>
 </div>
 </div>
 
@@ -200,10 +213,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="philosophy.html" class="btn btn-neutral float-right" title="PySD Design Philosophy" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="motivation.html" class="btn btn-neutral float-right" title="Motivation of PySD" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="contributing.html" class="btn btn-neutral" title="Contributing to PySD" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="development_index.html" class="btn btn-neutral" title="Developer Documentation" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

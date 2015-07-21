@@ -96,6 +96,12 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../functions.html">User Functions Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../../development/development_index.html">Developer Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="../../../development/contributing.html">Contributing to PySD</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="../../../development/contributing.html#test-suite">Test Suite</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../development/contributing.html#speed-tests">Speed Tests</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../../development/contributing.html#profiler">Profiler</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="../../../development/motivation.html">Motivation of PySD</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../../development/motivation.html#the-coming-of-age-of-big-data">The (coming of) age of Big Data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../../development/motivation.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
@@ -187,6 +193,9 @@
 <span class="kn">import</span> <span class="nn">inspect</span>
 <span class="kn">from</span> <span class="nn">pysd</span> <span class="kn">import</span> <span class="n">functions</span>
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">izip</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">keyword</span>
+
 
 
 
@@ -561,6 +570,37 @@
                   <span class="n">initial_condition</span><span class="o">=</span><span class="n">initial_value</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">flowlist</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+
+
+<span class="k">def</span> <span class="nf">make_python_identifier</span><span class="p">(</span><span class="n">string</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Takes an arbitrary string and creates a valid Python identifier.</span>
+<span class="sd">    </span>
+<span class="sd">    Identifiers must follow the convention outlined here:</span>
+<span class="sd">    https://docs.python.org/2/reference/lexical_analysis.html#identifiers</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c">#Todo:</span>
+    <span class="c"># It is possible that this will create non-unique variable names that we&#39;ll</span>
+    <span class="c"># need to deal with</span>
+
+    <span class="n">string</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+
+    <span class="c"># remove leading and trailing whitespace</span>
+    <span class="n">string</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+    <span class="c"># Make spaces into underscores</span>
+    <span class="n">string</span> <span class="o">=</span> <span class="n">string</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">,</span> <span class="s">&#39;_&#39;</span><span class="p">)</span>
+
+    <span class="c"># Remove invalid characters</span>
+    <span class="n">string</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;[^0-9a-zA-Z_]&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">string</span><span class="p">)</span>
+
+    <span class="c"># Remove leading characters until we find a letter or underscore</span>
+    <span class="n">string</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">&#39;^[^a-zA-Z_]+&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">string</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">string</span> <span class="ow">in</span> <span class="n">keyword</span><span class="o">.</span><span class="n">kwlist</span><span class="p">:</span>
+        <span class="n">string</span> <span class="o">+=</span> <span class="s">&#39;_element&#39;</span>
+
+    <span class="k">return</span> <span class="n">string</span>
 </pre></div>
 
           </div>

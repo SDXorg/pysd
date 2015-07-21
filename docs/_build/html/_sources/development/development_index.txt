@@ -5,6 +5,7 @@ Developer Documentation
 .. toctree::
    :maxdepth: 2
 
+   contributing
    motivation
    philosophy
    structure
