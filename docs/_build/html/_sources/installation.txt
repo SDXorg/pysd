@@ -41,7 +41,10 @@ PySD calls on the core Python data analytics stack, and a third party parsing li
 * Matplotlib
 * Parsimonious
 
-These modules should build automatically if you are installing via `pip`. If you are building from the source code, or if pip fails to load them, they can be loaded with the same `pip` syntax as above.
+These modules should build automatically if you are installing via `pip`. If you are building from
+the source code, or if pip fails to load them, they can be loaded with the same `pip` syntax as
+above.
+
 
 Optional Dependencies
 ---------------------
@@ -52,11 +55,15 @@ These Python libraries bring additional data analytics capabilities to the analy
 * NetworkX: a library for constructing networks
 * GeoPandas: a library for manipulating geographic data
 
-Additionally, the System Dynamics Translator utility developed by Robert Ward is useful for translating models from other system dynamics formats into the XMILE standard, to be read by PySD.
+Additionally, the System Dynamics Translator utility developed by Robert Ward is useful for
+translating models from other system dynamics formats into the XMILE standard, to be read by PySD.
 
 These modules can be installed using pip with syntax similar to the above.
 
+
 Additional Resources
 --------------------
-The PySD Cookbook contains `a tutorial <http://nbviewer.ipython.org/github/JamesPHoughton/PySD-Cookbook/blob/master/1_2_Installation_and_Setup.ipynb>`_ on getting started with the python data analytics stack, and integrating with PySD.
+The PySD Cookbook contains a recipe on
+:doc:`pysdcookbook:Installation_and_Setup` that can help you get set up
+with both python and PySD.
 

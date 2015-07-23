@@ -7,14 +7,16 @@ tracker. <https://github.com/JamesPHoughton/pysd/issues>`_ To get involved see :
 
 High Priority
 -------------
-* Subscripts/arrays
+* Subscripts/arrays `Github Issue Track <https://github.com/JamesPHoughton/pysd/issues/21>`_
 * Refactor delays to take advantage of array architecture
+* Improve translation of model documentation strings and units into python function docstrings
 
 
 Medium Priority
 ---------------
 * Outsource model translation to `SDXchange <https://github.com/SDXchange>`_ model translation toolset
 * Improve model exexution speed using cython, theano, numba, or another package
+* Improve performance when returning non-stock model elements
 
 
 Low Priority

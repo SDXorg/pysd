@@ -316,4 +316,5 @@ texinfo_documents = [
 #texinfo_no_detailmenu = False
 
 
-intersphinx_mapping = {'python': ('https://docs.python.org/2.7', None)}
+intersphinx_mapping = {'python': ('https://docs.python.org/2.7', None),
+                       'pysdcookbook': ('http://pysd-cookbook.readthedocs.org/en/latest/', None)}

@@ -48,6 +48,15 @@ explored in the browser.
 The profiler depends on :py:mod:`cProfile` and `cprofilev <https://github.com/ymichael/cprofilev>`_
 
 
+Python Linter
+^^^^^^^^^^^^^
+`Pylint <http://docs.pylint.org/>`_ is a module that checks that your code meets proper python
+coding practices. It is helpful for making sure that the code will be easy for other people to read,
+and also is good fast feedback for improving your coding practice. The lint checker can be run for
+the entire packages, and for individual python modules or classes. It should be run at a local level
+(ie, on specific files) whenever changes are made, and globally before the package is committed.
+It doesn't need to be perfect, but we should aspire always to move in a positive direction.'
+
 
 PySD Design Philosophy
 ----------------------
@@ -56,12 +65,19 @@ following philosophy:
 
 
 * Do as little as possible.
- * Anything that is not endemic to System Dynamics (such as plotting, integration, fitting, etc) should either be implemented using external tools, or omitted.
+
+ * Anything that is not endemic to System Dynamics (such as plotting, integration, fitting, etc)
+   should either be implemented using external tools, or omitted.
  * Stick to SD. Let other disciplines (ABM, Discrete Event Simulation, etc) create their own tools.
  * Use external model creation tools
+
 * Use the core language of system dynamics.
- * Implementation to the basic XMILE standard
- * Resisting the urge to include everything that shows up in all vendors' tools.
-* Be simple to use. Let SD practitioners who haven't used python before understand the basics.
+
+ * Limit implementation to the basic XMILE standard.
+ * Resist the urge to include everything that shows up in all vendors' tools.
+
+* Emphasize ease of use. Let SD practitioners who haven't used python before understand the basics.
 * Take advantage of general python constructions and best practices.
-* Develop and use strong testing and profiling components.
+* Develop and use strong testing and profiling components. Share your work early. Find bugs early.
+* Avoid firefighting or rushing to add features quickly. SD knows enough about short term thinking
+  in software development to know where that path leads.
