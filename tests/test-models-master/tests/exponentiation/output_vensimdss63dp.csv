@@ -1,0 +1,6 @@
+Time,associativity,FINAL TIME,INITIAL TIME,output,saveper,test,TIME STEP
+0,-4,4,0,0,1,1,1
+1,-4,,,1,1,1,
+2,-4,,,4,1,1,
+3,-4,,,9,1,1,
+4,-4,,,16,1,1,

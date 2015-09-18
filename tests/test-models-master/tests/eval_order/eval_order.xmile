@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<xmile xmlns="http://www.systemdynamics.org/XMILE" version="1.0" level="3">
+    <header>
+        <smile version="1.0"></smile>
+        <name>eval_order</name>
+        <uuid>554973ab-f992-4869-8aa8-9cf90e6e3158</uuid>
+        <vendor>SDLabs</vendor>
+        <product version="0.1">go-xmile</product>
+    </header>
+    <sim_specs time_units="Time">
+        <start>0</start>
+        <stop>1</stop>
+        <dt>1</dt>
+    </sim_specs>
+    <dimensions></dimensions>
+    <model_units></model_units>
+    <equation_prefs xmlns="isee" order_by="module"></equation_prefs>
+    <model>
+        <variables>
+            <aux name="auxiliary">
+                <eqn>4 - 5 + 6</eqn>
+            </aux>
+        </variables>
+        <views>
+            <view scroll_x="0" scroll_y="0" zoom="200" converter_size="medium">
+                <aux x="143" y="77" color="blue" name="auxiliary"></aux>
+            </view>
+            <view name="interface" scroll_x="0" scroll_y="0" zoom="0" page_width="788" page_height="528">
+                <simulation_delay>0.1</simulation_delay>
+            </view>
+        </views>
+    </model>
+</xmile>

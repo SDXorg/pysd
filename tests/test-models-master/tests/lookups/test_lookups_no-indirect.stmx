@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<xmile version="1.0" level="3" xmlns="http://www.systemdynamics.org/XMILE" xmlns:isee="http://iseesystems.com/XMILE">
+    <header>
+        <smile version="1.0" namespace="std, isee" />
+        <name>test_lookups_no-indirect</name>
+        <uuid>5b2699d0-2a0f-4dfd-a017-77307003f711</uuid>
+        <vendor>isee systems, inc.</vendor>
+        <product version="10.0.6" lang="en">STELLA</product>
+    </header>
+    <style>
+        <model font-family="Arial" font-size="9" />
+        <interface font-family="Arial" font-size="9" />
+    </style>
+    <sim_specs method="Euler" time_units="Time">
+        <start>0</start>
+        <stop>45</stop>
+        <dt>0.25</dt>
+    </sim_specs>
+    <model_units />
+    <isee:prefs layer="model" grid_width="20" grid_height="50" divide_by_zero_alert="true" hide_taskbar="true" show_module_prefix="true">
+        <isee:window width="2560" height="1434" />
+        <isee:security />
+        <isee:print_setup width="0" height="0" />
+    </isee:prefs>
+    <isee:equation_prefs order_by="module" />
+    <model>
+        <stock name="accumulation">
+            <eqn>0</eqn>
+            <inflow>rate</inflow>
+            <display x="201" y="117" color="blue" />
+        </stock>
+        <flow name="rate">
+            <eqn>lookup_function_call</eqn>
+            <display x="141" y="119" color="blue">
+                <pts>
+                    <pt x="103" y="119" />
+                    <pt x="179" y="119" />
+                </pts>
+            </display>
+        </flow>
+        <aux name="lookup_function_call">
+            <eqn>time</eqn>
+            <gf>
+                <xscale min="0" max="45" />
+                <yscale min="0" max="2" />
+                <ypts>0,0,1,1,0,0,-1,-1,0,0</ypts>
+            </gf>
+            <display x="96" y="44" color="blue" />
+        </aux>
+        <display page_width="0" page_height="0" isee:converter_size="medium" zoom="200" isee:animate_flows="true" isee:animate_stocks="true" isee:animate_converters="true" interval="DT">
+            <connector x="101" y="52" uid="0" color="#FF007F">
+                <from>lookup_function_call</from>
+                <to>rate</to>
+            </connector>
+        </display>
+        <interface page_width="788" page_height="528">
+            <simulation_delay>0.1</simulation_delay>
+        </interface>
+    </model>
+</xmile>

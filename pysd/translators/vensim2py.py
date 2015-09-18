@@ -155,7 +155,7 @@ file_grammar = (
     'Number   = ((~"[0-9]"+ "."? ~"[0-9]"*) / ("." ~"[0-9]"+)) (("e"/"E") ("-"/"+") ~"[0-9]"+)? \n'+
     'Identifier = Basic_Id / Special_Id                                                         \n'+
     'Basic_Id = Letter (Letter / Digit / ~"[_\s]")*                                             \n'+
-    'Special_Id = "\\""  ~"[^\\"]"*  "\\""                             \n'+
+    'Special_Id = "\\""  ~"[^\\"]"*  "\\""                                                      \n'+
     'Letter   = ~"[a-zA-Z]"                                                                     \n'+
     'Digit    = ~"[0-9]"                                                                        \n'+
 

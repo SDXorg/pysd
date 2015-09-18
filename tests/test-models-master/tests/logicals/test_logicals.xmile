@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<xmile xmlns="http://www.systemdynamics.org/XMILE" version="1.0" level="3">
+    <header>
+        <smile version="1.0"></smile>
+        <name>test_logicals</name>
+        <uuid>fd68926e-5330-4615-b7af-4f38f3ed895b</uuid>
+        <vendor>SDLabs</vendor>
+        <product version="0.1">go-xmile</product>
+    </header>
+    <sim_specs time_units="Time">
+        <start>0</start>
+        <stop>1</stop>
+        <dt>1</dt>
+    </sim_specs>
+    <dimensions></dimensions>
+    <model_units></model_units>
+    <equation_prefs xmlns="isee" order_by="module"></equation_prefs>
+    <model>
+        <variables>
+            <aux name="AND_output">
+                <eqn>if true_input and false_input then 1 else 0</eqn>
+            </aux>
+            <aux name="false_input">
+                <eqn>0</eqn>
+            </aux>
+            <aux name="NOT_output">
+                <eqn>if not false_input then 1 else 0</eqn>
+            </aux>
+            <aux name="OR_output">
+                <eqn>if true_input or false_input then 1 else 0</eqn>
+            </aux>
+            <aux name="true_input">
+                <eqn>1</eqn>
+            </aux>
+        </variables>
+        <views>
+            <view scroll_x="0" scroll_y="80" zoom="400" converter_size="medium">
+                <connector x="108" y="213" color="#FF007F" uid="0">
+                    <from>true_input</from>
+                    <to>OR_output</to>
+                </connector>
+                <connector x="109" y="220" color="#FF007F" uid="1">
+                    <from>true_input</from>
+                    <to>AND_output</to>
+                </connector>
+                <connector x="105" y="271" color="#FF007F" uid="2">
+                    <from>false_input</from>
+                    <to>OR_output</to>
+                </connector>
+                <connector x="108" y="275" color="#FF007F" uid="3">
+                    <from>false_input</from>
+                    <to>AND_output</to>
+                </connector>
+                <connector x="107" y="282" color="#FF007F" uid="4">
+                    <from>false_input</from>
+                    <to>NOT_output</to>
+                </connector>
+                <aux x="203" y="242" color="blue" name="AND_output"></aux>
+                <aux x="99" y="278" color="blue" name="false_input"></aux>
+                <aux x="201" y="305" color="blue" name="NOT_output"></aux>
+                <aux x="204" y="183" color="blue" name="OR_output"></aux>
+                <aux x="100" y="217" color="blue" name="true_input"></aux>
+            </view>
+            <view name="interface" scroll_x="0" scroll_y="0" zoom="0" page_width="788" page_height="528">
+                <simulation_delay>0.1</simulation_delay>
+            </view>
+        </views>
+    </model>
+</xmile>

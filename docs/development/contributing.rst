@@ -14,15 +14,19 @@ There are a number of tools that you might find helpful in development:
 
 Test Suite
 ^^^^^^^^^^
-The test suite is found in the main repository in the `test_pysd.py` module. These tests run
-quickly and should be executed when any changes are made to ensure that current functionality
-remains intact.
+PySD uses the common model test suite found `on github <https://github.com/SDXorg/test-models>`_
 
-The tests outlined in this file depend on a set of models present in the `tests` directory of the
-main repository that are categorized by model source.
+You can run the test suite with the `test_pysd.py` module, which will execute each test and display
+some debugging info if there are issues.
 
-The test suite depends on the standard python :py:mod:`unittest` library.
+The test runner will download the test suite, if
+it is not already installed, into the `/tests/` directory. To update the test suite, you can
+run `get_tests.py` manually.
 
+These tests run quickly and should be executed when any changes are made to ensure
+that current functionality remains intact.
+
+The tes
 
 Speed Tests
 ^^^^^^^^^^^

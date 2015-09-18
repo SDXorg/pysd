@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<xmile version="1.0" level="3" xmlns="http://www.systemdynamics.org/XMILE" xmlns:isee="http://iseesystems.com/XMILE">
+    <header>
+        <smile version="1.0" namespace="std, isee" />
+        <name>test_number_handling</name>
+        <uuid>b792d363-1118-40b9-8708-32b3bded135b</uuid>
+        <vendor>isee systems, inc.</vendor>
+        <product version="10.0.6" lang="en">STELLA</product>
+    </header>
+    <style>
+        <model font-family="Arial" font-size="9" />
+        <interface font-family="Arial" font-size="9" />
+    </style>
+    <sim_specs method="Euler" time_units="Time">
+        <start>0</start>
+        <stop>1</stop>
+        <dt>1</dt>
+    </sim_specs>
+    <model_units />
+    <isee:prefs layer="model" grid_width="20" grid_height="50" divide_by_zero_alert="true" hide_taskbar="true" show_module_prefix="true">
+        <isee:window width="2560" height="1434" />
+        <isee:security />
+        <isee:print_setup width="0" height="0" />
+    </isee:prefs>
+    <isee:equation_prefs order_by="module" />
+    <model>
+        <aux name="equality">
+            <eqn>IF quotient = quotient_target THEN 1 ELSE 0</eqn>
+            <display x="225" y="112" color="blue" />
+        </aux>
+        <aux name="numerator">
+            <eqn>3</eqn>
+            <display x="48" y="56" color="blue" />
+        </aux>
+        <aux name="denominator">
+            <eqn>4</eqn>
+            <display x="50" y="103" color="blue" />
+        </aux>
+        <aux name="quotient">
+            <eqn>numerator/denominator</eqn>
+            <display x="142" y="84" color="blue" />
+        </aux>
+        <aux name="quotient_target">
+            <eqn>.75</eqn>
+            <display x="138" y="143" color="blue" />
+        </aux>
+        <display page_width="0" page_height="0" isee:converter_size="medium" zoom="200" isee:animate_flows="true" isee:animate_stocks="true" isee:animate_converters="true" interval="DT" scroll_y="24">
+            <connector x="56" y="60" uid="0" color="#FF007F">
+                <from>numerator</from>
+                <to>quotient</to>
+            </connector>
+            <connector x="59" y="101" uid="1" color="#FF007F">
+                <from>denominator</from>
+                <to>quotient</to>
+            </connector>
+            <connector x="150" y="89" uid="2" color="#FF007F">
+                <from>quotient</from>
+                <to>equality</to>
+            </connector>
+            <connector x="146" y="139" uid="3" color="#FF007F">
+                <from>quotient_target</from>
+                <to>equality</to>
+            </connector>
+        </display>
+        <interface page_width="788" page_height="528">
+            <simulation_delay>0.1</simulation_delay>
+        </interface>
+    </model>
+</xmile>

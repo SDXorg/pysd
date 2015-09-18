@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<xmile version="1.0" level="3" xmlns="http://www.systemdynamics.org/XMILE" xmlns:isee="http://iseesystems.com/XMILE">
+    <header>
+        <smile version="1.0" namespace="std, isee" />
+        <name>test_logicals</name>
+        <uuid>fd68926e-5330-4615-b7af-4f38f3ed895b</uuid>
+        <vendor>isee systems, inc.</vendor>
+        <product version="10.0.6" lang="en">STELLA</product>
+    </header>
+    <style>
+        <model font-family="Arial" font-size="9" />
+        <interface font-family="Arial" font-size="9" />
+    </style>
+    <sim_specs method="Euler" time_units="Time">
+        <start>0</start>
+        <stop>1</stop>
+        <dt>1</dt>
+    </sim_specs>
+    <model_units />
+    <isee:prefs layer="model" grid_width="20" grid_height="50" divide_by_zero_alert="true" hide_taskbar="true" show_module_prefix="true">
+        <isee:window width="2560" height="1434" />
+        <isee:security />
+        <isee:print_setup width="0" height="0" />
+    </isee:prefs>
+    <isee:equation_prefs order_by="module" />
+    <model>
+        <aux name="AND_output">
+            <eqn>if true_input and false_input then 1 else 0</eqn>
+            <display x="203" y="242" color="blue" />
+        </aux>
+        <aux name="false_input">
+            <eqn>0</eqn>
+            <display x="99" y="278" color="blue" />
+        </aux>
+        <aux name="NOT_output">
+            <eqn>if not false_input then 1 else 0</eqn>
+            <display x="201" y="305" color="blue" />
+        </aux>
+        <aux name="OR_output">
+            <eqn>if true_input or false_input then 1 else 0</eqn>
+            <display x="204" y="183" color="blue" />
+        </aux>
+        <aux name="true_input">
+            <eqn>1</eqn>
+            <display x="100" y="217" color="blue" />
+        </aux>
+        <display page_width="0" page_height="0" isee:converter_size="medium" zoom="400" isee:animate_flows="true" isee:animate_stocks="true" isee:animate_converters="true" interval="DT" scroll_y="80">
+            <connector x="108" y="213" uid="0" color="#FF007F">
+                <from>true_input</from>
+                <to>OR_output</to>
+            </connector>
+            <connector x="109" y="220" uid="1" color="#FF007F">
+                <from>true_input</from>
+                <to>AND_output</to>
+            </connector>
+            <connector x="105" y="271" uid="2" color="#FF007F">
+                <from>false_input</from>
+                <to>OR_output</to>
+            </connector>
+            <connector x="108" y="275" uid="3" color="#FF007F">
+                <from>false_input</from>
+                <to>AND_output</to>
+            </connector>
+            <connector x="107" y="282" uid="4" color="#FF007F">
+                <from>false_input</from>
+                <to>NOT_output</to>
+            </connector>
+        </display>
+        <interface page_width="788" page_height="528">
+            <simulation_delay>0.1</simulation_delay>
+        </interface>
+    </model>
+</xmile>

@@ -189,12 +189,15 @@ When you&#8217;re happy with your edits, submit a pull request to the main branc
 <p>There are a number of tools that you might find helpful in development:</p>
 <div class="section" id="test-suite">
 <h3>Test Suite<a class="headerlink" href="#test-suite" title="Permalink to this headline">¶</a></h3>
-<p>The test suite is found in the main repository in the <cite>test_pysd.py</cite> module. These tests run
-quickly and should be executed when any changes are made to ensure that current functionality
-remains intact.</p>
-<p>The tests outlined in this file depend on a set of models present in the <cite>tests</cite> directory of the
-main repository that are categorized by model source.</p>
-<p>The test suite depends on the standard python <code class="xref py py-mod docutils literal"><span class="pre">unittest</span></code> library.</p>
+<p>PySD uses the common model test suite found <a class="reference external" href="https://github.com/SDXorg/test-models">on github</a></p>
+<p>You can run the test suite with the <cite>test_pysd.py</cite> module, which will execute each test and display
+some debugging info if there are issues.</p>
+<p>The test runner will download the test suite, if
+it is not already installed, into the <cite>/tests/</cite> directory. To update the test suite, you can
+run <cite>get_tests.py</cite> manually.</p>
+<p>These tests run quickly and should be executed when any changes are made to ensure
+that current functionality remains intact.</p>
+<p>The tes</p>
 </div>
 <div class="section" id="speed-tests">
 <h3>Speed Tests<a class="headerlink" href="#speed-tests" title="Permalink to this headline">¶</a></h3>
@@ -204,7 +207,7 @@ than the basic test suite, but are not onerous. They should be run before any su
 repository.</p>
 <p>The speed test results are appended to &#8216;speedtest_results.json&#8217;, along with version and date
 information, so that before and after comparisons can be made.</p>
-<p>The speed tests depend on the standard python <code class="xref py py-mod docutils literal"><span class="pre">timeit</span></code> library.</p>
+<p>The speed tests depend on the standard python <a class="reference external" href="https://docs.python.org/2.7/library/timeit.html#module-timeit" title="(in Python v2.7)"><code class="xref py py-mod docutils literal"><span class="pre">timeit</span></code></a> library.</p>
 </div>
 <div class="section" id="profiler">
 <h3>Profiler<a class="headerlink" href="#profiler" title="Permalink to this headline">¶</a></h3>
@@ -213,7 +216,7 @@ code influence its speed, we should construct a profiling test that executes the
 question. The file &#8216;profile_pysd.py&#8217; gives an example for how this profiling can be conducted, and
 the file &#8216;run_profiler.sh&#8217; executes the profiler and launches a view of the results that can be
 explored in the browser.</p>
-<p>The profiler depends on <code class="xref py py-mod docutils literal"><span class="pre">cProfile</span></code> and <a class="reference external" href="https://github.com/ymichael/cprofilev">cprofilev</a></p>
+<p>The profiler depends on <a class="reference external" href="https://docs.python.org/2.7/library/profile.html#module-cProfile" title="(in Python v2.7)"><code class="xref py py-mod docutils literal"><span class="pre">cProfile</span></code></a> and <a class="reference external" href="https://github.com/ymichael/cprofilev">cprofilev</a></p>
 </div>
 <div class="section" id="python-linter">
 <h3>Python Linter<a class="headerlink" href="#python-linter" title="Permalink to this headline">¶</a></h3>

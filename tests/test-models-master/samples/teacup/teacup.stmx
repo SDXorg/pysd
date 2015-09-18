@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<xmile version="1.0" level="3" xmlns="http://www.systemdynamics.org/XMILE" xmlns:isee="http://iseesystems.com/XMILE">
+    <header>
+        <smile version="1.0" namespace="std, isee" />
+        <name>teacup</name>
+        <uuid>cfc4ea6e-9e04-4362-ab8f-ab10f8242797</uuid>
+        <vendor>isee systems, inc.</vendor>
+        <product version="10.0.6" lang="en">STELLA</product>
+    </header>
+    <style>
+        <model font-family="Arial" font-size="9" />
+        <interface font-family="Arial" font-size="9" />
+    </style>
+    <sim_specs method="Euler" time_units="Time">
+        <start>0</start>
+        <stop>30</stop>
+        <dt>0.125</dt>
+    </sim_specs>
+    <model_units>
+        <units>
+            <eqn>deg/time</eqn>
+        </units>
+    </model_units>
+    <isee:prefs layer="model" grid_width="20" grid_height="50" divide_by_zero_alert="true" hide_taskbar="true" show_module_prefix="true">
+        <isee:window width="2560" height="1434" />
+        <isee:security />
+        <isee:print_setup width="0" height="0" />
+    </isee:prefs>
+    <isee:equation_prefs order_by="module" />
+    <model>
+        <stock name="teacup_temperature">
+            <eqn>180</eqn>
+            <outflow>heat_loss_to_room</outflow>
+            <non_negative />
+            <units>degrees</units>
+            <display x="132" y="97" color="blue" />
+        </stock>
+        <flow name="heat_loss_to_room">
+            <eqn>(teacup_temperature-room_temperature)/characteristic_time</eqn>
+            <non_negative />
+            <units>deg/time</units>
+            <display x="243" y="92" color="blue">
+                <pts>
+                    <pt x="154" y="92" />
+                    <pt x="332" y="92" />
+                </pts>
+            </display>
+        </flow>
+        <aux name="characteristic_time">
+            <eqn>10</eqn>
+            <units>minutes</units>
+            <display x="285" y="43" color="blue" />
+        </aux>
+        <aux name="room_temperature">
+            <eqn>70</eqn>
+            <units>degrees</units>
+            <display x="283" y="139" color="blue" />
+        </aux>
+        <display page_width="0" page_height="0" page_cols="2" isee:converter_size="medium" zoom="200" isee:animate_flows="true" isee:animate_stocks="true" isee:animate_converters="true" interval="DT">
+            <connector x="277" y="132" uid="0" color="#FF007F">
+                <from>room_temperature</from>
+                <to>heat_loss_to_room</to>
+            </connector>
+            <connector x="279" y="50" uid="1" color="#FF007F">
+                <from>characteristic_time</from>
+                <to>heat_loss_to_room</to>
+            </connector>
+            <connector x="154" y="80" uid="2" color="#FF007F">
+                <from>teacup_temperature</from>
+                <to>heat_loss_to_room</to>
+            </connector>
+        </display>
+        <interface page_width="788" page_height="528">
+            <simulation_delay>0.1</simulation_delay>
+        </interface>
+    </model>
+</xmile>

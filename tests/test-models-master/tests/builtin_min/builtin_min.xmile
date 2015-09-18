@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<xmile xmlns="http://www.systemdynamics.org/XMILE" version="1.0" level="3">
+    <header>
+        <smile version="1.0"></smile>
+        <name>builtin_min</name>
+        <uuid>33b80428-dbe5-46b5-ad02-fb174f720e1c</uuid>
+        <vendor>SDLabs</vendor>
+        <product version="0.1">go-xmile</product>
+    </header>
+    <sim_specs time_units="Time">
+        <start>0</start>
+        <stop>10</stop>
+        <dt>1</dt>
+    </sim_specs>
+    <dimensions></dimensions>
+    <model_units></model_units>
+    <equation_prefs xmlns="isee" order_by="module"></equation_prefs>
+    <model>
+        <variables>
+            <aux name="output">
+                <eqn>min(time, 5)</eqn>
+            </aux>
+        </variables>
+        <views>
+            <view scroll_x="0" scroll_y="0" zoom="600" converter_size="medium">
+                <aux x="63" y="50" color="blue" name="output"></aux>
+            </view>
+            <view name="interface" scroll_x="0" scroll_y="0" zoom="0" page_width="788" page_height="528">
+                <simulation_delay>0.1</simulation_delay>
+            </view>
+        </views>
+    </model>
+</xmile>
