@@ -142,6 +142,9 @@ class PySD(object):
 
         """
 
+        if not self.components._stocknames:
+            raise RuntimeError('Cannnot integrate no-stock models.')
+
         if params:
             self.set_components(params)
 

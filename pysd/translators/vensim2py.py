@@ -4,6 +4,7 @@
     James Houghton <james.p.houghton@gmail.com>
 """
 import parsimonious
+import string
 from parsimonious.nodes import NodeVisitor
 
 from pysd import builder
@@ -56,10 +57,11 @@ dictionary = {"ABS":"abs", "INTEGER":"int", "EXP":"np.exp",
     "ARCSIN":"np.arcsin", "ARCTAN":"np.arctan", "IF THEN ELSE":"self.functions.if_then_else",
     "STEP":"self.functions.step", "MODULO":"np.mod", "PULSE":"self.functions.pulse",
     "PULSE TRAIN":"self.functions.pulse_train", "RAMP":"self.functions.ramp",
-    "=":"==", "<=":"<=", "<":"<", ">=":">=", ">":">", "^":"**"}
+    "=":"==", "<=":"<=", "<":"<", ">=":">=", ">":">", "^":"**",
+    ":AND:": "and", ":OR:":"or"}
 
-construction_functions = ['DELAY1', 'DELAY3', 'DELAY N',
-                          'SMOOTH3I', 'SMOOTH3', 'SMOOTH N', 'SMOOTH',
+construction_functions = ['DELAY1', 'DELAY3', 'DELAY N', 'DELAY1I',
+                          'SMOOTH3I', 'SMOOTH3', 'SMOOTH N', 'SMOOTH', 'SMOOTHI',
                           'INITIAL'] #order is important for peg parser
 
 ###############################################################
@@ -81,8 +83,17 @@ construction_functions = ['DELAY1', 'DELAY3', 'DELAY N',
 
 # We have to sort keywords in decreasing order of length so that the peg parser doesnt
 #    quit early when finding a partial keyword
-keywords = ' / '.join(['"%s"'%key for key in reversed(sorted(dictionary.keys(), key=len))])
-con_keywords = ' / '.join(['"%s"'%key for key in reversed(sorted(construction_functions, key=len))])
+caps_keywords = dictionary.keys()
+multicaps_keywords = list(set(caps_keywords +
+                      [string.capwords(word) for word in caps_keywords] +
+                      [string.lower(word) for word in caps_keywords]))
+keywords = ' / '.join(['"%s"'%word for word in reversed(sorted(multicaps_keywords, key=len))])
+
+multicaps_con_keywords = list(set(construction_functions +
+                              [string.capwords(word) for word in construction_functions] +
+                              [string.lower(word) for word in construction_functions]))
+
+con_keywords = ' / '.join(['"%s"'%key for key in reversed(sorted(multicaps_con_keywords, key=len))])
 
 
 
@@ -238,18 +249,23 @@ class TextParser(NodeVisitor):
         pass
         if ConKeyword == 'DELAY1': #DELAY3(Inflow, Delay)
             return builder.add_n_delay(self.filename, args[0], args[1], str(0), 1)
+        elif ConKeyword == 'DELAY1I':
+            pass
         elif ConKeyword == 'DELAY3':
             return builder.add_n_delay(self.filename, args[0], args[1], str(0), 3)
         elif ConKeyword == 'DELAY N':#DELAY N(Inflow, Delay, init, order)
             return builder.add_n_delay(self.filename, args[0], args[1], args[2], args[3])
         elif ConKeyword == 'SMOOTH':
             pass
-        elif ConKeyword == 'SMOOTH3':
-            return builder.add_n_delay
+        elif ConKeyword == 'SMOOTH3':#SMOOTH3(Input,Adjustment Time)
+            return builder.add_n_delay(self.filename, args[0], args[1], str(0), 3)
         elif ConKeyword == 'SMOOTH3I': #SMOOTH3I( _in_ , _stime_ , _inival_ )
             return builder.add_n_smooth(self.filename, args[0], args[1], args[2], 3)
+        elif ConKeyword == 'SMOOTHI':
+            pass
         elif ConKeyword == 'SMOOTH N':
             pass
+
         elif ConKeyword == 'INITIAL':
             return builder.add_initial(self.filename, args[0])
 
@@ -257,7 +273,7 @@ class TextParser(NodeVisitor):
 
 
     def visit_Keyword(self, n, vc):
-        return dictionary[n.text]
+        return dictionary[n.text.upper()]
 
     def visit_Reference(self, n, (Identifier, _)):
         return 'self.'+Identifier+'()'

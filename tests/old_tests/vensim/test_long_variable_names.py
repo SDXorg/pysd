@@ -5,40 +5,45 @@ from pysd import builder
                                                                 
 class Components(builder.ComponentClass):                       
                                                                 
-    def and_output(self):
+    def particularly_efflusive_auxilliary_descriptor(self):
         """Type: Flow or Auxiliary
         """
-        return self.if_true_input_and_false_input_then_1_else_0() 
+        return 2 
 
-    def false_input(self):
+    def product(self):
         """Type: Flow or Auxiliary
         """
-        return 0 
+        return self.particularly_efflusive_auxilliary_descriptor()* self.semi_infinite_component_moniker()* self.terrifically_elaborate_element_handle()* self.very_long_variable_name() 
 
-    def not_output(self):
+    def semi_infinite_component_moniker(self):
         """Type: Flow or Auxiliary
         """
-        return self.if_not_false_input_then_1_else_0() 
+        return 3 
 
-    def or_output(self):
-        """Type: Flow or Auxiliary
-        """
-        return self.if_true_input_or_false_input_then_1_else_0() 
-
-    def true_input(self):
+    def terrifically_elaborate_element_handle(self):
         """Type: Flow or Auxiliary
         """
         return 1 
+
+    def very_long_variable_name(self):
+        """Type: Flow or Auxiliary
+        """
+        return 4 
+
+    def final_time(self):
+        """Type: Flow or Auxiliary
+        """
+        return 100 
 
     def initial_time(self):
         """Type: Flow or Auxiliary
         """
         return 0 
 
-    def final_time(self):
+    def saveper(self):
         """Type: Flow or Auxiliary
         """
-        return 1 
+        return self.time_step() 
 
     def time_step(self):
         """Type: Flow or Auxiliary

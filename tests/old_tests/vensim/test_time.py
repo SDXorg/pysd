@@ -5,40 +5,40 @@ from pysd import builder
                                                                 
 class Components(builder.ComponentClass):                       
                                                                 
-    def and_output(self):
+    def flow(self):
         """Type: Flow or Auxiliary
         """
-        return self.if_true_input_and_false_input_then_1_else_0() 
+        return self.time() 
 
-    def false_input(self):
-        """Type: Flow or Auxiliary
-        """
-        return 0 
+    def dstock_dt(self):                       
+        return self.flow()                           
 
-    def not_output(self):
-        """Type: Flow or Auxiliary
-        """
-        return self.if_not_false_input_then_1_else_0() 
+    def stock_init(self):                      
+        return 0                           
 
-    def or_output(self):
+    def stock(self):                            
+        """ Stock: stock =                      
+                 self.flow()                          
+                                             
+        Initial Value: 0                    
+        Do not overwrite this function       
+        """                                  
+        return self.state["stock"]              
+                                             
+    def final_time(self):
         """Type: Flow or Auxiliary
         """
-        return self.if_true_input_or_false_input_then_1_else_0() 
-
-    def true_input(self):
-        """Type: Flow or Auxiliary
-        """
-        return 1 
+        return 100 
 
     def initial_time(self):
         """Type: Flow or Auxiliary
         """
         return 0 
 
-    def final_time(self):
+    def saveper(self):
         """Type: Flow or Auxiliary
         """
-        return 1 
+        return self.time_step() 
 
     def time_step(self):
         """Type: Flow or Auxiliary

@@ -5,27 +5,32 @@ from pysd import builder
                                                                 
 class Components(builder.ComponentClass):                       
                                                                 
-    def and_output(self):
+    def equality(self):
         """Type: Flow or Auxiliary
         """
-        return self.if_true_input_and_false_input_then_1_else_0() 
+        return self.functions.if_then_else(self.quotient()==self.quotient_target(), 1 , 0 ) 
 
-    def false_input(self):
+    def denominator(self):
         """Type: Flow or Auxiliary
         """
-        return 0 
+        return 4 
 
-    def not_output(self):
+    def numerator(self):
         """Type: Flow or Auxiliary
         """
-        return self.if_not_false_input_then_1_else_0() 
+        return 3 
 
-    def or_output(self):
+    def quotient(self):
         """Type: Flow or Auxiliary
         """
-        return self.if_true_input_or_false_input_then_1_else_0() 
+        return self.numerator()/self.denominator() 
 
-    def true_input(self):
+    def quotient_target(self):
+        """Type: Flow or Auxiliary
+        """
+        return 0.75 
+
+    def final_time(self):
         """Type: Flow or Auxiliary
         """
         return 1 
@@ -35,10 +40,10 @@ class Components(builder.ComponentClass):
         """
         return 0 
 
-    def final_time(self):
+    def saveper(self):
         """Type: Flow or Auxiliary
         """
-        return 1 
+        return self.time_step() 
 
     def time_step(self):
         """Type: Flow or Auxiliary

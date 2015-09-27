@@ -1,0 +1,205 @@
+{UTF-8}
+test modulo=
+	MODULO(test pulse train, 17)
+	~	
+	~		|
+
+flow=
+	test tan
+	~	
+	~		|
+
+test pulse train=
+	PULSE TRAIN(test min, 2 , 5 , 50 )
+	~	
+	~		|
+
+test cos=
+	COS(test pulse)
+	~	
+	~		|
+
+test exp=
+	EXP(test step)
+	~	
+	~		|
+
+test if then else=
+	IF THEN ELSE(test sqrt > 0, 65.5 , -9.2 )
+	~	
+	~		|
+
+test integer=
+	INTEGER(test sin)
+	~	
+	~		|
+
+test ln=
+	test random uniform + LN(4)
+	~	
+	~		|
+
+test max=
+	MAX(test random normal, 4)
+	~	
+	~		|
+
+test min=
+	MIN(test ramp, 71.993)
+	~	
+	~		|
+
+test random uniform=
+	RANDOM UNIFORM(test integer, 2* test integer, 0 )
+	~	
+	~		|
+
+test pulse=
+	PULSE(test modulo, 5 )
+	~	
+	~		|
+
+test sqrt=
+	SQRT(test exp)
+	~	
+	~		|
+
+test ramp=
+	RAMP( test max , 5 , 10 )
+	~	
+	~		|
+
+test random normal=
+	RANDOM NORMAL( 0 , 1000 , test ln , 5 , 0 )
+	~	
+	~		|
+
+test tan=
+	TAN(test cos)
+	~	
+	~		|
+
+test sin=
+	SIN(test if then else)
+	~	
+	~		|
+
+test step=
+	STEP(test abs, 10 )
+	~	
+	~		|
+
+Dummy= INTEG (
+	flow,
+		0)
+	~	
+	~		|
+
+test abs=
+	ABS(-5)
+	~	
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 100
+	~	Month
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Month
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP
+	~	Month [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 1
+	~	Month [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,test abs,188,63,22,7,8,131,0,0,0,0,0,0
+10,2,test exp,188,175,22,8,8,131,0,0,0,0,0,0
+10,3,test if then else,309,235,41,9,8,131,0,0,0,0,0,0
+10,6,test integer,309,115,29,8,8,3,0,0,0,0,0,0
+10,8,test ln,425,63,17,8,8,3,0,0,0,0,0,0
+10,9,test max,425,175,22,8,8,3,0,0,0,0,0,0
+10,10,test min,534,235,21,8,8,3,0,0,0,0,0,0
+10,11,test modulo,534,115,30,8,8,3,0,0,0,0,0,0
+10,16,test pulse,534,63,25,8,8,3,0,0,0,0,0,0
+10,17,test pulse train,534,175,37,8,8,3,0,0,0,0,0,0
+10,18,test ramp,425,235,24,8,8,3,0,0,0,0,0,0
+1,19,11,16,0,0,0,0,0,64,0,-1--1--1,,1|(534,96)|
+1,20,10,17,0,0,0,0,0,64,0,-1--1--1,,1|(534,212)|
+1,21,9,18,0,0,0,0,0,64,0,-1--1--1,,1|(425,198)|
+10,22,test random normal,425,115,31,16,8,131,0,0,0,0,0,0
+1,23,8,22,0,0,0,0,0,64,0,-1--1--1,,1|(425,78)|
+10,24,test random uniform,309,63,33,16,8,131,0,0,0,0,0,0
+1,25,6,24,0,0,0,0,0,64,0,-1--1--1,,1|(309,100)|
+10,26,test sin,309,175,19,8,8,3,0,0,0,0,0,0
+10,27,test sqrt,188,235,21,8,8,3,0,0,0,0,0,0
+10,28,test step,188,115,22,8,8,3,0,0,0,0,0,0
+1,29,3,26,0,0,0,0,0,64,0,-1--1--1,,1|(309,211)|
+1,30,2,27,0,0,0,0,0,64,0,-1--1--1,,1|(188,198)|
+1,31,1,28,0,0,0,0,0,64,0,-1--1--1,,1|(188,81)|
+10,32,Dummy,800,338,40,20,3,3,0,0,0,0,0,0
+12,33,48,660,337,10,8,0,3,0,0,-1,0,0,0
+1,34,36,32,4,0,0,22,0,0,0,-1--1--1,,1|(740,337)|
+1,35,36,33,100,0,0,22,0,0,0,-1--1--1,,1|(689,337)|
+11,36,48,715,337,6,8,34,3,0,0,1,0,0,0
+10,37,flow,715,353,13,8,40,3,0,0,-1,0,0,0
+1,40,28,2,0,0,0,0,0,64,0,-1--1--1,,1|(188,138)|
+1,41,27,3,0,0,0,0,0,64,0,-1--1--1,,1|(231,235)|
+1,42,26,6,0,0,0,0,0,64,0,-1--1--1,,1|(309,152)|
+1,43,24,8,0,0,0,0,0,64,0,-1--1--1,,1|(368,63)|
+1,44,22,9,0,0,0,0,0,64,0,-1--1--1,,1|(425,142)|
+1,45,18,10,0,0,0,0,0,64,0,-1--1--1,,1|(474,235)|
+1,46,17,11,0,0,0,0,0,64,0,-1--1--1,,1|(534,152)|
+10,51,test cos,632,63,20,8,8,3,0,0,0,0,0,0
+1,52,16,51,0,0,0,0,0,64,0,-1--1--1,,1|(578,63)|
+10,53,test tan,630,115,19,8,8,3,0,0,0,0,0,0
+1,54,51,53,0,0,0,0,0,64,0,-1--1--1,,1|(631,82)|
+1,55,53,36,0,0,0,0,0,64,0,-1--1--1,,1|(670,220)|
+///---\\\
+:L<%^E!@
+1:Current.vdf
+9:Current
+22:$,Dollar,Dollars,$s
+22:Hour,Hours
+22:Month,Months
+22:Person,People,Persons
+22:Unit,Units
+22:Week,Weeks
+22:Year,Years
+22:Day,Days
+23:0
+15:0,0,0,0,0,0
+19:100,0
+27:2,
+34:0,
+4:Time
+5:flow
+35:Date
+36:YYYY-MM-DD
+37:2000
+38:1
+39:1
+40:2
+41:0
+42:1
+24:0
+25:100
+26:100

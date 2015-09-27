@@ -1,0 +1,94 @@
+{UTF-8}
+Particularly efflusive auxilliary descriptor=
+	2
+	~	
+	~		|
+
+Product=
+	Particularly efflusive auxilliary descriptor * Semi Infinite Component Moniker * Terrifically elaborate element handle\
+		 * Very Long Variable Name
+	~	
+	~		|
+
+Semi Infinite Component Moniker=
+	3
+	~	
+	~		|
+
+Terrifically elaborate element handle=
+	1
+	~	
+	~		|
+
+Very Long Variable Name=
+	4
+	~	
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 100
+	~	Month
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Month
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP 
+	~	Month [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 1
+	~	Month [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Very Long Variable Name,572,347,38,14,8,3,0,0,0,0,0,0
+10,2,Semi Infinite Component Moniker,726,350,53,14,8,3,0,0,0,0,0,0
+10,3,Terrifically elaborate element handle,467,433,54,14,8,3,0,0,0,0,0,0
+10,4,Particularly efflusive auxilliary descriptor,865,428,54,14,8,3,0,0,0,0,0,0
+10,5,Product,681,481,21,8,8,3,0,0,0,0,0,0
+1,6,3,5,0,0,0,0,0,64,0,-1--1--1,,1|(583,458)|
+1,7,1,5,0,0,0,0,0,64,0,-1--1--1,,1|(624,411)|
+1,8,2,5,0,0,0,0,0,64,0,-1--1--1,,1|(704,411)|
+1,9,4,5,0,0,0,0,0,64,0,-1--1--1,,1|(766,456)|
+///---\\\
+:L<%^E!@
+9:Current
+22:$,Dollar,Dollars,$s
+22:Hour,Hours
+22:Month,Months
+22:Person,People,Persons
+22:Unit,Units
+22:Week,Weeks
+22:Year,Years
+22:Day,Days
+15:0,0,0,0,0,0
+19:100,0
+27:2,
+34:0,
+5:Product
+35:Date
+36:YYYY-MM-DD
+37:2000
+38:1
+39:1
+40:2
+41:0
+42:1
+24:0
+25:0
+26:0

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xmile xmlns="http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+    <header>
+        <vendor>SDXchange</vendor>
+        <name>Teacup cooling</name>
+        <product version="1.0">SDXchange Dynamo to XMILE</product>
+    </header>
+    <sim_specs>
+        <stop>50.0</stop>
+        <start>0.0</start>
+        <dt>0.25</dt>
+    </sim_specs>
+    <model name="default">
+        <variables>
+            <aux name="MAXLEN">
+                <eqn>50</eqn>
+            </aux>
+            <flow name="TDIFF">
+                <eqn>KFAC*(RMTMP-CUPTEMP)</eqn>
+            </flow>
+            <aux name="RMTMP">
+                <eqn>68</eqn>
+            </aux>
+            <stock name="CUPTEMP">
+                <inflow>TDIFF</inflow>
+                <eqn>170</eqn>
+            </stock>
+            <aux name="KFAC">
+                <eqn>.17</eqn>
+            </aux>
+        </variables>
+        <views>
+            <view>
+                <aux name="MAXLEN" x="50.0" y="50.0"/>
+                <flow name="TDIFF" x="150.0" y="50.0">
+                    <pts>
+                        <pt x="125.0" y="50.0"/>
+                        <pt x="175.0" y="50.0"/>
+                    </pts>
+                </flow>
+                <aux name="RMTMP" x="50.0" y="100.0"/>
+                <stock name="CUPTEMP" x="200.0" y="50.0"/>
+                <aux name="KFAC" x="50.0" y="150.0"/>
+                <connector uid="1">
+                    <from>RMTMP</from>
+                    <to>TDIFF</to>
+                </connector>
+                <connector uid="2">
+                    <from>KFAC</from>
+                    <to>TDIFF</to>
+                </connector>
+                <connector uid="3">
+                    <from>CUPTEMP</from>
+                    <to>TDIFF</to>
+                </connector>
+                <stacked_container x="100.0" y="100.0" uid="4" width="350.0" height="280.0">
+                    <graph show_grid="true" left_axis_multi_scale="false" plot_numbers="true" background="yellow">
+                        <plot index="0" show_y_axis="true">
+                            <entity name="CUPTEMP"/>
+                        </plot>
+                    </graph>
+                </stacked_container>
+            </view>
+        </views>
+    </model>
+</xmile>
+
