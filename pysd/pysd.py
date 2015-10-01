@@ -142,8 +142,8 @@ class PySD(object):
 
         """
 
-        if not self.components._stocknames:
-            raise RuntimeError('Cannnot integrate no-stock models.')
+        #if not self.components._stocknames:
+            #raise RuntimeError('Cannnot integrate no-stock models.')
 
         if params:
             self.set_components(params)
@@ -159,15 +159,18 @@ class PySD(object):
         if addtflag:
             tseries = np.insert(tseries, 0, self.components.t)
 
-        res = _odeint(func=self.components.d_dt,
-                      y0=self.components.state_vector(),
-                      t=tseries,
-                      **intg_kwargs)
-                      #hmax=self.components.time_step())
+        if self.components._stocknames:
+            res = _odeint(func=self.components.d_dt,
+                          y0=self.components.state_vector(),
+                          t=tseries,
+                          **intg_kwargs)
+                          #hmax=self.components.time_step())
 
-        state_df = _pd.DataFrame(data=res,
-                                 index=tseries,
-                                 columns=self.components._stocknames)
+            state_df = _pd.DataFrame(data=res,
+                                     index=tseries,
+                                     columns=self.components._stocknames)
+        else:
+            state_df = _pd.DataFrame(index=tseries, data=1, columns=['dummy'])
 
         return_df = self.extend_dataframe(state_df, return_columns) if return_columns else state_df
 
@@ -222,7 +225,6 @@ class PySD(object):
                 updates_dict[key] = self._constant_component(value)
 
         self.components.__dict__.update(updates_dict)
-
 
     def extend_dataframe(self, state_df, return_columns):
         """ Calculates model values at given system states
