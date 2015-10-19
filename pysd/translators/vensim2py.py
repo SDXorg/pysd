@@ -58,9 +58,9 @@ dictionary = {"ABS":"abs", "INTEGER":"int", "EXP":"np.exp",
     "STEP":"self.functions.step", "MODULO":"np.mod", "PULSE":"self.functions.pulse",
     "PULSE TRAIN":"self.functions.pulse_train", "RAMP":"self.functions.ramp",
     "=":"==", "<=":"<=", "<":"<", ">=":">=", ">":">", "^":"**",
-    ":AND:": "and", ":OR:":"or"}
+    ":AND:": "and", ":OR:":"or", ":NOT:":"not"}
 
-construction_functions = ['DELAY1', 'DELAY3', 'DELAY N', 'DELAY1I',
+construction_functions = ['DELAY1', 'DELAY3', 'DELAY3I', 'DELAY N', 'DELAY1I',
                           'SMOOTH3I', 'SMOOTH3', 'SMOOTH N', 'SMOOTH', 'SMOOTHI',
                           'INITIAL'] #order is important for peg parser
 
