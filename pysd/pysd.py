@@ -161,7 +161,7 @@ class PySD(object):
 
         if self.components._stocknames:
             res = _odeint(func=self.components.d_dt,
-                          y0=self.components.state_vector(),
+                          y0=self.components.get_state(),
                           t=tseries,
                           **intg_kwargs)
                           #hmax=self.components.time_step())
