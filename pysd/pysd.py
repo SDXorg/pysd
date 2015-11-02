@@ -55,7 +55,7 @@ def read_vensim(mdl_file):
     model = load(py_model_file)
     model.__str__ = 'Import of ' + mdl_file
     return model
-read_vensim.__doc__ += _translators.translate_vensim.__doc__
+#read_vensim.__doc__ += _translators.translate_vensim.__doc__
 
 def load(py_model_file):
     """ Load a python-converted model file. """
@@ -167,8 +167,8 @@ class PySD(object):
                           #hmax=self.components.time_step())
 
             state_df = _pd.DataFrame(data=res,
-                                     index=tseries,
-                                     columns=self.components._stocknames)
+                                     index=tseries)#,
+                                     #columns=self.components._stocknames)
         else:
             state_df = _pd.DataFrame(index=tseries, data=1, columns=['dummy'])
 

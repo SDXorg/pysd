@@ -3,6 +3,7 @@ import inspect
 from pysd import functions
 from itertools import izip
 from xray import DataArray
+import numpy as np
 
 class ComponentClass(object):
     """
@@ -139,3 +140,6 @@ class ComponentClass(object):
         access the time component directly.
         """
         return self.t
+
+    def file(self):
+        return 'hi'

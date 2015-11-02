@@ -4,8 +4,9 @@
     James Houghton <james.p.houghton@gmail.com>
 """
 
+#from pysd import builder
 from ANTLR_collection.Compiled.Python_Vensim import ModelVisitor as vmdl
-from pysd import builder
+
 
 
 dictionary = {
@@ -81,11 +82,11 @@ class Visitor(vmdl):
 
         #Normal Functions
         if call in dictionary.keys():
-            rs = dictionary[call] +
+            rs = dictionary[call]
 
         #Construction Function (including INTEG)
         if call == 'INTEG': #add_stock
-
+            pass
 
 #        elif call == 'DELAY1': #DELAY3(Inflow, Delay)
 #            return builder.add_n_delay(self.filename, args[0], args[1], str(0), 1)
@@ -510,34 +511,35 @@ class Visitor(vmdl):
 #        return ''.join(filter(None, vc)) or n.text or ''
 #
 #
-def doc_supported_vensim_functions():
-    """prints a list of all of the vensim functions that are supported
-    by the translator.
-    """
-    rowline     = '+------------------------------+------------------------------+\n'
-    headers     = '|           Vensim             |       Python Translation     |\n'
-    underline   = '+==============================+==============================+\n'
-    string = rowline + headers + underline
-    for key, value in dictionary.iteritems():
-        string += '|'   + key.center(30) +  '|'  + value.center(30) + '|\n'
-        string += rowline
-    for item in construction_functions:
-        string += '|'   + item.center(30) + '|      Model Construction      |\n'
-        string += rowline
-
-    string += '\n `np` corresponds to the numpy package'
-
-    return string
+#def doc_supported_vensim_functions():
+#    """prints a list of all of the vensim functions that are supported
+#    by the translator.
+#    """
+#    rowline     = '+------------------------------+------------------------------+\n'
+#    headers     = '|           Vensim             |       Python Translation     |\n'
+#    underline   = '+==============================+==============================+\n'
+#    string = rowline + headers + underline
+#    for key, value in dictionary.iteritems():
+#        string += '|'   + key.center(30) +  '|'  + value.center(30) + '|\n'
+#        string += rowline
+#    for item in construction_functions:
+#        string += '|'   + item.center(30) + '|      Model Construction      |\n'
+#        string += rowline
+#
+#    string += '\n `np` corresponds to the numpy package'
+#
+#    return string
 
 
 def translate_vensim(mdl_file):
-    """
-    Translate a vensim model file into a python class.
+    pass
+#    """
+#    Translate a vensim model file into a python class.
+#
+#    Supported functionality:\n\n"""
+#    parser = TextParser(file_grammar, mdl_file)
+#    #module = imp.load_source('modulename', parser.filename)
+#
+#    return parser.filename #module.Components
 
-    Supported functionality:\n\n"""
-    parser = TextParser(file_grammar, mdl_file)
-    #module = imp.load_source('modulename', parser.filename)
-
-    return parser.filename #module.Components
-
-translate_vensim.__doc__ += doc_supported_vensim_functions()
+translate_vensim.__doc__ = 'dummy' #doc_supported_vensim_functions()
