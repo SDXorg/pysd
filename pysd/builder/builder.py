@@ -152,6 +152,8 @@ def add_lookup(filename, identifier, valid_range, copair_list):
         outfile.write(funcstr)
 
 
+
+
 def add_initial(filename, component):
     """ Implement vensim's `INITIAL` command as a build-time function.
         component cannot be a full expression, must be a reference to
@@ -236,6 +238,8 @@ def add_n_delay(filename, delay_input, delay_time, initial_value, order):
                   initial_condition='%s * (%s / %i)'%(initial_value, delay_time, order))
 
     return flowlist[-1]
+
+
 
 
 

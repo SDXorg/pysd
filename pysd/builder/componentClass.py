@@ -109,7 +109,9 @@ class ComponentClass(object):
             if isinstance(self.state[key], DataArray):
                 shape = self.state[key].shape
                 size = self.state[key].size
-                self.state[key].loc[:,:].values = np.array(state_vector[i:i+size]).reshape(shape)
+                new_value = np.array(state_vector[i:i+size]).reshape(shape)
+                #self.state[key].loc[:,:].values = new_value
+                self.state[key].values = new_value
                 i += size
             else:
                 self.state[key] = state_vector[i]
