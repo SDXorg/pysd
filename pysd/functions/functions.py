@@ -16,12 +16,22 @@ class Functions(object):
         self.components = component_class
 
 
-    def if_then_else(self, condition, val_if_true, val_if_false):
-        """Replicates vensim's IF THEN ELSE function. """
-        if condition:
-            return val_if_true
+    def if_then_else(self,condition,val_if_true,val_if_false):
+        return np.where(condition,val_if_true,val_if_false)
+    
+    
+    def pos(self,number):
+        return np.maximum(number, 0.000001)
+    
+    
+    def tuner(self,number,factor):
+        if factor>1:
+            if number==0:
+                return 0
+            else:
+                return max(number,0.000001)**factor
         else:
-            return val_if_false
+            return (factor*number)+(1-factor)
 
 
     def step(self, value, tstep):
