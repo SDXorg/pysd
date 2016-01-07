@@ -1,8 +1,7 @@
 """vensim2py
     created: August 13, 2014
-    last update: January 7 2015
+    last update: June 6 2015
     James Houghton <james.p.houghton@gmail.com>
-    Mounir Yakzan <mouniryakzan@gmail.com>
 """
 import parsimonious
 import string
