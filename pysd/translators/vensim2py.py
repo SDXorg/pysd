@@ -5,6 +5,7 @@
 """
 import parsimonious
 import string
+import re
 from parsimonious.nodes import NodeVisitor
 
 from pysd import builder
@@ -57,7 +58,7 @@ dictionary = {"ABS":"abs", "INTEGER":"int", "EXP":"np.exp",
     "ARCSIN":"np.arcsin", "ARCTAN":"np.arctan", "IF THEN ELSE":"self.functions.if_then_else",
     "STEP":"self.functions.step", "MODULO":"np.mod", "PULSE":"self.functions.pulse",
     "PULSE TRAIN":"self.functions.pulse_train", "RAMP":"self.functions.ramp",
-    "=":"==", "<=":"<=", "<":"<", ">=":">=", ">":">", "^":"**", 
+    "=":"==", "<>":"!=", "<=":"<=", "<":"<", ">=":">=", ">":">", "^":"**", 
     "POS":"self.functions.pos", "TUNER":"self.functions.tuner", "TUNE1":"self.functions.tuner"}
 
 construction_functions = ['DELAY1', 'DELAY3', 'DELAY N',
@@ -148,7 +149,7 @@ file_grammar = (
     'starline = ~"\*{3,}"                                                                       \n'+
 
     'Condition   = SNL Term SNL Conditional*                                                        \n'+
-    'Conditional = ("<=" / "<" / ">=" / ">" / "=") SNL Term                                     \n'+
+    'Conditional = ("<=" / "<>" / "<" / ">=" / ">" / "=") SNL Term                                     \n'+
 
     ###################################Subscript Element#############################################
     'SubElem = Identifier SNL ("," SNL Identifier SNL)*                                               \n'+
@@ -245,7 +246,7 @@ class TextParser(NodeVisitor):
         pass
 
     def visit_Subscript(self,n,(Identifier,_1,col,NL,Subelem)):
-        pysd.builder.add_Subscript(self.filename, Identifier, Subelem)
+        builder.add_Subscript(self.filename, Identifier, Subelem)
         return Identifier
         
     def visit_Subtext(self,n,(_1,lparen,_2,element,_3,rparen,_4)):
@@ -254,7 +255,7 @@ class TextParser(NodeVisitor):
     def visit_Stock(self, n, (Identifier, _1, Sub,_10, eq, _2, integ, _3,
                               lparen, NL1, expression, _6,
                               comma, NL2, initial_condition, _9, rparen)):
-        pysd.builder.add_stock(self.filename, Identifier,Sub, expression, initial_condition)
+        builder.add_stock(self.filename, Identifier,Sub, expression, initial_condition)
         return Identifier
 
 
@@ -303,7 +304,7 @@ class TextParser(NodeVisitor):
         else:
             elements=flaux[2]
         elements="".join(elements.split()).replace("\\","")
-        pysd.builder.add_flaux(self.filename,flowname,flowsub,elements)
+        builder.add_flaux(self.filename,flowname,flowsub,elements)
         
     def visit_Flowint(self,n,(flows)):
         return flows
@@ -315,7 +316,7 @@ class TextParser(NodeVisitor):
 
     def visit_Lookup(self, n, (Identifier, _1, lparen, _2, Range,
                      _3, CopairList, _4, rparen)):
-        pysd.builder.add_lookup(self.filename, Identifier, Range, CopairList)
+        builder.add_lookup(self.filename, Identifier, Range, CopairList)
         return Identifier
 
     def visit_Unit(self, n, vc):
@@ -355,8 +356,26 @@ class TextParser(NodeVisitor):
     def visit_Keyword(self, n, vc):
         return dictionary[n.text.upper()]
 
-    def visit_Reference(self, n, (Identifier, _)):
-        return 'self.'+Identifier+'()'
+    def visit_Reference(self, n, (Identifier, _1, Subs, _2)):
+        if Subs:
+            InterSub=Subs.split(",")
+            if len(InterSub)==1:
+                return 'self.'+Identifier+'()[self.getelempos("%s")]'%Subs.replace("!","")
+            else:
+                getelemstr="["
+                for i in InterSub:
+                    getelemstr+='self.getelempos("%s"),'%i
+                getelemstr=getelemstr.rstrip(",")+"]"
+                getelemstr=getelemstr.replace("!","")
+                if re.search("!",Subs) and Subs.count("!")==1:
+                    sumacross=0
+                    for i in range(len(InterSub)):
+                        if re.search("!",InterSub[i]):
+                            sumacross=i
+                    getelemstr+=",%i"%sumacross
+                return 'self.'+Identifier+'()%s'%(getelemstr)
+        else:
+            return 'self.'+Identifier+'()'
 
     def visit_Identifier(self, n, vc):
         string = n.text
