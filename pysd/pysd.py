@@ -13,6 +13,10 @@ from scipy.integrate import odeint as _odeint
 import pandas as _pd
 import numpy as np
 import imp
+import math
+import inspect as checkforlookup
+import re
+import csv
 
 ######################################################
 # Todo:
@@ -60,13 +64,16 @@ read_vensim.__doc__ += _translators.translate_vensim.__doc__
 def load(py_model_file):
     """ Load a python-converted model file. """
     module = imp.load_source('modulename', py_model_file)
-    model = module.Components
+    module.Components.getnumofelements=getnumofelements
+    module.Components.getelempos=getelempos
+    module.Components.time=time
+    model = module.Components()
     model.__str__ = 'Import of ' + py_model_file
     return model
 
 def run(model):
     components=getcomponents(model)
-    set_initial_condition(model)
+    set_initial_condition(model,components)
     
     final_time=getattr(model,'final_time')
     initial_time=getattr(model,'initial_time')
@@ -77,13 +84,12 @@ def run(model):
     variables=[]
     numbersonly=[]
     dictofsubs={}
-    dictofvars={}
+    Dictionary=model.Dictionary
     runtime=range(len(components))
     auxiliaries=[]
-    
-    for k in runtime:
-        dictofvars[components[k]]=k
-        
+    model.arrayofresults=np.ndarray((len(components),num_of_steps),object)
+    model.num_of_steps=num_of_steps
+            
     for k in runtime:
         if components[k].startswith('subscript_'):
             stocks.append(k)
@@ -101,8 +107,11 @@ def run(model):
             for l in range(len(components)):
                 if components[l]==components[k][:-5]:
                     stocks.append(l)
-        elif len(checkforlookup.getargspec(getattr(model,components[k]))[0])>1:
-            stocks.append(k)
+        try: 
+            if  len(checkforlookup.getargspec(getattr(model,components[k]))[0])>1:
+                stocks.append(k)
+        except:
+            pass
     
     for k in runtime:
         if k not in stocks:
@@ -119,7 +128,7 @@ def run(model):
     #Initializing the stocks to their initial values
     for num in runtime:
         if components[num].endswith('_init'):
-            stocknum=model.Dictionary.get(components[num][0:-5])
+            stocknum=Dictionary[components[num][0:-5]]
             value=getattr(model,components[num])
             model.arrayofresults[stocknum][0]=value()
             model.arrayofresults[stocknum][-1]=value()
@@ -136,7 +145,7 @@ def run(model):
     
         for k in ddt:
             StockValue=components[k][1:-3]
-            StockPos=dictofvars[StockValue]    
+            StockPos=Dictionary[StockValue]    
             model.arrayofresults[StockPos][i]=model.arrayofresults[StockPos][i-1]+getattr(model,components[k])()*time_step()
     
         for k in auxiliaries:
@@ -145,22 +154,19 @@ def run(model):
 def getcomponents(model):
     components=list(dir(model))
     components=[x for x in components if not x.startswith('__') and not x.startswith('_') 
-                and not x in ['getsubs','getnumofelements','getelements','getsubname','getelempos','getnp','time','state','functions','t','saveper','CurrentTime','final_time','initial_time','time_step','doc','reset_state','returnvalues','state_vector','d_dt']]
+                and not x in ['Dictionary','num_of_steps','CurrentTime','getsubs','getnumofelements','getelements','getsubname','getelempos','getnp','time','state','functions','t','saveper','CurrentTime','final_time','initial_time','time_step','num_of_steps','doc','reset_state','returnvalues','state_vector','d_dt']]
     return components
     
-def set_initial_condition(model):
+def set_initial_condition(model,components):
     getnumofelements.getnumofelements_variable={}
     getelempos.arrayofsubs={}
-    model.getnumofelements=getnumofelements
-    model.getelempos=getelempos
     #Creating a repertoire to know components location
     model.Dictionary=dict(zip(components,range(len(components))))
     #Variable defining current run time
     model.CurrentTime=0
-    model.arrayofresults=np.ndarray((len(components),num_of_steps),object)
 
     
-def getnumofelements(self, subname):
+def getnumofelements(self,subname):
     numofelements=[]
     try:
         numofelements=getnumofelements.getnumofelements_variable[subname]
@@ -173,9 +179,23 @@ def getnumofelements(self, subname):
     return numofelements
 getnumofelements.getnumofelements_variable={}
 
-def getelempos(self, element=""):
+def getelempos(self,element=""):
     return getelempos.arrayofsubs[element]
 getelempos.arrayofsubs={}
 
+def time(self):
+    return self.CurrentTime*self.time_step()+self.initial_time()
 
-
+def printresults(model,directory):
+    componentstoprint=[]
+    components=getcomponents(model)
+    for i in components:
+        if i.endswith("_init"):
+            componentstoprint.append(model.Dictionary[i[:-5]])
+    newcomponents=[components[i] for i in componentstoprint]
+    fl=open(directory+'.csv','wb')
+    writer=csv.writer(fl)
+    writer.writerow(newcomponents)
+    for i in range(model.num_of_steps):
+        writer.writerow(model.arrayofresults[componentstoprint,i])
+    fl.close()
