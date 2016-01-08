@@ -44,11 +44,6 @@ class ComponentClass(object):
     """
 
     def __init__(self):
-        self._stocknames = [name[:-5] for name in dir(self) if name[-5:] == '_init']
-        self._stocknames.sort() #inplace
-        self._dfuncs = [getattr(self, 'd%s_dt'%name) for name in self._stocknames]
-        self.state = dict(zip(self._stocknames, [None]*len(self._stocknames)))
-        self.reset_state()
         self.__doc__ = self.doc()
         self.functions = functions.Functions(self)
 
@@ -138,7 +133,7 @@ def new_model(filename):
         outfile.write(string)
 
 
-def add_stock(filename, identifier, expression, initial_condition):
+def add_stock(filename, identifier,sub, expression, initial_condition):
     """Adds a stock to the python model file based upon the interpreted expressions
     for the initial condition.
 
@@ -175,7 +170,7 @@ def add_stock(filename, identifier, expression, initial_condition):
                    )
     returnarray= ('        global variable_%s  \n'%identifier+
                   '        if self.variable_%s=="": \n'%identifier+
-                  '            self.variable_%s=self.arrayofresults[self.Dictionary.get("%s")][self.CurrentTime-1]\n'%(identifier,identifier)+
+                  '            self.variable_%s=self.arrayofresults[self.Dictionary["%s"]][self.CurrentTime-1]\n'%(identifier,identifier)+
                   '        return self.variable_%s \n\n'%identifier)
     #create a function that points to the state dictionary, to let other
     # components reference the state without explicitly having to know that
@@ -202,7 +197,7 @@ def add_stock(filename, identifier, expression, initial_condition):
 
 
 
-def add_flaux(filename, identifier, expression, doc=''):
+def add_flaux(filename, identifier, sub, expression, doc=''):
     """Adds a flow or auxiliary element to the model.
 
     identifier: <string> valid python identifier
