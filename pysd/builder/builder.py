@@ -44,11 +44,6 @@ class ComponentClass(object):
     """
 
     def __init__(self):
-        self._stocknames = [name[:-5] for name in dir(self) if name[-5:] == '_init']
-        self._stocknames.sort() #inplace
-        self._dfuncs = [getattr(self, 'd%s_dt'%name) for name in self._stocknames]
-        self.state = dict(zip(self._stocknames, [None]*len(self._stocknames)))
-        self.reset_state()
         self.__doc__ = self.doc()
         self.functions = functions.Functions(self)
 
@@ -138,7 +133,7 @@ def new_model(filename):
         outfile.write(string)
 
 
-def add_stock(filename, identifier, expression, initial_condition):
+def add_stock(filename, identifier,sub, expression, initial_condition):
     """Adds a stock to the python model file based upon the interpreted expressions
     for the initial condition.
 
@@ -158,16 +153,25 @@ def add_stock(filename, identifier, expression, initial_condition):
     """
     #create a 'derivative function' that can be
     # called by the d_dt boilerplate function and passed to the integrator
+    variable = ('    variable_%s=""\n\n'%identifier)
     dfuncstr = ('    def d%s_dt(self):                       \n'%identifier +
                 '        return %s                           \n\n'%expression
                )
 
     #create an 'intialization function' of the form '<stock>_init()' that
     # can be called when the model is reset to initialize the state variable
-    ifuncstr = ('    def %s_init(self):                      \n'%identifier +
-                '        return %s                           \n\n'%initial_condition
-               )
-
+    if sub:
+        ifuncstr = ('    def %s_init(self):                      \n'%identifier +
+                    '        return %s*np.ones(self.getnumofelements("%s"))     \n\n'%(initial_condition,sub)
+                   )
+    else:
+        ifuncstr = ('    def %s_init(self):                      \n'%identifier +
+                    '        return %s     \n\n'%initial_condition
+                   )
+    returnarray= ('        global variable_%s  \n'%identifier+
+                  '        if self.variable_%s=="": \n'%identifier+
+                  '            self.variable_%s=self.arrayofresults[self.Dictionary["%s"]][self.CurrentTime-1]\n'%(identifier,identifier)+
+                  '        return self.variable_%s \n\n'%identifier)
     #create a function that points to the state dictionary, to let other
     # components reference the state without explicitly having to know that
     # it is a stock. This is the function that gets an elaborated docstring
@@ -177,19 +181,23 @@ def add_stock(filename, identifier, expression, initial_condition):
                 '                                             \n' +
                 '        Initial Value: %s                    \n'%initial_condition +
                 '        Do not overwrite this function       \n' +
-                '        """                                  \n' +
-                '        return self.state["%s"]              \n'%identifier +
-                '                                             \n'
-               )
+                '        """                                  \n' + 
+                returnarray)
 
+    if sub:
+        returnval=1
+    else:
+        returnval=0
+               
     with open(filename, 'a') as outfile:
+        outfile.write(variable)
         outfile.write(dfuncstr)
         outfile.write(ifuncstr)
         outfile.write(sfuncstr)
 
 
 
-def add_flaux(filename, identifier, expression, doc=''):
+def add_flaux(filename, identifier, sub, expression, doc=''):
     """Adds a flow or auxiliary element to the model.
 
     identifier: <string> valid python identifier
@@ -201,14 +209,59 @@ def add_flaux(filename, identifier, expression, doc=''):
         They need to be written with with appropriate syntax, ie:
         `self.functioncall() * self.otherfunctioncall()`
     """
+    if not re.search('[a-zA-Z]',expression):
+        variablebegin = 'numbersonly_'
+    else:
+        variablebegin = ''
+    variable = ('    variable_%s%s=""\n\n'%(variablebegin,identifier))
     docstring = ('Type: Flow or Auxiliary\n        '+
                  '\n        '.join(doc.split('\n')))
-
-    funcstr = ('    def %s(self):\n'%identifier +
-               '        """%s"""\n'%docstring +
-               '        return %s \n\n'%expression)
-
+ 
+    if sub:
+        if re.search('np.array',expression) or re.search('np.transpose',expression):
+            funcstr = ('    def %s(self):\n'%identifier +
+                       '        """%s""" \n'%docstring +
+                       '        global variable_%s%s\n'%(variablebegin,identifier)+
+                       '        if self.variable_%s%s=="":\n'%(variablebegin,identifier)+
+                       '            self.variable_%s%s=%s\n'%(variablebegin,identifier,expression)+
+                       '        return self.variable_%s%s\n\n'%(variablebegin,identifier))
+        elif re.search(';',expression):
+            funcstr = ('    def %s(self):\n'%identifier +
+                       '        """%s"""\n'%docstring +
+                       '        global variable_%s%s\n'%(variablebegin,identifier)+
+                       '        if self.variable_%s%s=="":\n'%(variablebegin,identifier)+
+                       "            self.variable_%s%s=np.array(np.mat('%s'))\n"%(variablebegin,identifier,expression.rstrip(";"))+
+                       '        return self.variable_%s%s\n\n'%(variablebegin,identifier))
+        elif not re.search(',',expression): #may cause error if values equal one element from other function because it would contain commas
+            funcstr = ('    def %s(self):\n'%identifier +
+                       '        """%s"""\n'%docstring +
+                       '        global variable_%s%s\n'%(variablebegin,identifier)+
+                       '        if self.variable_%s%s=="":\n'%(variablebegin,identifier)+
+                       '            self.variable_%s%s=(np.ones(self.getnumofelements("%s"))*%s)\n'%(variablebegin,identifier,sub,expression)+
+                       '        return self.variable_%s%s\n\n'%(variablebegin,identifier))
+        else:
+            funcstr = ('    def %s(self):\n'%identifier +
+                       '        if self.variable_%s%s=="":\n'%(variablebegin,identifier)+
+                       '            self.variable_%s%s=%s\n'%(variablebegin,identifier,expression)+
+                       '        return self.variable_%s%s\n\n'%(variablebegin,identifier))
+    else:
+        if not re.search('[a-zA-Z]',expression):
+            funcstr = ('    def %s(self):\n'%identifier +
+                       '        """%s""" \n'%docstring +
+                       '        return %s\n\n'%expression)
+        else:
+            funcstr = ('    def %s(self):\n'%identifier +
+                       '        """%s"""\n'%docstring +
+                       '        global variable_%s%s\n'%(variablebegin,identifier)+
+                       '        if self.variable_%s%s=="":\n'%(variablebegin,identifier)+
+                       '            self.variable_%s%s=%s\n'%(variablebegin,identifier,expression)+
+                       '        return self.variable_%s%s\n\n'%(variablebegin,identifier))
+    if sub:
+        returnval=1
+    else:
+        returnval=0
     with open(filename, 'a') as outfile:
+        outfile.write(variable)
         outfile.write(funcstr)
 
     return 'self.%s()'%identifier
@@ -251,6 +304,16 @@ def add_lookup(filename, identifier, valid_range, copair_list):
     with open(filename, 'a') as outfile:
         outfile.write(funcstr)
 
+def add_Subscript(filename, identifier, expression):
+    docstring = ('Type: Subscript')
+    funcstr = ('    def subscript_%s(self):\n'%identifier + 
+               '        """%s"""\n'%docstring +
+               '        return "%s" \n\n'%expression)
+    
+    with open(filename, 'a') as outfile:
+        outfile.write(funcstr)
+
+    return 'self.%s()'%identifier
 
 def add_initial(filename, component):
     """ Implement vensim's `INITIAL` command as a build-time function.
@@ -269,7 +332,11 @@ def add_initial(filename, component):
 #        print a.method('hi')
 #        print a.method('there')
 
-    naked_component = component[5:-2]
+    if not re.search('[a-zA-Z]',component):
+        naked_component="number"
+    else:
+        naked_component = component.split("self.")[1]
+        naked_component = naked_component.split("()")[0]
     funcstr = ('    def initial_%s(self, inval):                  \n'%naked_component +
                '        if not hasattr(self.initial_%s, "value"): \n'%naked_component +
                '            self.initial_%s.im_func.value = inval \n'%naked_component +

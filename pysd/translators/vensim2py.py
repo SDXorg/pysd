@@ -5,6 +5,7 @@
 """
 import parsimonious
 import string
+import re
 from parsimonious.nodes import NodeVisitor
 
 from pysd import builder
@@ -53,15 +54,15 @@ dictionary = {"ABS":"abs", "INTEGER":"int", "EXP":"np.exp",
     "PI":"np.pi", "SIN":"np.sin", "COS":"np.cos", "SQRT":"np.sqrt", "TAN":"np.tan",
     "LOGNORMAL":"np.random.lognormal", "RANDOM NORMAL":"self.functions.bounded_normal",
     "POISSON":"np.random.poisson", "LN":"np.log", "EXPRND":"np.random.exponential",
-    "RANDOM UNIFORM":"np.random.rand", "MIN":"min", "MAX":"max", "ARCCOS":"np.arccos",
+    "RANDOM UNIFORM":"np.random.rand", "MIN":"np.minimum", "MAX":"np.maximum", "SUM":"np.sum", "ARCCOS":"np.arccos",
     "ARCSIN":"np.arcsin", "ARCTAN":"np.arctan", "IF THEN ELSE":"self.functions.if_then_else",
     "STEP":"self.functions.step", "MODULO":"np.mod", "PULSE":"self.functions.pulse",
     "PULSE TRAIN":"self.functions.pulse_train", "RAMP":"self.functions.ramp",
-    "=":"==", "<=":"<=", "<":"<", ">=":">=", ">":">", "^":"**",
-    ":AND:": "and", ":OR:":"or", ":NOT:":"not"}
+    "=":"==", "<>":"!=", "<=":"<=", "<":"<", ">=":">=", ">":">", "^":"**", 
+    "POS":"self.functions.pos", "TUNER":"self.functions.tuner", "TUNE1":"self.functions.tuner"}
 
-construction_functions = ['DELAY1', 'DELAY3', 'DELAY3I', 'DELAY N', 'DELAY1I',
-                          'SMOOTH3I', 'SMOOTH3', 'SMOOTH N', 'SMOOTH', 'SMOOTHI',
+construction_functions = ['DELAY1', 'DELAY3', 'DELAY N',
+                          'SMOOTH3I', 'SMOOTH3', 'SMOOTH N', 'SMOOTH',
                           'INITIAL'] #order is important for peg parser
 
 ###############################################################
@@ -100,68 +101,92 @@ con_keywords = ' / '.join(['"%s"'%key for key in reversed(sorted(multicaps_con_k
 file_grammar = (
     # In the 'Model' definiton, we use arbitrary characters (.) to represent the backslashes,
     #    because escaping in here is a nightmare
+    #Subscripting definition trial
     'Model = SNL "{UTF-8}" Content ~"...---///" Rubbish*                                        \n'+
     'Content = Entry+                                                                           \n'+
     'Rubbish = ~"."* NL*                                                                        \n'+
-
-    'Entry = MetaEntry / ModelEntry                                                             \n'+
-
+    'Entry = MacroEntry / MetaEntry / ModelEntry / GroupEntry                                   \n'+
+    'MacroEntry = SNL ":MACRO:" SNL MacroInside SNL ":END OF MACRO:" SNL                        \n'+
+    'MacroInside = ~"[^:]"* SNL                                                                 \n'+
     # meta entry recognizes model documentation, or the partition separating model control params.
-    'MetaEntry  = SNL starline SNL Docstring SNL starline _ "~" SNL Docstring SNL "|" SNL*      \n'+
-    'ModelEntry = SNL Component SNL "~" _ Unit SNL "~" _ Docstring SNL "|" SNL*                 \n'+
-
+    'MetaEntry  = SNL starline SNL Docstring SNL starline SNL "~" SNL Docstring SNL "|" SNL*      \n'+
+    'ModelEntry = SNL Component SNL "~" SNL Unit SNL "~" SNL Docstring SNL "|" SNL*                 \n'+
+    'GroupEntry = SNL "{" SNL ~"[^}]"* SNL "}" SNL \n'+
     'Unit      = ~"[^~|]"*                                                                      \n'+
     # The docstring parser also consumes trailing newlines. Not sure if we want this?
     # The second half of the docstring parser is a lookahead to make sure we don't consume starlines
     'Docstring = (~"[^~|]" !~"(\*{3,})")*                                                       \n'+
-    'Component = Stock / Flaux / Lookup                                                         \n'+
+    'Component = Stock / Flows / Lookup / Subscript                       \n'+
+    ###################################Subscript Element#############################################
+    'Subscript = Identifier SNL ":" SNL SubElem                                                   \n'+
+      
+    #We need to weed out subscripts from non-subscripts
 
-    'Lookup     = Identifier _ "(" _ NL _ Range _ CopairList _ ")"                              \n'+
+    'Lookup     = Identifier SNL "(" SNL Range SNL CopairList SNL ")"                              \n'+
+    
+    ###################################Subscript Element#############################################
+    'Subtext = SNL "[" SNL SubElem SNL "]" SNL                                                       \n'+
+
     'Range      = "[" _ Copair _ "-" _ Copair _ "]"                                             \n'+
     'CopairList = AddCopair*                                                                    \n'+
-    'AddCopair  = "," _ Copair                                                                  \n'+
+    'AddCopair  = "," SNL Copair                                                                  \n'+
     # 'Copair' represents a coordinate pair
-    'Copair     = "(" _ Primary _ "," _ Primary _ ")"                                           \n'+
+    'Copair     = "(" SNL UnderSub SNL ")"                                           \n'+
 
-    'Stock     = Identifier _ "=" _ "INTEG" _ "(" _ NL _ Condition _ "," _ NL _ Condition _ ")" \n'+
+    
+    'Stock = Identifier _ Subtext* _ "=" _ "INTEG" _ "(" SNL Condition _ "," SNL Condition _ ")" \n'+
     # 'Flaux' represents either a flow or an auxiliary, as the syntax is the same
-    'Flaux     = Identifier _ "=" SNL Condition                                                 \n'+
+    'Flows = Flowint Flaux \n' + # this is for subscripted equations, or situations where each element of the subscript is defined by itself.
+    'Flowint = Flow*'
+    'Flow = (Flaux SNL "~~|" SNL)                                          \n'+
+    
+    'Flaux = Identifier SNL Subtext* SNL "=" SNL Condition                                          \n'+
+
 
     # SNL means 'spaced newline'
     'SNL = _ NL* _                                                                              \n'+
     'NL = _ ~"[\\r\\n]" _                                                                       \n'+
     'starline = ~"\*{3,}"                                                                       \n'+
 
-    'Condition   = Term _ Conditional*                                                          \n'+
-    'Conditional = ("<=" / "<" / ">=" / ">" / "=") _ Term                                       \n'+
+    'Condition   = SNL Term SNL Conditional*                                                        \n'+
+    'Conditional = ("<=" / "<>" / "<" / ">=" / ">" / "=") SNL Term                                     \n'+
 
-    'Term     = Factor _ Additive*                                                              \n'+
-    'Additive = ("+"/"-") _ Factor                                                              \n'+
+    ###################################Subscript Element#############################################
+    'SubElem = Identifier SNL ("," SNL Identifier SNL)*                                               \n'+
+
+    'Term     = Factor SNL Additive*                                                              \n'+
+    'Additive = ("+"/"-") SNL Factor                                                              \n'+
 
     # Factor may be consuming newlines? don't want it to...
-    'Factor   = ExpBase _ Multiplicative*                                                       \n'+
-    'Multiplicative = ("*" / "/") _ ExpBase                                                     \n'+
+    'Factor   = ExpBase SNL Multiplicative*                                                       \n'+
+    'Multiplicative = ("*" / "/") SNL ExpBase                                                     \n'+
 
-    'ExpBase  = Primary _ Exponentive*                                                          \n'+
-    'Exponentive = "^" _ Primary                                                                \n'+
+    'ExpBase  = Primary SNL Exponentive*                                                          \n'+
+    'Exponentive = "^" SNL Primary                                                                \n'+
 
-    'Primary  = Call / ConCall / LUCall / Parens / Signed / Number / Reference                  \n'+
-    'Parens   = "(" _ Condition _ ")"                                                           \n'+
-
-    'Call     = Keyword _ "(" _ ArgList _ ")"                                                   \n'+
+    'Primary  = Call / ConCall / LUCall / Parens / Signed / Subs / UnderSub / Number / Reference \n'+
+    'Parens   = "(" SNL Condition SNL ")"                                                           \n'+
+    
+    'Call     = Keyword SNL "(" SNL ArgList SNL ")"                                              \n'+
+    
     'ArgList  = AddArg+                                                                         \n'+
-    'AddArg   = ","* _ Condition                                                                \n'+
+    'AddArg   = ","* SNL Condition                                                              \n'+
     # Calls to lookup functions don't use keywords, so we have to use identifiers.
     #    They take only one parameter. This could cause problems.
-    'LUCall   = Identifier _ "(" _ Condition _ ")"                                              \n'+
+    
+    ###################################Subscript Element#############################################
+    'Subs     = (SNL UnderSub SNL ";")+ SNL                                                     \n'+
+    'UnderSub = Number SNL ("," SNL Number SNL)+                                                \n'+
+
+    'LUCall   = Identifier SNL "(" SNL Condition SNL ")"                                        \n'+
     'Signed   = ("-"/"+") Primary                                                               \n'+
     # We have to break 'reference' out from identifier, because in reference situations
     #    we'll want to add self.<name>(), but we also need to be able to clean and access
     #    the identifier independently. To force parsimonious to handle the reference as
     #    a seperate object from the Identifier, we add a trailing optional space character
-    'Reference = Identifier _                                                                   \n'+
+    'Reference = Identifier SNL Subtext* SNL                                                    \n'+
 
-    'ConCall  = ConKeyword _ "(" _ ArgList _ ")"                                                \n'+
+    'ConCall  = ConKeyword SNL "(" SNL ArgList SNL ")"                                          \n'+
 
     'Number   = ((~"[0-9]"+ "."? ~"[0-9]"*) / ("." ~"[0-9]"+)) (("e"/"E") ("-"/"+") ~"[0-9]"+)? \n'+
     'Identifier = Basic_Id / Special_Id                                                         \n'+
@@ -175,10 +200,10 @@ file_grammar = (
     '_ = spacechar*                                                                             \n'+
     # Vensim uses a 'backslash, newline' syntax as a way to split an equation onto multiple lines.
     #   We address this by including it as  an allowed space character.
-    'spacechar = " "* ~"\t"* (~r"\\\\" NL)*                                                     \n'+
-
+    'spacechar = exclamation* " "* ~"\t"* (~r"\\\\" NL)*                                         \n'+
+    'exclamation = "!"+ \n' +
     'Keyword = %s  \n'%keywords +
-    'ConKeyword = %s  \n'%con_keywords
+    'ConKeyword = %s  \n'%con_keywords 
     )
 
 
@@ -209,7 +234,7 @@ class TextParser(NodeVisitor):
 
     ############# 'entry' level translators ############################
     visit_Entry = visit_Component = NodeVisitor.lift_child
-
+    
     def visit_ModelEntry(self, n, (_1, Identifier, _2, tld1, _3, Unit, _4,
                                    tld2, _5, Docstring, _6, pipe, _7)):
         """All we have to do here is add to the docstring of the relevant 
@@ -220,21 +245,77 @@ class TextParser(NodeVisitor):
         #builder.add_to_element_docstring(self.component_class, Identifier, string)
         pass
 
-
-    def visit_Stock(self, n, (Identifier, _1, eq, _2, integ, _3,
-                              lparen, _4, NL1, _5, expression, _6,
-                              comma, _7, NL2, _8, initial_condition, _9, rparen)):
-        builder.add_stock(self.filename, Identifier, expression, initial_condition)
+    def visit_Subscript(self,n,(Identifier,_1,col,NL,Subelem)):
+        builder.add_Subscript(self.filename, Identifier, Subelem)
+        return Identifier
+        
+    def visit_Subtext(self,n,(_1,lparen,_2,element,_3,rparen,_4)):
+        return element
+    
+    def visit_Stock(self, n, (Identifier, _1, Sub,_10, eq, _2, integ, _3,
+                              lparen, NL1, expression, _6,
+                              comma, NL2, initial_condition, _9, rparen)):
+        builder.add_stock(self.filename, Identifier,Sub, expression, initial_condition)
         return Identifier
 
 
-    def visit_Flaux(self, n, (Identifier, _1, eq, SNL, expression)):
-        builder.add_flaux(self.filename, Identifier, expression)
-        return Identifier
+    def visit_Flows(self,n,(flows,flaux)):
+        flowname=flaux[0]
+        flowsub=flaux[1]
+        flowlen=len(flowsub.split(","))
+        leftjoin=0
+        rightjoin=0
+        elements=[]
+        addendum=""
+        if flowlen>1:
+            addendum="),("
+        if flows:
+            flows.append(flaux)
+            if flowlen>1:
+                for i in range(len(flows)):
+                    if flows[0][1].split(",")[0]==flows[i][1].split(",")[0]:
+                        leftjoin+=1
+                    if flows[0][1].split(",")[1]==flows[i][1].split(",")[1]:
+                        rightjoin+=1
+                if rightjoin==len(flows) or leftjoin==len(flows):
+                    Temp=""
+                    if rightjoin==len(flows):
+                        Temp=flows[0][1].split(",")[1]
+                    if leftjoin==len(flows):
+                        Temp=flows[0][1].split(",")[0]
+                    for i in range(len(flows)):
+                        if not re.search('[,]',flows[i][2]):
+                            flows[i][2]="("+flows[i][2]+")*np.ones(self.getnumofelements('%s'))"%Temp
+                    for i in range(len(flows)-1):
+                        flows[i][2]+=addendum
+                else:
+                    comparingvar=0
+                    for i in range(len(flows)-1):
+                        if flows[comparingvar][1].split(",")[0]!=flows[i+1][1].split(",")[0]:
+                            flows[i][2]+=addendum
+                            comparingvar=i+1
+            for i in range(len(flows)):
+                elements.append(flows[i][2])
+            if leftjoin==len(flows):
+                elements="np.transpose((("+','.join(elements)+")))"
+            else:
+                elements="np.array((("+','.join(elements)+")))"
+            elements=elements.replace("(,","(")
+        else:
+            elements=flaux[2]
+        elements="".join(elements.split()).replace("\\","")
+        builder.add_flaux(self.filename,flowname,flowsub,elements)
+        
+    def visit_Flowint(self,n,(flows)):
+        return flows
+    def visit_Flow(self, n, (Flaux,_1,tilde,SNL)):
+        return Flaux
+    def visit_Flaux(self, n, (Identifier, _1, Sub, _2, eq, SNL, expression)):
+        return [Identifier,Sub,expression]
 
 
-    def visit_Lookup(self, n, (Identifier, _1, lparen, _2, NL1, _3, Range,
-                               _4, CopairList, _5, rparen)):
+    def visit_Lookup(self, n, (Identifier, _1, lparen, _2, Range,
+                     _3, CopairList, _4, rparen)):
         builder.add_lookup(self.filename, Identifier, Range, CopairList)
         return Identifier
 
@@ -275,8 +356,26 @@ class TextParser(NodeVisitor):
     def visit_Keyword(self, n, vc):
         return dictionary[n.text.upper()]
 
-    def visit_Reference(self, n, (Identifier, _)):
-        return 'self.'+Identifier+'()'
+    def visit_Reference(self, n, (Identifier, _1, Subs, _2)):
+        if Subs:
+            InterSub=Subs.split(",")
+            if len(InterSub)==1:
+                return 'self.'+Identifier+'()[self.getelempos("%s")]'%Subs.replace("!","")
+            else:
+                getelemstr="["
+                for i in InterSub:
+                    getelemstr+='self.getelempos("%s"),'%i
+                getelemstr=getelemstr.rstrip(",")+"]"
+                getelemstr=getelemstr.replace("!","")
+                if re.search("!",Subs) and Subs.count("!")==1:
+                    sumacross=0
+                    for i in range(len(InterSub)):
+                        if re.search("!",InterSub[i]):
+                            sumacross=i
+                    getelemstr+=",%i"%sumacross
+                return 'self.'+Identifier+'()%s'%(getelemstr)
+        else:
+            return 'self.'+Identifier+'()'
 
     def visit_Identifier(self, n, vc):
         string = n.text
@@ -288,7 +387,10 @@ class TextParser(NodeVisitor):
     def visit_LUCall(self, n, (Identifier, _1, lparen, _2, Condition, _3,  rparen)):
         return 'self.'+Identifier+'('+Condition+')'
 
-    def visit_Copair(self, n, (lparen, _1, xcoord, _2, comma, _3, ycoord, _, rparen)):
+    def visit_Copair(self, n, (lparen, _1, Subs, _2, rparen)):
+        Subs=Subs.replace("\\","")
+        xcoord=Subs.split(',')[0]
+        ycoord=Subs.split(',')[1]
         return (float(xcoord), float(ycoord))
 
     def visit_AddCopair(self, n, (comma, _1, Copair)):
