@@ -18,7 +18,8 @@ if not os.path.isdir(test_dir):
 
 
 vensim_testfiles = glob.glob(test_dir+'*/*/*.mdl')
-xmile_testfiles = glob.glob(test_dir+'*/*/*.xmile')
+#xmile_testfiles = glob.glob(test_dir+'*/*/*.xmile')
+xmile_testfiles = []
 testfiles = vensim_testfiles + xmile_testfiles
 
 print "Testing module at location: %s\n"%pysd.__file__

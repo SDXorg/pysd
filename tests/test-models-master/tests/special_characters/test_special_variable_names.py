@@ -1,92 +1,102 @@
-from __future__ import division                                 
-import numpy as np                                              
-from pysd import functions                                      
-from pysd import builder                                        
-                                                                
-class Components(builder.ComponentClass):                       
-                                                                
-    def normal_flow(self):
-        """Type: Flow or Auxiliary
-        """
-        return self.import_element() 
 
-    def import_element(self):
-        """Type: Flow or Auxiliary
-        """
-        return 10 
+from __future__ import division
+import numpy as np
+from pysd import functions
 
-    def aux_with_pec_characters(self):
-        """Type: Flow or Auxiliary
-        """
-        return 21 
+def time():
+    return _t
 
-    def aux_with_entirely_superfuluous_parenthetical_comment(self):
-        """Type: Flow or Auxiliary
-        """
-        return 90 
+def normal_flow():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return import_element()
 
-    def flow_w_division_lists_and_initialconstruction_functions(self):
-        """Type: Flow or Auxiliary
-        """
-        return self.aux_with_pec_characters() 
+def import_element():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 10
 
-    def flow_with_stepfunction_call(self):
-        """Type: Flow or Auxiliary
-        """
-        return self.aux_with_entirely_superfuluous_parenthetical_comment() 
+def aux_with_pec_characters():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 21
 
-    def flowwith_a_fewarithmetic__characters(self):
-        """Type: Flow or Auxiliary
-        """
-        return 4 
+def aux_with_entirely_superfuluous_parenthetical_comment():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 90
 
-    def dhyphenatedstockname_dt(self):                       
-        return self.normal_flow()-self.flowwith_a_fewarithmetic__characters()                           
+def flow_w_division_lists_and_initialconstruction_functions():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return aux_with_pec_characters()
 
-    def hyphenatedstockname_init(self):                      
-        return 0                           
+def flow_with_stepfunction_call():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return aux_with_entirely_superfuluous_parenthetical_comment()
 
-    def hyphenatedstockname(self):                            
-        """ Stock: hyphenatedstockname =                      
-                 self.normal_flow()-self.flowwith_a_fewarithmetic__characters()                          
-                                             
-        Initial Value: 0                    
-        Do not overwrite this function       
-        """                                  
-        return self.state["hyphenatedstockname"]              
-                                             
-    def dstock_with_n_newline_character_dt(self):                       
-        return self.flow_w_division_lists_and_initialconstruction_functions()-self.flow_with_stepfunction_call()                           
+def flowwith_a_fewarithmetic__characters():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 4
 
-    def stock_with_n_newline_character_init(self):                      
-        return 67                           
+def hyphenatedstockname():
+    return _state['hyphenatedstockname']
 
-    def stock_with_n_newline_character(self):                            
-        """ Stock: stock_with_n_newline_character =                      
-                 self.flow_w_division_lists_and_initialconstruction_functions()-self.flow_with_stepfunction_call()                          
-                                             
-        Initial Value: 67                    
-        Do not overwrite this function       
-        """                                  
-        return self.state["stock_with_n_newline_character"]              
-                                             
-    def final_time(self):
-        """Type: Flow or Auxiliary
-        """
-        return 100 
+def _hyphenatedstockname_init():
+    return 0
 
-    def initial_time(self):
-        """Type: Flow or Auxiliary
-        """
-        return 0 
+def _dhyphenatedstockname_dt():
+    return normal_flow()-flowwith_a_fewarithmetic__characters()
 
-    def saveper(self):
-        """Type: Flow or Auxiliary
-        """
-        return self.time_step() 
+def stock_with_n_newline_character():
+    return _state['stock_with_n_newline_character']
 
-    def time_step(self):
-        """Type: Flow or Auxiliary
-        """
-        return 1 
+def _stock_with_n_newline_character_init():
+    return 67
 
+def _dstock_with_n_newline_character_dt():
+    return flow_w_division_lists_and_initialconstruction_functions()-flow_with_stepfunction_call()
+
+def final_time():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 100
+
+def initial_time():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 0
+
+def saveper():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return time_step()
+
+def time_step():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 1

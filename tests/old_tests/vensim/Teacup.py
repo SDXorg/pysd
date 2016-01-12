@@ -1,57 +1,65 @@
-from __future__ import division                                 
-import numpy as np                                              
-from pysd import functions                                      
-from pysd import builder                                        
-                                                                
-class Components(builder.ComponentClass):                       
-                                                                
-    def characteristic_time(self):
-        """Type: Flow or Auxiliary
-        """
-        return 10 
 
-    def heat_loss_to_room(self):
-        """Type: Flow or Auxiliary
-        """
-        return (self.teacup_temperature()- self.room_temperature()) / self.characteristic_time() 
+from __future__ import division
+import numpy as np
+from pysd import functions
 
-    def room_temperature(self):
-        """Type: Flow or Auxiliary
-        """
-        return 70 
+def time():
+    return _t
 
-    def dteacup_temperature_dt(self):                       
-        return -self.heat_loss_to_room()                           
+def characteristic_time():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 10
 
-    def teacup_temperature_init(self):                      
-        return 180                           
+def heat_loss_to_room():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return (teacup_temperature()- room_temperature()) / characteristic_time()
 
-    def teacup_temperature(self):                            
-        """ Stock: teacup_temperature =                      
-                 -self.heat_loss_to_room()                          
-                                             
-        Initial Value: 180                    
-        Do not overwrite this function       
-        """                                  
-        return self.state["teacup_temperature"]              
-                                             
-    def final_time(self):
-        """Type: Flow or Auxiliary
-        """
-        return 30 
+def room_temperature():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 70
 
-    def initial_time(self):
-        """Type: Flow or Auxiliary
-        """
-        return 0 
+def teacup_temperature():
+    return _state['teacup_temperature']
 
-    def saveper(self):
-        """Type: Flow or Auxiliary
-        """
-        return self.time_step() 
+def _teacup_temperature_init():
+    return 180
 
-    def time_step(self):
-        """Type: Flow or Auxiliary
-        """
-        return 0.125 
+def _dteacup_temperature_dt():
+    return -heat_loss_to_room()
 
+def final_time():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 30
+
+def initial_time():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 0
+
+def saveper():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return time_step()
+
+def time_step():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 0.125

@@ -1,57 +1,65 @@
-from __future__ import division                                 
-import numpy as np                                              
-from pysd import functions                                      
-from pysd import builder                                        
-                                                                
-class Components(builder.ComponentClass):                       
-                                                                
-    def flowa(self):
-        """Type: Flow or Auxiliary
-        """
-        return 0.1 
 
-    def dstocka_dt(self):                       
-        return self.flowa()                           
+from __future__ import division
+import numpy as np
+from pysd import functions
 
-    def stocka_init(self):                      
-        return -5                           
+def time():
+    return _t
 
-    def stocka(self):                            
-        """ Stock: stocka =                      
-                 self.flowa()                          
-                                             
-        Initial Value: -5                    
-        Do not overwrite this function       
-        """                                  
-        return self.state["stocka"]              
-                                             
-    def test_integer(self):
-        """Type: Flow or Auxiliary
-        """
-        return int(self.stocka()) 
+def flowa():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 0.1
 
-    def test_modulo(self):
-        """Type: Flow or Auxiliary
-        """
-        return np.mod(self.stocka(), 3 ) 
+def stocka():
+    return _state['stocka']
 
-    def final_time(self):
-        """Type: Flow or Auxiliary
-        """
-        return 100 
+def _stocka_init():
+    return -5
 
-    def initial_time(self):
-        """Type: Flow or Auxiliary
-        """
-        return 0 
+def _dstocka_dt():
+    return flowa()
 
-    def saveper(self):
-        """Type: Flow or Auxiliary
-        """
-        return self.time_step() 
+def test_integer():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return int(stocka())
 
-    def time_step(self):
-        """Type: Flow or Auxiliary
-        """
-        return 1 
+def test_modulo():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return np.mod(stocka(), 3 )
 
+def final_time():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 100
+
+def initial_time():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 0
+
+def saveper():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return time_step()
+
+def time_step():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 1

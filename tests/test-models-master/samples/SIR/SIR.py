@@ -1,92 +1,97 @@
-from __future__ import division                                 
-import numpy as np                                              
-from pysd import functions                                      
-from pysd import builder                                        
-                                                                
-class Components(builder.ComponentClass):                       
-                                                                
-    def succumbing(self):
-        """Type: Flow or Auxiliary
-        """
-        return self.susceptible()*self.infectious()/self.total_population()*self.contact_infectivity() 
 
-    def recovering(self):
-        """Type: Flow or Auxiliary
-        """
-        return self.infectious()/self.duration() 
+from __future__ import division
+import numpy as np
+from pysd import functions
 
-    def total_population(self):
-        """Type: Flow or Auxiliary
-        """
-        return 1000 
+def time():
+    return _t
 
-    def duration(self):
-        """Type: Flow or Auxiliary
-        """
-        return 5 
+def contact_infectivity():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 0.3
 
-    def contact_infectivity(self):
-        """Type: Flow or Auxiliary
-        """
-        return 0.3 
+def duration():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 5
 
-    def dsusceptible_dt(self):                       
-        return  - self.succumbing()                           
+def infectious():
+    return _state['infectious']
 
-    def susceptible_init(self):                      
-        return self.total_population()                           
+def _infectious_init():
+    return 5
 
-    def susceptible(self):                            
-        """ Stock: susceptible =                      
-                  - self.succumbing()                          
-                                             
-        Initial Value: self.total_population()                    
-        Do not overwrite this function       
-        """                                  
-        return self.state["susceptible"]              
-                                             
-    def dinfectious_dt(self):                       
-        return self.succumbing() - self.recovering()                           
+def _dinfectious_dt():
+    return succumbing()-recovering()
 
-    def infectious_init(self):                      
-        return 5                           
+def recovered():
+    return _state['recovered']
 
-    def infectious(self):                            
-        """ Stock: infectious =                      
-                 self.succumbing() - self.recovering()                          
-                                             
-        Initial Value: 5                    
-        Do not overwrite this function       
-        """                                  
-        return self.state["infectious"]              
-                                             
-    def drecovered_dt(self):                       
-        return self.recovering()                           
+def _recovered_init():
+    return 0
 
-    def recovered_init(self):                      
-        return 0                           
+def _drecovered_dt():
+    return recovering()
 
-    def recovered(self):                            
-        """ Stock: recovered =                      
-                 self.recovering()                          
-                                             
-        Initial Value: 0                    
-        Do not overwrite this function       
-        """                                  
-        return self.state["recovered"]              
-                                             
-    def initial_time(self):
-        """Type: Flow or Auxiliary
-        """
-        return 0 
+def recovering():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return infectious()/duration()
 
-    def final_time(self):
-        """Type: Flow or Auxiliary
-        """
-        return 100 
+def succumbing():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return susceptible()*infectious()/total_population()* contact_infectivity()
 
-    def time_step(self):
-        """Type: Flow or Auxiliary
-        """
-        return 0.03125 
+def susceptible():
+    return _state['susceptible']
 
+def _susceptible_init():
+    return total_population()
+
+def _dsusceptible_dt():
+    return -succumbing()
+
+def total_population():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 1000
+
+def final_time():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 100
+
+def initial_time():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 0
+
+def saveper():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return time_step()
+
+def time_step():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 0.03125
