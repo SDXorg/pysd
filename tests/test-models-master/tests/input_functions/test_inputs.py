@@ -1,67 +1,79 @@
-from __future__ import division                                 
-import numpy as np                                              
-from pysd import functions                                      
-from pysd import builder                                        
-                                                                
-class Components(builder.ComponentClass):                       
-                                                                
-    def inputa(self):
-        """Type: Flow or Auxiliary
-        """
-        return self.test_pulse()+self.test_pulse_train()+self.test_ramp()+self.test_step() 
 
-    def dstocka_dt(self):                       
-        return self.inputa()                           
+from __future__ import division
+import numpy as np
+from pysd import functions
 
-    def stocka_init(self):                      
-        return 0                           
+def time():
+    return _t
 
-    def stocka(self):                            
-        """ Stock: stocka =                      
-                 self.inputa()                          
-                                             
-        Initial Value: 0                    
-        Do not overwrite this function       
-        """                                  
-        return self.state["stocka"]              
-                                             
-    def test_pulse(self):
-        """Type: Flow or Auxiliary
-        """
-        return self.functions.pulse(3, 2 ) 
+def inputa():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return test_pulse()+test_pulse_train()+test_ramp()+test_step()
 
-    def test_pulse_train(self):
-        """Type: Flow or Auxiliary
-        """
-        return self.functions.pulse_train(7 , 1 , 2 , 12) 
+def stocka():
+    return _state['stocka']
 
-    def test_ramp(self):
-        """Type: Flow or Auxiliary
-        """
-        return self.functions.ramp(1, 14 , 17 ) 
+def _stocka_init():
+    return 0
 
-    def test_step(self):
-        """Type: Flow or Auxiliary
-        """
-        return self.functions.step(1, 1) 
+def _dstocka_dt():
+    return inputa()
 
-    def final_time(self):
-        """Type: Flow or Auxiliary
-        """
-        return 25 
+def test_pulse():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return self.functions.pulse(3, 2 )
 
-    def initial_time(self):
-        """Type: Flow or Auxiliary
-        """
-        return 0 
+def test_pulse_train():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return self.functions.pulse_train(7 , 1 , 2 , 12)
 
-    def saveper(self):
-        """Type: Flow or Auxiliary
-        """
-        return self.time_step() 
+def test_ramp():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return self.functions.ramp(1, 14 , 17 )
 
-    def time_step(self):
-        """Type: Flow or Auxiliary
-        """
-        return 0.0625 
+def test_step():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return self.functions.step(1, 1)
 
+def final_time():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 25
+
+def initial_time():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 0
+
+def saveper():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return time_step()
+
+def time_step():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 0.0625

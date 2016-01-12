@@ -3,6 +3,9 @@ from __future__ import division
 import numpy as np
 from pysd import functions
 
+def time():
+    return _t
+
 def characteristic_time():
     """
     Type: Flow or Auxiliary

@@ -1,52 +1,58 @@
-from __future__ import division                                 
-import numpy as np                                              
-from pysd import functions                                      
-from pysd import builder                                        
-                                                                
-class Components(builder.ComponentClass):                       
-                                                                
-    def flowa(self):
-        """Type: Flow or Auxiliary
-        """
-        return 0.1 
 
-    def dstocka_dt(self):                       
-        return self.flowa()                           
+from __future__ import division
+import numpy as np
+from pysd import functions
 
-    def stocka_init(self):                      
-        return -5                           
+def time():
+    return _t
 
-    def stocka(self):                            
-        """ Stock: stocka =                      
-                 self.flowa()                          
-                                             
-        Initial Value: -5                    
-        Do not overwrite this function       
-        """                                  
-        return self.state["stocka"]              
-                                             
-    def test_exp(self):
-        """Type: Flow or Auxiliary
-        """
-        return np.exp(self.stocka()) 
+def flowa():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 0.1
 
-    def final_time(self):
-        """Type: Flow or Auxiliary
-        """
-        return 100 
+def stocka():
+    return _state['stocka']
 
-    def initial_time(self):
-        """Type: Flow or Auxiliary
-        """
-        return 0 
+def _stocka_init():
+    return -5
 
-    def saveper(self):
-        """Type: Flow or Auxiliary
-        """
-        return self.time_step() 
+def _dstocka_dt():
+    return flowa()
 
-    def time_step(self):
-        """Type: Flow or Auxiliary
-        """
-        return 1 
+def test_exp():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return np.exp(stocka())
 
+def final_time():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 100
+
+def initial_time():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 0
+
+def saveper():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return time_step()
+
+def time_step():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 1

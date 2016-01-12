@@ -5,56 +5,46 @@ version 0.2.5
 James Houghton <james.p.houghton@gmail.com>
 '''
 
-#pysd specific imports
-import translators as _translators
-
-#third party imports
 import pandas as _pd
 import numpy as np
 import imp
 
-######################################################
-# Todo:
-# - Check that having the init be a function attribute is ok, because sometimes it will be a function,
-#       and we may not be ready to run the function at import time.
-# - passing optional arguments in the run command through to the integrator,
-#       to give a finer level of control to those who know what to do with them. (such as `tcrit`)
-# - add a logical way to run two or more models together, using the same integrator.
-# - import translators within read_XMILE and read_Vensim, so we don't load both if we dont need them
-
-######################################################
-
-
-######################################################
-# Issues:
-#
-# If two model components (A, and B) depend on the same third model component (C)
-# then C will get computed twice. If C itself is dependant on many upstream components (D, E, F...)
-# then these will also be computed multiple times.
-#
-# As the model class depends on its internal state for calculating
-# the values of each element, instead of passing that state
-# through the function execution network, we can't use caching
-# to prevent multiple execution, as we don't know when to update the cache
-# (maybe in the calling function?)
-#
-# Also, this multi-calculation bears the risk that if the state is
-# changed during an execution step, the resulting calculation will be
-# corrupted, and we won't have any indication of this corruption.
-######################################################
+# Todo: add a logical way to run two or more models together, using the same integrator.
+# Todo: add model element caching
 
 def read_xmile(xmile_file):
-    """ Construct a model object from `.xmile` file. """
-    py_model_file = _translators.translate_xmile(xmile_file)
+    """ Construct a model object from `.xmile` file.
+
+    Parameters
+    ----------
+    xmile_file : <string>
+        The relative path filename for a raw xmile file
+
+    Examples
+    --------
+    >>> model = read_vensim('Teacup.xmile')
+    """
+    from translators import translate_xmile
+    py_model_file = translate_xmile(xmile_file)
     model = load(py_model_file)
     model.__str__ = 'Import of ' + xmile_file
     return model
-read_xmile.__doc__ += _translators.translate_xmile.__doc__
 
 
 def read_vensim(mdl_file):
-    """ Construct a model from Vensim `.mdl` file. """
-    py_model_file = _translators.translate_vensim(mdl_file)
+    """ Construct a model from Vensim `.mdl` file.
+
+    Parameters
+    ----------
+    mdl_file : <string>
+        The relative path filename for a raw Vensim `.mdl` file
+
+    Examples
+    --------
+    >>> model = read_vensim('Teacup.mdl')
+    """
+    from translators import translate_vensim
+    py_model_file = translate_vensim(mdl_file)
     model = load(py_model_file)
     model.__str__ = 'Import of ' + mdl_file
     return model
@@ -71,7 +61,7 @@ def load(py_model_file):
 
     Examples
     --------
-    >>>model = load('Teacup.mdl')
+    >>> model = load('Teacup.py')
     """
     components = imp.load_source('modulename', py_model_file)
     # Todo: This is a messy way to find stocknames. Refactor.
@@ -259,10 +249,12 @@ class PySD(object):
     def set_state(self, t, state):
         """ Set the system state.
 
+        Parameters
+        ----------
         t : numeric
             The system time
 
-        state: dict
+        state : dict
             Idelly a complete dictionary of system state, but a partial
             state dictionary will work if you're confident that the remaining
             state elements are correct.
@@ -270,22 +262,26 @@ class PySD(object):
         self.components._t = t
         self.components._state.update(state)
 
-
     def set_initial_condition(self, initial_condition):
         """ Set the initial conditions of the integration.
-        There are several ways to do this:
 
-        * 'original'/'o' : Reset to the model-file specified initial condition.
-        * 'current'/'c' : Use the current state of the system to start
-          the next simulation. This includes the simulation time, so this
-          initial condition must be paired with new return timestamps
-        * (t, {state}) : Lets the user specify a starting time and list of stock values.
+        Parameters
+        ----------
+        initial_condition : <string> or <tuple>
+            Takes on one of the following sets of values:
+
+            * 'original'/'o' : Reset to the model-file specified initial condition.
+            * 'current'/'c' : Use the current state of the system to start
+              the next simulation. This includes the simulation time, so this
+              initial condition must be paired with new return timestamps
+            * (t, {state}) : Lets the user specify a starting time and list of stock values.
 
         >>> model.set_initial_condition('original')
         >>> model.set_initial_condition('current')
-        >>> model.set_initial_condition( (10,{teacup_temperature:50}) )
+        >>> model.set_initial_condition( (10,{'teacup_temperature':50}) )
 
-        See also:
+        See Also
+        --------
         pysd.set_state()
         """
 

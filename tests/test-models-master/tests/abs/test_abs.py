@@ -1,52 +1,58 @@
-from __future__ import division                                 
-import numpy as np                                              
-from pysd import functions                                      
-from pysd import builder                                        
-                                                                
-class Components(builder.ComponentClass):                       
-                                                                
-    def flowa(self):
-        """Type: Flow or Auxiliary
-        """
-        return 1 
 
-    def dstocka_dt(self):                       
-        return self.flowa()                           
+from __future__ import division
+import numpy as np
+from pysd import functions
 
-    def stocka_init(self):                      
-        return -10                           
+def time():
+    return _t
 
-    def stocka(self):                            
-        """ Stock: stocka =                      
-                 self.flowa()                          
-                                             
-        Initial Value: -10                    
-        Do not overwrite this function       
-        """                                  
-        return self.state["stocka"]              
-                                             
-    def test_abs(self):
-        """Type: Flow or Auxiliary
-        """
-        return abs(self.stocka()) 
+def flowa():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 1
 
-    def final_time(self):
-        """Type: Flow or Auxiliary
-        """
-        return 20 
+def stocka():
+    return _state['stocka']
 
-    def initial_time(self):
-        """Type: Flow or Auxiliary
-        """
-        return 0 
+def _stocka_init():
+    return -10
 
-    def saveper(self):
-        """Type: Flow or Auxiliary
-        """
-        return self.time_step() 
+def _dstocka_dt():
+    return flowa()
 
-    def time_step(self):
-        """Type: Flow or Auxiliary
-        """
-        return 1 
+def test_abs():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return abs(stocka())
 
+def final_time():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 20
+
+def initial_time():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 0
+
+def saveper():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return time_step()
+
+def time_step():
+    """
+    Type: Flow or Auxiliary
+        
+    """
+    return 1

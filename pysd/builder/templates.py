@@ -15,7 +15,11 @@ templates['new file'] = Template(
 from __future__ import division
 import numpy as np
 from pysd import functions
+
+def time():
+    return _t
 """)
+# todo: figure out a better place for the 'time' function to live
 
 
 # Stock initial conditions and derivative functions are given leading underscores not because
