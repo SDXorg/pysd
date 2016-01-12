@@ -9,17 +9,19 @@ James Houghton <james.p.houghton@gmail.com>
 import translators as _translators
 
 #third party imports
-from scipy.integrate import odeint as _odeint
 import pandas as _pd
 import numpy as np
 import imp
 
 ######################################################
 # Todo:
+# - Check that having the init be a function attribute is ok, because sometimes it will be a function,
+#       and we may not be ready to run the function at import time.
 # - passing optional arguments in the run command through to the integrator,
 #       to give a finer level of control to those who know what to do with them. (such as `tcrit`)
 # - add a logical way to run two or more models together, using the same integrator.
 # - import translators within read_XMILE and read_Vensim, so we don't load both if we dont need them
+
 ######################################################
 
 
@@ -49,19 +51,35 @@ def read_xmile(xmile_file):
     return model
 read_xmile.__doc__ += _translators.translate_xmile.__doc__
 
+
 def read_vensim(mdl_file):
     """ Construct a model from Vensim `.mdl` file. """
     py_model_file = _translators.translate_vensim(mdl_file)
     model = load(py_model_file)
     model.__str__ = 'Import of ' + mdl_file
     return model
-read_vensim.__doc__ += _translators.translate_vensim.__doc__
+
 
 def load(py_model_file):
-    """ Load a python-converted model file. """
-    module = imp.load_source('modulename', py_model_file)
-    component_class = module.Components
-    model = PySD(component_class)
+    """ Load a python-converted model file.
+
+    Parameters
+    ----------
+    py_model_file : <string>
+        Filename of a model which has already been converted into a
+         python format.
+
+    Examples
+    --------
+    >>>model = load('Teacup.mdl')
+    """
+    components = imp.load_source('modulename', py_model_file)
+    # Todo: This is a messy way to find stocknames. Refactor.
+    components._stocknames = [name[2:-3] for name in dir(components) if name.startswith('_') and name.endswith('_dt')]
+    components._dfuncs = {name: getattr(components, '_d%s_dt'%name) for name in components._stocknames}
+    funcnames = filter(lambda x: not x.startswith('_'), dir(components))
+    components._funcs = {name: getattr(components, name) for name in funcnames}
+    model = PySD(components)
     model.__str__ = 'Import of ' + py_model_file
     return model
 
@@ -75,9 +93,9 @@ class PySD(object):
         The import functions pull models and create this class.
     """
 
-    def __init__(self, component_class):
+    def __init__(self, components):
         """ Construct a PySD object built around the component class """
-        self.components = component_class()
+        self.components = components
         self.record = []
 
     def __str__(self):
@@ -92,7 +110,6 @@ class PySD(object):
 
         Parameters
         ----------
-
         params : dictionary
             Keys are strings of model component names.
             Values are numeric or pandas Series.
@@ -142,55 +159,71 @@ class PySD(object):
 
         """
 
-        #if not self.components._stocknames:
-            #raise RuntimeError('Cannnot integrate no-stock models.')
-
         if params:
             self.set_components(params)
 
-        if initial_condition != 'current':
-            self.set_initial_condition(initial_condition)
+        self.set_initial_condition(initial_condition)
 
         tseries = self._build_timeseries(return_timestamps)
 
         # the odeint expects the first timestamp in the tseries to be the initial condition,
         # so we may need to add the t0 if it is not present in the tseries array
-        addtflag = tseries[0] != self.components.t
+        # Todo: with the euler integrator, this may no longer be the case. Reevaluate.
+        addtflag = tseries[0] != self.components._t
         if addtflag:
-            tseries = np.insert(tseries, 0, self.components.t)
+            tseries = np.insert(tseries, 0, self.components._t)
 
         if self.components._stocknames:
-            res = _odeint(func=self.components.d_dt,
-                          y0=self.components.state_vector(),
-                          t=tseries,
-                          **intg_kwargs)
-                          #hmax=self.components.time_step())
+            if not return_columns:
+                return_columns = self.components._stocknames
 
-            state_df = _pd.DataFrame(data=res,
+            res = self._integrate(self.components._dfuncs, tseries, return_columns)
+
+            return_df = _pd.DataFrame(data=res,
                                      index=tseries,
-                                     columns=self.components._stocknames)
-        else:
-            state_df = _pd.DataFrame(index=tseries, data=1, columns=['dummy'])
+                                     columns=return_columns)
 
-        return_df = self.extend_dataframe(state_df, return_columns) if return_columns else state_df
+        else:
+            outdict={}
+            for key in return_columns:
+                outdict[key] = self.components._funcs[key]()
+            return_df = _pd.DataFrame(index=tseries, data=outdict)
 
         if addtflag:
             return_df.drop(return_df.index[0], inplace=True)
 
         if collect:
-            self.record.append(return_df) #we could just record the state, and expand it later...
-
-        # The integrator takes us past the last point in the tseries.
-        # Go back to it, in order to maintain the state at a predictable location.
-        # This may take up more time than we're willing to spend...
-        if self.components.t != tseries[-1]:
-            self.set_state(tseries[-1], dict(state_df.iloc[-1]))
+            self.record.append(return_df)  # we could just record the state, and expand it later...
 
         return return_df
+
+    # We give the state and the time parameters leading underscores so that
+    # if there are variables in the model named 't' or 'state' there are no
+    # conflicts
+
+    def reset_state(self):
+        """Sets the model state to the state described in the model file. """
+        self.components._t = self.components.initial_time()  # set the initial time
+        self.components._state = dict()
+        retry_flag = False
+        for key in self.components._stocknames:
+            # We have to do a loop here because there are cases where the initialization will
+            # call a function, and that function may not have its own initial conditions defined
+            # just yet. There is the potential that if the model has a reference loop,
+            # this will become an infinite loop.
+            # Todo: make this more robust to infinite looping
+            try:
+                init_func = getattr(self.components, '_%s_init'%key)
+                self.components._state[key] = init_func()
+            except TypeError:
+                retry_flag = True
+        if retry_flag:
+            self.reset_state()
 
 
     def get_record(self):
         """ Return the recorded model information.
+        Returns everything as a big long dataframe.
 
         >>> model.get_record()
         """
@@ -203,7 +236,6 @@ class PySD(object):
         """
         self.record = []
 
-
     def set_components(self, params):
         """ Set the value of exogenous model elements.
         Element values can be passed as keyword=value pairs in the function call.
@@ -213,42 +245,16 @@ class PySD(object):
         Examples
         --------
         >>> br = pandas.Series(index=range(30), values=np.sin(range(30))
-        >>> set_components(birth_rate=br)
-        >>> set_components(birth_rate=10)
+        >>> model.set_components(birth_rate=br)
+        >>> model.set_components(birth_rate=10)
 
         """
-        updates_dict = {}
         for key, value in params.iteritems():
             if isinstance(value, _pd.Series):
-                updates_dict[key] = self._timeseries_component(value)
-            else: #could check here for valid value...
-                updates_dict[key] = self._constant_component(value)
-
-        self.components.__dict__.update(updates_dict)
-
-    def extend_dataframe(self, state_df, return_columns):
-        """ Calculates model values at given system states
-        This is primarily an internal method used by the run function
-        """
-        #there may be a better way to use the integrator that lets us report
-        #more values than just the stocks. In the meantime, we have to go
-        #through the returned values again, set up the model, and measure them.
-
-        def get_values(row):
-            """ Helper method that lets us use 'apply' below """
-            t = row.name
-            state = dict(row[self.components.state.keys()])
-            self.set_state(t, state)
-
-            return_vals = {}
-            for column in return_columns: #there must be a faster way to do this...
-                func = getattr(self.components, column)
-                return_vals[column] = func()
-
-            return _pd.Series(return_vals)
-
-        return state_df.apply(get_values, axis=1)
-
+                new_function = self._timeseries_component(value)
+            else:  # Todo: check here for valid value...
+                new_function = self._constant_component(value)
+            setattr(self.components, key, new_function)
 
     def set_state(self, t, state):
         """ Set the system state.
@@ -261,8 +267,8 @@ class PySD(object):
             state dictionary will work if you're confident that the remaining
             state elements are correct.
         """
-        self.components.t = t
-        self.components.state.update(state)
+        self.components._t = t
+        self.components._state.update(state)
 
 
     def set_initial_condition(self, initial_condition):
@@ -284,11 +290,11 @@ class PySD(object):
         """
 
         if isinstance(initial_condition, tuple):
-            #we should probably check the values more than just seeing if they are a tuple.
+            # Todo: check the values more than just seeing if they are a tuple.
             self.set_state(*initial_condition)
         elif isinstance(initial_condition, str):
             if initial_condition.lower() in ['original', 'o']:
-                self.components.reset_state()
+                self.reset_state()
             elif initial_condition.lower() in ['current', 'c']:
                 pass
             else:
@@ -298,9 +304,11 @@ class PySD(object):
         else:
             raise TypeError('Check documentation for valid entries')
 
-
     def _build_timeseries(self, return_timestamps):
         """ Build up array of timestamps """
+
+        # Todo: rework this for the euler integrator, to be the dt series plus the return timestamps
+        # Todo: maybe cache the result of this function?
         if return_timestamps == []:
             tseries = np.arange(self.components.initial_time(),
                                 self.components.final_time(),
@@ -311,15 +319,28 @@ class PySD(object):
             raise TypeError('`return_timestamps` expects a list, array, or numeric value')
         return tseries
 
-
-    #these could be better off in a model creation class
     def _timeseries_component(self, series):
         """ Internal function for creating a timeseries model element """
-        return lambda: np.interp(self.components.t, series.index, series.values)
+        return lambda: np.interp(self.components._t, series.index, series.values)
 
     def _constant_component(self, value):
         """ Internal function for creating a constant model element """
         return lambda: value
 
+    def _step(self, ddt, state, dt):
+        outdict = {}
+        for key in ddt:
+            outdict[key] = ddt[key]()*dt + state[key]
+        return outdict
 
+    def _integrate(self, ddt, timesteps, return_elements):
+        outputs = range(len(timesteps))
+        for i, t2 in enumerate(timesteps):
+            self.components._state = self._step(ddt, self.components._state, t2-self.components._t)
+            self.components._t = t2
+            outdict = {}
+            for key in return_elements:
+                outdict[key] = self.components._funcs[key]()
+            outputs[i] = outdict
 
+        return outputs

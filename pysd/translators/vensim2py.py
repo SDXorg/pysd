@@ -196,7 +196,7 @@ file_grammar = (
 class TextParser(NodeVisitor):
     def __init__(self, grammar, infilename):
         self.filename = infilename[:-4]+'.py'
-        builder.new_model(self.filename)
+        self.builder = builder.Builder(self.filename)
         self.grammar = parsimonious.Grammar(grammar)
         self.parse(infilename)
 
@@ -224,18 +224,18 @@ class TextParser(NodeVisitor):
     def visit_Stock(self, n, (Identifier, _1, eq, _2, integ, _3,
                               lparen, _4, NL1, _5, expression, _6,
                               comma, _7, NL2, _8, initial_condition, _9, rparen)):
-        builder.add_stock(self.filename, Identifier, expression, initial_condition)
+        self.builder.add_stock(Identifier, expression, initial_condition)
         return Identifier
 
 
     def visit_Flaux(self, n, (Identifier, _1, eq, SNL, expression)):
-        builder.add_flaux(self.filename, Identifier, expression)
+        self.builder.add_flaux(Identifier, expression)
         return Identifier
 
 
     def visit_Lookup(self, n, (Identifier, _1, lparen, _2, NL1, _3, Range,
                                _4, CopairList, _5, rparen)):
-        builder.add_lookup(self.filename, Identifier, Range, CopairList)
+        self.builder.add_lookup(Identifier, Range, CopairList)
         return Identifier
 
     def visit_Unit(self, n, vc):
@@ -248,26 +248,26 @@ class TextParser(NodeVisitor):
     def visit_ConCall(self, n, (ConKeyword, _1, lparen, _2, args, _4, rparen)):
         pass
         if ConKeyword == 'DELAY1': #DELAY3(Inflow, Delay)
-            return builder.add_n_delay(self.filename, args[0], args[1], str(0), 1)
+            return self.builder.add_n_delay(args[0], args[1], str(0), 1)
         elif ConKeyword == 'DELAY1I':
             pass
         elif ConKeyword == 'DELAY3':
-            return builder.add_n_delay(self.filename, args[0], args[1], str(0), 3)
+            return self.builder.add_n_delay(args[0], args[1], str(0), 3)
         elif ConKeyword == 'DELAY N':#DELAY N(Inflow, Delay, init, order)
-            return builder.add_n_delay(self.filename, args[0], args[1], args[2], args[3])
+            return self.builder.add_n_delay(args[0], args[1], args[2], args[3])
         elif ConKeyword == 'SMOOTH':
             pass
         elif ConKeyword == 'SMOOTH3':#SMOOTH3(Input,Adjustment Time)
-            return builder.add_n_delay(self.filename, args[0], args[1], str(0), 3)
+            return self.builder.add_n_delay(args[0], args[1], str(0), 3)
         elif ConKeyword == 'SMOOTH3I': #SMOOTH3I( _in_ , _stime_ , _inival_ )
-            return builder.add_n_smooth(self.filename, args[0], args[1], args[2], 3)
+            return self.builder.add_n_smooth(args[0], args[1], args[2], 3)
         elif ConKeyword == 'SMOOTHI':
             pass
         elif ConKeyword == 'SMOOTH N':
             pass
 
         elif ConKeyword == 'INITIAL':
-            return builder.add_initial(self.filename, args[0])
+            return self.builder.add_initial(args[0])
 
         #need to return whatever you call to get the final stage in the construction
 
@@ -276,7 +276,7 @@ class TextParser(NodeVisitor):
         return dictionary[n.text.upper()]
 
     def visit_Reference(self, n, (Identifier, _)):
-        return 'self.'+Identifier+'()'
+        return Identifier+'()'
 
     def visit_Identifier(self, n, vc):
         string = n.text
@@ -286,7 +286,7 @@ class TextParser(NodeVisitor):
         return Translated_Keyword+'('+', '.join(args)+')'
 
     def visit_LUCall(self, n, (Identifier, _1, lparen, _2, Condition, _3,  rparen)):
-        return 'self.'+Identifier+'('+Condition+')'
+        return Identifier+'('+Condition+')'
 
     def visit_Copair(self, n, (lparen, _1, xcoord, _2, comma, _3, ycoord, _, rparen)):
         return (float(xcoord), float(ycoord))
@@ -347,6 +347,7 @@ def translate_vensim(mdl_file):
     Supported functionality:\n\n"""
     parser = TextParser(file_grammar, mdl_file)
     #module = imp.load_source('modulename', parser.filename)
+    parser.builder.write()
 
     return parser.filename #module.Components
 
