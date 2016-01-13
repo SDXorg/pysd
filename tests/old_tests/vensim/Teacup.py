@@ -8,24 +8,29 @@ def time():
 
 def characteristic_time():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 10
+
+    output = 10
+	
+    return output
 
 def heat_loss_to_room():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return (teacup_temperature()- room_temperature()) / characteristic_time()
+
+    output = (teacup_temperature()- room_temperature()) / characteristic_time()
+    return output
 
 def room_temperature():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 70
+
+    output = 70
+	
+    return output
 
 def teacup_temperature():
     return _state['teacup_temperature']
@@ -38,28 +43,35 @@ def _dteacup_temperature_dt():
 
 def final_time():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 30
+
+    output = 30
+	
+    return output
 
 def initial_time():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 0
+
+    output = 0
+	
+    return output
 
 def saveper():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return time_step()
+
+    output = time_step()
+    return output
 
 def time_step():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 0.125
+
+    output = 0.125
+	
+    return output

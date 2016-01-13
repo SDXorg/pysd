@@ -8,10 +8,12 @@ def time():
 
 def inputa():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return test_pulse()+test_pulse_train()+test_ramp()+test_step()
+
+    output = test_pulse()+test_pulse_train()+test_ramp()+test_step()
+
+    return output
 
 def stocka():
     return _state['stocka']
@@ -24,56 +26,79 @@ def _dstocka_dt():
 
 def test_pulse():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return self.functions.pulse(3, 2 )
+
+    output = functions.pulse(3, 2 )
+	
+
+    return output
 
 def test_pulse_train():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return self.functions.pulse_train(7 , 1 , 2 , 12)
+
+    output = functions.pulse_train(7 , 1 , 2 , 12)
+	
+
+    return output
 
 def test_ramp():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return self.functions.ramp(1, 14 , 17 )
+
+    output = functions.ramp(1, 14 , 17 )
+	
+
+    return output
 
 def test_step():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return self.functions.step(1, 1)
+
+    output = functions.step(1, 1)
+	
+
+    return output
 
 def final_time():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 25
+
+    output = 25
+	
+
+    return output
 
 def initial_time():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 0
+
+    output = 0
+	
+
+    return output
 
 def saveper():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return time_step()
+
+    output = time_step()
+
+    return output
 
 def time_step():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 0.0625
+
+    output = 0.0625
+	
+
+    return output

@@ -33,16 +33,23 @@ fail_count = 0
 for modelfile in testfiles:
     #print modelfile
     directory = os.path.dirname(modelfile)
+    status_str = ''
     try:
         if modelfile[-3:] == "mdl":
             model = pysd.read_vensim(modelfile)
         elif modelfile[-5:] == "xmile":
             model = pysd.read_xmile(modelfile)
-        
+
+        status_str += 'Loaded Model, '
+
         canon = pd.read_csv(directory+'/output.csv', index_col='Time')
         canon.columns = [pysd.builder.make_python_identifier(x) for x in canon.columns.values]
-        
+
+        status_str += 'Loaded Output, '
+
         output = model.run(return_columns=list(canon.columns.values))
+
+        status_str += 'Ran Model'
         
         assert (canon-output).max().max() < 1
         
@@ -70,8 +77,10 @@ for modelfile in testfiles:
         err_str += '='*60 + '\n'
         err_str += 'Test Failure of: %s \n'%modelfile
         err_str += '-'*60 + '\n'
-        err_str += str(e.args[0])
+        #err_str += str(e.args[0])
         err_str += '\n\n'
+
+        fail_count += 1
         
     except IOError as e:
         print 'E',
@@ -102,6 +111,7 @@ for modelfile in testfiles:
         err_str += '='*60 + '\n'
         err_str += 'Unknown issue with: %s \n'%modelfile
         err_str += '-'*60 + '\n'
+        err_str += status_str + '\n'
         err_str += str(e.args[0])
         err_str += '\n\n'
 

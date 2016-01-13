@@ -6,31 +6,32 @@ from pysd import functions
 def time():
     return _t
 
-def flowa():
+def inflow_a():
     """
     
     """
 
-    output = stocka()
+    output = np.ndarray((3))
+    output[:] = rate_a()
 
     return output
 
-def stocka():
-    return _state['stocka']
+def stock_a():
+    return _state['stock_a']
 
-def _stocka_init():
-    return 0.0001
+def _stock_a_init():
+    return 0*np.ones((3))
 
-def _dstocka_dt():
-    return flowa()
+def _dstock_a_dt():
+    return inflow_a()
 
-def test_ln():
+def rate_a():
     """
     
     """
 
-    output = np.log(stocka())
-	
+    output = np.ndarray((3))
+    output[:] = 0.01, 0.02, 0.03
 
     return output
 
@@ -39,7 +40,7 @@ def final_time():
     
     """
 
-    output = 20
+    output = 100
 	
 
     return output

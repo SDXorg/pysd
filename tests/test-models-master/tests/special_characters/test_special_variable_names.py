@@ -8,52 +8,70 @@ def time():
 
 def normal_flow():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return import_element()
+
+    output = import_element()
+
+    return output
 
 def import_element():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 10
+
+    output = 10
+	
+
+    return output
 
 def aux_with_pec_characters():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 21
+
+    output = 21
+	
+
+    return output
 
 def aux_with_entirely_superfuluous_parenthetical_comment():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 90
+
+    output = 90
+	
+
+    return output
 
 def flow_w_division_lists_and_initialconstruction_functions():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return aux_with_pec_characters()
+
+    output = aux_with_pec_characters()
+
+    return output
 
 def flow_with_stepfunction_call():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return aux_with_entirely_superfuluous_parenthetical_comment()
+
+    output = aux_with_entirely_superfuluous_parenthetical_comment()
+
+    return output
 
 def flowwith_a_fewarithmetic__characters():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 4
+
+    output = 4
+	
+
+    return output
 
 def hyphenatedstockname():
     return _state['hyphenatedstockname']
@@ -75,28 +93,39 @@ def _dstock_with_n_newline_character_dt():
 
 def final_time():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 100
+
+    output = 100
+	
+
+    return output
 
 def initial_time():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 0
+
+    output = 0
+	
+
+    return output
 
 def saveper():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return time_step()
+
+    output = time_step()
+
+    return output
 
 def time_step():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 1
+
+    output = 1
+	
+
+    return output

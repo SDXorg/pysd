@@ -8,35 +8,49 @@ def time():
 
 def output():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return min(time(), 5)
+
+    output = np.minimum(time(), 5)
+	
+
+    return output
 
 def final_time():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 10
+
+    output = 10
+	
+
+    return output
 
 def initial_time():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 0
+
+    output = 0
+	
+
+    return output
 
 def saveper():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return time_step()
+
+    output = time_step()
+
+    return output
 
 def time_step():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 1
+
+    output = 1
+	
+
+    return output

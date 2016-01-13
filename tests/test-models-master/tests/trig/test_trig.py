@@ -8,10 +8,13 @@ def time():
 
 def inflowa():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 1
+
+    output = 1
+	
+
+    return output
 
 def stocka():
     return _state['stocka']
@@ -24,70 +27,99 @@ def _dstocka_dt():
 
 def test_arccos():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return np.arccos(test_cos())
+
+    output = np.arccos(test_cos())
+	
+
+    return output
 
 def test_arcsin():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return np.arcsin(test_sin())
+
+    output = np.arcsin(test_sin())
+	
+
+    return output
 
 def test_arctan():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return np.arctan(test_tan())
+
+    output = np.arctan(test_tan())
+	
+
+    return output
 
 def test_cos():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return np.cos(stocka())
+
+    output = np.cos(stocka())
+	
+
+    return output
 
 def test_sin():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return np.sin(stocka())
+
+    output = np.sin(stocka())
+	
+
+    return output
 
 def test_tan():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return np.tan(stocka())
+
+    output = np.tan(stocka())
+	
+
+    return output
 
 def final_time():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 20
+
+    output = 20
+	
+
+    return output
 
 def initial_time():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 0
+
+    output = 0
+	
+
+    return output
 
 def saveper():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return time_step()
+
+    output = time_step()
+
+    return output
 
 def time_step():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 0.125
+
+    output = 0.125
+	
+
+    return output

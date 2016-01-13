@@ -71,4 +71,51 @@ class Functions(object):
     def lookup(self, x, xs, ys):
         """ Provides the working mechanism for lookup functions the builder builds """
         return np.interp(x, xs, ys)
-
+#todo: fix this file...
+# def if_then_else(self,condition,val_if_true,val_if_false):
+#     return np.where(condition,val_if_true,val_if_false)
+#
+# def pos(self,number):
+#     return np.maximum(number, 0.000001)
+#
+# def tuner(self,number,factor):
+#     if factor>1:
+#         if number==0:
+#             return 0
+#         else:
+#             return max(number,0.000001)**factor
+#     else:
+#         return (factor*number)+(1-factor)
+#
+# def ramp(self, slope, start, finish):
+#     """ Implements vensim's RAMP function """
+#     t = self.components.t
+#     try:
+#         len(start)
+#     except:
+#         if t<start:
+#             return 0
+#         elif t>finish:
+#             return slope * (start-finish)
+#         else:
+#             return slope * (t-start)
+#     else:
+#         returnarray=np.ndarray(len(start))
+#         for i in range(len(start)):
+#             if np.less(t,start)[i]:
+#                 returnarray[i]=0
+#             elif np.greater(t,finish)[i]:
+#                 try:
+#                     len(slope)
+#                 except:
+#                     returnarray[i]=slope*(start[i]-finish[i])
+#                 else:
+#                     returnarray[i]=slope[i]*(start[i]-finish[i])
+#             else:
+#                 try:
+#                     len(slope)
+#                 except:
+#                     returnarray[i]=slope*(t-start[i])
+#                 else:
+#                     returnarray[i]=slope[i]*(t-start[i])
+#         return returnarray

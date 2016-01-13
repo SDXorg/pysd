@@ -6,42 +6,44 @@ from pysd import functions
 def time():
     return _t
 
-def flowa():
+def inflow_a():
     """
     
     """
 
-    output = 0.1
-	
+    output = np.ndarray((3,2,2))
+    output[:,:,:] = rate_a()
 
     return output
 
-def stocka():
-    return _state['stocka']
+def stock_a():
+    return _state['stock_a']
 
-def _stocka_init():
-    return -5
+def _stock_a_init():
+    return *np.ones(())
 
-def _dstocka_dt():
-    return flowa()
+def _dstock_a_dt():
+    return inflow_a()
 
-def test_integer():
+def initial_values():
     """
     
     """
 
-    output = int(stocka())
-	
+    output = np.ndarray((3,2,2))
+    output[:,:,0] = [[u'1, 2; 3, 4; 5, 6; ']]
+    output[:,:,1] = [[u'2, 4; 5, 3; 1, 4;\n\t']]
 
     return output
 
-def test_modulo():
+def rate_a():
     """
     
     """
 
-    output = np.mod(stocka(), 3 )
-	
+    output = np.ndarray((3,2,2))
+    output[:,:,0] = [[u'0.01, 0.02; 0.03, 0.04; 0.05, 0.06; ']]
+    output[:,:,1] = [[u'0.02, 0.05; 0.02, 0.04; 0.05, 0.06;\n\t']]
 
     return output
 

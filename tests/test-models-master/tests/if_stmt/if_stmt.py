@@ -8,35 +8,49 @@ def time():
 
 def output():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return self.functions.if_then_else(time()>5, 1, 0)
+
+    output = functions.if_then_else(time()>5, 1, 0)
+	
+
+    return output
 
 def final_time():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 12
+
+    output = 12
+	
+
+    return output
 
 def initial_time():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 0
+
+    output = 0
+	
+
+    return output
 
 def saveper():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return time_step()
+
+    output = time_step()
+
+    return output
 
 def time_step():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 0.25
+
+    output = 0.25
+	
+
+    return output

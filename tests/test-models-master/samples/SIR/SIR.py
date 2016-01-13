@@ -8,17 +8,23 @@ def time():
 
 def contact_infectivity():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 0.3
+
+    output = 0.3
+	
+
+    return output
 
 def duration():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 5
+
+    output = 5
+	
+
+    return output
 
 def infectious():
     return _state['infectious']
@@ -40,17 +46,21 @@ def _drecovered_dt():
 
 def recovering():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return infectious()/duration()
+
+    output = infectious()/duration()
+
+    return output
 
 def succumbing():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return susceptible()*infectious()/total_population()* contact_infectivity()
+
+    output = susceptible()*infectious()/total_population()* contact_infectivity()
+
+    return output
 
 def susceptible():
     return _state['susceptible']
@@ -63,35 +73,49 @@ def _dsusceptible_dt():
 
 def total_population():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 1000
+
+    output = 1000
+	
+
+    return output
 
 def final_time():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 100
+
+    output = 100
+	
+
+    return output
 
 def initial_time():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 0
+
+    output = 0
+	
+
+    return output
 
 def saveper():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return time_step()
+
+    output = time_step()
+
+    return output
 
 def time_step():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 0.03125
+
+    output = 0.03125
+	
+
+    return output

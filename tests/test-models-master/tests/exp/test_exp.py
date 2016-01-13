@@ -8,10 +8,13 @@ def time():
 
 def flowa():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 0.1
+
+    output = 0.1
+	
+
+    return output
 
 def stocka():
     return _state['stocka']
@@ -24,35 +27,49 @@ def _dstocka_dt():
 
 def test_exp():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return np.exp(stocka())
+
+    output = np.exp(stocka())
+	
+
+    return output
 
 def final_time():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 100
+
+    output = 100
+	
+
+    return output
 
 def initial_time():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 0
+
+    output = 0
+	
+
+    return output
 
 def saveper():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return time_step()
+
+    output = time_step()
+
+    return output
 
 def time_step():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 1
+
+    output = 1
+	
+
+    return output

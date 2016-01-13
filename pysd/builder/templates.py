@@ -51,7 +51,9 @@ def ${identifier}():
     \"""
     ${docstring}
     \"""
-    return ${expression}
+
+    ${expression}
+    return output
 """)
 
 

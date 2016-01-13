@@ -6,33 +6,46 @@ from pysd import functions
 def time():
     return _t
 
-def associativity():
+def initial_values():
     """
     
     """
 
-    output = -2**2
-	
+    output = np.ndarray((3,2))
+    output[:,:] = np.array([[1, 2],
+       [3, 4],
+       [5, 6]])
 
     return output
 
-def output():
+def stock_a():
+    return _state['stock_a']
+
+def _stock_a_init():
+    return initial_values()*np.ones((3,2))
+
+def _dstock_a_dt():
+    return inflow_a()
+
+def inflow_a():
     """
     
     """
 
-    output = time()**2
-	
+    output = np.ndarray((3,2))
+    output[:,:] = rate_a()
 
     return output
 
-def test():
+def rate_a():
     """
     
     """
 
-    output = functions.if_then_else(associativity()==4, 1, 0)
-	
+    output = np.ndarray((3,2))
+    output[:,:] = np.array([[ 0.01,  0.02],
+       [ 0.03,  0.04],
+       [ 0.05,  0.06]])
 
     return output
 
@@ -41,7 +54,7 @@ def final_time():
     
     """
 
-    output = 4
+    output = 100
 	
 
     return output

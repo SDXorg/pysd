@@ -8,63 +8,88 @@ def time():
 
 def equality():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return self.functions.if_then_else(quotient()==quotient_target(), 1 , 0 )
+
+    output = functions.if_then_else(quotient()==quotient_target(), 1 , 0 )
+	
+
+    return output
 
 def denominator():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 4
+
+    output = 4
+	
+
+    return output
 
 def numerator():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 3
+
+    output = 3
+	
+
+    return output
 
 def quotient():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return numerator()/denominator()
+
+    output = numerator()/denominator()
+
+    return output
 
 def quotient_target():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 0.75
+
+    output = 0.75
+	
+
+    return output
 
 def final_time():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 1
+
+    output = 1
+	
+
+    return output
 
 def initial_time():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 0
+
+    output = 0
+	
+
+    return output
 
 def saveper():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return time_step()
+
+    output = time_step()
+
+    return output
 
 def time_step():
     """
-    Type: Flow or Auxiliary
-        
+    
     """
-    return 1
+
+    output = 1
+	
+
+    return output

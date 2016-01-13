@@ -20,22 +20,35 @@ debug models.
 import re
 import keyword
 from templates import templates
+import numpy as np
 
 
 class Builder(object):
-    def __init__(self, outfilename):
+    def __init__(self, outfilename, dictofsubs={}):
         """ The builder class
 
         Parameters
         ----------
         outfilename: <string> valid python filename
             including '.py'
+
+
+        dictofsubs: dictionary
+            numpy indices of translated subscript names and elements.
+            {'apples':':', 'a1':0, 'a2':1,
+            'pears':':', 'p1':0, 'p2':1}
+
         """
+        # We specify the dictofsubs as a flat dictionary, because it is
+        # cleaner and faster.
+
         self.filename = outfilename
         self.stocklist = []
         self.preamble = []
         self.body = []
         self.preamble.append(templates['new file'].substitute())
+
+        self.dictofsubs = dictofsubs
               
     def write(self):
         """ Writes out the model file """
@@ -43,7 +56,7 @@ class Builder(object):
             [outfile.write(element) for element in self.preamble]
             [outfile.write(element) for element in self.body]
 
-    def add_stock(self, identifier, expression, initial_condition):
+    def add_stock(self, identifier, sub, expression, initial_condition):
         """Adds a stock to the python model file based upon the interpreted expressions
         for the initial condition.
 
@@ -54,21 +67,31 @@ class Builder(object):
             something that python can use as a function name.
 
         expression: <string>
-            Note that these expressions will be added as a function body within the model class.
-            They need to be written with with appropriate syntax, ie:
-            `self.functioncall() * self.otherfunctioncall()`
+            This contains reference to all of the flows that
 
         initial_condition: <string>
             An expression that defines the value that the stock should take on when the model
             is initialized. This may be a constant, or a call to other model elements.
-
+        subs is a string unlike in flaux where it's a list of strings. Because for now, a stock is only declared once.
         """
+
+        #todo: consider the case where different flows work over different subscripts
+        #todo: build a test case to test the above
+        initial_condition = initial_condition.replace('\n','').replace('\t','') #todo: this is kluge
+        if sub:
+            size = getnumofelements(sub, self.dictofsubs)
+            if re.search(';',initial_condition): #if the elements passed are an array of constants, need to format for numpy
+                initial_condition = 'np.'+ np.array(np.mat(initial_condition.strip(';'))).__repr__()
+
+            #todo: I don't like the fact that the array is applied even when it isnt needed - but thats for another day
+            initial_condition += '*np.ones((%s))'%(','.join(map(str,size)))
+
         self.body.append(templates['stock'].substitute(identifier=identifier,
                                                        expression=expression,
                                                        initial_condition=initial_condition))
         self.stocklist.append(identifier)
 
-    def add_flaux(self, identifier, expression, doc=''):
+    def add_flaux(self, identifier, sub, expression, doc=''):
         """Adds a flow or auxiliary element to the model.
 
         Parameters
@@ -77,17 +100,61 @@ class Builder(object):
             Our translators are responsible for translating the model identifiers into
             something that python can use as a function name.
 
-        expression: <string>
-            Note that these expressions will be added as a function body within the model class.
-            They need to be written with with appropriate syntax, ie:
-            `self.functioncall() * self.otherfunctioncall()`
-        """
-        docstring = ('Type: Flow or Auxiliary\n        '+
-                     '\n        '.join(doc.split('\n')))
+        expression: list of strings
+            Each element in the array is the equation that will be evaluated to fill
+            the return array at the coordinates listed at corresponding locations
+            in the `sub` dictionary
 
-        self.body.append(templates['flaux'].substitute(identifier=identifier,
-                                                       expression=expression,
-                                                       docstring=docstring))
+        sub: list of strings
+            List of strings of subscript indices that correspond to the
+            list of expressions
+            ['a1,pears', 'a2,pears']
+
+        doc: <string>
+            The documentation string of the model
+
+        Example
+        -------
+        assume we have some subscripts
+            apples = [a1, a2, a3]
+            pears = [p1, p2, p3]
+
+        now sub list a list:
+        sub = ['a1,pears', 'a2,pears']
+
+
+        """
+        # todo: evaluate if we should instead use syntax [['a1','pears'],['a2','pears']]
+        # todo: build a test case to test
+
+        # docstring = ('Type: Flow or Auxiliary\n        '+
+        #              '\n        '.join(doc.split('\n')))
+        docstring = ''
+
+
+        # first work out the size of the array that the function will return
+        if sub[0]!='': #todo: consider factoring this out if it is useful for the multiple flows
+            #todo: why does the no-sub condition give [''] as the argument?
+            size = getnumofelements(sub[0], self.dictofsubs)
+            funcset = 'output = np.ndarray((%s))\n'%','.join(map(str,size)) #lines which encode the expressions for partially defined subscript pieces
+            for expr, subi in zip(expression, sub):
+                expr = expr.replace('\n','').replace('\t','')
+                indices = ','.join(map(str,getelempos(subi,self.dictofsubs)))
+                if re.search(';',expr): #if the elements passed are an array of constants, need to format for numpy
+                    expr = 'np.'+np.array(np.mat(expr.strip(';'))).__repr__()
+                    #todo: this might be an interesting way to identify and pull out of the function array constants
+                funcset += '    output[%s] = %s\n'%(indices, expr)
+        else:
+            funcset = 'output = %s\n'%expression[0]
+
+
+        funcstr = templates['flaux'].substitute(identifier=identifier,
+                                                       expression=funcset,
+                                                       docstring=docstring)
+        self.body.append(funcstr)
+
+
+
 
     def add_lookup(self, identifier, valid_range, copair_list):
         """Constructs a function that implements a lookup.
@@ -117,6 +184,189 @@ class Builder(object):
         self.body.append(templates['lookup'].substitute(identifier=identifier,
                                                         xs_str=xs_str,
                                                         ys_str=ys_str))
+
+
+# these are module functions so that we can access them from the visitor
+
+def getelempos(element, dictofsubs):
+    position=[]
+    elements=element.replace('!','').replace(' ', '').split(',')
+    for element in elements:
+        if element in dictofsubs.keys():
+            position.append(':')
+        else:
+            for d in dictofsubs.itervalues():
+                try:
+                    position.append(d[element])
+                except: pass
+
+    return tuple(position)
+
+def getnumofelements(element, dictofsubs):
+    """
+
+    Parameters
+    ----------
+    element <string of subscripts>
+
+    returns a list of the sizes of the dimensions. A 4x3x6 array would return
+    [4,3,6]
+
+    """
+    # todo: make this elementstr or something
+    position=[]
+    elements=element.replace('!','').replace('','').split(',')
+    for element in elements:
+        if element in dictofsubs.keys():
+            position.append(len(dictofsubs[element]))
+        else:
+            for d in dictofsubs.itervalues():
+                try:
+                    (d[element])
+                except: pass
+                else:
+                    position.append(len(d))
+
+    return position
+
+
+
+
+
+
+def add_lookup(filename, identifier, valid_range, copair_list):
+    # in the future, we may want to check in bounds for the range. for now, lazy...
+    xs, ys = zip(*copair_list)
+    xs_str = str(list(xs))
+    ys_str = str(list(ys))
+
+    #warning: this may create a class attribute of the function for the lookups, when what we want
+    # is an instance attribute. Not sure...
+
+    funcstr = ('    def %s(self, x):                                      \n'%identifier +
+               '        return self.functions.lookup(x,                   \n' +
+               '                                     self.%s.xs,          \n'%identifier +
+               '                                     self.%s.ys)          \n'%identifier +
+               '                                                          \n' +
+               '    %s.xs = %s                                            \n'%(identifier, xs_str) +
+               '    %s.ys = %s                                            \n'%(identifier, ys_str) +
+               '                                                          \n'
+              )
+
+    with open(filename, 'a') as outfile:
+        outfile.write(funcstr)
+#
+# def add_Subscript(filename, identifier, expression):
+#     docstring = ('Type: Subscript')
+#     funcstr = ('    def subscript_%s(self):\n'%identifier +
+#                '        """%s"""\n'%docstring +
+#                '        return "%s" \n\n'%expression)
+#
+#     with open(filename, 'a') as outfile:
+#         outfile.write(funcstr)
+#
+#     return 'self.%s()'%identifier
+
+# def add_flaux(filename, identifier, sub, expression, doc=''):
+#     flowsub=sub[0]
+#     #flowsubs=flowsub.split(",")
+#     if getnumofelements(flowsub)==0: #no subscripts or sub==[]
+#         funcset=''
+#     else:
+#         funcset='            self.variable_%s=np.ndarray((%s))\n'%(identifier,'            self.variable_%s=np.ndarray((%s))
+#     for i in range(len(expression)):
+#         try:
+#             funcsub = ('[%s]')%(','.join(map(str,getelempos(sub[i]))))
+#         except:
+#             funcsub = ''
+#         if re.search(';',expression[i]):
+#             expression[i]=np.array(np.mat(expression[i].strip(';'))) #asarray slower due to type checking.
+#         funcset += ('            self.variable_%s%s=%s\n')%(identifier,funcsub,re.sub(r'[\n\t\\ ]','',expression[i]))
+#     variable = ('    variable_%s=""\n\n'%identifier)
+#     docstring = ('Type: Flow or Auxiliary\n        '+
+#                  '\n        '.join(doc.split('\n')))
+#     funcstr = ('    def %s(self):\n'%identifier +
+#                '        """%s"""\n'%docstring +
+#                '        global variable_%s\n'%(identifier)+
+#                '        if self.variable_%s=="":\n'%(identifier)+
+#                funcset+
+#                '        return self.variable_%s\n\n'%(identifier))
+#     with open(filename, 'a') as outfile:
+#         outfile.write(variable)
+#         outfile.write(funcstr)
+#
+#     return 'self.%s()'%identifier
+
+# def add_stock(filename, identifier, sub, expression, initial_condition):
+#      #create a 'derivative function' that can be
+#     # called by the d_dt boilerplate function and passed to the integrator
+#     variable = ('    variable_%s=""\n\n'%identifier)
+#     dfuncstr = ('    def d%s_dt(self):                       \n'%identifier +
+#                 '        return %s                           \n\n'%expression
+#                )
+#
+#     #create an 'intialization function' of the form '<stock>_init()' that
+#     # can be called when the model is reset to initialize the state variable
+#     if sub:
+#         ifuncstr = ('    def %s_init(self):                      \n'%identifier +
+#                     '        return %s*np.ones(%s)\n\n'%(initial_condition,'('+','.join(map(str,[getnumofelements(sub)]))+')')
+#                    )
+#
+#     else:
+#         ifuncstr = ('    def %s_init(self):                      \n'%identifier +
+#                     '        return %s     \n\n'%initial_condition
+#                    )
+#     returnarray= ('        global variable_%s  \n'%identifier+
+#                   '        if self.variable_%s=="": \n'%identifier+
+#                   '            if self.CurrentTime==0:\n'+ #hardcode?
+#                   '                self.variable_%s=self.%s_init()\n'%(identifier,identifier)+
+#                   '            else:\n'+
+#                   '                self.variable_%s=self.arrayofresults[self.Dictionary["%s"]][self.CurrentTime-1]\n'%(identifier,identifier)+
+#                   '        return self.variable_%s \n\n'%identifier)
+#     #create a function that points to the state dictionary, to let other
+#     # components reference the state without explicitly having to know that
+#     # it is a stock. This is the function that gets an elaborated docstring
+#     sfuncstr = ('    def %s(self):                            \n'%identifier +
+#                 '        """ Stock: %s =                      \n'%identifier +
+#                 '                 %s                          \n'%expression +
+#                 '                                             \n' +
+#                 '        Initial Value: %s                    \n'%initial_condition +
+#                 '        Do not overwrite this function       \n' +
+#                 '        """                                  \n' +
+#                 returnarray)
+#
+#     # if sub:
+#     #     returnval=1
+#     # else:
+#     #     returnval=0
+#
+#     with open(filename, 'a') as outfile:
+#         outfile.write(variable)
+#         outfile.write(dfuncstr)
+#         outfile.write(ifuncstr)
+#         outfile.write(sfuncstr)
+#
+# def add_initial(filename, component):
+#     """ Implement vensim's `INITIAL` command as a build-time function.
+#         component cannot be a full expression, must be a reference to
+#         a single external element.
+#     """
+#     if not re.search('[a-zA-Z]',component):
+#         naked_component="number"
+#     else:
+#         naked_component = component.split("self.")[1]
+#         naked_component = naked_component.split("()")[0]
+#     funcstr = ('    def initial_%s(self, inval):                  \n'%naked_component +
+#                '        if not hasattr(self.initial_%s, "value"): \n'%naked_component +
+#                '            self.initial_%s.im_func.value = inval \n'%naked_component +
+#                '        return self.initial_%s.value             \n\n'%naked_component
+#               )
+#     with open(filename, 'a') as outfile:
+#         outfile.write(funcstr)
+#
+#     return 'self.initial_%s(%s)'%(naked_component, component)
+#
+#
 
 # def add_initial(filename, component):
 #     """ Implement vensim's `INITIAL` command as a build-time function.
