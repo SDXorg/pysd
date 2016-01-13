@@ -116,7 +116,7 @@ file_grammar = (
     'Docstring = (~"[^~|]" !~"(\*{3,})")*                                                       \n'+
     'Component = Stock / Flaux / Lookup                                                         \n'+
 
-    
+    'Subscript = Identifier _ ":" SNL SubElem                                                   \n'+
 
     'Lookup     = Identifier _ "(" _ NL _ Range _ CopairList _ ")"                              \n'+
     'Range      = "[" _ Copair _ "-" _ Copair _ "]"                                             \n'+
