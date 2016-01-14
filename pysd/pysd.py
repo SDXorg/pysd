@@ -148,7 +148,6 @@ class PySD(object):
         pysd.set_initial_condition : handles setting initial conditions
 
         """
-
         if params:
             self.set_components(params)
 
@@ -163,15 +162,14 @@ class PySD(object):
         if addtflag:
             tseries = np.insert(tseries, 0, self.components._t)
 
+
+
         if self.components._stocknames:
             if not return_columns:
                 return_columns = self.components._stocknames
 
             res = self._integrate(self.components._dfuncs, tseries, return_columns)
-
-            return_df = _pd.DataFrame(data=res,
-                                     index=tseries,
-                                     columns=return_columns)
+            return_df = _pd.DataFrame(data=res, index=tseries)
 
         else:
             outdict={}
