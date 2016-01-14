@@ -16,6 +16,8 @@ print '*'*150
 print 'Testing module at location:', pysd.__file__
 
 
+#Todo: test the ability to flatten a dataframe with subscripts in it
+
 class Test_Vensim_Importer(unittest.TestCase):
     """ Test Import functionality """
     @classmethod

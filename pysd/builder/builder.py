@@ -46,9 +46,11 @@ class Builder(object):
         self.stocklist = []
         self.preamble = []
         self.body = []
+        self.dictofsubs = dictofsubs
         self.preamble.append(templates['new file'].substitute())
 
-        self.dictofsubs = dictofsubs
+        if dictofsubs: #Todo: check that the actual value passed to this function when there are no subscripts is an empty dict, or similar
+            self.preamble.append(templates['subscript_dict'].substitute(dictofsubs=dictofsubs.__repr__()))
               
     def write(self):
         """ Writes out the model file """
@@ -138,7 +140,7 @@ class Builder(object):
             size = getnumofelements(sub[0], self.dictofsubs)
             funcset = 'output = np.ndarray((%s))\n'%','.join(map(str,size)) #lines which encode the expressions for partially defined subscript pieces
             for expr, subi in zip(expression, sub):
-                expr = expr.replace('\n','').replace('\t','')
+                expr = expr.replace('\n','').replace('\t','').strip() #todo: we should clean the expressions before we get to this point...
                 indices = ','.join(map(str,getelempos(subi,self.dictofsubs)))
                 if re.search(';',expr): #if the elements passed are an array of constants, need to format for numpy
                     expr = 'np.'+np.array(np.mat(expr.strip(';'))).__repr__()
@@ -186,9 +188,81 @@ class Builder(object):
                                                         ys_str=ys_str))
 
 
+    def add_n_delay(self, delay_input, delay_time, initial_value, order, sub):
+        """Constructs stock and flow chains that implement the calculation of
+        a delay.
+
+        delay_input: <string>
+            Reference to the model component that is the input to the delay
+
+        delay_time: <string>
+            Can be a number (in string format) or a reference to another model element
+            which will calculate the delay. This is calculated throughout the simulation
+            at runtime.
+
+        initial_value: <string>
+            This is used to initialize the stocks that are present in the delay. We
+            initialize the stocks with equal values so that the outflow in the first
+            timestep is equal to this value.
+
+        order: int
+            The number of stocks in the delay pipeline. As we construct the delays at
+            build time, this must be an integer and cannot be calculated from other
+            model components. Anything else will yield a ValueError.
+
+        """
+        try:
+            order = int(order)
+        except ValueError:
+            print "Order of delay must be an int. (Can't even be a reference to an int. Sorry...)"
+            raise
+
+        #depending in these cases on input to be formatted as 'self.variable()' (or number)
+        naked_input = delay_input[5:-2]
+        naked_delay = delay_time[5:-2] if delay_time[:5] == 'self.' else delay_time
+        delay_name = '%s_delay_%s'%(naked_input, naked_delay)
+
+
+        flowlist = []
+        #use 1-based indexing for stocks in the delay chain so that (n of m) makes sense.
+        flowlist.append(add_flaux(identifier='%s_flow_1_of_%i'%(delay_name, order+1),
+                                  sub=sub, expression=delay_input))
+
+        for i in range(2, order+2):
+            flowlist.append(add_flaux(identifier='%s_flow_%i_of_%i'%(delay_name, i, order+1),
+                                      sub=sub,
+                                      expression='self.%s_stock_%i_of_%i()/(1.*%s/%i)'%(
+                                                  delay_name, i-1, order, delay_time, order)))
+
+        for i in range(1, order+1):
+            add_stock(identifier='%s_stock_%i_of_%i'%(delay_name, i, order),
+                      sub=sub,
+                      expression=flowlist[i-1]+' - '+flowlist[i],
+                      initial_condition='%s * (%s / %i)'%(initial_value, delay_time, order))
+
+        return flowlist[-1]
+
+
 # these are module functions so that we can access them from the visitor
 
 def getelempos(element, dictofsubs):
+    """
+    Helps for accessing elements of a
+
+    Parameters
+    ----------
+    element
+    dictofsubs
+
+    Returns
+    -------
+
+    """
+    # Todo: Make this accessible to the end user
+    #  The end user will get an unnamed array, and will want to have access to
+    #  members by name.
+
+
     position=[]
     elements=element.replace('!','').replace(' ', '').split(',')
     for element in elements:
@@ -267,84 +341,7 @@ def add_lookup(filename, identifier, valid_range, copair_list):
 #
 #     return 'self.%s()'%identifier
 
-# def add_flaux(filename, identifier, sub, expression, doc=''):
-#     flowsub=sub[0]
-#     #flowsubs=flowsub.split(",")
-#     if getnumofelements(flowsub)==0: #no subscripts or sub==[]
-#         funcset=''
-#     else:
-#         funcset='            self.variable_%s=np.ndarray((%s))\n'%(identifier,'            self.variable_%s=np.ndarray((%s))
-#     for i in range(len(expression)):
-#         try:
-#             funcsub = ('[%s]')%(','.join(map(str,getelempos(sub[i]))))
-#         except:
-#             funcsub = ''
-#         if re.search(';',expression[i]):
-#             expression[i]=np.array(np.mat(expression[i].strip(';'))) #asarray slower due to type checking.
-#         funcset += ('            self.variable_%s%s=%s\n')%(identifier,funcsub,re.sub(r'[\n\t\\ ]','',expression[i]))
-#     variable = ('    variable_%s=""\n\n'%identifier)
-#     docstring = ('Type: Flow or Auxiliary\n        '+
-#                  '\n        '.join(doc.split('\n')))
-#     funcstr = ('    def %s(self):\n'%identifier +
-#                '        """%s"""\n'%docstring +
-#                '        global variable_%s\n'%(identifier)+
-#                '        if self.variable_%s=="":\n'%(identifier)+
-#                funcset+
-#                '        return self.variable_%s\n\n'%(identifier))
-#     with open(filename, 'a') as outfile:
-#         outfile.write(variable)
-#         outfile.write(funcstr)
-#
-#     return 'self.%s()'%identifier
 
-# def add_stock(filename, identifier, sub, expression, initial_condition):
-#      #create a 'derivative function' that can be
-#     # called by the d_dt boilerplate function and passed to the integrator
-#     variable = ('    variable_%s=""\n\n'%identifier)
-#     dfuncstr = ('    def d%s_dt(self):                       \n'%identifier +
-#                 '        return %s                           \n\n'%expression
-#                )
-#
-#     #create an 'intialization function' of the form '<stock>_init()' that
-#     # can be called when the model is reset to initialize the state variable
-#     if sub:
-#         ifuncstr = ('    def %s_init(self):                      \n'%identifier +
-#                     '        return %s*np.ones(%s)\n\n'%(initial_condition,'('+','.join(map(str,[getnumofelements(sub)]))+')')
-#                    )
-#
-#     else:
-#         ifuncstr = ('    def %s_init(self):                      \n'%identifier +
-#                     '        return %s     \n\n'%initial_condition
-#                    )
-#     returnarray= ('        global variable_%s  \n'%identifier+
-#                   '        if self.variable_%s=="": \n'%identifier+
-#                   '            if self.CurrentTime==0:\n'+ #hardcode?
-#                   '                self.variable_%s=self.%s_init()\n'%(identifier,identifier)+
-#                   '            else:\n'+
-#                   '                self.variable_%s=self.arrayofresults[self.Dictionary["%s"]][self.CurrentTime-1]\n'%(identifier,identifier)+
-#                   '        return self.variable_%s \n\n'%identifier)
-#     #create a function that points to the state dictionary, to let other
-#     # components reference the state without explicitly having to know that
-#     # it is a stock. This is the function that gets an elaborated docstring
-#     sfuncstr = ('    def %s(self):                            \n'%identifier +
-#                 '        """ Stock: %s =                      \n'%identifier +
-#                 '                 %s                          \n'%expression +
-#                 '                                             \n' +
-#                 '        Initial Value: %s                    \n'%initial_condition +
-#                 '        Do not overwrite this function       \n' +
-#                 '        """                                  \n' +
-#                 returnarray)
-#
-#     # if sub:
-#     #     returnval=1
-#     # else:
-#     #     returnval=0
-#
-#     with open(filename, 'a') as outfile:
-#         outfile.write(variable)
-#         outfile.write(dfuncstr)
-#         outfile.write(ifuncstr)
-#         outfile.write(sfuncstr)
 #
 # def add_initial(filename, component):
 #     """ Implement vensim's `INITIAL` command as a build-time function.
@@ -398,61 +395,8 @@ def add_lookup(filename, identifier, valid_range, copair_list):
 
 
 #
-# def add_n_delay(filename, delay_input, delay_time, initial_value, order):
-#     """Constructs stock and flow chains that implement the calculation of
-#     a delay.
-#
-#     delay_input: <string>
-#         Reference to the model component that is the input to the delay
-#
-#     delay_time: <string>
-#         Can be a number (in string format) or a reference to another model element
-#         which will calculate the delay. This is calculated throughout the simulation
-#         at runtime.
-#
-#     initial_value: <string>
-#         This is used to initialize the stocks that are present in the delay. We
-#         initialize the stocks with equal values so that the outflow in the first
-#         timestep is equal to this value.
-#
-#     order: int
-#         The number of stocks in the delay pipeline. As we construct the delays at
-#         build time, this must be an integer and cannot be calculated from other
-#         model components. Anything else will yield a ValueError.
-#
-#     """
-#     try:
-#         order = int(order)
-#     except ValueError:
-#         print "Order of delay must be an int. (Can't even be a reference to an int. Sorry...)"
-#         raise
-#
-#     #depending in these cases on input to be formatted as 'self.variable()' (or number)
-#     naked_input = delay_input[5:-2]
-#     naked_delay = delay_time[5:-2] if delay_time[:5] == 'self.' else delay_time
-#     delay_name = '%s_delay_%s'%(naked_input, naked_delay)
-#
-#
-#     flowlist = []
-#     #use 1-based indexing for stocks in the delay chain so that (n of m) makes sense.
-#     flowlist.append(add_flaux(filename,
-#                               identifier='%s_flow_1_of_%i'%(delay_name, order+1),
-#                               expression=delay_input))
-#
-#     for i in range(2, order+2):
-#         flowlist.append(add_flaux(filename,
-#                                   identifier='%s_flow_%i_of_%i'%(delay_name, i, order+1),
-#                                   expression='self.%s_stock_%i_of_%i()/(1.*%s/%i)'%(
-#                                               delay_name, i-1, order, delay_time, order)))
-#
-#     for i in range(1, order+1):
-#         add_stock(filename,
-#                   identifier='%s_stock_%i_of_%i'%(delay_name, i, order),
-#                   expression=flowlist[i-1]+' - '+flowlist[i],
-#                   initial_condition='%s * (%s / %i)'%(initial_value, delay_time, order))
-#
-#     return flowlist[-1]
-#
+
+
 #
 #
 #
@@ -535,6 +479,9 @@ def make_python_identifier(string):
 
     # Make spaces into underscores
     string = string.replace(' ', '_')
+
+    # Make commas and brackets into underscores (mostly for subscript column names)
+    string = string.replace(',', '__').replace('[','__')
 
     # Remove invalid characters
     string = re.sub('[^0-9a-zA-Z_]', '', string)

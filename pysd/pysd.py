@@ -11,6 +11,9 @@ import imp
 
 # Todo: add a logical way to run two or more models together, using the same integrator.
 # Todo: add model element caching
+# Todo: add a way to flatten the result of a subscripted simulation, for comparison with vensim
+# Todo: add the state dictionary to the model file, to give some functionality to it even without the pysd class
+# Todo: initialize the model on load by calling reset state
 
 def read_xmile(xmile_file):
     """ Construct a model object from `.xmile` file.
@@ -338,3 +341,11 @@ class PySD(object):
             outputs[i] = outdict
 
         return outputs
+
+
+def flatten_dataframe(dataframe, subscripts_dict):
+    """
+    Takes a dataframe in which subscripted
+    :param dataframe:
+    :return:
+    """

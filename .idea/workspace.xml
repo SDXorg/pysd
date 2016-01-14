@@ -2,12 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a7e5b169-cc30-45fb-a7f9-e8e84f9c05bd" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/test-models" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gitmodules" afterPath="$PROJECT_DIR$/.gitmodules" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models" afterPath="$PROJECT_DIR$/tests/test-models" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/builder/builder.py" afterPath="$PROJECT_DIR$/pysd/builder/builder.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/builder/templates.py" afterPath="$PROJECT_DIR$/pysd/builder/templates.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/pysd.py" afterPath="$PROJECT_DIR$/pysd/pysd.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test_model_library.py" afterPath="$PROJECT_DIR$/test_model_library.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_individually_defined_1_of_2d_arrays/Untitled.ipynb" afterPath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_individually_defined_1_of_2d_arrays/Untitled.ipynb" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/translators/vensim2py.py" afterPath="$PROJECT_DIR$/pysd/translators/vensim2py.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test_functionality.py" afterPath="$PROJECT_DIR$/test_functionality.py" />
     </list>
     <ignored path="pysd.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -27,14 +28,14 @@
     <favorites_list name="pysd" />
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.47568712">
+    <splitter split-orientation="horizontal" split-proportion="0.4397463">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file leaf-file-name="builder.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="builder.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/pysd/builder/builder.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state vertical-scroll-proportion="-23.88889">
-                  <caret line="85" column="119" selection-start-line="85" selection-start-column="119" selection-end-line="85" selection-end-column="119" />
+                <state vertical-scroll-proportion="8.934363">
+                  <caret line="489" column="47" selection-start-line="489" selection-start-column="47" selection-end-line="489" selection-end-column="47" />
                   <folding />
                 </state>
               </provider>
@@ -56,7 +57,7 @@
             <entry file="file://$PROJECT_DIR$/pysd/builder/templates.py">
               <provider selected="true" editor-type-id="text-editor">
                 <state vertical-scroll-proportion="0.0">
-                  <caret line="55" column="4" selection-start-line="55" selection-start-column="4" selection-end-line="55" selection-end-column="4" />
+                  <caret line="30" column="26" selection-start-line="30" selection-start-column="26" selection-end-line="30" selection-end-column="26" />
                   <folding />
                 </state>
               </provider>
@@ -74,11 +75,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="pysd.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="pysd.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/pysd/pysd.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state vertical-scroll-proportion="0.6605505">
-                  <caret line="179" column="20" selection-start-line="179" selection-start-column="20" selection-end-line="179" selection-end-column="20" />
+                <state vertical-scroll-proportion="-7.7777777">
+                  <caret line="15" column="19" selection-start-line="15" selection-start-column="19" selection-end-line="15" selection-end-column="19" />
                   <folding>
                     <element signature="e#117#137#0" expanded="true" />
                   </folding>
@@ -124,26 +125,36 @@
       </split-first>
       <split-second>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file leaf-file-name="vensim2py.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="vensim2py.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/pysd/translators/vensim2py.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state vertical-scroll-proportion="-6.111111">
-                  <caret line="339" column="18" selection-start-line="339" selection-start-column="10" selection-end-line="339" selection-end-column="18" />
+                <state vertical-scroll-proportion="0.9111969">
+                  <caret line="180" column="0" selection-start-line="180" selection-start-column="0" selection-end-line="180" selection-end-column="0" />
                   <folding>
-                    <element signature="e#123#142#0" expanded="true" />
+                    <element signature="e#1362#1381#0" expanded="true" />
                   </folding>
                 </state>
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="test_model_library.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="test_model_library.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/test_model_library.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state vertical-scroll-proportion="1.5688074">
-                  <caret line="57" column="0" selection-start-line="57" selection-start-column="0" selection-end-line="57" selection-end-column="0" />
+                <state vertical-scroll-proportion="0.0">
+                  <caret line="56" column="0" selection-start-line="56" selection-start-column="0" selection-end-line="56" selection-end-column="0" />
                   <folding>
                     <element signature="e#1283#1294#0" expanded="true" />
                   </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="test_functionality.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/test_functionality.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state vertical-scroll-proportion="0.0">
+                  <caret line="18" column="68" selection-start-line="18" selection-start-column="68" selection-end-line="18" selection-end-column="68" />
+                  <folding />
                 </state>
               </provider>
             </entry>
@@ -152,11 +163,11 @@
             <entry file="file://$PROJECT_DIR$/pysd/builder/builder.py">
               <provider selected="true" editor-type-id="text-editor">
                 <state vertical-scroll-proportion="0.0">
-                  <caret line="84" column="0" selection-start-line="84" selection-start-column="0" selection-end-line="84" selection-end-column="0" />
+                  <caret line="86" column="0" selection-start-line="86" selection-start-column="0" selection-end-line="86" selection-end-column="0" />
                   <folding>
                     <element signature="e#751#760#0" expanded="true" />
-                    <marker date="1452720396000" expanded="true" signature="8222:8875" placeholder="..." />
-                    <marker date="1452720396000" expanded="true" signature="8945:10061" placeholder="..." />
+                    <marker date="1452801496000" expanded="true" signature="11301:11954" placeholder="..." />
+                    <marker date="1452801496000" expanded="true" signature="12024:13140" placeholder="..." />
                   </folding>
                 </state>
               </provider>
@@ -204,14 +215,14 @@
         <option value="$PROJECT_DIR$/pysd/builder/componentClass.py" />
         <option value="$PROJECT_DIR$/tests/plot_speedtests.py" />
         <option value="$PROJECT_DIR$/speed_test.py" />
-        <option value="$PROJECT_DIR$/test_functionality.py" />
         <option value="$PROJECT_DIR$/pysd/functions/functions.py" />
-        <option value="$PROJECT_DIR$/pysd/builder/templates.py" />
         <option value="$PROJECT_DIR$/tests/old_tests/vensim/Teacup.py" />
-        <option value="$PROJECT_DIR$/pysd/translators/vensim2py.py" />
-        <option value="$PROJECT_DIR$/pysd/builder/builder.py" />
-        <option value="$PROJECT_DIR$/pysd/pysd.py" />
         <option value="$PROJECT_DIR$/test_model_library.py" />
+        <option value="$PROJECT_DIR$/test_functionality.py" />
+        <option value="$PROJECT_DIR$/pysd/pysd.py" />
+        <option value="$PROJECT_DIR$/pysd/builder/templates.py" />
+        <option value="$PROJECT_DIR$/pysd/builder/builder.py" />
+        <option value="$PROJECT_DIR$/pysd/translators/vensim2py.py" />
       </list>
     </option>
   </component>
@@ -448,7 +459,7 @@
     </task>
     <servers />
   </component>
-  <component name="TodoView">
+  <component name="TodoView" selected-index="1">
     <todo-panel id="selected-file">
       <is-autoscroll-to-source value="true" />
     </todo-panel>
@@ -461,7 +472,7 @@
     <frame x="0" y="0" width="1440" height="900" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.15" sideWeight="0.4936306" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.14940098" sideWeight="0.4936306" order="1" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32891566" sideWeight="0.49753347" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32891566" sideWeight="0.5024665" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32891566" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
@@ -525,14 +536,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/tests/speedtest_results.json">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="11" column="0" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/profile_pysd.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -575,8 +578,8 @@
           <caret line="116" column="24" selection-start-line="116" selection-start-column="24" selection-end-line="116" selection-end-column="24" />
           <folding>
             <element signature="e#751#760#0" expanded="true" />
-            <marker date="1452720396000" expanded="true" signature="8222:8875" placeholder="..." />
-            <marker date="1452720396000" expanded="true" signature="8945:10061" placeholder="..." />
+            <marker date="1452801496000" expanded="true" signature="11301:11954" placeholder="..." />
+            <marker date="1452801496000" expanded="true" signature="12024:13140" placeholder="..." />
           </folding>
         </state>
       </provider>
@@ -624,7 +627,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#123#142#0" expanded="true" />
+            <element signature="e#1362#1381#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -661,8 +664,8 @@
           <caret line="116" column="24" selection-start-line="116" selection-start-column="24" selection-end-line="116" selection-end-column="24" />
           <folding>
             <element signature="e#751#760#0" expanded="true" />
-            <marker date="1452720396000" expanded="true" signature="8222:8875" placeholder="..." />
-            <marker date="1452720396000" expanded="true" signature="8945:10061" placeholder="..." />
+            <marker date="1452801496000" expanded="true" signature="11301:11954" placeholder="..." />
+            <marker date="1452801496000" expanded="true" signature="12024:13140" placeholder="..." />
           </folding>
         </state>
       </provider>
@@ -710,7 +713,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#123#142#0" expanded="true" />
+            <element signature="e#1362#1381#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -739,8 +742,8 @@
           <caret line="60" column="14" selection-start-line="60" selection-start-column="14" selection-end-line="60" selection-end-column="14" />
           <folding>
             <element signature="e#751#760#0" expanded="true" />
-            <marker date="1452720396000" expanded="true" signature="8222:8875" placeholder="..." />
-            <marker date="1452720396000" expanded="true" signature="8945:10061" placeholder="..." />
+            <marker date="1452801496000" expanded="true" signature="11301:11954" placeholder="..." />
+            <marker date="1452801496000" expanded="true" signature="12024:13140" placeholder="..." />
           </folding>
         </state>
       </provider>
@@ -807,8 +810,8 @@
           <caret line="60" column="14" selection-start-line="60" selection-start-column="14" selection-end-line="60" selection-end-column="14" />
           <folding>
             <element signature="e#751#760#0" expanded="true" />
-            <marker date="1452720396000" expanded="true" signature="8222:8875" placeholder="..." />
-            <marker date="1452720396000" expanded="true" signature="8945:10061" placeholder="..." />
+            <marker date="1452801496000" expanded="true" signature="11301:11954" placeholder="..." />
+            <marker date="1452801496000" expanded="true" signature="12024:13140" placeholder="..." />
           </folding>
         </state>
       </provider>
@@ -936,6 +939,24 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/test_model_library.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="56" column="0" selection-start-line="56" selection-start-column="0" selection-end-line="56" selection-end-column="0" />
+          <folding>
+            <element signature="e#1283#1294#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/test_functionality.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="18" column="68" selection-start-line="18" selection-start-column="68" selection-end-line="18" selection-end-column="68" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/tests/old_tests/vensim/Teacup.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -956,52 +977,42 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pysd/builder/templates.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="55" column="4" selection-start-line="55" selection-start-column="4" selection-end-line="55" selection-end-column="4" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pysd/translators/vensim2py.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-6.111111">
-          <caret line="339" column="18" selection-start-line="339" selection-start-column="10" selection-end-line="339" selection-end-column="18" />
-          <folding>
-            <element signature="e#123#142#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pysd/builder/builder.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="84" column="0" selection-start-line="84" selection-start-column="0" selection-end-line="84" selection-end-column="0" />
-          <folding>
-            <element signature="e#751#760#0" expanded="true" />
-            <marker date="1452720396000" expanded="true" signature="8222:8875" placeholder="..." />
-            <marker date="1452720396000" expanded="true" signature="8945:10061" placeholder="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pysd/pysd.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.6605505">
-          <caret line="179" column="20" selection-start-line="179" selection-start-column="20" selection-end-line="179" selection-end-column="20" />
+        <state vertical-scroll-proportion="-7.7777777">
+          <caret line="15" column="19" selection-start-line="15" selection-start-column="19" selection-end-line="15" selection-end-column="19" />
           <folding>
             <element signature="e#117#137#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/test_model_library.py">
+    <entry file="file://$PROJECT_DIR$/pysd/builder/templates.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="1.5688074">
-          <caret line="57" column="0" selection-start-line="57" selection-start-column="0" selection-end-line="57" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.0">
+          <caret line="30" column="26" selection-start-line="30" selection-start-column="26" selection-end-line="30" selection-end-column="26" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pysd/builder/builder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="86" column="0" selection-start-line="86" selection-start-column="0" selection-end-line="86" selection-end-column="0" />
           <folding>
-            <element signature="e#1283#1294#0" expanded="true" />
+            <element signature="e#751#760#0" expanded="true" />
+            <marker date="1452801496000" expanded="true" signature="11301:11954" placeholder="..." />
+            <marker date="1452801496000" expanded="true" signature="12024:13140" placeholder="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pysd/translators/vensim2py.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.9111969">
+          <caret line="180" column="0" selection-start-line="180" selection-start-column="0" selection-end-line="180" selection-end-column="0" />
+          <folding>
+            <element signature="e#1362#1381#0" expanded="true" />
           </folding>
         </state>
       </provider>

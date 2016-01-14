@@ -1,31 +1,25 @@
-"""vensim2py
-    created: August 13, 2014
-    last update: June 6 2015
-    James Houghton <james.p.houghton@gmail.com>
 """
-import parsimonious
-import string
-from parsimonious.nodes import NodeVisitor
-import re
-import numpy as np
+vensim2py.py
+james.p.houghton@gmail.com
+created: August 13, 2014
+last update: Jan 14, 2015
 
-from pysd import builder
+This file contains the machinery for parsing a vensim file and formatting
+components for the model builder.
 
+Everything that touches vensim or is vensim specific should live here.
 
-###############################################################
-#Updates:
-#
-# - Feb 16, 2015: brought parsing of full sections of the model into the PEG parser.
-# - March 28, 2015: incorporated parsimonious's node walker to take care of class construction.
-# - June 6, 2015: factored out component class construction code.
-###############################################################
+Updates
+-------
+- Feb 16, 2015: brought parsing of full sections of the model into the PEG parser.
+- March 28, 2015: incorporated parsimonious's node walker to take care of class construction.
+- June 6, 2015: factored out component class construction code.
+- Jan 2016: reworked to include subscript components
 
+"""
 
-###############################################################
-#Todo:
-#
-# - check that the identifiers discovered are not the same as python keywords
-# - parse excessive spaces out of docstrings
+# Todo: check that the identifiers discovered are not the same as python keywords
+# Todo: parse excessive spaces out of docstrings
 
 # - It would be good to include the original vensim/xmile non-python-safed identifiers for
 #   model components in the docstring, along with the cleaned version
@@ -36,20 +30,19 @@ from pysd import builder
 # should build in a mechanism to fail gracefully
 # maybe want to make the node visitor intelligently add spaces around things
 # should check that sin/cos are using the same units in vensim and numpy
-# the 'pi' keyword is broken
+# Todo: Fix the 'pi' keyword
 
-# are we parsing model control components properly?
-###############################################################
+import parsimonious
+from parsimonious.nodes import NodeVisitor
+import string
+import re
+import numpy as np
+from pysd import builder
 
 
-######################################################
-#Dictionary:
-#
 # This is the vensim to python translation dictionary. Many expressions (+-/*, etc)
 # translate directly, but some need to have their names changed, etc. This is
 # how we decide that. If it isn't in the dictionary, it probably won't work
-#
-######################################################
 
 dictionary = {"ABS":"abs", "INTEGER":"int", "EXP":"np.exp",
     "PI":"np.pi", "SIN":"np.sin", "COS":"np.cos", "SQRT":"np.sqrt", "TAN":"np.tan",
@@ -97,7 +90,7 @@ multicaps_con_keywords = list(set(construction_functions +
 
 con_keywords = ' / '.join(['"%s"'%key for key in reversed(sorted(multicaps_con_keywords, key=len))])
 
-
+# Todo: overhaul this grammar, pull it out into its own file. comment things properly.
 file_grammar = (
     # In the 'Model' definiton, we use arbitrary characters (.) to represent the backslashes,
     #    because escaping in here is a nightmare
@@ -175,16 +168,16 @@ file_grammar = (
     #    They take only one parameter. This could cause problems.
 
     ###################################Subscript Element#############################################
-    'Subs     = (SNL UnderSub SNL ";")+ SNL                                                     \n'+
+    'Subs     = (SNL UnderSub SNL ";")+ SNL                                                     \n'+ #this is for parsing an array
     'UnderSub = Number SNL ("," SNL Number SNL)+                                                \n'+
-
+    #undersub is creating errors parsing function arguments that are also numbers...
     'LUCall   = Identifier SNL "(" SNL Condition SNL ")"                                        \n'+
     'Signed   = ("-"/"+") Primary                                                               \n'+
     # We have to break 'reference' out from identifier, because in reference situations
     #    we'll want to add self.<name>(), but we also need to be able to clean and access
     #    the identifier independently. To force parsimonious to handle the reference as
     #    a seperate object from the Identifier, we add a trailing optional space character
-    'Reference = Identifier SNL Subtext* SNL                                                    \n'+
+    'Reference = Identifier SNL Subtext* SNL                                                \n'+
 
     'ConCall  = ConKeyword SNL "(" SNL ArgList SNL ")"                                          \n'+
 
@@ -194,9 +187,6 @@ file_grammar = (
     'Special_Id = "\\""  ~"[^\\"]"*  "\\""                                                      \n'+
     'Letter   = ~"[a-zA-Z]"                                                                     \n'+
     'Digit    = ~"[0-9]"                                                                        \n'+
-
-
-
 
     # We separated out single space characters from the _ entry, so that it can have any number or
     #   combination of space characters.
@@ -209,105 +199,13 @@ file_grammar = (
     'ConKeyword = %s  \n'%con_keywords
     )
 
-# file_grammar = (
-#     # In the 'Model' definiton, we use arbitrary characters (.) to represent the backslashes,
-#     #    because escaping in here is a nightmare
-#     'Model = SNL "{UTF-8}" Content ~"...---///" Rubbish*                                        \n'+
-#     'Content = Entry+                                                                           \n'+
-#     'Rubbish = ~"."* NL*                                                                        \n'+
-#
-#     'Entry = MetaEntry / ModelEntry                                                             \n'+
-#
-#     # meta entry recognizes model documentation, or the partition separating model control params.
-#     'MetaEntry  = SNL starline SNL Docstring SNL starline _ "~" SNL Docstring SNL "|" SNL*      \n'+
-#     'ModelEntry = SNL Component SNL "~" _ Unit SNL "~" _ Docstring SNL "|" SNL*                 \n'+
-#
-#     'Unit      = ~"[^~|]"*                                                                      \n'+
-#     # The docstring parser also consumes trailing newlines. Not sure if we want this?
-#     # The second half of the docstring parser is a lookahead to make sure we don't consume starlines
-#     'Docstring = (~"[^~|]" !~"(\*{3,})")*                                                       \n'+
-#     'Component = Stock / Flaux / Lookup                                                         \n'+
-#
-#     'Subscript = Identifier _ ":" SNL SubElem                                                   \n'+
-#
-#     'Lookup     = Identifier _ "(" _ NL _ Range _ CopairList _ ")"                              \n'+
-#     'Range      = "[" _ Copair _ "-" _ Copair _ "]"                                             \n'+
-#     'CopairList = AddCopair*                                                                    \n'+
-#     'AddCopair  = "," _ Copair                                                                  \n'+
-#     # 'Copair' represents a coordinate pair
-#     'Copair     = "(" _ Primary _ "," _ Primary _ ")"                                           \n'+
-#
-#     'Stock     = Identifier _ "=" _ "INTEG" _ "(" _ NL _ Condition _ "," _ NL _ Condition _ ")" \n'+
-#     # 'Flaux' represents either a flow or an auxiliary, as the syntax is the same
-#     'Flaux     = Identifier _ "=" SNL Condition                                                 \n'+
-#
-#     # SNL means 'spaced newline'
-#     'SNL = _ NL* _                                                                              \n'+
-#     'NL = _ ~"[\\r\\n]" _                                                                       \n'+
-#     'starline = ~"\*{3,}"                                                                       \n'+
-#
-#     'Condition   = Term _ Conditional*                                                          \n'+
-#     'Conditional = ("<=" / "<" / ">=" / ">" / "=") _ Term                                       \n'+
-#
-#     'Term     = Factor _ Additive*                                                              \n'+
-#     'Additive = ("+"/"-") _ Factor                                                              \n'+
-#
-#     # Factor may be consuming newlines? don't want it to...
-#     'Factor   = ExpBase _ Multiplicative*                                                       \n'+
-#     'Multiplicative = ("*" / "/") _ ExpBase                                                     \n'+
-#
-#     'ExpBase  = Primary _ Exponentive*                                                          \n'+
-#     'Exponentive = "^" _ Primary                                                                \n'+
-#
-#     'Primary  = Call / ConCall / LUCall / Parens / Signed / Number / Reference                  \n'+
-#     'Parens   = "(" _ Condition _ ")"                                                           \n'+
-#
-#     'Call     = Keyword _ "(" _ ArgList _ ")"                                                   \n'+
-#     'ArgList  = AddArg+                                                                         \n'+
-#     'AddArg   = ","* _ Condition                                                                \n'+
-#     # Calls to lookup functions don't use keywords, so we have to use identifiers.
-#     #    They take only one parameter. This could cause problems.
-#     'LUCall   = Identifier _ "(" _ Condition _ ")"                                              \n'+
-#     'Signed   = ("-"/"+") Primary                                                               \n'+
-#     # We have to break 'reference' out from identifier, because in reference situations
-#     #    we'll want to add self.<name>(), but we also need to be able to clean and access
-#     #    the identifier independently. To force parsimonious to handle the reference as
-#     #    a seperate object from the Identifier, we add a trailing optional space character
-#     'Reference = Identifier _                                                                   \n'+
-#
-#     'ConCall  = ConKeyword _ "(" _ ArgList _ ")"                                                \n'+
-#
-#     'Number   = ((~"[0-9]"+ "."? ~"[0-9]"*) / ("." ~"[0-9]"+)) (("e"/"E") ("-"/"+") ~"[0-9]"+)? \n'+
-#     'Identifier = Basic_Id / Special_Id                                                         \n'+
-#     'Basic_Id = Letter (Letter / Digit / ~"[_\s]")*                                             \n'+
-#     'Special_Id = "\\""  ~"[^\\"]"*  "\\""                                                      \n'+
-#     'Letter   = ~"[a-zA-Z]"                                                                     \n'+
-#     'Digit    = ~"[0-9]"                                                                        \n'+
-#
-#     # We separated out single space characters from the _ entry, so that it can have any number or
-#     #   combination of space characters.
-#     '_ = spacechar*                                                                             \n'+
-#     # Vensim uses a 'backslash, newline' syntax as a way to split an equation onto multiple lines.
-#     #   We address this by including it as  an allowed space character.
-#     'spacechar = " "* ~"\t"* (~r"\\\\" NL)*                                                     \n'+
-#
-#     'Keyword = %s  \n'%keywords +
-#     'ConKeyword = %s  \n'%con_keywords
-#     )
-
-
-#################################################################
-# Notes on node visitor
-#
-# - each function in the parser takes an argument which is the result of having visited
-#   each of the children
-#
-# - we separate the parse function from the class initialization to facilitate unit testing,
-#   although in practice, they will most certainly always be called sequentially
-#################################################################
-
 
 class TextParser(NodeVisitor):
+    """
+    Each function in the parser takes an argument which is the result of having visited
+    each of the children.
+
+    """
     def __init__(self, grammar, infilename, dictofsubs):
         self.filename = infilename[:-4]+'.py'
         self.builder = builder.Builder(self.filename, dictofsubs)
@@ -396,19 +294,31 @@ class TextParser(NodeVisitor):
     ######### 'expression' level visitors ###############################
 
     def visit_ConCall(self, n, (ConKeyword, _1, lparen, _2, args, _4, rparen)):
-        pass
         if ConKeyword == 'DELAY1': #DELAY3(Inflow, Delay)
-            return self.builder.add_n_delay(args[0], args[1], str(0), 1)
+            return self.builder.add_n_delay(delay_input=args[0],
+                                            delay_time=args[1],
+                                            inital_value=str(0),
+                                            order=1,
+                                            sub=['']) #todo: make this subscript work
         elif ConKeyword == 'DELAY1I':
             pass
         elif ConKeyword == 'DELAY3':
-            return self.builder.add_n_delay(args[0], args[1], str(0), 3)
+            return self.builder.add_n_delay(delay_input=args[0],
+                                            delay_time=args[1],
+                                            initial_value=str(0),
+                                            order=3,
+                                            sub=[''])
         elif ConKeyword == 'DELAY N':#DELAY N(Inflow, Delay, init, order)
-            return self.builder.add_n_delay(args[0], args[1], args[2], args[3])
+            print args
+            return self.builder.add_n_delay(delay_input=args[0],
+                                            delay_time=args[1],
+                                            initial_valye=args[2],
+                                            order=args[3],
+                                            sub=[''])
         elif ConKeyword == 'SMOOTH':
             pass
         elif ConKeyword == 'SMOOTH3':#SMOOTH3(Input,Adjustment Time)
-            return self.builder.add_n_delay(args[0], args[1], str(0), 3)
+            return self.builder.add_n_delay(args[0], args[1], str(0), 3) # Todo: this isn't right...
         elif ConKeyword == 'SMOOTH3I': #SMOOTH3I( _in_ , _stime_ , _inival_ )
             return self.builder.add_n_smooth(args[0], args[1], args[2], 3)
         elif ConKeyword == 'SMOOTHI':
@@ -544,6 +454,9 @@ def translate_vensim(mdl_file):
         for i in range(len(Elements)):
             Elements[i]=builder.make_python_identifier(Elements[i].strip())
         dictofsubs[Family]=dict(zip(Elements,range(len(Elements))))
+
+    # Todo: encode somewhere in this the order of the families...
+    # Todo: print the dict of subs in the model file
 
     # Step 2 parser
     parser = TextParser(file_grammar, mdl_file, dictofsubs)
