@@ -31,10 +31,13 @@ debug models.
 # child, as would be the case with subranges. Probably means that we'll have to collect
 # all of the subelements and pass them together to get the family name.
 
+# Todo: strip new line, tab, and slash characters
+
 import re
 import keyword
 from templates import templates
 import numpy as np
+
 
 
 class Builder(object):
@@ -206,6 +209,30 @@ class Builder(object):
                                                         ys_str=ys_str))
 
 
+
+# def add_lookup(filename, identifier, valid_range, copair_list):
+#     # in the future, we may want to check in bounds for the range. for now, lazy...
+#     xs, ys = zip(*copair_list)
+#     xs_str = str(list(xs))
+#     ys_str = str(list(ys))
+#
+#     #warning: this may create a class attribute of the function for the lookups, when what we want
+#     # is an instance attribute. Not sure...
+#
+#     funcstr = ('    def %s(self, x):                                      \n'%identifier +
+#                '        return self.functions.lookup(x,                   \n' +
+#                '                                     self.%s.xs,          \n'%identifier +
+#                '                                     self.%s.ys)          \n'%identifier +
+#                '                                                          \n' +
+#                '    %s.xs = %s                                            \n'%(identifier, xs_str) +
+#                '    %s.ys = %s                                            \n'%(identifier, ys_str) +
+#                '                                                          \n'
+#               )
+#
+#     with open(filename, 'a') as outfile:
+#         outfile.write(funcstr)
+
+
     def add_n_delay(self, delay_input, delay_time, initial_value, order, sub):
         """Constructs stock and flow chains that implement the calculation of
         a delay.
@@ -260,6 +287,24 @@ class Builder(object):
 
         return flowlist[-1]
 
+    def add_initial(self, component):
+        """ Implement vensim's `INITIAL` command as a build-time function.
+            component cannot be a full expression, must be a reference to
+            a single external element.
+        """
+        if not re.search('[a-zA-Z]',component):
+            naked_component="number"
+        else:
+            naked_component = component.split("()")[0]
+        funcstr = ('    def initial_%s(inval):                       \n'%naked_component +
+                   '        if not hasattr(initial_%s, "value"): \n'%naked_component +
+                   '            initial_%s.im_func.value = inval \n'%naked_component +
+                   '        return initial_%s.value             \n\n'%naked_component
+                  )
+
+        self.body.append(funcstr)
+        return 'initial_%s(%s)'%(naked_component, component)
+
 
 # these are module functions so that we can access them from the visitor
 
@@ -280,7 +325,6 @@ def getelempos(element, dictofsubs):
     # Todo: Make this accessible to the end user
     #  The end user will get an unnamed array, and will want to have access to
     #  members by name.
-
 
     position=[]
     elements=element.replace('!','').replace(' ', '').split(',')
@@ -344,28 +388,11 @@ def get_array_info(subs, dictofsubs):
     return directory, shape
 
 
-# def add_lookup(filename, identifier, valid_range, copair_list):
-#     # in the future, we may want to check in bounds for the range. for now, lazy...
-#     xs, ys = zip(*copair_list)
-#     xs_str = str(list(xs))
-#     ys_str = str(list(ys))
-#
-#     #warning: this may create a class attribute of the function for the lookups, when what we want
-#     # is an instance attribute. Not sure...
-#
-#     funcstr = ('    def %s(self, x):                                      \n'%identifier +
-#                '        return self.functions.lookup(x,                   \n' +
-#                '                                     self.%s.xs,          \n'%identifier +
-#                '                                     self.%s.ys)          \n'%identifier +
-#                '                                                          \n' +
-#                '    %s.xs = %s                                            \n'%(identifier, xs_str) +
-#                '    %s.ys = %s                                            \n'%(identifier, ys_str) +
-#                '                                                          \n'
-#               )
-#
-#     with open(filename, 'a') as outfile:
-#         outfile.write(funcstr)
-#
+
+
+
+
+
 # def add_Subscript(filename, identifier, expression):
 #     docstring = ('Type: Subscript')
 #     funcstr = ('    def subscript_%s(self):\n'%identifier +
@@ -379,26 +406,26 @@ def get_array_info(subs, dictofsubs):
 
 
 #
-# def add_initial(filename, component):
-#     """ Implement vensim's `INITIAL` command as a build-time function.
-#         component cannot be a full expression, must be a reference to
-#         a single external element.
-#     """
-#     if not re.search('[a-zA-Z]',component):
-#         naked_component="number"
-#     else:
-#         naked_component = component.split("self.")[1]
-#         naked_component = naked_component.split("()")[0]
-#     funcstr = ('    def initial_%s(self, inval):                  \n'%naked_component +
-#                '        if not hasattr(self.initial_%s, "value"): \n'%naked_component +
-#                '            self.initial_%s.im_func.value = inval \n'%naked_component +
-#                '        return self.initial_%s.value             \n\n'%naked_component
-#               )
-#     with open(filename, 'a') as outfile:
-#         outfile.write(funcstr)
-#
-#     return 'self.initial_%s(%s)'%(naked_component, component)
-#
+def add_initial(filename, component):
+    """ Implement vensim's `INITIAL` command as a build-time function.
+        component cannot be a full expression, must be a reference to
+        a single external element.
+    """
+    if not re.search('[a-zA-Z]',component):
+        naked_component="number"
+    else:
+        naked_component = component.split("self.")[1]
+        naked_component = naked_component.split("()")[0]
+    funcstr = ('    def initial_%s(self, inval):                  \n'%naked_component +
+               '        if not hasattr(self.initial_%s, "value"): \n'%naked_component +
+               '            self.initial_%s.im_func.value = inval \n'%naked_component +
+               '        return self.initial_%s.value             \n\n'%naked_component
+              )
+    with open(filename, 'a') as outfile:
+        outfile.write(funcstr)
+
+    return 'self.initial_%s(%s)'%(naked_component, component)
+
 #
 
 # def add_initial(filename, component):

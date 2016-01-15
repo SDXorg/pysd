@@ -79,12 +79,14 @@ fail_count = 0
 
 starttime = timeit.time.time()
 
-# Todo: refactor to break out each step into its own try/except?
 
 for i, modelfile in testfiles.iteritems():
     status_str = ''
 
     try:
+        err = None
+
+        # translate and load the model
         if modelfile[-3:] == "mdl":
             model = pysd.read_vensim(modelfile)
             status_str += 'Loaded Model, '
@@ -92,22 +94,29 @@ for i, modelfile in testfiles.iteritems():
             model = pysd.read_xmile(modelfile)
             status_str += 'Loaded Model, '
 
+        # load the canonical output
         directory = os.path.dirname(modelfile)
-        output_basename = directory+'/output'
-        #os ifexistss csv, import, else import tab.
+        if os.path.exists(directory+'/output.csv'):
+            canon = pd.read_csv(directory+'/output.csv', index_col='Time')
+            status_str += 'Loaded canon from .csv, '
+        elif os.path.exists(directory+'/output.tab'):
+            canon = pd.read_table(directory+'/output.tab', index_col='Time')
+            status_str += 'Loaded canon from .tab, '
+        else:
+            raise IOError('File not found for '+directory+'/output')
 
-
-        canon = pd.read_csv(directory+'/output.csv', index_col='Time')
-
+        # identify the columns to ask the model for
+        #todo: work out how to only ask for the actual model components. Probably by taking away everythign after double __
         return_columns = [pysd.builder.make_python_identifier(x) for x in canon.columns.tolist()]
         canon.columns = return_columns #rename the columns we brought in so they match to the model output
-
         status_str += 'Looking for output columns: '+', '.join(return_columns)
 
-        output = model.run(return_columns=return_columns)
-
+        # run the model
+        output = model.run(return_columns=return_columns,
+                           flatten_subscripts=True)
         status_str += 'Ran Model, got columns'+', '.join(output.columns.tolist())
-        
+
+        # check that the canonical output is close to the simulation output
         assert (canon-output).max().max() < 1
         
         print '.',
@@ -119,13 +128,11 @@ for i, modelfile in testfiles.iteritems():
         err_str += '='*60 + '\n'
         err_str += '%i | Test Failure of: %s \n'%(i,modelfile)
         err_str += '-'*60 + '\n'
+        err_str += status_str + '\n'
         err_str += 'Parsing Error at line: %i, column%i.\n'%(e.line(), e.column())
         err_str += 'On rule: %s \n\n'%e.expr.__repr__()
-        err_str += str(e)
-        #err_str += e.text.splitlines()[e.line()-1] + '\n' #line numbers are 1 based, most likely
-        #err_str += '^'.rjust(e.column())
-        err_str += '\n\n'
 
+        err = e
         fail_count += 1
 
     except VisitationError as e:
@@ -134,9 +141,10 @@ for i, modelfile in testfiles.iteritems():
         err_str += '='*60 + '\n'
         err_str += '%i | Test Failure of: %s \n'%(i,modelfile)
         err_str += '-'*60 + '\n'
-        err_str += str(e.args[0]) if args.verbose else '\n'.join(str(e.args[0]).splitlines()[:10])+'\n...\n add flag -v to see more'
-        err_str += '\n\n'
+        err_str += status_str + '\n'
+        err_str += '\n'
 
+        err = e
         fail_count += 1
         
     except IOError as e:
@@ -145,9 +153,11 @@ for i, modelfile in testfiles.iteritems():
         err_str += '='*60 + '\n'
         err_str += '%i | Test Error attempting: %s \n'%(i,modelfile)
         err_str += '-'*60 + '\n'
+        err_str += status_str + '\n'
         err_str += 'Could not load canonical output\n'
-        err_str += '\n\n'
+        err_str += '\n'
 
+        err = e
         err_count += 1
 
     except AssertionError as e:
@@ -156,10 +166,11 @@ for i, modelfile in testfiles.iteritems():
         err_str += '='*60 + '\n'
         err_str += '%i | Test Failure of: %s \n'%(i,modelfile)
         err_str += '-'*60 + '\n'
+        err_str += status_str + '\n'
         err_str += 'Model output does not match canon.\n'
         err_str += 'Variable       Maximum Discrepancy\n'
-        err_str += str((canon-output).max())
-        err_str += '\n\n'
+        err_str += str((canon-output).max())+'\n'
+        err_str += '\n'
 
         fail_count += 1
 
@@ -169,10 +180,16 @@ for i, modelfile in testfiles.iteritems():
         err_str += '%i | Unknown issue with: %s \n'%(i,modelfile)
         err_str += '-'*60 + '\n'
         err_str += status_str + '\n'
-        err_str += str(e.args[0])
-        err_str += '\n\n'
+        err_str += '\n'
 
+        err = e
         err_count += 1
+    finally:
+        if err:
+            if args.verbose:
+                tb = traceback.format_exc()
+                err_str += ''.join(tb)+'\n'
+
 
 endtime = timeit.time.time()
 

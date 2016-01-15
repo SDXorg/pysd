@@ -299,7 +299,7 @@ class TextParser(NodeVisitor):
                                             order=1,
                                             sub=['']) #todo: make this subscript work
         elif ConKeyword == 'DELAY1I':
-            pass
+            pass #todo: build out the rest of these
         elif ConKeyword == 'DELAY3':
             return self.builder.add_n_delay(delay_input=args[0],
                                             delay_time=args[1],
@@ -316,7 +316,7 @@ class TextParser(NodeVisitor):
         elif ConKeyword == 'SMOOTH':
             pass
         elif ConKeyword == 'SMOOTH3':#SMOOTH3(Input,Adjustment Time)
-            return self.builder.add_n_delay(args[0], args[1], str(0), 3) # Todo: this isn't right...
+            return self.builder.add_n_smooth(args[0], args[1], str(0), 3) # Todo: this isn't right...
         elif ConKeyword == 'SMOOTH3I': #SMOOTH3I( _in_ , _stime_ , _inival_ )
             return self.builder.add_n_smooth(args[0], args[1], args[2], 3)
         elif ConKeyword == 'SMOOTHI':
@@ -452,6 +452,17 @@ def translate_vensim(mdl_file):
         for i in range(len(Elements)):
             Elements[i]=builder.make_python_identifier(Elements[i].strip())
         dictofsubs[Family]=dict(zip(Elements,range(len(Elements))))
+
+    # for i in dictofsubs:
+    #     for j in dictofsubs:
+    #         try:
+    #             if set(dictofsubs[j].keys()).issubset(dictofsubs[i].keys()) and j!=i:
+    #                 dictofsubs[j]=sorted(dictofsubs[i].values())
+    #         except:
+    #             pass
+
+
+    print dictofsubs
 
     # Todo: encode somewhere in this the order of the families...
     # Todo: print the dict of subs in the model file

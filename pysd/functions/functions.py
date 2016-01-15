@@ -68,28 +68,31 @@ class Functions(object):
         np.random.seed(seed)
         return stats.truncnorm.rvs(minimum, maximum, loc=mean, scale=std)
 
-    def lookup(self, x, xs, ys):
-        """ Provides the working mechanism for lookup functions the builder builds """
-        return np.interp(x, xs, ys)
+def lookup(x, xs, ys):
+    """ Provides the working mechanism for lookup functions the builder builds """
+    return np.interp(x, xs, ys)
+
 #todo: fix this file...
-# def if_then_else(self,condition,val_if_true,val_if_false):
-#     return np.where(condition,val_if_true,val_if_false)
-#
-# def pos(self,number):
-#     return np.maximum(number, 0.000001)
-#
-# def tuner(self,number,factor):
-#     if factor>1:
-#         if number==0:
-#             return 0
-#         else:
-#             return max(number,0.000001)**factor
-#     else:
-#         return (factor*number)+(1-factor)
+def if_then_else(condition,val_if_true,val_if_false):
+    return np.where(condition,val_if_true,val_if_false)
+
+
+def pos(number):  # dont divide by 0
+    return np.maximum(number, 0.000001)
+
+
+def tuner(number, factor):
+    if factor>1:
+        if number == 0:
+            return 0
+        else:
+            return max(number,0.000001)**factor
+    else:
+        return (factor*number)+(1-factor)
 #
 # def ramp(self, slope, start, finish):
 #     """ Implements vensim's RAMP function """
-#     t = self.components.t
+#     t = self.components._t
 #     try:
 #         len(start)
 #     except:

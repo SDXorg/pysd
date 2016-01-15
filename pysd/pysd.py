@@ -8,6 +8,7 @@ James Houghton <james.p.houghton@gmail.com>
 import pandas as _pd
 import numpy as np
 import imp
+from math import fmod
 
 # Todo: add a logical way to run two or more models together, using the same integrator.
 # Todo: add model element caching
@@ -96,7 +97,7 @@ class PySD(object):
         return self.components.__str__
 
     def run(self, params={}, return_columns=[], return_timestamps=[],
-            initial_condition='original', collect=False, **intg_kwargs):
+            initial_condition='original', collect=False, flatten_subscripts=False):
         """ Simulate the model's behavior over time.
         Return a pandas dataframe with timestamps as rows,
         model elements as columns.
@@ -130,10 +131,13 @@ class PySD(object):
             When running multiple simulations, collect the results in a way
             that we can access down the road.
 
-        intg_kwargs: keyword arguments for odeint
-            Provides precice control over the integrator by passing through
-            keyword arguments to scipy's odeint function. The most interesting
-            of these will be `tcrit`, `hmax`, `mxstep`.
+        flatten_subscripts : binary (T/F)
+            If set to `True`, will format the output dataframe in two dimensions, each
+             cell of the dataframe containing a number. The number of columns of the
+             dataframe will be expanded.
+            If set to `False`, the dataframe cells corresponding to subscripted elements
+             will take the form of numpy arrays within the cells of the dataframe. The
+             columns will correspond to the model elements.
 
 
         Examples
@@ -179,6 +183,14 @@ class PySD(object):
             for key in return_columns:
                 outdict[key] = self.components._funcs[key]()
             return_df = _pd.DataFrame(index=tseries, data=outdict)
+
+        if flatten_subscripts:
+            #if self.components._subscript_dict:
+            #    return_df = self._flatten_dataframe(return_df)
+            try:
+                return_df = self._flatten_dataframe(return_df)
+            except:
+                pass #Todo: this is temp, until we have a better way of not trying to flatten things that don't have subscripts
 
         if addtflag:
             return_df.drop(return_df.index[0], inplace=True)
@@ -343,9 +355,62 @@ class PySD(object):
         return outputs
 
 
-def flatten_dataframe(dataframe, subscripts_dict):
-    """
-    Takes a dataframe in which subscripted
-    :param dataframe:
-    :return:
-    """
+    def _flatten_dataframe(self, dataframe):
+        """
+        Formats model output for easy comparison or storage in a 2d spreadsheet.
+
+        Parameters
+        ----------
+        dataframe : pandas dataframe
+            The output of a model simulation, with variable names as column names
+             and timeseries as the indices. In this dataframe may be some columns
+             representing variables with subscripts, whose values are held within
+             numpy arrays within each cell of the dataframe.
+
+        Returns
+        -------
+        flat_dataframe : pandas dataframe
+            Dataframe containing all of the information of the output, but flattened such
+             that each cell of the dataframe contains only a number, not a full array.
+             Extra columns will be added to represent each of the elements of the arrays
+             in question.
+        """
+        self.components
+
+        def sort(dictionary):
+            return [dictionary.keys()[dictionary.values().index(x)] for x in sorted(dictionary.values())]
+
+        def pandasnamearray(varname):
+            stocks={}
+            stocklen=1
+            stockmod=[]
+
+            for i in sort(varname.dimension_dir):
+                stocklen*=len(self.components._subscript_dict[i])
+                stockmod.append(len(self.components._subscript_dict[i]))
+
+            for i in range(len(stockmod)):
+                stockmod[i]=np.prod(stockmod[i+1:])
+
+            interstock=np.ndarray(stocklen,object)
+            interstock[:]=""
+
+            for i,j in enumerate(sort(varname.dimension_dir)):
+                for k in range(stocklen):
+                    interstock[k] += ","+sort(self.components._subscript_dict[j])[int(fmod(k/stockmod[i],len(self.components._subscript_dict[j])))]
+
+            return [interstock[i].strip(",") for i in range(len(interstock))]
+
+
+
+        def dataframeexpand(pddf):
+            result=[]
+            for pos,name in enumerate(pddf.columns):
+                result.append(pddf[name].apply(lambda x: _pd.Series(x.flatten())))
+                result[pos].columns=([name+'['+pandasnamearray(getattr(self.components,name))[x]+']' for x in range(len(pandasnamearray(getattr(self.components,name))))])
+            pddf=_pd.concat([result[x] for x in range(len(result))],axis=1)
+
+            return pddf
+
+
+        return dataframeexpand(dataframe)
