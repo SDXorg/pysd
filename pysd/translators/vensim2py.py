@@ -18,6 +18,8 @@ Updates
 
 """
 
+
+
 # Todo: check that the identifiers discovered are not the same as python keywords
 # Todo: parse excessive spaces out of docstrings
 
@@ -69,10 +71,6 @@ construction_functions = ['DELAY1', 'DELAY3', 'DELAY3I', 'DELAY N', 'DELAY1I',
 #
 # - # If you put a *+? quantifier on a node listing (ie: Docstring?) then it creates an anonymous
 #     node, which makes it hard to match up later in the tree crawler
-#
-# - we could think about putting the dictionary and the grammars within the class,
-#     because the class uses them exclusively
-#
 ################################################################
 
 
@@ -157,8 +155,8 @@ file_grammar = (
     'ExpBase  = Primary SNL Exponentive*                                                          \n'+
     'Exponentive = "^" SNL Primary                                                                \n'+
 
-    'Primary  = Call / ConCall / LUCall / Parens / Signed / Subs / UnderSub / Number / Reference \n'+
-    'Parens   = "(" SNL Condition SNL ")"                                                           \n'+
+    'Primary  = Call / ConCall / LUCall / Parens / Signed / Subs / UnderSub / Number / Reference  \n'+
+    'Parens   = "(" SNL Condition SNL ")"                                                         \n'+
 
     'Call     = Keyword SNL "(" SNL ArgList SNL ")"                                              \n'+
 
@@ -184,7 +182,7 @@ file_grammar = (
     'Number   = ((~"[0-9]"+ "."? ~"[0-9]"*) / ("." ~"[0-9]"+)) (("e"/"E") ("-"/"+") ~"[0-9]"+)? \n'+
     'Identifier = Basic_Id / Special_Id                                                         \n'+
     'Basic_Id = Letter (Letter / Digit / ~"[_\s]")*                                             \n'+
-    'Special_Id = "\\""  ~"[^\\"]"*  "\\""                                                      \n'+
+    'Special_Id = "\\""  ~"[^\\"]"*  "\\""                                                      \n'+ #won't handle where vensim has escaped double quotes...
     'Letter   = ~"[a-zA-Z]"                                                                     \n'+
     'Digit    = ~"[0-9]"                                                                        \n'+
 

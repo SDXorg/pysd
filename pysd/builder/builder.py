@@ -15,7 +15,21 @@ debug models.
 # Todo: Add a __doc__ function that summarizes the docstrings of the whole model
 # Todo: Give the __doc__ function a 'short' and 'long' option
 # Todo: Modify static functions to reference their own function attribute
+# If we have a function that defines a constant value (or a big, constructed
+# numpy array) it may be better to have the array constructed once (outside of the
+# function, perhaps as an attribute) than to construct and return it every time
+# the function is called. (Of course, it may be that python detects this and does
+# it for us - we should find out)
+# Alternately, there may be a clever way to cache this so that we don't have to
+# change the model file.
+#
 
+# Todo: Template separation is getting a bit out of control. Perhaps bring it back in?
+
+# Todo: create a function that gets the subscript family name, given one of its elements
+# this should be robust to the possibility that different families contain the same
+# child, as would be the case with subranges. Probably means that we'll have to collect
+# all of the subelements and pass them together to get the family name.
 
 import re
 import keyword
@@ -34,13 +48,9 @@ class Builder(object):
 
 
         dictofsubs: dictionary
-            numpy indices of translated subscript names and elements.
-            {'apples':':', 'a1':0, 'a2':1,
-            'pears':':', 'p1':0, 'p2':1}
+            # Todo: rewrite this once we settle on a schema
 
         """
-        # We specify the dictofsubs as a flat dictionary, because it is
-        # cleaner and faster.
 
         self.filename = outfilename
         self.stocklist = []
@@ -79,18 +89,26 @@ class Builder(object):
 
         #todo: consider the case where different flows work over different subscripts
         #todo: build a test case to test the above
+        #todo: force the sub parameter to be a list
         initial_condition = initial_condition.replace('\n','').replace('\t','') #todo: this is kluge
         if sub:
-            size = getnumofelements(sub, self.dictofsubs)
+            if isinstance(sub, basestring): sub = [sub] #also kluge
+            directory, size = get_array_info(sub, self.dictofsubs)
             if re.search(';',initial_condition): #if the elements passed are an array of constants, need to format for numpy
                 initial_condition = 'np.'+ np.array(np.mat(initial_condition.strip(';'))).__repr__()
 
             #todo: I don't like the fact that the array is applied even when it isnt needed - but thats for another day
             initial_condition += '*np.ones((%s))'%(','.join(map(str,size)))
 
-        self.body.append(templates['stock'].substitute(identifier=identifier,
-                                                       expression=expression,
-                                                       initial_condition=initial_condition))
+
+        funcstr = templates['stock'].substitute(identifier=identifier,
+                                                expression=expression,
+                                                initial_condition=initial_condition)
+
+        if sub:  # this is super bad coding practice, should change it.
+            funcstr += '%s.dimension_dir = '%identifier+directory.__repr__()+'\n'
+
+        self.body.append(funcstr)
         self.stocklist.append(identifier)
 
     def add_flaux(self, identifier, sub, expression, doc=''):
@@ -126,18 +144,18 @@ class Builder(object):
 
 
         """
+        # todo: why does the no-sub condition give [''] as the argument?
         # todo: evaluate if we should instead use syntax [['a1','pears'],['a2','pears']]
         # todo: build a test case to test
+        # todo: clean up this function
 
         # docstring = ('Type: Flow or Auxiliary\n        '+
         #              '\n        '.join(doc.split('\n')))
         docstring = ''
 
-
-        # first work out the size of the array that the function will return
         if sub[0]!='': #todo: consider factoring this out if it is useful for the multiple flows
-            #todo: why does the no-sub condition give [''] as the argument?
-            size = getnumofelements(sub[0], self.dictofsubs)
+            directory, size = get_array_info(sub, self.dictofsubs)
+
             funcset = 'output = np.ndarray((%s))\n'%','.join(map(str,size)) #lines which encode the expressions for partially defined subscript pieces
             for expr, subi in zip(expression, sub):
                 expr = expr.replace('\n','').replace('\t','').strip() #todo: we should clean the expressions before we get to this point...
@@ -151,12 +169,12 @@ class Builder(object):
 
 
         funcstr = templates['flaux'].substitute(identifier=identifier,
-                                                       expression=funcset,
-                                                       docstring=docstring)
+                                                expression=funcset,
+                                                docstring=docstring)
+
+        if sub[0]!='':  # this is bad coding practice, should change it.
+            funcstr += '%s.dimension_dir = '%identifier+directory.__repr__()+'\n'  # todo: do we like 'dimension_dictionary' as a name?
         self.body.append(funcstr)
-
-
-
 
     def add_lookup(self, identifier, valid_range, copair_list):
         """Constructs a function that implements a lookup.
@@ -247,7 +265,8 @@ class Builder(object):
 
 def getelempos(element, dictofsubs):
     """
-    Helps for accessing elements of a
+    Helps for accessing elements of an array: given the subscript element names,
+    returns the numerical ranges that correspond
 
     Parameters
     ----------
@@ -276,59 +295,76 @@ def getelempos(element, dictofsubs):
 
     return tuple(position)
 
-def getnumofelements(element, dictofsubs):
+def get_array_info(subs, dictofsubs):
     """
+    Returns information needed to create and access members of the numpy array
+    based upon the string names given to them in the model file.
 
     Parameters
     ----------
-    element <string of subscripts>
+    subs : Array of strings of subscripts
 
-    returns a list of the sizes of the dimensions. A 4x3x6 array would return
-    [4,3,6]
+    dictofsubs : dictionary
+
+    returns
+    -------
+    A dictionary of the dimensions associating their names with their numpy indices
+    directory = {'dimension name 1':0, 'dimension name 2':1}
+
+    A list of the length of each dimension. Equivalently, the shape of the array:
+    shape = [5,4]
 
     """
-    # todo: make this elementstr or something
-    position=[]
-    elements=element.replace('!','').replace('','').split(',')
-    for element in elements:
-        if element in dictofsubs.keys():
-            position.append(len(dictofsubs[element]))
+    # Todo: this isn't the most elegant function at the dance...
+    subscript_references = []
+    for sub in subs:
+        subscript_references.append(sub.replace('!','').replace('','').split(','))
+
+    num_dimensions = len(subscript_references[0])
+    reference_sets = [set() for _ in range(num_dimensions)]
+
+    for subscript_reference in subscript_references:
+        [reference_sets[i].add(element) for i, element in enumerate(subscript_reference)]
+    # reference sets will now include a set for every dimension.
+
+    directory = dict()
+    shape = np.zeros(num_dimensions)
+    for i, reference_set in enumerate(reference_sets):
+        if len(reference_set)==1:
+            reference = list(reference_set)[0]
+            if reference in dictofsubs.keys():
+                shape[i] = len(dictofsubs[reference])
+                directory[reference] = i
         else:
-            for d in dictofsubs.itervalues():
-                try:
-                    (d[element])
-                except: pass
-                else:
-                    position.append(len(d))
+            for key, member_dict in dictofsubs.iteritems():  # slow!
+                if reference_set == set(member_dict.keys()):  # matches
+                    shape[i] = len(member_dict)
+                    directory[key] = i
 
-    return position
+    return directory, shape
 
 
-
-
-
-
-def add_lookup(filename, identifier, valid_range, copair_list):
-    # in the future, we may want to check in bounds for the range. for now, lazy...
-    xs, ys = zip(*copair_list)
-    xs_str = str(list(xs))
-    ys_str = str(list(ys))
-
-    #warning: this may create a class attribute of the function for the lookups, when what we want
-    # is an instance attribute. Not sure...
-
-    funcstr = ('    def %s(self, x):                                      \n'%identifier +
-               '        return self.functions.lookup(x,                   \n' +
-               '                                     self.%s.xs,          \n'%identifier +
-               '                                     self.%s.ys)          \n'%identifier +
-               '                                                          \n' +
-               '    %s.xs = %s                                            \n'%(identifier, xs_str) +
-               '    %s.ys = %s                                            \n'%(identifier, ys_str) +
-               '                                                          \n'
-              )
-
-    with open(filename, 'a') as outfile:
-        outfile.write(funcstr)
+# def add_lookup(filename, identifier, valid_range, copair_list):
+#     # in the future, we may want to check in bounds for the range. for now, lazy...
+#     xs, ys = zip(*copair_list)
+#     xs_str = str(list(xs))
+#     ys_str = str(list(ys))
+#
+#     #warning: this may create a class attribute of the function for the lookups, when what we want
+#     # is an instance attribute. Not sure...
+#
+#     funcstr = ('    def %s(self, x):                                      \n'%identifier +
+#                '        return self.functions.lookup(x,                   \n' +
+#                '                                     self.%s.xs,          \n'%identifier +
+#                '                                     self.%s.ys)          \n'%identifier +
+#                '                                                          \n' +
+#                '    %s.xs = %s                                            \n'%(identifier, xs_str) +
+#                '    %s.ys = %s                                            \n'%(identifier, ys_str) +
+#                '                                                          \n'
+#               )
+#
+#     with open(filename, 'a') as outfile:
+#         outfile.write(funcstr)
 #
 # def add_Subscript(filename, identifier, expression):
 #     docstring = ('Type: Subscript')

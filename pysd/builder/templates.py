@@ -22,6 +22,23 @@ def time():
 # Todo: np, functions may want to be private, to make sure the namespace is safe...
 # Todo: figure out a better place for the 'time' function to live
 
+
+# Track subscripts names in the model file
+# What we do is at the top of the model file, create a dictionary with all of
+# the subscript families and their associated elements, also any subranges. i.e.
+#
+# subscript_list = {'one_dimensional_subscript': {'entry_1': 0, 'entry_2': 1, 'entry_3': 2},
+#                   'second_dimension_subscript': {'column_1': 0, 'column_2': 1},
+#                   'third_dimension_subscript': {'depth_1': 0, 'depth_2': 1}}
+#
+# Then, as an attribute to a subscripted variable, we include another
+# dictionary which says which families are used that variable, and what axis each
+# corresponds to:
+#
+# function.dimension_dir = {'one_dimensional_subscript':0, 'second_dimension_subscript':1}
+#
+
+
 templates['subscript_dict'] = Template(
 """
 _subscript_dict = ${dictofsubs}

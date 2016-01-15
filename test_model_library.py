@@ -79,6 +79,8 @@ fail_count = 0
 
 starttime = timeit.time.time()
 
+# Todo: refactor to break out each step into its own try/except?
+
 for i, modelfile in testfiles.iteritems():
     status_str = ''
 
@@ -91,7 +93,12 @@ for i, modelfile in testfiles.iteritems():
             status_str += 'Loaded Model, '
 
         directory = os.path.dirname(modelfile)
+        output_basename = directory+'/output'
+        #os ifexistss csv, import, else import tab.
+
+
         canon = pd.read_csv(directory+'/output.csv', index_col='Time')
+
         return_columns = [pysd.builder.make_python_identifier(x) for x in canon.columns.tolist()]
         canon.columns = return_columns #rename the columns we brought in so they match to the model output
 
