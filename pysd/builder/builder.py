@@ -162,7 +162,7 @@ class Builder(object):
             funcset = 'output = np.ndarray((%s))\n'%','.join(map(str,size)) #lines which encode the expressions for partially defined subscript pieces
             for expr, subi in zip(expression, sub):
                 expr = expr.replace('\n','').replace('\t','').strip() #todo: we should clean the expressions before we get to this point...
-                indices = ','.join(map(str,getelempos(subi,self.dictofsubs)))
+                indices = ','.join(map(str,getelempos(subi, directory, self.dictofsubs)))
                 if re.search(';',expr): #if the elements passed are an array of constants, need to format for numpy
                     expr = 'np.'+np.array(np.mat(expr.strip(';'))).__repr__()
                     #todo: this might be an interesting way to identify and pull out of the function array constants
@@ -308,7 +308,7 @@ class Builder(object):
 
 # these are module functions so that we can access them from the visitor
 
-def getelempos(element, dictofsubs):
+def getelempos(element, directory, dictofsubs):
     """
     Helps for accessing elements of an array: given the subscript element names,
     returns the numerical ranges that correspond
@@ -328,14 +328,12 @@ def getelempos(element, dictofsubs):
 
     position=[]
     elements=element.replace('!','').replace(' ', '').split(',')
-    for element in elements:
-        if element in dictofsubs.keys():
+    for i, element in enumerate(elements):
+        family = dir_find(directory, i)
+        if element == family:
             position.append(':')
         else:
-            for d in dictofsubs.itervalues():
-                try:
-                    position.append(d[element])
-                except: pass
+            position.append(dictofsubs[family][element])
 
     return tuple(position)
 
@@ -347,6 +345,7 @@ def get_array_info(subs, dictofsubs):
     Parameters
     ----------
     subs : Array of strings of subscripts
+        These should be all of the subscript names that are needed to create the array
 
     dictofsubs : dictionary
 
@@ -360,71 +359,70 @@ def get_array_info(subs, dictofsubs):
 
     """
     # Todo: this isn't the most elegant function at the dance...
+
+    #subscript references here are lists of array 'coordinate' names
     subscript_references = []
     for sub in subs:
         subscript_references.append(sub.replace('!','').replace('','').split(','))
 
+    #we collect the references used in each dimension as a set, so we can compare contents
     num_dimensions = len(subscript_references[0])
     reference_sets = [set() for _ in range(num_dimensions)]
-
     for subscript_reference in subscript_references:
         [reference_sets[i].add(element) for i, element in enumerate(subscript_reference)]
-    # reference sets will now include a set for every dimension.
+    # `reference_sets` will now include a set for every dimension, containing the names used to
+    # access parts of that dimension
 
     directory = dict()
     shape = np.zeros(num_dimensions)
     for i, reference_set in enumerate(reference_sets):
-        if len(reference_set)==1:
+        if len(reference_set)==1: # The element is almost certainly a subscript family name
             reference = list(reference_set)[0]
             if reference in dictofsubs.keys():
                 shape[i] = len(dictofsubs[reference])
                 directory[reference] = i
+            else:  # handle the case of a one-element subscript
+                pass
         else:
             for key, member_dict in dictofsubs.iteritems():  # slow!
                 if reference_set == set(member_dict.keys()):  # matches
                     shape[i] = len(member_dict)
                     directory[key] = i
+                    break  # this is to prevent multiple inclusions,
+                           # if a subarray is equal to the array
 
     return directory, shape
 
+def dir_find(dir, value):
+    return dir.keys()[dir.values().index(value)]
 
 
 
 
 
 
-# def add_Subscript(filename, identifier, expression):
-#     docstring = ('Type: Subscript')
-#     funcstr = ('    def subscript_%s(self):\n'%identifier +
-#                '        """%s"""\n'%docstring +
-#                '        return "%s" \n\n'%expression)
+
+
 #
+# def add_initial(filename, component):
+#     """ Implement vensim's `INITIAL` command as a build-time function.
+#         component cannot be a full expression, must be a reference to
+#         a single external element.
+#     """
+#     if not re.search('[a-zA-Z]',component):
+#         naked_component="number"
+#     else:
+#         naked_component = component.split("self.")[1]
+#         naked_component = naked_component.split("()")[0]
+#     funcstr = ('    def initial_%s(self, inval):                  \n'%naked_component +
+#                '        if not hasattr(self.initial_%s, "value"): \n'%naked_component +
+#                '            self.initial_%s.im_func.value = inval \n'%naked_component +
+#                '        return self.initial_%s.value             \n\n'%naked_component
+#               )
 #     with open(filename, 'a') as outfile:
 #         outfile.write(funcstr)
 #
-#     return 'self.%s()'%identifier
-
-
-#
-def add_initial(filename, component):
-    """ Implement vensim's `INITIAL` command as a build-time function.
-        component cannot be a full expression, must be a reference to
-        a single external element.
-    """
-    if not re.search('[a-zA-Z]',component):
-        naked_component="number"
-    else:
-        naked_component = component.split("self.")[1]
-        naked_component = naked_component.split("()")[0]
-    funcstr = ('    def initial_%s(self, inval):                  \n'%naked_component +
-               '        if not hasattr(self.initial_%s, "value"): \n'%naked_component +
-               '            self.initial_%s.im_func.value = inval \n'%naked_component +
-               '        return self.initial_%s.value             \n\n'%naked_component
-              )
-    with open(filename, 'a') as outfile:
-        outfile.write(funcstr)
-
-    return 'self.initial_%s(%s)'%(naked_component, component)
+#     return 'self.initial_%s(%s)'%(naked_component, component)
 
 #
 

@@ -397,9 +397,11 @@ class PySD(object):
 
             for i,j in enumerate(sort(varname.dimension_dir)):
                 for k in range(stocklen):
-                    interstock[k] += ","+sort(self.components._subscript_dict[j])[int(fmod(k/stockmod[i],len(self.components._subscript_dict[j])))]
+                    #interstock[k] += ","+sort(self.components._subscript_dict[j])[int(fmod(k/stockmod[i],len(self.components._subscript_dict[j])))]
+                    interstock[k] += "__"+sort(self.components._subscript_dict[j])[int(fmod(k/stockmod[i],len(self.components._subscript_dict[j])))]
 
-            return [interstock[i].strip(",") for i in range(len(interstock))]
+            #return [interstock[i].strip(",") for i in range(len(interstock))]
+            return [interstock[i].strip("__") for i in range(len(interstock))] #take off the ends
 
 
 
@@ -407,7 +409,8 @@ class PySD(object):
             result=[]
             for pos,name in enumerate(pddf.columns):
                 result.append(pddf[name].apply(lambda x: _pd.Series(x.flatten())))
-                result[pos].columns=([name+'['+pandasnamearray(getattr(self.components,name))[x]+']' for x in range(len(pandasnamearray(getattr(self.components,name))))])
+                #result[pos].columns=([name+'['+pandasnamearray(getattr(self.components,name))[x]+']' for x in range(len(pandasnamearray(getattr(self.components,name))))])
+                result[pos].columns=([name+'__'+pandasnamearray(getattr(self.components,name))[x] for x in range(len(pandasnamearray(getattr(self.components,name))))])
             pddf=_pd.concat([result[x] for x in range(len(result))],axis=1)
 
             return pddf

@@ -107,8 +107,11 @@ for i, modelfile in testfiles.iteritems():
 
         # identify the columns to ask the model for
         #todo: work out how to only ask for the actual model components. Probably by taking away everythign after double __
-        return_columns = [pysd.builder.make_python_identifier(x) for x in canon.columns.tolist()]
-        canon.columns = return_columns #rename the columns we brought in so they match to the model output
+        pythonized_column_names = [pysd.builder.make_python_identifier(x) for x in canon.columns.tolist()]
+        return_columns = list(set([name.split('__')[0] for name in pythonized_column_names]))
+
+        # rename the columns we brought in so they match to the (flattened) model output
+        canon.columns = pythonized_column_names
         status_str += 'Looking for output columns: '+', '.join(return_columns)
 
         # run the model

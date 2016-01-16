@@ -191,6 +191,7 @@ file_grammar = (
     '_ = spacechar*                                                                             \n'+
     # Vensim uses a 'backslash, newline' syntax as a way to split an equation onto multiple lines.
     #   We address this by including it as  an allowed space character.
+    # Todo: do we really want the exclamation to be a space character? we want to throw these away...
     'spacechar = exclamation* " "* ~"\t"* (~r"\\\\" NL)*                                         \n'+
     'exclamation = "!"+ \n' +
     'Keyword = %s  \n'%keywords +
@@ -221,6 +222,9 @@ class TextParser(NodeVisitor):
 
     ############# 'entry' level translators ############################
     visit_Entry = visit_Component = NodeVisitor.lift_child
+
+    def skip(self, n, vc):
+        return ''
 
     def visit_ModelEntry(self, n, (_1, Identifier, _2, tld1, _3, Unit, _4,
                                    tld2, _5, Docstring, _6, pipe, _7)):
@@ -338,8 +342,11 @@ class TextParser(NodeVisitor):
 
     def visit_Reference(self, n, (Identifier, _1, Subs, _2)):
         if Subs:
+            # This could be a fundamentally paradigm shattering thing. We need to know the
+            # position to reference in an array that isn't guaranteed to be created yet...
+            # for now, use old version. this is going to fail, though...
             InterSub=Subs.split(",")
-            subscript='[%s]'%','.join(map(str,builder.getelempos(Subs.replace("!",""), self.dictofsubs)))
+            subscript='[%s]'%','.join(map(str, getelempos(Subs.replace("!", ""), self.dictofsubs)))
             subscript=re.sub(r'\[(:,*)+]*\]','',subscript)
             getelemstr=Identifier+'()'+subscript
             if len(InterSub)==1:
@@ -410,6 +417,38 @@ class TextParser(NodeVisitor):
         """
         return ''.join(filter(None, vc)) or n.text or ''
 
+    visit_SNL = skip
+
+
+def getelempos(element, dictofsubs):
+    """
+    Helps for accessing elements of an array: given the subscript element names,
+    returns the numerical ranges that correspond
+    Parameters
+    ----------
+    element
+    dictofsubs
+    Returns
+    -------
+    """
+    # Todo: Make this accessible to the end user
+    #  The end user will get an unnamed array, and will want to have access to
+    #  members by name.
+
+    position=[]
+    elements=element.replace('!','').replace(' ', '').split(',')
+    for element in elements:
+        if element in dictofsubs.keys():
+            position.append(':')
+        else:
+            for d in dictofsubs.itervalues():
+                try:
+                    position.append(d[element])
+                    break
+                except: pass
+
+    return tuple(position)
+
 
 def doc_supported_vensim_functions():
     """prints a list of all of the vensim functions that are supported
@@ -462,7 +501,6 @@ def translate_vensim(mdl_file):
     #             pass
 
 
-    print dictofsubs
 
     # Todo: encode somewhere in this the order of the families...
     # Todo: print the dict of subs in the model file
