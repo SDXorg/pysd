@@ -1,5 +1,15 @@
+"""
+functions.py
+
+These are supports for functions that are included in modeling software but have no
+straightforward equivalent in python.
+
+"""
+
 import numpy as np
-import scipy.stats as stats
+import scipy.stats as stats  # Todo: can we get away from the scipy dependency?
+
+# Todo: Pull this out of a class and make it flat for inclusion in the model file
 
 
 class Functions(object):
@@ -68,11 +78,12 @@ class Functions(object):
         np.random.seed(seed)
         return stats.truncnorm.rvs(minimum, maximum, loc=mean, scale=std)
 
+
 def lookup(x, xs, ys):
     """ Provides the working mechanism for lookup functions the builder builds """
     return np.interp(x, xs, ys)
 
-#todo: fix this file...
+
 def if_then_else(condition,val_if_true,val_if_false):
     return np.where(condition,val_if_true,val_if_false)
 

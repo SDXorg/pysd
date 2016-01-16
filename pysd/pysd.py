@@ -1,9 +1,20 @@
-'''
-created: August 15, 2014
-last update: June 6 2015
-version 0.2.5
+"""
+pysd.py
+
+Contains all the code that will be directly accessed by the user in normal operation.
+Also contains some private members to facilitate integration, setup, etc.
+
+History
+--------
+August 15, 2014 : created
+June 6 2015 : Major updates - version 0.2.5
+Jan 2016 : Rework to handle subscripts
+
+Contributors
+------------
 James Houghton <james.p.houghton@gmail.com>
-'''
+Mounir Yakzan
+"""
 
 import pandas as _pd
 import numpy as np
@@ -68,7 +79,7 @@ def load(py_model_file):
     --------
     >>> model = load('Teacup.py')
     """
-    # Todo: This is a messy way to find stocknames. Refactor.
+    # Todo: This whole function is a mess. Consider including parts in the `init` of the PySD class
     components = imp.load_source('modulename', py_model_file)
     components._stocknames = [name[2:-3] for name in dir(components) if name.startswith('_') and name.endswith('_dt')]
     components._dfuncs = {name: getattr(components, '_d%s_dt'%name) for name in components._stocknames}
@@ -76,7 +87,8 @@ def load(py_model_file):
     components._funcs = {name: getattr(components, name) for name in funcnames}
 
     # set up the caches
-    #Todo: make a robust way to tell that we're only caching the right things
+    # Todo: make a robust way to tell that we're only caching the right things
+    # Todo: make caching optional?
     nocache = (['_t', 'time_step', 'time', 'initial_time', 'final_time', 'division', 'functions', 'np', 'saveper',
          '_stocknames', '_state', '_funcs', '_dfuncs', '_subscript_dict'] +
           ['_d%s_dt'%s for s in components._dfuncs.keys()] +  #these are only called once
@@ -90,16 +102,32 @@ def load(py_model_file):
     model.__str__ = 'Import of ' + py_model_file
     return model
 
+
 def cache(func, components):
-    def inner(*args):
+    """
+    Put a wrapper around a model function
+    Parameters
+    ----------
+    func : function in the components module
+
+    components : the components module
+
+    Returns
+    -------
+    new_func : function wrapping the original function, handling caching
+    """
+    # Todo: add some error checking, that `func` is actually a function, etc.
+    # Todo: find a more appropriate place for this to live.
+    def new_func(*args):
         try:
-            assert inner.t == components._t  # fails if cache is out of date or not instantiated
+            assert new_func.t == components._t  # fails if cache is out of date or not instantiated
         except:
-            inner.cache = func(*args)
-            inner.t = components._t
-        return inner.cache
-    inner.func_dict = func.func_dict  # propagate attributes (like dim_dict) to the wrap function
-    return inner
+            new_func.cache = func(*args)
+            new_func.t = components._t
+        return new_func.cache
+    new_func.func_dict = func.func_dict  # propagate attributes (like dim_dict) to the wrap function
+    return new_func
+
 
 class PySD(object):
     """
@@ -192,8 +220,6 @@ class PySD(object):
         if addtflag:
             tseries = np.insert(tseries, 0, self.components._t)
 
-
-
         if self.components._stocknames:
             if not return_columns:
                 return_columns = self.components._stocknames
@@ -202,21 +228,16 @@ class PySD(object):
             return_df = _pd.DataFrame(data=res, index=tseries)
 
         else:
-            outdict={}
+            outdict = {}
             for key in return_columns:
                 outdict[key] = self.components._funcs[key]()
             return_df = _pd.DataFrame(index=tseries, data=outdict)
 
         if flatten_subscripts:
-            #if self.components._subscript_dict:
-            #    return_df = self._flatten_dataframe(return_df)
-            #try:
+            # Todo: short circuit this if there is nothing to flatten
             return_df = self._flatten_dataframe(return_df)
-            #except:
-            #    flattening
-            #    pass #Todo: this is temp, until we have a better way of not trying to flatten things that don't have subscripts
 
-        if addtflag:
+        if addtflag: # Todo: add a test case in which this is necessary to test_functionality
             return_df.drop(return_df.index[0], inplace=True)
 
         if collect:
@@ -246,7 +267,6 @@ class PySD(object):
                 retry_flag = True
         if retry_flag:
             self.reset_state()
-
 
     def get_record(self):
         """ Return the recorded model information.
@@ -379,7 +399,7 @@ class PySD(object):
         -------
 
         """
-
+        # Todo: write proper docstrings.
         outputs = range(len(timesteps))
         for i, t2 in enumerate(timesteps):
             self.components._state = self._step(ddt, self.components._state, t2-self.components._t)
@@ -412,8 +432,6 @@ class PySD(object):
              Extra columns will be added to represent each of the elements of the arrays
              in question.
         """
-        self.components
-
         def sort(dictionary):
             return [dictionary.keys()[dictionary.values().index(x)] for x in sorted(dictionary.values())]
 
@@ -440,8 +458,6 @@ class PySD(object):
             #return [interstock[i].strip(",") for i in range(len(interstock))]
             return [interstock[i].strip("__") for i in range(len(interstock))] #take off the ends
 
-
-
         def dataframeexpand(pddf):
             result=[]
             for pos,name in enumerate(pddf.columns):
@@ -456,6 +472,5 @@ class PySD(object):
             pddf=_pd.concat([result[x] for x in range(len(result))],axis=1)
 
             return pddf
-
 
         return dataframeexpand(dataframe)

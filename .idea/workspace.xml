@@ -2,23 +2,13 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a7e5b169-cc30-45fb-a7f9-e8e84f9c05bd" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/pysd/translators/vensim.grammar" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/pysd/translators/ANTLR_collection" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/pysd/translators/antlr_vensim2py.py" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models" afterPath="$PROJECT_DIR$/tests/test-models" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/codeStyleSettings.xml" afterPath="$PROJECT_DIR$/.idea/codeStyleSettings.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/pysd.iml" afterPath="$PROJECT_DIR$/.idea/pysd.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/vcs.xml" afterPath="$PROJECT_DIR$/.idea/vcs.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/builder/builder.py" afterPath="$PROJECT_DIR$/pysd/builder/builder.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/builder/templates.py" afterPath="$PROJECT_DIR$/pysd/builder/templates.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/functions/functions.py" afterPath="$PROJECT_DIR$/pysd/functions/functions.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/pysd.py" afterPath="$PROJECT_DIR$/pysd/pysd.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/translators/__init__.py" afterPath="$PROJECT_DIR$/pysd/translators/__init__.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/translators/vensim2py.py" afterPath="$PROJECT_DIR$/pysd/translators/vensim2py.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/sandbox.ipynb" afterPath="$PROJECT_DIR$/sandbox.ipynb" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test_model_library.py" afterPath="$PROJECT_DIR$/test_model_library.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/old_tests/vensim/Teacup.py" afterPath="$PROJECT_DIR$/tests/old_tests/vensim/Teacup.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/README.md" afterPath="$PROJECT_DIR$/tests/test-models/README.md" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test_functionality.py" afterPath="$PROJECT_DIR$/test_functionality.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/samples/SIR/SIR.py" afterPath="$PROJECT_DIR$/tests/test-models/samples/SIR/SIR.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/samples/teacup/teacup.py" afterPath="$PROJECT_DIR$/tests/test-models/samples/teacup/teacup.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.py" afterPath="$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.py" />
@@ -43,125 +33,7 @@
     <favorites_list name="pysd" />
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="test_model_library.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/test_model_library.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="104" column="13" selection-start-line="104" selection-start-column="13" selection-end-line="104" selection-end-column="13" />
-              <folding>
-                <element signature="e#1283#1294#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="vensim2py.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pysd/translators/vensim2py.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-23.185184">
-              <caret line="326" column="13" selection-start-line="326" selection-start-column="13" selection-end-line="326" selection-end-column="13" />
-              <folding>
-                <element signature="e#1364#1383#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="vensim.grammar" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pysd/translators/vensim.grammar">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-15.555555">
-              <caret line="46" column="58" selection-start-line="46" selection-start-column="58" selection-end-line="46" selection-end-column="58" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="test_lookups.mdl" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.mdl">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="18" column="14" selection-start-line="18" selection-start-column="14" selection-end-line="18" selection-end-column="14" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="test_functionality.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/test_functionality.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="18" column="68" selection-start-line="18" selection-start-column="68" selection-end-line="18" selection-end-column="68" />
-              <folding>
-                <element signature="e#205#216#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="builder.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pysd/builder/builder.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="298" column="22" selection-start-line="298" selection-start-column="22" selection-end-line="298" selection-end-column="22" />
-              <folding>
-                <element signature="e#1686#1695#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="functions.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pysd/functions/functions.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="71" column="27" selection-start-line="71" selection-start-column="27" selection-end-line="71" selection-end-column="27" />
-              <folding>
-                <element signature="e#0#18#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="templates.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pysd/builder/templates.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-4.4444447">
-              <caret line="8" column="0" selection-start-line="8" selection-start-column="0" selection-end-line="8" selection-end-column="27" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="Teacup.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/tests/old_tests/vensim/Teacup.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="72" column="0" selection-start-line="72" selection-start-column="0" selection-end-line="72" selection-end-column="0" />
-              <folding>
-                <marker date="1452960622000" expanded="true" signature="1:78" placeholder="import ..." />
-                <marker date="1452960622000" expanded="true" signature="91:105" placeholder="..." />
-                <marker date="1452960622000" expanded="true" signature="138:154" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-                <marker date="1452960622000" expanded="true" signature="883:901" placeholder="..." />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="pysd.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/pysd/pysd.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.8363636">
-              <caret line="458" column="0" selection-start-line="458" selection-start-column="0" selection-end-line="458" selection-end-column="0" />
-              <folding>
-                <element signature="e#117#137#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-    </leaf>
+    <leaf />
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -180,14 +52,14 @@
         <option value="$PROJECT_DIR$/tests/plot_speedtests.py" />
         <option value="$PROJECT_DIR$/speed_test.py" />
         <option value="$PROJECT_DIR$/tests/old_tests/vensim/Teacup.py" />
-        <option value="$PROJECT_DIR$/test_functionality.py" />
-        <option value="$PROJECT_DIR$/pysd/builder/templates.py" />
-        <option value="$PROJECT_DIR$/pysd/functions/functions.py" />
         <option value="$PROJECT_DIR$/pysd/translators/.ipynb_checkpoints/vensim.grammar" />
         <option value="$PROJECT_DIR$/pysd/translators/vensim.grammar" />
-        <option value="$PROJECT_DIR$/pysd/builder/builder.py" />
-        <option value="$PROJECT_DIR$/pysd/translators/vensim2py.py" />
         <option value="$PROJECT_DIR$/test_model_library.py" />
+        <option value="$PROJECT_DIR$/pysd/translators/vensim2py.py" />
+        <option value="$PROJECT_DIR$/pysd/builder/builder.py" />
+        <option value="$PROJECT_DIR$/test_functionality.py" />
+        <option value="$PROJECT_DIR$/pysd/functions/functions.py" />
+        <option value="$PROJECT_DIR$/pysd/builder/templates.py" />
         <option value="$PROJECT_DIR$/pysd/pysd.py" />
       </list>
     </option>
@@ -299,8 +171,8 @@
     </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
-    <property name="settings.editor.selected.configurable" value="preferences.fileTypes" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/test_model_library.py" />
+    <property name="settings.editor.selected.configurable" value="reference.idesettings.debugger.python" />
     <property name="settings.editor.splitter.proportion" value="0.2" />
     <property name="FullScreen" value="true" />
     <property name="SearchEverywhereHistoryKey" value="&#9;FILE&#9;file:///Users/houghton/Google_Drive/Academic Projects/PYSD/pysd/pysd/builder/builder.py" />
@@ -321,7 +193,7 @@
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.Teacup">
+  <component name="RunManager" selected="Python.Test Model Library">
     <configuration default="false" name="Teacup" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -337,6 +209,25 @@
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/old_tests/vensim/Teacup.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
+      <method />
+    </configuration>
+    <configuration default="false" name="Doctests in test_model_library" type="tests" factoryName="Doctests" temporary="true" nameIsGenerated="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="pysd" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test_model_library.py" />
+      <option name="CLASS_NAME" value="" />
+      <option name="METHOD_NAME" value="" />
+      <option name="FOLDER_NAME" value="" />
+      <option name="TEST_TYPE" value="TEST_SCRIPT" />
+      <option name="PATTERN" value="" />
+      <option name="USE_PATTERN" value="false" />
       <method />
     </configuration>
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
@@ -461,12 +352,32 @@
       <option name="USE_KEYWORD" value="false" />
       <method />
     </configuration>
-    <list size="1">
-      <item index="0" class="java.lang.String" itemvalue="Python.Teacup" />
+    <configuration default="false" name="Test Model Library" type="PythonConfigurationType" factoryName="Python">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="$USER_HOME$/anaconda/bin/python" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="pysd" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test_model_library.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <method />
+    </configuration>
+    <list size="3">
+      <item index="0" class="java.lang.String" itemvalue="Python.Test Model Library" />
+      <item index="1" class="java.lang.String" itemvalue="Python.Teacup" />
+      <item index="2" class="java.lang.String" itemvalue="Python tests.Doctests in test_model_library" />
     </list>
     <recent_temporary>
-      <list size="1">
-        <item index="0" class="java.lang.String" itemvalue="Python.Teacup" />
+      <list size="2">
+        <item index="0" class="java.lang.String" itemvalue="Python tests.Doctests in test_model_library" />
+        <item index="1" class="java.lang.String" itemvalue="Python.Teacup" />
       </list>
     </recent_temporary>
   </component>
@@ -483,6 +394,11 @@
     </task>
     <servers />
   </component>
+  <component name="TestHistory">
+    <history-entry file="Doctests_in_test_model_library - 2016.01.16 at 13h 58m 41s.xml">
+      <configuration name="Doctests in test_model_library" configurationId="tests" />
+    </history-entry>
+  </component>
   <component name="TodoView" selected-index="1">
     <todo-panel id="selected-file">
       <is-autoscroll-to-source value="true" />
@@ -494,25 +410,25 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1440" height="900" extended-state="0" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.1509299" sideWeight="0.4936306" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.14652778" sideWeight="0.4936306" order="1" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32891566" sideWeight="0.49753347" order="9" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32891566" sideWeight="0.5024665" order="0" side_tool="true" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32891566" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.08674699" sideWeight="0.50500715" order="0" side_tool="true" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3282532" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.15421687" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32771084" sideWeight="0.49753347" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3253012" sideWeight="0.48907682" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25301206" sideWeight="0.49499285" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24947146" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.48125" sideWeight="0.6687808" order="3" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.40625" sideWeight="0.6687808" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.15574348" sideWeight="0.5063694" order="0" side_tool="true" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3634232" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32932693" sideWeight="0.49753347" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
     </layout>
     <layout-to-restore>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32891566" sideWeight="0.49753347" order="9" side_tool="false" content_ui="tabs" />
@@ -555,7 +471,7 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <option name="time" value="2" />
+      <option name="time" value="6" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -572,7 +488,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="116" column="24" selection-start-line="116" selection-start-column="24" selection-end-line="116" selection-end-column="24" />
           <folding>
-            <element signature="e#1686#1695#0" expanded="true" />
+            <element signature="e#1635#1644#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -582,7 +498,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="30" column="16" selection-start-line="30" selection-start-column="16" selection-end-line="30" selection-end-column="16" />
           <folding>
-            <element signature="e#117#137#0" expanded="true" />
+            <element signature="e#390#410#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -619,7 +535,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#1364#1383#0" expanded="true" />
+            <element signature="e#2181#2200#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -635,12 +551,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="65" column="0" selection-start-line="65" selection-start-column="0" selection-end-line="65" selection-end-column="0" />
-          <folding>
-            <marker date="1452960622000" expanded="true" signature="1:78" placeholder="import ..." />
-            <marker date="1452960622000" expanded="true" signature="91:105" placeholder="..." />
-            <marker date="1452960622000" expanded="true" signature="138:154" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1452960622000" expanded="true" signature="883:901" placeholder="..." />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -656,7 +567,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="116" column="24" selection-start-line="116" selection-start-column="24" selection-end-line="116" selection-end-column="24" />
           <folding>
-            <element signature="e#1686#1695#0" expanded="true" />
+            <element signature="e#1635#1644#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -666,7 +577,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="30" column="16" selection-start-line="30" selection-start-column="16" selection-end-line="30" selection-end-column="16" />
           <folding>
-            <element signature="e#117#137#0" expanded="true" />
+            <element signature="e#390#410#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -703,7 +614,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#1364#1383#0" expanded="true" />
+            <element signature="e#2181#2200#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -712,12 +623,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="65" column="0" selection-start-line="65" selection-start-column="0" selection-end-line="65" selection-end-column="0" />
-          <folding>
-            <marker date="1452960622000" expanded="true" signature="1:78" placeholder="import ..." />
-            <marker date="1452960622000" expanded="true" signature="91:105" placeholder="..." />
-            <marker date="1452960622000" expanded="true" signature="138:154" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1452960622000" expanded="true" signature="883:901" placeholder="..." />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -733,7 +639,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="60" column="14" selection-start-line="60" selection-start-column="14" selection-end-line="60" selection-end-column="14" />
           <folding>
-            <element signature="e#1686#1695#0" expanded="true" />
+            <element signature="e#1635#1644#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -742,12 +648,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="50" column="8" selection-start-line="50" selection-start-column="8" selection-end-line="50" selection-end-column="8" />
-          <folding>
-            <marker date="1452960622000" expanded="true" signature="1:78" placeholder="import ..." />
-            <marker date="1452960622000" expanded="true" signature="91:105" placeholder="..." />
-            <marker date="1452960622000" expanded="true" signature="138:154" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1452960622000" expanded="true" signature="883:901" placeholder="..." />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -756,7 +657,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="53" column="0" selection-start-line="53" selection-start-column="0" selection-end-line="53" selection-end-column="0" />
           <folding>
-            <element signature="e#117#137#0" expanded="true" />
+            <element signature="e#390#410#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -800,7 +701,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="60" column="14" selection-start-line="60" selection-start-column="14" selection-end-line="60" selection-end-column="14" />
           <folding>
-            <element signature="e#1686#1695#0" expanded="true" />
+            <element signature="e#1635#1644#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -809,12 +710,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="50" column="26" selection-start-line="50" selection-start-column="26" selection-end-line="50" selection-end-column="26" />
-          <folding>
-            <marker date="1452960622000" expanded="true" signature="1:78" placeholder="import ..." />
-            <marker date="1452960622000" expanded="true" signature="91:105" placeholder="..." />
-            <marker date="1452960622000" expanded="true" signature="138:154" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1452960622000" expanded="true" signature="883:901" placeholder="..." />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -823,7 +719,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="53" column="0" selection-start-line="53" selection-start-column="0" selection-end-line="53" selection-end-column="0" />
           <folding>
-            <element signature="e#117#137#0" expanded="true" />
+            <element signature="e#390#410#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -931,99 +827,94 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pysd/functions/functions.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="71" column="27" selection-start-line="71" selection-start-column="27" selection-end-line="71" selection-end-column="27" />
-          <folding>
-            <element signature="e#0#18#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tests/old_tests/vensim/Teacup.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="72" column="0" selection-start-line="72" selection-start-column="0" selection-end-line="72" selection-end-column="0" />
-          <folding>
-            <marker date="1452960622000" expanded="true" signature="1:78" placeholder="import ..." />
-            <marker date="1452960622000" expanded="true" signature="91:105" placeholder="..." />
-            <marker date="1452960622000" expanded="true" signature="138:154" placeholder="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1452960622000" expanded="true" signature="883:901" placeholder="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pysd/builder/templates.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-4.4444447">
-          <caret line="8" column="0" selection-start-line="8" selection-start-column="0" selection-end-line="8" selection-end-column="27" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pysd/translators/vensim.grammar">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-15.555555">
+        <state vertical-scroll-proportion="0.86466163">
           <caret line="46" column="58" selection-start-line="46" selection-start-column="58" selection-end-line="46" selection-end-column="58" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pysd/builder/builder.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="298" column="22" selection-start-line="298" selection-start-column="22" selection-end-line="298" selection-end-column="22" />
-          <folding>
-            <element signature="e#1686#1695#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.mdl">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="18" column="14" selection-start-line="18" selection-start-column="14" selection-end-line="18" selection-end-column="14" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/test_functionality.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="18" column="68" selection-start-line="18" selection-start-column="68" selection-end-line="18" selection-end-column="68" />
+        <state vertical-scroll-proportion="0.7090909">
+          <caret line="69" column="43" selection-start-line="69" selection-start-column="43" selection-end-line="69" selection-end-column="43" />
           <folding>
             <element signature="e#205#216#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.mdl">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.3272727">
+          <caret line="18" column="14" selection-start-line="18" selection-start-column="14" selection-end-line="18" selection-end-column="14" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pysd/translators/vensim2py.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="1.3454546">
+          <caret line="74" column="0" selection-start-line="74" selection-start-column="0" selection-end-line="74" selection-end-column="0" />
+          <folding>
+            <element signature="e#2181#2200#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/test_model_library.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="104" column="13" selection-start-line="104" selection-start-column="13" selection-end-line="104" selection-end-column="13" />
+        <state vertical-scroll-proportion="0.16363636">
+          <caret line="9" column="39" selection-start-line="9" selection-start-column="39" selection-end-line="9" selection-end-column="39" />
           <folding>
             <element signature="e#1283#1294#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pysd/translators/vensim2py.py">
+    <entry file="file://$PROJECT_DIR$/pysd/functions/functions.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-23.185184">
-          <caret line="326" column="13" selection-start-line="326" selection-start-column="13" selection-end-line="326" selection-end-column="13" />
+        <state vertical-scroll-proportion="2.4363637">
+          <caret line="134" column="28" selection-start-line="134" selection-start-column="28" selection-end-line="134" selection-end-column="28" />
           <folding>
-            <element signature="e#1364#1383#0" expanded="true" />
+            <element signature="e#146#164#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pysd/builder/templates.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="1.1090909">
+          <caret line="61" column="0" selection-start-line="61" selection-start-column="0" selection-end-line="61" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/old_tests/vensim/Teacup.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="1.2727273">
+          <caret line="72" column="0" selection-start-line="72" selection-start-column="0" selection-end-line="72" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/pysd/pysd.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.8363636">
-          <caret line="458" column="0" selection-start-line="458" selection-start-column="0" selection-end-line="458" selection-end-column="0" />
+        <state vertical-scroll-proportion="5.109091">
+          <caret line="281" column="32" selection-start-line="281" selection-start-column="32" selection-end-line="281" selection-end-column="32" />
           <folding>
-            <element signature="e#117#137#0" expanded="true" />
+            <element signature="e#390#410#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pysd/builder/builder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="3.3454545">
+          <caret line="184" column="30" selection-start-line="184" selection-start-column="30" selection-end-line="184" selection-end-column="30" />
+          <folding>
+            <element signature="e#1635#1644#0" expanded="true" />
           </folding>
         </state>
       </provider>

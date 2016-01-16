@@ -14,6 +14,10 @@
   <component name="PyDocumentationSettings">
     <option name="myDocStringFormat" value="NumPy" />
   </component>
+  <component name="ReSTService">
+    <option name="workdir" value="$MODULE_DIR$/docs" />
+    <option name="DOC_DIR" value="$MODULE_DIR$/docs" />
+  </component>
   <component name="TestRunnerService">
     <option name="PROJECT_TEST_RUNNER" value="Unittests" />
   </component>

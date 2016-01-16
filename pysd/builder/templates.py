@@ -21,6 +21,7 @@ def time():
 """)
 # Todo: np, functions may want to be private, to make sure the namespace is safe...
 # Todo: figure out a better place for the 'time' function to live
+# Todo: rework this with the builder, things are getting out of hand...
 
 
 # Track subscripts names in the model file
@@ -36,7 +37,7 @@ def time():
 # corresponds to:
 #
 # function.dimension_dir = {'one_dimensional_subscript':0, 'second_dimension_subscript':1}
-#
+
 
 
 templates['subscript_dict'] = Template(
@@ -55,8 +56,8 @@ _subscript_dict = ${dictofsubs}
 # safed in a different way, or these do.
 
 # The 'init' needs to be a function in its own right (as opposed to just an attribute of the stock
-# accessor) because its expression may reference other parts of the model. We want the initialization
-# to happen at run-time, not import-time, so we need to defer execution.
+# accessor) because its expression may reference other parts of the model. We want the
+# initialization to happen at run-time, not import-time, so we need to defer execution.
 
 
 
