@@ -175,7 +175,7 @@ class Builder(object):
                                                 expression=funcset,
                                                 docstring=docstring)
 
-        if sub[0]! = '':  # todo: make less brittle
+        if sub[0] != '':  # todo: make less brittle
             funcstr += '%s.dimension_dir = '%identifier+directory.__repr__()+'\n'  # todo: do we like 'dimension_dictionary' as a name?
         self.body.append(funcstr)
 
