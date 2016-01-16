@@ -296,10 +296,10 @@ class Builder(object):
             naked_component="number"
         else:
             naked_component = component.split("()")[0]
-        funcstr = ('    def initial_%s(inval):                       \n'%naked_component +
-                   '        if not hasattr(initial_%s, "value"): \n'%naked_component +
-                   '            initial_%s.im_func.value = inval \n'%naked_component +
-                   '        return initial_%s.value             \n\n'%naked_component
+        funcstr = ('\ndef initial_%s(inval):                       \n'%naked_component +
+                   '    if not hasattr(initial_%s, "value"): \n'%naked_component +
+                   '        initial_%s.value = inval         \n'%naked_component +
+                   '    return initial_%s.value             \n\n'%naked_component
                   )
 
         self.body.append(funcstr)

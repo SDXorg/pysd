@@ -15,6 +15,7 @@ from math import fmod
 # Todo: add a way to flatten the result of a subscripted simulation, for comparison with vensim
 # Todo: add the state dictionary to the model file, to give some functionality to it even without the pysd class
 # Todo: initialize the model on load by calling reset state
+# Todo: seems to be some issue with multiple imports - need to create a new instance...
 
 def read_xmile(xmile_file):
     """ Construct a model object from `.xmile` file.
@@ -67,16 +68,38 @@ def load(py_model_file):
     --------
     >>> model = load('Teacup.py')
     """
-    components = imp.load_source('modulename', py_model_file)
     # Todo: This is a messy way to find stocknames. Refactor.
+    components = imp.load_source('modulename', py_model_file)
     components._stocknames = [name[2:-3] for name in dir(components) if name.startswith('_') and name.endswith('_dt')]
     components._dfuncs = {name: getattr(components, '_d%s_dt'%name) for name in components._stocknames}
     funcnames = filter(lambda x: not x.startswith('_'), dir(components))
     components._funcs = {name: getattr(components, name) for name in funcnames}
+
+    # set up the caches
+    #Todo: make a robust way to tell that we're only caching the right things
+    nocache = (['_t', 'time_step', 'time', 'initial_time', 'final_time', 'division', 'functions', 'np', 'saveper',
+         '_stocknames', '_state', '_funcs', '_dfuncs', '_subscript_dict'] +
+          ['_d%s_dt'%s for s in components._dfuncs.keys()] +  #these are only called once
+          ['_%s_init'%s for s in components._dfuncs.keys()] + #these are only called once
+          ['%s'%s for s in components._dfuncs.keys()]) #these are pass-throughs anyways
+    cache_list = filter(lambda x: not x.startswith('__') and x not in nocache, dir(components))
+    [setattr(components,name, cache(getattr(components, name), components)) for name in cache_list]
+
     model = PySD(components)
+    model.reset_state()
     model.__str__ = 'Import of ' + py_model_file
     return model
 
+def cache(func, components):
+    def inner(*args):
+        try:
+            assert inner.t == components._t  # fails if cache is out of date or not instantiated
+        except:
+            inner.cache = func(*args)
+            inner.t = components._t
+        return inner.cache
+    inner.func_dict = func.func_dict  # propagate attributes (like dim_dict) to the wrap function
+    return inner
 
 class PySD(object):
     """
@@ -187,10 +210,11 @@ class PySD(object):
         if flatten_subscripts:
             #if self.components._subscript_dict:
             #    return_df = self._flatten_dataframe(return_df)
-            try:
-                return_df = self._flatten_dataframe(return_df)
-            except:
-                pass #Todo: this is temp, until we have a better way of not trying to flatten things that don't have subscripts
+            #try:
+            return_df = self._flatten_dataframe(return_df)
+            #except:
+            #    flattening
+            #    pass #Todo: this is temp, until we have a better way of not trying to flatten things that don't have subscripts
 
         if addtflag:
             return_df.drop(return_df.index[0], inplace=True)
@@ -343,6 +367,19 @@ class PySD(object):
         return outdict
 
     def _integrate(self, ddt, timesteps, return_elements):
+        """
+
+        Parameters
+        ----------
+        ddt : dictionary where keys are stock names and values are functions
+        timesteps
+        return_elements
+
+        Returns
+        -------
+
+        """
+
         outputs = range(len(timesteps))
         for i, t2 in enumerate(timesteps):
             self.components._state = self._step(ddt, self.components._state, t2-self.components._t)
@@ -408,9 +445,14 @@ class PySD(object):
         def dataframeexpand(pddf):
             result=[]
             for pos,name in enumerate(pddf.columns):
-                result.append(pddf[name].apply(lambda x: _pd.Series(x.flatten())))
-                #result[pos].columns=([name+'['+pandasnamearray(getattr(self.components,name))[x]+']' for x in range(len(pandasnamearray(getattr(self.components,name))))])
-                result[pos].columns=([name+'__'+pandasnamearray(getattr(self.components,name))[x] for x in range(len(pandasnamearray(getattr(self.components,name))))])
+                # todo: don't try and flatten if alreay a single number
+                if isinstance(pddf[name].loc[0], np.ndarray):
+                    result.append(pddf[name].apply(lambda x: _pd.Series(x.flatten())))
+                    #result[pos].columns=([name+'['+pandasnamearray(getattr(self.components,name))[x]+']' for x in range(len(pandasnamearray(getattr(self.components,name))))])
+                    result[pos].columns=([name+'__'+pandasnamearray(getattr(self.components,name))[x] for x in range(len(pandasnamearray(getattr(self.components,name))))])
+                else:
+                    result.append(_pd.DataFrame(pddf[name]))
+                    result[pos].columns=[name]
             pddf=_pd.concat([result[x] for x in range(len(result))],axis=1)
 
             return pddf

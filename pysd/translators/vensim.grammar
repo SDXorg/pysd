@@ -1,0 +1,107 @@
+
+# In the 'Model' definiton, we use arbitrary characters (.) to represent the backslashes,
+#because escaping in here is a nightmare
+#Subscripting definition trial
+Model   = _ "{UTF-8}" Content ~"...---///" Rubbish*
+Content = Entry+
+Rubbish = ~".*"
+
+
+Entry       = MacroEntry / MetaEntry / ModelEntry / GroupEntry
+MacroEntry  = _ ":MACRO:" _ MacroInside _ ":END OF MACRO:" _
+MacroInside = ~"[^:]"* _
+
+# meta entry recognizes model documentation, or the partition separating model control params.
+MetaEntry  = '****' ~"[^|]"* "|"
+ModelEntry = _ Component _ "~" _ Unit _ "~" _ Docstring _ "|" _*
+GroupEntry = _ "{" _ ~"[^}]"* _ "}" _
+Unit  = ~"[^~|]"*
+
+# The docstring parser also consumes trailing newlines. Not sure if we want this?
+# The second half of the docstring parser is a lookahead to make sure we don't consume starlines
+Docstring = (~"[^~|]" !~"(\*{3,})")*   
+Component = Stock / Flows / Lookup / Subscript   
+# ##################################Subscript Element##########################
+Subscript = Identifier _ ":" _ SubElem
+
+#We need to weed out subscripts from non-subscripts
+
+#'Lookup = Identifier _ "(" _ Range _ CopairList _ ")"
+Lookup = Identifier _ "(" _ Range _ CopairList _ ")" _
+
+# Subscript Element#############################################
+Subtext = _ "[" _ SubElem _ "]" _
+
+Range  = "[" _ Copair _ "-" _ Copair _ "]"
+CopairList = AddCopair*
+AddCopair  = _ "," _ Copair
+# 'Copair' represents a coordinate pair
+#'Copair = "(" _ UnderSub _ ")"
+Copair = "(" _ Primary _ "," _ Primary _ ")"
+
+Stock = Identifier _ Subtext* _ "=" _ "INTEG" _ "(" _ Condition _ "," _ Condition _ ")"
+# 'Flaux' represents either a flow or an auxiliary, as the syntax is the same
+# this is for subscripted equations, or situations where each element of the subscript is defined by itself.
+Flows = Flowint Flaux
+Flowint = Flow*
+Flow = (Flaux _ "~~|" _) # the pipe here is problematic...
+
+Flaux = Identifier _ Subtext* _ "=" _ Condition
+
+
+Condition   = _ Term _ Conditional*
+Conditional = ("<=" / "<>" / "<" / ">=" / ">" / "=") _ Term
+
+SubElem = Identifier (_ "," _ Identifier _)*
+
+Term = Factor _ Additive*
+Additive = ("+"/"-") _ Factor
+
+# Factor may be consuming newlines?
+Factor   = ExpBase _ Multiplicative*
+Multiplicative = ("*" / "/") _ ExpBase
+
+ExpBase  = Primary _ Exponentive*
+Exponentive = "^" _ Primary
+
+Primary  = Call / ConCall / LUCall / Parens / Signed / Subs / UnderSub / Number / Reference  
+Parens   = "(" _ Condition _ ")"
+
+Call = Keyword _ "(" _ ArgList _ ")"
+
+ArgList  = AddArg+ 
+AddArg   = ","* _ Condition
+# Calls to lookup functions don't use keywords so we have to use identifiers
+# They take only one parameter. This could cause problems.
+
+###################################Subscript Element#############################################
+Subs = (_ UnderSub _ ";")+ _  #this is for parsing an array
+UnderSub = Number _ ("," _ Number _)+
+#undersub is creating errors parsing function arguments that are also numbers...
+LUCall   = Identifier _ "(" _ Condition _ ")"
+Signed   = ("-"/"+") Primary   
+# We have to break 'reference' out from identifier, because in reference situations
+#we'll want to add self.<name>(), but we also need to be able to clean and access
+#the identifier independently. To force parsimonious to handle the reference as
+#a seperate object from the Identifier, we add a trailing optional space character
+Reference = Identifier _ Subtext* _
+
+ConCall  = ConKeyword _ "(" _ ArgList _ ")"
+
+Number   = ((~"[0-9]"+ "."? ~"[0-9]"*) / ("." ~"[0-9]"+)) (("e"/"E") ("-"/"+") ~"[0-9]"+)? 
+Identifier = Basic_Id / Special_Id 
+Basic_Id = Letter (Letter / Digit / ~"[_\s]")* 
+Special_Id = "\""  ~"[^\"]"*  "\""   #won't handle where vensim has escaped double quotes...
+Letter   = ~"[a-zA-Z]" 
+Digit= ~"[0-9]"
+
+# We separated out single space characters from the _ entry, so that it can have any number or
+#   combination of space characters.
+_ = ' '*
+# Vensim uses a 'backslash, newline' syntax as a way to split an equation onto multiple lines.
+#   We address this by including it as  an allowed space character.
+
+# Todo: do we really want the exclamation to be a space character? we want to throw these away...
+exclamation = "!"+ 
+Keyword = ${keywords}
+ConKeyword = ${con_keywords}

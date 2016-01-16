@@ -85,7 +85,7 @@ for i, modelfile in testfiles.iteritems():
 
     try:
         err = None
-
+        model = canon = None
         # translate and load the model
         if modelfile[-3:] == "mdl":
             model = pysd.read_vensim(modelfile)
@@ -112,12 +112,12 @@ for i, modelfile in testfiles.iteritems():
 
         # rename the columns we brought in so they match to the (flattened) model output
         canon.columns = pythonized_column_names
-        status_str += 'Looking for output columns: '+', '.join(return_columns)
+        status_str += 'Looking for output columns: '+', '.join(return_columns) +', '
 
         # run the model
         output = model.run(return_columns=return_columns,
                            flatten_subscripts=True)
-        status_str += 'Ran Model, got columns'+', '.join(output.columns.tolist())
+        status_str += 'Ran Model, got columns'+', '.join(output.columns.tolist()) +', '
 
         # check that the canonical output is close to the simulation output
         assert (canon-output).max().max() < 1
@@ -174,6 +174,13 @@ for i, modelfile in testfiles.iteritems():
         err_str += 'Variable       Maximum Discrepancy\n'
         err_str += str((canon-output).max())+'\n'
         err_str += '\n'
+
+        if args.verbose:
+            err_str += 'Canonical Output:\n'
+            err_str += canon.__repr__()
+            err_str += 'Recieved Output:\n'
+            err_str += output.__repr__()
+            print output
 
         fail_count += 1
 

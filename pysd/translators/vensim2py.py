@@ -40,6 +40,10 @@ import string
 import re
 import numpy as np
 from pysd import builder
+from string import Template
+import pkgutil
+
+
 
 
 # This is the vensim to python translation dictionary. Many expressions (+-/*, etc)
@@ -89,6 +93,16 @@ multicaps_con_keywords = list(set(construction_functions +
 con_keywords = ' / '.join(['"%s"'%key for key in reversed(sorted(multicaps_con_keywords, key=len))])
 
 # Todo: overhaul this grammar, pull it out into its own file. comment things properly.
+
+#grammar_template = Template(pkgutil.get_data('pysd', 'translators/vensim.grammar'))
+#file_grammar = grammar_template.substitute(keywords=keywords,
+#                                           con_keywords=con_keywords)
+
+# wishlist for new grammar:
+# - pull out all newlines, tabs, before running(but keep spaces)
+# separate into model elements, and pull out the first part
+# construct python model sections from multiple vensim model elements (make `flows` more robust)
+
 file_grammar = (
     # In the 'Model' definiton, we use arbitrary characters (.) to represent the backslashes,
     #    because escaping in here is a nightmare
@@ -108,22 +122,23 @@ file_grammar = (
     # The second half of the docstring parser is a lookahead to make sure we don't consume starlines
     'Docstring = (~"[^~|]" !~"(\*{3,})")*                                                       \n'+
     'Component = Stock / Flows / Lookup / Subscript                       \n'+
-    ###################################Subscript Element#############################################
-    'Subscript = Identifier SNL ":" SNL SubElem                                                   \n'+
+    # ##################################Subscript Element##########################
+    'Subscript = Identifier SNL ":" SNL SubElem                                           \n'+
 
     #We need to weed out subscripts from non-subscripts
 
     'Lookup     = Identifier SNL "(" SNL Range SNL CopairList SNL ")"                              \n'+
+    #'Lookup     = Identifier _ "(" SNL Range _ CopairList _ ")"            \n'+
 
-    ###################################Subscript Element#############################################
-    'Subtext = SNL "[" SNL SubElem SNL "]" SNL                                                       \n'+
+    # Subscript Element#############################################
+    'Subtext = SNL "[" SNL SubElem SNL "]" SNL                                               \n'+
 
     'Range      = "[" _ Copair _ "-" _ Copair _ "]"                                             \n'+
     'CopairList = AddCopair*                                                                    \n'+
     'AddCopair  = SNL "," SNL Copair                                                                  \n'+
     # 'Copair' represents a coordinate pair
     'Copair     = "(" SNL UnderSub SNL ")"                                           \n'+
-
+    #'Copair     = "(" _ Primary _ "," _ Primary _ ")"                                \n'+
 
     'Stock = Identifier _ Subtext* _ "=" _ "INTEG" _ "(" SNL Condition _ "," SNL Condition _ ")" \n'+
     # 'Flaux' represents either a flow or an auxiliary, as the syntax is the same
@@ -131,7 +146,7 @@ file_grammar = (
     'Flowint = Flow*'
     'Flow = (Flaux SNL "~~|" SNL)                                          \n'+
 
-    'Flaux = Identifier SNL Subtext* SNL "=" SNL Condition                                          \n'+
+    'Flaux = Identifier SNL Subtext* SNL "=" SNL Condition                                  \n'+
 
 
     # SNL means 'spaced newline'
@@ -166,8 +181,8 @@ file_grammar = (
     #    They take only one parameter. This could cause problems.
 
     ###################################Subscript Element#############################################
-    'Subs     = (SNL UnderSub SNL ";")+ SNL                                                     \n'+ #this is for parsing an array
-    'UnderSub = Number SNL ("," SNL Number SNL)+                                                \n'+
+    'Subs     = (SNL UnderSub SNL ";")+ SNL                                                     \n'+ #this is for parsing 2d array
+    'UnderSub = ("-"/"+")? Number SNL ("," SNL ("-"/"+")? Number SNL)+                                                \n'+ # for parsing 1d array - better to be 1d list
     #undersub is creating errors parsing function arguments that are also numbers...
     'LUCall   = Identifier SNL "(" SNL Condition SNL ")"                                        \n'+
     'Signed   = ("-"/"+") Primary                                                               \n'+
@@ -193,7 +208,7 @@ file_grammar = (
     #   We address this by including it as  an allowed space character.
     # Todo: do we really want the exclamation to be a space character? we want to throw these away...
     'spacechar = exclamation* " "* ~"\t"* (~r"\\\\" NL)*                                         \n'+
-    'exclamation = "!"+ \n' +
+    'exclamation = "!"+                                         \n' +
     'Keyword = %s  \n'%keywords +
     'ConKeyword = %s  \n'%con_keywords
     )
@@ -205,17 +220,15 @@ class TextParser(NodeVisitor):
     each of the children.
 
     """
-    def __init__(self, grammar, infilename, dictofsubs):
-        self.filename = infilename[:-4]+'.py'
+    def __init__(self, grammar, filename, text, dictofsubs):
+        self.filename = filename
         self.builder = builder.Builder(self.filename, dictofsubs)
         self.grammar = parsimonious.Grammar(grammar)
         self.dictofsubs = dictofsubs
-        self.parse(infilename)
+        self.parse(text)
 
 
-    def parse(self, filename):
-        with open(filename, 'rU') as file:
-            text = file.read()
+    def parse(self, text):
 
         self.ast = self.grammar.parse(text)
         return self.visit(self.ast)
@@ -311,7 +324,7 @@ class TextParser(NodeVisitor):
                                             order=3,
                                             sub=[''])
         elif ConKeyword == 'DELAY N':#DELAY N(Inflow, Delay, init, order)
-            print args
+            #print args
             return self.builder.add_n_delay(delay_input=args[0],
                                             delay_time=args[1],
                                             initial_valye=args[2],
@@ -478,9 +491,9 @@ def translate_vensim(mdl_file):
 
     # Step 1 parser gets the subscript dictionary
     with open(mdl_file, 'rU') as file:
-            f1 = file.read()
+            text = file.read()
 
-    f2=re.findall(r'([a-zA-Z][^:~\n.\[\]\+\-\!/\(\)\\\&\=]+:+[^:~.\[\]\+\-\!/\(\),\\\&\=]+,+[^:~.\[\]\+\-\!/\(\)\\\&\=]+~)+',f1)
+    f2=re.findall(r'([a-zA-Z][^:~\n.\[\]\+\-\!/\(\)\\\&\=]+:+[^:~.\[\]\+\-\!/\(\),\\\&\=]+,+[^:~.\[\]\+\-\!/\(\)\\\&\=]+~)+',text)
     for i in range(len(f2)):
         f2[i]=re.sub(r'[\n\t~]','',f2[i])
 
@@ -492,21 +505,18 @@ def translate_vensim(mdl_file):
             Elements[i]=builder.make_python_identifier(Elements[i].strip())
         dictofsubs[Family]=dict(zip(Elements,range(len(Elements))))
 
-    # for i in dictofsubs:
-    #     for j in dictofsubs:
-    #         try:
-    #             if set(dictofsubs[j].keys()).issubset(dictofsubs[i].keys()) and j!=i:
-    #                 dictofsubs[j]=sorted(dictofsubs[i].values())
-    #         except:
-    #             pass
 
+    #get rid of stuff that complicates the parser
+    #text = text.split('\\\\')[0]
+    #text = re.sub(r'[\\\n\t]','', text)
+    #text = re.sub(r'[\\]','', text) #remove line continuation characters
+    #print text
 
-
-    # Todo: encode somewhere in this the order of the families...
-    # Todo: print the dict of subs in the model file
 
     # Step 2 parser
-    parser = TextParser(file_grammar, mdl_file, dictofsubs)
+    outfilename = mdl_file[:-4]+'.py'
+    #print outfilename
+    parser = TextParser(file_grammar, outfilename, text, dictofsubs)
     #module = imp.load_source('modulename', parser.filename)
     parser.builder.write()
 
