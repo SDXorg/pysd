@@ -49,6 +49,7 @@ node, which makes it hard to match up later in the tree crawler
 # Todo: Process each tilde-delimited (~) section on its own
 # Todo: construct python model sections from multiple vensim model elements
 # Todo: make 'stock' a construction keyword like 'delay' - they are equivalent
+# Todo: when a parse error is detected, only print the first 5 lines of the parse tree
 
 import parsimonious
 from parsimonious.nodes import NodeVisitor

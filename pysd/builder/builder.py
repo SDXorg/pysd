@@ -371,8 +371,12 @@ def getelempos(element, directory, dictofsubs):
 
     Parameters
     ----------
-    element
-    dictofsubs
+    element :
+
+    directory : A dictionary of the dimensions associating their names with their numpy indices
+        directory = {'dimension name 1':0, 'dimension name 2':1}
+
+    dictofsubs :
 
     Returns
     -------
@@ -383,8 +387,8 @@ def getelempos(element, directory, dictofsubs):
     #  The end user will get an unnamed array, and will want to have access to
     #  members by name.
 
-    position=[]
-    elements=element.replace('!','').replace(' ', '').split(',')
+    position = []
+    elements = element.replace('!','').replace(' ', '').split(',')
     for i, element in enumerate(elements):
         family = dict_find(directory, i)
         if element == family:
@@ -408,11 +412,11 @@ def get_array_info(subs, dictofsubs):
 
     returns
     -------
-    A dictionary of the dimensions associating their names with their numpy indices
-    directory = {'dimension name 1':0, 'dimension name 2':1}
+    directory : A dictionary of the dimensions associating their names with their numpy indices
+        directory = {'dimension name 1':0, 'dimension name 2':1}
 
     A list of the length of each dimension. Equivalently, the shape of the array:
-    shape = [5,4]
+        shape = [5,4]
     """
 
     # subscript references here are lists of array 'coordinate' names
@@ -466,9 +470,14 @@ def dict_find(in_dict, value):
     key: basestring
         The key at which the value can be found
     """
+    # Todo: house this somewhere else
     # Todo: make this robust to repeated values
-    # Todo: make this robust to missing values
-    return in_dict.keys()[in_dict.values().index(value)]
+    try:
+        key = in_dict.keys()[in_dict.values().index(value)]
+    except ValueError:
+        print 'Value: ', str(value), ' is not in dictionary ', repr(in_dict)
+        raise
+    return key
 
 
 def make_python_identifier(string):
