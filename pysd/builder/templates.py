@@ -68,9 +68,17 @@ def ${identifier}():
     return _state['${identifier}']
 
 def _${identifier}_init():
+    try:
+        loc_dimension_dir = ${identifier}.dimension_dir
+    except:
+        loc_dimension_dir = 0
     return ${initial_condition}
 
 def _d${identifier}_dt():
+    try:
+        loc_dimension_dir = ${identifier}.dimension_dir
+    except:
+        loc_dimension_dir = 0
     return ${expression}
 """)
 

@@ -94,7 +94,7 @@ class Builder(object):
         # todo: build a test case to test the above
         # todo: force the sub parameter to be a list
         # todo: handle docstrings
-        initial_condition = initial_condition.replace('\n','').replace('\t','')  # Todo:pull out
+        initial_condition = initial_condition.replace('\n','').replace('\t','').replace('[@@@]','')  # Todo:pull out
         if sub:
             if isinstance(sub, basestring): sub = [sub]  # Todo: rework
             directory, size = get_array_info(sub, self.dictofsubs)
@@ -105,7 +105,7 @@ class Builder(object):
             initial_condition += '*np.ones((%s))'%(','.join(map(str,size)))
 
         funcstr = templates['stock'].substitute(identifier=identifier,
-                                                expression=expression,
+                                                expression=expression.replace('[@@@]',''),
                                                 initial_condition=initial_condition)
 
         if sub:  # this is super bad coding practice, should change it.
@@ -161,15 +161,17 @@ class Builder(object):
         if sub[0]!='': #todo: consider factoring this out if it is useful for the multiple flows
             directory, size = get_array_info(sub, self.dictofsubs)
 
-            funcset = 'output = np.ndarray((%s))\n'%','.join(map(str,size)) #lines which encode the expressions for partially defined subscript pieces
+            funcset = 'loc_dimension_dir = %s.dimension_dir \n'%identifier
+            funcset += '    output = np.ndarray((%s))\n'%','.join(map(str,size)) #lines which encode the expressions for partially defined subscript pieces
             for expr, subi in zip(expression, sub):
                 expr = expr.replace('\n','').replace('\t','').strip()  # todo: pull out
-                indices = ','.join(map(str,getelempos(subi, directory, self.dictofsubs)))
+                indices = ','.join(map(str,getelempos(subi, self.dictofsubs)))
                 if re.search(';',expr):  # if 2d array, format for numpy
                     expr = 'np.'+np.array(np.mat(expr.strip(';'))).__repr__()
-                funcset += '    output[%s] = %s\n'%(indices, expr)
+                funcset += '    output[%s] = %s\n'%(indices, expr.replace('[@@@]','[%s]'%indices))
         else:
-            funcset = 'output = %s\n'%expression[0]
+            funcset = 'loc_dimension_dir = 0 \n'
+            funcset += '    output = %s\n'%expression[0]
 
         funcstr = templates['flaux'].substitute(identifier=identifier,
                                                 expression=funcset,
@@ -217,13 +219,17 @@ class Builder(object):
         """
         if not re.search('[a-zA-Z]',component):
             naked_component="number"
+            funcstr = ('\ndef initial_%s(inval):                       \n'%naked_component +
+                    '    return inval             \n\n'
+                    )
+
         else:
             naked_component = component.split("()")[0]
-        funcstr = ('\ndef initial_%s(inval):                       \n'%naked_component +
-                   '    if not hasattr(initial_%s, "value"): \n'%naked_component +
-                   '        initial_%s.value = inval         \n'%naked_component +
-                   '    return initial_%s.value             \n\n'%naked_component
-                  )
+            funcstr = ('\ndef initial_%s(inval):                       \n'%naked_component +
+                    '    if not hasattr(initial_%s, "value"): \n'%naked_component +
+                    '        initial_%s.value = inval         \n'%naked_component +
+                    '    return initial_%s.value             \n\n'%naked_component
+                    )
 
         self.body.append(funcstr)
         return 'initial_%s(%s)'%(naked_component, component)
@@ -364,19 +370,15 @@ class Builder(object):
 
 # these are module functions so that we can access them from other places
 
-def getelempos(element, directory, dictofsubs):
+def getelempos(element, dictofsubs):
     """
     Helps for accessing elements of an array: given the subscript element names,
     returns the numerical ranges that correspond
 
     Parameters
     ----------
-    element :
-
-    directory : A dictionary of the dimensions associating their names with their numpy indices
-        directory = {'dimension name 1':0, 'dimension name 2':1}
-
-    dictofsubs :
+    element
+    dictofsubs
 
     Returns
     -------
@@ -387,17 +389,21 @@ def getelempos(element, directory, dictofsubs):
     #  The end user will get an unnamed array, and will want to have access to
     #  members by name.
 
-    position = []
-    elements = element.replace('!','').replace(' ', '').split(',')
-    for i, element in enumerate(elements):
-        family = dict_find(directory, i)
-        if element == family:
-            position.append(':')
-        else:
-            position.append(dictofsubs[family][element])
-
+    position=[] 
+    elements=element.replace('!','').replace(' ', '').split(',') 
+    for element in elements: 
+        if element in dictofsubs.keys():
+            if isinstance(dictofsubs[element],dict):            
+                position.append(':') 
+            else:
+                position.append(sorted(dictofsubs[element][:-1]))
+        else: 
+            for d in dictofsubs.itervalues(): 
+                try: 
+                    position.append(d[element]) 
+                except: pass  
     return tuple(position)
-
+    
 def get_array_info(subs, dictofsubs):
     """
     Returns information needed to create and access members of the numpy array
@@ -412,45 +418,44 @@ def get_array_info(subs, dictofsubs):
 
     returns
     -------
-    directory : A dictionary of the dimensions associating their names with their numpy indices
-        directory = {'dimension name 1':0, 'dimension name 2':1}
+    A dictionary of the dimensions associating their names with their numpy indices
+    directory = {'dimension name 1':0, 'dimension name 2':1}
 
     A list of the length of each dimension. Equivalently, the shape of the array:
-        shape = [5,4]
+    shape = [5,4]
     """
 
     # subscript references here are lists of array 'coordinate' names
-    subscript_references = []
-    for sub in subs:
-        subscript_references.append(sub.replace('!','').replace('','').split(','))
-
+    if isinstance(subs,list):
+        element=subs[0]
+    else:
+        element=subs
     # we collect the references used in each dimension as a set, so we can compare contents
-    num_dimensions = len(subscript_references[0])
-    reference_sets = [set() for _ in range(num_dimensions)]
-    for subscript_reference in subscript_references:
-        [reference_sets[i].add(element) for i, element in enumerate(subscript_reference)]
-    # `reference_sets` will now include a set for every dimension, containing the names used to
-    # access parts of that dimension
-
-    directory = dict()
-    shape = np.zeros(num_dimensions)
-    for i, reference_set in enumerate(reference_sets):
-        if len(reference_set)==1: # The element is almost certainly a subscript family name
-            reference = list(reference_set)[0]
-            if reference in dictofsubs.keys():
-                shape[i] = len(dictofsubs[reference])
-                directory[reference] = i
-            else:  # Todo: handle the case of a one-element subscript here
-                pass
+    position=[]
+    directory={}
+    dirpos=0
+    elements=element.replace('!','').replace(' ','').split(',')
+    for element in elements:
+        if element in dictofsubs.keys():
+            if isinstance(dictofsubs[element],list):
+                dir,pos = (get_array_info(dictofsubs[element][-1],dictofsubs))
+                position.append(pos[0])
+                directory[dictofsubs[element][-1]]=dirpos
+                dirpos+=1
+            else:
+                position.append(len(dictofsubs[element]))
+                directory[element]=dirpos
+                dirpos+=1
         else:
-            for key, member_dict in dictofsubs.iteritems():  # slow!
-                if reference_set == set(member_dict.keys()):  # matches
-                    shape[i] = len(member_dict)
-                    directory[key] = i
-                    break  # this is to prevent multiple inclusions,
-                           # if a subarray is equal to the array
-
-    return directory, shape
+            for famname,value in dictofsubs.iteritems():
+                try:
+                    (value[element])
+                except: pass
+                else:
+                    position.append(len(value))
+                    directory[famname]=dirpos
+                    dirpos+=1
+    return directory, position
 
 
 def dict_find(in_dict, value):
@@ -470,14 +475,9 @@ def dict_find(in_dict, value):
     key: basestring
         The key at which the value can be found
     """
-    # Todo: house this somewhere else
     # Todo: make this robust to repeated values
-    try:
-        key = in_dict.keys()[in_dict.values().index(value)]
-    except ValueError:
-        print 'Value: ', str(value), ' is not in dictionary ', repr(in_dict)
-        raise
-    return key
+    # Todo: make this robust to missing values
+    return in_dict.keys()[in_dict.values().index(value)]
 
 
 def make_python_identifier(string):

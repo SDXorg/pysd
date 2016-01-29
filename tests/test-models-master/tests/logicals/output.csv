@@ -1,0 +1,3 @@
+Time,AND output,false input,NOT output,OR output,true input
+0.000,0,0,1,1,1
+1.000,0,0,1,1,1

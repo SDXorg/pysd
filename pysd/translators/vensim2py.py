@@ -49,7 +49,6 @@ node, which makes it hard to match up later in the tree crawler
 # Todo: Process each tilde-delimited (~) section on its own
 # Todo: construct python model sections from multiple vensim model elements
 # Todo: make 'stock' a construction keyword like 'delay' - they are equivalent
-# Todo: when a parse error is detected, only print the first 5 lines of the parse tree
 
 import parsimonious
 from parsimonious.nodes import NodeVisitor
@@ -196,7 +195,7 @@ file_grammar = (
     #   We address this by including it as  an allowed space character.
     # Todo: do we really want the exclamation to be a space character? throw these away?
     'spacechar = exclamation* " "* ~"\t"* (~r"\\\\" NL)*                                       \n'+
-    'exclamation = "!"+                                         \n' +
+    'exclamation = "!"+                                                                        \n' +
     'Keyword = %s  \n'%keywords +
     'ConKeyword = %s  \n'%con_keywords
     )
@@ -226,6 +225,9 @@ class TextParser(NodeVisitor):
 
     def skip(self, n, vc):
         # Todo: Take more advantage of this...
+        # Todo: Make exclamations not white spaces.
+        if re.search('!',n.text): 
+            return '!'
         return ''
 
     def visit_ModelEntry(self, n, (_1, Identifier, _2, tld1, _3, Unit, _4,
@@ -240,7 +242,10 @@ class TextParser(NodeVisitor):
         return Identifier
 
     def visit_Subtext(self,n,(_1,lparen,_2,element,_3,rparen,_4)):
-        return re.sub(r'[\n\t\\ ]','',element)
+        addition = ''
+        if re.search('!',_3):
+            addition = '!'
+        return re.sub(r'[\n\t\\ ]','',element)+addition
 
     def visit_Flows(self,n,(flows,flaux)):
         flowname=flaux[0]
@@ -324,18 +329,27 @@ class TextParser(NodeVisitor):
         #  for now, use old version. this is going to fail, though...
         if Subs:
             InterSub=Subs.split(",")
-            subscript='[%s]'%','.join(map(str, getelempos(Subs.replace("!", ""), self.dictofsubs)))
+            subscript='[%s]'%','.join(map(str, getelempos(Subs, self.dictofsubs)))
             subscript=re.sub(r'\[(:,*)+]*\]','',subscript)
-            getelemstr=Identifier+'()'+subscript
+            getelemstr=Identifier+'()'
             if len(InterSub)==1:
-                return getelemstr
+                if Subs.count('!')==0:
+                    if subscript == '':
+                        subscript = '[@@@]'
+                    return "functions.shorthander(%s,%s.dimension_dir,loc_dimension_dir,_subscript_dict)"%(getelemstr,Identifier) + subscript
+                else:
+                    return getelemstr + subscript
             else:
                 if re.search("!",Subs) and Subs.count("!")==1:
                     sumacross=0
                     for i in range(len(InterSub)):
                         if re.search("!",InterSub[i]):
                             sumacross=i
-                    getelemstr+=",%i"%sumacross
+                    getelemstr+= subscript + ',%i'%sumacross
+                elif Subs.count('!')==0:
+                    if subscript == '':
+                        subscript = '[@@@]'
+                    getelemstr = "functions.shorthander(%s,%s.dimension_dir,loc_dimension_dir,_subscript_dict)"%(getelemstr,Identifier) + subscript
                 return getelemstr
         else:
             return Identifier+'()'
@@ -351,7 +365,7 @@ class TextParser(NodeVisitor):
         return Identifier+'('+Condition+')'
 
     def visit_Copair(self, n, (lparen, _1, Subs, _2, rparen)):
-        Subs=Subs.replace("\\","")
+        Subs=re.sub(r'[\\\!]','',Subs)
         xcoord=Subs.split(',')[0]
         ycoord=Subs.split(',')[1]
         return (float(xcoord), float(ycoord))
@@ -407,18 +421,20 @@ def getelempos(element, dictofsubs):
     #  The end user will get an unnamed array, and will want to have access to
     #  members by name.
 
-    position=[]
-    elements=element.replace('!','').replace(' ', '').split(',')
-    for element in elements:
-        if element in dictofsubs.keys():
-            position.append(':')
-        else:
-            for d in dictofsubs.itervalues():
-                try:
-                    position.append(d[element])
-                    break
-                except: pass
-
+    
+    position=[] 
+    elements=element.replace('!','').replace(' ', '').split(',') 
+    for elementary in elements:
+        if elementary in dictofsubs.keys():
+            if isinstance(dictofsubs[elementary],dict):
+                position.append(':') 
+            else:
+                position.append(sorted(dictofsubs[elementary][:-1]))
+        else: 
+            for d in dictofsubs.itervalues(): 
+                try: 
+                    position.append(d[elementary])
+                except: pass  
     return tuple(position)
 
 
@@ -459,14 +475,26 @@ def translate_vensim(mdl_file):
     for i in range(len(f2)):
         f2[i]=re.sub(r'[\n\t~]','',f2[i])
 
-    dictofsubs = {}
-    for i in f2:
-        Family = builder.make_python_identifier(i.split(":")[0])
-        Elements = i.split(":")[1].split(",")
-        for i in range(len(Elements)):
-            Elements[i] = builder.make_python_identifier(Elements[i].strip())
-        dictofsubs[Family] = dict(zip(Elements, range(len(Elements))))
+    dictofsubs = {} 
+    for i in f2: 
+        Family=builder.make_python_identifier(i.split(":")[0]) 
+        Elements=i.split(":")[1].split(",") 
+        for i in range(len(Elements)): 
+            Elements[i]=builder.make_python_identifier(Elements[i].strip()) 
+        dictofsubs[Family]=dict(zip(Elements,range(len(Elements)))) 
 
+    for i in dictofsubs:
+        for j in dictofsubs:
+            try:
+                if set(dictofsubs[j].keys()).issubset(dictofsubs[i].keys()) and j!=i:
+                    tempj=[]
+                    for key in (dictofsubs[i]):
+                        if key in dictofsubs[j].keys():
+                            tempj.append(dictofsubs[i][key])
+                    tempj.append(i)
+                    dictofsubs[j]=sorted(tempj)
+            except:
+                pass
     # Step 2 parser writes the file
     outfile_name = mdl_file[:-4]+'.py'
     parser = TextParser(file_grammar, outfile_name, text, dictofsubs)

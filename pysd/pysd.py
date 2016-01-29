@@ -472,5 +472,4 @@ class PySD(object):
             pddf=_pd.concat([result[x] for x in range(len(result))],axis=1)
 
             return pddf
-
         return dataframeexpand(dataframe)

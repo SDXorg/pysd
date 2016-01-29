@@ -1,0 +1,256 @@
+{UTF-8}
+Average Tenure=
+	35
+	~	 [30,300,1]
+	~		|
+
+Departure=
+	Experts / Average Tenure
+	~	Persons/Week
+	~		|
+
+Effect of Pressure on Hiring(
+	[(-1,0)-(3,30)],(-1,0),(-0.25,0),(0,2.5),(0.5,15),(1,20),(2,25),(3,25))
+	~	
+	~		|
+
+Expert Task Completion=
+	"Expert-Hours on Task per Week"/Expert Time per Task
+	~	Tasks/Week
+	~		|
+
+Expert Time per Task=
+	10
+	~	Person*Hours
+	~		|
+
+Expert Workweek=
+	40
+	~	Hours/Week
+	~		|
+
+"Expert-Hours on Task per Week"=
+	"Expert-Hours Worked per Week"-"Expert-Hours Spent on Rookie Supervision per Week"
+	~	Person*Hours/Week
+	~		|
+
+"Expert-Hours Spent on Rookie Supervision per Week"=
+	Hours of Supervision Required per Rookie Per Week * Rookies
+	~	Hours*Person/Week
+	~		|
+
+"Expert-Hours Worked per Week"=
+	Experts*Expert Workweek
+	~	Hours*Person/Week
+	~		|
+
+Experts= INTEG (
+	Maturation-Departure,
+		50)
+	~	
+	~		|
+
+Hiring=
+	Effect of Pressure on Hiring(Pressure to Hire)
+	~	Persons/Week
+	~		|
+
+Hours of Supervision Required per Rookie Per Week=
+	20
+	~	Person*Hours/Person
+	~		|
+
+Maturation=
+	Rookies/Maturation Time
+	~	Persons/Week
+	~		|
+
+Maturation Time=
+	15
+	~	Weeks [0,80]
+	~		|
+
+Pressure to Hire=
+	(Task Backlog-Target Backlog)/Target Backlog
+	~	
+	~		|
+
+Rookie Task Completion=
+	"Rookie-Hours on Task per Week"/Rookie Time per Task
+	~	Tasks/Week
+	~		|
+
+Rookie Time per Task=
+	30
+	~	Person*Hours
+	~		|
+
+Rookie Workweek=
+	40
+	~	Hours/Week
+	~		|
+
+"Rookie-Hours on Task per Week"=
+	"Rookie-Hours Worked per Week"
+	~	Person*Hours/Week
+	~		|
+
+"Rookie-Hours Worked per Week"=
+	Rookie Workweek * Rookies
+	~	Person Hours
+	~		|
+
+Rookies= INTEG (
+	Hiring-Maturation,
+		5)
+	~	
+	~		|
+
+Target Backlog=
+	500
+	~	
+	~		|
+
+Task Arrival=
+	230
+	~	Tasks/Week
+	~		|
+
+Task Backlog= INTEG (
+	Task Arrival-Task Completion,
+		500)
+	~	Tasks
+	~		|
+
+Task Completion=
+	MIN(Expert Task Completion+Rookie Task Completion, Task Backlog)
+	~	
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 150
+	~	Week
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Week
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP
+	~	Week [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 0.03125
+	~	Week [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,5,0
+10,1,Rookies,545,234,40,20,3,3,0,0,0,0,0,0
+10,2,Experts,991,233,40,20,3,3,0,0,0,0,0,0
+1,3,5,2,4,0,0,22,0,0,0,-1--1--1,,1|(869,233)|
+1,4,5,1,100,0,0,22,0,0,0,-1--1--1,,1|(680,233)|
+11,5,172,781,233,6,8,34,3,0,0,1,0,0,0
+10,6,Maturation,781,249,29,8,40,3,0,0,-1,0,0,0
+12,7,48,321,233,10,8,0,3,0,0,-1,0,0,0
+1,8,10,1,4,0,0,22,0,0,0,-1--1--1,,1|(465,232)|
+1,9,10,7,100,0,0,22,0,0,0,-1--1--1,,1|(372,232)|
+11,10,48,419,232,6,8,34,3,0,0,1,0,0,0
+10,11,Hiring,419,248,18,8,40,3,0,0,-1,0,0,0
+12,12,48,1224,233,10,8,0,3,0,0,-1,0,0,0
+1,13,15,12,4,0,0,22,0,0,0,-1--1--1,,1|(1169,233)|
+1,14,15,2,100,0,0,22,0,0,0,-1--1--1,,1|(1072,233)|
+11,15,48,1119,233,6,8,34,3,0,0,1,0,0,0
+10,16,Departure,1119,249,26,8,40,3,0,0,-1,0,0,0
+10,17,Task Backlog,646,549,40,20,3,3,0,0,0,0,0,0
+12,18,48,475,551,10,8,0,3,0,0,-1,0,0,0
+1,19,21,17,4,0,0,22,0,0,0,-1--1--1,,1|(578,551)|
+1,20,21,18,100,0,0,22,0,0,0,-1--1--1,,1|(512,551)|
+11,21,48,545,551,6,8,34,3,0,0,1,0,0,0
+10,22,Task Arrival,545,567,32,8,40,3,0,0,-1,0,0,0
+12,23,48,896,548,10,8,0,3,0,0,-1,0,0,0
+1,24,26,23,4,0,0,22,0,0,0,-1--1--1,,1|(854,548)|
+1,25,26,17,100,0,0,22,0,0,0,-1--1--1,,1|(748,548)|
+11,26,48,817,548,6,8,34,3,0,0,1,0,0,0
+10,27,Task Completion,817,564,43,8,40,3,0,0,-1,0,0,0
+10,28,Rookie Time per Task,677,480,34,18,8,131,0,0,0,0,0,0
+10,29,Expert Time per Task,1020,480,32,16,8,131,0,0,0,0,0,0
+10,30,"Rookie-Hours on Task per Week",756,418,44,14,8,3,0,0,0,0,0,0
+10,31,"Expert-Hours on Task per Week",964,414,43,14,8,3,0,0,0,0,0,0
+10,32,Rookie Task Completion,785,480,32,14,8,3,0,0,0,0,0,0
+10,33,Expert Task Completion,903,480,31,14,8,3,0,0,0,0,0,0
+1,34,32,26,1,0,0,0,0,64,0,-1--1--1,,1|(802,508)|
+1,35,33,26,1,0,0,0,0,64,0,-1--1--1,,1|(856,522)|
+1,36,28,32,0,0,45,0,2,64,0,-1--1--1,|12||0-0-0,1|(725,480)|
+1,37,30,32,1,0,43,0,2,64,0,-1--1--1,|12||0-0-0,1|(770,444)|
+1,38,31,33,1,0,43,0,2,64,0,-1--1--1,|12||0-0-0,1|(945,444)|
+1,39,29,33,0,0,45,0,2,64,0,-1--1--1,|12||0-0-0,1|(968,480)|
+10,40,Hours of Supervision Required per Rookie Per Week,850,371,54,20,8,131,0,0,0,0,0,0
+10,41,"Expert-Hours Worked per Week",1005,315,46,14,8,3,0,0,0,0,0,0
+10,42,Rookie Workweek,549,315,30,12,8,131,0,0,0,0,0,0
+10,43,"Rookie-Hours Worked per Week",682,316,46,14,8,3,0,0,0,0,0,0
+1,44,1,43,1,0,43,0,2,64,0,-1--1--1,|12||0-0-0,1|(609,267)|
+1,45,42,43,0,0,0,0,0,64,0,-1--1--1,,1|(600,315)|
+1,46,43,30,1,0,43,0,2,64,0,-1--1--1,|12||0-0-0,1|(718,356)|
+10,47,Expert Workweek,1119,314,30,15,8,131,0,0,0,0,0,0
+1,48,2,41,1,0,43,0,2,64,0,-1--1--1,|12||0-0-0,1|(1004,267)|
+1,49,47,41,0,0,43,0,2,64,0,-1--1--1,|12||0-0-0,1|(1077,314)|
+10,50,"Expert-Hours Spent on Rookie Supervision per Week",850,306,58,17,8,131,0,0,0,0,0,0
+1,51,1,50,1,0,43,0,2,64,0,-1--1--1,|12||0-0-0,1|(704,261)|
+1,52,40,50,0,0,43,0,2,64,0,-1--1--1,|12||0-0-0,1|(850,344)|
+1,53,50,31,1,0,45,0,2,64,0,-1--1--1,|12||0-0-0,1|(916,335)|
+1,54,41,31,1,0,43,0,2,64,0,-1--1--1,|12||0-0-0,1|(996,358)|
+10,55,Pressure to Hire,443,409,31,14,8,131,0,0,0,0,0,0
+1,56,17,55,1,0,43,0,2,64,0,-1--1--1,|12||0-0-0,1|(503,473)|
+1,57,55,11,1,0,43,0,2,64,0,-1--1--1,|12||0-0-0,1|(413,331)|
+10,58,Target Backlog,374,456,39,8,8,3,0,0,0,0,0,0
+1,59,58,55,0,0,45,0,2,64,0,-1--1--1,|12||0-0-0,1|(397,439)|
+10,60,Effect of Pressure on Hiring,313,292,46,14,8,3,0,0,0,0,0,0
+1,61,60,11,0,0,43,0,2,64,0,-1--1--1,|12||0-0-0,1|(367,269)|
+10,62,Maturation Time,767,161,43,8,8,3,0,0,0,0,0,0
+1,63,62,5,1,0,45,0,2,192,0,-1--1--1,|12||0-0-0,1|(777,196)|
+1,64,1,5,1,0,43,0,2,192,0,-1--1--1,|12||0-0-0,1|(675,194)|
+1,65,17,27,1,0,0,0,2,64,0,-1--1--1,|12||0-0-0,1|(734,580)|
+1,66,2,15,1,0,0,0,0,64,0,-1--1--1,,1|(1071,196)|
+10,67,Average Tenure,1161,191,40,8,8,3,0,0,0,0,0,0
+1,68,67,15,0,0,0,0,0,64,0,-1--1--1,,1|(1143,208)|
+///---\\\
+:L<%^E!@
+9:Current
+22:$,Dollar,Dollars,$s
+22:Hour,Hours
+22:Month,Months
+22:Person,People,Persons
+22:Unit,Units
+22:Week,Weeks
+22:Year,Years
+22:Day,Days
+15:0,0,0,0,0,0
+19:5,0
+27:2,
+34:0,
+4:Time
+5:Rookies
+35:Date
+36:YYYY-MM-DD
+37:2000
+38:1
+39:1
+40:3
+41:0
+42:0
+24:0
+25:150
+26:150
