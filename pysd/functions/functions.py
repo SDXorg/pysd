@@ -106,6 +106,7 @@ def shorthander(orig,dct,refdct,dictionary):
         return orig
     elif len(refdct) == 1:
         return orig
+
     def getnumofelements(element,dictionary):
         if element=="":
             return 0

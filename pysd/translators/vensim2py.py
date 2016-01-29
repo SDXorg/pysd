@@ -61,21 +61,21 @@ from pysd import builder
 # translate directly, but some need to have their names changed, etc. This is
 # how we decide that. If it isn't in the dictionary, it probably won't work
 
-dictionary = {"ABS":"abs", "INTEGER":"int", "EXP":"np.exp",
-    "PI":"np.pi", "SIN":"np.sin", "COS":"np.cos", "SQRT":"np.sqrt", "TAN":"np.tan",
-    "LOGNORMAL":"np.random.lognormal", "RANDOM NORMAL":"functions.bounded_normal",
-    "POISSON":"np.random.poisson", "LN":"np.log", "EXPRND":"np.random.exponential",
-    "RANDOM UNIFORM":"np.random.rand", "MIN":"np.minimum", "MAX":"np.maximum",
-    "SUM":"np.sum", "ARCCOS":"np.arccos",
-    "ARCSIN":"np.arcsin", "ARCTAN":"np.arctan", "IF THEN ELSE":"functions.if_then_else",
-    "STEP":"functions.step", "MODULO":"np.mod", "PULSE":"functions.pulse",
-    "PULSE TRAIN":"functions.pulse_train", "RAMP":"functions.ramp",
-    "=":"==", "<=":"<=", "<>":"!=", "<":"<", ">=":">=", ">":">", "^":"**",
-    "POS":"functions.pos", "TUNER":"functions.tuner", "TUNE1":"functions.tuner"}
+dictionary = {"ABS": "abs", "INTEGER": "int", "EXP": "np.exp",
+    "PI": "np.pi", "SIN": "np.sin", "COS": "np.cos", "SQRT": "np.sqrt", "TAN": "np.tan",
+    "LOGNORMAL": "np.random.lognormal", "RANDOM NORMAL": "functions.bounded_normal",
+    "POISSON": "np.random.poisson", "LN": "np.log", "EXPRND": "np.random.exponential",
+    "RANDOM UNIFORM": "np.random.rand", "MIN": "np.minimum", "MAX": "np.maximum",
+    "SUM": "np.sum", "ARCCOS": "np.arccos",
+    "ARCSIN": "np.arcsin", "ARCTAN": "np.arctan", "IF THEN ELSE": "functions.if_then_else",
+    "STEP": "functions.step", "MODULO": "np.mod", "PULSE": "functions.pulse",
+    "PULSE TRAIN": "functions.pulse_train", "RAMP": "functions.ramp",
+    "=": "==", "<=": "<=", "<>": "!=", "<": "<", ">=": ">=", ">": ">", "^": "**",
+    "POS": "functions.pos", "TUNER": "functions.tuner", "TUNE1": "functions.tuner"}
 
 construction_functions = ['DELAY1', 'DELAY3', 'DELAY3I', 'DELAY N', 'DELAY1I',
                           'SMOOTH3I', 'SMOOTH3', 'SMOOTH N', 'SMOOTH', 'SMOOTHI',
-                          'INITIAL'] #order is important for peg parser
+                          'INITIAL']  # order is important for peg parser
 
 
 # We have to sort keywords in decreasing order of length so that the peg parser doesnt
@@ -96,106 +96,113 @@ file_grammar = (
     # In the 'Model' definition, we use arbitrary characters (.) to represent the backslashes,
     #    because escaping in here is a nightmare
     #Subscripting definition trial
-    'Model = SNL "{UTF-8}" Content ~"...---///" Rubbish*                                        \n'+
-    'Content = Entry+                                                                           \n'+
-    'Rubbish = ~"."* NL*                                                                        \n'+
-    'Entry = MacroEntry / MetaEntry / ModelEntry / GroupEntry                                   \n'+
-    'MacroEntry = SNL ":MACRO:" SNL MacroInside SNL ":END OF MACRO:" SNL                        \n'+
-    'MacroInside = ~"[^:]"* SNL                                                                 \n'+
+    'Model = SNL "{UTF-8}" Content ~"...---///" Rubbish*                                       \n' +
+    'Content = Entry+                                                                          \n' +
+    'Rubbish = ~"."* NL*                                                                       \n' +
+    'Entry = MacroEntry / MetaEntry / ModelEntry / GroupEntry                                  \n' +
+    'MacroEntry = SNL ":MACRO:" SNL MacroInside SNL ":END OF MACRO:" SNL                       \n' +
+    'MacroInside = ~"[^:]"* SNL                                                                \n' +
     # meta entry recognizes model documentation, or the partition separating model control params.
-    'MetaEntry  = SNL starline SNL Docstring SNL starline SNL "~" SNL Docstring SNL "|" SNL*    \n'+
-    'ModelEntry = SNL Component SNL "~" SNL Unit SNL "~" SNL Docstring SNL "|" SNL*             \n'+
-    'GroupEntry = SNL "{" SNL ~"[^}]"* SNL "}" SNL \n'+
-    'Unit      = ~"[^~|]"*                                                                      \n'+
+    'MetaEntry  = SNL starline SNL Docstring SNL starline SNL "~" SNL Docstring SNL "|" SNL*   \n' +
+    'ModelEntry = SNL Component SNL "~" SNL Unit SNL "~" SNL Docstring SNL "|" SNL*            \n' +
+    'GroupEntry = SNL "{" SNL ~"[^}]"* SNL "}" SNL                                             \n' +
+    'Unit      = ~"[^~|]"*                                                                     \n' +
     # The docstring parser also consumes trailing newlines. Not sure if we want this?
     # The second half of the docstring parser is a lookahead to make sure we don't consume starlines
-    'Docstring = (~"[^~|]" !~"(\*{3,})")*                                                       \n'+
-    'Component = Stock / Flows / Lookup / Subscript                       \n'+
+    'Docstring = (~"[^~|]" !~"(\*{3,})")*                                                      \n' +
+    'Component = Stock / Flows / Lookup / Subscript                                            \n' +
     # ##################################Subscript Element##########################
-    'Subscript = Identifier SNL ":" SNL SubElem                                           \n'+
+    'Subscript = Identifier SNL ":" SNL SubElem                                                \n' +
 
     #We need to weed out subscripts from non-subscripts
 
-    'Lookup     = Identifier SNL "(" SNL Range SNL CopairList SNL ")"                           \n'+
-    #'Lookup     = Identifier _ "(" SNL Range _ CopairList _ ")"            \n'+
+    'Lookup     = Identifier SNL "(" SNL Range SNL CopairList SNL ")"                          \n' +
+    #'Lookup     = Identifier _ "(" SNL Range _ CopairList _ ")"           \n' +
 
     # Subscript Element#############################################
-    'Subtext = SNL "[" SNL SubElem SNL "]" SNL                                               \n'+
+    'Subtext = SNL "[" SNL SubElem SNL "]" SNL                                                 \n' +
 
-    'Range      = "[" _ Copair _ "-" _ Copair _ "]"                                             \n'+
-    'CopairList = AddCopair*                                                                    \n'+
-    'AddCopair  = SNL "," SNL Copair                                                            \n'+
+    'Range      = "[" _ Copair _ "-" _ Copair _ "]"                                            \n' +
+    'CopairList = AddCopair*                                                                   \n' +
+    'AddCopair  = SNL "," SNL Copair                                                           \n' +
     # 'Copair' represents a coordinate pair
-    'Copair     = "(" SNL UnderSub SNL ")"                                           \n'+
-    #'Copair     = "(" _ Primary _ "," _ Primary _ ")"                                \n'+
+    'Copair     = "(" SNL UnderSub SNL ")"                                                     \n' +
+    #'Copair     = "(" _ Primary _ "," _ Primary _ ")"                                         \n' +
 
-    'Stock = Identifier _ Subtext* _ "=" _ "INTEG" _ "(" SNL Condition _ "," SNL Condition _ ")"\n'+
-    # 'Flaux' represents either a flow or an auxiliary, as the syntax is the same
-    'Flows = Flowint Flaux \n' + # this is for subscripted equations, or situations where each element of the subscript is defined by itself.
+    'Stock = Identifier _ Subtext* _ "=" _ "INTEG" _ "(" SNL Condition _ "," SNL Condition _ ")" \n' +
+
+    # 'Flows' is for subscripted equations, or situations where each element
+    # of the subscript is defined by itself. # Todo: Make this more descriptive
+    'Flows = Flowint Flaux \n' +
     'Flowint = Flow*'
-    'Flow = (Flaux SNL "~~|" SNL)                                                               \n'+
+    'Flow = (Flaux SNL "~~|" SNL)                                                              \n' +
 
-    'Flaux = Identifier SNL Subtext* SNL "=" SNL Condition                                      \n'+
+    # 'Flaux' represents either a flow or an auxiliary, as the syntax is the same
+    'Flaux = Identifier SNL Subtext* SNL "=" SNL Condition                                     \n' +
 
     # SNL means 'spaced newline'
-    'SNL = _ NL* _                                                                              \n'+
-    'NL = _ ~"[\\r\\n]" _                                                                       \n'+
-    'starline = ~"\*{3,}"                                                                       \n'+
+    'SNL = _ NL* _                                                                             \n' +
+    'NL = _ ~"[\\r\\n]" _                                                                      \n' +
+    'starline = ~"\*{3,}"                                                                      \n' +
 
-    'Condition   = SNL Term SNL Conditional*                                                    \n'+
-    'Conditional = ("<=" / "<>" / "<" / ">=" / ">" / "=") SNL Term                              \n'+
+    'Condition   = SNL Term SNL Conditional*                                                   \n' +
+    'Conditional = ("<=" / "<>" / "<" / ">=" / ">" / "=") SNL Term                             \n' +
 
-    'SubElem = Identifier (SNL "," SNL Identifier SNL)*                                         \n'+
+    'SubElem = Identifier (SNL "," SNL Identifier SNL)*                                        \n' +
 
-    'Term     = Factor SNL Additive*                                                            \n'+
-    'Additive = ("+"/"-") SNL Factor                                                            \n'+
+    'Term     = Factor SNL Additive*                                                           \n' +
+    'Additive = ("+"/"-") SNL Factor                                                           \n' +
 
     # Factor may be consuming newlines? don't want it to...
-    'Factor   = ExpBase SNL Multiplicative*                                                     \n'+
-    'Multiplicative = ("*" / "/") SNL ExpBase                                                   \n'+
+    'Factor   = ExpBase SNL Multiplicative*                                                    \n' +
+    'Multiplicative = ("*" / "/") SNL ExpBase                                                  \n' +
 
-    'ExpBase  = Primary SNL Exponentive*                                                        \n'+
-    'Exponentive = "^" SNL Primary                                                              \n'+
+    'ExpBase  = Primary SNL Exponentive*                                                       \n' +
+    'Exponentive = "^" SNL Primary                                                             \n' +
 
-    'Primary  = Call / ConCall / LUCall / Parens / Signed / Subs / UnderSub / Number / Reference\n'+
-    'Parens   = "(" SNL Condition SNL ")"                                                       \n'+
+    'Primary  = Call / ConCall / LUCall / Parens / Signed / Subs / UnderSub / Number / Reference \n' +
+    'Parens   = "(" SNL Condition SNL ")"                                                      \n' +
 
-    'Call     = Keyword SNL "(" SNL ArgList SNL ")"                                             \n'+
+    'Call     = Keyword SNL "(" SNL ArgList SNL ")"                                            \n' +
 
-    'ArgList  = AddArg+                                                                         \n'+
-    'AddArg   = ","* SNL Condition                                                              \n'+
+    'ArgList  = AddArg+                                                                        \n' +
+    'AddArg   = ","* SNL Condition                                                             \n' +
     # Calls to lookup functions don't use keywords, so we have to use identifiers.
     #    They take only one parameter. This could cause problems.
 
-    ###################################Subscript Element###########################################
-    'Subs     = (SNL UnderSub SNL ";")+ SNL                                                     \n'+ #this is for parsing 2d array
-    'UnderSub = ("-"/"+")? Number SNL ("," SNL ("-"/"+")? Number SNL)+                          \n'+ # for parsing 1d array - better to be 1d list
-    #undersub is creating errors parsing function arguments that are also numbers...
-    'LUCall   = Identifier SNL "(" SNL Condition SNL ")"                                        \n'+
-    'Signed   = ("-"/"+") Primary                                                               \n'+
+    # 'Subs' is for parsing 2d array
+    'Subs     = (SNL UnderSub SNL ";")+ SNL                                                    \n' +
+    # 'Undersub' for parsing 1d array - # Todo: make these more descriptive ('1d_list'?)
+    'UnderSub = ("-"/"+")? Number SNL ("," SNL ("-"/"+")? Number SNL)+                         \n' +
+    # undersub may be creating errors parsing function arguments that are also numbers...
+
+    'LUCall   = Identifier SNL "(" SNL Condition SNL ")"                                       \n' +
+    'Signed   = ("-"/"+") Primary                                                              \n' +
     # We have to break 'reference' out from identifier, because in reference situations
     #    we'll want to add self.<name>(), but we also need to be able to clean and access
     #    the identifier independently. To force parsimonious to handle the reference as
     #    a seperate object from the Identifier, we add a trailing optional space character
-    'Reference = Identifier SNL Subtext* SNL                                                \n'+
+    'Reference = Identifier SNL Subtext* SNL                                                   \n' +
 
-    'ConCall  = ConKeyword SNL "(" SNL ArgList SNL ")"                                          \n'+
+    'ConCall  = ConKeyword SNL "(" SNL ArgList SNL ")"                                         \n' +
 
-    'Number   = ((~"[0-9]"+ "."? ~"[0-9]"*) / ("." ~"[0-9]"+)) (("e"/"E") ("-"/"+") ~"[0-9]"+)? \n'+
-    'Identifier = Basic_Id / Special_Id                                                         \n'+
-    'Basic_Id = Letter (Letter / Digit / ~"[_\s]")*                                             \n'+
-    'Special_Id = "\\""  ~"[^\\"]"*  "\\""                                                      \n'+ #won't handle where vensim has escaped double quotes...
-    'Letter   = ~"[a-zA-Z]"                                                                     \n'+
-    'Digit    = ~"[0-9]"                                                                        \n'+
+    'Number   = ((~"[0-9]"+ "."? ~"[0-9]"*) / ("." ~"[0-9]"+)) (("e"/"E") ("-"/"+") ~"[0-9]"+)?\n' +
+    'Identifier = Basic_Id / Special_Id                                                        \n' +
+    'Basic_Id = Letter (Letter / Digit / ~"[_\s]")*                                            \n' +
+
+    # Special_ID is for vensim names in double quotes - this allows special characters.
+    # This parsing is not robust to places where vensim has escaped double quotes...
+    'Special_Id = "\\""  ~"[^\\"]"*  "\\""                                                     \n' +
+    'Letter   = ~"[a-zA-Z]"                                                                    \n' +
+    'Digit    = ~"[0-9]"                                                                       \n' +
 
     # We separated out single space characters from the _ entry, so that it can have any number or
     #   combination of space characters.
-    '_ = spacechar*                                                                             \n'+
+    '_ = spacechar*                                                                            \n' +
     # Vensim uses a 'backslash, newline' syntax as a way to split an equation onto multiple lines.
     #   We address this by including it as  an allowed space character.
-    # Todo: do we really want the exclamation to be a space character? throw these away?
-    'spacechar = exclamation* " "* ~"\t"* (~r"\\\\" NL)*                                       \n'+
-    'exclamation = "!"+                                                                        \n' +
+    'spacechar = exclamation* " "* ~"\t"* (~r"\\\\" NL)*                                      \n' +
+    'exclamation = "!"+                                                                       \n' +
     'Keyword = %s  \n'%keywords +
     'ConKeyword = %s  \n'%con_keywords
     )
@@ -241,31 +248,31 @@ class TextParser(NodeVisitor):
         self.builder.add_stock(Identifier, Sub, expression, initial_condition)
         return Identifier
 
-    def visit_Subtext(self,n,(_1,lparen,_2,element,_3,rparen,_4)):
+    def visit_Subtext(self,n,(_1, lparen, _2, element, _3, rparen, _4)):
         addition = ''
         if re.search('!',_3):
             addition = '!'
-        return re.sub(r'[\n\t\\ ]','',element)+addition
+        return re.sub(r'[\n\t\\ ]', '', element)+addition
 
-    def visit_Flows(self,n,(flows,flaux)):
-        flowname=flaux[0]
+    def visit_Flows(self, n, (flows, flaux)):
+        flowname = flaux[0]
         if flows:
             flows.append(flaux)
         else:
-            flows=[]
+            flows = []
             flows.append(flaux)
-        flowsub=[]
-        flowelem=[]
+        flowsub = []
+        flowelem = []
         for i in range(len(flows)):
             flowsub.append(flows[i][1])
             flowelem.append(flows[i][2])
         self.builder.add_flaux(flowname,flowsub,flowelem)
         return flowname
 
-    def visit_Flowint(self,n,(flows)):
+    def visit_Flowint(self, n, (flows)):
         return flows
 
-    def visit_Flow(self, n, (Flaux,_1,tilde,SNL)):
+    def visit_Flow(self, n, (Flaux, _1, tilde, SNL)):
         return Flaux
 
     def visit_Flaux(self, n, (Identifier, _1, Sub, _2, eq, SNL, expression)):
@@ -283,8 +290,28 @@ class TextParser(NodeVisitor):
     ######### 'expression' level visitors ###############################
 
     def visit_ConCall(self, n, (ConKeyword, _1, lparen, _2, args, _4, rparen)):
-        #todo: build out omitted cases
-        if ConKeyword == 'DELAY1': #DELAY3(Inflow, Delay)
+        """Construction Call
+        Deals with vensim functions that create model structure.
+        For instance, a `delay` function creates a set of stocks and flows according to the
+        order of the delay.
+
+        Parameters
+        ----------
+        n
+
+        Returns
+        -------
+        output : string reference to a constructed function
+            The value returned here is what will be called by the model element that
+            contains the reference to the delay, etc. If the construction call is for a
+            third order delay, then the return will be a function call to the final outflow
+            from the delay chain.
+        """
+        # In theory, we could use this type of structure to handle the 'stock' call, and make
+        # the parsing easier. # Todo: Consider this when we rework the grammar
+
+        # Todo: build out omitted cases
+        if ConKeyword == 'DELAY1':  # DELAY3(Inflow, Delay)
             return self.builder.add_n_delay(delay_input=args[0],
                                             delay_time=args[1],
                                             inital_value=str(0),
@@ -317,7 +344,6 @@ class TextParser(NodeVisitor):
 
         elif ConKeyword == 'INITIAL':
             return self.builder.add_initial(args[0])
-        # Todo: return whatever you call to get the final stage in the construction
 
     def visit_Keyword(self, n, vc):
         return dictionary[n.text.upper()]
@@ -328,25 +354,25 @@ class TextParser(NodeVisitor):
         #  position to reference in an array that isn't guaranteed to be created yet...
         #  for now, use old version. this is going to fail, though...
         if Subs:
-            InterSub=Subs.split(",")
-            subscript='[%s]'%','.join(map(str, getelempos(Subs, self.dictofsubs)))
-            subscript=re.sub(r'\[(:,*)+]*\]','',subscript)
-            getelemstr=Identifier+'()'
-            if len(InterSub)==1:
-                if Subs.count('!')==0:
+            InterSub = Subs.split(",")
+            subscript = '[%s]'%','.join(map(str, getelempos(Subs, self.dictofsubs)))
+            subscript = re.sub(r'\[(:,*)+]*\]','',subscript)
+            getelemstr = Identifier+'()'
+            if len(InterSub) == 1:
+                if Subs.count('!') == 0:
                     if subscript == '':
                         subscript = '[@@@]'
-                    return "functions.shorthander(%s,%s.dimension_dir,loc_dimension_dir,_subscript_dict)"%(getelemstr,Identifier) + subscript
+                    return "functions.shorthander(%s,%s.dimension_dir,loc_dimension_dir,_subscript_dict)"%(getelemstr, Identifier) + subscript
                 else:
                     return getelemstr + subscript
             else:
-                if re.search("!",Subs) and Subs.count("!")==1:
-                    sumacross=0
+                if re.search("!", Subs) and Subs.count("!") == 1:
+                    sumacross = 0
                     for i in range(len(InterSub)):
-                        if re.search("!",InterSub[i]):
+                        if re.search("!", InterSub[i]):
                             sumacross=i
-                    getelemstr+= subscript + ',%i'%sumacross
-                elif Subs.count('!')==0:
+                    getelemstr += subscript + ',%i'%sumacross
+                elif Subs.count('!') == 0:
                     if subscript == '':
                         subscript = '[@@@]'
                     getelemstr = "functions.shorthander(%s,%s.dimension_dir,loc_dimension_dir,_subscript_dict)"%(getelemstr,Identifier) + subscript
@@ -365,9 +391,9 @@ class TextParser(NodeVisitor):
         return Identifier+'('+Condition+')'
 
     def visit_Copair(self, n, (lparen, _1, Subs, _2, rparen)):
-        Subs=re.sub(r'[\\\!]','',Subs)
-        xcoord=Subs.split(',')[0]
-        ycoord=Subs.split(',')[1]
+        Subs = re.sub(r'[\\\!]','',Subs)
+        xcoord = Subs.split(',')[0]
+        ycoord = Subs.split(',')[1]
         return (float(xcoord), float(ycoord))
 
     def visit_Lookup(self, n, (Identifier, _1, lparen, _2, Range,
@@ -414,6 +440,7 @@ def getelempos(element, dictofsubs):
     ----------
     element
     dictofsubs
+
     Returns
     -------
     """
@@ -470,24 +497,24 @@ def translate_vensim(mdl_file):
     with open(mdl_file, 'rU') as file:
             text = file.read()
 
-    # Todo: consider making this easier to understand, maybe with a second parsimonious grammar
+    # Todo: consider making this easier to understand, maybe with a second parsimonious grammar?
     f2=re.findall(r'([a-zA-Z][^:~\n.\[\]\+\-\!/\(\)\\\&\=]+:+[^:~.\[\]\+\-\!/\(\),\\\&\=]+,+[^:~.\[\]\+\-\!/\(\)\\\&\=]+~)+',text)
     for i in range(len(f2)):
-        f2[i]=re.sub(r'[\n\t~]','',f2[i])
+        f2[i] = re.sub(r'[\n\t~]', '', f2[i])
 
     dictofsubs = {} 
     for i in f2: 
-        Family=builder.make_python_identifier(i.split(":")[0]) 
-        Elements=i.split(":")[1].split(",") 
+        Family = builder.make_python_identifier(i.split(":")[0])
+        Elements = i.split(":")[1].split(",")
         for i in range(len(Elements)): 
-            Elements[i]=builder.make_python_identifier(Elements[i].strip()) 
-        dictofsubs[Family]=dict(zip(Elements,range(len(Elements)))) 
+            Elements[i] = builder.make_python_identifier(Elements[i].strip())
+        dictofsubs[Family] = dict(zip(Elements, range(len(Elements))))
 
     for i in dictofsubs:
         for j in dictofsubs:
             try:
-                if set(dictofsubs[j].keys()).issubset(dictofsubs[i].keys()) and j!=i:
-                    tempj=[]
+                if set(dictofsubs[j].keys()).issubset(dictofsubs[i].keys()) and j != i:
+                    tempj = []
                     for key in (dictofsubs[i]):
                         if key in dictofsubs[j].keys():
                             tempj.append(dictofsubs[i][key])

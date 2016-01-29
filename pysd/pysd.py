@@ -89,8 +89,8 @@ def load(py_model_file):
     # set up the caches
     # Todo: make a robust way to tell that we're only caching the right things
     # Todo: make caching optional?
-    nocache = (['_t', 'time_step', 'time', 'initial_time', 'final_time', 'division', 'functions', 'np', 'saveper',
-         '_stocknames', '_state', '_funcs', '_dfuncs', '_subscript_dict'] +
+    nocache = (['_t', 'time_step', 'time', 'initial_time', 'final_time', 'division', 'functions',
+                'np', 'saveper', '_stocknames', '_state', '_funcs', '_dfuncs', '_subscript_dict'] +
           ['_d%s_dt'%s for s in components._dfuncs.keys()] +  #these are only called once
           ['_%s_init'%s for s in components._dfuncs.keys()] + #these are only called once
           ['%s'%s for s in components._dfuncs.keys()]) #these are pass-throughs anyways
@@ -237,7 +237,7 @@ class PySD(object):
             # Todo: short circuit this if there is nothing to flatten
             return_df = self._flatten_dataframe(return_df)
 
-        if addtflag: # Todo: add a test case in which this is necessary to test_functionality
+        if addtflag:  # Todo: add a test case in which this is necessary to test_functionality
             return_df.drop(return_df.index[0], inplace=True)
 
         if collect:
