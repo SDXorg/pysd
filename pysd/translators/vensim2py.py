@@ -62,16 +62,21 @@ from pysd import builder
 # how we decide that. If it isn't in the dictionary, it probably won't work
 
 dictionary = {"ABS": "abs", "INTEGER": "int", "EXP": "np.exp",
-    "PI": "np.pi", "SIN": "np.sin", "COS": "np.cos", "SQRT": "np.sqrt", "TAN": "np.tan",
-    "LOGNORMAL": "np.random.lognormal", "RANDOM NORMAL": "functions.bounded_normal",
-    "POISSON": "np.random.poisson", "LN": "np.log", "EXPRND": "np.random.exponential",
-    "RANDOM UNIFORM": "np.random.rand", "MIN": "np.minimum", "MAX": "np.maximum",
-    "SUM": "np.sum", "ARCCOS": "np.arccos",
-    "ARCSIN": "np.arcsin", "ARCTAN": "np.arctan", "IF THEN ELSE": "functions.if_then_else",
-    "STEP": "functions.step", "MODULO": "np.mod", "PULSE": "functions.pulse",
-    "PULSE TRAIN": "functions.pulse_train", "RAMP": "functions.ramp",
-    "=": "==", "<=": "<=", "<>": "!=", "<": "<", ">=": ">=", ">": ">", "^": "**",
-    "POS": "functions.pos", "TUNER": "functions.tuner", "TUNE1": "functions.tuner"}
+              "PI": "np.pi", "SIN": "np.sin", "COS": "np.cos", "SQRT": "np.sqrt", "TAN": "np.tan",
+              "LOGNORMAL": "np.random.lognormal", "RANDOM NORMAL": "functions.bounded_normal",
+              "POISSON": "np.random.poisson", "LN": "np.log",
+              "EXPRND": "np.random.exponential",
+              "RANDOM UNIFORM": "np.random.rand",
+              "MIN": "np.minimum", "MAX": "np.maximum",  # these are element-wise
+              "VMIN": "np.min", "VMAX": "np.max",  # vector function
+              "PROD": "np.prod",  # vector function
+              "SUM": "np.sum", "ARCCOS": "np.arccos",
+              "ARCSIN": "np.arcsin", "ARCTAN": "np.arctan",
+              "IF THEN ELSE": "functions.if_then_else",
+              "STEP": "functions.step", "MODULO": "np.mod", "PULSE": "functions.pulse",
+              "PULSE TRAIN": "functions.pulse_train", "RAMP": "functions.ramp",
+              "=": "==", "<=": "<=", "<>": "!=", "<": "<", ">=": ">=", ">": ">", "^": "**",
+              "POS": "functions.pos", "TUNER": "functions.tuner", "TUNE1": "functions.tuner"}
 
 construction_functions = ['DELAY1', 'DELAY3', 'DELAY3I', 'DELAY N', 'DELAY1I',
                           'SMOOTH3I', 'SMOOTH3', 'SMOOTH N', 'SMOOTH', 'SMOOTHI',
@@ -223,7 +228,7 @@ class TextParser(NodeVisitor):
 
 
     def parse(self, text):
-
+        """ This function calls the visitors on the parsed tree. """
         self.ast = self.grammar.parse(text)
         return self.visit(self.ast)
 
@@ -242,15 +247,15 @@ class TextParser(NodeVisitor):
         # Todo: Add docstring handling
         pass
 
-    def visit_Stock(self, n, (Identifier, _1, Sub,_10, eq, _2, integ, _3,
+    def visit_Stock(self, n, (Identifier, _1, Sub, _10, eq, _2, integ, _3,
                               lparen, NL1, expression, _6,
                               comma, NL2, initial_condition, _9, rparen)):
         self.builder.add_stock(Identifier, Sub, expression, initial_condition)
         return Identifier
 
-    def visit_Subtext(self,n,(_1, lparen, _2, element, _3, rparen, _4)):
+    def visit_Subtext(self, n, (_1, lparen, _2, element, _3, rparen, _4)):
         addition = ''
-        if re.search('!',_3):
+        if re.search('!', _3):  # Todo: explain what's happening here
             addition = '!'
         return re.sub(r'[\n\t\\ ]', '', element)+addition
 

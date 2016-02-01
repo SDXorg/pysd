@@ -166,8 +166,8 @@ class Builder(object):
             for expr, subi in zip(expression, sub):
                 expr = expr.replace('\n','').replace('\t','').strip()  # todo: pull out
                 indices = ','.join(map(str,getelempos(subi, self.dictofsubs)))
-                expr = expr.replace('\n', '').replace('\t', '').strip()  # todo: pull out
-                indices = ','.join(map(str,getelempos(subi, directory, self.dictofsubs)))
+                #expr = expr.replace('\n', '').replace('\t', '').strip()  # todo: pull out
+                #indices = ','.join(map(str,getelempos(subi, directory, self.dictofsubs)))
                 if re.search(';',expr):  # if 2d array, format for numpy
                     expr = 'np.'+np.array(np.mat(expr.strip(';'))).__repr__()
                 funcset += '    output[%s] = %s\n'%(indices, expr.replace('[@@@]','[%s]'%indices))
@@ -450,23 +450,23 @@ def get_array_info(subs, dictofsubs):
                 directory[element]=dirpos
                 dirpos+=1
 
-    num_dimensions = len(subscript_references[0])
-    reference_sets = [set() for _ in range(num_dimensions)]
-    for subscript_reference in subscript_references:
-        [reference_sets[i].add(element) for i, element in enumerate(subscript_reference)]
-    # `reference_sets` will now include a set for every dimension, containing the names used to
-    # access parts of that dimension
-
-    directory = dict()
-    shape = np.zeros(num_dimensions)
-    for i, reference_set in enumerate(reference_sets):
-        if len(reference_set) == 1:  # The element is almost certainly a subscript family name
-            reference = list(reference_set)[0]
-            if reference in dictofsubs.keys():
-                shape[i] = len(dictofsubs[reference])
-                directory[reference] = i
-            else:  # Todo: handle the case of a one-element subscript here
-                pass
+    # num_dimensions = len(subscript_references[0])
+    # reference_sets = [set() for _ in range(num_dimensions)]
+    # for subscript_reference in subscript_references:
+    #     [reference_sets[i].add(element) for i, element in enumerate(subscript_reference)]
+    # # `reference_sets` will now include a set for every dimension, containing the names used to
+    # # access parts of that dimension
+    #
+    # directory = dict()
+    # shape = np.zeros(num_dimensions)
+    # for i, reference_set in enumerate(reference_sets):
+    #     if len(reference_set) == 1:  # The element is almost certainly a subscript family name
+    #         reference = list(reference_set)[0]
+    #         if reference in dictofsubs.keys():
+    #             shape[i] = len(dictofsubs[reference])
+    #             directory[reference] = i
+    #         else:  # Todo: handle the case of a one-element subscript here
+    #             pass
         else:
             for famname,value in dictofsubs.iteritems():
                 try:
