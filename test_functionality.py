@@ -24,11 +24,12 @@ class TestVensimImporter(unittest.TestCase):
 class TestSubscriptSpecificFunctionality(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.model = pysd.read_vensim('tests/test-models/tests/subscript_aggregation/test_subscript_aggregation.mdl')
+        model_file = 'tests/test-models/tests/subscript_aggregation/test_subscript_aggregation.mdl'
+        cls.model = pysd.read_vensim(model_file)
 
     def test_flatten(self):
-        # todo: write this test
-        pass
+        # todo: check that this actually produces the CORRECT result, not just A result.
+        self.model.run(flatten_subscripts=True)
 
 
 class TestBasicFunctionality(unittest.TestCase):
