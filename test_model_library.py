@@ -132,7 +132,7 @@ for i, modelfile in testfiles.iteritems():
         status_str += 'Ran Model, got columns'+', '.join(output.columns.tolist()) +', '
 
         # check that the canonical output is close to the simulation output
-        assert (canon-output).max().max() < 1
+        assert ((canon-output)/canon).max().max() < .02
         
         print '.',
         success_count += 1
@@ -183,14 +183,14 @@ for i, modelfile in testfiles.iteritems():
         err_str += '-'*60 + '\n'
         err_str += status_str + '\n'
         err_str += 'Model output does not match canon.\n'
-        err_str += 'Variable       Maximum Discrepancy\n'
-        err_str += str((canon-output).max())+'\n'
+        err_str += 'Variable       Maximum Fractional Discrepancy\n'
+        err_str += str(((canon-output)/canon).max())+'\n'
         err_str += '\n'
 
         if args.verbose:
             err_str += 'Canonical Output:\n'
             err_str += canon.__repr__()
-            err_str += 'Recieved Output:\n'
+            err_str += '\nRecieved Output:\n'
             err_str += output.__repr__()
             print output
 

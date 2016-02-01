@@ -20,12 +20,18 @@ class TestVensimImporter(unittest.TestCase):
     def setUpClass(cls):
         cls.model = pysd.read_vensim('tests/old_tests/vensim/Teacup.mdl')
 
-    @unittest.skip("in development")
-    def test_documentation(self):
-        self.assertIsInstance(self.model.components.doc(), basestring)
+
+class TestSubscriptSpecificFunctionality(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.model = pysd.read_vensim('tests/test-models/tests/subscript_aggregation/test_subscript_aggregation.mdl')
+
+    def test_flatten(self):
+        # todo: write this test
+        pass
 
 
-class TestPySD(unittest.TestCase):
+class TestBasicFunctionality(unittest.TestCase):
     """ Testing basic execution functionality """
     # Probably should change this, because we modify the model when we
     # run it with new parameters, and best practice would be to make these
@@ -68,7 +74,7 @@ class TestPySD(unittest.TestCase):
             self.model.run(initial_condition='bad value')
 
     def test_set_constant_parameter(self):
-        # re: https://github.com/JamesPHoughton/pysd/issues/5
+        """ In response to: re: https://github.com/JamesPHoughton/pysd/issues/5"""
         self.model.set_components({'room_temperature': 20})
         self.assertEqual(self.model.components.room_temperature(), 20)
         
@@ -86,12 +92,18 @@ class TestPySD(unittest.TestCase):
         print res['room_temperature']
         self.assertTrue((res['room_temperature'] == temp_timeseries).all())
 
-    @unittest.skip("in development")
+    def test_flatten_nonexisting_subscripts(self):
+        """ Even when the model has no subscripts, we should be able to set this to either value"""
+        self.model.run(flatten_subscripts=True)
+        self.model.run(flatten_subscripts=False)
+
     def test_docs(self):
-        # test that the model prints the documentation
-        print self.model  # tests model.__str__
-        print self.model.doc()  # tests the function we wrote
-        self.model.doc(short=True)  # tests condensed model function printing.
+        """ Test that the model prints the documentation """
+        # Todo: Test that this prints the docstring from teacup.mdl as we would like it,
+        # not just that it prints a string.
+        self.assertIsInstance(self.model.__str__, basestring)  # tests model.__str__
+        self.assertIsInstance(self.model.doc(), basestring)  # tests the function we wrote
+        self.assertIsInstance(self.model.doc(short=True), basestring)
 
     def test_collection(self):
         self.model.run(params={'room_temperature': 75},
@@ -102,14 +114,36 @@ class TestPySD(unittest.TestCase):
         self.assertTrue(all(stocks.index.values == np.array(range(0, 60))))
         # We may drop this use case, as its relatively low value,
         # and meeting it makes things slower.
+        # Todo: test clearing the record
+
+    def test_set_components(self):
+        # Todo: write this test
+        pass
+
+    def test_set_state(self):
+        # Todo: write this test
+        pass
+
+    def test_set_initial_condition(self):
+        # Todo: write this test
+        pass
+
+    def test_cache(self):
+        self.model.run()
+        self.assertIsNotNone(self.model.components.room_temperature.cache)
 
 
 class TestMetaStuff(unittest.TestCase):
     """ The tests in this class test pysd's interaction with itself
         and other modules. """
 
-    @unittest.skip("in development")
     def test_multiple_load(self):
+        """Test that we can load and run multiple models at the same time,
+        and that the models don't interact with each other. This can
+        happen if we arent careful about class attributes vs instance attributes"""
+        # Todo: Make this a stricter test,
+        #  perhaps by checking that the components do not share members they shouldn't
+
         model_1 = pysd.read_vensim('tests/old_tests/vensim/Teacup.mdl')
         model_1.run()
 

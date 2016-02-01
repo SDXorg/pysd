@@ -25,10 +25,6 @@ debug models.
 #
 
 # Todo: Template separation is getting a bit out of control. Perhaps bring it back in?
-# Todo: create a function that gets the subscript family name, given one of its elements
-# this should be robust to the possibility that different families contain the same
-# child, as would be the case with subranges. Probably means that we'll have to collect
-# all of the subelements and pass them together to get the family name.
 
 
 import re

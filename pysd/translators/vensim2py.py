@@ -31,6 +31,7 @@ anywhere, will give them trouble.
 node, which makes it hard to match up later in the tree crawler
 
 """
+# Todo: handle docstrings. Create a private method to access them in bulk
 # Todo: Include original vensim/xmile non-python-safe identifiers in element docstrings
 # Todo: Consider using original vensim/xmile ids for dataframe column headers
 # Todo: Improve error messaging for failed imports
@@ -271,7 +272,7 @@ class TextParser(NodeVisitor):
         for i in range(len(flows)):
             flowsub.append(flows[i][1])
             flowelem.append(flows[i][2])
-        self.builder.add_flaux(flowname,flowsub,flowelem)
+        self.builder.add_flaux(flowname, flowsub, flowelem)
         return flowname
 
     def visit_Flowint(self, n, (flows)):
@@ -302,7 +303,8 @@ class TextParser(NodeVisitor):
 
         Parameters
         ----------
-        n
+        ConKeyword
+        args
 
         Returns
         -------

@@ -251,6 +251,7 @@ class PySD(object):
 
     def reset_state(self):
         """Sets the model state to the state described in the model file. """
+        # Todo: Make this a private function? Or write a good test for it...
         self.components._t = self.components.initial_time()  # set the initial time
         self.components._state = dict()
         retry_flag = False
