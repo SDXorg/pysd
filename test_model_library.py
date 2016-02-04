@@ -54,14 +54,14 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('-n','--number', help='which test to run')
 parser.add_argument('-v','--verbose', help='displays lots of error messages', action="store_true")
+parser.add_argument('-i','--print_input_file', help='prints the input model', action="store_true")
+parser.add_argument('-o','--print_output_file', help='prints the translated model', action="store_true")
 args = parser.parse_args()
 
-#load test models
+# load test models
 test_dir = 'tests/test-models/'
-vensim_testfiles = glob.glob(test_dir+'*/*/*.mdl')
 vensim_testfiles = glob.glob(test_dir+'tests/*/*.mdl')
-#xmile_testfiles = glob.glob(test_dir+'*/*/*.xmile')
-xmile_testfiles = []
+xmile_testfiles = []  # glob.glob(test_dir+'*/*/*.xmile')
 testfiles = {number: testfile for number, testfile in enumerate(vensim_testfiles + xmile_testfiles)}
 
 if args.number:
@@ -83,6 +83,11 @@ starttime = timeit.time.time()
 for i, modelfile in testfiles.iteritems():
     status_str = ''
 
+    # print the input file if requested
+    if args.print_input_file:
+        with open(modelfile, 'r') as ft:
+            print ft.read()
+
     try:
         err = None
         model = canon = None
@@ -93,6 +98,13 @@ for i, modelfile in testfiles.iteritems():
         elif modelfile[-5:] == "xmile":
             model = pysd.read_xmile(modelfile)
             status_str += 'Loaded Model, '
+
+        # print the generated output file if requested
+        if args.print_output_file:
+            if modelfile[-3:] == "mdl":
+                py_file_name = modelfile[:-3]+'py'
+                with open(py_file_name, 'r') as ft:
+                    print ft.read()
 
         # load the canonical output
         directory = os.path.dirname(modelfile)
@@ -120,7 +132,7 @@ for i, modelfile in testfiles.iteritems():
         status_str += 'Ran Model, got columns'+', '.join(output.columns.tolist()) +', '
 
         # check that the canonical output is close to the simulation output
-        assert (canon-output).max().max() < 1
+        assert ((canon-output)/canon).max().max() < .02
         
         print '.',
         success_count += 1
@@ -171,14 +183,14 @@ for i, modelfile in testfiles.iteritems():
         err_str += '-'*60 + '\n'
         err_str += status_str + '\n'
         err_str += 'Model output does not match canon.\n'
-        err_str += 'Variable       Maximum Discrepancy\n'
-        err_str += str((canon-output).max())+'\n'
+        err_str += 'Variable       Maximum Fractional Discrepancy\n'
+        err_str += str(((canon-output)/canon).max())+'\n'
         err_str += '\n'
 
         if args.verbose:
             err_str += 'Canonical Output:\n'
             err_str += canon.__repr__()
-            err_str += 'Recieved Output:\n'
+            err_str += '\nRecieved Output:\n'
             err_str += output.__repr__()
             print output
 
