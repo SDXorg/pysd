@@ -1,16 +1,32 @@
-'''
-created: August 15, 2014
-last update: June 6 2015
-version 0.2.5
+"""
+pysd.py
+
+Contains all the code that will be directly accessed by the user in normal operation.
+Also contains some private members to facilitate integration, setup, etc.
+
+History
+--------
+August 15, 2014 : created
+June 6 2015 : Major updates - version 0.2.5
+Jan 2016 : Rework to handle subscripts
+
+Contributors
+------------
 James Houghton <james.p.houghton@gmail.com>
-'''
+Mounir Yakzan
+"""
 
 import pandas as _pd
 import numpy as np
 import imp
+from math import fmod
 
 # Todo: add a logical way to run two or more models together, using the same integrator.
 # Todo: add model element caching
+# Todo: add a way to flatten the result of a subscripted simulation, for comparison with vensim
+# Todo: add the state dictionary to the model file, to give some functionality to it even without the pysd class
+# Todo: initialize the model on load by calling reset state
+# Todo: seems to be some issue with multiple imports - need to create a new instance...
 
 def read_xmile(xmile_file):
     """ Construct a model object from `.xmile` file.
@@ -63,15 +79,54 @@ def load(py_model_file):
     --------
     >>> model = load('Teacup.py')
     """
+    # Todo: This whole function is a mess. Consider including parts in the `init` of the PySD class
     components = imp.load_source('modulename', py_model_file)
-    # Todo: This is a messy way to find stocknames. Refactor.
     components._stocknames = [name[2:-3] for name in dir(components) if name.startswith('_') and name.endswith('_dt')]
     components._dfuncs = {name: getattr(components, '_d%s_dt'%name) for name in components._stocknames}
     funcnames = filter(lambda x: not x.startswith('_'), dir(components))
     components._funcs = {name: getattr(components, name) for name in funcnames}
+
+    # set up the caches
+    # Todo: make a robust way to tell that we're only caching the right things
+    # Todo: make caching optional?
+    nocache = (['_t', 'time_step', 'time', 'initial_time', 'final_time', 'division', 'functions', 'np', 'saveper',
+         '_stocknames', '_state', '_funcs', '_dfuncs', '_subscript_dict'] +
+          ['_d%s_dt'%s for s in components._dfuncs.keys()] +  #these are only called once
+          ['_%s_init'%s for s in components._dfuncs.keys()] + #these are only called once
+          ['%s'%s for s in components._dfuncs.keys()]) #these are pass-throughs anyways
+    cache_list = filter(lambda x: not x.startswith('__') and x not in nocache, dir(components))
+    [setattr(components,name, cache(getattr(components, name), components)) for name in cache_list]
+
     model = PySD(components)
+    model.reset_state()
     model.__str__ = 'Import of ' + py_model_file
     return model
+
+
+def cache(func, components):
+    """
+    Put a wrapper around a model function
+    Parameters
+    ----------
+    func : function in the components module
+
+    components : the components module
+
+    Returns
+    -------
+    new_func : function wrapping the original function, handling caching
+    """
+    # Todo: add some error checking, that `func` is actually a function, etc.
+    # Todo: find a more appropriate place for this to live.
+    def new_func(*args):
+        try:
+            assert new_func.t == components._t  # fails if cache is out of date or not instantiated
+        except:
+            new_func.cache = func(*args)
+            new_func.t = components._t
+        return new_func.cache
+    new_func.func_dict = func.func_dict  # propagate attributes (like dim_dict) to the wrap function
+    return new_func
 
 
 class PySD(object):
@@ -93,7 +148,7 @@ class PySD(object):
         return self.components.__str__
 
     def run(self, params={}, return_columns=[], return_timestamps=[],
-            initial_condition='original', collect=False, **intg_kwargs):
+            initial_condition='original', collect=False, flatten_subscripts=False):
         """ Simulate the model's behavior over time.
         Return a pandas dataframe with timestamps as rows,
         model elements as columns.
@@ -127,10 +182,13 @@ class PySD(object):
             When running multiple simulations, collect the results in a way
             that we can access down the road.
 
-        intg_kwargs: keyword arguments for odeint
-            Provides precice control over the integrator by passing through
-            keyword arguments to scipy's odeint function. The most interesting
-            of these will be `tcrit`, `hmax`, `mxstep`.
+        flatten_subscripts : binary (T/F)
+            If set to `True`, will format the output dataframe in two dimensions, each
+             cell of the dataframe containing a number. The number of columns of the
+             dataframe will be expanded.
+            If set to `False`, the dataframe cells corresponding to subscripted elements
+             will take the form of numpy arrays within the cells of the dataframe. The
+             columns will correspond to the model elements.
 
 
         Examples
@@ -148,7 +206,6 @@ class PySD(object):
         pysd.set_initial_condition : handles setting initial conditions
 
         """
-
         if params:
             self.set_components(params)
 
@@ -168,18 +225,19 @@ class PySD(object):
                 return_columns = self.components._stocknames
 
             res = self._integrate(self.components._dfuncs, tseries, return_columns)
-
-            return_df = _pd.DataFrame(data=res,
-                                     index=tseries,
-                                     columns=return_columns)
+            return_df = _pd.DataFrame(data=res, index=tseries)
 
         else:
-            outdict={}
+            outdict = {}
             for key in return_columns:
                 outdict[key] = self.components._funcs[key]()
             return_df = _pd.DataFrame(index=tseries, data=outdict)
 
-        if addtflag:
+        if flatten_subscripts:
+            # Todo: short circuit this if there is nothing to flatten
+            return_df = self._flatten_dataframe(return_df)
+
+        if addtflag: # Todo: add a test case in which this is necessary to test_functionality
             return_df.drop(return_df.index[0], inplace=True)
 
         if collect:
@@ -193,6 +251,9 @@ class PySD(object):
 
     def reset_state(self):
         """Sets the model state to the state described in the model file. """
+        def initial_number(inval):
+            return inval
+        self.components.initial_number=initial_number
         self.components._t = self.components.initial_time()  # set the initial time
         self.components._state = dict()
         retry_flag = False
@@ -209,7 +270,6 @@ class PySD(object):
                 retry_flag = True
         if retry_flag:
             self.reset_state()
-
 
     def get_record(self):
         """ Return the recorded model information.
@@ -330,6 +390,19 @@ class PySD(object):
         return outdict
 
     def _integrate(self, ddt, timesteps, return_elements):
+        """
+
+        Parameters
+        ----------
+        ddt : dictionary where keys are stock names and values are functions
+        timesteps
+        return_elements
+
+        Returns
+        -------
+
+        """
+        # Todo: write proper docstrings.
         outputs = range(len(timesteps))
         for i, t2 in enumerate(timesteps):
             self.components._state = self._step(ddt, self.components._state, t2-self.components._t)
@@ -340,3 +413,66 @@ class PySD(object):
             outputs[i] = outdict
 
         return outputs
+
+
+    def _flatten_dataframe(self, dataframe):
+        """
+        Formats model output for easy comparison or storage in a 2d spreadsheet.
+
+        Parameters
+        ----------
+        dataframe : pandas dataframe
+            The output of a model simulation, with variable names as column names
+             and timeseries as the indices. In this dataframe may be some columns
+             representing variables with subscripts, whose values are held within
+             numpy arrays within each cell of the dataframe.
+
+        Returns
+        -------
+        flat_dataframe : pandas dataframe
+            Dataframe containing all of the information of the output, but flattened such
+             that each cell of the dataframe contains only a number, not a full array.
+             Extra columns will be added to represent each of the elements of the arrays
+             in question.
+        """
+        def sort(dictionary):
+            return [dictionary.keys()[dictionary.values().index(x)] for x in sorted(dictionary.values())]
+
+        def pandasnamearray(varname):
+            stocks={}
+            stocklen=1
+            stockmod=[]
+
+            for i in sort(varname.dimension_dir):
+                stocklen*=len(self.components._subscript_dict[i])
+                stockmod.append(len(self.components._subscript_dict[i]))
+
+            for i in range(len(stockmod)):
+                stockmod[i]=np.prod(stockmod[i+1:])
+
+            interstock=np.ndarray(stocklen,object)
+            interstock[:]=""
+
+            for i,j in enumerate(sort(varname.dimension_dir)):
+                for k in range(stocklen):
+                    #interstock[k] += ","+sort(self.components._subscript_dict[j])[int(fmod(k/stockmod[i],len(self.components._subscript_dict[j])))]
+                    interstock[k] += "__"+sort(self.components._subscript_dict[j])[int(fmod(k/stockmod[i],len(self.components._subscript_dict[j])))]
+
+            #return [interstock[i].strip(",") for i in range(len(interstock))]
+            return [interstock[i].strip("__") for i in range(len(interstock))] #take off the ends
+
+        def dataframeexpand(pddf):
+            result=[]
+            for pos,name in enumerate(pddf.columns):
+                # todo: don't try and flatten if alreay a single number
+                if isinstance(pddf[name].loc[0], np.ndarray):
+                    result.append(pddf[name].apply(lambda x: _pd.Series(x.flatten())))
+                    #result[pos].columns=([name+'['+pandasnamearray(getattr(self.components,name))[x]+']' for x in range(len(pandasnamearray(getattr(self.components,name))))])
+                    result[pos].columns=([name+'__'+pandasnamearray(getattr(self.components,name))[x] for x in range(len(pandasnamearray(getattr(self.components,name))))])
+                else:
+                    result.append(_pd.DataFrame(pddf[name]))
+                    result[pos].columns=[name]
+            pddf=_pd.concat([result[x] for x in range(len(result))],axis=1)
+
+            return pddf
+        return dataframeexpand(dataframe)

@@ -13,7 +13,8 @@ Folders within the [Samples](https://github.com/SDXorg/test-models/tree/master/s
 directory contain complete models that can be used for integration tests, benchmarking, and demos.
 
 Each model folder contains:
-- a single model concept, with its canonical output (named `output.csv`) containing (at least) 
+
+- a single model concept, with its canonical output (named `output.csv` or `output.tab`) containing (at least) 
 the stock values over the standard timeseries in the model files
 - Model files that produce said output (.mdl, .xmile, stella, pysd, etc)
 - A text file entitled `README.md` containing:
@@ -127,3 +128,10 @@ models rather than xmile, you can change the model-file suffix:
 
     # test Stella v10 XMILE-variant model files
     $ ./regression-test.py --ext stmx ~/path/to/tool .
+
+# List of Tests to add
+1. Models with no stocks
+2. Models with subscripted flow definitions
+3. Models with different sets of subscripts on different pieces
+4. Subscripted lookups
+5. Test 'pi' and other keywords

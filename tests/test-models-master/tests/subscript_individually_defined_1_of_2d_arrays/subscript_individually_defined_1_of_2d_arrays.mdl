@@ -1,0 +1,110 @@
+{UTF-8}
+Initial Values[One Dimensional Subscript,Second Dimension Subscript]=
+	1, 2; 3, 4; 5, 6;
+	~	
+	~		|
+
+Stock A[One Dimensional Subscript,Second Dimension Subscript]= INTEG (
+	Inflow A[One Dimensional Subscript,Second Dimension Subscript],
+		Initial Values[One Dimensional Subscript,Second Dimension Subscript])
+	~	
+	~		|
+
+Inflow A[One Dimensional Subscript,Second Dimension Subscript]=
+	Rate A[One Dimensional Subscript,Second Dimension Subscript]
+	~	
+	~		|
+
+Second Dimension Subscript:
+	Column 1, Column 2
+	~	
+	~		|
+
+One Dimensional Subscript:
+	Entry 1, Entry 2, Entry 3
+	~	
+	~		|
+
+Rate A[One Dimensional Subscript, Column 1]=
+	0.01, 0.03, 0.05 ~~|
+Rate A[One Dimensional Subscript, Column 2]=
+	0.02, 0.04, 0.06
+	~	
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 100
+	~	Month
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Month
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP
+	~	Month [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 1
+	~	Month [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Stock A,420,222,40,20,3,3,0,0,0,0,0,0
+12,2,48,257,223,10,8,0,3,0,0,-1,0,0,0
+1,3,5,1,4,0,0,22,0,0,0,-1--1--1,,1|(354,223)|
+1,4,5,2,100,0,0,22,0,0,0,-1--1--1,,1|(292,223)|
+11,5,48,323,223,6,8,34,3,0,0,1,0,0,0
+10,6,Inflow A,323,239,24,8,40,3,0,0,-1,0,0,0
+10,7,Rate A,318,308,19,8,8,3,0,0,0,0,0,0
+1,8,7,6,0,0,0,0,0,64,0,-1--1--1,,1|(319,280)|
+10,9,Initial Values,415,180,34,8,8,3,0,0,0,0,0,0
+1,10,9,1,0,0,0,0,0,64,1,-1--1--1,,1|(415,188)|
+///---\\\
+:L<%^E!@
+1:/Users/houghton/Google_Drive/Academic Projects/PYSD/test-models/tests/subscript_1d_arrays/Current.vdf
+1:Current.vdf
+9:Current
+22:$,Dollar,Dollars,$s
+22:Hour,Hours
+22:Month,Months
+22:Person,People,Persons
+22:Unit,Units
+22:Week,Weeks
+22:Year,Years
+22:Day,Days
+15:0,0,0,0,0,0
+19:100,0
+27:2,
+34:0,
+4:Time
+5:Rate A[One Dimensional Subscript,Second Dimension Subscript]
+35:Date
+36:YYYY-MM-DD
+37:2000
+38:1
+39:1
+40:2
+41:0
+42:1
+24:0
+25:100
+26:100
+6:Column 1
+6:Column 2
+6:Entry 1
+6:Entry 2
+6:Entry 3

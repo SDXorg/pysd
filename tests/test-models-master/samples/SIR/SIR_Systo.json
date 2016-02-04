@@ -1,0 +1,423 @@
+{
+   "meta": {
+      "language": "system_dynamics",
+      "name": "noname",
+      "id": "bayi_xti5",
+      "title": "no title",
+      "description": "no description",
+      "author": "no author"
+   },
+   "nodes": {
+      "stock1": {
+         "id": "stock1",
+         "type": "stock",
+         "label": "susceptible",
+         "centrex": 130,
+         "centrey": 163,
+         "text_shiftx": 1,
+         "text_shifty": -22,
+         "extras": {
+            "equation": {
+               "type": "long_text",
+               "default_value": "",
+               "value": "total_population"
+            },
+            "min_value": {
+               "type": "short_text",
+               "default_value": 0,
+               "value": 0
+            },
+            "max_value": {
+               "type": "short_text",
+               "default_value": 100,
+               "value": 100
+            },
+            "documentation": {
+               "type": "long_text",
+               "default_value": "",
+               "value": ""
+            },
+            "comments": {
+               "type": "long_text",
+               "default_value": "",
+               "value": ""
+            }
+         }
+      },
+      "stock2": {
+         "id": "stock2",
+         "type": "stock",
+         "label": "infectious",
+         "centrex": 276,
+         "centrey": 164,
+         "text_shiftx": 1,
+         "text_shifty": -22,
+         "extras": {
+            "equation": {
+               "type": "long_text",
+               "default_value": "",
+               "value": "5"
+            },
+            "min_value": {
+               "type": "short_text",
+               "default_value": 0,
+               "value": 0
+            },
+            "max_value": {
+               "type": "short_text",
+               "default_value": 100,
+               "value": 100
+            },
+            "documentation": {
+               "type": "long_text",
+               "default_value": "",
+               "value": ""
+            },
+            "comments": {
+               "type": "long_text",
+               "default_value": "",
+               "value": ""
+            }
+         }
+      },
+      "stock3": {
+         "id": "stock3",
+         "type": "stock",
+         "label": "recovered",
+         "centrex": 423,
+         "centrey": 165,
+         "text_shiftx": 1,
+         "text_shifty": -22,
+         "extras": {
+            "equation": {
+               "type": "long_text",
+               "default_value": "",
+               "value": "0"
+            },
+            "min_value": {
+               "type": "short_text",
+               "default_value": 0,
+               "value": 0
+            },
+            "max_value": {
+               "type": "short_text",
+               "default_value": 100,
+               "value": 100
+            },
+            "documentation": {
+               "type": "long_text",
+               "default_value": "",
+               "value": ""
+            },
+            "comments": {
+               "type": "long_text",
+               "default_value": "",
+               "value": ""
+            }
+         }
+      },
+      "valve1": {
+         "id": "valve1",
+         "type": "valve",
+         "label": "succumbing",
+         "centrex": 203,
+         "centrey": 163.5,
+         "text_shiftx": 0,
+         "text_shifty": 19,
+         "extras": {
+            "equation": {
+               "type": "long_text",
+               "default_value": "",
+               "value": "susceptible*infectious/total_population*contact_infectivity"
+            },
+            "min_value": {
+               "type": "short_text",
+               "default_value": 0,
+               "value": 0
+            },
+            "max_value": {
+               "type": "short_text",
+               "default_value": 10,
+               "value": 10
+            },
+            "documentation": {
+               "type": "long_text",
+               "default_value": "",
+               "value": ""
+            },
+            "comments": {
+               "type": "long_text",
+               "default_value": "",
+               "value": ""
+            }
+         }
+      },
+      "valve2": {
+         "id": "valve2",
+         "type": "valve",
+         "label": "recovering",
+         "centrex": 349.5,
+         "centrey": 164.5,
+         "text_shiftx": 0,
+         "text_shifty": 19,
+         "extras": {
+            "equation": {
+               "type": "long_text",
+               "default_value": "",
+               "value": "infectious/duration"
+            },
+            "min_value": {
+               "type": "short_text",
+               "default_value": 0,
+               "value": 0
+            },
+            "max_value": {
+               "type": "short_text",
+               "default_value": 10,
+               "value": 10
+            },
+            "documentation": {
+               "type": "long_text",
+               "default_value": "",
+               "value": ""
+            },
+            "comments": {
+               "type": "long_text",
+               "default_value": "",
+               "value": ""
+            }
+         }
+      },
+      "variable1": {
+         "id": "variable1",
+         "type": "variable",
+         "label": "total_population",
+         "centrex": 135,
+         "centrey": 69,
+         "text_shiftx": 0,
+         "text_shifty": 0,
+         "extras": {
+            "equation": {
+               "type": "long_text",
+               "default_value": "",
+               "value": "1000"
+            },
+            "min_value": {
+               "type": "short_text",
+               "default_value": 0,
+               "value": 0
+            },
+            "max_value": {
+               "type": "short_text",
+               "default_value": 1,
+               "value": 1
+            },
+            "documentation": {
+               "type": "long_text",
+               "default_value": "",
+               "value": ""
+            },
+            "comments": {
+               "type": "long_text",
+               "default_value": "",
+               "value": ""
+            }
+         }
+      },
+      "variable2": {
+         "id": "variable2",
+         "type": "variable",
+         "label": "contact_infectivity",
+         "centrex": 268,
+         "centrey": 78,
+         "text_shiftx": 0,
+         "text_shifty": 0,
+         "extras": {
+            "equation": {
+               "type": "long_text",
+               "default_value": "",
+               "value": "0.3"
+            },
+            "min_value": {
+               "type": "short_text",
+               "default_value": 0,
+               "value": 0
+            },
+            "max_value": {
+               "type": "short_text",
+               "default_value": 1,
+               "value": 1
+            },
+            "documentation": {
+               "type": "long_text",
+               "default_value": "",
+               "value": ""
+            },
+            "comments": {
+               "type": "long_text",
+               "default_value": "",
+               "value": ""
+            }
+         }
+      },
+      "variable3": {
+         "id": "variable3",
+         "type": "variable",
+         "label": "duration",
+         "centrex": 402,
+         "centrey": 81,
+         "text_shiftx": 0,
+         "text_shifty": 0,
+         "extras": {
+            "equation": {
+               "type": "long_text",
+               "default_value": "",
+               "value": "5"
+            },
+            "min_value": {
+               "type": "short_text",
+               "default_value": 0,
+               "value": 0
+            },
+            "max_value": {
+               "type": "short_text",
+               "default_value": 1,
+               "value": 1
+            },
+            "documentation": {
+               "type": "long_text",
+               "default_value": "",
+               "value": ""
+            },
+            "comments": {
+               "type": "long_text",
+               "default_value": "",
+               "value": ""
+            }
+         }
+      }
+   },
+   "arcs": {
+      "flow1": {
+         "id": "flow1",
+         "type": "flow",
+         "label": "flow1",
+         "start_node_id": "stock1",
+         "end_node_id": "stock2",
+         "curvature": 0,
+         "along": 0.5,
+         "node_id": "valve1",
+         "line_colour": "#a0a0a0",
+         "line_width": 4,
+         "fill_colour": "#a0a0a0"
+      },
+      "flow2": {
+         "id": "flow2",
+         "type": "flow",
+         "label": "flow2",
+         "start_node_id": "stock2",
+         "end_node_id": "stock3",
+         "curvature": 0,
+         "along": 0.5,
+         "node_id": "valve2",
+         "line_colour": "#a0a0a0",
+         "line_width": 4,
+         "fill_colour": "#a0a0a0"
+      },
+      "influence1": {
+         "id": "influence1",
+         "type": "influence",
+         "label": "influence1",
+         "start_node_id": "variable1",
+         "end_node_id": "stock1",
+         "curvature": 0.3,
+         "along": 0.5,
+         "line_colour": "#505050",
+         "line_width": 1,
+         "fill_colour": "#505050"
+      },
+      "influence2": {
+         "id": "influence2",
+         "type": "influence",
+         "label": "influence2",
+         "start_node_id": "variable1",
+         "end_node_id": "valve1",
+         "curvature": 0.3,
+         "along": 0.5,
+         "line_colour": "#505050",
+         "line_width": 1,
+         "fill_colour": "#505050"
+      },
+      "influence3": {
+         "id": "influence3",
+         "type": "influence",
+         "label": "influence3",
+         "start_node_id": "variable2",
+         "end_node_id": "valve1",
+         "curvature": 0.3,
+         "along": 0.5,
+         "line_colour": "#505050",
+         "line_width": 1,
+         "fill_colour": "#505050"
+      },
+      "influence4": {
+         "id": "influence4",
+         "type": "influence",
+         "label": "influence4",
+         "start_node_id": "stock1",
+         "end_node_id": "valve1",
+         "curvature": 0.3,
+         "along": 0.5,
+         "line_colour": "#505050",
+         "line_width": 1,
+         "fill_colour": "#505050"
+      },
+      "influence5": {
+         "id": "influence5",
+         "type": "influence",
+         "label": "influence5",
+         "start_node_id": "stock2",
+         "end_node_id": "valve1",
+         "curvature": 0.3,
+         "along": 0.5,
+         "line_colour": "#505050",
+         "line_width": 1,
+         "fill_colour": "#505050"
+      },
+      "influence6": {
+         "id": "influence6",
+         "type": "influence",
+         "label": "influence6",
+         "start_node_id": "variable3",
+         "end_node_id": "valve2",
+         "curvature": 0.3,
+         "along": 0.5,
+         "line_colour": "#505050",
+         "line_width": 1,
+         "fill_colour": "#505050"
+      },
+      "influence7": {
+         "id": "influence7",
+         "type": "influence",
+         "label": "influence7",
+         "start_node_id": "stock2",
+         "end_node_id": "valve2",
+         "curvature": 0.3,
+         "along": 0.5,
+         "line_colour": "#505050",
+         "line_width": 1,
+         "fill_colour": "#505050"
+      }
+   },
+   "scenarios": {
+      "default": {
+         "simulation_settings": {
+            "start_time": 0,
+            "end_time": 100,
+            "nstep": 100,
+            "display_interval": 1,
+            "integration_method": "euler1"
+         }
+      }
+   }
+}

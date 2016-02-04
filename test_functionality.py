@@ -11,7 +11,6 @@ import unittest
 import pandas as pd
 import numpy as np
 
-
 print '*'*150
 print 'Testing module at location:', pysd.__file__
 
@@ -72,7 +71,7 @@ class Test_PySD(unittest.TestCase):
             self.model.run(initial_condition='bad value')
 
     def test_set_constant_parameter(self):
-        #re: https://github.com/JamesPHoughton/pysd/issues/5
+        # re: https://github.com/JamesPHoughton/pysd/issues/5
         self.model.set_components({'room_temperature':20})
         self.assertEqual(self.model.components.room_temperature(),20)
         
