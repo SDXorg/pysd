@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<xmile xmlns="http://www.systemdynamics.org/XMILE" version="1.0" level="3">
+    <header>
+        <smile version="1.0">
+            <uses_submodels></uses_submodels>
+        </smile>
+        <name>model</name>
+        <uuid>5c1276e0-9bab-4489-b31c-a1e5dfc3a410</uuid>
+        <vendor>SDLabs</vendor>
+        <product version="0.1">go-xmile</product>
+    </header>
+    <sim_specs time_units="time">
+        <start>0</start>
+        <stop>12</stop>
+        <dt>0.5</dt>
+    </sim_specs>
+    <dimensions></dimensions>
+    <model_units></model_units>
+    <equation_prefs xmlns="isee" order_by="module"></equation_prefs>
+    <model>
+        <variables>
+            <module name="hares">
+                <connect to="area" from=".area"></connect>
+                <connect to="lynxes" from="lynxes.lynxes"></connect>
+            </module>
+            <module name="lynxes">
+                <connect to="hare_density" from="hares.hare_density"></connect>
+                <connect to="size_of_one_time_lynx_harvest" from=".size_of_one_time_lynx_harvest"></connect>
+            </module>
+            <aux name="area">
+                <eqn>1000 </eqn>
+            </aux>
+            <aux name="size_of_one\ntime_lynx_harvest">
+                <eqn>100 </eqn>
+            </aux>
+        </variables>
+        <views>
+            <view scroll_x="0" scroll_y="0" zoom="200" converter_size="medium">
+                <connector x="106" y="105" color="#FF007F" uid="0">
+                    <from>hares</from>
+                    <to>lynxes</to>
+                </connector>
+                <connector x="98" y="159" color="#FF007F" uid="1">
+                    <from>area</from>
+                    <to>hares</to>
+                </connector>
+                <connector x="248" y="67" color="#FF007F" uid="2">
+                    <from>lynxes</from>
+                    <to>hares</to>
+                </connector>
+                <connector x="257" y="158" color="#FF007F" uid="3">
+                    <from>size_of_one_time_lynx_harvest</from>
+                    <to>lynxes</to>
+                </connector>
+                <module x="88" y="85" color="blue" name="hares"></module>
+                <module x="273" y="85" color="blue" name="lynxes"></module>
+                <aux x="100" y="168" color="blue" name="area"></aux>
+                <aux x="256" y="167" color="blue" name="size_of_one\ntime_lynx_harvest"></aux>
+            </view>
+            <view name="interface" scroll_x="0" scroll_y="0" zoom="0" page_width="800" page_height="600">
+                <simulation_delay>0.0690335</simulation_delay>
+            </view>
+        </views>
+    </model>
+    <model name="hares">
+        <variables>
+            <stock name="hares">
+                <eqn>50000 </eqn>
+                <non_negative></non_negative>
+                <inflow>births</inflow>
+                <outflow>deaths</outflow>
+            </stock>
+            <flow name="births">
+                <eqn>hares * birth_fraction </eqn>
+                <non_negative></non_negative>
+            </flow>
+            <flow name="deaths">
+                <eqn>lynxes * hares_killed_per_lynx </eqn>
+                <non_negative></non_negative>
+            </flow>
+            <aux name="birth_fraction">
+                <eqn>1.25 </eqn>
+            </aux>
+            <aux name="area">
+                <eqn>{Enter equation for use when not hooked up to other models}</eqn>
+            </aux>
+            <aux name="hare_density">
+                <eqn>hares / area </eqn>
+            </aux>
+            <stock name="lynxes">
+                <eqn>{Enter equation for use when not hooked up to other models}</eqn>
+                <non_negative></non_negative>
+            </stock>
+            <aux name="hares_killed\nper_lynx">
+                <eqn>hare_density </eqn>
+                <gf discrete="false">
+                    <xpts>0,50,100,150.00000000000003,200,250,300.00000000000006,350.00000000000006,400,450,500</xpts>
+                    <ypts>0,50,100,150.00000000000003,200,250,300.00000000000006,350.00000000000006,400,450,500</ypts>
+                    <xscale min="0" max="0"></xscale>
+                    <yscale min="0" max="500"></yscale>
+                </gf>
+            </aux>
+        </variables>
+        <views>
+            <view scroll_x="54" scroll_y="35" zoom="200" converter_size="medium">
+                <connector x="73" y="160" color="#FF007F" uid="4">
+                    <from>birth_fraction</from>
+                    <to>births</to>
+                </connector>
+                <connector x="210" y="171" color="#FF007F" uid="5">
+                    <from>hare_density</from>
+                    <to>hares_killed_per_lynx</to>
+                </connector>
+                <connector x="275" y="155" color="#FF007F" uid="6">
+                    <from>hares_killed_per_lynx</from>
+                    <to>deaths</to>
+                </connector>
+                <connector x="182" y="112" color="#FF007F" uid="7">
+                    <from>hares</from>
+                    <to>hare_density</to>
+                </connector>
+                <connector x="331" y="159" color="#FF007F" uid="8">
+                    <from>lynxes</from>
+                    <to>deaths</to>
+                </connector>
+                <connector x="184" y="78" color="#FF007F" uid="9">
+                    <from>hares</from>
+                    <to>births</to>
+                </connector>
+                <connector x="155" y="212" color="#FF007F" uid="10">
+                    <from>area</from>
+                    <to>hare_density</to>
+                </connector>
+                <stock x="204" y="95" color="blue" name="hares"></stock>
+                <flow x="121" y="94" color="blue" name="births">
+                    <pts>
+                        <pt x="61" y="94"></pt>
+                        <pt x="182" y="94"></pt>
+                    </pts>
+                </flow>
+                <flow x="291" y="94" color="blue" name="deaths">
+                    <pts>
+                        <pt x="226" y="94"></pt>
+                        <pt x="357" y="94"></pt>
+                    </pts>
+                </flow>
+                <aux x="68" y="167" color="blue" name="birth_fraction"></aux>
+                <aux x="148" y="218" color="blue" name="area"></aux>
+                <aux x="202" y="167" color="blue" name="hare_density"></aux>
+                <stock x="342" y="176" color="blue" name="lynxes"></stock>
+                <aux x="273" y="164" color="blue" name="hares_killed\nper_lynx"></aux>
+            </view>
+            <view name="interface" scroll_x="0" scroll_y="0" zoom="0" page_width="800" page_height="600">
+                <simulation_delay>0.0690335</simulation_delay>
+            </view>
+        </views>
+    </model>
+    <model name="lynxes">
+        <variables>
+            <stock name="lynxes">
+                <eqn>1250 </eqn>
+                <non_negative></non_negative>
+                <inflow>births</inflow>
+                <outflow>deaths</outflow>
+                <outflow>harvest</outflow>
+            </stock>
+            <flow name="births">
+                <eqn>lynxes * birth_fraction </eqn>
+                <non_negative></non_negative>
+            </flow>
+            <flow name="deaths">
+                <eqn>death_fraction * lynxes </eqn>
+                <non_negative></non_negative>
+            </flow>
+            <aux name="hare_density">
+                <eqn>{Enter equation for use when not hooked up to other models}</eqn>
+            </aux>
+            <aux name="birth_fraction">
+                <eqn>.25 </eqn>
+            </aux>
+            <aux name="death_fraction">
+                <eqn>hare_density </eqn>
+                <gf discrete="false">
+                    <xpts>0,10,20,30.000000000000004,40,50,60.000000000000007,70,80,90,100</xpts>
+                    <ypts>1,0.60653065971263342,0.36787944117144233,0.22313016014842979,0.1353352832366127,0.0820849986238988,0.049787068367863924,0.030197383422318487,0.018315638888734179,0.011108996538242306,0.006737946999085467</ypts>
+                    <xscale min="0" max="0"></xscale>
+                    <yscale min="0" max="1"></yscale>
+                </gf>
+            </aux>
+            <flow name="harvest">
+                <eqn>PULSE( size_of_one_time_lynx_harvest , 4 , 0 ) </eqn>
+                <non_negative></non_negative>
+            </flow>
+            <aux name="size_of_one\ntime_lynx_harvest">
+                <eqn>{Enter equation for use when not hooked up to other models}</eqn>
+            </aux>
+        </variables>
+        <views>
+            <view scroll_x="68" scroll_y="0" zoom="165.6" converter_size="medium">
+                <connector x="185" y="83" color="#FF007F" uid="11">
+                    <from>lynxes</from>
+                    <to>births</to>
+                </connector>
+                <connector x="217" y="83" color="#FF007F" uid="12">
+                    <from>lynxes</from>
+                    <to>deaths</to>
+                </connector>
+                <connector x="130" y="169" color="#FF007F" uid="13">
+                    <from>birth_fraction</from>
+                    <to>births</to>
+                </connector>
+                <connector x="420" y="187" color="#FF007F" uid="14">
+                    <from>hare_density</from>
+                    <to>death_fraction</to>
+                </connector>
+                <connector x="297" y="217" color="#FF007F" uid="15">
+                    <from>size_of_one_time_lynx_harvest</from>
+                    <to>harvest</to>
+                </connector>
+                <connector x="331" y="169" color="#FF007F" uid="16">
+                    <from>death_fraction</from>
+                    <to>deaths</to>
+                </connector>
+                <stock x="202" y="100" color="blue" name="lynxes"></stock>
+                <flow x="126" y="96" color="blue" name="births">
+                    <pts>
+                        <pt x="73" y="96"></pt>
+                        <pt x="180" y="96"></pt>
+                    </pts>
+                </flow>
+                <flow x="306" y="96" color="blue" name="deaths">
+                    <pts>
+                        <pt x="224" y="96"></pt>
+                        <pt x="388" y="96"></pt>
+                    </pts>
+                </flow>
+                <aux x="430" y="184" color="blue" name="hare_density"></aux>
+                <aux x="130" y="178" color="blue" name="birth_fraction"></aux>
+                <aux x="340" y="169" color="blue" name="death_fraction"></aux>
+                <flow x="198" y="174" color="blue" name="harvest" label_side="top">
+                    <pts>
+                        <pt x="198" y="117"></pt>
+                        <pt x="198" y="232"></pt>
+                    </pts>
+                </flow>
+                <aux x="304" y="223" color="blue" name="size_of_one\ntime_lynx_harvest"></aux>
+            </view>
+            <view name="interface" scroll_x="0" scroll_y="0" zoom="0" page_width="800" page_height="600">
+                <simulation_delay>0.0690335</simulation_delay>
+            </view>
+        </views>
+    </model>
+</xmile>

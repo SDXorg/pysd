@@ -89,8 +89,8 @@ def load(py_model_file):
     # set up the caches
     # Todo: make a robust way to tell that we're only caching the right things
     # Todo: make caching optional?
-    nocache = (['_t', 'time_step', 'time', 'initial_time', 'final_time', 'division', 'functions',
-                'np', 'saveper', '_stocknames', '_state', '_funcs', '_dfuncs', '_subscript_dict'] +
+    nocache = (['_t', 'time_step', 'time', 'initial_time', 'final_time', 'division', 'functions', 'np', 'saveper',
+         '_stocknames', '_state', '_funcs', '_dfuncs', '_subscript_dict'] +
           ['_d%s_dt'%s for s in components._dfuncs.keys()] +  #these are only called once
           ['_%s_init'%s for s in components._dfuncs.keys()] + #these are only called once
           ['%s'%s for s in components._dfuncs.keys()]) #these are pass-throughs anyways
@@ -237,7 +237,7 @@ class PySD(object):
             # Todo: short circuit this if there is nothing to flatten
             return_df = self._flatten_dataframe(return_df)
 
-        if addtflag:  # Todo: add a test case in which this is necessary to test_functionality
+        if addtflag: # Todo: add a test case in which this is necessary to test_functionality
             return_df.drop(return_df.index[0], inplace=True)
 
         if collect:
@@ -251,7 +251,9 @@ class PySD(object):
 
     def reset_state(self):
         """Sets the model state to the state described in the model file. """
-        # Todo: Make this a private function? Or write a good test for it...
+        def initial_number(inval):
+            return inval
+        self.components.initial_number=initial_number
         self.components._t = self.components.initial_time()  # set the initial time
         self.components._state = dict()
         retry_flag = False
@@ -412,6 +414,7 @@ class PySD(object):
 
         return outputs
 
+
     def _flatten_dataframe(self, dataframe):
         """
         Formats model output for easy comparison or storage in a 2d spreadsheet.
@@ -436,32 +439,36 @@ class PySD(object):
             return [dictionary.keys()[dictionary.values().index(x)] for x in sorted(dictionary.values())]
 
         def pandasnamearray(varname):
-            stocklen = 1
-            stockmod = []
+            stocks={}
+            stocklen=1
+            stockmod=[]
 
             for i in sort(varname.dimension_dir):
-                stocklen *= len(self.components._subscript_dict[i])
+                stocklen*=len(self.components._subscript_dict[i])
                 stockmod.append(len(self.components._subscript_dict[i]))
 
             for i in range(len(stockmod)):
                 stockmod[i]=np.prod(stockmod[i+1:])
 
-            interstock = np.ndarray(stocklen,object)
-            interstock[:] = ""
+            interstock=np.ndarray(stocklen,object)
+            interstock[:]=""
 
-            for i, j in enumerate(sort(varname.dimension_dir)):
+            for i,j in enumerate(sort(varname.dimension_dir)):
                 for k in range(stocklen):
-                    interstock[k] += "__"+sort(self.components._subscript_dict[j])[int(fmod(k/stockmod[i], len(self.components._subscript_dict[j])))]
+                    #interstock[k] += ","+sort(self.components._subscript_dict[j])[int(fmod(k/stockmod[i],len(self.components._subscript_dict[j])))]
+                    interstock[k] += "__"+sort(self.components._subscript_dict[j])[int(fmod(k/stockmod[i],len(self.components._subscript_dict[j])))]
 
-            return [interstock[i].strip("__") for i in range(len(interstock))]  # take off the ends
+            #return [interstock[i].strip(",") for i in range(len(interstock))]
+            return [interstock[i].strip("__") for i in range(len(interstock))] #take off the ends
 
         def dataframeexpand(pddf):
-            result = []
-            for pos, name in enumerate(pddf.columns):
+            result=[]
+            for pos,name in enumerate(pddf.columns):
                 # todo: don't try and flatten if alreay a single number
                 if isinstance(pddf[name].loc[0], np.ndarray):
                     result.append(pddf[name].apply(lambda x: _pd.Series(x.flatten())))
-                    result[pos].columns=([name+'__'+pandasnamearray(getattr(self.components, name))[x] for x in range(len(pandasnamearray(getattr(self.components,name))))])
+                    #result[pos].columns=([name+'['+pandasnamearray(getattr(self.components,name))[x]+']' for x in range(len(pandasnamearray(getattr(self.components,name))))])
+                    result[pos].columns=([name+'__'+pandasnamearray(getattr(self.components,name))[x] for x in range(len(pandasnamearray(getattr(self.components,name))))])
                 else:
                     result.append(_pd.DataFrame(pddf[name]))
                     result[pos].columns=[name]

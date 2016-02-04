@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<xmile xmlns="http://www.systemdynamics.org/XMILE" version="1.0" level="3">
+    <header>
+        <smile version="1.0"></smile>
+        <name>exponentiation</name>
+        <uuid>193dce93-e47b-404e-8e53-e90b84220103</uuid>
+        <vendor>SDLabs</vendor>
+        <product version="0.1">go-xmile</product>
+    </header>
+    <sim_specs time_units="Time">
+        <start>0</start>
+        <stop>4</stop>
+        <dt>1</dt>
+    </sim_specs>
+    <dimensions></dimensions>
+    <model_units></model_units>
+    <equation_prefs xmlns="isee" order_by="module"></equation_prefs>
+    <model>
+        <variables>
+            <aux name="output">
+                <eqn>time^2</eqn>
+            </aux>
+            <aux name="associativity">
+                <eqn>-2^2</eqn>
+            </aux>
+            <aux name="test">
+                <eqn>IF associativity = -4 THEN 1 ELSE 0</eqn>
+            </aux>
+        </variables>
+        <views>
+            <view scroll_x="0" scroll_y="0" zoom="300" converter_size="medium">
+                <connector x="76" y="92" color="#FF007F" uid="0">
+                    <from>associativity</from>
+                    <to>test</to>
+                </connector>
+                <aux x="66" y="45" color="blue" name="output"></aux>
+                <aux x="67" y="93" color="blue" name="associativity"></aux>
+                <aux x="152" y="95" color="blue" name="test"></aux>
+            </view>
+            <view name="interface" scroll_x="0" scroll_y="0" zoom="0" page_width="788" page_height="528">
+                <simulation_delay>0.1</simulation_delay>
+            </view>
+        </views>
+    </model>
+</xmile>

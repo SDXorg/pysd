@@ -1,0 +1,115 @@
+{UTF-8}
+Smooth3 output=
+	SMOOTH3(Input,Adjustment Time)
+	~	
+	~		|
+
+Smooth N output=
+	SMOOTH N(Input, Adjustment Time , 0 , 5 )
+	~	
+	~		|
+
+Smooth output=
+	SMOOTH(Input, Adjustment Time )
+	~	
+	~		|
+
+SmoothI output=
+	SMOOTHI(Input, Adjustment Time, 0 )
+	~	
+	~		|
+
+Adjustment Time=
+	2
+	~	
+	~		|
+
+Smooth3I output=
+	SMOOTH3I(Input, Adjustment Time, 0 )
+	~	
+	~		|
+
+Input=
+	STEP(5 , 5)
+	~	
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 20
+	~	Month
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Month
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP 
+	~	Month [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 0.25
+	~	Month [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,Input,345,179,15,8,8,3,0,0,0,0,0,0
+10,2,Smooth3I output,303,252,43,8,8,3,0,0,0,0,0,0
+1,3,1,2,0,0,0,0,0,64,0,-1--1--1,,1|(327,209)|
+10,12,Adjustment Time,498,181,44,8,8,3,0,0,0,0,0,0
+1,13,12,2,1,0,0,0,0,64,0,-1--1--1,,1|(403,223)|
+10,40,SmoothI output,520,256,40,8,8,3,0,0,0,0,0,0
+1,41,1,40,0,0,0,0,0,64,0,-1--1--1,,1|(424,213)|
+1,42,12,40,0,0,0,0,0,64,0,-1--1--1,,1|(506,211)|
+10,43,Smooth output,286,112,38,8,8,3,0,0,0,0,0,0
+10,44,Smooth3 output,555,120,41,8,8,3,0,0,0,0,0,0
+1,45,1,43,0,0,0,0,0,64,0,-1--1--1,,1|(320,150)|
+1,46,12,43,0,0,0,0,0,64,0,-1--1--1,,1|(398,148)|
+1,47,1,44,0,0,0,0,0,64,0,-1--1--1,,1|(436,153)|
+1,48,12,44,0,0,0,0,0,64,0,-1--1--1,,1|(521,155)|
+10,49,Smooth N output,428,89,44,8,8,3,0,0,0,0,0,0
+1,50,1,49,0,0,0,0,0,64,0,-1--1--1,,1|(381,139)|
+1,51,12,49,0,0,0,0,0,64,0,-1--1--1,,1|(467,140)|
+///---\\\
+:L<%^E!@
+1:/Applications/Current.vdf
+1:/Users/houghton/Google_Drive/Academic Projects/PYSD/pysd/tests/vensim/Current.vdf
+1:Current.vdf
+9:Current
+22:$,Dollar,Dollars,$s
+22:Hour,Hours
+22:Month,Months
+22:Person,People,Persons
+22:Unit,Units
+22:Week,Weeks
+22:Year,Years
+22:Day,Days
+15:0,0,0,0,0,0
+19:100,0
+27:2,
+34:0,
+4:Time
+5:Smooth N output
+35:Date
+36:YYYY-MM-DD
+37:2000
+38:1
+39:1
+40:2
+41:0
+42:0
+24:0
+25:100
+26:100

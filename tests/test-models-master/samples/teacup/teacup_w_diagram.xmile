@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<xmile xmlns="http://www.systemdynamics.org/XMILE" version="1.0" level="3">
+    <header>
+        <smile version="1.0"></smile>
+        <name>teacup</name>
+        <uuid>cfc4ea6e-9e04-4362-ab8f-ab10f8242797</uuid>
+        <vendor>SDLabs</vendor>
+        <product version="0.1">go-xmile</product>
+    </header>
+    <sim_specs time_units="Time">
+        <start>0</start>
+        <stop>30</stop>
+        <dt>0.125</dt>
+    </sim_specs>
+    <dimensions></dimensions>
+    <model_units></model_units>
+    <equation_prefs xmlns="isee" order_by="module"></equation_prefs>
+    <model>
+        <variables>
+            <stock name="teacup_temperature">
+                <eqn>180</eqn>
+                <non_negative></non_negative>
+                <outflow>heat_loss_to_room</outflow>
+                <units>degrees</units>
+            </stock>
+            <flow name="heat_loss_to_room">
+                <eqn>(teacup_temperature-room_temperature)/characteristic_time</eqn>
+                <non_negative></non_negative>
+                <units>deg/time</units>
+            </flow>
+            <aux name="characteristic_time">
+                <eqn>10</eqn>
+                <units>minutes</units>
+            </aux>
+            <aux name="room_temperature">
+                <eqn>70</eqn>
+                <units>degrees</units>
+            </aux>
+        </variables>
+        <views>
+            <view scroll_x="0" scroll_y="0" zoom="200" page_cols="2" converter_size="medium">
+                <connector x="277" y="132" color="#FF007F" uid="0">
+                    <from>room_temperature</from>
+                    <to>heat_loss_to_room</to>
+                </connector>
+                <connector x="279" y="50" color="#FF007F" uid="1">
+                    <from>characteristic_time</from>
+                    <to>heat_loss_to_room</to>
+                </connector>
+                <connector x="154" y="80" color="#FF007F" uid="2">
+                    <from>teacup_temperature</from>
+                    <to>heat_loss_to_room</to>
+                </connector>
+                <stock x="132" y="97" color="blue" name="teacup_temperature"></stock>
+                <flow x="243" y="92" color="blue" name="heat_loss_to_room">
+                    <pts>
+                        <pt x="154" y="92"></pt>
+                        <pt x="332" y="92"></pt>
+                    </pts>
+                </flow>
+                <aux x="285" y="43" color="blue" name="characteristic_time"></aux>
+                <aux x="283" y="139" color="blue" name="room_temperature"></aux>
+            </view>
+            <view name="interface" scroll_x="0" scroll_y="0" zoom="0" page_width="788" page_height="528">
+                <simulation_delay>0.1</simulation_delay>
+            </view>
+        </views>
+    </model>
+</xmile>

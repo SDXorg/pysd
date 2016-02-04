@@ -25,6 +25,10 @@ debug models.
 #
 
 # Todo: Template separation is getting a bit out of control. Perhaps bring it back in?
+# Todo: create a function that gets the subscript family name, given one of its elements
+# this should be robust to the possibility that different families contain the same
+# child, as would be the case with subranges. Probably means that we'll have to collect
+# all of the subelements and pass them together to get the family name.
 
 
 import re
@@ -162,8 +166,6 @@ class Builder(object):
             for expr, subi in zip(expression, sub):
                 expr = expr.replace('\n','').replace('\t','').strip()  # todo: pull out
                 indices = ','.join(map(str,getelempos(subi, self.dictofsubs)))
-                #expr = expr.replace('\n', '').replace('\t', '').strip()  # todo: pull out
-                #indices = ','.join(map(str,getelempos(subi, directory, self.dictofsubs)))
                 if re.search(';',expr):  # if 2d array, format for numpy
                     expr = 'np.'+np.array(np.mat(expr.strip(';'))).__repr__()
                 funcset += '    output[%s] = %s\n'%(indices, expr.replace('[@@@]','[%s]'%indices))
@@ -176,39 +178,63 @@ class Builder(object):
                                                 docstring=docstring)
 
         if sub[0] != '':  # todo: make less brittle
-            funcstr += '%s.dimension_dir = '%identifier+directory.__repr__()+'\n'
+            funcstr += '%s.dimension_dir = '%identifier+directory.__repr__()+'\n'  # todo: do we like 'dimension_dictionary' as a name?
         self.body.append(funcstr)
 
         return identifier
 
-    def add_lookup(self, identifier, valid_range, copair_list):
-        """Constructs a function that implements a lookup.
-        The function encodes the coordinate pairs as numeric values in the python file.
-
-        Parameters
-        ----------
-        identifier: <string> valid python identifier
-            Our translators are responsible for translating the model identifiers into
-            something that python can use as a function name.
-
-        range: <tuple>
-            Minimum and maximum bounds on the lookup. Currently, we don't do anything
-            with this, but in the future, may use it to implement some error checking.
-
-        copair_list: a list of tuples, eg. [(0, 1), (1, 5), (2, 15)]
-            The coordinates of the lookup formatted in coordinate pairs.
-
-        """
-        # todo: Add a docstring capability
-
+    def add_lookup(self, identifier, valid_range, sub_list, copair_list):
         # in the future, we may want to check in bounds for the range. for now, lazy...
-        xs, ys = zip(*copair_list)
-        xs_str = str(list(xs))
-        ys_str = str(list(ys))
+        xs_str=[]
+        ys_str=[]
+        for i in copair_list:
+            xs, ys = zip(*i)
+            xs_str.append(str(list(xs)))
+            ys_str.append(str(list(ys)))
 
-        self.body.append(templates['lookup'].substitute(identifier=identifier,
-                                                        xs_str=xs_str,
-                                                        ys_str=ys_str))
+        if sub_list[0]=='':
+            createxy=''
+            addendum=''
+
+        else:
+            createxy = ('%s.xs = np.ndarray((%s),object) \n'%(identifier,','.join(map(str,get_array_info(sub_list[0],self.dictofsubs)[1])))+
+                        '%s.ys = np.ndarray((%s),object) \n'%(identifier,','.join(map(str,get_array_info(sub_list[0],self.dictofsubs)[1]))))
+            addendum=  ('for i,j in np.ndenumerate(%s.xs): \n'%identifier+
+                        '    %s.xs[i]=j.split(",") \n'%identifier+
+                        '    for k,l in np.ndenumerate(%s.xs[i]): \n'%identifier+
+                        '        %s.xs[i][k[0]]=float(l) \n'%identifier+
+                        'for i,j in np.ndenumerate(%s.ys): \n'%identifier+
+                        '    %s.ys[i]=j.split(",") \n'%identifier+
+                        '    for k,l in np.ndenumerate(%s.ys[i]): \n'%identifier+
+                        '        %s.ys[i][k[0]]=float(l) \n'%identifier+
+                        'del i,j,k,l')
+        for i in range(len(copair_list)):
+            try:
+                funcsub = ('[%s]')%(','.join(map(str,getelempos(sub_list[i],self.dictofsubs))))
+                funcsub = re.sub(r'\[(:,*)*]*\]','',funcsub)
+                if not funcsub:
+                    addendum = ''
+                    createxy = ''
+            except:
+                funcsub = ''
+
+            if not addendum:
+                createxy += ('%s.xs%s = %s \n'%(identifier,funcsub,xs_str[i])+
+                             '%s.ys%s = %s \n'%(identifier,funcsub,ys_str[i]))
+            else:
+                createxy += ('%s.xs%s = ",".join(map(str,%s)) \n'%(identifier,funcsub,xs_str[i])+
+                             '%s.ys%s = ",".join(map(str,%s)) \n'%(identifier,funcsub,ys_str[i]))
+        funcstr = ('def %s(x):                                      \n'%identifier+
+                   '    try: localxs                                          \n'+
+                   '    except:                                               \n'+
+                   '        localxs=%s.xs                                \n'%identifier+
+                   '        localys=%s.ys                                \n'%identifier+
+                   '    return functions.lookup(x,localxs,localys)   \n'+
+                   '                                                          \n'+
+                   createxy+addendum+
+                   '                                                          \n'
+                  )
+        self.body.append(funcstr)
 
     def add_initial(self, component):
         """ Implement vensim's `INITIAL` command as a build-time function.
@@ -223,6 +249,7 @@ class Builder(object):
 
         else:
             naked_component = component.split("()")[0]
+            naked_component = naked_component.replace('functions.shorthander(','')
             funcstr = ('\ndef initial_%s(inval):                       \n'%naked_component +
                     '    if not hasattr(initial_%s, "value"): \n'%naked_component +
                     '        initial_%s.value = inval         \n'%naked_component +
@@ -401,8 +428,7 @@ def getelempos(element, dictofsubs):
                     position.append(d[element]) 
                 except: pass  
     return tuple(position)
-
-
+    
 def get_array_info(subs, dictofsubs):
     """
     Returns information needed to create and access members of the numpy array
@@ -445,24 +471,6 @@ def get_array_info(subs, dictofsubs):
                 position.append(len(dictofsubs[element]))
                 directory[element]=dirpos
                 dirpos+=1
-
-    # num_dimensions = len(subscript_references[0])
-    # reference_sets = [set() for _ in range(num_dimensions)]
-    # for subscript_reference in subscript_references:
-    #     [reference_sets[i].add(element) for i, element in enumerate(subscript_reference)]
-    # # `reference_sets` will now include a set for every dimension, containing the names used to
-    # # access parts of that dimension
-    #
-    # directory = dict()
-    # shape = np.zeros(num_dimensions)
-    # for i, reference_set in enumerate(reference_sets):
-    #     if len(reference_set) == 1:  # The element is almost certainly a subscript family name
-    #         reference = list(reference_set)[0]
-    #         if reference in dictofsubs.keys():
-    #             shape[i] = len(dictofsubs[reference])
-    #             directory[reference] = i
-    #         else:  # Todo: handle the case of a one-element subscript here
-    #             pass
         else:
             for famname,value in dictofsubs.iteritems():
                 try:

@@ -1,0 +1,107 @@
+{UTF-8}
+InputA=
+	Test Pulse+Test Pulse Train+Test Ramp+Test Step
+	~	
+	~		|
+
+StockA= INTEG (
+	InputA,
+		0)
+	~	
+	~		|
+
+Test Pulse=
+	PULSE(3, 2 )
+	~	
+	~		|
+
+Test Pulse Train=
+	PULSE TRAIN(7 , 1 , 2 , 12)
+	~	
+	~		|
+
+Test Ramp=
+	RAMP(1, 14 , 17 )
+	~	
+	~		|
+
+Test Step=
+	STEP(1, 1)
+	~	
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 25
+	~	Month
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Month
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP 
+	~	Month [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 0.0625
+	~	Month [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|72,72,100,0
+10,1,StockA,661,242,40,20,3,3,0,0,0,0,0,0
+12,2,48,489,242,10,8,0,3,0,0,-1,0,0,0
+1,4,6,1,4,0,0,22,0,0,0,-1--1--1,,1|(593,242)|
+1,5,6,2,100,0,0,22,0,0,0,-1--1--1,,1|(526,242)|
+11,6,0,560,242,6,8,34,3,0,0,1,0,0,0
+10,7,InputA,560,258,19,8,40,3,0,0,-1,0,0,0
+10,8,Test Step,418,143,24,8,8,3,0,0,0,0,0,0
+10,9,Test Pulse,522,144,27,8,8,3,0,0,0,0,0,0
+1,10,8,6,0,0,0,0,0,64,0,-1--1--1,,1|(486,190)|
+1,11,9,6,0,0,0,0,0,64,0,-1--1--1,,1|(538,186)|
+10,12,Test Pulse Train,631,142,41,8,8,3,0,0,0,0,0,0
+1,13,12,6,0,0,0,0,0,64,0,-1--1--1,,1|(598,187)|
+10,14,Test Ramp,557,317,28,8,8,3,0,0,0,0,0,0
+1,15,14,7,0,0,0,0,0,64,0,-1--1--1,,1|(557,294)|
+///---\\\
+:L<%^E!@
+1:/Applications/Current.vdf
+1:Current.vdf
+9:Current
+22:$,Dollar,Dollars,$s
+22:Hour,Hours
+22:Month,Months
+22:Person,People,Persons
+22:Unit,Units
+22:Week,Weeks
+22:Year,Years
+22:Day,Days
+15:0,0,0,0,0,0
+19:100,0
+27:2,
+34:0,
+4:Time
+5:StockA
+35:Date
+36:YYYY-MM-DD
+37:2000
+38:1
+39:1
+40:2
+41:0
+42:0
+24:0
+25:25
+26:25

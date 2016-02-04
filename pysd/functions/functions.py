@@ -78,10 +78,14 @@ class Functions(object):
         np.random.seed(seed)
         return stats.truncnorm.rvs(minimum, maximum, loc=mean, scale=std)
 
-
 def lookup(x, xs, ys):
     """ Provides the working mechanism for lookup functions the builder builds """
-    return np.interp(x, xs, ys)
+    if not isinstance(xs,np.ndarray):
+        return np.interp(x,xs,ys)
+    resultarray=np.ndarray(np.shape(x))
+    for i,j in np.ndenumerate(x):
+        resultarray[i]=np.interp(j,np.array(xs)[i],np.array(ys)[i])
+    return resultarray
 
 
 def if_then_else(condition,val_if_true,val_if_false):
@@ -106,7 +110,6 @@ def shorthander(orig,dct,refdct,dictionary):
         return orig
     elif len(refdct) == 1:
         return orig
-
     def getnumofelements(element,dictionary):
         if element=="":
             return 0
@@ -165,6 +168,18 @@ def shorthander(orig,dct,refdct,dictionary):
         j=re.sub(r'[\(\)]','',i).split(',')
         copyoforig=copyoforig.swapaxes(int(j[0]),int(j[1]))
     return copyoforig
+
+def sums(expression,count=0):
+    operations = ['+','-','*','/']
+    merge=[]
+    if count == len(operations):
+        return 'np.sum(%s)'%expression
+    for sides in expression.split(operations[count]):
+        merge.append(sum(sides,count+1))
+    return operations[count].join(merge)
+
+
+
 #     add the variable to the dct so that it's similar to refdct, then do the swap axes
 #
 # def ramp(self, slope, start, finish):
