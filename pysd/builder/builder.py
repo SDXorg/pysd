@@ -173,6 +173,7 @@ class Builder(object):
             funcset = 'loc_dimension_dir = 0 \n'
             funcset += '    output = %s\n'%expression[0]
 
+
         funcstr = templates['flaux'].substitute(identifier=identifier,
                                                 expression=funcset,
                                                 docstring=docstring)
@@ -294,28 +295,29 @@ class Builder(object):
             raise
 
         # depending in these cases on input to be formatted as 'self.variable()' (or number)
-        naked_input = delay_input[5:-2]
-        naked_delay = delay_time[5:-2] if delay_time[:5] == 'self.' else delay_time
+        naked_input = delay_input[:-2]
+        naked_delay = delay_time[:-2] if delay_time.endswith('()') else delay_time
         delay_name = '%s_delay_%s'%(naked_input, naked_delay)
 
 
         flowlist = []
         # use 1-based indexing for stocks in the delay chain so that (n of m) makes sense.
-        flowlist.append(add_flaux(identifier='%s_flow_1_of_%i'%(delay_name, order+1),
-                                  sub=sub, expression=delay_input))
+        flowlist.append(self.add_flaux(identifier='%s_flow_1_of_%i'%(delay_name, order+1),
+                                  sub=sub, expression=[delay_input]))
 
         for i in range(2, order+2):
-            flowlist.append(add_flaux(identifier='%s_flow_%i_of_%i'%(delay_name, i, order+1),
+            flowlist.append(self.add_flaux(identifier='%s_flow_%i_of_%i'%(delay_name, i, order+1),
                                       sub=sub,
-                                      expression='self.%s_stock_%i_of_%i()/(1.*%s/%i)'%(
-                                                  delay_name, i-1, order, delay_time, order)))
+                                      expression=['%s_stock_%i_of_%i()/(1.*%s/%i)'%(
+                                                  delay_name, i-1, order, delay_time, order)]))
 
         for i in range(1, order+1):
-            add_stock(identifier='%s_stock_%i_of_%i'%(delay_name, i, order),
+            self.add_stock(identifier='%s_stock_%i_of_%i'%(delay_name, i, order),
                       sub=sub,
-                      expression=flowlist[i-1]+' - '+flowlist[i],
+                      expression=flowlist[i-1]+'() - '+flowlist[i]+'()',
                       initial_condition='%s * (%s / %i)'%(initial_value, delay_time, order))
 
+        print flowlist
         return flowlist[-1]
 
 

@@ -95,7 +95,7 @@ def load(py_model_file):
           ['_%s_init'%s for s in components._dfuncs.keys()] + #these are only called once
           ['%s'%s for s in components._dfuncs.keys()]) #these are pass-throughs anyways
     cache_list = filter(lambda x: not x.startswith('__') and x not in nocache, dir(components))
-    [setattr(components,name, cache(getattr(components, name), components)) for name in cache_list]
+    [setattr(components, name, cache(getattr(components, name), components)) for name in cache_list]
 
     model = PySD(components)
     model.reset_state()
@@ -252,8 +252,9 @@ class PySD(object):
     def reset_state(self):
         """Sets the model state to the state described in the model file. """
         def initial_number(inval):
+            # In case the number has not yet been defined, make a placeholder for it...
             return inval
-        self.components.initial_number=initial_number
+        self.components.initial_number = initial_number #todo: make this with leading underscore?
         self.components._t = self.components.initial_time()  # set the initial time
         self.components._state = dict()
         retry_flag = False

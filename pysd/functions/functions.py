@@ -34,16 +34,6 @@ class Functions(object):
             return val_if_false
 
 
-    def step(self, value, tstep):
-        """" Impliments vensim's STEP function
-
-        In range [-inf, tstep) returns 0
-        In range [tstep, +inf] returns `value`
-        """
-        t = self.components.t
-        return value if t >= tstep else 0
-
-
     def pulse(self, start, duration):
         """ Implements vensim's PULSE function
 
@@ -78,6 +68,14 @@ class Functions(object):
         np.random.seed(seed)
         return stats.truncnorm.rvs(minimum, maximum, loc=mean, scale=std)
 
+def step(value, tstep):
+    """" Impliments vensim's STEP function
+
+    In range [-inf, tstep) returns 0
+    In range [tstep, +inf] returns `value`
+    """
+    return value if time() >= tstep else 0
+
 def lookup(x, xs, ys):
     """ Provides the working mechanism for lookup functions the builder builds """
     if not isinstance(xs,np.ndarray):
@@ -95,6 +93,11 @@ def if_then_else(condition,val_if_true,val_if_false):
 def pos(number):  # dont divide by 0
     return np.maximum(number, 0.000001)
 
+def active_initial(expr, initval):
+    if _t == initial_time():
+        return initval
+    else:
+        return expr
 
 def tuner(number, factor):
     if factor>1:

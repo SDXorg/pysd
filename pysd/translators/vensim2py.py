@@ -70,7 +70,8 @@ dictionary = {"ABS":"abs", "INTEGER":"int", "EXP":"np.exp",
     "STEP":"functions.step", "MODULO":"np.mod", "PULSE":"functions.pulse",
     "PULSE TRAIN":"functions.pulse_train", "RAMP":"functions.ramp",
     "=":"==", "<=":"<=", "<>":"!=", "<":"<", ">=":">=", ">":">", "^":"**",
-    "POS":"functions.pos", "TUNER":"functions.tuner", "TUNE1":"functions.tuner"}
+    "POS":"functions.pos", "TUNER":"functions.tuner", "TUNE1":"functions.tuner",
+    "ACTIVE INITIAL": "functions.active_initial"}
 
 construction_functions = ['DELAY1', 'DELAY3', 'DELAY3I', 'DELAY N', 'DELAY1I',
                           'SMOOTH3I', 'SMOOTH3', 'SMOOTH N', 'SMOOTH', 'SMOOTHI',
@@ -118,7 +119,8 @@ file_grammar = (
     'Lookdown   = ( LOL SNL "~~|" SNL)                                                          \n'+
     'LOL        = (Lookup / OLookup)                                                            \n'+
     'Lookup     = Identifier SNL Subtext* SNL "(" SNL Range SNL CopairList SNL ")"              \n'+
-    'OLookup    = Identifier SNL Subtext* SNL "(" SNL UnderSub SNL ")"                          \n'+
+    'OLookup    = Identifier SNL Subtext* SNL "(" SNL UnderSub SNL ")"                          \n'+ #inline lookups
+
     ###################################Subscript Element#############################################
     'Subtext = SNL "[" SNL SubElem SNL "]" SNL                                                  \n'+
 
@@ -170,7 +172,7 @@ file_grammar = (
 
     ###################################Subscript Element#############################################
     'Subs     = (SNL UnderSub SNL ";")+ SNL                                                     \n'+
-    'UnderSub = SNL Number SNL ("," SNL Number SNL)+                                                \n'+
+    'UnderSub = SNL Number SNL ("," SNL Number SNL)+                                            \n'+
 
     'LUCall   = Identifier SNL Subtext* SNL "(" SNL Condition SNL ")"                                        \n'+
     'Signed   = ("-"/"+") Primary                                                               \n'+
@@ -251,6 +253,7 @@ class TextParser(NodeVisitor):
         return re.sub(r'[\n\t\\ ]','',element)+addition
 
     def visit_Flows(self,n,(flows,flaux)):
+        print flows, flaux
         flowname=flaux[0]
         if flows:
             flows.append(flaux)
@@ -287,24 +290,51 @@ class TextParser(NodeVisitor):
 
     def visit_ConCall(self, n, (ConKeyword, _1, lparen, _2, args, _4, rparen)):
         #todo: build out omitted cases
+        ConKeyword = ConKeyword.upper()
         if ConKeyword == 'DELAY1': #DELAY3(Inflow, Delay)
+
             return self.builder.add_n_delay(delay_input=args[0],
                                             delay_time=args[1],
                                             initial_value=str(0),
                                             order=1,
                                             sub=[''])
         elif ConKeyword == 'DELAY1I':
-            pass
+            return self.builder.add_n_delay(delay_input=args[0],
+                                            delay_time=args[1],
+                                            initial_value=args[2],
+                                            order=1,
+                                            sub=[''])
+
         elif ConKeyword == 'DELAY3':
             return self.builder.add_n_delay(delay_input=args[0],
                                             delay_time=args[1],
                                             initial_value=str(0),
                                             order=3,
                                             sub=[''])
-        elif ConKeyword == 'DELAY N':  # DELAY N(Inflow, Delay, init, order)
+
+        elif ConKeyword == 'DELAY3I':
             return self.builder.add_n_delay(delay_input=args[0],
                                             delay_time=args[1],
-                                            initial_valye=args[2],
+                                            initial_value=args[2],
+                                            order=3,
+                                            sub=[''])
+        elif ConKeyword == 'DELAY N':  # DELAY N(Inflow, Delay, init, order)
+
+            if len(args) < 4:
+                # args = ','.join(args).split(',') # this is a hack to cover the fact that the grammar doesnt properly separate numerical pieces
+                for i in range(len(args)):
+                    if not re.search(r'[a-zA-Z]', args[i]):
+                        args[i]=chr(1).join(args[i].split(','))
+
+
+                args=chr(1).join(args).split(chr(1))
+                # print args
+                #for i,arg in enumerate(args):
+                #    args[i] = builder.make_python_identifier(arg)
+            #print args
+            return self.builder.add_n_delay(delay_input=args[0],
+                                            delay_time=args[1],
+                                            initial_value=args[2],
                                             order=args[3],
                                             sub=[''])
         elif ConKeyword == 'SMOOTH':
@@ -398,15 +428,20 @@ class TextParser(NodeVisitor):
             Lookupcopairs.append(Lookupint[i][3])
         self.builder.add_lookup(Lookupname,Lookuprange,Lookupsub,Lookupcopairs)
         return Lookupname
+
     def visit_Lookupint(self,n,Lookdown):
         return Lookdown
+
     def visit_Lookdown(self, n, (Lookup,_1, tilde,_2)):
         return Lookup
+
     def visit_LOL(self, n, (Look)):
-        return Look[0]
+        return Look[0] #for some reason, the visit_Lookup and OLookup return 2d array?
+
     def visit_Lookup(self, n, (Identifier, _1, Sub, _5, lparen, _2, Range,
                      _3, CopairList, _4, rparen)):
         return [Identifier,Sub,Range,CopairList]
+
     def visit_OLookup(self, n, (Identifier, _1, Sub, _5, lparen, _2, Copair, _4, rparen)):
         CopairList = []
         Copairs = Copair.split(',')
