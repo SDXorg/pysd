@@ -179,12 +179,31 @@ class Builder(object):
                                                 docstring=docstring)
 
         if sub[0] != '':  # todo: make less brittle
-            funcstr += '%s.dimension_dir = '%identifier+directory.__repr__()+'\n'  # todo: do we like 'dimension_dictionary' as a name?
+            funcstr += '%s.dimension_dir = '%identifier+directory.__repr__()+'\n'
         self.body.append(funcstr)
 
         return identifier
 
-    def add_lookup(self, identifier, valid_range, sub_list, copair_list):
+    def add_lookup(self, identifier, valid_range, copair_list):
+        """Constructs a function that implements a lookup.
+        The function encodes the coordinate pairs as numeric values in the python file.
+
+        Parameters
+        ----------
+        identifier: <string> valid python identifier
+            Our translators are responsible for translating the model identifiers into
+            something that python can use as a function name.
+
+        range: <tuple>
+            Minimum and maximum bounds on the lookup. Currently, we don't do anything
+            with this, but in the future, may use it to implement some error checking.
+
+        copair_list: a list of tuples, eg. [(0, 1), (1, 5), (2, 15)]
+            The coordinates of the lookup formatted in coordinate pairs.
+
+        """
+        # todo: Add a docstring capability
+
         # in the future, we may want to check in bounds for the range. for now, lazy...
         xs_str=[]
         ys_str=[]
@@ -250,7 +269,7 @@ class Builder(object):
 
         else:
             naked_component = component.split("()")[0]
-            naked_component = naked_component.replace('functions.shorthander(','')
+            naked_component = naked_component.replace('functions.shorthander(', '')
             funcstr = ('\ndef initial_%s(inval):                       \n'%naked_component +
                     '    if not hasattr(initial_%s, "value"): \n'%naked_component +
                     '        initial_%s.value = inval         \n'%naked_component +
@@ -303,21 +322,21 @@ class Builder(object):
         flowlist = []
         # use 1-based indexing for stocks in the delay chain so that (n of m) makes sense.
         flowlist.append(self.add_flaux(identifier='%s_flow_1_of_%i'%(delay_name, order+1),
-                                  sub=sub, expression=[delay_input]))
+                                       sub=sub,
+                                       expression=[delay_input]))
 
         for i in range(2, order+2):
             flowlist.append(self.add_flaux(identifier='%s_flow_%i_of_%i'%(delay_name, i, order+1),
-                                      sub=sub,
-                                      expression=['%s_stock_%i_of_%i()/(1.*%s/%i)'%(
+                                           sub=sub,
+                                           expression=['%s_stock_%i_of_%i()/(1.*%s/%i)'%(
                                                   delay_name, i-1, order, delay_time, order)]))
 
         for i in range(1, order+1):
             self.add_stock(identifier='%s_stock_%i_of_%i'%(delay_name, i, order),
-                      sub=sub,
-                      expression=flowlist[i-1]+'() - '+flowlist[i]+'()',
-                      initial_condition='%s * (%s / %i)'%(initial_value, delay_time, order))
+                           sub=sub,
+                           expression=flowlist[i-1]+'() - '+flowlist[i]+'()',
+                           initial_condition='%s * (%s / %i)'%(initial_value, delay_time, order))
 
-        print flowlist
         return flowlist[-1]
 
 
@@ -430,7 +449,8 @@ def getelempos(element, dictofsubs):
                     position.append(d[element]) 
                 except: pass  
     return tuple(position)
-    
+
+
 def get_array_info(subs, dictofsubs):
     """
     Returns information needed to create and access members of the numpy array

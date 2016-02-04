@@ -138,7 +138,6 @@ class TestMetaStuff(unittest.TestCase):
     """ The tests in this class test pysd's interaction with itself
         and other modules. """
 
-    @unittest.skip("in development")
     def test_multiple_load(self):
         """Test that we can load and run multiple models at the same time,
         and that the models don't interact with each other. This can
