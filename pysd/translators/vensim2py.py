@@ -80,7 +80,7 @@ dictionary = {"ABS": "abs", "INTEGER": "int", "EXP": "np.exp",
 
 construction_functions = ['DELAY1', 'DELAY3', 'DELAY3I', 'DELAY N', 'DELAY1I',
                           'SMOOTH3I', 'SMOOTH3', 'SMOOTH N', 'SMOOTH', 'SMOOTHI',
-                          'INITIAL', 'SUM'] #order is important for peg parser
+                          'INITIAL', 'SUM']  # order is important for peg parser
 
 
 # We have to sort keywords in decreasing order of length so that the peg parser doesnt
