@@ -251,26 +251,48 @@ class PySD(object):
 
     def reset_state(self):
         """Sets the model state to the state described in the model file. """
-        def initial_number(inval):
-            # In case the number has not yet been defined, make a placeholder for it...
-            return inval
-        self.components.initial_number = initial_number #todo: make this with leading underscore?
+        # todo: check that this isn't being called twice, unnecessarily?
+
+        #def initial_number(inval):
+        #    # In case the number has not yet been defined, make a placeholder for it...
+        #    return inval
+        #self.components.initial_number = initial_number #todo: make this with leading underscore?
+
         self.components._t = self.components.initial_time()  # set the initial time
         self.components._state = dict()
-        retry_flag = False
-        for key in self.components._stocknames:
-            # We have to do a loop here because there are cases where the initialization will
-            # call a function, and that function may not have its own initial conditions defined
-            # just yet. There is the potential that if the model has a reference loop,
-            # this will become an infinite loop.
-            # Todo: make this more robust to infinite looping
-            try:
-                init_func = getattr(self.components, '_%s_init'%key)
-                self.components._state[key] = init_func()
-            except TypeError:
-                retry_flag = True
-        if retry_flag:
-            self.reset_state()
+
+        def initialize_state():
+            """
+            This function tries to initialize the state vector.
+
+            In the case where an initialization function for `Stock A` depends on
+            the value of `Stock B`, if we try to initialize `Stock A` before `Stock B`
+            then we will get an error, as the value will not yet exist.
+
+            In this case, just skip initializing `Stock A` for now, and
+            go on to the other state initializations. Then call whole function again.
+
+            Each time the function is called, we should be able to make some progress
+            towards full initialization, by initializing at least one more state.
+            If we don't then references are unresolvable, so we should throw an error.
+            """
+            retry_flag = False
+            making_progress = False
+            for key in self.components._stocknames:
+                try:
+                    init_func = getattr(self.components, '_%s_init'%key)
+                    self.components._state[key] = init_func()
+                    making_progress = True
+                except KeyError:  # may also need to catch TypeError?
+                    retry_flag = True
+            if not making_progress:
+                raise KeyError('Unresolvable Reference: Probable circular initialization')
+            if retry_flag:
+                initialize_state()
+
+        initialize_state()
+
+
 
     def get_record(self):
         """ Return the recorded model information.

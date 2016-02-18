@@ -184,7 +184,8 @@ class Builder(object):
 
         return identifier
 
-    def add_lookup(self, identifier, valid_range, copair_list):
+    def add_lookup(self, identifier, valid_range, sub, copair_list):
+
         """Constructs a function that implements a lookup.
         The function encodes the coordinate pairs as numeric values in the python file.
 
@@ -247,13 +248,14 @@ class Builder(object):
         funcstr = ('def %s(x):                                      \n'%identifier+
                    '    try: localxs                                          \n'+
                    '    except:                                               \n'+
-                   '        localxs=%s.xs                                \n'%identifier+
-                   '        localys=%s.ys                                \n'%identifier+
-                   '    return functions.lookup(x,localxs,localys)   \n'+
+                   '        localxs = %s.xs                                \n'%identifier+
+                   '        localys = %s.ys                                \n'%identifier+
+                   '    return functions.lookup(x, localxs, localys)          \n'+
                    '                                                          \n'+
                    createxy+addendum+
                    '                                                          \n'
                   )
+
         self.body.append(funcstr)
 
     def add_initial(self, component):

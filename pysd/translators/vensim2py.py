@@ -467,6 +467,7 @@ class TextParser(NodeVisitor):
 
     def visit_Lookup(self, n, (Identifier, _1, Sub, _5, lparen, _2, Range,
                      _3, CopairList, _4, rparen)):
+        self.builder.add_lookup(Identifier,Range,Sub,CopairList)
         return [Identifier,Sub,Range,CopairList]
 
     def visit_OLookup(self, n, (Identifier, _1, Sub, _5, lparen, _2, Copair, _4, rparen)):
