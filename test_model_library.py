@@ -52,10 +52,15 @@ import argparse
 # Todo: properly format subscript arrays for checking against canonical output
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-n','--number', help='which test to run')
-parser.add_argument('-v','--verbose', help='displays lots of error messages', action="store_true")
-parser.add_argument('-i','--print_input_file', help='prints the input model', action="store_true")
-parser.add_argument('-o','--print_output_file', help='prints the translated model', action="store_true")
+parser.add_argument('-n', '--number', help='which test to run')
+parser.add_argument('-v', '--verbose', help='displays lots of error messages', action="store_true")
+parser.add_argument('-i', '--print_input_file', help='prints the input model', action="store_true")
+parser.add_argument('-o', '--print_output_file', help='prints the translated model',
+                    action="store_true")
+parser.add_argument('-r', '--raise_exception',
+                    help='raises any unknown errors, so that the debugger can act',
+                    action="store_true")
+
 args = parser.parse_args()
 
 # load test models
@@ -71,7 +76,8 @@ if args.number:
 
 print "Testing module at location: %s\n"%pysd.__file__
 err_str = '\n\n'
-threshold = 1
+fractional_threshold = .02
+absolute_threshold = .0001
 
 success_count = 0
 err_count = 0
@@ -132,7 +138,8 @@ for i, modelfile in testfiles.iteritems():
         status_str += 'Ran Model, got columns'+', '.join(output.columns.tolist()) +', '
 
         # check that the canonical output is close to the simulation output
-        assert ((canon-output)/canon).max().max() < .02
+        assert (((canon-output)/canon).max().max() < fractional_threshold or
+                ((canon-output)).max().max() < absolute_threshold)
         
         print '.',
         success_count += 1
@@ -187,12 +194,15 @@ for i, modelfile in testfiles.iteritems():
         err_str += str(((canon-output)/canon).max())+'\n'
         err_str += '\n'
 
+
+
         if args.verbose:
-            err_str += 'Canonical Output:\n'
-            err_str += canon.__repr__()
-            err_str += '\nRecieved Output:\n'
-            err_str += output.__repr__()
-            print output
+            #err_str += 'Canonical Output:\n'
+            joint = canon.join(output, lsuffix='_canon', rsuffix='_output')
+            err_str += joint.reindex_axis(sorted(joint.columns), axis=1).__repr__()+'\n'
+            #err_str += '\nRecieved Output:\n'
+            #err_str += output.__repr__()
+            #print output
 
         fail_count += 1
 
@@ -206,6 +216,10 @@ for i, modelfile in testfiles.iteritems():
 
         err = e
         err_count += 1
+
+        if args.raise_exception:
+            raise e
+
     finally:
         if err:
             if args.verbose:

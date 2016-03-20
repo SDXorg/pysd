@@ -603,4 +603,44 @@ def translate_vensim(mdl_file):
 
     return parser.filename
 
+
+def get_elements(mdlstr):
+    """
+
+    Parameters
+    ----------
+    mdlstr
+
+    Returns
+    -------
+
+    >>> #mdlstr = open('../../test/test-models/tests/subscript_docs/subscript_docs.mdl')
+    >>> print 'hi' #mdlstr
+
+
+
+
+    """
+    # drop encoding
+    re.sub('{[^}*]}', '', mdlstr)
+
+def translate_vensim(mdl_file):
+    """
+
+    Parameters
+    ----------
+    mdl_file : basestring
+        file path of a vensim model file to translate to python
+
+    Returns
+    -------
+
+    """
+    with open(mdl_file, 'rU') as file:
+            text = file.read()
+
+    text.
+
+    elements = text.split('|')
+
 translate_vensim.__doc__ += doc_supported_vensim_functions()

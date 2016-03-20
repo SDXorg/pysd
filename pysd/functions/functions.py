@@ -66,8 +66,8 @@ def lookup(x, xs, ys):
     return resultarray
 
 
-def if_then_else(condition,val_if_true,val_if_false):
-    return np.where(condition,val_if_true,val_if_false)
+def if_then_else(condition, val_if_true, val_if_false):
+    return np.where(condition, val_if_true, val_if_false)
 
 
 def pos(number):  # dont divide by 0

@@ -22,8 +22,6 @@ import imp
 from math import fmod
 
 # Todo: add a logical way to run two or more models together, using the same integrator.
-# Todo: add model element caching
-# Todo: add a way to flatten the result of a subscripted simulation, for comparison with vensim
 # Todo: add the state dictionary to the model file, to give some functionality to it even without the pysd class
 # Todo: initialize the model on load by calling reset state
 # Todo: seems to be some issue with multiple imports - need to create a new instance...
@@ -81,7 +79,11 @@ def load(py_model_file):
     """
     # Todo: This whole function is a mess. Consider including parts in the `init` of the PySD class
     components = imp.load_source('modulename', py_model_file)
+
+
     components._stocknames = [name[2:-3] for name in dir(components) if name.startswith('_') and name.endswith('_dt')]
+
+    # pointers to the various derivative functions for each of the stocks
     components._dfuncs = {name: getattr(components, '_d%s_dt'%name) for name in components._stocknames}
     funcnames = filter(lambda x: not x.startswith('_'), dir(components))
     components._funcs = {name: getattr(components, name) for name in funcnames}
@@ -220,18 +222,18 @@ class PySD(object):
         if addtflag:
             tseries = np.insert(tseries, 0, self.components._t)
 
-        if self.components._stocknames:
-            if not return_columns:
-                return_columns = self.components._stocknames
+        #if self.components._stocknames:
+        if not return_columns:
+            return_columns = self.components._stocknames
 
-            res = self._integrate(self.components._dfuncs, tseries, return_columns)
-            return_df = _pd.DataFrame(data=res, index=tseries)
+        res = self._integrate(self.components._dfuncs, tseries, return_columns)
+        return_df = _pd.DataFrame(data=res, index=tseries)
 
-        else:
-            outdict = {}
-            for key in return_columns:
-                outdict[key] = self.components._funcs[key]()
-            return_df = _pd.DataFrame(index=tseries, data=outdict)
+#        else:
+#            outdict = {}
+#            for key in return_columns:
+#                outdict[key] = self.components._funcs[key]()
+#            return_df = _pd.DataFrame(index=tseries, data=outdict)
 
         if flatten_subscripts:
             # Todo: short circuit this if there is nothing to flatten
@@ -278,21 +280,23 @@ class PySD(object):
             """
             retry_flag = False
             making_progress = False
+            initialization_order = []
             for key in self.components._stocknames:
                 try:
                     init_func = getattr(self.components, '_%s_init'%key)
                     self.components._state[key] = init_func()
                     making_progress = True
+                    initialization_order.append(key)
                 except KeyError:  # may also need to catch TypeError?
                     retry_flag = True
             if not making_progress:
-                raise KeyError('Unresolvable Reference: Probable circular initialization')
+                raise KeyError('Unresolvable Reference: Probable circular initialization'+
+                               '\n'.join(initialization_order))
             if retry_flag:
                 initialize_state()
 
-        initialize_state()
-
-
+        if self.components._stocknames:  # if there are no stocks, don't try to initialize!
+            initialize_state()
 
     def get_record(self):
         """ Return the recorded model information.
@@ -384,13 +388,18 @@ class PySD(object):
             raise TypeError('Check documentation for valid entries')
 
     def _build_timeseries(self, return_timestamps):
-        """ Build up array of timestamps """
+        """ Build up array of timestamps
+
+        """
 
         # Todo: rework this for the euler integrator, to be the dt series plus the return timestamps
         # Todo: maybe cache the result of this function?
         if return_timestamps == []:
+            # Vensim's standard is to expect that the data set includes the `final time`,
+            # so we have to add an extra period to make sure we get that value in what
+            # numpy's `arange` gives us.
             tseries = np.arange(self.components.initial_time(),
-                                self.components.final_time(),
+                                self.components.final_time()+self.components.time_step(),
                                 self.components.time_step())
         elif isinstance(return_timestamps, (list, int, float, long, np.ndarray)):
             tseries = np.array(return_timestamps, ndmin=1)
@@ -406,18 +415,38 @@ class PySD(object):
         """ Internal function for creating a constant model element """
         return lambda: value
 
-    def _step(self, ddt, state, dt):
-        outdict = {}
-        for key in ddt:
-            outdict[key] = ddt[key]()*dt + state[key]
-        return outdict
-
-    def _integrate(self, ddt, timesteps, return_elements):
-        """
+    def _euler_step(self, ddt, state, dt):
+        """ Performs a single step in the euler integration
 
         Parameters
         ----------
-        ddt : dictionary where keys are stock names and values are functions
+        ddt : list of strings
+            list of the names of the derivative functions
+        state : dictionary
+            This is the state dictionary, where stock names are keys and values are
+            the number or array values at the current timestep
+        dt : float
+            This is the amount to increase
+
+        Returns
+        -------
+        new_state : dictionary
+             a dictionary with keys corresponding to the input 'state' dictionary,
+             after those values have been updated with one euler step
+        """
+        return {key: dfunc()*dt + state[key] for key, dfunc in ddt.iteritems()}
+        #outdict = {}
+        #for key in ddt:
+        #    outdict[key] = ddt[key]()*dt + state[key]
+        #return outdict
+
+    def _integrate(self, ddt, timesteps, return_elements):
+        """
+        Performs euler integration
+
+        Parameters
+        ----------
+        ddt :
         timesteps
         return_elements
 
@@ -428,12 +457,9 @@ class PySD(object):
         # Todo: write proper docstrings.
         outputs = range(len(timesteps))
         for i, t2 in enumerate(timesteps):
-            self.components._state = self._step(ddt, self.components._state, t2-self.components._t)
+            self.components._state = self._euler_step(ddt, self.components._state, t2-self.components._t)
             self.components._t = t2
-            outdict = {}
-            for key in return_elements:
-                outdict[key] = self.components._funcs[key]()
-            outputs[i] = outdict
+            outputs[i] = {key: self.components._funcs[key]() for key in return_elements}
 
         return outputs
 
@@ -485,13 +511,15 @@ class PySD(object):
             result = []
             for pos, name in enumerate(pddf.columns):
                 # todo: don't try and flatten if alreay a single number
-                if isinstance(pddf[name].loc[0], np.ndarray):
+                # except if its a single-element subscript, we may want to do this?
+                if (isinstance(pddf[name].loc[0], np.ndarray) and
+                        np.max(pddf[name].loc[0].size) > 1): #in the case that a single number makes its way into an array?
                     result.append(pddf[name].apply(lambda x: _pd.Series(x.flatten())))
-                    result[pos].columns=([name+'__'+pandasnamearray(getattr(self.components, name))[x] for x in range(len(pandasnamearray(getattr(self.components,name))))])
+                    result[pos].columns = ([name+'__'+pandasnamearray(getattr(self.components, name))[x] for x in range(len(pandasnamearray(getattr(self.components,name))))])
                 else:
                     result.append(_pd.DataFrame(pddf[name]))
-                    result[pos].columns=[name]
-            pddf=_pd.concat([result[x] for x in range(len(result))],axis=1)
+                    result[pos].columns = [name]
+            pddf = _pd.concat([result[x] for x in range(len(result))], axis=1)
 
             return pddf
         return dataframeexpand(dataframe)

@@ -6,6 +6,10 @@ from pysd import functions
 def time():
     return _t
 
+# Share the `time` function with the module for `step`, `pulse`, etc.
+functions.__builtins__.update({'time':time})
+
+
 def characteristic_time():
     """
     

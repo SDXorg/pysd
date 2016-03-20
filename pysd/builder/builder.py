@@ -206,8 +206,8 @@ class Builder(object):
         # todo: Add a docstring capability
 
         # in the future, we may want to check in bounds for the range. for now, lazy...
-        xs_str=[]
-        ys_str=[]
+        xs_str = []
+        ys_str = []
         for i in copair_list:
             xs, ys = zip(*i)
             xs_str.append(str(list(xs)))
@@ -320,8 +320,7 @@ class Builder(object):
         naked_delay = delay_time[:-2] if delay_time.endswith('()') else delay_time
         delay_name = '%s_delay_%s'%(naked_input, naked_delay)
 
-
-        flowlist = []
+        flowlist = []  # contains the identities of the flows, as strings
         # use 1-based indexing for stocks in the delay chain so that (n of m) makes sense.
         flowlist.append(self.add_flaux(identifier='%s_flow_1_of_%i'%(delay_name, order+1),
                                        sub=sub,
@@ -339,7 +338,7 @@ class Builder(object):
                            expression=flowlist[i-1]+'() - '+flowlist[i]+'()',
                            initial_condition='%s * (%s / %i)'%(initial_value, delay_time, order))
 
-        return flowlist[-1]
+        return flowlist[-1]+'()'
 
 
 
