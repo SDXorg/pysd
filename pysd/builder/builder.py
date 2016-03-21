@@ -422,6 +422,7 @@ def getelempos(element, dictofsubs):
     Helps for accessing elements of an array: given the subscript element names,
     returns the numerical ranges that correspond
 
+
     Parameters
     ----------
     element
@@ -528,9 +529,11 @@ def dict_find(in_dict, value):
     return in_dict.keys()[in_dict.values().index(value)]
 
 
-def make_python_identifier(string):
+def make_python_identifier(string, namespace=[]):
     """
     Takes an arbitrary string and creates a valid Python identifier.
+    If the python identifier created is already in the namespace,
+    adds _1, or if _1 is in the namespace, _2, etc.
 
     Parameters
     ----------
@@ -542,6 +545,30 @@ def make_python_identifier(string):
     identifier : <string>
         A vaild python identifier based on the input string
 
+    Examples
+    --------
+    >>> make_python_identifier('Capital')
+    'capital'
+    >>> make_python_identifier('multiple words')
+    'multiple_words'
+    >>> make_python_identifier('multiple     spaces')
+    'multiple_spaces'
+
+    When the name is a python keyword, add '_element' to differentiate it
+    >>> make_python_identifier('for')
+    'for_element'
+
+    Remove leading and trailing whitespace
+    >>> make_python_identifier('  whitespace  ')
+    'whitespace'
+
+    Remove most special characters outright:
+    >>> make_python_identifier('H@t tr!ck')
+    'ht_trck'
+
+    >>> make_python_identifier('variable[column1, column2]')
+    'variable__column1___column2'
+
     References
     ----------
     Identifiers must follow the convention outlined here:
@@ -550,6 +577,7 @@ def make_python_identifier(string):
     # Todo: check for variable uniqueness
     #  perhaps maintain a list of current variables and their translations??
     # Todo: check that the output is actually a valid python identifier
+    # Todo: check for other namespace conflicts (ie, with pysd function names, etc)
 
     string = string.lower()
 

@@ -2,198 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="a7e5b169-cc30-45fb-a7f9-e8e84f9c05bd" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/Fruits Sales.xlsx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/JitiaConn.xml" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/PDAT.xlsx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/.gitignore" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/AUTHORS" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/LICENSE" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/fix_lineendings.bash" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/Population/Subscripted Population Model.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/SIR/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/SIR/SIR-11b2.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/SIR/SIR.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/SIR/SIR.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/SIR/SIR.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/SIR/SIR_Systo.json" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/SIR/SIR_reciprocal-dt.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/SIR/SIR_simile_from_xmile.pl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/SIR/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/SIR/output_stella1006.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/SIR/simile_from_xmile_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/SIR/stella_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/SIR/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/Workforce/workforce.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/arrays/a2a/a2a-11b2.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/arrays/non-a2a/non-a2a-11b2.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/arrays/non-a2a/non-a2a-gf-11b2.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/bpowers-hares_and_lynxes_modules/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/bpowers-hares_and_lynxes_modules/model-11b2.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/bpowers-hares_and_lynxes_modules/model.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/bpowers-hares_and_lynxes_modules/model.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/bpowers-hares_and_lynxes_modules/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/bpowers-hares_and_lynxes_modules/stella_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/teacup/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/teacup/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/teacup/output_stella1006.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/teacup/stella_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/teacup/teacup-11b2.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/teacup/teacup.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/teacup/teacup.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/teacup/teacup.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/teacup/teacup_w_diagram.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/teacup/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/abs/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/abs/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/abs/test_abs.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/abs/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/builtin_max/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/builtin_max/builtin_max.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/builtin_max/builtin_max.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/builtin_max/builtin_max.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/builtin_max/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/builtin_max/output_vensim63dss.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/builtin_min/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/builtin_min/builtin_min.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/builtin_min/builtin_min.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/builtin_min/builtin_min.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/builtin_min/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/builtin_min/output_vensim63dss.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/comparisons/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/comparisons/comparisons.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/comparisons/comparisons.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/comparisons/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/delays/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/delays/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/delays/test_delays.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/delays/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/eval_order/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/eval_order/eval_order.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/eval_order/eval_order.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/eval_order/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/exp/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/exp/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/exp/test_exp.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/exp/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/exponentiation/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/exponentiation/exponentiation.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/exponentiation/exponentiation.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/exponentiation/exponentiation.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/exponentiation/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/exponentiation/output_vensimdss63dp.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/exponentiation/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/if_stmt/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/if_stmt/if_stmt.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/if_stmt/if_stmt.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/if_stmt/if_stmt.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/if_stmt/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/if_stmt/output_vensim63dp.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/if_stmt/stella_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/if_stmt/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/initial_function/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/initial_function/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/initial_function/test_initial.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/initial_function/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/input_functions/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/input_functions/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/input_functions/test_inputs.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/input_functions/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/line_continuation/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/line_continuation/output.tab" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/line_continuation/test_line_continuation.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/line_continuation/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/ln/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/ln/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/ln/test_ln.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/ln/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/logicals/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/logicals/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/logicals/output_vensimdss63.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/logicals/stella_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/logicals/test_logicals.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/logicals/test_logicals.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/logicals/test_logicals.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/logicals/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/lookups/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/lookups/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/lookups/output_stella1006.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/lookups/stella_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/lookups/test_lookups.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/lookups/test_lookups.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/lookups/test_lookups_no-indirect.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/lookups/test_lookups_no-indirect.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/lookups/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/number_handling/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/number_handling/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/number_handling/output_stella1006.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/number_handling/stella_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/number_handling/test_number_handling.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/number_handling/test_number_handling.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/number_handling/test_number_handling.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/number_handling/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/rounding/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/rounding/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/rounding/test_rounding.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/rounding/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/smooth/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/smooth/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/smooth/test_smooth.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/smooth/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/special_characters/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/special_characters/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/special_characters/test_special_variable_names.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/special_characters/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/sqrt/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/sqrt/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/sqrt/test_sqrt.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/sqrt/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_1d_arrays/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_1d_arrays/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_1d_arrays/test_subscript_1d_arrays.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_1d_arrays/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_2d_arrays/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_2d_arrays/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_2d_arrays/test_subscript_2d_arrays.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_2d_arrays/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_3d_arrays/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_3d_arrays/output.tab" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_aggregation/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_aggregation/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_aggregation/test_subscript_aggregation.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_aggregation/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_different_shapes/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_exceptions/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_individually_defined_1_of_2d_arrays/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_individually_defined_1_of_2d_arrays/output.tab" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_individually_defined_1_of_2d_arrays/subscript_individually_defined_1_of_2d_arrays.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_individually_defined_1_of_2d_arrays/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_individually_defined_1d_arrays/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_individually_defined_1d_arrays/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_individually_defined_1d_arrays/subscript_individually_defined_1d_arrays.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_individually_defined_1d_arrays/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_mapping/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_subranges/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_subranges/output.tab" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscript_subranges/test_subscript_subrange.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/subscripted_eqns/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/trig/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/trig/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/trig/test_trig.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/trig/vensim_screenshot.png" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models" afterPath="$PROJECT_DIR$/tests/test-models" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/builder/builder.py" afterPath="$PROJECT_DIR$/pysd/builder/builder.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/functions/functions.py" afterPath="$PROJECT_DIR$/pysd/functions/functions.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/pysd.py" afterPath="$PROJECT_DIR$/pysd/pysd.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/translators/vensim2py.py" afterPath="$PROJECT_DIR$/pysd/translators/vensim2py.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/sandbox.ipynb" afterPath="$PROJECT_DIR$/sandbox.ipynb" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/test_model_library.py" afterPath="$PROJECT_DIR$/test_model_library.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/old_tests/vensim/Teacup.py" afterPath="$PROJECT_DIR$/tests/old_tests/vensim/Teacup.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/old_tests/vensim/test_lookups.mdl" afterPath="$PROJECT_DIR$/tests/old_tests/vensim/test_lookups.mdl" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/old_tests/vensim/test_lookups.py" afterPath="$PROJECT_DIR$/tests/old_tests/vensim/test_lookups.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.py" afterPath="$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/number_handling/test_number_handling.py" afterPath="$PROJECT_DIR$/tests/test-models/tests/number_handling/test_number_handling.py" />
     </list>
     <ignored path="pysd.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -213,17 +25,27 @@
     <favorites_list name="pysd" />
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.5">
+    <splitter split-orientation="horizontal" split-proportion="0.57154405">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
           <file leaf-file-name="vensim2py2.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/pysd/translators/vensim2py2.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state vertical-scroll-proportion="1.6976352">
-                  <caret line="84" column="0" selection-start-line="84" selection-start-column="0" selection-end-line="84" selection-end-column="0" />
+                <state vertical-scroll-proportion="-7.419355">
+                  <caret line="65" column="9" selection-start-line="65" selection-start-column="9" selection-end-line="65" selection-end-column="9" />
                   <folding>
                     <element signature="e#93#102#0" expanded="true" />
                   </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="re.py" pinned="false" current-in-tab="false">
+            <entry file="file://$USER_HOME$/anaconda/lib/python2.7/re.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state vertical-scroll-proportion="0.0">
+                  <caret line="235" column="0" selection-start-line="235" selection-start-column="0" selection-end-line="235" selection-end-column="0" />
+                  <folding />
                 </state>
               </provider>
             </entry>
@@ -232,7 +54,7 @@
             <entry file="file://$USER_HOME$/anaconda/lib/python2.7/site-packages/parsimonious/expressions.py">
               <provider selected="true" editor-type-id="text-editor">
                 <state vertical-scroll-proportion="0.0">
-                  <caret line="164" column="0" selection-start-line="164" selection-start-column="0" selection-end-line="164" selection-end-column="0" />
+                  <caret line="121" column="0" selection-start-line="121" selection-start-column="0" selection-end-line="121" selection-end-column="0" />
                   <folding />
                 </state>
               </provider>
@@ -252,7 +74,7 @@
             <entry file="file://$USER_HOME$/anaconda/lib/python2.7/site-packages/parsimonious/nodes.py">
               <provider selected="true" editor-type-id="text-editor">
                 <state vertical-scroll-proportion="0.0">
-                  <caret line="45" column="0" selection-start-line="45" selection-start-column="0" selection-end-line="45" selection-end-column="0" />
+                  <caret line="257" column="8" selection-start-line="257" selection-start-column="8" selection-end-line="257" selection-end-column="8" />
                   <folding />
                 </state>
               </provider>
@@ -292,7 +114,7 @@
             <entry file="file://$USER_HOME$/anaconda/lib/python2.7/StringIO.py">
               <provider selected="true" editor-type-id="text-editor">
                 <state vertical-scroll-proportion="0.0">
-                  <caret line="268" column="0" selection-start-line="268" selection-start-column="0" selection-end-line="268" selection-end-column="0" />
+                  <caret line="220" column="0" selection-start-line="220" selection-start-column="0" selection-end-line="220" selection-end-column="0" />
                   <folding />
                 </state>
               </provider>
@@ -311,12 +133,12 @@
         </leaf>
       </split-first>
       <split-second>
-        <leaf>
+        <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
           <file leaf-file-name="test_subscript_3d_arrays.mdl" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl">
               <provider selected="true" editor-type-id="text-editor">
                 <state vertical-scroll-proportion="0.0">
-                  <caret line="8" column="37" selection-start-line="8" selection-start-column="37" selection-end-line="8" selection-end-column="37" />
+                  <caret line="34" column="0" selection-start-line="34" selection-start-column="0" selection-end-line="35" selection-end-column="29" />
                   <folding />
                 </state>
               </provider>
@@ -335,11 +157,33 @@
           <file leaf-file-name="vensim2py.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/pysd/translators/vensim2py.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state vertical-scroll-proportion="10.5777025">
-                  <caret line="505" column="8" selection-start-line="505" selection-start-column="8" selection-end-line="505" selection-end-column="56" />
+                <state vertical-scroll-proportion="0.22580644">
+                  <caret line="107" column="29" selection-start-line="107" selection-start-column="29" selection-end-line="107" selection-end-column="29" />
                   <folding>
                     <element signature="e#2181#2200#0" expanded="true" />
                   </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="builder.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/pysd/builder/builder.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state vertical-scroll-proportion="0.0">
+                  <caret line="525" column="7" selection-start-line="525" selection-start-column="7" selection-end-line="525" selection-end-column="7" />
+                  <folding>
+                    <element signature="e#1635#1644#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="test_lookups.mdl" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.mdl">
+              <provider selected="true" editor-type-id="text-editor">
+                <state vertical-scroll-proportion="0.0">
+                  <caret line="18" column="31" selection-start-line="18" selection-start-column="4" selection-end-line="18" selection-end-column="31" />
+                  <folding />
                 </state>
               </provider>
             </entry>
@@ -391,12 +235,12 @@
         <option value="$PROJECT_DIR$/test_functionality.py" />
         <option value="$PROJECT_DIR$/pysd/builder/Testing" />
         <option value="$PROJECT_DIR$/pysd/builder/templates.py" />
-        <option value="$PROJECT_DIR$/pysd/builder/builder.py" />
         <option value="$PROJECT_DIR$/tests/test-models/tests/exponentiation/exponentiation.py" />
         <option value="$PROJECT_DIR$/pysd/functions/functions.py" />
         <option value="$PROJECT_DIR$/pysd/pysd.py" />
         <option value="$PROJECT_DIR$/test_model_library.py" />
         <option value="$PROJECT_DIR$/pysd/translators/vensim2py.py" />
+        <option value="$PROJECT_DIR$/pysd/builder/builder.py" />
         <option value="$PROJECT_DIR$/pysd/translators/vensim2py2.py" />
       </list>
     </option>
@@ -446,20 +290,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope">
-        <subPane subId="Project Files">
-          <PATH>
-            <PATH_ELEMENT USER_OBJECT="Root">
-              <option name="myItemId" value="" />
-              <option name="myItemType" value="" />
-            </PATH_ELEMENT>
-          </PATH>
-        </subPane>
-        <subPane subId="Default" />
-      </pane>
-      <pane id="Scratches">
-        <subPane />
-      </pane>
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -594,6 +424,32 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
+              <option name="myItemId" value="tests" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="test-models" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tests" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="lookups" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="pysd" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="pysd" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
               <option name="myItemId" value="pysd" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
@@ -636,6 +492,20 @@
           </PATH>
         </subPane>
       </pane>
+      <pane id="Scope">
+        <subPane subId="Project Files">
+          <PATH>
+            <PATH_ELEMENT USER_OBJECT="Root">
+              <option name="myItemId" value="" />
+              <option name="myItemType" value="" />
+            </PATH_ELEMENT>
+          </PATH>
+        </subPane>
+        <subPane subId="Default" />
+      </pane>
+      <pane id="Scratches">
+        <subPane />
+      </pane>
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -664,64 +534,7 @@
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunManager" selected="Python tests.Doctests in vensim2py2">
-    <configuration default="false" name="Doctests in test_model_library" type="tests" factoryName="Doctests" temporary="true" nameIsGenerated="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="pysd" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/test_model_library.py" />
-      <option name="CLASS_NAME" value="" />
-      <option name="METHOD_NAME" value="" />
-      <option name="FOLDER_NAME" value="" />
-      <option name="TEST_TYPE" value="TEST_SCRIPT" />
-      <option name="PATTERN" value="" />
-      <option name="USE_PATTERN" value="false" />
-      <method />
-    </configuration>
-    <configuration default="false" name="Doctest PySD.run" type="tests" factoryName="Doctests" temporary="true" nameIsGenerated="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/pysd" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="pysd" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/pysd/pysd.py" />
-      <option name="CLASS_NAME" value="PySD" />
-      <option name="METHOD_NAME" value="run" />
-      <option name="FOLDER_NAME" value="" />
-      <option name="TEST_TYPE" value="TEST_METHOD" />
-      <option name="PATTERN" value="" />
-      <option name="USE_PATTERN" value="false" />
-      <method />
-    </configuration>
-    <configuration default="false" name="Doctest get_elements" type="tests" factoryName="Doctests" temporary="true" nameIsGenerated="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/pysd/translators" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="pysd" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/pysd/translators/vensim2py.py" />
-      <option name="CLASS_NAME" value="" />
-      <option name="METHOD_NAME" value="get_elements" />
-      <option name="FOLDER_NAME" value="" />
-      <option name="TEST_TYPE" value="TEST_FUNCTION" />
-      <option name="PATTERN" value="" />
-      <option name="USE_PATTERN" value="false" />
-      <method />
-    </configuration>
+  <component name="RunManager">
     <configuration default="false" name="Doctest get_model_elements" type="tests" factoryName="Doctests" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -742,6 +555,63 @@
       <method />
     </configuration>
     <configuration default="false" name="Doctests in vensim2py2" type="tests" factoryName="Doctests" temporary="true" nameIsGenerated="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/pysd/translators" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="pysd" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/pysd/translators/vensim2py2.py" />
+      <option name="CLASS_NAME" value="" />
+      <option name="METHOD_NAME" value="" />
+      <option name="FOLDER_NAME" value="" />
+      <option name="TEST_TYPE" value="TEST_SCRIPT" />
+      <option name="PATTERN" value="" />
+      <option name="USE_PATTERN" value="false" />
+      <method />
+    </configuration>
+    <configuration default="false" name="Doctest get_equation_components" type="tests" factoryName="Doctests" temporary="true" nameIsGenerated="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/pysd/translators" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="pysd" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/pysd/translators/vensim2py2.py" />
+      <option name="CLASS_NAME" value="" />
+      <option name="METHOD_NAME" value="get_equation_components" />
+      <option name="FOLDER_NAME" value="" />
+      <option name="TEST_TYPE" value="TEST_FUNCTION" />
+      <option name="PATTERN" value="" />
+      <option name="USE_PATTERN" value="false" />
+      <method />
+    </configuration>
+    <configuration default="false" name="Doctest translate_vensim" type="tests" factoryName="Doctests" temporary="true" nameIsGenerated="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/pysd/translators" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="pysd" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/pysd/translators/vensim2py2.py" />
+      <option name="CLASS_NAME" value="" />
+      <option name="METHOD_NAME" value="translate_vensim" />
+      <option name="FOLDER_NAME" value="" />
+      <option name="TEST_TYPE" value="TEST_FUNCTION" />
+      <option name="PATTERN" value="" />
+      <option name="USE_PATTERN" value="false" />
+      <method />
+    </configuration>
+    <configuration default="false" name="Doctests in vensim2py2 (2)" type="tests" factoryName="Doctests" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs />
@@ -901,19 +771,19 @@
     </configuration>
     <list size="6">
       <item index="0" class="java.lang.String" itemvalue="Python.Test Model Library" />
-      <item index="1" class="java.lang.String" itemvalue="Python tests.Doctests in test_model_library" />
-      <item index="2" class="java.lang.String" itemvalue="Python tests.Doctest PySD.run" />
-      <item index="3" class="java.lang.String" itemvalue="Python tests.Doctest get_elements" />
-      <item index="4" class="java.lang.String" itemvalue="Python tests.Doctest get_model_elements" />
-      <item index="5" class="java.lang.String" itemvalue="Python tests.Doctests in vensim2py2" />
+      <item index="1" class="java.lang.String" itemvalue="Python tests.Doctest get_model_elements" />
+      <item index="2" class="java.lang.String" itemvalue="Python tests.Doctests in vensim2py2" />
+      <item index="3" class="java.lang.String" itemvalue="Python tests.Doctest get_equation_components" />
+      <item index="4" class="java.lang.String" itemvalue="Python tests.Doctest translate_vensim" />
+      <item index="5" class="java.lang.String" itemvalue="Python tests.Doctests in vensim2py2 (2)" />
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python tests.Doctests in vensim2py2" />
-        <item index="1" class="java.lang.String" itemvalue="Python tests.Doctest get_model_elements" />
-        <item index="2" class="java.lang.String" itemvalue="Python tests.Doctest get_elements" />
-        <item index="3" class="java.lang.String" itemvalue="Python tests.Doctest PySD.run" />
-        <item index="4" class="java.lang.String" itemvalue="Python tests.Doctests in test_model_library" />
+        <item index="0" class="java.lang.String" itemvalue="Python tests.Doctest get_equation_components" />
+        <item index="1" class="java.lang.String" itemvalue="Python tests.Doctests in vensim2py2 (2)" />
+        <item index="2" class="java.lang.String" itemvalue="Python tests.Doctest translate_vensim" />
+        <item index="3" class="java.lang.String" itemvalue="Python tests.Doctests in vensim2py2" />
+        <item index="4" class="java.lang.String" itemvalue="Python tests.Doctest get_model_elements" />
       </list>
     </recent_temporary>
   </component>
@@ -934,39 +804,45 @@
       <option name="project" value="LOCAL" />
       <updated>1454621961923</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="reworking grammar">
+      <created>1458508448200</created>
+      <option name="number" value="00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1458508448200</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="Doctests_in_vensim2py2 - 2016.03.20 at 16h 40m 57s.xml">
-      <configuration name="Doctests in vensim2py2" configurationId="tests" />
+    <history-entry file="Doctest_get_equation_components - 2016.03.21 at 16h 39m 22s.xml">
+      <configuration name="Doctest get_equation_components" configurationId="tests" />
     </history-entry>
-    <history-entry file="Doctests_in_vensim2py2 - 2016.03.20 at 16h 41m 07s.xml">
-      <configuration name="Doctests in vensim2py2" configurationId="tests" />
+    <history-entry file="Doctest_get_equation_components - 2016.03.21 at 16h 43m 25s.xml">
+      <configuration name="Doctest get_equation_components" configurationId="tests" />
     </history-entry>
-    <history-entry file="Doctests_in_vensim2py2 - 2016.03.20 at 16h 42m 22s.xml">
-      <configuration name="Doctests in vensim2py2" configurationId="tests" />
+    <history-entry file="Doctest_get_equation_components - 2016.03.21 at 16h 45m 07s.xml">
+      <configuration name="Doctest get_equation_components" configurationId="tests" />
     </history-entry>
-    <history-entry file="Doctests_in_vensim2py2 - 2016.03.20 at 16h 45m 36s.xml">
-      <configuration name="Doctests in vensim2py2" configurationId="tests" />
+    <history-entry file="Doctest_get_equation_components - 2016.03.21 at 16h 45m 39s.xml">
+      <configuration name="Doctest get_equation_components" configurationId="tests" />
     </history-entry>
-    <history-entry file="Doctests_in_vensim2py2 - 2016.03.20 at 16h 45m 46s.xml">
-      <configuration name="Doctests in vensim2py2" configurationId="tests" />
+    <history-entry file="Doctest_get_equation_components - 2016.03.21 at 16h 46m 45s.xml">
+      <configuration name="Doctest get_equation_components" configurationId="tests" />
     </history-entry>
-    <history-entry file="Doctests_in_vensim2py2 - 2016.03.20 at 17h 06m 49s.xml">
-      <configuration name="Doctests in vensim2py2" configurationId="tests" />
+    <history-entry file="Doctest_get_equation_components - 2016.03.21 at 16h 46m 59s.xml">
+      <configuration name="Doctest get_equation_components" configurationId="tests" />
     </history-entry>
-    <history-entry file="Doctests_in_vensim2py2 - 2016.03.20 at 17h 08m 11s.xml">
-      <configuration name="Doctests in vensim2py2" configurationId="tests" />
+    <history-entry file="Doctests_in_vensim2py2_(2) - 2016.03.21 at 16h 25m 34s.xml">
+      <configuration name="Doctests in vensim2py2 (2)" configurationId="tests" />
     </history-entry>
-    <history-entry file="Doctests_in_vensim2py2 - 2016.03.20 at 17h 09m 13s.xml">
-      <configuration name="Doctests in vensim2py2" configurationId="tests" />
+    <history-entry file="Doctests_in_vensim2py2_(2) - 2016.03.21 at 16h 26m 23s.xml">
+      <configuration name="Doctests in vensim2py2 (2)" configurationId="tests" />
     </history-entry>
-    <history-entry file="Doctests_in_vensim2py2 - 2016.03.20 at 17h 09m 28s.xml">
-      <configuration name="Doctests in vensim2py2" configurationId="tests" />
+    <history-entry file="Doctests_in_vensim2py2_(2) - 2016.03.21 at 16h 26m 50s.xml">
+      <configuration name="Doctests in vensim2py2 (2)" configurationId="tests" />
     </history-entry>
-    <history-entry file="Doctests_in_vensim2py2 - 2016.03.20 at 17h 09m 43s.xml">
-      <configuration name="Doctests in vensim2py2" configurationId="tests" />
+    <history-entry file="Doctests_in_vensim2py2_(2) - 2016.03.21 at 16h 27m 49s.xml">
+      <configuration name="Doctests in vensim2py2 (2)" configurationId="tests" />
     </history-entry>
   </component>
   <component name="TodoView" selected-index="1">
@@ -982,17 +858,17 @@
     <frame x="0" y="0" width="1440" height="900" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1430585" sideWeight="0.4936306" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.14097223" sideWeight="0.4936306" order="1" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3282981" sideWeight="0.49753347" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.08674699" sideWeight="0.50500715" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32771084" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.1746988" sideWeight="0.49753347" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.14038657" sideWeight="0.48907682" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25301206" sideWeight="0.49499285" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2555686" sideWeight="0.49499285" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24919614" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.21204819" sideWeight="0.6687808" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.15574348" sideWeight="0.5063694" order="0" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.28313252" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.42203987" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -1043,33 +919,21 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="docs&#10;(cherry picked from commit c8551f4)" />
-    <option name="LAST_COMMIT_MESSAGE" value="docs&#10;(cherry picked from commit c8551f4)" />
+    <MESSAGE value="reworking grammar" />
+    <option name="LAST_COMMIT_MESSAGE" value="reworking grammar" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint type="python-line">
-          <dependency id="0" />
-          <url>file://$PROJECT_DIR$/tests/test-models/tests/delays/test_delays.py</url>
-          <line>1</line>
-          <option name="timeStamp" value="6" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="python-line">
-          <url>file://$USER_HOME$/anaconda/lib/python2.7/site-packages/parsimonious/expressions.py</url>
-          <line>121</line>
-          <option name="timeStamp" value="16" />
-        </line-breakpoint>
-      </breakpoints>
       <breakpoints-dialog>
         <breakpoints-dialog />
       </breakpoints-dialog>
       <default-breakpoints>
-        <breakpoint enabled="true" log-message="true" type="python-exception">
+        <breakpoint log-message="true" type="python-exception">
           <dependency master-id="0" />
           <properties exception="BaseException" />
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="17" />
+      <option name="time" value="41" />
     </breakpoint-manager>
     <watches-manager />
   </component>
@@ -1211,13 +1075,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.mdl">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.3272727">
-          <caret line="18" column="14" selection-start-line="18" selection-start-column="14" selection-end-line="18" selection-end-column="14" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/tests/old_tests/vensim/Teacup.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -1243,7 +1100,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="23" column="0" selection-start-line="23" selection-start-column="0" selection-end-line="23" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1259,16 +1115,6 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="474" column="0" selection-start-line="474" selection-start-column="0" selection-end-line="474" selection-end-column="0" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pysd/builder/builder.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="321" column="0" selection-start-line="321" selection-start-column="0" selection-end-line="321" selection-end-column="0" />
-          <folding>
-            <element signature="e#1635#1644#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1290,7 +1136,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="184" column="31" selection-start-line="184" selection-start-column="31" selection-end-line="184" selection-end-column="31" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1317,7 +1162,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1325,7 +1169,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1333,7 +1176,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="68" column="55" selection-start-line="68" selection-start-column="55" selection-end-line="68" selection-end-column="55" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1353,14 +1195,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/anaconda/lib/python2.7/re.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="236" column="0" selection-start-line="236" selection-start-column="0" selection-end-line="236" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/anaconda/lib/python2.7/site-packages/parsimonious/exceptions.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -1373,7 +1207,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.33333334">
           <caret line="150" column="0" selection-start-line="150" selection-start-column="0" selection-end-line="150" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1381,7 +1214,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.83597887">
           <caret line="143" column="0" selection-start-line="143" selection-start-column="0" selection-end-line="143" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1389,7 +1221,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.35978836">
           <caret line="111" column="0" selection-start-line="111" selection-start-column="0" selection-end-line="111" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1409,14 +1240,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/anaconda/lib/python2.7/StringIO.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="268" column="0" selection-start-line="268" selection-start-column="0" selection-end-line="268" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/_pydev_imps/_pydev_sys_patch.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -1425,10 +1248,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/anaconda/lib/python2.7/site-packages/parsimonious/nodes.py">
+    <entry file="file://$USER_HOME$/anaconda/lib/python2.7/StringIO.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="45" column="0" selection-start-line="45" selection-start-column="0" selection-end-line="45" selection-end-column="0" />
+          <caret line="220" column="0" selection-start-line="220" selection-start-column="0" selection-end-line="220" selection-end-column="0" />
           <folding />
         </state>
       </provider>
@@ -1436,7 +1259,31 @@
     <entry file="file://$USER_HOME$/anaconda/lib/python2.7/site-packages/parsimonious/expressions.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="164" column="0" selection-start-line="164" selection-start-column="0" selection-end-line="164" selection-end-column="0" />
+          <caret line="121" column="0" selection-start-line="121" selection-start-column="0" selection-end-line="121" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda/lib/python2.7/site-packages/parsimonious/nodes.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="257" column="8" selection-start-line="257" selection-start-column="8" selection-end-line="257" selection-end-column="8" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda/lib/python2.7/re.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="235" column="0" selection-start-line="235" selection-start-column="0" selection-end-line="235" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="34" column="0" selection-start-line="34" selection-start-column="0" selection-end-line="35" selection-end-column="29" />
           <folding />
         </state>
       </provider>
@@ -1449,18 +1296,28 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl">
+    <entry file="file://$PROJECT_DIR$/pysd/builder/builder.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="8" column="37" selection-start-line="8" selection-start-column="37" selection-end-line="8" selection-end-column="37" />
+          <caret line="525" column="7" selection-start-line="525" selection-start-column="7" selection-end-line="525" selection-end-column="7" />
+          <folding>
+            <element signature="e#1635#1644#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.mdl">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="18" column="31" selection-start-line="18" selection-start-column="4" selection-end-line="18" selection-end-column="31" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/pysd/translators/vensim2py.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="10.5777025">
-          <caret line="505" column="8" selection-start-line="505" selection-start-column="8" selection-end-line="505" selection-end-column="56" />
+        <state vertical-scroll-proportion="0.22580644">
+          <caret line="107" column="29" selection-start-line="107" selection-start-column="29" selection-end-line="107" selection-end-column="29" />
           <folding>
             <element signature="e#2181#2200#0" expanded="true" />
           </folding>
@@ -1469,8 +1326,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/pysd/translators/vensim2py2.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="1.6976352">
-          <caret line="84" column="0" selection-start-line="84" selection-start-column="0" selection-end-line="84" selection-end-column="0" />
+        <state vertical-scroll-proportion="-7.419355">
+          <caret line="65" column="9" selection-start-line="65" selection-start-column="9" selection-end-line="65" selection-end-column="9" />
           <folding>
             <element signature="e#93#102#0" expanded="true" />
           </folding>
