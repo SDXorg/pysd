@@ -147,7 +147,7 @@ def get_model_elements(model_str):
     [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
 
     # Handle the model display elements (ignore them)
-    >>> get_model_elements(r'a~b~c| d~e~f| \\\junk///junk')
+    >>> get_model_elements(r'a~b~c| d~e~f| \\\---///junk|junk~junk')
     [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'f', 'unit': 'e', 'eqn': 'd'}]
 
 
@@ -158,9 +158,10 @@ def get_model_elements(model_str):
     """
 
     model_structure_grammar = r"""
-    model = encoding? (entry / section)+ element  # trailing `element` captures sketch info
+    model = encoding? (entry / section)+ sketch?  # trailing `element` captures sketch info
     entry = element "~" element "~" element "|"  # these are what we want to capture
     section = element "~" element "|"  # section separators we don't capture
+    sketch = ~r".*"  #anything that is not an end-of-file character
 
     # Either an escape group, or a character that is not tilde or pipe
     element = (escape_group / ~r"[^~|]")*
@@ -289,7 +290,7 @@ def get_equation_components(equation_str):
     """
 
     # replace any amount of whitespace  with a single space
-    equation_str = re.sub('[\s]+', ' ', equation_str)
+    equation_str = re.sub('[\s\t\\\]+', ' ', equation_str)
 
     parser = parsimonious.Grammar(component_structure_grammar)
     tree = parser.parse(equation_str)
@@ -331,32 +332,87 @@ def get_equation_components(equation_str):
             'kind': parse_object.kind}
 
 
-def parse_general_expression(expression_string, name_dict):
+def parse_units(units_str):
     """
-    Parses a normal expression
 
     Parameters
     ----------
-    expression_string
-    name_dict
+    units_str
+
+    Returns
+    -------
+
+    Examples
+    --------
+    """
+    pass
+
+
+def parse_general_expression(expression_string, namespace=None, subscript_dict=None):
+    """
+    Parses a normal expression
+    # its annoying that we have to construct and compile the grammar every time...
+
+    Parameters
+    ----------
+    expression_string: <basestring>
+
+
+    namespace : <dictionary>
+
+    subscript_dict
+
 
     Returns
     -------
     new_elements
 
+    Examples
+    --------
+    >>> parse_general_expression('INTEG ( FlowA, -10)', {'FlowA': 'flowa'})
+
+    >>> parse_general_expression('INTEG ( FlowA, -10)', {'FlowA': 'flowa', 'StockA': 'stocka'})
+
+    >>> parse_general_expression('ABS(StockA)', {'StockA': 'stocka'})
+
+    >>> parse_general_expression('20', {'StockA': 'stocka'})
+
+    >>> parse_general_expression('Time^2', {})
+
     """
+    if namespace is None:
+        namespace = {}
+    if subscript_dict is None:
+        subscript_dict = {}
+
+    expr = expression_string.lower()
+
+    # there is an issue here, which is that the subscript dict is using the already-translated
+    # versions of the python identifiers... do we even need python safe versions of these?
+
+    sub_names_list = subscript_dict.keys()
+    sub_elems_list = [y for x in subscript_dict.values() for y in x]
+    ids_list = set(namespace.keys()) - set(sub_elems_list) - set(sub_names_list)
 
     equation_grammar = """
     expr =
 
     reference = id subscript_list?
+    id = %(ids)s  # variables that have already been identified
+    sub_name = %(sub_names)s  # subscript names
+    sub_element = %(sub_elems)s  # subscript elements
 
-    # id can either include characters and numbers and spaces and underscores
-    # or can be any string escaped with double quotes
-    id = basic_id / escape_group
-    basic_id = ~r"[a-z][a-z0-9_\s]*"
-    escape_group = "\"" ( "\\\"" / ~r"[^\"]" )* "\""
-    """
+    _ = ~r"[\s\\]*"  # whitespace character
+    """ % {
+        # In the following, we have to sort keywords in decreasing order of length so that the
+        # peg parser doesn't quit early when finding a partial keyword
+        'sub_names': ' / '.join(['"%s"' % n for n in reversed(sorted(sub_names_list, key=len))]),
+        'sub_elems': ' / '.join(['"%s"' % n for n in reversed(sorted(sub_elems_list, key=len))]),
+        'ids': ' / '.join(['"%s"' % n for n in reversed(sorted(ids_list, key=len))])
+    }
+
+    print equation_grammar
+
 
 def parse_lookup_expression():
     pass
@@ -406,40 +462,61 @@ def translate_vensim(mdl_file):
 
     Examples
     --------
-    >>> translate_vensim('../../tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl')
+    #>>> translate_vensim('../../tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl')
+
+    #>>> translate_vensim('../../tests/test-models/tests/abs/test_abs.mdl')
+
+    >>> translate_vensim('../../tests/test-models/tests/exponentiation/exponentiation.mdl')
+
+    #>>> translate_vensim('../../tests/test-models/tests/limits/test_limits.mdl')
 
     """
     with open(mdl_file, 'rU') as file:
             text = file.read()
 
-    model_elements = get_model_elements(text)
+    # extract model elements
+    model_elements = []
+    file_sections = get_file_sections(text.replace('\n',''))
+    for section in file_sections:
+        if section['name'] == 'main':
+            model_elements += get_model_elements(section['string'])
 
-    # extract
+    # extract equation components
     map(lambda e: e.update(get_equation_components(e['eqn'])),
         model_elements)
 
     # make python identifiers and track for namespace conflicts
-    # Variable names are not case sensitive, so we don't have to worry about namespace
-    # collisions on that account
     namespace = {}
     for element in model_elements:
-        element['py_name'] = builder.make_python_identifier(element['real_name'],
-                                                            namespace.values())
-        namespace['real_name'] = element['py_name']
+        element['py_name'], namespace = builder.make_python_identifier(element['real_name'],
+                                                                       namespace)
 
-    # build subscript dictionary
+
+    # has to take out the various components of the subscripts and make them into a subscirpt
+    # dictionary
     subscript_dict = {}
     for element in model_elements:
         if element['kind'] == 'subdef':
             subscript_elements = []
             for subelem in element['subs']:
-                py_name = builder.make_python_identifier(subelem, namespace)
+                py_name, namespace = builder.make_python_identifier(subelem, namespace)
                 subscript_elements.append(py_name)
-                namespace.append(py_name)
             subscript_dict[element['py_name']] = subscript_elements
 
-    # need a dictionary of the namespace that translates from the original words to the
-    # python safe equivalents
+    # Todo: parse units string
+
+    for element in model_elements:
+        if element['kind'] == 'lookup':
+            pass
+
+
+    # Todo: translate expressions to python syntax
+    for element in model_elements:
+        if element['kind'] == 'component':
+            pass
+
+
+    # Todo: send pieces to the builder class
 
     print model_elements
 

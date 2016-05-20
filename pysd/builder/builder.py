@@ -529,75 +529,141 @@ def dict_find(in_dict, value):
     return in_dict.keys()[in_dict.values().index(value)]
 
 
-def make_python_identifier(string, namespace=[]):
+def make_python_identifier(string, namespace=None, reserved_words=None,
+                           convert='drop', handle='force'):
     """
     Takes an arbitrary string and creates a valid Python identifier.
     If the python identifier created is already in the namespace,
+    or if the identifier is a reserved word in the reserved_words
+    list, or is a python default reserved word,
     adds _1, or if _1 is in the namespace, _2, etc.
 
     Parameters
     ----------
     string : <basestring>
         The text to be converted into a valid python identifier
+    namespace : <dictionary>
+        Map of existing translations into python safe identifiers.
+        This is to ensure that two strings are not translated into
+        the same python identifier
+    reserved_words : <list of strings>
+        List of words that are reserved (because they have other meanings
+        in this particular program, such as also being the names of
+        libraries, etc.
+    convert : <string>
+        Tells the function what to do with characters that are not
+        valid in python identifiers
+        - 'hex' implies that they will be converted to their hexidecimal
+                representation. This is handy if you have variables that
+                have a lot of reserved characters, or you don't want the
+                name to be dependent on when things were added to the
+                namespace
+        - 'drop' implies that they will just be dropped altogether
+    handle : <string>
+        Tells the function how to deal with namespace conflicts
+        - 'force' will create a representation which is not in conflict
+                  by appending _n to the resulting variable where n is
+                  the lowest number necessary to avoid a conflict
+        - 'throw' will raise an exception
 
     Returns
     -------
     identifier : <string>
         A vaild python identifier based on the input string
+    namespace : <dictionary>
+        An updated map of the translations of words to python identifiers,
+        including the passed in 'string'.
 
     Examples
     --------
     >>> make_python_identifier('Capital')
-    'capital'
-    >>> make_python_identifier('multiple words')
-    'multiple_words'
-    >>> make_python_identifier('multiple     spaces')
-    'multiple_spaces'
+    ('capital', {'Capital': 'capital'})
 
-    When the name is a python keyword, add '_element' to differentiate it
+    >>> make_python_identifier('multiple words')
+    ('multiple_words', {'multiple words': 'multiple_words'})
+
+    >>> make_python_identifier('multiple     spaces')
+    ('multiple_spaces', {'multiple     spaces': 'multiple_spaces'})
+
+    When the name is a python keyword, add '_1' to differentiate it
     >>> make_python_identifier('for')
-    'for_element'
+    ('for_1', {'for': 'for_1'})
 
     Remove leading and trailing whitespace
     >>> make_python_identifier('  whitespace  ')
-    'whitespace'
+    ('whitespace', {'  whitespace  ': 'whitespace'})
 
     Remove most special characters outright:
     >>> make_python_identifier('H@t tr!ck')
-    'ht_trck'
+    ('ht_trck', {'H@t tr!ck': 'ht_trck'})
 
-    >>> make_python_identifier('variable[column1, column2]')
-    'variable__column1___column2'
+    Replace special characters with their hex representations
+    >>> make_python_identifier('H@t tr!ck', convert='hex')
+    ('h40t_tr21ck', {'H@t tr!ck': 'h40t_tr21ck'})
+
+    remove leading digits
+    >>> make_python_identifier('123abc')
+    ('abc', {'123abc': 'abc'})
+
+    namespace conflicts
+    >>> make_python_identifier('Variable$', namespace={'Variable@':'variable'})
+    ('variable_1', {'Variable@': 'variable', 'Variable$': 'variable_1'})
+
+    >>> make_python_identifier('Variable$', namespace={'Variable@':'variable', 'Variable%':'variable_1'})
+    ('variable_2', {'Variable@': 'variable', 'Variable%': 'variable_1', 'Variable$': 'variable_2'})
+
+    throw exception instead
+    >>> make_python_identifier('Variable$', namespace={'Variable@':'variable'}, handle='throw')
+    Traceback (most recent call last):
+     ...
+    NameError: variable already exists in namespace or is a reserved word
+
 
     References
     ----------
     Identifiers must follow the convention outlined here:
         https://docs.python.org/2/reference/lexical_analysis.html#identifiers
     """
-    # Todo: check for variable uniqueness
-    #  perhaps maintain a list of current variables and their translations??
-    # Todo: check that the output is actually a valid python identifier
-    # Todo: check for other namespace conflicts (ie, with pysd function names, etc)
 
-    string = string.lower()
+    if namespace is None:
+        namespace = {}
+
+    if reserved_words is None:
+        reserved_words = []
+
+    # create a working copy (and make it lowercase, while we're at it)
+    s = string.lower()
 
     # remove leading and trailing whitespace
-    string = string.strip()
+    s = s.strip()
 
     # Make spaces into underscores
-    string = string.replace(' ', '_')
+    s = re.sub('[\\s\\t\\n]+', '_', s)
 
-    # Make commas and brackets into underscores (mostly for subscript column names)
-    string = string.replace(',', '__').replace('[','__')
+    if convert == 'hex':
+        # Convert invalid characters to hex
+        s = ''.join([c.encode("hex") if re.findall('[^0-9a-zA-Z_]', c) else c for c in s])
 
-    # Remove invalid characters
-    string = re.sub('[^0-9a-zA-Z_]', '', string)
+    elif convert == 'drop':
+        # Remove invalid characters
+        s = re.sub('[^0-9a-zA-Z_]', '', s)
 
     # Remove leading characters until we find a letter or underscore
-    string = re.sub('^[^a-zA-Z_]+', '', string)
+    s = re.sub('^[^a-zA-Z_]+', '', s)
 
     # Check that the string is not a python identifier
-    if string in keyword.kwlist:
-        string += '_element'
+    while (s in keyword.kwlist or
+           s in namespace.values() or
+           s in reserved_words):
+        if handle == 'throw':
+            raise NameError(s + ' already exists in namespace or is a reserved word')
+        if handle == 'force':
+            if re.match(".*?_\d+$", s):
+                i = re.match(".*?_(\d+)$", s).groups()[0]
+                s = s.strip('_'+i) + '_'+str(int(i)+1)
+            else:
+                s += '_1'
 
-    return string
+    namespace[string] = s
+
+    return s, namespace
