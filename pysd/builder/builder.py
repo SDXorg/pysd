@@ -67,6 +67,50 @@ class Builder(object):
             [outfile.write(element) for element in self.preamble]
             [outfile.write(element) for element in self.body]
 
+    def _add_stock(self, identifier, subs, expression, initial_condition):
+        """
+        Creates new model element dictionaries for the model elements associated
+        with a stock.
+
+
+        Parameters
+        ----------
+        identifier
+        sub
+        expression
+        initial_condition
+
+        Returns
+        -------
+        a string to use in place of the 'INTEG...' pieces in the element expression string,
+        a list of additional model elements to add
+
+
+        """
+
+        # create the stock initialization element
+        init_element = {
+            'py_name': 'init_%s' % identifier,
+            'real_name': None,
+            'kind': 'implicit',  # not explicitly specified in the model file, but must exist
+            'py_expr': initial_condition,
+            'subs': subs,
+            'doc': 'Provides initial conditions for %s function' % identifier,
+            'unit': 'See docs for %s' % identifier
+        }
+
+        ddt_element = {
+            'py_name': 'd%s_dt' % identifier,
+            'real_name': None,
+            'kind': 'implicit',
+            'py_expr':
+        }
+
+        # create the stock
+
+
+
+
     def add_stock(self, identifier, sub, expression, initial_condition):
         """Adds a stock to the python model file based upon the interpreted expressions
         for the initial condition.

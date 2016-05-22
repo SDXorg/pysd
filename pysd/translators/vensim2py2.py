@@ -232,7 +232,7 @@ def get_equation_components(equation_str):
 
     Shorten whitespaces
     >>> get_equation_components(r'''constant\t =
-    ...                                           25 ''')
+    ...                                           \t25\t ''')
     {'expr': '25', 'kind': 'component', 'subs': [], 'real_name': 'constant'}
 
     >>> get_equation_components(r'constant [Sub1, \\
@@ -280,7 +280,7 @@ def get_equation_components(equation_str):
 
     name = basic_id / escape_group
     subscriptlist = '[' _ subscript _ ("," _ subscript)* _ ']'
-    expression = ~r".*"  # expression could be anything, at this point.
+    expression = ~r".*"  # expression could be anything, at this point. # Todo: should make this regex include newlines
 
     subscript = basic_id / escape_group
 
@@ -290,7 +290,7 @@ def get_equation_components(equation_str):
     """
 
     # replace any amount of whitespace  with a single space
-    equation_str = re.sub('[\s\t\\\]+', ' ', equation_str)
+    equation_str = re.sub('[\\s\\t\\\]+', ' ', equation_str)
 
     parser = parsimonious.Grammar(component_structure_grammar)
     tree = parser.parse(equation_str)
@@ -348,7 +348,8 @@ def parse_units(units_str):
     pass
 
 
-def parse_general_expression(expression_string, namespace=None, subscript_dict=None):
+def parse_general_expression(expression_string, namespace=None,
+                             identifier=None, subscript_dict=None):
     """
     Parses a normal expression
     # its annoying that we have to construct and compile the grammar every time...
@@ -357,6 +358,9 @@ def parse_general_expression(expression_string, namespace=None, subscript_dict=N
     ----------
     expression_string: <basestring>
 
+    identifier: basestring
+        The name of the element that we are parsing the expression of. This is
+        mostly used in creating stock element structures.
 
     namespace : <dictionary>
 
@@ -365,19 +369,84 @@ def parse_general_expression(expression_string, namespace=None, subscript_dict=N
 
     Returns
     -------
-    new_elements
+    translation
+
+    new_elements: list of dictionaries. If the expression contains builder functions,
+    those builders will create new elements to add to our running list (that will
+    eventually be output to a file) such as stock initialization and derivative funcs,
+    etc.
 
     Examples
     --------
-    >>> parse_general_expression('INTEG ( FlowA, -10)', {'FlowA': 'flowa'})
+    Parse Ids
+    >>> parse_general_expression('StockA', namespace={'StockA': 'stocka'})
+    {'constant': False, 'py_expr': 'stocka'}
 
-    >>> parse_general_expression('INTEG ( FlowA, -10)', {'FlowA': 'flowa', 'StockA': 'stocka'})
 
-    >>> parse_general_expression('ABS(StockA)', {'StockA': 'stocka'})
+    Parse numbers
+    >>> parse_general_expression('20')
+    {'constant': True, 'py_expr': '20'}
 
-    >>> parse_general_expression('20', {'StockA': 'stocka'})
+    >>> parse_general_expression('3.14159')
+    {'constant': True, 'py_expr': '3.14159'}
 
+    >>> parse_general_expression('1.3e-10')
+    {'constant': True, 'py_expr': '1.3e-10'}
+
+    >>> parse_general_expression('-1.3e+10')
+    {'constant': True, 'py_expr': '-1.3e+10'}
+
+    >>> parse_general_expression('1.3e+10')
+    {'constant': True, 'py_expr': '1.3e+10'}
+
+    >>> parse_general_expression('+3.14159')
+    {'constant': True, 'py_expr': '3.14159'}
+
+
+    General expressions / order of operations
+    >>> parse_general_expression('10+3')
+    {'constant': True, 'py_expr': '10+3'}
+
+    >>> parse_general_expression('-10^3-2')
+    {'constant': True, 'py_expr': '-10**3-2'}
+
+
+    Parse build-in functions
     >>> parse_general_expression('Time^2', {})
+
+
+    Parse function calls
+    >>> parse_general_expression('ABS(StockA)', {'StockA': 'stocka'})
+    {'constant': False, 'py_expr': 'abs(stocka)'}
+
+    >>> parse_general_expression('If Then Else(A>B, 1, 0)', {'A': 'a', 'B':'b'})
+
+
+    Parse construction functions
+    >>> parse_general_expression('INTEG (FlowA, -10)', {'FlowA': 'flowa'})
+
+    >>> parse_general_expression('Const * DELAY1(Variable, DelayTime)',
+    ...                          {'Const':'const', 'Variable','variable'})
+
+    >>> parse_general_expression('DELAY N(Inflow , delay , 0 , Order)',
+    ...                          {'Const':'const', 'Variable','variable'})
+
+    >>> parse_general_expression('SMOOTHI(Input, Adjustment Time, 0 )',
+    ...                          {'Input':'input', 'Adjustment Time':'adjustment_time'})
+
+    Parse pieces specific to subscripts
+    >>> parse_general_expression('1, 2; 3, 4; 5, 6;')
+
+    >>> parse_general_expression('StockA[Second Dimension Subscript, Third Dimension Subscript]',
+    ...                          {'StockA': 'stocka'},
+    ...                          {'Second Dimension Subscript': ['Column 1', 'Column 2'],
+    ...                           'Third Dimension Subscript': ['Depth 1', 'Depth 2'],
+    ...                           'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3']})
+
+    >>> parse_general_expression('INTEG (Inflow A[sub_D1,sub_D2], Initials[sub_D1, sub_D2])',
+    ...                          {'Initials': 'initials', 'Inflow A':'inflow_a'},
+    ...                          {'sub_1D':['Entry 1', 'Entry 2', 'Entry 3'],
+    ...                           'sub_2D':['Column 1', 'Column 2']})
 
     """
     if namespace is None:
@@ -385,22 +454,69 @@ def parse_general_expression(expression_string, namespace=None, subscript_dict=N
     if subscript_dict is None:
         subscript_dict = {}
 
-    expr = expression_string.lower()
+    functions = {"abs": "abs", "integer": "int", "exp": "np.exp",
+                 "sin": "np.sin", "cos": "np.cos", "sqrt": "np.sqrt",
+                 "tan": "np.tan", "lognormal": "np.random.lognormal",
+                 "random normal": "functions.bounded_normal",
+                 "poisson": "np.random.poisson", "ln": "np.log",
+                 "exprnd": "np.random.exponential",
+                 "random uniform": "np.random.rand",
+                 "min": "np.minimum", "max": "np.maximum",  # these are element-wise
+                 "vmin": "np.min", "vmax": "np.max",  # vector function
+                 "prod": "np.prod",  # vector function
+                 "sum": "np.sum", "arccos": "np.arccos",
+                 "arcsin": "np.arcsin", "arctan": "np.arctan",
+                 "if then else": "functions.if_then_else",
+                 "step": "functions.step", "modulo": "np.mod", "pulse": "functions.pulse",
+                 "pulse train": "functions.pulse_train", "ramp": "functions.ramp",
+                 }
 
-    # there is an issue here, which is that the subscript dict is using the already-translated
-    # versions of the python identifiers... do we even need python safe versions of these?
+    builtins = {"time": "time"
+                }
 
-    sub_names_list = subscript_dict.keys()
-    sub_elems_list = [y for x in subscript_dict.values() for y in x]
-    ids_list = set(namespace.keys()) - set(sub_elems_list) - set(sub_names_list)
+    # Todo: add functions in the builder class that interface to a generic delay, smooth, etc
+    builders = {"integ": lambda expr, init: builder.add_stock(identifier, subscripts, expr, init),
+                "delay1": lambda in_var, dtime: builder.add_n_delay(in_var, dtime, '0', '1'),
+                "delay1i": lambda in_var, dtime, init: builder.add_n_delay(in_var, dtime, init, '1'),
+                }
 
-    equation_grammar = """
-    expr =
+    in_ops = {"+": "+", "-": "-", "*": "*", "/": "/",  "^": "**",
+              "=": "==", "<=": "<=", "<>": "!=", "<": "<",
+              ">=": ">=", ">": ">",
+              ":and:": "and", ":or:": "or",
+              ",": ",", ";": ";"}  # Todo: check these
 
-    reference = id subscript_list?
-    id = %(ids)s  # variables that have already been identified
-    sub_name = %(sub_names)s  # subscript names
-    sub_element = %(sub_elems)s  # subscript elements
+    pre_ops ={":not:": "not",
+              "+": " ",  # space is important, so that and empty string doesn't slip through generic
+              "-": "-"}
+
+    sub_names_list = subscript_dict.keys() or ['\\a']  # if none, use non-printable character
+    sub_elems_list = [y for x in subscript_dict.values() for y in x] or ['\\a']
+    ids_list = namespace.keys() or ['\\a']
+    in_ops_list = [re.escape(x) for x in in_ops.keys()]  # special characters need escaping
+    pre_ops_list = [re.escape(x) for x in pre_ops.keys()]
+
+    expression_grammar = r"""
+    expr = _ pre_oper? _ (call / parens / number / reference / builtin) _ (in_oper _ expr)?
+
+    call = (func / reference) _ "(" _ (expr _ ","? _)* ")" # allows calls with no arguments
+    build_call = builder _ "(" _ (expr _ ","? _)* ")" # allows calls with no arguments
+    parens   = "(" _ expr _ ")"
+
+    reference = id _ subscript_list?
+    subscript_list = "[" _ ((sub_name / sub_element) _ ","? _)+ "]"
+
+    number = ~r"\d+\.?\d*(e[+-]\d+)?"
+
+    id = %(ids)s
+    sub_name = %(sub_names)s  # subscript names (if none, use non-printable character)
+    sub_element = %(sub_elems)s  # subscript elements (if none, use non-printable character)
+
+    func = ~r"(%(funcs)s)"I  # functions (case insensitive)
+    in_oper = ~r"(%(in_ops)s)"I  # infix operators (case insensitive)
+    pre_oper = ~r"(%(pre_ops)s)"I  # prefix operators (case insensitive)
+    builder = ~r"(%(builders)s)"I # builder functions (case insensitive)
+    builtin = ~r"(%(builtins)s)"I # build in functions (case insensitive)
 
     _ = ~r"[\s\\]*"  # whitespace character
     """ % {
@@ -408,10 +524,58 @@ def parse_general_expression(expression_string, namespace=None, subscript_dict=N
         # peg parser doesn't quit early when finding a partial keyword
         'sub_names': ' / '.join(['"%s"' % n for n in reversed(sorted(sub_names_list, key=len))]),
         'sub_elems': ' / '.join(['"%s"' % n for n in reversed(sorted(sub_elems_list, key=len))]),
-        'ids': ' / '.join(['"%s"' % n for n in reversed(sorted(ids_list, key=len))])
+        'ids': '/'.join(['"%s"' % n for n in reversed(sorted(ids_list, key=len))]),
+        # These are part of regex expressions, and may not need to be sorted, but just to be safe...
+        'funcs': '|'.join(reversed(sorted(functions.keys(), key=len))),
+        'in_ops': '|'.join(reversed(sorted(in_ops_list, key=len))),
+        'pre_ops': '|'.join(reversed(sorted(pre_ops_list, key=len))),
+        'builders': '|'.join(reversed(sorted(builders.keys(), key=len))),
+        'builtins': '|'.join(reversed(sorted(builtins.keys(), key=len)))
     }
 
-    print equation_grammar
+    #print expression_grammar
+
+    parser = parsimonious.Grammar(expression_grammar)
+    tree = parser.parse(expression_string)
+
+    class ExpressionParser(parsimonious.NodeVisitor):
+        def __init__(self, ast):
+            self.translation = ""
+            self.kind = 'constant' #set originally as constant, then change if we reference anything else
+            self.visit(ast)
+            self.new_structure = []
+
+        def visit_expr(self, n, vc):
+            s = ''.join(filter(None, vc)).strip()
+            self.translation = s
+            return s
+
+        def visit_func(self, n, vc):
+            self.kind = 'component'
+            return functions[n.text.lower()]
+
+        def visit_in_oper(self, n, vc):
+            return in_ops[n.text]
+
+        def visit_pre_oper(self, n, vc):
+            return pre_ops[n.text]
+
+        def visit_id(self, n, vc):
+            self.kind = 'component'
+            return namespace[n.text]
+
+        def visit_build_call(self, n, (call, _1, lp, _2, args, _3, rp)):
+            self.kind = 'component'
+            name, self.new_structure += builders[call](args)
+            return name
+
+        def generic_visit(self, n, vc):
+            return ''.join(filter(None, vc)) or n.text
+
+    parse_object = ExpressionParser(tree)
+
+    return {'py_expr': parse_object.translation,
+            'kind': parse_object.kind},
 
 
 def parse_lookup_expression():
@@ -491,17 +655,18 @@ def translate_vensim(mdl_file):
         element['py_name'], namespace = builder.make_python_identifier(element['real_name'],
                                                                        namespace)
 
-
     # has to take out the various components of the subscripts and make them into a subscirpt
     # dictionary
-    subscript_dict = {}
-    for element in model_elements:
-        if element['kind'] == 'subdef':
-            subscript_elements = []
-            for subelem in element['subs']:
-                py_name, namespace = builder.make_python_identifier(subelem, namespace)
-                subscript_elements.append(py_name)
-            subscript_dict[element['py_name']] = subscript_elements
+    # rodo: make these just strings, not python safe ids.
+    # subscript_dict = {}
+    # for element in model_elements:
+    #     if element['kind'] == 'subdef':
+    #         subscript_elements = []
+    #         for subelem in element['subs']:
+    #             #py_name, namespace = builder.make_python_identifier(subelem, namespace)
+    #             subscript_elements.append(py_name)
+    #         subscript_dict[element['py_name']] = subscript_elements
+    subscript_dict = {e['real_name']: e['subs'] for e in model_elements if e['kind'] == 'subdef'}
 
     # Todo: parse units string
 
@@ -513,7 +678,8 @@ def translate_vensim(mdl_file):
     # Todo: translate expressions to python syntax
     for element in model_elements:
         if element['kind'] == 'component':
-            pass
+            parse_general_expression(element['expr'], namespace=namespace,
+                                     subscript_dict=subscript_dict)
 
 
     # Todo: send pieces to the builder class
