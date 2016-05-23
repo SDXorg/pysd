@@ -49,8 +49,12 @@ def get_file_sections(file_str):
     >>> get_file_sections(':MACRO: MAC(z, y :x, w) a~b~c| :END OF MACRO: d~e~f| g~h~i|')
     [{'returns': ['x', 'w'], 'params': ['z', 'y'], 'name': 'MAC', 'string': 'a~b~c|'}, {'returns': [], 'params': [], 'name': 'main', 'string': 'd~e~f| g~h~i|'}]
 
+    # encoding
+    >>> get_file_sections(r'{UTF-8} a~b~c| d~e~f| g~h~i|')
+    [{'returns': [], 'params': [], 'name': 'main', 'string': 'a~b~c| d~e~f| g~h~i|'}]
 
-
+    >>> get_file_sections(r'a~b~c| d~e~f{special}| g~h~i|') # allows the pattern in other locations
+    [{'returns': [], 'params': [], 'name': 'main', 'string': 'a~b~c| d~e~f{special}| g~h~i|'}]
     """
     file_structure_grammar = r"""
     file = encoding? (macro / main)+
@@ -132,12 +136,6 @@ def get_model_elements(model_str):
     >>> get_model_elements(r'a~b~c| d~e"x\\nx"~f| g~h~|')
     [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'f', 'unit': 'e"x\\\\nx"', 'eqn': 'd'}, {'doc': '', 'unit': 'h', 'eqn': 'g'}]
 
-    # Handle encoding:
-    >>> get_model_elements(r'{UTF-8}a~b~c| d~e~f| g~h~i|')
-    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'f', 'unit': 'e', 'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
-    >>> get_model_elements(r'a~b~c| d~e~f{special}| g~h~i|')
-    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'f{special}', 'unit': 'e', 'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
-
     # Todo: Handle model-level or section-level documentation
     >>> get_model_elements(r'*** .model doc ***~ Docstring!| d~e~f| g~h~i|')
     [{'doc': 'Docstring!', 'unit': '', 'eqn': ''}, {'doc': 'f', 'unit': 'e', 'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
@@ -158,17 +156,16 @@ def get_model_elements(model_str):
     """
 
     model_structure_grammar = r"""
-    model = encoding? (entry / section)+ sketch?  # trailing `element` captures sketch info
-    entry = element "~" element "~" element "|"  # these are what we want to capture
-    section = element "~" element "|"  # section separators we don't capture
-    sketch = ~r".*"  #anything that is not an end-of-file character
+    model = (entry / section)+ sketch?
+    entry = element "~" element "~" element "|"
+    section = element "~" element "|"
+    sketch = ~r".*"  #anything
 
     # Either an escape group, or a character that is not tilde or pipe
     element = (escape_group / ~r"[^~|]")*
 
     # between quotes, either escaped quote or character that is not a quote
     escape_group = "\"" ( "\\\"" / ~r"[^\"]" )* "\""
-    encoding = ~r"\{[^\}]*\}"
     """
     parser = parsimonious.Grammar(model_structure_grammar)
     tree = parser.parse(model_str)
@@ -198,20 +195,22 @@ def get_model_elements(model_str):
 def get_equation_components(equation_str):
     """
     Breaks down a string representing only the equation part of a model element.
-
-
-    lookups:
-    name, followed immediately by open parenthesis
+    Recognizes the various types of model elements that may exist, and identifies them.
 
     Parameters
     ----------
-    eqn
+    equation_str : basestring
+        the first section in each model element - the full equation.
 
     Returns
     -------
-    real_name: basestring
+    Returns a dictionary containing the following:
 
-    subscript_list: list of strings
+    real_name: basestring
+        The name of the element as given in the original vensim file
+
+    subs: list of strings
+        list of subscripts or subscript elements
 
     expr: basestring
 
@@ -334,6 +333,8 @@ def get_equation_components(equation_str):
 
 def parse_units(units_str):
     """
+    Extract and parse the units
+    Extract the bounds over which the expression is assumed to apply.
 
     Parameters
     ----------
@@ -344,27 +345,28 @@ def parse_units(units_str):
 
     Examples
     --------
+    >>> parse_units('Widgets/Month [-10,10,1]')
+
+    >>> parse_units('Month [0,?]')
+
+    >>> parse_units('Widgets [0,100]')
+
     """
-    pass
+    return units_str
 
 
-def parse_general_expression(expression_string, namespace=None,
-                             identifier=None, subscript_dict=None):
+def parse_general_expression(element, namespace=None, subscript_dict=None):
     """
     Parses a normal expression
     # its annoying that we have to construct and compile the grammar every time...
 
     Parameters
     ----------
-    expression_string: <basestring>
+    element: dictionary
 
-    identifier: basestring
-        The name of the element that we are parsing the expression of. This is
-        mostly used in creating stock element structures.
+    namespace : dictionary
 
-    namespace : <dictionary>
-
-    subscript_dict
+    subscript_dict : dictionary
 
 
     Returns
@@ -379,65 +381,72 @@ def parse_general_expression(expression_string, namespace=None,
     Examples
     --------
     Parse Ids
-    >>> parse_general_expression('StockA', namespace={'StockA': 'stocka'})
-    {'constant': False, 'py_expr': 'stocka'}
+    >>> parse_general_expression({'expr': 'StockA'},
+    ...                          namespace={'StockA': 'stocka'})
+    ({'kind': 'component', 'py_expr': 'stocka'}, [])
 
 
     Parse numbers
-    >>> parse_general_expression('20')
-    {'constant': True, 'py_expr': '20'}
+    >>> parse_general_expression({'expr': '20'})
+    ({'kind': 'constant', 'py_expr': '20'}, [])
 
-    >>> parse_general_expression('3.14159')
-    {'constant': True, 'py_expr': '3.14159'}
+    >>> parse_general_expression({'expr': '3.14159'})
+    ({'kind': 'constant', 'py_expr': '3.14159'}, [])
 
-    >>> parse_general_expression('1.3e-10')
-    {'constant': True, 'py_expr': '1.3e-10'}
+    >>> parse_general_expression({'expr': '1.3e-10'})
+    ({'kind': 'constant', 'py_expr': '1.3e-10'}, [])
 
-    >>> parse_general_expression('-1.3e+10')
-    {'constant': True, 'py_expr': '-1.3e+10'}
+    >>> parse_general_expression({'expr': '-1.3e+10'})
+    ({'kind': 'constant', 'py_expr': '-1.3e+10'}, [])
 
-    >>> parse_general_expression('1.3e+10')
-    {'constant': True, 'py_expr': '1.3e+10'}
+    >>> parse_general_expression({'expr': '1.3e+10'})
+    ({'kind': 'constant', 'py_expr': '1.3e+10'}, [])
 
-    >>> parse_general_expression('+3.14159')
-    {'constant': True, 'py_expr': '3.14159'}
+    >>> parse_general_expression({'expr': '+3.14159'})
+    ({'kind': 'constant', 'py_expr': '3.14159'}, [])
 
 
     General expressions / order of operations
-    >>> parse_general_expression('10+3')
-    {'constant': True, 'py_expr': '10+3'}
+    >>> parse_general_expression({'expr': '10+3'})
+    ({'kind': 'constant', 'py_expr': '10+3'}, [])
 
-    >>> parse_general_expression('-10^3-2')
-    {'constant': True, 'py_expr': '-10**3-2'}
+    >>> parse_general_expression({'expr': '-10^3-2'})
+    ({'kind': 'constant', 'py_expr': '-10**3-2'}, [])
 
 
     Parse build-in functions
-    >>> parse_general_expression('Time^2', {})
-
+    >>> parse_general_expression({'expr': 'Time^2'})
+    ({'kind': 'constant', 'py_expr': 'Time**2'}, [])
 
     Parse function calls
-    >>> parse_general_expression('ABS(StockA)', {'StockA': 'stocka'})
-    {'constant': False, 'py_expr': 'abs(stocka)'}
+    >>> parse_general_expression({'expr': 'ABS(StockA)'}, {'StockA': 'stocka'})
+    ({'kind': 'component', 'py_expr': 'abs(stocka)'}, [])
 
-    >>> parse_general_expression('If Then Else(A>B, 1, 0)', {'A': 'a', 'B':'b'})
+    >>> parse_general_expression({'expr': 'If Then Else(A>B, 1, 0)'}, {'A': 'a', 'B':'b'})
+    ({'kind': 'component', 'py_expr': 'functions.if_then_else(a>b, 1, 0)'}, [])
 
 
     Parse construction functions
-    >>> parse_general_expression('INTEG (FlowA, -10)', {'FlowA': 'flowa'})
+    >>> parse_general_expression({'expr': 'INTEG (FlowA, -10)','py_name':'test_stock',
+    ...                           'subs':None},
+    ...                          {'FlowA': 'flowa'})
 
-    >>> parse_general_expression('Const * DELAY1(Variable, DelayTime)',
-    ...                          {'Const':'const', 'Variable','variable'})
+    >>> parse_general_expression({'expr': 'Const * DELAY1(Variable, DelayTime)'},
+    ...                          {'Const': 'const', 'Variable': 'variable',
+    ...                           'DelayTime':'delaytime'})
 
-    >>> parse_general_expression('DELAY N(Inflow , delay , 0 , Order)',
-    ...                          {'Const':'const', 'Variable','variable'})
+    >>> parse_general_expression({'expr': 'DELAY N(Inflow , delay , 0 , Order)',
+    ...                          {'Const': 'const', 'Variable': 'variable'})
 
-    >>> parse_general_expression('SMOOTHI(Input, Adjustment Time, 0 )',
-    ...                          {'Input':'input', 'Adjustment Time':'adjustment_time'})
+    >>> parse_general_expression({'expr': 'SMOOTHI(Input, Adjustment Time, 0 )'},
+    ...                          {'Input': 'input', 'Adjustment Time': 'adjustment_time'})
 
     Parse pieces specific to subscripts
-    >>> parse_general_expression('1, 2; 3, 4; 5, 6;')
+    >>> parse_general_expression({'expr': '1, 2; 3, 4; 5, 6;'}, {},
+    ...                          {'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3'],
+    ...                           'Second Dimension Subscript': ['Column 1', 'Column 2']})
 
-    >>> parse_general_expression('StockA[Second Dimension Subscript, Third Dimension Subscript]',
+    >>> parse_general_expression({'expr': 'StockA[Second Dimension Subscript, Third Dimension Subscript]'},
     ...                          {'StockA': 'stocka'},
     ...                          {'Second Dimension Subscript': ['Column 1', 'Column 2'],
     ...                           'Third Dimension Subscript': ['Depth 1', 'Depth 2'],
@@ -454,41 +463,37 @@ def parse_general_expression(expression_string, namespace=None,
     if subscript_dict is None:
         subscript_dict = {}
 
-    functions = {"abs": "abs", "integer": "int", "exp": "np.exp",
-                 "sin": "np.sin", "cos": "np.cos", "sqrt": "np.sqrt",
-                 "tan": "np.tan", "lognormal": "np.random.lognormal",
-                 "random normal": "functions.bounded_normal",
-                 "poisson": "np.random.poisson", "ln": "np.log",
-                 "exprnd": "np.random.exponential",
-                 "random uniform": "np.random.rand",
-                 "min": "np.minimum", "max": "np.maximum",  # these are element-wise
-                 "vmin": "np.min", "vmax": "np.max",  # vector function
-                 "prod": "np.prod",  # vector function
-                 "sum": "np.sum", "arccos": "np.arccos",
-                 "arcsin": "np.arcsin", "arctan": "np.arctan",
-                 "if then else": "functions.if_then_else",
-                 "step": "functions.step", "modulo": "np.mod", "pulse": "functions.pulse",
-                 "pulse train": "functions.pulse_train", "ramp": "functions.ramp",
-                 }
+    functions = {
+        # element-wise functions
+        "abs": "abs", "integer": "int", "exp": "np.exp", "sin": "np.sin", "cos": "np.cos",
+        "sqrt": "np.sqrt", "tan": "np.tan", "lognormal": "np.random.lognormal",
+        "random normal": "functions.bounded_normal", "poisson": "np.random.poisson", "ln": "np.log",
+        "exprnd": "np.random.exponential", "random uniform": "np.random.rand", "sum": "np.sum",
+        "arccos": "np.arccos", "arcsin": "np.arcsin", "arctan": "np.arctan",
+        "if then else": "functions.if_then_else", "step": "functions.step", "modulo": "np.mod",
+        "pulse": "functions.pulse", "pulse train": "functions.pulse_train",
+        "ramp": "functions.ramp", "min": "np.minimum", "max": "np.maximum",
+        # vector functions
+        "vmin": "np.min", "vmax": "np.max", "prod": "np.prod",
+        }
 
     builtins = {"time": "time"
                 }
 
-    # Todo: add functions in the builder class that interface to a generic delay, smooth, etc
-    builders = {"integ": lambda expr, init: builder.add_stock(identifier, subscripts, expr, init),
-                "delay1": lambda in_var, dtime: builder.add_n_delay(in_var, dtime, '0', '1'),
-                "delay1i": lambda in_var, dtime, init: builder.add_n_delay(in_var, dtime, init, '1'),
-                }
+    builders = {
+        "integ": lambda expr, init: builder.add_stock(element['py_name'], element['subs'],
+                                                              expr, init),
+        "delay1": lambda in_var, dtime: builder.add_n_delay(in_var, dtime, '0', '1'),
+        "delay1i": lambda in_var, dtime, init: builder.add_n_delay(in_var, dtime, init, '1'),
+    }
 
-    in_ops = {"+": "+", "-": "-", "*": "*", "/": "/",  "^": "**",
-              "=": "==", "<=": "<=", "<>": "!=", "<": "<",
-              ">=": ">=", ">": ">",
-              ":and:": "and", ":or:": "or",
-              ",": ",", ";": ";"}  # Todo: check these
+    in_ops = {
+        "+": "+", "-": "-", "*": "*", "/": "/",  "^": "**", "=": "==", "<=": "<=", "<>": "!=",
+        "<": "<",">=": ">=", ">": ">", ":and:": "and", ":or:": "or", ",": ",", ";": "],["}  # Todo: make the semicolon into a [1,2],[3,4] type of array
 
-    pre_ops ={":not:": "not",
-              "+": " ",  # space is important, so that and empty string doesn't slip through generic
-              "-": "-"}
+    pre_ops ={
+        "-": "-", ":not:": "not", "+": " ",  # space is important, so that and empty string doesn't slip through generic
+        }
 
     sub_names_list = subscript_dict.keys() or ['\\a']  # if none, use non-printable character
     sub_elems_list = [y for x in subscript_dict.values() for y in x] or ['\\a']
@@ -497,7 +502,7 @@ def parse_general_expression(expression_string, namespace=None,
     pre_ops_list = [re.escape(x) for x in pre_ops.keys()]
 
     expression_grammar = r"""
-    expr = _ pre_oper? _ (call / parens / number / reference / builtin) _ (in_oper _ expr)?
+    expr = _ pre_oper? _ (build_call / call / parens / number / reference / builtin) _ (in_oper _ expr)?
 
     call = (func / reference) _ "(" _ (expr _ ","? _)* ")" # allows calls with no arguments
     build_call = builder _ "(" _ (expr _ ","? _)* ")" # allows calls with no arguments
@@ -515,8 +520,8 @@ def parse_general_expression(expression_string, namespace=None,
     func = ~r"(%(funcs)s)"I  # functions (case insensitive)
     in_oper = ~r"(%(in_ops)s)"I  # infix operators (case insensitive)
     pre_oper = ~r"(%(pre_ops)s)"I  # prefix operators (case insensitive)
-    builder = ~r"(%(builders)s)"I # builder functions (case insensitive)
-    builtin = ~r"(%(builtins)s)"I # build in functions (case insensitive)
+    builder = ~r"(%(builders)s)"I  # builder functions (case insensitive)
+    builtin = ~r"(%(builtins)s)"I  # build in functions (case insensitive)
 
     _ = ~r"[\s\\]*"  # whitespace character
     """ % {
@@ -536,14 +541,14 @@ def parse_general_expression(expression_string, namespace=None,
     #print expression_grammar
 
     parser = parsimonious.Grammar(expression_grammar)
-    tree = parser.parse(expression_string)
+    tree = parser.parse(element['expr'])
 
     class ExpressionParser(parsimonious.NodeVisitor):
         def __init__(self, ast):
             self.translation = ""
-            self.kind = 'constant' #set originally as constant, then change if we reference anything else
-            self.visit(ast)
+            self.kind = 'constant'  # change if we reference anything else
             self.new_structure = []
+            self.visit(ast)
 
         def visit_expr(self, n, vc):
             s = ''.join(filter(None, vc)).strip()
@@ -564,9 +569,11 @@ def parse_general_expression(expression_string, namespace=None,
             self.kind = 'component'
             return namespace[n.text]
 
-        def visit_build_call(self, n, (call, _1, lp, _2, args, _3, rp)):
+        def visit_build_call(self, n, (call, _1, lp, _2, args, rp)):
             self.kind = 'component'
-            name, self.new_structure += builders[call](args)
+            a = args.split(',')
+            name, structure = builders[call.strip().lower()](*args.split(','))
+            self.new_structure += structure
             return name
 
         def generic_visit(self, n, vc):
@@ -574,8 +581,9 @@ def parse_general_expression(expression_string, namespace=None,
 
     parse_object = ExpressionParser(tree)
 
-    return {'py_expr': parse_object.translation,
+    return ({'py_expr': parse_object.translation,
             'kind': parse_object.kind},
+            parse_object.new_structure)
 
 
 def parse_lookup_expression():
@@ -612,6 +620,42 @@ def build_model():
     -------
 
     """
+    pass
+
+
+def assemble_partial_elements(element_list):
+    """
+    merges model elements which collectively all define the model component,
+    mostly for multidimensional subscripts
+
+
+    Parameters
+    ----------
+    element_list
+
+    Returns
+    -------
+
+    Examples
+    --------
+    >>> assemble_partial_elements([{'py_name':'a', 'expr':'ms', 'subs': ['Name1', 'element1'],
+    ...                            {'py_name':'a', 'expr':'njk', 'subs': ['Name1', 'element2']])
+
+    """
+
+def build_function_string(element, namespace, subscript_dict):
+    """
+
+    Parameters
+    ----------
+    element
+    namespace
+    subscript_dict
+
+    Returns
+    -------
+
+    """
 
 def translate_vensim(mdl_file):
     """
@@ -626,11 +670,11 @@ def translate_vensim(mdl_file):
 
     Examples
     --------
-    #>>> translate_vensim('../../tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl')
+    >>> translate_vensim('../../tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl')
 
     #>>> translate_vensim('../../tests/test-models/tests/abs/test_abs.mdl')
 
-    >>> translate_vensim('../../tests/test-models/tests/exponentiation/exponentiation.mdl')
+    #>>> translate_vensim('../../tests/test-models/tests/exponentiation/exponentiation.mdl')
 
     #>>> translate_vensim('../../tests/test-models/tests/limits/test_limits.mdl')
 
@@ -640,10 +684,11 @@ def translate_vensim(mdl_file):
 
     # extract model elements
     model_elements = []
-    file_sections = get_file_sections(text.replace('\n',''))
+    file_sections = get_file_sections(text.replace('\n', ''))
     for section in file_sections:
         if section['name'] == 'main':
             model_elements += get_model_elements(section['string'])
+        # for now, ignoring macros
 
     # extract equation components
     map(lambda e: e.update(get_equation_components(e['eqn'])),
@@ -652,20 +697,13 @@ def translate_vensim(mdl_file):
     # make python identifiers and track for namespace conflicts
     namespace = {}
     for element in model_elements:
-        element['py_name'], namespace = builder.make_python_identifier(element['real_name'],
-                                                                       namespace)
+        if element['kind'] != 'subdef':
+            element['py_name'], namespace = builder.make_python_identifier(element['real_name'],
+                                                                           namespace)
 
-    # has to take out the various components of the subscripts and make them into a subscirpt
-    # dictionary
-    # rodo: make these just strings, not python safe ids.
-    # subscript_dict = {}
-    # for element in model_elements:
-    #     if element['kind'] == 'subdef':
-    #         subscript_elements = []
-    #         for subelem in element['subs']:
-    #             #py_name, namespace = builder.make_python_identifier(subelem, namespace)
-    #             subscript_elements.append(py_name)
-    #         subscript_dict[element['py_name']] = subscript_elements
+    # Create a namespace for the subscripts
+    # as these aren't used to create actual python functions, but are just labels on arrays,
+    # they don't actually need to be python-safe
     subscript_dict = {e['real_name']: e['subs'] for e in model_elements if e['kind'] == 'subdef'}
 
     # Todo: parse units string
@@ -675,14 +713,33 @@ def translate_vensim(mdl_file):
             pass
 
 
-    # Todo: translate expressions to python syntax
+    # Todo: translate general expressions to python syntax
     for element in model_elements:
         if element['kind'] == 'component':
-            parse_general_expression(element['expr'], namespace=namespace,
-                                     subscript_dict=subscript_dict)
+            translation, new_structure = parse_general_expression(element,
+                                                   namespace=namespace,
+                                                   subscript_dict=subscript_dict,
+                                                   )
+            element.update(translation)
+            model_elements += new_structure
 
+    # Todo: Combine elements that share the same name
+    # this is generally when functions or constants are defined in chunks,
+    # such as for subscripts with more than 2 dimensions,
+    # or for subscripted functions.
 
     # Todo: send pieces to the builder class
 
     print model_elements
 
+"""
+Elements Dictionary:
+doc
+eqn
+expr
+kind
+py_name
+real_name
+subs
+unit
+"""
