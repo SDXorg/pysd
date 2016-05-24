@@ -18,7 +18,7 @@ class TestMergePartialElements(TestCase):
                 [{'py_name': 'a',
                   'expr': ['ms', 'njk', 'as'],
                   'subs':[['Name1', 'element1'], ['Name1', 'element2'], ['Name1', 'element3']],
-                  'kind':'group',
+                  'kind':'component',
                   'doc': 'Test',
                   'real_name': 'A',
                   'unit':None
@@ -49,7 +49,7 @@ class TestMergePartialElements(TestCase):
                 [{'py_name': 'a',
                   'expr': ['ms', 'njk', 'as'],
                   'subs':[['Name1', 'element1'], ['Name1', 'element2'], ['Name1', 'element3']],
-                  'kind':'group',
+                  'kind':'component',
                   'doc': 'Test',
                   'real_name': 'A',
                   'unit':None
@@ -57,7 +57,7 @@ class TestMergePartialElements(TestCase):
                  {'py_name': 'b',
                   'expr': ['bgf', 'r4', 'ymt'],
                   'subs':[['Name1', 'element1'], ['Name1', 'element2'], ['Name1', 'element3']],
-                  'kind':'group',
+                  'kind':'component',
                   'doc': 'Test',
                   'real_name': 'B',
                   'unit':None
@@ -80,7 +80,7 @@ class TestMergePartialElements(TestCase):
                 [{'py_name': 'a',
                   'expr': ['ms', 'njk'],
                   'subs':[['Name1', 'element1'], ['Name1', 'element2']],
-                  'kind':'group',
+                  'kind':'component',
                   'doc': 'Test',
                   'real_name': 'A',
                   'unit':None

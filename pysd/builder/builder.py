@@ -67,6 +67,23 @@ import numpy as np
 #             [outfile.write(element) for element in self.preamble]
 #             [outfile.write(element) for element in self.body]
 
+def build(elements, subscript_dict):
+    """
+    Takes in a list of model components
+
+
+    Parameters
+    ----------
+    components
+    namespace
+    subscript_dict
+
+    Returns
+    -------
+
+    """
+    pass
+
 
 def add_stock(identifier, subs, expression, initial_condition):
     """
@@ -94,7 +111,7 @@ def add_stock(identifier, subs, expression, initial_condition):
 
     # create the stock initialization element
     init_element = {
-        'py_name': 'init_%s' % identifier,
+        'py_name': '_init_%s' % identifier,
         'real_name': None,
         'kind': 'implicit',  # not explicitly specified in the model file, but must exist
         'py_expr': initial_condition,
@@ -104,7 +121,7 @@ def add_stock(identifier, subs, expression, initial_condition):
     }
 
     ddt_element = {
-        'py_name': 'd%s_dt' % identifier,
+        'py_name': '_d%s_dt' % identifier,
         'real_name': None,
         'kind': 'implicit',
         'doc': 'Provides derivative for %s function' % identifier,

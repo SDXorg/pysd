@@ -539,10 +539,10 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
 
         def visit_id(self, n, vc):
             self.kind = 'component'
-            return namespace[n.text]
+            return namespace[n.text]+'()'
 
         def visit_builtin(self, n, vc):
-            return builtins[n.text.lower()]
+            return builtins[n.text.lower()]+'()'
 
         def visit_array(self, n, vc):
             text = n.text.strip(';').replace(' ','')  # remove trailing semi if exists
@@ -649,11 +649,10 @@ def merge_partial_elements(element_list):
             outs[name]['unit'] = outs[name]['unit'] or element['unit']
             outs[name]['py_expr'] += [element['py_expr']]
             outs[name]['subs'] += [element['subs']]
-            outs[name]['kind'] = 'group'
 
     return outs.values()
 
-def build_function_string(element, namespace, subscript_dict):
+def build_function_string(element, subscript_dict):
     """
 
     Parameters
@@ -698,9 +697,9 @@ def translate_vensim(mdl_file):
 
     Examples
     --------
-    >>> translate_vensim('../../tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl')
+    #>>> translate_vensim('../../tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl')
 
-    #>>> translate_vensim('../../tests/test-models/tests/abs/test_abs.mdl')
+    >>> translate_vensim('../../tests/test-models/tests/abs/test_abs.mdl')
 
     #>>> translate_vensim('../../tests/test-models/tests/exponentiation/exponentiation.mdl')
 

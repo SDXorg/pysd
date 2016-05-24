@@ -5,9 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a7e5b169-cc30-45fb-a7f9-e8e84f9c05bd" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/pysd/translators/test_group_partial_elements.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/pysd/builder/test_build.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/builder/builder.py" afterPath="$PROJECT_DIR$/pysd/builder/builder.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/translators/test_group_partial_elements.py" afterPath="$PROJECT_DIR$/pysd/translators/test_group_partial_elements.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/translators/test_parse_general_expression.py" afterPath="$PROJECT_DIR$/pysd/translators/test_parse_general_expression.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/translators/vensim2py2.py" afterPath="$PROJECT_DIR$/pysd/translators/vensim2py2.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/sandbox.ipynb" afterPath="$PROJECT_DIR$/sandbox.ipynb" />
     </list>
@@ -32,20 +34,19 @@
     <splitter split-orientation="horizontal" split-proportion="0.5104167">
       <split-first>
         <leaf>
-          <file leaf-file-name="vensim2py2.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="vensim2py2.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/pysd/translators/vensim2py2.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state vertical-scroll-proportion="0.5114943">
-                  <caret line="757" column="0" selection-start-line="757" selection-start-column="0" selection-end-line="757" selection-end-column="0" />
+                <state vertical-scroll-proportion="0.0">
+                  <caret line="517" column="17" selection-start-line="517" selection-start-column="17" selection-end-line="517" selection-end-column="17" />
                   <folding>
                     <element signature="e#102#111#0" expanded="true" />
                     <element signature="e#196#3751#0" expanded="false" />
                     <element signature="e#3793#7686#0" expanded="false" />
                     <element signature="e#7736#13267#0" expanded="false" />
                     <element signature="e#13714#14355#0" expanded="false" />
-                    <element signature="e#14439#22356#0" expanded="false" />
-                    <element signature="e#22441#22646#0" expanded="false" />
-                    <element signature="e#22672#22834#0" expanded="false" />
+                    <element signature="e#22451#22656#0" expanded="false" />
+                    <element signature="e#22682#22844#0" expanded="false" />
                   </folding>
                 </state>
               </provider>
@@ -56,6 +57,26 @@
               <provider selected="true" editor-type-id="text-editor">
                 <state vertical-scroll-proportion="0.0">
                   <caret line="207" column="0" selection-start-line="207" selection-start-column="0" selection-end-line="207" selection-end-column="0" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="builder.py" pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/pysd/builder/builder.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state vertical-scroll-proportion="1.1139896">
+                  <caret line="126" column="52" selection-start-line="126" selection-start-column="8" selection-end-line="126" selection-end-column="52" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="test_group_partial_elements.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/pysd/translators/test_group_partial_elements.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state vertical-scroll-proportion="0.0">
+                  <caret line="55" column="20" selection-start-line="55" selection-start-column="20" selection-end-line="55" selection-end-column="20" />
                   <folding />
                 </state>
               </provider>
@@ -115,21 +136,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="test_group_partial_elements.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/pysd/translators/test_group_partial_elements.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state vertical-scroll-proportion="0.0">
-                  <caret line="3" column="14" selection-start-line="3" selection-start-column="14" selection-end-line="3" selection-end-column="14" />
-                  <folding />
-                </state>
-              </provider>
-            </entry>
-          </file>
           <file leaf-file-name="test_parse_general_expression.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/pysd/translators/test_parse_general_expression.py">
               <provider selected="true" editor-type-id="text-editor">
                 <state vertical-scroll-proportion="0.0">
-                  <caret line="3" column="16" selection-start-line="3" selection-start-column="16" selection-end-line="3" selection-end-column="16" />
+                  <caret line="84" column="28" selection-start-line="84" selection-start-column="28" selection-end-line="84" selection-end-column="28" />
                   <folding />
                 </state>
               </provider>
@@ -145,11 +156,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="builder.py" pinned="false" current-in-tab="true">
-            <entry file="file://$PROJECT_DIR$/pysd/builder/builder.py">
+          <file leaf-file-name="test_build.py" pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/pysd/builder/test_build.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state vertical-scroll-proportion="0.651341">
-                  <caret line="110" column="21" selection-start-line="110" selection-start-column="21" selection-end-line="110" selection-end-column="21" />
+                <state vertical-scroll-proportion="0.6373057">
+                  <caret line="58" column="29" selection-start-line="58" selection-start-column="29" selection-end-line="58" selection-end-column="29" />
                   <folding />
                 </state>
               </provider>
@@ -198,10 +209,11 @@
         <option value="$PROJECT_DIR$/test_model_library.py" />
         <option value="$PROJECT_DIR$/pysd/translators/vensim2py.py" />
         <option value="$PROJECT_DIR$/../test-models/tests/model_doc/model_doc.mdl" />
-        <option value="$PROJECT_DIR$/pysd/translators/test_parse_general_expression.py" />
         <option value="$PROJECT_DIR$/pysd/translators/test_group_partial_elements.py" />
-        <option value="$PROJECT_DIR$/pysd/translators/vensim2py2.py" />
         <option value="$PROJECT_DIR$/pysd/builder/builder.py" />
+        <option value="$PROJECT_DIR$/pysd/translators/vensim2py2.py" />
+        <option value="$PROJECT_DIR$/pysd/translators/test_parse_general_expression.py" />
+        <option value="$PROJECT_DIR$/pysd/builder/test_build.py" />
       </list>
     </option>
   </component>
@@ -358,7 +370,7 @@
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunManager" selected="Python tests.Doctest translate_vensim">
+  <component name="RunManager" selected="Python tests.Unittests in TestParse_general_expression">
     <configuration default="false" name="Unittests in TestParse_general_expression" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -612,11 +624,11 @@
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python tests.Doctest translate_vensim" />
-        <item index="1" class="java.lang.String" itemvalue="Python tests.Doctest make_python_identifier" />
-        <item index="2" class="java.lang.String" itemvalue="Python tests.Unittests in TestMergePartialElements" />
-        <item index="3" class="java.lang.String" itemvalue="Python tests.Unittest TestMergePartialElements.test_multiple_sets" />
-        <item index="4" class="java.lang.String" itemvalue="Python tests.Unittests in TestParse_general_expression" />
+        <item index="0" class="java.lang.String" itemvalue="Python tests.Unittests in TestParse_general_expression" />
+        <item index="1" class="java.lang.String" itemvalue="Python tests.Doctest translate_vensim" />
+        <item index="2" class="java.lang.String" itemvalue="Python tests.Doctest make_python_identifier" />
+        <item index="3" class="java.lang.String" itemvalue="Python tests.Unittests in TestMergePartialElements" />
+        <item index="4" class="java.lang.String" itemvalue="Python tests.Unittest TestMergePartialElements.test_multiple_sets" />
       </list>
     </recent_temporary>
   </component>
@@ -653,35 +665,35 @@
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="Doctest_make_python_identifier - 2016.05.24 at 14h 41m 08s.xml">
-      <configuration name="Doctest make_python_identifier" configurationId="tests" />
+    <history-entry file="Unittests_in_TestParse_general_expression - 2016.05.24 at 16h 50m 01s.xml">
+      <configuration name="Unittests in TestParse_general_expression" configurationId="tests" />
     </history-entry>
-    <history-entry file="Doctest_make_python_identifier - 2016.05.24 at 14h 41m 30s.xml">
-      <configuration name="Doctest make_python_identifier" configurationId="tests" />
+    <history-entry file="Unittests_in_TestParse_general_expression - 2016.05.24 at 16h 51m 14s.xml">
+      <configuration name="Unittests in TestParse_general_expression" configurationId="tests" />
     </history-entry>
-    <history-entry file="Doctest_make_python_identifier - 2016.05.24 at 14h 41m 32s.xml">
-      <configuration name="Doctest make_python_identifier" configurationId="tests" />
+    <history-entry file="Unittests_in_TestParse_general_expression - 2016.05.24 at 16h 51m 17s.xml">
+      <configuration name="Unittests in TestParse_general_expression" configurationId="tests" />
     </history-entry>
-    <history-entry file="Doctest_translate_vensim - 2016.05.24 at 14h 36m 44s.xml">
-      <configuration name="Doctest translate_vensim" configurationId="tests" />
+    <history-entry file="Unittests_in_TestParse_general_expression - 2016.05.24 at 16h 51m 31s.xml">
+      <configuration name="Unittests in TestParse_general_expression" configurationId="tests" />
     </history-entry>
-    <history-entry file="Doctest_translate_vensim - 2016.05.24 at 14h 42m 14s.xml">
-      <configuration name="Doctest translate_vensim" configurationId="tests" />
+    <history-entry file="Unittests_in_TestParse_general_expression - 2016.05.24 at 16h 52m 00s.xml">
+      <configuration name="Unittests in TestParse_general_expression" configurationId="tests" />
     </history-entry>
-    <history-entry file="Doctest_translate_vensim - 2016.05.24 at 14h 46m 01s.xml">
-      <configuration name="Doctest translate_vensim" configurationId="tests" />
+    <history-entry file="Unittests_in_TestParse_general_expression - 2016.05.24 at 16h 52m 15s.xml">
+      <configuration name="Unittests in TestParse_general_expression" configurationId="tests" />
     </history-entry>
-    <history-entry file="Doctest_translate_vensim - 2016.05.24 at 14h 46m 07s.xml">
-      <configuration name="Doctest translate_vensim" configurationId="tests" />
+    <history-entry file="Unittests_in_TestParse_general_expression - 2016.05.24 at 16h 52m 38s.xml">
+      <configuration name="Unittests in TestParse_general_expression" configurationId="tests" />
     </history-entry>
-    <history-entry file="Doctest_translate_vensim - 2016.05.24 at 14h 46m 48s.xml">
-      <configuration name="Doctest translate_vensim" configurationId="tests" />
+    <history-entry file="Unittests_in_TestParse_general_expression - 2016.05.24 at 16h 52m 55s.xml">
+      <configuration name="Unittests in TestParse_general_expression" configurationId="tests" />
     </history-entry>
-    <history-entry file="Doctest_translate_vensim - 2016.05.24 at 14h 47m 05s.xml">
-      <configuration name="Doctest translate_vensim" configurationId="tests" />
+    <history-entry file="Unittests_in_TestParse_general_expression - 2016.05.24 at 16h 53m 13s.xml">
+      <configuration name="Unittests in TestParse_general_expression" configurationId="tests" />
     </history-entry>
-    <history-entry file="Doctest_translate_vensim - 2016.05.24 at 14h 50m 27s.xml">
-      <configuration name="Doctest translate_vensim" configurationId="tests" />
+    <history-entry file="Unittests_in_TestParse_general_expression - 2016.05.24 at 16h 54m 08s.xml">
+      <configuration name="Unittests in TestParse_general_expression" configurationId="tests" />
     </history-entry>
   </component>
   <component name="TodoView" selected-index="1">
@@ -697,17 +709,17 @@
     <frame x="0" y="0" width="1440" height="900" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1430585" sideWeight="0.4936306" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.1430585" sideWeight="0.4936306" order="1" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3282981" sideWeight="0.49753347" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.08674699" sideWeight="0.50500715" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32666665" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.1746988" sideWeight="0.49753347" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.14038657" sideWeight="0.48907682" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2686747" sideWeight="0.49499285" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2686747" sideWeight="0.49499285" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24919614" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.1879518" sideWeight="0.6687808" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.15574348" sideWeight="0.5063694" order="0" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.33734939" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32168674" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -726,15 +738,15 @@
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22650841" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.1746988" sideWeight="0.49753347" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.14038657" sideWeight="0.48907682" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3421687" sideWeight="0.49499285" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2686747" sideWeight="0.49499285" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.1879518" sideWeight="0.6687808" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1430585" sideWeight="0.4936306" order="1" side_tool="false" content_ui="combo" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32771084" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32666665" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24919614" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.15574348" sideWeight="0.5063694" order="0" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.30361447" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.08554217" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
     </layout-to-restore>
   </component>
   <component name="Vcs.Log.UiProperties">
@@ -768,7 +780,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/pysd/translators/vensim2py2.py</url>
-          <line>765</line>
+          <line>764</line>
           <option name="timeStamp" value="119" />
         </line-breakpoint>
       </breakpoints>
@@ -786,14 +798,6 @@
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscript_docs/subscript_docs.mdl">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/profile_pysd.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -1115,14 +1119,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/anaconda/lib/python2.7/site-packages/parsimonious/nodes.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="207" column="0" selection-start-line="207" selection-start-column="0" selection-end-line="207" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscript_docs/subscript_docs.mdl">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -1139,10 +1135,42 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$USER_HOME$/anaconda/lib/python2.7/site-packages/parsimonious/nodes.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="207" column="0" selection-start-line="207" selection-start-column="0" selection-end-line="207" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/pysd/translators/test_group_partial_elements.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="3" column="14" selection-start-line="3" selection-start-column="14" selection-end-line="3" selection-end-column="14" />
+          <caret line="55" column="20" selection-start-line="55" selection-start-column="20" selection-end-line="55" selection-end-column="20" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pysd/translators/vensim2py2.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="517" column="17" selection-start-line="517" selection-start-column="17" selection-end-line="517" selection-end-column="17" />
+          <folding>
+            <element signature="e#102#111#0" expanded="true" />
+            <element signature="e#196#3751#0" expanded="false" />
+            <element signature="e#3793#7686#0" expanded="false" />
+            <element signature="e#7736#13267#0" expanded="false" />
+            <element signature="e#13714#14355#0" expanded="false" />
+            <element signature="e#22451#22656#0" expanded="false" />
+            <element signature="e#22682#22844#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pysd/builder/builder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="1.1139896">
+          <caret line="126" column="52" selection-start-line="126" selection-start-column="8" selection-end-line="126" selection-end-column="52" />
           <folding />
         </state>
       </provider>
@@ -1150,33 +1178,16 @@
     <entry file="file://$PROJECT_DIR$/pysd/translators/test_parse_general_expression.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="3" column="16" selection-start-line="3" selection-start-column="16" selection-end-line="3" selection-end-column="16" />
+          <caret line="84" column="28" selection-start-line="84" selection-start-column="28" selection-end-line="84" selection-end-column="28" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pysd/builder/builder.py">
+    <entry file="file://$PROJECT_DIR$/pysd/builder/test_build.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.651341">
-          <caret line="110" column="21" selection-start-line="110" selection-start-column="21" selection-end-line="110" selection-end-column="21" />
+        <state vertical-scroll-proportion="0.6373057">
+          <caret line="58" column="29" selection-start-line="58" selection-start-column="29" selection-end-line="58" selection-end-column="29" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pysd/translators/vensim2py2.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.5114943">
-          <caret line="757" column="0" selection-start-line="757" selection-start-column="0" selection-end-line="757" selection-end-column="0" />
-          <folding>
-            <element signature="e#102#111#0" expanded="true" />
-            <element signature="e#196#3751#0" expanded="false" />
-            <element signature="e#3793#7686#0" expanded="false" />
-            <element signature="e#7736#13267#0" expanded="false" />
-            <element signature="e#13714#14355#0" expanded="false" />
-            <element signature="e#14439#22356#0" expanded="false" />
-            <element signature="e#22441#22646#0" expanded="false" />
-            <element signature="e#22672#22834#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
