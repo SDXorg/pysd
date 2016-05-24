@@ -354,6 +354,32 @@ def parse_units(units_str):
     """
     return units_str
 
+def find_subscript_name(subscript_dict, element):
+    """
+    Given a subscript dictionary, and a member of a subscript family,
+    return the first key of which the
+
+    Parameters
+    ----------
+    subscript_dict: dictionary
+        Follows the {'subscript name':['list','of','subscript','elements']} format
+    element: sting
+
+    Returns
+    -------
+
+    Examples:
+    >>> find_subscript_name({'Dim1': ['A', 'B'],
+    ...                      'Dim2': ['C', 'D', 'E'],
+    ...                      'Dim3': ['F', 'G', 'H', 'I']},
+    ...                      'D')
+    'Dim2'
+    """
+    for name, elements in subscript_dict.iteritems():
+        if element in elements:
+            return name
+
+
 
 def parse_general_expression(element, namespace=None, subscript_dict=None):
     """
@@ -373,89 +399,30 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
     -------
     translation
 
-    new_elements: list of dictionaries. If the expression contains builder functions,
-    those builders will create new elements to add to our running list (that will
-    eventually be output to a file) such as stock initialization and derivative funcs,
-    etc.
+    new_elements: list of dictionaries
+        If the expression contains builder functions, those builders will create new elements
+        to add to our running list (that will eventually be output to a file) such as stock
+        initialization and derivative funcs, etc.
+
 
     Examples
     --------
-    Parse Ids
-    >>> parse_general_expression({'expr': 'StockA'},
-    ...                          namespace={'StockA': 'stocka'})
-    ({'kind': 'component', 'py_expr': 'stocka'}, [])
-
-
-    Parse numbers
-    >>> parse_general_expression({'expr': '20'})
-    ({'kind': 'constant', 'py_expr': '20'}, [])
-
-    >>> parse_general_expression({'expr': '3.14159'})
-    ({'kind': 'constant', 'py_expr': '3.14159'}, [])
-
-    >>> parse_general_expression({'expr': '1.3e-10'})
-    ({'kind': 'constant', 'py_expr': '1.3e-10'}, [])
-
-    >>> parse_general_expression({'expr': '-1.3e+10'})
-    ({'kind': 'constant', 'py_expr': '-1.3e+10'}, [])
-
-    >>> parse_general_expression({'expr': '1.3e+10'})
-    ({'kind': 'constant', 'py_expr': '1.3e+10'}, [])
-
-    >>> parse_general_expression({'expr': '+3.14159'})
-    ({'kind': 'constant', 'py_expr': '3.14159'}, [])
-
-
-    General expressions / order of operations
-    >>> parse_general_expression({'expr': '10+3'})
-    ({'kind': 'constant', 'py_expr': '10+3'}, [])
-
-    >>> parse_general_expression({'expr': '-10^3-2'})
-    ({'kind': 'constant', 'py_expr': '-10**3-2'}, [])
-
-
-    Parse build-in functions
-    >>> parse_general_expression({'expr': 'Time^2'})
-    ({'kind': 'constant', 'py_expr': 'Time**2'}, [])
-
-    Parse function calls
-    >>> parse_general_expression({'expr': 'ABS(StockA)'}, {'StockA': 'stocka'})
-    ({'kind': 'component', 'py_expr': 'abs(stocka)'}, [])
-
-    >>> parse_general_expression({'expr': 'If Then Else(A>B, 1, 0)'}, {'A': 'a', 'B':'b'})
-    ({'kind': 'component', 'py_expr': 'functions.if_then_else(a>b, 1, 0)'}, [])
-
-
-    Parse construction functions
-    >>> parse_general_expression({'expr': 'INTEG (FlowA, -10)','py_name':'test_stock',
+    >>> parse_general_expression({'expr': 'INTEG (FlowA, -10)',
+    ...                           'py_name':'test_stock',
     ...                           'subs':None},
-    ...                          {'FlowA': 'flowa'})
-
-    >>> parse_general_expression({'expr': 'Const * DELAY1(Variable, DelayTime)'},
-    ...                          {'Const': 'const', 'Variable': 'variable',
-    ...                           'DelayTime':'delaytime'})
-
-    >>> parse_general_expression({'expr': 'DELAY N(Inflow , delay , 0 , Order)',
-    ...                          {'Const': 'const', 'Variable': 'variable'})
-
-    >>> parse_general_expression({'expr': 'SMOOTHI(Input, Adjustment Time, 0 )'},
-    ...                          {'Input': 'input', 'Adjustment Time': 'adjustment_time'})
-
-    Parse pieces specific to subscripts
-    >>> parse_general_expression({'expr': '1, 2; 3, 4; 5, 6;'}, {},
-    ...                          {'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3'],
-    ...                           'Second Dimension Subscript': ['Column 1', 'Column 2']})
-
-    >>> parse_general_expression({'expr': 'StockA[Second Dimension Subscript, Third Dimension Subscript]'},
-    ...                          {'StockA': 'stocka'},
-    ...                          {'Second Dimension Subscript': ['Column 1', 'Column 2'],
-    ...                           'Third Dimension Subscript': ['Depth 1', 'Depth 2'],
-    ...                           'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3']})
-
-    >>> parse_general_expression('INTEG (Inflow A[sub_D1,sub_D2], Initials[sub_D1, sub_D2])',
-    ...                          {'Initials': 'initials', 'Inflow A':'inflow_a'},
-    ...                          {'sub_1D':['Entry 1', 'Entry 2', 'Entry 3'],
-    ...                           'sub_2D':['Column 1', 'Column 2']})
+    ...                          {'FlowA': 'flowa'}),
+    ({'kind': 'component', 'py_expr': "_state['test_stock']"},
+     [{'kind': 'implicit',
+       'subs': None,
+       'doc': 'Provides initial conditions for test_stock function',
+       'py_name': 'init_test_stock',
+       'real_name': None,
+       'unit': 'See docs for test_stock',
+       'py_expr': '-10'},
+      {'py_name': 'dtest_stock_dt',
+       'kind': 'implicit',
+       'py_expr': 'flowa',
+       'real_name': None}])
 
     """
     if namespace is None:
@@ -485,11 +452,12 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
                                                               expr, init),
         "delay1": lambda in_var, dtime: builder.add_n_delay(in_var, dtime, '0', '1'),
         "delay1i": lambda in_var, dtime, init: builder.add_n_delay(in_var, dtime, init, '1'),
+        # continue this pattern with the other delay functions and smooth functions
     }
 
     in_ops = {
         "+": "+", "-": "-", "*": "*", "/": "/",  "^": "**", "=": "==", "<=": "<=", "<>": "!=",
-        "<": "<",">=": ">=", ">": ">", ":and:": "and", ":or:": "or", ",": ",", ";": "],["}  # Todo: make the semicolon into a [1,2],[3,4] type of array
+        "<": "<",">=": ">=", ">": ">", ":and:": "and", ":or:": "or"}  # Todo: make the semicolon into a [1,2],[3,4] type of array
 
     pre_ops ={
         "-": "-", ":not:": "not", "+": " ",  # space is important, so that and empty string doesn't slip through generic
@@ -502,6 +470,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
     pre_ops_list = [re.escape(x) for x in pre_ops.keys()]
 
     expression_grammar = r"""
+    expr_type = array / expr
     expr = _ pre_oper? _ (build_call / call / parens / number / reference / builtin) _ (in_oper _ expr)?
 
     call = (func / reference) _ "(" _ (expr _ ","? _)* ")" # allows calls with no arguments
@@ -511,6 +480,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
     reference = id _ subscript_list?
     subscript_list = "[" _ ((sub_name / sub_element) _ ","? _)+ "]"
 
+    array = (number _ ("," / ";")? _)+
     number = ~r"\d+\.?\d*(e[+-]\d+)?"
 
     id = %(ids)s
@@ -538,8 +508,6 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
         'builtins': '|'.join(reversed(sorted(builtins.keys(), key=len)))
     }
 
-    #print expression_grammar
-
     parser = parsimonious.Grammar(expression_grammar)
     tree = parser.parse(element['expr'])
 
@@ -549,6 +517,10 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
             self.kind = 'constant'  # change if we reference anything else
             self.new_structure = []
             self.visit(ast)
+
+        def visit_expr_type(self, n, vc):
+            s = ''.join(filter(None, vc)).strip()
+            self.translation = s
 
         def visit_expr(self, n, vc):
             s = ''.join(filter(None, vc)).strip()
@@ -569,10 +541,33 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
             self.kind = 'component'
             return namespace[n.text]
 
+        def visit_builtin(self, n, vc):
+            return builtins[n.text.lower()]
+
+        def visit_array(self, n, vc):
+            text = n.text.strip(';').replace(' ','')  # remove trailing semi if exists
+            if ';' in text:
+                return '['+text.replace(';', '],[')+']'
+            else:
+                return text
+
+        def visit_subscript_list(self, n, (lb, _1, refs, rb)):
+            coordinates = {}
+            subs = [x.strip() for x in refs.split(',')]
+            for sub in subs:
+                if sub in sub_elems_list:
+                    name = find_subscript_name(subscript_dict, sub)
+                    coordinates[name] = [sub]
+            if len(coordinates):
+                return '.loc[%s]'%repr(coordinates)
+
+            else:
+                return ' '
+
         def visit_build_call(self, n, (call, _1, lp, _2, args, rp)):
             self.kind = 'component'
-            a = args.split(',')
-            name, structure = builders[call.strip().lower()](*args.split(','))
+            arglist = [x.strip() for x in args.split(',')]
+            name, structure = builders[call.strip().lower()](*arglist)
             self.new_structure += structure
             return name
 
@@ -657,6 +652,24 @@ def build_function_string(element, namespace, subscript_dict):
 
     """
 
+
+def identify_subranges(subscript_dict):
+    """
+
+    Parameters
+    ----------
+    subscript_dict
+
+    Returns
+    -------
+
+    Examples
+    --------
+    >>> identify_subranges({'Dim1': ['A', 'B', 'C', 'D', 'E', 'F'],
+    ...                     'Range1': ['C', 'D', 'E']})
+    {'Range1': ('Dim1', ['C', 'D', 'E'])}, {'Dim1'
+    """
+
 def translate_vensim(mdl_file):
     """
 
@@ -705,6 +718,8 @@ def translate_vensim(mdl_file):
     # as these aren't used to create actual python functions, but are just labels on arrays,
     # they don't actually need to be python-safe
     subscript_dict = {e['real_name']: e['subs'] for e in model_elements if e['kind'] == 'subdef'}
+    # need to be able to identify that subranges ARE subranges...
+    subranges_dict
 
     # Todo: parse units string
 

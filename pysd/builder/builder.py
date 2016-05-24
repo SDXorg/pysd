@@ -557,26 +557,31 @@ def add_stock(identifier, subs, expression, initial_condition):
 #     return directory, position
 #
 #
-# def dict_find(in_dict, value):
-#     """ Helper function for looking up directory keys by their values.
-#      This isn't robust to repeated values
-#
-#     Parameters
-#     ----------
-#     in_dict : dictionary
-#         A dictionary containing `value`
-#
-#     value : any type
-#         What we wish to find in the dictionary
-#
-#     Returns
-#     -------
-#     key: basestring
-#         The key at which the value can be found
-#     """
-#     # Todo: make this robust to repeated values
-#     # Todo: make this robust to missing values
-#     return in_dict.keys()[in_dict.values().index(value)]
+def dict_find(in_dict, value):
+    """ Helper function for looking up directory keys by their values.
+     This isn't robust to repeated values
+
+    Parameters
+    ----------
+    in_dict : dictionary
+        A dictionary containing `value`
+
+    value : any type
+        What we wish to find in the dictionary
+
+    Returns
+    -------
+    key: basestring
+        The key at which the value can be found
+
+    Examples
+    --------
+    >>> dict_find({'Key1': 'A', 'Key2': 'B'})
+
+    """
+    # Todo: make this robust to repeated values
+    # Todo: make this robust to missing values
+    return in_dict.keys()[in_dict.values().index(value)]
 #
 
 def make_python_identifier(string, namespace=None, reserved_words=None,
