@@ -560,7 +560,6 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
                     coordinates[name] = [sub]
             if len(coordinates):
                 return '.loc[%s]'%repr(coordinates)
-
             else:
                 return ' '
 
@@ -618,7 +617,7 @@ def build_model():
     pass
 
 
-def assemble_partial_elements(element_list):
+def merge_partial_elements(element_list):
     """
     merges model elements which collectively all define the model component,
     mostly for multidimensional subscripts
@@ -630,13 +629,29 @@ def assemble_partial_elements(element_list):
 
     Returns
     -------
-
-    Examples
-    --------
-    >>> assemble_partial_elements([{'py_name':'a', 'expr':'ms', 'subs': ['Name1', 'element1'],
-    ...                            {'py_name':'a', 'expr':'njk', 'subs': ['Name1', 'element2']])
-
     """
+    outs = dict()  # output data structure
+    for element in element_list:
+        name = element['py_name']
+        if name not in outs:
+            outs[name] = {
+                'py_name': element['py_name'],
+                'real_name': element['real_name'],
+                'doc': element['doc'],
+                'py_expr': [element['py_expr']],  # in a list
+                'unit': element['unit'],
+                'subs': [element['subs']],
+                'kind': element['kind']
+            }
+
+        else:
+            outs[name]['doc'] = outs[name]['doc'] or element['doc']
+            outs[name]['unit'] = outs[name]['unit'] or element['unit']
+            outs[name]['py_expr'] += [element['py_expr']]
+            outs[name]['subs'] += [element['subs']]
+            outs[name]['kind'] = 'group'
+
+    return outs.values()
 
 def build_function_string(element, namespace, subscript_dict):
     """
@@ -719,7 +734,7 @@ def translate_vensim(mdl_file):
     # they don't actually need to be python-safe
     subscript_dict = {e['real_name']: e['subs'] for e in model_elements if e['kind'] == 'subdef'}
     # need to be able to identify that subranges ARE subranges...
-    subranges_dict
+    subranges_dict = {}
 
     # Todo: parse units string
 
@@ -737,6 +752,9 @@ def translate_vensim(mdl_file):
                                                    )
             element.update(translation)
             model_elements += new_structure
+
+
+    model_groups = merge_partial_elements([e for e in model_elements if e['kind'] != 'subdef'])
 
     # Todo: Combine elements that share the same name
     # this is generally when functions or constants are defined in chunks,

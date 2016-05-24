@@ -107,6 +107,9 @@ def add_stock(identifier, subs, expression, initial_condition):
         'py_name': 'd%s_dt' % identifier,
         'real_name': None,
         'kind': 'implicit',
+        'doc': 'Provides derivative for %s function' % identifier,
+        'subs': subs,
+        'unit': 'See docs for %s' % identifier,
         'py_expr': expression
     }
 
@@ -588,7 +591,13 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
                            convert='drop', handle='force'):
     """
     Takes an arbitrary string and creates a valid Python identifier.
+
+    If the input string is in the namespace, return its value.
+
     If the python identifier created is already in the namespace,
+    but the input string is not (ie, two similar strings resolve to
+    the same python identifier)
+
     or if the identifier is a reserved word in the reserved_words
     list, or is a python default reserved word,
     adds _1, or if _1 is in the namespace, _2, etc.
@@ -660,6 +669,10 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
     >>> make_python_identifier('123abc')
     ('abc', {'123abc': 'abc'})
 
+    already in namespace
+    >>> make_python_identifier('Variable$', namespace={'Variable$':'variable'})
+    ('variable', {'Variable$': 'variable'})
+
     namespace conflicts
     >>> make_python_identifier('Variable$', namespace={'Variable@':'variable'})
     ('variable_1', {'Variable@': 'variable', 'Variable$': 'variable_1'})
@@ -685,6 +698,9 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
 
     if reserved_words is None:
         reserved_words = []
+
+    if string in namespace:
+        return namespace[string], namespace
 
     # create a working copy (and make it lowercase, while we're at it)
     s = string.lower()

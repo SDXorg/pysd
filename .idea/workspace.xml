@@ -5,7 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a7e5b169-cc30-45fb-a7f9-e8e84f9c05bd" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/pysd/translators/test_parse_general_expression.py" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/pysd/translators/test_group_partial_elements.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/builder/builder.py" afterPath="$PROJECT_DIR$/pysd/builder/builder.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/translators/vensim2py2.py" afterPath="$PROJECT_DIR$/pysd/translators/vensim2py2.py" />
@@ -35,13 +35,17 @@
           <file leaf-file-name="vensim2py2.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/pysd/translators/vensim2py2.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state vertical-scroll-proportion="0.7104247">
-                  <caret line="509" column="0" selection-start-line="509" selection-start-column="0" selection-end-line="509" selection-end-column="0" />
+                <state vertical-scroll-proportion="0.5114943">
+                  <caret line="757" column="0" selection-start-line="757" selection-start-column="0" selection-end-line="757" selection-end-column="0" />
                   <folding>
                     <element signature="e#102#111#0" expanded="true" />
                     <element signature="e#196#3751#0" expanded="false" />
                     <element signature="e#3793#7686#0" expanded="false" />
                     <element signature="e#7736#13267#0" expanded="false" />
+                    <element signature="e#13714#14355#0" expanded="false" />
+                    <element signature="e#14439#22356#0" expanded="false" />
+                    <element signature="e#22441#22646#0" expanded="false" />
+                    <element signature="e#22672#22834#0" expanded="false" />
                   </folding>
                 </state>
               </provider>
@@ -111,11 +115,21 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="test_parse_general_expression.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="test_group_partial_elements.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/pysd/translators/test_group_partial_elements.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state vertical-scroll-proportion="0.0">
+                  <caret line="3" column="14" selection-start-line="3" selection-start-column="14" selection-end-line="3" selection-end-column="14" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="test_parse_general_expression.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/pysd/translators/test_parse_general_expression.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state vertical-scroll-proportion="2.5482626">
-                  <caret line="88" column="0" selection-start-line="88" selection-start-column="0" selection-end-line="88" selection-end-column="0" />
+                <state vertical-scroll-proportion="0.0">
+                  <caret line="3" column="16" selection-start-line="3" selection-start-column="16" selection-end-line="3" selection-end-column="16" />
                   <folding />
                 </state>
               </provider>
@@ -131,14 +145,12 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="builder.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="builder.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/pysd/builder/builder.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state vertical-scroll-proportion="0.0">
-                  <caret line="578" column="44" selection-start-line="578" selection-start-column="44" selection-end-line="578" selection-end-column="44" />
-                  <folding>
-                    <element signature="e#1635#1644#0" expanded="true" />
-                  </folding>
+                <state vertical-scroll-proportion="0.651341">
+                  <caret line="110" column="21" selection-start-line="110" selection-start-column="21" selection-end-line="110" selection-end-column="21" />
+                  <folding />
                 </state>
               </provider>
             </entry>
@@ -186,9 +198,10 @@
         <option value="$PROJECT_DIR$/test_model_library.py" />
         <option value="$PROJECT_DIR$/pysd/translators/vensim2py.py" />
         <option value="$PROJECT_DIR$/../test-models/tests/model_doc/model_doc.mdl" />
-        <option value="$PROJECT_DIR$/pysd/builder/builder.py" />
         <option value="$PROJECT_DIR$/pysd/translators/test_parse_general_expression.py" />
+        <option value="$PROJECT_DIR$/pysd/translators/test_group_partial_elements.py" />
         <option value="$PROJECT_DIR$/pysd/translators/vensim2py2.py" />
+        <option value="$PROJECT_DIR$/pysd/builder/builder.py" />
       </list>
     </option>
   </component>
@@ -237,6 +250,9 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scratches">
+        <subPane />
+      </pane>
       <pane id="Scope">
         <subPane subId="Project Files">
           <PATH>
@@ -314,14 +330,11 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scratches">
-        <subPane />
-      </pane>
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="last_opened_file_path" value="$PROJECT_DIR$/test_model_library.py" />
-    <property name="settings.editor.selected.configurable" value="reference.idesettings.debugger.python" />
+    <property name="settings.editor.selected.configurable" value="configurable.group.build" />
     <property name="settings.editor.splitter.proportion" value="0.2" />
     <property name="SearchEverywhereHistoryKey" value="&#9;FILE&#9;file:///Users/houghton/Google_Drive/Academic Projects/PYSD/pysd/pysd/builder/builder.py" />
     <property name="FullScreen" value="true" />
@@ -345,7 +358,7 @@
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunManager" selected="Python tests.Unittest TestParse_general_expression.test_number_parsing">
+  <component name="RunManager" selected="Python tests.Doctest translate_vensim">
     <configuration default="false" name="Unittests in TestParse_general_expression" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -368,7 +381,7 @@
       <option name="USE_PARAM" value="false" />
       <method />
     </configuration>
-    <configuration default="false" name="Unittest TestParse_general_expression.test_delay_construction_function_no_subscripts" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+    <configuration default="false" name="Unittests in TestMergePartialElements" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs />
@@ -378,11 +391,11 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="pysd" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/pysd/translators/test_parse_general_expression.py" />
-      <option name="CLASS_NAME" value="TestParse_general_expression" />
-      <option name="METHOD_NAME" value="test_delay_construction_function_no_subscripts" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/pysd/translators/test_group_partial_elements.py" />
+      <option name="CLASS_NAME" value="TestMergePartialElements" />
+      <option name="METHOD_NAME" value="" />
       <option name="FOLDER_NAME" value="" />
-      <option name="TEST_TYPE" value="TEST_METHOD" />
+      <option name="TEST_TYPE" value="TEST_CLASS" />
       <option name="PATTERN" value="" />
       <option name="USE_PATTERN" value="false" />
       <option name="PUREUNITTEST" value="true" />
@@ -390,7 +403,7 @@
       <option name="USE_PARAM" value="false" />
       <method />
     </configuration>
-    <configuration default="false" name="Unittest TestParse_general_expression.test_subscript_reference" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+    <configuration default="false" name="Unittest TestMergePartialElements.test_multiple_sets" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs />
@@ -400,9 +413,9 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="pysd" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/pysd/translators/test_parse_general_expression.py" />
-      <option name="CLASS_NAME" value="TestParse_general_expression" />
-      <option name="METHOD_NAME" value="test_subscript_reference" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/pysd/translators/test_group_partial_elements.py" />
+      <option name="CLASS_NAME" value="TestMergePartialElements" />
+      <option name="METHOD_NAME" value="test_multiple_sets" />
       <option name="FOLDER_NAME" value="" />
       <option name="TEST_TYPE" value="TEST_METHOD" />
       <option name="PATTERN" value="" />
@@ -412,7 +425,7 @@
       <option name="USE_PARAM" value="false" />
       <method />
     </configuration>
-    <configuration default="false" name="Doctest find_subscript_name" type="tests" factoryName="Doctests" temporary="true" nameIsGenerated="true">
+    <configuration default="false" name="Doctest translate_vensim" type="tests" factoryName="Doctests" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs />
@@ -424,33 +437,30 @@
       <module name="pysd" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/pysd/translators/vensim2py2.py" />
       <option name="CLASS_NAME" value="" />
-      <option name="METHOD_NAME" value="find_subscript_name" />
+      <option name="METHOD_NAME" value="translate_vensim" />
       <option name="FOLDER_NAME" value="" />
       <option name="TEST_TYPE" value="TEST_FUNCTION" />
       <option name="PATTERN" value="" />
       <option name="USE_PATTERN" value="false" />
       <method />
     </configuration>
-    <configuration default="false" name="Unittest TestParse_general_expression.test_number_parsing" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+    <configuration default="false" name="Doctest make_python_identifier" type="tests" factoryName="Doctests" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs />
       <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/pysd/translators" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/pysd/builder" />
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="pysd" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/pysd/translators/test_parse_general_expression.py" />
-      <option name="CLASS_NAME" value="TestParse_general_expression" />
-      <option name="METHOD_NAME" value="test_number_parsing" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/pysd/builder/builder.py" />
+      <option name="CLASS_NAME" value="" />
+      <option name="METHOD_NAME" value="make_python_identifier" />
       <option name="FOLDER_NAME" value="" />
-      <option name="TEST_TYPE" value="TEST_METHOD" />
+      <option name="TEST_TYPE" value="TEST_FUNCTION" />
       <option name="PATTERN" value="" />
       <option name="USE_PATTERN" value="false" />
-      <option name="PUREUNITTEST" value="true" />
-      <option name="PARAMS" value="" />
-      <option name="USE_PARAM" value="false" />
       <method />
     </configuration>
     <configuration default="true" type="PythonConfigurationType" factoryName="Python">
@@ -595,18 +605,18 @@
     <list size="6">
       <item index="0" class="java.lang.String" itemvalue="Python.Test Model Library" />
       <item index="1" class="java.lang.String" itemvalue="Python tests.Unittests in TestParse_general_expression" />
-      <item index="2" class="java.lang.String" itemvalue="Python tests.Unittest TestParse_general_expression.test_delay_construction_function_no_subscripts" />
-      <item index="3" class="java.lang.String" itemvalue="Python tests.Unittest TestParse_general_expression.test_subscript_reference" />
-      <item index="4" class="java.lang.String" itemvalue="Python tests.Doctest find_subscript_name" />
-      <item index="5" class="java.lang.String" itemvalue="Python tests.Unittest TestParse_general_expression.test_number_parsing" />
+      <item index="2" class="java.lang.String" itemvalue="Python tests.Unittests in TestMergePartialElements" />
+      <item index="3" class="java.lang.String" itemvalue="Python tests.Unittest TestMergePartialElements.test_multiple_sets" />
+      <item index="4" class="java.lang.String" itemvalue="Python tests.Doctest translate_vensim" />
+      <item index="5" class="java.lang.String" itemvalue="Python tests.Doctest make_python_identifier" />
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python tests.Unittests in TestParse_general_expression" />
-        <item index="1" class="java.lang.String" itemvalue="Python tests.Unittest TestParse_general_expression.test_number_parsing" />
-        <item index="2" class="java.lang.String" itemvalue="Python tests.Unittest TestParse_general_expression.test_subscript_reference" />
-        <item index="3" class="java.lang.String" itemvalue="Python tests.Doctest find_subscript_name" />
-        <item index="4" class="java.lang.String" itemvalue="Python tests.Unittest TestParse_general_expression.test_delay_construction_function_no_subscripts" />
+        <item index="0" class="java.lang.String" itemvalue="Python tests.Doctest translate_vensim" />
+        <item index="1" class="java.lang.String" itemvalue="Python tests.Doctest make_python_identifier" />
+        <item index="2" class="java.lang.String" itemvalue="Python tests.Unittests in TestMergePartialElements" />
+        <item index="3" class="java.lang.String" itemvalue="Python tests.Unittest TestMergePartialElements.test_multiple_sets" />
+        <item index="4" class="java.lang.String" itemvalue="Python tests.Unittests in TestParse_general_expression" />
       </list>
     </recent_temporary>
   </component>
@@ -643,35 +653,35 @@
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="Unittests_in_TestParse_general_expression - 2016.05.24 at 12h 52m 02s.xml">
-      <configuration name="Unittests in TestParse_general_expression" configurationId="tests" />
+    <history-entry file="Doctest_make_python_identifier - 2016.05.24 at 14h 41m 08s.xml">
+      <configuration name="Doctest make_python_identifier" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_TestParse_general_expression - 2016.05.24 at 12h 52m 19s.xml">
-      <configuration name="Unittests in TestParse_general_expression" configurationId="tests" />
+    <history-entry file="Doctest_make_python_identifier - 2016.05.24 at 14h 41m 30s.xml">
+      <configuration name="Doctest make_python_identifier" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_TestParse_general_expression - 2016.05.24 at 12h 52m 32s.xml">
-      <configuration name="Unittests in TestParse_general_expression" configurationId="tests" />
+    <history-entry file="Doctest_make_python_identifier - 2016.05.24 at 14h 41m 32s.xml">
+      <configuration name="Doctest make_python_identifier" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_TestParse_general_expression - 2016.05.24 at 12h 53m 33s.xml">
-      <configuration name="Unittests in TestParse_general_expression" configurationId="tests" />
+    <history-entry file="Doctest_translate_vensim - 2016.05.24 at 14h 36m 44s.xml">
+      <configuration name="Doctest translate_vensim" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_TestParse_general_expression - 2016.05.24 at 12h 53m 45s.xml">
-      <configuration name="Unittests in TestParse_general_expression" configurationId="tests" />
+    <history-entry file="Doctest_translate_vensim - 2016.05.24 at 14h 42m 14s.xml">
+      <configuration name="Doctest translate_vensim" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_TestParse_general_expression - 2016.05.24 at 12h 54m 35s.xml">
-      <configuration name="Unittests in TestParse_general_expression" configurationId="tests" />
+    <history-entry file="Doctest_translate_vensim - 2016.05.24 at 14h 46m 01s.xml">
+      <configuration name="Doctest translate_vensim" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_TestParse_general_expression - 2016.05.24 at 12h 54m 51s.xml">
-      <configuration name="Unittests in TestParse_general_expression" configurationId="tests" />
+    <history-entry file="Doctest_translate_vensim - 2016.05.24 at 14h 46m 07s.xml">
+      <configuration name="Doctest translate_vensim" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_TestParse_general_expression - 2016.05.24 at 12h 55m 27s.xml">
-      <configuration name="Unittests in TestParse_general_expression" configurationId="tests" />
+    <history-entry file="Doctest_translate_vensim - 2016.05.24 at 14h 46m 48s.xml">
+      <configuration name="Doctest translate_vensim" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_TestParse_general_expression - 2016.05.24 at 12h 56m 27s.xml">
-      <configuration name="Unittests in TestParse_general_expression" configurationId="tests" />
+    <history-entry file="Doctest_translate_vensim - 2016.05.24 at 14h 47m 05s.xml">
+      <configuration name="Doctest translate_vensim" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_TestParse_general_expression - 2016.05.24 at 12h 56m 31s.xml">
-      <configuration name="Unittests in TestParse_general_expression" configurationId="tests" />
+    <history-entry file="Doctest_translate_vensim - 2016.05.24 at 14h 50m 27s.xml">
+      <configuration name="Doctest translate_vensim" configurationId="tests" />
     </history-entry>
   </component>
   <component name="TodoView" selected-index="1">
@@ -690,20 +700,20 @@
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1430585" sideWeight="0.4936306" order="1" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3282981" sideWeight="0.49753347" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.08674699" sideWeight="0.50500715" order="0" side_tool="true" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32666665" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.1746988" sideWeight="0.49753347" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.14038657" sideWeight="0.48907682" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3421687" sideWeight="0.49499285" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2686747" sideWeight="0.49499285" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24919614" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.1879518" sideWeight="0.6687808" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.15574348" sideWeight="0.5063694" order="0" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.30361447" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.33734939" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22650841" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32771084" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
     <layout-to-restore>
@@ -716,7 +726,7 @@
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22650841" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.1746988" sideWeight="0.49753347" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.14038657" sideWeight="0.48907682" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.31325302" sideWeight="0.49499285" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3421687" sideWeight="0.49499285" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.1879518" sideWeight="0.6687808" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1430585" sideWeight="0.4936306" order="1" side_tool="false" content_ui="combo" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
@@ -724,7 +734,7 @@
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24919614" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.15574348" sideWeight="0.5063694" order="0" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.30361447" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.30361447" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
     </layout-to-restore>
   </component>
   <component name="Vcs.Log.UiProperties">
@@ -755,6 +765,13 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="python-line">
+          <url>file://$PROJECT_DIR$/pysd/translators/vensim2py2.py</url>
+          <line>765</line>
+          <option name="timeStamp" value="119" />
+        </line-breakpoint>
+      </breakpoints>
       <breakpoints-dialog>
         <breakpoints-dialog />
       </breakpoints-dialog>
@@ -764,19 +781,11 @@
           <properties exception="BaseException" />
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="116" />
+      <option name="time" value="127" />
     </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.mdl">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="18" column="31" selection-start-line="18" selection-start-column="4" selection-end-line="18" selection-end-column="31" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscript_docs/subscript_docs.mdl">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -804,7 +813,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="60" column="14" selection-start-line="60" selection-start-column="14" selection-end-line="60" selection-end-column="14" />
           <folding>
-            <element signature="e#1635#1644#0" expanded="true" />
+            <element signature="e#1635#1644#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -1046,6 +1055,34 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.mdl">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="18" column="31" selection-start-line="18" selection-start-column="4" selection-end-line="18" selection-end-column="31" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../test-models/tests/exponentiation/exponentiation.mdl">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../test-models/tests/abs/test_abs.mdl">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="44" column="0" selection-start-line="44" selection-start-column="0" selection-end-line="44" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.027272727">
+          <caret line="34" column="0" selection-start-line="34" selection-start-column="0" selection-end-line="35" selection-end-column="29" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$USER_HOME$/anaconda/lib/python2.7/site-packages/parsimonious/exceptions.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
@@ -1078,52 +1115,18 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$USER_HOME$/anaconda/lib/python2.7/site-packages/parsimonious/nodes.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="207" column="0" selection-start-line="207" selection-start-column="0" selection-end-line="207" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscript_docs/subscript_docs.mdl">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.mdl">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="18" column="31" selection-start-line="18" selection-start-column="4" selection-end-line="18" selection-end-column="31" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../test-models/tests/exponentiation/exponentiation.mdl">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../test-models/tests/abs/test_abs.mdl">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="44" column="0" selection-start-line="44" selection-start-column="0" selection-end-line="44" selection-end-column="9" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pysd/builder/builder.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="578" column="44" selection-start-line="578" selection-start-column="44" selection-end-line="578" selection-end-column="44" />
-          <folding>
-            <element signature="e#1635#1644#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.027272727">
-          <caret line="34" column="0" selection-start-line="34" selection-start-column="0" selection-end-line="35" selection-end-column="29" />
           <folding />
         </state>
       </provider>
@@ -1136,31 +1139,43 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$USER_HOME$/anaconda/lib/python2.7/site-packages/parsimonious/nodes.py">
+    <entry file="file://$PROJECT_DIR$/pysd/translators/test_group_partial_elements.py">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="207" column="0" selection-start-line="207" selection-start-column="0" selection-end-line="207" selection-end-column="0" />
+          <caret line="3" column="14" selection-start-line="3" selection-start-column="14" selection-end-line="3" selection-end-column="14" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/pysd/translators/test_parse_general_expression.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="2.5482626">
-          <caret line="88" column="0" selection-start-line="88" selection-start-column="0" selection-end-line="88" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.0">
+          <caret line="3" column="16" selection-start-line="3" selection-start-column="16" selection-end-line="3" selection-end-column="16" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pysd/builder/builder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.651341">
+          <caret line="110" column="21" selection-start-line="110" selection-start-column="21" selection-end-line="110" selection-end-column="21" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/pysd/translators/vensim2py2.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.7104247">
-          <caret line="509" column="0" selection-start-line="509" selection-start-column="0" selection-end-line="509" selection-end-column="0" />
+        <state vertical-scroll-proportion="0.5114943">
+          <caret line="757" column="0" selection-start-line="757" selection-start-column="0" selection-end-line="757" selection-end-column="0" />
           <folding>
             <element signature="e#102#111#0" expanded="true" />
             <element signature="e#196#3751#0" expanded="false" />
             <element signature="e#3793#7686#0" expanded="false" />
             <element signature="e#7736#13267#0" expanded="false" />
+            <element signature="e#13714#14355#0" expanded="false" />
+            <element signature="e#14439#22356#0" expanded="false" />
+            <element signature="e#22441#22646#0" expanded="false" />
+            <element signature="e#22672#22834#0" expanded="false" />
           </folding>
         </state>
       </provider>
