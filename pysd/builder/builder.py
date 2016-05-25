@@ -30,11 +30,14 @@ debug models.
 # child, as would be the case with subranges. Probably means that we'll have to collect
 # all of the subelements and pass them together to get the family name.
 
-
+import textwrap
+import autopep8
 import re
 import keyword
 from templates import templates
 import numpy as np
+
+
 #
 #
 # class Builder(object):
@@ -67,23 +70,172 @@ import numpy as np
 #             [outfile.write(element) for element in self.preamble]
 #             [outfile.write(element) for element in self.body]
 
-def build(elements, subscript_dict):
+def create_base_array(subs_list, subscript_dict):
     """
-    Takes in a list of model components
-
+    Given a list of subscript references,
+    returns a base array that can be populated by these references
 
     Parameters
     ----------
-    components
-    namespace
+    subs_list
+
+    Returns
+    -------
+    base_array: string
+        A string that
+
+    >>> create_base_array([['Dim1', 'D'], ['Dim1', 'E'], ['Dim1', 'F']],
+    ...                    {'Dim1': ['A', 'B', 'C'],
+    ...                     'Dim2': ['D', 'E', 'F', 'G']})
+    "xr.DataArray(data=np.empty([3, 3])*NaN, coords={'Dim2': ['D', 'E', 'F'], 'Dim1': ['A', 'B', 'C']})"
+
+    # >>> create_base_array([['Dim1', 'A'], ['Dim1', 'B'], ['Dim1', 'C']],
+    # ...                    {'Dim1': ['A', 'B', 'C']})
+
+    """
+    sub_names_list = subscript_dict.keys()
+    sub_elems_list = [y for x in subscript_dict.values() for y in x]
+
+    coords = dict()
+    for subset in subs_list:
+        for sub in subset:
+            if sub in sub_names_list:
+                if sub not in coords:
+                    coords[sub] = subscript_dict[sub]
+            elif sub in sub_elems_list:
+                name = find_subscript_name(subscript_dict, sub)
+                if name not in coords:
+                    coords[name] = [sub]
+                else:
+                    if sub not in coords[name]:
+                        coords[name] += [sub]
+
+    return "xr.DataArray(data=np.empty(%(shape)s)*NaN, coords=%(coords)s)" % {
+        'shape': repr(map(len, coords.values())),
+        'coords': repr(coords)
+    }
+
+
+def build_element(element, subscript_dict):
+    """
+    Returns a string that has processed a single element dictionary
+    Parameters
+    ----------
+    element
     subscript_dict
 
     Returns
     -------
 
     """
-    pass
+    if element['kind'] == 'constant':
+        cache = "@cache('run')"
+    elif element['kind'] == 'setup':
+        cache = ''
+    elif element['kind'] == 'component':
+        cache = "@cache('step')"
+    elif element['kind'] == 'macro':
+        cache = ''
 
+    if len(element['py_expr']) > 1:
+        contents = "ret = %s\n" % create_base_array(element['subs'], subscript_dict)
+
+        for sub, expr in zip(element['subs'], element['py_expr']):
+            contents += 'ret.iloc[%(coord_dict)s] = %(expr)s\n' % {
+                'coord_dict': repr(make_coord_dict(sub, subscript_dict)),
+                'expr': expr}
+
+        contents += "return ret"
+    else:
+        contents = "return %s" % element['py_expr'][0]
+
+    indent = 8
+    element.update({'cache': cache,
+                    'ulines': '-' * len(element['real_name']),
+                    'contents': contents.replace('\n',
+                                                 '\n' + ' ' * indent)})  # indent lines 2 onward
+
+    func = '''
+    %(cache)s
+    def %(py_name)s():
+        """
+        %(real_name)s
+        %(ulines)s
+        (%(py_name)s)
+        %(unit)s
+
+        %(doc)s
+        """
+        %(contents)s
+        ''' % element
+    return func
+
+
+def build(elements, subscript_dict, outfile_name):
+    """
+    Takes in a list of model components
+
+
+    Parameters
+    ----------
+    elements
+    subscript_dict
+
+    Returns
+    -------
+
+    """
+    elements = merge_partial_elements(elements)
+
+    functions = [build_element(element, subscript_dict) for element in elements]
+
+    imports = []
+    if subscript_dict:
+        imports += ['import xarray as xr']
+
+    text = """
+    from __future__ import division
+    import pysd.functions
+    %(imports)s
+    from pysd.builder import cache
+
+    subscript_dict = %(subscript_dict)s
+
+    %(functions)s
+
+    """ % {'subscript_dict': repr(subscript_dict),
+           'functions': '\n'.join(functions),
+           'imports': '\n'.join(imports)}
+
+    text = autopep8.fix_code(textwrap.dedent(text),
+                             options={'aggressive': 10,
+                                      'max_line_length': 99,
+                                      'experimental': True})
+
+    # this is used for testing
+    if outfile_name == 'return':
+        return text
+
+    with open(outfile_name, 'w') as out:
+        out.write(text)
+
+
+def identify_subranges(subscript_dict):
+    """
+
+    Parameters
+    ----------
+    subscript_dict
+
+    Returns
+    -------
+
+    Examples
+    --------
+    >>> identify_subranges({'Dim1': ['A', 'B', 'C', 'D', 'E', 'F'],
+    ...                     'Range1': ['C', 'D', 'E']})
+    {'Range1': ('Dim1', ['C', 'D', 'E'])}, {'Dim1'
+    """
 
 def add_stock(identifier, subs, expression, initial_condition):
     """
@@ -112,8 +264,8 @@ def add_stock(identifier, subs, expression, initial_condition):
     # create the stock initialization element
     init_element = {
         'py_name': '_init_%s' % identifier,
-        'real_name': None,
-        'kind': 'implicit',  # not explicitly specified in the model file, but must exist
+        'real_name': 'Implicit',
+        'kind': 'setup',  # not explicitly specified in the model file, but must exist
         'py_expr': initial_condition,
         'subs': subs,
         'doc': 'Provides initial conditions for %s function' % identifier,
@@ -122,8 +274,8 @@ def add_stock(identifier, subs, expression, initial_condition):
 
     ddt_element = {
         'py_name': '_d%s_dt' % identifier,
-        'real_name': None,
-        'kind': 'implicit',
+        'real_name': 'Implicit',
+        'kind': 'component',
         'doc': 'Provides derivative for %s function' % identifier,
         'subs': subs,
         'unit': 'See docs for %s' % identifier,
@@ -131,6 +283,98 @@ def add_stock(identifier, subs, expression, initial_condition):
     }
 
     return "_state['%s']" % identifier, [init_element, ddt_element]
+
+
+def make_coord_dict(subs, subscript_dict):
+    """
+    This is for assisting with the lookup of a particular element, such that the output
+    of this function would take the place of %s in this expression
+
+    `variable.loc[%s]`
+
+    Parameters
+    ----------
+    subs
+    subscript_dict
+
+    Returns
+    -------
+
+    Examples
+    --------
+    >>> make_coord_dict(['Dim1', 'D'], {'Dim1':['A','B','C'], 'Dim2':['D', 'E', 'F']})
+    {'Dim2': ['D']}
+
+    """
+    sub_elems_list = [y for x in subscript_dict.values() for y in x]
+    coordinates = {}
+    for sub in subs:
+        if sub in sub_elems_list:
+            name = find_subscript_name(subscript_dict, sub)
+            coordinates[name] = [sub]
+    return coordinates
+
+
+def find_subscript_name(subscript_dict, element):
+    """
+    Given a subscript dictionary, and a member of a subscript family,
+    return the first key of which the
+
+    Parameters
+    ----------
+    subscript_dict: dictionary
+        Follows the {'subscript name':['list','of','subscript','elements']} format
+    element: sting
+
+    Returns
+    -------
+
+    Examples:
+    >>> find_subscript_name({'Dim1': ['A', 'B'],
+    ...                      'Dim2': ['C', 'D', 'E'],
+    ...                      'Dim3': ['F', 'G', 'H', 'I']},
+    ...                      'D')
+    'Dim2'
+    """
+    for name, elements in subscript_dict.iteritems():
+        if element in elements:
+            return name
+
+
+def merge_partial_elements(element_list):
+    """
+    merges model elements which collectively all define the model component,
+    mostly for multidimensional subscripts
+
+
+    Parameters
+    ----------
+    element_list
+
+    Returns
+    -------
+    """
+    outs = dict()  # output data structure
+    for element in element_list:
+        name = element['py_name']
+        if name not in outs:
+            outs[name] = {
+                'py_name': element['py_name'],
+                'real_name': element['real_name'],
+                'doc': element['doc'],
+                'py_expr': [element['py_expr']],  # in a list
+                'unit': element['unit'],
+                'subs': [element['subs']],
+                'kind': element['kind']
+            }
+
+        else:
+            outs[name]['doc'] = outs[name]['doc'] or element['doc']
+            outs[name]['unit'] = outs[name]['unit'] or element['unit']
+            outs[name]['py_expr'] += [element['py_expr']]
+            outs[name]['subs'] += [element['subs']]
+
+    return outs.values()
 
     # create the stock
 
@@ -253,6 +497,7 @@ def add_stock(identifier, subs, expression, initial_condition):
     #     self.body.append(funcstr)
     #
     #     return identifier
+
 
 #     def add_lookup(self, identifier, valid_range, sub, copair_list):
 #
@@ -602,6 +847,8 @@ def dict_find(in_dict, value):
     # Todo: make this robust to repeated values
     # Todo: make this robust to missing values
     return in_dict.keys()[in_dict.values().index(value)]
+
+
 #
 
 def make_python_identifier(string, namespace=None, reserved_words=None,
@@ -741,14 +988,14 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
 
     # Check that the string is not a python identifier
     while (s in keyword.kwlist or
-           s in namespace.values() or
-           s in reserved_words):
+                   s in namespace.values() or
+                   s in reserved_words):
         if handle == 'throw':
             raise NameError(s + ' already exists in namespace or is a reserved word')
         if handle == 'force':
             if re.match(".*?_\d+$", s):
                 i = re.match(".*?_(\d+)$", s).groups()[0]
-                s = s.strip('_'+i) + '_'+str(int(i)+1)
+                s = s.strip('_' + i) + '_' + str(int(i) + 1)
             else:
                 s += '_1'
 

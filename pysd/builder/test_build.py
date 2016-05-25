@@ -1,36 +1,41 @@
 from unittest import TestCase
+import textwrap
 
 
 class TestBuild(TestCase):
+    def test_build_element(self):  # doctest: +NORMALIZE_WHITESPACE
+        from builder import build_element
+
+        self.assertEqual(
+                build_element(element={'py_name': 'my_variable',
+                                       'py_expr': ['50', '21', '3'],
+                                       'subs': [['A'], ['B'], ['C']],
+                                       'kind': 'constant',
+                                       'doc': 'This is a test.',
+                                       'unit': 'kg/s',
+                                       'real_name': 'My Variable'},
+                              subscript_dict={'Dim1': ['A', 'B', 'C'],
+                                              'Dim2': ['D', 'E', 'F', 'G']}),
+                textwrap.dedent('''
+                @cache('run')
+                def my_variable():
+                    """
+                    My Variable
+                    -----------
+                    (my_variable)
+                    kg/s
+
+                    This is a test.
+                    """
+                    ret = xr.DataArray(data=np.empty([3])*NaN, coords={'Dim1': ['A', 'B', 'C']})
+                    ret.iloc[{'Dim1': ['A']}] = 50
+                    ret.iloc[{'Dim1': ['B']}] = 21
+                    ret.iloc[{'Dim1': ['C']}] = 3
+                    return ret
+                '''))
+
     def test_build(self):
         from builder import build
-        self.assertEqual(
-                build(elements=[{'py_name': 'my_variable',
-                                 'expr': ['50', '21', '3'],
-                                 'subs': [['Dim1', 'A'], ['Dim1', 'B'], ['Dim1', 'C']],
-                                 'kind': 'constant',
-                                 'doc': 'This is a test.',
-                                 'unit': 'kg/s',
-                                 'real_name': 'My Variable'}],
-                      subscript_dict={'Dim1': ['A', 'B', 'C']}),
-                '''
-                @cache('run')
-                def variable():
-                """
-                My Variable
-                -----------
-                (my_variable)
-                kg/s
-
-                This is a test.
-                """
-                    ret = xr.DataArray(data=np.empty(3), coords={'Dim1': ['A', 'B', 'C']})
-                    ret.iloc[{'Dim1': ['A']}] = 50
-                    ret.iloc[{'Dim2': ['B']}] = 21
-                    ret.iloc[{'Dim3': ['C']}] = 3
-                    return ret
-                ''')
-
         self.assertEqual(
                 build(elements=[{'kind': 'component',
                                  'subs': [[]],
@@ -39,18 +44,18 @@ class TestBuild(TestCase):
                                  'real_name': 'StockA',
                                  'py_expr': ["_state['stocka']"],
                                  'unit': ''},
-                                {'kind': 'implicit',
+                                {'kind': 'component',
                                  'subs': [[]],
                                  'doc': 'Provides derivative for stocka function',
                                  'py_name': '_dstocka_dt',
-                                 'real_name': None,
+                                 'real_name': 'Implicit',
                                  'py_expr': ['flowa()'],
                                  'unit': 'See docs for stocka'},
-                                {'kind': 'implicit',
+                                {'kind': 'setup',
                                  'subs': [[]],
                                  'doc': 'Provides initial conditions for stocka function',
                                  'py_name': 'init_stocka',
-                                 'real_name': None,
+                                 'real_name': 'Implicit',
                                  'py_expr': ['-10'],
                                  'unit': 'See docs for stocka'}],
                       subscript_dict={'Dim1': ['A', 'B', 'C']}),

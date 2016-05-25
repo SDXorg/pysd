@@ -86,10 +86,11 @@ def get_file_sections(file_str):
                                  'string': n.text.strip()})
 
         def visit_macro(self, n, (m1, _1, name, _2, lp, _3, params, _4, cn, _5, returns,
-                                  _6, rp, text, m2)):
+        _6, rp, text, m2)):
             self.entries.append({'name': name,
                                  'params': [x.strip() for x in params.split(',')] if params else [],
-                                 'returns': [x.strip() for x in returns.split(',')] if returns else [],
+                                 'returns': [x.strip() for x in
+                                             returns.split(',')] if returns else [],
                                  'string': text.strip()})
 
         def generic_visit(self, n, vc):
@@ -311,10 +312,10 @@ def get_equation_components(equation_str):
         def visit_component(self, n, vc):
             self.kind = 'component'
 
-        def visit_name(self, n, (name,)):
+        def visit_name(self, n, (name, )):
             self.real_name = name.strip()
 
-        def visit_subscript(self, n, (subscript,)):
+        def visit_subscript(self, n, (subscript, )):
             self.subscripts.append(subscript.strip())
 
         def visit_expression(self, n, vc):
@@ -353,32 +354,6 @@ def parse_units(units_str):
 
     """
     return units_str
-
-def find_subscript_name(subscript_dict, element):
-    """
-    Given a subscript dictionary, and a member of a subscript family,
-    return the first key of which the
-
-    Parameters
-    ----------
-    subscript_dict: dictionary
-        Follows the {'subscript name':['list','of','subscript','elements']} format
-    element: sting
-
-    Returns
-    -------
-
-    Examples:
-    >>> find_subscript_name({'Dim1': ['A', 'B'],
-    ...                      'Dim2': ['C', 'D', 'E'],
-    ...                      'Dim3': ['F', 'G', 'H', 'I']},
-    ...                      'D')
-    'Dim2'
-    """
-    for name, elements in subscript_dict.iteritems():
-        if element in elements:
-            return name
-
 
 
 def parse_general_expression(element, namespace=None, subscript_dict=None):
@@ -442,26 +417,28 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
         "ramp": "functions.ramp", "min": "np.minimum", "max": "np.maximum",
         # vector functions
         "vmin": "np.min", "vmax": "np.max", "prod": "np.prod",
-        }
+    }
 
     builtins = {"time": "time"
                 }
 
     builders = {
         "integ": lambda expr, init: builder.add_stock(element['py_name'], element['subs'],
-                                                              expr, init),
+                                                      expr, init),
         "delay1": lambda in_var, dtime: builder.add_n_delay(in_var, dtime, '0', '1'),
         "delay1i": lambda in_var, dtime, init: builder.add_n_delay(in_var, dtime, init, '1'),
         # continue this pattern with the other delay functions and smooth functions
     }
 
     in_ops = {
-        "+": "+", "-": "-", "*": "*", "/": "/",  "^": "**", "=": "==", "<=": "<=", "<>": "!=",
-        "<": "<",">=": ">=", ">": ">", ":and:": "and", ":or:": "or"}  # Todo: make the semicolon into a [1,2],[3,4] type of array
+        "+": "+", "-": "-", "*": "*", "/": "/", "^": "**", "=": "==", "<=": "<=", "<>": "!=",
+        "<": "<", ">=": ">=", ">": ">", ":and:": "and",
+        ":or:": "or"}  # Todo: make the semicolon into a [1,2],[3,4] type of array
 
-    pre_ops ={
-        "-": "-", ":not:": "not", "+": " ",  # space is important, so that and empty string doesn't slip through generic
-        }
+    pre_ops = {
+        "-": "-", ":not:": "not", "+": " ",
+    # space is important, so that and empty string doesn't slip through generic
+    }
 
     sub_names_list = subscript_dict.keys() or ['\\a']  # if none, use non-printable character
     sub_elems_list = [y for x in subscript_dict.values() for y in x] or ['\\a']
@@ -539,27 +516,23 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
 
         def visit_id(self, n, vc):
             self.kind = 'component'
-            return namespace[n.text]+'()'
+            return namespace[n.text] + '()'
 
         def visit_builtin(self, n, vc):
-            return builtins[n.text.lower()]+'()'
+            return builtins[n.text.lower()] + '()'
 
         def visit_array(self, n, vc):
-            text = n.text.strip(';').replace(' ','')  # remove trailing semi if exists
+            text = n.text.strip(';').replace(' ', '')  # remove trailing semi if exists
             if ';' in text:
-                return '['+text.replace(';', '],[')+']'
+                return '[' + text.replace(';', '],[') + ']'
             else:
                 return text
 
         def visit_subscript_list(self, n, (lb, _1, refs, rb)):
-            coordinates = {}
             subs = [x.strip() for x in refs.split(',')]
-            for sub in subs:
-                if sub in sub_elems_list:
-                    name = find_subscript_name(subscript_dict, sub)
-                    coordinates[name] = [sub]
+            coordinates = builder.make_coord_dict(subs, subscript_dict)
             if len(coordinates):
-                return '.loc[%s]'%repr(coordinates)
+                return '.loc[%s]' % repr(coordinates)
             else:
                 return ' '
 
@@ -576,113 +549,13 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
     parse_object = ExpressionParser(tree)
 
     return ({'py_expr': parse_object.translation,
-            'kind': parse_object.kind},
+             'kind': parse_object.kind},
             parse_object.new_structure)
 
 
 def parse_lookup_expression():
     pass
 
-
-def make_docstring(doc, unit, eqn):
-    """
-    Formats information to display in the python function's docstring
-
-    Parameters
-    ----------
-    doc
-    unit
-    eqn
-
-    Returns
-    -------
-
-    """
-    return doc + '\n' + eqn + '\n' + unit
-
-
-def build_model():
-    """
-    Take the various components that we have extracted/assembled, and call the
-    builder
-
-    There should be a
-
-
-
-    Returns
-    -------
-
-    """
-    pass
-
-
-def merge_partial_elements(element_list):
-    """
-    merges model elements which collectively all define the model component,
-    mostly for multidimensional subscripts
-
-
-    Parameters
-    ----------
-    element_list
-
-    Returns
-    -------
-    """
-    outs = dict()  # output data structure
-    for element in element_list:
-        name = element['py_name']
-        if name not in outs:
-            outs[name] = {
-                'py_name': element['py_name'],
-                'real_name': element['real_name'],
-                'doc': element['doc'],
-                'py_expr': [element['py_expr']],  # in a list
-                'unit': element['unit'],
-                'subs': [element['subs']],
-                'kind': element['kind']
-            }
-
-        else:
-            outs[name]['doc'] = outs[name]['doc'] or element['doc']
-            outs[name]['unit'] = outs[name]['unit'] or element['unit']
-            outs[name]['py_expr'] += [element['py_expr']]
-            outs[name]['subs'] += [element['subs']]
-
-    return outs.values()
-
-def build_function_string(element, subscript_dict):
-    """
-
-    Parameters
-    ----------
-    element
-    namespace
-    subscript_dict
-
-    Returns
-    -------
-
-    """
-
-
-def identify_subranges(subscript_dict):
-    """
-
-    Parameters
-    ----------
-    subscript_dict
-
-    Returns
-    -------
-
-    Examples
-    --------
-    >>> identify_subranges({'Dim1': ['A', 'B', 'C', 'D', 'E', 'F'],
-    ...                     'Range1': ['C', 'D', 'E']})
-    {'Range1': ('Dim1', ['C', 'D', 'E'])}, {'Dim1'
-    """
 
 def translate_vensim(mdl_file):
     """
@@ -699,7 +572,7 @@ def translate_vensim(mdl_file):
     --------
     #>>> translate_vensim('../../tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl')
 
-    >>> translate_vensim('../../tests/test-models/tests/abs/test_abs.mdl')
+    #>>> translate_vensim('../../tests/test-models/tests/abs/test_abs.mdl')
 
     #>>> translate_vensim('../../tests/test-models/tests/exponentiation/exponentiation.mdl')
 
@@ -707,7 +580,7 @@ def translate_vensim(mdl_file):
 
     """
     with open(mdl_file, 'rU') as file:
-            text = file.read()
+        text = file.read()
 
     # extract model elements
     model_elements = []
@@ -715,11 +588,10 @@ def translate_vensim(mdl_file):
     for section in file_sections:
         if section['name'] == 'main':
             model_elements += get_model_elements(section['string'])
-        # for now, ignoring macros
+            # for now, ignoring macros
 
     # extract equation components
-    map(lambda e: e.update(get_equation_components(e['eqn'])),
-        model_elements)
+    map(lambda e: e.update(get_equation_components(e['eqn'])), model_elements)
 
     # make python identifiers and track for namespace conflicts
     namespace = {}
@@ -732,46 +604,26 @@ def translate_vensim(mdl_file):
     # as these aren't used to create actual python functions, but are just labels on arrays,
     # they don't actually need to be python-safe
     subscript_dict = {e['real_name']: e['subs'] for e in model_elements if e['kind'] == 'subdef'}
-    # need to be able to identify that subranges ARE subranges...
-    subranges_dict = {}
 
+    # Todo: work out what to do with subranges
     # Todo: parse units string
+    # Todo: deal with lookup elements
+    # Todo: deal with model level documentation
 
+    # Parse components to python syntax.
     for element in model_elements:
-        if element['kind'] == 'lookup':
-            pass
-
-
-    # Todo: translate general expressions to python syntax
-    for element in model_elements:
-        if element['kind'] == 'component':
+        if element['kind'] == 'component' and not 'py_expr' in element:
             translation, new_structure = parse_general_expression(element,
-                                                   namespace=namespace,
-                                                   subscript_dict=subscript_dict,
-                                                   )
+                                                                  namespace=namespace,
+                                                                  subscript_dict=subscript_dict,
+                                                                  )
             element.update(translation)
             model_elements += new_structure
 
+    # define outfile name
+    outfile_name = mdl_file.replace('.mdl', '.py')
 
-    model_groups = merge_partial_elements([e for e in model_elements if e['kind'] != 'subdef'])
-
-    # Todo: Combine elements that share the same name
-    # this is generally when functions or constants are defined in chunks,
-    # such as for subscripts with more than 2 dimensions,
-    # or for subscripted functions.
-
-    # Todo: send pieces to the builder class
-
-    print model_elements
-
-"""
-Elements Dictionary:
-doc
-eqn
-expr
-kind
-py_name
-real_name
-subs
-unit
-"""
+    # send the pieces to be built
+    builder.build([e for e in model_elements if e['kind'] != 'subdef'],
+                  subscript_dict,
+                  outfile_name)
