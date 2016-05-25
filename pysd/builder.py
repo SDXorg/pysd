@@ -34,41 +34,60 @@ import textwrap
 import autopep8
 import re
 import keyword
-from templates import templates
-import numpy as np
+from functools import wraps
+import imp, os.path
+
+def cache(horizon):
+    """
+    Put a wrapper around a model function
+
+    Decorators with parameters are tricky,
+    Parameters
+    ----------
+
+    horizon: string
+        - 'step' means cache just until the next timestep
+        - 'run' means cache until the next initialization of the model
 
 
-#
-#
-# class Builder(object):
-#     def __init__(self, outfile_name, dictofsubs={}):
-#         """ The builder class
-#
-#         Parameters
-#         ----------
-#         outfilename: <string> valid python filename
-#             including '.py'
-#
-#         dictofsubs: dictionary
-#             # Todo: rewrite this once we settle on a schema
-#
-#         """
-#         # Todo: check that the no-subscript value of dictofsubs is an empty dictionary.
-#         self.filename = outfile_name
-#         self.stocklist = []
-#         self.preamble = []
-#         self.body = []
-#         self.dictofsubs = dictofsubs
-#         self.preamble.append(templates['new file'].substitute())
-#
-#         if dictofsubs:
-#             self.preamble.append(templates['subscript_dict'].substitute(dictofsubs=dictofsubs.__repr__()))
-#
-#     def write(self):
-#         """ Writes out the model file """
-#         with open(self.filename, 'w') as outfile:
-#             [outfile.write(element) for element in self.preamble]
-#             [outfile.write(element) for element in self.body]
+
+    Returns
+    -------
+    new_func : function wrapping the original function, handling caching
+    """
+    def cache_step(func):
+        @wraps(func)
+        def cached(*args):
+            """Stepwise cache function"""
+            try:
+                assert cached.t == _t  # fails if cache is out of date or not instantiated
+            except:
+                cached.cache = func(*args)
+                cached.t = _t
+            return cached.cache
+        return cached
+
+    def cache_run(func):
+        @wraps(func)
+        def cached(*args):
+            """Stepwise cache function"""
+            try:
+                return cached.cache  # fails if cache is not instantiated
+            except:
+                cached.cache = func(*args)
+                return cached.cache
+        return cached
+
+    if horizon == 'step':
+        return cache_step
+
+    elif horizon == 'run':
+        return cache_run
+
+    else:
+        raise(AttributeError('Bad horizon for cache decorator'))
+
+
 
 def create_base_array(subs_list, subscript_dict):
     """
@@ -110,7 +129,7 @@ def create_base_array(subs_list, subscript_dict):
                     if sub not in coords[name]:
                         coords[name] += [sub]
 
-    return "xr.DataArray(data=np.empty(%(shape)s)*NaN, coords=%(coords)s)" % {
+    return "xr.DataArray(data=np.empty(%(shape)s)*np.NaN, coords=%(coords)s)" % {
         'shape': repr(map(len, coords.values())),
         'coords': repr(coords)
     }
@@ -141,7 +160,7 @@ def build_element(element, subscript_dict):
         contents = "ret = %s\n" % create_base_array(element['subs'], subscript_dict)
 
         for sub, expr in zip(element['subs'], element['py_expr']):
-            contents += 'ret.iloc[%(coord_dict)s] = %(expr)s\n' % {
+            contents += 'ret.loc[%(coord_dict)s] = %(expr)s\n' % {
                 'coord_dict': repr(make_coord_dict(sub, subscript_dict)),
                 'expr': expr}
 
@@ -170,6 +189,22 @@ def build_element(element, subscript_dict):
         ''' % element
     return func
 
+# def add_ddt_element(elements):
+#     """
+#     Identifies the derivative functions and creates a single function to take the derivative
+#     Parameters
+#     ----------
+#     elements
+#
+#     Returns
+#     -------
+#     >>> add_ddt_element([{'py_name':'_dme_dt'}, {'py_name':'_dyou_dt'}, {'py_name':'them'}])
+#     """
+#     dfuncs = []
+#     for element in elements:
+#         if element['py_name'].startswith('_d') and element['py_name'].endswith('_dt'):
+#             dfuncs.append(element['py_name'])
+#     print dfuncs
 
 def build(elements, subscript_dict, outfile_name):
     """
@@ -195,9 +230,10 @@ def build(elements, subscript_dict, outfile_name):
 
     text = """
     from __future__ import division
-    import pysd.functions
+    import numpy as np
     %(imports)s
     from pysd.builder import cache
+    from pysd import functions
 
     subscript_dict = %(subscript_dict)s
 
@@ -375,128 +411,6 @@ def merge_partial_elements(element_list):
             outs[name]['subs'] += [element['subs']]
 
     return outs.values()
-
-    # create the stock
-
-    #
-    #
-    #
-    # def add_stock(self, identifier, sub, expression, initial_condition):
-    #     """Adds a stock to the python model file based upon the interpreted expressions
-    #     for the initial condition.
-    #
-    #     Parameters
-    #     ----------
-    #     identifier: <string> valid python identifier
-    #         Our translators are responsible for translating the model identifiers into
-    #         something that python can use as a function name.
-    #
-    #     expression: <string>
-    #         This contains reference to all of the flows that
-    #
-    #     initial_condition: <string>
-    #         An expression that defines the value that the stock should take on when the model
-    #         is initialized. This may be a constant, or a call to other model elements.
-    #
-    #     sub : basestring
-    #         unlike in flaux where it's a list of strings. Because for now, a stock
-    #         is only declared once.
-    #     """
-    #
-    #     # todo: consider the case where different flows work over different subscripts
-    #     # todo: properly handle subscripts here
-    #     # todo: build a test case to test the above
-    #     # todo: force the sub parameter to be a list
-    #     # todo: handle docstrings
-    #     initial_condition = initial_condition.replace('\n','').replace('\t','').replace('[@@@]','')  # Todo:pull out
-    #     if sub:
-    #         if isinstance(sub, basestring): sub = [sub]  # Todo: rework
-    #         directory, size = get_array_info(sub, self.dictofsubs)
-    #         if re.search(';',initial_condition):  # format arrays for numpy
-    #             initial_condition = 'np.'+ np.array(np.mat(initial_condition.strip(';'))).__repr__()
-    #
-    #         # todo: I don't like the fact that the array is applied even when it isnt needed
-    #         initial_condition += '*np.ones((%s))'%(','.join(map(str,size)))
-    #
-    #     funcstr = templates['stock'].substitute(identifier=identifier,
-    #                                             expression=expression.replace('[@@@]',''),
-    #                                             initial_condition=initial_condition)
-    #
-    #     if sub:  # this is super bad coding practice, should change it.
-    #         funcstr += '%s.dimension_dir = '%identifier+directory.__repr__()+'\n'
-    #
-    #     self.body.append(funcstr)
-    #     self.stocklist.append(identifier)
-    #
-    # def add_flaux(self, identifier, sub, expression, doc=''):
-    #     """Adds a flow or auxiliary element to the model.
-    #
-    #     Parameters
-    #     ----------
-    #     identifier: <string> valid python identifier
-    #         Our translators are responsible for translating the model identifiers into
-    #         something that python can use as a function name.
-    #
-    #     expression: list of strings
-    #         Each element in the array is the equation that will be evaluated to fill
-    #         the return array at the coordinates listed at corresponding locations
-    #         in the `sub` dictionary
-    #
-    #     sub: list of strings
-    #         List of strings of subscript indices that correspond to the
-    #         list of expressions, and collectively define the shape of the output
-    #         ['a1,pears', 'a2,pears']
-    #
-    #     doc: <string>
-    #         The documentation string of the model
-    #
-    #     Returns
-    #     -------
-    #     identifier: <string>
-    #         The name of the constructed function
-    #
-    #     Example
-    #     -------
-    #     assume we have some subscripts
-    #         apples = [a1, a2, a3]
-    #         pears = [p1, p2, p3]
-    #
-    #     now sub list a list:
-    #     sub = ['a1,pears', 'a2,pears']
-    #     """
-    #     # todo: why does the no-sub condition give [''] as the argument?
-    #     # todo: evaluate if we should instead use syntax [['a1','pears'],['a2','pears']]
-    #     # todo: build a test case to test
-    #     # todo: clean up this function
-    #     # todo: add docstring handling
-    #
-    #     docstring = ''
-    #
-    #     if sub[0]!='': #todo: consider factoring this out if it is useful for the multiple flows
-    #         directory, size = get_array_info(sub, self.dictofsubs)
-    #
-    #         funcset = 'loc_dimension_dir = %s.dimension_dir \n'%identifier
-    #         funcset += '    output = np.ndarray((%s))\n'%','.join(map(str,size)) #lines which encode the expressions for partially defined subscript pieces
-    #         for expr, subi in zip(expression, sub):
-    #             expr = expr.replace('\n','').replace('\t','').strip()  # todo: pull out
-    #             indices = ','.join(map(str,getelempos(subi, self.dictofsubs)))
-    #             if re.search(';',expr):  # if 2d array, format for numpy
-    #                 expr = 'np.'+np.array(np.mat(expr.strip(';'))).__repr__()
-    #             funcset += '    output[%s] = %s\n'%(indices, expr.replace('[@@@]','[%s]'%indices))
-    #     else:
-    #         funcset = 'loc_dimension_dir = 0 \n'
-    #         funcset += '    output = %s\n'%expression[0]
-    #
-    #
-    #     funcstr = templates['flaux'].substitute(identifier=identifier,
-    #                                             expression=funcset,
-    #                                             docstring=docstring)
-    #
-    #     if sub[0] != '':  # todo: make less brittle
-    #         funcstr += '%s.dimension_dir = '%identifier+directory.__repr__()+'\n'
-    #     self.body.append(funcstr)
-    #
-    #     return identifier
 
 
 #     def add_lookup(self, identifier, valid_range, sub, copair_list):
@@ -732,96 +646,6 @@ def merge_partial_elements(element_list):
 #
 # # these are module functions so that we can access them from other places
 #
-# def getelempos(element, dictofsubs):
-#     """
-#     Helps for accessing elements of an array: given the subscript element names,
-#     returns the numerical ranges that correspond
-#
-#
-#     Parameters
-#     ----------
-#     element
-#     dictofsubs
-#
-#     Returns
-#     -------
-#
-#
-#     """
-#     # Todo: Make this accessible to the end user
-#     #  The end user will get an unnamed array, and will want to have access to
-#     #  members by name.
-#
-#     position=[]
-#     elements=element.replace('!','').replace(' ', '').split(',')
-#     for element in elements:
-#         if element in dictofsubs.keys():
-#             if isinstance(dictofsubs[element],dict):
-#                 position.append(':')
-#             else:
-#                 position.append(sorted(dictofsubs[element][:-1]))
-#         else:
-#             for d in dictofsubs.itervalues():
-#                 try:
-#                     position.append(d[element])
-#                 except: pass
-#     return tuple(position)
-#
-#
-# def get_array_info(subs, dictofsubs):
-#     """
-#     Returns information needed to create and access members of the numpy array
-#     based upon the string names given to them in the model file.
-#
-#     Parameters
-#     ----------
-#     subs : Array of strings of subscripts
-#         These should be all of the subscript names that are needed to create the array
-#
-#     dictofsubs : dictionary
-#
-#     returns
-#     -------
-#     A dictionary of the dimensions associating their names with their numpy indices
-#     directory = {'dimension name 1':0, 'dimension name 2':1}
-#
-#     A list of the length of each dimension. Equivalently, the shape of the array:
-#     shape = [5,4]
-#     """
-#
-#     # subscript references here are lists of array 'coordinate' names
-#     if isinstance(subs,list):
-#         element=subs[0]
-#     else:
-#         element=subs
-#     # we collect the references used in each dimension as a set, so we can compare contents
-#     position=[]
-#     directory={}
-#     dirpos=0
-#     elements=element.replace('!','').replace(' ','').split(',')
-#     for element in elements:
-#         if element in dictofsubs.keys():
-#             if isinstance(dictofsubs[element],list):
-#                 dir,pos = (get_array_info(dictofsubs[element][-1],dictofsubs))
-#                 position.append(pos[0])
-#                 directory[dictofsubs[element][-1]]=dirpos
-#                 dirpos+=1
-#             else:
-#                 position.append(len(dictofsubs[element]))
-#                 directory[element]=dirpos
-#                 dirpos+=1
-#         else:
-#             for famname,value in dictofsubs.iteritems():
-#                 try:
-#                     (value[element])
-#                 except: pass
-#                 else:
-#                     position.append(len(value))
-#                     directory[famname]=dirpos
-#                     dirpos+=1
-#     return directory, position
-#
-#
 def dict_find(in_dict, value):
     """ Helper function for looking up directory keys by their values.
      This isn't robust to repeated values
@@ -1002,3 +826,16 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
     namespace[string] = s
 
     return s, namespace
+
+
+def import_file(filename):
+    (path, name) = os.path.split(filename)
+    (name, ext) = os.path.splitext(name)
+
+    fp, pathname, description = imp.find_module(name, [path])
+
+    try:
+        return imp.load_module(name, fp, pathname, description)
+    finally:
+        if fp:
+            fp.close()

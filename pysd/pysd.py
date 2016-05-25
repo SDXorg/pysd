@@ -21,6 +21,7 @@ import numpy as np
 import imp
 from math import fmod
 
+
 # Todo: add a logical way to run two or more models together, using the same integrator.
 # Todo: add the state dictionary to the model file, to give some functionality to it even without the pysd class
 # Todo: initialize the model on load by calling reset state
@@ -38,11 +39,11 @@ def read_xmile(xmile_file):
     --------
     >>> model = read_vensim('Teacup.xmile')
     """
-    from translators import translate_xmile
-    py_model_file = translate_xmile(xmile_file)
-    model = load(py_model_file)
-    model.__str__ = 'Import of ' + xmile_file
-    return model
+    #from translators import translate_xmile
+    #py_model_file = translate_xmile(xmile_file)
+    #model = load(py_model_file)
+    #model.__str__ = 'Import of ' + xmile_file
+    #return model
 
 
 def read_vensim(mdl_file):
@@ -55,12 +56,11 @@ def read_vensim(mdl_file):
 
     Examples
     --------
-    >>> model = read_vensim('Teacup.mdl')
+    >>> model = read_vensim('../tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl')
     """
-    from translators import translate_vensim
+    from vensim2py import translate_vensim
     py_model_file = translate_vensim(mdl_file)
     model = load(py_model_file)
-    model.__str__ = 'Import of ' + mdl_file
     return model
 
 
@@ -75,60 +75,24 @@ def load(py_model_file):
 
     Examples
     --------
-    >>> model = load('Teacup.py')
+    >>> model = load('../tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.py')
     """
-    # Todo: This whole function is a mess. Consider including parts in the `init` of the PySD class
     components = imp.load_source('modulename', py_model_file)
 
 
-    components._stocknames = [name[2:-3] for name in dir(components) if name.startswith('_') and name.endswith('_dt')]
-
     # pointers to the various derivative functions for each of the stocks
-    components._dfuncs = {name: getattr(components, '_d%s_dt'%name) for name in components._stocknames}
-    funcnames = filter(lambda x: not x.startswith('_'), dir(components))
-    components._funcs = {name: getattr(components, name) for name in funcnames}
+    components._dfuncs = {name: getattr(components, name) for name in dir(components)
+                          if name.startswith('_d') and name.endswith('_dt')}
 
-    # set up the caches
-    # Todo: make a robust way to tell that we're only caching the right things
-    # Todo: make caching optional?
-    nocache = (['_t', 'time_step', 'time', 'initial_time', 'final_time', 'division', 'functions',
-                'np', 'saveper', '_stocknames', '_state', '_funcs', '_dfuncs', '_subscript_dict'] +
-          ['_d%s_dt'%s for s in components._dfuncs.keys()] +  #these are only called once
-          ['_%s_init'%s for s in components._dfuncs.keys()] + #these are only called once
-          ['%s'%s for s in components._dfuncs.keys()]) #these are pass-throughs anyways
-    cache_list = filter(lambda x: not x.startswith('__') and x not in nocache, dir(components))
-    [setattr(components, name, cache(getattr(components, name), components)) for name in cache_list]
+    components._stocknames = [name.strip('_d').strip('_dt') for name in dir(components)
+                          if name.startswith('_d') and name.endswith('_dt')]
 
     model = PySD(components)
     model.reset_state()
-    model.__str__ = 'Import of ' + py_model_file
     return model
 
 
-def cache(func, components):
-    """
-    Put a wrapper around a model function
-    Parameters
-    ----------
-    func : function in the components module
 
-    components : the components module
-
-    Returns
-    -------
-    new_func : function wrapping the original function, handling caching
-    """
-    # Todo: add some error checking, that `func` is actually a function, etc.
-    # Todo: find a more appropriate place for this to live.
-    def new_func(*args):
-        try:
-            assert new_func.t == components._t  # fails if cache is out of date or not instantiated
-        except:
-            new_func.cache = func(*args)
-            new_func.t = components._t
-        return new_func.cache
-    new_func.func_dict = func.func_dict  # propagate attributes (like dim_dict) to the wrap function
-    return new_func
 
 
 class PySD(object):
@@ -283,7 +247,7 @@ class PySD(object):
             initialization_order = []
             for key in self.components._stocknames:
                 try:
-                    init_func = getattr(self.components, '_%s_init'%key)
+                    init_func = getattr(self.components, '_init_%s'%key)
                     self.components._state[key] = init_func()
                     making_progress = True
                     initialization_order.append(key)

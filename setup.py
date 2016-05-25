@@ -11,7 +11,7 @@ setup(
     version=__version__,
     author='James Houghton',
     author_email='james.p.houghton@gmail.com',
-    packages=['pysd', 'pysd.translators', 'pysd.functions', 'pysd.builder'],
+    packages=['pysd'],
     url='https://github.com/JamesPHoughton/pysd',
     license='LICENSE.txt',
     description='System Dynamics Modeling in Python',

@@ -1,5 +1,5 @@
-from unittest import TestCase
 import textwrap
+from unittest import TestCase
 
 
 class TestBuild(TestCase):

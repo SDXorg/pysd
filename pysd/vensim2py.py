@@ -10,7 +10,7 @@ Todo:
 
 import re
 import parsimonious
-from pysd import builder
+import builder
 
 
 def get_file_sections(file_str):
@@ -627,3 +627,5 @@ def translate_vensim(mdl_file):
     builder.build([e for e in model_elements if e['kind'] != 'subdef'],
                   subscript_dict,
                   outfile_name)
+
+    return outfile_name
