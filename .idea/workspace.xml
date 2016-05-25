@@ -5,30 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a7e5b169-cc30-45fb-a7f9-e8e84f9c05bd" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/pysd/vensim2py.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/test_read_vensim.py" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/MANIFEST" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/pysd/builder/__init__.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/pysd/builder/componentClass.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/pysd/builder/templates.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/pysd/functions/__init__.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/pysd/translators/XMILE2Py.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/pysd/translators/__init__.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/pysd/translators/vensim.grammar" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/pysd/translators/vensim2py.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/pysd/translators/vensim2py2.py" afterPath="" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/pysd/builder/builder.py" afterPath="$PROJECT_DIR$/pysd/builder.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/pysd/builder/test_build.py" afterPath="$PROJECT_DIR$/tests/test_build.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/pysd/functions/functions.py" afterPath="$PROJECT_DIR$/pysd/functions.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/pysd/translators/test_group_partial_elements.py" afterPath="$PROJECT_DIR$/tests/test_group_partial_elements.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/pysd/translators/test_parse_general_expression.py" afterPath="$PROJECT_DIR$/tests/test_parse_general_expression.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/conf.py" afterPath="$PROJECT_DIR$/docs/conf.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/__init__.py" afterPath="$PROJECT_DIR$/pysd/__init__.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/_version.py" afterPath="$PROJECT_DIR$/pysd/_version.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/builder.py" afterPath="$PROJECT_DIR$/pysd/builder.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/pysd.py" afterPath="$PROJECT_DIR$/pysd/pysd.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/sandbox.ipynb" afterPath="$PROJECT_DIR$/sandbox.ipynb" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/setup.py" afterPath="$PROJECT_DIR$/setup.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test_read_vensim.py" afterPath="$PROJECT_DIR$/tests/test_read_vensim.py" />
     </list>
     <ignored path="pysd.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -53,7 +32,7 @@
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestBuild_test_build.coverage" NAME="Unittest TestBuild.test_build Coverage Results" MODIFIED="1464197758368" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pysd/builder" />
     <SUITE FILE_PATH="coverage/pysd$Doctest_read_vensim.coverage" NAME="Doctest read_vensim Coverage Results" MODIFIED="1464205609533" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pysd" />
     <SUITE FILE_PATH="coverage/pysd$Doctest_load.coverage" NAME="Doctest load Coverage Results" MODIFIED="1464208403962" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pysd" />
-    <SUITE FILE_PATH="coverage/pysd$Unittest_TestRead_vensim_test_read_vensim.coverage" NAME="Unittest TestRead_vensim.test_read_vensim Coverage Results" MODIFIED="1464210989831" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/pysd$Unittest_TestRead_vensim_test_read_vensim.coverage" NAME="Unittest TestRead_vensim.test_read_vensim Coverage Results" MODIFIED="1464211783658" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittests_in_TestMergePartialElements.coverage" NAME="Unittests in TestMergePartialElements Coverage Results" MODIFIED="1464125273209" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pysd/translators" />
   </component>
   <component name="CreatePatchCommitExecutor">
@@ -64,14 +43,14 @@
     <favorites_list name="pysd" />
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.5">
+    <splitter split-orientation="horizontal" split-proportion="0.5247836">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
           <file leaf-file-name="vensim2py.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/pysd/vensim2py.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="583">
-                  <caret line="620" column="22" selection-start-line="620" selection-start-column="22" selection-end-line="620" selection-end-column="22" />
+                <state relative-caret-position="238">
+                  <caret line="574" column="73" selection-start-line="574" selection-start-column="33" selection-end-line="574" selection-end-column="73" />
                   <folding>
                     <element signature="e#102#111#0" expanded="true" />
                     <marker date="1464203411000" expanded="true" signature="8953:9030" placeholder="'''...'''" />
@@ -98,19 +77,19 @@
           <file leaf-file-name="builder.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/pysd/builder.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="403">
-                  <caret line="840" column="22" selection-start-line="840" selection-start-column="22" selection-end-line="840" selection-end-column="22" />
+                <state relative-caret-position="199">
+                  <caret line="66" column="0" selection-start-line="66" selection-start-column="0" selection-end-line="66" selection-end-column="0" />
                   <folding>
                     <element signature="e#1634#1649#0" expanded="true" />
-                    <marker date="1464209799000" expanded="true" signature="3410:3491" placeholder="..." />
-                    <marker date="1464209799000" expanded="true" signature="7821:7914" placeholder="..." />
-                    <marker date="1464209799000" expanded="true" signature="10400:10531" placeholder="..." />
+                    <marker date="1464211422000" expanded="true" signature="3431:3512" placeholder="..." />
+                    <marker date="1464211422000" expanded="true" signature="7842:7935" placeholder="..." />
+                    <marker date="1464211422000" expanded="true" signature="10421:10552" placeholder="..." />
                   </folding>
                 </state>
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="test_subscript_3d_arrays.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="test_subscript_3d_arrays.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.py">
               <provider selected="true" editor-type-id="text-editor">
                 <state relative-caret-position="358">
@@ -122,11 +101,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="test_read_vensim.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="test_read_vensim.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/tests/test_read_vensim.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="60">
-                  <caret line="4" column="16" selection-start-line="4" selection-start-column="16" selection-end-line="4" selection-end-column="16" />
+                <state relative-caret-position="210">
+                  <caret line="14" column="14" selection-start-line="14" selection-start-column="14" selection-end-line="14" selection-end-column="14" />
                   <folding />
                 </state>
               </provider>
@@ -159,8 +138,8 @@
           <file leaf-file-name="pysd.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/pysd/pysd.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="-242">
-                  <caret line="249" column="66" selection-start-line="249" selection-start-column="66" selection-end-line="249" selection-end-column="66" />
+                <state relative-caret-position="2308">
+                  <caret line="155" column="0" selection-start-line="155" selection-start-column="0" selection-end-line="155" selection-end-column="0" />
                   <folding>
                     <element signature="e#390#410#0" expanded="true" />
                   </folding>
@@ -196,7 +175,7 @@
       </list>
     </option>
     <option name="ROOT_SYNC" value="DONT_SYNC" />
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/tests/test-models" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
         <entry key="$PROJECT_DIR$" value="subscript-parsimonious" />
@@ -229,9 +208,9 @@
         <option value="$PROJECT_DIR$/pysd/_version.py" />
         <option value="$PROJECT_DIR$/pysd/__init__.py" />
         <option value="$PROJECT_DIR$/setup.py" />
-        <option value="$PROJECT_DIR$/tests/test_read_vensim.py" />
-        <option value="$PROJECT_DIR$/pysd/builder.py" />
         <option value="$PROJECT_DIR$/tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.py" />
+        <option value="$PROJECT_DIR$/pysd/builder.py" />
+        <option value="$PROJECT_DIR$/tests/test_read_vensim.py" />
         <option value="$PROJECT_DIR$/pysd/pysd.py" />
       </list>
     </option>
@@ -827,27 +806,6 @@
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="Doctest_load - 2016.05.25 at 16h 33m 26s.xml">
-      <configuration name="Doctest load" configurationId="tests" />
-    </history-entry>
-    <history-entry file="Unittest_TestRead_vensim_test_read_vensim - 2016.05.25 at 16h 34m 40s.xml">
-      <configuration name="Unittest TestRead_vensim.test_read_vensim" configurationId="tests" />
-    </history-entry>
-    <history-entry file="Unittest_TestRead_vensim_test_read_vensim - 2016.05.25 at 16h 35m 07s.xml">
-      <configuration name="Unittest TestRead_vensim.test_read_vensim" configurationId="tests" />
-    </history-entry>
-    <history-entry file="Unittest_TestRead_vensim_test_read_vensim - 2016.05.25 at 16h 45m 14s.xml">
-      <configuration name="Unittest TestRead_vensim.test_read_vensim" configurationId="tests" />
-    </history-entry>
-    <history-entry file="Unittest_TestRead_vensim_test_read_vensim - 2016.05.25 at 16h 45m 48s.xml">
-      <configuration name="Unittest TestRead_vensim.test_read_vensim" configurationId="tests" />
-    </history-entry>
-    <history-entry file="Unittest_TestRead_vensim_test_read_vensim - 2016.05.25 at 16h 57m 03s.xml">
-      <configuration name="Unittest TestRead_vensim.test_read_vensim" configurationId="tests" />
-    </history-entry>
-    <history-entry file="Unittest_TestRead_vensim_test_read_vensim - 2016.05.25 at 17h 07m 55s.xml">
-      <configuration name="Unittest TestRead_vensim.test_read_vensim" configurationId="tests" />
-    </history-entry>
     <history-entry file="Unittest_TestRead_vensim_test_read_vensim - 2016.05.25 at 17h 11m 28s.xml">
       <configuration name="Unittest TestRead_vensim.test_read_vensim" configurationId="tests" />
     </history-entry>
@@ -855,6 +813,27 @@
       <configuration name="Unittest TestRead_vensim.test_read_vensim" configurationId="tests" />
     </history-entry>
     <history-entry file="Unittest_TestRead_vensim_test_read_vensim - 2016.05.25 at 17h 16m 37s.xml">
+      <configuration name="Unittest TestRead_vensim.test_read_vensim" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittest_TestRead_vensim_test_read_vensim - 2016.05.25 at 17h 18m 43s.xml">
+      <configuration name="Unittest TestRead_vensim.test_read_vensim" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittest_TestRead_vensim_test_read_vensim - 2016.05.25 at 17h 19m 32s.xml">
+      <configuration name="Unittest TestRead_vensim.test_read_vensim" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittest_TestRead_vensim_test_read_vensim - 2016.05.25 at 17h 19m 55s.xml">
+      <configuration name="Unittest TestRead_vensim.test_read_vensim" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittest_TestRead_vensim_test_read_vensim - 2016.05.25 at 17h 24m 09s.xml">
+      <configuration name="Unittest TestRead_vensim.test_read_vensim" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittest_TestRead_vensim_test_read_vensim - 2016.05.25 at 17h 27m 28s.xml">
+      <configuration name="Unittest TestRead_vensim.test_read_vensim" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittest_TestRead_vensim_test_read_vensim - 2016.05.25 at 17h 29m 24s.xml">
+      <configuration name="Unittest TestRead_vensim.test_read_vensim" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Unittest_TestRead_vensim_test_read_vensim - 2016.05.25 at 17h 29m 49s.xml">
       <configuration name="Unittest TestRead_vensim.test_read_vensim" configurationId="tests" />
     </history-entry>
   </component>
@@ -959,7 +938,7 @@
           <properties exception="BaseException" />
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="168" />
+      <option name="time" value="171" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="tests">
@@ -1312,18 +1291,18 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tests/test_read_vensim.py">
+    <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/_pydev_bundle/pydev_monkey_qt.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="60">
-          <caret line="4" column="16" selection-start-line="4" selection-start-column="16" selection-end-line="4" selection-end-column="16" />
+        <state relative-caret-position="1050">
+          <caret line="70" column="0" selection-start-line="70" selection-start-column="0" selection-end-line="70" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/pysd/vensim2py.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="583">
-          <caret line="620" column="22" selection-start-line="620" selection-start-column="22" selection-end-line="620" selection-end-column="22" />
+        <state relative-caret-position="238">
+          <caret line="574" column="73" selection-start-line="574" selection-start-column="33" selection-end-line="574" selection-end-column="73" />
           <folding>
             <element signature="e#102#111#0" expanded="true" />
             <marker date="1464203411000" expanded="true" signature="8953:9030" placeholder="'''...'''" />
@@ -1334,43 +1313,43 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pysd/builder.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="403">
-          <caret line="840" column="22" selection-start-line="840" selection-start-column="22" selection-end-line="840" selection-end-column="22" />
-          <folding>
-            <element signature="e#1634#1649#0" expanded="true" />
-            <marker date="1464209799000" expanded="true" signature="3410:3491" placeholder="..." />
-            <marker date="1464209799000" expanded="true" signature="7821:7914" placeholder="..." />
-            <marker date="1464209799000" expanded="true" signature="10400:10531" placeholder="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/_pydev_bundle/pydev_monkey_qt.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1050">
-          <caret line="70" column="0" selection-start-line="70" selection-start-column="0" selection-end-line="70" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pysd/pysd.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-242">
-          <caret line="249" column="66" selection-start-line="249" selection-start-column="66" selection-end-line="249" selection-end-column="66" />
-          <folding>
-            <element signature="e#390#410#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="358">
           <caret line="49" column="7" selection-start-line="49" selection-start-column="7" selection-end-line="49" selection-end-column="7" />
           <folding>
             <element signature="e#1#32#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pysd/builder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="199">
+          <caret line="66" column="0" selection-start-line="66" selection-start-column="0" selection-end-line="66" selection-end-column="0" />
+          <folding>
+            <element signature="e#1634#1649#0" expanded="true" />
+            <marker date="1464211422000" expanded="true" signature="3431:3512" placeholder="..." />
+            <marker date="1464211422000" expanded="true" signature="7842:7935" placeholder="..." />
+            <marker date="1464211422000" expanded="true" signature="10421:10552" placeholder="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/test_read_vensim.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="210">
+          <caret line="14" column="14" selection-start-line="14" selection-start-column="14" selection-end-line="14" selection-end-column="14" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pysd/pysd.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2308">
+          <caret line="155" column="0" selection-start-line="155" selection-start-column="0" selection-end-line="155" selection-end-column="0" />
+          <folding>
+            <element signature="e#390#410#0" expanded="true" />
           </folding>
         </state>
       </provider>

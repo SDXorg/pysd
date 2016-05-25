@@ -63,7 +63,7 @@ def cache(horizon):
                 assert cached.t == _t  # fails if cache is out of date or not instantiated
             except:
                 cached.cache = func(*args)
-                cached.t = _t
+                cached.t = func.func_globals['_t']
             return cached.cache
         return cached
 

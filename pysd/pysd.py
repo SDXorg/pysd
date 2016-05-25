@@ -24,7 +24,6 @@ from math import fmod
 
 # Todo: add a logical way to run two or more models together, using the same integrator.
 # Todo: add the state dictionary to the model file, to give some functionality to it even without the pysd class
-# Todo: initialize the model on load by calling reset state
 # Todo: seems to be some issue with multiple imports - need to create a new instance...
 
 def read_xmile(xmile_file):
@@ -79,13 +78,15 @@ def load(py_model_file):
     """
     components = imp.load_source('modulename', py_model_file)
 
+    components._stocknames = [name.strip('_d').strip('_dt') for name in dir(components)
+                              if name.startswith('_d') and name.endswith('_dt')]
 
     # pointers to the various derivative functions for each of the stocks
-    components._dfuncs = {name: getattr(components, name) for name in dir(components)
-                          if name.startswith('_d') and name.endswith('_dt')}
+    components._dfuncs = {name: getattr(components, '_d%s_dt' % name)
+                          for name in components._stocknames}
 
-    components._stocknames = [name.strip('_d').strip('_dt') for name in dir(components)
-                          if name.startswith('_d') and name.endswith('_dt')]
+    funcnames = filter(lambda x: not x.startswith('_'), dir(components))
+    components._funcs = {name: getattr(components, name) for name in funcnames}
 
     model = PySD(components)
     model.reset_state()
@@ -399,10 +400,7 @@ class PySD(object):
              after those values have been updated with one euler step
         """
         return {key: dfunc()*dt + state[key] for key, dfunc in ddt.iteritems()}
-        #outdict = {}
-        #for key in ddt:
-        #    outdict[key] = ddt[key]()*dt + state[key]
-        #return outdict
+
 
     def _integrate(self, ddt, timesteps, return_elements):
         """
