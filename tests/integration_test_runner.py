@@ -10,9 +10,10 @@ def runner(model_file):
     # load model
     if model_file.endswith('.mdl'):
         model = pysd.read_vensim(model_file)
-
-    elif model_file.endswith("xmile"):
+    elif model_file.endswith(".xmile"):
         model = pysd.read_xmile(model_file)
+    else:
+        raise AttributeError('Modelifle should be *.mdl or *.xmile')
 
     # load canonical output
     try:
@@ -47,16 +48,16 @@ def assertFramesClose(actual, expected, **kwargs):
 
     Examples
     --------
-    >>> assert_frames_close(pd.DataFrame(100, index=range(5), columns=range(3)),
-    ...                     pd.DataFrame(100, index=range(5), columns=range(3)))
+    >>> assertFramesClose(pd.DataFrame(100, index=range(5), columns=range(3)),
+    ...                   pd.DataFrame(100, index=range(5), columns=range(3)))
 
-    >>> assert_frames_close(pd.DataFrame(100, index=range(5), columns=range(3)),
-    ...                     pd.DataFrame(110, index=range(5), columns=range(3)),
-    ...                     rtol=.2)
+    >>> assertFramesClose(pd.DataFrame(100, index=range(5), columns=range(3)),
+    ...                   pd.DataFrame(110, index=range(5), columns=range(3)),
+    ...                   rtol=.2)
 
-    >>> assert_frames_close(pd.DataFrame(100, index=range(5), columns=range(3)),
-    ...                     pd.DataFrame(150, index=range(5), columns=range(3)),
-    ...                     rtol=.2)  # doctest: +IGNORE_EXCEPTION_DETAIL
+    >>> assertFramesClose(pd.DataFrame(100, index=range(5), columns=range(3)),
+    ...                   pd.DataFrame(150, index=range(5), columns=range(3)),
+    ...                   rtol=.2)  # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ...
     AssertionError:

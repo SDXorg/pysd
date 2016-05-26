@@ -80,7 +80,7 @@ def load(py_model_file):
     """
     components = imp.load_source('modulename', py_model_file)
 
-    components._stocknames = [name.strip('_d').strip('_dt') for name in dir(components)
+    components._stocknames = [name[2:-3] for name in dir(components)  # strip to just the name
                               if name.startswith('_d') and name.endswith('_dt')]
 
     # pointers to the various derivative functions for each of the stocks
@@ -113,7 +113,7 @@ class PySD(object):
         """ Return model source file """
         return self.components.__str__
 
-    def run(self, params={}, return_columns=[], return_timestamps=[],
+    def run(self, params=None, return_columns=None, return_timestamps=None,
             initial_condition='original', collect=False, flatten_subscripts=False):
         """ Simulate the model's behavior over time.
         Return a pandas dataframe with timestamps as rows,
@@ -172,6 +172,7 @@ class PySD(object):
         pysd.set_initial_condition : handles setting initial conditions
 
         """
+
         if params:
             self.set_components(params)
 
@@ -186,18 +187,11 @@ class PySD(object):
         if addtflag:
             tseries = np.insert(tseries, 0, self.components._t)
 
-        #if self.components._stocknames:
-        if not return_columns:
+        if return_columns is None:
             return_columns = self.components._stocknames
 
         res = self._integrate(self.components._dfuncs, tseries, return_columns)
         return_df = _pd.DataFrame(data=res, index=tseries)
-
-#        else:
-#            outdict = {}
-#            for key in return_columns:
-#                outdict[key] = self.components._funcs[key]()
-#            return_df = _pd.DataFrame(index=tseries, data=outdict)
 
         if flatten_subscripts:
             # Todo: short circuit this if there is nothing to flatten
@@ -296,6 +290,7 @@ class PySD(object):
             else:  # Todo: check here for valid value...
                 new_function = self._constant_component(value)
             setattr(self.components, key, new_function)
+            self.components._funcs[key] = new_function  # facilitates lookups
 
     def set_state(self, t, state):
         """ Set the system state.
@@ -351,14 +346,14 @@ class PySD(object):
         else:
             raise TypeError('Check documentation for valid entries')
 
-    def _build_timeseries(self, return_timestamps):
+    def _build_timeseries(self, return_timestamps=None):
         """ Build up array of timestamps
 
         """
 
         # Todo: rework this for the euler integrator, to be the dt series plus the return timestamps
         # Todo: maybe cache the result of this function?
-        if return_timestamps == []:
+        if not return_timestamps:
             # Vensim's standard is to expect that the data set includes the `final time`,
             # so we have to add an extra period to make sure we get that value in what
             # numpy's `arange` gives us.

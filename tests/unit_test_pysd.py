@@ -43,7 +43,7 @@ class TestPySD(TestCase):
         stocks = model.run(initial_condition='current', return_timestamps=range(31, 45))
         self.assertGreater(stocks['teacup_temperature'].loc[44], 0)
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             self.run(initial_condition='bad value')
 
     def test_set_constant_parameter(self):
@@ -140,7 +140,7 @@ class TestPySD(TestCase):
         self.fail()
 
 
-class TestMetaStuff(unittest.TestCase):
+class TestMetaStuff(TestCase):
     """ The tests in this class test pysd's interaction with itself
         and other modules. """
 
@@ -150,6 +150,7 @@ class TestMetaStuff(unittest.TestCase):
         happen if we arent careful about class attributes vs instance attributes"""
         # Todo: Make this a stricter test,
         #  perhaps by checking that the components do not share members they shouldn't
+        import pysd
 
         model_1 = pysd.read_vensim('tests/old_tests/vensim/Teacup.mdl')
         model_1.run()
@@ -158,16 +159,4 @@ class TestMetaStuff(unittest.TestCase):
         model_2.run()
 
         self.fail() # need to check that the second components dictionary does not just merge with the first
-
-
-
-class TestSubscriptSpecificFunctionality(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        model_file = 'tests/test-models/tests/subscript_aggregation/test_subscript_aggregation.mdl'
-        cls.model = pysd.read_vensim(model_file)
-
-    def test_flatten(self):
-        # todo: check that this actually produces the CORRECT result, not just A result.
-        self.model.run(flatten_subscripts=True)
 

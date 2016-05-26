@@ -15,7 +15,6 @@ import keyword
 from functools import wraps
 
 
-
 def build(elements, subscript_dict, namespace, outfile_name):
     """
     Takes in a list of model components
@@ -75,7 +74,7 @@ def build_element(element, subscript_dict):
     Returns a string that has processed a single element dictionary
     Parameters
     ----------
-    element: dict
+    element: dictionary
         dictionary containing at least the elements:
         - kind: ['constant', 'setup', 'component', 'lookup']
             Different types of elements will be built differently
@@ -85,20 +84,22 @@ def build_element(element, subscript_dict):
             Each sublist contains coordinates for initialization of a particular
             part of a subscripted function
 
-    subscript_dict: dict
+    subscript_dict: dictionary
 
     Returns
     -------
 
     """
     if element['kind'] == 'constant':
-        cache = "@cache('run')"
+        cache_type = "@cache('run')"
     elif element['kind'] == 'setup':
-        cache = ''
+        cache_type = ''
     elif element['kind'] == 'component':
-        cache = "@cache('step')"
+        cache_type = "@cache('step')"
     elif element['kind'] == 'macro':
-        cache = ''
+        cache_type = ''
+    else:
+        raise AttributeError("Bad value for 'kind'")
 
     if len(element['py_expr']) > 1:
         contents = "ret = %s\n" % create_base_array(element['subs'], subscript_dict)
@@ -113,7 +114,7 @@ def build_element(element, subscript_dict):
         contents = "return %s" % element['py_expr'][0]
 
     indent = 8
-    element.update({'cache': cache,
+    element.update({'cache': cache_type,
                     'ulines': '-' * len(element['real_name']),
                     'contents': contents.replace('\n',
                                                  '\n' + ' ' * indent)})  # indent lines 2 onward
@@ -198,6 +199,8 @@ def create_base_array(subs_list, subscript_dict):
     ----------
     subs_list
 
+    subscript_dict: dictionary
+
     Returns
     -------
     base_array: string
@@ -234,12 +237,6 @@ def create_base_array(subs_list, subscript_dict):
         'coords': repr(coords)
     }
 
-
-
-
-
-
-
 # def identify_subranges(subscript_dict):
 #     """
 #
@@ -257,6 +254,7 @@ def create_base_array(subs_list, subscript_dict):
 #     {'Range1': ('Dim1', ['C', 'D', 'E'])}, {'Dim1'
 #     """
 
+
 def add_stock(identifier, subs, expression, initial_condition):
     """
     Creates new model element dictionaries for the model elements associated
@@ -266,7 +264,7 @@ def add_stock(identifier, subs, expression, initial_condition):
     Parameters
     ----------
     identifier
-    sub
+    subs
     expression
     initial_condition
 
@@ -338,7 +336,7 @@ def make_coord_dict(subs, subscript_dict):
 def find_subscript_name(subscript_dict, element):
     """
     Given a subscript dictionary, and a member of a subscript family,
-    return the first key of which the
+    return the first key of which the member is within the value list
 
     Parameters
     ----------

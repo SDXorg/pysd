@@ -12,7 +12,24 @@ import re
 
 
 def ramp(slope, start, finish):
-    """ Implements vensim's RAMP function """
+    """
+    Implements vensim's RAMP function
+
+    Parameters
+    ----------
+    slope
+    start
+    finish
+
+    Returns
+    -------
+
+    Examples
+    --------
+
+
+    """
+
     t = time()
     if t < start:
         return 0
