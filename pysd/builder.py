@@ -1,79 +1,180 @@
 """builder.py
-Modified June 26 2015
+Refactored May 26 2016
 James Houghton
 james.p.houghton@gmail.com
 
-This module contains everything that is needed to construct a system dynamics model
-in python, using syntax that is compatible with the pysd model simulation functionality.
-
-These functions could be used to construct a system dynamics model from scratch, in a
-pinch. Due to the highly visual structure of system dynamics models, I still recommend
-using an external model construction tool such as vensim or stella/iThink to build and
-debug models.
 """
 
 # Todo: Add a __doc__ function that summarizes the docstrings of the whole model
 # Todo: Give the __doc__ function a 'short' and 'long' option
-# Todo: Modify static functions to reference their own function attribute
-# If we have a function that defines a constant value (or a big, constructed
-# numpy array) it may be better to have the array constructed once (outside of the
-# function, perhaps as an attribute) than to construct and return it every time
-# the function is called. (Of course, it may be that python detects this and does
-# it for us - we should find out)
-# Alternately, there may be a clever way to cache this so that we don't have to
-# change the model file.
-#
-
-# Todo: Template separation is getting a bit out of control. Perhaps bring it back in?
-# Todo: create a function that gets the subscript family name, given one of its elements
-# this should be robust to the possibility that different families contain the same
-# child, as would be the case with subranges. Probably means that we'll have to collect
-# all of the subelements and pass them together to get the family name.
 
 import textwrap
 import autopep8
 import re
 import keyword
 from functools import wraps
-import imp, os.path
+
+
+
+def build(elements, subscript_dict, namespace, outfile_name):
+    """
+    Takes in a list of model components
+
+    Parameters
+    ----------
+    elements: list
+
+    subscript_dict: dictionary
+
+    outfile_name: string
+
+    Returns
+    -------
+
+    """
+    elements = merge_partial_elements(elements)
+    functions = [build_element(element, subscript_dict) for element in elements]
+
+    imports = []
+    if subscript_dict:
+        imports += ['import xarray as xr']
+
+    text = """
+    from __future__ import division
+    import numpy as np
+    %(imports)s
+    from pysd.builder import cache
+    from pysd import functions
+
+    subscript_dict = %(subscript_dict)s
+
+    namespace = %(namespace)s
+
+    %(functions)s
+
+    """ % {'subscript_dict': repr(subscript_dict),
+           'functions': '\n'.join(functions),
+           'imports': '\n'.join(imports),
+           'namespace': repr(namespace)}
+
+    text = autopep8.fix_code(textwrap.dedent(text),
+                             options={'aggressive': 10,
+                                      'max_line_length': 99,
+                                      'experimental': True})
+
+    # this is used for testing
+    if outfile_name == 'return':
+        return text
+
+    with open(outfile_name, 'w') as out:
+        out.write(text)
+
+
+def build_element(element, subscript_dict):
+    """
+    Returns a string that has processed a single element dictionary
+    Parameters
+    ----------
+    element: dict
+        dictionary containing at least the elements:
+        - kind: ['constant', 'setup', 'component', 'lookup']
+            Different types of elements will be built differently
+        - py_expr: string
+            An expression that has been converted already into python syntax
+        - subs: list of lists
+            Each sublist contains coordinates for initialization of a particular
+            part of a subscripted function
+
+    subscript_dict: dict
+
+    Returns
+    -------
+
+    """
+    if element['kind'] == 'constant':
+        cache = "@cache('run')"
+    elif element['kind'] == 'setup':
+        cache = ''
+    elif element['kind'] == 'component':
+        cache = "@cache('step')"
+    elif element['kind'] == 'macro':
+        cache = ''
+
+    if len(element['py_expr']) > 1:
+        contents = "ret = %s\n" % create_base_array(element['subs'], subscript_dict)
+
+        for sub, expr in zip(element['subs'], element['py_expr']):
+            contents += 'ret.loc[%(coord_dict)s] = %(expr)s\n' % {
+                'coord_dict': repr(make_coord_dict(sub, subscript_dict)),
+                'expr': expr}
+
+        contents += "return ret"
+    else:
+        contents = "return %s" % element['py_expr'][0]
+
+    indent = 8
+    element.update({'cache': cache,
+                    'ulines': '-' * len(element['real_name']),
+                    'contents': contents.replace('\n',
+                                                 '\n' + ' ' * indent)})  # indent lines 2 onward
+
+    func = '''
+    %(cache)s
+    def %(py_name)s():
+        """
+        %(real_name)s
+        %(ulines)s
+        (%(py_name)s)
+        %(unit)s
+
+        %(doc)s
+        """
+        %(contents)s
+        ''' % element
+    return func
+
 
 def cache(horizon):
     """
     Put a wrapper around a model function
 
-    Decorators with parameters are tricky,
+    Decorators with parameters are tricky, you have to
+    essentially create a decorator that returns a decorator,
+    which itself then returns the function wrapper.
+
     Parameters
     ----------
-
     horizon: string
         - 'step' means cache just until the next timestep
         - 'run' means cache until the next initialization of the model
 
-
-
     Returns
     -------
-    new_func : function wrapping the original function, handling caching
+    new_func: decorated function
+        function wrapping the original function, handling caching
+
     """
     def cache_step(func):
+        """ Decorator for caching at a step level"""
         @wraps(func)
         def cached(*args):
-            """Stepwise cache function"""
-            try:
-                assert cached.t == _t  # fails if cache is out of date or not instantiated
-            except:
+            """Step wise cache function"""
+            try:  # fails if cache is out of date or not instantiated
+                assert cached.t == func.func_globals['_t']
+            except (AssertionError, AttributeError):
                 cached.cache = func(*args)
                 cached.t = func.func_globals['_t']
             return cached.cache
         return cached
 
     def cache_run(func):
+        """ Decorator for caching at  the run level"""
         @wraps(func)
         def cached(*args):
-            """Stepwise cache function"""
-            try:
-                return cached.cache  # fails if cache is not instantiated
-            except:
+            """Run wise cache function"""
+            try:  # fails if cache is not instantiated
+                return cached.cache
+            except AttributeError:
                 cached.cache = func(*args)
                 return cached.cache
         return cached
@@ -86,7 +187,6 @@ def cache(horizon):
 
     else:
         raise(AttributeError('Bad horizon for cache decorator'))
-
 
 
 def create_base_array(subs_list, subscript_dict):
@@ -135,143 +235,27 @@ def create_base_array(subs_list, subscript_dict):
     }
 
 
-def build_element(element, subscript_dict):
-    """
-    Returns a string that has processed a single element dictionary
-    Parameters
-    ----------
-    element
-    subscript_dict
 
-    Returns
-    -------
 
-    """
-    if element['kind'] == 'constant':
-        cache = "@cache('run')"
-    elif element['kind'] == 'setup':
-        cache = ''
-    elif element['kind'] == 'component':
-        cache = "@cache('step')"
-    elif element['kind'] == 'macro':
-        cache = ''
 
-    if len(element['py_expr']) > 1:
-        contents = "ret = %s\n" % create_base_array(element['subs'], subscript_dict)
 
-        for sub, expr in zip(element['subs'], element['py_expr']):
-            contents += 'ret.loc[%(coord_dict)s] = %(expr)s\n' % {
-                'coord_dict': repr(make_coord_dict(sub, subscript_dict)),
-                'expr': expr}
 
-        contents += "return ret"
-    else:
-        contents = "return %s" % element['py_expr'][0]
-
-    indent = 8
-    element.update({'cache': cache,
-                    'ulines': '-' * len(element['real_name']),
-                    'contents': contents.replace('\n',
-                                                 '\n' + ' ' * indent)})  # indent lines 2 onward
-
-    func = '''
-    %(cache)s
-    def %(py_name)s():
-        """
-        %(real_name)s
-        %(ulines)s
-        (%(py_name)s)
-        %(unit)s
-
-        %(doc)s
-        """
-        %(contents)s
-        ''' % element
-    return func
-
-# def add_ddt_element(elements):
+# def identify_subranges(subscript_dict):
 #     """
-#     Identifies the derivative functions and creates a single function to take the derivative
+#
 #     Parameters
 #     ----------
-#     elements
+#     subscript_dict
 #
 #     Returns
 #     -------
-#     >>> add_ddt_element([{'py_name':'_dme_dt'}, {'py_name':'_dyou_dt'}, {'py_name':'them'}])
+#
+#     Examples
+#     --------
+#     >>> identify_subranges({'Dim1': ['A', 'B', 'C', 'D', 'E', 'F'],
+#     ...                     'Range1': ['C', 'D', 'E']})
+#     {'Range1': ('Dim1', ['C', 'D', 'E'])}, {'Dim1'
 #     """
-#     dfuncs = []
-#     for element in elements:
-#         if element['py_name'].startswith('_d') and element['py_name'].endswith('_dt'):
-#             dfuncs.append(element['py_name'])
-#     print dfuncs
-
-def build(elements, subscript_dict, outfile_name):
-    """
-    Takes in a list of model components
-
-
-    Parameters
-    ----------
-    elements
-    subscript_dict
-
-    Returns
-    -------
-
-    """
-    elements = merge_partial_elements(elements)
-
-    functions = [build_element(element, subscript_dict) for element in elements]
-
-    imports = []
-    if subscript_dict:
-        imports += ['import xarray as xr']
-
-    text = """
-    from __future__ import division
-    import numpy as np
-    %(imports)s
-    from pysd.builder import cache
-    from pysd import functions
-
-    subscript_dict = %(subscript_dict)s
-
-    %(functions)s
-
-    """ % {'subscript_dict': repr(subscript_dict),
-           'functions': '\n'.join(functions),
-           'imports': '\n'.join(imports)}
-
-    text = autopep8.fix_code(textwrap.dedent(text),
-                             options={'aggressive': 10,
-                                      'max_line_length': 99,
-                                      'experimental': True})
-
-    # this is used for testing
-    if outfile_name == 'return':
-        return text
-
-    with open(outfile_name, 'w') as out:
-        out.write(text)
-
-
-def identify_subranges(subscript_dict):
-    """
-
-    Parameters
-    ----------
-    subscript_dict
-
-    Returns
-    -------
-
-    Examples
-    --------
-    >>> identify_subranges({'Dim1': ['A', 'B', 'C', 'D', 'E', 'F'],
-    ...                     'Range1': ['C', 'D', 'E']})
-    {'Range1': ('Dim1', ['C', 'D', 'E'])}, {'Dim1'
-    """
 
 def add_stock(identifier, subs, expression, initial_condition):
     """
@@ -828,14 +812,3 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
     return s, namespace
 
 
-def import_file(filename):
-    (path, name) = os.path.split(filename)
-    (name, ext) = os.path.splitext(name)
-
-    fp, pathname, description = imp.find_module(name, [path])
-
-    try:
-        return imp.load_module(name, fp, pathname, description)
-    finally:
-        if fp:
-            fp.close()

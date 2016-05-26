@@ -6,9 +6,10 @@ Also contains some private members to facilitate integration, setup, etc.
 
 History
 --------
-August 15, 2014 : created
-June 6 2015 : Major updates - version 0.2.5
-Jan 2016 : Rework to handle subscripts
+August 15, 2014: created
+June 6 2015: Major updates - version 0.2.5
+Jan 2016: Rework to handle subscripts
+May 2016: Updates to handle grammar refactoring
 
 Contributors
 ------------
@@ -23,7 +24,8 @@ from math import fmod
 
 
 # Todo: add a logical way to run two or more models together, using the same integrator.
-# Todo: add the state dictionary to the model file, to give some functionality to it even without the pysd class
+# Todo: add the state dictionary to the model file, to give some functionality to it even
+# without the pysd class
 # Todo: seems to be some issue with multiple imports - need to create a new instance...
 
 def read_xmile(xmile_file):
@@ -91,9 +93,6 @@ def load(py_model_file):
     model = PySD(components)
     model.reset_state()
     return model
-
-
-
 
 
 class PySD(object):

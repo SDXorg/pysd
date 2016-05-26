@@ -626,6 +626,7 @@ def translate_vensim(mdl_file):
     # send the pieces to be built
     builder.build([e for e in model_elements if e['kind'] != 'subdef'],
                   subscript_dict,
+                  namespace,
                   outfile_name)
 
     return outfile_name

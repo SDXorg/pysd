@@ -4,7 +4,7 @@ import unittest
 class TestParse_general_expression(unittest.TestCase):
 
     def test_id_parsing(self):
-        from translators.vensim2py2 import parse_general_expression
+        from vensim2py import parse_general_expression
         self.assertEqual(parse_general_expression({'expr': 'StockA'},
                                                   namespace={'StockA': 'stocka'}),
                          ({'kind': 'component', 'py_expr': 'stocka()'}, []))

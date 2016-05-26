@@ -4,7 +4,7 @@ import time
 times = { }
 
 ###################
-from pysd._version import __version__
+from _version import __version__
 
 times['version'] = __version__
 times['timestamp'] = time.time()
