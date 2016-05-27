@@ -9,6 +9,62 @@ straightforward equivalent in python.
 import numpy as np
 import scipy.stats as stats  # Todo: can we get away from the scipy dependency?
 import re
+from functools import wraps
+
+
+def cache(horizon):
+    """
+    Put a wrapper around a model function
+
+    Decorators with parameters are tricky, you have to
+    essentially create a decorator that returns a decorator,
+    which itself then returns the function wrapper.
+
+    Parameters
+    ----------
+    horizon: string
+        - 'step' means cache just until the next timestep
+        - 'run' means cache until the next initialization of the model
+
+    Returns
+    -------
+    new_func: decorated function
+        function wrapping the original function, handling caching
+
+    """
+    def cache_step(func):
+        """ Decorator for caching at a step level"""
+        @wraps(func)
+        def cached(*args):
+            """Step wise cache function"""
+            try:  # fails if cache is out of date or not instantiated
+                assert cached.t == func.func_globals['_t']
+            except (AssertionError, AttributeError):
+                cached.cache = func(*args)
+                cached.t = func.func_globals['_t']
+            return cached.cache
+        return cached
+
+    def cache_run(func):
+        """ Decorator for caching at  the run level"""
+        @wraps(func)
+        def cached(*args):
+            """Run wise cache function"""
+            try:  # fails if cache is not instantiated
+                return cached.cache
+            except AttributeError:
+                cached.cache = func(*args)
+                return cached.cache
+        return cached
+
+    if horizon == 'step':
+        return cache_step
+
+    elif horizon == 'run':
+        return cache_run
+
+    else:
+        raise(AttributeError('Bad horizon for cache decorator'))
 
 
 def ramp(slope, start, finish):

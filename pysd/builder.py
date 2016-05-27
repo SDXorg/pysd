@@ -5,14 +5,11 @@ james.p.houghton@gmail.com
 
 """
 
-# Todo: Add a __doc__ function that summarizes the docstrings of the whole model
-# Todo: Give the __doc__ function a 'short' and 'long' option
 
 import textwrap
 import autopep8
 import re
 import keyword
-from functools import wraps
 
 
 def build(elements, subscript_dict, namespace, outfile_name):
@@ -31,6 +28,12 @@ def build(elements, subscript_dict, namespace, outfile_name):
     -------
 
     """
+    # Todo: deal with model level documentation
+    # Todo: Make np import conditional on usage in the file
+    # Todo: Make pysd functions import conditional on usage in the file
+    # Todo: Make presence of subscript_dict instantiation conditional on usage
+    # Todo: Sort elements (alphabetically? group stock funcs?)
+    # Todo: do something better than hardcoding the time function
     elements = merge_partial_elements(elements)
     functions = [build_element(element, subscript_dict) for element in elements]
 
@@ -42,7 +45,7 @@ def build(elements, subscript_dict, namespace, outfile_name):
     from __future__ import division
     import numpy as np
     %(imports)s
-    from pysd.builder import cache
+    from pysd.functions import cache
     from pysd import functions
 
     subscript_dict = %(subscript_dict)s
@@ -50,6 +53,10 @@ def build(elements, subscript_dict, namespace, outfile_name):
     namespace = %(namespace)s
 
     %(functions)s
+
+    def time():
+        return _t
+    functions.time = time
 
     """ % {'subscript_dict': repr(subscript_dict),
            'functions': '\n'.join(functions),
@@ -135,59 +142,6 @@ def build_element(element, subscript_dict):
     return func
 
 
-def cache(horizon):
-    """
-    Put a wrapper around a model function
-
-    Decorators with parameters are tricky, you have to
-    essentially create a decorator that returns a decorator,
-    which itself then returns the function wrapper.
-
-    Parameters
-    ----------
-    horizon: string
-        - 'step' means cache just until the next timestep
-        - 'run' means cache until the next initialization of the model
-
-    Returns
-    -------
-    new_func: decorated function
-        function wrapping the original function, handling caching
-
-    """
-    def cache_step(func):
-        """ Decorator for caching at a step level"""
-        @wraps(func)
-        def cached(*args):
-            """Step wise cache function"""
-            try:  # fails if cache is out of date or not instantiated
-                assert cached.t == func.func_globals['_t']
-            except (AssertionError, AttributeError):
-                cached.cache = func(*args)
-                cached.t = func.func_globals['_t']
-            return cached.cache
-        return cached
-
-    def cache_run(func):
-        """ Decorator for caching at  the run level"""
-        @wraps(func)
-        def cached(*args):
-            """Run wise cache function"""
-            try:  # fails if cache is not instantiated
-                return cached.cache
-            except AttributeError:
-                cached.cache = func(*args)
-                return cached.cache
-        return cached
-
-    if horizon == 'step':
-        return cache_step
-
-    elif horizon == 'run':
-        return cache_run
-
-    else:
-        raise(AttributeError('Bad horizon for cache decorator'))
 
 
 def create_base_array(subs_list, subscript_dict):

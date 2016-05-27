@@ -179,13 +179,15 @@ def get_model_elements(model_str):
         def visit_entry(self, n, (eqn, _1, unit, _2, doc, _3)):
             self.entries.append({'eqn': eqn.strip(),
                                  'unit': unit.strip(),
-                                 'doc': doc.strip()})
+                                 'doc': doc.strip(),
+                                 'kind': 'entry'})
 
         def visit_section(self, n, (sect_marker, _1, text, _3)):
             if text.strip() != "Simulation Control Parameters":
                 self.entries.append({'eqn': '',
                                      'unit': '',
-                                     'doc': text.strip()})
+                                     'doc': text.strip(),
+                                     'kind': 'section'})
 
         def generic_visit(self, n, vc):
             return ''.join(filter(None, vc)) or n.text or ''
@@ -225,45 +227,6 @@ def get_equation_components(equation_str):
     --------
     >>> get_equation_components(r'constant = 25')
     {'expr': '25', 'kind': 'component', 'subs': [], 'real_name': 'constant'}
-
-    Parse cases with equal signs within them
-    >>> get_equation_components(r'Boolean = IF THEN ELSE(1 = 1, 1, 0)')
-    {'expr': 'IF THEN ELSE(1 = 1, 1, 0)', 'kind': 'component', 'subs': [], 'real_name': 'Boolean'}
-
-    Shorten whitespaces
-    >>> get_equation_components(r'''constant\t =
-    ...                                           \t25\t ''')
-    {'expr': '25', 'kind': 'component', 'subs': [], 'real_name': 'constant'}
-
-    >>> get_equation_components(r'constant [Sub1, \\
-    ...                                     Sub2] = 10, 12; 14, 16;')
-    {'expr': '10, 12; 14, 16;', 'kind': 'component', 'subs': ['Sub1', 'Sub2'], 'real_name': 'constant'}
-
-    Handle subscript definitions
-    >>> get_equation_components(r'''Sub1: Entry 1, Entry 2, Entry 3 ''')
-    {'expr': None, 'kind': 'subdef', 'subs': ['Entry 1', 'Entry 2', 'Entry 3'], 'real_name': 'Sub1'}
-
-    Handle subscript references
-    >>> get_equation_components(r'constant [Sub1, Sub2] = 10, 12; 14, 16;')
-    {'expr': '10, 12; 14, 16;', 'kind': 'component', 'subs': ['Sub1', 'Sub2'], 'real_name': 'constant'}
-    >>> get_equation_components(r'function [Sub1] = other function[Sub1]')
-    {'expr': 'other function[Sub1]', 'kind': 'component', 'subs': ['Sub1'], 'real_name': 'function'}
-    >>> get_equation_components(r'constant ["S1,b", "S1,c"] = 1, 2; 3, 4;')
-    {'expr': '1, 2; 3, 4;', 'kind': 'component', 'subs': ['"S1,b"', '"S1,c"'], 'real_name': 'constant'}
-    >>> get_equation_components(r'constant ["S1=b", "S1=c"] = 1, 2; 3, 4;')
-    {'expr': '1, 2; 3, 4;', 'kind': 'component', 'subs': ['"S1=b"', '"S1=c"'], 'real_name': 'constant'}
-
-    Handle lookup definitions:
-    >>> get_equation_components(r'table([(0,-1)-(45,1)],(0,0),(5,0))')
-    {'expr': '([(0,-1)-(45,1)],(0,0),(5,0))', 'kind': 'lookup', 'subs': [], 'real_name': 'table'}
-    >>> get_equation_components(r'table2 ([(0,-1)-(45,1)],(0,0),(5,0))')
-    {'expr': '([(0,-1)-(45,1)],(0,0),(5,0))', 'kind': 'lookup', 'subs': [], 'real_name': 'table2'}
-
-    Handle pathological names:
-    >>> get_equation_components(r'"silly-string" = 25')
-    {'expr': '25', 'kind': 'component', 'subs': [], 'real_name': '"silly-string"'}
-    >>> get_equation_components(r'"pathological\\-string" = 25')
-    {'expr': '25', 'kind': 'component', 'subs': [], 'real_name': '"pathological\\\\-string"'}
 
     Notes
     -----
@@ -419,7 +382,13 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
         "vmin": "np.min", "vmax": "np.max", "prod": "np.prod",
     }
 
-    builtins = {"time": "time"
+    builtins = {"time": ("time", [{'kind': 'component',
+                                   'subs': None,
+                                   'doc': 'The time of the model',
+                                   'py_name': 'time',
+                                   'real_name': 'Time',
+                                   'unit': None,
+                                   'py_expr': '_t'}])
                 }
 
     builders = {
@@ -437,13 +406,15 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
 
     pre_ops = {
         "-": "-", ":not:": "not", "+": " ",
-    # space is important, so that and empty string doesn't slip through generic
+        # space is important, so that and empty string doesn't slip through generic
     }
 
-    sub_names_list = subscript_dict.keys() or ['\\a']  # if none, use non-printable character
-    sub_elems_list = [y for x in subscript_dict.values() for y in x] or ['\\a']
-    ids_list = namespace.keys() or ['\\a']
-    in_ops_list = [re.escape(x) for x in in_ops.keys()]  # special characters need escaping
+    # in the following, if lists are empty use non-printable character
+    # everything needs to be escaped before going into the grammar, in case it includes quotes
+    sub_names_list = [re.escape(x) for x in subscript_dict.keys()] or ['\\a']
+    sub_elems_list = [re.escape(y) for x in subscript_dict.values() for y in x] or ['\\a']
+    ids_list = [re.escape(x) for x in namespace.keys()] or ['\\a']
+    in_ops_list = [re.escape(x) for x in in_ops.keys()]
     pre_ops_list = [re.escape(x) for x in pre_ops.keys()]
 
     expression_grammar = r"""
@@ -486,7 +457,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
     }
 
     parser = parsimonious.Grammar(expression_grammar)
-    tree = parser.parse(element['expr'])
+    tree = parser.parse(element['expr'])  # need to escape special characters here
 
     class ExpressionParser(parsimonious.NodeVisitor):
         def __init__(self, ast):
@@ -519,7 +490,12 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
             return namespace[n.text] + '()'
 
         def visit_builtin(self, n, vc):
-            return builtins[n.text.lower()] + '()'
+            # these are model elements that are not functions, but exist implicitly within the
+            # vensim model
+            self.kind = 'component'
+            name, structure = builtins[n.text.lower()]
+            self.new_structure += structure
+            return name + '()'
 
         def visit_array(self, n, vc):
             text = n.text.strip(';').replace(' ', '')  # remove trailing semi if exists
@@ -579,8 +555,13 @@ def translate_vensim(mdl_file):
     #>>> translate_vensim('../../tests/test-models/tests/limits/test_limits.mdl')
 
     """
-    with open(mdl_file, 'rU') as file:
-        text = file.read()
+    # Todo: work out what to do with subranges
+    # Todo: parse units string
+    # Todo: deal with lookup elements
+    # Todo: handle macros
+
+    with open(mdl_file, 'rU') as in_file:
+        text = in_file.read()
 
     # extract model elements
     model_elements = []
@@ -588,15 +569,19 @@ def translate_vensim(mdl_file):
     for section in file_sections:
         if section['name'] == 'main':
             model_elements += get_model_elements(section['string'])
-            # for now, ignoring macros
 
     # extract equation components
-    map(lambda e: e.update(get_equation_components(e['eqn'])), model_elements)
+    model_docstring = ''
+    for entry in model_elements:
+        if entry['kind'] == 'entry':
+            entry.update(get_equation_components(entry['eqn']))
+        elif entry['kind'] == 'section':
+            model_docstring += entry['doc']
 
     # make python identifiers and track for namespace conflicts
     namespace = {}
     for element in model_elements:
-        if element['kind'] != 'subdef':
+        if element['kind'] not in ['subdef', 'section']:
             element['py_name'], namespace = builder.make_python_identifier(element['real_name'],
                                                                            namespace)
 
@@ -605,14 +590,9 @@ def translate_vensim(mdl_file):
     # they don't actually need to be python-safe
     subscript_dict = {e['real_name']: e['subs'] for e in model_elements if e['kind'] == 'subdef'}
 
-    # Todo: work out what to do with subranges
-    # Todo: parse units string
-    # Todo: deal with lookup elements
-    # Todo: deal with model level documentation
-
     # Parse components to python syntax.
     for element in model_elements:
-        if element['kind'] == 'component' and not 'py_expr' in element:
+        if element['kind'] == 'component' and 'py_expr' not in element:
             translation, new_structure = parse_general_expression(element,
                                                                   namespace=namespace,
                                                                   subscript_dict=subscript_dict,
@@ -624,7 +604,7 @@ def translate_vensim(mdl_file):
     outfile_name = mdl_file.replace('.mdl', '.py')
 
     # send the pieces to be built
-    builder.build([e for e in model_elements if e['kind'] != 'subdef'],
+    builder.build([e for e in model_elements if e['kind'] not in ['subdef', 'section']],
                   subscript_dict,
                   namespace,
                   outfile_name)

@@ -1,6 +1,103 @@
 import unittest
 
 
+class TestEquationStringParsing(unittest.TestCase):
+    """ Tests the 'get_equation_components function """
+    def test_basics(self):
+        from vensim2py import get_equation_components
+        self.assertEqual(
+            get_equation_components(r'constant = 25'),
+            {'expr': '25', 'kind': 'component', 'subs': [], 'real_name': 'constant'}
+        )
+
+    def test_equals_handling(self):
+        """ Parse cases with equal signs within the expression """
+        from vensim2py import get_equation_components
+        self.assertEqual(
+            get_equation_components(r'Boolean = IF THEN ELSE(1 = 1, 1, 0)'),
+            {'expr': 'IF THEN ELSE(1 = 1, 1, 0)', 'kind': 'component', 'subs': [],
+             'real_name': 'Boolean'}
+        )
+
+    def test_whitespace_handling(self):
+        """ Whitespaces should be shortened to a single space """
+        from vensim2py import get_equation_components
+        self.assertEqual(
+            get_equation_components(r'''constant\t =
+                                                        \t25\t '''),
+            {'expr': '25', 'kind': 'component', 'subs': [], 'real_name': 'constant'}
+        )
+
+        # test eliminating vensim's line continuation character
+        self.assertEqual(
+            get_equation_components(r"""constant [Sub1, \\
+                                     Sub2] = 10, 12; 14, 16;"""),
+            {'expr': '10, 12; 14, 16;', 'kind': 'component', 'subs': ['Sub1', 'Sub2'],
+             'real_name': 'constant'}
+        )
+
+    def test_subscript_definition_parsing(self):
+        from vensim2py import get_equation_components
+        self.assertEqual(
+            get_equation_components(r'''Sub1: Entry 1, Entry 2, Entry 3 '''),
+            {'expr': None, 'kind': 'subdef', 'subs': ['Entry 1', 'Entry 2', 'Entry 3'],
+             'real_name': 'Sub1'}
+        )
+
+    def test_subscript_references(self):
+        from vensim2py import get_equation_components
+        self.assertEqual(
+            get_equation_components(r'constant [Sub1, Sub2] = 10, 12; 14, 16;'),
+            {'expr': '10, 12; 14, 16;', 'kind': 'component', 'subs': ['Sub1', 'Sub2'],
+             'real_name': 'constant'}
+        )
+
+        self.assertEqual(
+            get_equation_components(r'function [Sub1] = other function[Sub1]'),
+            {'expr': 'other function[Sub1]', 'kind': 'component', 'subs': ['Sub1'],
+             'real_name': 'function'}
+        )
+
+        self.assertEqual(
+            get_equation_components(r'constant ["S1,b", "S1,c"] = 1, 2; 3, 4;'),
+            {'expr': '1, 2; 3, 4;', 'kind': 'component', 'subs': ['"S1,b"', '"S1,c"'],
+             'real_name': 'constant'}
+        )
+
+        self.assertEqual(
+            get_equation_components(r'constant ["S1=b", "S1=c"] = 1, 2; 3, 4;'),
+            {'expr': '1, 2; 3, 4;', 'kind': 'component', 'subs': ['"S1=b"', '"S1=c"'],
+             'real_name': 'constant'}
+        )
+
+    def test_lookup_definitions(self):
+        from vensim2py import get_equation_components
+        self.assertEqual(
+            get_equation_components(r'table([(0,-1)-(45,1)],(0,0),(5,0))'),
+            {'expr': '([(0,-1)-(45,1)],(0,0),(5,0))', 'kind': 'lookup', 'subs': [],
+             'real_name': 'table'}
+        )
+
+        self.assertEqual(
+            get_equation_components(r'table2 ([(0,-1)-(45,1)],(0,0),(5,0))'),
+            {'expr': '([(0,-1)-(45,1)],(0,0),(5,0))', 'kind': 'lookup', 'subs': [],
+             'real_name': 'table2'}
+        )
+
+    def test_pathological_names(self):
+        from vensim2py import get_equation_components
+        self.assertEqual(
+            get_equation_components(r'"silly-string" = 25'),
+            {'expr': '25', 'kind': 'component', 'subs': [], 'real_name': '"silly-string"'}
+        )
+
+        self.assertEqual(
+            get_equation_components(r'"pathological\\-string" = 25'),
+            {'expr': '25', 'kind': 'component', 'subs': [],
+             'real_name': r'"pathological\\-string"'}
+        )
+
+
 class TestParse_general_expression(unittest.TestCase):
 
     def test_id_parsing(self):
@@ -68,7 +165,7 @@ class TestParse_general_expression(unittest.TestCase):
         )
 
     def test_stock_construction_function_no_subscripts(self):
-        from translators.vensim2py2 import parse_general_expression
+        from vensim2py import parse_general_expression
         self.assertEqual(
             parse_general_expression({'expr': 'INTEG (FlowA, -10)',
                                       'py_name':'test_stock',
@@ -163,7 +260,7 @@ class TestParse_general_expression(unittest.TestCase):
     # so do it by default?
 
     def test_subscript_reference(self):
-        from translators.vensim2py2 import parse_general_expression
+        from vensim2py import parse_general_expression
         self.assertEqual(
             parse_general_expression({'expr': 'Var A[Dim1, Dim2]'},
                                      {'Var A': 'var_a'},
@@ -191,7 +288,7 @@ class TestParse_general_expression(unittest.TestCase):
 
     @unittest.skip('not yet implemented')
     def test_subscript_ranges(self):
-        from translators.vensim2py2 import parse_general_expression
+        from vensim2py import parse_general_expression
         self.assertEqual(
             parse_general_expression({'expr': 'Var D[Range1]'},
                                      {'Var D': 'var_c'},
@@ -200,4 +297,16 @@ class TestParse_general_expression(unittest.TestCase):
             ({'kind': 'constant', 'py_expr': "var_c().loc[{'Dim1': ['C', 'D', 'E']}]"}, [])
         )
 
-
+    def test_builtin_components(self):
+        from vensim2py import parse_general_expression
+        self.assertEqual(
+            parse_general_expression({'expr': 'TIME'}, {}),
+            ({'kind': 'component', 'py_expr': "time()"},
+             [{'kind': 'component',
+               'subs': None,
+               'doc': 'The time of the model',
+               'py_name': 'time',
+               'real_name': 'Time',
+               'unit': None,
+               'py_expr': '_t'}])
+        )

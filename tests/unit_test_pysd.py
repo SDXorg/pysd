@@ -140,23 +140,33 @@ class TestPySD(TestCase):
         self.fail()
 
 
-class TestMetaStuff(TestCase):
+class TestModelInteraction(TestCase):
     """ The tests in this class test pysd's interaction with itself
         and other modules. """
 
     def test_multiple_load(self):
-        """Test that we can load and run multiple models at the same time,
+        """
+        Test that we can load and run multiple models at the same time,
         and that the models don't interact with each other. This can
-        happen if we arent careful about class attributes vs instance attributes"""
-        # Todo: Make this a stricter test,
-        #  perhaps by checking that the components do not share members they shouldn't
+        happen if we arent careful about class attributes vs instance attributes
+
+        This test responds to issue:
+        https://github.com/JamesPHoughton/pysd/issues/23
+
+        """
+
         import pysd
 
-        model_1 = pysd.read_vensim('tests/old_tests/vensim/Teacup.mdl')
-        model_1.run()
+        model_1 = pysd.read_vensim('test-models/samples/teacup/Teacup.mdl')
+        model_2 = pysd.read_vensim('test-models/samples/SIR/SIR.mdl')
 
-        model_2 = pysd.read_vensim('tests/old_tests/vensim/test_lookups.mdl')
-        model_2.run()
+        self.assertNotIn('teacup_temperature', dir(model_2.components))
 
-        self.fail() # need to check that the second components dictionary does not just merge with the first
+    def test_no_crosstalk(self):
+        """
+        Need to check that if we instantiate two copies of the same model,
+        changes to one copy do not influence the other copy.
+        """
+
+        self.fail()
 

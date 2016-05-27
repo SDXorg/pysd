@@ -21,8 +21,10 @@ import pandas as _pd
 import numpy as np
 import imp
 from math import fmod
+import time
 
-
+# Todo: Add a __doc__ function that summarizes the docstrings of the whole model
+# Todo: Give the __doc__ function a 'short' and 'long' option
 # Todo: add a logical way to run two or more models together, using the same integrator.
 # Todo: add the state dictionary to the model file, to give some functionality to it even
 # without the pysd class
@@ -55,9 +57,14 @@ def read_vensim(mdl_file):
     mdl_file : <string>
         The relative path filename for a raw Vensim `.mdl` file
 
+    Returns
+    -------
+    model: a PySD class object
+        Elements from the python model are loaded into the PySD class and ready to run
+
     Examples
     --------
-    >>> model = read_vensim('../tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl')
+    >>> model = read_vensim('../tests/test-models/samples/teacup/teacup.mdl')
     """
     from vensim2py import translate_vensim
     py_model_file = translate_vensim(mdl_file)
@@ -76,9 +83,12 @@ def load(py_model_file):
 
     Examples
     --------
-    >>> model = load('../tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.py')
+    >>> model = load('../tests/test-models/samples/teacup/teacup.py')
     """
-    components = imp.load_source('modulename', py_model_file)
+
+    # need a unique identifier for the imported module. Use the time.
+    module_name = str(time.time()).replace('.', '')
+    components = imp.load_source(module_name, py_model_file)
 
     components._stocknames = [name[2:-3] for name in dir(components)  # strip to just the name
                               if name.startswith('_d') and name.endswith('_dt')]
@@ -89,6 +99,9 @@ def load(py_model_file):
 
     funcnames = filter(lambda x: not x.startswith('_'), dir(components))
     components._funcs = {name: getattr(components, name) for name in funcnames}
+    # so that we can get values by their real names, not their python names
+    components._funcs.update({name: getattr(components, components.namespace[name])
+                              for name in components.namespace})
 
     model = PySD(components)
     model.reset_state()
@@ -212,11 +225,6 @@ class PySD(object):
     def reset_state(self):
         """Sets the model state to the state described in the model file. """
         # todo: check that this isn't being called twice, unnecessarily?
-
-        #def initial_number(inval):
-        #    # In case the number has not yet been defined, make a placeholder for it...
-        #    return inval
-        #self.components.initial_number = initial_number #todo: make this with leading underscore?
 
         self.components._t = self.components.initial_time()  # set the initial time
         self.components._state = dict()
@@ -353,7 +361,7 @@ class PySD(object):
 
         # Todo: rework this for the euler integrator, to be the dt series plus the return timestamps
         # Todo: maybe cache the result of this function?
-        if not return_timestamps:
+        if return_timestamps is None:
             # Vensim's standard is to expect that the data set includes the `final time`,
             # so we have to add an extra period to make sure we get that value in what
             # numpy's `arange` gives us.
@@ -379,7 +387,7 @@ class PySD(object):
 
         Parameters
         ----------
-        ddt : list of strings
+        ddt : dictionary
             list of the names of the derivative functions
         state : dictionary
             This is the state dictionary, where stock names are keys and values are
@@ -393,8 +401,9 @@ class PySD(object):
              a dictionary with keys corresponding to the input 'state' dictionary,
              after those values have been updated with one euler step
         """
-        return {key: dfunc()*dt + state[key] for key, dfunc in ddt.iteritems()}
+        # Todo: instead of a list of dfuncs, just use locals() http://stackoverflow.com/a/834451/6361632
 
+        return {key: dfunc()*dt + state[key] for key, dfunc in ddt.iteritems()}
 
     def _integrate(self, ddt, timesteps, return_elements):
         """
@@ -402,7 +411,7 @@ class PySD(object):
 
         Parameters
         ----------
-        ddt :
+        ddt:
         timesteps
         return_elements
 
@@ -410,7 +419,6 @@ class PySD(object):
         -------
 
         """
-        # Todo: write proper docstrings.
         outputs = range(len(timesteps))
         for i, t2 in enumerate(timesteps):
             self.components._state = self._euler_step(ddt, self.components._state, t2-self.components._t)
