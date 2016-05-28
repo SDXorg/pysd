@@ -22,6 +22,8 @@ import numpy as np
 import imp
 from math import fmod
 import time
+import utils
+
 
 # Todo: Add a __doc__ function that summarizes the docstrings of the whole model
 # Todo: Give the __doc__ function a 'short' and 'long' option
@@ -29,6 +31,7 @@ import time
 # Todo: add the state dictionary to the model file, to give some functionality to it even
 # without the pysd class
 # Todo: seems to be some issue with multiple imports - need to create a new instance...
+# Todo: work out an RK4 adaptive integrator
 
 def read_xmile(xmile_file):
     """ Construct a model object from `.xmile` file.
@@ -99,9 +102,7 @@ def load(py_model_file):
 
     funcnames = filter(lambda x: not x.startswith('_'), dir(components))
     components._funcs = {name: getattr(components, name) for name in funcnames}
-    # so that we can get values by their real names, not their python names
-    components._funcs.update({name: getattr(components, components.namespace[name])
-                              for name in components.namespace})
+
 
     model = PySD(components)
     model.reset_state()
@@ -127,7 +128,7 @@ class PySD(object):
         return self.components.__str__
 
     def run(self, params=None, return_columns=None, return_timestamps=None,
-            initial_condition='original', collect=False, flatten_subscripts=False):
+            initial_condition='original', collect=False):
         """ Simulate the model's behavior over time.
         Return a pandas dataframe with timestamps as rows,
         model elements as columns.
@@ -161,14 +162,6 @@ class PySD(object):
             When running multiple simulations, collect the results in a way
             that we can access down the road.
 
-        flatten_subscripts : binary (T/F)
-            If set to `True`, will format the output dataframe in two dimensions, each
-             cell of the dataframe containing a number. The number of columns of the
-             dataframe will be expanded.
-            If set to `False`, the dataframe cells corresponding to subscripted elements
-             will take the form of numpy arrays within the cells of the dataframe. The
-             columns will correspond to the model elements.
-
 
         Examples
         --------
@@ -193,37 +186,33 @@ class PySD(object):
 
         tseries = self._build_timeseries(return_timestamps)
 
-        # the odeint expects the first timestamp in the tseries to be the initial condition,
-        # so we may need to add the t0 if it is not present in the tseries array
-        # Todo: with the euler integrator, this may no longer be the case. Reevaluate.
-        addtflag = tseries[0] != self.components._t
-        if addtflag:
-            tseries = np.insert(tseries, 0, self.components._t)
-
         if return_columns is None:
-            return_columns = self.components._stocknames
+            return_elements = self.components._stocknames
 
-        res = self._integrate(self.components._dfuncs, tseries, return_columns)
-        return_df = _pd.DataFrame(data=res, index=tseries)
+        capture_elements, return_addresses = utils.get_return_elements(
+            return_columns, self.components._namespace, self.components._subscript_dict)
 
-        if flatten_subscripts:
-            # Todo: short circuit this if there is nothing to flatten
-            return_df = self._flatten_dataframe(return_df)
+        res = self._integrate(self.components._dfuncs, tseries, capture_elements, tseries)
 
-        if addtflag: # Todo: add a test case in which this is necessary to test_functionality
-            return_df.drop(return_df.index[0], inplace=True)
+        return_df = utils.make_flat_df(res, return_addresses)
 
         if collect:
-            self.record.append(return_df)  # we could just record the state, and expand it later...
+            self.record.append(return_df)
 
         return return_df
 
-    # We give the state and the time parameters leading underscores so that
-    # if there are variables in the model named 't' or 'state' there are no
-    # conflicts
+
+
+
+
 
     def reset_state(self):
         """Sets the model state to the state described in the model file. """
+
+        # We give the state and the time parameters leading underscores so that
+        # if there are variables in the model named 't' or 'state' there are no
+        # conflicts
+
         # todo: check that this isn't being called twice, unnecessarily?
 
         self.components._t = self.components.initial_time()  # set the initial time
@@ -405,7 +394,7 @@ class PySD(object):
 
         return {key: dfunc()*dt + state[key] for key, dfunc in ddt.iteritems()}
 
-    def _integrate(self, ddt, timesteps, return_elements):
+    def _integrate(self, ddt, timesteps, return_elements, return_timestamps):
         """
         Performs euler integration
 
@@ -421,9 +410,11 @@ class PySD(object):
         """
         outputs = range(len(timesteps))
         for i, t2 in enumerate(timesteps):
-            self.components._state = self._euler_step(ddt, self.components._state, t2-self.components._t)
-            self.components._t = t2
-            outputs[i] = {key: self.components._funcs[key]() for key in return_elements}
+            next_state = self._euler_step(ddt, self.components._state, t2-self.components._t)
+            if self.components._t in return_timestamps:
+                outputs[i] = {key: self.components._funcs[key]() for key in return_elements}
+            self.components._state = next_state
+            self.components._t = t2  # this will clear the stepwise caches
 
         return outputs
 
@@ -487,3 +478,5 @@ class PySD(object):
 
             return pddf
         return dataframeexpand(dataframe)
+
+

@@ -1,3 +1,6 @@
+""" Utilities for aiding in testing.
+Not tests of utilities... That could be confusing."""
+
 import pysd
 import numpy.testing as npt
 import pandas as pd
@@ -25,8 +28,7 @@ def runner(model_file):
             raise IOError('Canonical output file not found')
 
     # run model
-    output = model.run(return_columns=canon.columns,
-                       flatten_subscripts=True)
+    output = model.run(return_columns=canon.columns)
 
     return output, canon
 
@@ -34,10 +36,10 @@ def runner(model_file):
 
 def assertFramesClose(actual, expected, **kwargs):
     """
-    Compare DataFrame items by index and column and
-    raise AssertionError if any item is not equal.
+    Compare DataFrame items by column and
+    raise AssertionError if any column is not equal.
 
-    Ordering is unimportant, items are compared only by label.
+    Ordering of columns is unimportant, items are compared only by label.
     NaN and infinite values are supported.
 
     Parameters
@@ -72,19 +74,19 @@ def assertFramesClose(actual, expected, **kwargs):
             isinstance(expected, pd.DataFrame)), \
         'Inputs must both be pandas DataFrames.'
 
-    for i, exp_row in expected.iterrows():
-        assert i in actual.index, 'Expected row {!r} not found.'.format(i)
+    assert set(expected.columns) == set(actual.columns), \
+        'test set columns must be equal to those in actual/observed set.'
 
-        act_row = actual.loc[i]
+    assert (expected.index.values == actual.index.values).all(), \
+        'test set and actual set must share a common index'
 
-        for j, exp_item in exp_row.iteritems():
-            assert j in act_row.index, \
-                'Expected column {!r} not found.'.format(j)
-
-            act_item = act_row[j]
-
-            try:
-                npt.assert_allclose(act_item, exp_item, **kwargs)
-            except AssertionError as e:
-                raise AssertionError(
-                    e.message + '\n\nColumn: {!r}\nRow: {!r}'.format(j, i))
+    for col in expected.columns:
+        try:
+            npt.assert_allclose(expected[col].values,
+                                actual[col].values,
+                                **kwargs)
+        except AssertionError as e:
+            print 1
+            raise AssertionError(
+                e.message + 'Column: ' + str(col)
+            )

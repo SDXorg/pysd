@@ -11,6 +11,7 @@ Todo:
 import re
 import parsimonious
 import builder
+import utils
 
 
 def get_file_sections(file_str):
@@ -431,9 +432,9 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
     array = (number _ ("," / ";")? _)+
     number = ~r"\d+\.?\d*(e[+-]\d+)?"
 
-    id = %(ids)s
-    sub_name = %(sub_names)s  # subscript names (if none, use non-printable character)
-    sub_element = %(sub_elems)s  # subscript elements (if none, use non-printable character)
+    id = ~r"(%(ids)s)"I
+    sub_name = ~r"(%(sub_names)s)"I  # subscript names (if none, use non-printable character)
+    sub_element = ~r"(%(sub_elems)s)"I  # subscript elements (if none, use non-printable character)
 
     func = ~r"(%(funcs)s)"I  # functions (case insensitive)
     in_oper = ~r"(%(in_ops)s)"I  # infix operators (case insensitive)
@@ -445,10 +446,11 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
     """ % {
         # In the following, we have to sort keywords in decreasing order of length so that the
         # peg parser doesn't quit early when finding a partial keyword
-        'sub_names': ' / '.join(['"%s"' % n for n in reversed(sorted(sub_names_list, key=len))]),
-        'sub_elems': ' / '.join(['"%s"' % n for n in reversed(sorted(sub_elems_list, key=len))]),
-        'ids': '/'.join(['"%s"' % n for n in reversed(sorted(ids_list, key=len))]),
-        # These are part of regex expressions, and may not need to be sorted, but just to be safe...
+        #'sub_names': ' / '.join(['"%s"' % n for n in reversed(sorted(sub_names_list, key=len))]),
+        'sub_names': '|'.join(reversed(sorted(sub_names_list, key=len))),
+        #'sub_elems': ' / '.join(['"%s"' % n for n in reversed(sorted(sub_elems_list, key=len))]),
+        'sub_elems': '|'.join(reversed(sorted(sub_elems_list, key=len))),
+        'ids': '|'.join(reversed(sorted(ids_list, key=len))),
         'funcs': '|'.join(reversed(sorted(functions.keys(), key=len))),
         'in_ops': '|'.join(reversed(sorted(in_ops_list, key=len))),
         'pre_ops': '|'.join(reversed(sorted(pre_ops_list, key=len))),
@@ -457,7 +459,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
     }
 
     parser = parsimonious.Grammar(expression_grammar)
-    tree = parser.parse(element['expr'])  # need to escape special characters here
+    tree = parser.parse(element['expr'])
 
     class ExpressionParser(parsimonious.NodeVisitor):
         def __init__(self, ast):
@@ -506,7 +508,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
 
         def visit_subscript_list(self, n, (lb, _1, refs, rb)):
             subs = [x.strip() for x in refs.split(',')]
-            coordinates = builder.make_coord_dict(subs, subscript_dict)
+            coordinates = utils.make_coord_dict(subs, subscript_dict)
             if len(coordinates):
                 return '.loc[%s]' % repr(coordinates)
             else:
@@ -582,7 +584,7 @@ def translate_vensim(mdl_file):
     namespace = {}
     for element in model_elements:
         if element['kind'] not in ['subdef', 'section']:
-            element['py_name'], namespace = builder.make_python_identifier(element['real_name'],
+            element['py_name'], namespace = utils.make_python_identifier(element['real_name'],
                                                                            namespace)
 
     # Create a namespace for the subscripts

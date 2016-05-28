@@ -103,6 +103,8 @@ class TestPySD(TestCase):
         model.run()
         self.assertIsNotNone(model.components.room_temperature.cache)
 
+
+
     def test_reset_state(self):
         self.fail()
 
