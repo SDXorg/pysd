@@ -7,7 +7,6 @@ straightforward equivalent in python.
 """
 
 import numpy as np
-import scipy.stats as stats  # Todo: can we get away from the scipy dependency?
 import re
 from functools import wraps
 

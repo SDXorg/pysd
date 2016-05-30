@@ -27,7 +27,6 @@ setup(
         'pandas',
         'numpy',
         'parsimonious',
-        'scipy',
         'autopep8'
     ]
 )

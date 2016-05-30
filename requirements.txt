@@ -2,4 +2,3 @@ pandas
 numpy
 parsimonious
 autopep8
-scipy
