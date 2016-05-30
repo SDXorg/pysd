@@ -482,10 +482,10 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
             return functions[n.text.lower()]
 
         def visit_in_oper(self, n, vc):
-            return in_ops[n.text]
+            return in_ops[n.text.lower()]
 
         def visit_pre_oper(self, n, vc):
-            return pre_ops[n.text]
+            return pre_ops[n.text.lower()]
 
         def visit_id(self, n, vc):
             self.kind = 'component'

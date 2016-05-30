@@ -2,7 +2,7 @@
 Not tests of utilities... That could be confusing."""
 
 import pysd
-import numpy.testing as npt
+import numpy as np
 import pandas as pd
 import os.path
 
@@ -82,11 +82,15 @@ def assertFramesClose(actual, expected, **kwargs):
 
     for col in expected.columns:
         try:
-            npt.assert_allclose(expected[col].values,
-                                actual[col].values,
-                                **kwargs)
+            assert_allclose(expected[col].values,
+                            actual[col].values,
+                            **kwargs)
         except AssertionError as e:
             print 1
             raise AssertionError(
                 e.message + 'Column: ' + str(col)
             )
+
+
+def assert_allclose(x, y, rtol=1.e-5, atol=1.e-8):
+    assert np.all(np.less_equal(abs(x-y), atol + rtol * abs(y)))

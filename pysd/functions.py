@@ -133,9 +133,9 @@ def lookup(x, xs, ys):
     """ Provides the working mechanism for lookup functions the builder builds """
     if not isinstance(xs, np.ndarray):
         return np.interp(x, xs, ys)
-    resultarray=np.ndarray(np.shape(x))
-    for i,j in np.ndenumerate(x):
-        resultarray[i]=np.interp(j,np.array(xs)[i],np.array(ys)[i])
+    resultarray = np.ndarray(np.shape(x))
+    for i, j in np.ndenumerate(x):
+        resultarray[i] = np.interp(j, np.array(xs)[i], np.array(ys)[i])
     return resultarray
 
 

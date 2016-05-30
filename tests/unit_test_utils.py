@@ -25,11 +25,11 @@ class TestUtils(TestCase):
         self.assertEqual(
             get_return_elements(["Inflow A",
                                  "Inflow B"],
-                                {'Dim1': ['Entry 1', 'Entry 2'],
-                                 'Dim2': ['Column 1', 'Column 2']}),
-                                {'Inflow A': 'inflow_a',
-                                 'Inflow B': 'inflow_b'},
-            (['inflow_a, inflow_b'],
+                                subscript_dict={'Dim1': ['Entry 1', 'Entry 2'],
+                                                'Dim2': ['Column 1', 'Column 2']},
+                                namespace={'Inflow A': 'inflow_a',
+                                           'Inflow B': 'inflow_b'}),
+            (['inflow_a', 'inflow_b'],
              {'Inflow A': ('inflow_a', {}),
               'Inflow B': ('inflow_b', {})}
              )
@@ -57,7 +57,6 @@ class TestUtils(TestCase):
 
         test_utils.assertFramesClose(resultdf, df, rtol=.01)
 
-
     def test_visit_addresses(self):
         from utils import visit_addresses
 
@@ -71,6 +70,16 @@ class TestUtils(TestCase):
         return_addresses = {'Elem1[B,F]': ('elem1', {'Dim1': ['B'], 'Dim2': ['F']})}
         self.assertEqual(visit_addresses(frame, return_addresses),
                          {'Elem1[B,F]': 8})
+
+    def test_visit_addresses_nosubs(self):
+        from utils import visit_addresses
+
+        frame = {'elem1': 25, 'elem2': 13}
+        return_addresses = {'Elem1': ('elem1', {}),
+                            'Elem2': ('elem2', {})}
+
+        self.assertEqual(visit_addresses(frame, return_addresses),
+                         {'Elem1': 25, 'Elem2': 13})
 
     def test_visit_addresses_return_array(self):
         """ There could be cases where we want to

@@ -103,7 +103,12 @@ class TestPySD(TestCase):
         model.run()
         self.assertIsNotNone(model.components.room_temperature.cache)
 
-
+    def test_output_type(self):
+        """
+        We may have a situation where the pandas dataframe contains elements that are themselves
+        numpy arrays, not individual values. Sometimes we may want that, but if it's a single
+        element, it should probably just be a number.
+        """
 
     def test_reset_state(self):
         self.fail()

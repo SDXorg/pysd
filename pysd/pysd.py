@@ -178,6 +178,8 @@ class PySD(object):
         pysd.set_initial_condition : handles setting initial conditions
 
         """
+        # Todo: think of a better way to handle the separation between return timestamps and
+        # integration tseries
 
         if params:
             self.set_components(params)
@@ -185,6 +187,9 @@ class PySD(object):
         self.set_initial_condition(initial_condition)
 
         tseries = self._build_timeseries(return_timestamps)
+
+        if return_timestamps is None:
+            return_timestamps = tseries
 
         if return_columns is None:
             return_elements = self.components._stocknames
@@ -195,6 +200,7 @@ class PySD(object):
         res = self._integrate(self.components._dfuncs, tseries, capture_elements, tseries)
 
         return_df = utils.make_flat_df(res, return_addresses)
+        return_df.index = return_timestamps
 
         if collect:
             self.record.append(return_df)
@@ -356,7 +362,7 @@ class PySD(object):
             # numpy's `arange` gives us.
             tseries = np.arange(self.components.initial_time(),
                                 self.components.final_time()+self.components.time_step(),
-                                self.components.time_step())
+                                self.components.time_step(), dtype=np.float64)
         elif isinstance(return_timestamps, (list, int, float, long, np.ndarray)):
             tseries = np.array(return_timestamps, ndmin=1)
         else:
@@ -394,13 +400,14 @@ class PySD(object):
 
         return {key: dfunc()*dt + state[key] for key, dfunc in ddt.iteritems()}
 
-    def _integrate(self, ddt, timesteps, return_elements, return_timestamps):
+
+    def _integrate(self, derivative_functions, timesteps, return_elements, return_timestamps):
         """
         Performs euler integration
 
         Parameters
         ----------
-        ddt:
+        derivative_functions
         timesteps
         return_elements
 
@@ -408,13 +415,28 @@ class PySD(object):
         -------
 
         """
-        outputs = range(len(timesteps))
-        for i, t2 in enumerate(timesteps):
-            next_state = self._euler_step(ddt, self.components._state, t2-self.components._t)
+        # todo: make this integrator less klugey
+        # creates a list whose members we can overwrite with a dictionary,
+        # may be able to just append to an empty array?
+        outputs = range(len(return_timestamps))
+
+        # add something to the final timesteps, otherwise we loose the last version
+        # because we have to subtract timestamps to get the dt, and we use the dt in
+        # the values calculation. (this could be done more intelligently)
+
+
+        for i, t2 in enumerate(timesteps[1:]):
             if self.components._t in return_timestamps:
                 outputs[i] = {key: self.components._funcs[key]() for key in return_elements}
-            self.components._state = next_state
+            self.components._state = self._euler_step(derivative_functions,
+                                          self.components._state,
+                                          t2-self.components._t)
             self.components._t = t2  # this will clear the stepwise caches
+
+        if self.components._t in return_timestamps:
+            outputs[i+1] = {key: self.components._funcs[key]() for key in return_elements}
+
+
 
         return outputs
 

@@ -272,6 +272,10 @@ def get_return_elements(return_columns, namespace, subscript_dict):
             capture_elements.add(py_name)
             address = make_coord_dict(subs, subscript_dict)
             return_addresses[col] = (py_name, address)
+        else:
+            py_name = namespace[col]
+            capture_elements.add(py_name)
+            return_addresses[col] = (py_name, {})
 
     return list(capture_elements), return_addresses
 
@@ -323,6 +327,10 @@ def visit_addresses(frame, return_addresses):
     """
     outdict = dict()
     for real_name, (pyname, address) in return_addresses.iteritems():
-        val = np.squeeze(frame[pyname].loc[address].values)
-        outdict[real_name] = float(val)
+        if address:
+            val = np.squeeze(frame[pyname].loc[address].values)
+            outdict[real_name] = float(val)
+        else:
+            outdict[real_name] = frame[pyname]
+
     return outdict
