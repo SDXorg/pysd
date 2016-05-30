@@ -27,6 +27,7 @@ setup(
         'pandas',
         'numpy',
         'parsimonious',
-        'autopep8'
+        'autopep8',
+        'xarray'
     ]
 )
