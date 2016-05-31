@@ -6,7 +6,7 @@ import test_utils
 class TestUtils(TestCase):
 
     def test_get_return_elements(self):
-        from utils import get_return_elements
+        from pysd.utils import get_return_elements
 
         self.assertEqual(
             get_return_elements(["Inflow A[Entry 1,Column 1]",
@@ -36,7 +36,7 @@ class TestUtils(TestCase):
         )
 
     def test_make_flat_df(self):
-        from utils import make_flat_df
+        from pysd.utils import make_flat_df
 
         frames = [{'elem1': xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
                                        {'Dim1': ['A', 'B', 'C'],
@@ -58,7 +58,7 @@ class TestUtils(TestCase):
         test_utils.assertFramesClose(resultdf, df, rtol=.01)
 
     def test_visit_addresses(self):
-        from utils import visit_addresses
+        from pysd.utils import visit_addresses
 
         frame = {'elem1': xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
                                        {'Dim1': ['A', 'B', 'C'],
@@ -72,7 +72,7 @@ class TestUtils(TestCase):
                          {'Elem1[B,F]': 8})
 
     def test_visit_addresses_nosubs(self):
-        from utils import visit_addresses
+        from pysd.utils import visit_addresses
 
         frame = {'elem1': 25, 'elem2': 13}
         return_addresses = {'Elem1': ('elem1', {}),

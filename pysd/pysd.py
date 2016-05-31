@@ -186,18 +186,18 @@ class PySD(object):
 
         self.set_initial_condition(initial_condition)
 
-        tseries = self._build_timeseries(return_timestamps)
+        t_series = self._build_euler_timeseries(return_timestamps)
 
-        if return_timestamps is None:
-            return_timestamps = tseries
+        return_timestamps = self._format_return_timestamps(return_timestamps)
 
         if return_columns is None:
-            return_elements = self.components._stocknames
+            return_columns = self.components._stocknames
 
         capture_elements, return_addresses = utils.get_return_elements(
             return_columns, self.components._namespace, self.components._subscript_dict)
 
-        res = self._integrate(self.components._dfuncs, tseries, capture_elements, tseries)
+        res = self._integrate(self.components._dfuncs, t_series,
+                              capture_elements, return_timestamps)
 
         return_df = utils.make_flat_df(res, return_addresses)
         return_df.index = return_timestamps
@@ -213,7 +213,11 @@ class PySD(object):
 
 
     def reset_state(self):
-        """Sets the model state to the state described in the model file. """
+        """
+        Sets the model state to the state described in the model file.
+        Builds the state vector from scratch
+
+        """
 
         # We give the state and the time parameters leading underscores so that
         # if there are variables in the model named 't' or 'state' there are no
@@ -349,25 +353,30 @@ class PySD(object):
         else:
             raise TypeError('Check documentation for valid entries')
 
-    def _build_timeseries(self, return_timestamps=None):
-        """ Build up array of timestamps
+    def _build_euler_timeseries(self, return_timestamps=None):
+        # Todo: Add the returned timeseries into the integration array. Best we can do for now.
 
+        return np.arange(self.components.initial_time(),
+                         self.components.final_time() + self.components.time_step(),
+                         self.components.time_step(), dtype=np.float64)
+
+    def _format_return_timestamps(self, return_timestamps=None):
         """
-
-        # Todo: rework this for the euler integrator, to be the dt series plus the return timestamps
-        # Todo: maybe cache the result of this function?
+        Format the passed in return timestamps value if it exists,
+        or build up array of timestamps based upon the model saveper
+        """
         if return_timestamps is None:
             # Vensim's standard is to expect that the data set includes the `final time`,
             # so we have to add an extra period to make sure we get that value in what
             # numpy's `arange` gives us.
-            tseries = np.arange(self.components.initial_time(),
-                                self.components.final_time()+self.components.time_step(),
-                                self.components.time_step(), dtype=np.float64)
+            return_timestamps_array = np.arange(self.components.initial_time(),
+                                self.components.final_time() + self.components.saveper(),
+                                self.components.saveper(), dtype=np.float64)
         elif isinstance(return_timestamps, (list, int, float, long, np.ndarray)):
-            tseries = np.array(return_timestamps, ndmin=1)
+            return_timestamps_array = np.array(return_timestamps, ndmin=1)
         else:
             raise TypeError('`return_timestamps` expects a list, array, or numeric value')
-        return tseries
+        return return_timestamps_array
 
     def _timeseries_component(self, series):
         """ Internal function for creating a timeseries model element """
@@ -415,28 +424,21 @@ class PySD(object):
         -------
 
         """
-        # todo: make this integrator less klugey
-        # creates a list whose members we can overwrite with a dictionary,
-        # may be able to just append to an empty array?
-        outputs = range(len(return_timestamps))
-
-        # add something to the final timesteps, otherwise we loose the last version
-        # because we have to subtract timestamps to get the dt, and we use the dt in
-        # the values calculation. (this could be done more intelligently)
-
+        # Todo: consider adding the timestamp to the return elements, and using that as the index
+        outputs = []
 
         for i, t2 in enumerate(timesteps[1:]):
             if self.components._t in return_timestamps:
-                outputs[i] = {key: self.components._funcs[key]() for key in return_elements}
+                outputs.append({key: self.components._funcs[key]() for key in return_elements})
             self.components._state = self._euler_step(derivative_functions,
-                                          self.components._state,
-                                          t2-self.components._t)
+                                                      self.components._state,
+                                                      t2 - self.components._t)
             self.components._t = t2  # this will clear the stepwise caches
 
+        # need to add one more timestep, because we run only the state updates in the previous
+        # loop and thus may be one short.
         if self.components._t in return_timestamps:
-            outputs[i+1] = {key: self.components._funcs[key]() for key in return_elements}
-
-
+            outputs.append({key: self.components._funcs[key]() for key in return_elements})
 
         return outputs
 

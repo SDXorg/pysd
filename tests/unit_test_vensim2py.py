@@ -4,7 +4,7 @@ import unittest
 class TestEquationStringParsing(unittest.TestCase):
     """ Tests the 'get_equation_components function """
     def test_basics(self):
-        from vensim2py import get_equation_components
+        from pysd.vensim2py import get_equation_components
         self.assertEqual(
             get_equation_components(r'constant = 25'),
             {'expr': '25', 'kind': 'component', 'subs': [], 'real_name': 'constant'}
@@ -12,7 +12,7 @@ class TestEquationStringParsing(unittest.TestCase):
 
     def test_equals_handling(self):
         """ Parse cases with equal signs within the expression """
-        from vensim2py import get_equation_components
+        from pysd.vensim2py import get_equation_components
         self.assertEqual(
             get_equation_components(r'Boolean = IF THEN ELSE(1 = 1, 1, 0)'),
             {'expr': 'IF THEN ELSE(1 = 1, 1, 0)', 'kind': 'component', 'subs': [],
@@ -21,7 +21,7 @@ class TestEquationStringParsing(unittest.TestCase):
 
     def test_whitespace_handling(self):
         """ Whitespaces should be shortened to a single space """
-        from vensim2py import get_equation_components
+        from pysd.vensim2py import get_equation_components
         self.assertEqual(
             get_equation_components(r'''constant\t =
                                                         \t25\t '''),
@@ -37,7 +37,7 @@ class TestEquationStringParsing(unittest.TestCase):
         )
 
     def test_subscript_definition_parsing(self):
-        from vensim2py import get_equation_components
+        from pysd.vensim2py import get_equation_components
         self.assertEqual(
             get_equation_components(r'''Sub1: Entry 1, Entry 2, Entry 3 '''),
             {'expr': None, 'kind': 'subdef', 'subs': ['Entry 1', 'Entry 2', 'Entry 3'],
@@ -45,7 +45,7 @@ class TestEquationStringParsing(unittest.TestCase):
         )
 
     def test_subscript_references(self):
-        from vensim2py import get_equation_components
+        from pysd.vensim2py import get_equation_components
         self.assertEqual(
             get_equation_components(r'constant [Sub1, Sub2] = 10, 12; 14, 16;'),
             {'expr': '10, 12; 14, 16;', 'kind': 'component', 'subs': ['Sub1', 'Sub2'],
@@ -71,7 +71,7 @@ class TestEquationStringParsing(unittest.TestCase):
         )
 
     def test_lookup_definitions(self):
-        from vensim2py import get_equation_components
+        from pysd.vensim2py import get_equation_components
         self.assertEqual(
             get_equation_components(r'table([(0,-1)-(45,1)],(0,0),(5,0))'),
             {'expr': '([(0,-1)-(45,1)],(0,0),(5,0))', 'kind': 'lookup', 'subs': [],
@@ -85,7 +85,7 @@ class TestEquationStringParsing(unittest.TestCase):
         )
 
     def test_pathological_names(self):
-        from vensim2py import get_equation_components
+        from pysd.vensim2py import get_equation_components
         self.assertEqual(
             get_equation_components(r'"silly-string" = 25'),
             {'expr': '25', 'kind': 'component', 'subs': [], 'real_name': '"silly-string"'}
@@ -101,7 +101,7 @@ class TestEquationStringParsing(unittest.TestCase):
 class TestParse_general_expression(unittest.TestCase):
 
     def test_id_parsing(self):
-        from vensim2py import parse_general_expression
+        from pysd.vensim2py import parse_general_expression
         self.assertEqual(parse_general_expression({'expr': 'StockA'},
                                                   namespace={'StockA': 'stocka'}),
                          ({'kind': 'component', 'py_expr': 'stocka()'}, []))
@@ -165,7 +165,7 @@ class TestParse_general_expression(unittest.TestCase):
         )
 
     def test_stock_construction_function_no_subscripts(self):
-        from vensim2py import parse_general_expression
+        from pysd.vensim2py import parse_general_expression
         self.assertEqual(
             parse_general_expression({'expr': 'INTEG (FlowA, -10)',
                                       'py_name':'test_stock',
@@ -260,7 +260,7 @@ class TestParse_general_expression(unittest.TestCase):
     # so do it by default?
 
     def test_subscript_reference(self):
-        from vensim2py import parse_general_expression
+        from pysd.vensim2py import parse_general_expression
         self.assertEqual(
             parse_general_expression({'expr': 'Var A[Dim1, Dim2]'},
                                      {'Var A': 'var_a'},
@@ -288,7 +288,7 @@ class TestParse_general_expression(unittest.TestCase):
 
     @unittest.skip('not yet implemented')
     def test_subscript_ranges(self):
-        from vensim2py import parse_general_expression
+        from pysd.vensim2py import parse_general_expression
         self.assertEqual(
             parse_general_expression({'expr': 'Var D[Range1]'},
                                      {'Var D': 'var_c'},
@@ -298,7 +298,7 @@ class TestParse_general_expression(unittest.TestCase):
         )
 
     def test_builtin_components(self):
-        from vensim2py import parse_general_expression
+        from pysd.vensim2py import parse_general_expression
         self.assertEqual(
             parse_general_expression({'expr': 'TIME'}, {}),
             ({'kind': 'component', 'py_expr': "time()"},

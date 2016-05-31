@@ -107,8 +107,6 @@ def build_element(element, subscript_dict):
     else:
         raise AttributeError("Bad value for 'kind'")
 
-
-
     if len(element['py_expr']) > 1:
         contents = "ret = %s\n" % create_base_array(element['subs'], subscript_dict)
 
@@ -119,12 +117,16 @@ def build_element(element, subscript_dict):
 
         contents += "return ret"
 
-    elif element['kind'] == 'constant' and len(element['subs'][0]) > 0:
-        contents = 'return xr.DataArray(data=%(expr)s, coords=%(coords)s, dims=%(dims)s )' % {
-            'expr': '[' + element['py_expr'][0] + ']',
-            'coords': {dim: subscript_dict[dim] for dim in element['subs'][0]},
-            'dims': element['subs'][0]
-        }
+    elif element['kind'] in ['constant', 'setup'] and len(element['subs'][0]) > 0:
+        if ',' in element['py_expr'][0]:  # array type initialization
+            contents = 'return xr.DataArray(data=%(expr)s, coords=%(coords)s, dims=%(dims)s )' % {
+                'expr': '[' + element['py_expr'][0] + ']',
+                'coords': {dim: subscript_dict[dim] for dim in element['subs'][0]},
+                'dims': element['subs'][0]}
+        else:  # float type initialization
+            contents = "return " + create_base_array(element['subs'],
+                                                     subscript_dict,
+                                                     initial_val=element['py_expr'][0])
 
     else:
         contents = "return %s" % element['py_expr'][0]
@@ -151,9 +153,7 @@ def build_element(element, subscript_dict):
     return func
 
 
-
-
-def create_base_array(subs_list, subscript_dict):
+def create_base_array(subs_list, subscript_dict, initial_val='np.Nan'):
     """
     Given a list of subscript references,
     returns a base array that can be populated by these references
@@ -195,9 +195,10 @@ def create_base_array(subs_list, subscript_dict):
                     if sub not in coords[name]:
                         coords[name] += [sub]
 
-    return "xr.DataArray(data=np.empty(%(shape)s)*np.NaN, coords=%(coords)s)" % {
+    return "xr.DataArray(data=np.ones(%(shape)s)*%(init)s, coords=%(coords)s)" % {
         'shape': repr(map(len, coords.values())),
-        'coords': repr(coords)
+        'coords': repr(coords),
+        'init': initial_val
     }
 
 # def identify_subranges(subscript_dict):
