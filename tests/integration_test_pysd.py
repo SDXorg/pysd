@@ -3,6 +3,7 @@ from unittest import TestCase
 
 rtol = .05
 
+
 class TestIntegrationExamples(TestCase):
 
     def test_abs(self):

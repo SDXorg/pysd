@@ -121,14 +121,13 @@ class PySD(object):
     def __init__(self, components):
         """ Construct a PySD object built around the component class """
         self.components = components
-        self.record = []
 
     def __str__(self):
         """ Return model source file """
         return self.components.__str__
 
     def run(self, params=None, return_columns=None, return_timestamps=None,
-            initial_condition='original', collect=False):
+            initial_condition='original'):
         """ Simulate the model's behavior over time.
         Return a pandas dataframe with timestamps as rows,
         model elements as columns.
@@ -157,10 +156,6 @@ class PySD(object):
             * 'current' uses the state of the model after the previous execution
             * (t, {state}) lets the user specify a starting time and (possibly partial)
               list of stock values.
-
-        collect: binary (T/F)
-            When running multiple simulations, collect the results in a way
-            that we can access down the road.
 
 
         Examples
@@ -203,14 +198,7 @@ class PySD(object):
         return_df = utils.make_flat_df(res, return_addresses)
         return_df.index = return_timestamps
 
-        if collect:
-            self.record.append(return_df)
-
         return return_df
-
-
-
-
 
 
     def reset_state(self):
@@ -263,21 +251,6 @@ class PySD(object):
 
         if self.components._stocknames:  # if there are no stocks, don't try to initialize!
             initialize_state()
-
-    def get_record(self):
-        """ Return the recorded model information.
-        Returns everything as a big long dataframe.
-
-        >>> model.get_record()
-        """
-        return _pd.concat(self.record)
-
-    def clear_record(self):
-        """ Reset the recorder.
-
-        >>> model.clear_record()
-        """
-        self.record = []
 
     def set_components(self, params):
         """ Set the value of exogenous model elements.

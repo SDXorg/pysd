@@ -87,11 +87,11 @@ def assertFramesClose(actual, expected, **kwargs):
                             actual[col].values,
                             **kwargs)
         except AssertionError as e:
-            print 1
             raise AssertionError(
                 e.message + 'Column: ' + str(col)
+
             )
 
 
-def assert_allclose(x, y, rtol=1.e-5, atol=1.e-8):
+def assert_allclose(x, y, rtol=1.e-5, atol=1.e-5):
     assert np.all(np.less_equal(abs(x-y), atol + rtol * abs(y)))

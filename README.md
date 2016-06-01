@@ -1,7 +1,7 @@
 PySD
 ====
-[![Coverage Status](https://coveralls.io/repos/github/JamesPHoughton/pysd/badge.svg?branch=master)](https://coveralls.io/github/JamesPHoughton/pysd?branch=master)
-[![Code Health](https://landscape.io/github/JamesPHoughton/pysd/master/landscape.svg?style=flat)](https://landscape.io/github/JamesPHoughton/pysd/master)
+[![Coverage Status](https://coveralls.io/repos/github/JamesPHoughton/pysd/badge.svg?branch=subscript-parsimonious-regrammar)](https://coveralls.io/github/JamesPHoughton/pysd?branch=subscript-parsimonious-regrammar)
+[![Code Health](https://landscape.io/github/JamesPHoughton/pysd/subscript-parsimonious-regrammar/landscape.svg?style=flat)](https://landscape.io/github/JamesPHoughton/pysd/subscript-parsimonious-regrammar)
 [![Build Status](https://travis-ci.org/JamesPHoughton/pysd.svg?branch=master)](https://travis-ci.org/JamesPHoughton/pysd)
 
 

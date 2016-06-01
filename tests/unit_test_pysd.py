@@ -92,25 +92,12 @@ class TestPySD(TestCase):
         self.assertIsInstance(model.doc(), basestring)  # tests the function we wrote
         self.assertIsInstance(model.doc(short=True), basestring)
 
-    def test_collection(self):
-        import pysd
-        model = pysd.read_vensim(test_model)
-        model.run(params={'room_temperature': 75},
-                  return_timestamps=range(0, 30), collect=True)
-        model.run(params={'room_temperature': 25}, initial_condition='current',
-                  return_timestamps=range(30, 60), collect=True)
-        stocks = model.get_record()
-        self.assertTrue(all(stocks.index.values == np.array(range(0, 60))))
-        # We may drop this use case, as its relatively low value,
-        # and meeting it makes things slower.
-        # Todo: test clearing the record
-
     def test_cache(self):
+        # Todo: test stepwise and runwise caching
         import pysd
         model = pysd.read_vensim(test_model)
         model.run()
         self.assertIsNotNone(model.components.room_temperature.cache)
-
 
     def test_reset_state(self):
         import pysd
@@ -122,15 +109,6 @@ class TestPySD(TestCase):
         reset_state = model.components._state.copy()
         self.assertNotEqual(initial_state, final_state)
         self.assertEqual(initial_state, reset_state)
-
-    def test_get_record(self):
-        self.fail()
-
-    def test_clear_record(self):
-        self.fail()
-
-    def test_set_components(self):
-        self.fail()
 
     def test_set_state(self):
         import pysd
@@ -153,9 +131,31 @@ class TestPySD(TestCase):
         self.assertNotEqual(initial_time, new_time)
         self.assertEqual(new_time, set_time)
 
-
     def test_set_initial_condition(self):
-        self.fail()
+        import pysd
+        model = pysd.read_vensim(test_model)
+        initial_state = model.components._state.copy()
+        initial_time = model.components.time()
+
+        new_state = {key: np.random.rand() for key in initial_state.iterkeys()}
+        new_time = np.random.rand()
+
+        model.set_initial_condition((new_time, new_state))
+        set_state = model.components._state.copy()
+        set_time = model.components.time()
+
+        self.assertNotEqual(initial_state, new_state)
+        self.assertEqual(set_state, new_state)
+
+        self.assertNotEqual(initial_time, new_time)
+        self.assertEqual(new_time, set_time)
+
+        model.set_initial_condition('original')
+        set_state = model.components._state.copy()
+        set_time = model.components.time()
+
+        self.assertEqual(initial_state, set_state)
+        self.assertEqual(initial_time, set_time)
 
     def test__build_timeseries(self):
         self.fail()

@@ -9,5 +9,5 @@ install:
 # command to run tests
 script:
     - cd tests
-    - nosetests --with-coverage
+    - nosetests --with-coverage --cover-package=pysd
     - coveralls
