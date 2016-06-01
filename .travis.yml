@@ -5,7 +5,9 @@ python:
 install:
   - pip install .
   - pip install -r requirements.txt
+  - pip install coveralls
 # command to run tests
 script:
     - cd tests
-    - nosetests
+    - nosetests --with-coverage
+    - coveralls
