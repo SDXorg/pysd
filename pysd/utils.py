@@ -3,6 +3,7 @@ import keyword
 import numpy as np
 import pandas as pd
 
+
 def dict_find(in_dict, value):
     """ Helper function for looking up directory keys by their values.
      This isn't robust to repeated values
@@ -262,18 +263,33 @@ def get_return_elements(return_columns, namespace, subscript_dict):
     --------
 
     """
+    # Todo: clean up duplicated code
     capture_elements = set()
     return_addresses = dict()
     for col in return_columns:
         if '[' in col:
             name, location = col.strip(']').split('[')
             subs = [l.strip() for l in location.split(',')]
-            py_name = namespace[name]
+            try:
+                py_name = namespace[name]
+            except KeyError:
+                if name in namespace.values():
+                    py_name = name
+                else:
+                    raise KeyError(name + " not found as model element")
+
             capture_elements.add(py_name)
             address = make_coord_dict(subs, subscript_dict)
             return_addresses[col] = (py_name, address)
         else:
-            py_name = namespace[col]
+            try:
+                py_name = namespace[col]
+            except KeyError:
+                if col in namespace.values():
+                    py_name = col
+                else:
+                    raise KeyError(col + " not found as model element")
+
             capture_elements.add(py_name)
             return_addresses[col] = (py_name, {})
 
@@ -328,8 +344,11 @@ def visit_addresses(frame, return_addresses):
     outdict = dict()
     for real_name, (pyname, address) in return_addresses.iteritems():
         if address:
-            val = np.squeeze(frame[pyname].loc[address].values)
-            outdict[real_name] = float(val)
+            xrval = frame[pyname].loc[address]
+            if xrval.size > 1:
+                outdict[real_name] = xrval
+            else:
+                outdict[real_name] = float(np.squeeze(xrval.values))
         else:
             outdict[real_name] = frame[pyname]
 

@@ -107,7 +107,7 @@ class TestParse_general_expression(unittest.TestCase):
                          ({'kind': 'component', 'py_expr': 'stocka()'}, []))
 
     def test_number_parsing(self):
-        from translators.vensim2py2 import parse_general_expression
+        from pysd.vensim2py import parse_general_expression
         self.assertEqual(
             parse_general_expression({'expr': '20'}),
             ({'kind': 'constant', 'py_expr': '20'}, [])
@@ -134,21 +134,28 @@ class TestParse_general_expression(unittest.TestCase):
         )
 
     def test_arithmetic(self):
-        from translators.vensim2py2 import parse_general_expression
+        from pysd.vensim2py import parse_general_expression
         self.assertEqual(
             parse_general_expression({'expr': '-10^3+4'}),
             ({'kind': 'constant', 'py_expr': '-10**3+4'}, [])
         )
 
     def test_builtins(self):
-        from translators.vensim2py2 import parse_general_expression
+        from pysd.vensim2py import parse_general_expression
         self.assertEqual(
             parse_general_expression({'expr': 'Time'}),
-            ({'kind': 'constant', 'py_expr': 'time()'}, [])
+            ({'kind': 'component', 'py_expr': 'time()'},
+             [{'doc': 'The time of the model',
+               'kind': 'component',
+               'py_expr': '_t',
+               'py_name': 'time',
+               'real_name': 'Time',
+               'subs': None,
+               'unit': None}])
         )
 
     def test_function_calls(self):
-        from translators.vensim2py2 import parse_general_expression
+        from pysd.vensim2py import parse_general_expression
         self.assertEqual(
             parse_general_expression({'expr': 'ABS(StockA)'}, {'StockA': 'stocka'}),
             ({'kind': 'component', 'py_expr': 'abs(stocka())'}, [])
@@ -169,28 +176,28 @@ class TestParse_general_expression(unittest.TestCase):
         self.assertEqual(
             parse_general_expression({'expr': 'INTEG (FlowA, -10)',
                                       'py_name':'test_stock',
-                                      'subs':None},
+                                      'subs': None},
                                      {'FlowA': 'flowa'}),
             ({'kind': 'component', 'py_expr': "_state['test_stock']"},
-             [{'kind': 'implicit',
+             [{'kind': 'setup',
                'subs': None,
                'doc': 'Provides initial conditions for test_stock function',
                'py_name': '_init_test_stock',
-               'real_name': None,
+               'real_name': 'Implicit',
                'unit': 'See docs for test_stock',
                'py_expr': '-10'},
               {'py_name': '_dtest_stock_dt',
                'subs': None,
                'doc': 'Provides derivative for test_stock function',
-               'kind': 'implicit',
+               'kind': 'component',
                'unit': 'See docs for test_stock',
                'py_expr': 'flowa()',
-               'real_name': None}])
+               'real_name': 'Implicit'}])
         )
 
     @unittest.skip('not yet implemented')
     def test_delay_construction_function_no_subscripts(self):
-        from translators.vensim2py2 import parse_general_expression
+        from pysd.vensim2py import parse_general_expression
         self.assertEqual(
             parse_general_expression({'expr': 'Const * DELAY1(Variable, DelayTime)'},
                                      {'Const': 'const', 'Variable': 'variable', 'DelayTime':'delaytime'}),
@@ -205,14 +212,14 @@ class TestParse_general_expression(unittest.TestCase):
 
     @unittest.skip('not yet implemented')
     def test_smooth_construction_function_no_subscripts(self):
-        from translators.vensim2py2 import parse_general_expression
+        from pysd.vensim2py import parse_general_expression
         self.assertEqual(
             parse_general_expression({'expr': 'If Then Else(A>B, 1, 0)'}, {'A': 'a', 'B':'b'}),
             ({'kind': 'component', 'py_expr': 'functions.if_then_else(a>b, 1, 0)'}, [])
         )
 
     def test_subscript_constant(self):
-        from translators.vensim2py2 import parse_general_expression
+        from pysd.vensim2py import parse_general_expression
         self.assertEqual(
             parse_general_expression({'expr': '1, 2, 3, 4, 5, 6'}, {},
                                      {'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3'],
@@ -229,7 +236,7 @@ class TestParse_general_expression(unittest.TestCase):
 
     def test_subscript_stock(self):
         self.maxDiff = None
-        from translators.vensim2py2 import parse_general_expression
+        from pysd.vensim2py import parse_general_expression
         self.assertEqual(
             parse_general_expression({'expr': 'INTEG (Flow[sub_D1,sub_D2], Init[sub_D1, sub_D2])',
                                       'py_name': 'stock_test', 'subs': ['sub_D1']},
@@ -237,20 +244,20 @@ class TestParse_general_expression(unittest.TestCase):
                                      {'sub_D1': ['Entry 1', 'Entry 2', 'Entry 3'],
                                       'sub_D2': ['Column 1', 'Column 2']}),
             ({'kind': 'component', 'py_expr': "_state['stock_test']"},
-             [{'kind': 'implicit',
+             [{'kind': 'setup',
                'subs': ['sub_D1'],
                'doc': 'Provides initial conditions for stock_test function',
                'py_name': '_init_stock_test',
-               'real_name': None,
+               'real_name': 'Implicit',
                'unit': 'See docs for stock_test',
                'py_expr': 'init()'},
               {'py_name': '_dstock_test_dt',
                'subs': ['sub_D1'],
-               'kind': 'implicit',
+               'kind': 'component',
                'py_expr': 'flow()',
                'unit': 'See docs for stock_test',
                'doc': 'Provides derivative for stock_test function',
-               'real_name': None}])
+               'real_name': 'Implicit'}])
         )
 
     #notes:

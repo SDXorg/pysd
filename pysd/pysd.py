@@ -191,7 +191,8 @@ class PySD(object):
         return_timestamps = self._format_return_timestamps(return_timestamps)
 
         if return_columns is None:
-            return_columns = self.components._stocknames
+            return_columns = [utils.dict_find(self.components._namespace, x)
+                              for x in self.components._stocknames]
 
         capture_elements, return_addresses = utils.get_return_elements(
             return_columns, self.components._namespace, self.components._subscript_dict)

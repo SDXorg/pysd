@@ -254,7 +254,8 @@ def get_equation_components(equation_str):
     """
 
     # replace any amount of whitespace  with a single space
-    equation_str = re.sub('[\\s\\t\\\]+', ' ', equation_str)
+    equation_str = equation_str.replace('\\t', ' ')
+    equation_str = re.sub(r"\s+", ' ', equation_str)
 
     parser = parsimonious.Grammar(component_structure_grammar)
     tree = parser.parse(equation_str)
@@ -462,6 +463,9 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
     tree = parser.parse(element['expr'])
 
     class ExpressionParser(parsimonious.NodeVisitor):
+        # Todo: at some point, we could make the 'kind' identification recursive on expression,
+        # so that if an expression is passed into a builder function, the information
+        # about whether it is a constant, or calls another function, goes with it.
         def __init__(self, ast):
             self.translation = ""
             self.kind = 'constant'  # change if we reference anything else

@@ -11,7 +11,7 @@ class TestPySD(TestCase):
         model = pysd.read_vensim(test_model)
         stocks = model.run()
         self.assertTrue(isinstance(stocks, pd.DataFrame))  # return a dataframe
-        self.assertTrue('teacup_temperature' in stocks.columns.values)  # contains correct column
+        self.assertTrue('Teacup Temperature' in stocks.columns.values)  # contains correct column
         self.assertGreater(len(stocks), 3)  # has multiple rows
         self.assertTrue(stocks.notnull().all().all())  # there are no null values in the set
 
@@ -26,7 +26,15 @@ class TestPySD(TestCase):
         stocks = model.run(return_timestamps=5)
         self.assertEqual(stocks.index[0], 5)
 
-    def test_run_return_columns(self):
+    def test_run_return_columns_fullnames(self):
+        """Addresses https://github.com/JamesPHoughton/pysd/issues/26"""
+        import pysd
+        model = pysd.read_vensim(test_model)
+        return_columns = ['Room Temperature', 'Teacup Temperature']
+        result = model.run(return_columns=return_columns)
+        self.assertEqual(set(result.columns), set(return_columns))
+
+    def test_run_return_columns_pysafe_names(self):
         """Addresses https://github.com/JamesPHoughton/pysd/issues/26"""
         import pysd
         model = pysd.read_vensim(test_model)
@@ -103,15 +111,17 @@ class TestPySD(TestCase):
         model.run()
         self.assertIsNotNone(model.components.room_temperature.cache)
 
-    def test_output_type(self):
-        """
-        We may have a situation where the pandas dataframe contains elements that are themselves
-        numpy arrays, not individual values. Sometimes we may want that, but if it's a single
-        element, it should probably just be a number.
-        """
 
     def test_reset_state(self):
-        self.fail()
+        import pysd
+        model = pysd.read_vensim(test_model)
+        initial_state = model.components._state.copy()
+        model.run()
+        final_state = model.components._state.copy()
+        model.reset_state()
+        reset_state = model.components._state.copy()
+        self.assertNotEqual(initial_state, final_state)
+        self.assertEqual(initial_state, reset_state)
 
     def test_get_record(self):
         self.fail()
@@ -123,7 +133,26 @@ class TestPySD(TestCase):
         self.fail()
 
     def test_set_state(self):
-        self.fail()
+        import pysd
+        model = pysd.read_vensim(test_model)
+
+        initial_state = model.components._state.copy()
+        initial_time = model.components.time()
+
+        new_state = {key: np.random.rand() for key in initial_state.iterkeys()}
+        new_time = np.random.rand()
+
+        model.set_state(new_time, new_state)
+
+        set_state = model.components._state.copy()
+        set_time = model.components.time()
+
+        self.assertNotEqual(initial_state, new_state)
+        self.assertEqual(set_state, new_state)
+
+        self.assertNotEqual(initial_time, new_time)
+        self.assertEqual(new_time, set_time)
+
 
     def test_set_initial_condition(self):
         self.fail()

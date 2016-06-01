@@ -27,7 +27,7 @@ class TestBuildElement(TestCase):
 
                 This is a test.
                 """
-                ret = xr.DataArray(data=np.empty([3])*np.NaN, coords={'Dim1': ['A', 'B', 'C']})
+                ret = xr.DataArray(data=np.ones([3])*np.NaN, coords={'Dim1': ['A', 'B', 'C']})
                 ret.loc[{'Dim1': ['A']}] = 50
                 ret.loc[{'Dim1': ['B']}] = 21
                 ret.loc[{'Dim1': ['C']}] = 3
@@ -108,12 +108,12 @@ class TestBuildElement(TestCase):
         )
 
         expected = textwrap.dedent('''
-                @cache('run')
-                def rate_a():
+
+                def _init_stock_a():
                     """
-                    Rate A
-                    ------
-                    (rate_a)
+                    Implicit
+                    --------
+                    (_init_stock_a)
 
 
 
@@ -156,10 +156,12 @@ class TestBuildElement(TestCase):
                     ''')
         self.assertEqual(expected, actual)
 
+
 class TestBuild(TestCase):
     def test_build(self):
+        # Todo: add other builder-specific inclusions to this test
         from pysd.builder import build
-        self.assertEqual(
+        actual = textwrap.dedent(
             build(elements=[{'kind': 'component',
                              'subs': [[]],
                              'doc': '',
@@ -181,20 +183,13 @@ class TestBuild(TestCase):
                              'real_name': 'Implicit',
                              'py_expr': ['-10'],
                              'unit': 'See docs for stocka'}],
-                  subscript_dict={'Dim1': ['A', 'B', 'C']}),
-            '''
-            @cache('step')
-            def stocka():
-            """
-            StockA
-            -----------
-            (stocka)
-            """
-                return _state['stocka']
+                  namespace={'StockA': 'stocka'},
+                  subscript_dict={'Dim1': ['A', 'B', 'C']},
+                  outfile_name='return'))
 
-            def _dstocka_dt():
-                return flowa()
-            ''')
+        self.assertIn("_subscript_dict = {'Dim1': ['A', 'B', 'C']}", actual)
+        self.assertIn("functions.time = time", actual)
+        self.assertIn("_namespace = {'StockA': 'stocka'}", actual)
 
     class TestMergePartialElements(TestCase):
         def test_single_set(self):

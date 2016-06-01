@@ -96,6 +96,9 @@ def build_element(element, subscript_dict):
     -------
 
     """
+    # Todo: I don't like how we identify the types of initializations here, using tokens from
+    #  stings. It isn't explicit, or robust. These should be identified explicitly somewhere else.
+
     if element['kind'] == 'constant':
         cache_type = "@cache('run')"
     elif element['kind'] == 'setup':
@@ -123,6 +126,8 @@ def build_element(element, subscript_dict):
                 'expr': '[' + element['py_expr'][0] + ']',
                 'coords': {dim: subscript_dict[dim] for dim in element['subs'][0]},
                 'dims': element['subs'][0]}
+        elif '(' in element['py_expr'][0]:  # reference type initialization
+            contents = "return " + element['py_expr'][0]
         else:  # float type initialization
             contents = "return " + create_base_array(element['subs'],
                                                      subscript_dict,
@@ -153,7 +158,7 @@ def build_element(element, subscript_dict):
     return func
 
 
-def create_base_array(subs_list, subscript_dict, initial_val='np.Nan'):
+def create_base_array(subs_list, subscript_dict, initial_val='np.NaN'):
     """
     Given a list of subscript references,
     returns a base array that can be populated by these references
