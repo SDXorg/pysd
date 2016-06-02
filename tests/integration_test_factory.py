@@ -14,9 +14,9 @@ for file_path in vensim_test_files:
 
     test_func_string = """
     def test_%(test_name)s(self):
-        from test_utils import runner, assertFramesClose
+        from test_utils import runner, assert_frames_close
         output, canon = runner('%(file_path)s')
-        assertFramesClose(output, canon, rtol=rtol)
+        assert_frames_close(output, canon, rtol=rtol)
     """ % {
         'file_path': file_path,
         'test_name': test_name,

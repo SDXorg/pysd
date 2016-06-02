@@ -33,8 +33,7 @@ def runner(model_file):
     return output, canon
 
 
-
-def assertFramesClose(actual, expected, **kwargs):
+def assert_frames_close(actual, expected, **kwargs):
     """
     Compare DataFrame items by column and
     raise AssertionError if any column is not equal.
@@ -50,14 +49,14 @@ def assertFramesClose(actual, expected, **kwargs):
 
     Examples
     --------
-    >>> assertFramesClose(pd.DataFrame(100, index=range(5), columns=range(3)),
+    >>> assert_frames_close(pd.DataFrame(100, index=range(5), columns=range(3)),
     ...                   pd.DataFrame(100, index=range(5), columns=range(3)))
 
-    >>> assertFramesClose(pd.DataFrame(100, index=range(5), columns=range(3)),
+    >>> assert_frames_close(pd.DataFrame(100, index=range(5), columns=range(3)),
     ...                   pd.DataFrame(110, index=range(5), columns=range(3)),
     ...                   rtol=.2)
 
-    >>> assertFramesClose(pd.DataFrame(100, index=range(5), columns=range(3)),
+    >>> assert_frames_close(pd.DataFrame(100, index=range(5), columns=range(3)),
     ...                   pd.DataFrame(150, index=range(5), columns=range(3)),
     ...                   rtol=.2)  # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):

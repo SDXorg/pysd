@@ -74,7 +74,7 @@ class TestUtils(TestCase):
         df = pd.DataFrame([{'Elem1[B,F]': 8}, {'Elem1[B,F]': 16}])
         resultdf = make_flat_df(frames, return_addresses)
 
-        test_utils.assertFramesClose(resultdf, df, rtol=.01)
+        test_utils.assert_frames_close(resultdf, df, rtol=.01)
 
     def test_visit_addresses(self):
         from pysd.utils import visit_addresses

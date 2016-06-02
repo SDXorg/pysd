@@ -20,7 +20,6 @@ Mounir Yakzan
 import pandas as _pd
 import numpy as np
 import imp
-from math import fmod
 import time
 import utils
 
@@ -384,7 +383,7 @@ class PySD(object):
         return {key: dfunc()*dt + state[key] for key, dfunc in ddt.iteritems()}
 
 
-    def _integrate(self, derivative_functions, timesteps, return_elements, return_timestamps):
+    def _integrate(self, derivative_functions, timesteps, capture_elements, return_timestamps):
         """
         Performs euler integration
 
@@ -392,7 +391,7 @@ class PySD(object):
         ----------
         derivative_functions
         timesteps
-        return_elements
+        capture_elements
 
         Returns
         -------
@@ -403,7 +402,7 @@ class PySD(object):
 
         for i, t2 in enumerate(timesteps[1:]):
             if self.components._t in return_timestamps:
-                outputs.append({key: self.components._funcs[key]() for key in return_elements})
+                outputs.append({key: self.components._funcs[key]() for key in capture_elements})
             self.components._state = self._euler_step(derivative_functions,
                                                       self.components._state,
                                                       t2 - self.components._t)
@@ -412,69 +411,6 @@ class PySD(object):
         # need to add one more timestep, because we run only the state updates in the previous
         # loop and thus may be one short.
         if self.components._t in return_timestamps:
-            outputs.append({key: self.components._funcs[key]() for key in return_elements})
+            outputs.append({key: self.components._funcs[key]() for key in capture_elements})
 
         return outputs
-
-
-    def _flatten_dataframe(self, dataframe):
-        """
-        Formats model output for easy comparison or storage in a 2d spreadsheet.
-
-        Parameters
-        ----------
-        dataframe : pandas dataframe
-            The output of a model simulation, with variable names as column names
-             and timeseries as the indices. In this dataframe may be some columns
-             representing variables with subscripts, whose values are held within
-             numpy arrays within each cell of the dataframe.
-
-        Returns
-        -------
-        flat_dataframe : pandas dataframe
-            Dataframe containing all of the information of the output, but flattened such
-             that each cell of the dataframe contains only a number, not a full array.
-             Extra columns will be added to represent each of the elements of the arrays
-             in question.
-        """
-        def sort(dictionary):
-            return [dictionary.keys()[dictionary.values().index(x)] for x in sorted(dictionary.values())]
-
-        def pandasnamearray(varname):
-            stocklen = 1
-            stockmod = []
-
-            for i in sort(varname.dimension_dir):
-                stocklen *= len(self.components._subscript_dict[i])
-                stockmod.append(len(self.components._subscript_dict[i]))
-
-            for i in range(len(stockmod)):
-                stockmod[i]=np.prod(stockmod[i+1:])
-
-            interstock = np.ndarray(stocklen, object)
-            interstock[:] = ""
-
-            for i, j in enumerate(sort(varname.dimension_dir)):
-                for k in range(stocklen):
-                    interstock[k] += "__"+sort(self.components._subscript_dict[j])[int(fmod(k/stockmod[i], len(self.components._subscript_dict[j])))]
-
-            return [interstock[i].strip("__") for i in range(len(interstock))]  # take off the ends
-
-        def dataframeexpand(pddf):
-            result = []
-            for pos, name in enumerate(pddf.columns):
-                # todo: don't try and flatten if alreay a single number
-                # except if its a single-element subscript, we may want to do this?
-                if (isinstance(pddf[name].loc[0], np.ndarray) and
-                        np.max(pddf[name].loc[0].size) > 1): #in the case that a single number makes its way into an array?
-                    result.append(pddf[name].apply(lambda x: _pd.Series(x.flatten())))
-                    result[pos].columns = ([name+'__'+pandasnamearray(getattr(self.components, name))[x] for x in range(len(pandasnamearray(getattr(self.components,name))))])
-                else:
-                    result.append(_pd.DataFrame(pddf[name]))
-                    result[pos].columns = [name]
-            pddf = _pd.concat([result[x] for x in range(len(result))], axis=1)
-
-            return pddf
-        return dataframeexpand(dataframe)
-
-

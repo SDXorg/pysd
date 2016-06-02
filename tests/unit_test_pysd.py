@@ -26,6 +26,16 @@ class TestPySD(TestCase):
         stocks = model.run(return_timestamps=5)
         self.assertEqual(stocks.index[0], 5)
 
+    def test_run_return_timestamps_past_final_time(self):
+        """ If the user enters a timestamp that is longer than the euler
+        timeseries that is defined by the normal model file, should
+        extend the euler series to the largest timestamp"""
+        import pysd
+        model = pysd.read_vensim(test_model)
+        return_timestamps = range(0, 100, 10)
+        stocks = model.run(return_timestamps=return_timestamps),
+        self.assertSequenceEqual(return_timestamps, list(stocks.index))
+
     def test_run_return_columns_fullnames(self):
         """Addresses https://github.com/JamesPHoughton/pysd/issues/26"""
         import pysd
@@ -46,10 +56,13 @@ class TestPySD(TestCase):
         import pysd
         model = pysd.read_vensim(test_model)
         stocks = model.run(initial_condition=(0, {'teacup_temperature': 33}))
-        self.assertEqual(stocks['teacup_temperature'].loc[0], 33)
+        actual = stocks['Teacup Temperature'].loc[0]
+        expected = 33
+        self.assertEqual(actual, expected)
 
-        stocks = model.run(initial_condition='current', return_timestamps=range(31, 45))
-        self.assertGreater(stocks['teacup_temperature'].loc[44], 0)
+        stocks = model.run(initial_condition='current',
+                           return_timestamps=range(31, 45))
+        self.assertGreater(stocks['Teacup Temperature'].loc[44], 0)
 
         with self.assertRaises(TypeError):
             self.run(initial_condition='bad value')
@@ -75,12 +88,14 @@ class TestPySD(TestCase):
                         return_timestamps=timeseries)
         self.assertTrue((res['room_temperature'] == temp_timeseries).all())
 
-    def test_flatten_nonexisting_subscripts(self):
-        """ Even when the model has no subscripts, we should be able to set this to either value"""
+    def set_component_with_real_name(self):
         import pysd
         model = pysd.read_vensim(test_model)
-        model.run(flatten_subscripts=True)
-        model.run(flatten_subscripts=False)
+        model.set_components({'Room Temperature': 20})
+        self.assertEqual(model.components.room_temperature(), 20)
+
+        model.run(params={'Room Temperature': 70})
+        self.assertEqual(model.components.room_temperature(), 70)
 
     def test_docs(self):
         """ Test that the model prints the documentation """
@@ -88,9 +103,9 @@ class TestPySD(TestCase):
         # not just that it prints a string.
         import pysd
         model = pysd.read_vensim(test_model)
-        self.assertIsInstance(model.__str__, basestring)  # tests model.__str__
-        self.assertIsInstance(model.doc(), basestring)  # tests the function we wrote
-        self.assertIsInstance(model.doc(short=True), basestring)
+        self.assertIsInstance(model.__str__, str)  # tests model.__str__
+        self.assertIsInstance(model.doc(), str)  # tests the function we wrote
+        self.assertIsInstance(model.doc(short=True), str)
 
     def test_cache(self):
         # Todo: test stepwise and runwise caching
@@ -131,6 +146,15 @@ class TestPySD(TestCase):
         self.assertNotEqual(initial_time, new_time)
         self.assertEqual(new_time, set_time)
 
+    def test_replace_element(self):
+        import pysd
+        model = pysd.read_vensim(test_model)
+        stocks1 = model.run()
+        model.components.characteristic_time = lambda: 3
+        stocks2 = model.run()
+        self.assertGreater(stocks1['Teacup Temperature'].loc[10],
+                           stocks2['Teacup Temperature'].loc[10])
+
     def test_set_initial_condition(self):
         import pysd
         model = pysd.read_vensim(test_model)
@@ -157,23 +181,79 @@ class TestPySD(TestCase):
         self.assertEqual(initial_state, set_state)
         self.assertEqual(initial_time, set_time)
 
-    def test__build_timeseries(self):
-        self.fail()
+    def test__build_euler_timeseries(self):
+        import pysd
+        model = pysd.read_vensim(test_model)
+        model.components.initial_time = lambda: 3
+        model.components.final_time = lambda: 10
+        model.components.time_step = lambda: 1
+
+        actual = list(model._build_euler_timeseries())
+        expected = range(3, 11, 1)
+        self.assertSequenceEqual(actual, expected)
+
+    def test_build_euler_timeseries_with_timestamps(self):
+        import pysd
+        model = pysd.read_vensim(test_model)
+        model.components.initial_time = lambda: 3
+        model.components.final_time = lambda: 7
+        model.components.time_step = lambda: 1
+
+        actual = list(model._build_euler_timeseries([3.14, 5.7]))
+        expected = [3, 3.14, 4, 5, 5.7, 6, 7]
+        self.assertSequenceEqual(actual, expected)
 
     def test__timeseries_component(self):
-        self.fail()
+        import pysd
+        model = pysd.read_vensim(test_model)
+        temp_timeseries = pd.Series(index=range(0, 30, 1),
+                                    data=range(0, 60, 2))
+        func = model._timeseries_component(temp_timeseries)
+        model.components._t = 0
+        self.assertEqual(func(), 0)
+
+        model.components._t = 2.5
+        self.assertEqual(func(), 5)
+
+        model.components._t = 3.1
+        self.assertEqual(func(), 6.2)
 
     def test__constant_component(self):
-        self.fail()
+        import pysd
+        model = pysd.read_vensim(test_model)
+        val = 12.3
+        func = model._constant_component(val)
+        model.components._t = 0
+        self.assertEqual(func(), val)
+
+        model.components._t = 2.5
+        self.assertEqual(func(), val)
 
     def test__euler_step(self):
-        self.fail()
+        import pysd
+        model = pysd.read_vensim(test_model)
+        state = model.components._state.copy()
+        next_step = model._euler_step(model.components._dfuncs,
+                                      model.components._state,
+                                      1)
+        self.assertIsInstance(next_step, dict)
+        self.assertNotEqual(next_step, state)
+        double_step = model._euler_step(model.components._dfuncs,
+                                        model.components._state,
+                                        2)
+        self.assertEqual(double_step['teacup_temperature'] - next_step['teacup_temperature'],
+                         next_step['teacup_temperature'] - state['teacup_temperature'])
 
     def test__integrate(self):
-        self.fail()
-
-    def test__flatten_dataframe(self):
-        self.fail()
+        import pysd
+        # Todo: think through a stronger test here...
+        model = pysd.read_vensim(test_model)
+        res = model._integrate(derivative_functions=model.components._dfuncs,
+                               timesteps=range(5),
+                               capture_elements=['teacup_temperature'],
+                               return_timestamps=range(0, 5, 2))
+        self.assertIsInstance(res, list)
+        self.assertIsInstance(res[0], dict)
 
 
 class TestModelInteraction(TestCase):
@@ -190,7 +270,6 @@ class TestModelInteraction(TestCase):
         https://github.com/JamesPHoughton/pysd/issues/23
 
         """
-
         import pysd
 
         model_1 = pysd.read_vensim('test-models/samples/teacup/Teacup.mdl')
@@ -203,6 +282,13 @@ class TestModelInteraction(TestCase):
         Need to check that if we instantiate two copies of the same model,
         changes to one copy do not influence the other copy.
         """
+        # Todo: this test could be made more comprehensive
+        import pysd
 
-        self.fail()
+        model_1 = pysd.read_vensim('test-models/samples/teacup/Teacup.mdl')
+        model_2 = pysd.read_vensim('test-models/samples/SIR/SIR.mdl')
+
+        model_1.components.initial_time = lambda: 10
+        self.assertNotEqual(model_2.components.initial_time, 10)
+
 

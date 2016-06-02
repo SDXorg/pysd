@@ -141,6 +141,7 @@ def build_element(element, subscript_dict):
                     'ulines': '-' * len(element['real_name']),
                     'contents': contents.replace('\n',
                                                  '\n' + ' ' * indent)})  # indent lines 2 onward
+    element['doc'] = element['doc'].replace('\\', '\n    ')
 
     func = '''
     %(cache)s
