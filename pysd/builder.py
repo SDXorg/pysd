@@ -56,6 +56,7 @@ def build(elements, subscript_dict, namespace, outfile_name):
     def time():
         return _t
     functions.time = time
+    functions.initial_time = initial_time
 
     """ % {'subscript_dict': repr(subscript_dict),
            'functions': '\n'.join(functions),

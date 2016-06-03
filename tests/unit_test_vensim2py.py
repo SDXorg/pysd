@@ -84,6 +84,7 @@ class TestEquationStringParsing(unittest.TestCase):
              'real_name': 'table2'}
         )
 
+    @unittest.skip('James Working')
     def test_pathological_names(self):
         from pysd.vensim2py import get_equation_components
         self.assertEqual(

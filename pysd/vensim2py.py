@@ -255,7 +255,9 @@ def get_equation_components(equation_str):
 
     # replace any amount of whitespace  with a single space
     equation_str = equation_str.replace('\\t', ' ')
+    equation_str = equation_str.replace('\\', ' ')
     equation_str = re.sub(r"\s+", ' ', equation_str)
+
 
     parser = parsimonious.Grammar(component_structure_grammar)
     tree = parser.parse(equation_str)
@@ -380,8 +382,9 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
         "if then else": "functions.if_then_else", "step": "functions.step", "modulo": "np.mod",
         "pulse": "functions.pulse", "pulse train": "functions.pulse_train",
         "ramp": "functions.ramp", "min": "np.minimum", "max": "np.maximum",
+        "active initial": "functions.active_initial",
         # vector functions
-        "vmin": "np.min", "vmax": "np.max", "prod": "np.prod",
+        "vmin": "np.min", "vmax": "np.max", "prod": "np.prod"
     }
 
     builtins = {"time": ("time", [{'kind': 'component',
