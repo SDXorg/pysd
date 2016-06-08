@@ -7,19 +7,15 @@
     <list default="true" id="a7e5b169-cc30-45fb-a7f9-e8e84f9c05bd" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models" afterPath="$PROJECT_DIR$/tests/test-models" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/builder.py" afterPath="$PROJECT_DIR$/pysd/builder.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/vensim2py.py" afterPath="$PROJECT_DIR$/pysd/vensim2py.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/integration_test_factory.py" afterPath="$PROJECT_DIR$/tests/integration_test_factory.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/integration_test_pysd.py" afterPath="$PROJECT_DIR$/tests/integration_test_pysd.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/speed_test.py" afterPath="$PROJECT_DIR$/tests/speed_test.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/functions.py" afterPath="$PROJECT_DIR$/pysd/functions.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/requirements.txt" afterPath="$PROJECT_DIR$/requirements.txt" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/samples/SIR/SIR.py" afterPath="$PROJECT_DIR$/tests/test-models/samples/SIR/SIR.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/samples/teacup/teacup.py" afterPath="$PROJECT_DIR$/tests/test-models/samples/teacup/teacup.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/builtin_max/builtin_max.mdl" afterPath="$PROJECT_DIR$/tests/test-models/tests/builtin_max/builtin_max.mdl" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/chained_initialization/test_chained_initialization.mdl" afterPath="$PROJECT_DIR$/tests/test-models/tests/chained_initialization/test_chained_initialization.mdl" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/euler_step_vs_saveper/test_euler_step_vs_saveper.mdl" afterPath="$PROJECT_DIR$/tests/test-models/tests/euler_step_vs_saveper/test_euler_step_vs_saveper.mdl" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/number_handling/test_number_handling.py" afterPath="$PROJECT_DIR$/tests/test-models/tests/number_handling/test_number_handling.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/unit_test_pysd.py" afterPath="$PROJECT_DIR$/tests/unit_test_pysd.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/unit_test_vensim2py.py" afterPath="$PROJECT_DIR$/tests/unit_test_vensim2py.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/unit_test_functions.py" afterPath="$PROJECT_DIR$/tests/unit_test_functions.py" />
     </list>
     <ignored path="pysd.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -35,10 +31,13 @@
   <component name="CoverageDataManager">
     <SUITE FILE_PATH="coverage/pysd$Doctest_create_base_array.coverage" NAME="Doctest create_base_array Coverage Results" MODIFIED="1464194027627" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pysd/builder" />
     <SUITE FILE_PATH="coverage/pysd$Unittests_in_TestPySD.coverage" NAME="Unittests in TestPySD Coverage Results" MODIFIED="1464345224803" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/pysd$Unittest_TestInputFunctions_test_step.coverage" NAME="Unittest TestInputFunctions.test_step Coverage Results" MODIFIED="1465409971340" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestIntegrationExamples_test_input_functions.coverage" NAME="Unittest TestIntegrationExamples.test_input_functions Coverage Results" MODIFIED="1464367820297" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestPySD_test_set_initial_condition.coverage" NAME="Unittest TestPySD.test_set_initial_condition Coverage Results" MODIFIED="1464818080842" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Doctest_make_coord_dict.coverage" NAME="Doctest make_coord_dict Coverage Results" MODIFIED="1464193300909" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pysd/builder" />
+    <SUITE FILE_PATH="coverage/pysd$Unittest_TestStatsFunctions_test_bounded_normal.coverage" NAME="Unittest TestStatsFunctions.test_bounded_normal Coverage Results" MODIFIED="1465409337787" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestModelInteraction_test_no_crosstalk.coverage" NAME="Unittest TestModelInteraction.test_no_crosstalk Coverage Results" MODIFIED="1464826722350" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/pysd$Unittest_TestInputFunctions_test_ramp.coverage" NAME="Unittest TestInputFunctions.test_ramp Coverage Results" MODIFIED="1465409707213" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestParse_general_expression_test_subscript_reference.coverage" NAME="Unittest TestParse_general_expression.test_subscript_reference Coverage Results" MODIFIED="1464357711316" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestPySD_test_run_return_columns_pysafe_names.coverage" NAME="Unittest TestPySD.test_run_return_columns_pysafe_names Coverage Results" MODIFIED="1464812528001" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestUtils_test_visit_addresses_return_array.coverage" NAME="Unittest TestUtils.test_visit_addresses_return_array Coverage Results" MODIFIED="1464811063746" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
@@ -92,6 +91,7 @@
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestPySD_test_set_state.coverage" NAME="Unittest TestPySD.test_set_state Coverage Results" MODIFIED="1464813041787" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestRead_vensim_test_read_vensim.coverage" NAME="Unittest TestRead_vensim.test_read_vensim Coverage Results" MODIFIED="1464269107785" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestPySD_test_set_timeseries_parameter.coverage" NAME="Unittest TestPySD.test_set_timeseries_parameter Coverage Results" MODIFIED="1464814975855" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/pysd$Unittest_TestInputFunctions_test_pulse_chain.coverage" NAME="Unittest TestInputFunctions.test_pulse_chain Coverage Results" MODIFIED="1465411180826" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Doctest_assert_frames_close.coverage" NAME="Doctest assert_frames_close Coverage Results" MODIFIED="1464272241186" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pysd" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestUtils_test_get_return_elements_pysafe_names.coverage" NAME="Unittest TestUtils.test_get_return_elements_pysafe_names Coverage Results" MODIFIED="1464812678245" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestIntegrationExamples_test_rounding.coverage" NAME="Unittest TestIntegrationExamples.test_rounding Coverage Results" MODIFIED="1464816701203" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
@@ -99,6 +99,7 @@
     <SUITE FILE_PATH="coverage/pysd$Unittests_in_integration_test_pysd.coverage" NAME="Unittests in integration_test_pysd Coverage Results" MODIFIED="1464961755663" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestPySD_test__timeseries_component.coverage" NAME="Unittest TestPySD.test__timeseries_component Coverage Results" MODIFIED="1464824943192" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittests_in_unit_test_vensim2py.coverage" NAME="Unittests in unit_test_vensim2py Coverage Results" MODIFIED="1464809999378" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/pysd$Unittest_TestInputFunctions_test_pulse.coverage" NAME="Unittest TestInputFunctions.test_pulse Coverage Results" MODIFIED="1465410208536" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestBuild_test_single_line_2d_subscript_constant_construction.coverage" NAME="Unittest TestBuild.test_single_line_2d_subscript_constant_construction Coverage Results" MODIFIED="1464711910928" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestBuild_test_build_element.coverage" NAME="Unittest TestBuild.test_build_element Coverage Results" MODIFIED="1464710861722" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Doctest_translate_vensim.coverage" NAME="Doctest translate_vensim Coverage Results" MODIFIED="1464200337135" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pysd/translators" />
@@ -133,13 +134,15 @@
     <splitter split-orientation="horizontal" split-proportion="0.4949833">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file leaf-file-name="vensim2py.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="vensim2py.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/pysd/vensim2py.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="420">
-                  <caret line="385" column="26" selection-start-line="385" selection-start-column="26" selection-end-line="385" selection-end-column="26" />
+                <state relative-caret-position="-580">
+                  <caret line="301" column="0" selection-start-line="301" selection-start-column="0" selection-end-line="301" selection-end-column="0" />
                   <folding>
                     <element signature="e#102#111#0" expanded="true" />
+                    <element signature="e#7864#11175#0" expanded="false" />
+                    <element signature="e#11210#11566#0" expanded="false" />
                     <marker date="1464912615000" expanded="true" signature="12237:12452" ph="..." />
                     <marker date="1464912615000" expanded="true" signature="12263:12396" ph="..." />
                   </folding>
@@ -160,7 +163,7 @@
           <file leaf-file-name="builder.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/pysd/builder.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="270">
+                <state relative-caret-position="840">
                   <caret line="58" column="41" selection-start-line="58" selection-start-column="41" selection-end-line="58" selection-end-column="41" />
                   <folding>
                     <element signature="e#86#101#0" expanded="true" />
@@ -171,12 +174,14 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="functions.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="functions.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/pysd/functions.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="-2475">
-                  <caret line="9" column="9" selection-start-line="9" selection-start-column="9" selection-end-line="9" selection-end-column="9" />
-                  <folding />
+                <state relative-caret-position="765">
+                  <caret line="175" column="11" selection-start-line="175" selection-start-column="11" selection-end-line="175" selection-end-column="11" />
+                  <folding>
+                    <element signature="e#146#164#0" expanded="true" />
+                  </folding>
                 </state>
               </provider>
             </entry>
@@ -184,7 +189,7 @@
           <file leaf-file-name="pysd.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/pysd/pysd.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="-5115">
+                <state relative-caret-position="240">
                   <caret line="16" column="13" selection-start-line="16" selection-start-column="13" selection-end-line="16" selection-end-column="13" />
                   <folding>
                     <element signature="e#435#455#0" expanded="true" />
@@ -210,9 +215,21 @@
           <file leaf-file-name="test_utils.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/tests/test_utils.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="489">
+                <state relative-caret-position="1380">
                   <caret line="95" column="64" selection-start-line="95" selection-start-column="64" selection-end-line="95" selection-end-column="64" />
                   <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="unit_test_functions.py" pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/tests/unit_test_functions.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="1260">
+                  <caret line="84" column="0" selection-start-line="84" selection-start-column="0" selection-end-line="84" selection-end-column="0" />
+                  <folding>
+                    <element signature="e#0#29#0" expanded="true" />
+                  </folding>
                 </state>
               </provider>
             </entry>
@@ -220,17 +237,17 @@
           <file leaf-file-name="integration_test_pysd.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/tests/integration_test_pysd.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="159">
+                <state relative-caret-position="2250">
                   <caret line="150" column="41" selection-start-line="150" selection-start-column="41" selection-end-line="150" selection-end-column="41" />
                   <folding />
                 </state>
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="unit_test_builder.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="unit_test_builder.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/tests/unit_test_builder.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="2880">
+                <state relative-caret-position="774">
                   <caret line="193" column="41" selection-start-line="193" selection-start-column="41" selection-end-line="193" selection-end-column="41" />
                   <folding />
                 </state>
@@ -293,12 +310,9 @@
         <option value="$PROJECT_DIR$/pysd/__init__.py" />
         <option value="$PROJECT_DIR$/tests/test-models/tests/subscript_2d_arrays/test_subscript_2d_arrays.py" />
         <option value="$PROJECT_DIR$/setup.py" />
-        <option value="$PROJECT_DIR$/requirements.txt" />
-        <option value="$PROJECT_DIR$/pysd/functions.py" />
         <option value="$PROJECT_DIR$/tests/test-models/tests/chained_initialization/test_chained_initialization.mdl" />
         <option value="$PROJECT_DIR$/tests/test-models/tests/euler_step_vs_saveper/test_euler_step_vs_saveper.mdl" />
         <option value="$PROJECT_DIR$/tests/test-models/tests/euler_step_vs_saveper/test_euler_step_vs_saveper.py" />
-        <option value="$PROJECT_DIR$/tests/unit_test_functions.py" />
         <option value="$PROJECT_DIR$/tests/test-models/tests/subscript_individually_defined_1_of_2d_arrays/subscript_individually_defined_1_of_2d_arrays.py" />
         <option value="$PROJECT_DIR$/tests/test-models/tests/subscript_1d_arrays/test_subscript_1d_arrays.py" />
         <option value="$PROJECT_DIR$/tests/unit_test_builder.py" />
@@ -316,6 +330,9 @@
         <option value="$PROJECT_DIR$/tests/unit_test_pysd.py" />
         <option value="$PROJECT_DIR$/tests/unit_test_vensim2py.py" />
         <option value="$PROJECT_DIR$/tests/speed_test.py" />
+        <option value="$PROJECT_DIR$/pysd/functions.py" />
+        <option value="$PROJECT_DIR$/tests/unit_test_functions.py" />
+        <option value="$PROJECT_DIR$/requirements.txt" />
       </list>
     </option>
   </component>
@@ -386,24 +403,7 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="pysd" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="pysd" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="tests" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
         </subPane>
-      </pane>
-      <pane id="Scratches">
-        <subPane />
       </pane>
       <pane id="Scope">
         <subPane subId="Project Files">
@@ -415,6 +415,9 @@
           </PATH>
         </subPane>
         <subPane subId="Default" />
+      </pane>
+      <pane id="Scratches">
+        <subPane />
       </pane>
     </panes>
   </component>
@@ -447,8 +450,8 @@
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunManager" selected="Python.speed_test">
-    <configuration default="false" name="Unittests in TestIntegrationExamples" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+  <component name="RunManager" selected="Python tests.Unittest TestInputFunctions.test_pulse_chain">
+    <configuration default="false" name="Unittest TestStatsFunctions.test_bounded_normal" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs />
@@ -459,11 +462,11 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="pysd" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/integration_test_pysd.py" />
-      <option name="CLASS_NAME" value="TestIntegrationExamples" />
-      <option name="METHOD_NAME" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/unit_test_functions.py" />
+      <option name="CLASS_NAME" value="TestStatsFunctions" />
+      <option name="METHOD_NAME" value="test_bounded_normal" />
       <option name="FOLDER_NAME" value="" />
-      <option name="TEST_TYPE" value="TEST_CLASS" />
+      <option name="TEST_TYPE" value="TEST_METHOD" />
       <option name="PATTERN" value="" />
       <option name="USE_PATTERN" value="false" />
       <option name="PUREUNITTEST" value="true" />
@@ -471,25 +474,7 @@
       <option name="USE_PARAM" value="false" />
       <method />
     </configuration>
-    <configuration default="false" name="integration_test_factory" type="PythonConfigurationType" factoryName="Python" temporary="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="pysd" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/integration_test_factory.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
-      <method />
-    </configuration>
-    <configuration default="false" name="Unittests in integration_test_pysd" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+    <configuration default="false" name="Unittest TestInputFunctions.test_ramp" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs />
@@ -500,11 +485,11 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="pysd" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/integration_test_pysd.py" />
-      <option name="CLASS_NAME" value="" />
-      <option name="METHOD_NAME" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/unit_test_functions.py" />
+      <option name="CLASS_NAME" value="TestInputFunctions" />
+      <option name="METHOD_NAME" value="test_ramp" />
       <option name="FOLDER_NAME" value="" />
-      <option name="TEST_TYPE" value="TEST_SCRIPT" />
+      <option name="TEST_TYPE" value="TEST_METHOD" />
       <option name="PATTERN" value="" />
       <option name="USE_PATTERN" value="false" />
       <option name="PUREUNITTEST" value="true" />
@@ -512,7 +497,7 @@
       <option name="USE_PARAM" value="false" />
       <method />
     </configuration>
-    <configuration default="false" name="Unittests in unit_test_pysd" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+    <configuration default="false" name="Unittest TestInputFunctions.test_step" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs />
@@ -523,11 +508,11 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="pysd" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/unit_test_pysd.py" />
-      <option name="CLASS_NAME" value="" />
-      <option name="METHOD_NAME" value="" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/unit_test_functions.py" />
+      <option name="CLASS_NAME" value="TestInputFunctions" />
+      <option name="METHOD_NAME" value="test_step" />
       <option name="FOLDER_NAME" value="" />
-      <option name="TEST_TYPE" value="TEST_SCRIPT" />
+      <option name="TEST_TYPE" value="TEST_METHOD" />
       <option name="PATTERN" value="" />
       <option name="USE_PATTERN" value="false" />
       <option name="PUREUNITTEST" value="true" />
@@ -535,12 +520,10 @@
       <option name="USE_PARAM" value="false" />
       <method />
     </configuration>
-    <configuration default="false" name="speed_test" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration default="false" name="Unittest TestInputFunctions.test_pulse" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
-      <envs>
-        <env name="PYTHONUNBUFFERED" value="1" />
-      </envs>
+      <envs />
       <option name="SDK_HOME" value="" />
       <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
       <option name="IS_MODULE_SDK" value="true" />
@@ -548,9 +531,39 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="pysd" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/speed_test.py" />
-      <option name="PARAMETERS" value="" />
-      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/unit_test_functions.py" />
+      <option name="CLASS_NAME" value="TestInputFunctions" />
+      <option name="METHOD_NAME" value="test_pulse" />
+      <option name="FOLDER_NAME" value="" />
+      <option name="TEST_TYPE" value="TEST_METHOD" />
+      <option name="PATTERN" value="" />
+      <option name="USE_PATTERN" value="false" />
+      <option name="PUREUNITTEST" value="true" />
+      <option name="PARAMS" value="" />
+      <option name="USE_PARAM" value="false" />
+      <method />
+    </configuration>
+    <configuration default="false" name="Unittest TestInputFunctions.test_pulse_chain" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="pysd" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/unit_test_functions.py" />
+      <option name="CLASS_NAME" value="TestInputFunctions" />
+      <option name="METHOD_NAME" value="test_pulse_chain" />
+      <option name="FOLDER_NAME" value="" />
+      <option name="TEST_TYPE" value="TEST_METHOD" />
+      <option name="PATTERN" value="" />
+      <option name="USE_PATTERN" value="false" />
+      <option name="PUREUNITTEST" value="true" />
+      <option name="PARAMS" value="" />
+      <option name="USE_PARAM" value="false" />
       <method />
     </configuration>
     <configuration default="true" type="DjangoTestsConfigurationType" factoryName="Django tests">
@@ -802,19 +815,19 @@
     <list size="7">
       <item index="0" class="java.lang.String" itemvalue="Python.Test Model Library" />
       <item index="1" class="java.lang.String" itemvalue="Python tests.Doctest assert_frames_close" />
-      <item index="2" class="java.lang.String" itemvalue="Python tests.Unittests in TestIntegrationExamples" />
-      <item index="3" class="java.lang.String" itemvalue="Python.integration_test_factory" />
-      <item index="4" class="java.lang.String" itemvalue="Python tests.Unittests in integration_test_pysd" />
-      <item index="5" class="java.lang.String" itemvalue="Python tests.Unittests in unit_test_pysd" />
-      <item index="6" class="java.lang.String" itemvalue="Python.speed_test" />
+      <item index="2" class="java.lang.String" itemvalue="Python tests.Unittest TestStatsFunctions.test_bounded_normal" />
+      <item index="3" class="java.lang.String" itemvalue="Python tests.Unittest TestInputFunctions.test_ramp" />
+      <item index="4" class="java.lang.String" itemvalue="Python tests.Unittest TestInputFunctions.test_step" />
+      <item index="5" class="java.lang.String" itemvalue="Python tests.Unittest TestInputFunctions.test_pulse" />
+      <item index="6" class="java.lang.String" itemvalue="Python tests.Unittest TestInputFunctions.test_pulse_chain" />
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python.speed_test" />
-        <item index="1" class="java.lang.String" itemvalue="Python tests.Unittests in unit_test_pysd" />
-        <item index="2" class="java.lang.String" itemvalue="Python tests.Unittests in integration_test_pysd" />
-        <item index="3" class="java.lang.String" itemvalue="Python tests.Unittests in TestIntegrationExamples" />
-        <item index="4" class="java.lang.String" itemvalue="Python.integration_test_factory" />
+        <item index="0" class="java.lang.String" itemvalue="Python tests.Unittest TestInputFunctions.test_pulse_chain" />
+        <item index="1" class="java.lang.String" itemvalue="Python tests.Unittest TestInputFunctions.test_pulse" />
+        <item index="2" class="java.lang.String" itemvalue="Python tests.Unittest TestInputFunctions.test_step" />
+        <item index="3" class="java.lang.String" itemvalue="Python tests.Unittest TestInputFunctions.test_ramp" />
+        <item index="4" class="java.lang.String" itemvalue="Python tests.Unittest TestStatsFunctions.test_bounded_normal" />
       </list>
     </recent_temporary>
   </component>
@@ -857,35 +870,35 @@
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="Unittest_TestIntegrationExamples_test_active_initial - 2016.06.02 at 20h 10m 16s.xml">
-      <configuration name="Unittest TestIntegrationExamples.test_active_initial" configurationId="tests" />
+    <history-entry file="Unittest_TestInputFunctions_test_pulse - 2016.06.08 at 14h 22m 06s.xml">
+      <configuration name="Unittest TestInputFunctions.test_pulse" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittest_TestIntegrationExamples_test_active_initial - 2016.06.02 at 20h 10m 43s.xml">
-      <configuration name="Unittest TestIntegrationExamples.test_active_initial" configurationId="tests" />
+    <history-entry file="Unittest_TestInputFunctions_test_pulse - 2016.06.08 at 14h 22m 44s.xml">
+      <configuration name="Unittest TestInputFunctions.test_pulse" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_TestIntegrationExamples - 2016.06.02 at 20h 08m 15s.xml">
-      <configuration name="Unittests in TestIntegrationExamples" configurationId="tests" />
+    <history-entry file="Unittest_TestInputFunctions_test_pulse - 2016.06.08 at 14h 22m 59s.xml">
+      <configuration name="Unittest TestInputFunctions.test_pulse" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_TestIntegrationExamples - 2016.06.02 at 20h 12m 13s.xml">
-      <configuration name="Unittests in TestIntegrationExamples" configurationId="tests" />
+    <history-entry file="Unittest_TestInputFunctions_test_pulse - 2016.06.08 at 14h 23m 29s.xml">
+      <configuration name="Unittest TestInputFunctions.test_pulse" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_TestIntegrationExamples - 2016.06.03 at 09h 45m 46s.xml">
-      <configuration name="Unittests in TestIntegrationExamples" configurationId="tests" />
+    <history-entry file="Unittest_TestInputFunctions_test_pulse_chain - 2016.06.08 at 14h 37m 09s.xml">
+      <configuration name="Unittest TestInputFunctions.test_pulse_chain" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_TestIntegrationExamples - 2016.06.03 at 09h 48m 21s.xml">
-      <configuration name="Unittests in TestIntegrationExamples" configurationId="tests" />
+    <history-entry file="Unittest_TestInputFunctions_test_pulse_chain - 2016.06.08 at 14h 37m 42s.xml">
+      <configuration name="Unittest TestInputFunctions.test_pulse_chain" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_integration_test_pysd - 2016.06.03 at 09h 49m 32s.xml">
-      <configuration name="Unittests in integration_test_pysd" configurationId="tests" />
+    <history-entry file="Unittest_TestInputFunctions_test_pulse_chain - 2016.06.08 at 14h 39m 41s.xml">
+      <configuration name="Unittest TestInputFunctions.test_pulse_chain" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_unit_test_pysd - 2016.06.03 at 09h 51m 41s.xml">
-      <configuration name="Unittests in unit_test_pysd" configurationId="tests" />
+    <history-entry file="Unittest_TestInputFunctions_test_ramp - 2016.06.08 at 14h 11m 15s.xml">
+      <configuration name="Unittest TestInputFunctions.test_ramp" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_unit_test_pysd - 2016.06.03 at 09h 53m 38s.xml">
-      <configuration name="Unittests in unit_test_pysd" configurationId="tests" />
+    <history-entry file="Unittest_TestInputFunctions_test_ramp - 2016.06.08 at 14h 15m 08s.xml">
+      <configuration name="Unittest TestInputFunctions.test_ramp" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_unit_test_pysd - 2016.06.03 at 09h 54m 14s.xml">
-      <configuration name="Unittests in unit_test_pysd" configurationId="tests" />
+    <history-entry file="Unittest_TestInputFunctions_test_step - 2016.06.08 at 14h 19m 32s.xml">
+      <configuration name="Unittest TestInputFunctions.test_step" configurationId="tests" />
     </history-entry>
   </component>
   <component name="TodoView" selected-index="1">
@@ -899,9 +912,9 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1440" height="900" extended-state="6" />
-    <editor active="false" />
+    <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.20028612" sideWeight="0.4936306" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.20314735" sideWeight="0.4936306" order="1" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3282981" sideWeight="0.49753347" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.08674699" sideWeight="0.50500715" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297568" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
@@ -997,7 +1010,7 @@
           <properties exception="BaseException" />
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="279" />
+      <option name="time" value="283" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="tests">
@@ -1090,13 +1103,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/requirements.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="60">
-          <caret line="4" column="6" selection-start-line="4" selection-start-column="6" selection-end-line="4" selection-end-column="6" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscript_2d_arrays/test_subscript_2d_arrays.mdl">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -1169,14 +1175,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tests/unit_test_functions.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="150">
-          <caret line="10" column="13" selection-start-line="10" selection-start-column="13" selection-end-line="10" selection-end-column="13" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="298">
@@ -1231,7 +1229,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="430">
           <caret line="155" column="0" selection-start-line="155" selection-start-column="0" selection-end-line="155" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1239,7 +1236,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="400">
           <caret line="258" column="0" selection-start-line="258" selection-start-column="0" selection-end-line="258" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1247,7 +1243,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="178">
           <caret line="69" column="0" selection-start-line="69" selection-start-column="0" selection-end-line="69" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1271,7 +1266,7 @@
         <state relative-caret-position="3343">
           <caret line="292" column="17" selection-start-line="292" selection-start-column="17" selection-end-line="292" selection-end-column="17" />
           <folding>
-            <element signature="e#0#9#0" expanded="true" />
+            <element signature="e#0#9#0" expanded="false" />
             <marker date="1464812527000" expanded="true" signature="1135:1266" ph="..." />
           </folding>
         </state>
@@ -1288,13 +1283,12 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/pysd/pysd.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-5115">
+        <state relative-caret-position="240">
           <caret line="16" column="13" selection-start-line="16" selection-start-column="13" selection-end-line="16" selection-end-column="13" />
           <folding>
             <element signature="e#435#455#0" expanded="true" />
@@ -1304,7 +1298,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/pysd/builder.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="270">
+        <state relative-caret-position="840">
           <caret line="58" column="41" selection-start-line="58" selection-start-column="41" selection-end-line="58" selection-end-column="41" />
           <folding>
             <element signature="e#86#101#0" expanded="true" />
@@ -1314,29 +1308,16 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pysd/vensim2py.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="420">
-          <caret line="385" column="26" selection-start-line="385" selection-start-column="26" selection-end-line="385" selection-end-column="26" />
-          <folding>
-            <element signature="e#102#111#0" expanded="true" />
-            <marker date="1464912615000" expanded="true" signature="12237:12452" ph="..." />
-            <marker date="1464912615000" expanded="true" signature="12263:12396" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/tests/integration_test_factory.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-9">
           <caret line="8" column="28" selection-start-line="8" selection-start-column="28" selection-end-line="8" selection-end-column="28" />
-          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/tests/test_utils.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="489">
+        <state relative-caret-position="1380">
           <caret line="95" column="64" selection-start-line="95" selection-start-column="64" selection-end-line="95" selection-end-column="64" />
           <folding />
         </state>
@@ -1346,15 +1327,12 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="343">
           <caret line="35" column="0" selection-start-line="35" selection-start-column="0" selection-end-line="35" selection-end-column="0" />
-          <folding>
-            <marker date="1464961527000" expanded="false" signature="1:112" ph="import ..." />
-          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/tests/integration_test_pysd.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="159">
+        <state relative-caret-position="2250">
           <caret line="150" column="41" selection-start-line="150" selection-start-column="41" selection-end-line="150" selection-end-column="41" />
           <folding />
         </state>
@@ -1364,9 +1342,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="975">
           <caret line="65" column="20" selection-start-line="65" selection-start-column="16" selection-end-line="65" selection-end-column="20" />
-          <folding>
-            <element signature="e#0#13#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1383,24 +1358,58 @@
         <state relative-caret-position="60">
           <caret line="4" column="0" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="52" />
           <folding>
-            <element signature="e#0#15#0" expanded="true" />
+            <element signature="e#0#15#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/unit_test_builder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="774">
+          <caret line="193" column="41" selection-start-line="193" selection-start-column="41" selection-end-line="193" selection-end-column="41" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/requirements.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="75">
+          <caret line="5" column="9" selection-start-line="5" selection-start-column="9" selection-end-line="5" selection-end-column="9" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/unit_test_functions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1260">
+          <caret line="84" column="0" selection-start-line="84" selection-start-column="0" selection-end-line="84" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#29#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/pysd/functions.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-2475">
-          <caret line="9" column="9" selection-start-line="9" selection-start-column="9" selection-end-line="9" selection-end-column="9" />
-          <folding />
+        <state relative-caret-position="765">
+          <caret line="175" column="11" selection-start-line="175" selection-start-column="11" selection-end-line="175" selection-end-column="11" />
+          <folding>
+            <element signature="e#146#164#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tests/unit_test_builder.py">
+    <entry file="file://$PROJECT_DIR$/pysd/vensim2py.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2880">
-          <caret line="193" column="41" selection-start-line="193" selection-start-column="41" selection-end-line="193" selection-end-column="41" />
-          <folding />
+        <state relative-caret-position="-580">
+          <caret line="301" column="0" selection-start-line="301" selection-start-column="0" selection-end-line="301" selection-end-column="0" />
+          <folding>
+            <element signature="e#102#111#0" expanded="true" />
+            <element signature="e#7864#11175#0" expanded="false" />
+            <element signature="e#11210#11566#0" expanded="false" />
+            <marker date="1464912615000" expanded="true" signature="12237:12452" ph="..." />
+            <marker date="1464912615000" expanded="true" signature="12263:12396" ph="..." />
+          </folding>
         </state>
       </provider>
     </entry>

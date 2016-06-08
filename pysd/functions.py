@@ -9,6 +9,7 @@ straightforward equivalent in python.
 import numpy as np
 import re
 from functools import wraps
+import scipy.stats as stats
 
 
 def cache(horizon):
@@ -72,13 +73,18 @@ def ramp(slope, start, finish):
 
     Parameters
     ----------
-    slope
-    start
-    finish
+    slope: float
+        The slope of the ramp starting at zero at time start
+    start: float
+        Time at which the ramp begins
+    finish: float
+        Time at which the ramo ends
 
     Returns
     -------
-
+    response: float
+        If prior to ramp start, returns zero
+        If after ramp ends, returns top of ramp
     Examples
     --------
 
@@ -94,17 +100,21 @@ def ramp(slope, start, finish):
         return slope * (t-start)
 
 
-def bounded_normal(minimum, maximum, mean, std, seed):
-    """ Implements vensim's BOUNDED NORMAL function """
-    np.random.seed(seed)
-    return stats.truncnorm.rvs(minimum, maximum, loc=mean, scale=std)
-
-
 def step(value, tstep):
-    """" Impliments vensim's STEP function
+    """"
+    Implements vensim's STEP function
 
-    In range [-inf, tstep) returns 0
-    In range [tstep, +inf] returns `value`
+    Parameters
+    ----------
+    value: float
+        The height of the step
+    tstep: float
+        The time at and after which `result` equals `value`
+
+    Returns
+    -------
+    - In range [-inf, tstep) returns 0
+    - In range [tstep, +inf] returns `value`
     """
     return value if time() >= tstep else 0
 
@@ -113,19 +123,31 @@ def pulse(start, duration):
     """ Implements vensim's PULSE function
 
     In range [-inf, start) returns 0
-    In range [start, start+duration) returns 1
-    In range [start+duration, +inf] returns 0
+    In range [start, start + duration) returns 1
+    In range [start + duration, +inf] returns 0
     """
     t = time()
-    return 1 if t >= start and t < start+duration else 0
+    return 1 if start <= t < start + duration else 0
 
 
-def pulse_train(start, duration, repeattime, end):
+def pulse_train(start, duration, repeat_time, end):
     """ Implements vensim's PULSE TRAIN function
 
+    In range [-inf, start) returns 0
+    In range [start + n * repeat_time, start + n * repeat_time + duration) return 1
+    In range [start + n * repeat_time + duration, start + (n+1) * repeat_time) return 0
     """
     t = time()
-    return 1 if t >= start and (t-start)%repeattime < duration else 0
+    if start <= t < end:
+        return 1 if (t-start) % repeat_time < duration else 0
+    else:
+        return 0
+
+
+def bounded_normal(minimum, maximum, mean, std, seed):
+    """ Implements vensim's BOUNDED NORMAL function """
+    # np.random.seed(seed)  # we could bring this back later, but for now, ignore
+    return stats.truncnorm.rvs(minimum, maximum, loc=mean, scale=std)
 
 
 def lookup(x, xs, ys):
@@ -142,15 +164,27 @@ def if_then_else(condition, val_if_true, val_if_false):
     return np.where(condition, val_if_true, val_if_false)
 
 
-def pos(number):  # dont divide by 0
-    return np.maximum(number, 0.000001)
-
-
 def active_initial(expr, initval):
+    """
+    Implements vensim's ACTIVE INITIAL function
+    Parameters
+    ----------
+    expr
+    initval
+
+    Returns
+    -------
+
+    """
     if time() == initial_time():
         return initval
     else:
         return expr
+
+
+
+#        def pos(number):  # dont divide by 0
+#            return np.maximum(number, 0.000001)
 
 #
 # def tuner(number, factor):
