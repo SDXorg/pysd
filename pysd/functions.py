@@ -7,9 +7,28 @@ straightforward equivalent in python.
 """
 
 import numpy as np
-import re
+# import re
 from functools import wraps
-import scipy.stats as stats
+
+try:
+    import scipy.stats as stats
+
+    def bounded_normal(minimum, maximum, mean, std, seed):
+        """ Implements vensim's BOUNDED NORMAL function """
+        # np.random.seed(seed)  # we could bring this back later, but for now, ignore
+        return stats.truncnorm.rvs(minimum, maximum, loc=mean, scale=std)
+
+except ImportError:
+    import warnings
+
+    warnings.warn("Warning... scipy required for functions:"
+                  "- Bounded Normal (falling back to unbounded normal)")
+
+    def bounded_normal(minimum, maximum, mean, std, seed):
+        """ Warning: using unbounded normal due to no scipy """
+        # np.random.seed(seed)  # we could bring this back later, but for now, ignore
+        return np.random.normal(mean, std)
+
 
 
 def cache(horizon):
@@ -144,10 +163,7 @@ def pulse_train(start, duration, repeat_time, end):
         return 0
 
 
-def bounded_normal(minimum, maximum, mean, std, seed):
-    """ Implements vensim's BOUNDED NORMAL function """
-    # np.random.seed(seed)  # we could bring this back later, but for now, ignore
-    return stats.truncnorm.rvs(minimum, maximum, loc=mean, scale=std)
+
 
 
 def lookup(x, xs, ys):

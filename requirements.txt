@@ -3,4 +3,3 @@ numpy
 parsimonious
 autopep8
 xarray
-scipy
