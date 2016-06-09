@@ -274,7 +274,7 @@ class TestModelInteraction(unittest.TestCase):
         """
         import pysd
 
-        model_1 = pysd.read_vensim('test-models/samples/teacup/Teacup.mdl')
+        model_1 = pysd.read_vensim('test-models/samples/teacup/teacup.mdl')
         model_2 = pysd.read_vensim('test-models/samples/SIR/SIR.mdl')
 
         self.assertNotIn('teacup_temperature', dir(model_2.components))
@@ -287,7 +287,7 @@ class TestModelInteraction(unittest.TestCase):
         # Todo: this test could be made more comprehensive
         import pysd
 
-        model_1 = pysd.read_vensim('test-models/samples/teacup/Teacup.mdl')
+        model_1 = pysd.read_vensim('test-models/samples/teacup/teacup.mdl')
         model_2 = pysd.read_vensim('test-models/samples/SIR/SIR.mdl')
 
         model_1.components.initial_time = lambda: 10

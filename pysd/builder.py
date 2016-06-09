@@ -9,6 +9,7 @@ james.p.houghton@gmail.com
 import textwrap
 import autopep8
 from utils import *
+from _version import __version__
 
 
 def build(elements, subscript_dict, namespace, outfile_name):
@@ -40,7 +41,11 @@ def build(elements, subscript_dict, namespace, outfile_name):
     if subscript_dict:
         imports += ['import xarray as xr']
 
-    text = """
+    text = '''
+    """
+    Python model %(outfile)s
+    Translated using PySD version %(version)s
+    """
     from __future__ import division
     import numpy as np
     %(imports)s
@@ -58,10 +63,12 @@ def build(elements, subscript_dict, namespace, outfile_name):
     functions.time = time
     functions.initial_time = initial_time
 
-    """ % {'subscript_dict': repr(subscript_dict),
+    ''' % {'subscript_dict': repr(subscript_dict),
            'functions': '\n'.join(functions),
            'imports': '\n'.join(imports),
-           'namespace': repr(namespace)}
+           'namespace': repr(namespace),
+           'outfile': outfile_name,
+           'version': __version__}
 
     text = autopep8.fix_code(textwrap.dedent(text),
                              options={'aggressive': 10,

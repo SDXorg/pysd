@@ -18,15 +18,14 @@ try:
         # np.random.seed(seed)  # we could bring this back later, but for now, ignore
         return stats.truncnorm.rvs(minimum, maximum, loc=mean, scale=std)
 
+
 except ImportError:
     import warnings
-
     warnings.warn("Warning... scipy required for functions:"
                   "- Bounded Normal (falling back to unbounded normal)")
 
     def bounded_normal(minimum, maximum, mean, std, seed):
         """ Warning: using unbounded normal due to no scipy """
-        # np.random.seed(seed)  # we could bring this back later, but for now, ignore
         return np.random.normal(mean, std)
 
 
