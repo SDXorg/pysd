@@ -6,10 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="a7e5b169-cc30-45fb-a7f9-e8e84f9c05bd" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models" afterPath="$PROJECT_DIR$/tests/test-models" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/README.md" afterPath="$PROJECT_DIR$/README.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/functions.py" afterPath="$PROJECT_DIR$/pysd/functions.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/vensim2py.py" afterPath="$PROJECT_DIR$/pysd/vensim2py.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/speed_test.py" afterPath="$PROJECT_DIR$/tests/speed_test.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/samples/SIR/SIR.py" afterPath="$PROJECT_DIR$/tests/test-models/samples/SIR/SIR.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/samples/teacup/teacup.py" afterPath="$PROJECT_DIR$/tests/test-models/samples/teacup/teacup.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/builtin_max/builtin_max.mdl" afterPath="$PROJECT_DIR$/tests/test-models/tests/builtin_max/builtin_max.mdl" />
@@ -17,7 +13,6 @@
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/euler_step_vs_saveper/test_euler_step_vs_saveper.mdl" afterPath="$PROJECT_DIR$/tests/test-models/tests/euler_step_vs_saveper/test_euler_step_vs_saveper.mdl" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/number_handling/test_number_handling.py" afterPath="$PROJECT_DIR$/tests/test-models/tests/number_handling/test_number_handling.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/unit_test_functions.py" afterPath="$PROJECT_DIR$/tests/unit_test_functions.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/unit_test_vensim2py.py" afterPath="$PROJECT_DIR$/tests/unit_test_vensim2py.py" />
     </list>
     <ignored path="pysd.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -181,8 +176,8 @@
           <file leaf-file-name="functions.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/pysd/functions.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="630">
-                  <caret line="174" column="0" selection-start-line="174" selection-start-column="0" selection-end-line="174" selection-end-column="0" />
+                <state relative-caret-position="1950">
+                  <caret line="151" column="36" selection-start-line="151" selection-start-column="36" selection-end-line="151" selection-end-column="36" />
                   <folding />
                 </state>
               </provider>
@@ -217,16 +212,16 @@
           <file leaf-file-name="unit_test_functions.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/tests/unit_test_functions.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="90">
-                  <caret line="84" column="35" selection-start-line="84" selection-start-column="35" selection-end-line="84" selection-end-column="35" />
+                <state relative-caret-position="60">
+                  <caret line="82" column="0" selection-start-line="82" selection-start-column="0" selection-end-line="82" selection-end-column="0" />
                   <folding>
-                    <element signature="e#0#29#0" expanded="true" />
-                    <element signature="e#90#2758#0" expanded="false" />
-                    <element signature="e#119#457#0" expanded="false" />
-                    <element signature="e#492#781#0" expanded="false" />
-                    <element signature="e#817#1278#0" expanded="false" />
-                    <element signature="e#1320#2758#0" expanded="false" />
-                    <element signature="e#2801#3403#0" expanded="false" />
+                    <element signature="e#0#15#0" expanded="true" />
+                    <element signature="e#85#2753#0" expanded="false" />
+                    <element signature="e#114#452#0" expanded="false" />
+                    <element signature="e#487#776#0" expanded="false" />
+                    <element signature="e#812#1273#0" expanded="false" />
+                    <element signature="e#1315#2753#0" expanded="false" />
+                    <element signature="e#2805#3407#0" expanded="false" />
                   </folding>
                 </state>
               </provider>
@@ -1485,24 +1480,24 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/pysd/functions.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="630">
-          <caret line="174" column="0" selection-start-line="174" selection-start-column="0" selection-end-line="174" selection-end-column="0" />
+        <state relative-caret-position="1950">
+          <caret line="151" column="36" selection-start-line="151" selection-start-column="36" selection-end-line="151" selection-end-column="36" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/tests/unit_test_functions.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="84" column="35" selection-start-line="84" selection-start-column="35" selection-end-line="84" selection-end-column="35" />
+        <state relative-caret-position="60">
+          <caret line="82" column="0" selection-start-line="82" selection-start-column="0" selection-end-line="82" selection-end-column="0" />
           <folding>
-            <element signature="e#0#29#0" expanded="true" />
-            <element signature="e#90#2758#0" expanded="false" />
-            <element signature="e#119#457#0" expanded="false" />
-            <element signature="e#492#781#0" expanded="false" />
-            <element signature="e#817#1278#0" expanded="false" />
-            <element signature="e#1320#2758#0" expanded="false" />
-            <element signature="e#2801#3403#0" expanded="false" />
+            <element signature="e#0#15#0" expanded="true" />
+            <element signature="e#85#2753#0" expanded="false" />
+            <element signature="e#114#452#0" expanded="false" />
+            <element signature="e#487#776#0" expanded="false" />
+            <element signature="e#812#1273#0" expanded="false" />
+            <element signature="e#1315#2753#0" expanded="false" />
+            <element signature="e#2805#3407#0" expanded="false" />
           </folding>
         </state>
       </provider>

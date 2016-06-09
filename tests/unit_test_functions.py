@@ -1,7 +1,7 @@
-from unittest import TestCase
+import unittest
 import numpy as np
 
-class TestInputFunctions(TestCase):
+class TestInputFunctions(unittest.TestCase):
     def test_ramp(self):
         """Test functions.ramp"""
         from pysd import functions
@@ -82,7 +82,7 @@ class TestInputFunctions(TestCase):
         self.assertEqual(functions.pulse_train(1, 3, 5, 13), 0)
 
 
-class TestStatsFunctions(TestCase):
+class TestStatsFunctions(unittest.TestCase):
     def test_bounded_normal(self):
         from pysd.functions import bounded_normal
         min = -4
@@ -101,7 +101,7 @@ class TestStatsFunctions(TestCase):
         self.assertGreater(len(np.unique(results)), 100)
 
 
-class TestLogicFunctions(TestCase):
+class TestLogicFunctions(unittest.TestCase):
     def test_if_then_else_basic(self):
         """ If Then Else function"""
         from pysd.functions import if_then_else
