@@ -63,16 +63,16 @@ def load(py_model_file):
     --------
     >>> model = load('Teacup.py')
     """
-    components = imp.load_source('modulename', py_model_file)
+    components = imp.load_source('modulename', py_model_file) ## 'modulename' is the name of the object, but to use it within the console it needs to be imported: import modulename. In that case, imp.load_source does not need to be assigned to an object, but modulename will be the object
     # Todo: This is a messy way to find stocknames. Refactor.
     components._stocknames = [name[2:-3] for name in dir(components) if name.startswith('_') and name.endswith('_dt')]
     components._dfuncs = {name: getattr(components, '_d%s_dt'%name) for name in components._stocknames}
     funcnames = filter(lambda x: not x.startswith('_'), dir(components))
     components._funcs = {name: getattr(components, name) for name in funcnames}
+    components.__str__ = str(components) + "\n" + str(dir(components)) # This does not work with print, in which case the module name is displayed. But as an attribute (__str__) it is stored in components.
     model = PySD(components)
-    model.__str__ = 'Import of ' + py_model_file
+    model.__str__ = 'Import of ' + py_model_file # This is inconsequent?
     return model
-
 
 class PySD(object):
     """
@@ -89,10 +89,15 @@ class PySD(object):
         self.record = []
 
     def __str__(self):
-        """ Return model source file """
-        return self.components.__str__
+        """ Return model source file
+        and a list of the components
+        """
+        description = self.components.__str__ +\
+                      "\n Stocks: \n" + str(self.components._stocknames) +\
+                      "\n Functions: \n" + str(self.components._dfuncs)
+        return description
 
-    def run(self, params={}, return_columns=[], return_timestamps=[],
+    def run(self, paramdescriptions={}, return_columns=[], return_timestamps=[],
             initial_condition='original', collect=False, **intg_kwargs):
         """ Simulate the model's behavior over time.
         Return a pandas dataframe with timestamps as rows,
@@ -340,3 +345,10 @@ class PySD(object):
             outputs[i] = outdict
 
         return outputs
+
+    def doc(self):
+        """
+        Prints the model elements, with their units and comments
+        """
+        ## Let's try to get this in a nice table format. First of all,
+        return "Hello"

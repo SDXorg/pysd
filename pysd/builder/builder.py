@@ -296,3 +296,4 @@ def make_python_identifier(string):
         string += '_element'
 
     return string
+

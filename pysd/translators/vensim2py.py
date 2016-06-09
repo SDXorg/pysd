@@ -58,7 +58,17 @@ dictionary = {"ABS":"abs", "INTEGER":"int", "EXP":"np.exp",
     "STEP":"self.functions.step", "MODULO":"np.mod", "PULSE":"self.functions.pulse",
     "PULSE TRAIN":"self.functions.pulse_train", "RAMP":"self.functions.ramp",
     "=":"==", "<=":"<=", "<":"<", ">=":">=", ">":">", "^":"**",
-    ":AND:": "and", ":OR:":"or", ":NOT:":"not"}
+    ":AND:": "and", ":OR:":"or", ":NOT:":"not"} # if function names are not capitalized in the vensim file, they are not recognized here? Just copy the dictionary with lowercase?
+
+## Use the dictionary to append the same one without capitalized function names
+
+dictionary2 = dict(dictionary) # copy dictionary
+dickeysLower = map(lambda i: str(i).lower(),dictionary.keys()) #take the keys from the original library and make them lowercase
+
+for i in range(0,len(dictionary.keys())) :
+    dictionary2[str(dickeysLower[i])] = dictionary2.pop(dictionary.keys()[i]) ## Replace key per key
+
+dictionary.update(dictionary2) ## Now the dictionary has all keys in lower and in upper case
 
 construction_functions = ['DELAY1', 'DELAY3', 'DELAY3I', 'DELAY N', 'DELAY1I',
                           'SMOOTH3I', 'SMOOTH3', 'SMOOTH N', 'SMOOTH', 'SMOOTHI',
@@ -223,7 +233,7 @@ class TextParser(NodeVisitor):
 
     def visit_Stock(self, n, (Identifier, _1, eq, _2, integ, _3,
                               lparen, _4, NL1, _5, expression, _6,
-                              comma, _7, NL2, _8, initial_condition, _9, rparen)):
+                              comma, _7, NL2, _8, initial_condition, _9, rparen)): ## Are the numbers with underscores optional arguments?
         self.builder.add_stock(Identifier, expression, initial_condition)
         return Identifier
 
