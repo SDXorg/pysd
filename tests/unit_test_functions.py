@@ -1,7 +1,6 @@
 from unittest import TestCase
 import numpy as np
 
-
 class TestInputFunctions(TestCase):
     def test_ramp(self):
         """Test functions.ramp"""
@@ -100,3 +99,28 @@ class TestStatsFunctions(TestCase):
         self.assertAlmostEqual(results.mean(), mean, delta=std)
         self.assertAlmostEqual(results.std(), std, delta=std)  # this is a pretty loose test
         self.assertGreater(len(np.unique(results)), 100)
+
+
+class TestLogicFunctions(TestCase):
+    def test_if_then_else_basic(self):
+        """ If Then Else function"""
+        from pysd.functions import if_then_else
+        self.assertEqual(if_then_else(True, 1, 0), 1)
+        self.assertEqual(if_then_else(False, 1, 0), 0)
+
+    @unittest.skip('Not Yet Implemented')
+    def test_if_then_else_with_subscripted_output(self):
+        """ We may have a subscripted value passed as an output """
+        self.fail()
+
+    @unittest.skip('Not Yet Implemented')
+    def test_if_then_else_with_subscripted_input_basic_output(self):
+        """ What do we do if the expression yields a subscripted array of true and false values,
+         and the output options are singular?"""
+        self.fail()
+
+    @unittest.skip('Not Yet Implemented')
+    def test_if_then_else_with_subscripted_input_output(self):
+        """ What do we do if the expression yields a subscripted array of true and false values,
+        and the output values are subscripted? """
+        self.fail()

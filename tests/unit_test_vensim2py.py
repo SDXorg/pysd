@@ -1,6 +1,69 @@
 import unittest
 
 
+class TestGetFileSections(unittest.TestCase):
+    def test_normal_load(self):
+        """normal model file with no macros"""
+        from pysd.vensim2py import get_file_sections
+        actual = get_file_sections(r'a~b~c| d~e~f| g~h~i|')
+        expected = [{'returns': [], 'params': [], 'name': 'main', 'string': 'a~b~c| d~e~f| g~h~i|'}]
+        self.assertEqual(actual, expected)
+
+    def test_macro_only(self):
+        """ Macro Only """
+        from pysd.vensim2py import get_file_sections
+        actual = get_file_sections(':MACRO: MAC(z) a~b~c| :END OF MACRO:')
+        expected = [{'returns': [], 'params': ['z'], 'name': 'MAC', 'string': 'a~b~c|'}]
+        self.assertEqual(actual, expected)
+
+    def test_macro_and_model(self):
+        """ basic macro and model """
+        from pysd.vensim2py import get_file_sections
+        actual = get_file_sections(':MACRO: MAC(z) a~b~c| :END OF MACRO: d~e~f| g~h~i|')
+        expected = [{'returns': [], 'params': ['z'], 'name': 'MAC', 'string': 'a~b~c|'},
+                    {'returns': [], 'params': [], 'name': 'main', 'string': 'd~e~f| g~h~i|'}]
+        self.assertEqual(actual, expected)
+
+    def test_macro_multiple_inputs(self):
+        """ macro with multiple input parameters """
+        from pysd.vensim2py import get_file_sections
+        actual = get_file_sections(':MACRO: MAC(z, y) a~b~c| :END OF MACRO: d~e~f| g~h~i|')
+        expected = [{'returns': [], 'params': ['z', 'y'], 'name': 'MAC', 'string': 'a~b~c|'},
+                    {'returns': [], 'params': [], 'name': 'main', 'string': 'd~e~f| g~h~i|'}]
+        self.assertEqual(actual, expected)
+
+    def test_macro_with_returns(self):
+        """ macro with return values """
+        from pysd.vensim2py import get_file_sections
+        actual = get_file_sections(':MACRO: MAC(z, y :x, w) a~b~c| :END OF MACRO: d~e~f| g~h~i|')
+        expected = [{'returns': ['x', 'w'],
+                     'params': ['z', 'y'],
+                     'name': 'MAC',
+                     'string': 'a~b~c|'},
+                    {'returns': [],
+                     'params': [],
+                     'name': 'main',
+                     'string': 'd~e~f| g~h~i|'}]
+        self.assertEqual(actual, expected)
+
+    def test_handle_encoding(self):
+        """ Handle encoding """
+        from pysd.vensim2py import get_file_sections
+        actual = get_file_sections(r'{UTF-8} a~b~c| d~e~f| g~h~i|')
+        expected = [{'returns': [], 'params': [], 'name': 'main', 'string': 'a~b~c| d~e~f| g~h~i|'}]
+        self.assertEqual(actual, expected)
+
+    def test_handle_encoding_like_strings(self):
+        """ Handle encoding-like strings in other places in the file """
+        from pysd.vensim2py import get_file_sections
+        actual = get_file_sections(r'a~b~c| d~e~f{special}| g~h~i|')
+        expected = [{'returns': [],
+                     'params': [],
+                     'name': 'main',
+                     'string': 'a~b~c| d~e~f{special}| g~h~i|'}]
+        self.assertEqual(actual, expected)
+
+
 class TestEquationStringParsing(unittest.TestCase):
     """ Tests the 'get_equation_components function """
     def test_basics(self):

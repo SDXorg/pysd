@@ -18,16 +18,14 @@ try:
         # np.random.seed(seed)  # we could bring this back later, but for now, ignore
         return stats.truncnorm.rvs(minimum, maximum, loc=mean, scale=std)
 
-
 except ImportError:
     import warnings
-    warnings.warn("Warning... scipy required for functions:"
+    warnings.warn("Scipy required for functions:"
                   "- Bounded Normal (falling back to unbounded normal)")
 
     def bounded_normal(minimum, maximum, mean, std, seed):
         """ Warning: using unbounded normal due to no scipy """
         return np.random.normal(mean, std)
-
 
 
 def cache(horizon):
@@ -160,9 +158,6 @@ def pulse_train(start, duration, repeat_time, end):
         return 1 if (t-start) % repeat_time < duration else 0
     else:
         return 0
-
-
-
 
 
 def lookup(x, xs, ys):
