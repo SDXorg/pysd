@@ -102,6 +102,7 @@ def load(py_model_file):
     funcnames = filter(lambda x: not x.startswith('_'), dir(components))
     components._funcs = {name: getattr(components, name) for name in funcnames}
 
+    components._docstrings = [getattr(components,name).__doc__ for name in components._funcs]
 
     model = PySD(components)
     model.reset_state()
@@ -414,3 +415,6 @@ class PySD(object):
             outputs.append({key: self.components._funcs[key]() for key in capture_elements})
 
         return outputs
+
+    def doc(self):
+        return self.components._docstrings
