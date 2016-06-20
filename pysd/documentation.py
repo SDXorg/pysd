@@ -22,35 +22,49 @@ class SDVarDoc(NodeVisitor):
         pass
 
 
-grammar = """\
-    sdVar = (sep? name sep "-"* sep modelNameWrap sep unit sep+ comment? " "*)
-    sep = ws "\\n" ws
-    ws = " "*
-    name = ~"[A-z ]+"
-    modelNameWrap = '(' modelName ')'
-    modelName = ~"[A-z_]+"
-    unit = ~"[A-z /*\\[\\]\\?]*"
-    comment = ~"[A-z _+-/*\\n]+"
-    """
-
-text= """
-    Teacup Temperature
-    ------------------
-    (teacup_temperature)
-    Degrees
-
-
-    """
-
-text2= """
-    Implicit
-    --------
-    (_init_teacup_temperature)
-    See docs for teacup_temperature
-
-    Provides initial conditions for teacup_temperature function
-    """
-
-print SDVarDoc(grammar,text).sdVar
-
-print SDVarDoc(grammar,text2).sdVar
+## Below is the grammar and strings on which I tested.
+#
+# grammar = """\
+#     sdVar = (sep? name sep "-"* sep modelNameWrap sep unit sep+ comment? " "*)?
+#     sep = ws "\\n" ws
+#     ws = " "*
+#     name = ~"[A-z ]+"
+#     modelNameWrap = '(' modelName ')'
+#     modelName = ~"[A-z_]+"
+#     unit = ~"[A-z\\, \\/\\*\\[\\]\\?0-9]*"
+#     comment = ~"[A-z _+-/*\\n]+"
+#     """
+#
+# text= """
+#     Teacup Temperature
+#     ------------------
+#     (teacup_temperature)
+#     Degrees
+#
+#
+#     """
+#
+# text2= """
+#     Implicit
+#     --------
+#     (_init_teacup_temperature)
+#     See docs for teacup_temperature
+#
+#     Provides initial conditions for teacup_temperature function
+#     """
+#
+# text3 = """"""
+#
+# text4 = """
+#     TIME STEP
+#     ---------
+#     (time_step)
+#     Minute [0,?]
+#
+#     The time step for the simulation.
+#     """
+#
+# print SDVarDoc(grammar,text).sdVar
+# print SDVarDoc(grammar,text2).sdVar
+# print SDVarDoc(grammar,text3).sdVar
+# print SDVarDoc(grammar,text4).sdVar

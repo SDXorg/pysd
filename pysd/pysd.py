@@ -22,6 +22,9 @@ import numpy as np
 import imp
 import time
 import utils
+import tabulate
+
+from documentation import SDVarDoc
 
 
 # Todo: Add a __doc__ function that summarizes the docstrings of the whole model
@@ -102,7 +105,8 @@ def load(py_model_file):
     funcnames = filter(lambda x: not x.startswith('_'), dir(components))
     components._funcs = {name: getattr(components, name) for name in funcnames}
 
-    components._docstrings = [getattr(components,name).__doc__ for name in components._funcs]
+    varnames = filter(lambda x: not x.startswith('_') and not x in ('cache','functions','np'), dir(components))
+    components._docstrings = [getattr(components,name).__doc__ for name in varnames]
 
     model = PySD(components)
     model.reset_state()
@@ -417,4 +421,26 @@ class PySD(object):
         return outputs
 
     def doc(self):
-        return self.components._docstrings
+        docstringList=list()
+
+        grammar = """\
+            sdVar = (sep? name sep "-"* sep modelNameWrap sep unit sep+ comment? " "*)?
+            sep = ws "\\n" ws
+            ws = " "*
+            name = ~"[A-z ]+"
+            modelNameWrap = '(' modelName ')'
+            modelName = ~"[A-z_]+"
+            unit = ~"[A-z\\, \\/\\*\\[\\]\\?0-9]*"
+            comment = ~"[A-z _+-/*\\n]+"
+            """
+
+        for ds in filter(None,self.components._docstrings):
+            docstringList.append(SDVarDoc(grammar,ds).sdVar)
+
+        dsdf = _pd.DataFrame(docstringList) ## Convert docstringlist, a list of dicitonaries, to a Pandas dataframe, for easy printing down the line.
+
+        dsheaders=['name','modelName','unit','comment']
+
+        dstable = tabulate.tabulate(dsdf[dsheaders],headers=dsheaders,tablefmt='orgtbl')
+
+        return dstable
