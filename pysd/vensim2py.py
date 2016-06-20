@@ -27,35 +27,22 @@ def get_file_sections(file_str):
 
     Returns
     -------
-
+    entries: list of dictionaries
+        Each dictionary represents a different section of the model file, either a macro,
+        or the main body of the model file. The dictionaries contain various elements:
+        - returns: list of strings
+            represents what is returned from a macro (for macros) or empty for main model
+        - params: list of strings
+            represents what is passed into a macro (for macros) or empty for main model
+        - name: string
+            the name of the macro, or 'main' for main body of model
+        - string: string
+            string representing the model section
     Examples
     --------
-    # normal model file with no macros
     >>> get_file_sections(r'a~b~c| d~e~f| g~h~i|')
     [{'returns': [], 'params': [], 'name': 'main', 'string': 'a~b~c| d~e~f| g~h~i|'}]
 
-    # macro only
-    >>> get_file_sections(':MACRO: MAC(z) a~b~c| :END OF MACRO:')
-    [{'returns': [], 'params': ['z'], 'name': 'MAC', 'string': 'a~b~c|'}]
-
-    # basic macro and model
-    >>> get_file_sections(':MACRO: MAC(z) a~b~c| :END OF MACRO: d~e~f| g~h~i|')
-    [{'returns': [], 'params': ['z'], 'name': 'MAC', 'string': 'a~b~c|'}, {'returns': [], 'params': [], 'name': 'main', 'string': 'd~e~f| g~h~i|'}]
-
-    # multiple input parameters
-    >>> get_file_sections(':MACRO: MAC(z, y) a~b~c| :END OF MACRO: d~e~f| g~h~i|')
-    [{'returns': [], 'params': ['z', 'y'], 'name': 'MAC', 'string': 'a~b~c|'}, {'returns': [], 'params': [], 'name': 'main', 'string': 'd~e~f| g~h~i|'}]
-
-    # macro with returns specified
-    >>> get_file_sections(':MACRO: MAC(z, y :x, w) a~b~c| :END OF MACRO: d~e~f| g~h~i|')
-    [{'returns': ['x', 'w'], 'params': ['z', 'y'], 'name': 'MAC', 'string': 'a~b~c|'}, {'returns': [], 'params': [], 'name': 'main', 'string': 'd~e~f| g~h~i|'}]
-
-    # encoding
-    >>> get_file_sections(r'{UTF-8} a~b~c| d~e~f| g~h~i|')
-    [{'returns': [], 'params': [], 'name': 'main', 'string': 'a~b~c| d~e~f| g~h~i|'}]
-
-    >>> get_file_sections(r'a~b~c| d~e~f{special}| g~h~i|') # allows the pattern in other locations
-    [{'returns': [], 'params': [], 'name': 'main', 'string': 'a~b~c| d~e~f{special}| g~h~i|'}]
     """
     file_structure_grammar = r"""
     file = encoding? (macro / main)+

@@ -34,3 +34,12 @@ There are a number of great SD programs out there ([Vensim](http://vensim.com/),
 That reason is this: There is a whole world of computational tools being developed in the larger data science community. **System dynamicists should directly use the tools that other people are building, instead of replicating their functionality in SD specific software.** The best way to do this is to bring specific SD functionality to the domain where those other tools are being developed. 
 
 This approach allows SD modelers to take advantage of the most recent developments in data science, and focus our efforts on improving the part of the stack that is unique to System Dynamics modeling.
+
+### Cloning this repository
+
+If you'd like to work with this repository directly, you'll need to use a recursive git checkout in order to properly load the test suite (sorry..)
+
+The command should be something like:
+```shell
+git clone --recursive https://github.com/JamesPHoughton/pysd.git
+```

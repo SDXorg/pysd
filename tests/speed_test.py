@@ -2,11 +2,9 @@ import timeit
 import time
 
 test_model = 'test-models/samples/teacup/teacup.mdl'
+times = dict()
 
-times = { }
-
-###################
-from _version import __version__
+from pysd._version import __version__
 
 times['version'] = __version__
 times['timestamp'] = time.time()
@@ -62,6 +60,6 @@ times['monte carlo'] = \
 print 'Monte Carlo:', times['monte carlo']
 
 
-#---------------------------------
+# ---------------------------------
 with open('speedtest_results.json', 'a') as outfile:
     outfile.write(str(times)+'\n')
