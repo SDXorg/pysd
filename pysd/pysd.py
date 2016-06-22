@@ -108,6 +108,8 @@ def load(py_model_file):
     varnames = filter(lambda x: not x.startswith('_') and not x in ('cache','functions','np'), dir(components))
     components._docstrings = [getattr(components,name).__doc__ for name in varnames]
 
+    components.__str__ = 'This is the list of model components' + str(dir(components)) ## To have PySD.__str__ produce a string
+
     model = PySD(components)
     model.reset_state()
     return model
