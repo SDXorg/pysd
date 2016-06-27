@@ -12,6 +12,8 @@ import re
 import parsimonious
 import builder
 import utils
+import textwrap
+import numpy as np
 
 
 def get_file_sections(file_str):
@@ -146,7 +148,7 @@ def get_model_elements(model_str):
 
     model_structure_grammar = r"""
     model = (entry / section)+ sketch?
-    entry = element "~" element "~" element "|"
+    entry = element "~" element "~" element ("~" element)? "|"
     section = element "~" element "|"
     sketch = ~r".*"  #anything
 
@@ -164,7 +166,7 @@ def get_model_elements(model_str):
             self.entries = []
             self.visit(ast)
 
-        def visit_entry(self, n, (eqn, _1, unit, _2, doc, _3)):
+        def visit_entry(self, n, (eqn, _1, unit, _2, doc, _3, annotation)):
             self.entries.append({'eqn': eqn.strip(),
                                  'unit': unit.strip(),
                                  'doc': doc.strip(),
@@ -382,7 +384,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
                                    'unit': None,
                                    'py_expr': '_t'}])
                 }
-
+    # Todo: integ needs to process the init as its own element
     builders = {
         "integ": lambda expr, init: builder.add_stock(element['py_name'], element['subs'],
                                                       expr, init),
@@ -494,11 +496,26 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
             return name + '()'
 
         def visit_array(self, n, vc):
-            text = n.text.strip(';').replace(' ', '')  # remove trailing semi if exists
-            if ';' in text:
-                return '[' + text.replace(';', '],[') + ']'
+            if element['subs']:
+                coords = utils.make_coord_dict(element['subs'], subscript_dict, terse=False)
+                dims = [utils.find_subscript_name(subscript_dict, sub) for sub in element['subs']]
+                shape = [len(coords[dim]) for dim in dims]
+                if ';' in n.text or ',' in n.text:
+                    text = n.text.strip(';').replace(' ', '').replace(';', ',')
+                    data = np.array([float(s) for s in text.split(',')]).reshape(shape)
+                else:
+                    data = np.tile(float(n.text), shape)
+                datastr = np.array2string(data, separator=',').replace('\n', '').replace(' ', '')
+                return textwrap.dedent("""\
+                    xr.DataArray(data=%(datastr)s,
+                                 coords=%(coords)s,
+                                 dims=%(dims)s )""" % {
+                    'datastr': datastr,
+                    'coords': repr(coords),
+                    'dims': repr(dims)})
+
             else:
-                return text
+                return n.text.replace(' ', '')
 
         def visit_subscript_list(self, n, (lb, _1, refs, rb)):
             subs = [x.strip() for x in refs.split(',')]
@@ -542,7 +559,7 @@ def translate_vensim(mdl_file):
 
     Examples
     --------
-    #>>> translate_vensim('../../tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl')
+    >>> translate_vensim('../tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl')
 
     #>>> translate_vensim('../../tests/test-models/tests/abs/test_abs.mdl')
 

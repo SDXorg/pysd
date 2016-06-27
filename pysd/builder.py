@@ -48,6 +48,7 @@ def build(elements, subscript_dict, namespace, outfile_name):
     """
     from __future__ import division
     import numpy as np
+    from pysd import utils
     %(imports)s
     from pysd.functions import cache
     from pysd import functions
@@ -71,7 +72,7 @@ def build(elements, subscript_dict, namespace, outfile_name):
            'version': __version__}
 
     text = autopep8.fix_code(textwrap.dedent(text),
-                             options={'aggressive': 10,
+                             options={'aggressive': 100,
                                       'max_line_length': 99,
                                       'experimental': True})
 
@@ -96,7 +97,7 @@ def build_element(element, subscript_dict):
             An expression that has been converted already into python syntax
         - subs: list of lists
             Each sublist contains coordinates for initialization of a particular
-            part of a subscripted function
+            part of a subscripted function, the list of subscripts vensim attaches to an equation
 
     subscript_dict: dictionary
 
@@ -105,7 +106,7 @@ def build_element(element, subscript_dict):
 
     """
     # Todo: I don't like how we identify the types of initializations here, using tokens from
-    #  stings. It isn't explicit, or robust. These should be identified explicitly somewhere else.
+    #  strings. It isn't explicit, or robust. These should be identified explicitly somewhere else.
 
     if element['kind'] == 'constant':
         cache_type = "@cache('run')"
@@ -119,30 +120,10 @@ def build_element(element, subscript_dict):
         raise AttributeError("Bad value for 'kind'")
 
     if len(element['py_expr']) > 1:
-        contents = "ret = %s\n" % create_base_array(element['subs'], subscript_dict)
-
-        for sub, expr in zip(element['subs'], element['py_expr']):
-            contents += 'ret.loc[%(coord_dict)s] = %(expr)s\n' % {
-                'coord_dict': repr(make_coord_dict(sub, subscript_dict)),
-                'expr': expr}
-
-        contents += "return ret"
-
-    elif element['kind'] in ['constant', 'setup'] and len(element['subs'][0]) > 0:
-        if ',' in element['py_expr'][0]:  # array type initialization
-            contents = 'return xr.DataArray(data=%(expr)s, coords=%(coords)s, dims=%(dims)s )' % {
-                'expr': '[' + element['py_expr'][0] + ']',
-                'coords': {dim: subscript_dict[dim] for dim in element['subs'][0]},
-                'dims': element['subs'][0]}
-        elif '(' in element['py_expr'][0]:  # reference type initialization
-            contents = "return " + element['py_expr'][0]
-        else:  # float type initialization
-            contents = "return " + create_base_array(element['subs'],
-                                                     subscript_dict,
-                                                     initial_val=element['py_expr'][0])
-
+        contents = 'return utils.xrmerge([%(das)s])' % {'das': ',\n'.join(element['py_expr'])}
     else:
-        contents = "return %s" % element['py_expr'][0]
+        contents = 'return %(py_expr)s' % {'py_expr': element['py_expr'][0]}
+
 
     indent = 8
     element.update({'cache': cache_type,
@@ -166,54 +147,77 @@ def build_element(element, subscript_dict):
         ''' % element
     return func
 
-
-def create_base_array(subs_list, subscript_dict, initial_val='np.NaN'):
-    """
-    Given a list of subscript references,
-    returns a base array that can be populated by these references
-
-    Parameters
-    ----------
-    subs_list
-
-    subscript_dict: dictionary
-
-    Returns
-    -------
-    base_array: string
-        A string that
-
-    >>> create_base_array([['Dim1', 'D'], ['Dim1', 'E'], ['Dim1', 'F']],
-    ...                    {'Dim1': ['A', 'B', 'C'],
-    ...                     'Dim2': ['D', 'E', 'F', 'G']})
-    "xr.DataArray(data=np.empty([3, 3])*NaN, coords={'Dim2': ['D', 'E', 'F'], 'Dim1': ['A', 'B', 'C']})"
-
-    # >>> create_base_array([['Dim1', 'A'], ['Dim1', 'B'], ['Dim1', 'C']],
-    # ...                    {'Dim1': ['A', 'B', 'C']})
-
-    """
-    sub_names_list = subscript_dict.keys()
-    sub_elems_list = [y for x in subscript_dict.values() for y in x]
-
-    coords = dict()
-    for subset in subs_list:
-        for sub in subset:
-            if sub in sub_names_list:
-                if sub not in coords:
-                    coords[sub] = subscript_dict[sub]
-            elif sub in sub_elems_list:
-                name = find_subscript_name(subscript_dict, sub)
-                if name not in coords:
-                    coords[name] = [sub]
-                else:
-                    if sub not in coords[name]:
-                        coords[name] += [sub]
-
-    return "xr.DataArray(data=np.ones(%(shape)s)*%(init)s, coords=%(coords)s)" % {
-        'shape': repr(map(len, coords.values())),
-        'coords': repr(coords),
-        'init': initial_val
-    }
+# not needed?
+#
+# def make_xarray(subs, expr, subscript_dict):
+#     # Todo: this function should take a single line from a vensim model file
+#     # (abstracted as elements in an array passed to the build elemtn funrction)
+#     # and make an xarray from them. Either just build up the syntax to construct one on the fly
+#     # during model load, or actually build one, deconstruct it, and use the array presentation
+#     # to make an xarray using simple syntax.
+#
+#     xarray_string = """\
+#         xr.DataArray(data=%(expr)s,
+#                      coords=%(coords_dict)s)
+#     """ % {'expr': expr,
+#            'coords_dict': make_coord_dict(subs, subscript_dict, terse=False)}
+#
+#     return xarray_string
+#
+#
+# def create_base_array(subs_list, subscript_dict, initial_val='np.NaN'):
+#     """
+#     Given a list of subscript references,
+#     returns a base array that can be populated by these references
+#
+#     Parameters
+#     ----------
+#     subs_list
+#
+#     subscript_dict: dictionary
+#
+#     Returns
+#     -------
+#     base_array: string
+#         A string that
+#
+#     >>> create_base_array([['Dim1', 'D'], ['Dim1', 'E'], ['Dim1', 'F']],
+#     ...                    {'Dim1': ['A', 'B', 'C'],
+#     ...                     'Dim2': ['D', 'E', 'F', 'G']})
+#     "xr.DataArray(data=np.empty([3, 3])*NaN, coords={'Dim2': ['D', 'E', 'F'], 'Dim1': ['A', 'B', 'C']})"
+#
+#     # >>> create_base_array([['Dim1', 'A'], ['Dim1', 'B'], ['Dim1', 'C']],
+#     # ...                    {'Dim1': ['A', 'B', 'C']})
+#
+#     """
+#     sub_names_list = subscript_dict.keys()
+#     sub_elems_list = [y for x in subscript_dict.values() for y in x]
+#     coords = dict()
+#     for subset in subs_list:
+#         for sub in subset:
+#             if sub in sub_names_list:
+#                 if sub not in coords:
+#                     coords[sub] = subscript_dict[sub]
+#             elif sub in sub_elems_list:
+#                 name = find_subscript_name(subscript_dict, sub)
+#                 if name not in coords:
+#                     coords[name] = [sub]
+#                 else:
+#                     if sub not in coords[name]:
+#                         coords[name] += [sub]
+#
+#     dims = [find_subscript_name(subscript_dict, element) if element in sub_elems_list else element
+#             for element in subs_list[0]]
+#
+#     return textwrap.dedent("""\
+#         xr.DataArray(data=np.ones(%(shape)s)*%(init)s,
+#                      coords=%(coords)s,
+#                      dims=%(dims)s )""" % {
+#         'shape': [len(coords[dim]) for dim in dims],
+#         'coords': repr(coords),
+#         'init': initial_val,
+#         'dims': dims
+#     })
 
 # def identify_subranges(subscript_dict):
 #     """

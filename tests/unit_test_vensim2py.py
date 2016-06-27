@@ -1,4 +1,5 @@
 import unittest
+import xarray as xr
 
 
 class TestGetFileSections(unittest.TestCase):
@@ -282,21 +283,46 @@ class TestParse_general_expression(unittest.TestCase):
             ({'kind': 'component', 'py_expr': 'functions.if_then_else(a>b, 1, 0)'}, [])
         )
 
-    def test_subscript_constant(self):
+    def test_subscript_1d_constant(self):
         from pysd.vensim2py import parse_general_expression
-        self.assertEqual(
-            parse_general_expression({'expr': '1, 2, 3, 4, 5, 6'}, {},
-                                     {'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3'],
-                                      'Second Dimension Subscript': ['Column 1', 'Column 2']}),
-            ({'kind': 'constant', 'py_expr': '1,2,3,4,5,6'}, [])
-        )
+        element = parse_general_expression({'expr': '1, 2, 3',
+                                           'subs': ['Dim1']},
+                                          {},
+                                          {'Dim1': ['A', 'B', 'C'],
+                                           'Dim2': ['D', 'E']}),
+        string = element[0]['py_expr']
+        a = eval(string)
+        self.assertDictEqual({key: list(val.values) for key, val in a.coords.iteritems()},
+                             {'Dim1': ['A', 'B', 'C']})
+        self.assertEqual(a.loc[{'Dim1': 'A'}], 1)
 
-        self.assertEqual(
-            parse_general_expression({'expr': '1, 2; 3, 4; 5, 6;'}, {},
-                                     {'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3'],
-                                      'Second Dimension Subscript': ['Column 1', 'Column 2']}),
-            ({'kind': 'constant', 'py_expr': '[1,2],[3,4],[5,6]'}, [])
-        )
+    def test_subscript_2d_constant(self):
+        from pysd.vensim2py import parse_general_expression
+        element = parse_general_expression({'expr': '1, 2; 3, 4; 5, 6;',
+                                            'subs': ['Dim1', 'Dim2']},
+                                           {},
+                                           {'Dim1': ['A', 'B', 'C'],
+                                            'Dim2': ['D', 'E']})
+        string = element[0]['py_expr']
+        a = eval(string)
+        self.assertDictEqual({key: list(val.values) for key, val in a.coords.iteritems()},
+                             {'Dim1': ['A', 'B', 'C'], 'Dim2': ['D', 'E']})
+        self.assertEqual(a.loc[{'Dim1': 'A', 'Dim2': 'D'}], 1)
+        self.assertEqual(a.loc[{'Dim1': 'B', 'Dim2': 'E'}], 4)
+
+    def test_subscript_3d_depth(self):
+        from pysd.vensim2py import parse_general_expression
+        element = parse_general_expression({'expr': '1, 2; 3, 4; 5, 6;',
+                                            'subs': ['Dim1', 'Dim2']},
+                                           {},
+                                           {'Dim1': ['A', 'B', 'C'],
+                                            'Dim2': ['D', 'E']})
+        string = element[0]['py_expr']
+        a = eval(string)
+        self.assertDictEqual({key: list(val.values) for key, val in a.coords.iteritems()},
+                             {'Dim1': ['A', 'B', 'C'], 'Dim2': ['D', 'E']})
+        self.assertEqual(a.loc[{'Dim1': 'A', 'Dim2': 'D'}], 1)
+        self.assertEqual(a.loc[{'Dim1': 'B', 'Dim2': 'E'}], 4)
 
     def test_subscript_stock(self):
         self.maxDiff = None

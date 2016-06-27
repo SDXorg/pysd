@@ -293,4 +293,13 @@ class TestModelInteraction(unittest.TestCase):
         model_1.components.initial_time = lambda: 10
         self.assertNotEqual(model_2.components.initial_time, 10)
 
+    def test_restart_cache(self):
+        """
+        Test that when we cache a model variable at the 'run' time,
+         if the variable is changed and the model re-run, the cache updates
+         to the new variable, instead of maintaining the old one.
+
+        """
+        self.fail()
+
 
