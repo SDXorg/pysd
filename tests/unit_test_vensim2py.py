@@ -219,6 +219,20 @@ class TestParse_general_expression(unittest.TestCase):
                'unit': None}])
         )
 
+    def test_caps_handling(self):
+        from pysd.vensim2py import parse_general_expression
+        self.assertEqual(
+            parse_general_expression({'expr': 'Abs(-3)'}),
+            ({'kind': 'component', 'py_expr': 'abs(-3)'}, []))
+
+        self.assertEqual(
+            parse_general_expression({'expr': 'ABS(-3)'}),
+            ({'kind': 'component', 'py_expr': 'abs(-3)'}, []))
+
+        self.assertEqual(
+            parse_general_expression({'expr': 'aBS(-3)'}),
+            ({'kind': 'component', 'py_expr': 'abs(-3)'}, []))
+
     def test_function_calls(self):
         from pysd.vensim2py import parse_general_expression
         self.assertEqual(
