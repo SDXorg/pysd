@@ -5,28 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a7e5b169-cc30-45fb-a7f9-e8e84f9c05bd" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models/tests/ln/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models/tests/subscript_3d_arrays_widthwise copy/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models/tests/subscript_3d_arrays_widthwise copy/output.tab" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models/tests/subscript_3d_arrays_widthwise copy/test_subscript_3d_arrays_widthwise.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models/tests/subscript_3d_arrays_widthwise copy/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models/tests/subscript_different_shapes/README.md" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models" afterPath="$PROJECT_DIR$/tests/test-models" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Xarray value assignment.ipynb" afterPath="$PROJECT_DIR$/Xarray value assignment.ipynb" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/builder.py" afterPath="$PROJECT_DIR$/pysd/builder.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/functions.py" afterPath="$PROJECT_DIR$/pysd/functions.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/vensim2py.py" afterPath="$PROJECT_DIR$/pysd/vensim2py.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/sandbox.ipynb" afterPath="$PROJECT_DIR$/sandbox.ipynb" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/samples/SIR/SIR.py" afterPath="$PROJECT_DIR$/tests/test-models/samples/SIR/SIR.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/samples/teacup/teacup.py" afterPath="$PROJECT_DIR$/tests/test-models/samples/teacup/teacup.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/delays/test_delays.mdl" afterPath="$PROJECT_DIR$/tests/test-models/tests/delays/test_delays.mdl" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/line_continuation/output.tab" afterPath="$PROJECT_DIR$/tests/test-models/tests/line_continuation/output.tab" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/line_continuation/test_line_continuation.mdl" afterPath="$PROJECT_DIR$/tests/test-models/tests/line_continuation/test_line_continuation.mdl" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/number_handling/test_number_handling.py" afterPath="$PROJECT_DIR$/tests/test-models/tests/number_handling/test_number_handling.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/subscript_3d_arrays/output.tab" afterPath="$PROJECT_DIR$/tests/test-models/tests/subscript_3d_arrays/output.tab" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/subscript_3d_arrays_lengthwise/output.tab" afterPath="$PROJECT_DIR$/tests/test-models/tests/subscript_3d_arrays_lengthwise/output.tab" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/subscript_individually_defined_stocks/output.tab" afterPath="$PROJECT_DIR$/tests/test-models/tests/subscript_individually_defined_stocks/output.tab" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/subscript_updimensioning/test_subscript_updimensioning.mdl" afterPath="$PROJECT_DIR$/tests/test-models/tests/subscript_updimensioning/test_subscript_updimensioning.mdl" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/unit_test_vensim2py.py" afterPath="$PROJECT_DIR$/tests/unit_test_vensim2py.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/integration_test_factory.py" afterPath="$PROJECT_DIR$/tests/integration_test_factory.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/integration_test_pysd.py" afterPath="$PROJECT_DIR$/tests/integration_test_pysd.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.mdl" afterPath="$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.mdl" />
     </list>
     <ignored path="pysd.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -54,10 +40,10 @@
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestIntegrationExamples_test_trig.coverage" NAME="Unittest TestIntegrationExamples.test_trig Coverage Results" MODIFIED="1464640202239" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Doctest_assertFramesClose.coverage" NAME="Doctest assertFramesClose Coverage Results" MODIFIED="1464372099428" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestPySD_test_run_return_timestamps.coverage" NAME="Unittest TestPySD.test_run_return_timestamps Coverage Results" MODIFIED="1464826423600" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
-    <SUITE FILE_PATH="coverage/pysd$Unittests_in_TestIntegrationExamples.coverage" NAME="Unittests in TestIntegrationExamples Coverage Results" MODIFIED="1467040756736" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/pysd$Unittests_in_TestIntegrationExamples.coverage" NAME="Unittests in TestIntegrationExamples Coverage Results" MODIFIED="1467221361906" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestIntegrationExamples_test_subscript_2d_arrays.coverage" NAME="Unittest TestIntegrationExamples.test_subscript_2d_arrays Coverage Results" MODIFIED="1464396953159" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestBuildElement_test_single_line_2d_subscript_constant_construction.coverage" NAME="Unittest TestBuildElement.test_single_line_2d_subscript_constant_construction Coverage Results" MODIFIED="1466773596155" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
-    <SUITE FILE_PATH="coverage/pysd$Unittests_in_TestParse_general_expression.coverage" NAME="Unittests in TestParse_general_expression Coverage Results" MODIFIED="1464808953095" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/pysd$Unittests_in_TestParse_general_expression.coverage" NAME="Unittests in TestParse_general_expression Coverage Results" MODIFIED="1467145841932" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestParse_general_expression_test_subscript_2d_constant.coverage" NAME="Unittest TestParse_general_expression.test_subscript_2d_constant Coverage Results" MODIFIED="1467025312511" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittests_in_unit_test_pysd.coverage" NAME="Unittests in unit_test_pysd Coverage Results" MODIFIED="1464962048450" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestIntegrationExamples_test_special_characters.coverage" NAME="Unittest TestIntegrationExamples.test_special_characters Coverage Results" MODIFIED="1464370670915" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
@@ -69,6 +55,7 @@
     <SUITE FILE_PATH="coverage/pysd$Unittests_in_TestGetFileSections.coverage" NAME="Unittests in TestGetFileSections Coverage Results" MODIFIED="1465481737173" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestIntegrationExamples_test_line_continuation.coverage" NAME="Unittest TestIntegrationExamples.test_line_continuation Coverage Results" MODIFIED="1467144562229" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestEquationStringParsing_test_subscript_references.coverage" NAME="Unittest TestEquationStringParsing.test_subscript_references Coverage Results" MODIFIED="1464356135148" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/pysd$Unittest_TestIntegrationExamples_test_line_breaks.coverage" NAME="Unittest TestIntegrationExamples.test_line_breaks Coverage Results" MODIFIED="1467149082413" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestPySD_test_ramp.coverage" NAME="Unittest TestPySD.test_ramp Coverage Results" MODIFIED="1464287809961" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestPySD_test__constant_component.coverage" NAME="Unittest TestPySD.test__constant_component Coverage Results" MODIFIED="1464825009275" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Doctest_add_ddt_element.coverage" NAME="Doctest add_ddt_element Coverage Results" MODIFIED="1464202456612" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pysd/builder" />
@@ -89,12 +76,16 @@
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestPySD_test__timeseries_component.coverage" NAME="Unittest TestPySD.test__timeseries_component Coverage Results" MODIFIED="1464824943192" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestParse_general_expression_test_caps_handling.coverage" NAME="Unittest TestParse_general_expression.test_caps_handling Coverage Results" MODIFIED="1467145230898" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittests_in_unit_test_vensim2py.coverage" NAME="Unittests in unit_test_vensim2py Coverage Results" MODIFIED="1464809999378" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/pysd$Unittest_TestIntegrationExamples_test_initial_function.coverage" NAME="Unittest TestIntegrationExamples.test_initial_function Coverage Results" MODIFIED="1467150322493" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestUtils_test_find_subscript_name.coverage" NAME="Unittest TestUtils.test_find_subscript_name Coverage Results" MODIFIED="1467022645586" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestBuild_test_build.coverage" NAME="Unittest TestBuild.test_build Coverage Results" MODIFIED="1464808409130" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
-    <SUITE FILE_PATH="coverage/pysd$Unittests_in_TestIntegrationExamples__2_.coverage" NAME="Unittests in TestIntegrationExamples (2) Coverage Results" MODIFIED="1467144567844" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/pysd$Unittest_TestIntegrationExamples_test_exponentiation.coverage" NAME="Unittest TestIntegrationExamples.test_exponentiation Coverage Results" MODIFIED="1467221301909" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/pysd$Unittests_in_TestIntegrationExamples__2_.coverage" NAME="Unittests in TestIntegrationExamples (2) Coverage Results" MODIFIED="1467158014395" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestUtils_test_get_return_elements.coverage" NAME="Unittest TestUtils.test_get_return_elements Coverage Results" MODIFIED="1464631493358" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/pysd$Unittest_TestIntegrationExamples_test_subscript_subranges_equal.coverage" NAME="Unittest TestIntegrationExamples.test_subscript_subranges_equal Coverage Results" MODIFIED="1467147560474" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestParse_general_expression_test_builtin_components.coverage" NAME="Unittest TestParse_general_expression.test_builtin_components Coverage Results" MODIFIED="1464357956226" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestPySD_test__integrate.coverage" NAME="Unittest TestPySD.test__integrate Coverage Results" MODIFIED="1464825706216" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/pysd$Unittest_TestIntegrationExamples_test_lookups.coverage" NAME="Unittest TestIntegrationExamples.test_lookups Coverage Results" MODIFIED="1467222038025" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestModelInteraction_test_multiple_load.coverage" NAME="Unittest TestModelInteraction.test_multiple_load Coverage Results" MODIFIED="1464361669056" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestBuildElement_test_setup_with_call.coverage" NAME="Unittest TestBuildElement.test_setup_with_call Coverage Results" MODIFIED="1466774399348" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittests_in_TestPySD.coverage" NAME="Unittests in TestPySD Coverage Results" MODIFIED="1464345224803" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
@@ -103,7 +94,7 @@
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestPySD_test_set_initial_condition.coverage" NAME="Unittest TestPySD.test_set_initial_condition Coverage Results" MODIFIED="1464818080842" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Doctest_make_coord_dict.coverage" NAME="Doctest make_coord_dict Coverage Results" MODIFIED="1465995392857" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pysd" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestInputFunctions_test_ramp.coverage" NAME="Unittest TestInputFunctions.test_ramp Coverage Results" MODIFIED="1465409707213" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
-    <SUITE FILE_PATH="coverage/pysd$Unittests_in_TestIntegrationExamples__1_.coverage" NAME="Unittests in TestIntegrationExamples (1) Coverage Results" MODIFIED="1467143547470" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/pysd$Unittests_in_TestIntegrationExamples__1_.coverage" NAME="Unittests in TestIntegrationExamples (1) Coverage Results" MODIFIED="1467210802865" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestParse_general_expression_test_subscript_reference.coverage" NAME="Unittest TestParse_general_expression.test_subscript_reference Coverage Results" MODIFIED="1464357711316" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestPySD_test_run_return_columns_pysafe_names.coverage" NAME="Unittest TestPySD.test_run_return_columns_pysafe_names Coverage Results" MODIFIED="1464812528001" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Doctest_read_vensim.coverage" NAME="Doctest read_vensim Coverage Results" MODIFIED="1464205609533" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pysd" />
@@ -114,6 +105,7 @@
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestIntegrationExamples_test_subscript_1d_arrays.coverage" NAME="Unittest TestIntegrationExamples.test_subscript_1d_arrays Coverage Results" MODIFIED="1467040384267" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestBuildElement_test_single_line_1d_subscript_constant_construction.coverage" NAME="Unittest TestBuildElement.test_single_line_1d_subscript_constant_construction Coverage Results" MODIFIED="1466773609959" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestIntegrationExamples_test_logicals.coverage" NAME="Unittest TestIntegrationExamples.test_logicals Coverage Results" MODIFIED="1464637489233" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/pysd$Unittest_TestIntegrationExamples_test_lookups_inline.coverage" NAME="Unittest TestIntegrationExamples.test_lookups_inline Coverage Results" MODIFIED="1467210723309" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestPySD_test_initial_conditions.coverage" NAME="Unittest TestPySD.test_initial_conditions Coverage Results" MODIFIED="1464826205581" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestParse_general_expression_test_subscript_1d_constant.coverage" NAME="Unittest TestParse_general_expression.test_subscript_1d_constant Coverage Results" MODIFIED="1467025333300" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestPySD_test_run_return_timestamps_past_final_time.coverage" NAME="Unittest TestPySD.test_run_return_timestamps_past_final_time Coverage Results" MODIFIED="1464826551683" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
@@ -135,8 +127,9 @@
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestPySD_test_set_state.coverage" NAME="Unittest TestPySD.test_set_state Coverage Results" MODIFIED="1464813041787" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestRead_vensim_test_read_vensim.coverage" NAME="Unittest TestRead_vensim.test_read_vensim Coverage Results" MODIFIED="1464269107785" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestParse_general_expression_test_subscript_constant.coverage" NAME="Unittest TestParse_general_expression.test_subscript_constant Coverage Results" MODIFIED="1466790580246" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/pysd$Unittests_in_TestIntegrationExamples__3_.coverage" NAME="Unittests in TestIntegrationExamples (3) Coverage Results" MODIFIED="1467219621917" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestUtils_test_get_return_elements_pysafe_names.coverage" NAME="Unittest TestUtils.test_get_return_elements_pysafe_names Coverage Results" MODIFIED="1464812678245" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
-    <SUITE FILE_PATH="coverage/pysd$integration_test_factory.coverage" NAME="integration_test_factory Coverage Results" MODIFIED="1467035623965" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/pysd$integration_test_factory.coverage" NAME="integration_test_factory Coverage Results" MODIFIED="1467158001194" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestInputFunctions_test_pulse.coverage" NAME="Unittest TestInputFunctions.test_pulse Coverage Results" MODIFIED="1465410208536" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestBuildElement_test_no_subs_call.coverage" NAME="Unittest TestBuildElement.test_no_subs_call Coverage Results" MODIFIED="1466780962187" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestBuild_test_single_line_2d_subscript_constant_construction.coverage" NAME="Unittest TestBuild.test_single_line_2d_subscript_constant_construction Coverage Results" MODIFIED="1464711910928" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
@@ -165,22 +158,19 @@
     <favorites_list name="pysd" />
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.49570817">
+    <splitter split-orientation="horizontal" split-proportion="0.5379113">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
           <file leaf-file-name="vensim2py.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/pysd/vensim2py.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="1130">
-                  <caret line="439" column="43" selection-start-line="439" selection-start-column="43" selection-end-line="439" selection-end-column="43" />
+                <state relative-caret-position="170">
+                  <caret line="477" column="20" selection-start-line="477" selection-start-column="20" selection-end-line="477" selection-end-column="20" />
                   <folding>
                     <element signature="e#102#111#0" expanded="true" />
-                    <element signature="e#234#3066#0" expanded="false" />
-                    <element signature="e#3108#7134#0" expanded="false" />
-                    <element signature="e#7184#10495#0" expanded="false" />
                     <element signature="e#10530#10886#0" expanded="false" />
-                    <marker date="1467052015000" expanded="true" signature="11557:11772" ph="..." />
-                    <marker date="1467052015000" expanded="true" signature="11583:11716" ph="..." />
+                    <marker date="1467221301000" expanded="true" signature="11557:11772" ph="..." />
+                    <marker date="1467221301000" expanded="true" signature="11583:11716" ph="..." />
                   </folding>
                 </state>
               </provider>
@@ -195,26 +185,6 @@
                     <element signature="e#0#9#0" expanded="true" />
                     <marker date="1467026968000" expanded="true" signature="1971:2102" ph="..." />
                   </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="test_subscript_1d_arrays.mdl" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscript_1d_arrays/test_subscript_1d_arrays.mdl">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="0">
-                  <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-                  <folding />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="functions.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/pysd/functions.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="-285">
-                  <caret line="151" column="36" selection-start-line="151" selection-start-column="36" selection-end-line="151" selection-end-column="36" />
-                  <folding />
                 </state>
               </provider>
             </entry>
@@ -235,11 +205,61 @@
       </split-first>
       <split-second>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file leaf-file-name="test_utils.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="test_utils.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/tests/test_utils.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="592">
-                  <caret line="88" column="0" selection-start-line="88" selection-start-column="0" selection-end-line="88" selection-end-column="0" />
+                <state relative-caret-position="223">
+                  <caret line="84" column="0" selection-start-line="84" selection-start-column="0" selection-end-line="84" selection-end-column="0" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="expressions.py" pinned="false" current-in-tab="false">
+            <entry file="file://$USER_HOME$/anaconda/lib/python2.7/site-packages/parsimonious/expressions.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="419">
+                  <caret line="123" column="0" selection-start-line="123" selection-start-column="0" selection-end-line="123" selection-end-column="0" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="exceptions.py" pinned="false" current-in-tab="false">
+            <entry file="file://$USER_HOME$/anaconda/lib/python2.7/site-packages/parsimonious/exceptions.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="150">
+                  <caret line="10" column="0" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="grammar.py" pinned="false" current-in-tab="false">
+            <entry file="file://$USER_HOME$/anaconda/lib/python2.7/site-packages/parsimonious/grammar.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="164">
+                  <caret line="111" column="0" selection-start-line="111" selection-start-column="0" selection-end-line="111" selection-end-column="0" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="integration_test_pysd.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/tests/integration_test_pysd.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="164">
+                  <caret line="56" column="0" selection-start-line="56" selection-start-column="0" selection-end-line="56" selection-end-column="0" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="exponentiation.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/tests/test-models/tests/exponentiation/exponentiation.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="-210">
+                  <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
                   <folding />
                 </state>
               </provider>
@@ -248,103 +268,43 @@
           <file leaf-file-name="builder.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/pysd/builder.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="49">
-                  <caret line="319" column="1" selection-start-line="319" selection-start-column="1" selection-end-line="319" selection-end-column="1" />
+                <state relative-caret-position="-46">
+                  <caret line="113" column="7" selection-start-line="113" selection-start-column="7" selection-end-line="113" selection-end-column="7" />
                   <folding>
-                    <element signature="e#86#101#0" expanded="true" />
-                    <marker date="1467143423000" expanded="true" signature="5449:5544" ph="..." />
+                    <element signature="e#330#345#0" expanded="true" />
+                    <marker date="1467219850000" expanded="true" signature="5792:5887" ph="..." />
                   </folding>
                 </state>
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="test_active_initial.mdl" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/tests/test-models/tests/active_initial/test_active_initial.mdl">
+          <file leaf-file-name="test_lookups.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="0">
-                  <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+                <state relative-caret-position="179">
+                  <caret line="71" column="0" selection-start-line="71" selection-start-column="0" selection-end-line="71" selection-end-column="0" />
                   <folding />
                 </state>
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="test_euler_step_vs_saveper.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/tests/test-models/tests/euler_step_vs_saveper/test_euler_step_vs_saveper.py">
+          <file leaf-file-name="functions.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/pysd/functions.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="-1298">
-                  <caret line="1" column="0" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
-                  <folding />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="unit_test_functions.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/tests/unit_test_functions.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="60">
-                  <caret line="82" column="0" selection-start-line="82" selection-start-column="0" selection-end-line="82" selection-end-column="0" />
+                <state relative-caret-position="118">
+                  <caret line="181" column="82" selection-start-line="181" selection-start-column="82" selection-end-line="181" selection-end-column="82" />
                   <folding>
-                    <element signature="e#0#15#0" expanded="true" />
-                    <element signature="e#85#2753#0" expanded="false" />
-                    <element signature="e#114#452#0" expanded="false" />
-                    <element signature="e#487#776#0" expanded="false" />
-                    <element signature="e#812#1273#0" expanded="false" />
-                    <element signature="e#1315#2753#0" expanded="false" />
-                    <element signature="e#2805#3407#0" expanded="false" />
+                    <element signature="e#146#164#0" expanded="true" />
                   </folding>
                 </state>
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="integration_test_pysd.py" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/tests/integration_test_pysd.py">
+          <file leaf-file-name="test_lookups_inline.mdl" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/tests/test-models/tests/lookups_inline/test_lookups_inline.mdl">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="154">
-                  <caret line="88" column="8" selection-start-line="88" selection-start-column="8" selection-end-line="88" selection-end-column="8" />
-                  <folding />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="test_subscript_3d_arrays_lengthwise.mdl" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscript_3d_arrays_lengthwise/test_subscript_3d_arrays_lengthwise.mdl">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="90">
-                  <caret line="6" column="30" selection-start-line="6" selection-start-column="12" selection-end-line="6" selection-end-column="30" />
-                  <folding />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="unit_test_vensim2py.py" pinned="false" current-in-tab="true">
-            <entry file="file://$PROJECT_DIR$/tests/unit_test_vensim2py.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="200">
-                  <caret line="221" column="17" selection-start-line="221" selection-start-column="17" selection-end-line="221" selection-end-column="17" />
-                  <folding>
-                    <element signature="e#0#15#0" expanded="true" />
-                    <element signature="e#88#3045#0" expanded="false" />
-                    <element signature="e#3104#7095#0" expanded="false" />
-                  </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="case.py" pinned="false" current-in-tab="false">
-            <entry file="file://$USER_HOME$/anaconda/lib/python2.7/unittest/case.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="158">
-                  <caret line="392" column="0" selection-start-line="392" selection-start-column="0" selection-end-line="392" selection-end-column="0" />
-                  <folding />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="suite.py" pinned="false" current-in-tab="false">
-            <entry file="file://$USER_HOME$/anaconda/lib/python2.7/unittest/suite.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="158">
-                  <caret line="69" column="0" selection-start-line="69" selection-start-column="0" selection-end-line="69" selection-end-column="0" />
+                <state relative-caret-position="105">
+                  <caret line="7" column="15" selection-start-line="7" selection-start-column="4" selection-end-line="7" selection-end-column="15" />
                   <folding />
                 </state>
               </provider>
@@ -378,8 +338,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/pysd/translators/.ipynb_checkpoints/vensim.grammar" />
-        <option value="$PROJECT_DIR$/pysd/translators/vensim.grammar" />
         <option value="$PROJECT_DIR$/pysd/builder/Testing" />
         <option value="$PROJECT_DIR$/pysd/builder/templates.py" />
         <option value="$PROJECT_DIR$/tests/test-models/tests/exponentiation/exponentiation.py" />
@@ -413,11 +371,9 @@
         <option value="$PROJECT_DIR$/tests/test-models/samples/teacup/teacup.py" />
         <option value="$PROJECT_DIR$/README.md" />
         <option value="$PROJECT_DIR$/tests/speed_test.py" />
-        <option value="$PROJECT_DIR$/pysd/functions.py" />
         <option value="$PROJECT_DIR$/tests/unit_test_functions.py" />
         <option value="$PROJECT_DIR$/tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl" />
         <option value="$PROJECT_DIR$/tests/unit_test_pysd.py" />
-        <option value="$PROJECT_DIR$/tests/integration_test_factory.py" />
         <option value="$PROJECT_DIR$/tests/unit_test_builder.py" />
         <option value="$PROJECT_DIR$/pysd/utils.py" />
         <option value="$PROJECT_DIR$/tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.py" />
@@ -426,9 +382,13 @@
         <option value="$PROJECT_DIR$/tests/unit_test_utils.py" />
         <option value="$PROJECT_DIR$/tests/test-models/tests/subscript_1d_arrays/test_subscript_1d_arrays.py" />
         <option value="$PROJECT_DIR$/tests/test-models/tests/subscript_individually_defined_stocks/output.tab" />
+        <option value="$PROJECT_DIR$/tests/unit_test_vensim2py.py" />
+        <option value="$PROJECT_DIR$/tests/test-models/tests/subscript_subranges_equal/output.tab" />
+        <option value="$PROJECT_DIR$/tests/test-models/tests/subscript_mixed_assembly/test_subscript_mixed_assembly.py" />
+        <option value="$PROJECT_DIR$/tests/integration_test_factory.py" />
+        <option value="$PROJECT_DIR$/pysd/functions.py" />
         <option value="$PROJECT_DIR$/pysd/builder.py" />
         <option value="$PROJECT_DIR$/pysd/vensim2py.py" />
-        <option value="$PROJECT_DIR$/tests/unit_test_vensim2py.py" />
       </list>
     </option>
   </component>
@@ -482,7 +442,156 @@
     </navigator>
     <panes>
       <pane id="ProjectPane">
-        <subPane />
+        <subPane>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="pysd" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="pysd" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="pysd" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="pysd" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="pysd" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tests" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="pysd" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="pysd" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tests" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="test-models" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="pysd" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="pysd" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tests" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="test-models" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tests" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="pysd" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="pysd" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tests" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="test-models" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tests" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="subscripted_flows" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="pysd" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="pysd" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tests" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="test-models" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tests" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="lookups_inline" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="pysd" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="pysd" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tests" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="test-models" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="tests" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="exponentiation" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+        </subPane>
       </pane>
       <pane id="Scratches" />
       <pane id="Scope" />
@@ -517,30 +626,7 @@
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunManager" selected="Python tests.Unittest TestParse_general_expression.test_caps_handling">
-    <configuration default="false" name="Unittest TestIntegrationExamples.test_ln" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="pysd" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/integration_test_pysd.py" />
-      <option name="CLASS_NAME" value="TestIntegrationExamples" />
-      <option name="METHOD_NAME" value="test_ln" />
-      <option name="FOLDER_NAME" value="" />
-      <option name="TEST_TYPE" value="TEST_METHOD" />
-      <option name="PATTERN" value="" />
-      <option name="USE_PATTERN" value="false" />
-      <option name="PUREUNITTEST" value="true" />
-      <option name="PARAMS" value="" />
-      <option name="USE_PARAM" value="false" />
-      <method />
-    </configuration>
+  <component name="RunManager" selected="Python tests.Unittest TestIntegrationExamples.test_lookups">
     <configuration default="false" name="Unittests in TestIntegrationExamples (1)" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -554,7 +640,7 @@
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/integration_test_pysd.py" />
       <option name="CLASS_NAME" value="TestIntegrationExamples" />
-      <option name="METHOD_NAME" value="test_ln" />
+      <option name="METHOD_NAME" value="test_lookups_inline" />
       <option name="FOLDER_NAME" value="" />
       <option name="TEST_TYPE" value="TEST_CLASS" />
       <option name="PATTERN" value="" />
@@ -564,7 +650,7 @@
       <option name="USE_PARAM" value="false" />
       <method />
     </configuration>
-    <configuration default="false" name="Unittest TestIntegrationExamples.test_line_continuation" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+    <configuration default="false" name="Unittest TestIntegrationExamples.test_lookups" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs />
@@ -577,7 +663,7 @@
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/integration_test_pysd.py" />
       <option name="CLASS_NAME" value="TestIntegrationExamples" />
-      <option name="METHOD_NAME" value="test_line_continuation" />
+      <option name="METHOD_NAME" value="test_lookups" />
       <option name="FOLDER_NAME" value="" />
       <option name="TEST_TYPE" value="TEST_METHOD" />
       <option name="PATTERN" value="" />
@@ -587,7 +673,7 @@
       <option name="USE_PARAM" value="false" />
       <method />
     </configuration>
-    <configuration default="false" name="Unittests in TestIntegrationExamples (2)" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+    <configuration default="false" name="Unittests in TestIntegrationExamples (3)" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs />
@@ -600,7 +686,7 @@
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/integration_test_pysd.py" />
       <option name="CLASS_NAME" value="TestIntegrationExamples" />
-      <option name="METHOD_NAME" value="test_line_continuation" />
+      <option name="METHOD_NAME" value="test_lookups" />
       <option name="FOLDER_NAME" value="" />
       <option name="TEST_TYPE" value="TEST_CLASS" />
       <option name="PATTERN" value="" />
@@ -610,7 +696,7 @@
       <option name="USE_PARAM" value="false" />
       <method />
     </configuration>
-    <configuration default="false" name="Unittest TestParse_general_expression.test_caps_handling" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+    <configuration default="false" name="Unittest TestIntegrationExamples.test_exponentiation" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs />
@@ -621,11 +707,34 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <module name="pysd" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/unit_test_vensim2py.py" />
-      <option name="CLASS_NAME" value="TestParse_general_expression" />
-      <option name="METHOD_NAME" value="test_caps_handling" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/integration_test_pysd.py" />
+      <option name="CLASS_NAME" value="TestIntegrationExamples" />
+      <option name="METHOD_NAME" value="test_exponentiation" />
       <option name="FOLDER_NAME" value="" />
       <option name="TEST_TYPE" value="TEST_METHOD" />
+      <option name="PATTERN" value="" />
+      <option name="USE_PATTERN" value="false" />
+      <option name="PUREUNITTEST" value="true" />
+      <option name="PARAMS" value="" />
+      <option name="USE_PARAM" value="false" />
+      <method />
+    </configuration>
+    <configuration default="false" name="Unittests in TestIntegrationExamples" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="pysd" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/integration_test_pysd.py" />
+      <option name="CLASS_NAME" value="TestIntegrationExamples" />
+      <option name="METHOD_NAME" value="test_exponentiation" />
+      <option name="FOLDER_NAME" value="" />
+      <option name="TEST_TYPE" value="TEST_CLASS" />
       <option name="PATTERN" value="" />
       <option name="USE_PATTERN" value="false" />
       <option name="PUREUNITTEST" value="true" />
@@ -713,6 +822,24 @@
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
       <module name="pysd" />
+      <method />
+    </configuration>
+    <configuration default="true" type="docs" factoryName="Sphinx task">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="pysd" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="docutils_input_file" value="" />
+      <option name="docutils_output_file" value="" />
+      <option name="docutils_params" value="" />
+      <option name="docutils_task" value="" />
+      <option name="docutils_open_in_browser" value="false" />
       <method />
     </configuration>
     <configuration default="true" type="js.build_tools.gulp" factoryName="Gulp.js">
@@ -882,19 +1009,19 @@
     <list size="7">
       <item index="0" class="java.lang.String" itemvalue="Python.Test Model Library" />
       <item index="1" class="java.lang.String" itemvalue="Python tests.Doctest assert_frames_close" />
-      <item index="2" class="java.lang.String" itemvalue="Python tests.Unittest TestIntegrationExamples.test_ln" />
-      <item index="3" class="java.lang.String" itemvalue="Python tests.Unittests in TestIntegrationExamples (1)" />
-      <item index="4" class="java.lang.String" itemvalue="Python tests.Unittest TestIntegrationExamples.test_line_continuation" />
-      <item index="5" class="java.lang.String" itemvalue="Python tests.Unittests in TestIntegrationExamples (2)" />
-      <item index="6" class="java.lang.String" itemvalue="Python tests.Unittest TestParse_general_expression.test_caps_handling" />
+      <item index="2" class="java.lang.String" itemvalue="Python tests.Unittests in TestIntegrationExamples (1)" />
+      <item index="3" class="java.lang.String" itemvalue="Python tests.Unittest TestIntegrationExamples.test_lookups" />
+      <item index="4" class="java.lang.String" itemvalue="Python tests.Unittests in TestIntegrationExamples (3)" />
+      <item index="5" class="java.lang.String" itemvalue="Python tests.Unittest TestIntegrationExamples.test_exponentiation" />
+      <item index="6" class="java.lang.String" itemvalue="Python tests.Unittests in TestIntegrationExamples" />
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python tests.Unittest TestParse_general_expression.test_caps_handling" />
-        <item index="1" class="java.lang.String" itemvalue="Python tests.Unittests in TestIntegrationExamples (2)" />
-        <item index="2" class="java.lang.String" itemvalue="Python tests.Unittest TestIntegrationExamples.test_line_continuation" />
-        <item index="3" class="java.lang.String" itemvalue="Python tests.Unittests in TestIntegrationExamples (1)" />
-        <item index="4" class="java.lang.String" itemvalue="Python tests.Unittest TestIntegrationExamples.test_ln" />
+        <item index="0" class="java.lang.String" itemvalue="Python tests.Unittest TestIntegrationExamples.test_lookups" />
+        <item index="1" class="java.lang.String" itemvalue="Python tests.Unittests in TestIntegrationExamples" />
+        <item index="2" class="java.lang.String" itemvalue="Python tests.Unittest TestIntegrationExamples.test_exponentiation" />
+        <item index="3" class="java.lang.String" itemvalue="Python tests.Unittests in TestIntegrationExamples (3)" />
+        <item index="4" class="java.lang.String" itemvalue="Python tests.Unittests in TestIntegrationExamples (1)" />
       </list>
     </recent_temporary>
   </component>
@@ -937,35 +1064,35 @@
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="Unittest_TestIntegrationExamples_test_line_continuation - 2016.06.28 at 16h 09m 24s.xml">
-      <configuration name="Unittest TestIntegrationExamples.test_line_continuation" configurationId="tests" />
+    <history-entry file="Unittest_TestIntegrationExamples_test_exponentiation - 2016.06.29 at 13h 15m 44s.xml">
+      <configuration name="Unittest TestIntegrationExamples.test_exponentiation" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittest_TestIntegrationExamples_test_ln - 2016.06.28 at 13h 31m 57s.xml">
-      <configuration name="Unittest TestIntegrationExamples.test_ln" configurationId="tests" />
+    <history-entry file="Unittest_TestIntegrationExamples_test_exponentiation - 2016.06.29 at 13h 15m 56s.xml">
+      <configuration name="Unittest TestIntegrationExamples.test_exponentiation" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittest_TestIntegrationExamples_test_ln - 2016.06.28 at 15h 50m 26s.xml">
-      <configuration name="Unittest TestIntegrationExamples.test_ln" configurationId="tests" />
+    <history-entry file="Unittest_TestIntegrationExamples_test_exponentiation - 2016.06.29 at 13h 27m 15s.xml">
+      <configuration name="Unittest TestIntegrationExamples.test_exponentiation" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittest_TestIntegrationExamples_test_ln - 2016.06.28 at 15h 51m 45s.xml">
-      <configuration name="Unittest TestIntegrationExamples.test_ln" configurationId="tests" />
+    <history-entry file="Unittest_TestIntegrationExamples_test_exponentiation - 2016.06.29 at 13h 28m 11s.xml">
+      <configuration name="Unittest TestIntegrationExamples.test_exponentiation" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittest_TestIntegrationExamples_test_ln - 2016.06.28 at 15h 52m 20s.xml">
-      <configuration name="Unittest TestIntegrationExamples.test_ln" configurationId="tests" />
+    <history-entry file="Unittest_TestIntegrationExamples_test_exponentiation - 2016.06.29 at 13h 28m 23s.xml">
+      <configuration name="Unittest TestIntegrationExamples.test_exponentiation" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittest_TestIntegrationExamples_test_subscript_individually_defined_stocks - 2016.06.27 at 11h 19m 10s.xml">
-      <configuration name="Unittest TestIntegrationExamples.test_subscript_individually_defined_stocks" configurationId="tests" />
+    <history-entry file="Unittest_TestIntegrationExamples_test_lookups - 2016.06.29 at 12h 58m 30s.xml">
+      <configuration name="Unittest TestIntegrationExamples.test_lookups" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittest_TestParse_general_expression_test_caps_handling - 2016.06.28 at 16h 20m 31s.xml">
-      <configuration name="Unittest TestParse_general_expression.test_caps_handling" configurationId="tests" />
+    <history-entry file="Unittest_TestIntegrationExamples_test_lookups - 2016.06.29 at 13h 40m 15s.xml">
+      <configuration name="Unittest TestIntegrationExamples.test_lookups" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_TestIntegrationExamples - 2016.06.27 at 11h 19m 58s.xml">
+    <history-entry file="Unittests_in_TestIntegrationExamples - 2016.06.29 at 13h 30m 04s.xml">
       <configuration name="Unittests in TestIntegrationExamples" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_TestIntegrationExamples_(1) - 2016.06.28 at 15h 53m 08s.xml">
-      <configuration name="Unittests in TestIntegrationExamples (1)" configurationId="tests" />
+    <history-entry file="Unittests_in_TestIntegrationExamples_(3) - 2016.06.29 at 12h 59m 22s.xml">
+      <configuration name="Unittests in TestIntegrationExamples (3)" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_TestIntegrationExamples_(2) - 2016.06.28 at 16h 10m 08s.xml">
-      <configuration name="Unittests in TestIntegrationExamples (2)" configurationId="tests" />
+    <history-entry file="Unittests_in_TestIntegrationExamples_(3) - 2016.06.29 at 13h 01m 06s.xml">
+      <configuration name="Unittests in TestIntegrationExamples (3)" configurationId="tests" />
     </history-entry>
   </component>
   <component name="TodoView" selected-index="1">
@@ -979,19 +1106,20 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1440" height="900" extended-state="6" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.31402004" sideWeight="0.4936306" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.21459228" sideWeight="0.4936306" order="1" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3282981" sideWeight="0.49753347" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22048193" sideWeight="0.5078684" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297568" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32650602" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.1746988" sideWeight="0.49753347" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.14038657" sideWeight="0.48907682" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32771084" sideWeight="0.49213162" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.41807228" sideWeight="0.49213162" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24892704" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.18554217" sideWeight="0.6687808" order="11" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.28674698" sideWeight="0.6687808" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.15574348" sideWeight="0.5063694" order="0" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3554217" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.37228915" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -999,7 +1127,6 @@
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22650602" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Coverage" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.27038628" sideWeight="0.5" order="3" side_tool="true" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32650602" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
     <layout-to-restore>
@@ -1094,6 +1221,21 @@
           <line>88</line>
           <option name="timeStamp" value="322" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" type="python-line">
+          <url>file://$USER_HOME$/anaconda/lib/python2.7/site-packages/parsimonious/expressions.py</url>
+          <line>123</line>
+          <option name="timeStamp" value="334" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="python-line">
+          <url>file://$PROJECT_DIR$/pysd/vensim2py.py</url>
+          <line>517</line>
+          <option name="timeStamp" value="339" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" type="python-line">
+          <url>file://$PROJECT_DIR$/tests/test_utils.py</url>
+          <line>84</line>
+          <option name="timeStamp" value="364" />
+        </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
         <breakpoints-dialog />
@@ -1104,74 +1246,17 @@
           <properties exception="BaseException" />
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="323" />
+      <option name="time" value="365" />
     </breakpoint-manager>
-    <watches-manager />
+    <watches-manager>
+      <configuration name="tests">
+        <watch expression="m" />
+        <watch expression="node" />
+        <watch expression="text[pos:]" language="Python" />
+      </configuration>
+    </watches-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/trig/test_trig.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/euler_step_vs_saveper/test_euler_step_vs_saveper.mdl">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="6" column="18" selection-start-line="6" selection-start-column="18" selection-end-line="6" selection-end-column="18" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscript_2d_arrays/output.tab">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="68" selection-start-line="0" selection-start-column="40" selection-end-line="0" selection-end-column="68" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/anaconda/lib/python2.7/site-packages/pandas/core/frame.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3150">
-          <caret line="210" column="0" selection-start-line="210" selection-start-column="0" selection-end-line="210" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/setup.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="450">
-          <caret line="30" column="15" selection-start-line="30" selection-start-column="15" selection-end-line="30" selection-end-column="15" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscript_2d_arrays/test_subscript_2d_arrays.mdl">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscript_individually_defined_1_of_2d_arrays/subscript_individually_defined_1_of_2d_arrays.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-760">
-          <caret line="1" column="0" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/anaconda/lib/python2.7/site-packages/pandas/computation/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="18" column="0" selection-start-line="18" selection-start-column="0" selection-end-line="18" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/anaconda/lib/python2.7/re.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2280">
-          <caret line="154" column="0" selection-start-line="154" selection-start-column="0" selection-end-line="154" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/tests/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -1201,13 +1286,6 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscript_subranges/output.tab">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscript_subranges_equal/output.tab">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
@@ -1367,23 +1445,13 @@
         <state relative-caret-position="60">
           <caret line="82" column="0" selection-start-line="82" selection-start-column="0" selection-end-line="82" selection-end-column="0" />
           <folding>
-            <element signature="e#0#15#0" expanded="true" />
+            <element signature="e#0#15#0" expanded="false" />
             <element signature="e#85#2753#0" expanded="false" />
             <element signature="e#114#452#0" expanded="false" />
             <element signature="e#487#776#0" expanded="false" />
             <element signature="e#812#1273#0" expanded="false" />
             <element signature="e#1315#2753#0" expanded="false" />
             <element signature="e#2805#3407#0" expanded="false" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tests/integration_test_factory.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="60">
-          <caret line="4" column="0" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#14#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -1453,10 +1521,26 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscript_subranges_equal/output.tab">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/tests/unit_test_pysd.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="568">
+        <state relative-caret-position="3195">
           <caret line="291" column="0" selection-start-line="291" selection-start-column="0" selection-end-line="291" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscript_mixed_assembly/test_subscript_mixed_assembly.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding />
         </state>
       </provider>
@@ -1469,6 +1553,24 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/tests/unit_test_vensim2py.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="169">
+          <caret line="295" column="60" selection-start-line="295" selection-start-column="60" selection-end-line="295" selection-end-column="60" />
+          <folding>
+            <element signature="e#0#15#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/integration_test_factory.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15">
+          <caret line="4" column="0" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/tests/test-models/tests/active_initial/test_active_initial.mdl">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -1477,66 +1579,117 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pysd/functions.py">
+    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/lookups_inline/test_lookups_inline.mdl">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-285">
-          <caret line="151" column="36" selection-start-line="151" selection-start-column="36" selection-end-line="151" selection-end-column="36" />
+        <state relative-caret-position="105">
+          <caret line="7" column="15" selection-start-line="7" selection-start-column="4" selection-end-line="7" selection-end-column="15" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda/lib/python2.7/site-packages/parsimonious/exceptions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="150">
+          <caret line="10" column="0" selection-start-line="10" selection-start-column="0" selection-end-line="10" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda/lib/python2.7/site-packages/parsimonious/grammar.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="164">
+          <caret line="111" column="0" selection-start-line="111" selection-start-column="0" selection-end-line="111" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda/lib/python2.7/site-packages/parsimonious/nodes.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="164">
+          <caret line="207" column="0" selection-start-line="207" selection-start-column="0" selection-end-line="207" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda/lib/python2.7/site-packages/parsimonious/expressions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="419">
+          <caret line="123" column="0" selection-start-line="123" selection-start-column="0" selection-end-line="123" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="179">
+          <caret line="71" column="0" selection-start-line="71" selection-start-column="0" selection-end-line="71" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscripted_flows/output.tab">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/pysd/builder.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="49">
-          <caret line="319" column="1" selection-start-line="319" selection-start-column="1" selection-end-line="319" selection-end-column="1" />
+        <state relative-caret-position="-46">
+          <caret line="113" column="7" selection-start-line="113" selection-start-column="7" selection-end-line="113" selection-end-column="7" />
           <folding>
-            <element signature="e#86#101#0" expanded="true" />
-            <marker date="1467143423000" expanded="true" signature="5449:5544" ph="..." />
+            <element signature="e#330#345#0" expanded="true" />
+            <marker date="1467219850000" expanded="true" signature="5792:5887" ph="..." />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/tests/integration_test_pysd.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="154">
-          <caret line="88" column="8" selection-start-line="88" selection-start-column="8" selection-end-line="88" selection-end-column="8" />
+        <state relative-caret-position="164">
+          <caret line="56" column="0" selection-start-line="56" selection-start-column="0" selection-end-line="56" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tests/test_utils.py">
+    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/exponentiation/exponentiation.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="592">
-          <caret line="88" column="0" selection-start-line="88" selection-start-column="0" selection-end-line="88" selection-end-column="0" />
+        <state relative-caret-position="-210">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/pysd/vensim2py.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1130">
-          <caret line="439" column="43" selection-start-line="439" selection-start-column="43" selection-end-line="439" selection-end-column="43" />
+        <state relative-caret-position="170">
+          <caret line="477" column="20" selection-start-line="477" selection-start-column="20" selection-end-line="477" selection-end-column="20" />
           <folding>
             <element signature="e#102#111#0" expanded="true" />
-            <element signature="e#234#3066#0" expanded="false" />
-            <element signature="e#3108#7134#0" expanded="false" />
-            <element signature="e#7184#10495#0" expanded="false" />
             <element signature="e#10530#10886#0" expanded="false" />
-            <marker date="1467052015000" expanded="true" signature="11557:11772" ph="..." />
-            <marker date="1467052015000" expanded="true" signature="11583:11716" ph="..." />
+            <marker date="1467221301000" expanded="true" signature="11557:11772" ph="..." />
+            <marker date="1467221301000" expanded="true" signature="11583:11716" ph="..." />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tests/unit_test_vensim2py.py">
+    <entry file="file://$PROJECT_DIR$/pysd/functions.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="200">
-          <caret line="221" column="17" selection-start-line="221" selection-start-column="17" selection-end-line="221" selection-end-column="17" />
+        <state relative-caret-position="118">
+          <caret line="181" column="82" selection-start-line="181" selection-start-column="82" selection-end-line="181" selection-end-column="82" />
           <folding>
-            <element signature="e#0#15#0" expanded="true" />
-            <element signature="e#88#3045#0" expanded="false" />
-            <element signature="e#3104#7095#0" expanded="false" />
+            <element signature="e#146#164#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/test_utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="223">
+          <caret line="84" column="0" selection-start-line="84" selection-start-column="0" selection-end-line="84" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>

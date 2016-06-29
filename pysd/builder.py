@@ -3,6 +3,12 @@ Refactored May 26 2016
 James Houghton
 james.p.houghton@gmail.com
 
+This is code to assemble a pysd model once all of the elements have
+been translated from their native language into python compatible syntax.
+There should be nothing in this file that has to know about either vensim or
+xmile specific syntax.
+
+
 """
 
 
@@ -10,6 +16,7 @@ import textwrap
 import autopep8
 from utils import *
 from _version import __version__
+import utils
 
 
 def build(elements, subscript_dict, namespace, outfile_name):
@@ -105,16 +112,15 @@ def build_element(element, subscript_dict):
     -------
 
     """
-    # Todo: I don't like how we identify the types of initializations here, using tokens from
-    #  strings. It isn't explicit, or robust. These should be identified explicitly somewhere else.
-
     if element['kind'] == 'constant':
         cache_type = "@cache('run')"
-    elif element['kind'] == 'setup':
+    elif element['kind'] == 'setup':  # setups only get called once, so caching is wasted
         cache_type = ''
     elif element['kind'] == 'component':
         cache_type = "@cache('step')"
     elif element['kind'] == 'macro':
+        cache_type = ''
+    elif element['kind'] == 'lookup':  # lookups may be called with different values in a round
         cache_type = ''
     else:
         raise AttributeError("Bad value for 'kind'")
@@ -123,7 +129,6 @@ def build_element(element, subscript_dict):
         contents = 'return utils.xrmerge([%(das)s])' % {'das': ',\n'.join(element['py_expr'])}
     else:
         contents = 'return %(py_expr)s' % {'py_expr': element['py_expr'][0]}
-
 
     indent = 8
     element.update({'cache': cache_type,
@@ -134,161 +139,17 @@ def build_element(element, subscript_dict):
 
     func = '''
     %(cache)s
-    def %(py_name)s():
+    def %(py_name)s(%(arguments)s):
         """
         %(real_name)s
         %(ulines)s
         (%(py_name)s)
         %(unit)s
-
         %(doc)s
         """
         %(contents)s
         ''' % element
     return func
-
-# not needed?
-#
-# def make_xarray(subs, expr, subscript_dict):
-#     # Todo: this function should take a single line from a vensim model file
-#     # (abstracted as elements in an array passed to the build elemtn funrction)
-#     # and make an xarray from them. Either just build up the syntax to construct one on the fly
-#     # during model load, or actually build one, deconstruct it, and use the array presentation
-#     # to make an xarray using simple syntax.
-#
-#     xarray_string = """\
-#         xr.DataArray(data=%(expr)s,
-#                      coords=%(coords_dict)s)
-#     """ % {'expr': expr,
-#            'coords_dict': make_coord_dict(subs, subscript_dict, terse=False)}
-#
-#     return xarray_string
-#
-#
-# def create_base_array(subs_list, subscript_dict, initial_val='np.NaN'):
-#     """
-#     Given a list of subscript references,
-#     returns a base array that can be populated by these references
-#
-#     Parameters
-#     ----------
-#     subs_list
-#
-#     subscript_dict: dictionary
-#
-#     Returns
-#     -------
-#     base_array: string
-#         A string that
-#
-#     >>> create_base_array([['Dim1', 'D'], ['Dim1', 'E'], ['Dim1', 'F']],
-#     ...                    {'Dim1': ['A', 'B', 'C'],
-#     ...                     'Dim2': ['D', 'E', 'F', 'G']})
-#     "xr.DataArray(data=np.empty([3, 3])*NaN, coords={'Dim2': ['D', 'E', 'F'], 'Dim1': ['A', 'B', 'C']})"
-#
-#     # >>> create_base_array([['Dim1', 'A'], ['Dim1', 'B'], ['Dim1', 'C']],
-#     # ...                    {'Dim1': ['A', 'B', 'C']})
-#
-#     """
-#     sub_names_list = subscript_dict.keys()
-#     sub_elems_list = [y for x in subscript_dict.values() for y in x]
-#     coords = dict()
-#     for subset in subs_list:
-#         for sub in subset:
-#             if sub in sub_names_list:
-#                 if sub not in coords:
-#                     coords[sub] = subscript_dict[sub]
-#             elif sub in sub_elems_list:
-#                 name = find_subscript_name(subscript_dict, sub)
-#                 if name not in coords:
-#                     coords[name] = [sub]
-#                 else:
-#                     if sub not in coords[name]:
-#                         coords[name] += [sub]
-#
-#     dims = [find_subscript_name(subscript_dict, element) if element in sub_elems_list else element
-#             for element in subs_list[0]]
-#
-#     return textwrap.dedent("""\
-#         xr.DataArray(data=np.ones(%(shape)s)*%(init)s,
-#                      coords=%(coords)s,
-#                      dims=%(dims)s )""" % {
-#         'shape': [len(coords[dim]) for dim in dims],
-#         'coords': repr(coords),
-#         'init': initial_val,
-#         'dims': dims
-#     })
-
-# def identify_subranges(subscript_dict):
-#     """
-#
-#     Parameters
-#     ----------
-#     subscript_dict
-#
-#     Returns
-#     -------
-#
-#     Examples
-#     --------
-#     >>> identify_subranges({'Dim1': ['A', 'B', 'C', 'D', 'E', 'F'],
-#     ...                     'Range1': ['C', 'D', 'E']})
-#     {'Range1': ('Dim1', ['C', 'D', 'E'])}, {'Dim1'
-#     """
-
-
-def add_stock(identifier, subs, expression, initial_condition):
-    """
-    Creates new model element dictionaries for the model elements associated
-    with a stock.
-
-
-    Parameters
-    ----------
-    identifier
-    subs
-    expression
-    initial_condition
-
-    Returns
-    -------
-    a string to use in place of the 'INTEG...' pieces in the element expression string,
-    a list of additional model elements to add
-
-    Examples
-    --------
-    >>> add_stock('stock_name', [], 'inflow_a', '10')
-
-    """
-
-    # create the stock initialization element
-    init_element = {
-        'py_name': '_init_%s' % identifier,
-        'real_name': 'Implicit',
-        'kind': 'setup',  # not explicitly specified in the model file, but must exist
-        'py_expr': initial_condition,
-        'subs': subs,
-        'doc': 'Provides initial conditions for %s function' % identifier,
-        'unit': 'See docs for %s' % identifier
-    }
-
-    ddt_element = {
-        'py_name': '_d%s_dt' % identifier,
-        'real_name': 'Implicit',
-        'kind': 'component',
-        'doc': 'Provides derivative for %s function' % identifier,
-        'subs': subs,
-        'unit': 'See docs for %s' % identifier,
-        'py_expr': expression
-    }
-
-    return "_state['%s']" % identifier, [init_element, ddt_element]
-
-
-
-
-
-
 
 
 def merge_partial_elements(element_list):
@@ -315,7 +176,8 @@ def merge_partial_elements(element_list):
                 'py_expr': [element['py_expr']],  # in a list
                 'unit': element['unit'],
                 'subs': [element['subs']],
-                'kind': element['kind']
+                'kind': element['kind'],
+                'arguments': element['arguments']
             }
 
         else:
@@ -323,9 +185,183 @@ def merge_partial_elements(element_list):
             outs[name]['unit'] = outs[name]['unit'] or element['unit']
             outs[name]['py_expr'] += [element['py_expr']]
             outs[name]['subs'] += [element['subs']]
+            outs[name]['arguments'] = element['arguments']
 
     return outs.values()
 
+# def identify_subranges(subscript_dict):
+#     """
+#
+#     Parameters
+#     ----------
+#     subscript_dict
+#
+#     Returns
+#     -------
+#
+#     Examples
+#     --------
+#     >>> identify_subranges({'Dim1': ['A', 'B', 'C', 'D', 'E', 'F'],
+#     ...                     'Range1': ['C', 'D', 'E']})
+#     {'Range1': ('Dim1', ['C', 'D', 'E'])}, {'Dim1'
+#     """
+
+
+def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
+    """
+    Creates new model element dictionaries for the model elements associated
+    with a stock.
+
+
+    Parameters
+    ----------
+    identifier
+    subs
+    expression
+    initial_condition
+    subscript_dict
+
+    Returns
+    -------
+    a string to use in place of the 'INTEG...' pieces in the element expression string,
+    a list of additional model elements to add
+
+    Examples
+    --------
+    >>> add_stock('stock_name', [], 'inflow_a', '10')
+
+    """
+    # take care of cases when a float is passed as initialization for an array.
+    # this might be better located in the translation function in the future.
+    if subs and initial_condition.decode('unicode-escape').isnumeric():
+        coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
+        dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
+        shape = [len(coords[dim]) for dim in dims]
+        initial_condition = textwrap.dedent("""\
+            xr.DataArray(data=np.ones(%(shape)s)*%(value)s,
+                         coords=%(coords)s,
+                         dims=%(dims)s )""" % {
+            'shape': shape,
+            'value': initial_condition,
+            'coords': repr(coords),
+            'dims': repr(dims)})
+
+    # create the stock initialization element
+    init_element = {
+        'py_name': '_init_%s' % identifier,
+        'real_name': 'Implicit',
+        'kind': 'setup',  # not explicitly specified in the model file, but must exist
+        'py_expr': initial_condition,
+        'subs': subs,
+        'doc': 'Provides initial conditions for %s function' % identifier,
+        'unit': 'See docs for %s' % identifier,
+        'arguments': ''
+    }
+
+    ddt_element = {
+        'py_name': '_d%s_dt' % identifier,
+        'real_name': 'Implicit',
+        'kind': 'component',
+        'doc': 'Provides derivative for %s function' % identifier,
+        'subs': subs,
+        'unit': 'See docs for %s' % identifier,
+        'py_expr': expression,
+        'arguments': ''
+    }
+
+    return "_state['%s']" % identifier, [init_element, ddt_element]
+
+
+def add_n_delay(self, delay_input, delay_time, initial_value, order, subs, subscript_dict):
+    """Constructs stock and flow chains that implement the calculation of
+    a delay.
+
+    delay_input: <string>
+        Reference to the model component that is the input to the delay
+
+    delay_time: <string>
+        Can be a number (in string format) or a reference to another model element
+        which will calculate the delay. This is calculated throughout the simulation
+        at runtime.
+
+    initial_value: <string>
+        This is used to initialize the stocks that are present in the delay. We
+        initialize the stocks with equal values so that the outflow in the first
+        timestep is equal to this value.
+
+    order: int
+        The number of stocks in the delay pipeline. As we construct the delays at
+        build time, this must be an integer and cannot be calculated from other
+        model components. Anything else will yield a ValueError.
+
+    Returns
+    -------
+    outflow: basestring
+        Reference to the flow which contains the output of the delay process
+
+    """
+
+    delayed_variable = delay_input[:-2]
+    identifier = '_' + delayed_variable + '_delay'
+    try:
+        subs.update({'_delay': range(int(order))})
+    except TypeError or ValueError:
+        raise TypeError('Order of delay on %s must be an integer, instead recieved %s' % (
+            identifier, str(order)))
+
+
+    coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
+    dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
+    shape = [len(coords[dim]) for dim in dims]
+    initial_condition = textwrap.dedent("""\
+            xr.DataArray(data=np.ones(%(shape)s)*%(value)s,
+                         coords=%(coords)s,
+                         dims=%(dims)s )*%(delay)s/%(order)s""" % {
+        'shape': shape,
+        'value': initial_value,
+        'coords': repr(coords),
+        'dims': repr(dims),
+        'delay': delay_time,
+        'order': order})
+
+#    expression =
+
+
+
+    state_reference, new_structure = add_stock(identifier, subs, expression,
+                                               initial_condition, subscript_dict)
+
+
+    try:
+        order = int(order)
+    except ValueError:
+        print "Order of delay must be an int. (Can't even be a reference to an int. Sorry...)"
+        raise
+
+    # depending in these cases on input to be formatted as 'self.variable()' (or number)
+    naked_input = delay_input[:-2]
+    naked_delay = delay_time[:-2] if delay_time.endswith('()') else delay_time
+    delay_name = '%s_delay_%s' % (naked_input, naked_delay)
+
+    flowlist = []  # contains the identities of the flows, as strings
+    # use 1-based indexing for stocks in the delay chain so that (n of m) makes sense.
+    flowlist.append(self.add_flaux(identifier='%s_flow_1_of_%i' % (delay_name, order + 1),
+                                   sub=sub,
+                                   expression=[delay_input]))
+
+    for i in range(2, order + 2):
+        flowlist.append(self.add_flaux(identifier='%s_flow_%i_of_%i' % (delay_name, i, order + 1),
+                                       sub=sub,
+                                       expression=['%s_stock_%i_of_%i()/(1.*%s/%i)' % (
+                                           delay_name, i - 1, order, delay_time, order)]))
+
+    for i in range(1, order + 1):
+        self.add_stock(identifier='%s_stock_%i_of_%i' % (delay_name, i, order),
+                       sub=sub,
+                       expression=flowlist[i - 1] + '() - ' + flowlist[i] + '()',
+                       initial_condition='%s * (%s / %i)' % (initial_value, delay_time, order))
+
+    return flowlist[-1] + '()'
 
 #     def add_lookup(self, identifier, valid_range, sub, copair_list):
 #
@@ -424,64 +460,7 @@ def merge_partial_elements(element_list):
 #         self.body.append(funcstr)
 #         return 'initial_%s(%s)'%(naked_component, component)
 #
-#     def add_n_delay(self, delay_input, delay_time, initial_value, order, sub):
-#         """Constructs stock and flow chains that implement the calculation of
-#         a delay.
-#
-#         delay_input: <string>
-#             Reference to the model component that is the input to the delay
-#
-#         delay_time: <string>
-#             Can be a number (in string format) or a reference to another model element
-#             which will calculate the delay. This is calculated throughout the simulation
-#             at runtime.
-#
-#         initial_value: <string>
-#             This is used to initialize the stocks that are present in the delay. We
-#             initialize the stocks with equal values so that the outflow in the first
-#             timestep is equal to this value.
-#
-#         order: int
-#             The number of stocks in the delay pipeline. As we construct the delays at
-#             build time, this must be an integer and cannot be calculated from other
-#             model components. Anything else will yield a ValueError.
-#
-#         Returns
-#         -------
-#         outflow: basestring
-#             Reference to the flow which contains the output of the delay process
-#
-#         """
-#         try:
-#             order = int(order)
-#         except ValueError:
-#             print "Order of delay must be an int. (Can't even be a reference to an int. Sorry...)"
-#             raise
-#
-#         # depending in these cases on input to be formatted as 'self.variable()' (or number)
-#         naked_input = delay_input[:-2]
-#         naked_delay = delay_time[:-2] if delay_time.endswith('()') else delay_time
-#         delay_name = '%s_delay_%s'%(naked_input, naked_delay)
-#
-#         flowlist = []  # contains the identities of the flows, as strings
-#         # use 1-based indexing for stocks in the delay chain so that (n of m) makes sense.
-#         flowlist.append(self.add_flaux(identifier='%s_flow_1_of_%i'%(delay_name, order+1),
-#                                        sub=sub,
-#                                        expression=[delay_input]))
-#
-#         for i in range(2, order+2):
-#             flowlist.append(self.add_flaux(identifier='%s_flow_%i_of_%i'%(delay_name, i, order+1),
-#                                            sub=sub,
-#                                            expression=['%s_stock_%i_of_%i()/(1.*%s/%i)'%(
-#                                                   delay_name, i-1, order, delay_time, order)]))
-#
-#         for i in range(1, order+1):
-#             self.add_stock(identifier='%s_stock_%i_of_%i'%(delay_name, i, order),
-#                            sub=sub,
-#                            expression=flowlist[i-1]+'() - '+flowlist[i]+'()',
-#                            initial_condition='%s * (%s / %i)'%(initial_value, delay_time, order))
-#
-#         return flowlist[-1]+'()'
+
 #
 #
 #

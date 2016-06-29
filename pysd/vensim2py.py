@@ -371,7 +371,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
         "if then else": "functions.if_then_else", "step": "functions.step", "modulo": "np.mod",
         "pulse": "functions.pulse", "pulse train": "functions.pulse_train",
         "ramp": "functions.ramp", "min": "np.minimum", "max": "np.maximum",
-        "active initial": "functions.active_initial",
+        "active initial": "functions.active_initial", "initial": "functions.initial",
         # vector functions
         "vmin": "np.min", "vmax": "np.max", "prod": "np.prod"
     }
@@ -382,16 +382,21 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
                                    'py_name': 'time',
                                    'real_name': 'Time',
                                    'unit': None,
-                                   'py_expr': '_t'}])
+                                   'py_expr': '_t',
+                                   'arguments': ''}])
                 }
+
+
     # Todo: integ needs to process the init as its own element
     builders = {
         "integ": lambda expr, init: builder.add_stock(element['py_name'], element['subs'],
-                                                      expr, init),
-        "delay1": lambda in_var, dtime: builder.add_n_delay(in_var, dtime, '0', '1'),
+                                                      expr, init, subscript_dict),
+        "delay1": lambda in_var, dtime: builder.add_n_delay(in_var, dtime, '0', '1',
+                                                            element['subs'], subscript_dict),
         "delay1i": lambda in_var, dtime, init: builder.add_n_delay(in_var, dtime, init, '1'),
         # continue this pattern with the other delay functions and smooth functions
     }
+
 
     in_ops = {
         "+": "+", "-": "-", "*": "*", "/": "/", "^": "**", "=": "==", "<=": "<=", "<>": "!=",
@@ -399,8 +404,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
         ":or:": "or"}  # Todo: make the semicolon into a [1,2],[3,4] type of array
 
     pre_ops = {
-        "-": "-", ":not:": "not", "+": " ",
-        # space is important, so that and empty string doesn't slip through generic
+        "-": "-", ":not:": "not",
+        "+": " "  # space is important, so that and empty string doesn't slip through generic
     }
 
     # in the following, if lists are empty use non-printable character
@@ -413,9 +418,10 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
 
     expression_grammar = r"""
     expr_type = array / expr
-    expr = _ pre_oper? _ (build_call / call / parens / number / reference / builtin) _ (in_oper _ expr)?
+    expr = _ pre_oper? _ (lookup_def / build_call / call / parens / number / reference / builtin) _ (in_oper _ expr)?
 
-    call = (func / reference) _ "(" _ (expr _ ","? _)* ")" # allows calls with no arguments
+    lookup_def = ~r"(WITH\ LOOKUP)"I _ "(" _ reference _ "," _ "(" _ ( "(" _ number _ "," _ number _ ")" ","? _ )+ _ ")" _ ")"
+    call = (func / id) _ "(" _ (expr _ ","? _)* ")" # allows calls with no arguments
     build_call = builder _ "(" _ (expr _ ","? _)* ")" # allows calls with no arguments
     parens   = "(" _ expr _ ")"
 
@@ -439,9 +445,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
     """ % {
         # In the following, we have to sort keywords in decreasing order of length so that the
         # peg parser doesn't quit early when finding a partial keyword
-        #'sub_names': ' / '.join(['"%s"' % n for n in reversed(sorted(sub_names_list, key=len))]),
         'sub_names': '|'.join(reversed(sorted(sub_names_list, key=len))),
-        #'sub_elems': ' / '.join(['"%s"' % n for n in reversed(sorted(sub_elems_list, key=len))]),
         'sub_elems': '|'.join(reversed(sorted(sub_elems_list, key=len))),
         'ids': '|'.join(reversed(sorted(ids_list, key=len))),
         'funcs': '|'.join(reversed(sorted(functions.keys(), key=len))),
@@ -483,9 +487,13 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
         def visit_pre_oper(self, n, vc):
             return pre_ops[n.text.lower()]
 
-        def visit_id(self, n, vc):
+        def visit_reference(self, n, vc):
             self.kind = 'component'
-            return namespace[n.text] + '()'
+            id = vc[0]
+            return id + '()'
+
+        def visit_id(self, n, vc):
+            return namespace[n.text]
 
         def visit_builtin(self, n, vc):
             # these are model elements that are not functions, but exist implicitly within the
@@ -494,6 +502,21 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
             name, structure = builtins[n.text.lower()]
             self.new_structure += structure
             return name + '()'
+
+        def visit_lookup_def(self, n, vc):
+            """ This exists because vensim has multiple ways of doing lookups.
+            Which is frustrating."""
+            x = vc[4]
+            pairs = vc[10]
+            mixed_list = pairs.replace('(', '').replace(')', '').split(',')
+            xs = mixed_list[::2]
+            ys = mixed_list[1::2]
+            string = "functions.lookup(%(x)s, [%(xs)s], [%(ys)s])" % {
+                'x': x,
+                'xs': ','.join(xs),
+                'ys': ','.join(ys)
+            }
+            return string
 
         def visit_array(self, n, vc):
             if element['subs']:
@@ -538,12 +561,49 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
     parse_object = ExpressionParser(tree)
 
     return ({'py_expr': parse_object.translation,
-             'kind': parse_object.kind},
+             'kind': parse_object.kind,
+             'arguments': ''},
             parse_object.new_structure)
 
 
-def parse_lookup_expression():
-    pass
+def parse_lookup_expression(element):
+    '( [(0,-1)-(45,1)],(0,0),(5,0),(10,1),(15,1),(20,0),(25,0),(30,-1),(35,-1),(40,0),(45,0 ))'
+
+    lookup_grammar = r"""
+    lookup = _ "(" _ "[" ~r"[^\]]*" "]" _ "," _ ( "(" _ number _ "," _ number _ ")" ","? _ )+ ")"
+    number = ("+"/"-")? ~r"\d+\.?\d*(e[+-]\d+)?"
+    _ = ~r"[\s\\]*"  # whitespace character
+    """
+    parser = parsimonious.Grammar(lookup_grammar)
+    tree = parser.parse(element['expr'])
+
+    class LookupParser(parsimonious.NodeVisitor):
+        def __init__(self, ast):
+            self.translation = ""
+            self.new_structure = []
+            self.visit(ast)
+
+        def visit__(self, n, vc):
+            "remove whitespace"
+            return ''
+        def visit_lookup(self, n, vc):
+            pairs = vc[9]
+            mixed_list = pairs.replace('(', '').replace(')', '').split(',')
+            xs = mixed_list[::2]
+            ys = mixed_list[1::2]
+            string = "functions.lookup(x, [%(xs)s], [%(ys)s])" % {
+                'xs': ','.join(xs),
+                'ys': ','.join(ys)
+            }
+            self.translation = string
+
+        def generic_visit(self, n, vc):
+            return ''.join(filter(None, vc)) or n.text
+
+    parse_object = LookupParser(tree)
+    return {'py_expr': parse_object.translation,
+            'arguments': 'x'}
+
 
 
 def translate_vensim(mdl_file):
@@ -613,11 +673,15 @@ def translate_vensim(mdl_file):
             element.update(translation)
             model_elements += new_structure
 
+        elif element['kind'] == 'lookup':
+            element.update(parse_lookup_expression(element))
+
     # define outfile name
     outfile_name = mdl_file.replace('.mdl', '.py')
 
     # send the pieces to be built
-    builder.build([e for e in model_elements if e['kind'] not in ['subdef', 'section']],
+    build_elements = [e for e in model_elements if e['kind'] not in ['subdef', 'section']]
+    builder.build(build_elements,
                   subscript_dict,
                   namespace,
                   outfile_name)
