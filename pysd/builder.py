@@ -14,7 +14,6 @@ xmile specific syntax.
 
 import textwrap
 import autopep8
-from utils import *
 from _version import __version__
 import utils
 
@@ -44,9 +43,6 @@ def build(elements, subscript_dict, namespace, outfile_name):
     elements = merge_partial_elements(elements)
     functions = [build_element(element, subscript_dict) for element in elements]
 
-    imports = []
-    if subscript_dict:
-        imports += ['import xarray as xr']
 
     text = '''
     """
@@ -56,7 +52,8 @@ def build(elements, subscript_dict, namespace, outfile_name):
     from __future__ import division
     import numpy as np
     from pysd import utils
-    %(imports)s
+    import xarray as xr
+
     from pysd.functions import cache
     from pysd import functions
 
@@ -73,7 +70,6 @@ def build(elements, subscript_dict, namespace, outfile_name):
 
     ''' % {'subscript_dict': repr(subscript_dict),
            'functions': '\n'.join(functions),
-           'imports': '\n'.join(imports),
            'namespace': repr(namespace),
            'outfile': outfile_name,
            'version': __version__}
@@ -189,23 +185,6 @@ def merge_partial_elements(element_list):
 
     return outs.values()
 
-# def identify_subranges(subscript_dict):
-#     """
-#
-#     Parameters
-#     ----------
-#     subscript_dict
-#
-#     Returns
-#     -------
-#
-#     Examples
-#     --------
-#     >>> identify_subranges({'Dim1': ['A', 'B', 'C', 'D', 'E', 'F'],
-#     ...                     'Range1': ['C', 'D', 'E']})
-#     {'Range1': ('Dim1', ['C', 'D', 'E'])}, {'Dim1'
-#     """
-
 
 def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
     """
@@ -272,7 +251,7 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
     return "_state['%s']" % identifier, [init_element, ddt_element]
 
 
-def add_n_delay(self, delay_input, delay_time, initial_value, order, subs, subscript_dict):
+def add_n_delay(delay_input, delay_time, initial_value, order, subs, subscript_dict):
     """Constructs stock and flow chains that implement the calculation of
     a delay.
 
@@ -303,15 +282,33 @@ def add_n_delay(self, delay_input, delay_time, initial_value, order, subs, subsc
 
     delayed_variable = delay_input[:-2]
     identifier = '_' + delayed_variable + '_delay'
+
+    output_element = {
+        'py_name': identifier,
+        'real_name': 'Implicit',
+        'kind': 'component',
+        'doc': 'delayed value of %s' % delayed_variable,
+        'subs': subs,
+        'unit': 'See docs for %s' % identifier,
+        'py_expr': "(%(stock)s / (%(delay)s / %(order)s)).loc[{'_delay': %(order)s-1}]" % {
+            'stock': '_state["%s"]' % identifier,
+            'delay': delay_time,
+            'order': order,
+        },
+        'arguments': ''
+    }
+
+    coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
+    dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
+
     try:
-        subs.update({'_delay': range(int(order))})
+        coords.update({'_delay': range(int(order))})
     except TypeError or ValueError:
         raise TypeError('Order of delay on %s must be an integer, instead recieved %s' % (
             identifier, str(order)))
 
+    dims.append('_delay')
 
-    coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
-    dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
     shape = [len(coords[dim]) for dim in dims]
     initial_condition = textwrap.dedent("""\
             xr.DataArray(data=np.ones(%(shape)s)*%(value)s,
@@ -324,119 +321,41 @@ def add_n_delay(self, delay_input, delay_time, initial_value, order, subs, subsc
         'delay': delay_time,
         'order': order})
 
-#    expression =
+    init_element = {
+        'py_name': '_init_%s' % identifier,
+        'real_name': 'Implicit',
+        'kind': 'setup',  # not explicitly specified in the model file, but must exist
+        'py_expr': initial_condition,
+        'subs': dims,
+        'doc': 'Provides initial conditions for delay of %s function' % identifier,
+        'unit': 'See docs for %s' % identifier,
+        'arguments': ''
+    }
+
+    expression = textwrap.dedent("""\
+        ((%(stock)s / (%(delay)s / %(order)s)).shift(**{'_delay': 1}).fillna(%(inval)s)
+            - (%(stock)s / (%(delay)s / %(order)s)))""" % {
+        'stock': '_state["%s"]' % identifier,
+        'delay': delay_time,
+        'order': order,
+        'inval': delay_input
+    })
+
+    ddt_element = {
+        'py_name': '_d%s_dt' % identifier,
+        'real_name': 'Implicit',
+        'kind': 'component',
+        'doc': 'Provides derivative for %s function' % identifier,
+        'subs': dims,
+        'unit': 'See docs for %s' % identifier,
+        'py_expr': expression,
+        'arguments': ''
+    }
+
+    return ("%s()" % identifier,
+            [init_element, ddt_element, output_element])
 
 
-
-    state_reference, new_structure = add_stock(identifier, subs, expression,
-                                               initial_condition, subscript_dict)
-
-
-    try:
-        order = int(order)
-    except ValueError:
-        print "Order of delay must be an int. (Can't even be a reference to an int. Sorry...)"
-        raise
-
-    # depending in these cases on input to be formatted as 'self.variable()' (or number)
-    naked_input = delay_input[:-2]
-    naked_delay = delay_time[:-2] if delay_time.endswith('()') else delay_time
-    delay_name = '%s_delay_%s' % (naked_input, naked_delay)
-
-    flowlist = []  # contains the identities of the flows, as strings
-    # use 1-based indexing for stocks in the delay chain so that (n of m) makes sense.
-    flowlist.append(self.add_flaux(identifier='%s_flow_1_of_%i' % (delay_name, order + 1),
-                                   sub=sub,
-                                   expression=[delay_input]))
-
-    for i in range(2, order + 2):
-        flowlist.append(self.add_flaux(identifier='%s_flow_%i_of_%i' % (delay_name, i, order + 1),
-                                       sub=sub,
-                                       expression=['%s_stock_%i_of_%i()/(1.*%s/%i)' % (
-                                           delay_name, i - 1, order, delay_time, order)]))
-
-    for i in range(1, order + 1):
-        self.add_stock(identifier='%s_stock_%i_of_%i' % (delay_name, i, order),
-                       sub=sub,
-                       expression=flowlist[i - 1] + '() - ' + flowlist[i] + '()',
-                       initial_condition='%s * (%s / %i)' % (initial_value, delay_time, order))
-
-    return flowlist[-1] + '()'
-
-#     def add_lookup(self, identifier, valid_range, sub, copair_list):
-#
-#         """Constructs a function that implements a lookup.
-#         The function encodes the coordinate pairs as numeric values in the python file.
-#
-#         Parameters
-#         ----------
-#         identifier: <string> valid python identifier
-#             Our translators are responsible for translating the model identifiers into
-#             something that python can use as a function name.
-#
-#         range: <tuple>
-#             Minimum and maximum bounds on the lookup. Currently, we don't do anything
-#             with this, but in the future, may use it to implement some error checking.
-#
-#         copair_list: a list of tuples, eg. [(0, 1), (1, 5), (2, 15)]
-#             The coordinates of the lookup formatted in coordinate pairs.
-#
-#         """
-#         # todo: Add a docstring capability
-#
-#         # in the future, we may want to check in bounds for the range. for now, lazy...
-#         xs_str = []
-#         ys_str = []
-#         for i in copair_list:
-#             xs, ys = zip(*i)
-#             xs_str.append(str(list(xs)))
-#             ys_str.append(str(list(ys)))
-#
-#         if sub_list[0]=='':
-#             createxy=''
-#             addendum=''
-#
-#         else:
-#             createxy = ('%s.xs = np.ndarray((%s),object) \n'%(identifier,','.join(map(str,get_array_info(sub_list[0],self.dictofsubs)[1])))+
-#                         '%s.ys = np.ndarray((%s),object) \n'%(identifier,','.join(map(str,get_array_info(sub_list[0],self.dictofsubs)[1]))))
-#             addendum=  ('for i,j in np.ndenumerate(%s.xs): \n'%identifier+
-#                         '    %s.xs[i]=j.split(",") \n'%identifier+
-#                         '    for k,l in np.ndenumerate(%s.xs[i]): \n'%identifier+
-#                         '        %s.xs[i][k[0]]=float(l) \n'%identifier+
-#                         'for i,j in np.ndenumerate(%s.ys): \n'%identifier+
-#                         '    %s.ys[i]=j.split(",") \n'%identifier+
-#                         '    for k,l in np.ndenumerate(%s.ys[i]): \n'%identifier+
-#                         '        %s.ys[i][k[0]]=float(l) \n'%identifier+
-#                         'del i,j,k,l')
-#         for i in range(len(copair_list)):
-#             try:
-#                 funcsub = ('[%s]')%(','.join(map(str,getelempos(sub_list[i],self.dictofsubs))))
-#                 funcsub = re.sub(r'\[(:,*)*]*\]','',funcsub)
-#                 if not funcsub:
-#                     addendum = ''
-#                     createxy = ''
-#             except:
-#                 funcsub = ''
-#
-#             if not addendum:
-#                 createxy += ('%s.xs%s = %s \n'%(identifier,funcsub,xs_str[i])+
-#                              '%s.ys%s = %s \n'%(identifier,funcsub,ys_str[i]))
-#             else:
-#                 createxy += ('%s.xs%s = ",".join(map(str,%s)) \n'%(identifier,funcsub,xs_str[i])+
-#                              '%s.ys%s = ",".join(map(str,%s)) \n'%(identifier,funcsub,ys_str[i]))
-#         funcstr = ('def %s(x):                                      \n'%identifier+
-#                    '    try: localxs                                          \n'+
-#                    '    except:                                               \n'+
-#                    '        localxs = %s.xs                                \n'%identifier+
-#                    '        localys = %s.ys                                \n'%identifier+
-#                    '    return functions.lookup(x, localxs, localys)          \n'+
-#                    '                                                          \n'+
-#                    createxy+addendum+
-#                    '                                                          \n'
-#                   )
-#
-#         self.body.append(funcstr)
-#
 #     def add_initial(self, component):
 #         """ Implement vensim's `INITIAL` command as a build-time function.
 #             component cannot be a full expression, must be a reference to
@@ -459,11 +378,8 @@ def add_n_delay(self, delay_input, delay_time, initial_value, order, subs, subsc
 #
 #         self.body.append(funcstr)
 #         return 'initial_%s(%s)'%(naked_component, component)
-#
 
-#
-#
-#
+
 #     def add_n_smooth(self, smooth_input, smooth_time, initial_value, order, sub):
 #         """Constructs stock and flow chains that implement the calculation of
 #         a smoothing function.

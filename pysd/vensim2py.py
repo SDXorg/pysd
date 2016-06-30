@@ -393,7 +393,16 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
                                                       expr, init, subscript_dict),
         "delay1": lambda in_var, dtime: builder.add_n_delay(in_var, dtime, '0', '1',
                                                             element['subs'], subscript_dict),
-        "delay1i": lambda in_var, dtime, init: builder.add_n_delay(in_var, dtime, init, '1'),
+        "delay1i": lambda in_var, dtime, init: builder.add_n_delay(in_var, dtime, init, '1',
+                                                                   element['subs'], subscript_dict),
+        "delay3": lambda in_var, dtime: builder.add_n_delay(in_var, dtime, '0', '3',
+                                                            element['subs'], subscript_dict),
+        "delay3i": lambda in_var, dtime, init: builder.add_n_delay(in_var, dtime, init, '3',
+                                                                   element['subs'], subscript_dict),
+        "delay n": lambda in_var, dtime, init, order: builder.add_n_delay(in_var, dtime,
+                                                                         init, order,
+                                                                         element['subs'],
+                                                                         subscript_dict),
         # continue this pattern with the other delay functions and smooth functions
     }
 
@@ -567,7 +576,6 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
 
 
 def parse_lookup_expression(element):
-    '( [(0,-1)-(45,1)],(0,0),(5,0),(10,1),(15,1),(20,0),(25,0),(30,-1),(35,-1),(40,0),(45,0 ))'
 
     lookup_grammar = r"""
     lookup = _ "(" _ "[" ~r"[^\]]*" "]" _ "," _ ( "(" _ number _ "," _ number _ ")" ","? _ )+ ")"
