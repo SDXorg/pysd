@@ -539,7 +539,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
             return string
 
         def visit_array(self, n, vc):
-            if element['subs']:
+            if 'subs' in element and element['subs']:  # first test handles when subs is not defined
                 coords = utils.make_coord_dict(element['subs'], subscript_dict, terse=False)
                 dims = [utils.find_subscript_name(subscript_dict, sub) for sub in element['subs']]
                 shape = [len(coords[dim]) for dim in dims]

@@ -3,12 +3,15 @@
   <component name="AnalysisUIOptions">
     <option name="SCOPE_TYPE" value="3" />
   </component>
+  <component name="AutoTestManager">
+    <enabled-run-configurations>
+      <run-configuration type="tests" name="Unittests in unit_test_vensim2py" />
+    </enabled-run-configurations>
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="a7e5b169-cc30-45fb-a7f9-e8e84f9c05bd" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models" afterPath="$PROJECT_DIR$/tests/test-models" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/builder.py" afterPath="$PROJECT_DIR$/pysd/builder.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/vensim2py.py" afterPath="$PROJECT_DIR$/pysd/vensim2py.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/sandbox.ipynb" afterPath="$PROJECT_DIR$/sandbox.ipynb" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/samples/SIR/SIR.py" afterPath="$PROJECT_DIR$/tests/test-models/samples/SIR/SIR.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/samples/teacup/teacup.py" afterPath="$PROJECT_DIR$/tests/test-models/samples/teacup/teacup.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/exponentiation/exponentiation.mdl" afterPath="$PROJECT_DIR$/tests/test-models/tests/exponentiation/exponentiation.mdl" />
@@ -16,6 +19,8 @@
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.py" afterPath="$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/model_doc/model_doc.mdl" afterPath="$PROJECT_DIR$/tests/test-models/tests/model_doc/model_doc.mdl" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/number_handling/test_number_handling.py" afterPath="$PROJECT_DIR$/tests/test-models/tests/number_handling/test_number_handling.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/unit_test_builder.py" afterPath="$PROJECT_DIR$/tests/unit_test_builder.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/unit_test_vensim2py.py" afterPath="$PROJECT_DIR$/tests/unit_test_vensim2py.py" />
     </list>
     <ignored path="pysd.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -79,7 +84,7 @@
     <SUITE FILE_PATH="coverage/pysd$Unittests_in_integration_test_pysd.coverage" NAME="Unittests in integration_test_pysd Coverage Results" MODIFIED="1464961755663" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestPySD_test__timeseries_component.coverage" NAME="Unittest TestPySD.test__timeseries_component Coverage Results" MODIFIED="1464824943192" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestParse_general_expression_test_caps_handling.coverage" NAME="Unittest TestParse_general_expression.test_caps_handling Coverage Results" MODIFIED="1467145230898" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
-    <SUITE FILE_PATH="coverage/pysd$Unittests_in_unit_test_vensim2py.coverage" NAME="Unittests in unit_test_vensim2py Coverage Results" MODIFIED="1464809999378" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/pysd$Unittests_in_unit_test_vensim2py.coverage" NAME="Unittests in unit_test_vensim2py Coverage Results" MODIFIED="1467317755542" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestIntegrationExamples_test_initial_function.coverage" NAME="Unittest TestIntegrationExamples.test_initial_function Coverage Results" MODIFIED="1467150322493" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestUtils_test_find_subscript_name.coverage" NAME="Unittest TestUtils.test_find_subscript_name Coverage Results" MODIFIED="1467022645586" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestBuild_test_build.coverage" NAME="Unittest TestBuild.test_build Coverage Results" MODIFIED="1464808409130" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
@@ -111,7 +116,7 @@
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestIntegrationExamples_test_logicals.coverage" NAME="Unittest TestIntegrationExamples.test_logicals Coverage Results" MODIFIED="1464637489233" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestIntegrationExamples_test_lookups_inline.coverage" NAME="Unittest TestIntegrationExamples.test_lookups_inline Coverage Results" MODIFIED="1467210723309" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestPySD_test_initial_conditions.coverage" NAME="Unittest TestPySD.test_initial_conditions Coverage Results" MODIFIED="1464826205581" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
-    <SUITE FILE_PATH="coverage/pysd$Unittest_TestParse_general_expression_test_subscript_1d_constant.coverage" NAME="Unittest TestParse_general_expression.test_subscript_1d_constant Coverage Results" MODIFIED="1467025333300" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/pysd$Unittest_TestParse_general_expression_test_subscript_1d_constant.coverage" NAME="Unittest TestParse_general_expression.test_subscript_1d_constant Coverage Results" MODIFIED="1467315300950" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestPySD_test_run_return_timestamps_past_final_time.coverage" NAME="Unittest TestPySD.test_run_return_timestamps_past_final_time Coverage Results" MODIFIED="1464826551683" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestBuildElement_test_multiline_subscripted_constant_construction.coverage" NAME="Unittest TestBuildElement.test_multiline_subscripted_constant_construction Coverage Results" MODIFIED="1466687607523" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestIntegrationExamples_test_delays.coverage" NAME="Unittest TestIntegrationExamples.test_delays Coverage Results" MODIFIED="1467307825611" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
@@ -167,20 +172,24 @@
     <splitter split-orientation="horizontal" split-proportion="0.51671183">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file leaf-file-name="vensim2py.py" pinned="false" current-in-tab="true">
-            <entry file="file://$PROJECT_DIR$/pysd/vensim2py.py">
+          <file leaf-file-name="unit_test_vensim2py.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/tests/unit_test_vensim2py.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="849">
-                  <caret line="417" column="5" selection-start-line="417" selection-start-column="5" selection-end-line="417" selection-end-column="5" />
+                <state relative-caret-position="1561">
+                  <caret line="354" column="0" selection-start-line="354" selection-start-column="0" selection-end-line="354" selection-end-column="0" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="unit_test_builder.py" pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/tests/unit_test_builder.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="30">
+                  <caret line="6" column="0" selection-start-line="6" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
                   <folding>
-                    <element signature="e#102#111#0" expanded="true" />
-                    <element signature="e#234#3066#0" expanded="false" />
-                    <element signature="e#3108#7134#0" expanded="false" />
-                    <element signature="e#7184#10495#0" expanded="false" />
-                    <element signature="e#10530#10886#0" expanded="false" />
-                    <element signature="e#23535#24729#0" expanded="false" />
-                    <marker date="1467307470000" expanded="true" signature="11557:11772" ph="..." />
-                    <marker date="1467307470000" expanded="true" signature="11583:11716" ph="..." />
+                    <element signature="e#0#15#0" expanded="true" />
+                    <element signature="e#10564#16773#0" expanded="false" />
                   </folding>
                 </state>
               </provider>
@@ -235,10 +244,29 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="builder.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="vensim2py.py" pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/pysd/vensim2py.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="-170">
+                  <caret line="565" column="32" selection-start-line="565" selection-start-column="32" selection-end-line="565" selection-end-column="32" />
+                  <folding>
+                    <element signature="e#102#111#0" expanded="true" />
+                    <element signature="e#234#3066#0" expanded="false" />
+                    <element signature="e#3108#7134#0" expanded="false" />
+                    <element signature="e#7184#10495#0" expanded="false" />
+                    <element signature="e#10530#10886#0" expanded="false" />
+                    <element signature="e#23604#24798#0" expanded="false" />
+                    <marker date="1467315229000" expanded="true" signature="11557:11772" ph="..." />
+                    <marker date="1467315229000" expanded="true" signature="11583:11716" ph="..." />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="builder.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/pysd/builder.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="136">
+                <state relative-caret-position="451">
                   <caret line="371" column="0" selection-start-line="371" selection-start-column="0" selection-end-line="371" selection-end-column="0" />
                   <folding>
                     <element signature="e#330#345#0" expanded="true" />
@@ -325,7 +353,6 @@
         <option value="$PROJECT_DIR$/tests/unit_test_functions.py" />
         <option value="$PROJECT_DIR$/tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl" />
         <option value="$PROJECT_DIR$/tests/unit_test_pysd.py" />
-        <option value="$PROJECT_DIR$/tests/unit_test_builder.py" />
         <option value="$PROJECT_DIR$/pysd/utils.py" />
         <option value="$PROJECT_DIR$/tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.py" />
         <option value="$PROJECT_DIR$/tests/test_utils.py" />
@@ -333,16 +360,17 @@
         <option value="$PROJECT_DIR$/tests/unit_test_utils.py" />
         <option value="$PROJECT_DIR$/tests/test-models/tests/subscript_1d_arrays/test_subscript_1d_arrays.py" />
         <option value="$PROJECT_DIR$/tests/test-models/tests/subscript_individually_defined_stocks/output.tab" />
-        <option value="$PROJECT_DIR$/tests/unit_test_vensim2py.py" />
         <option value="$PROJECT_DIR$/tests/test-models/tests/subscript_subranges_equal/output.tab" />
         <option value="$PROJECT_DIR$/tests/test-models/tests/subscript_mixed_assembly/test_subscript_mixed_assembly.py" />
         <option value="$PROJECT_DIR$/tests/integration_test_factory.py" />
         <option value="$PROJECT_DIR$/pysd/functions.py" />
-        <option value="$PROJECT_DIR$/pysd/vensim2py.py" />
         <option value="$PROJECT_DIR$/tests/test-models/tests/delays/test_delays.py" />
         <option value="$PROJECT_DIR$/tests/test-models/tests/smooth/test_smooth.py" />
         <option value="$PROJECT_DIR$/tests/test-models/tests/initial_function/test_initial.py" />
         <option value="$PROJECT_DIR$/pysd/builder.py" />
+        <option value="$PROJECT_DIR$/pysd/vensim2py.py" />
+        <option value="$PROJECT_DIR$/tests/unit_test_vensim2py.py" />
+        <option value="$PROJECT_DIR$/tests/unit_test_builder.py" />
       </list>
     </option>
   </component>
@@ -427,46 +455,6 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="pysd" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="pysd" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="tests" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="test-models" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="pysd" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="pysd" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="tests" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="test-models" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="tests" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
         </subPane>
       </pane>
       <pane id="Scratches" />
@@ -502,53 +490,7 @@
       <recent name="$PROJECT_DIR$" />
     </key>
   </component>
-  <component name="RunManager" selected="Python tests.Unittests in TestIntegrationExamples">
-    <configuration default="false" name="Unittest TestIntegrationExamples.test_delays" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="pysd" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/integration_test_pysd.py" />
-      <option name="CLASS_NAME" value="TestIntegrationExamples" />
-      <option name="METHOD_NAME" value="test_delays" />
-      <option name="FOLDER_NAME" value="" />
-      <option name="TEST_TYPE" value="TEST_METHOD" />
-      <option name="PATTERN" value="" />
-      <option name="USE_PATTERN" value="false" />
-      <option name="PUREUNITTEST" value="true" />
-      <option name="PARAMS" value="" />
-      <option name="USE_PARAM" value="false" />
-      <method />
-    </configuration>
-    <configuration default="false" name="Unittest TestIntegrationExamples.test_smooth" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="pysd" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/integration_test_pysd.py" />
-      <option name="CLASS_NAME" value="TestIntegrationExamples" />
-      <option name="METHOD_NAME" value="test_smooth" />
-      <option name="FOLDER_NAME" value="" />
-      <option name="TEST_TYPE" value="TEST_METHOD" />
-      <option name="PATTERN" value="" />
-      <option name="USE_PATTERN" value="false" />
-      <option name="PUREUNITTEST" value="true" />
-      <option name="PARAMS" value="" />
-      <option name="USE_PARAM" value="false" />
-      <method />
-    </configuration>
+  <component name="RunManager" selected="Python tests.Unittest TestParse_general_expression.test_subscript_1d_constant">
     <configuration default="false" name="Unittests in TestIntegrationExamples (2)" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -611,6 +553,52 @@
       <option name="METHOD_NAME" value="test_model_doc" />
       <option name="FOLDER_NAME" value="" />
       <option name="TEST_TYPE" value="TEST_CLASS" />
+      <option name="PATTERN" value="" />
+      <option name="USE_PATTERN" value="false" />
+      <option name="PUREUNITTEST" value="true" />
+      <option name="PARAMS" value="" />
+      <option name="USE_PARAM" value="false" />
+      <method />
+    </configuration>
+    <configuration default="false" name="Unittests in unit_test_vensim2py" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="pysd" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/unit_test_vensim2py.py" />
+      <option name="CLASS_NAME" value="" />
+      <option name="METHOD_NAME" value="" />
+      <option name="FOLDER_NAME" value="" />
+      <option name="TEST_TYPE" value="TEST_SCRIPT" />
+      <option name="PATTERN" value="" />
+      <option name="USE_PATTERN" value="false" />
+      <option name="PUREUNITTEST" value="true" />
+      <option name="PARAMS" value="" />
+      <option name="USE_PARAM" value="false" />
+      <method />
+    </configuration>
+    <configuration default="false" name="Unittest TestParse_general_expression.test_subscript_1d_constant" type="tests" factoryName="Unittests" temporary="true" nameIsGenerated="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="pysd" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/unit_test_vensim2py.py" />
+      <option name="CLASS_NAME" value="TestParse_general_expression" />
+      <option name="METHOD_NAME" value="test_subscript_1d_constant" />
+      <option name="FOLDER_NAME" value="" />
+      <option name="TEST_TYPE" value="TEST_METHOD" />
       <option name="PATTERN" value="" />
       <option name="USE_PATTERN" value="false" />
       <option name="PUREUNITTEST" value="true" />
@@ -885,19 +873,19 @@
     <list size="7">
       <item index="0" class="java.lang.String" itemvalue="Python.Test Model Library" />
       <item index="1" class="java.lang.String" itemvalue="Python tests.Doctest assert_frames_close" />
-      <item index="2" class="java.lang.String" itemvalue="Python tests.Unittest TestIntegrationExamples.test_delays" />
-      <item index="3" class="java.lang.String" itemvalue="Python tests.Unittest TestIntegrationExamples.test_smooth" />
-      <item index="4" class="java.lang.String" itemvalue="Python tests.Unittests in TestIntegrationExamples (2)" />
-      <item index="5" class="java.lang.String" itemvalue="Python tests.Unittest TestIntegrationExamples.test_model_doc" />
-      <item index="6" class="java.lang.String" itemvalue="Python tests.Unittests in TestIntegrationExamples" />
+      <item index="2" class="java.lang.String" itemvalue="Python tests.Unittests in TestIntegrationExamples (2)" />
+      <item index="3" class="java.lang.String" itemvalue="Python tests.Unittest TestIntegrationExamples.test_model_doc" />
+      <item index="4" class="java.lang.String" itemvalue="Python tests.Unittests in TestIntegrationExamples" />
+      <item index="5" class="java.lang.String" itemvalue="Python tests.Unittests in unit_test_vensim2py" />
+      <item index="6" class="java.lang.String" itemvalue="Python tests.Unittest TestParse_general_expression.test_subscript_1d_constant" />
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python tests.Unittests in TestIntegrationExamples" />
-        <item index="1" class="java.lang.String" itemvalue="Python tests.Unittest TestIntegrationExamples.test_model_doc" />
-        <item index="2" class="java.lang.String" itemvalue="Python tests.Unittests in TestIntegrationExamples (2)" />
-        <item index="3" class="java.lang.String" itemvalue="Python tests.Unittest TestIntegrationExamples.test_smooth" />
-        <item index="4" class="java.lang.String" itemvalue="Python tests.Unittest TestIntegrationExamples.test_delays" />
+        <item index="0" class="java.lang.String" itemvalue="Python tests.Unittests in unit_test_vensim2py" />
+        <item index="1" class="java.lang.String" itemvalue="Python tests.Unittest TestParse_general_expression.test_subscript_1d_constant" />
+        <item index="2" class="java.lang.String" itemvalue="Python tests.Unittests in TestIntegrationExamples" />
+        <item index="3" class="java.lang.String" itemvalue="Python tests.Unittest TestIntegrationExamples.test_model_doc" />
+        <item index="4" class="java.lang.String" itemvalue="Python tests.Unittests in TestIntegrationExamples (2)" />
       </list>
     </recent_temporary>
   </component>
@@ -940,35 +928,35 @@
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="Unittest_TestIntegrationExamples_test_delays - 2016.06.30 at 13h 30m 08s.xml">
-      <configuration name="Unittest TestIntegrationExamples.test_delays" configurationId="tests" />
+    <history-entry file="Unittests_in_unit_test_vensim2py - 2016.06.30 at 15h 57m 57s.xml">
+      <configuration name="Unittests in unit_test_vensim2py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittest_TestIntegrationExamples_test_delays - 2016.06.30 at 13h 31m 21s.xml">
-      <configuration name="Unittest TestIntegrationExamples.test_delays" configurationId="tests" />
+    <history-entry file="Unittests_in_unit_test_vensim2py - 2016.06.30 at 15h 58m 32s.xml">
+      <configuration name="Unittests in unit_test_vensim2py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittest_TestIntegrationExamples_test_model_doc - 2016.06.30 at 13h 57m 03s.xml">
-      <configuration name="Unittest TestIntegrationExamples.test_model_doc" configurationId="tests" />
+    <history-entry file="Unittests_in_unit_test_vensim2py - 2016.06.30 at 15h 58m 40s.xml">
+      <configuration name="Unittests in unit_test_vensim2py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittest_TestIntegrationExamples_test_smooth - 2016.06.30 at 13h 19m 26s.xml">
-      <configuration name="Unittest TestIntegrationExamples.test_smooth" configurationId="tests" />
+    <history-entry file="Unittests_in_unit_test_vensim2py - 2016.06.30 at 15h 58m 48s.xml">
+      <configuration name="Unittests in unit_test_vensim2py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittest_TestIntegrationExamples_test_smooth - 2016.06.30 at 13h 24m 35s.xml">
-      <configuration name="Unittest TestIntegrationExamples.test_smooth" configurationId="tests" />
+    <history-entry file="Unittests_in_unit_test_vensim2py - 2016.06.30 at 15h 58m 53s.xml">
+      <configuration name="Unittests in unit_test_vensim2py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittest_TestIntegrationExamples_test_smooth - 2016.06.30 at 13h 29m 26s.xml">
-      <configuration name="Unittest TestIntegrationExamples.test_smooth" configurationId="tests" />
+    <history-entry file="Unittests_in_unit_test_vensim2py - 2016.06.30 at 15h 59m 02s.xml">
+      <configuration name="Unittests in unit_test_vensim2py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittest_TestIntegrationExamples_test_smooth - 2016.06.30 at 13h 51m 14s.xml">
-      <configuration name="Unittest TestIntegrationExamples.test_smooth" configurationId="tests" />
+    <history-entry file="Unittests_in_unit_test_vensim2py - 2016.06.30 at 15h 59m 09s.xml">
+      <configuration name="Unittests in unit_test_vensim2py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_TestIntegrationExamples - 2016.06.30 at 13h 59m 14s.xml">
-      <configuration name="Unittests in TestIntegrationExamples" configurationId="tests" />
+    <history-entry file="Unittests_in_unit_test_vensim2py - 2016.06.30 at 15h 59m 19s.xml">
+      <configuration name="Unittests in unit_test_vensim2py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_TestIntegrationExamples_(1) - 2016.06.30 at 12h 42m 04s.xml">
-      <configuration name="Unittests in TestIntegrationExamples (1)" configurationId="tests" />
+    <history-entry file="Unittests_in_unit_test_vensim2py - 2016.06.30 at 15h 59m 42s.xml">
+      <configuration name="Unittests in unit_test_vensim2py" configurationId="tests" />
     </history-entry>
-    <history-entry file="Unittests_in_TestIntegrationExamples_(2) - 2016.06.30 at 13h 54m 45s.xml">
-      <configuration name="Unittests in TestIntegrationExamples (2)" configurationId="tests" />
+    <history-entry file="Unittests_in_unit_test_vensim2py - 2016.06.30 at 16h 15m 57s.xml">
+      <configuration name="Unittests in unit_test_vensim2py" configurationId="tests" />
     </history-entry>
   </component>
   <component name="TodoView" selected-index="1">
@@ -982,17 +970,17 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1440" height="900" extended-state="6" />
-    <editor active="true" />
+    <editor active="false" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2081545" sideWeight="0.4936306" order="1" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3282981" sideWeight="0.49753347" order="9" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22048193" sideWeight="0.5078684" order="0" side_tool="true" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3325301" sideWeight="0.5107296" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297568" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.1746988" sideWeight="0.49753347" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.14038657" sideWeight="0.48907682" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3325301" sideWeight="0.49213162" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3325301" sideWeight="0.4892704" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24892704" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3325301" sideWeight="0.6687808" order="11" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3759036" sideWeight="0.565093" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.15574348" sideWeight="0.5063694" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3819277" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -1079,13 +1067,8 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/tests/unit_test_vensim2py.py</url>
-          <line>319</line>
+          <line>311</line>
           <option name="timeStamp" value="311" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="python-line">
-          <url>file://$PROJECT_DIR$/tests/unit_test_vensim2py.py</url>
-          <line>306</line>
-          <option name="timeStamp" value="312" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="python-line">
           <url>file://$PROJECT_DIR$/pysd/utils.py</url>
@@ -1117,7 +1100,7 @@
           <properties exception="BaseException" />
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="374" />
+      <option name="time" value="375" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="tests">
@@ -1223,17 +1206,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2220">
           <caret line="152" column="0" selection-start-line="152" selection-start-column="0" selection-end-line="152" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tests/unit_test_builder.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="300">
-          <caret line="70" column="52" selection-start-line="70" selection-start-column="8" selection-end-line="70" selection-end-column="52" />
-          <folding>
-            <element signature="e#0#15#0" expanded="false" />
-            <element signature="e#10559#16768#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1358,16 +1330,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-1298">
           <caret line="1" column="0" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tests/unit_test_vensim2py.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="169">
-          <caret line="295" column="60" selection-start-line="295" selection-start-column="60" selection-end-line="295" selection-end-column="60" />
-          <folding>
-            <element signature="e#0#15#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -1537,7 +1499,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/pysd/builder.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="136">
+        <state relative-caret-position="451">
           <caret line="371" column="0" selection-start-line="371" selection-start-column="0" selection-end-line="371" selection-end-column="0" />
           <folding>
             <element signature="e#330#345#0" expanded="true" />
@@ -1552,17 +1514,36 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/pysd/vensim2py.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="849">
-          <caret line="417" column="5" selection-start-line="417" selection-start-column="5" selection-end-line="417" selection-end-column="5" />
+        <state relative-caret-position="-170">
+          <caret line="565" column="32" selection-start-line="565" selection-start-column="32" selection-end-line="565" selection-end-column="32" />
           <folding>
             <element signature="e#102#111#0" expanded="true" />
             <element signature="e#234#3066#0" expanded="false" />
             <element signature="e#3108#7134#0" expanded="false" />
             <element signature="e#7184#10495#0" expanded="false" />
             <element signature="e#10530#10886#0" expanded="false" />
-            <element signature="e#23535#24729#0" expanded="false" />
-            <marker date="1467307470000" expanded="true" signature="11557:11772" ph="..." />
-            <marker date="1467307470000" expanded="true" signature="11583:11716" ph="..." />
+            <element signature="e#23604#24798#0" expanded="false" />
+            <marker date="1467315229000" expanded="true" signature="11557:11772" ph="..." />
+            <marker date="1467315229000" expanded="true" signature="11583:11716" ph="..." />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/unit_test_vensim2py.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1561">
+          <caret line="354" column="0" selection-start-line="354" selection-start-column="0" selection-end-line="354" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/unit_test_builder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="30">
+          <caret line="6" column="0" selection-start-line="6" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
+          <folding>
+            <element signature="e#0#15#0" expanded="true" />
+            <element signature="e#10564#16773#0" expanded="false" />
           </folding>
         </state>
       </provider>

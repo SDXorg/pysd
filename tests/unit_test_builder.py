@@ -2,7 +2,7 @@ import textwrap
 from unittest import TestCase
 import xarray as xr
 import numpy as np
-from functions import cache
+from pysd.functions import cache
 from numbers import Number
 
 
