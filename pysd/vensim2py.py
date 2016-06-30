@@ -386,8 +386,6 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
                                    'arguments': ''}])
                 }
 
-
-    # Todo: integ needs to process the init as its own element
     builders = {
         "integ": lambda expr, init: builder.add_stock(element['py_name'], element['subs'],
                                                       expr, init, subscript_dict),
@@ -400,17 +398,30 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
         "delay3i": lambda in_var, dtime, init: builder.add_n_delay(in_var, dtime, init, '3',
                                                                    element['subs'], subscript_dict),
         "delay n": lambda in_var, dtime, init, order: builder.add_n_delay(in_var, dtime,
-                                                                         init, order,
-                                                                         element['subs'],
-                                                                         subscript_dict),
-        # continue this pattern with the other delay functions and smooth functions
+                                                                          init, order,
+                                                                          element['subs'],
+                                                                          subscript_dict),
+        "smooth": lambda in_var, dtime: builder.add_n_smooth(in_var, dtime, '0', '1',
+                                                             element['subs'], subscript_dict),
+        "smoothi": lambda in_var, dtime, init: builder.add_n_smooth(in_var, dtime, init, '1',
+                                                                    element['subs'],
+                                                                    subscript_dict),
+        "smooth3": lambda in_var, dtime: builder.add_n_smooth(in_var, dtime, '0', '3',
+                                                              element['subs'], subscript_dict),
+        "smooth3i": lambda in_var, dtime, init: builder.add_n_smooth(in_var, dtime, init, '3',
+                                                                     element['subs'],
+                                                                     subscript_dict),
+        "smooth n": lambda in_var, dtime, init, order: builder.add_n_smooth(in_var, dtime,
+                                                                            init, order,
+                                                                            element['subs'],
+                                                                            subscript_dict),
     }
 
 
     in_ops = {
         "+": "+", "-": "-", "*": "*", "/": "/", "^": "**", "=": "==", "<=": "<=", "<>": "!=",
         "<": "<", ">=": ">=", ">": ">", ":and:": "and",
-        ":or:": "or"}  # Todo: make the semicolon into a [1,2],[3,4] type of array
+        ":or:": "or"}
 
     pre_ops = {
         "-": "-", ":not:": "not",

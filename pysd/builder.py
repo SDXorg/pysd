@@ -281,7 +281,7 @@ def add_n_delay(delay_input, delay_time, initial_value, order, subs, subscript_d
     """
 
     delayed_variable = delay_input[:-2]
-    identifier = '_' + delayed_variable + '_delay'
+    identifier = '_' + delayed_variable + '_delay_' + order.rstrip('()')
 
     output_element = {
         'py_name': identifier,
@@ -304,7 +304,7 @@ def add_n_delay(delay_input, delay_time, initial_value, order, subs, subscript_d
     try:
         coords.update({'_delay': range(int(order))})
     except TypeError or ValueError:
-        raise TypeError('Order of delay on %s must be an integer, instead recieved %s' % (
+        raise TypeError('Order of delay on %s must be an integer, instead received %s' % (
             identifier, str(order)))
 
     dims.append('_delay')
@@ -356,103 +356,111 @@ def add_n_delay(delay_input, delay_time, initial_value, order, subs, subscript_d
             [init_element, ddt_element, output_element])
 
 
-#     def add_initial(self, component):
-#         """ Implement vensim's `INITIAL` command as a build-time function.
-#             component cannot be a full expression, must be a reference to
-#             a single external element.
-#         """
-#         if not re.search('[a-zA-Z]',component):
-#             naked_component="number"
-#             funcstr = ('\ndef initial_%s(inval):                       \n'%naked_component +
-#                     '    return inval             \n\n'
-#                     )
-#
-#         else:
-#             naked_component = component.split("()")[0]
-#             naked_component = naked_component.replace('functions.shorthander(', '')
-#             funcstr = ('\ndef initial_%s(inval):                       \n'%naked_component +
-#                     '    if not hasattr(initial_%s, "value"): \n'%naked_component +
-#                     '        initial_%s.value = inval         \n'%naked_component +
-#                     '    return initial_%s.value             \n\n'%naked_component
-#                     )
-#
-#         self.body.append(funcstr)
-#         return 'initial_%s(%s)'%(naked_component, component)
+def add_n_smooth(smooth_input, smooth_time, initial_value, order, subs, subscript_dict):
+    """Constructs stock and flow chains that implement the calculation of
+        a smoothing function.
 
+        Parameters
+        ----------
+        smooth_input: <string>
+            Reference to the model component that is the input to the smoothing function
 
-#     def add_n_smooth(self, smooth_input, smooth_time, initial_value, order, sub):
-#         """Constructs stock and flow chains that implement the calculation of
-#         a smoothing function.
-#
-#         Parameters
-#         ----------
-#         delay_input: <string>
-#             Reference to the model component that is the input to the smoothing function
-#
-#         smooth_time: <string>
-#             Can be a number (in string format) or a reference to another model element
-#             which will calculate the delay. This is calculated throughout the simulation
-#             at runtime.
-#
-#         initial_value: <string>
-#             This is used to initialize the stocks that are present in the delay. We
-#             initialize the stocks with equal values so that the outflow in the first
-#             timestep is equal to this value.
-#
-#         order: int
-#             The number of stocks in the delay pipeline. As we construct the delays at
-#             build time, this must be an integer and cannot be calculated from other
-#             model components. Anything else will yield a ValueError.
-#
-#         sub: list of strings
-#             List of strings of subscript indices that correspond to the
-#             list of expressions, and collectively define the shape of the output
-#             See `builder.add_flaux` for more info
-#
-#         Returns
-#         -------
-#         output: <basestring>
-#             Name of the stock which contains the smoothed version of the input
-#
-#         """
-#         try:
-#             order = int(order)
-#         except ValueError:
-#             print "Order of delay must be an int. (Can't even be a reference to an int. Sorry...)"
-#             raise
-#
-#         naked_input = smooth_input[:-2] #always a funciton
-#         naked_smooth = smooth_time[:-2] if smooth_time.endswith('()') else smooth_time #function or number
-#         smooth_name = '%s_smooth_%s'%(naked_input, naked_smooth)
-#
-#
-#         flowlist = []
-#         # use 1-based indexing for stocks in the delay chain so that (n of m) makes sense.
-#         prev = smooth_input
-#         current = '%s_stock_1_of_%i()'%(smooth_name, order)
-#         flowlist.append(self.add_flaux(identifier='%s_flow_1_of_%i'%(smooth_name, order),
-#                                        sub=sub,
-#                                        expression='(%s - %s) / (1.*%s/%i)'%(
-#                                                prev, current, smooth_time, order)))
-#
-#         for i in range(2, order+1):
-#             prev = 'self.%s_stock_%i_of_%i()'%(smooth_name, i-1, order)
-#             current = 'self.%s_stock_%i_of_%i()'%(smooth_name, i, order)
-#             flowlist.append(self.add_flaux(identifier='%s_flow_%i_of_%i'%(smooth_name, i, order),
-#                                            sub=sub,
-#                                            expression='(%s - %s)/(1.*%s/%i)'%(
-#                                                   prev, current, smooth_time, order)))
-#
-#         stocklist = []
-#         for i in range(1, order+1):
-#             stocklist.append(self.add_stock(identifier='%s_stock_%i_of_%i'%(smooth_name, i, order),
-#                                             sub=sub,
-#                                             expression=flowlist[i-1],
-#                                             initial_condition=initial_value))
-#
-#         return stocklist[-1]
-#
-#
-# # these are module functions so that we can access them from other places
-#
+        smooth_time: <string>
+            Can be a number (in string format) or a reference to another model element
+            which will calculate the delay. This is calculated throughout the simulation
+            at runtime.
 
+        initial_value: <string>
+            This is used to initialize the stocks that are present in the delay. We
+            initialize the stocks with equal values so that the outflow in the first
+            timestep is equal to this value.
+
+        order: string
+            The number of stocks in the delay pipeline. As we construct the delays at
+            build time, this must be an integer and cannot be calculated from other
+            model components. Anything else will yield a ValueError.
+
+        sub: list of strings
+            List of strings of subscript indices that correspond to the
+            list of expressions, and collectively define the shape of the output
+            See `builder.add_flaux` for more info
+
+        Returns
+        -------
+        output: <basestring>
+            Name of the stock which contains the smoothed version of the input
+
+        """
+
+    smoothed_variable = smooth_input[:-2]
+    identifier = '_' + smoothed_variable + '_smooth_' + order.rstrip('()')
+
+    output_element = {
+        'py_name': identifier,
+        'real_name': 'Implicit',
+        'kind': 'component',
+        'doc': 'smoothed value of %s' % smoothed_variable,
+        'subs': subs,
+        'unit': 'See docs for %s' % identifier,
+        'py_expr': "%(stock)s.loc[{'_smooth': %(order)s-1}]" % {
+            'stock': '_state["%s"]' % identifier,
+            'order': order,
+        },
+        'arguments': ''
+    }
+
+    coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
+    dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
+
+    try:
+        coords.update({'_smooth': range(int(order))})
+    except TypeError or ValueError:
+        raise TypeError('Order of smooth on %s must be an integer, instead received %s' % (
+            identifier, str(order)))
+
+    dims.append('_smooth')
+
+    shape = [len(coords[dim]) for dim in dims]
+    initial_condition = textwrap.dedent("""\
+               xr.DataArray(data=np.ones(%(shape)s)*%(value)s,
+                            coords=%(coords)s,
+                            dims=%(dims)s )""" % {
+        'shape': shape,
+        'value': initial_value,
+        'coords': repr(coords),
+        'dims': repr(dims)
+    })
+
+    init_element = {
+        'py_name': '_init_%s' % identifier,
+        'real_name': 'Implicit',
+        'kind': 'setup',  # not explicitly specified in the model file, but must exist
+        'py_expr': initial_condition,
+        'subs': dims,
+        'doc': 'Provides initial conditions for smooth of %s function' % identifier,
+        'unit': 'See docs for %s' % identifier,
+        'arguments': ''
+    }
+
+    expression = textwrap.dedent("""\
+        (%(stock)s.shift(**{'_smooth': 1}).fillna(%(inval)s) - %(stock)s )/(%(smooth)s/%(order)s)
+           """ % {
+        'stock': '_state["%s"]' % identifier,
+        'smooth': smooth_time,
+        'order': order,
+        'inval': smooth_input
+    })
+
+    ddt_element = {
+        'py_name': '_d%s_dt' % identifier,
+        'real_name': 'Implicit',
+        'kind': 'component',
+        'doc': 'Provides derivative for %s function' % identifier,
+        'subs': dims,
+        'unit': 'See docs for %s' % identifier,
+        'py_expr': expression,
+        'arguments': ''
+    }
+
+    return ("%s()" % identifier,
+            [init_element, ddt_element, output_element])
