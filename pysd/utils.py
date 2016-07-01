@@ -32,6 +32,7 @@ def dict_find(in_dict, value):
     # Todo: make this robust to missing values
     return in_dict.keys()[in_dict.values().index(value)]
 
+
 def xrmerge(das, accept_new=True):
     """
     Merges xarrays with different dimension sets
@@ -58,6 +59,7 @@ def xrmerge(das, accept_new=True):
         # Fill NaNs one way or the other re. accept_new
         da = new_da.fillna(da) if accept_new else da.fillna(new_da)
     return da
+
 
 def find_subscript_name(subscript_dict, element):
     """
@@ -230,10 +232,10 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
     """
 
     if namespace is None:
-        namespace = {}
+        namespace = dict()
 
     if reserved_words is None:
-        reserved_words = []
+        reserved_words = list()
 
     if string in namespace:
         return namespace[string], namespace
@@ -375,6 +377,7 @@ def visit_addresses(frame, return_addresses):
 
     Returns
     -------
+    outdict: dictionary
 
     """
     outdict = dict()

@@ -2,7 +2,7 @@ from unittest import TestCase
 import xarray as xr
 import pandas as pd
 import test_utils
-
+import doctest
 
 class TestUtils(TestCase):
 
@@ -52,7 +52,6 @@ class TestUtils(TestCase):
               'inflow_b': ('inflow_b', {})}
              )
         )
-
 
     def test_make_flat_df(self):
         from pysd.utils import make_flat_df
@@ -152,3 +151,6 @@ class TestUtils(TestCase):
                                              'Dim3'),
                          'Dim3')
 
+    def test_doctests(self):
+        import pysd.utils
+        doctest.DocTestSuite(pysd.utils)

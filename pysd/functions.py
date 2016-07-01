@@ -96,8 +96,6 @@ def initial(value):
     Returns
     -------
     The first value of `value` after the caches are reset
-
-
     """
     return value
 
@@ -121,7 +119,6 @@ def ramp(slope, start, finish):
         If after ramp ends, returns top of ramp
     Examples
     --------
-
 
     """
 
@@ -180,12 +177,8 @@ def pulse_train(start, duration, repeat_time, end):
 
 def lookup(x, xs, ys):
     """ Provides the working mechanism for lookup functions the builder builds """
-    if not isinstance(xs, np.ndarray):
-        return np.interp(x, xs, ys)
-    resultarray = np.ndarray(np.shape(x))
-    for i, j in np.ndenumerate(x):
-        resultarray[i] = np.interp(j, np.array(xs)[i], np.array(ys)[i])
-    return resultarray
+    return np.interp(x, xs, ys)
+
 
 
 def if_then_else(condition, val_if_true, val_if_false):

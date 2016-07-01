@@ -1,7 +1,7 @@
 import os.path
 import textwrap
 import glob
-from pysd import builder
+from pysd import utils
 
 test_dir = 'test-models/'
 vensim_test_files = glob.glob(test_dir+'tests/*/*.mdl')
@@ -11,7 +11,7 @@ for file_path in vensim_test_files:
     (path, file_name) = os.path.split(file_path)
     (name, ext) = os.path.splitext(file_name)
 
-    test_name = builder.make_python_identifier(path.split('/')[-1])[0]
+    test_name = utils.make_python_identifier(path.split('/')[-1])[0]
 
     test_func_string = """
         def test_%(test_name)s(self):

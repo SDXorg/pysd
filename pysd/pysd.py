@@ -259,18 +259,30 @@ class PySD(object):
 
         Examples
         --------
+
+        >>> model.set_components({'birth_rate': 10})
+        >>> model.set_components({'Birth Rate': 10})
+
         >>> br = pandas.Series(index=range(30), values=np.sin(range(30))
-        >>> model.set_components(birth_rate=br)
-        >>> model.set_components(birth_rate=10)
+        >>> model.set_components({'birth_rate': br})
+
 
         """
         for key, value in params.iteritems():
             if isinstance(value, _pd.Series):
                 new_function = self._timeseries_component(value)
-            else:  # Todo: check here for valid value...
+            else:
                 new_function = self._constant_component(value)
-            setattr(self.components, key, new_function)
-            self.components._funcs[key] = new_function  # facilitates lookups
+
+            if key in self.components._namespace.keys():
+                func_name = self.components._namespace[key]
+            elif key in self.components._namespace.values():
+                func_name = key
+            else:
+                raise NameError('%s is not recognized as a model component' % key)
+
+            setattr(self.components, func_name, new_function)
+            self.components._funcs[func_name] = new_function  # facilitates lookups
 
     def set_state(self, t, state):
         """ Set the system state.
@@ -327,11 +339,15 @@ class PySD(object):
             raise TypeError('Check documentation for valid entries')
 
     def _build_euler_timeseries(self, return_timestamps=None):
-        # Todo: Add the returned timeseries into the integration array. Best we can do for now.
-
-        return np.arange(self.components.initial_time(),
-                         self.components.final_time() + self.components.time_step(),
-                         self.components.time_step(), dtype=np.float64)
+        # Adds the returned timeseries into the integration array. Best we can do for now.
+        # This does change the integration ever so slightly, but for well-specified
+        # models there shouldn't be sensitivity to a finer integration timestep.
+        ts = np.arange(self.components.initial_time(),
+                       self.components.final_time() + self.components.time_step(),
+                       self.components.time_step(), dtype=np.float64)
+        if return_timestamps is not None:
+            ts = np.sort(np.unique(np.append(ts, return_timestamps)))
+        return ts
 
     def _format_return_timestamps(self, return_timestamps=None):
         """
@@ -353,10 +369,12 @@ class PySD(object):
 
     def _timeseries_component(self, series):
         """ Internal function for creating a timeseries model element """
+        # Todo: check here for valid value...
         return lambda: np.interp(self.components._t, series.index, series.values)
 
     def _constant_component(self, value):
         """ Internal function for creating a constant model element """
+        # Todo: check here for valid value...
         return lambda: value
 
     def _euler_step(self, ddt, state, dt):

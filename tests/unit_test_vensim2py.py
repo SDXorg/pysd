@@ -148,7 +148,6 @@ class TestEquationStringParsing(unittest.TestCase):
              'real_name': 'table2'}
         )
 
-    @unittest.skip('James Working')
     def test_pathological_names(self):
         from pysd.vensim2py import get_equation_components
         self.assertEqual(
@@ -164,7 +163,6 @@ class TestEquationStringParsing(unittest.TestCase):
 
 
 class TestParse_general_expression(unittest.TestCase):
-
 
     def test_arithmetic(self):
         from pysd.vensim2py import parse_general_expression
@@ -187,7 +185,6 @@ class TestParse_general_expression(unittest.TestCase):
         self.assertEqual(res[1][0]['kind'], 'setup')
         self.assertEqual(res[1][1]['kind'], 'component')
 
-
     def test_builtins(self):
         from pysd.vensim2py import parse_general_expression
         res = parse_general_expression({'expr': 'Time'})
@@ -206,7 +203,6 @@ class TestParse_general_expression(unittest.TestCase):
         res = parse_general_expression({'expr': 'aBS(-3)'})
         self.assertEqual(res[0]['py_expr'], 'abs(-3)')
 
-
     def test_delay_construction_function_no_subscripts(self):
         #todo: eventually make this case more rigorous, for now depending on integration test
         from pysd.vensim2py import parse_general_expression
@@ -215,8 +211,7 @@ class TestParse_general_expression(unittest.TestCase):
                                        {'Const': 'const', 'Variable': 'variable',
                                         'DelayTime': 'delaytime'},
                                        )
-        self.assertEqual(res[0]['py_expr'], 'const()* _variable_delay_1()')
-
+        self.assertEqual(res[0]['py_expr'], 'const()*_variable_delay_1()')
 
     def test_function_calls(self):
         from pysd.vensim2py import parse_general_expression
@@ -224,11 +219,11 @@ class TestParse_general_expression(unittest.TestCase):
         self.assertEqual(res[0]['py_expr'], 'abs(stocka())')
 
         res = parse_general_expression({'expr': 'If Then Else(A>B, 1, 0)'}, {'A': 'a', 'B':'b'})
-        self.assertEqual(res[0]['py_expr'], 'functions.if_then_else(a()>b(), 1, 0)')
+        self.assertEqual(res[0]['py_expr'], 'functions.if_then_else(a()>b(),1,0)')
 
         # test that function calls are handled properly in arguments
-        res = parse_general_expression({'expr': 'If Then Else(A>B, 1, A)'}, {'A': 'a', 'B': 'b'})
-        self.assertEqual(res[0]['py_expr'], 'functions.if_then_else(a()>b(), 1, a())')
+        res = parse_general_expression({'expr': 'If Then Else(A>B,1,A)'}, {'A': 'a', 'B': 'b'})
+        self.assertEqual(res[0]['py_expr'], 'functions.if_then_else(a()>b(),1,a())')
 
     def test_id_parsing(self):
         from pysd.vensim2py import parse_general_expression
@@ -252,32 +247,35 @@ class TestParse_general_expression(unittest.TestCase):
         res = parse_general_expression({'expr': '-1.3e-10'})
         self.assertEqual(res[0]['py_expr'], '-1.3e-10')
 
-
     def test_stock_construction_function_no_subscripts(self):
         from pysd.vensim2py import parse_general_expression
-        self.assertEqual(
-            parse_general_expression({'expr': 'INTEG (FlowA, -10)',
+        actual = parse_general_expression({'expr': 'INTEG (FlowA, -10)',
                                       'py_name': 'test_stock',
                                       'subs': None},
-                                     {'FlowA': 'flowa'}),
-            ({'kind': 'component', 'py_expr': "_state['test_stock']", 'arguments': ''},
-             [{'kind': 'setup',
-               'subs': None,
-               'doc': 'Provides initial conditions for test_stock function',
-               'py_name': '_init_test_stock',
-               'real_name': 'Implicit',
-               'unit': 'See docs for test_stock',
-               'py_expr': '-10',
-               'arguments': ''},
-              {'py_name': '_dtest_stock_dt',
-               'subs': None,
-               'doc': 'Provides derivative for test_stock function',
-               'kind': 'component',
-               'unit': 'See docs for test_stock',
-               'py_expr': 'flowa()',
-               'real_name': 'Implicit',
-               'arguments': ''}])
-        )
+                                     {'FlowA': 'flowa'})
+
+        expected = (
+            {'kind': 'component', 'py_expr': "_state['test_stock']", 'arguments': ''},
+            [{'kind': 'setup',
+              'subs': None,
+              'doc': 'Provides initial conditions for test_stock function',
+              'py_name': '_init_test_stock',
+              'real_name': 'Implicit',
+              'unit': 'See docs for test_stock',
+              'py_expr': '-10',
+              'arguments': ''},
+             {'py_name': '_dtest_stock_dt',
+              'subs': None,
+              'doc': 'Provides derivative for test_stock function',
+              'kind': 'component',
+              'unit': 'See docs for test_stock',
+              'py_expr': 'flowa()',
+              'real_name': 'Implicit',
+              'arguments': ''}])
+        self.assertDictEqual(actual[0], expected[0])
+        self.assertDictEqual(actual[1][0], expected[1][0])
+        self.assertDictEqual(actual[1][1], expected[1][1])
+
 
     def test_smooth_construction_function_no_subscripts(self):
         # todo: improve this test
@@ -287,7 +285,20 @@ class TestParse_general_expression(unittest.TestCase):
                                        {'Const': 'const', 'Variable': 'variable',
                                         'DelayTime': 'delaytime'},
                                        )
-        self.assertEqual(res[0]['py_expr'], 'const()* _variable_smooth_1()')
+        self.assertEqual(res[0]['py_expr'], 'const()*_variable_smooth_1()')
+
+    def test_subscript_float_initialization(self):
+        from pysd.vensim2py import parse_general_expression
+        element = parse_general_expression({'expr': '3.32',
+                                            'subs': ['Dim1']},
+                                           {},
+                                           {'Dim1': ['A', 'B', 'C'],
+                                            'Dim2': ['D', 'E']})
+        string = element[0]['py_expr']
+        a = eval(string)
+        self.assertDictEqual({key: list(val.values) for key, val in a.coords.iteritems()},
+                             {'Dim1': ['A', 'B', 'C']})
+        self.assertEqual(a.loc[{'Dim1': 'B'}], 3.32)
 
     def test_subscript_1d_constant(self):
         from pysd.vensim2py import parse_general_expression

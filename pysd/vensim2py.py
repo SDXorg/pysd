@@ -244,7 +244,7 @@ def get_equation_components(equation_str):
 
     # replace any amount of whitespace  with a single space
     equation_str = equation_str.replace('\\t', ' ')
-    equation_str = equation_str.replace('\\', ' ')
+    #equation_str = equation_str.replace('\\', ' ')
     equation_str = re.sub(r"\s+", ' ', equation_str)
 
 
@@ -279,6 +279,9 @@ def get_equation_components(equation_str):
 
         def generic_visit(self, n, vc):
             return ''.join(filter(None, vc)) or n.text
+
+        def visit__(self, n, vc):
+            return ' '
 
     parse_object = ComponentParser(tree)
 
@@ -417,14 +420,13 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
                                                                             subscript_dict),
     }
 
-
     in_ops = {
         "+": "+", "-": "-", "*": "*", "/": "/", "^": "**", "=": "==", "<=": "<=", "<>": "!=",
-        "<": "<", ">=": ">=", ">": ">", ":and:": "and",
-        ":or:": "or"}
+        "<": "<", ">=": ">=", ">": ">",
+        ":and:": " and ", ":or:": " or "}  # spaces important for word-based operators
 
     pre_ops = {
-        "-": "-", ":not:": "not",
+        "-": "-", ":not:": " not ",  # spaces important for word-based operators
         "+": " "  # space is important, so that and empty string doesn't slip through generic
     }
 
@@ -574,6 +576,9 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
             name, structure = builders[call.strip().lower()](*arglist)
             self.new_structure += structure
             return name
+
+        def visit__(self, n, vc):
+            return ''
 
         def generic_visit(self, n, vc):
             return ''.join(filter(None, vc)) or n.text
