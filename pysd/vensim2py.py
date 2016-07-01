@@ -511,8 +511,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
 
         def visit_reference(self, n, vc):
             self.kind = 'component'
-            id = vc[0]
-            return id + '()'
+            id_str = vc[0]
+            return id_str + '()'
 
         def visit_id(self, n, vc):
             return namespace[n.text]
@@ -656,7 +656,6 @@ def translate_vensim(mdl_file):
     """
     # Todo: work out what to do with subranges
     # Todo: parse units string
-    # Todo: deal with lookup elements
     # Todo: handle macros
 
     with open(mdl_file, 'rU') as in_file:
