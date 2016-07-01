@@ -166,17 +166,17 @@ def get_model_elements(model_str):
             self.entries = []
             self.visit(ast)
 
-        def visit_entry(self, n, (eqn, _1, unit, _2, doc, _3, annotation)):
-            self.entries.append({'eqn': eqn.strip(),
-                                 'unit': unit.strip(),
-                                 'doc': doc.strip(),
+        def visit_entry(self, n, vc):
+            self.entries.append({'eqn': vc[0].strip(),
+                                 'unit': vc[2].strip(),
+                                 'doc': vc[4].strip(),
                                  'kind': 'entry'})
 
-        def visit_section(self, n, (sect_marker, _1, text, _3)):
-            if text.strip() != "Simulation Control Parameters":
+        def visit_section(self, n, vc):
+            if vc[2].strip() != "Simulation Control Parameters":
                 self.entries.append({'eqn': '',
                                      'unit': '',
-                                     'doc': text.strip(),
+                                     'doc': vc[2].strip(),
                                      'kind': 'section'})
 
         def generic_visit(self, n, vc):
@@ -570,7 +570,9 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
             else:
                 return ' '
 
-        def visit_build_call(self, n, (call, _1, lp, _2, args, rp)):
+        def visit_build_call(self, n, vc):
+            call = vc[0]
+            args = vc[4]
             self.kind = 'component'
             arglist = [x.strip() for x in args.split(',')]
             name, structure = builders[call.strip().lower()](*arglist)

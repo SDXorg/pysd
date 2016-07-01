@@ -29,26 +29,7 @@ import utils
 # Todo: add a logical way to run two or more models together, using the same integrator.
 # Todo: add the state dictionary to the model file, to give some functionality to it even
 # without the pysd class
-# Todo: seems to be some issue with multiple imports - need to create a new instance...
 # Todo: work out an RK4 adaptive integrator
-
-def read_xmile(xmile_file):
-    """ Construct a model object from `.xmile` file.
-
-    Parameters
-    ----------
-    xmile_file : <string>
-        The relative path filename for a raw xmile file
-
-    Examples
-    --------
-    >>> model = read_vensim('Teacup.xmile')
-    """
-    #from translators import translate_xmile
-    #py_model_file = translate_xmile(xmile_file)
-    #model = load(py_model_file)
-    #model.__str__ = 'Import of ' + xmile_file
-    #return model
 
 
 def read_vensim(mdl_file):
@@ -418,7 +399,7 @@ class PySD(object):
         # Todo: consider adding the timestamp to the return elements, and using that as the index
         outputs = []
 
-        for i, t2 in enumerate(timesteps[1:]):
+        for t2 in timesteps[1:]:
             if self.components._t in return_timestamps:
                 outputs.append({key: self.components._funcs[key]() for key in capture_elements})
             self.components._state = self._euler_step(derivative_functions,
