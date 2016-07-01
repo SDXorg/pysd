@@ -1,4 +1,4 @@
-from .pysd import read_xmile, read_vensim, load
-from .pysd import PySD
-from ._version import __version__
-import builder, functions
+from .pysd import read_vensim, load, PySD
+from . import functions
+from . import utils
+
