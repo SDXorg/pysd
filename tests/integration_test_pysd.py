@@ -36,6 +36,11 @@ class TestIntegrationExamples(TestCase):
         output, canon = runner('test-models/tests/chained_initialization/test_chained_initialization.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    def test_constant_expressions(self):
+        from test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/constant_expressions/test_constant_expressions.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_delays(self):
         from test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/delays/test_delays.mdl')

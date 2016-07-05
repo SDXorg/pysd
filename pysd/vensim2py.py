@@ -450,7 +450,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
     reference = id _ subscript_list?
     subscript_list = "[" _ ((sub_name / sub_element) _ ","? _)+ "]"
 
-    array = (number _ ("," / ";")? _)+
+    array = (number _ ("," / ";")? _)+ !~r"."  # negative lookahead for anything other than an array
     number = ~r"\d+\.?\d*(e[+-]\d+)?"
 
     id = ~r"(%(ids)s)"I
