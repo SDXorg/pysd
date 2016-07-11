@@ -161,9 +161,9 @@ class PySD(object):
 
         self.set_initial_condition(initial_condition)
 
-        t_series = self._build_euler_timeseries(return_timestamps)
-
         return_timestamps = self._format_return_timestamps(return_timestamps)
+
+        t_series = self._build_euler_timeseries(return_timestamps)
 
         if return_columns is None:
             return_columns = [utils.dict_find(self.components._namespace, x)
@@ -320,14 +320,33 @@ class PySD(object):
             raise TypeError('Check documentation for valid entries')
 
     def _build_euler_timeseries(self, return_timestamps=None):
-        # Adds the returned timeseries into the integration array. Best we can do for now.
+        """
+        - The integration steps need to include the return values.
+        - There is no point running the model past the last return value.
+        - The last timestep will be the last in that requested for return
+        - Spacing should be at maximum what is specified by the integration time step.
+        - The initial time should be the one specified by the model file, OR
+          it should be the initial condition.
+        - This function needs to be called AFTER the model is set in its initial state
+        Parameters
+        ----------
+        return_timestamps: numpy array
+          Must be specified by user or built from model file before this function is called.
+
+        Returns
+        -------
+        ts: numpy array
+            The times that the integrator will use to compute time history
+        """
+        t_0 = self.components._t
+        t_f = return_timestamps[-1]
+        dt = self.components.time_step()
+        ts = np.arange(t_0, t_f, dt, dtype=np.float64)
+
+        # Add the returned time series into the integration array. Best we can do for now.
         # This does change the integration ever so slightly, but for well-specified
-        # models there shouldn't be sensitivity to a finer integration timestep.
-        ts = np.arange(self.components.initial_time(),
-                       self.components.final_time() + self.components.time_step(),
-                       self.components.time_step(), dtype=np.float64)
-        if return_timestamps is not None:
-            ts = np.sort(np.unique(np.append(ts, return_timestamps)))
+        # models there shouldn't be sensitivity to a finer integration time step.
+        ts = np.sort(np.unique(np.append(ts, return_timestamps)))
         return ts
 
     def _format_return_timestamps(self, return_timestamps=None):

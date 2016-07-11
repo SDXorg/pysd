@@ -631,7 +631,6 @@ def parse_lookup_expression(element):
             'arguments': 'x'}
 
 
-
 def translate_vensim(mdl_file):
     """
 

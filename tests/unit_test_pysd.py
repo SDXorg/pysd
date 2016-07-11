@@ -15,6 +15,12 @@ class TestPySD(unittest.TestCase):
         self.assertGreater(len(stocks), 3)  # has multiple rows
         self.assertTrue(stocks.notnull().all().all())  # there are no null values in the set
 
+    def test_run_includes_last_value(self):
+        import pysd
+        model = pysd.read_vensim(test_model)
+        res = model.run()
+        self.assertEqual(res.index[-1], model.components.final_time())
+
     def test_run_return_timestamps(self):
         """Addresses https://github.com/JamesPHoughton/pysd/issues/17"""
         import pysd
@@ -52,20 +58,28 @@ class TestPySD(unittest.TestCase):
         result = model.run(return_columns=return_columns)
         self.assertEqual(set(result.columns), set(return_columns))
 
-    def test_initial_conditions(self):
+    def test_initial_conditions_tuple(self):
         import pysd
         model = pysd.read_vensim(test_model)
-        stocks = model.run(initial_condition=(0, {'teacup_temperature': 33}))
-        actual = stocks['Teacup Temperature'].loc[0]
-        expected = 33
-        self.assertEqual(actual, expected)
+        stocks = model.run(initial_condition=(3000, {'teacup_temperature': 33}),
+                           return_timestamps=range(3000, 3010))
+        self.assertEqual(stocks.index[0], 3000)
+        self.assertEqual(stocks['Teacup Temperature'].iloc[0], 33)
 
-        stocks = model.run(initial_condition='current',
-                           return_timestamps=range(31, 45))
-        self.assertGreater(stocks['Teacup Temperature'].loc[44], 0)
+    def test_initial_conditions_current(self):
+        import pysd
+        model = pysd.read_vensim(test_model)
+        stocks1 = model.run(return_timestamps=range(0, 31))
+        stocks2 = model.run(initial_condition='current',
+                            return_timestamps=range(30, 45))
+        self.assertEqual(stocks1['Teacup Temperature'].iloc[-1],
+                         stocks2['Teacup Temperature'].iloc[0])
 
-        with self.assertRaises(TypeError):
-            self.run(initial_condition='bad value')
+    def test_initial_condition_bad_value(self):
+        import pysd
+        model = pysd.read_vensim(test_model)
+        with self.assertRaises(ValueError):
+            model.run(initial_condition='bad value')
 
     def test_set_constant_parameter(self):
         """ In response to: re: https://github.com/JamesPHoughton/pysd/issues/5"""
@@ -186,20 +200,23 @@ class TestPySD(unittest.TestCase):
         model.components.initial_time = lambda: 3
         model.components.final_time = lambda: 10
         model.components.time_step = lambda: 1
+        model.reset_state()
 
-        actual = list(model._build_euler_timeseries())
+        actual = list(model._build_euler_timeseries(return_timestamps=[10]))
         expected = range(3, 11, 1)
         self.assertSequenceEqual(actual, expected)
 
     def test_build_euler_timeseries_with_timestamps(self):
+        # don't bother to have timeseries go beyond return val.
         import pysd
         model = pysd.read_vensim(test_model)
         model.components.initial_time = lambda: 3
         model.components.final_time = lambda: 7
         model.components.time_step = lambda: 1
+        model.reset_state()
 
         actual = list(model._build_euler_timeseries([3.14, 5.7]))
-        expected = [3, 3.14, 4, 5, 5.7, 6, 7]
+        expected = [3, 3.14, 4, 5, 5.7]
         self.assertSequenceEqual(actual, expected)
 
     def test__timeseries_component(self):
