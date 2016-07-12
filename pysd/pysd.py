@@ -278,8 +278,16 @@ class PySD(object):
             state dictionary will work if you're confident that the remaining
             state elements are correct.
         """
+        # Todo: Do we really need to have the state dictionary use python safe names? Probably not.
         self.components._t = t
-        self.components._state.update(state)
+
+        keys = [self.components._namespace[key]
+                if key in self.components._namespace.keys()
+                else key
+                for key in state.iterkeys()]
+
+        #state = {namespace[key]: value if key in self.components._namespace.keys() else key, value in state.iteritems() if key in }
+        self.components._state.update(dict(zip(keys, state.itervalues())))
 
     def set_initial_condition(self, initial_condition):
         """ Set the initial conditions of the integration.
@@ -354,6 +362,7 @@ class PySD(object):
         Format the passed in return timestamps value if it exists,
         or build up array of timestamps based upon the model saveper
         """
+        # Todo: format a Pandas index as an appropriate input source
         if return_timestamps is None:
             # Vensim's standard is to expect that the data set includes the `final time`,
             # so we have to add an extra period to make sure we get that value in what
@@ -370,6 +379,7 @@ class PySD(object):
     def _timeseries_component(self, series):
         """ Internal function for creating a timeseries model element """
         # Todo: check here for valid value...
+        # Todo: raise a warning if extrapolating from the end of the series.
         return lambda: np.interp(self.components._t, series.index, series.values)
 
     def _constant_component(self, value):

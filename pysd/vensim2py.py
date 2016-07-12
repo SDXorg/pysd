@@ -75,8 +75,7 @@ def get_file_sections(file_str):
                                  'returns': [],
                                  'string': n.text.strip()})
 
-        def visit_macro(self, n, (m1, _1, name, _2, lp, _3, params, _4, cn, _5, returns,
-        _6, rp, text, m2)):
+        def visit_macro(self, n, (m1, _1, name, _2, lp, _3, params, _4, cn, _5, returns, _6, rp, text, m2)):
             self.entries.append({'name': name,
                                  'params': [x.strip() for x in params.split(',')] if params else [],
                                  'returns': [x.strip() for x in

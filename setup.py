@@ -16,7 +16,7 @@ setup(
     license='LICENSE.txt',
     description='System Dynamics Modeling in Python',
     long_description=long_description,
-    keywords=['System Dynamics', 'XMILE', 'Vensim'],
+    keywords=['System Dynamics', 'Vensim'],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'License :: OSI Approved :: MIT License',

@@ -1,8 +1,10 @@
 import unittest
 import pandas as pd
 import numpy as np
+from pysd import utils
 
 test_model = 'test-models/samples/teacup/teacup.mdl'
+
 
 
 class TestPySD(unittest.TestCase):
@@ -43,7 +45,8 @@ class TestPySD(unittest.TestCase):
         self.assertSequenceEqual(return_timestamps, list(stocks.index))
 
     def test_run_return_columns_fullnames(self):
-        """Addresses https://github.com/JamesPHoughton/pysd/issues/26"""
+        """Addresses https://github.com/JamesPHoughton/pysd/issues/26
+        - Also checks that columns are returned in the correct order"""
         import pysd
         model = pysd.read_vensim(test_model)
         return_columns = ['Room Temperature', 'Teacup Temperature']
@@ -158,6 +161,27 @@ class TestPySD(unittest.TestCase):
 
         self.assertNotEqual(initial_time, new_time)
         self.assertEqual(new_time, set_time)
+
+    def test_set_state_with_real_name(self):
+        import pysd
+        model = pysd.read_vensim(test_model)
+
+        initial_state = model.components._state.copy()
+
+        new_state_realnames = {utils.dict_find(model.components._namespace, key): np.random.rand()
+                     for key in initial_state.iterkeys()}
+
+        new_state_pynames = {model.components._namespace[key]: value
+                             for key, value in new_state_realnames.iteritems()}
+        new_time = np.random.rand()
+
+        model.set_state(new_time, new_state_realnames)
+
+        set_state = model.components._state.copy()
+
+        self.assertNotEqual(initial_state, new_state_pynames)
+        self.assertEqual(set_state, new_state_pynames)
+
 
     def test_replace_element(self):
         import pysd
