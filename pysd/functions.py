@@ -173,6 +173,23 @@ def lookup(x, xs, ys):
 def if_then_else(condition, val_if_true, val_if_false):
     return np.where(condition, val_if_true, val_if_false)
 
+def xidz(numerator,denominator,value_if_denom_is_zero):
+    """ Implements Vensim's XIDZ function, which takes as arguments numerator, denominator of a fraction and a value to return if the denominator is close to zero, returning the fraction otherwise. This function bypasses divide-by-zero errors
+    """
+    small = 1e-6 ## What is considered zero according to Vensim Help
+    if abs(denominator) < small:
+        return value_if_denom_is_zero
+    else:
+        return numerator*1.0/denominator
+
+def zidz(numerator,denominator):
+    """ Implements Vensim's ZIDZ function, which takes as arguments numerator and denominator of a fraction to be returned if the denominator is not close to zero, and zero otherwise. This function bypasses divide-by-zero errors
+    """
+    small = 1e-6 ## What is considered zero according to Vensim Help
+    if abs(denominator) < small:
+        return 0
+    else:
+        return numerator*1.0/denominator
 
 def active_initial(expr, initval):
     """
