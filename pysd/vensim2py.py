@@ -369,7 +369,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
         "if then else": "functions.if_then_else", "step": "functions.step", "modulo": "np.mod",
         "pulse": "functions.pulse", "pulse train": "functions.pulse_train",
         "ramp": "functions.ramp", "min": "np.minimum", "max": "np.maximum",
-        "active initial": "functions.active_initial",
+        "active initial": "functions.active_initial", "xidz": "functions.xidz",
+        "zidz": "functions.zidz",
         # vector functions
         "vmin": "np.min", "vmax": "np.max", "prod": "np.prod"
     }
