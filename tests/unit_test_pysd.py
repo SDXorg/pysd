@@ -104,7 +104,8 @@ class TestPySD(unittest.TestCase):
         """ Test that the model prints some documentation """
         import pysd
         model = pysd.read_vensim(test_model)
-        self.assertIsInstance(model.__str__, str)  # tests model.__str__
+        self.assertIsInstance(str(model), str)  # tests string conversion of string
+        self.assertEqual(str(model),test_model) # tests that the output of print model is indeed the filename
         self.assertIsInstance(model.doc(), str)  # tests the function we wrote
         self.assertIsInstance(model.doc(short=True), str)
 

@@ -128,7 +128,7 @@ class PySD(object):
 
     def __str__(self):
         """ Return model source file """
-        fn = str(self.components.__file__)
+        fn = str(self.components.__file__).split('.')[0] + '.mdl' ## rename the python file to have the original mdl extension. This needs to be changed should the python file name generation (from the Vensim model filename) change
         return fn
 
     def run(self, params=None, return_columns=None, return_timestamps=None,
@@ -421,7 +421,7 @@ class PySD(object):
 
         return outputs
 
-    def doc(self):
+    def doc(self,short=False):
         docstringList=list()
 
         grammar = """\
@@ -444,4 +444,4 @@ class PySD(object):
 
         dstable = tabulate.tabulate(dsdf[dsheaders],headers=dsheaders,tablefmt='orgtbl')
 
-        return dstable
+        return str(dstable)
