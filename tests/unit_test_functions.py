@@ -81,6 +81,19 @@ class TestInputFunctions(unittest.TestCase):
         functions.time = lambda: 15
         self.assertEqual(functions.pulse_train(1, 3, 5, 13), 0)
 
+    def test_xidz(self):
+        from pysd import functions
+        ## functions.time = lambda: 5 ## any time will and should do
+        self.assertEqual(functions.xidz(1,-0.00000001,5),5)
+        self.assertEqual(functions.xidz(1, 0, 5), 5)
+        self.assertEqual(functions.xidz(1, 8, 5), 0.125)
+
+    def test_zidz(self):
+        from pysd import functions
+        ## functions.time = lambda: 5 ## any time will and should do
+        self.assertEqual(functions.zidz(1,-0.00000001),0)
+        self.assertEqual(functions.zidz(1, 0), 0)
+        self.assertEqual(functions.zidz(1, 8), 0.125)
 
 class TestStatsFunctions(unittest.TestCase):
     def test_bounded_normal(self):
