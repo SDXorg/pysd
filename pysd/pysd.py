@@ -32,26 +32,7 @@ from documentation import SDVarDoc
 # Todo: add a logical way to run two or more models together, using the same integrator.
 # Todo: add the state dictionary to the model file, to give some functionality to it even
 # without the pysd class
-# Todo: seems to be some issue with multiple imports - need to create a new instance...
 # Todo: work out an RK4 adaptive integrator
-
-def read_xmile(xmile_file):
-    """ Construct a model object from `.xmile` file.
-
-    Parameters
-    ----------
-    xmile_file : <string>
-        The relative path filename for a raw xmile file
-
-    Examples
-    --------
-    >>> model = read_vensim('Teacup.xmile')
-    """
-    #from translators import translate_xmile
-    #py_model_file = translate_xmile(xmile_file)
-    #model = load(py_model_file)
-    #model.__str__ = 'Import of ' + xmile_file
-    #return model
 
 
 def read_vensim(mdl_file):
@@ -188,9 +169,9 @@ class PySD(object):
 
         self.set_initial_condition(initial_condition)
 
-        t_series = self._build_euler_timeseries(return_timestamps)
-
         return_timestamps = self._format_return_timestamps(return_timestamps)
+
+        t_series = self._build_euler_timeseries(return_timestamps)
 
         if return_columns is None:
             return_columns = [utils.dict_find(self.components._namespace, x)
@@ -267,18 +248,30 @@ class PySD(object):
 
         Examples
         --------
+
+        >>> model.set_components({'birth_rate': 10})
+        >>> model.set_components({'Birth Rate': 10})
+
         >>> br = pandas.Series(index=range(30), values=np.sin(range(30))
-        >>> model.set_components(birth_rate=br)
-        >>> model.set_components(birth_rate=10)
+        >>> model.set_components({'birth_rate': br})
+
 
         """
         for key, value in params.iteritems():
             if isinstance(value, _pd.Series):
                 new_function = self._timeseries_component(value)
-            else:  # Todo: check here for valid value...
+            else:
                 new_function = self._constant_component(value)
-            setattr(self.components, key, new_function)
-            self.components._funcs[key] = new_function  # facilitates lookups
+
+            if key in self.components._namespace.keys():
+                func_name = self.components._namespace[key]
+            elif key in self.components._namespace.values():
+                func_name = key
+            else:
+                raise NameError('%s is not recognized as a model component' % key)
+
+            setattr(self.components, func_name, new_function)
+            self.components._funcs[func_name] = new_function  # facilitates lookups
 
     def set_state(self, t, state):
         """ Set the system state.
@@ -293,8 +286,16 @@ class PySD(object):
             state dictionary will work if you're confident that the remaining
             state elements are correct.
         """
+        # Todo: Do we really need to have the state dictionary use python safe names? Probably not.
         self.components._t = t
-        self.components._state.update(state)
+
+        keys = [self.components._namespace[key]
+                if key in self.components._namespace.keys()
+                else key
+                for key in state.iterkeys()]
+
+        #state = {namespace[key]: value if key in self.components._namespace.keys() else key, value in state.iteritems() if key in }
+        self.components._state.update(dict(zip(keys, state.itervalues())))
 
     def set_initial_condition(self, initial_condition):
         """ Set the initial conditions of the integration.
@@ -335,17 +336,41 @@ class PySD(object):
             raise TypeError('Check documentation for valid entries')
 
     def _build_euler_timeseries(self, return_timestamps=None):
-        # Todo: Add the returned timeseries into the integration array. Best we can do for now.
+        """
+        - The integration steps need to include the return values.
+        - There is no point running the model past the last return value.
+        - The last timestep will be the last in that requested for return
+        - Spacing should be at maximum what is specified by the integration time step.
+        - The initial time should be the one specified by the model file, OR
+          it should be the initial condition.
+        - This function needs to be called AFTER the model is set in its initial state
+        Parameters
+        ----------
+        return_timestamps: numpy array
+          Must be specified by user or built from model file before this function is called.
 
-        return np.arange(self.components.initial_time(),
-                         self.components.final_time() + self.components.time_step(),
-                         self.components.time_step(), dtype=np.float64)
+        Returns
+        -------
+        ts: numpy array
+            The times that the integrator will use to compute time history
+        """
+        t_0 = self.components._t
+        t_f = return_timestamps[-1]
+        dt = self.components.time_step()
+        ts = np.arange(t_0, t_f, dt, dtype=np.float64)
+
+        # Add the returned time series into the integration array. Best we can do for now.
+        # This does change the integration ever so slightly, but for well-specified
+        # models there shouldn't be sensitivity to a finer integration time step.
+        ts = np.sort(np.unique(np.append(ts, return_timestamps)))
+        return ts
 
     def _format_return_timestamps(self, return_timestamps=None):
         """
         Format the passed in return timestamps value if it exists,
         or build up array of timestamps based upon the model saveper
         """
+        # Todo: format a Pandas index as an appropriate input source
         if return_timestamps is None:
             # Vensim's standard is to expect that the data set includes the `final time`,
             # so we have to add an extra period to make sure we get that value in what
@@ -361,10 +386,13 @@ class PySD(object):
 
     def _timeseries_component(self, series):
         """ Internal function for creating a timeseries model element """
+        # Todo: check here for valid value...
+        # Todo: raise a warning if extrapolating from the end of the series.
         return lambda: np.interp(self.components._t, series.index, series.values)
 
     def _constant_component(self, value):
         """ Internal function for creating a constant model element """
+        # Todo: check here for valid value...
         return lambda: value
 
     def _euler_step(self, ddt, state, dt):
@@ -408,7 +436,7 @@ class PySD(object):
         # Todo: consider adding the timestamp to the return elements, and using that as the index
         outputs = []
 
-        for i, t2 in enumerate(timesteps[1:]):
+        for t2 in timesteps[1:]:
             if self.components._t in return_timestamps:
                 outputs.append({key: self.components._funcs[key]() for key in capture_elements})
             self.components._state = self._euler_step(derivative_functions,

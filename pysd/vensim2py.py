@@ -12,6 +12,8 @@ import re
 import parsimonious
 import builder
 import utils
+import textwrap
+import numpy as np
 
 
 def get_file_sections(file_str):
@@ -73,8 +75,7 @@ def get_file_sections(file_str):
                                  'returns': [],
                                  'string': n.text.strip()})
 
-        def visit_macro(self, n, (m1, _1, name, _2, lp, _3, params, _4, cn, _5, returns,
-        _6, rp, text, m2)):
+        def visit_macro(self, n, (m1, _1, name, _2, lp, _3, params, _4, cn, _5, returns, _6, rp, text, m2)):
             self.entries.append({'name': name,
                                  'params': [x.strip() for x in params.split(',')] if params else [],
                                  'returns': [x.strip() for x in
@@ -146,7 +147,7 @@ def get_model_elements(model_str):
 
     model_structure_grammar = r"""
     model = (entry / section)+ sketch?
-    entry = element "~" element "~" element "|"
+    entry = element "~" element "~" element ("~" element)? "|"
     section = element "~" element "|"
     sketch = ~r".*"  #anything
 
@@ -164,17 +165,17 @@ def get_model_elements(model_str):
             self.entries = []
             self.visit(ast)
 
-        def visit_entry(self, n, (eqn, _1, unit, _2, doc, _3)):
-            self.entries.append({'eqn': eqn.strip(),
-                                 'unit': unit.strip(),
-                                 'doc': doc.strip(),
+        def visit_entry(self, n, vc):
+            self.entries.append({'eqn': vc[0].strip(),
+                                 'unit': vc[2].strip(),
+                                 'doc': vc[4].strip(),
                                  'kind': 'entry'})
 
-        def visit_section(self, n, (sect_marker, _1, text, _3)):
-            if text.strip() != "Simulation Control Parameters":
+        def visit_section(self, n, vc):
+            if vc[2].strip() != "Simulation Control Parameters":
                 self.entries.append({'eqn': '',
                                      'unit': '',
-                                     'doc': text.strip(),
+                                     'doc': vc[2].strip(),
                                      'kind': 'section'})
 
         def generic_visit(self, n, vc):
@@ -242,7 +243,7 @@ def get_equation_components(equation_str):
 
     # replace any amount of whitespace  with a single space
     equation_str = equation_str.replace('\\t', ' ')
-    equation_str = equation_str.replace('\\', ' ')
+    #equation_str = equation_str.replace('\\', ' ')
     equation_str = re.sub(r"\s+", ' ', equation_str)
 
 
@@ -277,6 +278,9 @@ def get_equation_components(equation_str):
 
         def generic_visit(self, n, vc):
             return ''.join(filter(None, vc)) or n.text
+
+        def visit__(self, n, vc):
+            return ' '
 
     parse_object = ComponentParser(tree)
 
@@ -371,6 +375,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
         "ramp": "functions.ramp", "min": "np.minimum", "max": "np.maximum",
         "active initial": "functions.active_initial", "xidz": "functions.xidz",
         "zidz": "functions.zidz",
+
         # vector functions
         "vmin": "np.min", "vmax": "np.max", "prod": "np.prod"
     }
@@ -381,25 +386,49 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
                                    'py_name': 'time',
                                    'real_name': 'Time',
                                    'unit': None,
-                                   'py_expr': '_t'}])
+                                   'py_expr': '_t',
+                                   'arguments': ''}])
                 }
 
     builders = {
         "integ": lambda expr, init: builder.add_stock(element['py_name'], element['subs'],
-                                                      expr, init),
-        "delay1": lambda in_var, dtime: builder.add_n_delay(in_var, dtime, '0', '1'),
-        "delay1i": lambda in_var, dtime, init: builder.add_n_delay(in_var, dtime, init, '1'),
-        # continue this pattern with the other delay functions and smooth functions
+                                                      expr, init, subscript_dict),
+        "delay1": lambda in_var, dtime: builder.add_n_delay(in_var, dtime, '0', '1',
+                                                            element['subs'], subscript_dict),
+        "delay1i": lambda in_var, dtime, init: builder.add_n_delay(in_var, dtime, init, '1',
+                                                                   element['subs'], subscript_dict),
+        "delay3": lambda in_var, dtime: builder.add_n_delay(in_var, dtime, '0', '3',
+                                                            element['subs'], subscript_dict),
+        "delay3i": lambda in_var, dtime, init: builder.add_n_delay(in_var, dtime, init, '3',
+                                                                   element['subs'], subscript_dict),
+        "delay n": lambda in_var, dtime, init, order: builder.add_n_delay(in_var, dtime,
+                                                                          init, order,
+                                                                          element['subs'],
+                                                                          subscript_dict),
+        "smooth": lambda in_var, dtime: builder.add_n_smooth(in_var, dtime, '0', '1',
+                                                             element['subs'], subscript_dict),
+        "smoothi": lambda in_var, dtime, init: builder.add_n_smooth(in_var, dtime, init, '1',
+                                                                    element['subs'],
+                                                                    subscript_dict),
+        "smooth3": lambda in_var, dtime: builder.add_n_smooth(in_var, dtime, '0', '3',
+                                                              element['subs'], subscript_dict),
+        "smooth3i": lambda in_var, dtime, init: builder.add_n_smooth(in_var, dtime, init, '3',
+                                                                     element['subs'],
+                                                                     subscript_dict),
+        "smooth n": lambda in_var, dtime, init, order: builder.add_n_smooth(in_var, dtime,
+                                                                            init, order,
+                                                                            element['subs'],
+                                                                            subscript_dict),
     }
 
     in_ops = {
         "+": "+", "-": "-", "*": "*", "/": "/", "^": "**", "=": "==", "<=": "<=", "<>": "!=",
-        "<": "<", ">=": ">=", ">": ">", ":and:": "and",
-        ":or:": "or"}  # Todo: make the semicolon into a [1,2],[3,4] type of array
+        "<": "<", ">=": ">=", ">": ">",
+        ":and:": " and ", ":or:": " or "}  # spaces important for word-based operators
 
     pre_ops = {
-        "-": "-", ":not:": "not", "+": " ",
-        # space is important, so that and empty string doesn't slip through generic
+        "-": "-", ":not:": " not ",  # spaces important for word-based operators
+        "+": " "  # space is important, so that and empty string doesn't slip through generic
     }
 
     # in the following, if lists are empty use non-printable character
@@ -412,16 +441,17 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
 
     expression_grammar = r"""
     expr_type = array / expr
-    expr = _ pre_oper? _ (build_call / call / parens / number / reference / builtin) _ (in_oper _ expr)?
+    expr = _ pre_oper? _ (lookup_def / build_call / call / parens / number / reference / builtin) _ (in_oper _ expr)?
 
-    call = (func / reference) _ "(" _ (expr _ ","? _)* ")" # allows calls with no arguments
+    lookup_def = ~r"(WITH\ LOOKUP)"I _ "(" _ reference _ "," _ "(" _ ( "(" _ number _ "," _ number _ ")" ","? _ )+ _ ")" _ ")"
+    call = (func / id) _ "(" _ (expr _ ","? _)* ")" # allows calls with no arguments
     build_call = builder _ "(" _ (expr _ ","? _)* ")" # allows calls with no arguments
     parens   = "(" _ expr _ ")"
 
     reference = id _ subscript_list?
     subscript_list = "[" _ ((sub_name / sub_element) _ ","? _)+ "]"
 
-    array = (number _ ("," / ";")? _)+
+    array = (number _ ("," / ";")? _)+ !~r"."  # negative lookahead for anything other than an array
     number = ~r"\d+\.?\d*(e[+-]\d+)?"
 
     id = ~r"(%(ids)s)"I
@@ -438,9 +468,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
     """ % {
         # In the following, we have to sort keywords in decreasing order of length so that the
         # peg parser doesn't quit early when finding a partial keyword
-        #'sub_names': ' / '.join(['"%s"' % n for n in reversed(sorted(sub_names_list, key=len))]),
         'sub_names': '|'.join(reversed(sorted(sub_names_list, key=len))),
-        #'sub_elems': ' / '.join(['"%s"' % n for n in reversed(sorted(sub_elems_list, key=len))]),
         'sub_elems': '|'.join(reversed(sorted(sub_elems_list, key=len))),
         'ids': '|'.join(reversed(sorted(ids_list, key=len))),
         'funcs': '|'.join(reversed(sorted(functions.keys(), key=len))),
@@ -482,9 +510,13 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
         def visit_pre_oper(self, n, vc):
             return pre_ops[n.text.lower()]
 
-        def visit_id(self, n, vc):
+        def visit_reference(self, n, vc):
             self.kind = 'component'
-            return namespace[n.text] + '()'
+            id_str = vc[0]
+            return id_str + '()'
+
+        def visit_id(self, n, vc):
+            return namespace[n.text]
 
         def visit_builtin(self, n, vc):
             # these are model elements that are not functions, but exist implicitly within the
@@ -494,12 +526,42 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
             self.new_structure += structure
             return name + '()'
 
+        def visit_lookup_def(self, n, vc):
+            """ This exists because vensim has multiple ways of doing lookups.
+            Which is frustrating."""
+            x = vc[4]
+            pairs = vc[10]
+            mixed_list = pairs.replace('(', '').replace(')', '').split(',')
+            xs = mixed_list[::2]
+            ys = mixed_list[1::2]
+            string = "functions.lookup(%(x)s, [%(xs)s], [%(ys)s])" % {
+                'x': x,
+                'xs': ','.join(xs),
+                'ys': ','.join(ys)
+            }
+            return string
+
         def visit_array(self, n, vc):
-            text = n.text.strip(';').replace(' ', '')  # remove trailing semi if exists
-            if ';' in text:
-                return '[' + text.replace(';', '],[') + ']'
+            if 'subs' in element and element['subs']:  # first test handles when subs is not defined
+                coords = utils.make_coord_dict(element['subs'], subscript_dict, terse=False)
+                dims = [utils.find_subscript_name(subscript_dict, sub) for sub in element['subs']]
+                shape = [len(coords[dim]) for dim in dims]
+                if ';' in n.text or ',' in n.text:
+                    text = n.text.strip(';').replace(' ', '').replace(';', ',')
+                    data = np.array([float(s) for s in text.split(',')]).reshape(shape)
+                else:
+                    data = np.tile(float(n.text), shape)
+                datastr = np.array2string(data, separator=',').replace('\n', '').replace(' ', '')
+                return textwrap.dedent("""\
+                    xr.DataArray(data=%(datastr)s,
+                                 coords=%(coords)s,
+                                 dims=%(dims)s )""" % {
+                    'datastr': datastr,
+                    'coords': repr(coords),
+                    'dims': repr(dims)})
+
             else:
-                return text
+                return n.text.replace(' ', '')
 
         def visit_subscript_list(self, n, (lb, _1, refs, rb)):
             subs = [x.strip() for x in refs.split(',')]
@@ -509,12 +571,17 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
             else:
                 return ' '
 
-        def visit_build_call(self, n, (call, _1, lp, _2, args, rp)):
+        def visit_build_call(self, n, vc):
+            call = vc[0]
+            args = vc[4]
             self.kind = 'component'
             arglist = [x.strip() for x in args.split(',')]
             name, structure = builders[call.strip().lower()](*arglist)
             self.new_structure += structure
             return name
+
+        def visit__(self, n, vc):
+            return ''
 
         def generic_visit(self, n, vc):
             return ''.join(filter(None, vc)) or n.text
@@ -522,12 +589,47 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
     parse_object = ExpressionParser(tree)
 
     return ({'py_expr': parse_object.translation,
-             'kind': parse_object.kind},
+             'kind': parse_object.kind,
+             'arguments': ''},
             parse_object.new_structure)
 
 
-def parse_lookup_expression():
-    pass
+def parse_lookup_expression(element):
+
+    lookup_grammar = r"""
+    lookup = _ "(" _ "[" ~r"[^\]]*" "]" _ "," _ ( "(" _ number _ "," _ number _ ")" ","? _ )+ ")"
+    number = ("+"/"-")? ~r"\d+\.?\d*(e[+-]\d+)?"
+    _ = ~r"[\s\\]*"  # whitespace character
+    """
+    parser = parsimonious.Grammar(lookup_grammar)
+    tree = parser.parse(element['expr'])
+
+    class LookupParser(parsimonious.NodeVisitor):
+        def __init__(self, ast):
+            self.translation = ""
+            self.new_structure = []
+            self.visit(ast)
+
+        def visit__(self, n, vc):
+            "remove whitespace"
+            return ''
+        def visit_lookup(self, n, vc):
+            pairs = vc[9]
+            mixed_list = pairs.replace('(', '').replace(')', '').split(',')
+            xs = mixed_list[::2]
+            ys = mixed_list[1::2]
+            string = "functions.lookup(x, [%(xs)s], [%(ys)s])" % {
+                'xs': ','.join(xs),
+                'ys': ','.join(ys)
+            }
+            self.translation = string
+
+        def generic_visit(self, n, vc):
+            return ''.join(filter(None, vc)) or n.text
+
+    parse_object = LookupParser(tree)
+    return {'py_expr': parse_object.translation,
+            'arguments': 'x'}
 
 
 def translate_vensim(mdl_file):
@@ -543,7 +645,7 @@ def translate_vensim(mdl_file):
 
     Examples
     --------
-    #>>> translate_vensim('../../tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl')
+    >>> translate_vensim('../tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl')
 
     #>>> translate_vensim('../../tests/test-models/tests/abs/test_abs.mdl')
 
@@ -554,7 +656,6 @@ def translate_vensim(mdl_file):
     """
     # Todo: work out what to do with subranges
     # Todo: parse units string
-    # Todo: deal with lookup elements
     # Todo: handle macros
 
     with open(mdl_file, 'rU') as in_file:
@@ -597,11 +698,15 @@ def translate_vensim(mdl_file):
             element.update(translation)
             model_elements += new_structure
 
+        elif element['kind'] == 'lookup':
+            element.update(parse_lookup_expression(element))
+
     # define outfile name
     outfile_name = mdl_file.replace('.mdl', '.py')
 
     # send the pieces to be built
-    builder.build([e for e in model_elements if e['kind'] not in ['subdef', 'section']],
+    build_elements = [e for e in model_elements if e['kind'] not in ['subdef', 'section']]
+    builder.build(build_elements,
                   subscript_dict,
                   namespace,
                   outfile_name)

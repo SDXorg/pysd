@@ -1,8 +1,10 @@
 import unittest
 import pandas as pd
 import numpy as np
+from pysd import utils
 
 test_model = 'test-models/samples/teacup/teacup.mdl'
+
 
 
 class TestPySD(unittest.TestCase):
@@ -15,7 +17,12 @@ class TestPySD(unittest.TestCase):
         self.assertGreater(len(stocks), 3)  # has multiple rows
         self.assertTrue(stocks.notnull().all().all())  # there are no null values in the set
 
-    @unittest.skip('James Working')
+    def test_run_includes_last_value(self):
+        import pysd
+        model = pysd.read_vensim(test_model)
+        res = model.run()
+        self.assertEqual(res.index[-1], model.components.final_time())
+
     def test_run_return_timestamps(self):
         """Addresses https://github.com/JamesPHoughton/pysd/issues/17"""
         import pysd
@@ -27,7 +34,6 @@ class TestPySD(unittest.TestCase):
         stocks = model.run(return_timestamps=5)
         self.assertEqual(stocks.index[0], 5)
 
-    @unittest.skip('James Working')
     def test_run_return_timestamps_past_final_time(self):
         """ If the user enters a timestamp that is longer than the euler
         timeseries that is defined by the normal model file, should
@@ -35,11 +41,12 @@ class TestPySD(unittest.TestCase):
         import pysd
         model = pysd.read_vensim(test_model)
         return_timestamps = range(0, 100, 10)
-        stocks = model.run(return_timestamps=return_timestamps),
+        stocks = model.run(return_timestamps=return_timestamps)
         self.assertSequenceEqual(return_timestamps, list(stocks.index))
 
     def test_run_return_columns_fullnames(self):
-        """Addresses https://github.com/JamesPHoughton/pysd/issues/26"""
+        """Addresses https://github.com/JamesPHoughton/pysd/issues/26
+        - Also checks that columns are returned in the correct order"""
         import pysd
         model = pysd.read_vensim(test_model)
         return_columns = ['Room Temperature', 'Teacup Temperature']
@@ -54,21 +61,28 @@ class TestPySD(unittest.TestCase):
         result = model.run(return_columns=return_columns)
         self.assertEqual(set(result.columns), set(return_columns))
 
-    @unittest.skip('James Working')
-    def test_initial_conditions(self):
+    def test_initial_conditions_tuple(self):
         import pysd
         model = pysd.read_vensim(test_model)
-        stocks = model.run(initial_condition=(0, {'teacup_temperature': 33}))
-        actual = stocks['Teacup Temperature'].loc[0]
-        expected = 33
-        self.assertEqual(actual, expected)
+        stocks = model.run(initial_condition=(3000, {'teacup_temperature': 33}),
+                           return_timestamps=range(3000, 3010))
+        self.assertEqual(stocks.index[0], 3000)
+        self.assertEqual(stocks['Teacup Temperature'].iloc[0], 33)
 
-        stocks = model.run(initial_condition='current',
-                           return_timestamps=range(31, 45))
-        self.assertGreater(stocks['Teacup Temperature'].loc[44], 0)
+    def test_initial_conditions_current(self):
+        import pysd
+        model = pysd.read_vensim(test_model)
+        stocks1 = model.run(return_timestamps=range(0, 31))
+        stocks2 = model.run(initial_condition='current',
+                            return_timestamps=range(30, 45))
+        self.assertEqual(stocks1['Teacup Temperature'].iloc[-1],
+                         stocks2['Teacup Temperature'].iloc[0])
 
-        with self.assertRaises(TypeError):
-            self.run(initial_condition='bad value')
+    def test_initial_condition_bad_value(self):
+        import pysd
+        model = pysd.read_vensim(test_model)
+        with self.assertRaises(ValueError):
+            model.run(initial_condition='bad value')
 
     def test_set_constant_parameter(self):
         """ In response to: re: https://github.com/JamesPHoughton/pysd/issues/5"""
@@ -91,7 +105,7 @@ class TestPySD(unittest.TestCase):
                         return_timestamps=timeseries)
         self.assertTrue((res['room_temperature'] == temp_timeseries).all())
 
-    def set_component_with_real_name(self):
+    def test_set_component_with_real_name(self):
         import pysd
         model = pysd.read_vensim(test_model)
         model.set_components({'Room Temperature': 20})
@@ -100,6 +114,7 @@ class TestPySD(unittest.TestCase):
         model.run(params={'Room Temperature': 70})
         self.assertEqual(model.components.room_temperature(), 70)
 
+    @unittest.skip('@SimonStrong working')
     def test_docs(self):
         """ Test that the model prints some documentation """
         import pysd
@@ -148,6 +163,27 @@ class TestPySD(unittest.TestCase):
         self.assertNotEqual(initial_time, new_time)
         self.assertEqual(new_time, set_time)
 
+    def test_set_state_with_real_name(self):
+        import pysd
+        model = pysd.read_vensim(test_model)
+
+        initial_state = model.components._state.copy()
+
+        new_state_realnames = {utils.dict_find(model.components._namespace, key): np.random.rand()
+                     for key in initial_state.iterkeys()}
+
+        new_state_pynames = {model.components._namespace[key]: value
+                             for key, value in new_state_realnames.iteritems()}
+        new_time = np.random.rand()
+
+        model.set_state(new_time, new_state_realnames)
+
+        set_state = model.components._state.copy()
+
+        self.assertNotEqual(initial_state, new_state_pynames)
+        self.assertEqual(set_state, new_state_pynames)
+
+
     def test_replace_element(self):
         import pysd
         model = pysd.read_vensim(test_model)
@@ -189,21 +225,23 @@ class TestPySD(unittest.TestCase):
         model.components.initial_time = lambda: 3
         model.components.final_time = lambda: 10
         model.components.time_step = lambda: 1
+        model.reset_state()
 
-        actual = list(model._build_euler_timeseries())
+        actual = list(model._build_euler_timeseries(return_timestamps=[10]))
         expected = range(3, 11, 1)
         self.assertSequenceEqual(actual, expected)
 
-    @unittest.skip('Not Yet Implemented')
     def test_build_euler_timeseries_with_timestamps(self):
+        # don't bother to have timeseries go beyond return val.
         import pysd
         model = pysd.read_vensim(test_model)
         model.components.initial_time = lambda: 3
         model.components.final_time = lambda: 7
         model.components.time_step = lambda: 1
+        model.reset_state()
 
         actual = list(model._build_euler_timeseries([3.14, 5.7]))
-        expected = [3, 3.14, 4, 5, 5.7, 6, 7]
+        expected = [3, 3.14, 4, 5, 5.7]
         self.assertSequenceEqual(actual, expected)
 
     def test__timeseries_component(self):
@@ -293,5 +331,22 @@ class TestModelInteraction(unittest.TestCase):
 
         model_1.components.initial_time = lambda: 10
         self.assertNotEqual(model_2.components.initial_time, 10)
+
+    def test_restart_cache(self):
+        """
+        Test that when we cache a model variable at the 'run' time,
+         if the variable is changed and the model re-run, the cache updates
+         to the new variable, instead of maintaining the old one.
+        """
+        import pysd
+        model = pysd.read_vensim(test_model)
+        model.run()
+        old = model.components.room_temperature()
+        model.set_components({'Room Temperature': 345})
+        new = model.components.room_temperature()
+        model.run()
+        self.assertEqual(new, 345)
+        self.assertNotEqual(old, new)
+
 
 

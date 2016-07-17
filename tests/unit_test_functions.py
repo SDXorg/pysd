@@ -137,3 +137,36 @@ class TestLogicFunctions(unittest.TestCase):
         """ What do we do if the expression yields a subscripted array of true and false values,
         and the output values are subscripted? """
         self.fail()
+
+class TestDataHandling(unittest.TestCase):
+    def test_initial(self):
+        from pysd import functions
+        a = 1
+        b = 2
+
+        def func1():
+            return a
+
+        def func2():
+            return b
+
+        f1_0 = func1()
+        f1_i0 = functions.initial(func1())
+        self.assertEqual(f1_0, f1_i0)
+
+        f2_0 = func2()
+        f2_i0 = functions.initial(func2())
+        self.assertEqual(f2_0, f2_i0)
+
+        a = 5
+        b = 6
+
+        f1_1 = func1()
+        f1_i1 = functions.initial(func1())
+        self.assertNotEqual(f1_1, f1_i1)
+        self.assertEqual(f1_i1, f1_0)
+
+        f2_1 = func2()
+        f2_i1 = functions.initial(func2())
+        self.assertNotEqual(f2_1, f2_i1)
+        self.assertEqual(f2_i1, f2_0)

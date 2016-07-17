@@ -89,6 +89,7 @@ def assert_frames_close(actual, expected, **kwargs):
             raise AssertionError(
                 e.message + 'Column: ' + str(col)
 
+
             )
 
 

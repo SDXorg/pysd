@@ -2,6 +2,7 @@ import re
 import keyword
 import numpy as np
 import pandas as pd
+import xarray as xr
 
 
 def dict_find(in_dict, value):
@@ -23,7 +24,8 @@ def dict_find(in_dict, value):
 
     Examples
     --------
-    >>> dict_find({'Key1': 'A', 'Key2': 'B'})
+    >>> dict_find({'Key1': 'A', 'Key2': 'B'}, 'B')
+    'Key2'
 
     """
     # Todo: make this robust to repeated values
@@ -31,16 +33,46 @@ def dict_find(in_dict, value):
     return in_dict.keys()[in_dict.values().index(value)]
 
 
+def xrmerge(das, accept_new=True):
+    """
+    Merges xarrays with different dimension sets
+    Parameters
+    ----------
+    das : list of data_arrays
+
+    accept_new
+
+    Returns
+    -------
+    da : an xarray that is the merge of das
+
+    References
+    ----------
+    Thanks to @jcmgray https://github.com/pydata/xarray/issues/742#issue-130753818
+
+    In the future, we may not need this as xarray may provide the merge for us.
+    """
+    da = das[0]
+    for new_da in das[1:]:
+        # Expand both to have same dimensions, padding with NaN
+        da, new_da = xr.align(da, new_da, join='outer')
+        # Fill NaNs one way or the other re. accept_new
+        da = new_da.fillna(da) if accept_new else da.fillna(new_da)
+    return da
+
+
 def find_subscript_name(subscript_dict, element):
     """
     Given a subscript dictionary, and a member of a subscript family,
-    return the first key of which the member is within the value list
+    return the first key of which the member is within the value list.
+    If element is already a subscript name, return that
 
     Parameters
     ----------
     subscript_dict: dictionary
         Follows the {'subscript name':['list','of','subscript','elements']} format
-    element: sting
+
+    element: string
 
     Returns
     -------
@@ -52,12 +84,15 @@ def find_subscript_name(subscript_dict, element):
     ...                      'D')
     'Dim2'
     """
+    if element in subscript_dict.keys():
+        return element
+
     for name, elements in subscript_dict.iteritems():
         if element in elements:
             return name
 
 
-def make_coord_dict(subs, subscript_dict):
+def make_coord_dict(subs, subscript_dict, terse=True):
     """
     This is for assisting with the lookup of a particular element, such that the output
     of this function would take the place of %s in this expression
@@ -76,7 +111,8 @@ def make_coord_dict(subs, subscript_dict):
     --------
     >>> make_coord_dict(['Dim1', 'D'], {'Dim1':['A','B','C'], 'Dim2':['D', 'E', 'F']})
     {'Dim2': ['D']}
-
+    >>> make_coord_dict(['Dim1', 'D'], {'Dim1':['A','B','C'], 'Dim2':['D', 'E', 'F']}, terse=False)
+    {'Dim2': ['D'], 'Dim1': ['A', 'B', 'C']}
     """
     sub_elems_list = [y for x in subscript_dict.values() for y in x]
     coordinates = {}
@@ -84,6 +120,8 @@ def make_coord_dict(subs, subscript_dict):
         if sub in sub_elems_list:
             name = find_subscript_name(subscript_dict, sub)
             coordinates[name] = [sub]
+        elif not terse:
+            coordinates[sub] = subscript_dict[sub]
     return coordinates
 
 
@@ -194,10 +232,10 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
     """
 
     if namespace is None:
-        namespace = {}
+        namespace = dict()
 
     if reserved_words is None:
-        reserved_words = []
+        reserved_words = list()
 
     if string in namespace:
         return namespace[string], namespace
@@ -339,6 +377,7 @@ def visit_addresses(frame, return_addresses):
 
     Returns
     -------
+    outdict: dictionary
 
     """
     outdict = dict()

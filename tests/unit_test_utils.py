@@ -2,7 +2,7 @@ from unittest import TestCase
 import xarray as xr
 import pandas as pd
 import test_utils
-
+import doctest
 
 class TestUtils(TestCase):
 
@@ -52,7 +52,6 @@ class TestUtils(TestCase):
               'inflow_b': ('inflow_b', {})}
              )
         )
-
 
     def test_make_flat_df(self):
         from pysd.utils import make_flat_df
@@ -124,3 +123,34 @@ class TestUtils(TestCase):
         self.assertEqual(actual['Elem1[Dim1, F]'].shape,
                          expected['Elem1[Dim1, F]'].shape)
         # Todo: test that the values are equal
+
+    def test_make_coord_dict(self):
+        from pysd.utils import make_coord_dict
+        self.assertEqual(make_coord_dict(['Dim1', 'D'],
+                                         {'Dim1': ['A', 'B', 'C'],
+                                          'Dim2': ['D', 'E', 'F']},
+                                         terse=True),
+                         {'Dim2': ['D']})
+        self.assertEqual(make_coord_dict(['Dim1', 'D'],
+                                         {'Dim1': ['A', 'B', 'C'],
+                                          'Dim2': ['D', 'E', 'F']},
+                                         terse=False),
+                         {'Dim1': ['A', 'B', 'C'], 'Dim2': ['D']})
+
+    def test_find_subscript_name(self):
+        from pysd.utils import find_subscript_name
+        self.assertEqual(find_subscript_name({'Dim1': ['A', 'B'],
+                                              'Dim2': ['C', 'D', 'E'],
+                                              'Dim3': ['F', 'G', 'H', 'I']},
+                                             'D'),
+                         'Dim2')
+
+        self.assertEqual(find_subscript_name({'Dim1': ['A', 'B'],
+                                              'Dim2': ['C', 'D', 'E'],
+                                              'Dim3': ['F', 'G', 'H', 'I']},
+                                             'Dim3'),
+                         'Dim3')
+
+    def test_doctests(self):
+        import pysd.utils
+        doctest.DocTestSuite(pysd.utils)
