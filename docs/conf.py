@@ -12,13 +12,11 @@
 # All configuration values have a default; values that are commented out
 # serve to show the default.
 
-import sys
 import os
-import shlex
-
+import sys
 
 import mock
- 
+
 MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot', 'scipy.stats',
                 'scipy.integrate', 'pandas', 'parsimonious', 'parsimonious.nodes',
                 'lxml']
@@ -39,7 +37,8 @@ sys.path.insert(0, os.path.abspath('../')) #this *should* be adding to the begin
 
 
 # Build the translated functions file
-from pysd.translators import vensim2py
+import vensim2py
+
 with open('development/supported_vensim_functions.rst', 'w') as fout:
     fout.write(vensim2py.doc_supported_vensim_functions())
 

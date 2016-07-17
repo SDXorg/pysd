@@ -1,0 +1,6 @@
+pandas
+numpy
+parsimonious
+autopep8
+xarray
+tabulate

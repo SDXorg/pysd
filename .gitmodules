@@ -1,3 +1,6 @@
 [submodule "pysd/translators/ANTLR_collection"]
 	path = pysd/translators/ANTLR_collection
 	url = https://github.com/SDXorg/ANTLR_collection.git
+[submodule "tests/test-models"]
+	path = tests/test-models
+	url = https://github.com/SDXorg/test-models
