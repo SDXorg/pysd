@@ -5,251 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a7e5b169-cc30-45fb-a7f9-e8e84f9c05bd" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/dist/pysd-0.5.0.macosx-10.5-x86_64.tar.gz" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/test-models" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.travis.yml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/module_doc.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/pysd/builder.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/pysd/documentation.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/pysd/functions.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/pysd/utils.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/pysd/vensim2py.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/requirements.txt" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/.coverage" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/integration_test_factory.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/integration_test_pysd.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/test_utils.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/unit_test_builder.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/unit_test_functions.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/unit_test_pysd.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/unit_test_utils.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/unit_test_vensim2py.py" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/MANIFEST" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/get_tests.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/min_model.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/pysd/builder/__init__.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/pysd/builder/templates.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/pysd/functions/__init__.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/pysd/functions/functions.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/pysd/translators/SMILE2Py.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/pysd/translators/XMILE2Py.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/pysd/translators/__init__.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/pysd/translators/antlr_vensim2py.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/test_functionality.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/test_model_library.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/test_pysd.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/tests.ipynb" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/vensim/Teacup.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/vensim/Teacup.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/vensim/test_delays.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/vensim/test_delays.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/vensim/test_initial.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/vensim/test_initial.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/vensim/test_long_variable_names.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/vensim/test_long_variable_names.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/vensim/test_lookups.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/vensim/test_lookups.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/vensim/test_multi_views.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/vensim/test_multi_views.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/vensim/test_number_handling.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/vensim/test_number_handling.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/vensim/test_smooth.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/vensim/test_smooth.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/vensim/test_special_variable_names.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/vensim/test_special_variable_names.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/vensim/test_time.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/vensim/test_time.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/vensim/test_variable_names_with_quotes.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/vensim/test_variable_names_with_quotes.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/vensim/test_vensim_functions.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/xmile/pdf.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/xmile/pugh_p211.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/xmile/teacup.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/xmile/teacup.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/old_tests/xmile/v2pugh_96.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/.gitignore" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/AUTHORS" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/LICENSE" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/compare.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/fix_lineendings.bash" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/regression-test.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/SIR/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/SIR/SIR-11b2.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/SIR/SIR.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/SIR/SIR.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/SIR/SIR.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/SIR/SIR.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/SIR/SIR_reciprocal-dt.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/SIR/SIR_reciprocal-dt.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/SIR/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/SIR/output_stella1006.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/SIR/stella_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/SIR/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/arrays/a2a/a2a-11b2.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/arrays/non-a2a/non-a2a-11b2.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/arrays/non-a2a/non-a2a-gf-11b2.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/bpowers-hares_and_lynxes_modules/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/bpowers-hares_and_lynxes_modules/model-11b2.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/bpowers-hares_and_lynxes_modules/model.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/bpowers-hares_and_lynxes_modules/model.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/bpowers-hares_and_lynxes_modules/model.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/bpowers-hares_and_lynxes_modules/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/bpowers-hares_and_lynxes_modules/stella_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/teacup/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/teacup/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/teacup/output_stella1006.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/teacup/stella_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/teacup/teacup-11b2.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/teacup/teacup.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/teacup/teacup.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/teacup/teacup.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/teacup/teacup.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/teacup/teacup_w_diagram.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/teacup/teacup_w_diagram.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/samples/teacup/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/abs/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/abs/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/abs/test_abs.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/abs/test_abs.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/abs/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/builtin_max/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/builtin_max/builtin_max.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/builtin_max/builtin_max.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/builtin_max/builtin_max.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/builtin_max/builtin_max.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/builtin_max/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/builtin_max/output_vensim63dss.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/builtin_min/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/builtin_min/builtin_min.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/builtin_min/builtin_min.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/builtin_min/builtin_min.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/builtin_min/builtin_min.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/builtin_min/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/builtin_min/output_vensim63dss.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/comparisons/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/comparisons/comparisons.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/comparisons/comparisons.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/comparisons/comparisons.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/comparisons/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/delays/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/delays/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/delays/test_delays.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/delays/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/eval_order/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/eval_order/eval_order.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/eval_order/eval_order.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/eval_order/eval_order.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/eval_order/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/exp/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/exp/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/exp/test_exp.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/exp/test_exp.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/exp/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/exponentiation/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/exponentiation/exponentiation.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/exponentiation/exponentiation.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/exponentiation/exponentiation.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/exponentiation/exponentiation.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/exponentiation/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/exponentiation/output_vensimdss63dp.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/exponentiation/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/if_stmt/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/if_stmt/if_stmt.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/if_stmt/if_stmt.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/if_stmt/if_stmt.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/if_stmt/if_stmt.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/if_stmt/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/if_stmt/output_vensim63dp.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/if_stmt/stella_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/if_stmt/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/initial_function/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/initial_function/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/initial_function/test_initial.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/initial_function/test_initial.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/initial_function/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/input_functions/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/input_functions/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/input_functions/test_inputs.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/input_functions/test_inputs.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/input_functions/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/ln/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/ln/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/ln/test_ln.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/ln/test_ln.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/ln/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/logicals/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/logicals/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/logicals/output_vensimdss63.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/logicals/stella_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/logicals/test_logicals.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/logicals/test_logicals.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/logicals/test_logicals.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/logicals/test_logicals.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/logicals/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/lookups/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/lookups/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/lookups/output_stella1006.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/lookups/stella_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/lookups/test_lookups.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/lookups/test_lookups.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/lookups/test_lookups.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/lookups/test_lookups_no-indirect.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/lookups/test_lookups_no-indirect.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/lookups/test_lookups_no-indirect.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/lookups/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/number_handling/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/number_handling/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/number_handling/output_stella1006.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/number_handling/stella_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/number_handling/test_number_handling.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/number_handling/test_number_handling.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/number_handling/test_number_handling.stmx" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/number_handling/test_number_handling.xmile" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/number_handling/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/rounding/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/rounding/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/rounding/test_rounding.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/rounding/test_rounding.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/rounding/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/smooth/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/smooth/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/smooth/test_smooth.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/smooth/test_smooth.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/smooth/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/special_characters/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/special_characters/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/special_characters/test_special_variable_names.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/special_characters/test_special_variable_names.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/special_characters/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/sqrt/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/sqrt/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/sqrt/test_sqrt.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/sqrt/test_sqrt.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/sqrt/vensim_screenshot.png" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/trig/README.md" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/trig/output.csv" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/trig/test_trig.mdl" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/trig/test_trig.py" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/tests/test-models-master/tests/trig/vensim_screenshot.png" afterPath="" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/profile_pysd.py" afterPath="$PROJECT_DIR$/tests/profile_pysd.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/run_profiler.sh" afterPath="$PROJECT_DIR$/tests/run_profiler.sh" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/speed_test.py" afterPath="$PROJECT_DIR$/tests/speed_test.py" />
-      <change type="MOVED" beforePath="$PROJECT_DIR$/tests/old_tests/vensim/test_vensim_functions.py" afterPath="$PROJECT_DIR$/tests/__init__.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gitignore" afterPath="$PROJECT_DIR$/.gitignore" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gitmodules" afterPath="$PROJECT_DIR$/.gitmodules" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/pysd.iml" afterPath="$PROJECT_DIR$/.idea/pysd.iml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models" afterPath="$PROJECT_DIR$/tests/test-models" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/vcs.xml" afterPath="$PROJECT_DIR$/.idea/vcs.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/README.md" afterPath="$PROJECT_DIR$/README.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/conf.py" afterPath="$PROJECT_DIR$/docs/conf.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/__init__.py" afterPath="$PROJECT_DIR$/pysd/__init__.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/_version.py" afterPath="$PROJECT_DIR$/pysd/_version.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/builder/builder.py" afterPath="$PROJECT_DIR$/pysd/builder/builder.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/pysd.py" afterPath="$PROJECT_DIR$/pysd/pysd.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/translators/vensim2py.py" afterPath="$PROJECT_DIR$/pysd/translators/vensim2py.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/sandbox.ipynb" afterPath="$PROJECT_DIR$/sandbox.ipynb" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/setup.py" afterPath="$PROJECT_DIR$/setup.py" />
     </list>
     <ignored path="pysd.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -371,7 +129,7 @@
           <file leaf-file-name="test_subscript_2d_arrays.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscript_2d_arrays/test_subscript_2d_arrays.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="18">
+                <state relative-caret-position="72">
                   <caret line="57" column="0" selection-start-line="57" selection-start-column="0" selection-end-line="61" selection-end-column="0" />
                   <folding />
                 </state>
@@ -454,11 +212,21 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="pysd.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="pysd.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/pysd/pysd.py">
               <provider selected="true" editor-type-id="text-editor">
                 <state relative-caret-position="648">
                   <caret line="449" column="0" selection-start-line="449" selection-start-column="0" selection-end-line="449" selection-end-column="0" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="builder.py" pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/pysd/builder/builder.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="0">
+                  <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
                   <folding />
                 </state>
               </provider>
@@ -553,6 +321,7 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
+    <option name="x" value="1920" />
     <option name="y" value="24" />
     <option name="width" value="1920" />
     <option name="height" value="1056" />
@@ -735,6 +504,28 @@
             <PATH_ELEMENT>
               <option name="myItemId" value="pysd" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="pysd" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="pysd" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="pysd" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="builder" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="builder.py" />
+              <option name="myItemType" value="com.jetbrains.python.projectView.PyFileNode" />
             </PATH_ELEMENT>
           </PATH>
         </subPane>
@@ -1161,8 +952,8 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="24" width="1920" height="1056" extended-state="6" />
-    <editor active="true" />
+    <frame x="1920" y="24" width="1920" height="1056" extended-state="6" />
+    <editor active="false" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.17079599" sideWeight="0.4936306" order="1" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32744282" sideWeight="0.49552396" order="9" side_tool="false" content_ui="tabs" />
@@ -1170,7 +961,7 @@
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.35208333" sideWeight="0.48339483" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.14038657" sideWeight="0.48907682" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24892704" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16666667" sideWeight="0.55719554" order="11" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.43229166" sideWeight="0.55719554" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.15574348" sideWeight="0.5063694" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
@@ -1244,7 +1035,6 @@
     </watches-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/euler_step_vs_saveper/test_euler_step_vs_saveper.mdl" />
     <entry file="file://$PROJECT_DIR$/tests/test-models/tests/euler_step_vs_saveper/test_euler_step_vs_saveper.py" />
     <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscript_2d_arrays/output.tab" />
     <entry file="file://$USER_HOME$/anaconda/lib/python2.7/site-packages/pandas/core/frame.py" />
@@ -1412,7 +1202,7 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscript_2d_arrays/test_subscript_2d_arrays.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="18">
+        <state relative-caret-position="72">
           <caret line="57" column="0" selection-start-line="57" selection-start-column="0" selection-end-line="61" selection-end-column="0" />
           <folding />
         </state>
@@ -1499,6 +1289,14 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="320">
           <caret line="372" column="33" selection-start-line="372" selection-start-column="33" selection-end-line="372" selection-end-column="33" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pysd/builder/builder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding />
         </state>
       </provider>
