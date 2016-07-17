@@ -16,7 +16,7 @@ def runner(model_file):
     elif model_file.endswith(".xmile"):
         model = pysd.read_xmile(model_file)
     else:
-        raise AttributeError('Modelifle should be *.mdl or *.xmile')
+        raise AttributeError('Modelfile should be *.mdl or *.xmile')
 
     # load canonical output
     try:
