@@ -185,13 +185,6 @@ class TestParse_general_expression(unittest.TestCase):
         self.assertEqual(res[1][0]['kind'], 'setup')
         self.assertEqual(res[1][1]['kind'], 'component')
 
-    def test_builtins(self):
-        from pysd.vensim2py import parse_general_expression
-        res = parse_general_expression({'expr': 'Time'})
-        self.assertEqual(res[0]['py_expr'], 'time()')
-        self.assertDictContainsSubset({'kind': 'component', 'py_expr': '_t'},
-                                      res[1][0])
-
     def test_caps_handling(self):
         from pysd.vensim2py import parse_general_expression
         res = parse_general_expression({'expr': 'Abs(-3)'})
@@ -364,6 +357,7 @@ class TestParse_general_expression(unittest.TestCase):
                                        'py_expr': 'flow()'},
                                       res[1][1])
 
+    @unittest.skip('in branch')
     def test_subscript_reference(self):
         from pysd.vensim2py import parse_general_expression
         res = parse_general_expression({'expr': 'Var A[Dim1, Dim2]'},
@@ -386,6 +380,7 @@ class TestParse_general_expression(unittest.TestCase):
                                       'Dim3': ['F', 'G', 'H', 'I']})
         self.assertEqual(res[0]['py_expr'], "var_c().loc[{'Dim2': ['C'], 'Dim3': ['H']}]")
 
+    @unittest.skip('in branch')
     def test_subscript_ranges(self):
         from pysd.vensim2py import parse_general_expression
         res = parse_general_expression({'expr': 'Var D[Range1]'},

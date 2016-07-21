@@ -362,7 +362,6 @@ class PySD(object):
         Format the passed in return timestamps value if it exists,
         or build up array of timestamps based upon the model saveper
         """
-        # Todo: format a Pandas index as an appropriate input source
         if return_timestamps is None:
             # Vensim's standard is to expect that the data set includes the `final time`,
             # so we have to add an extra period to make sure we get that value in what
@@ -371,6 +370,7 @@ class PySD(object):
                                 self.components.final_time() + self.components.saveper(),
                                 self.components.saveper(), dtype=np.float64)
         elif isinstance(return_timestamps, (list, int, float, long, np.ndarray)):
+            # Todo: format a Pandas index as an appropriate input source
             return_timestamps_array = np.array(return_timestamps, ndmin=1)
         else:
             raise TypeError('`return_timestamps` expects a list, array, or numeric value')

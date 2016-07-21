@@ -125,6 +125,7 @@ class TestLogicFunctions(unittest.TestCase):
         and the output values are subscripted? """
         self.fail()
 
+@unittest.skip('In branches')
 class TestDataHandling(unittest.TestCase):
     def test_initial(self):
         from pysd import functions
