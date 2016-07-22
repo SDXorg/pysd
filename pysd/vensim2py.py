@@ -380,16 +380,6 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
         "vmin": "np.min", "vmax": "np.max", "prod": "np.prod"
     }
 
-    builtins = {"time": ("time", [{'kind': 'component',
-                                   'subs': None,
-                                   'doc': 'The time of the model',
-                                   'py_name': 'time',
-                                   'real_name': 'Time',
-                                   'unit': None,
-                                   'py_expr': '_t',
-                                   'arguments': ''}])
-                }
-
     builders = {
         "integ": lambda expr, init: builder.add_stock(element['py_name'], element['subs'],
                                                       expr, init, subscript_dict),
@@ -441,7 +431,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
 
     expression_grammar = r"""
     expr_type = array / expr
-    expr = _ pre_oper? _ (lookup_def / build_call / call / parens / number / reference / builtin) _ (in_oper _ expr)?
+    expr = _ pre_oper? _ (lookup_def / build_call / call / parens / number / reference) _ (in_oper _ expr)?
 
     lookup_def = ~r"(WITH\ LOOKUP)"I _ "(" _ reference _ "," _ "(" _ ( "(" _ number _ "," _ number _ ")" ","? _ )+ _ ")" _ ")"
     call = (func / id) _ "(" _ (expr _ ","? _)* ")" # allows calls with no arguments
@@ -462,7 +452,6 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
     in_oper = ~r"(%(in_ops)s)"I  # infix operators (case insensitive)
     pre_oper = ~r"(%(pre_ops)s)"I  # prefix operators (case insensitive)
     builder = ~r"(%(builders)s)"I  # builder functions (case insensitive)
-    builtin = ~r"(%(builtins)s)"I  # build in functions (case insensitive)
 
     _ = ~r"[\s\\]*"  # whitespace character
     """ % {
@@ -475,7 +464,6 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
         'in_ops': '|'.join(reversed(sorted(in_ops_list, key=len))),
         'pre_ops': '|'.join(reversed(sorted(pre_ops_list, key=len))),
         'builders': '|'.join(reversed(sorted(builders.keys(), key=len))),
-        'builtins': '|'.join(reversed(sorted(builtins.keys(), key=len)))
     }
 
     parser = parsimonious.Grammar(expression_grammar)
@@ -517,14 +505,6 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
 
         def visit_id(self, n, vc):
             return namespace[n.text]
-
-        def visit_builtin(self, n, vc):
-            # these are model elements that are not functions, but exist implicitly within the
-            # vensim model
-            self.kind = 'component'
-            name, structure = builtins[n.text.lower()]
-            self.new_structure += structure
-            return name + '()'
 
         def visit_lookup_def(self, n, vc):
             """ This exists because vensim has multiple ways of doing lookups.
@@ -676,8 +656,9 @@ def translate_vensim(mdl_file):
         elif entry['kind'] == 'section':
             model_docstring += entry['doc']
 
+
     # make python identifiers and track for namespace conflicts
-    namespace = {}
+    namespace = {'TIME': 'time', 'Time':'time'}  # Initialize with builtins
     for element in model_elements:
         if element['kind'] not in ['subdef', 'section']:
             element['py_name'], namespace = utils.make_python_identifier(element['real_name'],
@@ -700,6 +681,16 @@ def translate_vensim(mdl_file):
 
         elif element['kind'] == 'lookup':
             element.update(parse_lookup_expression(element))
+
+    model_elements.append({'kind': 'component',
+                           'subs': None,
+                           'doc': 'The time of the model',
+                           'py_name': 'time',
+                           'real_name': 'TIME',
+                           'unit': None,
+                           'py_expr': '_t',
+                           'arguments': ''})
+
 
     # define outfile name
     outfile_name = mdl_file.replace('.mdl', '.py')
