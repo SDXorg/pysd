@@ -27,11 +27,8 @@ import tabulate
 from documentation import SDVarDoc
 
 
-# Todo: Add a __doc__ function that summarizes the docstrings of the whole model
-# Todo: Give the __doc__ function a 'short' and 'long' option
 # Todo: add a logical way to run two or more models together, using the same integrator.
-# Todo: add the state dictionary to the model file, to give some functionality to it even
-# without the pysd class
+# Todo: add the state dictionary to the model file
 # Todo: work out an RK4 adaptive integrator
 
 
@@ -74,8 +71,7 @@ def load(py_model_file):
 
     # need a unique identifier for the imported module. Use the time.
     module_name = str(time.time()).replace('.', '')
-    components = imp.load_source(module_name, py_model_file) ## SDS personal note: 'modulename' is the name of the object, but to use it within the console it needs to be imported: import modulename. In that case, imp.load_source does not need to be assigned to an object, but modulename will be the object
-
+    components = imp.load_source(module_name, py_model_file)  # SDS personal note: 'modulename' is the name of the object, but to use it within the console it needs to be imported: import modulename. In that case, imp.load_source does not need to be assigned to an object, but modulename will be the object
 
     components._stocknames = [name[2:-3] for name in dir(components)  # strip to just the name
                               if name.startswith('_d') and name.endswith('_dt')]
@@ -87,13 +83,15 @@ def load(py_model_file):
     funcnames = filter(lambda x: not x.startswith('_'), dir(components))
     components._funcs = {name: getattr(components, name) for name in funcnames}
 
-    varnames = filter(lambda x: not x.startswith('_') and not x in ('cache','functions','np'), dir(components))
-    components._docstrings = [getattr(components,name).__doc__ for name in varnames]
+    varnames = filter(lambda x: not x.startswith('_') and not x in ('cache', 'functions', 'np'),
+                      dir(components))
+    components._docstrings = [getattr(components, name).__doc__ for name in varnames]
 
     model = PySD(components)
     model.reset_state()
 
     return model
+
 
 class PySD(object):
     """
@@ -111,7 +109,13 @@ class PySD(object):
     def __str__(self):
 
         """ Return model source file """
-        fn = str(self.components.__file__).split('.')[0] + '.mdl' ## rename the python file to have the original mdl extension. This needs to be changed should the python file name generation (from the Vensim model filename) change
+
+        # rename the python file to have the original mdl extension.
+        # This needs to be changed should the python file name generation
+        # (from the Vensim model filename) change
+        # JPH: Maybe we should attach the original and the python filenames
+        # to the model object as attributes?
+        fn = str(self.components.__file__).split('.')[0] + '.mdl'
         return fn
 
     def run(self, params=None, return_columns=None, return_timestamps=None,
@@ -161,8 +165,6 @@ class PySD(object):
         pysd.set_initial_condition : handles setting initial conditions
 
         """
-        # Todo: think of a better way to handle the separation between return timestamps and
-        # integration tseries
 
         if params:
             self.set_components(params)
@@ -187,7 +189,6 @@ class PySD(object):
         return_df.index = return_timestamps
 
         return return_df
-
 
     def reset_state(self):
         """
@@ -257,6 +258,12 @@ class PySD(object):
 
 
         """
+        # It might make sense to allow the params argument to take a pandas series, where
+        # the indicies of the series are variable names. This would make it easier to
+        # do a pandas apply on a dataframe of parameter values. However, this may conflict
+        # with a pandas series being passed in as a dictionary element.
+
+
         for key, value in params.iteritems():
             if isinstance(value, _pd.Series):
                 new_function = self._timeseries_component(value)
@@ -294,7 +301,6 @@ class PySD(object):
                 else key
                 for key in state.iterkeys()]
 
-        #state = {namespace[key]: value if key in self.components._namespace.keys() else key, value in state.iteritems() if key in }
         self.components._state.update(dict(zip(keys, state.itervalues())))
 
     def set_initial_condition(self, initial_condition):
@@ -371,28 +377,34 @@ class PySD(object):
         or build up array of timestamps based upon the model saveper
         """
         if return_timestamps is None:
+            # Build based upon model file Start, Stop times and Saveper
             # Vensim's standard is to expect that the data set includes the `final time`,
             # so we have to add an extra period to make sure we get that value in what
             # numpy's `arange` gives us.
-            return_timestamps_array = np.arange(self.components.initial_time(),
-                                self.components.final_time() + self.components.saveper(),
-                                self.components.saveper(), dtype=np.float64)
+            return_timestamps_array = np.arange(
+                self.components.initial_time(),
+                self.components.final_time() + self.components.saveper(),
+                self.components.saveper(), dtype=np.float64
+            )
         elif isinstance(return_timestamps, (list, int, float, long, np.ndarray)):
-            # Todo: format a Pandas index as an appropriate input source
             return_timestamps_array = np.array(return_timestamps, ndmin=1)
+        elif isinstance(return_timestamps, _pd.Series):
+            return_timestamps_array = return_timestamps.as_matrix()
+        elif isinstance(return_timestamps, np.ndarray):
+            return_timestamps_array = return_timestamps
         else:
-            raise TypeError('`return_timestamps` expects a list, array, or numeric value')
+            raise TypeError('`return_timestamps` expects a list, array, pandas Series, '
+                            'or numeric value')
         return return_timestamps_array
 
     def _timeseries_component(self, series):
         """ Internal function for creating a timeseries model element """
-        # Todo: check here for valid value...
+        # this is only called if the set_component function recognizes a pandas series
         # Todo: raise a warning if extrapolating from the end of the series.
         return lambda: np.interp(self.components._t, series.index, series.values)
 
     def _constant_component(self, value):
         """ Internal function for creating a constant model element """
-        # Todo: check here for valid value...
         return lambda: value
 
     def _euler_step(self, ddt, state, dt):
@@ -451,8 +463,8 @@ class PySD(object):
 
         return outputs
 
-    def doc(self,short=False):
-        docstringList=list()
+    def doc(self, short=False):
+        docstringList = list()
 
         grammar = """\
             sdVar = (sep? name sep "-"* sep modelNameWrap sep unit sep+ comment? " "*)?
@@ -465,13 +477,15 @@ class PySD(object):
             comment = ~"[A-z _+-/*\\n]+"
             """
 
-        for ds in filter(None,self.components._docstrings):
-            docstringList.append(SDVarDoc(grammar,ds).sdVar)
+        for ds in filter(None, self.components._docstrings):
+            docstringList.append(SDVarDoc(grammar, ds).sdVar)
 
-        dsdf = _pd.DataFrame(docstringList) ## Convert docstringlist, a list of dicitonaries, to a Pandas dataframe, for easy printing down the line.
+        # Convert docstringlist, a list of dictionaries, to a Pandas dataframe,
+        # for easy printing down the line.
+        dsdf = _pd.DataFrame(docstringList)
 
-        dsheaders=['name','modelName','unit','comment']
+        dsheaders = ['name', 'modelName', 'unit', 'comment']
 
-        dstable = tabulate.tabulate(dsdf[dsheaders],headers=dsheaders,tablefmt='orgtbl')
+        dstable = tabulate.tabulate(dsdf[dsheaders], headers=dsheaders, tablefmt='orgtbl')
 
         return str(dstable)

@@ -81,6 +81,7 @@ def cache(horizon):
     else:
         raise(AttributeError('Bad horizon for cache decorator'))
 
+
 @cache('run')
 def initial(value):
     """
@@ -98,6 +99,7 @@ def initial(value):
     The first value of `value` after the caches are reset
     """
     return value
+
 
 def ramp(slope, start, finish):
     """
@@ -180,42 +182,60 @@ def lookup(x, xs, ys):
     return np.interp(x, xs, ys)
 
 
-
 def if_then_else(condition, val_if_true, val_if_false):
     return np.where(condition, val_if_true, val_if_false)
 
-def xidz(numerator,denominator,value_if_denom_is_zero):
-    """ Implements Vensim's XIDZ function, which takes as arguments numerator, denominator of a fraction and a value to return if the denominator is close to zero, returning the fraction otherwise. This function bypasses divide-by-zero errors
+
+def xidz(numerator, denominator, value_if_denom_is_zero):
     """
-    small = 1e-6 ## What is considered zero according to Vensim Help
+    Implements Vensim's XIDZ function.
+    This function executes a division, robust to denominator being zero.
+    In the case of zero denominator, the final argument is returned.
+
+    Parameters
+    ----------
+    numerator: float
+    denominator: float
+        Components of the division operation
+    value_if_denom_is_zero: float
+        The value to return if the denominator is zero
+
+    Returns
+    -------
+    numerator / denominator if denominator > 1e-6
+    otherwise, returns value_if_denom_is_zero
+    """
+    small = 1e-6  # What is considered zero according to Vensim Help
     if abs(denominator) < small:
         return value_if_denom_is_zero
     else:
         return numerator*1.0/denominator
 
-def zidz(numerator,denominator):
+
+def zidz(numerator, denominator):
     """ Implements Vensim's ZIDZ function, which takes as arguments numerator and denominator of a fraction to be returned if the denominator is not close to zero, and zero otherwise. This function bypasses divide-by-zero errors
     """
-    small = 1e-6 ## What is considered zero according to Vensim Help
+    small = 1e-6  # What is considered zero according to Vensim Help
     if abs(denominator) < small:
         return 0
     else:
         return numerator*1.0/denominator
 
-def active_initial(expr, initval):
+
+def active_initial(expr, init_val):
     """
     Implements vensim's ACTIVE INITIAL function
     Parameters
     ----------
     expr
-    initval
+    init_val
 
     Returns
     -------
 
     """
     if time() == initial_time():
-        return initval
+        return init_val
     else:
         return expr
 

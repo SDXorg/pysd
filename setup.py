@@ -28,6 +28,7 @@ setup(
         'numpy',
         'parsimonious',
         'autopep8',
-        'xarray'
+        'xarray',
+        'tabulate'
     ]
 )

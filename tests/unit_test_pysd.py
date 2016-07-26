@@ -114,7 +114,6 @@ class TestPySD(unittest.TestCase):
         model.run(params={'Room Temperature': 70})
         self.assertEqual(model.components.room_temperature(), 70)
 
-    @unittest.skip('@SimonStrong working')
     def test_docs(self):
         """ Test that the model prints some documentation """
         import pysd
