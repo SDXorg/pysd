@@ -10,8 +10,8 @@ Todo:
 
 import re
 import parsimonious
-import builder
-import utils
+from . import builder
+from . import utils
 import textwrap
 import numpy as np
 
@@ -75,7 +75,8 @@ def get_file_sections(file_str):
                                  'returns': [],
                                  'string': n.text.strip()})
 
-        def visit_macro(self, n, (m1, _1, name, _2, lp, _3, params, _4, cn, _5, returns, _6, rp, text, m2)):
+        def visit_macro(self, n, inputs):
+            (m1, _1, name, _2, lp, _3, params, _4, cn, _5, returns, _6, rp, text, m2) = inputs
             self.entries.append({'name': name,
                                  'params': [x.strip() for x in params.split(',')] if params else [],
                                  'returns': [x.strip() for x in
@@ -267,10 +268,12 @@ def get_equation_components(equation_str):
         def visit_component(self, n, vc):
             self.kind = 'component'
 
-        def visit_name(self, n, (name, )):
+        def visit_name(self, n, inputs):
+            (name, ) = inputs
             self.real_name = name.strip()
 
-        def visit_subscript(self, n, (subscript, )):
+        def visit_subscript(self, n, inputs):
+            (subscript, ) = inputs
             self.subscripts.append(subscript.strip())
 
         def visit_expression(self, n, vc):
@@ -543,7 +546,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
             else:
                 return n.text.replace(' ', '')
 
-        def visit_subscript_list(self, n, (lb, _1, refs, rb)):
+        def visit_subscript_list(self, n, inputs):
+            (lb, _1, refs, rb) = inputs
             subs = [x.strip() for x in refs.split(',')]
             coordinates = utils.make_coord_dict(subs, subscript_dict)
             if len(coordinates):

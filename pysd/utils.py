@@ -30,7 +30,7 @@ def dict_find(in_dict, value):
     """
     # Todo: make this robust to repeated values
     # Todo: make this robust to missing values
-    return in_dict.keys()[in_dict.values().index(value)]
+    return list(in_dict.keys())[list(in_dict.values()).index(value)]
 
 
 def xrmerge(das, accept_new=True):
@@ -87,7 +87,7 @@ def find_subscript_name(subscript_dict, element):
     if element in subscript_dict.keys():
         return element
 
-    for name, elements in subscript_dict.iteritems():
+    for name, elements in subscript_dict.items():
         if element in elements:
             return name
 
@@ -356,7 +356,7 @@ def make_flat_df(frames, return_addresses):
     """
 
     # Todo: could also try a list comprehension here, or parallel apply
-    visited = map(lambda x: visit_addresses(x, return_addresses), frames)
+    visited = list(map(lambda x: visit_addresses(x, return_addresses), frames))
     return pd.DataFrame(visited)
 
 
@@ -381,7 +381,7 @@ def visit_addresses(frame, return_addresses):
 
     """
     outdict = dict()
-    for real_name, (pyname, address) in return_addresses.iteritems():
+    for real_name, (pyname, address) in return_addresses.items():
         if address:
             xrval = frame[pyname].loc[address]
             if xrval.size > 1:
