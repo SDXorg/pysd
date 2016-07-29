@@ -53,10 +53,10 @@ def cache(horizon):
         def cached(*args):
             """Step wise cache function"""
             try:  # fails if cache is out of date or not instantiated
-                assert cached.t == func.func_globals['_t']
+                assert cached.t == func.__globals__['_t']
             except (AssertionError, AttributeError):
                 cached.cache = func(*args)
-                cached.t = func.func_globals['_t']
+                cached.t = func.__globals__['_t']
             return cached.cache
         return cached
 

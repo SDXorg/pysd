@@ -15,7 +15,7 @@ xmile specific syntax.
 import textwrap
 import autopep8
 from _version import __version__
-import utils
+from . import utils
 
 
 def build(elements, subscript_dict, namespace, outfile_name):
@@ -212,7 +212,15 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
     """
     # take care of cases when a float is passed as initialization for an array.
     # this might be better located in the translation function in the future.
-    if subs and initial_condition.decode('unicode-escape').isnumeric():
+
+    try:
+        decoded = initial_condition.decode('unicode-escape')
+        initial_condition_numeric = decoded.isnumeric()
+    except AttributeError:
+        # I believe this should be okay for Py3 but should be checked
+        initial_condition_numeric = initial_condition.isnumeric()
+
+    if subs and initial_condition_numeric:
         coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
         dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
         shape = [len(coords[dim]) for dim in dims]

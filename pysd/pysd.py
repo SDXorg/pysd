@@ -21,10 +21,10 @@ import pandas as _pd
 import numpy as np
 import imp
 import time
-import utils
+from . import utils
 import tabulate
 
-from documentation import SDVarDoc
+from .documentation import SDVarDoc
 
 
 # Todo: add a logical way to run two or more models together, using the same integrator.
@@ -49,7 +49,7 @@ def read_vensim(mdl_file):
     --------
     >>> model = read_vensim('../tests/test-models/samples/teacup/teacup.mdl')
     """
-    from vensim2py import translate_vensim
+    from .vensim2py import translate_vensim
     py_model_file = translate_vensim(mdl_file)
     model = load(py_model_file)
     return model
@@ -264,7 +264,7 @@ class PySD(object):
         # with a pandas series being passed in as a dictionary element.
 
 
-        for key, value in params.iteritems():
+        for key, value in params.items():
             if isinstance(value, _pd.Series):
                 new_function = self._timeseries_component(value)
             else:
@@ -299,9 +299,9 @@ class PySD(object):
         keys = [self.components._namespace[key]
                 if key in self.components._namespace.keys()
                 else key
-                for key in state.iterkeys()]
+                for key in state.keys()]
 
-        self.components._state.update(dict(zip(keys, state.itervalues())))
+        self.components._state.update(dict(zip(keys, state.values())))
 
     def set_initial_condition(self, initial_condition):
         """ Set the initial conditions of the integration.
@@ -386,7 +386,7 @@ class PySD(object):
                 self.components.final_time() + self.components.saveper(),
                 self.components.saveper(), dtype=np.float64
             )
-        elif isinstance(return_timestamps, (list, int, float, long, np.ndarray)):
+        elif isinstance(return_timestamps, (list, int, float, np.ndarray)):
             return_timestamps_array = np.array(return_timestamps, ndmin=1)
         elif isinstance(return_timestamps, _pd.Series):
             return_timestamps_array = return_timestamps.as_matrix()
@@ -428,7 +428,7 @@ class PySD(object):
         """
         # Todo: instead of a list of dfuncs, just use locals() http://stackoverflow.com/a/834451/6361632
 
-        return {key: dfunc()*dt + state[key] for key, dfunc in ddt.iteritems()}
+        return {key: dfunc()*dt + state[key] for key, dfunc in ddt.items()}
 
 
     def _integrate(self, derivative_functions, timesteps, capture_elements, return_timestamps):

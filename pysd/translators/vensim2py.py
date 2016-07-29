@@ -63,10 +63,9 @@ dictionary = {"ABS":"abs", "INTEGER":"int", "EXP":"np.exp",
 ## Use the dictionary to append the same one without capitalized function names
 
 dictionary2 = dict(dictionary) # copy dictionary
-dickeysLower = map(lambda i: str(i).lower(),dictionary.keys()) #take the keys from the original library and make them lowercase
 
-for i in range(0,len(dictionary.keys())) :
-    dictionary2[str(dickeysLower[i])] = dictionary2.pop(dictionary.keys()[i]) ## Replace key per key
+for key in dictionary:
+    dictionary2[key.lower()] = dictionary2.pop(key) ## Replace key per key
 
 dictionary.update(dictionary2) ## Now the dictionary has all keys in lower and in upper case
 
@@ -93,15 +92,15 @@ construction_functions = ['DELAY1', 'DELAY3', 'DELAY3I', 'DELAY N', 'DELAY1I',
 
 # We have to sort keywords in decreasing order of length so that the peg parser doesnt
 #    quit early when finding a partial keyword
-caps_keywords = dictionary.keys()
+caps_keywords = list(dictionary.keys())
 multicaps_keywords = list(set(caps_keywords +
                       [string.capwords(word) for word in caps_keywords] +
-                      [string.lower(word) for word in caps_keywords]))
+                      [word.lower() for word in caps_keywords]))
 keywords = ' / '.join(['"%s"'%word for word in reversed(sorted(multicaps_keywords, key=len))])
 
 multicaps_con_keywords = list(set(construction_functions +
                               [string.capwords(word) for word in construction_functions] +
-                              [string.lower(word) for word in construction_functions]))
+                              [word.lower() for word in construction_functions]))
 
 con_keywords = ' / '.join(['"%s"'%key for key in reversed(sorted(multicaps_con_keywords, key=len))])
 
@@ -212,7 +211,10 @@ class TextParser(NodeVisitor):
 
     def parse(self, filename):
         with open(filename, 'rU') as file:
-            text = file.read().decode('utf-8')
+            try:
+                text = file.read().decode('utf-8')
+            except AttributeError:
+                text = file.read()
 
         self.ast = self.grammar.parse(text)
         return self.visit(self.ast)
@@ -220,8 +222,9 @@ class TextParser(NodeVisitor):
     ############# 'entry' level translators ############################
     visit_Entry = visit_Component = NodeVisitor.lift_child
 
-    def visit_ModelEntry(self, n, (_1, Identifier, _2, tld1, _3, Unit, _4,
-                                   tld2, _5, Docstring, _6, pipe, _7)):
+    def visit_ModelEntry(self, n, inputs):
+        (_1, Identifier, _2, tld1, _3, Unit, _4,
+         tld2, _5, Docstring, _6, pipe, _7) = inputs
         """All we have to do here is add to the docstring of the relevant 
         function the things that arent available at lower levels. 
         The stock/flaux/lookup visitors will take care of adding methods to the class
@@ -231,20 +234,23 @@ class TextParser(NodeVisitor):
         pass
 
 
-    def visit_Stock(self, n, (Identifier, _1, eq, _2, integ, _3,
-                              lparen, _4, NL1, _5, expression, _6,
-                              comma, _7, NL2, _8, initial_condition, _9, rparen)): ## Are the numbers with underscores optional arguments?
+    def visit_Stock(self, n, inputs):
+        (Identifier, _1, eq, _2, integ, _3,
+         lparen, _4, NL1, _5, expression, _6,
+         comma, _7, NL2, _8, initial_condition, _9, rparen) = inputs ## Are the numbers with underscores optional arguments?
         self.builder.add_stock(Identifier, expression, initial_condition)
         return Identifier
 
 
-    def visit_Flaux(self, n, (Identifier, _1, eq, SNL, expression)):
+    def visit_Flaux(self, n, inputs):
+        (Identifier, _1, eq, SNL, expression) = inputs
         self.builder.add_flaux(Identifier, expression)
         return Identifier
 
 
-    def visit_Lookup(self, n, (Identifier, _1, lparen, _2, NL1, _3, Range,
-                               _4, CopairList, _5, rparen)):
+    def visit_Lookup(self, n, inputs):
+        (Identifier, _1, lparen, _2, NL1, _3, Range,
+         _4, CopairList, _5, rparen) = inputs
         self.builder.add_lookup(Identifier, Range, CopairList)
         return Identifier
 
@@ -255,7 +261,8 @@ class TextParser(NodeVisitor):
 
     ######### 'expression' level visitors ###############################
 
-    def visit_ConCall(self, n, (ConKeyword, _1, lparen, _2, args, _4, rparen)):
+    def visit_ConCall(self, n, inputs):
+        (ConKeyword, _1, lparen, _2, args, _4, rparen) = inputs
         pass
         if ConKeyword == 'DELAY1': #DELAY3(Inflow, Delay)
             return self.builder.add_n_delay(args[0], args[1], str(0), 1)
@@ -285,29 +292,35 @@ class TextParser(NodeVisitor):
     def visit_Keyword(self, n, vc):
         return dictionary[n.text.upper()]
 
-    def visit_Reference(self, n, (Identifier, _)):
+    def visit_Reference(self, n, inputs):
+        (Identifier, _) = inputs
         return Identifier+'()'
 
     def visit_Identifier(self, n, vc):
         string = n.text
         return builder.make_python_identifier(string)
 
-    def visit_Call(self, n, (Translated_Keyword, _1, lparen, _2, args, _3, rparen)):
+    def visit_Call(self, n, inputs):
+        (Translated_Keyword, _1, lparen, _2, args, _3, rparen) = inputs
         return Translated_Keyword+'('+', '.join(args)+')'
 
-    def visit_LUCall(self, n, (Identifier, _1, lparen, _2, Condition, _3,  rparen)):
+    def visit_LUCall(self, n, inputs):
+        (Identifier, _1, lparen, _2, Condition, _3,  rparen) = inputs
         return Identifier+'('+Condition+')'
 
-    def visit_Copair(self, n, (lparen, _1, xcoord, _2, comma, _3, ycoord, _, rparen)):
+    def visit_Copair(self, n, inputs):
+        (lparen, _1, xcoord, _2, comma, _3, ycoord, _, rparen) = inputs
         return (float(xcoord), float(ycoord))
 
-    def visit_AddCopair(self, n, (comma, _1, Copair)):
+    def visit_AddCopair(self, n, inputs):
+        (comma, _1, Copair) = inputs
         return Copair
 
     def visit_ArgList(self, n, args):
         return args
 
-    def visit_AddArg(self, n, (comma, _1, argument)):
+    def visit_AddArg(self, n, inputs):
+        (comma, _1, argument) = inputs
         return argument
 
     def visit_Range(self, n, copairs):
@@ -316,7 +329,8 @@ class TextParser(NodeVisitor):
     def visit_CopairList(self, n, copairs):
         return copairs
 
-    def visit_Conditional(self, n, (condition, _, term)):
+    def visit_Conditional(self, n, inputs):
+        (condition, _, term) = inputs
         return dictionary[condition] + term
 
     visit_Exponentive = visit_Conditional
@@ -338,7 +352,7 @@ def doc_supported_vensim_functions():
     headers     = '|           Vensim             |       Python Translation     |\n'
     underline   = '+==============================+==============================+\n'
     string = rowline + headers + underline
-    for key, value in dictionary.iteritems():
+    for key, value in dictionary.items():
         string += '|'   + key.center(30) +  '|'  + value.center(30) + '|\n'
         string += rowline
     for item in construction_functions:
