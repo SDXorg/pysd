@@ -1,7 +1,9 @@
+from __future__ import print_function
+
 from distutils.core import setup
 
 exec(open('pysd/_version.py').read())
-print __version__
+print(__version__)
 
 long_description ="""Project Documentation: http://pysd.readthedocs.org/"""
 

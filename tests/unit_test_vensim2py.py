@@ -289,7 +289,7 @@ class TestParse_general_expression(unittest.TestCase):
                                             'Dim2': ['D', 'E']})
         string = element[0]['py_expr']
         a = eval(string)
-        self.assertDictEqual({key: list(val.values) for key, val in a.coords.iteritems()},
+        self.assertDictEqual({key: list(val.values) for key, val in a.coords.items()},
                              {'Dim1': ['A', 'B', 'C']})
         self.assertEqual(a.loc[{'Dim1': 'B'}], 3.32)
 
@@ -302,7 +302,7 @@ class TestParse_general_expression(unittest.TestCase):
                                             'Dim2': ['D', 'E']})
         string = element[0]['py_expr']
         a = eval(string)
-        self.assertDictEqual({key: list(val.values) for key, val in a.coords.iteritems()},
+        self.assertDictEqual({key: list(val.values) for key, val in a.coords.items()},
                              {'Dim1': ['A', 'B', 'C']})
         self.assertEqual(a.loc[{'Dim1': 'A'}], 1)
 
@@ -315,7 +315,7 @@ class TestParse_general_expression(unittest.TestCase):
                                             'Dim2': ['D', 'E']})
         string = element[0]['py_expr']
         a = eval(string)
-        self.assertDictEqual({key: list(val.values) for key, val in a.coords.iteritems()},
+        self.assertDictEqual({key: list(val.values) for key, val in a.coords.items()},
                              {'Dim1': ['A', 'B', 'C'], 'Dim2': ['D', 'E']})
         self.assertEqual(a.loc[{'Dim1': 'A', 'Dim2': 'D'}], 1)
         self.assertEqual(a.loc[{'Dim1': 'B', 'Dim2': 'E'}], 4)
@@ -329,7 +329,7 @@ class TestParse_general_expression(unittest.TestCase):
                                             'Dim2': ['D', 'E']})
         string = element[0]['py_expr']
         a = eval(string)
-        self.assertDictEqual({key: list(val.values) for key, val in a.coords.iteritems()},
+        self.assertDictEqual({key: list(val.values) for key, val in a.coords.items()},
                              {'Dim1': ['A', 'B', 'C'], 'Dim2': ['D', 'E']})
         self.assertEqual(a.loc[{'Dim1': 'A', 'Dim2': 'D'}], 1)
         self.assertEqual(a.loc[{'Dim1': 'B', 'Dim2': 'E'}], 4)

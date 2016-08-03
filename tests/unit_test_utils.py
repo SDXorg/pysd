@@ -1,7 +1,7 @@
 from unittest import TestCase
 import xarray as xr
 import pandas as pd
-import test_utils
+from . import test_utils
 import doctest
 
 class TestUtils(TestCase):
@@ -119,7 +119,7 @@ class TestUtils(TestCase):
                                      {'Dim1': ['A', 'B', 'C'],
                                       'Dim2': ['F']}),
                     }
-        self.assertIsInstance(actual.values()[0], xr.DataArray)
+        self.assertIsInstance(list(actual.values())[0], xr.DataArray)
         self.assertEqual(actual['Elem1[Dim1, F]'].shape,
                          expected['Elem1[Dim1, F]'].shape)
         # Todo: test that the values are equal

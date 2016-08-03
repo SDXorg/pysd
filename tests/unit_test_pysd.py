@@ -40,7 +40,7 @@ class TestPySD(unittest.TestCase):
         extend the euler series to the largest timestamp"""
         import pysd
         model = pysd.read_vensim(test_model)
-        return_timestamps = range(0, 100, 10)
+        return_timestamps = list(range(0, 100, 10))
         stocks = model.run(return_timestamps=return_timestamps)
         self.assertSequenceEqual(return_timestamps, list(stocks.index))
 
@@ -65,16 +65,16 @@ class TestPySD(unittest.TestCase):
         import pysd
         model = pysd.read_vensim(test_model)
         stocks = model.run(initial_condition=(3000, {'teacup_temperature': 33}),
-                           return_timestamps=range(3000, 3010))
+                           return_timestamps=list(range(3000, 3010)))
         self.assertEqual(stocks.index[0], 3000)
         self.assertEqual(stocks['Teacup Temperature'].iloc[0], 33)
 
     def test_initial_conditions_current(self):
         import pysd
         model = pysd.read_vensim(test_model)
-        stocks1 = model.run(return_timestamps=range(0, 31))
+        stocks1 = model.run(return_timestamps=list(range(0, 31)))
         stocks2 = model.run(initial_condition='current',
-                            return_timestamps=range(30, 45))
+                            return_timestamps=list(range(30, 45)))
         self.assertEqual(stocks1['Teacup Temperature'].iloc[-1],
                          stocks2['Teacup Temperature'].iloc[0])
 
@@ -97,7 +97,7 @@ class TestPySD(unittest.TestCase):
     def test_set_timeseries_parameter(self):
         import pysd
         model = pysd.read_vensim(test_model)
-        timeseries = range(30)
+        timeseries = list(range(30))
         temp_timeseries = pd.Series(index=timeseries,
                                     data=(50 + np.random.rand(len(timeseries)).cumsum()))
         res = model.run(params={'room_temperature': temp_timeseries},
@@ -148,7 +148,7 @@ class TestPySD(unittest.TestCase):
         initial_state = model.components._state.copy()
         initial_time = model.components.time()
 
-        new_state = {key: np.random.rand() for key in initial_state.iterkeys()}
+        new_state = {key: np.random.rand() for key in initial_state.keys()}
         new_time = np.random.rand()
 
         model.set_state(new_time, new_state)
@@ -169,10 +169,10 @@ class TestPySD(unittest.TestCase):
         initial_state = model.components._state.copy()
 
         new_state_realnames = {utils.dict_find(model.components._namespace, key): np.random.rand()
-                     for key in initial_state.iterkeys()}
+                     for key in initial_state.keys()}
 
         new_state_pynames = {model.components._namespace[key]: value
-                             for key, value in new_state_realnames.iteritems()}
+                             for key, value in new_state_realnames.items()}
         new_time = np.random.rand()
 
         model.set_state(new_time, new_state_realnames)
@@ -198,7 +198,7 @@ class TestPySD(unittest.TestCase):
         initial_state = model.components._state.copy()
         initial_time = model.components.time()
 
-        new_state = {key: np.random.rand() for key in initial_state.iterkeys()}
+        new_state = {key: np.random.rand() for key in initial_state.keys()}
         new_time = np.random.rand()
 
         model.set_initial_condition((new_time, new_state))
@@ -289,9 +289,9 @@ class TestPySD(unittest.TestCase):
         # Todo: think through a stronger test here...
         model = pysd.read_vensim(test_model)
         res = model._integrate(derivative_functions=model.components._dfuncs,
-                               timesteps=range(5),
+                               timesteps=list(range(5)),
                                capture_elements=['teacup_temperature'],
-                               return_timestamps=range(0, 5, 2))
+                               return_timestamps=list(range(0, 5, 2)))
         self.assertIsInstance(res, list)
         self.assertIsInstance(res[0], dict)
 
