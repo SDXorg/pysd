@@ -263,7 +263,6 @@ class PySD(object):
         # do a pandas apply on a dataframe of parameter values. However, this may conflict
         # with a pandas series being passed in as a dictionary element.
 
-
         for key, value in params.iteritems():
             if isinstance(value, _pd.Series):
                 new_function = self._timeseries_component(value)

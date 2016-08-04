@@ -82,23 +82,38 @@ def cache(horizon):
         raise(AttributeError('Bad horizon for cache decorator'))
 
 
-@cache('run')
-def initial(value):
-    """
-    This function returns the first value passed in,
-    regardless of how many times it is called
+class Initial(object):
+    """Replicates Vensim's `initial` function
 
-    Uses the @cache('run') functionality.
+    a new instance of the class should be instantiated for each
+    unique call to the `initial` function."""
 
-    Parameters
-    ----------
-    value
+    def __init__(self):
+        self.state.init_value = None
 
-    Returns
-    -------
-    The first value of `value` after the caches are reset
-    """
-    return value
+    def __call__(self, value):
+        """
+        Returns the first value passed in,
+        regardless of how many times it is called
+
+        Parameters
+        ----------
+        value: object
+            Will usually be the result of a function, returning
+            either a float or a DataArray
+
+        Returns
+        -------
+        init_value: object
+            The first value of `value` after the caches are reset
+        """
+        if self.state.init_value is None:
+            self.state.init_value = value
+
+        return self.state.init_value
+
+    def reset(self):
+        self.init_value = None
 
 
 def ramp(slope, start, finish):
@@ -213,8 +228,23 @@ def xidz(numerator, denominator, value_if_denom_is_zero):
 
 
 def zidz(numerator, denominator):
-    """ Implements Vensim's ZIDZ function, which takes as arguments numerator and denominator of a fraction to be returned if the denominator is not close to zero, and zero otherwise. This function bypasses divide-by-zero errors
     """
+    This function bypasses divide-by-zero errors,
+    implementing Vensim's ZIDZ function
+
+    Parameters
+    ----------
+    numerator: float
+        value to be divided
+    denominator: float
+        value to devide by
+
+    Returns
+    -------
+    result of division numerator/denominator if denominator is not zero,
+    otherwise zero.
+    """
+    # Todo: make this work for arrays
     small = 1e-6  # What is considered zero according to Vensim Help
     if abs(denominator) < small:
         return 0
