@@ -177,7 +177,8 @@ class PySD(object):
 
         if return_columns is None:
             return_columns = [utils.dict_find(self.components._namespace, x)
-                              for x in self.components._stocknames]
+                              for x in self.components._stocknames
+                              if not x.startswith('_')]
 
         capture_elements, return_addresses = utils.get_return_elements(
             return_columns, self.components._namespace, self.components._subscript_dict)
