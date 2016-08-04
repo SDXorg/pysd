@@ -81,39 +81,39 @@ def cache(horizon):
     else:
         raise(AttributeError('Bad horizon for cache decorator'))
 
-
-class Initial(object):
-    """Replicates Vensim's `initial` function
-
-    a new instance of the class should be instantiated for each
-    unique call to the `initial` function."""
-
-    def __init__(self):
-        self.state.init_value = None
-
-    def __call__(self, value):
-        """
-        Returns the first value passed in,
-        regardless of how many times it is called
-
-        Parameters
-        ----------
-        value: object
-            Will usually be the result of a function, returning
-            either a float or a DataArray
-
-        Returns
-        -------
-        init_value: object
-            The first value of `value` after the caches are reset
-        """
-        if self.state.init_value is None:
-            self.state.init_value = value
-
-        return self.state.init_value
-
-    def reset(self):
-        self.init_value = None
+#
+# class Initial(object):
+#     """Replicates Vensim's `initial` function
+#
+#     a new instance of the class should be instantiated for each
+#     unique call to the `initial` function."""
+#
+#     def __init__(self):
+#         self.state.init_value = None
+#
+#     def __call__(self, value):
+#         """
+#         Returns the first value passed in,
+#         regardless of how many times it is called
+#
+#         Parameters
+#         ----------
+#         value: object
+#             Will usually be the result of a function, returning
+#             either a float or a DataArray
+#
+#         Returns
+#         -------
+#         init_value: object
+#             The first value of `value` after the caches are reset
+#         """
+#         if self.state.init_value is None:
+#             self.state.init_value = value
+#
+#         return self.state.init_value
+#
+#     def reset(self):
+#         self.init_value = None
 
 
 def ramp(slope, start, finish):
