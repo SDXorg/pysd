@@ -436,7 +436,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
     expr_type = array / expr
     expr = _ pre_oper? _ (lookup_def / build_call / call / parens / number / reference) _ (in_oper _ expr)?
 
-    lookup_def = ~r"(WITH\ LOOKUP)"I _ "(" _ reference _ "," _ "(" _ ( "(" _ number _ "," _ number _ ")" ","? _ )+ _ ")" _ ")"
+    lookup_def = ~r"(WITH\ LOOKUP)"I _ "(" _ reference _ "," _ "(" _  ("[" ~r"[^\]]*" "]" _ ",")?  ( "(" _ expr _ "," _ expr _ ")" ","? _ )+ _ ")" _ ")"
     call = (func / id) _ "(" _ (expr _ ","? _)* ")" # allows calls with no arguments
     build_call = builder _ "(" _ (expr _ ","? _)* ")" # allows calls with no arguments
     parens   = "(" _ expr _ ")"
@@ -513,7 +513,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
             """ This exists because vensim has multiple ways of doing lookups.
             Which is frustrating."""
             x = vc[4]
-            pairs = vc[10]
+            pairs = vc[11]
             mixed_list = pairs.replace('(', '').replace(')', '').split(',')
             xs = mixed_list[::2]
             ys = mixed_list[1::2]
@@ -579,6 +579,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
 
 
 def parse_lookup_expression(element):
+    """ This syntax parses lookups that are defined with their own element """
 
     lookup_grammar = r"""
     lookup = _ "(" _ "[" ~r"[^\]]*" "]" _ "," _ ( "(" _ number _ "," _ number _ ")" ","? _ )+ ")"
@@ -662,7 +663,7 @@ def translate_vensim(mdl_file):
 
 
     # make python identifiers and track for namespace conflicts
-    namespace = {'TIME': 'time', 'Time':'time'}  # Initialize with builtins
+    namespace = {'TIME': 'time', 'Time': 'time'}  # Initialize with builtins
     for element in model_elements:
         if element['kind'] not in ['subdef', 'section']:
             element['py_name'], namespace = utils.make_python_identifier(element['real_name'],
@@ -676,6 +677,7 @@ def translate_vensim(mdl_file):
     # Parse components to python syntax.
     for element in model_elements:
         if element['kind'] == 'component' and 'py_expr' not in element:
+            # Todo: if there is new structure, it should be added to the namespace...
             translation, new_structure = parse_general_expression(element,
                                                                   namespace=namespace,
                                                                   subscript_dict=subscript_dict,

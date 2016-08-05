@@ -295,6 +295,21 @@ class TestPySD(unittest.TestCase):
         self.assertIsInstance(res, list)
         self.assertIsInstance(res[0], dict)
 
+    def test_default_returns_with_construction_functions(self):
+        """
+        If the run function is called with no arguments
+
+        """
+        import pysd
+        model = pysd.read_vensim('test-models/tests/delays/test_delays.mdl')
+        ret = model.run()
+        self.assertSetEqual(set(ret.columns.values),
+                            set(['Stock Delay1I',
+                                 'Stock Delay3I',
+                                 'Stock Delay1',
+                                 'Stock DelayN',
+                                 'Stock Delay3']))
+
 
 class TestModelInteraction(unittest.TestCase):
     """ The tests in this class test pysd's interaction with itself
