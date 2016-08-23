@@ -362,5 +362,15 @@ class TestModelInteraction(unittest.TestCase):
         self.assertEqual(new, 345)
         self.assertNotEqual(old, new)
 
+    def test_py_model_file(self):
+        """Addresses https://github.com/JamesPHoughton/pysd/issues/86"""
+        import pysd
+        model = pysd.read_vensim(test_model)
+        self.assertEqual(model.py_model_file, test_model.replace('.mdl', '.py'))
 
+    def test_mdl_file(self):
+        """Relates to https://github.com/JamesPHoughton/pysd/issues/86"""
+        import pysd
+        model = pysd.read_vensim(test_model)
+        self.assertEqual(model.mdl_file, test_model)
 

@@ -107,16 +107,22 @@ class PySD(object):
         self.components = components
 
     def __str__(self):
-
         """ Return model source file """
 
-        # rename the python file to have the original mdl extension.
-        # This needs to be changed should the python file name generation
-        # (from the Vensim model filename) change
-        # JPH: Maybe we should attach the original and the python filenames
-        # to the model object as attributes?
-        fn = str(self.components.__file__).split('.')[0] + '.mdl'
-        return fn
+        # JT: Might be helpful to return not only the source file, but
+        # also how the instance differs from that source file. This
+        # would give a more accurate view of the current model.
+        return self.mdl_file
+
+    @property
+    def py_model_file(self):
+        """ Return model's python file """
+        return str(self.components.__file__)
+
+    @property
+    def mdl_file(self):
+        """ Return model's vensim source file """
+        return self.py_model_file.replace('.py', '.mdl')
 
     def run(self, params=None, return_columns=None, return_timestamps=None,
             initial_condition='original'):
