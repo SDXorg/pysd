@@ -1,7 +1,6 @@
 import unittest
 import pandas as pd
 import numpy as np
-import warnings
 from pysd import utils
 
 test_model = 'test-models/samples/teacup/teacup.mdl'
@@ -118,14 +117,13 @@ class TestPySD(unittest.TestCase):
     def test_set_components_warnings(self):
         """Addresses https://github.com/JamesPHoughton/pysd/issues/80"""
         import pysd
+        import warnings
         model = pysd.read_vensim(test_model)
-
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            model.run(params={'Teacup Temperature': 20})   # run model while setting stock value using params
             model.set_components({'Teacup Temperature': 20, 'Characteristic Time': 15})   # set stock value using params
-        self.assertEqual(len(w), 2)
-        self.assertTrue('Teacup Temperature' in str(w[1].message))   # check that warning references the stock
+        self.assertEqual(len(w), 1)
+        self.assertTrue('Teacup Temperature' in str(w[0].message))   # check that warning references the stock
 
     def test_docs(self):
         """ Test that the model prints some documentation """

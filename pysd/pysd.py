@@ -285,7 +285,7 @@ class PySD(object):
                 raise NameError('%s is not recognized as a model component' % key)
 
             if func_name in self.components._stocknames:    # warn when setting stock values using params
-                warnings.warn("Replacing the equation of stock {} with params".format(key))
+                warnings.warn("Replacing the equation of stock {} with params".format(key), stacklevel=2)
 
             setattr(self.components, func_name, new_function)
             self.components._funcs[func_name] = new_function  # facilitates lookups
