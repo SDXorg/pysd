@@ -114,6 +114,17 @@ class TestPySD(unittest.TestCase):
         model.run(params={'Room Temperature': 70})
         self.assertEqual(model.components.room_temperature(), 70)
 
+    def test_set_components_warnings(self):
+        """Addresses https://github.com/JamesPHoughton/pysd/issues/80"""
+        import pysd
+        import warnings
+        model = pysd.read_vensim(test_model)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            model.set_components({'Teacup Temperature': 20, 'Characteristic Time': 15})   # set stock value using params
+        self.assertEqual(len(w), 1)
+        self.assertTrue('Teacup Temperature' in str(w[0].message))   # check that warning references the stock
+
     def test_docs(self):
         """ Test that the model prints some documentation """
         import pysd
@@ -310,6 +321,18 @@ class TestPySD(unittest.TestCase):
                                  'Stock DelayN',
                                  'Stock Delay3']))
 
+    def test_py_model_file(self):
+        """Addresses https://github.com/JamesPHoughton/pysd/issues/86"""
+        import pysd
+        model = pysd.read_vensim(test_model)
+        self.assertEqual(model.py_model_file, test_model.replace('.mdl', '.py'))
+
+    def test_mdl_file(self):
+        """Relates to https://github.com/JamesPHoughton/pysd/issues/86"""
+        import pysd
+        model = pysd.read_vensim(test_model)
+        self.assertEqual(model.mdl_file, test_model)
+
 
 class TestModelInteraction(unittest.TestCase):
     """ The tests in this class test pysd's interaction with itself
@@ -362,15 +385,4 @@ class TestModelInteraction(unittest.TestCase):
         self.assertEqual(new, 345)
         self.assertNotEqual(old, new)
 
-    def test_py_model_file(self):
-        """Addresses https://github.com/JamesPHoughton/pysd/issues/86"""
-        import pysd
-        model = pysd.read_vensim(test_model)
-        self.assertEqual(model.py_model_file, test_model.replace('.mdl', '.py'))
-
-    def test_mdl_file(self):
-        """Relates to https://github.com/JamesPHoughton/pysd/issues/86"""
-        import pysd
-        model = pysd.read_vensim(test_model)
-        self.assertEqual(model.mdl_file, test_model)
 
