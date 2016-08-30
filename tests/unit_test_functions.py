@@ -141,7 +141,7 @@ class TestLogicFunctions(unittest.TestCase):
         self.fail()
 
 
-class TestMacros(unittest.TestCase):
+class TestStateful(unittest.TestCase):
 
     def testInteg(self):
         import pysd.functions
@@ -155,7 +155,7 @@ class TestMacros(unittest.TestCase):
         def init_func():
             return init_val
 
-        stock = pysd.functions.integ(lambda: ddt_func(),
+        stock = pysd.functions.Integ(lambda: ddt_func(),
                                      lambda: init_func())
 
         stock.initialize()
@@ -177,16 +177,14 @@ class TestMacros(unittest.TestCase):
         stock.initialize()
         self.assertEqual(stock(), 11)
 
-
-
-    def testMacroIdentification(self):
+    def testStatefulIdentification(self):
         import pysd.functions
 
-        stock = pysd.functions.integ(lambda: 5,
+        stock = pysd.functions.Integ(lambda: 5,
                                      lambda: 7)
 
         self.assertIsInstance(stock,
-                              pysd.functions.macro)
+                              pysd.functions.Stateful)
 
 @unittest.skip('In Branch')
 class TestDataHandling(unittest.TestCase):

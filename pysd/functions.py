@@ -81,7 +81,8 @@ def cache(horizon):
     else:
         raise(AttributeError('Bad horizon for cache decorator'))
 
-class macro(object):
+
+class Stateful(object):
     def __init__(self):
         pass
 
@@ -91,12 +92,13 @@ class macro(object):
     def initialize(self):
         pass
 
-    def update(self):
+    def update(self, *args):
         pass
 
-class integ(macro):
-    def __init__(self, ddt, init):
-        self.init_func = init
+
+class Integ(Stateful):
+    def __init__(self, ddt, initial_value):
+        self.init_func = initial_value
         self.ddt = ddt
         self.state = None
 
@@ -108,6 +110,14 @@ class integ(macro):
 
     def update(self, state):
         self.state = state
+
+#class delay(macro):
+#    def __init__(self, delay_input, delay_time, initial_value, order):
+#        self.init_func = initial_value
+
+#class initial(macro):
+
+
 
 
 #

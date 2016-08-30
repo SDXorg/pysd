@@ -110,7 +110,7 @@ def build_element(element, subscript_dict):
     """
     if element['kind'] == 'constant':
         cache_type = "@cache('run')"
-    elif element['kind'] == 'setup':  # setups only get called once, so caching is wasted
+    elif element['kind'] in ['setup', 'stateful']:  # setups only get called once, so caching is wasted
         cache_type = ''
     elif element['kind'] == 'component':
         cache_type = "@cache('step')"
@@ -133,7 +133,13 @@ def build_element(element, subscript_dict):
                                                  '\n' + ' ' * indent)})  # indent lines 2 onward
     element['doc'] = element['doc'].replace('\\', '\n    ')
 
-    func = '''
+    if element['kind'] == 'stateful':
+        func = '''
+    %(py_name)s = %(py_expr)s
+            ''' % {'py_name': element['py_name'], 'py_expr': element['py_expr'][0]}
+
+    else:
+        func = '''
     %(cache)s
     def %(py_name)s(%(arguments)s):
         """
@@ -145,6 +151,7 @@ def build_element(element, subscript_dict):
         """
         %(contents)s
         ''' % element
+
     return func
 
 
@@ -210,6 +217,10 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
     >>> add_stock('stock_name', [], 'inflow_a', '10')
 
     """
+
+
+
+
     # take care of cases when a float is passed as initialization for an array.
     # this might be better located in the translation function in the future.
     if subs and initial_condition.decode('unicode-escape').isnumeric():
@@ -248,7 +259,8 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
         'arguments': ''
     }
 
-    return "_state['%s']" % identifier, [init_element, ddt_element]
+    return "functions.Integ(lambda: %s() , lambda: %s())" % ('_d%s_dt' % identifier, '_init_%s' % identifier), \
+           [init_element, ddt_element]
 
 
 def add_n_delay(delay_input, delay_time, initial_value, order, subs, subscript_dict):

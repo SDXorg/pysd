@@ -554,7 +554,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
         def visit_build_call(self, n, vc):
             call = vc[0]
             args = vc[4]
-            self.kind = 'component'
+            self.kind = 'stateful'
             arglist = [x.strip() for x in args.split(',')]
             name, structure = builders[call.strip().lower()](*arglist)
             self.new_structure += structure
