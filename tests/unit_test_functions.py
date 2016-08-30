@@ -141,6 +141,53 @@ class TestLogicFunctions(unittest.TestCase):
         self.fail()
 
 
+class TestMacros(unittest.TestCase):
+
+    def testInteg(self):
+        import pysd.functions
+
+        ddt_val = 5
+        init_val = 10
+
+        def ddt_func():
+            return ddt_val
+
+        def init_func():
+            return init_val
+
+        stock = pysd.functions.integ(lambda: ddt_func(),
+                                     lambda: init_func())
+
+        stock.initialize()
+
+        self.assertEqual(stock(), 10)
+        self.assertEqual(stock.ddt(), 5)
+
+        dt = .1
+        stock.update(stock() + dt * stock.ddt())
+
+        self.assertEqual(stock(), 10.5)
+
+        ddt_val = 43
+        self.assertEqual(stock.ddt(), 43)
+
+        init_val = 11
+        self.assertEqual(stock(), 10.5)
+
+        stock.initialize()
+        self.assertEqual(stock(), 11)
+
+
+
+    def testMacroIdentification(self):
+        import pysd.functions
+
+        stock = pysd.functions.integ(lambda: 5,
+                                     lambda: 7)
+
+        self.assertIsInstance(stock,
+                              pysd.functions.macro)
+
 @unittest.skip('In Branch')
 class TestDataHandling(unittest.TestCase):
     def test_initial(self):

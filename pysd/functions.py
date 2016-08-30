@@ -81,6 +81,35 @@ def cache(horizon):
     else:
         raise(AttributeError('Bad horizon for cache decorator'))
 
+class macro(object):
+    def __init__(self):
+        pass
+
+    def __call__(self, *args, **kwargs):
+        pass
+
+    def initialize(self):
+        pass
+
+    def update(self):
+        pass
+
+class integ(macro):
+    def __init__(self, ddt, init):
+        self.init_func = init
+        self.ddt = ddt
+        self.state = None
+
+    def __call__(self):
+        return self.state
+
+    def initialize(self):
+        self.state = self.init_func()
+
+    def update(self, state):
+        self.state = state
+
+
 #
 # class Initial(object):
 #     """Replicates Vensim's `initial` function
