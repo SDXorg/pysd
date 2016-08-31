@@ -121,7 +121,7 @@ class Integ(Stateful):
 
 
 class Delay(Stateful):
-    # note that we could have put the `input` function argument as a parameter to
+    # note that we could have put the `delay_input` argument as a parameter to
     # the `__call__` function, and more closely mirrored the vensim syntax.
     # However, people may get confused this way in thinking that they need only one
     # delay object and can call it with various arguments to delay whatever is convenient.
@@ -170,46 +170,13 @@ class Initial(Stateful):
         self.state = self.func()
 
     def __call__(self):
-        return self.state()
+        return self.state
 
     def ddt(self):
         return 0
 
     def update(self, state):
         pass
-#
-# class Initial(object):
-#     """Replicates Vensim's `initial` function
-#
-#     a new instance of the class should be instantiated for each
-#     unique call to the `initial` function."""
-#
-#     def __init__(self):
-#         self.state.init_value = None
-#
-#     def __call__(self, value):
-#         """
-#         Returns the first value passed in,
-#         regardless of how many times it is called
-#
-#         Parameters
-#         ----------
-#         value: object
-#             Will usually be the result of a function, returning
-#             either a float or a DataArray
-#
-#         Returns
-#         -------
-#         init_value: object
-#             The first value of `value` after the caches are reset
-#         """
-#         if self.state.init_value is None:
-#             self.state.init_value = value
-#
-#         return self.state.init_value
-#
-#     def reset(self):
-#         self.init_value = None
 
 
 def ramp(slope, start, finish):

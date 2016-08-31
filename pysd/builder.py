@@ -114,7 +114,7 @@ def build_element(element, subscript_dict):
         cache_type = ''
     elif element['kind'] == 'component':
         cache_type = "@cache('step')"
-    elif element['kind'] == 'macro':
+    elif element['kind'] == 'stateful':
         cache_type = ''
     elif element['kind'] == 'lookup':  # lookups may be called with different values in a round
         cache_type = ''
@@ -288,84 +288,23 @@ def add_n_delay(delay_input, delay_time, initial_value, order, subs, subscript_d
     Returns
     -------
     outflow: basestring
-        Reference to the flow which contains the output of the delay process
-
+        reference to the delay object `__call__` method, which will return the output
+        of the delay process
     """
-
-    delayed_variable = delay_input[:-2]
-    identifier = '_' + delayed_variable + '_delay_' + order.rstrip('()')
-
-    output_element = {
-        'py_name': identifier,
-        'real_name': 'Implicit',
-        'kind': 'component',
-        'doc': 'delayed value of %s' % delayed_variable,
-        'subs': subs,
-        'unit': 'See docs for %s' % identifier,
-        'py_expr': "(%(stock)s / (%(delay)s / %(order)s)).loc[{'_delay': %(order)s-1}]" % {
-            'stock': '_state["%s"]' % identifier,
-            'delay': delay_time,
-            'order': order,
-        },
+    stateful = {
+        'py_name': 'delay_%s' % utils.make_python_identifier(delay_input)[0],
+        'real_name': 'Delay of %s' % delay_input,
+        'doc': 'Delay time: %s \n Delay initial value %s \n Delay order %s' % (
+            delay_time, initial_value, order),
+        'py_expr': 'functions.Delay(lambda: %s, lambda: %s, lambda: %s, lambda: %s)' % (
+            delay_input, delay_time, initial_value, order),
+        'unit': 'None',
+        'subs': '',
+        'kind': 'stateful',
         'arguments': ''
     }
 
-    coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
-    dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
-
-    try:
-        coords.update({'_delay': range(int(order))})
-    except TypeError or ValueError:
-        raise TypeError('Order of delay on %s must be an integer, instead received %s' % (
-            identifier, str(order)))
-
-    dims.append('_delay')
-
-    shape = [len(coords[dim]) for dim in dims]
-    initial_condition = textwrap.dedent("""\
-            xr.DataArray(data=np.ones(%(shape)s)*%(value)s,
-                         coords=%(coords)s,
-                         dims=%(dims)s )*%(delay)s/%(order)s""" % {
-        'shape': shape,
-        'value': initial_value,
-        'coords': repr(coords),
-        'dims': repr(dims),
-        'delay': delay_time,
-        'order': order})
-
-    init_element = {
-        'py_name': '_init_%s' % identifier,
-        'real_name': 'Implicit',
-        'kind': 'setup',  # not explicitly specified in the model file, but must exist
-        'py_expr': initial_condition,
-        'subs': dims,
-        'doc': 'Provides initial conditions for delay of %s function' % identifier,
-        'unit': 'See docs for %s' % identifier,
-        'arguments': ''
-    }
-
-    expression = textwrap.dedent("""\
-        ((%(stock)s / (%(delay)s / %(order)s)).shift(**{'_delay': 1}).fillna(%(inval)s)
-            - (%(stock)s / (%(delay)s / %(order)s)))""" % {
-        'stock': '_state["%s"]' % identifier,
-        'delay': delay_time,
-        'order': order,
-        'inval': delay_input
-    })
-
-    ddt_element = {
-        'py_name': '_d%s_dt' % identifier,
-        'real_name': 'Implicit',
-        'kind': 'component',
-        'doc': 'Provides derivative for %s function' % identifier,
-        'subs': dims,
-        'unit': 'See docs for %s' % identifier,
-        'py_expr': expression,
-        'arguments': ''
-    }
-
-    return ("%s()" % identifier,
-            [init_element, ddt_element, output_element])
+    return "%s()" % stateful['py_name'], [stateful]
 
 
 def add_n_smooth(smooth_input, smooth_time, initial_value, order, subs, subscript_dict):

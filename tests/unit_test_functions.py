@@ -214,13 +214,15 @@ class TestStateful(unittest.TestCase):
         # test that the function returns the first value
         # after it is called once
         f1_0 = func1()
-        initial_f10 = functions.Initial()
-        f1_i0 = initial_f10(func1())
+        initial_f10 = functions.Initial(lambda: func1())
+        initial_f10.initialize()
+        f1_i0 = initial_f10()
         self.assertEqual(f1_0, f1_i0)
 
         f2_0 = func2()
-        initial_f20 = functions.Initial()
-        f2_i0 = initial_f20(func2())
+        initial_f20 = functions.Initial(func2)
+        initial_f20.initialize()
+        f2_i0 = initial_f20()
         self.assertEqual(f2_0, f2_i0)
 
         a = 5
@@ -229,12 +231,12 @@ class TestStateful(unittest.TestCase):
         # test that the function returns the first value
         # after it is called a second time
         f1_1 = func1()
-        f1_i1 = initial_f10(func1())
+        f1_i1 = initial_f10()
         self.assertNotEqual(f1_1, f1_i1)
         self.assertEqual(f1_i1, f1_0)
 
         f2_1 = func2()
-        f2_i1 = initial_f20(func2())
+        f2_i1 = initial_f20()
         self.assertNotEqual(f2_1, f2_i1)
         self.assertEqual(f2_i1, f2_0)
 
