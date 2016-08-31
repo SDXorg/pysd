@@ -98,6 +98,14 @@ class Stateful(object):
 
 class Integ(Stateful):
     def __init__(self, ddt, initial_value):
+        """
+
+        Parameters
+        ----------
+        ddt: function
+            This will become an attribute of the object
+        initial_value
+        """
         self.init_func = initial_value
         self.ddt = ddt
         self.state = None
@@ -111,15 +119,64 @@ class Integ(Stateful):
     def update(self, state):
         self.state = state
 
-#class delay(macro):
-#    def __init__(self, delay_input, delay_time, initial_value, order):
-#        self.init_func = initial_value
 
-#class initial(macro):
+class Delay(Stateful):
+    # note that we could have put the `input` function argument as a parameter to
+    # the `__call__` function, and more closely mirrored the vensim syntax.
+    # However, people may get confused this way in thinking that they need only one
+    # delay object and can call it with various arguments to delay whatever is convenient.
+    # This method forces them to acknowledge that additional structure is being created
+    # in the delay object.
+
+    def __init__(self, delay_input, delay_time, initial_value, order):
+        """
+
+        Parameters
+        ----------
+        delay_input: function
+        delay_time: function
+        initial_value: function
+        order: function
+        """
+        self.init_func = initial_value
+        self.delay_time_func = delay_time
+        self.input_func = delay_input
+        self.order_func = order
+        self.state = None
+
+    def initialize(self):
+        init_state_value = self.init_func() * self.delay_time_func() / self.order_func()
+        self.state = np.array([init_state_value] * self.order_func())
+
+    def __call__(self):
+        return self.state[-1] / (self.delay_time_func() / self.order_func())
+
+    def ddt(self):
+        outflows = self.state / (self.delay_time_func() / self.order_func())
+        inflows = np.roll(outflows, 1)
+        inflows[0] = self.input_func()
+        return inflows
+
+    def update(self, state):
+        self.state = state
 
 
+class Initial(Stateful):
+    def __init__(self, func):
+        self.state = None
+        self.func = func
 
+    def initialize(self):
+        self.state = self.func()
 
+    def __call__(self):
+        return self.state()
+
+    def ddt(self):
+        return 0
+
+    def update(self, state):
+        pass
 #
 # class Initial(object):
 #     """Replicates Vensim's `initial` function

@@ -186,8 +186,20 @@ class TestStateful(unittest.TestCase):
         self.assertIsInstance(stock,
                               pysd.functions.Stateful)
 
-@unittest.skip('In Branch')
-class TestDataHandling(unittest.TestCase):
+    def testDelay(self):
+        import pysd.functions
+
+        delay_a = pysd.functions.Delay(delay_input=lambda: 5,
+                                       delay_time=lambda: 3,
+                                       initial_value=lambda: 4.234,
+                                       order=lambda: 3)
+
+        delay_a.initialize()
+
+        self.assertEqual(delay_a(), 4.234)
+
+        self.assertEqual(delay_a.ddt()[0], 5)
+
     def test_initial(self):
         from pysd import functions
         a = 1
@@ -225,3 +237,5 @@ class TestDataHandling(unittest.TestCase):
         f2_i1 = initial_f20(func2())
         self.assertNotEqual(f2_1, f2_i1)
         self.assertEqual(f2_i1, f2_0)
+
+
