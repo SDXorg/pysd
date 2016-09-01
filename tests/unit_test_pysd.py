@@ -133,54 +133,36 @@ class TestPySD(unittest.TestCase):
     def test_reset_state(self):
         import pysd
         model = pysd.read_vensim(test_model)
-        initial_state = model.components._state.copy()
+        initial_temp = model.components.teacup_temperature()
         model.run()
-        final_state = model.components._state.copy()
+        final_temp = model.components.teacup_temperature()
         model.reset_state()
-        reset_state = model.components._state.copy()
-        self.assertNotEqual(initial_state, final_state)
-        self.assertEqual(initial_state, reset_state)
+        reset_temp = model.components.teacup_temperature()
+        self.assertNotEqual(initial_temp, final_temp)
+        self.assertEqual(initial_temp, reset_temp)
 
     def test_set_state(self):
         import pysd
         model = pysd.read_vensim(test_model)
 
-        initial_state = model.components._state.copy()
+        initial_temp = model.components.teacup_temperature()
         initial_time = model.components.time()
 
-        new_state = {key: np.random.rand() for key in initial_state.iterkeys()}
         new_time = np.random.rand()
 
-        model.set_state(new_time, new_state)
+        # Test that we can set with real names
+        model.set_state(new_time, {'Teacup Temperature': 500})
+        self.assertNotEqual(initial_temp, 500)
+        self.assertEqual(model.components.teacup_temperature(), 500)
 
-        set_state = model.components._state.copy()
-        set_time = model.components.time()
+        # Test setting with pysafe names
+        model.set_state(new_time+1, {'teacup_temperature': 202})
+        self.assertEqual(model.components.teacup_temperature(), 202)
 
-        self.assertNotEqual(initial_state, new_state)
-        self.assertEqual(set_state, new_state)
+        # Test setting with stateful object name
+        model.set_state(new_time+2, {'integ_teacup_temperature': 302})
+        self.assertEqual(model.components.teacup_temperature(), 302)
 
-        self.assertNotEqual(initial_time, new_time)
-        self.assertEqual(new_time, set_time)
-
-    def test_set_state_with_real_name(self):
-        import pysd
-        model = pysd.read_vensim(test_model)
-
-        initial_state = model.components._state.copy()
-
-        new_state_realnames = {utils.dict_find(model.components._namespace, key): np.random.rand()
-                     for key in initial_state.iterkeys()}
-
-        new_state_pynames = {model.components._namespace[key]: value
-                             for key, value in new_state_realnames.iteritems()}
-        new_time = np.random.rand()
-
-        model.set_state(new_time, new_state_realnames)
-
-        set_state = model.components._state.copy()
-
-        self.assertNotEqual(initial_state, new_state_pynames)
-        self.assertEqual(set_state, new_state_pynames)
 
 
     def test_replace_element(self):
@@ -195,27 +177,27 @@ class TestPySD(unittest.TestCase):
     def test_set_initial_condition(self):
         import pysd
         model = pysd.read_vensim(test_model)
-        initial_state = model.components._state.copy()
+        initial_temp = model.components.teacup_temperature()
         initial_time = model.components.time()
 
-        new_state = {key: np.random.rand() for key in initial_state.iterkeys()}
+        new_state = {'Teacup Temperature': 500}
         new_time = np.random.rand()
 
         model.set_initial_condition((new_time, new_state))
-        set_state = model.components._state.copy()
+        set_temp = model.components.teacup_temperature()
         set_time = model.components.time()
 
-        self.assertNotEqual(initial_state, new_state)
-        self.assertEqual(set_state, new_state)
+        self.assertNotEqual(set_temp, 500)
+        self.assertEqual(set_temp, initial_temp)
 
         self.assertNotEqual(initial_time, new_time)
         self.assertEqual(new_time, set_time)
 
         model.set_initial_condition('original')
-        set_state = model.components._state.copy()
+        set_temp = model.components.teacup_temperature()
         set_time = model.components.time()
 
-        self.assertEqual(initial_state, set_state)
+        self.assertEqual(initial_temp, set_temp)
         self.assertEqual(initial_time, set_time)
 
     def test__build_euler_timeseries(self):
@@ -288,8 +270,7 @@ class TestPySD(unittest.TestCase):
         import pysd
         # Todo: think through a stronger test here...
         model = pysd.read_vensim(test_model)
-        res = model._integrate(derivative_functions=model.components._dfuncs,
-                               timesteps=range(5),
+        res = model._integrate(timesteps=range(5),
                                capture_elements=['teacup_temperature'],
                                return_timestamps=range(0, 5, 2))
         self.assertIsInstance(res, list)

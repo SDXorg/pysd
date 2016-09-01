@@ -93,6 +93,9 @@ class Stateful(object):
         pass
 
     def update(self, *args):
+        # Todo: Just use this one, except when it is overridden.
+        # Todo: check that the passed in new state is the same type and
+        # shape as the current state.
         pass
 
 
@@ -143,22 +146,46 @@ class Delay(Stateful):
         self.input_func = delay_input
         self.order_func = order
         self.state = None
+        self.order = None
 
     def initialize(self):
-        init_state_value = self.init_func() * self.delay_time_func() / self.order_func()
-        self.state = np.array([init_state_value] * self.order_func())
+        self.order = self.order_func()  # The order can only be set once
+        init_state_value = self.init_func() * self.delay_time_func() / self.order
+        self.state = np.array([init_state_value] * self.order)
 
     def __call__(self):
-        return self.state[-1] / (self.delay_time_func() / self.order_func())
+        return self.state[-1] / (self.delay_time_func() / self.order)
 
     def ddt(self):
-        outflows = self.state / (self.delay_time_func() / self.order_func())
+        outflows = self.state / (self.delay_time_func() / self.order)
         inflows = np.roll(outflows, 1)
         inflows[0] = self.input_func()
         return inflows
 
     def update(self, state):
         self.state = state
+
+
+class Smooth(Stateful):
+    def __init__(self, smooth_input, smooth_time, initial_value, order):
+        self.init_func = initial_value
+        self.smooth_time_func = smooth_time
+        self.input_func = smooth_input
+        self.order_func = order
+        self.state = None
+        self.order = None
+
+    def initialize(self):
+        self.order = self.order_func()  # The order can only be set once
+        self.state = np.array([self.init_func()] * self.order)
+
+    def __call__(self):
+        return self.state[-1]
+
+    def ddt(self):
+        targets = np.roll(self.state, 1)
+        targets[0] = self.input_func()
+        return (targets - self.state) * self.order / self.smooth_time_func()
 
 
 class Initial(Stateful):

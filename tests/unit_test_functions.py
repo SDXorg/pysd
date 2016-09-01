@@ -143,7 +143,7 @@ class TestLogicFunctions(unittest.TestCase):
 
 class TestStateful(unittest.TestCase):
 
-    def testInteg(self):
+    def test_integ(self):
         import pysd.functions
 
         ddt_val = 5
@@ -177,7 +177,7 @@ class TestStateful(unittest.TestCase):
         stock.initialize()
         self.assertEqual(stock(), 11)
 
-    def testStatefulIdentification(self):
+    def test_stateful_identification(self):
         import pysd.functions
 
         stock = pysd.functions.Integ(lambda: 5,
@@ -186,7 +186,7 @@ class TestStateful(unittest.TestCase):
         self.assertIsInstance(stock,
                               pysd.functions.Stateful)
 
-    def testDelay(self):
+    def test_delay(self):
         import pysd.functions
 
         delay_a = pysd.functions.Delay(delay_input=lambda: 5,

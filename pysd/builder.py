@@ -217,50 +217,65 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
     >>> add_stock('stock_name', [], 'inflow_a', '10')
 
     """
+    new_structure = []
 
+    if len(subs) == 0:
+        stateful_py_expr = 'functions.Integ(lambda: %s, lambda: %s)' % (expression, initial_condition)
+    else:
+        stateful_py_expr = 'functions.Integ(lambda: _d%s_dt(), lambda: _init_%s())' % (identifier, identifier)
 
+        # take care of cases when a float is passed as initialization for an array.
+        # this might be better located in the translation function in the future.
+        if subs and initial_condition.decode('unicode-escape').isnumeric():
+            coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
+            dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
+            shape = [len(coords[dim]) for dim in dims]
+            initial_condition = textwrap.dedent("""\
+                    xr.DataArray(data=np.ones(%(shape)s)*%(value)s,
+                                 coords=%(coords)s,
+                                 dims=%(dims)s )""" % {
+                'shape': shape,
+                'value': initial_condition,
+                'coords': repr(coords),
+                'dims': repr(dims)})
 
+        # create the stock initialization element
+        new_structure.append({
+            'py_name': '_init_%s' % identifier,
+            'real_name': 'Implicit',
+            'kind': 'setup',  # not explicitly specified in the model file, but must exist
+            'py_expr': initial_condition,
+            'subs': subs,
+            'doc': 'Provides initial conditions for %s function' % identifier,
+            'unit': 'See docs for %s' % identifier,
+            'arguments': ''
+        })
 
-    # take care of cases when a float is passed as initialization for an array.
-    # this might be better located in the translation function in the future.
-    if subs and initial_condition.decode('unicode-escape').isnumeric():
-        coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
-        dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
-        shape = [len(coords[dim]) for dim in dims]
-        initial_condition = textwrap.dedent("""\
-            xr.DataArray(data=np.ones(%(shape)s)*%(value)s,
-                         coords=%(coords)s,
-                         dims=%(dims)s )""" % {
-            'shape': shape,
-            'value': initial_condition,
-            'coords': repr(coords),
-            'dims': repr(dims)})
+        new_structure.append({
+            'py_name': '_d%s_dt' % identifier,
+            'real_name': 'Implicit',
+            'kind': 'component',
+            'doc': 'Provides derivative for %s function' % identifier,
+            'subs': subs,
+            'unit': 'See docs for %s' % identifier,
+            'py_expr': expression,
+            'arguments': ''
+        })
 
-    # create the stock initialization element
-    init_element = {
-        'py_name': '_init_%s' % identifier,
-        'real_name': 'Implicit',
-        'kind': 'setup',  # not explicitly specified in the model file, but must exist
-        'py_expr': initial_condition,
-        'subs': subs,
-        'doc': 'Provides initial conditions for %s function' % identifier,
-        'unit': 'See docs for %s' % identifier,
+    # describe the stateful object
+    stateful = {
+        'py_name': 'integ_%s' % identifier,
+        'real_name': 'Representation of  %s' % identifier,
+        'doc': 'Integrates Expression %s' % expression,
+        'py_expr': stateful_py_expr,
+        'unit': 'None',
+        'subs': '',
+        'kind': 'stateful',
         'arguments': ''
     }
 
-    ddt_element = {
-        'py_name': '_d%s_dt' % identifier,
-        'real_name': 'Implicit',
-        'kind': 'component',
-        'doc': 'Provides derivative for %s function' % identifier,
-        'subs': subs,
-        'unit': 'See docs for %s' % identifier,
-        'py_expr': expression,
-        'arguments': ''
-    }
-
-    return "functions.Integ(lambda: %s() , lambda: %s())" % ('_d%s_dt' % identifier, '_init_%s' % identifier), \
-           [init_element, ddt_element]
+    new_structure.append(stateful)
+    return "%s()" % stateful['py_name'], new_structure
 
 
 def add_n_delay(delay_input, delay_time, initial_value, order, subs, subscript_dict):
@@ -343,75 +358,17 @@ def add_n_smooth(smooth_input, smooth_time, initial_value, order, subs, subscrip
 
         """
 
-    smoothed_variable = smooth_input[:-2]
-    identifier = '_' + smoothed_variable + '_smooth_' + order.rstrip('()')
-
-    output_element = {
-        'py_name': identifier,
-        'real_name': 'Implicit',
-        'kind': 'component',
-        'doc': 'smoothed value of %s' % smoothed_variable,
-        'subs': subs,
-        'unit': 'See docs for %s' % identifier,
-        'py_expr': "%(stock)s.loc[{'_smooth': %(order)s-1}]" % {
-            'stock': '_state["%s"]' % identifier,
-            'order': order,
-        },
+    stateful = {
+        'py_name': 'smooth_%s' % utils.make_python_identifier(smooth_input)[0],
+        'real_name': 'Smooth of %s' % smooth_input,
+        'doc': 'Smooth time: %s \n Smooth initial value %s \n Smooth order %s' % (
+            smooth_time, initial_value, order),
+        'py_expr': 'functions.Delay(lambda: %s, lambda: %s, lambda: %s, lambda: %s)' % (
+            smooth_input, smooth_time, initial_value, order),
+        'unit': 'None',
+        'subs': '',
+        'kind': 'stateful',
         'arguments': ''
     }
 
-    coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
-    dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
-
-    try:
-        coords.update({'_smooth': range(int(order))})
-    except TypeError or ValueError:
-        raise TypeError('Order of smooth on %s must be an integer, instead received %s' % (
-            identifier, str(order)))
-
-    dims.append('_smooth')
-
-    shape = [len(coords[dim]) for dim in dims]
-    initial_condition = textwrap.dedent("""\
-               xr.DataArray(data=np.ones(%(shape)s)*%(value)s,
-                            coords=%(coords)s,
-                            dims=%(dims)s )""" % {
-        'shape': shape,
-        'value': initial_value,
-        'coords': repr(coords),
-        'dims': repr(dims)
-    })
-
-    init_element = {
-        'py_name': '_init_%s' % identifier,
-        'real_name': 'Implicit',
-        'kind': 'setup',  # not explicitly specified in the model file, but must exist
-        'py_expr': initial_condition,
-        'subs': dims,
-        'doc': 'Provides initial conditions for smooth of %s function' % identifier,
-        'unit': 'See docs for %s' % identifier,
-        'arguments': ''
-    }
-
-    expression = textwrap.dedent("""\
-        (%(stock)s.shift(**{'_smooth': 1}).fillna(%(inval)s) - %(stock)s )/(%(smooth)s/%(order)s)
-           """ % {
-        'stock': '_state["%s"]' % identifier,
-        'smooth': smooth_time,
-        'order': order,
-        'inval': smooth_input
-    })
-
-    ddt_element = {
-        'py_name': '_d%s_dt' % identifier,
-        'real_name': 'Implicit',
-        'kind': 'component',
-        'doc': 'Provides derivative for %s function' % identifier,
-        'subs': dims,
-        'unit': 'See docs for %s' % identifier,
-        'py_expr': expression,
-        'arguments': ''
-    }
-
-    return ("%s()" % identifier,
-            [init_element, ddt_element, output_element])
+    return "%s()" % stateful['py_name'], [stateful]

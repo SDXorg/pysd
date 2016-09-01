@@ -75,10 +75,15 @@ def load(py_model_file):
     components = imp.load_source(module_name,
                                  py_model_file)  # SDS personal note: 'modulename' is the name of the object, but to use it within the console it needs to be imported: import modulename. In that case, imp.load_source does not need to be assigned to an object, but modulename will be the object
 
-    components._stateful_elements = {utils.dict_find(components._namespace, name):
-                                         getattr(components, name)
-                                     for name in dir(components)
-                                     if isinstance(getattr(components, name), functions.Stateful)}
+    components._stateful_elements = [getattr(components, name) for name in dir(components)
+                                     if isinstance(getattr(components, name), functions.Stateful)]
+
+    #components._stocknames = [name.lstrip('integ_') for name in dir(components)
+    #                                 if isinstance(getattr(components, name), functions.Stateful)]
+    #components._stateful_elements = {utils.dict_find(components._namespace, name):
+    #                                     getattr(components, name)
+    #                                 for name in dir(components)
+    #                                 if isinstance(getattr(components, name), functions.Stateful)}
 
     # components._stocknames = [name[2:-3] for name in dir(components)  # strip to just the name
     #                          if name.startswith('_d') and name.endswith('_dt')]
@@ -189,7 +194,7 @@ class PySD(object):
         t_series = self._build_euler_timeseries(return_timestamps)
 
         if return_columns is None:
-            return_columns = self.components._stateful_elements.keys()
+            return_columns = self.components._namespace.keys()
 
         capture_elements, return_addresses = utils.get_return_elements(
             return_columns, self.components._namespace, self.components._subscript_dict)
@@ -233,12 +238,14 @@ class PySD(object):
             retry_flag = False
             making_progress = False
             initialization_order = []
-            for name, element in self.components._stateful_elements.items():
+            for element in self.components._stateful_elements:
                 try:
                     element.initialize()
                     making_progress = True
-                    initialization_order.append(name)
-                except KeyError:  # may also need to catch TypeError?
+                    initialization_order.append(repr(element))
+                except KeyError:
+                    retry_flag = True
+                except TypeError:
                     retry_flag = True
             if not making_progress:
                 raise KeyError('Unresolvable Reference: Probable circular initialization' +
@@ -285,7 +292,6 @@ class PySD(object):
                 raise NameError('%s is not recognized as a model component' % key)
 
             setattr(self.components, func_name, new_function)
-            self.components._funcs[func_name] = new_function  # facilitates lookups
 
     def set_state(self, t, state):
         """ Set the system state.
@@ -296,19 +302,25 @@ class PySD(object):
             The system time
 
         state : dict
-            Idelly a complete dictionary of system state, but a partial
-            state dictionary will work if you're confident that the remaining
-            state elements are correct.
+            A (possibly partial) dictionary of the system state.
         """
-        # Todo: Do we really need to have the state dictionary use python safe names? Probably not.
         self.components._t = t
 
-        keys = [self.components._namespace[key]
-                if key in self.components._namespace.keys()
-                else key
-                for key in state.iterkeys()]
+        for key, value in state.items():
+            if key in self.components._namespace.keys():
+                element_name = 'integ_%s' % self.components._namespace[key]
+            elif key in self.components._namespace.values():
+                element_name = 'integ_%s' % key
+            else: # allow the user to specify the stateful object directly
+                element_name = key
 
-        self.components._state.update(dict(zip(keys, state.itervalues())))
+            try:
+                element = getattr(self.components, element_name)
+                element.update(value)
+            except AttributeError:
+                print("'%s' has no state elements, assignment failed")
+                raise
+
 
     def set_initial_condition(self, initial_condition):
         """ Set the initial conditions of the integration.
@@ -415,19 +427,18 @@ class PySD(object):
         return lambda: value
 
     def _euler_step(self, dt):
-        """ Performs a single step in the euler integration
+        """ Performs a single step in the euler integration,
+        updating stateful components
 
         Parameters
         ----------
         dt : float
-            This is the amount to increase
+            This is the amount to increase time by this step
         """
-        # Todo: this is brittle because we can't count on dictionary to preserve order.
-        # Need to rethink.
         new_states = [component() + component.ddt() * dt
-                      for component in self.components._stateful_elements.values()]
+                      for component in self.components._stateful_elements]
         [component.update(new_state)
-         for component, new_state in zip(self.components._stateful_elements.values(), new_states)]
+         for component, new_state in zip(self.components._stateful_elements, new_states)]
 
     def _integrate(self, timesteps, capture_elements, return_timestamps):
         """
