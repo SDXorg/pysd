@@ -16,7 +16,6 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/abs/test_abs.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('in branch')
     def test_active_initial(self):
         from test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/active_initial/test_active_initial.mdl')
@@ -42,7 +41,6 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/constant_expressions/test_constant_expressions.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('in branch')
     def test_delay_parentheses(self):
         from test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/delay_parentheses/test_delay_parentheses.mdl')
@@ -78,7 +76,6 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/if_stmt/if_stmt.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('In branches')
     def test_initial_function(self):
         from test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/initial_function/test_initial.mdl')
@@ -273,7 +270,6 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscript_updimensioning/test_subscript_updimensioning.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('in branch')
     def test_subscripted_delays(self):
         from test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscripted_delays/test_subscripted_delays.mdl')

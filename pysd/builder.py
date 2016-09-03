@@ -306,8 +306,14 @@ def add_n_delay(delay_input, delay_time, initial_value, order, subs, subscript_d
         reference to the delay object `__call__` method, which will return the output
         of the delay process
     """
+    # the py name has to be unique to all the passed parameters, or if there are two things
+    # that delay the output by different amounts, they'll overwrite the original function...
+
     stateful = {
-        'py_name': 'delay_%s' % utils.make_python_identifier(delay_input)[0],
+        'py_name': utils.make_python_identifier('delay_%s_%s_%s_%s' % (delay_input,
+                                                                       delay_time,
+                                                                       initial_value,
+                                                                       order))[0],
         'real_name': 'Delay of %s' % delay_input,
         'doc': 'Delay time: %s \n Delay initial value %s \n Delay order %s' % (
             delay_time, initial_value, order),
@@ -359,11 +365,14 @@ def add_n_smooth(smooth_input, smooth_time, initial_value, order, subs, subscrip
         """
 
     stateful = {
-        'py_name': 'smooth_%s' % utils.make_python_identifier(smooth_input)[0],
+        'py_name': utils.make_python_identifier('smooth_%s_%s_%s_%s' % (smooth_input,
+                                                                        smooth_time,
+                                                                        initial_value,
+                                                                        order))[0],
         'real_name': 'Smooth of %s' % smooth_input,
         'doc': 'Smooth time: %s \n Smooth initial value %s \n Smooth order %s' % (
             smooth_time, initial_value, order),
-        'py_expr': 'functions.Delay(lambda: %s, lambda: %s, lambda: %s, lambda: %s)' % (
+        'py_expr': 'functions.Smooth(lambda: %s, lambda: %s, lambda: %s, lambda: %s)' % (
             smooth_input, smooth_time, initial_value, order),
         'unit': 'None',
         'subs': '',

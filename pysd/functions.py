@@ -6,8 +6,10 @@ straightforward equivalent in python.
 
 """
 
+from __future__ import division
 import numpy as np
 from functools import wraps
+
 
 try:
     import scipy.stats as stats
@@ -83,20 +85,28 @@ def cache(horizon):
 
 
 class Stateful(object):
+    # the integrator needs to be able to 'get' the current state of the object,
+    # and get the derivative. It calculates the new state, and updates it. The state
+    # can be any object which is subject to basic (element-wise) algebraic operations
     def __init__(self):
-        pass
+        self._state = None
 
     def __call__(self, *args, **kwargs):
-        pass
+        return self.state
 
     def initialize(self):
         pass
 
-    def update(self, *args):
-        # Todo: Just use this one, except when it is overridden.
-        # Todo: check that the passed in new state is the same type and
-        # shape as the current state.
-        pass
+    @property
+    def state(self):
+        return self._state
+
+    @state.setter
+    def state(self, new_value):
+        self._state = new_value
+
+    def update(self, state):
+        self.state = state
 
 
 class Integ(Stateful):
@@ -109,18 +119,12 @@ class Integ(Stateful):
             This will become an attribute of the object
         initial_value
         """
+        super(Integ, self).__init__()
         self.init_func = initial_value
         self.ddt = ddt
-        self.state = None
-
-    def __call__(self):
-        return self.state
 
     def initialize(self):
         self.state = self.init_func()
-
-    def update(self, state):
-        self.state = state
 
 
 class Delay(Stateful):
@@ -141,11 +145,11 @@ class Delay(Stateful):
         initial_value: function
         order: function
         """
+        super(Delay, self).__init__()
         self.init_func = initial_value
         self.delay_time_func = delay_time
         self.input_func = delay_input
         self.order_func = order
-        self.state = None
         self.order = None
 
     def initialize(self):
@@ -160,19 +164,16 @@ class Delay(Stateful):
         outflows = self.state / (self.delay_time_func() / self.order)
         inflows = np.roll(outflows, 1)
         inflows[0] = self.input_func()
-        return inflows
-
-    def update(self, state):
-        self.state = state
+        return inflows - outflows
 
 
 class Smooth(Stateful):
     def __init__(self, smooth_input, smooth_time, initial_value, order):
+        super(Smooth, self).__init__()
         self.init_func = initial_value
         self.smooth_time_func = smooth_time
         self.input_func = smooth_input
         self.order_func = order
-        self.state = None
         self.order = None
 
     def initialize(self):
@@ -190,19 +191,17 @@ class Smooth(Stateful):
 
 class Initial(Stateful):
     def __init__(self, func):
-        self.state = None
+        super(Initial, self).__init__()
         self.func = func
 
     def initialize(self):
         self.state = self.func()
 
-    def __call__(self):
-        return self.state
-
     def ddt(self):
         return 0
 
     def update(self, state):
+        # this doesn't change once it's set up.
         pass
 
 

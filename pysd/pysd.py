@@ -435,7 +435,7 @@ class PySD(object):
         dt : float
             This is the amount to increase time by this step
         """
-        new_states = [component() + component.ddt() * dt
+        new_states = [component.state + component.ddt() * dt
                       for component in self.components._stateful_elements]
         [component.update(new_state)
          for component, new_state in zip(self.components._stateful_elements, new_states)]
