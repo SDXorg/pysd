@@ -198,7 +198,7 @@ class TestStateful(unittest.TestCase):
 
         self.assertEqual(delay_a(), 4.234)
 
-        self.assertEqual(delay_a.ddt()[0], 5)
+        self.assertEqual(delay_a.ddt()[0], 5-(4.234*3/3))
 
     def test_initial(self):
         from pysd import functions

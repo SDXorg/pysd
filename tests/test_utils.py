@@ -88,8 +88,6 @@ def assert_frames_close(actual, expected, **kwargs):
         except AssertionError as e:
             raise AssertionError(
                 e.message + 'Column: ' + str(col)
-
-
             )
 
 

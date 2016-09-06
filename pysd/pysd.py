@@ -10,11 +10,6 @@ August 15, 2014: created
 June 6 2015: Major updates - version 0.2.5
 Jan 2016: Rework to handle subscripts
 May 2016: Updates to handle grammar refactoring
-
-Contributors
-------------
-James Houghton <james.p.houghton@gmail.com>
-Mounir Yakzan
 """
 
 import pandas as _pd
@@ -27,9 +22,7 @@ import functions
 
 from documentation import SDVarDoc
 
-
 # Todo: add a logical way to run two or more models together, using the same integrator.
-# Todo: add the state dictionary to the model file
 # Todo: work out an RK4 adaptive integrator
 
 
@@ -57,6 +50,7 @@ def read_vensim(mdl_file):
 
 
 def load(py_model_file):
+    # Todo: brng the bulk of this into the pysd __init__ function
     """ Load a python-converted model file.
 
     Parameters
@@ -69,7 +63,6 @@ def load(py_model_file):
     --------
     >>> model = load('../tests/test-models/samples/teacup/teacup.py')
     """
-
     # need a unique identifier for the imported module. Use the time.
     module_name = str(time.time()).replace('.', '')
     components = imp.load_source(module_name,
@@ -77,23 +70,6 @@ def load(py_model_file):
 
     components._stateful_elements = [getattr(components, name) for name in dir(components)
                                      if isinstance(getattr(components, name), functions.Stateful)]
-
-    #components._stocknames = [name.lstrip('integ_') for name in dir(components)
-    #                                 if isinstance(getattr(components, name), functions.Stateful)]
-    #components._stateful_elements = {utils.dict_find(components._namespace, name):
-    #                                     getattr(components, name)
-    #                                 for name in dir(components)
-    #                                 if isinstance(getattr(components, name), functions.Stateful)}
-
-    # components._stocknames = [name[2:-3] for name in dir(components)  # strip to just the name
-    #                          if name.startswith('_d') and name.endswith('_dt')]
-
-    ## pointers to the various derivative functions for each of the stocks
-    # components._dfuncs = {name: getattr(components, '_d%s_dt' % name)
-    #                      for name in components._stocknames}
-
-    # funcnames = filter(lambda x: not x.startswith('_'), dir(components))
-    # components._funcs = {name: getattr(components, name) for name in funcnames}
 
     varnames = filter(lambda x: not x.startswith('_') and not x in ('cache', 'functions', 'np'),
                       dir(components))
@@ -172,7 +148,7 @@ class PySD(object):
         --------
 
         >>> model.run(params={'exogenous_constant':42})
-        >>> model.run(params={'exogenous_variable':timeseries_input})
+        >>> model.run(params={'exogenous_variable': timeseries_input})
         >>> model.run(return_timestamps=[1,2,3.1415,4,10])
         >>> model.run(return_timestamps=10)
         >>> model.run(return_timestamps=np.linspace(1,10,20))
@@ -196,6 +172,9 @@ class PySD(object):
         if return_columns is None:
             return_columns = self.components._namespace.keys()
 
+        self.components._stage = 'Run'
+        self.clear_caches()
+
         capture_elements, return_addresses = utils.get_return_elements(
             return_columns, self.components._namespace, self.components._subscript_dict)
 
@@ -217,8 +196,8 @@ class PySD(object):
         # if there are variables in the model named 't' or 'state' there are no
         # conflicts
 
-
-        self.components._t = self.components.initial_time()  # set the initial time
+        self.components._t = self.components.initial_time()
+        self.components._stage = 'Initialization'
 
         def initialize_state():
             """
@@ -246,6 +225,8 @@ class PySD(object):
                 except KeyError:
                     retry_flag = True
                 except TypeError:
+                    retry_flag = True
+                except AttributeError:
                     retry_flag = True
             if not making_progress:
                 raise KeyError('Unresolvable Reference: Probable circular initialization' +
@@ -321,7 +302,6 @@ class PySD(object):
                 print("'%s' has no state elements, assignment failed")
                 raise
 
-
     def set_initial_condition(self, initial_condition):
         """ Set the initial conditions of the integration.
 
@@ -359,6 +339,14 @@ class PySD(object):
                                  '    "current"/"c"')
         else:
             raise TypeError('Check documentation for valid entries')
+
+    def clear_caches(self):
+        """ Clears the Caches for all model elements """
+        for element_name in dir(self.components):
+            element = getattr(self.components, element_name)
+            if hasattr(element, 'cache_val'):
+                delattr(element, 'cache_val')
+
 
     def _build_euler_timeseries(self, return_timestamps=None):
         """

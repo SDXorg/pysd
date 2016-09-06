@@ -55,11 +55,12 @@ def cache(horizon):
         def cached(*args):
             """Step wise cache function"""
             try:  # fails if cache is out of date or not instantiated
-                assert cached.t == func.func_globals['_t']
+                assert cached.cache_t == func.func_globals['_t']
+                assert hasattr(cached, 'cache_val')
             except (AssertionError, AttributeError):
-                cached.cache = func(*args)
-                cached.t = func.func_globals['_t']
-            return cached.cache
+                cached.cache_val = func(*args)
+                cached.cache_t = func.func_globals['_t']
+            return cached.cache_val
         return cached
 
     def cache_run(func):
@@ -68,10 +69,10 @@ def cache(horizon):
         def cached(*args):
             """Run wise cache function"""
             try:  # fails if cache is not instantiated
-                return cached.cache
+                return cached.cache_val
             except AttributeError:
-                cached.cache = func(*args)
-                return cached.cache
+                cached.cache_val = func(*args)
+                return cached.cache_val
         return cached
 
     if horizon == 'step':
@@ -95,10 +96,12 @@ class Stateful(object):
         return self.state
 
     def initialize(self):
-        pass
+        raise NotImplementedError
 
     @property
     def state(self):
+        if self._state is None:
+            raise AttributeError('Attempt to call stateful element before it is initialized.')
         return self._state
 
     @state.setter
@@ -353,7 +356,7 @@ def active_initial(expr, init_val):
     -------
 
     """
-    if time() == initial_time():
+    if _stage() == 'Initialization':
         return init_val
     else:
         return expr

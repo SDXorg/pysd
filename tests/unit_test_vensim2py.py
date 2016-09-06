@@ -169,22 +169,6 @@ class TestParse_general_expression(unittest.TestCase):
         res = parse_general_expression({'expr': '-10^3+4'})
         self.assertEqual(res[0]['py_expr'], '-10**3+4')
 
-    def test_kind_assignment(self):
-        from pysd.vensim2py import parse_general_expression
-        res = parse_general_expression({'expr': '-10^3+4'})
-        self.assertEqual(res[0]['kind'], 'constant')
-
-        res = parse_general_expression({'expr': 'Abs(-3)'})
-        self.assertEqual(res[0]['kind'], 'component')
-
-        res = parse_general_expression({'expr': 'INTEG (FlowA, -10)',
-                                        'py_name': 'test_stock',
-                                        'subs': None},
-                                       {'FlowA': 'flowa'})
-        self.assertEqual(res[0]['kind'], 'component')
-        self.assertEqual(res[1][0]['kind'], 'setup')
-        self.assertEqual(res[1][1]['kind'], 'component')
-
     def test_caps_handling(self):
         from pysd.vensim2py import parse_general_expression
         res = parse_general_expression({'expr': 'Abs(-3)'})
@@ -196,15 +180,7 @@ class TestParse_general_expression(unittest.TestCase):
         res = parse_general_expression({'expr': 'aBS(-3)'})
         self.assertEqual(res[0]['py_expr'], 'abs(-3)')
 
-    def test_delay_construction_function_no_subscripts(self):
-        #todo: eventually make this case more rigorous, for now depending on integration test
-        from pysd.vensim2py import parse_general_expression
-        res = parse_general_expression({'expr': 'Const * DELAY1(Variable, DelayTime)',
-                                        'subs': []},
-                                       {'Const': 'const', 'Variable': 'variable',
-                                        'DelayTime': 'delaytime'},
-                                       )
-        self.assertEqual(res[0]['py_expr'], 'const()*_variable_delay_1()')
+
 
     def test_function_calls(self):
         from pysd.vensim2py import parse_general_expression
@@ -241,44 +217,62 @@ class TestParse_general_expression(unittest.TestCase):
         self.assertEqual(res[0]['py_expr'], '-1.3e-10')
 
     def test_stock_construction_function_no_subscripts(self):
+        """ stock construction should create a stateful variable and reference it """
         from pysd.vensim2py import parse_general_expression
-        actual = parse_general_expression({'expr': 'INTEG (FlowA, -10)',
+        from pysd.functions import Integ
+        from pysd import functions
+        res = parse_general_expression({'expr': 'INTEG (FlowA, -10)',
                                       'py_name': 'test_stock',
-                                      'subs': None},
+                                      'subs': []},
                                      {'FlowA': 'flowa'})
 
-        expected = (
-            {'kind': 'component', 'py_expr': "_state['test_stock']", 'arguments': ''},
-            [{'kind': 'setup',
-              'subs': None,
-              'doc': 'Provides initial conditions for test_stock function',
-              'py_name': '_init_test_stock',
-              'real_name': 'Implicit',
-              'unit': 'See docs for test_stock',
-              'py_expr': '-10',
-              'arguments': ''},
-             {'py_name': '_dtest_stock_dt',
-              'subs': None,
-              'doc': 'Provides derivative for test_stock function',
-              'kind': 'component',
-              'unit': 'See docs for test_stock',
-              'py_expr': 'flowa()',
-              'real_name': 'Implicit',
-              'arguments': ''}])
-        self.assertDictEqual(actual[0], expected[0])
-        self.assertDictEqual(actual[1][0], expected[1][0])
-        self.assertDictEqual(actual[1][1], expected[1][1])
+        self.assertEqual(res[1][0]['kind'], 'stateful')
+        a = eval(res[1][0]['py_expr'])
+        self.assertIsInstance(a, Integ)
+
+        # check the reference to that variable
+        self.assertEqual(res[0]['py_expr'], res[1][0]['py_name'] + '()')
+
+    def test_delay_construction_function_no_subscripts(self):
+        from pysd.vensim2py import parse_general_expression
+        from pysd.functions import Delay
+        from pysd import functions
+        res = parse_general_expression({'expr': 'DELAY1(Variable, DelayTime)',
+                                        'subs': []},
+                                       {'Variable': 'variable',
+                                        'DelayTime': 'delaytime'},
+                                       )
+
+        self.assertEqual(res[1][0]['kind'], 'stateful')
+        a = eval(res[1][0]['py_expr'])
+        self.assertIsInstance(a, Delay)
+
+        # check the reference to that variable
+        self.assertEqual(res[0]['py_expr'], res[1][0]['py_name'] + '()')
 
 
     def test_smooth_construction_function_no_subscripts(self):
-        # todo: improve this test
+        """ Tests translation of 'smooth'
+
+        This translation should create a new stateful object to hold the delay elements,
+        and then pass back a reference to that value
+        """
         from pysd.vensim2py import parse_general_expression
-        res = parse_general_expression({'expr': 'Const * SMOOTH(Variable, DelayTime)',
+        from pysd.functions import Smooth
+        from pysd import functions
+        res = parse_general_expression({'expr': 'SMOOTH(Variable, DelayTime)',
                                         'subs': []},
-                                       {'Const': 'const', 'Variable': 'variable',
+                                       {'Variable': 'variable',
                                         'DelayTime': 'delaytime'},
                                        )
-        self.assertEqual(res[0]['py_expr'], 'const()*_variable_smooth_1()')
+
+        # check stateful object creation
+        self.assertEqual(res[1][0]['kind'], 'stateful')
+        a = eval(res[1][0]['py_expr'])
+        self.assertIsInstance(a, Smooth)
+
+        # check the reference to that variable
+        self.assertEqual(res[0]['py_expr'], res[1][0]['py_name']+'()')
 
     def test_subscript_float_initialization(self):
         from pysd.vensim2py import parse_general_expression
@@ -333,29 +327,6 @@ class TestParse_general_expression(unittest.TestCase):
                              {'Dim1': ['A', 'B', 'C'], 'Dim2': ['D', 'E']})
         self.assertEqual(a.loc[{'Dim1': 'A', 'Dim2': 'D'}], 1)
         self.assertEqual(a.loc[{'Dim1': 'B', 'Dim2': 'E'}], 4)
-
-    def test_subscript_stock(self):
-        from pysd.vensim2py import parse_general_expression
-        res = parse_general_expression({'expr': 'INTEG (Flow[sub_D1,sub_D2], Init[sub_D1, sub_D2])',
-                                      'py_name': 'stock_test', 'subs': ['sub_D1']},
-                                     {'Init': 'init', 'Flow': 'flow'},
-                                     {'sub_D1': ['Entry 1', 'Entry 2', 'Entry 3'],
-                                      'sub_D2': ['Column 1', 'Column 2']})
-
-        self.assertDictContainsSubset({'kind': 'component', 'py_expr': "_state['stock_test']"},
-                                      res[0])
-
-        self.assertDictContainsSubset({'kind': 'setup',
-                                       'subs': ['sub_D1'],
-                                       'py_name': '_init_stock_test',
-                                       'py_expr': 'init()'},
-                                      res[1][0])
-
-        self.assertDictContainsSubset({'kind': 'component',
-                                       'subs': ['sub_D1'],
-                                       'py_name': '_dstock_test_dt',
-                                       'py_expr': 'flow()'},
-                                      res[1][1])
 
     @unittest.skip('in branch')
     def test_subscript_reference(self):

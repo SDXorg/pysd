@@ -6,7 +6,6 @@ from pysd import utils
 test_model = 'test-models/samples/teacup/teacup.mdl'
 
 
-
 class TestPySD(unittest.TestCase):
     def test_run(self):
         import pysd
@@ -119,7 +118,8 @@ class TestPySD(unittest.TestCase):
         import pysd
         model = pysd.read_vensim(test_model)
         self.assertIsInstance(str(model), str)  # tests string conversion of string
-        self.assertEqual(str(model),test_model) # tests that the output of print model is indeed the filename
+        self.assertEqual(str(model),
+                         test_model)  # tests that the output of print model is indeed the filename
         self.assertIsInstance(model.doc(), str)  # tests the function we wrote
         self.assertIsInstance(model.doc(short=True), str)
 
@@ -128,7 +128,7 @@ class TestPySD(unittest.TestCase):
         import pysd
         model = pysd.read_vensim(test_model)
         model.run()
-        self.assertIsNotNone(model.components.room_temperature.cache)
+        self.assertIsNotNone(model.components.room_temperature.cache_val)
 
     def test_reset_state(self):
         import pysd
@@ -156,14 +156,12 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(model.components.teacup_temperature(), 500)
 
         # Test setting with pysafe names
-        model.set_state(new_time+1, {'teacup_temperature': 202})
+        model.set_state(new_time + 1, {'teacup_temperature': 202})
         self.assertEqual(model.components.teacup_temperature(), 202)
 
         # Test setting with stateful object name
-        model.set_state(new_time+2, {'integ_teacup_temperature': 302})
+        model.set_state(new_time + 2, {'integ_teacup_temperature': 302})
         self.assertEqual(model.components.teacup_temperature(), 302)
-
-
 
     def test_replace_element(self):
         import pysd
@@ -187,8 +185,8 @@ class TestPySD(unittest.TestCase):
         set_temp = model.components.teacup_temperature()
         set_time = model.components.time()
 
-        self.assertNotEqual(set_temp, 500)
-        self.assertEqual(set_temp, initial_temp)
+        self.assertNotEqual(set_temp, initial_temp)
+        self.assertEqual(set_temp, 500)
 
         self.assertNotEqual(initial_time, new_time)
         self.assertEqual(new_time, set_time)
@@ -251,21 +249,6 @@ class TestPySD(unittest.TestCase):
         model.components._t = 2.5
         self.assertEqual(func(), val)
 
-    def test__euler_step(self):
-        import pysd
-        model = pysd.read_vensim(test_model)
-        state = model.components._state.copy()
-        next_step = model._euler_step(model.components._dfuncs,
-                                      model.components._state,
-                                      1)
-        self.assertIsInstance(next_step, dict)
-        self.assertNotEqual(next_step, state)
-        double_step = model._euler_step(model.components._dfuncs,
-                                        model.components._state,
-                                        2)
-        self.assertEqual(double_step['teacup_temperature'] - next_step['teacup_temperature'],
-                         next_step['teacup_temperature'] - state['teacup_temperature'])
-
     def test__integrate(self):
         import pysd
         # Todo: think through a stronger test here...
@@ -284,12 +267,12 @@ class TestPySD(unittest.TestCase):
         import pysd
         model = pysd.read_vensim('test-models/tests/delays/test_delays.mdl')
         ret = model.run()
-        self.assertSetEqual(set(ret.columns.values),
-                            set(['Stock Delay1I',
-                                 'Stock Delay3I',
-                                 'Stock Delay1',
-                                 'Stock DelayN',
-                                 'Stock Delay3']))
+        self.assertTrue({'Stock Delay1I',
+                         'Stock Delay3I',
+                         'Stock Delay1',
+                         'Stock DelayN',
+                         'Stock Delay3'} <=
+                        set(ret.columns.values))
 
 
 class TestModelInteraction(unittest.TestCase):
@@ -354,4 +337,3 @@ class TestModelInteraction(unittest.TestCase):
         import pysd
         model = pysd.read_vensim(test_model)
         self.assertEqual(model.mdl_file, test_model)
-
