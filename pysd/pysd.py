@@ -10,11 +10,6 @@ August 15, 2014: created
 June 6 2015: Major updates - version 0.2.5
 Jan 2016: Rework to handle subscripts
 May 2016: Updates to handle grammar refactoring
-
-Contributors
-------------
-James Houghton <james.p.houghton@gmail.com>
-Mounir Yakzan
 """
 
 import pandas as _pd
@@ -23,12 +18,11 @@ import imp
 import time
 import utils
 import tabulate
+import functions
 
 from documentation import SDVarDoc
 
-
 # Todo: add a logical way to run two or more models together, using the same integrator.
-# Todo: add the state dictionary to the model file
 # Todo: work out an RK4 adaptive integrator
 
 
@@ -56,6 +50,7 @@ def read_vensim(mdl_file):
 
 
 def load(py_model_file):
+    # Todo: brng the bulk of this into the pysd __init__ function
     """ Load a python-converted model file.
 
     Parameters
@@ -68,20 +63,13 @@ def load(py_model_file):
     --------
     >>> model = load('../tests/test-models/samples/teacup/teacup.py')
     """
-
     # need a unique identifier for the imported module. Use the time.
     module_name = str(time.time()).replace('.', '')
-    components = imp.load_source(module_name, py_model_file)  # SDS personal note: 'modulename' is the name of the object, but to use it within the console it needs to be imported: import modulename. In that case, imp.load_source does not need to be assigned to an object, but modulename will be the object
+    components = imp.load_source(module_name,
+                                 py_model_file)  # SDS personal note: 'modulename' is the name of the object, but to use it within the console it needs to be imported: import modulename. In that case, imp.load_source does not need to be assigned to an object, but modulename will be the object
 
-    components._stocknames = [name[2:-3] for name in dir(components)  # strip to just the name
-                              if name.startswith('_d') and name.endswith('_dt')]
-
-    # pointers to the various derivative functions for each of the stocks
-    components._dfuncs = {name: getattr(components, '_d%s_dt' % name)
-                          for name in components._stocknames}
-
-    funcnames = filter(lambda x: not x.startswith('_'), dir(components))
-    components._funcs = {name: getattr(components, name) for name in funcnames}
+    components._stateful_elements = [getattr(components, name) for name in dir(components)
+                                     if isinstance(getattr(components, name), functions.Stateful)]
 
     varnames = filter(lambda x: not x.startswith('_') and not x in ('cache', 'functions', 'np'),
                       dir(components))
@@ -160,7 +148,7 @@ class PySD(object):
         --------
 
         >>> model.run(params={'exogenous_constant':42})
-        >>> model.run(params={'exogenous_variable':timeseries_input})
+        >>> model.run(params={'exogenous_variable': timeseries_input})
         >>> model.run(return_timestamps=[1,2,3.1415,4,10])
         >>> model.run(return_timestamps=10)
         >>> model.run(return_timestamps=np.linspace(1,10,20))
@@ -182,15 +170,15 @@ class PySD(object):
         t_series = self._build_euler_timeseries(return_timestamps)
 
         if return_columns is None:
-            return_columns = [utils.dict_find(self.components._namespace, x)
-                              for x in self.components._stocknames
-                              if not x.startswith('_')]
+            return_columns = self.components._namespace.keys()
+
+        self.components._stage = 'Run'
+        self.clear_caches()
 
         capture_elements, return_addresses = utils.get_return_elements(
             return_columns, self.components._namespace, self.components._subscript_dict)
 
-        res = self._integrate(self.components._dfuncs, t_series,
-                              capture_elements, return_timestamps)
+        res = self._integrate(t_series, capture_elements, return_timestamps)
 
         return_df = utils.make_flat_df(res, return_addresses)
         return_df.index = return_timestamps
@@ -208,10 +196,8 @@ class PySD(object):
         # if there are variables in the model named 't' or 'state' there are no
         # conflicts
 
-        # todo: check that this isn't being called twice, unnecessarily?
-
-        self.components._t = self.components.initial_time()  # set the initial time
-        self.components._state = dict()
+        self.components._t = self.components.initial_time()
+        self.components._stage = 'Initialization'
 
         def initialize_state():
             """
@@ -231,21 +217,24 @@ class PySD(object):
             retry_flag = False
             making_progress = False
             initialization_order = []
-            for key in self.components._stocknames:
+            for element in self.components._stateful_elements:
                 try:
-                    init_func = getattr(self.components, '_init_%s'%key)
-                    self.components._state[key] = init_func()
+                    element.initialize()
                     making_progress = True
-                    initialization_order.append(key)
-                except KeyError:  # may also need to catch TypeError?
+                    initialization_order.append(repr(element))
+                except KeyError:
+                    retry_flag = True
+                except TypeError:
+                    retry_flag = True
+                except AttributeError:
                     retry_flag = True
             if not making_progress:
-                raise KeyError('Unresolvable Reference: Probable circular initialization'+
+                raise KeyError('Unresolvable Reference: Probable circular initialization' +
                                '\n'.join(initialization_order))
             if retry_flag:
                 initialize_state()
 
-        if self.components._stocknames:  # if there are no stocks, don't try to initialize!
+        if self.components._stateful_elements:  # if there are no stocks, don't try to initialize!
             initialize_state()
 
     def set_components(self, params):
@@ -284,7 +273,6 @@ class PySD(object):
                 raise NameError('%s is not recognized as a model component' % key)
 
             setattr(self.components, func_name, new_function)
-            self.components._funcs[func_name] = new_function  # facilitates lookups
 
     def set_state(self, t, state):
         """ Set the system state.
@@ -295,19 +283,24 @@ class PySD(object):
             The system time
 
         state : dict
-            Idelly a complete dictionary of system state, but a partial
-            state dictionary will work if you're confident that the remaining
-            state elements are correct.
+            A (possibly partial) dictionary of the system state.
         """
-        # Todo: Do we really need to have the state dictionary use python safe names? Probably not.
         self.components._t = t
 
-        keys = [self.components._namespace[key]
-                if key in self.components._namespace.keys()
-                else key
-                for key in state.iterkeys()]
+        for key, value in state.items():
+            if key in self.components._namespace.keys():
+                element_name = 'integ_%s' % self.components._namespace[key]
+            elif key in self.components._namespace.values():
+                element_name = 'integ_%s' % key
+            else: # allow the user to specify the stateful object directly
+                element_name = key
 
-        self.components._state.update(dict(zip(keys, state.itervalues())))
+            try:
+                element = getattr(self.components, element_name)
+                element.update(value)
+            except AttributeError:
+                print("'%s' has no state elements, assignment failed")
+                raise
 
     def set_initial_condition(self, initial_condition):
         """ Set the initial conditions of the integration.
@@ -341,11 +334,19 @@ class PySD(object):
             elif initial_condition.lower() in ['current', 'c']:
                 pass
             else:
-                raise ValueError('Valid initial condition strings include:  \n'+
-                                 '    "original"/"o",                       \n'+
+                raise ValueError('Valid initial condition strings include:  \n' +
+                                 '    "original"/"o",                       \n' +
                                  '    "current"/"c"')
         else:
             raise TypeError('Check documentation for valid entries')
+
+    def clear_caches(self):
+        """ Clears the Caches for all model elements """
+        for element_name in dir(self.components):
+            element = getattr(self.components, element_name)
+            if hasattr(element, 'cache_val'):
+                delattr(element, 'cache_val')
+
 
     def _build_euler_timeseries(self, return_timestamps=None):
         """
@@ -413,31 +414,21 @@ class PySD(object):
         """ Internal function for creating a constant model element """
         return lambda: value
 
-    def _euler_step(self, ddt, state, dt):
-        """ Performs a single step in the euler integration
+    def _euler_step(self, dt):
+        """ Performs a single step in the euler integration,
+        updating stateful components
 
         Parameters
         ----------
-        ddt : dictionary
-            list of the names of the derivative functions
-        state : dictionary
-            This is the state dictionary, where stock names are keys and values are
-            the number or array values at the current timestep
         dt : float
-            This is the amount to increase
-
-        Returns
-        -------
-        new_state : dictionary
-             a dictionary with keys corresponding to the input 'state' dictionary,
-             after those values have been updated with one euler step
+            This is the amount to increase time by this step
         """
-        # Todo: instead of a list of dfuncs, just use locals() http://stackoverflow.com/a/834451/6361632
+        new_states = [component.state + component.ddt() * dt
+                      for component in self.components._stateful_elements]
+        [component.update(new_state)
+         for component, new_state in zip(self.components._stateful_elements, new_states)]
 
-        return {key: dfunc()*dt + state[key] for key, dfunc in ddt.iteritems()}
-
-
-    def _integrate(self, derivative_functions, timesteps, capture_elements, return_timestamps):
+    def _integrate(self, timesteps, capture_elements, return_timestamps):
         """
         Performs euler integration
 
@@ -456,16 +447,14 @@ class PySD(object):
 
         for t2 in timesteps[1:]:
             if self.components._t in return_timestamps:
-                outputs.append({key: self.components._funcs[key]() for key in capture_elements})
-            self.components._state = self._euler_step(derivative_functions,
-                                                      self.components._state,
-                                                      t2 - self.components._t)
+                outputs.append({key: getattr(self.components, key)() for key in capture_elements})
+            self._euler_step(t2 - self.components._t)
             self.components._t = t2  # this will clear the stepwise caches
 
         # need to add one more timestep, because we run only the state updates in the previous
         # loop and thus may be one short.
         if self.components._t in return_timestamps:
-            outputs.append({key: self.components._funcs[key]() for key in capture_elements})
+            outputs.append({key: getattr(self.components, key)() for key in capture_elements})
 
         return outputs
 

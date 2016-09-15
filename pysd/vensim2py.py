@@ -409,6 +409,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
                                                                             init, order,
                                                                             element['subs'],
                                                                             subscript_dict),
+        "initial": lambda initial_input: builder.add_initial(initial_input)
     }
 
     in_ops = {
@@ -561,6 +562,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
             return name
 
         def visit__(self, n, vc):
+            """ Handles whitespace characters"""
             return ''
 
         def generic_visit(self, n, vc):
