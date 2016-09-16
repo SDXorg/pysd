@@ -425,7 +425,7 @@ class PySD(object):
         [component.update(new_state)
          for component, new_state in zip(self._stateful_elements, new_states)]
 
-    def _integrate(self, derivative_functions, timesteps, capture_elements, return_timestamps):
+    def _integrate(self, time_steps, capture_elements, return_timestamps):
         """
         Performs euler integration
 

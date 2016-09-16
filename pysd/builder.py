@@ -191,7 +191,7 @@ def merge_partial_elements(element_list):
             outs[name]['subs'] += [element['subs']]
             outs[name]['arguments'] = element['arguments']
 
-    return outs.values()
+    return list(outs.values())
 
 
 def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
@@ -235,6 +235,7 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
                                                                         initial_condition)
     else:
         stateful_py_expr = 'functions.Integ(lambda: _d%s_dt(), lambda: _init_%s())' % (identifier,
+                                                                                       identifier)
 
         try:
             decoded = initial_condition.decode('unicode-escape')

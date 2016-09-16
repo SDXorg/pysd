@@ -312,7 +312,7 @@ def get_return_elements(return_columns, namespace, subscript_dict):
 
     """
     # Todo: clean up duplicated code
-    capture_elements = set()
+    capture_elements = list()
     return_addresses = dict()
     for col in return_columns:
         if '[' in col:
@@ -326,7 +326,8 @@ def get_return_elements(return_columns, namespace, subscript_dict):
                 else:
                     raise KeyError(name + " not found as model element")
 
-            capture_elements.add(py_name)
+            if py_name not in capture_elements:
+                capture_elements += [py_name]
             address = make_coord_dict(subs, subscript_dict)
             return_addresses[col] = (py_name, address)
         else:
@@ -338,7 +339,8 @@ def get_return_elements(return_columns, namespace, subscript_dict):
                 else:
                     raise KeyError(col + " not found as model element")
 
-            capture_elements.add(py_name)
+            if py_name not in capture_elements:
+                capture_elements += [py_name]
             return_addresses[col] = (py_name, {})
 
     return list(capture_elements), return_addresses

@@ -119,9 +119,7 @@ class TestMergePartialElements(TestCase):
 
     def test_multiple_sets(self):
         from pysd.builder import merge_partial_elements
-
-        self.assertEqual(
-            merge_partial_elements(
+        actual = merge_partial_elements(
                 [{'py_name': 'a', 'py_expr': 'ms', 'subs': ['Name1', 'element1'],
                   'real_name': 'A', 'doc': 'Test', 'unit': None,
                   'kind': 'component', 'arguments': ''},
@@ -139,42 +137,44 @@ class TestMergePartialElements(TestCase):
                   'kind': 'component', 'arguments': ''},
                  {'py_name': 'b', 'py_expr': 'ymt', 'subs': ['Name1', 'element3'],
                   'real_name': 'B', 'doc': '', 'unit': None,
-                  'kind': 'component', 'arguments': ''}]),
-            [{'py_name': 'a',
-              'py_expr': ['ms', 'njk', 'as'],
-              'subs': [['Name1', 'element1'], ['Name1', 'element2'], ['Name1', 'element3']],
-              'kind': 'component',
-              'doc': 'Test',
-              'real_name': 'A',
-              'unit': None,
-              'arguments': ''
-              },
-             {'py_name': 'b',
-              'py_expr': ['bgf', 'r4', 'ymt'],
-              'subs': [['Name1', 'element1'], ['Name1', 'element2'], ['Name1', 'element3']],
-              'kind': 'component',
-              'doc': 'Test',
-              'real_name': 'B',
-              'unit': None,
-              'arguments': ''
-              }])
+                  'kind': 'component', 'arguments': ''}])
+
+        expected = [{'py_name': 'a',
+                     'py_expr': ['ms', 'njk', 'as'],
+                     'subs': [['Name1', 'element1'], ['Name1', 'element2'], ['Name1', 'element3']],
+                     'kind': 'component',
+                     'doc': 'Test',
+                     'real_name': 'A',
+                     'unit': None,
+                     'arguments': ''
+                     },
+                    {'py_name': 'b',
+                     'py_expr': ['bgf', 'r4', 'ymt'],
+                     'subs': [['Name1', 'element1'], ['Name1', 'element2'], ['Name1', 'element3']],
+                     'kind': 'component',
+                     'doc': 'Test',
+                     'real_name': 'B',
+                     'unit': None,
+                     'arguments': ''
+                     }]
+        self.assertIn(actual[0], expected)
+        self.assertIn(actual[1], expected)
 
     def test_non_set(self):
         from pysd.builder import merge_partial_elements
+        actual = merge_partial_elements(
+            [{'py_name': 'a', 'py_expr': 'ms', 'subs': ['Name1', 'element1'],
+              'real_name': 'A', 'doc': 'Test', 'unit': None,
+              'kind': 'component', 'arguments': ''},
+             {'py_name': 'a', 'py_expr': 'njk', 'subs': ['Name1', 'element2'],
+              'real_name': 'A', 'doc': None, 'unit': None,
+              'kind': 'component', 'arguments': ''},
+             {'py_name': 'c', 'py_expr': 'as', 'subs': ['Name1', 'element3'],
+              'real_name': 'C', 'doc': 'hi', 'unit': None,
+              'kind': 'component', 'arguments': ''},
+             ])
 
-        self.assertEqual(
-            merge_partial_elements(
-                [{'py_name': 'a', 'py_expr': 'ms', 'subs': ['Name1', 'element1'],
-                  'real_name': 'A', 'doc': 'Test', 'unit': None,
-                  'kind': 'component', 'arguments': ''},
-                 {'py_name': 'a', 'py_expr': 'njk', 'subs': ['Name1', 'element2'],
-                  'real_name': 'A', 'doc': None, 'unit': None,
-                  'kind': 'component', 'arguments': ''},
-                 {'py_name': 'c', 'py_expr': 'as', 'subs': ['Name1', 'element3'],
-                  'real_name': 'C', 'doc': 'hi', 'unit': None,
-                  'kind': 'component', 'arguments': ''},
-                 ]),
-            [{'py_name': 'a',
+        expected = [{'py_name': 'a',
               'py_expr': ['ms', 'njk'],
               'subs': [['Name1', 'element1'], ['Name1', 'element2']],
               'kind': 'component',
@@ -191,4 +191,7 @@ class TestMergePartialElements(TestCase):
               'real_name': 'C',
               'unit': None,
               'arguments': ''
-              }])
+              }]
+
+        self.assertIn(actual[0], expected)
+        self.assertIn(actual[1], expected)
