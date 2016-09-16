@@ -112,7 +112,7 @@ def build_element(element, subscript_dict):
     """
     if element['kind'] == 'constant':
         cache_type = "@cache('run')"
-    elif element['kind'] in ['setup', 'stateful']:  # setups only get called once, so caching is wasted
+    elif element['kind'] in ['setup', 'stateful']:  # setups only get called once, caching is wasted
         cache_type = ''
     elif element['kind'] == 'component':
         cache_type = "@cache('step')"
@@ -231,9 +231,11 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
     new_structure = []
 
     if len(subs) == 0:
-        stateful_py_expr = 'functions.Integ(lambda: %s, lambda: %s)' % (expression, initial_condition)
+        stateful_py_expr = 'functions.Integ(lambda: %s, lambda: %s)' % (expression,
+                                                                        initial_condition)
     else:
-        stateful_py_expr = 'functions.Integ(lambda: _d%s_dt(), lambda: _init_%s())' % (identifier, identifier)
+        stateful_py_expr = 'functions.Integ(lambda: _d%s_dt(), lambda: _init_%s())' % (identifier,
+                                                                                       identifier)
 
         # take care of cases when a float is passed as initialization for an array.
         # this might be better located in the translation function in the future.
@@ -375,7 +377,7 @@ def add_n_smooth(smooth_input, smooth_time, initial_value, order, subs, subscrip
             build time, this must be an integer and cannot be calculated from other
             model components. Anything else will yield a ValueError.
 
-        sub: list of strings
+        subs: list of strings
             List of strings of subscript indices that correspond to the
             list of expressions, and collectively define the shape of the output
             See `builder.add_flaux` for more info
