@@ -103,11 +103,11 @@ class PySD(object):
         # JT: Might be helpful to return not only the source file, but
         # also how the instance differs from that source file. This
         # would give a more accurate view of the current model.
-        str = 'Translated Model File: ' + self.py_model_file
+        string = 'Translated Model File: ' + self.py_model_file
         if hasattr(self, 'mdl_file'):
-            str += '\n Original Model File: ' + self.mdl_file
+            string += '\n Original Model File: ' + self.mdl_file
 
-        return str
+        return string
 
     def run(self, params=None, return_columns=None, return_timestamps=None,
             initial_condition='original'):
