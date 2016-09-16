@@ -6,8 +6,6 @@
   <component name="ChangeListManager">
     <list default="true" id="a7e5b169-cc30-45fb-a7f9-e8e84f9c05bd" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models" afterPath="$PROJECT_DIR$/tests/test-models" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/pysd.iml" afterPath="$PROJECT_DIR$/.idea/pysd.iml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/samples/SIR/SIR.py" afterPath="$PROJECT_DIR$/tests/test-models/samples/SIR/SIR.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/samples/teacup/teacup.py" afterPath="$PROJECT_DIR$/tests/test-models/samples/teacup/teacup.py" />
@@ -211,7 +209,7 @@
           <file leaf-file-name="pysd.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/pysd/pysd.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="475">
+                <state relative-caret-position="-17">
                   <caret line="428" column="11" selection-start-line="428" selection-start-column="11" selection-end-line="428" selection-end-column="11" />
                   <folding />
                 </state>
@@ -221,11 +219,10 @@
           <file leaf-file-name="unit_test_builder.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/tests/unit_test_builder.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="202">
+                <state relative-caret-position="2430">
                   <caret line="162" column="13" selection-start-line="162" selection-start-column="13" selection-end-line="162" selection-end-column="13" />
                   <folding>
                     <element signature="e#0#15#0" expanded="true" />
-                    <marker date="1474061142000" expanded="true" signature="7138:8509" ph="..." />
                   </folding>
                 </state>
               </provider>
@@ -234,7 +231,7 @@
           <file leaf-file-name="test_utils.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/tests/test_utils.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="249">
+                <state relative-caret-position="1275">
                   <caret line="88" column="0" selection-start-line="88" selection-start-column="0" selection-end-line="88" selection-end-column="0" />
                   <folding />
                 </state>
@@ -244,12 +241,9 @@
           <file leaf-file-name="utils.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/pysd/utils.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="174">
+                <state relative-caret-position="5895">
                   <caret line="397" column="0" selection-start-line="397" selection-start-column="0" selection-end-line="397" selection-end-column="0" />
-                  <folding>
-                    <marker date="1474061866000" expanded="true" signature="1985:2116" ph="..." />
-                    <marker date="1474061866000" expanded="true" signature="7446:7551" ph="..." />
-                  </folding>
+                  <folding />
                 </state>
               </provider>
             </entry>
@@ -257,7 +251,7 @@
           <file leaf-file-name="case.py" pinned="false" current-in-tab="false">
             <entry file="file://$USER_HOME$/anaconda/envs/py3k/lib/python3.5/unittest/case.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="158">
+                <state relative-caret-position="12090">
                   <caret line="819" column="0" selection-start-line="819" selection-start-column="0" selection-end-line="819" selection-end-column="0" />
                   <folding />
                 </state>
@@ -267,16 +261,14 @@
           <file leaf-file-name="integration_test_pysd.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/tests/integration_test_pysd.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="202">
+                <state relative-caret-position="3765">
                   <caret line="251" column="8" selection-start-line="251" selection-start-column="8" selection-end-line="251" selection-end-column="8" />
-                  <folding>
-                    <marker date="1474061554000" expanded="true" signature="201:13848" ph="..." />
-                  </folding>
+                  <folding />
                 </state>
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="unit_test_utils.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="unit_test_utils.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/tests/unit_test_utils.py">
               <provider selected="true" editor-type-id="text-editor">
                 <state relative-caret-position="1920">
@@ -289,7 +281,7 @@
           <file leaf-file-name="dataarray.py" pinned="false" current-in-tab="false">
             <entry file="file://$USER_HOME$/anaconda/lib/python2.7/site-packages/xarray/core/dataarray.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="167">
+                <state relative-caret-position="855">
                   <caret line="78" column="0" selection-start-line="78" selection-start-column="0" selection-end-line="78" selection-end-column="0" />
                   <folding />
                 </state>
@@ -308,11 +300,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="builder.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="builder.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/pysd/builder.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="353">
-                  <caret line="193" column="30" selection-start-line="193" selection-start-column="30" selection-end-line="193" selection-end-column="30" />
+                <state relative-caret-position="343">
+                  <caret line="265" column="20" selection-start-line="265" selection-start-column="20" selection-end-line="265" selection-end-column="20" />
                   <folding />
                 </state>
               </provider>
@@ -369,21 +361,7 @@
               <provider selected="true" editor-type-id="text-editor">
                 <state relative-caret-position="3030">
                   <caret line="203" column="27" selection-start-line="203" selection-start-column="27" selection-end-line="203" selection-end-column="27" />
-                  <folding>
-                    <marker date="1474056603000" expanded="true" signature="81:3349" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="479:777" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="1307:2754" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="2780:3056" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="3082:3349" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="3396:4027" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="3431:4027" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="3618:3701" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="4074:5047" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="4113:4307" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="4407:4495" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="4607:4773" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="4879:5047" ph="..." />
-                  </folding>
+                  <folding />
                 </state>
               </provider>
             </entry>
@@ -401,34 +379,11 @@
           <file leaf-file-name="unit_test_vensim2py.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/tests/unit_test_vensim2py.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="2910">
+                <state relative-caret-position="4350">
                   <caret line="293" column="29" selection-start-line="293" selection-start-column="29" selection-end-line="293" selection-end-column="29" />
                   <folding>
                     <element signature="e#0#15#0" expanded="true" />
                     <element signature="e#7157#7324#0" expanded="false" />
-                    <marker date="1474056603000" expanded="false" signature="83:3045" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="775:1181" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="976:1137" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="1693:2250" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="1906:2206" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="1907:2048" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="2072:2205" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="2287:2584" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="2634:3045" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="2850:3001" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="2851:3000" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="3099:7059" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="3182:3417" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="4623:4918" ph="..." />
-                    <marker date="1474056603000" expanded="false" signature="4960:5986" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="5140:5250" ph="..." />
-                    <marker date="1474056603000" expanded="false" signature="6026:6551" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="6201:6305" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="6435:6540" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="6591:7059" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="6949:7048" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="7116:16438" ph="..." />
-                    <marker date="1474056603000" expanded="true" signature="14784:14785" ph="..." />
                   </folding>
                 </state>
               </provider>
@@ -536,7 +491,7 @@
   </component>
   <component name="ProjectFrameBounds">
     <option name="width" value="1440" />
-    <option name="height" value="900" />
+    <option name="height" value="896" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -611,8 +566,8 @@
           </PATH>
         </subPane>
       </pane>
-      <pane id="Scratches" />
       <pane id="Scope" />
+      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -622,7 +577,6 @@
     <property name="SearchEverywhereHistoryKey" value="&#9;FILE&#9;file:///Users/houghton/Google_Drive/Academic Projects/PYSD/pysd/tests/test-models/tests/subscript_1d_arrays/test_subscript_1d_arrays.py" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="js-jscs-nodeInterpreter" value="/usr/local/bin/node" />
-    <property name="FullScreen" value="true" />
   </component>
   <component name="PyConsoleOptionsProvider">
     <option name="myPythonConsoleState">
@@ -1118,29 +1072,29 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="0" width="1440" height="900" extended-state="6" />
-    <editor active="false" />
+    <frame x="0" y="0" width="1440" height="896" extended-state="6" />
+    <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2932761" sideWeight="0.4936306" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3018598" sideWeight="0.4936306" order="1" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3282981" sideWeight="0.49753347" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39036146" sideWeight="0.4806867" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297568" sideWeight="0.48677248" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.1746988" sideWeight="0.49753347" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.23012048" sideWeight="0.48907682" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3626506" sideWeight="0.4892704" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24892704" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.191067" sideWeight="0.5193133" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.15574348" sideWeight="0.5063694" order="0" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.48554218" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22650602" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3626506" sideWeight="0.4892704" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Coverage" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297568" sideWeight="0.5132275" order="3" side_tool="true" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32650602" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.48554218" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
     </layout>
     <layout-to-restore>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3282981" sideWeight="0.49753347" order="9" side_tool="false" content_ui="tabs" />
@@ -1414,7 +1368,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1755">
           <caret line="117" column="24" selection-start-line="117" selection-start-column="24" selection-end-line="117" selection-end-column="24" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1447,7 +1400,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="30">
           <caret line="2" column="21" selection-start-line="2" selection-start-column="21" selection-end-line="2" selection-end-column="21" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1455,7 +1407,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="5895">
           <caret line="400" column="0" selection-start-line="400" selection-start-column="0" selection-end-line="400" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1463,10 +1414,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="9780">
           <caret line="660" column="40" selection-start-line="660" selection-start-column="40" selection-end-line="660" selection-end-column="40" />
-          <folding>
-            <marker date="1474057794000" expanded="true" signature="0:4" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1474057794000" expanded="true" signature="27500:27857" ph="..." />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
@@ -1474,7 +1422,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="15">
           <caret line="1" column="0" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1482,7 +1429,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1498,34 +1444,11 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/tests/unit_test_vensim2py.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2910">
+        <state relative-caret-position="4350">
           <caret line="293" column="29" selection-start-line="293" selection-start-column="29" selection-end-line="293" selection-end-column="29" />
           <folding>
             <element signature="e#0#15#0" expanded="true" />
             <element signature="e#7157#7324#0" expanded="false" />
-            <marker date="1474056603000" expanded="false" signature="83:3045" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="775:1181" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="976:1137" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="1693:2250" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="1906:2206" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="1907:2048" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="2072:2205" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="2287:2584" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="2634:3045" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="2850:3001" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="2851:3000" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="3099:7059" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="3182:3417" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="4623:4918" ph="..." />
-            <marker date="1474056603000" expanded="false" signature="4960:5986" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="5140:5250" ph="..." />
-            <marker date="1474056603000" expanded="false" signature="6026:6551" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="6201:6305" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="6435:6540" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="6591:7059" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="6949:7048" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="7116:16438" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="14784:14785" ph="..." />
           </folding>
         </state>
       </provider>
@@ -1534,28 +1457,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="3030">
           <caret line="203" column="27" selection-start-line="203" selection-start-column="27" selection-end-line="203" selection-end-column="27" />
-          <folding>
-            <marker date="1474056603000" expanded="true" signature="81:3349" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="479:777" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="1307:2754" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="2780:3056" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="3082:3349" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="3396:4027" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="3431:4027" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="3618:3701" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="4074:5047" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="4113:4307" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="4407:4495" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="4607:4773" ph="..." />
-            <marker date="1474056603000" expanded="true" signature="4879:5047" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pysd/pysd.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="475">
-          <caret line="428" column="11" selection-start-line="428" selection-start-column="11" selection-end-line="428" selection-end-column="11" />
           <folding />
         </state>
       </provider>
@@ -1578,55 +1479,41 @@
     </entry>
     <entry file="file://$USER_HOME$/anaconda/envs/py3k/lib/python3.5/unittest/case.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="158">
+        <state relative-caret-position="12090">
           <caret line="819" column="0" selection-start-line="819" selection-start-column="0" selection-end-line="819" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pysd/builder.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="353">
-          <caret line="193" column="30" selection-start-line="193" selection-start-column="30" selection-end-line="193" selection-end-column="30" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/tests/unit_test_builder.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="202">
+        <state relative-caret-position="2430">
           <caret line="162" column="13" selection-start-line="162" selection-start-column="13" selection-end-line="162" selection-end-column="13" />
           <folding>
             <element signature="e#0#15#0" expanded="true" />
-            <marker date="1474061142000" expanded="true" signature="7138:8509" ph="..." />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/tests/integration_test_pysd.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="202">
+        <state relative-caret-position="3765">
           <caret line="251" column="8" selection-start-line="251" selection-start-column="8" selection-end-line="251" selection-end-column="8" />
-          <folding>
-            <marker date="1474061554000" expanded="true" signature="201:13848" ph="..." />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/pysd/utils.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="174">
+        <state relative-caret-position="5895">
           <caret line="397" column="0" selection-start-line="397" selection-start-column="0" selection-end-line="397" selection-end-column="0" />
-          <folding>
-            <marker date="1474061866000" expanded="true" signature="1985:2116" ph="..." />
-            <marker date="1474061866000" expanded="true" signature="7446:7551" ph="..." />
-          </folding>
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/tests/test_utils.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="249">
+        <state relative-caret-position="1275">
           <caret line="88" column="0" selection-start-line="88" selection-start-column="0" selection-end-line="88" selection-end-column="0" />
           <folding />
         </state>
@@ -1634,7 +1521,7 @@
     </entry>
     <entry file="file://$USER_HOME$/anaconda/lib/python2.7/site-packages/xarray/core/dataarray.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="167">
+        <state relative-caret-position="855">
           <caret line="78" column="0" selection-start-line="78" selection-start-column="0" selection-end-line="78" selection-end-column="0" />
           <folding />
         </state>
@@ -1644,6 +1531,22 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1920">
           <caret line="132" column="48" selection-start-line="132" selection-start-column="48" selection-end-line="132" selection-end-column="48" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pysd/pysd.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-17">
+          <caret line="428" column="11" selection-start-line="428" selection-start-column="11" selection-end-line="428" selection-end-column="11" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pysd/builder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="343">
+          <caret line="265" column="20" selection-start-line="265" selection-start-column="20" selection-end-line="265" selection-end-column="20" />
           <folding />
         </state>
       </provider>
