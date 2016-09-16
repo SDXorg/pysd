@@ -6,8 +6,10 @@ straightforward equivalent in python.
 
 """
 
+from __future__ import division
 import numpy as np
 from functools import wraps
+
 
 try:
     import scipy.stats as stats
@@ -53,11 +55,12 @@ def cache(horizon):
         def cached(*args):
             """Step wise cache function"""
             try:  # fails if cache is out of date or not instantiated
-                assert cached.t == func.func_globals['_t']
+                assert cached.cache_t == func.func_globals['_t']
+                assert hasattr(cached, 'cache_val')
             except (AssertionError, AttributeError):
-                cached.cache = func(*args)
-                cached.t = func.func_globals['_t']
-            return cached.cache
+                cached.cache_val = func(*args)
+                cached.cache_t = func.func_globals['_t']
+            return cached.cache_val
         return cached
 
     def cache_run(func):
@@ -66,10 +69,10 @@ def cache(horizon):
         def cached(*args):
             """Run wise cache function"""
             try:  # fails if cache is not instantiated
-                return cached.cache
+                return cached.cache_val
             except AttributeError:
-                cached.cache = func(*args)
-                return cached.cache
+                cached.cache_val = func(*args)
+                return cached.cache_val
         return cached
 
     if horizon == 'step':
@@ -81,39 +84,128 @@ def cache(horizon):
     else:
         raise(AttributeError('Bad horizon for cache decorator'))
 
-#
-# class Initial(object):
-#     """Replicates Vensim's `initial` function
-#
-#     a new instance of the class should be instantiated for each
-#     unique call to the `initial` function."""
-#
-#     def __init__(self):
-#         self.state.init_value = None
-#
-#     def __call__(self, value):
-#         """
-#         Returns the first value passed in,
-#         regardless of how many times it is called
-#
-#         Parameters
-#         ----------
-#         value: object
-#             Will usually be the result of a function, returning
-#             either a float or a DataArray
-#
-#         Returns
-#         -------
-#         init_value: object
-#             The first value of `value` after the caches are reset
-#         """
-#         if self.state.init_value is None:
-#             self.state.init_value = value
-#
-#         return self.state.init_value
-#
-#     def reset(self):
-#         self.init_value = None
+
+class Stateful(object):
+    # the integrator needs to be able to 'get' the current state of the object,
+    # and get the derivative. It calculates the new state, and updates it. The state
+    # can be any object which is subject to basic (element-wise) algebraic operations
+    def __init__(self):
+        self._state = None
+
+    def __call__(self, *args, **kwargs):
+        return self.state
+
+    def initialize(self):
+        raise NotImplementedError
+
+    @property
+    def state(self):
+        if self._state is None:
+            raise AttributeError('Attempt to call stateful element before it is initialized.')
+        return self._state
+
+    @state.setter
+    def state(self, new_value):
+        self._state = new_value
+
+    def update(self, state):
+        self.state = state
+
+
+class Integ(Stateful):
+    def __init__(self, ddt, initial_value):
+        """
+
+        Parameters
+        ----------
+        ddt: function
+            This will become an attribute of the object
+        initial_value
+        """
+        super(Integ, self).__init__()
+        self.init_func = initial_value
+        self.ddt = ddt
+
+    def initialize(self):
+        self.state = self.init_func()
+
+
+class Delay(Stateful):
+    # note that we could have put the `delay_input` argument as a parameter to
+    # the `__call__` function, and more closely mirrored the vensim syntax.
+    # However, people may get confused this way in thinking that they need only one
+    # delay object and can call it with various arguments to delay whatever is convenient.
+    # This method forces them to acknowledge that additional structure is being created
+    # in the delay object.
+
+    def __init__(self, delay_input, delay_time, initial_value, order):
+        """
+
+        Parameters
+        ----------
+        delay_input: function
+        delay_time: function
+        initial_value: function
+        order: function
+        """
+        super(Delay, self).__init__()
+        self.init_func = initial_value
+        self.delay_time_func = delay_time
+        self.input_func = delay_input
+        self.order_func = order
+        self.order = None
+
+    def initialize(self):
+        self.order = self.order_func()  # The order can only be set once
+        init_state_value = self.init_func() * self.delay_time_func() / self.order
+        self.state = np.array([init_state_value] * self.order)
+
+    def __call__(self):
+        return self.state[-1] / (self.delay_time_func() / self.order)
+
+    def ddt(self):
+        outflows = self.state / (self.delay_time_func() / self.order)
+        inflows = np.roll(outflows, 1)
+        inflows[0] = self.input_func()
+        return inflows - outflows
+
+
+class Smooth(Stateful):
+    def __init__(self, smooth_input, smooth_time, initial_value, order):
+        super(Smooth, self).__init__()
+        self.init_func = initial_value
+        self.smooth_time_func = smooth_time
+        self.input_func = smooth_input
+        self.order_func = order
+        self.order = None
+
+    def initialize(self):
+        self.order = self.order_func()  # The order can only be set once
+        self.state = np.array([self.init_func()] * self.order)
+
+    def __call__(self):
+        return self.state[-1]
+
+    def ddt(self):
+        targets = np.roll(self.state, 1)
+        targets[0] = self.input_func()
+        return (targets - self.state) * self.order / self.smooth_time_func()
+
+
+class Initial(Stateful):
+    def __init__(self, func):
+        super(Initial, self).__init__()
+        self.func = func
+
+    def initialize(self):
+        self.state = self.func()
+
+    def ddt(self):
+        return 0
+
+    def update(self, state):
+        # this doesn't change once it's set up.
+        pass
 
 
 def ramp(slope, start, finish):
@@ -264,7 +356,7 @@ def active_initial(expr, init_val):
     -------
 
     """
-    if time() == initial_time():
+    if _stage() == 'Initialization':
         return init_val
     else:
         return expr

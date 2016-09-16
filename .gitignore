@@ -5,3 +5,4 @@ build/
 *.2mdl
 .idea/workspace.xml
 .idea/*
+pysd.egg*

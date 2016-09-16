@@ -7,10 +7,7 @@ This is code to assemble a pysd model once all of the elements have
 been translated from their native language into python compatible syntax.
 There should be nothing in this file that has to know about either vensim or
 xmile specific syntax.
-
-
 """
-
 
 import textwrap
 import autopep8
@@ -20,29 +17,34 @@ import utils
 
 def build(elements, subscript_dict, namespace, outfile_name):
     """
-    Takes in a list of model components
+    Actually constructs and writes the python representation of the model
 
     Parameters
     ----------
     elements: list
+        Each element is a dictionary, with the various components needed to assemble
+        a model component in python syntax. This will contain multiple entries for
+        elements that have multiple definitions in the original file, and which need
+        to be combined.
 
     subscript_dict: dictionary
+        A dictionary containing the names of subscript families (dimensions) as keys, and
+        a list of the possible positions within that dimension for each value
+
+    namespace: dictionary
+        Translation from original model element names (keys) to python safe
+        function identifiers (values)
 
     outfile_name: string
-
-    Returns
-    -------
-
+        The name of the file to write the model to.
     """
     # Todo: deal with model level documentation
-    # Todo: Make np import conditional on usage in the file
-    # Todo: Make pysd functions import conditional on usage in the file
+    # Todo: Make np, pysd.functions import conditional on usage in the file
     # Todo: Make presence of subscript_dict instantiation conditional on usage
     # Todo: Sort elements (alphabetically? group stock funcs?)
     # Todo: do something better than hardcoding the time function
     elements = merge_partial_elements(elements)
     functions = [build_element(element, subscript_dict) for element in elements]
-
 
     text = '''
     """
@@ -66,7 +68,7 @@ def build(elements, subscript_dict, namespace, outfile_name):
     def time():
         return _t
     functions.time = time
-    functions.initial_time = initial_time
+    functions._stage = lambda: _stage
 
     ''' % {'subscript_dict': repr(subscript_dict),
            'functions': '\n'.join(functions),
@@ -110,11 +112,11 @@ def build_element(element, subscript_dict):
     """
     if element['kind'] == 'constant':
         cache_type = "@cache('run')"
-    elif element['kind'] == 'setup':  # setups only get called once, so caching is wasted
+    elif element['kind'] in ['setup', 'stateful']:  # setups only get called once, caching is wasted
         cache_type = ''
     elif element['kind'] == 'component':
         cache_type = "@cache('step')"
-    elif element['kind'] == 'macro':
+    elif element['kind'] == 'stateful':
         cache_type = ''
     elif element['kind'] == 'lookup':  # lookups may be called with different values in a round
         cache_type = ''
@@ -133,7 +135,13 @@ def build_element(element, subscript_dict):
                                                  '\n' + ' ' * indent)})  # indent lines 2 onward
     element['doc'] = element['doc'].replace('\\', '\n    ')
 
-    func = '''
+    if element['kind'] == 'stateful':
+        func = '''
+    %(py_name)s = %(py_expr)s
+            ''' % {'py_name': element['py_name'], 'py_expr': element['py_expr'][0]}
+
+    else:
+        func = '''
     %(cache)s
     def %(py_name)s(%(arguments)s):
         """
@@ -145,6 +153,7 @@ def build_element(element, subscript_dict):
         """
         %(contents)s
         ''' % element
+
     return func
 
 
@@ -152,7 +161,6 @@ def merge_partial_elements(element_list):
     """
     merges model elements which collectively all define the model component,
     mostly for multidimensional subscripts
-
 
     Parameters
     ----------
@@ -191,69 +199,110 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
     Creates new model element dictionaries for the model elements associated
     with a stock.
 
-
     Parameters
     ----------
-    identifier
-    subs
-    expression
-    initial_condition
-    subscript_dict
+    identifier: basestring
+        the name of the stock
+
+    subs: list
+        a list of subscript elements
+
+    expression: basestring
+        The formula which forms the derivative of the stock
+
+    initial_condition: basestring
+        Formula which forms the initial condition for the stock
+
+    subscript_dict: dictionary
+        Dictionary describing the possible dimensions of the stock's subscripts
 
     Returns
     -------
-    a string to use in place of the 'INTEG...' pieces in the element expression string,
-    a list of additional model elements to add
+    reference: string
+        a string to use in place of the 'INTEG...' pieces in the element expression string,
+        a reference to the stateful object
+    new_structure: list
 
-    Examples
-    --------
-    >>> add_stock('stock_name', [], 'inflow_a', '10')
+        list of additional model element dictionaries. When there are subscripts,
+        constructs an external 'init' and 'ddt' function so that these can be appropriately
+        aggregated
 
     """
-    # take care of cases when a float is passed as initialization for an array.
-    # this might be better located in the translation function in the future.
-    if subs and initial_condition.decode('unicode-escape').isnumeric():
-        coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
-        dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
-        shape = [len(coords[dim]) for dim in dims]
-        initial_condition = textwrap.dedent("""\
-            xr.DataArray(data=np.ones(%(shape)s)*%(value)s,
-                         coords=%(coords)s,
-                         dims=%(dims)s )""" % {
-            'shape': shape,
-            'value': initial_condition,
-            'coords': repr(coords),
-            'dims': repr(dims)})
+    new_structure = []
 
-    # create the stock initialization element
-    init_element = {
-        'py_name': '_init_%s' % identifier,
-        'real_name': 'Implicit',
-        'kind': 'setup',  # not explicitly specified in the model file, but must exist
-        'py_expr': initial_condition,
-        'subs': subs,
-        'doc': 'Provides initial conditions for %s function' % identifier,
-        'unit': 'See docs for %s' % identifier,
+    if len(subs) == 0:
+        stateful_py_expr = 'functions.Integ(lambda: %s, lambda: %s)' % (expression,
+                                                                        initial_condition)
+    else:
+        stateful_py_expr = 'functions.Integ(lambda: _d%s_dt(), lambda: _init_%s())' % (identifier,
+                                                                                       identifier)
+
+        # take care of cases when a float is passed as initialization for an array.
+        # this might be better located in the translation function in the future.
+        if subs and initial_condition.decode('unicode-escape').isnumeric():
+            coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
+            dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
+            shape = [len(coords[dim]) for dim in dims]
+            initial_condition = textwrap.dedent("""\
+                    xr.DataArray(data=np.ones(%(shape)s)*%(value)s,
+                                 coords=%(coords)s,
+                                 dims=%(dims)s )""" % {
+                'shape': shape,
+                'value': initial_condition,
+                'coords': repr(coords),
+                'dims': repr(dims)})
+
+        # create the stock initialization element
+        new_structure.append({
+            'py_name': '_init_%s' % identifier,
+            'real_name': 'Implicit',
+            'kind': 'setup',  # not explicitly specified in the model file, but must exist
+            'py_expr': initial_condition,
+            'subs': subs,
+            'doc': 'Provides initial conditions for %s function' % identifier,
+            'unit': 'See docs for %s' % identifier,
+            'arguments': ''
+        })
+
+        new_structure.append({
+            'py_name': '_d%s_dt' % identifier,
+            'real_name': 'Implicit',
+            'kind': 'component',
+            'doc': 'Provides derivative for %s function' % identifier,
+            'subs': subs,
+            'unit': 'See docs for %s' % identifier,
+            'py_expr': expression,
+            'arguments': ''
+        })
+
+    # describe the stateful object
+    stateful = {
+        'py_name': 'integ_%s' % identifier,
+        'real_name': 'Representation of  %s' % identifier,
+        'doc': 'Integrates Expression %s' % expression,
+        'py_expr': stateful_py_expr,
+        'unit': 'None',
+        'subs': '',
+        'kind': 'stateful',
         'arguments': ''
     }
 
-    ddt_element = {
-        'py_name': '_d%s_dt' % identifier,
-        'real_name': 'Implicit',
-        'kind': 'component',
-        'doc': 'Provides derivative for %s function' % identifier,
-        'subs': subs,
-        'unit': 'See docs for %s' % identifier,
-        'py_expr': expression,
-        'arguments': ''
-    }
-
-    return "_state['%s']" % identifier, [init_element, ddt_element]
+    new_structure.append(stateful)
+    return "%s()" % stateful['py_name'], new_structure
 
 
 def add_n_delay(delay_input, delay_time, initial_value, order, subs, subscript_dict):
-    """Constructs stock and flow chains that implement the calculation of
-    a delay.
+    """
+    Creates code to instantiate a stateful 'Delay' object,
+    and provides reference to that object's output.
+
+    The name of the stateful object is based upon the passed in parameters, so if
+    there are multiple places where identical delay functions are referenced, the
+    translated python file will only maintain one stateful object, and reference it
+    multiple times.
+
+    Parameters
+    ----------
 
     delay_input: <string>
         Reference to the model component that is the input to the delay
@@ -268,92 +317,40 @@ def add_n_delay(delay_input, delay_time, initial_value, order, subs, subscript_d
         initialize the stocks with equal values so that the outflow in the first
         timestep is equal to this value.
 
-    order: int
+    order: string
         The number of stocks in the delay pipeline. As we construct the delays at
         build time, this must be an integer and cannot be calculated from other
         model components. Anything else will yield a ValueError.
 
     Returns
     -------
-    outflow: basestring
-        Reference to the flow which contains the output of the delay process
+    reference: basestring
+        reference to the delay object `__call__` method, which will return the output
+        of the delay process
 
+    new_structure: list
+        list of element construction dictionaries for the builder to assemble
     """
+    # the py name has to be unique to all the passed parameters, or if there are two things
+    # that delay the output by different amounts, they'll overwrite the original function...
 
-    delayed_variable = delay_input[:-2]
-    identifier = '_' + delayed_variable + '_delay_' + order.rstrip('()')
-
-    output_element = {
-        'py_name': identifier,
-        'real_name': 'Implicit',
-        'kind': 'component',
-        'doc': 'delayed value of %s' % delayed_variable,
-        'subs': subs,
-        'unit': 'See docs for %s' % identifier,
-        'py_expr': "(%(stock)s / (%(delay)s / %(order)s)).loc[{'_delay': %(order)s-1}]" % {
-            'stock': '_state["%s"]' % identifier,
-            'delay': delay_time,
-            'order': order,
-        },
+    stateful = {
+        'py_name': utils.make_python_identifier('delay_%s_%s_%s_%s' % (delay_input,
+                                                                       delay_time,
+                                                                       initial_value,
+                                                                       order))[0],
+        'real_name': 'Delay of %s' % delay_input,
+        'doc': 'Delay time: %s \n Delay initial value %s \n Delay order %s' % (
+            delay_time, initial_value, order),
+        'py_expr': 'functions.Delay(lambda: %s, lambda: %s, lambda: %s, lambda: %s)' % (
+            delay_input, delay_time, initial_value, order),
+        'unit': 'None',
+        'subs': '',
+        'kind': 'stateful',
         'arguments': ''
     }
 
-    coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
-    dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
-
-    try:
-        coords.update({'_delay': range(int(order))})
-    except TypeError or ValueError:
-        raise TypeError('Order of delay on %s must be an integer, instead received %s' % (
-            identifier, str(order)))
-
-    dims.append('_delay')
-
-    shape = [len(coords[dim]) for dim in dims]
-    initial_condition = textwrap.dedent("""\
-            xr.DataArray(data=np.ones(%(shape)s)*%(value)s,
-                         coords=%(coords)s,
-                         dims=%(dims)s )*%(delay)s/%(order)s""" % {
-        'shape': shape,
-        'value': initial_value,
-        'coords': repr(coords),
-        'dims': repr(dims),
-        'delay': delay_time,
-        'order': order})
-
-    init_element = {
-        'py_name': '_init_%s' % identifier,
-        'real_name': 'Implicit',
-        'kind': 'setup',  # not explicitly specified in the model file, but must exist
-        'py_expr': initial_condition,
-        'subs': dims,
-        'doc': 'Provides initial conditions for delay of %s function' % identifier,
-        'unit': 'See docs for %s' % identifier,
-        'arguments': ''
-    }
-
-    expression = textwrap.dedent("""\
-        ((%(stock)s / (%(delay)s / %(order)s)).shift(**{'_delay': 1}).fillna(%(inval)s)
-            - (%(stock)s / (%(delay)s / %(order)s)))""" % {
-        'stock': '_state["%s"]' % identifier,
-        'delay': delay_time,
-        'order': order,
-        'inval': delay_input
-    })
-
-    ddt_element = {
-        'py_name': '_d%s_dt' % identifier,
-        'real_name': 'Implicit',
-        'kind': 'component',
-        'doc': 'Provides derivative for %s function' % identifier,
-        'subs': dims,
-        'unit': 'See docs for %s' % identifier,
-        'py_expr': expression,
-        'arguments': ''
-    }
-
-    return ("%s()" % identifier,
-            [init_element, ddt_element, output_element])
+    return "%s()" % stateful['py_name'], [stateful]
 
 
 def add_n_smooth(smooth_input, smooth_time, initial_value, order, subs, subscript_dict):
@@ -380,87 +377,69 @@ def add_n_smooth(smooth_input, smooth_time, initial_value, order, subs, subscrip
             build time, this must be an integer and cannot be calculated from other
             model components. Anything else will yield a ValueError.
 
-        sub: list of strings
+        subs: list of strings
             List of strings of subscript indices that correspond to the
             list of expressions, and collectively define the shape of the output
             See `builder.add_flaux` for more info
 
         Returns
         -------
-        output: <basestring>
-            Name of the stock which contains the smoothed version of the input
+        reference: basestring
+            reference to the smooth object `__call__` method, which will return the output
+            of the smooth process
 
+        new_structure: list
+            list of element construction dictionaries for the builder to assemble
         """
 
-    smoothed_variable = smooth_input[:-2]
-    identifier = '_' + smoothed_variable + '_smooth_' + order.rstrip('()')
-
-    output_element = {
-        'py_name': identifier,
-        'real_name': 'Implicit',
-        'kind': 'component',
-        'doc': 'smoothed value of %s' % smoothed_variable,
-        'subs': subs,
-        'unit': 'See docs for %s' % identifier,
-        'py_expr': "%(stock)s.loc[{'_smooth': %(order)s-1}]" % {
-            'stock': '_state["%s"]' % identifier,
-            'order': order,
-        },
+    stateful = {
+        'py_name': utils.make_python_identifier('smooth_%s_%s_%s_%s' % (smooth_input,
+                                                                        smooth_time,
+                                                                        initial_value,
+                                                                        order))[0],
+        'real_name': 'Smooth of %s' % smooth_input,
+        'doc': 'Smooth time: %s \n Smooth initial value %s \n Smooth order %s' % (
+            smooth_time, initial_value, order),
+        'py_expr': 'functions.Smooth(lambda: %s, lambda: %s, lambda: %s, lambda: %s)' % (
+            smooth_input, smooth_time, initial_value, order),
+        'unit': 'None',
+        'subs': '',
+        'kind': 'stateful',
         'arguments': ''
     }
 
-    coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
-    dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
+    return "%s()" % stateful['py_name'], [stateful]
 
-    try:
-        coords.update({'_smooth': range(int(order))})
-    except TypeError or ValueError:
-        raise TypeError('Order of smooth on %s must be an integer, instead received %s' % (
-            identifier, str(order)))
 
-    dims.append('_smooth')
+def add_initial(initial_input):
+    """
+    Constructs a stateful object for handling vensim's 'Initial' functionality
 
-    shape = [len(coords[dim]) for dim in dims]
-    initial_condition = textwrap.dedent("""\
-               xr.DataArray(data=np.ones(%(shape)s)*%(value)s,
-                            coords=%(coords)s,
-                            dims=%(dims)s )""" % {
-        'shape': shape,
-        'value': initial_value,
-        'coords': repr(coords),
-        'dims': repr(dims)
-    })
+    Parameters
+    ----------
+    initial_input: basestring
+        The expression which will be evaluated, and the first value of which returned
 
-    init_element = {
-        'py_name': '_init_%s' % identifier,
-        'real_name': 'Implicit',
-        'kind': 'setup',  # not explicitly specified in the model file, but must exist
-        'py_expr': initial_condition,
-        'subs': dims,
-        'doc': 'Provides initial conditions for smooth of %s function' % identifier,
-        'unit': 'See docs for %s' % identifier,
+    Returns
+    -------
+    reference: basestring
+        reference to the Initial object `__call__` method,
+        which will return the first calculated value of `initial_input`
+
+    new_structure: list
+        list of element construction dictionaries for the builder to assemble
+
+    """
+    stateful = {
+        'py_name': utils.make_python_identifier('initial_%s' % initial_input)[0],
+        'real_name': 'Smooth of %s' % initial_input,
+        'doc': 'Returns the value taken on during the initialization phase',
+        'py_expr': 'functions.Initial(lambda: %s)' % (
+            initial_input),
+        'unit': 'None',
+        'subs': '',
+        'kind': 'stateful',
         'arguments': ''
     }
 
-    expression = textwrap.dedent("""\
-        (%(stock)s.shift(**{'_smooth': 1}).fillna(%(inval)s) - %(stock)s )/(%(smooth)s/%(order)s)
-           """ % {
-        'stock': '_state["%s"]' % identifier,
-        'smooth': smooth_time,
-        'order': order,
-        'inval': smooth_input
-    })
-
-    ddt_element = {
-        'py_name': '_d%s_dt' % identifier,
-        'real_name': 'Implicit',
-        'kind': 'component',
-        'doc': 'Provides derivative for %s function' % identifier,
-        'subs': dims,
-        'unit': 'See docs for %s' % identifier,
-        'py_expr': expression,
-        'arguments': ''
-    }
-
-    return ("%s()" % identifier,
-            [init_element, ddt_element, output_element])
+    return "%s()" % stateful['py_name'], [stateful]

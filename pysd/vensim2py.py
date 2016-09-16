@@ -1,11 +1,6 @@
 """
-In this version:
-build up construction functions as separate step in model loading
-
-
-Todo:
-
-
+Translates vensim .mdl file to pieces needed by the builder module to write a python version of the
+model. Everything that requires knowledge of vensim syntax should be in this file.
 """
 
 import re
@@ -69,13 +64,17 @@ def get_file_sections(file_str):
             self.entries = []
             self.visit(ast)
 
-        def visit_main(self, n, text):
+        def visit_main(self, n, vc):
             self.entries.append({'name': 'main',
                                  'params': [],
                                  'returns': [],
                                  'string': n.text.strip()})
 
-        def visit_macro(self, n, (m1, _1, name, _2, lp, _3, params, _4, cn, _5, returns, _6, rp, text, m2)):
+        def visit_macro(self, n, vc):
+            name = vc[2]
+            params = vc[6]
+            returns = vc[10]
+            text = vc[13]
             self.entries.append({'name': name,
                                  'params': [x.strip() for x in params.split(',')] if params else [],
                                  'returns': [x.strip() for x in
@@ -232,20 +231,18 @@ def get_equation_components(equation_str):
 
     name = basic_id / escape_group
     subscriptlist = '[' _ subscript _ ("," _ subscript)* _ ']'
-    expression = ~r".*"  # expression could be anything, at this point. # Todo: should make this regex include newlines
+    expression = ~r".*"  # expression could be anything, at this point.
 
     subscript = basic_id / escape_group
 
     basic_id = ~r"[a-zA-Z][a-zA-Z0-9_\s]*"
     escape_group = "\"" ( "\\\"" / ~r"[^\"]" )* "\""
-    _ = ~r"[\s\\]*" #whitespace character
+    _ = ~r"[\s\\]*"  # whitespace character
     """
 
     # replace any amount of whitespace  with a single space
     equation_str = equation_str.replace('\\t', ' ')
-    #equation_str = equation_str.replace('\\', ' ')
     equation_str = re.sub(r"\s+", ' ', equation_str)
-
 
     parser = parsimonious.Grammar(component_structure_grammar)
     tree = parser.parse(equation_str)
@@ -409,6 +406,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
                                                                             init, order,
                                                                             element['subs'],
                                                                             subscript_dict),
+        "initial": lambda initial_input: builder.add_initial(initial_input)
     }
 
     in_ops = {
@@ -509,13 +507,13 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
         def visit_lookup_def(self, n, vc):
             """ This exists because vensim has multiple ways of doing lookups.
             Which is frustrating."""
-            x = vc[4]
+            x_val = vc[4]
             pairs = vc[11]
             mixed_list = pairs.replace('(', '').replace(')', '').split(',')
             xs = mixed_list[::2]
             ys = mixed_list[1::2]
             string = "functions.lookup(%(x)s, [%(xs)s], [%(ys)s])" % {
-                'x': x,
+                'x': x_val,
                 'xs': ','.join(xs),
                 'ys': ','.join(ys)
             }
@@ -561,6 +559,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
             return name
 
         def visit__(self, n, vc):
+            """ Handles whitespace characters"""
             return ''
 
         def generic_visit(self, n, vc):
@@ -592,8 +591,9 @@ def parse_lookup_expression(element):
             self.visit(ast)
 
         def visit__(self, n, vc):
-            "remove whitespace"
+            # remove whitespace
             return ''
+
         def visit_lookup(self, n, vc):
             pairs = vc[9]
             mixed_list = pairs.replace('(', '').replace(')', '').split(',')
@@ -657,13 +657,12 @@ def translate_vensim(mdl_file):
         elif entry['kind'] == 'section':
             model_docstring += entry['doc']
 
-
     # make python identifiers and track for namespace conflicts
     namespace = {'TIME': 'time', 'Time': 'time'}  # Initialize with builtins
     for element in model_elements:
         if element['kind'] not in ['subdef', 'section']:
             element['py_name'], namespace = utils.make_python_identifier(element['real_name'],
-                                                                           namespace)
+                                                                         namespace)
 
     # Create a namespace for the subscripts
     # as these aren't used to create actual python functions, but are just labels on arrays,
@@ -676,8 +675,7 @@ def translate_vensim(mdl_file):
             # Todo: if there is new structure, it should be added to the namespace...
             translation, new_structure = parse_general_expression(element,
                                                                   namespace=namespace,
-                                                                  subscript_dict=subscript_dict,
-                                                                  )
+                                                                  subscript_dict=subscript_dict)
             element.update(translation)
             model_elements += new_structure
 
@@ -692,7 +690,6 @@ def translate_vensim(mdl_file):
                            'unit': None,
                            'py_expr': '_t',
                            'arguments': ''})
-
 
     # define outfile name
     outfile_name = mdl_file.replace('.mdl', '.py')
