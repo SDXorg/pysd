@@ -43,7 +43,7 @@ class TestPySD(unittest.TestCase):
         stocks = model.run(return_timestamps=return_timestamps)
         self.assertSequenceEqual(return_timestamps, list(stocks.index))
 
-    def test_run_return_columns_fullnames(self):
+    def test_run_return_columns_original_names(self):
         """Addresses https://github.com/JamesPHoughton/pysd/issues/26
         - Also checks that columns are returned in the correct order"""
         import pysd
@@ -60,10 +60,19 @@ class TestPySD(unittest.TestCase):
         result = model.run(return_columns=return_columns)
         self.assertEqual(set(result.columns), set(return_columns))
 
-    def test_initial_conditions_tuple(self):
+    def test_initial_conditions_tuple_pysafe_names(self):
         import pysd
         model = pysd.read_vensim(test_model)
         stocks = model.run(initial_condition=(3000, {'teacup_temperature': 33}),
+                           return_timestamps=range(3000, 3010))
+        self.assertEqual(stocks.index[0], 3000)
+        self.assertEqual(stocks['Teacup Temperature'].iloc[0], 33)
+
+    def test_initial_conditions_tuple_original_names(self):
+        """ Responds to https://github.com/JamesPHoughton/pysd/issues/77"""
+        import pysd
+        model = pysd.read_vensim(test_model)
+        stocks = model.run(initial_condition=(3000, {'Teacup Temperature': 33}),
                            return_timestamps=range(3000, 3010))
         self.assertEqual(stocks.index[0], 3000)
         self.assertEqual(stocks['Teacup Temperature'].iloc[0], 33)
@@ -118,10 +127,8 @@ class TestPySD(unittest.TestCase):
         import pysd
         model = pysd.read_vensim(test_model)
         self.assertIsInstance(str(model), str)  # tests string conversion of string
-        self.assertEqual(str(model),
-                         test_model)  # tests that the output of print model is indeed the filename
-        self.assertIsInstance(model.doc(), str)  # tests the function we wrote
-        self.assertIsInstance(model.doc(short=True), str)
+        self.assertIsInstance(repr(model.doc()), str)  # tests that doc can be printed
+        self.assertIsInstance(model.doc(), pd.DataFrame)
 
     def test_cache(self):
         # Todo: test stepwise and runwise caching
@@ -253,7 +260,7 @@ class TestPySD(unittest.TestCase):
         import pysd
         # Todo: think through a stronger test here...
         model = pysd.read_vensim(test_model)
-        res = model._integrate(timesteps=range(5),
+        res = model._integrate(time_steps=range(5),
                                capture_elements=['teacup_temperature'],
                                return_timestamps=range(0, 5, 2))
         self.assertIsInstance(res, list)
