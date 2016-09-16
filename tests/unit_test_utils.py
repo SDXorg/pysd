@@ -1,7 +1,7 @@
 from unittest import TestCase
 import xarray as xr
 import pandas as pd
-import test_utils
+from . import test_utils
 import doctest
 
 class TestUtils(TestCase):
@@ -58,19 +58,23 @@ class TestUtils(TestCase):
 
         frames = [{'elem1': xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
                                        {'Dim1': ['A', 'B', 'C'],
-                                        'Dim2': ['D', 'E', 'F']}),
+                                        'Dim2': ['D', 'E', 'F']},
+                                       dims=['Dim1', 'Dim2']),
                    'elem2': xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
                                        {'Dim1': ['A', 'B', 'C'],
-                                        'Dim2': ['D', 'E', 'F']})},
+                                        'Dim2': ['D', 'E', 'F']},
+                                       dims=['Dim1', 'Dim2'])},
                   {'elem1': xr.DataArray([[2, 4, 6], [8, 10, 12], [14, 16, 19]],
                                          {'Dim1': ['A', 'B', 'C'],
-                                          'Dim2': ['D', 'E', 'F']}),
+                                          'Dim2': ['D', 'E', 'F']},
+                                       dims=['Dim1', 'Dim2']),
                    'elem2': xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
                                          {'Dim1': ['A', 'B', 'C'],
-                                          'Dim2': ['D', 'E', 'F']})}]
+                                          'Dim2': ['D', 'E', 'F']},
+                                       dims=['Dim1', 'Dim2'])}]
 
         return_addresses = {'Elem1[B,F]': ('elem1', {'Dim1': ['B'], 'Dim2': ['F']})}
-        df = pd.DataFrame([{'Elem1[B,F]': 8}, {'Elem1[B,F]': 16}])
+        df = pd.DataFrame([{'Elem1[B,F]': 6}, {'Elem1[B,F]': 12}])
         resultdf = make_flat_df(frames, return_addresses)
 
         test_utils.assert_frames_close(resultdf, df, rtol=.01)
@@ -80,14 +84,16 @@ class TestUtils(TestCase):
 
         frame = {'elem1': xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
                                        {'Dim1': ['A', 'B', 'C'],
-                                        'Dim2': ['D', 'E', 'F']}),
+                                        'Dim2': ['D', 'E', 'F']},
+                                       dims=['Dim1', 'Dim2']),
                  'elem2': xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
                                        {'Dim1': ['A', 'B', 'C'],
-                                        'Dim2': ['D', 'E', 'F']})}
+                                        'Dim2': ['D', 'E', 'F']},
+                                       dims=['Dim1', 'Dim2'])}
 
         return_addresses = {'Elem1[B,F]': ('elem1', {'Dim1': ['B'], 'Dim2': ['F']})}
         self.assertEqual(visit_addresses(frame, return_addresses),
-                         {'Elem1[B,F]': 8})
+                         {'Elem1[B,F]': 6})
 
     def test_visit_addresses_nosubs(self):
         from pysd.utils import visit_addresses
@@ -107,21 +113,24 @@ class TestUtils(TestCase):
 
         frame = {'elem1': xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
                                        {'Dim1': ['A', 'B', 'C'],
-                                        'Dim2': ['D', 'E', 'F']}),
+                                        'Dim2': ['D', 'E', 'F']},
+                                       dims=['Dim1', 'Dim2']),
                  'elem2': xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
                                        {'Dim1': ['A', 'B', 'C'],
-                                        'Dim2': ['D', 'E', 'F']})}
-        return_addresses = {'Elem1[Dim1, F]': ('elem1', {'Dim1': ['A', 'B', 'C'], 'Dim2': ['F']})}
+                                        'Dim2': ['D', 'E', 'F']},
+                                        dims=['Dim1', 'Dim2'])}
+        return_addresses = {'Elem1[A, Dim2]': ('elem1', {'Dim1': ['A'], 'Dim2': ['D', 'E', 'F']})}
 
         actual = visit_addresses(frame, return_addresses)
-        expected = {'Elem1[Dim1, F]':
+        expected = {'Elem1[A, Dim2]':
                         xr.DataArray([[1, 2, 3]],
-                                     {'Dim1': ['A', 'B', 'C'],
-                                      'Dim2': ['F']}),
+                                     {'Dim1': ['A'],
+                                      'Dim2': ['D', 'E', 'F']},
+                                     dims=['Dim1', 'Dim2']),
                     }
-        self.assertIsInstance(actual.values()[0], xr.DataArray)
-        self.assertEqual(actual['Elem1[Dim1, F]'].shape,
-                         expected['Elem1[Dim1, F]'].shape)
+        self.assertIsInstance(list(actual.values())[0], xr.DataArray)
+        self.assertEqual(actual['Elem1[A, Dim2]'].shape,
+                         expected['Elem1[A, Dim2]'].shape)
         # Todo: test that the values are equal
 
     def test_make_coord_dict(self):

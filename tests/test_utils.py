@@ -86,9 +86,7 @@ def assert_frames_close(actual, expected, **kwargs):
                             actual[col].values,
                             **kwargs)
         except AssertionError as e:
-            raise AssertionError(
-                e.message + 'Column: ' + str(col)
-            )
+            raise AssertionError('Column: ' + str(col) + ' is not close.')
 
 
 def assert_allclose(x, y, rtol=1.e-5, atol=1.e-5):

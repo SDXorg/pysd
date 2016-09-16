@@ -30,7 +30,7 @@ def dict_find(in_dict, value):
     """
     # Todo: make this robust to repeated values
     # Todo: make this robust to missing values
-    return in_dict.keys()[in_dict.values().index(value)]
+    return list(in_dict.keys())[list(in_dict.values()).index(value)]
 
 
 def xrmerge(das, accept_new=True):
@@ -312,7 +312,7 @@ def get_return_elements(return_columns, namespace, subscript_dict):
 
     """
     # Todo: clean up duplicated code
-    capture_elements = set()
+    capture_elements = list()
     return_addresses = dict()
     for col in return_columns:
         if '[' in col:
@@ -326,7 +326,8 @@ def get_return_elements(return_columns, namespace, subscript_dict):
                 else:
                     raise KeyError(name + " not found as model element")
 
-            capture_elements.add(py_name)
+            if py_name not in capture_elements:
+                capture_elements += [py_name]
             address = make_coord_dict(subs, subscript_dict)
             return_addresses[col] = (py_name, address)
         else:
@@ -338,7 +339,8 @@ def get_return_elements(return_columns, namespace, subscript_dict):
                 else:
                     raise KeyError(col + " not found as model element")
 
-            capture_elements.add(py_name)
+            if py_name not in capture_elements:
+                capture_elements += [py_name]
             return_addresses[col] = (py_name, {})
 
     return list(capture_elements), return_addresses
@@ -366,7 +368,7 @@ def make_flat_df(frames, return_addresses):
     """
 
     # Todo: could also try a list comprehension here, or parallel apply
-    visited = map(lambda x: visit_addresses(x, return_addresses), frames)
+    visited = list(map(lambda x: visit_addresses(x, return_addresses), frames))
     return pd.DataFrame(visited)
 
 

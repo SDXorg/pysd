@@ -16,8 +16,8 @@ import pandas as _pd
 import numpy as np
 import imp
 import time
-import utils
-import functions
+from . import utils
+from . import functions
 import warnings
 
 
@@ -43,7 +43,7 @@ def read_vensim(mdl_file):
     --------
     >>> model = read_vensim('../tests/test-models/samples/teacup/teacup.mdl')
     """
-    from vensim2py import translate_vensim
+    from .vensim2py import translate_vensim
     py_model_file = translate_vensim(mdl_file)
     model = PySD(py_model_file)
     model.mdl_file = mdl_file
@@ -395,7 +395,7 @@ class PySD(object):
                 self.components.final_time() + self.components.saveper(),
                 self.components.saveper(), dtype=np.float64
             )
-        elif isinstance(return_timestamps, (list, int, float, long, np.ndarray)):
+        elif isinstance(return_timestamps, (list, int, float, np.ndarray)):
             return_timestamps_array = np.array(return_timestamps, ndmin=1)
         elif isinstance(return_timestamps, _pd.Series):
             return_timestamps_array = return_timestamps.as_matrix()

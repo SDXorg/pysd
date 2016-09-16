@@ -5,8 +5,8 @@ model. Everything that requires knowledge of vensim syntax should be in this fil
 
 import re
 import parsimonious
-import builder
-import utils
+from . import builder
+from . import utils
 import textwrap
 import numpy as np
 
@@ -264,10 +264,12 @@ def get_equation_components(equation_str):
         def visit_component(self, n, vc):
             self.kind = 'component'
 
-        def visit_name(self, n, (name, )):
+        def visit_name(self, n, vc):
+            (name, ) = vc
             self.real_name = name.strip()
 
-        def visit_subscript(self, n, (subscript, )):
+        def visit_subscript(self, n, vc):
+            (subscript, ) = vc
             self.subscripts.append(subscript.strip())
 
         def visit_expression(self, n, vc):
@@ -541,7 +543,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
             else:
                 return n.text.replace(' ', '')
 
-        def visit_subscript_list(self, n, (lb, _1, refs, rb)):
+        def visit_subscript_list(self, n, vc):
+            refs = vc[2]
             subs = [x.strip() for x in refs.split(',')]
             coordinates = utils.make_coord_dict(subs, subscript_dict)
             if len(coordinates):

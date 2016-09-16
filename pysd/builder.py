@@ -12,7 +12,7 @@ xmile specific syntax.
 import textwrap
 import autopep8
 from _version import __version__
-import utils
+from . import utils
 
 
 def build(elements, subscript_dict, namespace, outfile_name):
@@ -39,7 +39,7 @@ def build(elements, subscript_dict, namespace, outfile_name):
         The name of the file to write the model to.
     """
     # Todo: deal with model level documentation
-    # Todo: Make np, pysd.functions import conditional on usage in the file
+    # Todo: Make np, PySD.functions import conditional on usage in the file
     # Todo: Make presence of subscript_dict instantiation conditional on usage
     # Todo: Sort elements (alphabetically? group stock funcs?)
     # Todo: do something better than hardcoding the time function
@@ -191,7 +191,7 @@ def merge_partial_elements(element_list):
             outs[name]['subs'] += [element['subs']]
             outs[name]['arguments'] = element['arguments']
 
-    return outs.values()
+    return list(outs.values())
 
 
 def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
@@ -237,16 +237,21 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
         stateful_py_expr = 'functions.Integ(lambda: _d%s_dt(), lambda: _init_%s())' % (identifier,
                                                                                        identifier)
 
-        # take care of cases when a float is passed as initialization for an array.
-        # this might be better located in the translation function in the future.
-        if subs and initial_condition.decode('unicode-escape').isnumeric():
+        try:
+            decoded = initial_condition.decode('unicode-escape')
+            initial_condition_numeric = decoded.isnumeric()
+        except AttributeError:
+            # I believe this should be okay for Py3 but should be checked
+            initial_condition_numeric = initial_condition.isnumeric()
+
+        if subs and initial_condition_numeric:
             coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
             dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
             shape = [len(coords[dim]) for dim in dims]
             initial_condition = textwrap.dedent("""\
-                    xr.DataArray(data=np.ones(%(shape)s)*%(value)s,
-                                 coords=%(coords)s,
-                                 dims=%(dims)s )""" % {
+                xr.DataArray(data=np.ones(%(shape)s)*%(value)s,
+                             coords=%(coords)s,
+                             dims=%(dims)s )""" % {
                 'shape': shape,
                 'value': initial_condition,
                 'coords': repr(coords),

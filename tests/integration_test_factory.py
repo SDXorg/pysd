@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 run = False
 
 if run:
@@ -48,4 +50,4 @@ if run:
     with open('integration_test_pysd.py', 'w') as ofile:
         ofile.write(file_string)
 
-    print 'generated %i integration tests' % len(tests)
+    print('generated %i integration tests' % len(tests))
