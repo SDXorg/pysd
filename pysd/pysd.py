@@ -18,6 +18,7 @@ import imp
 import time
 import utils
 import functions
+import warnings
 
 
 # Todo: add a logical way to run two or more models together, using the same integrator.
@@ -268,10 +269,9 @@ class PySD(object):
             else:
                 raise NameError('%s is not recognized as a model component' % key)
 
-            if isinstance(getattr(self.components, func_name), functions.Stateful)
+            if 'integ_'+func_name in dir(self.components): # this won't handle other statefuls...
                 warnings.warn("Replacing the equation of stock {} with params".format(key),
                               stacklevel=2)
-
 
             setattr(self.components, func_name, new_function)
 
