@@ -5,16 +5,16 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Developer Documentation &mdash; PySD 0.3.2 documentation</title>
+  <title>Developer Documentation &mdash; PySD 0.7.1 documentation</title>
   
 
   
   
 
   
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
 
   
   
@@ -30,12 +30,12 @@
   
 
   
-    <link rel="top" title="PySD 0.3.2 documentation" href="../index.html"/>
+    <link rel="top" title="PySD 0.7.1 documentation" href="../index.html"/>
         <link rel="next" title="About the Project" href="about.html"/>
         <link rel="prev" title="User Functions Reference" href="../functions.html"/> 
 
   
-  <script src="_static/js/modernizr.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
 
 </head>
 
@@ -47,14 +47,8 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-nav-search">
         
-
+          <a href="../index.html" class="fa fa-home"> PySD</a>
         
-          <a href="../index.html" class="icon icon-home"> PySD
-        
-
-        
-        </a>
-
         
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -63,8 +57,6 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-        
       </div>
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
@@ -87,7 +79,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../basic_usage.html#setting-parameter-values">Setting parameter values</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../basic_usage.html#setting-simulation-initial-conditions">Setting simulation initial conditions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../basic_usage.html#querying-current-values">Querying current values</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../basic_usage.html#collecting-a-history-of-returned-values">Collecting a history of returned values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basic_usage.html#supported-functions">Supported functions</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced_usage.html">Advanced Usage</a><ul>
@@ -97,44 +89,10 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../functions.html">User Functions Reference</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Developer Documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="about.html">About the Project</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="about.html#motivation-the-coming-of-age-of-big-data">Motivation: The (coming of) age of Big Data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="about.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="contributing.html">Contributing to PySD</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="contributing.html#development-tools">Development Tools</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="contributing.html#test-suite">Test Suite</a></li>
-<li class="toctree-l4"><a class="reference internal" href="contributing.html#speed-tests">Speed Tests</a></li>
-<li class="toctree-l4"><a class="reference internal" href="contributing.html#profiler">Profiler</a></li>
-<li class="toctree-l4"><a class="reference internal" href="contributing.html#python-linter">Python Linter</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="contributing.html#pysd-design-philosophy">PySD Design Philosophy</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="pathway.html">PySD Development Pathway</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="pathway.html#high-priority">High Priority</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pathway.html#medium-priority">Medium Priority</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pathway.html#low-priority">Low Priority</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pathway.html#not-planned">Not Planned</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pathway.html#ideas-for-other-projects">Ideas for Other Projects</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pathway.html#current-features">Current Features</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="structure.html">Structure of the PySD module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="structure.html#translation">Translation</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="vensim_translation.html">Vensim Translation</a></li>
-<li class="toctree-l4"><a class="reference internal" href="xmile_translation.html">XMILE Translation</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="structure.html#the-model-class">The model class</a></li>
-<li class="toctree-l3"><a class="reference internal" href="structure.html#the-pysd-class">The PySD class</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="internal_functions.html">Internal Functions</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="about.html">About the Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html">Contributing to PySD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pathway.html">PySD Development Pathway</a></li>
+<li class="toctree-l2"><a class="reference internal" href="structure.html">Structure of the PySD module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="complement.html">Complementary Projects</a></li>
 </ul>
 </li>
@@ -165,9 +123,7 @@
     <li>Developer Documentation</li>
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="../_sources/development/development_index.txt" rel="nofollow"> View page source</a>
-          
+          <a href="../_sources/development/development_index.txt" rel="nofollow"> View page source</a>
         
       </li>
   </ul>
@@ -215,10 +171,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="about.html" class="btn btn-neutral float-right" title="About the Project" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="about.html" class="btn btn-neutral float-right" title="About the Project">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="../functions.html" class="btn btn-neutral" title="User Functions Reference" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="../functions.html" class="btn btn-neutral" title="User Functions Reference"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -227,13 +183,13 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015, James Houghton.
+        &copy; Copyright 2016, James Houghton.
     </p>
   </div>
+
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
-
+  
 </footer>
-
         </div>
       </div>
 
@@ -248,7 +204,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'0.3.2',
+            VERSION:'0.7.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

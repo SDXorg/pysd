@@ -5,16 +5,16 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>pysd.pysd &mdash; PySD 0.3.2 documentation</title>
+  <title>pysd.pysd &mdash; PySD 0.7.1 documentation</title>
   
 
   
   
 
   
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
 
   
   
@@ -30,11 +30,11 @@
   
 
   
-    <link rel="top" title="PySD 0.3.2 documentation" href="../../index.html"/>
+    <link rel="top" title="PySD 0.7.1 documentation" href="../../index.html"/>
         <link rel="up" title="Module code" href="../index.html"/> 
 
   
-  <script src="_static/js/modernizr.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
 
 </head>
 
@@ -46,14 +46,8 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-nav-search">
         
-
+          <a href="../../index.html" class="fa fa-home"> PySD</a>
         
-          <a href="../../index.html" class="icon icon-home"> PySD
-        
-
-        
-        </a>
-
         
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
@@ -62,8 +56,6 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-        
       </div>
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
@@ -86,7 +78,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../basic_usage.html#setting-parameter-values">Setting parameter values</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../basic_usage.html#setting-simulation-initial-conditions">Setting simulation initial conditions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../basic_usage.html#querying-current-values">Querying current values</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../../basic_usage.html#collecting-a-history-of-returned-values">Collecting a history of returned values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../basic_usage.html#supported-functions">Supported functions</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../advanced_usage.html">Advanced Usage</a><ul>
@@ -96,44 +88,10 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../functions.html">User Functions Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../development/development_index.html">Developer Documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../../development/about.html">About the Project</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../development/about.html#motivation-the-coming-of-age-of-big-data">Motivation: The (coming of) age of Big Data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../development/about.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../../development/contributing.html">Contributing to PySD</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../development/contributing.html#development-tools">Development Tools</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../development/contributing.html#test-suite">Test Suite</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../development/contributing.html#speed-tests">Speed Tests</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../development/contributing.html#profiler">Profiler</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../development/contributing.html#python-linter">Python Linter</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="../../development/contributing.html#pysd-design-philosophy">PySD Design Philosophy</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../../development/pathway.html">PySD Development Pathway</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../development/pathway.html#high-priority">High Priority</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../development/pathway.html#medium-priority">Medium Priority</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../development/pathway.html#low-priority">Low Priority</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../development/pathway.html#not-planned">Not Planned</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../development/pathway.html#ideas-for-other-projects">Ideas for Other Projects</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../development/pathway.html#current-features">Current Features</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="../../development/structure.html">Structure of the PySD module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="../../development/structure.html#translation">Translation</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../development/vensim_translation.html">Vensim Translation</a></li>
-<li class="toctree-l4"><a class="reference internal" href="../../development/xmile_translation.html">XMILE Translation</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="../../development/structure.html#the-model-class">The model class</a></li>
-<li class="toctree-l3"><a class="reference internal" href="../../development/structure.html#the-pysd-class">The PySD class</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="../../development/internal_functions.html">Internal Functions</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="../../development/about.html">About the Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../development/contributing.html">Contributing to PySD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../development/pathway.html">PySD Development Pathway</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../../development/structure.html">Structure of the PySD module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../development/complement.html">Complementary Projects</a></li>
 </ul>
 </li>
@@ -166,8 +124,6 @@
     <li>pysd.pysd</li>
       <li class="wy-breadcrumbs-aside">
         
-          
-        
       </li>
   </ul>
   <hr/>
@@ -175,101 +131,125 @@
           <div role="main" class="document">
             
   <h1>Source code for pysd.pysd</h1><div class="highlight"><pre>
-<span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">created: August 15, 2014</span>
-<span class="sd">last update: June 6 2015</span>
-<span class="sd">version 0.2.5</span>
-<span class="sd">James Houghton &lt;james.p.houghton@gmail.com&gt;</span>
-<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">pysd.py</span>
 
-<span class="c">#pysd specific imports</span>
-<span class="kn">import</span> <span class="nn">translators</span> <span class="kn">as</span> <span class="nn">_translators</span>
+<span class="sd">Contains all the code that will be directly accessed by the user in normal operation.</span>
+<span class="sd">Also contains some private members to facilitate integration, setup, etc.</span>
 
-<span class="c">#third party imports</span>
-<span class="kn">from</span> <span class="nn">scipy.integrate</span> <span class="kn">import</span> <span class="n">odeint</span> <span class="k">as</span> <span class="n">_odeint</span>
+<span class="sd">History</span>
+<span class="sd">--------</span>
+<span class="sd">August 15, 2014: created</span>
+<span class="sd">June 6 2015: Major updates - version 0.2.5</span>
+<span class="sd">Jan 2016: Rework to handle subscripts</span>
+<span class="sd">May 2016: Updates to handle grammar refactoring</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
 <span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">_pd</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
 <span class="kn">import</span> <span class="nn">imp</span>
-
-<span class="c">######################################################</span>
-<span class="c"># Todo:</span>
-<span class="c"># - passing optional arguments in the run command through to the integrator,</span>
-<span class="c">#       to give a finer level of control to those who know what to do with them. (such as `tcrit`)</span>
-<span class="c"># - add a logical way to run two or more models together, using the same integrator.</span>
-<span class="c"># - import translators within read_XMILE and read_Vensim, so we don&#39;t load both if we dont need them</span>
-<span class="c">######################################################</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">utils</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">functions</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
 
 
-<span class="c">######################################################</span>
-<span class="c"># Issues:</span>
-<span class="c">#</span>
-<span class="c"># If two model components (A, and B) depend on the same third model component (C)</span>
-<span class="c"># then C will get computed twice. If C itself is dependant on many upstream components (D, E, F...)</span>
-<span class="c"># then these will also be computed multiple times.</span>
-<span class="c">#</span>
-<span class="c"># As the model class depends on its internal state for calculating</span>
-<span class="c"># the values of each element, instead of passing that state</span>
-<span class="c"># through the function execution network, we can&#39;t use caching</span>
-<span class="c"># to prevent multiple execution, as we don&#39;t know when to update the cache</span>
-<span class="c"># (maybe in the calling function?)</span>
-<span class="c">#</span>
-<span class="c"># Also, this multi-calculation bears the risk that if the state is</span>
-<span class="c"># changed during an execution step, the resulting calculation will be</span>
-<span class="c"># corrupted, and we won&#39;t have any indication of this corruption.</span>
-<span class="c">######################################################</span>
+<span class="c"># Todo: add a logical way to run two or more models together, using the same integrator.</span>
+<span class="c"># Todo: work out an RK4 adaptive integrator</span>
 
-<div class="viewcode-block" id="read_xmile"><a class="viewcode-back" href="../../functions.html#pysd.read_xmile">[docs]</a><span class="k">def</span> <span class="nf">read_xmile</span><span class="p">(</span><span class="n">xmile_file</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Construct a model object from `.xmile` file. &quot;&quot;&quot;</span>
-    <span class="n">py_model_file</span> <span class="o">=</span> <span class="n">_translators</span><span class="o">.</span><span class="n">translate_xmile</span><span class="p">(</span><span class="n">xmile_file</span><span class="p">)</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="n">py_model_file</span><span class="p">)</span>
-    <span class="n">model</span><span class="o">.</span><span class="n">__str__</span> <span class="o">=</span> <span class="s">&#39;Import of &#39;</span> <span class="o">+</span> <span class="n">xmile_file</span>
-    <span class="k">return</span> <span class="n">model</span></div>
-<span class="n">read_xmile</span><span class="o">.</span><span class="n">__doc__</span> <span class="o">+=</span> <span class="n">_translators</span><span class="o">.</span><span class="n">translate_xmile</span><span class="o">.</span><span class="n">__doc__</span>
 
 <div class="viewcode-block" id="read_vensim"><a class="viewcode-back" href="../../functions.html#pysd.read_vensim">[docs]</a><span class="k">def</span> <span class="nf">read_vensim</span><span class="p">(</span><span class="n">mdl_file</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Construct a model from Vensim `.mdl` file. &quot;&quot;&quot;</span>
-    <span class="n">py_model_file</span> <span class="o">=</span> <span class="n">_translators</span><span class="o">.</span><span class="n">translate_vensim</span><span class="p">(</span><span class="n">mdl_file</span><span class="p">)</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="n">py_model_file</span><span class="p">)</span>
-    <span class="n">model</span><span class="o">.</span><span class="n">__str__</span> <span class="o">=</span> <span class="s">&#39;Import of &#39;</span> <span class="o">+</span> <span class="n">mdl_file</span>
-    <span class="k">return</span> <span class="n">model</span></div>
-<span class="n">read_vensim</span><span class="o">.</span><span class="n">__doc__</span> <span class="o">+=</span> <span class="n">_translators</span><span class="o">.</span><span class="n">translate_vensim</span><span class="o">.</span><span class="n">__doc__</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Construct a model from Vensim `.mdl` file.</span>
 
-<div class="viewcode-block" id="load"><a class="viewcode-back" href="../../functions.html#pysd.load">[docs]</a><span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">py_model_file</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot; Load a python-converted model file. &quot;&quot;&quot;</span>
-    <span class="n">module</span> <span class="o">=</span> <span class="n">imp</span><span class="o">.</span><span class="n">load_source</span><span class="p">(</span><span class="s">&#39;modulename&#39;</span><span class="p">,</span> <span class="n">py_model_file</span><span class="p">)</span>
-    <span class="n">component_class</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">Components</span>
-    <span class="n">model</span> <span class="o">=</span> <span class="n">PySD</span><span class="p">(</span><span class="n">component_class</span><span class="p">)</span>
-    <span class="n">model</span><span class="o">.</span><span class="n">__str__</span> <span class="o">=</span> <span class="s">&#39;Import of &#39;</span> <span class="o">+</span> <span class="n">py_model_file</span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mdl_file : &lt;string&gt;</span>
+<span class="sd">        The relative path filename for a raw Vensim `.mdl` file</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    model: a PySD class object</span>
+<span class="sd">        Elements from the python model are loaded into the PySD class and ready to run</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; model = read_vensim(&#39;../tests/test-models/samples/teacup/teacup.mdl&#39;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">.vensim2py</span> <span class="kn">import</span> <span class="n">translate_vensim</span>
+    <span class="n">py_model_file</span> <span class="o">=</span> <span class="n">translate_vensim</span><span class="p">(</span><span class="n">mdl_file</span><span class="p">)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">PySD</span><span class="p">(</span><span class="n">py_model_file</span><span class="p">)</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">mdl_file</span> <span class="o">=</span> <span class="n">mdl_file</span>
     <span class="k">return</span> <span class="n">model</span>
+
+</div>
+<div class="viewcode-block" id="load"><a class="viewcode-back" href="../../functions.html#pysd.load">[docs]</a><span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="n">py_model_file</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Load a python-converted model file.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    py_model_file : &lt;string&gt;</span>
+<span class="sd">        Filename of a model which has already been converted into a</span>
+<span class="sd">         python format.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; model = load(&#39;../tests/test-models/samples/teacup/teacup.py&#39;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">PySD</span><span class="p">(</span><span class="n">py_model_file</span><span class="p">)</span>
 
 </div>
 <div class="viewcode-block" id="PySD"><a class="viewcode-back" href="../../functions.html#pysd.PySD">[docs]</a><span class="k">class</span> <span class="nc">PySD</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        PySD is the default class charged with running a model.</span>
-
-<span class="sd">        It can be initialized by passing an existing component class.</span>
-
-<span class="sd">        The import functions pull models and create this class.</span>
+<span class="sd">    PySD is the default class charged with running a model.</span>
+<span class="sd">    It can be initialized by passing a string to a translated python model file.</span>
+<span class="sd">    The import functions pull models and create this class.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">component_class</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Construct a PySD object built around the component class &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">components</span> <span class="o">=</span> <span class="n">component_class</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">record</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">py_model_file</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Construct a PySD object from a translated model python file</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        py_model_file : &lt;string&gt;</span>
+<span class="sd">            Filename of a model which has already been converted into a</span>
+<span class="sd">            python format.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># need a unique identifier for the imported module. Use the time.</span>
+        <span class="n">module_name</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">components</span> <span class="o">=</span> <span class="n">imp</span><span class="o">.</span><span class="n">load_source</span><span class="p">(</span><span class="n">module_name</span><span class="p">,</span>
+                                          <span class="n">py_model_file</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_stateful_elements</span> <span class="o">=</span> <span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">)</span>
+                                   <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">,</span> <span class="n">name</span><span class="p">),</span>
+                                                 <span class="n">functions</span><span class="o">.</span><span class="n">Stateful</span><span class="p">)]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">py_model_file</span> <span class="o">=</span> <span class="n">py_model_file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reset_state</span><span class="p">()</span>
 
 <div class="viewcode-block" id="PySD.__str__"><a class="viewcode-back" href="../../functions.html#pysd.PySD.__str__">[docs]</a>    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Return model source file &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">__str__</span>
+        <span class="sd">&quot;&quot;&quot; Return model source files &quot;&quot;&quot;</span>
+
+        <span class="c"># JT: Might be helpful to return not only the source file, but</span>
+        <span class="c"># also how the instance differs from that source file. This</span>
+        <span class="c"># would give a more accurate view of the current model.</span>
+        <span class="n">string</span> <span class="o">=</span> <span class="s">&#39;Translated Model File: &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">py_model_file</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s">&#39;mdl_file&#39;</span><span class="p">):</span>
+            <span class="n">string</span> <span class="o">+=</span> <span class="s">&#39;</span><span class="se">\n</span><span class="s"> Original Model File: &#39;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">mdl_file</span>
+
+        <span class="k">return</span> <span class="n">string</span>
 </div>
-<div class="viewcode-block" id="PySD.run"><a class="viewcode-back" href="../../functions.html#pysd.PySD.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="p">{},</span> <span class="n">return_columns</span><span class="o">=</span><span class="p">[],</span> <span class="n">return_timestamps</span><span class="o">=</span><span class="p">[],</span>
-            <span class="n">initial_condition</span><span class="o">=</span><span class="s">&#39;original&#39;</span><span class="p">,</span> <span class="n">collect</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="o">**</span><span class="n">intg_kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="PySD.run"><a class="viewcode-back" href="../../functions.html#pysd.PySD.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">return_columns</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">return_timestamps</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+            <span class="n">initial_condition</span><span class="o">=</span><span class="s">&#39;original&#39;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Simulate the model&#39;s behavior over time.</span>
 <span class="sd">        Return a pandas dataframe with timestamps as rows,</span>
 <span class="sd">        model elements as columns.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-
 <span class="sd">        params : dictionary</span>
 <span class="sd">            Keys are strings of model component names.</span>
 <span class="sd">            Values are numeric or pandas Series.</span>
@@ -293,24 +273,15 @@
 <span class="sd">            * (t, {state}) lets the user specify a starting time and (possibly partial)</span>
 <span class="sd">              list of stock values.</span>
 
-<span class="sd">        collect: binary (T/F)</span>
-<span class="sd">            When running multiple simulations, collect the results in a way</span>
-<span class="sd">            that we can access down the road.</span>
-
-<span class="sd">        intg_kwargs: keyword arguments for odeint</span>
-<span class="sd">            Provides precice control over the integrator by passing through</span>
-<span class="sd">            keyword arguments to scipy&#39;s odeint function. The most interesting</span>
-<span class="sd">            of these will be `tcrit`, `hmax`, `mxstep`.</span>
-
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
 
-<span class="sd">        &gt;&gt;&gt; model.run(params={&#39;exogenous_constant&#39;:42})</span>
-<span class="sd">        &gt;&gt;&gt; model.run(params={&#39;exogenous_variable&#39;:timeseries_input})</span>
-<span class="sd">        &gt;&gt;&gt; model.run(return_timestamps=[1,2,3.1415,4,10])</span>
+<span class="sd">        &gt;&gt;&gt; model.run(params={&#39;exogenous_constant&#39;: 42})</span>
+<span class="sd">        &gt;&gt;&gt; model.run(params={&#39;exogenous_variable&#39;: timeseries_input})</span>
+<span class="sd">        &gt;&gt;&gt; model.run(return_timestamps=[1, 2, 3.1415, 4, 10])</span>
 <span class="sd">        &gt;&gt;&gt; model.run(return_timestamps=10)</span>
-<span class="sd">        &gt;&gt;&gt; model.run(return_timestamps=np.linspace(1,10,20))</span>
+<span class="sd">        &gt;&gt;&gt; model.run(return_timestamps=np.linspace(1, 10, 20))</span>
 
 <span class="sd">        See Also</span>
 <span class="sd">        --------</span>
@@ -322,58 +293,79 @@
         <span class="k">if</span> <span class="n">params</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">set_components</span><span class="p">(</span><span class="n">params</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">initial_condition</span> <span class="o">!=</span> <span class="s">&#39;current&#39;</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">set_initial_condition</span><span class="p">(</span><span class="n">initial_condition</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">set_initial_condition</span><span class="p">(</span><span class="n">initial_condition</span><span class="p">)</span>
 
-        <span class="n">tseries</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_timeseries</span><span class="p">(</span><span class="n">return_timestamps</span><span class="p">)</span>
+        <span class="n">return_timestamps</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_format_return_timestamps</span><span class="p">(</span><span class="n">return_timestamps</span><span class="p">)</span>
 
-        <span class="c"># the odeint expects the first timestamp in the tseries to be the initial condition,</span>
-        <span class="c"># so we may need to add the t0 if it is not present in the tseries array</span>
-        <span class="n">addtflag</span> <span class="o">=</span> <span class="n">tseries</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">t</span>
-        <span class="k">if</span> <span class="n">addtflag</span><span class="p">:</span>
-            <span class="n">tseries</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">insert</span><span class="p">(</span><span class="n">tseries</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">t</span><span class="p">)</span>
+        <span class="n">t_series</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_build_euler_timeseries</span><span class="p">(</span><span class="n">return_timestamps</span><span class="p">)</span>
 
-        <span class="n">res</span> <span class="o">=</span> <span class="n">_odeint</span><span class="p">(</span><span class="n">func</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">d_dt</span><span class="p">,</span>
-                      <span class="n">y0</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">state_vector</span><span class="p">(),</span>
-                      <span class="n">t</span><span class="o">=</span><span class="n">tseries</span><span class="p">,</span>
-                      <span class="o">**</span><span class="n">intg_kwargs</span><span class="p">)</span>
-                      <span class="c">#hmax=self.components.time_step())</span>
+        <span class="k">if</span> <span class="n">return_columns</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">return_columns</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">_namespace</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span>
 
-        <span class="n">state_df</span> <span class="o">=</span> <span class="n">_pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">res</span><span class="p">,</span>
-                                 <span class="n">index</span><span class="o">=</span><span class="n">tseries</span><span class="p">,</span>
-                                 <span class="n">columns</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">_stocknames</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">_stage</span> <span class="o">=</span> <span class="s">&#39;Run&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clear_caches</span><span class="p">()</span>
 
-        <span class="n">return_df</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extend_dataframe</span><span class="p">(</span><span class="n">state_df</span><span class="p">,</span> <span class="n">return_columns</span><span class="p">)</span> <span class="k">if</span> <span class="n">return_columns</span> <span class="k">else</span> <span class="n">state_df</span>
+        <span class="n">capture_elements</span><span class="p">,</span> <span class="n">return_addresses</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_return_elements</span><span class="p">(</span>
+            <span class="n">return_columns</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">_namespace</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">_subscript_dict</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">addtflag</span><span class="p">:</span>
-            <span class="n">return_df</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">return_df</span><span class="o">.</span><span class="n">index</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">inplace</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_integrate</span><span class="p">(</span><span class="n">t_series</span><span class="p">,</span> <span class="n">capture_elements</span><span class="p">,</span> <span class="n">return_timestamps</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">collect</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">record</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">return_df</span><span class="p">)</span> <span class="c">#we could just record the state, and expand it later...</span>
-
-        <span class="c"># The integrator takes us past the last point in the tseries.</span>
-        <span class="c"># Go back to it, in order to maintain the state at a predictable location.</span>
-        <span class="c"># This may take up more time than we&#39;re willing to spend...</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">t</span> <span class="o">!=</span> <span class="n">tseries</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="n">tseries</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="nb">dict</span><span class="p">(</span><span class="n">state_df</span><span class="o">.</span><span class="n">iloc</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="n">return_df</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">make_flat_df</span><span class="p">(</span><span class="n">res</span><span class="p">,</span> <span class="n">return_addresses</span><span class="p">)</span>
+        <span class="n">return_df</span><span class="o">.</span><span class="n">index</span> <span class="o">=</span> <span class="n">return_timestamps</span>
 
         <span class="k">return</span> <span class="n">return_df</span>
-
 </div>
-<div class="viewcode-block" id="PySD.get_record"><a class="viewcode-back" href="../../functions.html#pysd.PySD.get_record">[docs]</a>    <span class="k">def</span> <span class="nf">get_record</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Return the recorded model information.</span>
+<div class="viewcode-block" id="PySD.reset_state"><a class="viewcode-back" href="../../functions.html#pysd.PySD.reset_state">[docs]</a>    <span class="k">def</span> <span class="nf">reset_state</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets the model state to the state described in the model file.</span>
+<span class="sd">        Builds the state vector from scratch</span>
 
-<span class="sd">        &gt;&gt;&gt; model.get_record()</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="n">_pd</span><span class="o">.</span><span class="n">concat</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">record</span><span class="p">)</span>
-</div>
-<div class="viewcode-block" id="PySD.clear_record"><a class="viewcode-back" href="../../functions.html#pysd.PySD.clear_record">[docs]</a>    <span class="k">def</span> <span class="nf">clear_record</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Reset the recorder.</span>
 
-<span class="sd">        &gt;&gt;&gt; model.clear_record()</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">record</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c"># We give the state and the time parameters leading underscores so that</span>
+        <span class="c"># if there are variables in the model named &#39;t&#39; or &#39;state&#39; there are no</span>
+        <span class="c"># conflicts</span>
 
+        <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">_t</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">initial_time</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">_stage</span> <span class="o">=</span> <span class="s">&#39;Initialization&#39;</span>
+
+        <span class="k">def</span> <span class="nf">initialize_state</span><span class="p">():</span>
+            <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            This function tries to initialize the state vector.</span>
+
+<span class="sd">            In the case where an initialization function for `Stock A` depends on</span>
+<span class="sd">            the value of `Stock B`, if we try to initialize `Stock A` before `Stock B`</span>
+<span class="sd">            then we will get an error, as the value will not yet exist.</span>
+
+<span class="sd">            In this case, just skip initializing `Stock A` for now, and</span>
+<span class="sd">            go on to the other state initializations. Then call whole function again.</span>
+
+<span class="sd">            Each time the function is called, we should be able to make some progress</span>
+<span class="sd">            towards full initialization, by initializing at least one more state.</span>
+<span class="sd">            If we don&#39;t then references are unresolvable, so we should throw an error.</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">retry_flag</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="n">making_progress</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="n">initialization_order</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stateful_elements</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">element</span><span class="o">.</span><span class="n">initialize</span><span class="p">()</span>
+                    <span class="n">making_progress</span> <span class="o">=</span> <span class="bp">True</span>
+                    <span class="n">initialization_order</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">repr</span><span class="p">(</span><span class="n">element</span><span class="p">))</span>
+                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                    <span class="n">retry_flag</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+                    <span class="n">retry_flag</span> <span class="o">=</span> <span class="bp">True</span>
+                <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                    <span class="n">retry_flag</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">making_progress</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s">&#39;Unresolvable Reference: Probable circular initialization&#39;</span> <span class="o">+</span>
+                               <span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">initialization_order</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">retry_flag</span><span class="p">:</span>
+                <span class="n">initialize_state</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stateful_elements</span><span class="p">:</span>  <span class="c"># if there are no stocks, don&#39;t try to initialize!</span>
+            <span class="n">initialize_state</span><span class="p">()</span>
 </div>
 <div class="viewcode-block" id="PySD.set_components"><a class="viewcode-back" href="../../functions.html#pysd.PySD.set_components">[docs]</a>    <span class="k">def</span> <span class="nf">set_components</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">params</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Set the value of exogenous model elements.</span>
@@ -383,116 +375,294 @@
 
 <span class="sd">        Examples</span>
 <span class="sd">        --------</span>
+
+<span class="sd">        &gt;&gt;&gt; model.set_components({&#39;birth_rate&#39;: 10})</span>
+<span class="sd">        &gt;&gt;&gt; model.set_components({&#39;Birth Rate&#39;: 10})</span>
+
 <span class="sd">        &gt;&gt;&gt; br = pandas.Series(index=range(30), values=np.sin(range(30))</span>
-<span class="sd">        &gt;&gt;&gt; set_components(birth_rate=br)</span>
-<span class="sd">        &gt;&gt;&gt; set_components(birth_rate=10)</span>
+<span class="sd">        &gt;&gt;&gt; model.set_components({&#39;birth_rate&#39;: br})</span>
+
 
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">updates_dict</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="c"># It might make sense to allow the params argument to take a pandas series, where</span>
+        <span class="c"># the indices of the series are variable names. This would make it easier to</span>
+        <span class="c"># do a Pandas apply on a DataFrame of parameter values. However, this may conflict</span>
+        <span class="c"># with a pandas series being passed in as a dictionary element.</span>
+
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
             <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">_pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
-                <span class="n">updates_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_timeseries_component</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
-            <span class="k">else</span><span class="p">:</span> <span class="c">#could check here for valid value...</span>
-                <span class="n">updates_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_constant_component</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                <span class="n">new_function</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_timeseries_component</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_function</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_constant_component</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
 
-        <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">__dict__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">updates_dict</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">_namespace</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">func_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">_namespace</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">_namespace</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="n">func_name</span> <span class="o">=</span> <span class="n">key</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NameError</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%s</span><span class="s"> is not recognized as a model component&#39;</span> <span class="o">%</span> <span class="n">key</span><span class="p">)</span>
 
-</div>
-<div class="viewcode-block" id="PySD.extend_dataframe"><a class="viewcode-back" href="../../functions.html#pysd.PySD.extend_dataframe">[docs]</a>    <span class="k">def</span> <span class="nf">extend_dataframe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_df</span><span class="p">,</span> <span class="n">return_columns</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Calculates model values at given system states</span>
-<span class="sd">        This is primarily an internal method used by the run function</span>
-<span class="sd">        &quot;&quot;&quot;</span>
-        <span class="c">#there may be a better way to use the integrator that lets us report</span>
-        <span class="c">#more values than just the stocks. In the meantime, we have to go</span>
-        <span class="c">#through the returned values again, set up the model, and measure them.</span>
+            <span class="k">if</span> <span class="s">&#39;integ_&#39;</span><span class="o">+</span><span class="n">func_name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">):</span> <span class="c"># this won&#39;t handle other statefuls...</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;Replacing the equation of stock {} with params&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">),</span>
+                              <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
 
-        <span class="k">def</span> <span class="nf">get_values</span><span class="p">(</span><span class="n">row</span><span class="p">):</span>
-            <span class="sd">&quot;&quot;&quot; Helper method that lets us use &#39;apply&#39; below &quot;&quot;&quot;</span>
-            <span class="n">t</span> <span class="o">=</span> <span class="n">row</span><span class="o">.</span><span class="n">name</span>
-            <span class="n">state</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">keys</span><span class="p">()])</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">state</span><span class="p">)</span>
-
-            <span class="n">return_vals</span> <span class="o">=</span> <span class="p">{}</span>
-            <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">return_columns</span><span class="p">:</span> <span class="c">#there must be a faster way to do this...</span>
-                <span class="n">func</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">,</span> <span class="n">column</span><span class="p">)</span>
-                <span class="n">return_vals</span><span class="p">[</span><span class="n">column</span><span class="p">]</span> <span class="o">=</span> <span class="n">func</span><span class="p">()</span>
-
-            <span class="k">return</span> <span class="n">_pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">return_vals</span><span class="p">)</span>
-
-        <span class="k">return</span> <span class="n">state_df</span><span class="o">.</span><span class="n">apply</span><span class="p">(</span><span class="n">get_values</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-
+            <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">,</span> <span class="n">func_name</span><span class="p">,</span> <span class="n">new_function</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="PySD.set_state"><a class="viewcode-back" href="../../functions.html#pysd.PySD.set_state">[docs]</a>    <span class="k">def</span> <span class="nf">set_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">state</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Set the system state.</span>
 
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
 <span class="sd">        t : numeric</span>
 <span class="sd">            The system time</span>
 
-<span class="sd">        state: dict</span>
-<span class="sd">            Idelly a complete dictionary of system state, but a partial</span>
-<span class="sd">            state dictionary will work if you&#39;re confident that the remaining</span>
-<span class="sd">            state elements are correct.</span>
+<span class="sd">        state : dict</span>
+<span class="sd">            A (possibly partial) dictionary of the system state.</span>
+<span class="sd">            The keys to this dictionary may be either pysafe names or original model file names</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">t</span> <span class="o">=</span> <span class="n">t</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">state</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">_t</span> <span class="o">=</span> <span class="n">t</span>
 
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">state</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">_namespace</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="n">element_name</span> <span class="o">=</span> <span class="s">&#39;integ_</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">_namespace</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">_namespace</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="n">element_name</span> <span class="o">=</span> <span class="s">&#39;integ_</span><span class="si">%s</span><span class="s">&#39;</span> <span class="o">%</span> <span class="n">key</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c"># allow the user to specify the stateful object directly</span>
+                <span class="n">element_name</span> <span class="o">=</span> <span class="n">key</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">element</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">,</span> <span class="n">element_name</span><span class="p">)</span>
+                <span class="n">element</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="s">&quot;&#39;</span><span class="si">%s</span><span class="s">&#39; has no state elements, assignment failed&quot;</span><span class="p">)</span>
+                <span class="k">raise</span>
 </div>
 <div class="viewcode-block" id="PySD.set_initial_condition"><a class="viewcode-back" href="../../functions.html#pysd.PySD.set_initial_condition">[docs]</a>    <span class="k">def</span> <span class="nf">set_initial_condition</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">initial_condition</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Set the initial conditions of the integration.</span>
-<span class="sd">        There are several ways to do this:</span>
 
-<span class="sd">        * &#39;original&#39;/&#39;o&#39; : Reset to the model-file specified initial condition.</span>
-<span class="sd">        * &#39;current&#39;/&#39;c&#39; : Use the current state of the system to start</span>
-<span class="sd">          the next simulation. This includes the simulation time, so this</span>
-<span class="sd">          initial condition must be paired with new return timestamps</span>
-<span class="sd">        * (t, {state}) : Lets the user specify a starting time and list of stock values.</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        initial_condition : &lt;string&gt; or &lt;tuple&gt;</span>
+<span class="sd">            Takes on one of the following sets of values:</span>
+
+<span class="sd">            * &#39;original&#39;/&#39;o&#39; : Reset to the model-file specified initial condition.</span>
+<span class="sd">            * &#39;current&#39;/&#39;c&#39; : Use the current state of the system to start</span>
+<span class="sd">              the next simulation. This includes the simulation time, so this</span>
+<span class="sd">              initial condition must be paired with new return timestamps</span>
+<span class="sd">            * (t, {state}) : Lets the user specify a starting time and list of stock values.</span>
 
 <span class="sd">        &gt;&gt;&gt; model.set_initial_condition(&#39;original&#39;)</span>
 <span class="sd">        &gt;&gt;&gt; model.set_initial_condition(&#39;current&#39;)</span>
-<span class="sd">        &gt;&gt;&gt; model.set_initial_condition( (10,{teacup_temperature:50}) )</span>
+<span class="sd">        &gt;&gt;&gt; model.set_initial_condition((10, {&#39;teacup_temperature&#39;: 50}))</span>
 
-<span class="sd">        See also:</span>
-<span class="sd">        pysd.set_state()</span>
+<span class="sd">        See Also</span>
+<span class="sd">        --------</span>
+<span class="sd">        PySD.set_state()</span>
+
 <span class="sd">        &quot;&quot;&quot;</span>
 
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_condition</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
-            <span class="c">#we should probably check the values more than just seeing if they are a tuple.</span>
+            <span class="c"># Todo: check the values more than just seeing if they are a tuple.</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">set_state</span><span class="p">(</span><span class="o">*</span><span class="n">initial_condition</span><span class="p">)</span>
         <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">initial_condition</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
             <span class="k">if</span> <span class="n">initial_condition</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;original&#39;</span><span class="p">,</span> <span class="s">&#39;o&#39;</span><span class="p">]:</span>
-                <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">reset_state</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">reset_state</span><span class="p">()</span>
             <span class="k">elif</span> <span class="n">initial_condition</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;current&#39;</span><span class="p">,</span> <span class="s">&#39;c&#39;</span><span class="p">]:</span>
                 <span class="k">pass</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Valid initial condition strings include:  </span><span class="se">\n</span><span class="s">&#39;</span><span class="o">+</span>
-                                 <span class="s">&#39;    &quot;original&quot;/&quot;o&quot;,                       </span><span class="se">\n</span><span class="s">&#39;</span><span class="o">+</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;Valid initial condition strings include:  </span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span>
+                                 <span class="s">&#39;    &quot;original&quot;/&quot;o&quot;,                       </span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">+</span>
                                  <span class="s">&#39;    &quot;current&quot;/&quot;c&quot;&#39;</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;Check documentation for valid entries&#39;</span><span class="p">)</span>
-
 </div>
-    <span class="k">def</span> <span class="nf">_build_timeseries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">return_timestamps</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot; Build up array of timestamps &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">return_timestamps</span> <span class="o">==</span> <span class="p">[]:</span>
-            <span class="n">tseries</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">initial_time</span><span class="p">(),</span>
-                                <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">final_time</span><span class="p">(),</span>
-                                <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">time_step</span><span class="p">())</span>
-        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">return_timestamps</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">long</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
-            <span class="n">tseries</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">return_timestamps</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+<div class="viewcode-block" id="PySD.clear_caches"><a class="viewcode-back" href="../../functions.html#pysd.PySD.clear_caches">[docs]</a>    <span class="k">def</span> <span class="nf">clear_caches</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Clears the Caches for all model elements &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">element_name</span> <span class="ow">in</span> <span class="nb">dir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">):</span>
+            <span class="n">element</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">,</span> <span class="n">element_name</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="s">&#39;cache_val&#39;</span><span class="p">):</span>
+                <span class="nb">delattr</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="s">&#39;cache_val&#39;</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">_build_euler_timeseries</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">return_timestamps</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        - The integration steps need to include the return values.</span>
+<span class="sd">        - There is no point running the model past the last return value.</span>
+<span class="sd">        - The last timestep will be the last in that requested for return</span>
+<span class="sd">        - Spacing should be at maximum what is specified by the integration time step.</span>
+<span class="sd">        - The initial time should be the one specified by the model file, OR</span>
+<span class="sd">          it should be the initial condition.</span>
+<span class="sd">        - This function needs to be called AFTER the model is set in its initial state</span>
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        return_timestamps: numpy array</span>
+<span class="sd">          Must be specified by user or built from model file before this function is called.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ts: numpy array</span>
+<span class="sd">            The times that the integrator will use to compute time history</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">t_0</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        <span class="n">t_f</span> <span class="o">=</span> <span class="n">return_timestamps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">dt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">time_step</span><span class="p">()</span>
+        <span class="n">ts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">t_0</span><span class="p">,</span> <span class="n">t_f</span><span class="p">,</span> <span class="n">dt</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+
+        <span class="c"># Add the returned time series into the integration array. Best we can do for now.</span>
+        <span class="c"># This does change the integration ever so slightly, but for well-specified</span>
+        <span class="c"># models there shouldn&#39;t be sensitivity to a finer integration time step.</span>
+        <span class="n">ts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ts</span><span class="p">,</span> <span class="n">return_timestamps</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">ts</span>
+
+    <span class="k">def</span> <span class="nf">_format_return_timestamps</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">return_timestamps</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Format the passed in return timestamps value if it exists,</span>
+<span class="sd">        or build up array of timestamps based upon the model saveper</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">return_timestamps</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="c"># Build based upon model file Start, Stop times and Saveper</span>
+            <span class="c"># Vensim&#39;s standard is to expect that the data set includes the `final time`,</span>
+            <span class="c"># so we have to add an extra period to make sure we get that value in what</span>
+            <span class="c"># numpy&#39;s `arange` gives us.</span>
+            <span class="n">return_timestamps_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">initial_time</span><span class="p">(),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">final_time</span><span class="p">()</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">saveper</span><span class="p">(),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">saveper</span><span class="p">(),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span>
+            <span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">return_timestamps</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)):</span>
+            <span class="n">return_timestamps_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">return_timestamps</span><span class="p">,</span> <span class="n">ndmin</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">return_timestamps</span><span class="p">,</span> <span class="n">_pd</span><span class="o">.</span><span class="n">Series</span><span class="p">):</span>
+            <span class="n">return_timestamps_array</span> <span class="o">=</span> <span class="n">return_timestamps</span><span class="o">.</span><span class="n">as_matrix</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">return_timestamps</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="n">return_timestamps_array</span> <span class="o">=</span> <span class="n">return_timestamps</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;`return_timestamps` expects a list, array, or numeric value&#39;</span><span class="p">)</span>
-        <span class="k">return</span> <span class="n">tseries</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s">&#39;`return_timestamps` expects a list, array, pandas Series, &#39;</span>
+                            <span class="s">&#39;or numeric value&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">return_timestamps_array</span>
 
-
-    <span class="c">#these could be better off in a model creation class</span>
     <span class="k">def</span> <span class="nf">_timeseries_component</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">series</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Internal function for creating a timeseries model element &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">t</span><span class="p">,</span> <span class="n">series</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">series</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
+        <span class="c"># this is only called if the set_component function recognizes a pandas series</span>
+        <span class="c"># Todo: raise a warning if extrapolating from the end of the series.</span>
+        <span class="k">return</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">time</span><span class="p">(),</span> <span class="n">series</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">series</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">_constant_component</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot; Internal function for creating a constant model element &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">value</span>
-</pre></div></div>
+
+    <span class="k">def</span> <span class="nf">_euler_step</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">dt</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Performs a single step in the euler integration,</span>
+<span class="sd">        updating stateful components</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dt : float</span>
+<span class="sd">            This is the amount to increase time by this step</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">new_states</span> <span class="o">=</span> <span class="p">[</span><span class="n">component</span><span class="o">.</span><span class="n">state</span> <span class="o">+</span> <span class="n">component</span><span class="o">.</span><span class="n">ddt</span><span class="p">()</span> <span class="o">*</span> <span class="n">dt</span>
+                      <span class="k">for</span> <span class="n">component</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_stateful_elements</span><span class="p">]</span>
+        <span class="p">[</span><span class="n">component</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">new_state</span><span class="p">)</span>
+         <span class="k">for</span> <span class="n">component</span><span class="p">,</span> <span class="n">new_state</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_stateful_elements</span><span class="p">,</span> <span class="n">new_states</span><span class="p">)]</span>
+
+    <span class="k">def</span> <span class="nf">_integrate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time_steps</span><span class="p">,</span> <span class="n">capture_elements</span><span class="p">,</span> <span class="n">return_timestamps</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Performs euler integration</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        time_steps: iterable</span>
+<span class="sd">            the time steps that the integrator progresses over</span>
+<span class="sd">        capture_elements: list</span>
+<span class="sd">            which model elements to capture - uses pysafe names</span>
+<span class="sd">        return_timestamps:</span>
+<span class="sd">            which subset of &#39;timesteps&#39; should be values be returned?</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        outputs: list of dictionaries</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c"># Todo: consider adding the timestamp to the return elements, and using that as the index</span>
+        <span class="n">outputs</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">t2</span> <span class="ow">in</span> <span class="n">time_steps</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">_t</span> <span class="ow">in</span> <span class="n">return_timestamps</span><span class="p">:</span>
+                <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="n">key</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">,</span> <span class="n">key</span><span class="p">)()</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">capture_elements</span><span class="p">})</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_euler_step</span><span class="p">(</span><span class="n">t2</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">_t</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">_t</span> <span class="o">=</span> <span class="n">t2</span>  <span class="c"># this will clear the stepwise caches</span>
+
+        <span class="c"># need to add one more time step, because we run only the state updates in the previous</span>
+        <span class="c"># loop and thus may be one short.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">_t</span> <span class="ow">in</span> <span class="n">return_timestamps</span><span class="p">:</span>
+            <span class="n">outputs</span><span class="o">.</span><span class="n">append</span><span class="p">({</span><span class="n">key</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">,</span> <span class="n">key</span><span class="p">)()</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">capture_elements</span><span class="p">})</span>
+
+        <span class="k">return</span> <span class="n">outputs</span>
+
+<div class="viewcode-block" id="PySD.doc"><a class="viewcode-back" href="../../functions.html#pysd.PySD.doc">[docs]</a>    <span class="k">def</span> <span class="nf">doc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Formats a table of documentation strings to help users remember variable names, and</span>
+<span class="sd">        understand how they are translated into python safe names.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        docs_df: pandas dataframe</span>
+<span class="sd">            Dataframe with columns for the model components:</span>
+<span class="sd">                - Real names</span>
+<span class="sd">                - Python safe identifiers (as used in model.components)</span>
+<span class="sd">                - Units string</span>
+<span class="sd">                - Documentation strings from the original model file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="kn">from</span> <span class="nn">parsimonious.grammar</span> <span class="kn">import</span> <span class="n">Grammar</span>
+        <span class="kn">from</span> <span class="nn">parsimonious.nodes</span> <span class="kn">import</span> <span class="n">NodeVisitor</span>
+
+        <span class="n">varnames</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="ow">not</span> <span class="n">x</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">x</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">(</span><span class="s">&#39;cache&#39;</span><span class="p">,</span> <span class="s">&#39;functions&#39;</span><span class="p">,</span> <span class="s">&#39;np&#39;</span><span class="p">),</span>
+                          <span class="nb">dir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">))</span>
+
+        <span class="n">docstrings</span> <span class="o">=</span> <span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">components</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">__doc__</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">varnames</span><span class="p">]</span>
+
+        <span class="n">g</span> <span class="o">=</span> <span class="s">&quot;&quot;&quot;</span><span class="se">\</span>
+<span class="s">            sdVar = (sep? name sep &quot;-&quot;* sep model_name_wrap sep unit sep+ comment? &quot; &quot;*)?</span>
+<span class="s">            sep = ws &quot;</span><span class="se">\\</span><span class="s">n&quot; ws</span>
+<span class="s">            ws = &quot; &quot;*</span>
+<span class="s">            name = ~&quot;[A-z ]+&quot;</span>
+<span class="s">            model_name_wrap = &#39;(&#39; model_name &#39;)&#39;</span>
+<span class="s">            model_name = ~&quot;[A-z_]+&quot;</span>
+<span class="s">            unit = ~&quot;[A-z</span><span class="se">\\</span><span class="s">, </span><span class="se">\\</span><span class="s">/</span><span class="se">\\</span><span class="s">*</span><span class="se">\\</span><span class="s">[</span><span class="se">\\</span><span class="s">]</span><span class="se">\\</span><span class="s">?0-9]*&quot;</span>
+<span class="s">            comment = ~&quot;[A-z _+-/*</span><span class="se">\\</span><span class="s">n]+&quot;</span>
+<span class="s">            &quot;&quot;&quot;</span>
+
+        <span class="k">class</span> <span class="nc">SDVarDoc</span><span class="p">(</span><span class="n">NodeVisitor</span><span class="p">):</span>
+            <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">grammar</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sdVar</span> <span class="o">=</span> <span class="p">{}</span>
+                <span class="n">ast</span> <span class="o">=</span> <span class="n">Grammar</span><span class="p">(</span><span class="n">grammar</span><span class="p">)</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">visit</span><span class="p">(</span><span class="n">ast</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">visit_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">vc</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sdVar</span><span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">text</span>
+
+            <span class="k">def</span> <span class="nf">visit_model_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">vc</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sdVar</span><span class="p">[</span><span class="s">&#39;model_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">text</span>
+
+            <span class="k">def</span> <span class="nf">visit_unit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">vc</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sdVar</span><span class="p">[</span><span class="s">&#39;unit&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">text</span>
+
+            <span class="k">def</span> <span class="nf">visit_comment</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">vc</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">sdVar</span><span class="p">[</span><span class="s">&#39;comment&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">text</span>
+
+            <span class="k">def</span> <span class="nf">generic_visit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">vc</span><span class="p">):</span>
+                <span class="k">pass</span>
+
+        <span class="n">docstring_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">ds</span> <span class="ow">in</span> <span class="nb">filter</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="n">docstrings</span><span class="p">):</span>
+            <span class="n">docstring_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">SDVarDoc</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">ds</span><span class="p">)</span><span class="o">.</span><span class="n">sdVar</span><span class="p">)</span>
+
+        <span class="c"># Convert docstring_list, a list of dictionaries, to a Pandas DataFrame,</span>
+        <span class="c"># for easy printing down the line.</span>
+        <span class="n">df_headers</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;Real Name&#39;</span><span class="p">,</span> <span class="s">&#39;Py Name&#39;</span><span class="p">,</span> <span class="s">&#39;Unit&#39;</span><span class="p">,</span> <span class="s">&#39;Comment&#39;</span><span class="p">]</span>
+        <span class="n">docs_df</span> <span class="o">=</span> <span class="n">_pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">(</span><span class="n">docstring_list</span><span class="p">,</span> <span class="n">columns</span><span class="o">=</span><span class="n">df_headers</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">docs_df</span></div></div>
+</pre></div>
 
           </div>
           <footer>
@@ -502,13 +672,13 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015, James Houghton.
+        &copy; Copyright 2016, James Houghton.
     </p>
   </div>
+
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
-
+  
 </footer>
-
         </div>
       </div>
 
@@ -523,7 +693,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../../',
-            VERSION:'0.3.2',
+            VERSION:'0.7.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

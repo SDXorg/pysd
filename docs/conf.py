@@ -19,7 +19,7 @@ import mock
 
 MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot', 'scipy.stats',
                 'scipy.integrate', 'pandas', 'parsimonious', 'parsimonious.nodes',
-                'lxml']
+                'lxml', 'xarray', 'autopep8']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.Mock()
 
@@ -33,14 +33,15 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
+print os.path.abspath('../')
 sys.path.insert(0, os.path.abspath('../')) #this *should* be adding to the beginning...
 
 
 # Build the translated functions file
-import vensim2py
+#from pysd import vensim2py
 
-with open('development/supported_vensim_functions.rst', 'w') as fout:
-    fout.write(vensim2py.doc_supported_vensim_functions())
+#with open('development/supported_vensim_functions.rst', 'w') as fout:
+#    fout.write(vensim2py.doc_supported_vensim_functions())
 
 
 # -- General configuration ------------------------------------------------
@@ -77,7 +78,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'PySD'
-copyright = u'2015, James Houghton'
+copyright = u'2016, James Houghton'
 author = u'James Houghton'
 
 # The version info for the project you're documenting, acts as replacement for

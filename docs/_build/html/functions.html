@@ -5,16 +5,16 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>User Functions Reference &mdash; PySD 0.3.2 documentation</title>
+  <title>User Functions Reference &mdash; PySD 0.7.1 documentation</title>
   
 
   
   
 
   
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
 
   
   
@@ -30,12 +30,12 @@
   
 
   
-    <link rel="top" title="PySD 0.3.2 documentation" href="index.html"/>
+    <link rel="top" title="PySD 0.7.1 documentation" href="index.html"/>
         <link rel="next" title="Developer Documentation" href="development/development_index.html"/>
         <link rel="prev" title="Advanced Usage" href="advanced_usage.html"/> 
 
   
-  <script src="_static/js/modernizr.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
 
 </head>
 
@@ -47,14 +47,8 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-nav-search">
         
-
+          <a href="index.html" class="fa fa-home"> PySD</a>
         
-          <a href="index.html" class="icon icon-home"> PySD
-        
-
-        
-        </a>
-
         
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -63,8 +57,6 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-        
       </div>
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
@@ -87,7 +79,7 @@
 <li class="toctree-l2"><a class="reference internal" href="basic_usage.html#setting-parameter-values">Setting parameter values</a></li>
 <li class="toctree-l2"><a class="reference internal" href="basic_usage.html#setting-simulation-initial-conditions">Setting simulation initial conditions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="basic_usage.html#querying-current-values">Querying current values</a></li>
-<li class="toctree-l2"><a class="reference internal" href="basic_usage.html#collecting-a-history-of-returned-values">Collecting a history of returned values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="basic_usage.html#supported-functions">Supported functions</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">Advanced Usage</a><ul>
@@ -97,44 +89,10 @@
 </li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">User Functions Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="development/development_index.html">Developer Documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="development/about.html">About the Project</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="development/about.html#motivation-the-coming-of-age-of-big-data">Motivation: The (coming of) age of Big Data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/about.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="development/contributing.html">Contributing to PySD</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="development/contributing.html#development-tools">Development Tools</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="development/contributing.html#test-suite">Test Suite</a></li>
-<li class="toctree-l4"><a class="reference internal" href="development/contributing.html#speed-tests">Speed Tests</a></li>
-<li class="toctree-l4"><a class="reference internal" href="development/contributing.html#profiler">Profiler</a></li>
-<li class="toctree-l4"><a class="reference internal" href="development/contributing.html#python-linter">Python Linter</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="development/contributing.html#pysd-design-philosophy">PySD Design Philosophy</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="development/pathway.html">PySD Development Pathway</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="development/pathway.html#high-priority">High Priority</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/pathway.html#medium-priority">Medium Priority</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/pathway.html#low-priority">Low Priority</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/pathway.html#not-planned">Not Planned</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/pathway.html#ideas-for-other-projects">Ideas for Other Projects</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/pathway.html#current-features">Current Features</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="development/structure.html">Structure of the PySD module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="development/structure.html#translation">Translation</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="development/vensim_translation.html">Vensim Translation</a></li>
-<li class="toctree-l4"><a class="reference internal" href="development/xmile_translation.html">XMILE Translation</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="development/structure.html#the-model-class">The model class</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/structure.html#the-pysd-class">The PySD class</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="development/internal_functions.html">Internal Functions</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="development/about.html">About the Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/contributing.html">Contributing to PySD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/pathway.html">PySD Development Pathway</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/structure.html">Structure of the PySD module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="development/complement.html">Complementary Projects</a></li>
 </ul>
 </li>
@@ -165,9 +123,7 @@
     <li>User Functions Reference</li>
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/functions.txt" rel="nofollow"> View page source</a>
-          
+          <a href="_sources/functions.txt" rel="nofollow"> View page source</a>
         
       </li>
   </ul>
@@ -180,44 +136,58 @@
 <p>These are the primary functions that control model import and execution.</p>
 <dl class="class">
 <dt id="pysd.PySD">
-<em class="property">class </em><code class="descclassname">pysd.</code><code class="descname">PySD</code><span class="sig-paren">(</span><em>component_class</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#PySD"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.PySD" title="Permalink to this definition">¶</a></dt>
-<dd><p>PySD is the default class charged with running a model.</p>
-<p>It can be initialized by passing an existing component class.</p>
-<p>The import functions pull models and create this class.</p>
+<em class="property">class </em><code class="descclassname">pysd.</code><code class="descname">PySD</code><span class="sig-paren">(</span><em>py_model_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#PySD"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.PySD" title="Permalink to this definition">¶</a></dt>
+<dd><p>PySD is the default class charged with running a model.
+It can be initialized by passing a string to a translated python model file.
+The import functions pull models and create this class.</p>
 <dl class="method">
 <dt id="pysd.PySD.__str__">
 <code class="descname">__str__</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#PySD.__str__"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.PySD.__str__" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return model source file</p>
+<dd><p>Return model source files</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pysd.PySD.clear_record">
-<code class="descname">clear_record</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#PySD.clear_record"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.PySD.clear_record" title="Permalink to this definition">¶</a></dt>
-<dd><p>Reset the recorder.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">clear_record</span><span class="p">()</span>
-</pre></div>
-</div>
+<dt id="pysd.PySD.clear_caches">
+<code class="descname">clear_caches</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#PySD.clear_caches"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.PySD.clear_caches" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the Caches for all model elements</p>
 </dd></dl>
 
 <dl class="method">
-<dt id="pysd.PySD.extend_dataframe">
-<code class="descname">extend_dataframe</code><span class="sig-paren">(</span><em>state_df</em>, <em>return_columns</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#PySD.extend_dataframe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.PySD.extend_dataframe" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculates model values at given system states
-This is primarily an internal method used by the run function</p>
+<dt id="pysd.PySD.doc">
+<code class="descname">doc</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#PySD.doc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.PySD.doc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Formats a table of documentation strings to help users remember variable names, and
+understand how they are translated into python safe names.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><strong>docs_df</strong> &#8211;
+Dataframe with columns for the model components:<blockquote>
+<div><ul class="simple">
+<li>Real names</li>
+<li>Python safe identifiers (as used in model.components)</li>
+<li>Units string</li>
+<li>Documentation strings from the original model file</li>
+</ul>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">pandas dataframe</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 <dl class="method">
-<dt id="pysd.PySD.get_record">
-<code class="descname">get_record</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#PySD.get_record"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.PySD.get_record" title="Permalink to this definition">¶</a></dt>
-<dd><p>Return the recorded model information.</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">get_record</span><span class="p">()</span>
-</pre></div>
-</div>
+<dt id="pysd.PySD.reset_state">
+<code class="descname">reset_state</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#PySD.reset_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.PySD.reset_state" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the model state to the state described in the model file.
+Builds the state vector from scratch</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="pysd.PySD.run">
-<code class="descname">run</code><span class="sig-paren">(</span><em>params={}</em>, <em>return_columns=[]</em>, <em>return_timestamps=[]</em>, <em>initial_condition='original'</em>, <em>collect=False</em>, <em>**intg_kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#PySD.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.PySD.run" title="Permalink to this definition">¶</a></dt>
+<code class="descname">run</code><span class="sig-paren">(</span><em>params=None</em>, <em>return_columns=None</em>, <em>return_timestamps=None</em>, <em>initial_condition='original'</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#PySD.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.PySD.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simulate the model&#8217;s behavior over time.
 Return a pandas dataframe with timestamps as rows,
 model elements as columns.</p>
@@ -243,22 +213,17 @@ at that starting time.</p>
 list of stock values.</li>
 </ul>
 </li>
-<li><strong>collect</strong> (<em>binary (T/F)</em>) &#8211; When running multiple simulations, collect the results in a way
-that we can access down the road.</li>
-<li><strong>intg_kwargs</strong> (<em>keyword arguments for odeint</em>) &#8211; Provides precice control over the integrator by passing through
-keyword arguments to scipy&#8217;s odeint function. The most interesting
-of these will be <cite>tcrit</cite>, <cite>hmax</cite>, <cite>mxstep</cite>.</li>
 </ul>
 </td>
 </tr>
 </tbody>
 </table>
 <p class="rubric">Examples</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;exogenous_constant&#39;</span><span class="p">:</span><span class="mi">42</span><span class="p">})</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;exogenous_variable&#39;</span><span class="p">:</span><span class="n">timeseries_input</span><span class="p">})</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">return_timestamps</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mf">3.1415</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="mi">10</span><span class="p">])</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;exogenous_constant&#39;</span><span class="p">:</span> <span class="mi">42</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;exogenous_variable&#39;</span><span class="p">:</span> <span class="n">timeseries_input</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">return_timestamps</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mf">3.1415</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">10</span><span class="p">])</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">return_timestamps</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">return_timestamps</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">,</span><span class="mi">20</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">return_timestamps</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">))</span>
 </pre></div>
 </div>
 <div class="admonition seealso">
@@ -280,9 +245,12 @@ Element values can be passed as keyword=value pairs in the function call.
 Values can be numeric type or pandas Series.
 Series will be interpolated by integrator.</p>
 <p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">set_components</span><span class="p">({</span><span class="s">&#39;birth_rate&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">set_components</span><span class="p">({</span><span class="s">&#39;Birth Rate&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">})</span>
+</pre></div>
+</div>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">br</span> <span class="o">=</span> <span class="n">pandas</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">),</span> <span class="n">values</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">))</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">set_components</span><span class="p">(</span><span class="n">birth_rate</span><span class="o">=</span><span class="n">br</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">set_components</span><span class="p">(</span><span class="n">birth_rate</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">set_components</span><span class="p">({</span><span class="s">&#39;birth_rate&#39;</span><span class="p">:</span> <span class="n">br</span><span class="p">})</span>
 </pre></div>
 </div>
 </dd></dl>
@@ -290,36 +258,52 @@ Series will be interpolated by integrator.</p>
 <dl class="method">
 <dt id="pysd.PySD.set_initial_condition">
 <code class="descname">set_initial_condition</code><span class="sig-paren">(</span><em>initial_condition</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#PySD.set_initial_condition"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.PySD.set_initial_condition" title="Permalink to this definition">¶</a></dt>
-<dd><p>Set the initial conditions of the integration.
-There are several ways to do this:</p>
-<ul class="simple">
+<dd><p>Set the initial conditions of the integration.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>initial_condition</strong> (<em>&lt;string&gt; or &lt;tuple&gt;</em>) &#8211; <p>Takes on one of the following sets of values:</p>
+<ul>
 <li>&#8216;original&#8217;/&#8217;o&#8217; : Reset to the model-file specified initial condition.</li>
 <li>&#8216;current&#8217;/&#8217;c&#8217; : Use the current state of the system to start
 the next simulation. This includes the simulation time, so this
 initial condition must be paired with new return timestamps</li>
 <li>(t, {state}) : Lets the user specify a starting time and list of stock values.</li>
 </ul>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">set_initial_condition</span><span class="p">(</span><span class="s">&#39;original&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">set_initial_condition</span><span class="p">(</span><span class="s">&#39;current&#39;</span><span class="p">)</span>
-<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">set_initial_condition</span><span class="p">(</span> <span class="p">(</span><span class="mi">10</span><span class="p">,{</span><span class="n">teacup_temperature</span><span class="p">:</span><span class="mi">50</span><span class="p">})</span> <span class="p">)</span>
-</pre></div>
+</li>
+<li><strong>model.set_initial_condition('original')</strong> (<em>&gt;&gt;&gt;</em>) &#8211; </li>
+<li><strong>model.set_initial_condition('current')</strong> (<em>&gt;&gt;&gt;</em>) &#8211; </li>
+<li><strong>model.set_initial_condition((10, {'teacup_temperature'</strong> (<em>&gt;&gt;&gt;</em>) &#8211; </li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last"><code class="xref py py-meth docutils literal"><span class="pre">PySD.set_state()</span></code></p>
 </div>
-<p>See also:
-pysd.set_state()</p>
 </dd></dl>
 
 <dl class="method">
 <dt id="pysd.PySD.set_state">
 <code class="descname">set_state</code><span class="sig-paren">(</span><em>t</em>, <em>state</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#PySD.set_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.PySD.set_state" title="Permalink to this definition">¶</a></dt>
 <dd><p>Set the system state.</p>
-<dl class="docutils">
-<dt>t <span class="classifier-delimiter">:</span> <span class="classifier">numeric</span></dt>
-<dd>The system time</dd>
-<dt>state: dict</dt>
-<dd>Idelly a complete dictionary of system state, but a partial
-state dictionary will work if you&#8217;re confident that the remaining
-state elements are correct.</dd>
-</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>t</strong> (<em>numeric</em>) &#8211; The system time</li>
+<li><strong>state</strong> (<a class="reference external" href="https://docs.python.org/2.7/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) &#8211; A (possibly partial) dictionary of the system state.
+The keys to this dictionary may be either pysafe names or original model file names</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </dd></dl>
@@ -327,157 +311,43 @@ state elements are correct.</dd>
 <dl class="function">
 <dt id="pysd.read_vensim">
 <code class="descclassname">pysd.</code><code class="descname">read_vensim</code><span class="sig-paren">(</span><em>mdl_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#read_vensim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.read_vensim" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="docutils">
-<dt>Construct a model from Vensim <cite>.mdl</cite> file.</dt>
-<dd><p class="first">Translate a vensim model file into a python class.</p>
-<p class="last">Supported functionality:</p>
-</dd>
-</dl>
-<table border="1" class="docutils">
-<colgroup>
-<col width="50%" />
-<col width="50%" />
-</colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Vensim</th>
-<th class="head">Python Translation</th>
-</tr>
-</thead>
+<dd><p>Construct a model from Vensim <cite>.mdl</cite> file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
 <tbody valign="top">
-<tr class="row-even"><td>COS</td>
-<td>np.cos</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>mdl_file</strong> (<em>&lt;string&gt;</em>) &#8211; The relative path filename for a raw Vensim <cite>.mdl</cite> file</td>
 </tr>
-<tr class="row-odd"><td>EXP</td>
-<td>np.exp</td>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><strong>model</strong> &#8211;
+Elements from the python model are loaded into the PySD class and ready to run</td>
 </tr>
-<tr class="row-even"><td>MIN</td>
-<td>min</td>
-</tr>
-<tr class="row-odd"><td>&lt;=</td>
-<td>&lt;=</td>
-</tr>
-<tr class="row-even"><td>STEP</td>
-<td>self.functions.step</td>
-</tr>
-<tr class="row-odd"><td>PULSE</td>
-<td>self.functions.pulse</td>
-</tr>
-<tr class="row-even"><td>POISSON</td>
-<td>np.random.poisson</td>
-</tr>
-<tr class="row-odd"><td>EXPRND</td>
-<td>np.random.exponential</td>
-</tr>
-<tr class="row-even"><td>SIN</td>
-<td>np.sin</td>
-</tr>
-<tr class="row-odd"><td>&gt;=</td>
-<td>&gt;=</td>
-</tr>
-<tr class="row-even"><td>IF THEN ELSE</td>
-<td>self.functions.if_then_else</td>
-</tr>
-<tr class="row-odd"><td>LN</td>
-<td>np.log</td>
-</tr>
-<tr class="row-even"><td>PULSE TRAIN</td>
-<td>self.functions.pulse_train</td>
-</tr>
-<tr class="row-odd"><td>RAMP</td>
-<td>self.functions.ramp</td>
-</tr>
-<tr class="row-even"><td>INTEGER</td>
-<td>int</td>
-</tr>
-<tr class="row-odd"><td>TAN</td>
-<td>np.tan</td>
-</tr>
-<tr class="row-even"><td>PI</td>
-<td>np.pi</td>
-</tr>
-<tr class="row-odd"><td>=</td>
-<td>==</td>
-</tr>
-<tr class="row-even"><td>&lt;</td>
-<td>&lt;</td>
-</tr>
-<tr class="row-odd"><td>&gt;</td>
-<td>&gt;</td>
-</tr>
-<tr class="row-even"><td>MODULO</td>
-<td>np.mod</td>
-</tr>
-<tr class="row-odd"><td>ARCSIN</td>
-<td>np.arcsin</td>
-</tr>
-<tr class="row-even"><td>ABS</td>
-<td>abs</td>
-</tr>
-<tr class="row-odd"><td>^</td>
-<td><a href="#id1"><span class="problematic" id="id2">**</span></a></td>
-</tr>
-<tr class="row-even"><td>LOGNORMAL</td>
-<td>np.random.lognormal</td>
-</tr>
-<tr class="row-odd"><td>MAX</td>
-<td>max</td>
-</tr>
-<tr class="row-even"><td>SQRT</td>
-<td>np.sqrt</td>
-</tr>
-<tr class="row-odd"><td>ARCTAN</td>
-<td>np.arctan</td>
-</tr>
-<tr class="row-even"><td>ARCCOS</td>
-<td>np.arccos</td>
-</tr>
-<tr class="row-odd"><td>RANDOM NORMAL</td>
-<td>self.functions.bounded_normal</td>
-</tr>
-<tr class="row-even"><td>RANDOM UNIFORM</td>
-<td>np.random.rand</td>
-</tr>
-<tr class="row-odd"><td>DELAY1</td>
-<td>Model Construction</td>
-</tr>
-<tr class="row-even"><td>DELAY3</td>
-<td>Model Construction</td>
-</tr>
-<tr class="row-odd"><td>DELAY N</td>
-<td>Model Construction</td>
-</tr>
-<tr class="row-even"><td>SMOOTH3I</td>
-<td>Model Construction</td>
-</tr>
-<tr class="row-odd"><td>SMOOTH3</td>
-<td>Model Construction</td>
-</tr>
-<tr class="row-even"><td>SMOOTH N</td>
-<td>Model Construction</td>
-</tr>
-<tr class="row-odd"><td>SMOOTH</td>
-<td>Model Construction</td>
-</tr>
-<tr class="row-even"><td>INITIAL</td>
-<td>Model Construction</td>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">a PySD class object</td>
 </tr>
 </tbody>
 </table>
-<blockquote>
-<div><cite>np</cite> corresponds to the numpy package</div></blockquote>
-</dd></dl>
-
-<dl class="function">
-<dt id="pysd.read_xmile">
-<code class="descclassname">pysd.</code><code class="descname">read_xmile</code><span class="sig-paren">(</span><em>xmile_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#read_xmile"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.read_xmile" title="Permalink to this definition">¶</a></dt>
-<dd><p>Construct a model object from <cite>.xmile</cite> file.  Translate an xmile model file into a python class.
-Functionality is currently limited.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">read_vensim</span><span class="p">(</span><span class="s">&#39;../tests/test-models/samples/teacup/teacup.mdl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 <dl class="function">
 <dt id="pysd.load">
 <code class="descclassname">pysd.</code><code class="descname">load</code><span class="sig-paren">(</span><em>py_model_file</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/pysd/pysd.html#load"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.load" title="Permalink to this definition">¶</a></dt>
 <dd><p>Load a python-converted model file.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>py_model_file</strong> (<em>&lt;string&gt;</em>) &#8211; Filename of a model which has already been converted into a
+python format.</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Examples</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">load</span><span class="p">(</span><span class="s">&#39;../tests/test-models/samples/teacup/teacup.py&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
 </dd></dl>
 
 </div>
@@ -488,10 +358,10 @@ Functionality is currently limited.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="development/development_index.html" class="btn btn-neutral float-right" title="Developer Documentation" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="development/development_index.html" class="btn btn-neutral float-right" title="Developer Documentation">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="advanced_usage.html" class="btn btn-neutral" title="Advanced Usage" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="advanced_usage.html" class="btn btn-neutral" title="Advanced Usage"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -500,13 +370,13 @@ Functionality is currently limited.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015, James Houghton.
+        &copy; Copyright 2016, James Houghton.
     </p>
   </div>
+
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
-
+  
 </footer>
-
         </div>
       </div>
 
@@ -521,7 +391,7 @@ Functionality is currently limited.</p>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3.2',
+            VERSION:'0.7.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

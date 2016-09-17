@@ -2,14 +2,14 @@ Vensim Translation
 ==================
 
 PySD parses a vensim '.mdl' file and translates the result into python, creating a new file in the
-same directory as the original. For example, the Vensim file :download:`Teacup.mdl<../../tests/vensim/Teacup.mdl>`:
+same directory as the original. For example, the Vensim file :download:`Teacup.mdl<../../tests/test-models/samples/teacup/Teacup.mdl>`:
 
-.. literalinclude:: ../../tests/vensim/Teacup.mdl
+.. literalinclude:: ../../tests/test-models/samples/teacup/Teacup.mdl
    :lines: 1-51
 
-becomes :download:`Teacup.py<../../tests/vensim/Teacup.py>`:
+becomes :download:`Teacup.py<../../tests/test-models/samples/teacup/Teacup.py>`:
 
-.. literalinclude:: ../../tests/vensim/Teacup.py
+.. literalinclude:: ../../tests/test-models/samples/teacup/Teacup.py
    :language: python
 
 This allows model execution independent of the Vensim environment, which can be handy for deploying

@@ -5,16 +5,16 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Vensim Translation &mdash; PySD 0.3.2 documentation</title>
+  <title>Vensim Translation &mdash; PySD 0.7.1 documentation</title>
   
 
   
   
 
   
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
 
   
   
@@ -30,13 +30,13 @@
   
 
   
-    <link rel="top" title="PySD 0.3.2 documentation" href="../index.html"/>
+    <link rel="top" title="PySD 0.7.1 documentation" href="../index.html"/>
         <link rel="up" title="Structure of the PySD module" href="structure.html"/>
         <link rel="next" title="XMILE Translation" href="xmile_translation.html"/>
         <link rel="prev" title="Structure of the PySD module" href="structure.html"/> 
 
   
-  <script src="_static/js/modernizr.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
 
 </head>
 
@@ -48,14 +48,8 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-nav-search">
         
-
+          <a href="../index.html" class="fa fa-home"> PySD</a>
         
-          <a href="../index.html" class="icon icon-home"> PySD
-        
-
-        
-        </a>
-
         
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -64,8 +58,6 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-        
       </div>
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
@@ -88,7 +80,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../basic_usage.html#setting-parameter-values">Setting parameter values</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../basic_usage.html#setting-simulation-initial-conditions">Setting simulation initial conditions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../basic_usage.html#querying-current-values">Querying current values</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../basic_usage.html#collecting-a-history-of-returned-values">Collecting a history of returned values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basic_usage.html#supported-functions">Supported functions</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced_usage.html">Advanced Usage</a><ul>
@@ -98,44 +90,10 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../functions.html">User Functions Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="development_index.html">Developer Documentation</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="about.html">About the Project</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="about.html#motivation-the-coming-of-age-of-big-data">Motivation: The (coming of) age of Big Data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="about.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="contributing.html">Contributing to PySD</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="contributing.html#development-tools">Development Tools</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="contributing.html#test-suite">Test Suite</a></li>
-<li class="toctree-l4"><a class="reference internal" href="contributing.html#speed-tests">Speed Tests</a></li>
-<li class="toctree-l4"><a class="reference internal" href="contributing.html#profiler">Profiler</a></li>
-<li class="toctree-l4"><a class="reference internal" href="contributing.html#python-linter">Python Linter</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="contributing.html#pysd-design-philosophy">PySD Design Philosophy</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="pathway.html">PySD Development Pathway</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="pathway.html#high-priority">High Priority</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pathway.html#medium-priority">Medium Priority</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pathway.html#low-priority">Low Priority</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pathway.html#not-planned">Not Planned</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pathway.html#ideas-for-other-projects">Ideas for Other Projects</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pathway.html#current-features">Current Features</a></li>
-</ul>
-</li>
-<li class="toctree-l2 current"><a class="reference internal" href="structure.html">Structure of the PySD module</a><ul class="current">
-<li class="toctree-l3 current"><a class="reference internal" href="structure.html#translation">Translation</a><ul class="current">
-<li class="toctree-l4 current"><a class="current reference internal" href="">Vensim Translation</a></li>
-<li class="toctree-l4"><a class="reference internal" href="xmile_translation.html">XMILE Translation</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="structure.html#the-model-class">The model class</a></li>
-<li class="toctree-l3"><a class="reference internal" href="structure.html#the-pysd-class">The PySD class</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="internal_functions.html">Internal Functions</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="about.html">About the Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html">Contributing to PySD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pathway.html">PySD Development Pathway</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="structure.html">Structure of the PySD module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="complement.html">Complementary Projects</a></li>
 </ul>
 </li>
@@ -170,9 +128,7 @@
     <li>Vensim Translation</li>
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="../_sources/development/vensim_translation.txt" rel="nofollow"> View page source</a>
-          
+          <a href="../_sources/development/vensim_translation.txt" rel="nofollow"> View page source</a>
         
       </li>
   </ul>
@@ -183,8 +139,205 @@
   <div class="section" id="vensim-translation">
 <h1>Vensim Translation<a class="headerlink" href="#vensim-translation" title="Permalink to this headline">¶</a></h1>
 <p>PySD parses a vensim &#8216;.mdl&#8217; file and translates the result into python, creating a new file in the
-same directory as the original. For example, the Vensim file <code class="xref download docutils literal"><span class="pre">Teacup.mdl</span></code>:</p>
-<p>becomes <code class="xref download docutils literal"><span class="pre">Teacup.py</span></code>:</p>
+same directory as the original. For example, the Vensim file <a class="reference download internal" href="../_downloads/Teacup.mdl"><code class="xref download docutils literal"><span class="pre">Teacup.mdl</span></code></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre>{UTF-8}
+Characteristic Time=
+	10
+	~	Minutes
+	~		|
+
+Heat Loss to Room=
+	(Teacup Temperature - Room Temperature) / Characteristic Time
+	~	Degrees/Minute
+	~	This is the rate at which heat flows from the cup into the room. We can \
+		ignore it at this point.
+	|
+
+Room Temperature=
+	70
+	~	
+	~		|
+
+Teacup Temperature= INTEG (
+	-Heat Loss to Room,
+		180)
+	~	Degrees
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 30
+	~	Minute
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Minute
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP 
+	~	Minute [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 0.125
+	~	Minute [0,?]
+	~	The time step for the simulation.
+	|
+</pre></div>
+</div>
+<p>becomes <a class="reference download internal" href="../_downloads/Teacup.py"><code class="xref download docutils literal"><span class="pre">Teacup.py</span></code></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Python model tests/test-models/samples/teacup/teacup.py</span>
+<span class="sd">Translated using PySD version 0.7.1</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pysd</span> <span class="kn">import</span> <span class="n">utils</span>
+<span class="kn">import</span> <span class="nn">xarray</span> <span class="kn">as</span> <span class="nn">xr</span>
+
+<span class="kn">from</span> <span class="nn">pysd.functions</span> <span class="kn">import</span> <span class="n">cache</span>
+<span class="kn">from</span> <span class="nn">pysd</span> <span class="kn">import</span> <span class="n">functions</span>
+
+<span class="n">_subscript_dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+<span class="n">_namespace</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s">&#39;INITIAL TIME&#39;</span><span class="p">:</span> <span class="s">&#39;initial_time&#39;</span><span class="p">,</span>
+    <span class="s">&#39;Characteristic Time&#39;</span><span class="p">:</span> <span class="s">&#39;characteristic_time&#39;</span><span class="p">,</span>
+    <span class="s">&#39;Heat Loss to Room&#39;</span><span class="p">:</span> <span class="s">&#39;heat_loss_to_room&#39;</span><span class="p">,</span>
+    <span class="s">&#39;TIME&#39;</span><span class="p">:</span> <span class="s">&#39;time&#39;</span><span class="p">,</span>
+    <span class="s">&#39;SAVEPER&#39;</span><span class="p">:</span> <span class="s">&#39;saveper&#39;</span><span class="p">,</span>
+    <span class="s">&#39;FINAL TIME&#39;</span><span class="p">:</span> <span class="s">&#39;final_time&#39;</span><span class="p">,</span>
+    <span class="s">&#39;Room Temperature&#39;</span><span class="p">:</span> <span class="s">&#39;room_temperature&#39;</span><span class="p">,</span>
+    <span class="s">&#39;Teacup Temperature&#39;</span><span class="p">:</span> <span class="s">&#39;teacup_temperature&#39;</span><span class="p">,</span>
+    <span class="s">&#39;Time&#39;</span><span class="p">:</span> <span class="s">&#39;time&#39;</span><span class="p">,</span>
+    <span class="s">&#39;TIME STEP&#39;</span><span class="p">:</span> <span class="s">&#39;time_step&#39;</span><span class="p">}</span>
+
+
+<span class="nd">@cache</span><span class="p">(</span><span class="s">&#39;step&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">teacup_temperature</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Teacup Temperature</span>
+<span class="sd">    ------------------</span>
+<span class="sd">    (teacup_temperature)</span>
+<span class="sd">    Degrees</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">integ_teacup_temperature</span><span class="p">()</span>
+
+
+<span class="nd">@cache</span><span class="p">(</span><span class="s">&#39;run&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">final_time</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    FINAL TIME</span>
+<span class="sd">    ----------</span>
+<span class="sd">    (final_time)</span>
+<span class="sd">    Minute</span>
+<span class="sd">    The final time for the simulation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mi">30</span>
+
+
+<span class="n">integ_teacup_temperature</span> <span class="o">=</span> <span class="n">functions</span><span class="o">.</span><span class="n">Integ</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="o">-</span><span class="n">heat_loss_to_room</span><span class="p">(),</span> <span class="k">lambda</span><span class="p">:</span> <span class="mi">180</span><span class="p">)</span>
+
+
+<span class="nd">@cache</span><span class="p">(</span><span class="s">&#39;run&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">room_temperature</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Room Temperature</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    (room_temperature)</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mi">70</span>
+
+
+<span class="nd">@cache</span><span class="p">(</span><span class="s">&#39;step&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">heat_loss_to_room</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Heat Loss to Room</span>
+<span class="sd">    -----------------</span>
+<span class="sd">    (heat_loss_to_room)</span>
+<span class="sd">    Degrees/Minute</span>
+<span class="sd">    This is the rate at which heat flows from the cup into the room. We can</span>
+<span class="sd">                ignore it at this point.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">teacup_temperature</span><span class="p">()</span> <span class="o">-</span> <span class="n">room_temperature</span><span class="p">())</span> <span class="o">/</span> <span class="n">characteristic_time</span><span class="p">()</span>
+
+
+<span class="nd">@cache</span><span class="p">(</span><span class="s">&#39;run&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">characteristic_time</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Characteristic Time</span>
+<span class="sd">    -------------------</span>
+<span class="sd">    (characteristic_time)</span>
+<span class="sd">    Minutes</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mi">10</span>
+
+
+<span class="nd">@cache</span><span class="p">(</span><span class="s">&#39;step&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">saveper</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    SAVEPER</span>
+<span class="sd">    -------</span>
+<span class="sd">    (saveper)</span>
+<span class="sd">    Minute [0,?]</span>
+<span class="sd">    The frequency with which output is stored.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">time_step</span><span class="p">()</span>
+
+
+<span class="nd">@cache</span><span class="p">(</span><span class="s">&#39;run&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">initial_time</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    INITIAL TIME</span>
+<span class="sd">    ------------</span>
+<span class="sd">    (initial_time)</span>
+<span class="sd">    Minute</span>
+<span class="sd">    The initial time for the simulation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mi">0</span>
+
+
+<span class="nd">@cache</span><span class="p">(</span><span class="s">&#39;step&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">time</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    TIME</span>
+<span class="sd">    ----</span>
+<span class="sd">    (time)</span>
+<span class="sd">    None</span>
+<span class="sd">    The time of the model</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">_t</span>
+
+
+<span class="nd">@cache</span><span class="p">(</span><span class="s">&#39;run&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">time_step</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    TIME STEP</span>
+<span class="sd">    ---------</span>
+<span class="sd">    (time_step)</span>
+<span class="sd">    Minute [0,?]</span>
+<span class="sd">    The time step for the simulation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mf">0.125</span>
+
+
+<span class="k">def</span> <span class="nf">time</span><span class="p">():</span>
+    <span class="k">return</span> <span class="n">_t</span>
+<span class="n">functions</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">time</span>
+<span class="n">functions</span><span class="o">.</span><span class="n">_stage</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">_stage</span>
+</pre></div>
+</div>
 <p>This allows model execution independent of the Vensim environment, which can be handy for deploying
 models as backends to other products, or for performing massively parallel distributed computation.</p>
 <p>These translated model files are read by PySD, which provides methods for modifying or running the
@@ -217,10 +370,10 @@ has an equivalent in XMILE. The current release supports the following functiona
 <td>&lt;=</td>
 </tr>
 <tr class="row-even"><td>STEP</td>
-<td>self.functions.step</td>
+<td>functions.step</td>
 </tr>
 <tr class="row-odd"><td>PULSE</td>
-<td>self.functions.pulse</td>
+<td>functions.pulse</td>
 </tr>
 <tr class="row-even"><td>POISSON</td>
 <td>np.random.poisson</td>
@@ -235,16 +388,16 @@ has an equivalent in XMILE. The current release supports the following functiona
 <td>&gt;=</td>
 </tr>
 <tr class="row-even"><td>IF THEN ELSE</td>
-<td>self.functions.if_then_else</td>
+<td>functions.if_then_else</td>
 </tr>
 <tr class="row-odd"><td>LN</td>
 <td>np.log</td>
 </tr>
 <tr class="row-even"><td>PULSE TRAIN</td>
-<td>self.functions.pulse_train</td>
+<td>functions.pulse_train</td>
 </tr>
 <tr class="row-odd"><td>RAMP</td>
-<td>self.functions.ramp</td>
+<td>functions.ramp</td>
 </tr>
 <tr class="row-even"><td>INTEGER</td>
 <td>int</td>
@@ -298,28 +451,34 @@ has an equivalent in XMILE. The current release supports the following functiona
 <td>np.random.rand</td>
 </tr>
 <tr class="row-odd"><td>DELAY1</td>
-<td>Model Construction</td>
+<td>functions.Delay</td>
 </tr>
 <tr class="row-even"><td>DELAY3</td>
-<td>Model Construction</td>
+<td>functions.Delay</td>
 </tr>
 <tr class="row-odd"><td>DELAY N</td>
-<td>Model Construction</td>
+<td>functions.Delay</td>
 </tr>
 <tr class="row-even"><td>SMOOTH3I</td>
-<td>Model Construction</td>
+<td>functions.Smooth</td>
 </tr>
 <tr class="row-odd"><td>SMOOTH3</td>
-<td>Model Construction</td>
+<td>functions.Smooth</td>
 </tr>
 <tr class="row-even"><td>SMOOTH N</td>
-<td>Model Construction</td>
+<td>functions.Smooth</td>
 </tr>
 <tr class="row-odd"><td>SMOOTH</td>
-<td>Model Construction</td>
+<td>functions.Smooth</td>
 </tr>
 <tr class="row-even"><td>INITIAL</td>
-<td>Model Construction</td>
+<td>functions.Initial</td>
+</tr>
+<tr class="row-odd"><td>XIDZ</td>
+<td>functions.XIDZ</td>
+</tr>
+<tr class="row-even"><td>ZIDZ</td>
+<td>functions.XIDZ</td>
 </tr>
 </tbody>
 </table>
@@ -343,10 +502,10 @@ parsed, and may throw an error. Future releases will handle this with more grace
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="xmile_translation.html" class="btn btn-neutral float-right" title="XMILE Translation" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="xmile_translation.html" class="btn btn-neutral float-right" title="XMILE Translation">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="structure.html" class="btn btn-neutral" title="Structure of the PySD module" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="structure.html" class="btn btn-neutral" title="Structure of the PySD module"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -355,13 +514,13 @@ parsed, and may throw an error. Future releases will handle this with more grace
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015, James Houghton.
+        &copy; Copyright 2016, James Houghton.
     </p>
   </div>
+
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
-
+  
 </footer>
-
         </div>
       </div>
 
@@ -376,7 +535,7 @@ parsed, and may throw an error. Future releases will handle this with more grace
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'0.3.2',
+            VERSION:'0.7.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

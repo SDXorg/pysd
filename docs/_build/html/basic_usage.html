@@ -5,16 +5,16 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basic Usage &mdash; PySD 0.3.2 documentation</title>
+  <title>Basic Usage &mdash; PySD 0.7.1 documentation</title>
   
 
   
   
 
   
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
 
   
   
@@ -30,12 +30,12 @@
   
 
   
-    <link rel="top" title="PySD 0.3.2 documentation" href="index.html"/>
+    <link rel="top" title="PySD 0.7.1 documentation" href="index.html"/>
         <link rel="next" title="Advanced Usage" href="advanced_usage.html"/>
         <link rel="prev" title="Installation" href="installation.html"/> 
 
   
-  <script src="_static/js/modernizr.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
 
 </head>
 
@@ -47,14 +47,8 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-nav-search">
         
-
+          <a href="index.html" class="fa fa-home"> PySD</a>
         
-          <a href="index.html" class="icon icon-home"> PySD
-        
-
-        
-        </a>
-
         
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
@@ -63,8 +57,6 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-        
       </div>
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
@@ -87,7 +79,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#setting-parameter-values">Setting parameter values</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#setting-simulation-initial-conditions">Setting simulation initial conditions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#querying-current-values">Querying current values</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#collecting-a-history-of-returned-values">Collecting a history of returned values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#supported-functions">Supported functions</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">Advanced Usage</a><ul>
@@ -97,44 +89,10 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="functions.html">User Functions Reference</a></li>
 <li class="toctree-l1"><a class="reference internal" href="development/development_index.html">Developer Documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="development/about.html">About the Project</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="development/about.html#motivation-the-coming-of-age-of-big-data">Motivation: The (coming of) age of Big Data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/about.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="development/contributing.html">Contributing to PySD</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="development/contributing.html#development-tools">Development Tools</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="development/contributing.html#test-suite">Test Suite</a></li>
-<li class="toctree-l4"><a class="reference internal" href="development/contributing.html#speed-tests">Speed Tests</a></li>
-<li class="toctree-l4"><a class="reference internal" href="development/contributing.html#profiler">Profiler</a></li>
-<li class="toctree-l4"><a class="reference internal" href="development/contributing.html#python-linter">Python Linter</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="development/contributing.html#pysd-design-philosophy">PySD Design Philosophy</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="development/pathway.html">PySD Development Pathway</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="development/pathway.html#high-priority">High Priority</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/pathway.html#medium-priority">Medium Priority</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/pathway.html#low-priority">Low Priority</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/pathway.html#not-planned">Not Planned</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/pathway.html#ideas-for-other-projects">Ideas for Other Projects</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/pathway.html#current-features">Current Features</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="development/structure.html">Structure of the PySD module</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="development/structure.html#translation">Translation</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="development/vensim_translation.html">Vensim Translation</a></li>
-<li class="toctree-l4"><a class="reference internal" href="development/xmile_translation.html">XMILE Translation</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="development/structure.html#the-model-class">The model class</a></li>
-<li class="toctree-l3"><a class="reference internal" href="development/structure.html#the-pysd-class">The PySD class</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="development/internal_functions.html">Internal Functions</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="development/about.html">About the Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/contributing.html">Contributing to PySD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/pathway.html">PySD Development Pathway</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development/structure.html">Structure of the PySD module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="development/complement.html">Complementary Projects</a></li>
 </ul>
 </li>
@@ -165,9 +123,7 @@
     <li>Basic Usage</li>
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/basic_usage.txt" rel="nofollow"> View page source</a>
-          
+          <a href="_sources/basic_usage.txt" rel="nofollow"> View page source</a>
         
       </li>
   </ul>
@@ -188,23 +144,6 @@
 <a class="reference internal image-reference" href="_images/Teacup.png"><img alt="_images/Teacup.png" class="align-center" src="_images/Teacup.png" style="width: 350px;" /></a>
 <p>To view a synopsis of the model equations and documentation, call the <code class="xref py py-func docutils literal"><span class="pre">components.doc()</span></code> method of the model class. This will generate a listing of all the model elements, their documentation, units, equations, and initial values, where appropriate. Here is a sample from the teacup model:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">model</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">doc</span><span class="p">()</span>
-
-<span class="go">Import of Teacup.mdl</span>
-
-<span class="go">characteristic_time</span>
-<span class="go">Units: minutes</span>
-<span class="go">Equation: 10</span>
-
-<span class="go">dteacup_temperature_dt</span>
-<span class="go">Units: degrees</span>
-<span class="go">Equation: -heat_loss_to_room()</span>
-<span class="go">Init: 180</span>
-
-<span class="go">final_time</span>
-<span class="go">the final time for the simulation.</span>
-<span class="go">Units: minute</span>
-<span class="go">Equation: 30</span>
-<span class="go">…</span>
 </pre></div>
 </div>
 </div>
@@ -232,9 +171,9 @@
 <div class="section" id="outputting-various-run-information">
 <h2>Outputting various run information<a class="headerlink" href="#outputting-various-run-information" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="xref py py-func docutils literal"><span class="pre">run()</span></code> command has a few options that make it more useful. In many situations we want to access components of the model other than merely the stocks – we can specify which components of the model should be included in the returned dataframe by including them in a list that we pass to the <code class="xref py py-func docutils literal"><span class="pre">run()</span></code> command, using the return_columns keyword argument:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">return_columns</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;teacup_temperature&#39;</span><span class="p">,</span> <span class="s">&#39;room_temperature&#39;</span><span class="p">])</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">return_columns</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;Teacup Temperature&#39;</span><span class="p">,</span> <span class="s">&#39;Room Temperature&#39;</span><span class="p">])</span>
 
-<span class="go">t         teacup_temperature    room_temperature</span>
+<span class="go">t         Teacup Temperature    Room Temperature</span>
 <span class="go">0.000     180.000000            75.0</span>
 <span class="go">0.125     178.633556            75.0</span>
 <span class="go">0.250     177.284091            75.0</span>
@@ -245,7 +184,7 @@
 <p>If the measured data that we are comparing with our model comes in at irregular timestamps, we may want to sample the model at timestamps to match. The .run() function gives us this ability with the return_timestamps keyword argument:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">return_timestamps</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mf">9.5</span><span class="p">,</span><span class="mf">13.178</span><span class="p">,</span><span class="mi">21</span><span class="p">,</span><span class="mi">25</span><span class="p">,</span><span class="mi">30</span><span class="p">])</span>
 
-<span class="go">t       teacup_temperature</span>
+<span class="go">t       Teacup Temperature</span>
 <span class="go">0.0     180.000000</span>
 <span class="go">1.0     169.532119</span>
 <span class="go">3.0     151.490002</span>
@@ -259,21 +198,21 @@
 <h2>Setting parameter values<a class="headerlink" href="#setting-parameter-values" title="Permalink to this headline">¶</a></h2>
 <p>In many cases, we want to modify the parameters of the model to investigate its behavior under different assumptions. There are several ways to do this in PySD, but the .run() function gives us a convenient method in the params keyword argument.</p>
 <p>This argument expects a dictionary whose keys correspond to the components of the model.  The associated values can either be a constant, or a Pandas series whose indices are timestamps and whose values are the values that the model component should take on at the corresponding time. For instance, in our model we can set the room temperature to a constant value:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;room_temperature&#39;</span><span class="p">:</span><span class="mi">20</span><span class="p">})</span>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;Room Temperature&#39;</span><span class="p">:</span><span class="mi">20</span><span class="p">})</span>
 </pre></div>
 </div>
 <p>Alternately, if we believe the room temperature is changing over the course of the simulation, we can give the run function a set of time-series values in the form of a Pandas series, and PySD will linearly interpolate between the given values in the course of its integration:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
 <span class="n">temp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">),</span> <span class="n">data</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="mi">80</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
-<span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;room_temperature&#39;</span><span class="p">:</span><span class="n">temp</span><span class="p">})</span>
+<span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;Room Temperature&#39;</span><span class="p">:</span><span class="n">temp</span><span class="p">})</span>
 </pre></div>
 </div>
 <p>Note that once parameters are set by the run command, they are permanently changed within the model. We can also change model parameters without running the model, using PySD’s <code class="xref py py-func docutils literal"><span class="pre">set_components(params={})()</span></code> method, which takes the same params dictionary as the run function. We might choose to do this in situations where we’ll be running the model many times, and only want to spend time setting the parameters once.</p>
 </div>
 <div class="section" id="setting-simulation-initial-conditions">
 <h2>Setting simulation initial conditions<a class="headerlink" href="#setting-simulation-initial-conditions" title="Permalink to this headline">¶</a></h2>
-<p>Finally, we can set the initial conditions of our model in several ways. We’ll get into why this is helpful in the next section. So far, we’ve been using the default value for the initial_condition keyword argument, which is ‘original’. This value runs the model from the initial conditions that were specified originally by the model file. We can alternately specify a tuple containing the start time and a dictionary of values for the system’s stocks. Here we start the model with the tea at just above freezing:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">initial_condition</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;teacup_temperature&#39;</span><span class="p">:</span><span class="mi">33</span><span class="p">}))</span>
+<p>Finally, we can set the initial conditions of our model in several ways. So far, we’ve been using the default value for the initial_condition keyword argument, which is ‘original’. This value runs the model from the initial conditions that were specified originally by the model file. We can alternately specify a tuple containing the start time and a dictionary of values for the system’s stocks. Here we start the model with the tea at just above freezing:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">initial_condition</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;Teacup Temperature&#39;</span><span class="p">:</span><span class="mi">33</span><span class="p">}))</span>
 </pre></div>
 </div>
 <p>Additionally we can run the model forward from its current position, by passing the initial_condition argument the keyword ‘current’. After having run the model from time zero to thirty, we can ask the model to continue running forward for another chunk of time:</p>
@@ -282,18 +221,156 @@
 </pre></div>
 </div>
 <p>The integration picks up at the last value returned in the previous run condition, and returns values at the requested timestamps.</p>
+<p>There are times when we may choose to overwrite a stock with a constant value (ie, for testing). To do this, we just use the params value, as before. Be careful not to use &#8216;params&#8217; when you really mean to be setting the initial condition!</p>
 </div>
 <div class="section" id="querying-current-values">
 <h2>Querying current values<a class="headerlink" href="#querying-current-values" title="Permalink to this headline">¶</a></h2>
-<p>We can easily access the current value of a model component by calling its associated method in the components subclass. For instance, to find the temperature of the teacup, we simply call:</p>
+<p>We can easily access the current value of a model component by calling its associated method (using python safe names) in the components subclass. For instance, to find the temperature of the teacup, we simply call:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="n">model</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">teacup_temperature</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
-<div class="section" id="collecting-a-history-of-returned-values">
-<h2>Collecting a history of returned values<a class="headerlink" href="#collecting-a-history-of-returned-values" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="xref py py-func docutils literal"><span class="pre">run()</span></code> function provides a flag named collect that instructs PySD to collect all output from a series of run commands into a record. This can be helpful when running the model forwards for a period of time, then returning control to the user, who will specify changes to the model, and continue the integration forwards.</p>
-<p>The record is stored as a list of Pandas dataframes, one from each run. To access this record in its raw form, the user can access the <code class="xref py py-func docutils literal"><span class="pre">record()</span></code> attribute of the PySD class. It is usually more helpful to have a single dataframe which stitches together all of these pieces. We can access this via the <code class="xref py py-func docutils literal"><span class="pre">get_record()</span></code> method.</p>
+<div class="section" id="supported-functions">
+<h2>Supported functions<a class="headerlink" href="#supported-functions" title="Permalink to this headline">¶</a></h2>
+<p>Vensim functions include:</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="50%" />
+<col width="50%" />
+</colgroup>
+<thead valign="bottom">
+<tr class="row-odd"><th class="head">Vensim</th>
+<th class="head">Python Translation</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr class="row-even"><td>COS</td>
+<td>np.cos</td>
+</tr>
+<tr class="row-odd"><td>EXP</td>
+<td>np.exp</td>
+</tr>
+<tr class="row-even"><td>MIN</td>
+<td>min</td>
+</tr>
+<tr class="row-odd"><td>&lt;=</td>
+<td>&lt;=</td>
+</tr>
+<tr class="row-even"><td>STEP</td>
+<td>functions.step</td>
+</tr>
+<tr class="row-odd"><td>PULSE</td>
+<td>functions.pulse</td>
+</tr>
+<tr class="row-even"><td>POISSON</td>
+<td>np.random.poisson</td>
+</tr>
+<tr class="row-odd"><td>EXPRND</td>
+<td>np.random.exponential</td>
+</tr>
+<tr class="row-even"><td>SIN</td>
+<td>np.sin</td>
+</tr>
+<tr class="row-odd"><td>&gt;=</td>
+<td>&gt;=</td>
+</tr>
+<tr class="row-even"><td>IF THEN ELSE</td>
+<td>functions.if_then_else</td>
+</tr>
+<tr class="row-odd"><td>LN</td>
+<td>np.log</td>
+</tr>
+<tr class="row-even"><td>PULSE TRAIN</td>
+<td>functions.pulse_train</td>
+</tr>
+<tr class="row-odd"><td>RAMP</td>
+<td>functions.ramp</td>
+</tr>
+<tr class="row-even"><td>INTEGER</td>
+<td>int</td>
+</tr>
+<tr class="row-odd"><td>TAN</td>
+<td>np.tan</td>
+</tr>
+<tr class="row-even"><td>PI</td>
+<td>np.pi</td>
+</tr>
+<tr class="row-odd"><td>=</td>
+<td>==</td>
+</tr>
+<tr class="row-even"><td>&lt;</td>
+<td>&lt;</td>
+</tr>
+<tr class="row-odd"><td>&gt;</td>
+<td>&gt;</td>
+</tr>
+<tr class="row-even"><td>MODULO</td>
+<td>np.mod</td>
+</tr>
+<tr class="row-odd"><td>ARCSIN</td>
+<td>np.arcsin</td>
+</tr>
+<tr class="row-even"><td>ABS</td>
+<td>abs</td>
+</tr>
+<tr class="row-odd"><td>^</td>
+<td><a href="#id1"><span class="problematic" id="id2">**</span></a></td>
+</tr>
+<tr class="row-even"><td>LOGNORMAL</td>
+<td>np.random.lognormal</td>
+</tr>
+<tr class="row-odd"><td>MAX</td>
+<td>max</td>
+</tr>
+<tr class="row-even"><td>SQRT</td>
+<td>np.sqrt</td>
+</tr>
+<tr class="row-odd"><td>ARCTAN</td>
+<td>np.arctan</td>
+</tr>
+<tr class="row-even"><td>ARCCOS</td>
+<td>np.arccos</td>
+</tr>
+<tr class="row-odd"><td>RANDOM NORMAL</td>
+<td>self.functions.bounded_normal</td>
+</tr>
+<tr class="row-even"><td>RANDOM UNIFORM</td>
+<td>np.random.rand</td>
+</tr>
+<tr class="row-odd"><td>DELAY1</td>
+<td>functions.Delay</td>
+</tr>
+<tr class="row-even"><td>DELAY3</td>
+<td>functions.Delay</td>
+</tr>
+<tr class="row-odd"><td>DELAY N</td>
+<td>functions.Delay</td>
+</tr>
+<tr class="row-even"><td>SMOOTH3I</td>
+<td>functions.Smooth</td>
+</tr>
+<tr class="row-odd"><td>SMOOTH3</td>
+<td>functions.Smooth</td>
+</tr>
+<tr class="row-even"><td>SMOOTH N</td>
+<td>functions.Smooth</td>
+</tr>
+<tr class="row-odd"><td>SMOOTH</td>
+<td>functions.Smooth</td>
+</tr>
+<tr class="row-even"><td>INITIAL</td>
+<td>functions.Initial</td>
+</tr>
+<tr class="row-odd"><td>XIDZ</td>
+<td>functions.XIDZ</td>
+</tr>
+<tr class="row-even"><td>ZIDZ</td>
+<td>functions.XIDZ</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<div><cite>np</cite> corresponds to the numpy package</div></blockquote>
 </div>
 </div>
 
@@ -303,10 +380,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="advanced_usage.html" class="btn btn-neutral float-right" title="Advanced Usage" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="advanced_usage.html" class="btn btn-neutral float-right" title="Advanced Usage">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="installation.html" class="btn btn-neutral" title="Installation" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="installation.html" class="btn btn-neutral" title="Installation"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -315,13 +392,13 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015, James Houghton.
+        &copy; Copyright 2016, James Houghton.
     </p>
   </div>
+
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
-
+  
 </footer>
-
         </div>
       </div>
 
@@ -336,7 +413,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.3.2',
+            VERSION:'0.7.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

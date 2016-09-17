@@ -5,16 +5,16 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Internal Functions &mdash; PySD 0.3.2 documentation</title>
+  <title>Internal Functions &mdash; PySD 0.7.1 documentation</title>
   
 
   
   
 
   
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
 
   
   
@@ -30,13 +30,13 @@
   
 
   
-    <link rel="top" title="PySD 0.3.2 documentation" href="../index.html"/>
+    <link rel="top" title="PySD 0.7.1 documentation" href="../index.html"/>
         <link rel="up" title="Structure of the PySD module" href="structure.html"/>
         <link rel="next" title="Complementary Projects" href="complement.html"/>
         <link rel="prev" title="XMILE Translation" href="xmile_translation.html"/> 
 
   
-  <script src="_static/js/modernizr.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
 
 </head>
 
@@ -48,14 +48,8 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-nav-search">
         
-
+          <a href="../index.html" class="fa fa-home"> PySD</a>
         
-          <a href="../index.html" class="icon icon-home"> PySD
-        
-
-        
-        </a>
-
         
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -64,8 +58,6 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-
-        
       </div>
 
       <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
@@ -88,7 +80,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../basic_usage.html#setting-parameter-values">Setting parameter values</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../basic_usage.html#setting-simulation-initial-conditions">Setting simulation initial conditions</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../basic_usage.html#querying-current-values">Querying current values</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../basic_usage.html#collecting-a-history-of-returned-values">Collecting a history of returned values</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../basic_usage.html#supported-functions">Supported functions</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../advanced_usage.html">Advanced Usage</a><ul>
@@ -98,44 +90,10 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../functions.html">User Functions Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="development_index.html">Developer Documentation</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="about.html">About the Project</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="about.html#motivation-the-coming-of-age-of-big-data">Motivation: The (coming of) age of Big Data</a></li>
-<li class="toctree-l3"><a class="reference internal" href="about.html#general-approaches-for-integrating-system-dynamic-models-and-data-analytics">General approaches for integrating system dynamic models and data analytics</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="contributing.html">Contributing to PySD</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="contributing.html#development-tools">Development Tools</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="contributing.html#test-suite">Test Suite</a></li>
-<li class="toctree-l4"><a class="reference internal" href="contributing.html#speed-tests">Speed Tests</a></li>
-<li class="toctree-l4"><a class="reference internal" href="contributing.html#profiler">Profiler</a></li>
-<li class="toctree-l4"><a class="reference internal" href="contributing.html#python-linter">Python Linter</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="contributing.html#pysd-design-philosophy">PySD Design Philosophy</a></li>
-</ul>
-</li>
-<li class="toctree-l2"><a class="reference internal" href="pathway.html">PySD Development Pathway</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="pathway.html#high-priority">High Priority</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pathway.html#medium-priority">Medium Priority</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pathway.html#low-priority">Low Priority</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pathway.html#not-planned">Not Planned</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pathway.html#ideas-for-other-projects">Ideas for Other Projects</a></li>
-<li class="toctree-l3"><a class="reference internal" href="pathway.html#current-features">Current Features</a></li>
-</ul>
-</li>
-<li class="toctree-l2 current"><a class="reference internal" href="structure.html">Structure of the PySD module</a><ul class="current">
-<li class="toctree-l3"><a class="reference internal" href="structure.html#translation">Translation</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="vensim_translation.html">Vensim Translation</a></li>
-<li class="toctree-l4"><a class="reference internal" href="xmile_translation.html">XMILE Translation</a></li>
-</ul>
-</li>
-<li class="toctree-l3"><a class="reference internal" href="structure.html#the-model-class">The model class</a></li>
-<li class="toctree-l3 current"><a class="reference internal" href="structure.html#the-pysd-class">The PySD class</a><ul class="current">
-<li class="toctree-l4 current"><a class="current reference internal" href="">Internal Functions</a></li>
-</ul>
-</li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="about.html">About the Project</a></li>
+<li class="toctree-l2"><a class="reference internal" href="contributing.html">Contributing to PySD</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pathway.html">PySD Development Pathway</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="structure.html">Structure of the PySD module</a></li>
 <li class="toctree-l2"><a class="reference internal" href="complement.html">Complementary Projects</a></li>
 </ul>
 </li>
@@ -170,9 +128,7 @@
     <li>Internal Functions</li>
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="../_sources/development/internal_functions.txt" rel="nofollow"> View page source</a>
-          
+          <a href="../_sources/development/internal_functions.txt" rel="nofollow"> View page source</a>
         
       </li>
   </ul>
@@ -186,206 +142,21 @@
 <div class="section" id="special-functions-needed-for-model-execution">
 <h2>Special functions needed for model execution<a class="headerlink" href="#special-functions-needed-for-model-execution" title="Permalink to this headline">¶</a></h2>
 <p>These functions have no direct analog in the standard python data analytics stack, or require information about the internal state of the system beyond what is present in the function call. We provide them in a structure that makes it easy for the model elements to call.</p>
-<dl class="class">
-<dt id="pysd.functions.Functions">
-<em class="property">class </em><code class="descclassname">pysd.functions.</code><code class="descname">Functions</code><span class="sig-paren">(</span><em>component_class</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/functions/functions.html#Functions"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.functions.Functions" title="Permalink to this definition">¶</a></dt>
-<dd><p>Provides SD-specific calculations that are not available in python standard libraries,
-or have a different functional form to those specified in the libraries, and therefore
-are in need of translation.</p>
-<p>This is implemented as a class, with a local pointer to the model components class,
-because some of these functions need to reference the internal state of the model.
-Mostly they are just referencing the simulation time.</p>
-<dl class="method">
-<dt id="pysd.functions.Functions.bounded_normal">
-<code class="descname">bounded_normal</code><span class="sig-paren">(</span><em>minimum</em>, <em>maximum</em>, <em>mean</em>, <em>std</em>, <em>seed</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/functions/functions.html#Functions.bounded_normal"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.functions.Functions.bounded_normal" title="Permalink to this definition">¶</a></dt>
-<dd><p>Implements vensim&#8217;s BOUNDED NORMAL function</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysd.functions.Functions.if_then_else">
-<code class="descname">if_then_else</code><span class="sig-paren">(</span><em>condition</em>, <em>val_if_true</em>, <em>val_if_false</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/functions/functions.html#Functions.if_then_else"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.functions.Functions.if_then_else" title="Permalink to this definition">¶</a></dt>
-<dd><p>Replicates vensim&#8217;s IF THEN ELSE function.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysd.functions.Functions.lookup">
-<code class="descname">lookup</code><span class="sig-paren">(</span><em>x</em>, <em>xs</em>, <em>ys</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/functions/functions.html#Functions.lookup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.functions.Functions.lookup" title="Permalink to this definition">¶</a></dt>
-<dd><p>Provides the working mechanism for lookup functions the builder builds</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysd.functions.Functions.pulse">
-<code class="descname">pulse</code><span class="sig-paren">(</span><em>start</em>, <em>duration</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/functions/functions.html#Functions.pulse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.functions.Functions.pulse" title="Permalink to this definition">¶</a></dt>
-<dd><p>Implements vensim&#8217;s PULSE function</p>
-<p>In range [-inf, start) returns 0
-In range [start, start+duration) returns 1
-In range [start+duration, +inf] returns 0</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysd.functions.Functions.pulse_train">
-<code class="descname">pulse_train</code><span class="sig-paren">(</span><em>start</em>, <em>duration</em>, <em>repeattime</em>, <em>end</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/functions/functions.html#Functions.pulse_train"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.functions.Functions.pulse_train" title="Permalink to this definition">¶</a></dt>
-<dd><p>Implements vensim&#8217;s PULSE TRAIN function</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysd.functions.Functions.ramp">
-<code class="descname">ramp</code><span class="sig-paren">(</span><em>slope</em>, <em>start</em>, <em>finish</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/functions/functions.html#Functions.ramp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.functions.Functions.ramp" title="Permalink to this definition">¶</a></dt>
-<dd><p>Implements vensim&#8217;s RAMP function</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysd.functions.Functions.step">
-<code class="descname">step</code><span class="sig-paren">(</span><em>value</em>, <em>tstep</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/functions/functions.html#Functions.step"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.functions.Functions.step" title="Permalink to this definition">¶</a></dt>
-<dd><p>&#8221; Impliments vensim&#8217;s STEP function</p>
-<p>In range [-inf, tstep) returns 0
-In range [tstep, +inf] returns <cite>value</cite></p>
-</dd></dl>
-
-</dd></dl>
-
-</div>
+<span class="target" id="module-pysd.functions"></span><p>functions.py</p>
+<p>These are supports for functions that are included in modeling software but have no
+straightforward equivalent in python.</p>
+<span class="target" id="module-pysd.utils"></span></div>
 <div class="section" id="building-the-python-model-file">
 <h2>Building the python model file<a class="headerlink" href="#building-the-python-model-file" title="Permalink to this headline">¶</a></h2>
 <p>These elements are used by the translator to construct the model from the interpreted results. It is technically possible to use these functions to build a model from scratch. But - it would be rather error prone.</p>
-<dl class="class">
-<dt id="pysd.builder.ComponentClass">
-<em class="property">class </em><code class="descclassname">pysd.builder.</code><code class="descname">ComponentClass</code><a class="reference internal" href="../_modules/pysd/builder/builder.html#ComponentClass"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.builder.ComponentClass" title="Permalink to this definition">¶</a></dt>
-<dd><p>This is a template class to be subclassed and fleshed out by the translation tools.</p>
-<p>A function should be added for every flow or auxiliary variable, having the name of that
-variable, taking no parameters, which calculates the value of the variable.</p>
-<p>A function should be added for each stock called d&lt;stockname&gt;_dt() which calculates
-the net inflow to the stock as a function of the flows.</p>
-<p>A function should be added for each stock called &lt;stockname&gt;_init() which calculates
-the (potentially dynamically generated) initial value for the stock.</p>
-<p>This docstring will be rewritten and dynamically generated.</p>
-<dl class="method">
-<dt id="pysd.builder.ComponentClass.d_dt">
-<code class="descname">d_dt</code><span class="sig-paren">(</span><em>state_vector</em>, <em>t</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/builder/builder.html#ComponentClass.d_dt"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.builder.ComponentClass.d_dt" title="Permalink to this definition">¶</a></dt>
-<dd><p>The primary purpose of this function is to interact with the integrator.
-It takes a state vector, sets the state of the system based on that vector,
-and returns a derivative of the state vector</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysd.builder.ComponentClass.doc">
-<code class="descname">doc</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/builder/builder.html#ComponentClass.doc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.builder.ComponentClass.doc" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function returns an aggregation of all of the docstrings of all of the
-elements in the model.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysd.builder.ComponentClass.initial_time">
-<code class="descname">initial_time</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/builder/builder.html#ComponentClass.initial_time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.builder.ComponentClass.initial_time" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function represents the initial time as set in the model file
-It should be overwritten during the class extension.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysd.builder.ComponentClass.reset_state">
-<code class="descname">reset_state</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/builder/builder.html#ComponentClass.reset_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.builder.ComponentClass.reset_state" title="Permalink to this definition">¶</a></dt>
-<dd><p>Sets the model state to the state described in the model file.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysd.builder.ComponentClass.state_vector">
-<code class="descname">state_vector</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/builder/builder.html#ComponentClass.state_vector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.builder.ComponentClass.state_vector" title="Permalink to this definition">¶</a></dt>
-<dd><p>This function interacts with the integrator by setting the
-initial values of the integrator to the state vector.
-It returns the values of the state dictionary, sorted
-alphabetically by key.</p>
-</dd></dl>
-
-<dl class="method">
-<dt id="pysd.builder.ComponentClass.time">
-<code class="descname">time</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/builder/builder.html#ComponentClass.time"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.builder.ComponentClass.time" title="Permalink to this definition">¶</a></dt>
-<dd><p>This helper function allows the model components to
-access the time component directly.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="function">
-<dt id="pysd.builder.new_model">
-<code class="descclassname">pysd.builder.</code><code class="descname">new_model</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/builder/builder.html#new_model"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.builder.new_model" title="Permalink to this definition">¶</a></dt>
-<dd><p>Starts a new python file (saved under <cite>filename</cite>) where translations from
-the vensim model file or XMILE model file will be implemented as a python class.</p>
-</dd></dl>
-
-<dl class="function">
-<dt id="pysd.builder.add_stock">
-<code class="descclassname">pysd.builder.</code><code class="descname">add_stock</code><span class="sig-paren">(</span><em>filename</em>, <em>identifier</em>, <em>expression</em>, <em>initial_condition</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/builder/builder.html#add_stock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.builder.add_stock" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds a stock to the python model file based upon the interpreted expressions
-for the initial condition.</p>
-<dl class="docutils">
-<dt>identifier: &lt;string&gt; valid python identifier</dt>
-<dd>Our translators are responsible for translating the model identifiers into
-something that python can use as a function name.</dd>
-<dt>expression: &lt;string&gt;</dt>
-<dd>Note that these expressions will be added as a function body within the model class.
-They need to be written with with appropriate syntax, ie:
-<cite>self.functioncall() * self.otherfunctioncall()</cite></dd>
-<dt>initial_condition: &lt;string&gt;</dt>
-<dd>An expression that defines the value that the stock should take on when the model
-is initialized. This may be a constant, or a call to other model elements.</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="pysd.builder.add_flaux">
-<code class="descclassname">pysd.builder.</code><code class="descname">add_flaux</code><span class="sig-paren">(</span><em>filename</em>, <em>identifier</em>, <em>expression</em>, <em>doc=''</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/builder/builder.html#add_flaux"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.builder.add_flaux" title="Permalink to this definition">¶</a></dt>
-<dd><p>Adds a flow or auxiliary element to the model.</p>
-<dl class="docutils">
-<dt>identifier: &lt;string&gt; valid python identifier</dt>
-<dd>Our translators are responsible for translating the model identifiers into
-something that python can use as a function name.</dd>
-<dt>expression: &lt;string&gt;</dt>
-<dd>Note that these expressions will be added as a function body within the model class.
-They need to be written with with appropriate syntax, ie:
-<cite>self.functioncall() * self.otherfunctioncall()</cite></dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="pysd.builder.add_lookup">
-<code class="descclassname">pysd.builder.</code><code class="descname">add_lookup</code><span class="sig-paren">(</span><em>filename</em>, <em>identifier</em>, <em>valid_range</em>, <em>copair_list</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/builder/builder.html#add_lookup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.builder.add_lookup" title="Permalink to this definition">¶</a></dt>
-<dd><p>Constructs a function that implements a lookup.
-The function encodes the coordinate pairs as numeric values in the python file.</p>
-<dl class="docutils">
-<dt>identifier: &lt;string&gt; valid python identifier</dt>
-<dd>Our translators are responsible for translating the model identifiers into
-something that python can use as a function name.</dd>
-<dt>range: tuple</dt>
-<dd>Minimum and maximum bounds on the lookup. Currently, we don&#8217;t do anything
-with this, but in the future, may use it to implement some error checking.</dd>
-<dt>copair_list: a list of tuples, eg. [(0, 1), (1, 5), (2, 15)]</dt>
-<dd>The coordinates of the lookup formatted in coordinate pairs.</dd>
-</dl>
-</dd></dl>
-
-<dl class="function">
-<dt id="pysd.builder.add_n_delay">
-<code class="descclassname">pysd.builder.</code><code class="descname">add_n_delay</code><span class="sig-paren">(</span><em>filename</em>, <em>delay_input</em>, <em>delay_time</em>, <em>initial_value</em>, <em>order</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/pysd/builder/builder.html#add_n_delay"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pysd.builder.add_n_delay" title="Permalink to this definition">¶</a></dt>
-<dd><p>Constructs stock and flow chains that implement the calculation of
-a delay.</p>
-<dl class="docutils">
-<dt>delay_input: &lt;string&gt;</dt>
-<dd>Reference to the model component that is the input to the delay</dd>
-<dt>delay_time: &lt;string&gt;</dt>
-<dd>Can be a number (in string format) or a reference to another model element
-which will calculate the delay. This is calculated throughout the simulation
-at runtime.</dd>
-<dt>initial_value: &lt;string&gt;</dt>
-<dd>This is used to initialize the stocks that are present in the delay. We
-initialize the stocks with equal values so that the outflow in the first
-timestep is equal to this value.</dd>
-<dt>order: int</dt>
-<dd>The number of stocks in the delay pipeline. As we construct the delays at
-build time, this must be an integer and cannot be calculated from other
-model components. Anything else will yield a ValueError.</dd>
-</dl>
-</dd></dl>
-
+<span class="target" id="module-pysd.builder"></span><p>builder.py
+Refactored May 26 2016
+James Houghton
+<a class="reference external" href="mailto:james&#46;p&#46;houghton&#37;&#52;&#48;gmail&#46;com">james<span>&#46;</span>p<span>&#46;</span>houghton<span>&#64;</span>gmail<span>&#46;</span>com</a></p>
+<p>This is code to assemble a pysd model once all of the elements have
+been translated from their native language into python compatible syntax.
+There should be nothing in this file that has to know about either vensim or
+xmile specific syntax.</p>
 </div>
 </div>
 
@@ -395,10 +166,10 @@ model components. Anything else will yield a ValueError.</dd>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="complement.html" class="btn btn-neutral float-right" title="Complementary Projects" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="complement.html" class="btn btn-neutral float-right" title="Complementary Projects">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="xmile_translation.html" class="btn btn-neutral" title="XMILE Translation" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="xmile_translation.html" class="btn btn-neutral" title="XMILE Translation"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -407,13 +178,13 @@ model components. Anything else will yield a ValueError.</dd>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2015, James Houghton.
+        &copy; Copyright 2016, James Houghton.
     </p>
   </div>
+
   Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
-
+  
 </footer>
-
         </div>
       </div>
 
@@ -428,7 +199,7 @@ model components. Anything else will yield a ValueError.</dd>
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'0.3.2',
+            VERSION:'0.7.1',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
