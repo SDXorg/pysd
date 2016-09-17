@@ -137,9 +137,12 @@ class TestPySD(unittest.TestCase):
         """ Test that the model prints some documentation """
         import pysd
         model = pysd.read_vensim(test_model)
-        self.assertIsInstance(str(model), str)  # tests string conversion of string
-        self.assertIsInstance(repr(model.doc()), str)  # tests that doc can be printed
-        self.assertIsInstance(model.doc(), pd.DataFrame)
+        self.assertIsInstance(str(model), str)  # tests string conversion of model
+
+        doc = model.doc()
+        self.assertIsInstance(doc, pd.DataFrame)
+        self.assertIn('Teacup Temperature', doc['Real Name'].values)
+        self.assertIn('teacup_temperature', doc['Py Name'].values)
 
     def test_cache(self):
         # Todo: test stepwise and runwise caching

@@ -24,13 +24,13 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Topic :: Scientific/Engineering :: Mathematics',
         'Topic :: Scientific/Engineering :: Information Analysis',
+        'Intended Audience :: Science/Research',
     ],
     install_requires=[
         'pandas',
         'numpy',
         'parsimonious',
         'autopep8',
-        'xarray',
-        'tabulate'
+        'xarray'
     ]
 )

@@ -505,16 +505,16 @@ class PySD(object):
                 self.visit(ast)
 
             def visit_name(self, n, vc):
-                self.sdVar['name'] = n.text
+                self.sdVar['Real Name'] = n.text
 
             def visit_model_name(self, n, vc):
-                self.sdVar['model_name'] = n.text
+                self.sdVar['Py Name'] = n.text
 
             def visit_unit(self, n, vc):
-                self.sdVar['unit'] = n.text
+                self.sdVar['Unit'] = n.text
 
             def visit_comment(self, n, vc):
-                self.sdVar['comment'] = n.text
+                self.sdVar['Comment'] = n.text
 
             def generic_visit(self, n, vc):
                 pass
@@ -523,9 +523,8 @@ class PySD(object):
         for ds in filter(None, docstrings):
             docstring_list.append(SDVarDoc(g, ds).sdVar)
 
-        # Convert docstring_list, a list of dictionaries, to a Pandas DataFrame,
-        # for easy printing down the line.
-        df_headers = ['Real Name', 'Py Name', 'Unit', 'Comment']
-        docs_df = _pd.DataFrame(docstring_list, columns=df_headers)
+        # Convert docstring_list, a list of dictionaries, to a Pandas DataFrame
+        docs_df = _pd.DataFrame(docstring_list)
+        docs_df.fillna('', inplace=True)
 
-        return docs_df
+        return docs_df[['Real Name', 'Py Name', 'Unit', 'Comment']]
