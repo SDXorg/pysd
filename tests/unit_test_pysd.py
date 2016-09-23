@@ -133,6 +133,9 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(len(w), 1)
         self.assertTrue('Teacup Temperature' in str(w[0].message))   # check that warning references the stock
 
+    def test_set_components_with_function(self):
+        self.fail()
+
     def test_docs(self):
         """ Test that the model prints some documentation """
         import pysd

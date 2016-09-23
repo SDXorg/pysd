@@ -448,3 +448,42 @@ def add_initial(initial_input):
     }
 
     return "%s()" % stateful['py_name'], [stateful]
+
+
+def add_macro(macro_name, filename, func_args):
+    """
+    Constructs a stateful object instantiating a 'Macro'
+
+    Parameters
+    ----------
+    macro_name: basestring
+        python safe name for macro
+    filename: basestring
+        filepath to macro definition
+    func_args: dict
+        dictionary of values to be passed to macro
+        {key: function}
+
+    Returns
+    -------
+    reference: basestring
+        reference to the Initial object `__call__` method,
+        which will return the first calculated value of `initial_input`
+
+    new_structure: list
+        list of element construction dictionaries for the builder to assemble
+
+    """
+    stateful = {
+        'py_name': 'macro_' + macro_name + '_' + '_'.join(
+            [utils.make_python_identifier(f) for f in func_args.values()]),
+        'real_name': 'Macro Instantiation of ' + macro_name,
+        'doc': 'Instantiates the Macro',
+        'py_expr': 'functions.Model(%s, %s)' % (filename, func_args),
+        'unit': 'None',
+        'subs': '',
+        'kind': 'stateful',
+        'arguments': ''
+    }
+
+    return "%s()" % stateful['py_name'], [stateful]

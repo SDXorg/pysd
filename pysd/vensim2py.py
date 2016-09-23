@@ -313,7 +313,7 @@ def parse_units(units_str):
     return units_str
 
 
-def parse_general_expression(element, namespace=None, subscript_dict=None):
+def parse_general_expression(element, namespace=None, subscript_dict=None, macro_list=None):
     """
     Parses a normal expression
     # its annoying that we have to construct and compile the grammar every time...
@@ -434,8 +434,9 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
     expr = _ pre_oper? _ (lookup_def / build_call / call / parens / number / reference) _ (in_oper _ expr)?
 
     lookup_def = ~r"(WITH\ LOOKUP)"I _ "(" _ reference _ "," _ "(" _  ("[" ~r"[^\]]*" "]" _ ",")?  ( "(" _ expr _ "," _ expr _ ")" ","? _ )+ _ ")" _ ")"
-    call = (func / id) _ "(" _ (expr _ ","? _)* ")" # allows calls with no arguments
-    build_call = builder _ "(" _ (expr _ ","? _)* ")" # allows calls with no arguments
+    call = (func / id) _ "(" _ (expr _ ","? _)* ")"  # I can't remember why `id` is here...
+    build_call = builder _ "(" _ (expr _ ","? _)* ")"
+    macro_call = macro _ "(" _ (expr _ ","? _)* ")"
     parens   = "(" _ expr _ ")"
 
     reference = id _ subscript_list?
@@ -452,6 +453,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
     in_oper = ~r"(%(in_ops)s)"I  # infix operators (case insensitive)
     pre_oper = ~r"(%(pre_ops)s)"I  # prefix operators (case insensitive)
     builder = ~r"(%(builders)s)"I  # builder functions (case insensitive)
+    macro = ~r"(%(macros)s)"I  # macros defined in the model file
 
     _ = ~r"[\s\\]*"  # whitespace character
     """ % {
@@ -464,6 +466,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
         'in_ops': '|'.join(reversed(sorted(in_ops_list, key=len))),
         'pre_ops': '|'.join(reversed(sorted(pre_ops_list, key=len))),
         'builders': '|'.join(reversed(sorted(builders.keys(), key=len))),
+        'macros': '|'.join(reversed(sorted(macro_list, key=len)))
     }
 
     parser = parsimonious.Grammar(expression_grammar)
@@ -560,6 +563,13 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
             name, structure = builders[call.strip().lower()](*arglist)
             self.new_structure += structure
             return name
+
+        def visit_macro(self, n, vc):
+            call = vc[0]
+            args = vc[4]
+            self.kind = 'component'
+            arglist = [x.strip() for x in args.split(',')]
+            builder.add_macro(call.strip().lower(), arglist)
 
         def visit__(self, n, vc):
             """ Handles whitespace characters"""
@@ -696,20 +706,25 @@ def translate_vensim(mdl_file):
     with open(mdl_file, 'rU') as in_file:
         text = in_file.read()
 
+
+
     outfile_name = mdl_file.replace('.mdl', '.py')
 
     # extract model elements
-
     file_sections = get_file_sections(text.replace('\n', ''))
+    macro_list = [s['name'] for s in file_sections if s['name'] is not '_main_']
+    # Todo: build up a representation of macros including parameters, filenames, that can be passed
+    # to the various builders.
+
+
     for section in file_sections:
         if section['name'] == '_main_':
             # define outfile name
             section['file_name'] = outfile_name
-            translate_section(section)
+            translate_section(section, macro_list)
         else:
             section['py_name'] = utils.make_python_identifier(section['name'])
             section['file_name'] = section['py_name'] + '.py'
-            translate_section(section)
-
+            translate_section(section, macro_list)
 
     return outfile_name

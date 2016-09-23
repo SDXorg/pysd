@@ -218,7 +218,7 @@ class Initial(Stateful):
 
 
 class Model(Stateful):
-    def __init__(self, py_model_file):
+    def __init__(self, py_model_file, params):
         # need a unique identifier for the imported module. Otherwise, any time a module
         # was imported, it would be just a reference to the single module. When we import
         # a python file as part of a macro, we want to be able to have multiple instances
@@ -228,6 +228,8 @@ class Model(Stateful):
 
         self.components = imp.load_source(module_name,
                                           py_model_file)
+
+        self.set_components(params)
 
         self._stateful_elements = [getattr(self.components, name) for name in dir(self.components)
                                    if isinstance(getattr(self.components, name),
@@ -281,6 +283,49 @@ class Model(Stateful):
     @state.setter
     def state(self, new_value):
         [component.update(val) for component, val in zip(self._stateful_elements, new_value)]
+
+    def set_components(self, params):
+        """ Set the value of exogenous model elements.
+        Element values can be passed as keyword=value pairs in the function call.
+        Values can be numeric type or pandas Series.
+        Series will be interpolated by integrator.
+
+        Examples
+        --------
+
+        >>> model.set_components({'birth_rate': 10})
+        >>> model.set_components({'Birth Rate': 10})
+
+        >>> br = pandas.Series(index=range(30), values=np.sin(range(30))
+        >>> model.set_components({'birth_rate': br})
+
+
+        """
+        # It might make sense to allow the params argument to take a pandas series, where
+        # the indices of the series are variable names. This would make it easier to
+        # do a Pandas apply on a DataFrame of parameter values. However, this may conflict
+        # with a pandas series being passed in as a dictionary element.
+
+        for key, value in params.items():
+            if isinstance(value, _pd.Series):
+                new_function = self._timeseries_component(value)
+            elif callable(value):
+                new_function = value
+            else:
+                new_function = self._constant_component(value)
+
+            if key in self.components._namespace.keys():
+                func_name = self.components._namespace[key]
+            elif key in self.components._namespace.values():
+                func_name = key
+            else:
+                raise NameError('%s is not recognized as a model component' % key)
+
+            if 'integ_' + func_name in dir(self.components):  # this won't handle other statefuls...
+                warnings.warn("Replacing the equation of stock {} with params".format(key),
+                              stacklevel=2)
+
+            setattr(self.components, func_name, new_function)
 
     def doc(self):
         """
