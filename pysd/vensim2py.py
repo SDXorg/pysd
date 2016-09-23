@@ -65,7 +65,7 @@ def get_file_sections(file_str):
             self.visit(ast)
 
         def visit_main(self, n, vc):
-            self.entries.append({'name': 'main',
+            self.entries.append({'name': '_main_',
                                  'params': [],
                                  'returns': [],
                                  'string': n.text.strip()})
@@ -616,41 +616,9 @@ def parse_lookup_expression(element):
             'arguments': 'x'}
 
 
-def translate_vensim(mdl_file):
-    """
+def translate_section(section, outfile_name):
 
-    Parameters
-    ----------
-    mdl_file : basestring
-        file path of a vensim model file to translate to python
-
-    Returns
-    -------
-
-    Examples
-    --------
-    >>> translate_vensim('../tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl')
-
-    #>>> translate_vensim('../../tests/test-models/tests/abs/test_abs.mdl')
-
-    #>>> translate_vensim('../../tests/test-models/tests/exponentiation/exponentiation.mdl')
-
-    #>>> translate_vensim('../../tests/test-models/tests/limits/test_limits.mdl')
-
-    """
-    # Todo: work out what to do with subranges
-    # Todo: parse units string
-    # Todo: handle macros
-
-    with open(mdl_file, 'rU') as in_file:
-        text = in_file.read()
-
-    # extract model elements
-    model_elements = []
-    file_sections = get_file_sections(text.replace('\n', ''))
-    for section in file_sections:
-        if section['name'] == 'main':
-            model_elements += get_model_elements(section['string'])
+    model_elements = get_model_elements(section['string'])
 
     # extract equation components
     model_docstring = ''
@@ -694,14 +662,54 @@ def translate_vensim(mdl_file):
                            'py_expr': '_t',
                            'arguments': ''})
 
-    # define outfile name
-    outfile_name = mdl_file.replace('.mdl', '.py')
-
     # send the pieces to be built
     build_elements = [e for e in model_elements if e['kind'] not in ['subdef', 'section']]
     builder.build(build_elements,
                   subscript_dict,
                   namespace,
                   outfile_name)
+
+    return outfile_name
+
+def translate_vensim(mdl_file):
+    """
+
+    Parameters
+    ----------
+    mdl_file : basestring
+        file path of a vensim model file to translate to python
+
+    Returns
+    -------
+
+    Examples
+    --------
+    >>> translate_vensim('../tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl')
+
+    #>>> translate_vensim('../../tests/test-models/tests/abs/test_abs.mdl')
+
+    #>>> translate_vensim('../../tests/test-models/tests/exponentiation/exponentiation.mdl')
+
+    #>>> translate_vensim('../../tests/test-models/tests/limits/test_limits.mdl')
+
+    """
+    with open(mdl_file, 'rU') as in_file:
+        text = in_file.read()
+
+    outfile_name = mdl_file.replace('.mdl', '.py')
+
+    # extract model elements
+
+    file_sections = get_file_sections(text.replace('\n', ''))
+    for section in file_sections:
+        if section['name'] == '_main_':
+            # define outfile name
+            section['file_name'] = outfile_name
+            translate_section(section)
+        else:
+            section['py_name'] = utils.make_python_identifier(section['name'])
+            section['file_name'] = section['py_name'] + '.py'
+            translate_section(section)
+
 
     return outfile_name

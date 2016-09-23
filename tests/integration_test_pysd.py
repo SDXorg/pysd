@@ -126,6 +126,26 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/lookups_inline_bounded/test_lookups_inline_bounded.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    def test_macro_expression(self):
+        from.test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/macro_expression/test_macro_expression.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
+    def test_macro_multi_expression(self):
+        from .test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/macro_multi_expression/test_macro_multi_expression.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
+    def test_macro_multi_macros(self):
+        from .test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/macro_multi_macros/test_macro_multi_macros.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
+    def test_macro_stock(self):
+        from .test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/macro_stock/test_macro_stock.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_model_doc(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/model_doc/model_doc.mdl')
