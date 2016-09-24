@@ -85,6 +85,7 @@ class PySD(object):
             python format.
 
         """
+        module_name = str(time.time()).replace('.', '')
         self.components = imp.load_source(module_name,
                                           py_model_file)
 

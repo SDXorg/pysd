@@ -9,6 +9,7 @@ from . import builder
 from . import utils
 import textwrap
 import numpy as np
+import os
 
 
 def get_file_sections(file_str):
@@ -326,6 +327,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
 
     subscript_dict : dictionary
 
+    macro_list: list of dictionaries
+        [{'name': 'M', 'py_name':'m', 'filename':'path/to/file', 'args':['arg1', 'arg2']}]
 
     Returns
     -------
@@ -428,10 +431,11 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
     ids_list = [re.escape(x) for x in namespace.keys()] or ['\\a']
     in_ops_list = [re.escape(x) for x in in_ops.keys()]
     pre_ops_list = [re.escape(x) for x in pre_ops.keys()]
+    macro_names_list = [x['name'] for x in macro_list]
 
     expression_grammar = r"""
     expr_type = array / expr
-    expr = _ pre_oper? _ (lookup_def / build_call / call / parens / number / reference) _ (in_oper _ expr)?
+    expr = _ pre_oper? _ (lookup_def / build_call / macro_call / call / parens / number / reference) _ (in_oper _ expr)?
 
     lookup_def = ~r"(WITH\ LOOKUP)"I _ "(" _ reference _ "," _ "(" _  ("[" ~r"[^\]]*" "]" _ ",")?  ( "(" _ expr _ "," _ expr _ ")" ","? _ )+ _ ")" _ ")"
     call = (func / id) _ "(" _ (expr _ ","? _)* ")"  # I can't remember why `id` is here...
@@ -466,7 +470,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
         'in_ops': '|'.join(reversed(sorted(in_ops_list, key=len))),
         'pre_ops': '|'.join(reversed(sorted(pre_ops_list, key=len))),
         'builders': '|'.join(reversed(sorted(builders.keys(), key=len))),
-        'macros': '|'.join(reversed(sorted(macro_list, key=len)))
+        'macros': '|'.join(reversed(sorted(macro_names_list, key=len)))
     }
 
     parser = parsimonious.Grammar(expression_grammar)
@@ -564,12 +568,17 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             self.new_structure += structure
             return name
 
-        def visit_macro(self, n, vc):
+        def visit_macro_call(self, n, vc):
             call = vc[0]
             args = vc[4]
             self.kind = 'component'
             arglist = [x.strip() for x in args.split(',')]
-            builder.add_macro(call.strip().lower(), arglist)
+            py_name = utils.make_python_identifier(call)[0]
+            macro = [x for x in macro_list if x['py_name'] == py_name][0]  # should match once
+            name, structure = builder.add_macro(macro['py_name'], macro['file_name'], macro['params'], arglist)
+            self.new_structure += structure
+            return name
+
 
         def visit__(self, n, vc):
             """ Handles whitespace characters"""
@@ -626,7 +635,7 @@ def parse_lookup_expression(element):
             'arguments': 'x'}
 
 
-def translate_section(section, outfile_name):
+def translate_section(section, macro_list):
 
     model_elements = get_model_elements(section['string'])
 
@@ -640,6 +649,16 @@ def translate_section(section, outfile_name):
 
     # make python identifiers and track for namespace conflicts
     namespace = {'TIME': 'time', 'Time': 'time'}  # Initialize with builtins
+    # add macro parameters when parsing a macro section
+    for param in section['params']:
+        name, namespace = utils.make_python_identifier(param, namespace)
+
+    # add macro functions to namespace
+    for macro in macro_list:
+        if macro['name'] is not '_main_':
+            name, namespace = utils.make_python_identifier(macro['name'], namespace)
+
+    # add model elements
     for element in model_elements:
         if element['kind'] not in ['subdef', 'section']:
             element['py_name'], namespace = utils.make_python_identifier(element['real_name'],
@@ -656,7 +675,8 @@ def translate_section(section, outfile_name):
             # Todo: if there is new structure, it should be added to the namespace...
             translation, new_structure = parse_general_expression(element,
                                                                   namespace=namespace,
-                                                                  subscript_dict=subscript_dict)
+                                                                  subscript_dict=subscript_dict,
+                                                                  macro_list=macro_list)
             element.update(translation)
             model_elements += new_structure
 
@@ -677,9 +697,9 @@ def translate_section(section, outfile_name):
     builder.build(build_elements,
                   subscript_dict,
                   namespace,
-                  outfile_name)
+                  section['file_name'])
 
-    return outfile_name
+    return section['file_name']
 
 def translate_vensim(mdl_file):
     """
@@ -709,22 +729,24 @@ def translate_vensim(mdl_file):
 
 
     outfile_name = mdl_file.replace('.mdl', '.py')
+    out_dir = os.path.dirname(outfile_name)
 
     # extract model elements
     file_sections = get_file_sections(text.replace('\n', ''))
-    macro_list = [s['name'] for s in file_sections if s['name'] is not '_main_']
     # Todo: build up a representation of macros including parameters, filenames, that can be passed
     # to the various builders.
-
-
     for section in file_sections:
         if section['name'] == '_main_':
             # define outfile name
             section['file_name'] = outfile_name
-            translate_section(section, macro_list)
         else:
-            section['py_name'] = utils.make_python_identifier(section['name'])
-            section['file_name'] = section['py_name'] + '.py'
-            translate_section(section, macro_list)
+            section['py_name'] = utils.make_python_identifier(section['name'])[0]
+            section['file_name'] = out_dir + '/' + section['py_name'] + '.py'
+
+    macro_list = [s for s in file_sections if s['name'] is not '_main_']
+
+    for section in file_sections:
+        translate_section(section, macro_list)
+
 
     return outfile_name

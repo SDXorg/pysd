@@ -11,6 +11,7 @@ import numpy as np
 from functools import wraps
 import imp
 import time
+import pandas as pd
 
 try:
     import scipy.stats as stats
@@ -218,7 +219,7 @@ class Initial(Stateful):
 
 
 class Model(Stateful):
-    def __init__(self, py_model_file, params):
+    def __init__(self, py_model_file, params, return_func):
         # need a unique identifier for the imported module. Otherwise, any time a module
         # was imported, it would be just a reference to the single module. When we import
         # a python file as part of a macro, we want to be able to have multiple instances
@@ -234,6 +235,10 @@ class Model(Stateful):
         self._stateful_elements = [getattr(self.components, name) for name in dir(self.components)
                                    if isinstance(getattr(self.components, name),
                                                  Stateful)]
+        self.return_func = getattr(self.components, return_func)
+
+    def __call__(self):
+        return self.return_func()
 
     def initialize(self):
         """
@@ -307,7 +312,7 @@ class Model(Stateful):
         # with a pandas series being passed in as a dictionary element.
 
         for key, value in params.items():
-            if isinstance(value, _pd.Series):
+            if isinstance(value, pd.Series):
                 new_function = self._timeseries_component(value)
             elif callable(value):
                 new_function = value

@@ -450,7 +450,7 @@ def add_initial(initial_input):
     return "%s()" % stateful['py_name'], [stateful]
 
 
-def add_macro(macro_name, filename, func_args):
+def add_macro(macro_name, filename, arg_names, arg_vals):
     """
     Constructs a stateful object instantiating a 'Macro'
 
@@ -474,12 +474,15 @@ def add_macro(macro_name, filename, func_args):
         list of element construction dictionaries for the builder to assemble
 
     """
+    func_args = '{ %s }' % ', '.join(["'%s': lambda: %s" % (key, val) for key, val in
+                                      zip(arg_names, arg_vals)])
+
     stateful = {
         'py_name': 'macro_' + macro_name + '_' + '_'.join(
-            [utils.make_python_identifier(f) for f in func_args.values()]),
+            [utils.make_python_identifier(f)[0] for f in arg_vals]),
         'real_name': 'Macro Instantiation of ' + macro_name,
         'doc': 'Instantiates the Macro',
-        'py_expr': 'functions.Model(%s, %s)' % (filename, func_args),
+        'py_expr': "functions.Model('%s', %s, '%s')" % (filename, func_args, macro_name),
         'unit': 'None',
         'subs': '',
         'kind': 'stateful',
