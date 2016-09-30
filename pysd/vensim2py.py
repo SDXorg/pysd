@@ -431,7 +431,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
     ids_list = [re.escape(x) for x in namespace.keys()] or ['\\a']
     in_ops_list = [re.escape(x) for x in in_ops.keys()]
     pre_ops_list = [re.escape(x) for x in pre_ops.keys()]
-    macro_names_list = [x['name'] for x in macro_list]
+    macro_names_list = [x['name'] for x in macro_list] or ['\\a']
 
     expression_grammar = r"""
     expr_type = array / expr
@@ -457,7 +457,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
     in_oper = ~r"(%(in_ops)s)"I  # infix operators (case insensitive)
     pre_oper = ~r"(%(pre_ops)s)"I  # prefix operators (case insensitive)
     builder = ~r"(%(builders)s)"I  # builder functions (case insensitive)
-    macro = ~r"(%(macros)s)"I  # macros defined in the model file
+    macro = ~r"(%(macros)s)"I  # macros from model file (if none, use non-printable character)
 
     _ = ~r"[\s\\]*"  # whitespace character
     """ % {
@@ -579,7 +579,6 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             self.new_structure += structure
             return name
 
-
         def visit__(self, n, vc):
             """ Handles whitespace characters"""
             return ''
@@ -682,15 +681,6 @@ def translate_section(section, macro_list):
 
         elif element['kind'] == 'lookup':
             element.update(parse_lookup_expression(element))
-
-    model_elements.append({'kind': 'component',
-                           'subs': None,
-                           'doc': 'The time of the model',
-                           'py_name': 'time',
-                           'real_name': 'TIME',
-                           'unit': None,
-                           'py_expr': '_t',
-                           'arguments': ''})
 
     # send the pieces to be built
     build_elements = [e for e in model_elements if e['kind'] not in ['subdef', 'section']]

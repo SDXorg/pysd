@@ -65,10 +65,10 @@ def build(elements, subscript_dict, namespace, outfile_name):
 
     %(functions)s
 
-    def time():
-        return _t
-    functions.time = time
-    functions._stage = lambda: _stage
+    #def time():
+    #    return _t
+    #functions.time = time
+    #functions._stage = lambda: _stage
 
     ''' % {'subscript_dict': repr(subscript_dict),
            'functions': '\n'.join(functions),
@@ -482,7 +482,7 @@ def add_macro(macro_name, filename, arg_names, arg_vals):
             [utils.make_python_identifier(f)[0] for f in arg_vals]),
         'real_name': 'Macro Instantiation of ' + macro_name,
         'doc': 'Instantiates the Macro',
-        'py_expr': "functions.Model('%s', %s, '%s')" % (filename, func_args, macro_name),
+        'py_expr': "functions.Macro('%s', time, %s, '%s')" % (filename, func_args, macro_name),
         'unit': 'None',
         'subs': '',
         'kind': 'stateful',

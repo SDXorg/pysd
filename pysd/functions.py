@@ -7,11 +7,17 @@ straightforward equivalent in python.
 """
 
 from __future__ import division
-import numpy as np
 from functools import wraps
-import imp
-import time
+
 import pandas as pd
+
+import pandas as _pd
+import numpy as np
+import time as timemodule
+from . import utils
+import warnings
+import imp
+
 
 try:
     import scipy.stats as stats
@@ -62,11 +68,11 @@ def cache(horizon):
         def cached(*args):
             """Step wise cache function"""
             try:  # fails if cache is out of date or not instantiated
-                assert cached.t == func.__globals__['_t']
+                assert cached.t == func.__globals__['time']()
                 assert hasattr(cached, 'cache_val')
             except (AssertionError, AttributeError):
                 cached.cache_val = func(*args)
-                cached.cache_t = func.__globals__['_t']
+                cached.cache_t = func.__globals__['time']()
             return cached.cache_val
 
         return cached
@@ -218,31 +224,62 @@ class Initial(Stateful):
         pass
 
 
-class Model(Stateful):
-    def __init__(self, py_model_file, params, return_func):
-        # need a unique identifier for the imported module. Otherwise, any time a module
-        # was imported, it would be just a reference to the single module. When we import
-        # a python file as part of a macro, we want to be able to have multiple instances
-        # of the same module available.
-        # A simple way to give a unique name is to use the time at import.
-        module_name = str(time.time()).replace('.', '')
+class Macro(Stateful):
+    """
+    The Model class implements a stateful representation of the system,
+    and contains the majority of methods for accessing and modifying model components.
 
+    When the instance in question also serves as the root model object (as opposed to a
+    macro or submodel within another model) it will have added methods to facilitate
+    execution.
+    """
+
+    def __init__(self, py_model_file, time, params=None, return_func=None):
+        """
+        The model object will be created with components drawn from a translated python
+        model file.
+
+        Parameters
+        ----------
+        py_model_file : <string>
+            Filename of a model which has already been converted into a
+            python format.
+        time: Time object
+            yields the current simulation time
+            and keeps track of the current simulation stage
+        params
+        return_func
+        """
+        super(Macro, self).__init__()
+
+        # need a unique identifier for the imported module. Use the time.
+        module_name = str(timemodule.time()).replace('.', '')
         self.components = imp.load_source(module_name,
                                           py_model_file)
 
-        self.set_components(params)
+        self.time = time
+        self.components.time = self.time
+        self.components.functions.time = self.time  # rewrite functions so we don't need this
+
+        if params is not None:
+            self.set_components(params)
 
         self._stateful_elements = [getattr(self.components, name) for name in dir(self.components)
                                    if isinstance(getattr(self.components, name),
                                                  Stateful)]
-        self.return_func = getattr(self.components, return_func)
+        if return_func is not None:
+            self.return_func = getattr(self.components, return_func)
+        else:
+            self.return_func = lambda: 0
+
+        self.py_model_file = py_model_file
 
     def __call__(self):
         return self.return_func()
 
-    def initialize(self):
+    def initialize(self,  initialization_order=None):
         """
-        This function tries to initialize the state vector.
+        This function tries to initialize the stateful objects.
 
         In the case where an initialization function for `Stock A` depends on
         the value of `Stock B`, if we try to initialize `Stock A` before `Stock B`
@@ -258,9 +295,11 @@ class Model(Stateful):
         if not self._stateful_elements:  # if there are no stocks, don't try to initialize!
             return 0
 
+        if initialization_order is None:
+            initialization_order = []
+
         retry_flag = False
         making_progress = False
-        initialization_order = []
         for element in self._stateful_elements:
             try:
                 element.initialize()
@@ -276,7 +315,9 @@ class Model(Stateful):
             raise KeyError('Unresolvable Reference: Probable circular initialization' +
                            '\n'.join(initialization_order))
         if retry_flag:
-            self.initialize()
+            Macro.initialize(self, initialization_order)
+            # using 'Macro.initialize' instead of 'self.initialize' is to ensure that
+            # we don't call the overridden method in the subclass
 
     def ddt(self):
         return np.array([component.ddt() for component in self._stateful_elements])
@@ -331,6 +372,52 @@ class Model(Stateful):
                               stacklevel=2)
 
             setattr(self.components, func_name, new_function)
+
+    def _timeseries_component(self, series):
+        """ Internal function for creating a timeseries model element """
+        # this is only called if the set_component function recognizes a pandas series
+        # Todo: raise a warning if extrapolating from the end of the series.
+        return lambda: np.interp(self.components.time(), series.index, series.values)
+
+    def _constant_component(self, value):
+        """ Internal function for creating a constant model element """
+        return lambda: value
+
+    def set_state(self, t, state):
+        """ Set the system state.
+
+        Parameters
+        ----------
+        t : numeric
+            The system time
+
+        state : dict
+            A (possibly partial) dictionary of the system state.
+            The keys to this dictionary may be either pysafe names or original model file names
+        """
+        self.time.update(t)
+
+        for key, value in state.items():
+            if key in self.components._namespace.keys():
+                element_name = 'integ_%s' % self.components._namespace[key]
+            elif key in self.components._namespace.values():
+                element_name = 'integ_%s' % key
+            else:  # allow the user to specify the stateful object directly
+                element_name = key
+
+            try:
+                element = getattr(self.components, element_name)
+                element.update(value)
+            except AttributeError:
+                print("'%s' has no state elements, assignment failed")
+                raise
+
+    def clear_caches(self):
+        """ Clears the Caches for all model elements """
+        for element_name in dir(self.components):
+            element = getattr(self.components, element_name)
+            if hasattr(element, 'cache_val'):
+                delattr(element, 'cache_val')
 
     def doc(self):
         """
@@ -396,6 +483,266 @@ class Model(Stateful):
         docs_df.fillna('', inplace=True)
 
         return docs_df[['Real Name', 'Py Name', 'Unit', 'Comment']]
+
+    def __str__(self):
+        """ Return model source files """
+
+        # JT: Might be helpful to return not only the source file, but
+        # also how the instance differs from that source file. This
+        # would give a more accurate view of the current model.
+        string = 'Translated Model File: ' + self.py_model_file
+        if hasattr(self, 'mdl_file'):
+            string += '\n Original Model File: ' + self.mdl_file
+
+        return string
+
+
+class Time(object):
+    def __init__(self):
+        self._t = None
+        self.stage = None
+
+    def __call__(self):
+        return self._t
+
+    def update(self, value):
+        self._t = value
+
+
+class Model(Macro):
+    def __init__(self, py_model_file):
+        """ Sets up the python objects """
+        self.time = Time()
+        self.time.stage = 'Load'
+        super(Model, self).__init__(py_model_file, self.time, None, None)
+        self.initialize()
+
+    def initialize(self):
+        """ Initializes the simulation model """
+        self.time.update(self.components.initial_time())
+        self.time.stage = 'Initialization'
+        super(Model, self).initialize()
+
+    def reset_state(self):
+        warnings.warn('reset_state is deprecated. use `initialize` instead',
+                      DeprecationWarning, stacklevel=2)
+        self.initialize()
+
+    def _build_euler_timeseries(self, return_timestamps=None):
+        """
+        - The integration steps need to include the return values.
+        - There is no point running the model past the last return value.
+        - The last timestep will be the last in that requested for return
+        - Spacing should be at maximum what is specified by the integration time step.
+        - The initial time should be the one specified by the model file, OR
+          it should be the initial condition.
+        - This function needs to be called AFTER the model is set in its initial state
+        Parameters
+        ----------
+        return_timestamps: numpy array
+          Must be specified by user or built from model file before this function is called.
+
+        Returns
+        -------
+        ts: numpy array
+            The times that the integrator will use to compute time history
+        """
+        t_0 = self.time()
+        t_f = return_timestamps[-1]
+        dt = self.components.time_step()
+        ts = np.arange(t_0, t_f, dt, dtype=np.float64)
+
+        # Add the returned time series into the integration array. Best we can do for now.
+        # This does change the integration ever so slightly, but for well-specified
+        # models there shouldn't be sensitivity to a finer integration time step.
+        ts = np.sort(np.unique(np.append(ts, return_timestamps)))
+        return ts
+
+    def _format_return_timestamps(self, return_timestamps=None):
+        """
+        Format the passed in return timestamps value if it exists,
+        or build up array of timestamps based upon the model saveper
+        """
+        if return_timestamps is None:
+            # Build based upon model file Start, Stop times and Saveper
+            # Vensim's standard is to expect that the data set includes the `final time`,
+            # so we have to add an extra period to make sure we get that value in what
+            # numpy's `arange` gives us.
+            return_timestamps_array = np.arange(
+                self.components.initial_time(),
+                self.components.final_time() + self.components.saveper(),
+                self.components.saveper(), dtype=np.float64
+            )
+        elif isinstance(return_timestamps, (list, int, float, np.ndarray)):
+            return_timestamps_array = np.array(return_timestamps, ndmin=1)
+        elif isinstance(return_timestamps, _pd.Series):
+            return_timestamps_array = return_timestamps.as_matrix()
+        elif isinstance(return_timestamps, np.ndarray):
+            return_timestamps_array = return_timestamps
+        else:
+            raise TypeError('`return_timestamps` expects a list, array, pandas Series, '
+                            'or numeric value')
+        return return_timestamps_array
+
+    def run(self, params=None, return_columns=None, return_timestamps=None,
+            initial_condition='original'):
+        """ Simulate the model's behavior over time.
+        Return a pandas dataframe with timestamps as rows,
+        model elements as columns.
+
+        Parameters
+        ----------
+        params : dictionary
+            Keys are strings of model component names.
+            Values are numeric or pandas Series.
+            Numeric values represent constants over the model integration.
+            Timeseries will be interpolated to give time-varying input.
+
+        return_timestamps : list, numeric, numpy array(1-D)
+            Timestamps in model execution at which to return state information.
+            Defaults to model-file specified timesteps.
+
+        return_columns : list of string model component names
+            Returned dataframe will have corresponding columns.
+            Defaults to model stock values.
+
+        initial_condition : 'original'/'o', 'current'/'c', (t, {state})
+            The starting time, and the state of the system (the values of all the stocks)
+            at that starting time.
+
+            * 'original' (default) uses model-file specified initial condition
+            * 'current' uses the state of the model after the previous execution
+            * (t, {state}) lets the user specify a starting time and (possibly partial)
+              list of stock values.
+
+
+        Examples
+        --------
+
+        >>> model.run(params={'exogenous_constant': 42})
+        >>> model.run(params={'exogenous_variable': timeseries_input})
+        >>> model.run(return_timestamps=[1, 2, 3.1415, 4, 10])
+        >>> model.run(return_timestamps=10)
+        >>> model.run(return_timestamps=np.linspace(1, 10, 20))
+
+        See Also
+        --------
+        pysd.set_components : handles setting model parameters
+        pysd.set_initial_condition : handles setting initial conditions
+
+        """
+
+        if params:
+            self.set_components(params)
+
+        self.set_initial_condition(initial_condition)
+
+        return_timestamps = self._format_return_timestamps(return_timestamps)
+
+        t_series = self._build_euler_timeseries(return_timestamps)
+
+        if return_columns is None:
+            return_columns = self.components._namespace.keys()
+
+        self.time.stage = 'Run'
+        self.clear_caches()
+
+        capture_elements, return_addresses = utils.get_return_elements(
+            return_columns, self.components._namespace, self.components._subscript_dict)
+
+        res = self._integrate(t_series, capture_elements, return_timestamps)
+
+        return_df = utils.make_flat_df(res, return_addresses)
+        return_df.index = return_timestamps
+
+        return return_df
+
+    def set_initial_condition(self, initial_condition):
+        """ Set the initial conditions of the integration.
+
+        Parameters
+        ----------
+        initial_condition : <string> or <tuple>
+            Takes on one of the following sets of values:
+
+            * 'original'/'o' : Reset to the model-file specified initial condition.
+            * 'current'/'c' : Use the current state of the system to start
+              the next simulation. This includes the simulation time, so this
+              initial condition must be paired with new return timestamps
+            * (t, {state}) : Lets the user specify a starting time and list of stock values.
+
+        >>> model.set_initial_condition('original')
+        >>> model.set_initial_condition('current')
+        >>> model.set_initial_condition((10, {'teacup_temperature': 50}))
+
+        See Also
+        --------
+        PySD.set_state()
+
+        """
+
+        if isinstance(initial_condition, tuple):
+            # Todo: check the values more than just seeing if they are a tuple.
+            self.set_state(*initial_condition)
+        elif isinstance(initial_condition, str):
+            if initial_condition.lower() in ['original', 'o']:
+                self.initialize()
+            elif initial_condition.lower() in ['current', 'c']:
+                pass
+            else:
+                raise ValueError('Valid initial condition strings include:  \n' +
+                                 '    "original"/"o",                       \n' +
+                                 '    "current"/"c"')
+        else:
+            raise TypeError('Check documentation for valid entries')
+
+    def _euler_step(self, dt):
+        """ Performs a single step in the euler integration,
+        updating stateful components
+
+        Parameters
+        ----------
+        dt : float
+            This is the amount to increase time by this step
+        """
+        new_states = [component.state + component.ddt() * dt
+                      for component in self._stateful_elements]
+        [component.update(new_state)
+         for component, new_state in zip(self._stateful_elements, new_states)]
+
+    def _integrate(self, time_steps, capture_elements, return_timestamps):
+        """
+        Performs euler integration
+
+        Parameters
+        ----------
+        time_steps: iterable
+            the time steps that the integrator progresses over
+        capture_elements: list
+            which model elements to capture - uses pysafe names
+        return_timestamps:
+            which subset of 'timesteps' should be values be returned?
+
+        Returns
+        -------
+        outputs: list of dictionaries
+
+        """
+        # Todo: consider adding the timestamp to the return elements, and using that as the index
+        outputs = []
+
+        for t2 in time_steps[1:]:
+            if self.time() in return_timestamps:
+                outputs.append({key: getattr(self.components, key)() for key in capture_elements})
+            self._euler_step(t2 - self.time())
+            self.time.update(t2)  # this will clear the stepwise caches
+
+        # need to add one more time step, because we run only the state updates in the previous
+        # loop and thus may be one short.
+        if self.time() in return_timestamps:
+            outputs.append({key: getattr(self.components, key)() for key in capture_elements})
+
+        return outputs
 
 
 def ramp(slope, start, finish):
@@ -546,7 +893,7 @@ def active_initial(expr, init_val):
     -------
 
     """
-    if _stage() == 'Initialization':
+    if time.stage == 'Initialization':
         return init_val
     else:
         return expr
