@@ -7,7 +7,7 @@ class TestGetFileSections(unittest.TestCase):
         """normal model file with no macros"""
         from pysd.vensim2py import get_file_sections
         actual = get_file_sections(r'a~b~c| d~e~f| g~h~i|')
-        expected = [{'returns': [], 'params': [], 'name': 'main', 'string': 'a~b~c| d~e~f| g~h~i|'}]
+        expected = [{'returns': [], 'params': [], 'name': '_main_', 'string': 'a~b~c| d~e~f| g~h~i|'}]
         self.assertEqual(actual, expected)
 
     def test_macro_only(self):
@@ -22,7 +22,7 @@ class TestGetFileSections(unittest.TestCase):
         from pysd.vensim2py import get_file_sections
         actual = get_file_sections(':MACRO: MAC(z) a~b~c| :END OF MACRO: d~e~f| g~h~i|')
         expected = [{'returns': [], 'params': ['z'], 'name': 'MAC', 'string': 'a~b~c|'},
-                    {'returns': [], 'params': [], 'name': 'main', 'string': 'd~e~f| g~h~i|'}]
+                    {'returns': [], 'params': [], 'name': '_main_', 'string': 'd~e~f| g~h~i|'}]
         self.assertEqual(actual, expected)
 
     def test_macro_multiple_inputs(self):
@@ -30,7 +30,7 @@ class TestGetFileSections(unittest.TestCase):
         from pysd.vensim2py import get_file_sections
         actual = get_file_sections(':MACRO: MAC(z, y) a~b~c| :END OF MACRO: d~e~f| g~h~i|')
         expected = [{'returns': [], 'params': ['z', 'y'], 'name': 'MAC', 'string': 'a~b~c|'},
-                    {'returns': [], 'params': [], 'name': 'main', 'string': 'd~e~f| g~h~i|'}]
+                    {'returns': [], 'params': [], 'name': '_main_', 'string': 'd~e~f| g~h~i|'}]
         self.assertEqual(actual, expected)
 
     def test_macro_with_returns(self):
@@ -43,7 +43,7 @@ class TestGetFileSections(unittest.TestCase):
                      'string': 'a~b~c|'},
                     {'returns': [],
                      'params': [],
-                     'name': 'main',
+                     'name': '_main_',
                      'string': 'd~e~f| g~h~i|'}]
         self.assertEqual(actual, expected)
 
@@ -51,7 +51,7 @@ class TestGetFileSections(unittest.TestCase):
         """ Handle encoding """
         from pysd.vensim2py import get_file_sections
         actual = get_file_sections(r'{UTF-8} a~b~c| d~e~f| g~h~i|')
-        expected = [{'returns': [], 'params': [], 'name': 'main', 'string': 'a~b~c| d~e~f| g~h~i|'}]
+        expected = [{'returns': [], 'params': [], 'name': '_main_', 'string': 'a~b~c| d~e~f| g~h~i|'}]
         self.assertEqual(actual, expected)
 
     def test_handle_encoding_like_strings(self):
@@ -60,7 +60,7 @@ class TestGetFileSections(unittest.TestCase):
         actual = get_file_sections(r'a~b~c| d~e~f{special}| g~h~i|')
         expected = [{'returns': [],
                      'params': [],
-                     'name': 'main',
+                     'name': '_main_',
                      'string': 'a~b~c| d~e~f{special}| g~h~i|'}]
         self.assertEqual(actual, expected)
 

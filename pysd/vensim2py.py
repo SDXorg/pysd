@@ -431,7 +431,10 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
     ids_list = [re.escape(x) for x in namespace.keys()] or ['\\a']
     in_ops_list = [re.escape(x) for x in in_ops.keys()]
     pre_ops_list = [re.escape(x) for x in pre_ops.keys()]
-    macro_names_list = [x['name'] for x in macro_list] or ['\\a']
+    if macro_list is not None and len(macro_list) > 0:
+        macro_names_list = [x['name'] for x in macro_list]
+    else:
+        macro_names_list = ['\\a']
 
     expression_grammar = r"""
     expr_type = array / expr

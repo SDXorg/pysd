@@ -13,15 +13,15 @@ import pandas as pd
 
 import pandas as _pd
 import numpy as np
-import time as timemodule
+import time as time_module
 from . import utils
-import warnings
 import imp
+import warnings
+import random
 
 
 try:
     import scipy.stats as stats
-
 
     def bounded_normal(minimum, maximum, mean, std, seed):
         """ Implements vensim's BOUNDED NORMAL function """
@@ -29,8 +29,6 @@ try:
         return stats.truncnorm.rvs(minimum, maximum, loc=mean, scale=std)
 
 except ImportError:
-    import warnings
-
     warnings.warn("Scipy required for functions:"
                   "- Bounded Normal (falling back to unbounded normal)")
 
@@ -234,7 +232,7 @@ class Macro(Stateful):
     execution.
     """
 
-    def __init__(self, py_model_file, time, params=None, return_func=None):
+    def __init__(self, py_model_file, params=None, return_func=None):
         """
         The model object will be created with components drawn from a translated python
         model file.
@@ -244,22 +242,18 @@ class Macro(Stateful):
         py_model_file : <string>
             Filename of a model which has already been converted into a
             python format.
-        time: Time object
-            yields the current simulation time
-            and keeps track of the current simulation stage
+        get_time:
+            needs to be a function that returns a time object
         params
         return_func
         """
         super(Macro, self).__init__()
+        self.time = None
 
         # need a unique identifier for the imported module. Use the time.
-        module_name = str(timemodule.time()).replace('.', '')
+        module_name = py_model_file + str(random.randint(0, 1000000))
         self.components = imp.load_source(module_name,
                                           py_model_file)
-
-        self.time = time
-        self.components.time = self.time
-        self.components.functions.time = self.time  # rewrite functions so we don't need this
 
         if params is not None:
             self.set_components(params)
@@ -292,6 +286,11 @@ class Macro(Stateful):
         towards full initialization, by initializing at least one more state.
         If we don't then references are unresolvable, so we should throw an error.
         """
+        if self.time is None:
+            self.time = time
+        self.components.time = self.time
+        self.components.functions.time = self.time  # rewrite functions so we don't need this
+
         if not self._stateful_elements:  # if there are no stocks, don't try to initialize!
             return 0
 
@@ -512,9 +511,9 @@ class Time(object):
 class Model(Macro):
     def __init__(self, py_model_file):
         """ Sets up the python objects """
+        super(Model, self).__init__(py_model_file, None, None)
         self.time = Time()
         self.time.stage = 'Load'
-        super(Model, self).__init__(py_model_file, self.time, None, None)
         self.initialize()
 
     def initialize(self):
@@ -705,10 +704,7 @@ class Model(Macro):
         dt : float
             This is the amount to increase time by this step
         """
-        new_states = [component.state + component.ddt() * dt
-                      for component in self._stateful_elements]
-        [component.update(new_state)
-         for component, new_state in zip(self._stateful_elements, new_states)]
+        self.state = self.state + self.ddt() * dt
 
     def _integrate(self, time_steps, capture_elements, return_timestamps):
         """
