@@ -13,11 +13,11 @@ import pandas as pd
 
 import pandas as _pd
 import numpy as np
-import time as time_module
 from . import utils
 import imp
 import warnings
 import random
+import xarray as xr
 
 
 try:
@@ -139,9 +139,24 @@ class Integ(Stateful):
         super(Integ, self).__init__()
         self.init_func = initial_value
         self.ddt = ddt
+        self.shape_info = None
 
     def initialize(self):
         self.state = self.init_func()
+        if isinstance(self.state, xr.DataArray):
+            self.shape_info = {'dims': self.state.dims,
+                               'coords': self.state.coords}
+
+    @property
+    def state(self):
+        return self._state
+
+    @state.setter
+    def state(self, new_value):
+        if self.shape_info is not None:
+            self._state = xr.DataArray(data=new_value, **self.shape_info)
+        else:
+            self._state = new_value
 
 
 class Delay(Stateful):
@@ -250,7 +265,7 @@ class Macro(Stateful):
         super(Macro, self).__init__()
         self.time = None
 
-        # need a unique identifier for the imported module. Use the time.
+        # need a unique identifier for the imported module.
         module_name = py_model_file + str(random.randint(0, 1000000))
         self.components = imp.load_source(module_name,
                                           py_model_file)

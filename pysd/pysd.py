@@ -12,11 +12,7 @@ Jan 2016: Rework to handle subscripts
 May 2016: Updates to handle grammar refactoring
 """
 
-
 from . import functions
-
-
-# Todo: work out an RK4 adaptive integrator
 
 
 def read_vensim(mdl_file):
