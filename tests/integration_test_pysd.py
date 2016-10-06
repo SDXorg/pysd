@@ -151,6 +151,7 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/macro_stock/test_macro_stock.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    @unittest.skip('do we need this?')
     def test_macro_trailing_definition(self):
         from .test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/macro_trailing_definition/test_macro_trailing_definition.mdl')

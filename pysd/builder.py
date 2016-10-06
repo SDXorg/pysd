@@ -42,7 +42,6 @@ def build(elements, subscript_dict, namespace, outfile_name):
     # Todo: Make np, PySD.functions import conditional on usage in the file
     # Todo: Make presence of subscript_dict instantiation conditional on usage
     # Todo: Sort elements (alphabetically? group stock funcs?)
-    # Todo: do something better than hardcoding the time function
     elements = merge_partial_elements(elements)
     functions = [build_element(element, subscript_dict) for element in elements]
 

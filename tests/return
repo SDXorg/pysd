@@ -1,0 +1,51 @@
+
+"""
+Python model return
+Translated using PySD version 0.7.2
+"""
+from __future__ import division
+import numpy as np
+from pysd import utils
+import xarray as xr
+
+from pysd.functions import cache
+from pysd import functions
+
+_subscript_dict = {'Dim1': ['A', 'B', 'C']}
+
+_namespace = {'StockA': 'stocka'}
+
+
+@cache('step')
+def stocka():
+    """
+    StockA
+    ------
+    (stocka)
+
+
+    """
+    return ["_state['stocka']"]
+
+
+@cache('step')
+def _dstocka_dt():
+    """
+    Implicit
+    --------
+    (_dstocka_dt)
+    See docs for stocka
+    Provides derivative for stocka function
+    """
+    return ['flowa()']
+
+
+def init_stocka():
+    """
+    Implicit
+    --------
+    (init_stocka)
+    See docs for stocka
+    Provides initial conditions for stocka function
+    """
+    return ['-10']
