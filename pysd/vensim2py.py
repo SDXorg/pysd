@@ -564,14 +564,6 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             else:
                 return ' '
 
-        def visit_nested_build_call(self, n, vc):
-            call = vc[0]
-            args = vc[4]
-            self.kind = 'component'
-            name, structure = builders[call.strip().lower()](args)
-            self.new_structure += structure
-            return name
-
         def visit_build_call(self, n, vc):
             call = vc[0]
             arglist = vc[4]
