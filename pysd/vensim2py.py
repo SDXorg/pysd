@@ -367,13 +367,14 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
         "abs": "abs", "integer": "int", "exp": "np.exp", "sin": "np.sin", "cos": "np.cos",
         "sqrt": "np.sqrt", "tan": "np.tan", "lognormal": "np.random.lognormal",
         "random normal": "functions.bounded_normal", "poisson": "np.random.poisson", "ln": "np.log",
-        "exprnd": "np.random.exponential", "random uniform": "np.random.rand", "sum": "np.sum",
+        "exprnd": "np.random.exponential", "_random uniform": "np.random.rand", "sum": "np.sum",
         "arccos": "np.arccos", "arcsin": "np.arcsin", "arctan": "np.arctan",
         "if then else": "functions.if_then_else", "step": "functions.step", "modulo": "np.mod",
         "pulse": "functions.pulse", "pulse train": "functions.pulse_train",
         "ramp": "functions.ramp", "min": "np.minimum", "max": "np.maximum",
         "active initial": "functions.active_initial", "xidz": "functions.xidz",
         "zidz": "functions.zidz",
+        "random uniform": "functions.random_uniform",
 
         # vector functions
         "vmin": "np.min", "vmax": "np.max", "prod": "np.prod"
@@ -431,11 +432,13 @@ def parse_general_expression(element, namespace=None, subscript_dict=None):
 
     expression_grammar = r"""
     expr_type = array / expr
-    expr = _ pre_oper? _ (lookup_def / build_call / call / parens / number / reference) _ (in_oper _ expr)?
+    expr = _ pre_oper? _ (lookup_def / build_call / call / parens / number / reference ) _ (in_oper _ expr)?
+
 
     lookup_def = ~r"(WITH\ LOOKUP)"I _ "(" _ reference _ "," _ "(" _  ("[" ~r"[^\]]*" "]" _ ",")?  ( "(" _ expr _ "," _ expr _ ")" ","? _ )+ _ ")" _ ")"
     call = (func / id) _ "(" _ (expr _ ","? _)* ")" # allows calls with no arguments
     build_call = builder _ "(" _ (expr _ ","? _)* ")" # allows calls with no arguments
+
     parens   = "(" _ expr _ ")"
 
     reference = id _ subscript_list?

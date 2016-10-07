@@ -362,3 +362,5 @@ def active_initial(expr, init_val):
     else:
         return expr
 
+def random_uniform(m, x, s):
+    return np.random.uniform(m, x)
