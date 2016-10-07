@@ -441,10 +441,12 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
     expr = _ pre_oper? _ (lookup_def / build_call / macro_call / call / parens / number / reference) _ (in_oper _ expr)?
 
     lookup_def = ~r"(WITH\ LOOKUP)"I _ "(" _ reference _ "," _ "(" _  ("[" ~r"[^\]]*" "]" _ ",")?  ( "(" _ expr _ "," _ expr _ ")" ","? _ )+ _ ")" _ ")"
-    call = (func / id) _ "(" _ (expr _ ","? _)* ")"  # I can't remember why `id` is here...
-    build_call = builder _ "(" _ (expr _ ","? _)* ")"
-    macro_call = macro _ "(" _ (expr _ ","? _)* ")"
+    call = (func / id) _ "(" _ (expr _ ","? _)* ")"  # these don't need their args parsed...
+    build_call = builder _ "(" _ arguments _ ")"
+    macro_call = macro _ "(" _ arguments _ ")"
     parens   = "(" _ expr _ ")"
+
+    arguments = (expr _ ","? _)*
 
     reference = id _ subscript_list?
     subscript_list = "[" _ ((sub_name / sub_element) _ ","? _)+ "]"
@@ -564,23 +566,25 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
 
         def visit_build_call(self, n, vc):
             call = vc[0]
-            args = vc[4]
+            arglist = vc[4]
             self.kind = 'component'
-            arglist = [x.strip() for x in args.split(',')]
             name, structure = builders[call.strip().lower()](*arglist)
             self.new_structure += structure
             return name
 
         def visit_macro_call(self, n, vc):
             call = vc[0]
-            args = vc[4]
+            arglist = vc[4]
             self.kind = 'component'
-            arglist = [x.strip() for x in args.split(',')]
             py_name = utils.make_python_identifier(call)[0]
             macro = [x for x in macro_list if x['py_name'] == py_name][0]  # should match once
             name, structure = builder.add_macro(macro['py_name'], macro['file_name'], macro['params'], arglist)
             self.new_structure += structure
             return name
+
+        def visit_arguments(self, n, vc):
+            arglist = [x.strip(',') for x in vc]
+            return arglist
 
         def visit__(self, n, vc):
             """ Handles whitespace characters"""
