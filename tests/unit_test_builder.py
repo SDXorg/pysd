@@ -88,7 +88,6 @@ class TestBuild(TestCase):
                   outfile_name='return'))
 
         self.assertIn("_subscript_dict = {'Dim1': ['A', 'B', 'C']}", actual)
-        self.assertIn("functions.time = time", actual)
         self.assertIn("_namespace = {'StockA': 'stocka'}", actual)
 
 

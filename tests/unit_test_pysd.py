@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 from pysd import utils
 
+
 test_model = 'test-models/samples/teacup/teacup.mdl'
 
 
@@ -21,6 +22,21 @@ class TestPySD(unittest.TestCase):
         model = pysd.read_vensim(test_model)
         res = model.run()
         self.assertEqual(res.index[-1], model.components.final_time())
+
+    def test_run_build_timeseries(self):
+        import pysd
+        model = pysd.read_vensim(test_model)
+
+        model.components.initial_time = lambda: 3
+        model.components.final_time = lambda: 7
+        model.components.time_step = lambda: 1
+        model.initialize()
+
+        res = model.run()
+
+        actual = list(res.index)
+        expected = [3., 4., 5., 6., 7.]
+        self.assertSequenceEqual(actual, expected)
 
     def test_run_return_timestamps(self):
         """Addresses https://github.com/JamesPHoughton/pysd/issues/17"""
@@ -133,6 +149,16 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(len(w), 1)
         self.assertTrue('Teacup Temperature' in str(w[0].message))   # check that warning references the stock
 
+    def test_set_components_with_function(self):
+        def test_func():
+            return 5
+
+        import pysd
+        model = pysd.read_vensim(test_model)
+        model.set_components({'Room Temperature': test_func})
+        res = model.run(return_columns=['Room Temperature'])
+        self.assertEqual(test_func(), res['Room Temperature'].iloc[0])
+
     def test_docs(self):
         """ Test that the model prints some documentation """
         import pysd
@@ -151,16 +177,25 @@ class TestPySD(unittest.TestCase):
         model.run()
         self.assertIsNotNone(model.components.room_temperature.cache_val)
 
-    def test_reset_state(self):
+    def test_initialize(self):
         import pysd
         model = pysd.read_vensim(test_model)
         initial_temp = model.components.teacup_temperature()
         model.run()
         final_temp = model.components.teacup_temperature()
-        model.reset_state()
+        model.initialize()
         reset_temp = model.components.teacup_temperature()
         self.assertNotEqual(initial_temp, final_temp)
         self.assertEqual(initial_temp, reset_temp)
+
+    def test_reset_state(self):
+        import pysd
+        import warnings
+        model = pysd.read_vensim(test_model)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            model.reset_state()
+        self.assertEqual(len(w), 1)
 
     def test_set_state(self):
         import pysd
@@ -225,50 +260,13 @@ class TestPySD(unittest.TestCase):
         model.components.initial_time = lambda: 3
         model.components.final_time = lambda: 10
         model.components.time_step = lambda: 1
-        model.reset_state()
+        model.initialize()
 
         actual = list(model._build_euler_timeseries(return_timestamps=[10]))
         expected = range(3, 11, 1)
         self.assertSequenceEqual(actual, expected)
 
-    def test_build_euler_timeseries_with_timestamps(self):
-        # don't bother to have timeseries go beyond return val.
-        import pysd
-        model = pysd.read_vensim(test_model)
-        model.components.initial_time = lambda: 3
-        model.components.final_time = lambda: 7
-        model.components.time_step = lambda: 1
-        model.reset_state()
 
-        actual = list(model._build_euler_timeseries([3.14, 5.7]))
-        expected = [3, 3.14, 4, 5, 5.7]
-        self.assertSequenceEqual(actual, expected)
-
-    def test__timeseries_component(self):
-        import pysd
-        model = pysd.read_vensim(test_model)
-        temp_timeseries = pd.Series(index=range(0, 30, 1),
-                                    data=range(0, 60, 2))
-        func = model._timeseries_component(temp_timeseries)
-        model.components._t = 0
-        self.assertEqual(func(), 0)
-
-        model.components._t = 2.5
-        self.assertEqual(func(), 5)
-
-        model.components._t = 3.1
-        self.assertEqual(func(), 6.2)
-
-    def test__constant_component(self):
-        import pysd
-        model = pysd.read_vensim(test_model)
-        val = 12.3
-        func = model._constant_component(val)
-        model.components._t = 0
-        self.assertEqual(func(), val)
-
-        model.components._t = 2.5
-        self.assertEqual(func(), val)
 
     def test__integrate(self):
         import pysd

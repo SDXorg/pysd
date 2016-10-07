@@ -42,7 +42,6 @@ def build(elements, subscript_dict, namespace, outfile_name):
     # Todo: Make np, PySD.functions import conditional on usage in the file
     # Todo: Make presence of subscript_dict instantiation conditional on usage
     # Todo: Sort elements (alphabetically? group stock funcs?)
-    # Todo: do something better than hardcoding the time function
     elements = merge_partial_elements(elements)
     functions = [build_element(element, subscript_dict) for element in elements]
 
@@ -64,11 +63,6 @@ def build(elements, subscript_dict, namespace, outfile_name):
     _namespace = %(namespace)s
 
     %(functions)s
-
-    def time():
-        return _t
-    functions.time = time
-    functions._stage = lambda: _stage
 
     ''' % {'subscript_dict': repr(subscript_dict),
            'functions': '\n'.join(functions),
@@ -441,6 +435,48 @@ def add_initial(initial_input):
         'doc': 'Returns the value taken on during the initialization phase',
         'py_expr': 'functions.Initial(lambda: %s)' % (
             initial_input),
+        'unit': 'None',
+        'subs': '',
+        'kind': 'stateful',
+        'arguments': ''
+    }
+
+    return "%s()" % stateful['py_name'], [stateful]
+
+
+def add_macro(macro_name, filename, arg_names, arg_vals):
+    """
+    Constructs a stateful object instantiating a 'Macro'
+
+    Parameters
+    ----------
+    macro_name: basestring
+        python safe name for macro
+    filename: basestring
+        filepath to macro definition
+    func_args: dict
+        dictionary of values to be passed to macro
+        {key: function}
+
+    Returns
+    -------
+    reference: basestring
+        reference to the Initial object `__call__` method,
+        which will return the first calculated value of `initial_input`
+
+    new_structure: list
+        list of element construction dictionaries for the builder to assemble
+
+    """
+    func_args = '{ %s }' % ', '.join(["'%s': lambda: %s" % (key, val) for key, val in
+                                      zip(arg_names, arg_vals)])
+
+    stateful = {
+        'py_name': 'macro_' + macro_name + '_' + '_'.join(
+            [utils.make_python_identifier(f)[0] for f in arg_vals]),
+        'real_name': 'Macro Instantiation of ' + macro_name,
+        'doc': 'Instantiates the Macro',
+        'py_expr': "functions.Macro('%s', %s, '%s')" % (filename, func_args, macro_name),
         'unit': 'None',
         'subs': '',
         'kind': 'stateful',
