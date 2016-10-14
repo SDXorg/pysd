@@ -30,7 +30,7 @@ setup(
         'pandas',
         'numpy',
         'parsimonious',
-        'autopep8',
+        'yapf',
         'xarray'
     ]
 )

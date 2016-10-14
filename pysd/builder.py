@@ -10,9 +10,10 @@ xmile specific syntax.
 """
 
 import textwrap
-import autopep8
+import yapf
 from ._version import __version__
 from . import utils
+import os
 
 
 def build(elements, subscript_dict, namespace, outfile_name):
@@ -70,10 +71,10 @@ def build(elements, subscript_dict, namespace, outfile_name):
            'outfile': outfile_name,
            'version': __version__}
 
-    text = autopep8.fix_code(textwrap.dedent(text),
-                             options={'aggressive': 100,
-                                      'max_line_length': 99,
-                                      'experimental': True})
+    style_file = os.path.dirname(os.path.realpath(__file__)) + '/output_style.yapf'
+    text = text.replace('\t', '    ')
+    text, changed = yapf.yapf_api.FormatCode(textwrap.dedent(text),
+                                             style_config=style_file)
 
     # this is used for testing
     if outfile_name == 'return':
@@ -118,7 +119,7 @@ def build_element(element, subscript_dict):
         raise AttributeError("Bad value for 'kind'")
 
     if len(element['py_expr']) > 1:
-        contents = 'return utils.xrmerge([%(das)s])' % {'das': ',\n'.join(element['py_expr'])}
+        contents = 'return utils.xrmerge([%(das)s,])' % {'das': ',\n'.join(element['py_expr'])}
     else:
         contents = 'return %(py_expr)s' % {'py_expr': element['py_expr'][0]}
 

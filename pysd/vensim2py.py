@@ -69,18 +69,18 @@ def get_file_sections(file_str):
             self.entries.append({'name': '_main_',
                                  'params': [],
                                  'returns': [],
-                                 'string' : n.text.strip()})
+                                 'string': n.text.strip()})
 
         def visit_macro(self, n, vc):
             name = vc[2]
             params = vc[6]
             returns = vc[10]
             text = vc[13]
-            self.entries.append({'name'   : name,
-                                 'params' : [x.strip() for x in params.split(',')] if params else [],
+            self.entries.append({'name': name,
+                                 'params': [x.strip() for x in params.split(',')] if params else [],
                                  'returns': [x.strip() for x in
                                              returns.split(',')] if returns else [],
-                                 'string' : text.strip()})
+                                 'string': text.strip()})
 
         def generic_visit(self, n, vc):
             return ''.join(filter(None, vc)) or n.text or ''
@@ -166,16 +166,16 @@ def get_model_elements(model_str):
             self.visit(ast)
 
         def visit_entry(self, n, vc):
-            self.entries.append({'eqn' : vc[0].strip(),
+            self.entries.append({'eqn': vc[0].strip(),
                                  'unit': vc[2].strip(),
-                                 'doc' : vc[4].strip(),
+                                 'doc': vc[4].strip(),
                                  'kind': 'entry'})
 
         def visit_section(self, n, vc):
             if vc[2].strip() != "Simulation Control Parameters":
-                self.entries.append({'eqn' : '',
+                self.entries.append({'eqn': '',
                                      'unit': '',
-                                     'doc' : vc[2].strip(),
+                                     'doc': vc[2].strip(),
                                      'kind': 'section'})
 
         def generic_visit(self, n, vc):
@@ -285,9 +285,9 @@ def get_equation_components(equation_str):
     parse_object = ComponentParser(tree)
 
     return {'real_name': parse_object.real_name,
-            'subs'     : parse_object.subscripts,
-            'expr'     : parse_object.expression,
-            'kind'     : parse_object.kind}
+            'subs': parse_object.subscripts,
+            'expr': parse_object.expression,
+            'kind': parse_object.kind}
 
 
 def parse_units(units_str):
@@ -367,43 +367,44 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
 
     functions = {
         # element-wise functions
-        "abs"           : "abs", "integer": "int", "exp": "np.exp", "sin": "np.sin", "cos": "np.cos",
-        "sqrt"          : "np.sqrt", "tan": "np.tan", "lognormal": "np.random.lognormal",
-        "random normal" : "functions.bounded_normal", "poisson": "np.random.poisson", "ln": "np.log",
-        "exprnd"        : "np.random.exponential", "random uniform": "functions.random_uniform", "sum": "np.sum",
-        "arccos"        : "np.arccos", "arcsin": "np.arcsin", "arctan": "np.arctan",
-        "if then else"  : "functions.if_then_else", "step": "functions.step", "modulo": "np.mod",
-        "pulse"         : "functions.pulse", "pulse train": "functions.pulse_train",
-        "ramp"          : "functions.ramp", "min": "np.minimum", "max": "np.maximum",
+        "abs": "abs", "integer": "int", "exp": "np.exp", "sin": "np.sin", "cos": "np.cos",
+        "sqrt": "np.sqrt", "tan": "np.tan", "lognormal": "np.random.lognormal",
+        "random normal": "functions.bounded_normal", "poisson": "np.random.poisson", "ln": "np.log",
+        "exprnd": "np.random.exponential", "random uniform": "functions.random_uniform",
+        "sum": "np.sum",
+        "arccos": "np.arccos", "arcsin": "np.arcsin", "arctan": "np.arctan",
+        "if then else": "functions.if_then_else", "step": "functions.step", "modulo": "np.mod",
+        "pulse": "functions.pulse", "pulse train": "functions.pulse_train",
+        "ramp": "functions.ramp", "min": "np.minimum", "max": "np.maximum",
         "active initial": "functions.active_initial", "xidz": "functions.xidz",
-        "zidz"          : "functions.zidz",
+        "zidz": "functions.zidz",
 
         # vector functions
-        "vmin"          : "np.min", "vmax": "np.max", "prod": "np.prod"
+        "vmin": "np.min", "vmax": "np.max", "prod": "np.prod"
     }
 
     builders = {
-        "integ"   : lambda expr, init: builder.add_stock(element['py_name'], element['subs'],
-                                                         expr, init, subscript_dict),
-        "delay1"  : lambda in_var, dtime: builder.add_n_delay(in_var, dtime, '0', '1',
+        "integ": lambda expr, init: builder.add_stock(element['py_name'], element['subs'],
+                                                      expr, init, subscript_dict),
+        "delay1": lambda in_var, dtime: builder.add_n_delay(in_var, dtime, '0', '1',
+                                                            element['subs'], subscript_dict),
+        "delay1i": lambda in_var, dtime, init: builder.add_n_delay(in_var, dtime, init, '1',
+                                                                   element['subs'], subscript_dict),
+        "delay3": lambda in_var, dtime: builder.add_n_delay(in_var, dtime, '0', '3',
+                                                            element['subs'], subscript_dict),
+        "delay3i": lambda in_var, dtime, init: builder.add_n_delay(in_var, dtime, init, '3',
+                                                                   element['subs'], subscript_dict),
+        "delay n": lambda in_var, dtime, init, order: builder.add_n_delay(in_var, dtime,
+                                                                          init, order,
+                                                                          element['subs'],
+                                                                          subscript_dict),
+        "smooth": lambda in_var, dtime: builder.add_n_smooth(in_var, dtime, '0', '1',
+                                                             element['subs'], subscript_dict),
+        "smoothi": lambda in_var, dtime, init: builder.add_n_smooth(in_var, dtime, init, '1',
+                                                                    element['subs'],
+                                                                    subscript_dict),
+        "smooth3": lambda in_var, dtime: builder.add_n_smooth(in_var, dtime, '0', '3',
                                                               element['subs'], subscript_dict),
-        "delay1i" : lambda in_var, dtime, init: builder.add_n_delay(in_var, dtime, init, '1',
-                                                                    element['subs'], subscript_dict),
-        "delay3"  : lambda in_var, dtime: builder.add_n_delay(in_var, dtime, '0', '3',
-                                                              element['subs'], subscript_dict),
-        "delay3i" : lambda in_var, dtime, init: builder.add_n_delay(in_var, dtime, init, '3',
-                                                                    element['subs'], subscript_dict),
-        "delay n" : lambda in_var, dtime, init, order: builder.add_n_delay(in_var, dtime,
-                                                                           init, order,
-                                                                           element['subs'],
-                                                                           subscript_dict),
-        "smooth"  : lambda in_var, dtime: builder.add_n_smooth(in_var, dtime, '0', '1',
-                                                               element['subs'], subscript_dict),
-        "smoothi" : lambda in_var, dtime, init: builder.add_n_smooth(in_var, dtime, init, '1',
-                                                                     element['subs'],
-                                                                     subscript_dict),
-        "smooth3" : lambda in_var, dtime: builder.add_n_smooth(in_var, dtime, '0', '3',
-                                                               element['subs'], subscript_dict),
         "smooth3i": lambda in_var, dtime, init: builder.add_n_smooth(in_var, dtime, init, '3',
                                                                      element['subs'],
                                                                      subscript_dict),
@@ -411,12 +412,12 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
                                                                             init, order,
                                                                             element['subs'],
                                                                             subscript_dict),
-        "initial" : lambda initial_input: builder.add_initial(initial_input)
+        "initial": lambda initial_input: builder.add_initial(initial_input)
     }
 
     in_ops = {
-        "+"    : "+", "-": "-", "*": "*", "/": "/", "^": "**", "=": "==", "<=": "<=", "<>": "!=",
-        "<"    : "<", ">=": ">=", ">": ">",
+        "+": "+", "-": "-", "*": "*", "/": "/", "^": "**", "=": "==", "<=": "<=", "<>": "!=",
+        "<": "<", ">=": ">=", ">": ">",
         ":and:": " and ", ":or:": " or "}  # spaces important for word-based operators
 
     pre_ops = {
@@ -527,7 +528,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             xs = mixed_list[::2]
             ys = mixed_list[1::2]
             string = "functions.lookup(%(x)s, [%(xs)s], [%(ys)s])" % {
-                'x' : x_val,
+                'x': x_val,
                 'xs': ','.join(xs),
                 'ys': ','.join(ys)
             }
@@ -549,8 +550,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
                                  coords=%(coords)s,
                                  dims=%(dims)s )""" % {
                     'datastr': datastr,
-                    'coords' : repr(coords),
-                    'dims'   : repr(dims)})
+                    'coords': repr(coords),
+                    'dims': repr(dims)})
 
             else:
                 return n.text.replace(' ', '')
@@ -578,7 +579,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             self.kind = 'component'
             py_name = utils.make_python_identifier(call)[0]
             macro = [x for x in macro_list if x['py_name'] == py_name][0]  # should match once
-            name, structure = builder.add_macro(macro['py_name'], macro['file_name'], macro['params'], arglist)
+            name, structure = builder.add_macro(macro['py_name'], macro['file_name'],
+                                                macro['params'], arglist)
             self.new_structure += structure
             return name
 
@@ -595,8 +597,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
 
     parse_object = ExpressionParser(tree)
 
-    return ({'py_expr'  : parse_object.translation,
-             'kind'     : parse_object.kind,
+    return ({'py_expr': parse_object.translation,
+             'kind': parse_object.kind,
              'arguments': ''},
             parse_object.new_structure)
 
@@ -637,12 +639,11 @@ def parse_lookup_expression(element):
             return ''.join(filter(None, vc)) or n.text
 
     parse_object = LookupParser(tree)
-    return {'py_expr'  : parse_object.translation,
+    return {'py_expr': parse_object.translation,
             'arguments': 'x'}
 
 
 def translate_section(section, macro_list):
-
     model_elements = get_model_elements(section['string'])
 
     # extract equation components
@@ -698,6 +699,7 @@ def translate_section(section, macro_list):
 
     return section['file_name']
 
+
 def translate_vensim(mdl_file):
     """
 
@@ -723,8 +725,6 @@ def translate_vensim(mdl_file):
     with open(mdl_file, 'rU') as in_file:
         text = in_file.read()
 
-
-
     outfile_name = mdl_file.replace('.mdl', '.py')
     out_dir = os.path.dirname(outfile_name)
 
@@ -744,6 +744,5 @@ def translate_vensim(mdl_file):
 
     for section in file_sections:
         translate_section(section, macro_list)
-
 
     return outfile_name
