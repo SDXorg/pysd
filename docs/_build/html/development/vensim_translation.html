@@ -7,7 +7,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Vensim Translation &mdash; PySD 0.7.1 documentation</title>
+  <title>Vensim Translation &mdash; PySD 0.7.5 documentation</title>
   
 
   
@@ -30,7 +30,10 @@
   
 
   
-    <link rel="top" title="PySD 0.7.1 documentation" href="../index.html"/>
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="PySD 0.7.5 documentation" href="../index.html"/>
         <link rel="up" title="Structure of the PySD module" href="structure.html"/>
         <link rel="next" title="XMILE Translation" href="xmile_translation.html"/>
         <link rel="prev" title="Structure of the PySD module" href="structure.html"/> 
@@ -139,8 +142,8 @@
   <div class="section" id="vensim-translation">
 <h1>Vensim Translation<a class="headerlink" href="#vensim-translation" title="Permalink to this headline">¶</a></h1>
 <p>PySD parses a vensim &#8216;.mdl&#8217; file and translates the result into python, creating a new file in the
-same directory as the original. For example, the Vensim file <a class="reference download internal" href="../_downloads/Teacup.mdl"><code class="xref download docutils literal"><span class="pre">Teacup.mdl</span></code></a>:</p>
-<div class="highlight-python"><div class="highlight"><pre>{UTF-8}
+same directory as the original. For example, the Vensim file <a class="reference download internal" href="../_downloads/Teacup.mdl" download=""><code class="xref download docutils literal"><span class="pre">Teacup.mdl</span></code></a>:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span>{UTF-8}
 Characteristic Time=
 	10
 	~	Minutes
@@ -190,12 +193,13 @@ TIME STEP  = 0.125
 	~	Minute [0,?]
 	~	The time step for the simulation.
 	|
+
 </pre></div>
 </div>
-<p>becomes <a class="reference download internal" href="../_downloads/Teacup.py"><code class="xref download docutils literal"><span class="pre">Teacup.py</span></code></a>:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Python model tests/test-models/samples/teacup/teacup.py</span>
-<span class="sd">Translated using PySD version 0.7.1</span>
+<p>becomes <a class="reference download internal" href="../_downloads/Teacup.py" download=""><code class="xref download docutils literal"><span class="pre">Teacup.py</span></code></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Python model test-models/samples/teacup/teacup.py</span>
+<span class="sd">Translated using PySD version 0.7.5</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
@@ -208,31 +212,20 @@ TIME STEP  = 0.125
 <span class="n">_subscript_dict</span> <span class="o">=</span> <span class="p">{}</span>
 
 <span class="n">_namespace</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s">&#39;INITIAL TIME&#39;</span><span class="p">:</span> <span class="s">&#39;initial_time&#39;</span><span class="p">,</span>
-    <span class="s">&#39;Characteristic Time&#39;</span><span class="p">:</span> <span class="s">&#39;characteristic_time&#39;</span><span class="p">,</span>
-    <span class="s">&#39;Heat Loss to Room&#39;</span><span class="p">:</span> <span class="s">&#39;heat_loss_to_room&#39;</span><span class="p">,</span>
-    <span class="s">&#39;TIME&#39;</span><span class="p">:</span> <span class="s">&#39;time&#39;</span><span class="p">,</span>
-    <span class="s">&#39;SAVEPER&#39;</span><span class="p">:</span> <span class="s">&#39;saveper&#39;</span><span class="p">,</span>
-    <span class="s">&#39;FINAL TIME&#39;</span><span class="p">:</span> <span class="s">&#39;final_time&#39;</span><span class="p">,</span>
-    <span class="s">&#39;Room Temperature&#39;</span><span class="p">:</span> <span class="s">&#39;room_temperature&#39;</span><span class="p">,</span>
-    <span class="s">&#39;Teacup Temperature&#39;</span><span class="p">:</span> <span class="s">&#39;teacup_temperature&#39;</span><span class="p">,</span>
-    <span class="s">&#39;Time&#39;</span><span class="p">:</span> <span class="s">&#39;time&#39;</span><span class="p">,</span>
-    <span class="s">&#39;TIME STEP&#39;</span><span class="p">:</span> <span class="s">&#39;time_step&#39;</span><span class="p">}</span>
+    <span class="s1">&#39;SAVEPER&#39;</span><span class="p">:</span> <span class="s1">&#39;saveper&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Characteristic Time&#39;</span><span class="p">:</span> <span class="s1">&#39;characteristic_time&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Teacup Temperature&#39;</span><span class="p">:</span> <span class="s1">&#39;teacup_temperature&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;FINAL TIME&#39;</span><span class="p">:</span> <span class="s1">&#39;final_time&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;INITIAL TIME&#39;</span><span class="p">:</span> <span class="s1">&#39;initial_time&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Heat Loss to Room&#39;</span><span class="p">:</span> <span class="s1">&#39;heat_loss_to_room&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Room Temperature&#39;</span><span class="p">:</span> <span class="s1">&#39;room_temperature&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;TIME STEP&#39;</span><span class="p">:</span> <span class="s1">&#39;time_step&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;Time&#39;</span><span class="p">:</span> <span class="s1">&#39;time&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;TIME&#39;</span><span class="p">:</span> <span class="s1">&#39;time&#39;</span>
+<span class="p">}</span>
 
 
-<span class="nd">@cache</span><span class="p">(</span><span class="s">&#39;step&#39;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">teacup_temperature</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Teacup Temperature</span>
-<span class="sd">    ------------------</span>
-<span class="sd">    (teacup_temperature)</span>
-<span class="sd">    Degrees</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">integ_teacup_temperature</span><span class="p">()</span>
-
-
-<span class="nd">@cache</span><span class="p">(</span><span class="s">&#39;run&#39;</span><span class="p">)</span>
+<span class="nd">@cache</span><span class="p">(</span><span class="s1">&#39;run&#39;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">final_time</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    FINAL TIME</span>
@@ -247,80 +240,7 @@ TIME STEP  = 0.125
 <span class="n">integ_teacup_temperature</span> <span class="o">=</span> <span class="n">functions</span><span class="o">.</span><span class="n">Integ</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="o">-</span><span class="n">heat_loss_to_room</span><span class="p">(),</span> <span class="k">lambda</span><span class="p">:</span> <span class="mi">180</span><span class="p">)</span>
 
 
-<span class="nd">@cache</span><span class="p">(</span><span class="s">&#39;run&#39;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">room_temperature</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Room Temperature</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    (room_temperature)</span>
-
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="mi">70</span>
-
-
-<span class="nd">@cache</span><span class="p">(</span><span class="s">&#39;step&#39;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">heat_loss_to_room</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Heat Loss to Room</span>
-<span class="sd">    -----------------</span>
-<span class="sd">    (heat_loss_to_room)</span>
-<span class="sd">    Degrees/Minute</span>
-<span class="sd">    This is the rate at which heat flows from the cup into the room. We can</span>
-<span class="sd">                ignore it at this point.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">teacup_temperature</span><span class="p">()</span> <span class="o">-</span> <span class="n">room_temperature</span><span class="p">())</span> <span class="o">/</span> <span class="n">characteristic_time</span><span class="p">()</span>
-
-
-<span class="nd">@cache</span><span class="p">(</span><span class="s">&#39;run&#39;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">characteristic_time</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Characteristic Time</span>
-<span class="sd">    -------------------</span>
-<span class="sd">    (characteristic_time)</span>
-<span class="sd">    Minutes</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="mi">10</span>
-
-
-<span class="nd">@cache</span><span class="p">(</span><span class="s">&#39;step&#39;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">saveper</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    SAVEPER</span>
-<span class="sd">    -------</span>
-<span class="sd">    (saveper)</span>
-<span class="sd">    Minute [0,?]</span>
-<span class="sd">    The frequency with which output is stored.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">time_step</span><span class="p">()</span>
-
-
-<span class="nd">@cache</span><span class="p">(</span><span class="s">&#39;run&#39;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">initial_time</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    INITIAL TIME</span>
-<span class="sd">    ------------</span>
-<span class="sd">    (initial_time)</span>
-<span class="sd">    Minute</span>
-<span class="sd">    The initial time for the simulation.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="mi">0</span>
-
-
-<span class="nd">@cache</span><span class="p">(</span><span class="s">&#39;step&#39;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">time</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    TIME</span>
-<span class="sd">    ----</span>
-<span class="sd">    (time)</span>
-<span class="sd">    None</span>
-<span class="sd">    The time of the model</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">_t</span>
-
-
-<span class="nd">@cache</span><span class="p">(</span><span class="s">&#39;run&#39;</span><span class="p">)</span>
+<span class="nd">@cache</span><span class="p">(</span><span class="s1">&#39;run&#39;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">time_step</span><span class="p">():</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    TIME STEP</span>
@@ -332,10 +252,77 @@ TIME STEP  = 0.125
     <span class="k">return</span> <span class="mf">0.125</span>
 
 
-<span class="k">def</span> <span class="nf">time</span><span class="p">():</span>
-    <span class="k">return</span> <span class="n">_t</span>
-<span class="n">functions</span><span class="o">.</span><span class="n">time</span> <span class="o">=</span> <span class="n">time</span>
-<span class="n">functions</span><span class="o">.</span><span class="n">_stage</span> <span class="o">=</span> <span class="k">lambda</span><span class="p">:</span> <span class="n">_stage</span>
+<span class="nd">@cache</span><span class="p">(</span><span class="s1">&#39;step&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">heat_loss_to_room</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Heat Loss to Room</span>
+<span class="sd">    -----------------</span>
+<span class="sd">    (heat_loss_to_room)</span>
+<span class="sd">    Degrees/Minute</span>
+<span class="sd">    This is the rate at which heat flows from the cup into the room. We can </span>
+<span class="sd">        ignore it at this point.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">teacup_temperature</span><span class="p">()</span> <span class="o">-</span> <span class="n">room_temperature</span><span class="p">())</span> <span class="o">/</span> <span class="n">characteristic_time</span><span class="p">()</span>
+
+
+<span class="nd">@cache</span><span class="p">(</span><span class="s1">&#39;run&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">initial_time</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    INITIAL TIME</span>
+<span class="sd">    ------------</span>
+<span class="sd">    (initial_time)</span>
+<span class="sd">    Minute</span>
+<span class="sd">    The initial time for the simulation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mi">0</span>
+
+
+<span class="nd">@cache</span><span class="p">(</span><span class="s1">&#39;step&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">teacup_temperature</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Teacup Temperature</span>
+<span class="sd">    ------------------</span>
+<span class="sd">    (teacup_temperature)</span>
+<span class="sd">    Degrees</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">integ_teacup_temperature</span><span class="p">()</span>
+
+
+<span class="nd">@cache</span><span class="p">(</span><span class="s1">&#39;run&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">characteristic_time</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Characteristic Time</span>
+<span class="sd">    -------------------</span>
+<span class="sd">    (characteristic_time)</span>
+<span class="sd">    Minutes</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mi">10</span>
+
+
+<span class="nd">@cache</span><span class="p">(</span><span class="s1">&#39;run&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">room_temperature</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Room Temperature</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    (room_temperature)</span>
+
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="mi">70</span>
+
+
+<span class="nd">@cache</span><span class="p">(</span><span class="s1">&#39;step&#39;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">saveper</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    SAVEPER</span>
+<span class="sd">    -------</span>
+<span class="sd">    (saveper)</span>
+<span class="sd">    Minute [0,?]</span>
+<span class="sd">    The frequency with which output is stored.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">time_step</span><span class="p">()</span>
 </pre></div>
 </div>
 <p>This allows model execution independent of the Vensim environment, which can be handy for deploying
@@ -535,7 +522,7 @@ parsed, and may throw an error. Future releases will handle this with more grace
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'../',
-            VERSION:'0.7.1',
+            VERSION:'0.7.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

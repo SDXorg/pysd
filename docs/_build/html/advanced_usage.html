@@ -7,7 +7,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Advanced Usage &mdash; PySD 0.7.1 documentation</title>
+  <title>Advanced Usage &mdash; PySD 0.7.5 documentation</title>
   
 
   
@@ -30,7 +30,10 @@
   
 
   
-    <link rel="top" title="PySD 0.7.1 documentation" href="index.html"/>
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="PySD 0.7.5 documentation" href="index.html"/>
         <link rel="next" title="User Functions Reference" href="functions.html"/>
         <link rel="prev" title="Basic Usage" href="basic_usage.html"/> 
 
@@ -82,7 +85,7 @@
 <li class="toctree-l2"><a class="reference internal" href="basic_usage.html#supported-functions">Supported functions</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Advanced Usage</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Advanced Usage</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#replacing-model-components-with-more-complex-objects">Replacing model components with more complex objects</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#supplying-additional-arguments-to-the-integrator">Supplying additional arguments to the integrator</a></li>
 </ul>
@@ -137,25 +140,25 @@
 <div class="section" id="replacing-model-components-with-more-complex-objects">
 <h2>Replacing model components with more complex objects<a class="headerlink" href="#replacing-model-components-with-more-complex-objects" title="Permalink to this headline">¶</a></h2>
 <p>In the last section we saw that a parameter could take on a single value, or a series of values over time, with PySD linearly interpolating between the supplied time-series values. Behind the scenes, PySD is translating that constant or time-series into a function that then goes on to replace the original component in the model. For instance, in the teacup example, the room temperature was originally a function defined through parsing the model file as something similar to:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">room_temperature</span><span class="p">():</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">room_temperature</span><span class="p">():</span>
    <span class="k">return</span> <span class="mi">75</span>
 </pre></div>
 </div>
 <p>However, when we made the room temperature something that varied with time, PySD replaced this function with something like:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">room_temperature</span><span class="p">():</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">room_temperature</span><span class="p">():</span>
    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">interp</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">series</span><span class="o">.</span><span class="n">index</span><span class="p">,</span> <span class="n">series</span><span class="o">.</span><span class="n">values</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>This drew on the internal state of the system, namely the time t, and the time-series data series that that we wanted to variable to represent. This process of substitution is available to the user, and we can replace functions ourselves, if we are careful.</p>
 <p>Because PySD assumes that all components in a model are represented as functions taking no arguments, any component that we wish to modify must be replaced with a function taking no arguments. As the state of the system and all auxiliary or flow methods are public, our replacement function can call these methods as part of its internal structure.</p>
 <p>In our teacup example, suppose we didn’t know the functional form for calculating the heat lost to the room, but instead had a lot of data of teacup temperatures and heat flow rates. We could use a regression model (here a support vector regression from Scikit-Learn) in place of the analytic function:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">sklearn.svm</span> <span class="kn">import</span> <span class="n">SVR</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.svm</span> <span class="k">import</span> <span class="n">SVR</span>
 <span class="n">regression</span> <span class="o">=</span> <span class="n">SVR</span><span class="p">()</span>
 <span class="n">regression</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X_training</span><span class="p">,</span> <span class="n">Y_training</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Once the regression model is fit, we write a wrapper function for its predict method that accesses the input components of the model and formats the prediction for PySD:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="k">def</span> <span class="nf">new_heatflow_function</span><span class="p">():</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">new_heatflow_function</span><span class="p">():</span>
    <span class="sd">&quot;&quot;&quot; Replaces the original flowrate equation</span>
 <span class="sd">       with a regression model&quot;&quot;&quot;</span>
    <span class="n">tea_temp</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">teacup_temperature</span><span class="p">()</span>
@@ -164,7 +167,7 @@
 </pre></div>
 </div>
 <p>We can substitute this function directly for the heat_loss_to_room model component:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">model</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">heat_loss_to_room</span> <span class="o">=</span> <span class="n">new_heatflow_function</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">heat_loss_to_room</span> <span class="o">=</span> <span class="n">new_heatflow_function</span>
 </pre></div>
 </div>
 </div>
@@ -213,7 +216,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.7.1',
+            VERSION:'0.7.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true

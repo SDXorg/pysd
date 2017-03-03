@@ -5,6 +5,7 @@ pysd/__init__.py
 pysd/_version.py
 pysd/builder.py
 pysd/functions.py
+pysd/output_style.yapf
 pysd/pysd.py
 pysd/utils.py
 pysd/vensim2py.py

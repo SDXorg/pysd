@@ -5,7 +5,8 @@ from distutils.core import setup
 exec(open('pysd/_version.py').read())
 print(__version__)
 
-long_description = """Project Documentation: http://pysd.readthedocs.org/"""
+long_description ="""Project Documentation: http://pysd.readthedocs.org/"""
+
 
 setup(
     name='pysd',
@@ -32,6 +33,5 @@ setup(
         'yapf',
         'xarray'
     ],
-    package_data={'pysd': ['*.yapf']},
     include_package_data=True
 )

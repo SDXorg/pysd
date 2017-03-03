@@ -3,7 +3,6 @@ import pandas as pd
 import numpy as np
 from pysd import utils
 
-
 test_model = 'test-models/samples/teacup/teacup.mdl'
 
 
@@ -145,9 +144,11 @@ class TestPySD(unittest.TestCase):
         model = pysd.read_vensim(test_model)
         with warnings.catch_warnings(record=True) as w:
             warnings.simplefilter("always")
-            model.set_components({'Teacup Temperature': 20, 'Characteristic Time': 15})   # set stock value using params
+            model.set_components({'Teacup Temperature': 20,
+                                  'Characteristic Time': 15})  # set stock value using params
         self.assertEqual(len(w), 1)
-        self.assertTrue('Teacup Temperature' in str(w[0].message))   # check that warning references the stock
+        self.assertTrue(
+            'Teacup Temperature' in str(w[0].message))  # check that warning references the stock
 
     def test_set_components_with_function(self):
         def test_func():
@@ -266,8 +267,6 @@ class TestPySD(unittest.TestCase):
         expected = range(3, 11, 1)
         self.assertSequenceEqual(actual, expected)
 
-
-
     def test__integrate(self):
         import pysd
         # Todo: think through a stronger test here...
@@ -326,11 +325,19 @@ class TestModelInteraction(unittest.TestCase):
         model_2 = pysd.read_vensim('test-models/samples/SIR/SIR.mdl')
 
         self.assertNotIn('teacup_temperature', dir(model_2.components))
+        self.assertIn('susceptible', dir(model_2.components))
+
+        self.assertNotIn('susceptible', dir(model_1.components))
+        self.assertIn('teacup_temperature', dir(model_1.components))
 
     def test_no_crosstalk(self):
         """
         Need to check that if we instantiate two copies of the same model,
         changes to one copy do not influence the other copy.
+
+        Checks for issue: https://github.com/JamesPHoughton/pysd/issues/108
+        that time is not shared between the two models
+
         """
         # Todo: this test could be made more comprehensive
         import pysd
@@ -340,6 +347,10 @@ class TestModelInteraction(unittest.TestCase):
 
         model_1.components.initial_time = lambda: 10
         self.assertNotEqual(model_2.components.initial_time, 10)
+
+        # check that the model time is not shared between the two objects
+        model_1.run()
+        self.assertNotEqual(model_1.time(), model_2.time())
 
     def test_restart_cache(self):
         """
@@ -356,4 +367,3 @@ class TestModelInteraction(unittest.TestCase):
         model.run()
         self.assertEqual(new, 345)
         self.assertNotEqual(old, new)
-

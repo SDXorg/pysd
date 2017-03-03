@@ -14,9 +14,9 @@ This code creates an instance of the PySD class loaded with an example model tha
    :width: 350 px
    :align: center
 
-To view a synopsis of the model equations and documentation, call the :py:func:`components.doc()` method of the model class. This will generate a listing of all the model elements, their documentation, units, equations, and initial values, where appropriate. Here is a sample from the teacup model::
+To view a synopsis of the model equations and documentation, call the :py:func:`.doc()` method of the model class. This will generate a listing of all the model elements, their documentation, units, equations, and initial values, where appropriate. Here is a sample from the teacup model::
 
-   >>> print model.components.doc()
+   >>> print model.doc()
 
 Running the Model
 -----------------

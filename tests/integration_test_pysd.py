@@ -121,6 +121,11 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/lookups/test_lookups.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    def test_lookups_funcnames(self):
+        from.test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/lookups_funcnames/test_lookups_funcnames.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_lookups_inline(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/lookups_inline/test_lookups_inline.mdl')
@@ -192,6 +197,11 @@ class TestIntegrationExamples(unittest.TestCase):
     def test_smooth(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/smooth/test_smooth.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
+    def test_smooth_and_stock(self):
+        from.test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/smooth_and_stock/test_smooth_and_stock.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
     @unittest.skip('in branch')

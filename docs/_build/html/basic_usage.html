@@ -7,7 +7,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basic Usage &mdash; PySD 0.7.1 documentation</title>
+  <title>Basic Usage &mdash; PySD 0.7.5 documentation</title>
   
 
   
@@ -30,7 +30,10 @@
   
 
   
-    <link rel="top" title="PySD 0.7.1 documentation" href="index.html"/>
+        <link rel="index" title="Index"
+              href="genindex.html"/>
+        <link rel="search" title="Search" href="search.html"/>
+    <link rel="top" title="PySD 0.7.5 documentation" href="index.html"/>
         <link rel="next" title="Advanced Usage" href="advanced_usage.html"/>
         <link rel="prev" title="Installation" href="installation.html"/> 
 
@@ -72,7 +75,7 @@
 <li class="toctree-l2"><a class="reference internal" href="installation.html#additional-resources">Additional Resources</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Basic Usage</a><ul>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Basic Usage</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#importing-a-model-and-getting-started">Importing a model and getting started</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#running-the-model">Running the Model</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#outputting-various-run-information">Outputting various run information</a></li>
@@ -136,21 +139,21 @@
 <div class="section" id="importing-a-model-and-getting-started">
 <h2>Importing a model and getting started<a class="headerlink" href="#importing-a-model-and-getting-started" title="Permalink to this headline">¶</a></h2>
 <p>To begin, we must first load the PySD module, and use it to import a supported model file:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">pysd</span>
-<span class="n">model</span> <span class="o">=</span> <span class="n">pysd</span><span class="o">.</span><span class="n">read_vensim</span><span class="p">(</span><span class="s">&#39;Teacup.mdl&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pysd</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">pysd</span><span class="o">.</span><span class="n">read_vensim</span><span class="p">(</span><span class="s1">&#39;Teacup.mdl&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>This code creates an instance of the PySD class loaded with an example model that we will use as the system dynamics equivalent of ‘Hello World’: a cup of tea cooling to room temperature.</p>
 <a class="reference internal image-reference" href="_images/Teacup.png"><img alt="_images/Teacup.png" class="align-center" src="_images/Teacup.png" style="width: 350px;" /></a>
-<p>To view a synopsis of the model equations and documentation, call the <code class="xref py py-func docutils literal"><span class="pre">components.doc()</span></code> method of the model class. This will generate a listing of all the model elements, their documentation, units, equations, and initial values, where appropriate. Here is a sample from the teacup model:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="k">print</span> <span class="n">model</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">doc</span><span class="p">()</span>
+<p>To view a synopsis of the model equations and documentation, call the <code class="xref py py-func docutils literal"><span class="pre">doc()</span></code> method of the model class. This will generate a listing of all the model elements, their documentation, units, equations, and initial values, where appropriate. Here is a sample from the teacup model:</p>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">model</span><span class="o">.</span><span class="n">doc</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="running-the-model">
 <h2>Running the Model<a class="headerlink" href="#running-the-model" title="Permalink to this headline">¶</a></h2>
 <p>The simplest way to simulate the model is to use the <code class="xref py py-func docutils literal"><span class="pre">run()</span></code> command with no options. This runs the model with the default parameters supplied by the model file, and returns a Pandas dataframe of the values of the stocks at every timestamp:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">stocks</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stocks</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 
 <span class="go">t        teacup_temperature</span>
 <span class="go">0.000    180.000000</span>
@@ -161,9 +164,9 @@
 </pre></div>
 </div>
 <p>Pandas gives us simple plotting capability, so we can see how the cup of tea behaves:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">stocks</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s">&#39;Degrees F&#39;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s">&#39;Minutes&#39;</span><span class="p">)</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">stocks</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Degrees F&#39;</span><span class="p">)</span>
+<span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Minutes&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <a class="reference internal image-reference" href="_images/Teacup_Cooling.png"><img alt="_images/Teacup_Cooling.png" class="align-center" src="_images/Teacup_Cooling.png" style="width: 400px;" /></a>
@@ -171,7 +174,7 @@
 <div class="section" id="outputting-various-run-information">
 <h2>Outputting various run information<a class="headerlink" href="#outputting-various-run-information" title="Permalink to this headline">¶</a></h2>
 <p>The <code class="xref py py-func docutils literal"><span class="pre">run()</span></code> command has a few options that make it more useful. In many situations we want to access components of the model other than merely the stocks – we can specify which components of the model should be included in the returned dataframe by including them in a list that we pass to the <code class="xref py py-func docutils literal"><span class="pre">run()</span></code> command, using the return_columns keyword argument:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">return_columns</span><span class="o">=</span><span class="p">[</span><span class="s">&#39;Teacup Temperature&#39;</span><span class="p">,</span> <span class="s">&#39;Room Temperature&#39;</span><span class="p">])</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">return_columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Teacup Temperature&#39;</span><span class="p">,</span> <span class="s1">&#39;Room Temperature&#39;</span><span class="p">])</span>
 
 <span class="go">t         Teacup Temperature    Room Temperature</span>
 <span class="go">0.000     180.000000            75.0</span>
@@ -182,7 +185,7 @@
 </pre></div>
 </div>
 <p>If the measured data that we are comparing with our model comes in at irregular timestamps, we may want to sample the model at timestamps to match. The .run() function gives us this ability with the return_timestamps keyword argument:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">return_timestamps</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mf">9.5</span><span class="p">,</span><span class="mf">13.178</span><span class="p">,</span><span class="mi">21</span><span class="p">,</span><span class="mi">25</span><span class="p">,</span><span class="mi">30</span><span class="p">])</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">return_timestamps</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mf">9.5</span><span class="p">,</span><span class="mf">13.178</span><span class="p">,</span><span class="mi">21</span><span class="p">,</span><span class="mi">25</span><span class="p">,</span><span class="mi">30</span><span class="p">])</span>
 
 <span class="go">t       Teacup Temperature</span>
 <span class="go">0.0     180.000000</span>
@@ -198,13 +201,13 @@
 <h2>Setting parameter values<a class="headerlink" href="#setting-parameter-values" title="Permalink to this headline">¶</a></h2>
 <p>In many cases, we want to modify the parameters of the model to investigate its behavior under different assumptions. There are several ways to do this in PySD, but the .run() function gives us a convenient method in the params keyword argument.</p>
 <p>This argument expects a dictionary whose keys correspond to the components of the model.  The associated values can either be a constant, or a Pandas series whose indices are timestamps and whose values are the values that the model component should take on at the corresponding time. For instance, in our model we can set the room temperature to a constant value:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;Room Temperature&#39;</span><span class="p">:</span><span class="mi">20</span><span class="p">})</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Room Temperature&#39;</span><span class="p">:</span><span class="mi">20</span><span class="p">})</span>
 </pre></div>
 </div>
 <p>Alternately, if we believe the room temperature is changing over the course of the simulation, we can give the run function a set of time-series values in the form of a Pandas series, and PySD will linearly interpolate between the given values in the course of its integration:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
 <span class="n">temp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">),</span> <span class="n">data</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="mi">80</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
-<span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s">&#39;Room Temperature&#39;</span><span class="p">:</span><span class="n">temp</span><span class="p">})</span>
+<span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Room Temperature&#39;</span><span class="p">:</span><span class="n">temp</span><span class="p">})</span>
 </pre></div>
 </div>
 <p>Note that once parameters are set by the run command, they are permanently changed within the model. We can also change model parameters without running the model, using PySD’s <code class="xref py py-func docutils literal"><span class="pre">set_components(params={})()</span></code> method, which takes the same params dictionary as the run function. We might choose to do this in situations where we’ll be running the model many times, and only want to spend time setting the parameters once.</p>
@@ -212,11 +215,11 @@
 <div class="section" id="setting-simulation-initial-conditions">
 <h2>Setting simulation initial conditions<a class="headerlink" href="#setting-simulation-initial-conditions" title="Permalink to this headline">¶</a></h2>
 <p>Finally, we can set the initial conditions of our model in several ways. So far, we’ve been using the default value for the initial_condition keyword argument, which is ‘original’. This value runs the model from the initial conditions that were specified originally by the model file. We can alternately specify a tuple containing the start time and a dictionary of values for the system’s stocks. Here we start the model with the tea at just above freezing:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">initial_condition</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;Teacup Temperature&#39;</span><span class="p">:</span><span class="mi">33</span><span class="p">}))</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">initial_condition</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;Teacup Temperature&#39;</span><span class="p">:</span><span class="mi">33</span><span class="p">}))</span>
 </pre></div>
 </div>
 <p>Additionally we can run the model forward from its current position, by passing the initial_condition argument the keyword ‘current’. After having run the model from time zero to thirty, we can ask the model to continue running forward for another chunk of time:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">initial_condition</span><span class="o">=</span><span class="s">&#39;current&#39;</span><span class="p">,</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">initial_condition</span><span class="o">=</span><span class="s1">&#39;current&#39;</span><span class="p">,</span>
           <span class="n">return_timestamps</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">31</span><span class="p">,</span><span class="mi">45</span><span class="p">))</span>
 </pre></div>
 </div>
@@ -226,7 +229,7 @@
 <div class="section" id="querying-current-values">
 <h2>Querying current values<a class="headerlink" href="#querying-current-values" title="Permalink to this headline">¶</a></h2>
 <p>We can easily access the current value of a model component by calling its associated method (using python safe names) in the components subclass. For instance, to find the temperature of the teacup, we simply call:</p>
-<div class="highlight-python"><div class="highlight"><pre><span class="n">model</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">teacup_temperature</span><span class="p">()</span>
+<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">teacup_temperature</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
@@ -413,7 +416,7 @@
     <script type="text/javascript">
         var DOCUMENTATION_OPTIONS = {
             URL_ROOT:'./',
-            VERSION:'0.7.1',
+            VERSION:'0.7.5',
             COLLAPSE_INDEX:false,
             FILE_SUFFIX:'.html',
             HAS_SOURCE:  true
