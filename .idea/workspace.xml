@@ -5,72 +5,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a7e5b169-cc30-45fb-a7f9-e8e84f9c05bd" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/MANIFEST.in" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/docs/readme.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/doctrees/advanced_usage.doctree" afterPath="$PROJECT_DIR$/docs/_build/doctrees/advanced_usage.doctree" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/doctrees/basic_usage.doctree" afterPath="$PROJECT_DIR$/docs/_build/doctrees/basic_usage.doctree" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/doctrees/development/about.doctree" afterPath="$PROJECT_DIR$/docs/_build/doctrees/development/about.doctree" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/doctrees/development/complement.doctree" afterPath="$PROJECT_DIR$/docs/_build/doctrees/development/complement.doctree" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/doctrees/development/contributing.doctree" afterPath="$PROJECT_DIR$/docs/_build/doctrees/development/contributing.doctree" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/doctrees/development/development_index.doctree" afterPath="$PROJECT_DIR$/docs/_build/doctrees/development/development_index.doctree" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/doctrees/development/internal_functions.doctree" afterPath="$PROJECT_DIR$/docs/_build/doctrees/development/internal_functions.doctree" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/doctrees/development/pathway.doctree" afterPath="$PROJECT_DIR$/docs/_build/doctrees/development/pathway.doctree" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/doctrees/development/structure.doctree" afterPath="$PROJECT_DIR$/docs/_build/doctrees/development/structure.doctree" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/doctrees/development/supported_vensim_functions.doctree" afterPath="$PROJECT_DIR$/docs/_build/doctrees/development/supported_vensim_functions.doctree" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/doctrees/development/vensim_translation.doctree" afterPath="$PROJECT_DIR$/docs/_build/doctrees/development/vensim_translation.doctree" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/doctrees/development/xmile_translation.doctree" afterPath="$PROJECT_DIR$/docs/_build/doctrees/development/xmile_translation.doctree" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/doctrees/functions.doctree" afterPath="$PROJECT_DIR$/docs/_build/doctrees/functions.doctree" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/doctrees/index.doctree" afterPath="$PROJECT_DIR$/docs/_build/doctrees/index.doctree" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/doctrees/installation.doctree" afterPath="$PROJECT_DIR$/docs/_build/doctrees/installation.doctree" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/objects.inv" afterPath="$PROJECT_DIR$/docs/_build/html/objects.inv" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models" afterPath="$PROJECT_DIR$/tests/test-models" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/pysd.iml" afterPath="$PROJECT_DIR$/.idea/pysd.iml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/MANIFEST" afterPath="$PROJECT_DIR$/MANIFEST" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/doctrees/environment.pickle" afterPath="$PROJECT_DIR$/docs/_build/doctrees/environment.pickle" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/.buildinfo" afterPath="$PROJECT_DIR$/docs/_build/html/.buildinfo" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/_downloads/Teacup.py" afterPath="$PROJECT_DIR$/docs/_build/html/_downloads/Teacup.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/_modules/index.html" afterPath="$PROJECT_DIR$/docs/_build/html/_modules/index.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/_modules/pysd/pysd.html" afterPath="$PROJECT_DIR$/docs/_build/html/_modules/pysd/pysd.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/_sources/basic_usage.txt" afterPath="$PROJECT_DIR$/docs/_build/html/_sources/basic_usage.txt" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/_static/basic.css" afterPath="$PROJECT_DIR$/docs/_build/html/_static/basic.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/_static/doctools.js" afterPath="$PROJECT_DIR$/docs/_build/html/_static/doctools.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/_static/pygments.css" afterPath="$PROJECT_DIR$/docs/_build/html/_static/pygments.css" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/_static/searchtools.js" afterPath="$PROJECT_DIR$/docs/_build/html/_static/searchtools.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/_static/websupport.js" afterPath="$PROJECT_DIR$/docs/_build/html/_static/websupport.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/advanced_usage.html" afterPath="$PROJECT_DIR$/docs/_build/html/advanced_usage.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/basic_usage.html" afterPath="$PROJECT_DIR$/docs/_build/html/basic_usage.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/development/about.html" afterPath="$PROJECT_DIR$/docs/_build/html/development/about.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/development/complement.html" afterPath="$PROJECT_DIR$/docs/_build/html/development/complement.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/development/contributing.html" afterPath="$PROJECT_DIR$/docs/_build/html/development/contributing.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/development/development_index.html" afterPath="$PROJECT_DIR$/docs/_build/html/development/development_index.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/development/internal_functions.html" afterPath="$PROJECT_DIR$/docs/_build/html/development/internal_functions.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/development/pathway.html" afterPath="$PROJECT_DIR$/docs/_build/html/development/pathway.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/development/structure.html" afterPath="$PROJECT_DIR$/docs/_build/html/development/structure.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/development/supported_vensim_functions.html" afterPath="$PROJECT_DIR$/docs/_build/html/development/supported_vensim_functions.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/development/vensim_translation.html" afterPath="$PROJECT_DIR$/docs/_build/html/development/vensim_translation.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/development/xmile_translation.html" afterPath="$PROJECT_DIR$/docs/_build/html/development/xmile_translation.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/functions.html" afterPath="$PROJECT_DIR$/docs/_build/html/functions.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/genindex.html" afterPath="$PROJECT_DIR$/docs/_build/html/genindex.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/index.html" afterPath="$PROJECT_DIR$/docs/_build/html/index.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/installation.html" afterPath="$PROJECT_DIR$/docs/_build/html/installation.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/py-modindex.html" afterPath="$PROJECT_DIR$/docs/_build/html/py-modindex.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/search.html" afterPath="$PROJECT_DIR$/docs/_build/html/search.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/_build/html/searchindex.js" afterPath="$PROJECT_DIR$/docs/_build/html/searchindex.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/docs/basic_usage.rst" afterPath="$PROJECT_DIR$/docs/basic_usage.rst" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/_version.py" afterPath="$PROJECT_DIR$/pysd/_version.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/vensim2py.py" afterPath="$PROJECT_DIR$/pysd/vensim2py.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/requirements.txt" afterPath="$PROJECT_DIR$/requirements.txt" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/setup.py" afterPath="$PROJECT_DIR$/setup.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/integration_test_pysd.py" afterPath="$PROJECT_DIR$/tests/integration_test_pysd.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/samples/SIR/SIR.py" afterPath="$PROJECT_DIR$/tests/test-models/samples/SIR/SIR.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/samples/teacup/teacup.py" afterPath="$PROJECT_DIR$/tests/test-models/samples/teacup/teacup.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/lookups/output.tab" afterPath="$PROJECT_DIR$/tests/test-models/tests/lookups/output.tab" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.py" afterPath="$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/lookups_funcnames/README.md" afterPath="$PROJECT_DIR$/tests/test-models/tests/lookups_funcnames/README.md" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/lookups_funcnames/output.tab" afterPath="$PROJECT_DIR$/tests/test-models/tests/lookups_funcnames/output.tab" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/lookups_funcnames/test_lookups_funcnames.mdl" afterPath="$PROJECT_DIR$/tests/test-models/tests/lookups_funcnames/test_lookups_funcnames.mdl" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/number_handling/test_number_handling.py" afterPath="$PROJECT_DIR$/tests/test-models/tests/number_handling/test_number_handling.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/unit_test_pysd.py" afterPath="$PROJECT_DIR$/tests/unit_test_pysd.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/smooth_and_stock/test_smooth_and_stock.mdl" afterPath="$PROJECT_DIR$/tests/test-models/tests/smooth_and_stock/test_smooth_and_stock.mdl" />
     </list>
     <ignored path="pysd.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -108,7 +50,7 @@
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestUtils_test_find_subscript_name.coverage" NAME="Unittest TestUtils.test_find_subscript_name Coverage Results" MODIFIED="1467022645586" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Nosetests_in_tests__3_.coverage" NAME="Nosetests in tests (3) Coverage Results" MODIFIED="1487085940813" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Nosetest_TestPySD_test_run_includes_last_value.coverage" NAME="Nosetest TestPySD.test_run_includes_last_value Coverage Results" MODIFIED="1475249607181" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
-    <SUITE FILE_PATH="coverage/pysd$Nosetests_in_tests.coverage" NAME="Nosetests in tests Coverage Results" MODIFIED="1488469720148" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/pysd$Nosetests_in_tests.coverage" NAME="Nosetests in tests Coverage Results" MODIFIED="1488576384349" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestPySD_test_set_state.coverage" NAME="Unittest TestPySD.test_set_state Coverage Results" MODIFIED="1464813041787" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestParse_general_expression_test_stock_construction_function_no_subscripts.coverage" NAME="Unittest TestParse_general_expression.test_stock_construction_function_no_subscripts Coverage Results" MODIFIED="1467394993374" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittests_in_unit_test_functions.coverage" NAME="Unittests in unit_test_functions Coverage Results" MODIFIED="1469110134462" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
@@ -177,6 +119,7 @@
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestModelInteraction_test_no_crosstalk.coverage" NAME="Unittest TestModelInteraction.test_no_crosstalk Coverage Results" MODIFIED="1464826722350" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Nosetest_TestBuild_test_build.coverage" NAME="Nosetest TestBuild.test_build Coverage Results" MODIFIED="1475504150180" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestIntegrationExamples_test_delays.coverage" NAME="Unittest TestIntegrationExamples.test_delays Coverage Results" MODIFIED="1467307825611" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/pysd$Nosetests_in_TestIntegrationExamples__1_.coverage" NAME="Nosetests in TestIntegrationExamples (1) Coverage Results" MODIFIED="1488576316662" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittests_in_unit_test_utils__2_.coverage" NAME="Unittests in unit_test_utils (2) Coverage Results" MODIFIED="1467385362035" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestBuild_test_build_element.coverage" NAME="Unittest TestBuild.test_build_element Coverage Results" MODIFIED="1464710861722" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittests_in_unit_test_utils.coverage" NAME="Unittests in unit_test_utils Coverage Results" MODIFIED="1469110207508" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
@@ -229,7 +172,7 @@
     <SUITE FILE_PATH="coverage/pysd$Doctests_in_test_utils.coverage" NAME="Doctests in test_utils Coverage Results" MODIFIED="1469110112372" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestUtils_test_visit_addresses.coverage" NAME="Unittest TestUtils.test_visit_addresses Coverage Results" MODIFIED="1464631867186" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestIntegrationExamples_test_subscript_individually_defined_1d_arrays.coverage" NAME="Unittest TestIntegrationExamples.test_subscript_individually_defined_1d_arrays Coverage Results" MODIFIED="1467735352246" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
-    <SUITE FILE_PATH="coverage/pysd$Nosetest_TestIntegrationExamples_test_lookups_funcnames.coverage" NAME="Nosetest TestIntegrationExamples.test_lookups_funcnames Coverage Results" MODIFIED="1488571241701" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/pysd$Nosetest_TestIntegrationExamples_test_lookups_funcnames.coverage" NAME="Nosetest TestIntegrationExamples.test_lookups_funcnames Coverage Results" MODIFIED="1488575878604" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestIntegrationExamples_test_active_initial.coverage" NAME="Unittest TestIntegrationExamples.test_active_initial Coverage Results" MODIFIED="1464912661761" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestBuild_test_multiline_subscripted_constant_construction.coverage" NAME="Unittest TestBuild.test_multiline_subscripted_constant_construction Coverage Results" MODIFIED="1464711689533" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestPySD_test_set_constant_parameter.coverage" NAME="Unittest TestPySD.test_set_constant_parameter Coverage Results" MODIFIED="1467380901876" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
@@ -909,10 +852,11 @@
           <file leaf-file-name="test_smooth.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/tests/test-models/tests/smooth/test_smooth.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="60">
-                  <caret line="4" column="0" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
+                <state relative-caret-position="15">
+                  <caret line="1" column="0" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
                   <folding>
                     <element signature="e#97#128#0" expanded="true" />
+                    <marker date="1488576392000" expanded="true" signature="2956:2957" ph="..." />
                   </folding>
                 </state>
               </provider>
@@ -928,7 +872,7 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="functions.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="functions.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/pysd/functions.py">
               <provider selected="true" editor-type-id="text-editor">
                 <state relative-caret-position="492">
@@ -952,11 +896,11 @@
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="integration_test_pysd.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="integration_test_pysd.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/tests/integration_test_pysd.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="390">
-                  <caret line="201" column="22" selection-start-line="201" selection-start-column="22" selection-end-line="201" selection-end-column="22" />
+                <state relative-caret-position="180">
+                  <caret line="123" column="24" selection-start-line="123" selection-start-column="24" selection-end-line="123" selection-end-column="24" />
                   <folding />
                 </state>
               </provider>
@@ -966,51 +910,15 @@
       </split-first>
       <split-second>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file leaf-file-name="vensim2py.py" pinned="false" current-in-tab="false">
+          <file leaf-file-name="vensim2py.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/pysd/vensim2py.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="816">
+                <state relative-caret-position="375">
                   <caret line="281" column="33" selection-start-line="281" selection-start-column="33" selection-end-line="281" selection-end-column="33" />
                   <folding>
                     <marker date="1488470357000" expanded="true" signature="11786:12001" ph="..." />
                     <marker date="1488470357000" expanded="true" signature="11812:11945" ph="..." />
                   </folding>
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="README.md" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/tests/test-models/tests/lookups_funcnames/README.md">
-              <provider selected="true" editor-type-id="split-provider[text-editor;MarkdownPreviewEditor]">
-                <state split_layout="FIRST">
-                  <first_editor relative-caret-position="0">
-                    <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-                    <folding />
-                  </first_editor>
-                  <second_editor />
-                </state>
-              </provider>
-              <provider editor-type-id="MarkdownFxPreviewEditor">
-                <state />
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="test_lookups.mdl" pinned="false" current-in-tab="false">
-            <entry file="file://$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.mdl">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="390">
-                  <caret line="26" column="22" selection-start-line="26" selection-start-column="22" selection-end-line="26" selection-end-column="22" />
-                  <folding />
-                </state>
-              </provider>
-            </entry>
-          </file>
-          <file leaf-file-name="test_lookups_funcnames.py" pinned="false" current-in-tab="true">
-            <entry file="file://$PROJECT_DIR$/tests/test-models/tests/lookups_funcnames/test_lookups_funcnames.py">
-              <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="525">
-                  <caret line="51" column="0" selection-start-line="51" selection-start-column="0" selection-end-line="51" selection-end-column="0" />
-                  <folding />
                 </state>
               </provider>
             </entry>
@@ -1105,10 +1013,8 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="8" />
-    <option name="y" value="23" />
-    <option name="width" value="1875" />
-    <option name="height" value="1048" />
+    <option name="width" value="1440" />
+    <option name="height" value="900" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -1194,6 +1100,7 @@
     <property name="SearchEverywhereHistoryKey" value="&#9;FILE&#9;file:///Users/houghton/Google_Drive/Academic Projects/PYSD/pysd/tests/test-models/tests/subscript_1d_arrays/test_subscript_1d_arrays.py" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="js-jscs-nodeInterpreter" value="/usr/local/bin/node" />
+    <property name="FullScreen" value="true" />
   </component>
   <component name="PyConsoleOptionsProvider">
     <option name="myPythonConsoleState">
@@ -1216,51 +1123,7 @@
       <recent name="$PROJECT_DIR$/pysd" />
     </key>
   </component>
-  <component name="RunManager" selected="Python tests.Nosetest TestIntegrationExamples.test_smooth_and_stock">
-    <configuration default="false" name="Nosetests in TestIntegrationExamples" type="tests" factoryName="Nosetests" temporary="true" nameIsGenerated="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="pysd" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/integration_test_pysd.py" />
-      <option name="CLASS_NAME" value="TestIntegrationExamples" />
-      <option name="METHOD_NAME" value="" />
-      <option name="FOLDER_NAME" value="$PROJECT_DIR$/tests" />
-      <option name="TEST_TYPE" value="TEST_CLASS" />
-      <option name="PATTERN" value="" />
-      <option name="USE_PATTERN" value="false" />
-      <option name="PARAMS" value="" />
-      <option name="USE_PARAM" value="false" />
-      <method />
-    </configuration>
-    <configuration default="false" name="Nosetests in tests (1)" type="tests" factoryName="Nosetests" temporary="true" nameIsGenerated="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
-      <option name="IS_MODULE_SDK" value="true" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="pysd" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="" />
-      <option name="CLASS_NAME" value="" />
-      <option name="METHOD_NAME" value="" />
-      <option name="FOLDER_NAME" value="$PROJECT_DIR$/tests" />
-      <option name="TEST_TYPE" value="TEST_FOLDER" />
-      <option name="PATTERN" value="" />
-      <option name="USE_PATTERN" value="false" />
-      <option name="PARAMS" value="" />
-      <option name="USE_PARAM" value="false" />
-      <method />
-    </configuration>
+  <component name="RunManager" selected="Python tests.Nosetests in tests">
     <configuration default="false" name="Nosetest TestIntegrationExamples.test_lookups_funcnames" type="tests" factoryName="Nosetests" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -1321,6 +1184,50 @@
       <option name="METHOD_NAME" value="test_smooth_and_stock" />
       <option name="FOLDER_NAME" value="" />
       <option name="TEST_TYPE" value="TEST_METHOD" />
+      <option name="PATTERN" value="" />
+      <option name="USE_PATTERN" value="false" />
+      <option name="PARAMS" value="" />
+      <option name="USE_PARAM" value="false" />
+      <method />
+    </configuration>
+    <configuration default="false" name="Nosetests in TestIntegrationExamples (1)" type="tests" factoryName="Nosetests" temporary="true" nameIsGenerated="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="pysd" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/integration_test_pysd.py" />
+      <option name="CLASS_NAME" value="TestIntegrationExamples" />
+      <option name="METHOD_NAME" value="test_lookups_funcnames" />
+      <option name="FOLDER_NAME" value="$PROJECT_DIR$/tests" />
+      <option name="TEST_TYPE" value="TEST_CLASS" />
+      <option name="PATTERN" value="" />
+      <option name="USE_PATTERN" value="false" />
+      <option name="PARAMS" value="" />
+      <option name="USE_PARAM" value="false" />
+      <method />
+    </configuration>
+    <configuration default="false" name="Nosetests in tests" type="tests" factoryName="Nosetests" temporary="true" nameIsGenerated="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="pysd" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="" />
+      <option name="CLASS_NAME" value="" />
+      <option name="METHOD_NAME" value="" />
+      <option name="FOLDER_NAME" value="$PROJECT_DIR$/tests" />
+      <option name="TEST_TYPE" value="TEST_FOLDER" />
       <option name="PATTERN" value="" />
       <option name="USE_PATTERN" value="false" />
       <option name="PARAMS" value="" />
@@ -1594,19 +1501,19 @@
     <list size="7">
       <item index="0" class="java.lang.String" itemvalue="Python.Test Model Library" />
       <item index="1" class="java.lang.String" itemvalue="Python tests.Doctest assert_frames_close" />
-      <item index="2" class="java.lang.String" itemvalue="Python tests.Nosetests in TestIntegrationExamples" />
-      <item index="3" class="java.lang.String" itemvalue="Python tests.Nosetests in tests (1)" />
-      <item index="4" class="java.lang.String" itemvalue="Python tests.Nosetest TestIntegrationExamples.test_lookups_funcnames" />
-      <item index="5" class="java.lang.String" itemvalue="Python tests.Nosetest TestIntegrationExamples.test_smooth" />
-      <item index="6" class="java.lang.String" itemvalue="Python tests.Nosetest TestIntegrationExamples.test_smooth_and_stock" />
+      <item index="2" class="java.lang.String" itemvalue="Python tests.Nosetest TestIntegrationExamples.test_lookups_funcnames" />
+      <item index="3" class="java.lang.String" itemvalue="Python tests.Nosetest TestIntegrationExamples.test_smooth" />
+      <item index="4" class="java.lang.String" itemvalue="Python tests.Nosetest TestIntegrationExamples.test_smooth_and_stock" />
+      <item index="5" class="java.lang.String" itemvalue="Python tests.Nosetests in TestIntegrationExamples (1)" />
+      <item index="6" class="java.lang.String" itemvalue="Python tests.Nosetests in tests" />
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python tests.Nosetest TestIntegrationExamples.test_smooth_and_stock" />
-        <item index="1" class="java.lang.String" itemvalue="Python tests.Nosetest TestIntegrationExamples.test_lookups_funcnames" />
-        <item index="2" class="java.lang.String" itemvalue="Python tests.Nosetest TestIntegrationExamples.test_smooth" />
-        <item index="3" class="java.lang.String" itemvalue="Python tests.Nosetests in tests (1)" />
-        <item index="4" class="java.lang.String" itemvalue="Python tests.Nosetests in TestIntegrationExamples" />
+        <item index="0" class="java.lang.String" itemvalue="Python tests.Nosetests in tests" />
+        <item index="1" class="java.lang.String" itemvalue="Python tests.Nosetests in TestIntegrationExamples (1)" />
+        <item index="2" class="java.lang.String" itemvalue="Python tests.Nosetest TestIntegrationExamples.test_lookups_funcnames" />
+        <item index="3" class="java.lang.String" itemvalue="Python tests.Nosetest TestIntegrationExamples.test_smooth_and_stock" />
+        <item index="4" class="java.lang.String" itemvalue="Python tests.Nosetest TestIntegrationExamples.test_smooth" />
       </list>
     </recent_temporary>
   </component>
@@ -1656,12 +1563,6 @@
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="Nosetest_TestIntegrationExamples_test_lookups_funcnames - 2017.03.03 at 11h 15m 22s.xml">
-      <configuration name="Nosetest TestIntegrationExamples.test_lookups_funcnames" configurationId="tests" />
-    </history-entry>
-    <history-entry file="Nosetest_TestIntegrationExamples_test_lookups_funcnames - 2017.03.03 at 14h 27m 51s.xml">
-      <configuration name="Nosetest TestIntegrationExamples.test_lookups_funcnames" configurationId="tests" />
-    </history-entry>
     <history-entry file="Nosetest_TestIntegrationExamples_test_lookups_funcnames - 2017.03.03 at 14h 29m 09s.xml">
       <configuration name="Nosetest TestIntegrationExamples.test_lookups_funcnames" configurationId="tests" />
     </history-entry>
@@ -1677,14 +1578,20 @@
     <history-entry file="Nosetest_TestIntegrationExamples_test_lookups_funcnames - 2017.03.03 at 14h 53m 51s.xml">
       <configuration name="Nosetest TestIntegrationExamples.test_lookups_funcnames" configurationId="tests" />
     </history-entry>
-    <history-entry file="Nosetest_TestIntegrationExamples_test_smooth - 2017.03.03 at 14h 14m 36s.xml">
-      <configuration name="Nosetest TestIntegrationExamples.test_smooth" configurationId="tests" />
+    <history-entry file="Nosetest_TestIntegrationExamples_test_lookups_funcnames - 2017.03.03 at 16h 18m 04s.xml">
+      <configuration name="Nosetest TestIntegrationExamples.test_lookups_funcnames" configurationId="tests" />
     </history-entry>
     <history-entry file="Nosetest_TestIntegrationExamples_test_smooth - 2017.03.03 at 15h 00m 28s.xml">
       <configuration name="Nosetest TestIntegrationExamples.test_smooth" configurationId="tests" />
     </history-entry>
     <history-entry file="Nosetest_TestIntegrationExamples_test_smooth_and_stock - 2017.03.03 at 15h 14m 16s.xml">
       <configuration name="Nosetest TestIntegrationExamples.test_smooth_and_stock" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Nosetests_in_TestIntegrationExamples_(1) - 2017.03.03 at 16h 26m 04s.xml">
+      <configuration name="Nosetests in TestIntegrationExamples (1)" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Nosetests_in_tests - 2017.03.03 at 16h 27m 04s.xml">
+      <configuration name="Nosetests in tests" configurationId="tests" />
     </history-entry>
   </component>
   <component name="TodoView" selected-index="1">
@@ -1697,16 +1604,16 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="8" y="23" width="1875" height="1048" extended-state="0" />
-    <editor active="true" />
+    <frame x="0" y="0" width="1440" height="900" extended-state="0" />
+    <editor active="false" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.15002728" sideWeight="0.4936306" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.19670959" sideWeight="0.4936306" order="1" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3282981" sideWeight="0.49753347" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39036146" sideWeight="0.4806867" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297568" sideWeight="0.48677248" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.23012048" sideWeight="0.48907682" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.1746988" sideWeight="0.49753347" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32008368" sideWeight="0.4892704" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.3686747" sideWeight="0.4892704" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24892704" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2079832" sideWeight="0.5193133" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.15574348" sideWeight="0.5063694" order="0" side_tool="true" content_ui="tabs" />
@@ -2088,20 +1995,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/lookups_funcnames/README.md">
-      <provider selected="true" editor-type-id="split-provider[text-editor;MarkdownPreviewEditor]">
-        <state split_layout="FIRST">
-          <first_editor relative-caret-position="0">
-            <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-            <folding />
-          </first_editor>
-          <second_editor />
-        </state>
-      </provider>
-      <provider editor-type-id="MarkdownFxPreviewEditor">
-        <state />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/tests/test-models/tests/lookups/output.tab">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -2142,25 +2035,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.mdl">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="390">
-          <caret line="26" column="22" selection-start-line="26" selection-start-column="22" selection-end-line="26" selection-end-column="22" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pysd/vensim2py.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="816">
-          <caret line="281" column="33" selection-start-line="281" selection-start-column="33" selection-end-line="281" selection-end-column="33" />
-          <folding>
-            <marker date="1488470357000" expanded="true" signature="11786:12001" ph="..." />
-            <marker date="1488470357000" expanded="true" signature="11812:11945" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/tests/test-models/tests/lookups_funcnames/test_lookups_funcnames.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="525">
@@ -2171,19 +2045,45 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/tests/test-models/tests/smooth/test_smooth.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="60">
-          <caret line="4" column="0" selection-start-line="4" selection-start-column="0" selection-end-line="4" selection-end-column="0" />
+        <state relative-caret-position="15">
+          <caret line="1" column="0" selection-start-line="1" selection-start-column="0" selection-end-line="1" selection-end-column="0" />
           <folding>
             <element signature="e#97#128#0" expanded="true" />
+            <marker date="1488576392000" expanded="true" signature="2956:2957" ph="..." />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tests/integration_test_pysd.py">
+    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.mdl">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="390">
-          <caret line="201" column="22" selection-start-line="201" selection-start-column="22" selection-end-line="201" selection-end-column="22" />
+          <caret line="26" column="22" selection-start-line="26" selection-start-column="22" selection-end-line="26" selection-end-column="22" />
           <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/lookups_funcnames/README.md">
+      <provider selected="true" editor-type-id="split-provider[text-editor;MarkdownPreviewEditor]">
+        <state split_layout="FIRST">
+          <first_editor relative-caret-position="0">
+            <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+            <folding />
+          </first_editor>
+          <second_editor />
+        </state>
+      </provider>
+      <provider editor-type-id="MarkdownFxPreviewEditor">
+        <state />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pysd/vensim2py.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="375">
+          <caret line="281" column="33" selection-start-line="281" selection-start-column="33" selection-end-line="281" selection-end-column="33" />
+          <folding>
+            <marker date="1488470357000" expanded="true" signature="11786:12001" ph="..." />
+            <marker date="1488470357000" expanded="true" signature="11812:11945" ph="..." />
+          </folding>
         </state>
       </provider>
     </entry>
@@ -2194,6 +2094,14 @@
           <folding>
             <element signature="e#146#177#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/integration_test_pysd.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="180">
+          <caret line="123" column="24" selection-start-line="123" selection-start-column="24" selection-end-line="123" selection-end-column="24" />
+          <folding />
         </state>
       </provider>
     </entry>
