@@ -76,6 +76,11 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/function_capitalization/test_function_capitalization.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    def test_game(self):
+        from.test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/game/test_game.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_if_stmt(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/if_stmt/if_stmt.mdl')

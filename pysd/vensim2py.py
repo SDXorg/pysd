@@ -378,6 +378,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
         "ramp": "functions.ramp", "min": "np.minimum", "max": "np.maximum",
         "active initial": "functions.active_initial", "xidz": "functions.xidz",
         "zidz": "functions.zidz",
+        "game": "",  # In the future, may have an actual `functions.game` pass through
 
         # vector functions
         "vmin": "np.min", "vmax": "np.max", "prod": "np.prod"
