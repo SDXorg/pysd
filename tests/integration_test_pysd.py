@@ -161,6 +161,12 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/macro_multi_macros/test_macro_multi_macros.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    @unittest.skip('working')
+    def test_macro_output(self):
+        from .test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/macro_output/test_macro_output.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_macro_stock(self):
         from .test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/macro_stock/test_macro_stock.mdl')
@@ -204,6 +210,7 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/smooth/test_smooth.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    @unittest.skip('working')
     def test_smooth_and_stock(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/smooth_and_stock/test_smooth_and_stock.mdl')

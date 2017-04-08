@@ -141,9 +141,9 @@ def build_element(element, subscript_dict):
     def %(py_name)s(%(arguments)s):
         """
         %(real_name)s
-        %(ulines)s
-        (%(py_name)s)
+
         %(unit)s
+
         %(doc)s
         """
         %(contents)s

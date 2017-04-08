@@ -19,9 +19,9 @@ import warnings
 import random
 import xarray as xr
 
-
 try:
     import scipy.stats as stats
+
 
     def bounded_normal(minimum, maximum, mean, std, seed):
         """ Implements vensim's BOUNDED NORMAL function """
@@ -286,7 +286,7 @@ class Macro(Stateful):
     def __call__(self):
         return self.return_func()
 
-    def initialize(self,  initialization_order=None):
+    def initialize(self, initialization_order=None):
         """
         This function tries to initialize the stateful objects.
 
@@ -331,7 +331,7 @@ class Macro(Stateful):
         if retry_flag:
             Macro.initialize(self, initialization_order)
             # using 'Macro.initialize' instead of 'self.initialize' is to ensure that
-            # we don't call the overridden method in the subclass
+            # we don't call the overridden method when Macro is subclassed as Model
 
     def ddt(self):
         return np.array([component.ddt() for component in self._stateful_elements])
@@ -447,53 +447,19 @@ class Macro(Stateful):
                 - Units string
                 - Documentation strings from the original model file
         """
-
-        from parsimonious.grammar import Grammar
-        from parsimonious.nodes import NodeVisitor
-
-        varnames = filter(lambda x: not x.startswith('_') and x not in ('cache', 'functions', 'np'),
-                          dir(self.components))
-
-        docstrings = [getattr(self.components, name).__doc__ for name in varnames]
-
-        g = """\
-            sdVar = (sep? name sep "-"* sep model_name_wrap sep unit sep+ comment? " "*)?
-            sep = ws "\\n" ws
-            ws = " "*
-            name = ~"[A-z ]+"
-            model_name_wrap = '(' model_name ')'
-            model_name = ~"[A-z_]+"
-            unit = ~"[A-z\\, \\/\\*\\[\\]\\?0-9]*"
-            comment = ~"[A-z _+-/*\\n]+"
-            """
-
-        class SDVarDoc(NodeVisitor):
-            def __init__(self, grammar, text):
-                self.sdVar = {}
-                ast = Grammar(grammar).parse(text)
-                self.visit(ast)
-
-            def visit_name(self, n, vc):
-                self.sdVar['Real Name'] = n.text
-
-            def visit_model_name(self, n, vc):
-                self.sdVar['Py Name'] = n.text
-
-            def visit_unit(self, n, vc):
-                self.sdVar['Unit'] = n.text
-
-            def visit_comment(self, n, vc):
-                self.sdVar['Comment'] = n.text
-
-            def generic_visit(self, n, vc):
+        collector = []
+        for name, varname in self.components._namespace.items():
+            try:
+                docstring = getattr(self.components, varname).__doc__
+                lines = docstring.split('\n')
+                collector.append({'Real Name': name,
+                                  'Py Name': varname,
+                                  'Unit': lines[3],
+                                  'Comment': '\n'.join(lines[5:]).strip()})
+            except:
                 pass
 
-        docstring_list = list()
-        for ds in filter(None, docstrings):
-            docstring_list.append(SDVarDoc(g, ds).sdVar)
-
-        # Convert docstring_list, a list of dictionaries, to a Pandas DataFrame
-        docs_df = _pd.DataFrame(docstring_list)
+        docs_df = _pd.DataFrame(collector)
         docs_df.fillna('', inplace=True)
 
         return docs_df[['Real Name', 'Py Name', 'Unit', 'Comment']]
@@ -908,6 +874,7 @@ def active_initial(expr, init_val):
         return init_val
     else:
         return expr
+
 
 def random_uniform(m, x, s):
     return np.random.uniform(m, x)
