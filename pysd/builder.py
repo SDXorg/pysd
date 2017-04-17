@@ -14,6 +14,7 @@ import yapf
 from ._version import __version__
 from . import utils
 import os
+import warnings
 
 
 def build(elements, subscript_dict, namespace, outfile_name):
@@ -485,3 +486,17 @@ def add_macro(macro_name, filename, arg_names, arg_vals):
     }
 
     return "%s()" % stateful['py_name'], [stateful]
+
+
+def add_incomplete(var_name, dependencies):
+    """
+    Incomplete functions don't really need to be 'builders' as they
+     add no new real structure, but it's helpful to have a function
+     in which we can raise a warning about the incomplete equation
+     at translate time.
+    """
+    warnings.warn('%s has no equation specified' %var_name,
+                   SyntaxWarning, stacklevel=2)
+
+    return "functions.incomplete(%s)" ', '.join(dependencies[1:]), []  # first arg is self-reference
+

@@ -385,35 +385,43 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
     }
 
     builders = {
-        "integ": lambda expr, init: builder.add_stock(element['py_name'], element['subs'],
-                                                      expr, init, subscript_dict),
-        "delay1": lambda in_var, dtime: builder.add_n_delay(in_var, dtime, '0', '1',
-                                                            element['subs'], subscript_dict),
-        "delay1i": lambda in_var, dtime, init: builder.add_n_delay(in_var, dtime, init, '1',
-                                                                   element['subs'], subscript_dict),
-        "delay3": lambda in_var, dtime: builder.add_n_delay(in_var, dtime, '0', '3',
-                                                            element['subs'], subscript_dict),
-        "delay3i": lambda in_var, dtime, init: builder.add_n_delay(in_var, dtime, init, '3',
-                                                                   element['subs'], subscript_dict),
-        "delay n": lambda in_var, dtime, init, order: builder.add_n_delay(in_var, dtime,
-                                                                          init, order,
-                                                                          element['subs'],
-                                                                          subscript_dict),
-        "smooth": lambda in_var, dtime: builder.add_n_smooth(in_var, dtime, '0', '1',
-                                                             element['subs'], subscript_dict),
-        "smoothi": lambda in_var, dtime, init: builder.add_n_smooth(in_var, dtime, init, '1',
-                                                                    element['subs'],
-                                                                    subscript_dict),
-        "smooth3": lambda in_var, dtime: builder.add_n_smooth(in_var, dtime, '0', '3',
-                                                              element['subs'], subscript_dict),
-        "smooth3i": lambda in_var, dtime, init: builder.add_n_smooth(in_var, dtime, init, '3',
-                                                                     element['subs'],
-                                                                     subscript_dict),
-        "smooth n": lambda in_var, dtime, init, order: builder.add_n_smooth(in_var, dtime,
-                                                                            init, order,
-                                                                            element['subs'],
-                                                                            subscript_dict),
-        "initial": lambda initial_input: builder.add_initial(initial_input)
+        "integ": lambda expr, init: builder.add_stock(
+            element['py_name'], element['subs'], expr, init, subscript_dict),
+
+        "delay1": lambda in_var, dtime: builder.add_n_delay(
+            in_var, dtime, '0', '1', element['subs'], subscript_dict),
+
+        "delay1i": lambda in_var, dtime, init: builder.add_n_delay(
+            in_var, dtime, init, '1', element['subs'], subscript_dict),
+
+        "delay3": lambda in_var, dtime: builder.add_n_delay(
+            in_var, dtime, '0', '3', element['subs'], subscript_dict),
+
+        "delay3i": lambda in_var, dtime, init: builder.add_n_delay(
+            in_var, dtime, init, '3', element['subs'], subscript_dict),
+
+        "delay n": lambda in_var, dtime, init, order: builder.add_n_delay(
+            in_var, dtime, init, order, element['subs'], subscript_dict),
+
+        "smooth": lambda in_var, dtime: builder.add_n_smooth(
+            in_var, dtime, '0', '1', element['subs'], subscript_dict),
+
+        "smoothi": lambda in_var, dtime, init: builder.add_n_smooth(
+            in_var, dtime, init, '1', element['subs'], subscript_dict),
+
+        "smooth3": lambda in_var, dtime: builder.add_n_smooth(
+            in_var, dtime, '0', '3', element['subs'], subscript_dict),
+
+        "smooth3i": lambda in_var, dtime, init: builder.add_n_smooth(
+            in_var, dtime, init, '3', element['subs'], subscript_dict),
+
+        "smooth n": lambda in_var, dtime, init, order: builder.add_n_smooth(
+            in_var, dtime, init, order, element['subs'], subscript_dict),
+
+        "initial": lambda initial_input: builder.add_initial(initial_input),
+
+        "a function of": lambda *args: builder.add_incomplete(
+            element['real_name'], args)
     }
 
     in_ops = {
