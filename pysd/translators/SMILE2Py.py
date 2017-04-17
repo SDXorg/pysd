@@ -69,10 +69,14 @@ class SMILEParser(NodeVisitor):
         return dictionary[n.text]
     
     def visit_Reference(self, n, (Identifier, _)):
+        convertedIdentifier = Identifier
+        if convertedIdentifier == 'dt':
+            convertedIdentifier = 'time_step'
+        
         if self.context == 'eqn':
-            return 'self.'+Identifier+'()'
+            return 'self.'+convertedIdentifier+'()'
         elif self.context == 'defn':
-            return Identifier
+            return convertedIdentifier
 
     def visit_Identifier(self, n, vc):
         #todo: should check here that identifiers are not python keywords...
