@@ -22,8 +22,8 @@ dictionary = {"abs":"abs", "int":"int", "exp":"np.exp", "inf":"np.inf", "log10":
 keywords = ' / '.join(['"%s"'%key for key in reversed(sorted(dictionary.keys(), key=len))])
 
 grammar = (
-    'Condition   = Term Conditional*                                                            \n'+
-    'Conditional = ("<=" / "<" / ">=" / ">" / "=") Term                                         \n'+
+    'Condition   = Term _ Conditional*                                                          \n'+
+    'Conditional = ("<=" / "<" / ">=" / ">" / "=") _ Term                                       \n'+
 
     'Term        = Factor Additive*                                                             \n'+
     'Additive    = ("+"/"-") Factor                                                             \n'+
@@ -36,7 +36,9 @@ grammar = (
 
     'Primary  = Call / Parens / Signed / Number / Reference                                     \n'+
     'Parens   = "(" Condition ")"                                                               \n'+
-    'Call     = Keyword "(" Condition ("," Condition)* ")"                                      \n'+
+    'Call     = Keyword _ "(" _ ArgList _ ")"                                                   \n'+
+    'ArgList  = AddArg+                                                                         \n'+
+    'AddArg   = ","* _ Condition                                                                \n'+
     'Signed   = ("-"/"+") Primary                                                               \n'+
     'Number   = ((~"[0-9]"+ "."? ~"[0-9]"*) / ("." ~"[0-9]"+)) (("e"/"E") ("-"/"+") ~"[0-9]"+)? \n'+
     'Reference = Identifier _                                                                   \n'+
@@ -85,6 +87,12 @@ class SMILEParser(NodeVisitor):
 
     def visit_Conditional(self, n, (condition, _, term)):
         return dictionary[condition] + term
+
+    def visit_ArgList(self, n, args):
+        return args
+
+    def visit_AddArg(self, n, (comma, _1, argument)):
+        return argument
 
     visit_Exponentive = visit_Conditional
     
