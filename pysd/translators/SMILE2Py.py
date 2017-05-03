@@ -9,8 +9,9 @@ Alexey Prey Mulyukin <alexprey@yandex.ru>
     [May 03 2017] Alexey Prey Mulyukin: Integrate support to
         logical operators like 'AND', 'OR' and 'NOT'.
         Fix support the whitespaces in expressions between 
-		operators and operands.
+        operators and operands.
         Add support to modulo operator - 'MOD'.
+        Fix support for case insensitive in function names.
     
 This module converts a string of SMILE syntax into Python
     
@@ -36,13 +37,13 @@ operators = {
               "*": "*", "/": "/", "mod": "%"       
             }
 
-keywords = ' / '.join(['"%s"'%key for key in reversed(sorted(dictionary.keys(), key=len))])
+keywords = '|'.join(['%s'%key for key in reversed(sorted(dictionary.keys(), key=len))])
 
 grammar = (
     'PrimaryLogic = InvertedLogic / Logic                                                       \n'+
-    'InvertedLogic = "not" _ Logic                                                              \n'+
+    'InvertedLogic = ~"not"i _ Logic                                                            \n'+
     'Logic       = Condition _ Logical*                                                         \n'+
-    'Logical     = ("and" / "or") _ Condition                                                   \n'+
+    'Logical     = ~"and|or"i _ Condition                                                   \n'+
 
     'Condition   = Term _ Conditional*                                                          \n'+
     'Conditional = ("<=" / "<" / ">=" / ">" / "=") _ Term                                       \n'+
@@ -51,7 +52,7 @@ grammar = (
     'Additive    = ("+"/"-") _ Factor                                                           \n'+
 
     'Factor      = ExpBase _ Multiplicative*                                                    \n'+
-    'Multiplicative = ("*" / "/" / "mod") _ ExpBase                                             \n'+
+    'Multiplicative = ("*" / "/" / ~"mod"i) _ ExpBase                                           \n'+
 
     'ExpBase  = Primary _ Exponentive*                                                          \n'+
     'Exponentive = "^" _ Primary                                                                \n'+
@@ -69,7 +70,7 @@ grammar = (
     '_ = spacechar*                                                                             \n'+
     'spacechar = " "* ~"\t"*                                                                    \n'+
 
-    'Keyword = %s  \n'%keywords
+    'Keyword = ~"%s"i  \n'%keywords
            )
 
 
@@ -88,7 +89,7 @@ class SMILEParser(NodeVisitor):
         return self.visit(self.ast)
 
     def visit_Keyword(self, n, vc):
-        return dictionary[n.text]
+        return dictionary[n.text.lower()]
     
     def visit_Reference(self, n, (Identifier, _)):
         convertedIdentifier = Identifier
@@ -118,7 +119,7 @@ class SMILEParser(NodeVisitor):
         return argument
 
     def operationVisitor(self, n, (operator, _, operand)):
-        return operators[operator] + ' ' + operand + ' '
+        return operators[operator.lower()] + ' ' + operand.strip() + ' '
 
     visit_Conditional = operationVisitor
     visit_Exponentive = operationVisitor
