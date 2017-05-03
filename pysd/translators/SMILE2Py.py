@@ -1,6 +1,16 @@
 '''
 Created August 14 2014
 James Houghton <james.p.houghton@gmail.com>
+
+Changed May 03 2017
+Alexey Prey Mulyukin <alexprey@yandex.ru>
+    Changes:
+    
+    [May 03 2017] Alexey Prey Mulyukin: Integrate support to
+        logical operators like 'AND', 'OR' and 'NOT'.
+        Fix support the whitespaces in expressions between 
+		operators and operands.
+        Add support to modulo operator - 'MOD'.
     
 This module converts a string of SMILE syntax into Python
     
@@ -16,29 +26,41 @@ dictionary = {"abs":"abs", "int":"int", "exp":"np.exp", "inf":"np.inf", "log10":
               "random":"np.random.rand", "min":"min", "max":"max", "arccos":"np.arccos",
               "arcsin":"np.arcsin", "arctan":"np.arctan",
               "if_then_else":"self.functions.if_then_else",
-              "step":"self.functions.step", "pulse":"self.functions.pulse",
-              "=":"==", "<=":"<=", "<":"<", ">=":">=", ">":">", "^":"**"}
+              "step":"self.functions.step", "pulse":"self.functions.pulse"
+             }
+
+operators = {
+              "and": "and", "or": "or", "not": "not",
+              "=":"==", "<=":"<=", "<":"<", ">=":">=", ">":">", 
+              "^":"**", "+": "+", "-": "-", 
+              "*": "*", "/": "/", "mod": "%"       
+            }
 
 keywords = ' / '.join(['"%s"'%key for key in reversed(sorted(dictionary.keys(), key=len))])
 
 grammar = (
+    'PrimaryLogic = Logic / InvertedLogic                                                       \n'+
+    'InvertedLogic = "not" _ Logic                                                              \n'+
+    'Logic       = Condition _ Logical*                                                         \n'+
+    'Logical     = ("and" / "or") _ Condition                                                   \n'+
+
     'Condition   = Term _ Conditional*                                                          \n'+
     'Conditional = ("<=" / "<" / ">=" / ">" / "=") _ Term                                       \n'+
 
-    'Term        = Factor Additive*                                                             \n'+
-    'Additive    = ("+"/"-") Factor                                                             \n'+
+    'Term        = Factor _ Additive*                                                           \n'+
+    'Additive    = ("+"/"-") _ Factor                                                           \n'+
 
-    'Factor      = ExpBase Multiplicative*                                                      \n'+
-    'Multiplicative = ("*" / "/") ExpBase                                                       \n'+
+    'Factor      = ExpBase _ Multiplicative*                                                    \n'+
+    'Multiplicative = ("*" / "/" / "mod") _ ExpBase                                             \n'+
 
-    'ExpBase  = Primary Exponentive*                                                            \n'+
-    'Exponentive = "^" Primary                                                                  \n'+
+    'ExpBase  = Primary _ Exponentive*                                                          \n'+
+    'Exponentive = "^" _ Primary                                                                \n'+
 
     'Primary  = Call / Parens / Signed / Number / Reference                                     \n'+
-    'Parens   = "(" Condition ")"                                                               \n'+
+    'Parens   = "(" _ PrimaryLogic _ ")"                                                        \n'+
     'Call     = Keyword _ "(" _ ArgList _ ")"                                                   \n'+
     'ArgList  = AddArg+                                                                         \n'+
-    'AddArg   = ","* _ Condition                                                                \n'+
+    'AddArg   = ","* _ PrimaryLogic                                                             \n'+
     'Signed   = ("-"/"+") Primary                                                               \n'+
     'Number   = ((~"[0-9]"+ "."? ~"[0-9]"*) / ("." ~"[0-9]"+)) (("e"/"E") ("-"/"+") ~"[0-9]"+)? \n'+
     'Reference = Identifier _                                                                   \n'+
@@ -89,16 +111,20 @@ class SMILEParser(NodeVisitor):
     def visit_Call(self, n, (Translated_Keyword, _1, lparen, _2, args, _3, rparen)):
         return Translated_Keyword+'('+', '.join(args)+')'
 
-    def visit_Conditional(self, n, (condition, _, term)):
-        return dictionary[condition] + term
-
     def visit_ArgList(self, n, args):
         return args
 
     def visit_AddArg(self, n, (comma, _1, argument)):
         return argument
 
-    visit_Exponentive = visit_Conditional
+    def operationVisitor(self, n, (operator, _, operand)):
+        return operators[operator] + ' ' + operand + ' '
+
+    visit_Conditional = operationVisitor
+    visit_Exponentive = operationVisitor
+    visit_Logical = operationVisitor
+    visit_Additive = operationVisitor
+    visit_InvertedLogic = operationVisitor
     
     def generic_visit(self, n, vc):
         """
