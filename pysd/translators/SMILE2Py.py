@@ -39,7 +39,7 @@ operators = {
 keywords = ' / '.join(['"%s"'%key for key in reversed(sorted(dictionary.keys(), key=len))])
 
 grammar = (
-    'PrimaryLogic = Logic / InvertedLogic                                                       \n'+
+    'PrimaryLogic = InvertedLogic / Logic                                                       \n'+
     'InvertedLogic = "not" _ Logic                                                              \n'+
     'Logic       = Condition _ Logical*                                                         \n'+
     'Logical     = ("and" / "or") _ Condition                                                   \n'+
@@ -64,7 +64,7 @@ grammar = (
     'Signed   = ("-"/"+") Primary                                                               \n'+
     'Number   = ((~"[0-9]"+ "."? ~"[0-9]"*) / ("." ~"[0-9]"+)) (("e"/"E") ("-"/"+") ~"[0-9]"+)? \n'+
     'Reference = Identifier _                                                                   \n'+
-    'Identifier = ~"[a-zA-Z]" ~"[a-zA-Z0-9_\$\s]"*                                              \n'+
+    'Identifier = ~"[a-zA-Z]" ~"[a-zA-Z0-9_\$]"*                                              \n'+
 
     '_ = spacechar*                                                                             \n'+
     'spacechar = " "* ~"\t"*                                                                    \n'+
