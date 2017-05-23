@@ -311,11 +311,14 @@ class TestPySD(unittest.TestCase):
             warnings.simplefilter("always")
             model = pysd.read_vensim(
                 'test-models/tests/incomplete_equations/test_incomplete_model.mdl')
-        self.assertEqual(len(w), 1)
+        self.assertTrue(any([warn.category == SyntaxWarning for warn in w]))
 
         with warnings.catch_warnings(record=True) as w:
             model.run()
         self.assertEqual(len(w), 1)
+
+        # test that the upstream functions were actually called
+
 
 
 

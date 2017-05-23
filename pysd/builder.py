@@ -498,5 +498,7 @@ def add_incomplete(var_name, dependencies):
     warnings.warn('%s has no equation specified' %var_name,
                    SyntaxWarning, stacklevel=2)
 
-    return "functions.incomplete(%s)" ', '.join(dependencies[1:]), []  # first arg is self-reference
+    # first arg is `self` reference
+    return "functions.incomplete(%s)" % ', '.join(dependencies[1:]), []
+
 
