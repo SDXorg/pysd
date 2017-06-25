@@ -61,12 +61,12 @@ def load(py_model_file):
     """ Load a python-converted model file. """
     module = imp.load_source('modulename', py_model_file)
     component_class = module.Components
-    model = PySD(component_class)
+    model = PySD032(component_class)
     model.__str__ = 'Import of ' + py_model_file
     return model
 
 
-class PySD(object):
+class PySD032(object):
     """
         PySD is the default class charged with running a model.
 

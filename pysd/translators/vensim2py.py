@@ -6,7 +6,7 @@
 import parsimonious
 from parsimonious.nodes import NodeVisitor
 
-from pysd import builder
+from pysd_032 import builder
 
 
 ###############################################################

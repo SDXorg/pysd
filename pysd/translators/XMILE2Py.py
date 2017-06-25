@@ -3,9 +3,9 @@ August 15 2014
 James Houghton <james.p.houghton@gmail.com>
 Major edits June 22 2015
 '''
-from pysd.translators.SMILE2Py import SMILEParser
+from pysd_032.translators.SMILE2Py import SMILEParser
 from lxml import etree
-from pysd import builder
+from pysd_032 import builder
 
 
 def translate_xmile(xmile_file):

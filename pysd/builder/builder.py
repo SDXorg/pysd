@@ -19,7 +19,7 @@ debug models.
 
 from __future__ import division
 import inspect
-from pysd import functions
+from pysd_032 import functions
 from itertools import izip
 
 
@@ -125,8 +125,8 @@ def new_model(filename):
     """
     string = ('from __future__ import division                                 \n' +
               'import numpy as np                                              \n' +
-              'from pysd import functions                                      \n' +
-              'from pysd import builder                                        \n' +
+              'from pysd_032 import functions                                      \n' +
+              'from pysd_032 import builder                                        \n' +
               '                                                                \n' +
               'class Components(builder.ComponentClass):                       \n' +
               '                                                                \n'
