@@ -198,8 +198,9 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/parentheses/test_parens.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('in branch')
+    @unittest.skip('low priority')
     def test_reference_capitalization(self):
+        """A properly formatted Vensim model should never create this failure"""
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/reference_capitalization/test_reference_capitalization.mdl')
         assert_frames_close(output, canon, rtol=rtol)

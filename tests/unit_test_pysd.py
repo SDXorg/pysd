@@ -58,6 +58,17 @@ class TestPySD(unittest.TestCase):
         stocks = model.run(return_timestamps=return_timestamps)
         self.assertSequenceEqual(return_timestamps, list(stocks.index))
 
+    def test_return_timestamps_with_range(self):
+        """
+        Tests that return timestamps may receive a 'range'.
+        It will be cast to a numpy array in the end...
+        """
+        import pysd
+        model = pysd.read_vensim(test_model)
+        return_timestamps = range(0, 100, 10)
+        stocks = model.run(return_timestamps=return_timestamps)
+        self.assertSequenceEqual(return_timestamps, list(stocks.index))
+
     def test_run_return_columns_original_names(self):
         """Addresses https://github.com/JamesPHoughton/pysd/issues/26
         - Also checks that columns are returned in the correct order"""

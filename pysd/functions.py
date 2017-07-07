@@ -540,8 +540,9 @@ class Model(Macro):
 
     def _format_return_timestamps(self, return_timestamps=None):
         """
-        Format the passed in return timestamps value if it exists,
-        or build up array of timestamps based upon the model saveper
+        Format the passed in return timestamps value as a numpy array.
+        If no value is passed, build up array of timestamps based upon
+        model start and end times, and the 'saveper' value.
         """
         if return_timestamps is None:
             # Build based upon model file Start, Stop times and Saveper
@@ -553,12 +554,10 @@ class Model(Macro):
                 self.components.final_time() + self.components.saveper(),
                 self.components.saveper(), dtype=np.float64
             )
-        elif isinstance(return_timestamps, (list, int, float, np.ndarray)):
+        elif isinstance(return_timestamps, (list, int, float, range, np.ndarray)):
             return_timestamps_array = np.array(return_timestamps, ndmin=1)
         elif isinstance(return_timestamps, _pd.Series):
             return_timestamps_array = return_timestamps.as_matrix()
-        elif isinstance(return_timestamps, np.ndarray):
-            return_timestamps_array = return_timestamps
         else:
             raise TypeError('`return_timestamps` expects a list, array, pandas Series, '
                             'or numeric value')
