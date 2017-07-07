@@ -369,7 +369,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
         # element-wise functions
         "abs": "abs", "integer": "int", "exp": "np.exp", "sin": "np.sin", "cos": "np.cos",
         "sqrt": "np.sqrt", "tan": "np.tan", "lognormal": "np.random.lognormal",
-        "random normal": "functions.bounded_normal", "poisson": "np.random.poisson", "ln": "np.log",
+        "random normal": "functions.bounded_normal", "poisson": "np.random.poisson",
+        "ln": "np.log", "log": "functions.log",
         "exprnd": "np.random.exponential", "random uniform": "functions.random_uniform",
         "sum": "np.sum",
         "arccos": "np.arccos", "arcsin": "np.arcsin", "arctan": "np.arctan",

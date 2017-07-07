@@ -116,6 +116,11 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/ln/test_ln.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    def test_log(self):
+        from.test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/log/test_log.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_logicals(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/logicals/test_logicals.mdl')

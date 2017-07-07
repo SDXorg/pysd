@@ -878,3 +878,14 @@ def active_initial(expr, init_val):
 
 def random_uniform(m, x, s):
     return np.random.uniform(m, x)
+
+
+def log(x, base):
+    """
+    Implements vensim's LOG function with change of base
+    Parameters
+    ----------
+    x: input value
+    base: base of the logarithm
+    """
+    return np.log(x) / np.log(base)
