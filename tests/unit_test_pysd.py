@@ -303,6 +303,20 @@ class TestPySD(unittest.TestCase):
                          'Stock Delay3'} <=
                         set(ret.columns.values))
 
+    def test_default_returns_with_lookups(self):
+        """
+        Addresses https://github.com/JamesPHoughton/pysd/issues/114
+        The default settings should skip model elements with no particular
+        return value
+        """
+        import pysd
+        model = pysd.read_vensim('test-models/tests/lookups/test_lookups.mdl')
+        ret = model.run()
+        self.assertTrue({'accumulation',
+                         'rate',
+                         'lookup function call'} <=
+                        set(ret.columns.values))
+
     def test_py_model_file(self):
         """Addresses https://github.com/JamesPHoughton/pysd/issues/86"""
         import pysd

@@ -18,6 +18,7 @@ import imp
 import warnings
 import random
 import xarray as xr
+from inspect import signature
 
 try:
     import scipy.stats as stats
@@ -621,7 +622,7 @@ class Model(Macro):
         t_series = self._build_euler_timeseries(return_timestamps)
 
         if return_columns is None:
-            return_columns = self.components._namespace.keys()
+            return_columns = self._default_return_columns()
 
         self.time.stage = 'Run'
         self.clear_caches()
@@ -635,6 +636,18 @@ class Model(Macro):
         return_df.index = return_timestamps
 
         return return_df
+
+    def _default_return_columns(self):
+        """
+        Return a list of the model elements that does not include lookup functions
+        or other functions that take parameters.
+        """
+        return_columns = []
+        for key, value in self.components._namespace.items():
+            sig = signature(getattr(self.components, value))
+            if len(sig.parameters) == 0:
+                return_columns.append(key)
+        return return_columns
 
     def set_initial_condition(self, initial_condition):
         """ Set the initial conditions of the integration.
