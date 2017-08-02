@@ -565,7 +565,7 @@ class Model(Macro):
         return return_timestamps_array
 
     def run(self, params=None, return_columns=None, return_timestamps=None,
-            initial_condition='original'):
+            initial_condition='original', reload=False):
         """ Simulate the model's behavior over time.
         Return a pandas dataframe with timestamps as rows,
         model elements as columns.
@@ -595,6 +595,8 @@ class Model(Macro):
             * (t, {state}) lets the user specify a starting time and (possibly partial)
               list of stock values.
 
+        reload : bool
+            If true, reloads the model from the translated model file before making changes
 
         Examples
         --------
@@ -611,6 +613,8 @@ class Model(Macro):
         pysd.set_initial_condition : handles setting initial conditions
 
         """
+        if reload:
+            self.reload()
 
         if params:
             self.set_components(params)
@@ -636,6 +640,12 @@ class Model(Macro):
         return_df.index = return_timestamps
 
         return return_df
+
+    def reload(self):
+        """Reloads the model from the translated model file, so that all the
+        parameters are back to their original value.
+        """
+        self.__init__(self.py_model_file)
 
     def _default_return_columns(self):
         """

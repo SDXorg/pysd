@@ -1,5 +1,0 @@
-[style]
-based_on_style = pep8
-column_limit = 99
-coalesce_brackets = True
-split_arguments_when_comma_terminated = True
