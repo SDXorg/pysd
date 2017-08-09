@@ -1,6 +1,7 @@
 import unittest
 import os
 import pysd
+import numpy as np
 
 
 class TestRangeChecker(unittest.TestCase):
@@ -28,6 +29,14 @@ class TestRangeChecker(unittest.TestCase):
     def test_range_test_from_bounds(self):
         errors = pysd.testing.range_test(self.result, bounds=self.bounds)
         self.assertEqual(len(errors), 2)
+
+    def test_identify_nan(self):
+        new_result = self.result.copy()
+        new_result.loc[:3, 'Stock'] = np.NaN
+
+        errors = pysd.testing.range_test(new_result, bounds=self.bounds)
+        self.assertEqual(len(errors), 3)
+
 
     @classmethod
     def tearDownClass(cls):

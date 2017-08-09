@@ -406,3 +406,12 @@ class TestModelInteraction(unittest.TestCase):
         model.run()
         self.assertEqual(new, 345)
         self.assertNotEqual(old, new)
+
+
+class TestMultiRun(unittest.TestCase):
+    def test_delay_reinitializes(self):
+        import pysd
+        model = pysd.read_vensim('../tests/test-models/tests/delays/test_delays.mdl')
+        res1 = model.run()
+        res2 = model.run()
+        self.assertTrue(all(res1==res2))
