@@ -4,41 +4,105 @@ import numpy as np
 
 
 def create_static_test_matrix(model, filename=None):
-    pass
+    """
+    Creates an empty test matrix for evaluating extreme conditions tests.
+
+    After running this function, the user should edit the file and save with
+    a separate filename to avoid overwriting.
+
+    Todo: it would be good to make this automatically blank out elements that
+    are not influenced by a variable, or *are* the variable,
+    and to omit rows that have no consequences because nothing depends on them.
+    Also, to omit columns that nothing influences.
+    """
+    docs = model.doc()
+    docs['bounds'] = docs['Unit'].apply(get_bounds)
+    docs['Min'] = docs['bounds'].apply(lambda x: float(x[0].replace('?', '-inf')))
+    docs['Max'] = docs['bounds'].apply(lambda x: float(x[1].replace('?', '+inf')))
+
+    collector = []
+    for i, row in docs.iterrows():
+        collector.append({'Real Name': row['Real Name'],
+                          'Comment': row['Comment'],
+                          'Value': row['Min'],
+                          })
+
+        collector.append({'Real Name': row['Real Name'],
+                          'Comment': row['Comment'],
+                          'Value': row['Max'],
+                          })
+
+    conditions = pd.DataFrame(collector)
+    results = pd.DataFrame(columns=list(docs['Real Name']))
+    cols = ['Real Name', 'Comment', 'Value'] + list(docs['Real Name'])
+    output = pd.concat([conditions, results])[cols]
+
+    if filename is None:
+        return output
+    elif filename.split('.')[-1] in ['xls', 'xlsx']:
+        output.to_excel(filename, sheet_name='Extreme Conditions', index=False)
+    elif filename.split('.')[-1] == 'csv':
+        output.to_csv(filename, index=False)
+    elif filename.split('.')[-1] == 'tab':
+        output.to_csv(filename, sep='\t')
+    else:
+        raise ValueError('Unknown file extension %s' % filename.split('.')[-1])
 
 
-def static_test_matrix(mdl_file, matrix=None, excel_file=None):
+def static_test_matrix(mdl_file, matrix=None, excel_file=None, errors='return'):
     if matrix:
         pass
     elif excel_file:
-        matrix = pd.read_excel('SIR_Extreme_Conditions.xlsx', index_col=[0, 1])
+        matrix = pd.read_excel(excel_file, index_col=[0, 1, 2])
+        matrix = matrix.replace('inf', np.inf).replace('-inf', np.inf)
     else:
         raise ValueError('Must supply a test matrix or refer to an external file')
 
     model = pysd.read_vensim(mdl_file)
     py_mdl_file = model.py_model_file
 
-    errors = []
+    error_list = []
     for index, row in matrix.iterrows():
         try:
             model = pysd.load(py_mdl_file)
-            result = model.run(params=dict([index]),
+            result = model.run(params={index[0]: index[2]},
                                return_columns=row.index.values,
                                return_timestamps=0).loc[0]
 
             for key, value in row.items():
-                if value != '-' and result[key] != value:
-                    errors.append('When %s = %s, %s is %s instead of %s' %
-                                  (index[0], index[1], key, result[key], value))
+                try:
+                    if value not in ['-', 'x'] and result[key] != value:
+                        error_list.append({'Condition': '%s = %s' % (index[0], index[2]),
+                                           'Variable': repr(key),
+                                           'Expected': repr(value),
+                                           'Observed': repr(result[key])})
 
+                except Exception as e:
+                    error_list.append({'Condition': '%s = %s' % (index[0], index[2]),
+                                       'Variable': repr(key),
+                                       'Expected': repr(value),
+                                       'Observed': e})
         except Exception as e:
-            errors.append('When %s = %s, %s' %
-                          (index[0], index[1], e))
+            error_list.append({'Condition': '%s = %s' % (index[0], index[2]),
+                               'Variable': '',
+                               'Expected': 'Run Error',
+                               'Observed': e})
 
-    try:
-        assert errors == []
-    except:
-        raise AssertionError(errors)
+    if len(error_list) == 0:
+        return None
+
+    if errors == 'return':
+        df = pd.DataFrame(error_list)
+        return df.sort_values(['Condition', 'Variable'])[
+            ['Condition', 'Variable', 'Expected', 'Observed']]
+    elif errors == 'raise':
+        raise AssertionError(["When '%(Condition)s', %(Variable)s is %(Observed)s "
+                              "instead of %(Expected)s" % e for e in error_list])
+
+
+def get_bounds(unit_string):
+    parts = unit_string.split('[')
+    return parts[-1].strip(']').split(',') if len(parts) > 1 else ['?', '?']
 
 
 def create_range_test_matrix(model, filename=None):
@@ -59,10 +123,6 @@ def create_range_test_matrix(model, filename=None):
     -------
 
     """
-
-    def get_bounds(unit_string):
-        parts = unit_string.split('[')
-        return parts[-1].strip(']').split(',') if len(parts) > 1 else ['?', '?']
 
     docs = model.doc()
     docs['bounds'] = docs['Unit'].apply(get_bounds)
@@ -157,6 +217,8 @@ def range_test(result, bounds=None, errors='return'):
                     'beginning': nans[nans].index[0],
                     'index': nans[nans].index.summary().split(':')[1]}
                 )
+    if len(error_list) == 0:
+        return None
 
     if errors == 'return':
         df = pd.DataFrame(error_list)
