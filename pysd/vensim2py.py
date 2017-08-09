@@ -733,13 +733,10 @@ def translate_vensim(mdl_file):
 
     # extract model elements
     file_sections = get_file_sections(text.replace('\n', ''))
-    # Todo: build up a representation of macros including parameters, filenames, that can be passed
-    # to the various builders.
     for section in file_sections:
         if section['name'] == '_main_':
-            # define outfile name
             section['file_name'] = outfile_name
-        else:
+        else:  # separate macro elements into their own files
             section['py_name'] = utils.make_python_identifier(section['name'])[0]
             section['file_name'] = out_dir + '/' + section['py_name'] + '.py'
 
