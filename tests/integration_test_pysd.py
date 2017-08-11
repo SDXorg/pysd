@@ -216,7 +216,7 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/smooth/test_smooth.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('working')
+    #@unittest.skip('working')
     def test_smooth_and_stock(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/smooth_and_stock/test_smooth_and_stock.mdl')
@@ -346,6 +346,11 @@ class TestIntegrationExamples(unittest.TestCase):
     def test_subscripted_flows(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscripted_flows/test_subscripted_flows.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
+    def test_trig(self):
+        from.test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/time/test_time.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_trig(self):
