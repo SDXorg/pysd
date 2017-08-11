@@ -65,7 +65,7 @@ class TestStaticTestMatrix(unittest.TestCase):
     def test_static_test_matrix(self):
         errors = pysd.testing.static_test_matrix(self.model_file,
                                                  excel_file=self.filled_file_name)
-        self.assertEqual(len(errors), 2)
+        self.assertEqual(len(errors), 1)
 
     @classmethod
     def tearDownClass(cls):

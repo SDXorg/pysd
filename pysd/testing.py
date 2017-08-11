@@ -14,6 +14,7 @@ def create_static_test_matrix(model, filename=None):
     are not influenced by a variable, or *are* the variable,
     and to omit rows that have no consequences because nothing depends on them.
     Also, to omit columns that nothing influences.
+    Also, omit table functions
     """
     docs = model.doc()
     docs['bounds'] = docs['Unit'].apply(get_bounds)
@@ -34,7 +35,7 @@ def create_static_test_matrix(model, filename=None):
 
     conditions = pd.DataFrame(collector)
     results = pd.DataFrame(columns=list(docs['Real Name']))
-    cols = ['Real Name', 'Comment', 'Value'] + list(docs['Real Name'])
+    cols = ['Real Name', 'Comment', 'Value'] + sorted(list(docs['Real Name']))
     output = pd.concat([conditions, results])[cols]
 
     if filename is None:
@@ -50,6 +51,20 @@ def create_static_test_matrix(model, filename=None):
 
 
 def static_test_matrix(mdl_file, matrix=None, excel_file=None, errors='return'):
+    """
+
+    Parameters
+    ----------
+    mdl_file
+    matrix
+    excel_file
+    errors
+
+    Returns
+    -------
+    Error matrix
+
+    """
     if matrix:
         pass
     elif excel_file:
@@ -62,37 +77,44 @@ def static_test_matrix(mdl_file, matrix=None, excel_file=None, errors='return'):
     py_mdl_file = model.py_model_file
 
     error_list = []
-    for index, row in matrix.iterrows():
+    for row_num, (index, row) in enumerate(matrix.iterrows()):
         try:
             model = pysd.load(py_mdl_file)
             result = model.run(params={index[0]: index[2]},
                                return_columns=row.index.values,
                                return_timestamps=0).loc[0]
 
-            for key, value in row.items():
+            for col_num, (key, value) in enumerate(row.items()):
                 try:
-                    if value not in ['-', 'x'] and result[key] != value:
+                    if value not in ['-', 'x', 'nan', np.nan, ''] and result[key] != value:
                         error_list.append({'Condition': '%s = %s' % (index[0], index[2]),
                                            'Variable': repr(key),
                                            'Expected': repr(value),
-                                           'Observed': repr(result[key])})
+                                           'Observed': repr(result[key]),
+                                           'Test': '%i.%i' % (row_num, col_num)
+                                           })
 
                 except Exception as e:
                     error_list.append({'Condition': '%s = %s' % (index[0], index[2]),
                                        'Variable': repr(key),
                                        'Expected': repr(value),
-                                       'Observed': e})
+                                       'Observed': e,
+                                       'Test': '%i.%i' % (row_num, col_num)
+                                       })
         except Exception as e:
             error_list.append({'Condition': '%s = %s' % (index[0], index[2]),
                                'Variable': '',
                                'Expected': 'Run Error',
-                               'Observed': e})
+                               'Observed': e,
+                               'Test': '%i.run' % row_num
+                               })
 
     if len(error_list) == 0:
         return None
 
     if errors == 'return':
         df = pd.DataFrame(error_list)
+        df.set_index('Test', inplace=True)
         return df.sort_values(['Condition', 'Variable'])[
             ['Condition', 'Variable', 'Expected', 'Observed']]
     elif errors == 'raise':
@@ -194,8 +216,9 @@ def range_test(result, bounds=None, errors='return'):
                     'bound': lower_bound,
                     'type': 'below support',
                     'beginning': below_bounds[below_bounds].index[0],
-                    'index': below_bounds[below_bounds].index.summary().split(':')[1]}
-                )
+                    'index': below_bounds[below_bounds].index.summary().split(':')[1],
+                    'test': '%i.%i' % ((bounds.index == colname).argmax(), 0)
+                })
 
             upper_bound = bounds['Max'].loc[colname]
             above_bounds = result[colname] > upper_bound
@@ -205,8 +228,9 @@ def range_test(result, bounds=None, errors='return'):
                     'bound': upper_bound,
                     'type': 'above support',
                     'beginning': above_bounds[above_bounds].index[0],
-                    'index': above_bounds[above_bounds].index.summary().split(':')[1]}
-                )
+                    'index': above_bounds[above_bounds].index.summary().split(':')[1],
+                    'test': '%i.%i' % ((bounds.index == colname).argmax(), 1)
+                })
 
             nans = result[colname].isnull()
             if any(nans):
@@ -215,14 +239,15 @@ def range_test(result, bounds=None, errors='return'):
                     'bound': '',
                     'type': 'NaN',
                     'beginning': nans[nans].index[0],
-                    'index': nans[nans].index.summary().split(':')[1]}
-                )
+                    'index': nans[nans].index.summary().split(':')[1],
+                    'test': '%i.nan' % (bounds.index == colname).argmax()
+                })
     if len(error_list) == 0:
         return None
 
     if errors == 'return':
         df = pd.DataFrame(error_list)
-        return df.sort_values(by='beginning').set_index('beginning')[
+        return df.sort_values(by='beginning').set_index('test')[
             ['column', 'type', 'bound', 'index']]
     elif errors == 'raise':
         raise AssertionError(["'%(column)s' is %(type) %(bound) at %(index)s" % e
