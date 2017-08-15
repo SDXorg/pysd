@@ -6,3 +6,4 @@ xarray
 tabulate
 yapf
 xlwt
+funcsigs
