@@ -1,8 +1,11 @@
-from unittest import TestCase
-import xarray as xr
-import pandas as pd
-from . import test_utils
 import doctest
+from unittest import TestCase
+
+import pandas as pd
+import xarray as xr
+
+from . import test_utils
+
 
 class TestUtils(TestCase):
 

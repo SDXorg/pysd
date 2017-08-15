@@ -1,6 +1,7 @@
-import pysd
-import pandas as pd
 import numpy as np
+import pandas as pd
+
+import pysd
 
 
 def create_static_test_matrix(model, filename=None):

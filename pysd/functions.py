@@ -7,18 +7,19 @@ straightforward equivalent in python.
 """
 
 from __future__ import division
-from functools import wraps
 
-import pandas as pd
-
-import pandas as _pd
-import numpy as np
-from . import utils
 import imp
-import warnings
 import random
+import warnings
+from functools import wraps
+from funcsigs import signature
+
+import numpy as np
+import pandas as _pd
+import pandas as pd
 import xarray as xr
-from inspect import signature
+
+from . import utils
 
 try:
     import scipy.stats as stats

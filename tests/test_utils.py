@@ -1,10 +1,12 @@
 """ Utilities for aiding in testing.
 Not tests of utilities... That could be confusing."""
 
-import pysd
+import os.path
+
 import numpy as np
 import pandas as pd
-import os.path
+
+import pysd
 
 
 def runner(model_file):

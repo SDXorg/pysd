@@ -3,12 +3,9 @@ Python model test-models/samples/teacup/teacup.py
 Translated using PySD version 0.7.5
 """
 from __future__ import division
-import numpy as np
-from pysd import utils
-import xarray as xr
 
-from pysd.functions import cache
 from pysd import functions
+from pysd.functions import cache
 
 _subscript_dict = {}
 

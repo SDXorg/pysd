@@ -1,7 +1,9 @@
-import unittest
 import os
-import pysd
+import unittest
+
 import numpy as np
+
+import pysd
 
 
 class TestRangeChecker(unittest.TestCase):

@@ -9,11 +9,13 @@ There should be nothing in this file that has to know about either vensim or
 xmile specific syntax.
 """
 
-import textwrap
-import yapf
-from ._version import __version__
-from . import utils
 import os
+import textwrap
+
+import yapf
+
+from . import utils
+from ._version import __version__
 
 
 def build(elements, subscript_dict, namespace, outfile_name):

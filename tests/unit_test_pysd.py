@@ -1,7 +1,7 @@
 import unittest
-import pandas as pd
+
 import numpy as np
-from pysd import utils
+import pandas as pd
 
 test_model = 'test-models/samples/teacup/teacup.mdl'
 

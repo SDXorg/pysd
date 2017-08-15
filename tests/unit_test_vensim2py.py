@@ -1,4 +1,5 @@
 import unittest
+from pysd import functions
 import xarray as xr
 
 
@@ -220,7 +221,6 @@ class TestParse_general_expression(unittest.TestCase):
         """ stock construction should create a stateful variable and reference it """
         from pysd.vensim2py import parse_general_expression
         from pysd.functions import Integ
-        from pysd import functions
         res = parse_general_expression({'expr': 'INTEG (FlowA, -10)',
                                       'py_name': 'test_stock',
                                       'subs': []},
@@ -236,7 +236,6 @@ class TestParse_general_expression(unittest.TestCase):
     def test_delay_construction_function_no_subscripts(self):
         from pysd.vensim2py import parse_general_expression
         from pysd.functions import Delay
-        from pysd import functions
         res = parse_general_expression({'expr': 'DELAY1(Variable, DelayTime)',
                                         'subs': []},
                                        {'Variable': 'variable',
@@ -259,7 +258,6 @@ class TestParse_general_expression(unittest.TestCase):
         """
         from pysd.vensim2py import parse_general_expression
         from pysd.functions import Smooth
-        from pysd import functions
         res = parse_general_expression({'expr': 'SMOOTH(Variable, DelayTime)',
                                         'subs': []},
                                        {'Variable': 'variable',

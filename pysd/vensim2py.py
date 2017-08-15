@@ -3,13 +3,15 @@ Translates vensim .mdl file to pieces needed by the builder module to write a py
 model. Everything that requires knowledge of vensim syntax should be in this file.
 """
 
+import os
 import re
+import textwrap
+
+import numpy as np
 import parsimonious
+
 from . import builder
 from . import utils
-import textwrap
-import numpy as np
-import os
 
 
 def get_file_sections(file_str):
