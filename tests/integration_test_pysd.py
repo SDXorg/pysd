@@ -348,7 +348,7 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscripted_flows/test_subscripted_flows.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    def test_trig(self):
+    def test_time(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/time/test_time.mdl')
         assert_frames_close(output, canon, rtol=rtol)
@@ -356,6 +356,11 @@ class TestIntegrationExamples(unittest.TestCase):
     def test_trig(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/trig/test_trig.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
+    def test_variable_ranges(self):
+        from .test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/variable_ranges/test_variable_ranges.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_xidz_zidz(self):

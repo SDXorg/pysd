@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
-
+import pyDOE
+import scipy.stats.distributions as dist
 import pysd
 
 
@@ -139,12 +140,15 @@ def create_range_test_matrix(model, filename=None):
 
     Parameters
     ----------
-    model: PySD Model Object or
-    filename
+    model: PySD Model Object
+
+    filename: string or None
+        location where the test matrix may be saved
 
     Returns
     -------
-
+    output: pandas DataFrame
+        if filename == None, returns a DataFrame containing the test matrix
     """
 
     docs = model.doc()
@@ -253,3 +257,116 @@ def range_test(result, bounds=None, errors='return'):
     elif errors == 'raise':
         raise AssertionError(["'%(column)s' is %(type) %(bound) at %(index)s" % e
                               for e in error_list])
+
+
+def sample_pspace(model, param_list, bounds=None, samples=100):
+    """
+    A dataframe where each row represents a location in the parameter
+    space, locations distributed to exercise the full range of values
+    that each parameter can take on.
+
+    This is useful for quick and dirty application of tests to a bunch
+    of locations in the sample space. Kind-of a fuzz-testing for
+    the model.
+
+    Uses latin hypercube sampling, with random values within
+    the sample bins. the LHS sampler shuffles the bins each time,
+    so a subsequent call will yield a different sample from the
+    parameter space.
+
+    When a variable has both upper and lower bounds, use a uniform
+    sample between those bounds.
+
+    When a variable has only one bound, use an exponential distribution
+    with the scale set to be the difference between the bound and the
+    current model value (1 if they are the same)
+
+    When the variable has neither bound, use a normal distribution centered
+    on the current model value, with scale equal to the absolute value
+    of the model value (1 if that magnitude is 0)
+
+    Parameters
+    ----------
+    model = pysd.Model object
+
+    param_list = list of strings
+        The real names of parameters to include in the explored parameter
+         space.
+
+    bounds = DataFrame, string filename, or None
+        A range test matrix as used for bounds checking.
+        If None, creates one from the model
+        These bounds can also place artificial limits on the
+        parameter space you want to explore, even if the theoretical
+        bounds on the variable are infinite.
+
+    samples: int
+        How many samples to include in the iterator?
+
+    Returns
+    -------
+    lhs : pandas dataframe
+        distribution-weighted latin hypercube samples
+
+    Note
+    ----
+    Executes the model by 1 timestep to get the current value of parameters.
+
+    """
+    if isinstance(bounds, pd.DataFrame):
+        bounds = bounds.set_index('Real Name')
+    elif bounds is None:
+        bounds = create_range_test_matrix(model)
+    elif isinstance(bounds, str):
+        if bounds.split('.')[-1] in ['xls', 'xlsx']:
+            bounds = pd.read_excel(bounds, sheetname='Bounds', index_col='Real Name')
+        elif bounds.split('.')[-1] == 'csv':
+            bounds = pd.read_csv(bounds, index_col='Real Name')
+        elif bounds.split('.')[-1] == 'tab':
+            bounds = pd.read_csv(bounds, sep='\t', index_col='Real Name')
+        else:
+            raise ValueError('Unknown file type: bounds')
+    else:
+        raise ValueError('Unknown type: bounds')
+
+    unit_lhs = pd.DataFrame(pyDOE.lhs(n=len(param_list), samples=samples),
+                            columns=param_list)
+
+    res = model.run(return_timestamps=[model.components.initial_time()])
+    lhs = pd.DataFrame(index=unit_lhs.index)
+    for param in param_list:
+        lower, upper = bounds[['Min', 'Max']].loc[param]
+        value = res[param].iloc[0]
+
+        if lower == upper:
+            lhs[param] = lower
+
+        elif np.isfinite(lower) and np.isfinite(upper):  # np.isfinite(0)==True
+            scale = upper-lower
+            lhs[param] = dist.uniform(lower, scale).ppf(unit_lhs[param])
+
+        elif np.isfinite(lower) and np.isinf(upper):
+            if lower == value:
+                scale = 1
+            else:
+                scale = value - lower
+            lhs[param] = dist.expon(lower, scale).ppf(unit_lhs[param])
+
+        elif np.isinf(lower) and np.isfinite(upper):  # np.isinf(-np.inf)==True
+            if upper == value:
+                scale = 1
+            else:
+                scale = upper - value
+            lhs[param] = upper - dist.expon(0, scale).ppf(unit_lhs[param])
+
+        elif np.isinf(lower) and np.isinf(upper):  # np.isinf(-np.inf)==True
+            if value == 0:
+                scale = 1
+            else:
+                scale = abs(value)
+            lhs[param] = dist.norm(value, scale).ppf(unit_lhs[param])
+
+        else:
+            raise ValueError('Problem with lower: %s or upper: %s bounds' % (lower, upper))
+
+    return lhs
