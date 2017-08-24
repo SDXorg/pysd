@@ -1,11 +1,11 @@
-import numpy as np
-import pandas as pd
-import pyDOE
-import scipy.stats.distributions as dist
-import pysd
+import numpy as _np
+import pandas as _pd
+import pyDOE as _pyDOE
+import scipy.stats.distributions as _dist
+import pysd as _pysd
 
 
-def create_static_test_matrix(model, filename=None):
+def create_extreme_conditions_test_matrix(model, filename=None):
     """
     Creates an empty test matrix for evaluating extreme conditions tests.
 
@@ -19,7 +19,7 @@ def create_static_test_matrix(model, filename=None):
     Also, omit table functions
     """
     docs = model.doc()
-    docs['bounds'] = docs['Unit'].apply(get_bounds)
+    docs['bounds'] = docs['Unit'].apply(_get_bounds)
     docs['Min'] = docs['bounds'].apply(lambda x: float(x[0].replace('?', '-inf')))
     docs['Max'] = docs['bounds'].apply(lambda x: float(x[1].replace('?', '+inf')))
 
@@ -35,10 +35,10 @@ def create_static_test_matrix(model, filename=None):
                           'Value': row['Max'],
                           })
 
-    conditions = pd.DataFrame(collector)
-    results = pd.DataFrame(columns=list(docs['Real Name']))
+    conditions = _pd.DataFrame(collector)
+    results = _pd.DataFrame(columns=list(docs['Real Name']))
     cols = ['Real Name', 'Comment', 'Value'] + sorted(list(docs['Real Name']))
-    output = pd.concat([conditions, results])[cols]
+    output = _pd.concat([conditions, results])[cols]
 
     if filename is None:
         return output
@@ -52,7 +52,7 @@ def create_static_test_matrix(model, filename=None):
         raise ValueError('Unknown file extension %s' % filename.split('.')[-1])
 
 
-def static_test_matrix(mdl_file, matrix=None, excel_file=None, errors='return'):
+def extreme_conditions_test(mdl_file, matrix=None, excel_file=None, errors='return'):
     """
 
     Parameters
@@ -70,30 +70,30 @@ def static_test_matrix(mdl_file, matrix=None, excel_file=None, errors='return'):
     if matrix:
         pass
     elif excel_file:
-        matrix = pd.read_excel(excel_file, index_col=[0, 1, 2])
-        matrix = matrix.replace('inf', np.inf).replace('-inf', np.inf)
+        matrix = _pd.read_excel(excel_file, index_col=[0, 1, 2])
+        matrix = matrix.replace('inf', _np.inf).replace('-inf', _np.inf)
     else:
         raise ValueError('Must supply a test matrix or refer to an external file')
 
-    model = pysd.read_vensim(mdl_file)
+    model = _pysd.read_vensim(mdl_file)
     py_mdl_file = model.py_model_file
 
     error_list = []
     for row_num, (index, row) in enumerate(matrix.iterrows()):
         try:
-            model = pysd.load(py_mdl_file)
+            model = _pysd.load(py_mdl_file)
             result = model.run(params={index[0]: index[2]},
                                return_columns=row.index.values,
                                return_timestamps=0).loc[0]
 
             for col_num, (key, value) in enumerate(row.items()):
                 try:
-                    if value not in ['-', 'x', 'nan', np.nan, ''] and result[key] != value:
+                    if value not in ['-', 'x', 'nan', 'NaN', _np.nan, ''] and result[key] != value:
                         error_list.append({'Condition': '%s = %s' % (index[0], index[2]),
                                            'Variable': repr(key),
                                            'Expected': repr(value),
                                            'Observed': repr(result[key]),
-                                           'Test': '%i.%i' % (row_num, col_num)
+                                           'Test': 'ex.%i.%i' % (row_num, col_num)
                                            })
 
                 except Exception as e:
@@ -101,35 +101,36 @@ def static_test_matrix(mdl_file, matrix=None, excel_file=None, errors='return'):
                                        'Variable': repr(key),
                                        'Expected': repr(value),
                                        'Observed': e,
-                                       'Test': '%i.%i' % (row_num, col_num)
+                                       'Test': 'ex.%i.%i' % (row_num, col_num)
                                        })
         except Exception as e:
             error_list.append({'Condition': '%s = %s' % (index[0], index[2]),
                                'Variable': '',
                                'Expected': 'Run Error',
                                'Observed': e,
-                               'Test': '%i.run' % row_num
+                               'Test': 'ex.%i.run' % row_num
                                })
 
     if len(error_list) == 0:
         return None
 
     if errors == 'return':
-        df = pd.DataFrame(error_list)
+        df = _pd.DataFrame(error_list)
         df.set_index('Test', inplace=True)
-        return df.sort_values(['Condition', 'Variable'])[
+        errors = df.sort_values(['Condition', 'Variable'])[
             ['Condition', 'Variable', 'Expected', 'Observed']]
+        return errors[errors['Expected'] != 'nan']
     elif errors == 'raise':
         raise AssertionError(["When '%(Condition)s', %(Variable)s is %(Observed)s "
                               "instead of %(Expected)s" % e for e in error_list])
 
 
-def get_bounds(unit_string):
+def _get_bounds(unit_string):
     parts = unit_string.split('[')
     return parts[-1].strip(']').split(',') if len(parts) > 1 else ['?', '?']
 
 
-def create_range_test_matrix(model, filename=None):
+def create_bounds_test_matrix(model, filename=None):
     """
     Creates a test file that can be used to test that all model elements
     remain within their supported ranges.
@@ -152,11 +153,12 @@ def create_range_test_matrix(model, filename=None):
     """
 
     docs = model.doc()
-    docs['bounds'] = docs['Unit'].apply(get_bounds)
+    docs['bounds'] = docs['Unit'].apply(_get_bounds)
     docs['Min'] = docs['bounds'].apply(lambda x: float(x[0].replace('?', '-inf')))
     docs['Max'] = docs['bounds'].apply(lambda x: float(x[1].replace('?', '+inf')))
 
-    output = docs[['Real Name', 'Comment', 'Unit', 'Min', 'Max']]
+    output = docs[['Real Name', 'Comment',
+                   'Unit', 'Min', 'Max']].sort_values(by='Real Name')
 
     if filename is None:
         return output
@@ -170,12 +172,12 @@ def create_range_test_matrix(model, filename=None):
         raise ValueError('Unknown file extension %s' % filename.split('.')[-1])
 
 
-def range_test(result, bounds=None, errors='return'):
+def bounds_test(result, bounds=None, errors='return'):
     """
     Checks that the output of a simulation remains within the specified bounds.
     Also will identify if results are NaN
 
-    Requires a test matrix probably generated by `create_range_test_matrix`
+    Requires a test matrix probably generated by `create_bounds_test_matrix`
 
     Parameters
     ----------
@@ -196,15 +198,15 @@ def range_test(result, bounds=None, errors='return'):
 
     """
 
-    if isinstance(bounds, pd.DataFrame):
+    if isinstance(bounds, _pd.DataFrame):
         bounds = bounds.set_index('Real Name')
     elif isinstance(bounds, str):
         if bounds.split('.')[-1] in ['xls', 'xlsx']:
-            bounds = pd.read_excel(bounds, sheetname='Bounds', index_col='Real Name')
+            bounds = _pd.read_excel(bounds, sheetname='Bounds', index_col='Real Name')
         elif bounds.split('.')[-1] == 'csv':
-            bounds = pd.read_csv(bounds, index_col='Real Name')
+            bounds = _pd.read_csv(bounds, index_col='Real Name')
         elif bounds.split('.')[-1] == 'tab':
-            bounds = pd.read_csv(bounds, sep='\t', index_col='Real Name')
+            bounds = _pd.read_csv(bounds, sep='\t', index_col='Real Name')
         else:
             raise ValueError('Unknown file type: bounds')
     else:
@@ -218,11 +220,11 @@ def range_test(result, bounds=None, errors='return'):
             if any(below_bounds):
                 error_list.append({
                     'column': colname,
-                    'bound': lower_bound,
+                    'condition': lower_bound,
                     'type': 'below support',
                     'beginning': below_bounds[below_bounds].index[0],
                     'index': below_bounds[below_bounds].index.summary().split(':')[1],
-                    'test': '%i.%i' % ((bounds.index == colname).argmax(), 0)
+                    'test': 'b.%i.%i' % ((bounds.index == colname).argmax(), 0)
                 })
 
             upper_bound = bounds['Max'].loc[colname]
@@ -230,38 +232,38 @@ def range_test(result, bounds=None, errors='return'):
             if any(above_bounds):
                 error_list.append({
                     'column': colname,
-                    'bound': upper_bound,
+                    'condition': upper_bound,
                     'type': 'above support',
                     'beginning': above_bounds[above_bounds].index[0],
                     'index': above_bounds[above_bounds].index.summary().split(':')[1],
-                    'test': '%i.%i' % ((bounds.index == colname).argmax(), 1)
+                    'test': 'b.%i.%i' % ((bounds.index == colname).argmax(), 1)
                 })
 
             nans = result[colname].isnull()
             if any(nans):
                 error_list.append({
                     'column': colname,
-                    'bound': '',
+                    'condition': '',
                     'type': 'NaN',
                     'beginning': nans[nans].index[0],
                     'index': nans[nans].index.summary().split(':')[1],
-                    'test': '%i.nan' % (bounds.index == colname).argmax()
+                    'test': 'b.%i.nan' % (bounds.index == colname).argmax()
                 })
     if len(error_list) == 0:
         return None
 
     if errors == 'return':
-        df = pd.DataFrame(error_list)
+        df = _pd.DataFrame(error_list)
         return df.sort_values(by='beginning').set_index('test')[
-            ['column', 'type', 'bound', 'index']]
+            ['column', 'type', 'condition', 'index']]
     elif errors == 'raise':
         raise AssertionError(["'%(column)s' is %(type) %(bound) at %(index)s" % e
                               for e in error_list])
 
 
-def sample_pspace(model, param_list, bounds=None, samples=100):
+def sample_pspace(model, param_list=None, bounds=None, samples=100):
     """
-    A dataframe where each row represents a location in the parameter
+    A DataFrame where each row represents a location in the parameter
     space, locations distributed to exercise the full range of values
     that each parameter can take on.
 
@@ -287,13 +289,15 @@ def sample_pspace(model, param_list, bounds=None, samples=100):
 
     Parameters
     ----------
-    model = pysd.Model object
+    model: pysd.Model object
 
-    param_list = list of strings
+    param_list: None or list of strings
         The real names of parameters to include in the explored parameter
-         space.
+        space.
+        If None, uses all of the constants in the model except TIME STEP,
+        INITIAL TIME, etc.
 
-    bounds = DataFrame, string filename, or None
+    bounds: DataFrame, string filename, or None
         A range test matrix as used for bounds checking.
         If None, creates one from the model
         These bounds can also place artificial limits on the
@@ -305,35 +309,40 @@ def sample_pspace(model, param_list, bounds=None, samples=100):
 
     Returns
     -------
-    lhs : pandas dataframe
+    lhs : pandas DataFrame
         distribution-weighted latin hypercube samples
 
     Note
     ----
-    Executes the model by 1 timestep to get the current value of parameters.
+    Executes the model by 1 time-step to get the current value of parameters.
 
     """
-    if isinstance(bounds, pd.DataFrame):
+    if param_list is None:
+        doc = model.doc()
+        param_list = sorted(list(set(doc[doc['Type'] == 'constant']['Real Name']) -
+                            {'FINAL TIME', 'INITIAL TIME', 'TIME STEP'}))
+
+    if isinstance(bounds, _pd.DataFrame):
         bounds = bounds.set_index('Real Name')
     elif bounds is None:
-        bounds = create_range_test_matrix(model)
+        bounds = create_bounds_test_matrix(model).set_index('Real Name')
     elif isinstance(bounds, str):
         if bounds.split('.')[-1] in ['xls', 'xlsx']:
-            bounds = pd.read_excel(bounds, sheetname='Bounds', index_col='Real Name')
+            bounds = _pd.read_excel(bounds, sheetname='Bounds', index_col='Real Name')
         elif bounds.split('.')[-1] == 'csv':
-            bounds = pd.read_csv(bounds, index_col='Real Name')
+            bounds = _pd.read_csv(bounds, index_col='Real Name')
         elif bounds.split('.')[-1] == 'tab':
-            bounds = pd.read_csv(bounds, sep='\t', index_col='Real Name')
+            bounds = _pd.read_csv(bounds, sep='\t', index_col='Real Name')
         else:
             raise ValueError('Unknown file type: bounds')
     else:
         raise ValueError('Unknown type: bounds')
 
-    unit_lhs = pd.DataFrame(pyDOE.lhs(n=len(param_list), samples=samples),
-                            columns=param_list)
+    unit_lhs = _pd.DataFrame(_pyDOE.lhs(n=len(param_list), samples=samples),
+                             columns=param_list)
 
     res = model.run(return_timestamps=[model.components.initial_time()])
-    lhs = pd.DataFrame(index=unit_lhs.index)
+    lhs = _pd.DataFrame(index=unit_lhs.index)
     for param in param_list:
         lower, upper = bounds[['Min', 'Max']].loc[param]
         value = res[param].iloc[0]
@@ -341,32 +350,109 @@ def sample_pspace(model, param_list, bounds=None, samples=100):
         if lower == upper:
             lhs[param] = lower
 
-        elif np.isfinite(lower) and np.isfinite(upper):  # np.isfinite(0)==True
-            scale = upper-lower
-            lhs[param] = dist.uniform(lower, scale).ppf(unit_lhs[param])
+        elif _np.isfinite(lower) and _np.isfinite(upper):  # np.isfinite(0)==True
+            scale = upper - lower
+            lhs[param] = _dist.uniform(lower, scale).ppf(unit_lhs[param])
 
-        elif np.isfinite(lower) and np.isinf(upper):
+        elif _np.isfinite(lower) and _np.isinf(upper):
             if lower == value:
                 scale = 1
             else:
                 scale = value - lower
-            lhs[param] = dist.expon(lower, scale).ppf(unit_lhs[param])
+            lhs[param] = _dist.expon(lower, scale).ppf(unit_lhs[param])
 
-        elif np.isinf(lower) and np.isfinite(upper):  # np.isinf(-np.inf)==True
+        elif _np.isinf(lower) and _np.isfinite(upper):  # np.isinf(-np.inf)==True
             if upper == value:
                 scale = 1
             else:
                 scale = upper - value
-            lhs[param] = upper - dist.expon(0, scale).ppf(unit_lhs[param])
+            lhs[param] = upper - _dist.expon(0, scale).ppf(unit_lhs[param])
 
-        elif np.isinf(lower) and np.isinf(upper):  # np.isinf(-np.inf)==True
+        elif _np.isinf(lower) and _np.isinf(upper):  # np.isinf(-np.inf)==True
             if value == 0:
                 scale = 1
             else:
                 scale = abs(value)
-            lhs[param] = dist.norm(value, scale).ppf(unit_lhs[param])
+            lhs[param] = _dist.norm(value, scale).ppf(unit_lhs[param])
 
         else:
             raise ValueError('Problem with lower: %s or upper: %s bounds' % (lower, upper))
 
     return lhs
+
+
+def summarize(model, cases, tests):
+    """
+    Runs the model at each of the test cases,
+    applies each test function in the tests list
+    and summarizes the results.
+
+    Parameters
+    ----------
+    model: pysd Model object
+    cases: Pandas Dictionary
+        each row is a test condition, column names are variables
+    tests: list of functions
+        functions should take a model result dataframe and
+        return an error dataframe,
+
+    Returns
+    -------
+
+
+    """
+    # Todo: This should be easily parallelizable
+
+    synopsis = _pd.DataFrame(columns=['variable', 'type', 'condition', 'cases'])
+    for case_num, case in cases.iterrows():
+        result = model.run(dict(case))
+        error_df = _pd.DataFrame()
+        for test_func in tests:
+            error_df = error_df.append(test_func(result))
+
+        for name, error in error_df.iterrows():
+            if name in synopsis.index:
+                synopsis.loc[name]['cases'].append(case_num)
+            else:
+                synopsis.loc[name, 'variable'] = error['column']
+                synopsis.loc[name, 'type'] = error['type']
+                synopsis.loc[name, 'condition'] = error['condition']
+                synopsis.loc[name, 'cases'] = [case_num]
+
+    return synopsis
+
+
+def timestep_test(model, threshold=.99, errors='return'):
+    """
+    Assess that the current timestep is appropriate for the model.
+     
+    This function runs the model once with its current timestep,
+    and then again with the timestep at two random fractions of
+    that value.
+    It compares the results of these simulations across all model elements
+    and ensures that the resulting output is sufficiently similar.
+
+    The function uses two random values to get around the fact that
+    some oscillatory modes might be bisectable by the timestep and
+    not yield a meaningful difference in simulation. This approach
+    makes that type of occurrence very unlikely.
+    
+    
+    Parameters
+    ----------
+    model
+    threshold
+    errors
+
+    Returns
+    -------
+
+    """
+    pass
+
+
+# __all__ = [create_extreme_conditions_test_matrix,
+#            extreme_conditions_test,
+#            create_bounds_test_matrix,
+#            bounds_test,
+#            sample_pspace]

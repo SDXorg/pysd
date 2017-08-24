@@ -456,15 +456,17 @@ class Macro(Stateful):
                 lines = docstring.split('\n')
                 collector.append({'Real Name': name,
                                   'Py Name': varname,
-                                  'Unit': lines[3],
-                                  'Comment': '\n'.join(lines[5:]).strip()})
+                                  'Unit': lines[3].strip(),
+                                  'Type': lines[5].strip(),
+                                  'Comment': '\n'.join(lines[7:]).strip()})
             except:
                 pass
 
         docs_df = _pd.DataFrame(collector)
         docs_df.fillna('', inplace=True)
 
-        return docs_df[['Real Name', 'Py Name', 'Unit', 'Comment']]
+        order = ['Real Name', 'Py Name','Unit', 'Type', 'Comment']
+        return docs_df[order].sort_values(by='Real Name').reset_index(drop=True)
 
     def __str__(self):
         """ Return model source files """

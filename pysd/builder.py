@@ -145,6 +145,8 @@ def build_element(element, subscript_dict):
         %(real_name)s
 
         %(unit)s
+        
+        %(kind)s
 
         %(doc)s
         """
