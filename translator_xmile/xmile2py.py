@@ -243,14 +243,14 @@ def xmile_parser(xmile_file):
         name = flw_parse.pop("flow_name").replace(" ", "_")
         flows[name] = flw_parse
 
-    stocks, stocks_dict = [], []
+    stocks, stocks_cls = [], []
     for stk in soup.variables.find_all("stock"):
         stock_parse = StockParser(stock_grammar, stk.prettify()).entry
         if stk.inflow:
             stock_parse["inflow"] = flows[stock_parse["inflow"]]
         if stk.outflow:
             stock_parse["outflow"] = flows[stock_parse["outflow"]]
-        stocks_dict.append(stock_parse)
+        stocks_cls.append(stock(attributs["stocks"][0]))
 
         eqn = stk.attrs["name"] + "(t)" + " = " + stk.attrs["name"] +\
             " (t - dt)"
@@ -292,7 +292,7 @@ def xmile_parser(xmile_file):
             aux.append(ax.attrs["name"] + " = GRAPH(" + ax.eqn.text + ")\n" +
                        ", ".join(series))
 
-    return {"flows": flows, "stocks": stocks_dict, "auxs": aux_dict}
+    return {"flows": flows, "stocks": stocks_cls, "auxs": aux_dict}
 
 # %% Read xmile model (like stella 10 onwards)
 if __name__ == '__main__':
