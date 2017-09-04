@@ -84,9 +84,9 @@ class aux:
             self.units = aux_dict["units"]
             self.type = "value"
 
-
 class meta_data:
     def __init__(self, stock_dict, aux):
+        pass
 
 
 # %% Parsers
@@ -237,6 +237,7 @@ def xmile_parser(xmile_file):
 
     # Extract equations block located in model/variables section of xmile file
     # First get flow equations
+    
     flows = {}
     for flw in soup.variables.find_all("flow"):
         flw_parse = FlowParser(flow_grammar, flw.prettify()).entry
@@ -250,7 +251,7 @@ def xmile_parser(xmile_file):
             stock_parse["inflow"] = flows[stock_parse["inflow"]]
         if stk.outflow:
             stock_parse["outflow"] = flows[stock_parse["outflow"]]
-        stocks_dict.append(stock_parse)
+        stocks_dict.append(stock(stock_parse))
 
         eqn = stk.attrs["name"] + "(t)" + " = " + stk.attrs["name"] +\
             " (t - dt)"
@@ -275,10 +276,10 @@ def xmile_parser(xmile_file):
         print(StockParser(stock_grammar, stk.prettify()).entry)
 
     # Get aux variables
-    aux_dict, aux = [], []
+    aux_dict, aux_lst = [], []
     for ax in soup.variables.find_all("aux"):
         aux_parse = AuxParser(aux_grammar, ax.prettify()).entry
-        aux_dict.append(aux_parse)
+        aux_dict.append(aux(aux_parse))
 
         if ax.gf:
             rge = float(ax.xscale["max"]) - float(ax.xscale["min"])
@@ -289,7 +290,7 @@ def xmile_parser(xmile_file):
                 g_xy = "(" + str(float(i)) + ", " + str(float(g)) + ")"
                 series.extend([g_xy])
                 i += step
-            aux.append(ax.attrs["name"] + " = GRAPH(" + ax.eqn.text + ")\n" +
+            aux_lst.append(ax.attrs["name"] + " = GRAPH(" + ax.eqn.text + ")\n" +
                        ", ".join(series))
 
     return {"flows": flows, "stocks": stocks_dict, "auxs": aux_dict}
@@ -297,14 +298,18 @@ def xmile_parser(xmile_file):
 # %% Read xmile model (like stella 10 onwards)
 if __name__ == '__main__':
     main()
-    with open("SIR_HK (stella 10).stmx") as fp:
-        soup = bs(fp, "lxml")
+
+import os 
+os.chdir("C:/Users/Miguel/Documents/1 Nube/Dropbox/Curso posgrado/2015/Día 2/Influenza/El modelo general")
+with open("SIR_HK (stella 10).stmx") as fp:
+    soup = bs(fp, "lxml")
 
 attributs = xmile_parser (soup)
-attributs["auxs"][2]
+attributs["stocks"][0]
+attributs
 
-stk1 = stock (attributs["stocks"][0])
-stk1.show()
+stk1 = attributs["stocks"]
+stk1[1].show()
 
 ax1 = aux(attributs["auxs"][2])
 ax1.name
