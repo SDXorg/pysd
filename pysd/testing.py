@@ -272,7 +272,7 @@ def sample_pspace(model, param_list=None, bounds=None, samples=100):
     the model.
 
     Uses latin hypercube sampling, with random values within
-    the sample bins. the LHS sampler shuffles the bins each time,
+    the sample bins. The LHS sampler shuffles the bins each time,
     so a subsequent call will yield a different sample from the
     parameter space.
 
@@ -451,8 +451,25 @@ def timestep_test(model, threshold=.99, errors='return'):
     pass
 
 
-# __all__ = [create_extreme_conditions_test_matrix,
-#            extreme_conditions_test,
-#            create_bounds_test_matrix,
-#            bounds_test,
-#            sample_pspace]
+def lookup_linter(model):
+    """
+
+    Linter on lookup tables.
+
+    Checks that tables are:
+    - normalized
+    - monotonic
+
+
+    Parameters
+    ----------
+    model
+
+    Returns
+    -------
+
+    References
+    ----------
+    Sterman 2000, table 14.1
+
+    """
