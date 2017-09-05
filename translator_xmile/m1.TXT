@@ -1,0 +1,13 @@
+Biomass(t) = Biomass(t - dt) + (Photosynthesis - Decomposition - Deforestation) * dt
+INIT Biomass = 100
+Photosynthesis = P_rate*Biomass*CO2/(P_hsat+CO2)
+Decomposition = D_rate*Biomass
+Deforestation = Biomass*0.01
+CO2(t) = CO2(t - dt) + (Decomposition + F_Release - Photosynthesis) * dt
+INIT CO2 = 100
+Decomposition = D_rate*Biomass
+F_Release = 20
+Photosynthesis = P_rate*Biomass*CO2/(P_hsat+CO2)
+D_rate = 0.03
+P_hsat = 800
+P_rate = 0.09
