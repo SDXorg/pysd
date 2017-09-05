@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Aug 27 23:45:45 2017 
+Created on Sun Aug 27 23:45:45 2017
 
 @author: Miguel
 """
@@ -47,28 +47,37 @@ def main():
     print("\n".join(aux))
     print(meta_data)
 
+a = XmileStock(stock_parse)
+a.show()
 
+a = XmileAux(aux_parse)
+a.show()
 # %%Model classes
-
-class stock:
+class XmileStock:
     def __init__(self, stock_dict):
         self.name = stock_dict["stock_name"]
+        self.units = stock_dict["units"]
         self.eqn = ""
         if "inflow" in stock_dict:
             self.inflow = stock_dict["inflow"]["eqn"]
             self.eqn = self.eqn + stock_dict["inflow"]["eqn"]
+            self.inflow_units = stock_dict["inflow"]["units"]
         if "outflow" in stock_dict:
             self.outflow = stock_dict["outflow"]["eqn"]
-            self.eqn = self.eqn  + " - " + stock_dict["outflow"]["eqn"]
+            self.eqn = self.eqn + " - " + stock_dict["outflow"]["eqn"]
+            self.outflow_units = stock_dict["outflow"]["units"]
         self.init = float(stock_dict["val_ini"])
+        self.eqn = self.eqn.strip(" ")
 
     def show(self):
-        print("Stock")
-        print("name:", self.name)
-        print("Equation: ", self.eqn)
-        print("Init value: ", self.init)
+        print("STOCK")
+        print("Name:", self.name)
+        print("Units:", self.units)
+        print("Initial value:", self.init)
+        print("Equation:", self.eqn)
 
-class aux:
+
+class XmileAux:
     def __init__(self, aux_dict):
         self.name = aux_dict["aux_name"]
         if "ypts" in aux_dict:
@@ -84,10 +93,19 @@ class aux:
             self.units = aux_dict["units"]
             self.type = "value"
 
+    def show(self):
+        print("CONVERTER")
+        print("Name:", self.name)
+        print("Type:", self.type)
+        if self.type is "value":
+            print("Units:", self.units)
+        else:
+            print("Data series:", self.series)
 
-class meta_data:
+
+class XmileModel:
     def __init__(self, stock_dict, aux):
-
+    pass
 
 # %% Parsers
 def xmile_parser(xmile_file):
@@ -250,7 +268,7 @@ def xmile_parser(xmile_file):
             stock_parse["inflow"] = flows[stock_parse["inflow"]]
         if stk.outflow:
             stock_parse["outflow"] = flows[stock_parse["outflow"]]
-        stocks_cls.append(stock(attributs["stocks"][0]))
+        stocks_cls.append(XmileStock(stock_parse))
 
         eqn = stk.attrs["name"] + "(t)" + " = " + stk.attrs["name"] +\
             " (t - dt)"
@@ -272,13 +290,12 @@ def xmile_parser(xmile_file):
 
         stocks.append(item)
 
-        print(StockParser(stock_grammar, stk.prettify()).entry)
 
     # Get aux variables
     aux_dict, aux = [], []
     for ax in soup.variables.find_all("aux"):
         aux_parse = AuxParser(aux_grammar, ax.prettify()).entry
-        aux_dict.append(aux_parse)
+        aux_dict.append(XmileAux(aux_parse))
 
         if ax.gf:
             rge = float(ax.xscale["max"]) - float(ax.xscale["min"])
@@ -292,7 +309,7 @@ def xmile_parser(xmile_file):
             aux.append(ax.attrs["name"] + " = GRAPH(" + ax.eqn.text + ")\n" +
                        ", ".join(series))
 
-    return {"flows": flows, "stocks": stocks_cls, "auxs": aux_dict}
+    return {"stocks": stocks_cls, "auxs": aux_dict}
 
 # %% Read xmile model (like stella 10 onwards)
 if __name__ == '__main__':
@@ -301,7 +318,8 @@ if __name__ == '__main__':
         soup = bs(fp, "lxml")
 
 attributs = xmile_parser (soup)
-attributs["auxs"][2]
+attributs["auxs"][2].name
+print(attributs["stocks"][0])
 
 stk1 = stock (attributs["stocks"][0])
 stk1.show()
