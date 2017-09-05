@@ -91,6 +91,30 @@ class XmileModel:
         self.name = name
         self.stocks = stocks
         self.auxs = auxs
+        
+    def rTranslation(self):
+        pass
+        def FunctionTranslator(x):
+            return {
+                'EXP': x.lower(),
+                'MIN':x.lower(),
+                'MAX':x.lower(),
+                'MEAN':x.lower(),
+                'SUM':x.lower(),
+                'ABS':x.lower(),
+                'SIN':x.lower(),
+                'COS':x.lower(),
+                'TAN':x.lower(),
+                'LOG10':x.lower(),
+                'SQRT':x.lower(),
+                'ROUND':x.lower(),
+                'LOGN':'log',
+                'ARCTAN':'atan',
+                'TIME':'t',
+                'PI':x.lower(),
+                'INT':'floor',
+                'DT':'DT'
+                }[x]
 
     def show(self):
         print("Top-Level Model <%s>:" % self.name)
