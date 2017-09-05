@@ -28,30 +28,7 @@ def main():
     if len(outName_split) > 1:
         outputName = outName_split[-1]
 
-    # Metadata
-    num_var = len(stocks) + len(flows) + len(aux)
-    uses_arrays = int(soup.header.smile.attrs["uses_arrays"])
-    meta_data = "".join([
-            "{ The model has ", str(num_var), " (",
-            str(num_var * uses_arrays), ") variables (array ",
-            "expansion in parens).\n", "  In root model and 0",
-            " additional modules with 0 sectors.\n", "  Stocks ",
-            str(len(stocks)), " (", str(len(stocks) * uses_arrays),
-            "), Flows: ", str(len(flows)), " (",
-            str(len(flows) * uses_arrays), "), Converters: ",
-            str(len(aux)), " (", str(len(aux) * uses_arrays), ")\n}"])
 
-    print("Top-levelmodel:")
-    for st in stocks:
-        print("\n".join(st))
-    print("\n".join(aux))
-    print(meta_data)
-
-a = XmileStock(stock_parse)
-a.show()
-
-a = XmileAux(aux_parse)
-a.show()
 # %%Model classes
 class XmileStock:
     def __init__(self, stock_dict):
@@ -59,10 +36,12 @@ class XmileStock:
         self.units = stock_dict["units"]
         self.eqn = ""
         if "inflow" in stock_dict:
+            self.inflow_name = stock_dict["inflow"]["flow_name"]
             self.inflow = stock_dict["inflow"]["eqn"]
             self.eqn = self.eqn + stock_dict["inflow"]["eqn"]
             self.inflow_units = stock_dict["inflow"]["units"]
         if "outflow" in stock_dict:
+            self.outflow_name = stock_dict["outflow"]["flow_name"]
             self.outflow = stock_dict["outflow"]["eqn"]
             self.eqn = self.eqn + " - " + stock_dict["outflow"]["eqn"]
             self.outflow_units = stock_dict["outflow"]["units"]
@@ -81,16 +60,18 @@ class XmileAux:
     def __init__(self, aux_dict):
         self.name = aux_dict["aux_name"]
         if "ypts" in aux_dict:
+            self.eqn = aux_dict["eqn_str"]
             self.type = "series"
             step = (float(aux_dict["x_max"]) - float(aux_dict["x_min"]))\
                 / (len(aux_dict["ypts"].split(",")) - 1)
             yval = list(map(float, (aux_dict["ypts"].split(","))))
             self.series = list(map(lambda x, y: (x, float(y)),
                                    [float(aux_dict["x_min"]) + step * x
-                                          for x in range(0, len(yval))],
-                                          aux_dict["ypts"].split(",")))
+                                    for x in range(0, len(yval))],
+                               aux_dict["ypts"].split(",")))
         else:
             self.units = aux_dict["units"]
+            self.value = float(aux_dict["eqn_str"])
             self.type = "value"
 
     def show(self):
@@ -98,14 +79,62 @@ class XmileAux:
         print("Name:", self.name)
         print("Type:", self.type)
         if self.type is "value":
+            print("Value:", self.value)
             print("Units:", self.units)
         else:
-            print("Data series:", self.series)
+            print("Equation: GRAPH(%s)" % self.eqn)
+            print("Data series:", ", ".join([str(x) for x in self.series]))
 
 
 class XmileModel:
-    def __init__(self, stock_dict, aux):
-    pass
+    def __init__(self, name, stocks, auxs):
+        self.name = name
+        self.stocks = stocks
+        self.auxs = auxs
+
+    def show(self):
+        print("Top-Level Model <%s>:" % self.name)
+        for stk in self.stocks:
+            eqn = stk.name + "(t)" + " = " + stk.name + " (t - dt)"
+            fls = ""
+            if hasattr(stk, "inflow"):
+                fls = stk.inflow_name
+            if hasattr(stk, "outflow"):
+                fls = fls + " - " + stk.outflow_name
+            items = [eqn + " + (" + fls + ") * dt"]
+            items.extend(["    INIT " + stk.name + " = " + str(stk.init)])
+
+            # Define flows
+            if hasattr(stk, "inflow"):
+                items.extend(["    INFLOWS:"])
+                items.extend(["        " + stk.inflow_name +
+                              " = " + stk.inflow])
+            if hasattr(stk, "outflow"):
+                items.extend(["    OUTFLOWS:"])
+                items.extend(["        " + stk.outflow_name +
+                              " = " + stk.outflow])
+            print("\n".join(items))
+
+        for ax in self.auxs:
+            if ax.type is "value":
+                print("%s = %s" % (ax.name, ax.value))
+            else:
+                print("%s = GRAPH(%s)" % (ax.name, ax.eqn))
+                print(", ".join([str(x) for x in ax.series]))
+
+#        # Metadata
+#        num_var = len(stocks) + len(flows) + len(aux)
+#        uses_arrays = int(soup.header.smile.attrs["uses_arrays"])
+#        meta_data = "".join([
+#                "{ The model has ", str(num_var), " (",
+#                str(num_var * uses_arrays), ") variables (array ",
+#                "expansion in parens).\n", "  In root model and 0",
+#                " additional modules with 0 sectors.\n", "  Stocks ",
+#                str(len(stocks)), " (", str(len(stocks) * uses_arrays),
+#                "), Flows: ", str(len(flows)), " (",
+#                str(len(flows) * uses_arrays), "), Converters: ",
+#                str(len(aux)), " (", str(len(aux) * uses_arrays), ")\n}"])
+
 
 # %% Parsers
 def xmile_parser(xmile_file):
@@ -235,8 +264,8 @@ def xmile_parser(xmile_file):
         def visit_aux_name(self, n, vc):
             self.entry['aux_name'] = n.text
 
-        def visit_eqn(self, n, vc):
-            self.entry['eqn'] = n.text
+        def visit_eqn_str(self, n, vc):
+            self.entry['eqn_str'] = n.text
 
         def visit_units(self, n, vc):
             self.entry['units'] = n.text
@@ -258,10 +287,11 @@ def xmile_parser(xmile_file):
     flows = {}
     for flw in soup.variables.find_all("flow"):
         flw_parse = FlowParser(flow_grammar, flw.prettify()).entry
-        name = flw_parse.pop("flow_name").replace(" ", "_")
+        name = flw_parse["flow_name"].replace(" ", "_")
         flows[name] = flw_parse
 
-    stocks, stocks_cls = [], []
+    # Extract stock collection attributes
+    stocks_cls = []
     for stk in soup.variables.find_all("stock"):
         stock_parse = StockParser(stock_grammar, stk.prettify()).entry
         if stk.inflow:
@@ -270,62 +300,29 @@ def xmile_parser(xmile_file):
             stock_parse["outflow"] = flows[stock_parse["outflow"]]
         stocks_cls.append(XmileStock(stock_parse))
 
-        eqn = stk.attrs["name"] + "(t)" + " = " + stk.attrs["name"] +\
-            " (t - dt)"
-        fls = ""
-        if stk.inflow:
-            fls = stk.inflow.text
-        if stk.outflow:
-            fls = fls + " - " + stk.outflow.text
-        item = [eqn + " + (" + fls + ") * dt"]
-        item.extend(["    INIT " + stk.attrs["name"] + " = " + stk.eqn.text])
-
-        # Define flows
-        if stk.inflow:
-            item.extend(["    INFLOWS:"])
-            item.extend(["        " + flows[stk.inflow.text]["eqn"]])
-        if stk.outflow:
-            item.extend(["    OUTFLOWS:"])
-            item.extend(["        " + flows[stk.outflow.text]["eqn"]])
-
-        stocks.append(item)
-
-
     # Get aux variables
-    aux_dict, aux = [], []
+    aux_dict = []
     for ax in soup.variables.find_all("aux"):
         aux_parse = AuxParser(aux_grammar, ax.prettify()).entry
         aux_dict.append(XmileAux(aux_parse))
 
-        if ax.gf:
-            rge = float(ax.xscale["max"]) - float(ax.xscale["min"])
-            gf = ax.gf.ypts.text.split(",")
-            step = rge / (len(gf) - 1)
-            i, series = float(ax.xscale["min"]), []
-            for g in gf:
-                g_xy = "(" + str(float(i)) + ", " + str(float(g)) + ")"
-                series.extend([g_xy])
-                i += step
-            aux.append(ax.attrs["name"] + " = GRAPH(" + ax.eqn.text + ")\n" +
-                       ", ".join(series))
-
     return {"stocks": stocks_cls, "auxs": aux_dict}
+
 
 # %% Read xmile model (like stella 10 onwards)
 if __name__ == '__main__':
     main()
     with open("SIR_HK (stella 10).stmx") as fp:
         soup = bs(fp, "lxml")
+    model_name = soup.header.find("name").text
 
 attributs = xmile_parser (soup)
-attributs["auxs"][2].name
-print(attributs["stocks"][0])
+attributs["auxs"][2].show()
+XmileModel(model_name, attributs["stocks"], attributs["auxs"]).show()
 
-stk1 = stock (attributs["stocks"][0])
+
+stk1 = attributs["stocks"][0]
 stk1.show()
 
-ax1 = aux(attributs["auxs"][2])
-ax1.name
-ax1.series
-if hasattr(ax1, 'units'):
-   ax1.units
+ax1 = attributs["auxs"][2]
+ax1.show()
