@@ -361,3 +361,10 @@ class TestParse_general_expression(unittest.TestCase):
         self.assertEqual(res[0]['py_expr'], "var_c().loc[{'Dim1': ['C', 'D', 'E']}]")
 
 
+    def test_incomplete_expression(self):
+        from pysd.vensim2py import parse_general_expression
+        res = parse_general_expression({'expr': 'Var D[Range1]'},
+                                       {'Var D': 'var_c'},
+                                       {'Dim1': ['A', 'B', 'C', 'D', 'E', 'F'],
+                                        'Range1': ['C', 'D', 'E']})
+        self.assertEqual(res[0]['py_expr'], "var_c().loc[{'Dim1': ['C', 'D', 'E']}]")
