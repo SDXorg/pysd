@@ -3,4 +3,5 @@ from . import functions
 from . import utils
 from ._version import __version__
 from . import testing
+from .table2py import read_tabular
 

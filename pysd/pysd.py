@@ -40,7 +40,6 @@ def read_vensim(mdl_file):
     model.mdl_file = mdl_file
     return model
 
-
 def load(py_model_file):
     """
     Load a python-converted model file.
