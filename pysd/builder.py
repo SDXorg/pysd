@@ -167,25 +167,26 @@ def merge_partial_elements(element_list):
     """
     outs = dict()  # output data structure
     for element in element_list:
-        name = element['py_name']
-        if name not in outs:
-            outs[name] = {
-                'py_name': element['py_name'],
-                'real_name': element['real_name'],
-                'doc': element['doc'],
-                'py_expr': [element['py_expr']],  # in a list
-                'unit': element['unit'],
-                'subs': [element['subs']],
-                'kind': element['kind'],
-                'arguments': element['arguments']
-            }
+        if element['py_expr'] != "None":  # for
+            name = element['py_name']
+            if name not in outs:
+                outs[name] = {
+                    'py_name': element['py_name'],
+                    'real_name': element['real_name'],
+                    'doc': element['doc'],
+                    'py_expr': [element['py_expr']],  # in a list
+                    'unit': element['unit'],
+                    'subs': [element['subs']],
+                    'kind': element['kind'],
+                    'arguments': element['arguments']
+                }
 
-        else:
-            outs[name]['doc'] = outs[name]['doc'] or element['doc']
-            outs[name]['unit'] = outs[name]['unit'] or element['unit']
-            outs[name]['py_expr'] += [element['py_expr']]
-            outs[name]['subs'] += [element['subs']]
-            outs[name]['arguments'] = element['arguments']
+            else:
+                outs[name]['doc'] = outs[name]['doc'] or element['doc']
+                outs[name]['unit'] = outs[name]['unit'] or element['unit']
+                outs[name]['py_expr'] += [element['py_expr']]
+                outs[name]['subs'] += [element['subs']]
+                outs[name]['arguments'] = element['arguments']
 
     return list(outs.values())
 
