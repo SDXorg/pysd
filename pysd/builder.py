@@ -14,6 +14,7 @@ import yapf
 from ._version import __version__
 from . import utils
 import os
+import warnings
 
 
 def build(elements, subscript_dict, namespace, outfile_name):
@@ -166,25 +167,26 @@ def merge_partial_elements(element_list):
     """
     outs = dict()  # output data structure
     for element in element_list:
-        name = element['py_name']
-        if name not in outs:
-            outs[name] = {
-                'py_name': element['py_name'],
-                'real_name': element['real_name'],
-                'doc': element['doc'],
-                'py_expr': [element['py_expr']],  # in a list
-                'unit': element['unit'],
-                'subs': [element['subs']],
-                'kind': element['kind'],
-                'arguments': element['arguments']
-            }
+        if element['py_expr'] != "None":  # for
+            name = element['py_name']
+            if name not in outs:
+                outs[name] = {
+                    'py_name': element['py_name'],
+                    'real_name': element['real_name'],
+                    'doc': element['doc'],
+                    'py_expr': [element['py_expr']],  # in a list
+                    'unit': element['unit'],
+                    'subs': [element['subs']],
+                    'kind': element['kind'],
+                    'arguments': element['arguments']
+                }
 
-        else:
-            outs[name]['doc'] = outs[name]['doc'] or element['doc']
-            outs[name]['unit'] = outs[name]['unit'] or element['unit']
-            outs[name]['py_expr'] += [element['py_expr']]
-            outs[name]['subs'] += [element['subs']]
-            outs[name]['arguments'] = element['arguments']
+            else:
+                outs[name]['doc'] = outs[name]['doc'] or element['doc']
+                outs[name]['unit'] = outs[name]['unit'] or element['unit']
+                outs[name]['py_expr'] += [element['py_expr']]
+                outs[name]['subs'] += [element['subs']]
+                outs[name]['arguments'] = element['arguments']
 
     return list(outs.values())
 
@@ -485,3 +487,19 @@ def add_macro(macro_name, filename, arg_names, arg_vals):
     }
 
     return "%s()" % stateful['py_name'], [stateful]
+
+
+def add_incomplete(var_name, dependencies):
+    """
+    Incomplete functions don't really need to be 'builders' as they
+     add no new real structure, but it's helpful to have a function
+     in which we can raise a warning about the incomplete equation
+     at translate time.
+    """
+    warnings.warn('%s has no equation specified' %var_name,
+                   SyntaxWarning, stacklevel=2)
+
+    # first arg is `self` reference
+    return "functions.incomplete(%s)" % ', '.join(dependencies[1:]), []
+
+
