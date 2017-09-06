@@ -356,7 +356,6 @@ class TestPySD(unittest.TestCase):
             model.run()
         self.assertEqual(len(w), 1)
 
-        # test that the upstream functions were actually called
 
 
 

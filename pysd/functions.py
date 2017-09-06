@@ -905,6 +905,7 @@ def random_uniform(m, x, s):
 def incomplete(*args):
     warnings.warn('Call to undefined function, calling dependencies and returning NaN',
                   RuntimeWarning, stacklevel=2)
+
     return np.nan
 
 
