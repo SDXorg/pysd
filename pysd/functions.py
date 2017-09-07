@@ -461,7 +461,7 @@ class Macro(Stateful):
                 pass
 
         docs_df = _pd.DataFrame(collector)
-        docs_df.fillna('', inplace=True)
+        docs_df.fillna('None', inplace=True)
 
         return docs_df[['Real Name', 'Py Name', 'Unit', 'Comment']]
 
@@ -900,6 +900,13 @@ def active_initial(expr, init_val):
 
 def random_uniform(m, x, s):
     return np.random.uniform(m, x)
+
+
+def incomplete(*args):
+    warnings.warn('Call to undefined function, calling dependencies and returning NaN',
+                  RuntimeWarning, stacklevel=2)
+
+    return np.nan
 
 
 def log(x, base):
