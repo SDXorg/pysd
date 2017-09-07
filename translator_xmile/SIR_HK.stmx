@@ -1,0 +1,521 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xmile version="1.0" xmlns="http://docs.oasis-open.org/xmile/ns/XMILE/v1.0" xmlns:isee="http://iseesystems.com/XMILE">
+	<header>
+		<smile version="1.0" namespace="std, isee" uses_arrays="1"/>
+		<name>SIR_HK (stella 10)</name>
+		<uuid>a6591222-698e-41d5-9566-3f25a4e92d4e</uuid>
+		<vendor>isee systems, inc.</vendor>
+		<product version="1.4" isee:build_number="1125" isee:saved_by_v1="true" lang="en">Stella Professional</product>
+	</header>
+	<sim_specs isee:simulation_delay="0.5" method="Euler" time_units="Weeks" isee:pause_after_rates="false" isee:instantaneous_flows="false">
+		<start>1</start>
+		<stop>13</stop>
+		<dt>0.01</dt>
+	</sim_specs>
+	<dimensions>
+		<dim name="Dim_Name_1" size="1"/>
+	</dimensions>
+	<isee:prefs show_module_prefix="true" live_update_on_drag="true" show_restore_buttons="true" layer="map" saved_runs="5" keep="false" rifp="false"/>
+	<isee:multiplayer_settings include_chat="true" allow_observers="false" advance_time_increment="1" observer_start_page="home_page" enabled="false"/>
+	<model_units>
+		<unit name="Days">
+			<eqn/>
+			<alias>day</alias>
+		</unit>
+		<unit name="Weeks">
+			<eqn/>
+			<alias>wk</alias>
+			<alias>week</alias>
+		</unit>
+		<unit name="Per Day">
+			<eqn>1/Days</eqn>
+		</unit>
+	</model_units>
+	<model>
+		<variables>
+			<stock name="Infectados" isee:display_name="Infected">
+				<eqn>14</eqn>
+				<inflow>infeccion</inflow>
+				<outflow>recuperacion</outflow>
+				<non_negative/>
+				<units>personas</units>
+			</stock>
+			<flow name="recuperacion">
+				<eqn>tasa_de_recuperacion*Infectados</eqn>
+				<non_negative/>
+				<units>personas/Weeks</units>
+			</flow>
+			<flow name="infeccion" isee:display_name="becoming_infected">
+				<eqn>tasa_de_infeccion*Infectados*Susceptibles</eqn>
+				<non_negative/>
+				<units>personas/Weeks</units>
+			</flow>
+			<stock name="Susceptibles">
+				<eqn>1021</eqn>
+				<outflow>infeccion</outflow>
+				<non_negative/>
+				<units>personas</units>
+			</stock>
+			<stock name="Recuperados" isee:display_name="Recovered">
+				<eqn>0</eqn>
+				<inflow>recuperacion</inflow>
+				<non_negative/>
+				<units>personas</units>
+			</stock>
+			<aux name="tasa de infeccion" isee:display_name="infection_rate">
+				<eqn>0.001</eqn>
+				<units>fraccion de personas infectadas por dia</units>
+			</aux>
+			<aux name="tasa de recuperacion">
+				<eqn>0.2</eqn>
+				<units>per day</units>
+			</aux>
+			<aux name="datos">
+				<eqn>TIME</eqn>
+				<gf>
+					<xscale min="1" max="13"/>
+					<yscale min="0" max="100"/>
+					<ypts>14,28,50,66,156,190,156,108,68,77,33,65,24</ypts>
+				</gf>
+			</aux>
+			<isee:dependencies>
+				<var name="recuperacion">
+					<in>Infectados</in>
+					<in>tasa_de_recuperacion</in>
+				</var>
+				<var name="infeccion">
+					<in>Infectados</in>
+					<in>Susceptibles</in>
+					<in>tasa_de_infeccion</in>
+				</var>
+			</isee:dependencies>
+		</variables>
+		<views>
+			<style color="black" background="white" font_style="normal" font_weight="normal" text_decoration="none" text_align="center" vertical_text_align="center" font_color="black" font_family="Arial" font_size="10pt" padding="2" border_color="black" border_width="thin" border_style="none">
+				<text_box color="black" background="white" text_align="left" vertical_text_align="top" font_size="12pt"/>
+				<numeric_display color="blue" background="white" font_size="9pt" isee:transparent="false"/>
+				<graph color="black" background="white" font_size="12pt" axis_color="#666666" grid_color="#C8C8C8" isee:graph_area_color="white" legend_position="bottom" isee:transparent="false" isee:hide_border="false">
+					<isee:series_styles>
+						<isee:series_style color="blue" thickness="1"/>
+						<isee:series_style color="red" thickness="1" pen_style="dot_dashed"/>
+						<isee:series_style color="fuchsia" thickness="1" pen_style="dotted"/>
+						<isee:series_style color="#008F44" thickness="1" pen_style="dashed"/>
+						<isee:series_style color="#FF7F00" thickness="1"/>
+						<isee:series_style color="#7F00FF" thickness="1" pen_style="dot_dashed"/>
+						<isee:series_style color="#0CA0FF" thickness="1" pen_style="dotted"/>
+						<isee:series_style color="lime" thickness="1" pen_style="dashed"/>
+						<isee:series_style color="#FF007F" thickness="1"/>
+						<isee:series_style color="aqua" thickness="1" pen_style="dot_dashed"/>
+						<isee:series_style color="#F586FF" thickness="1" pen_style="dotted"/>
+						<isee:series_style color="black" thickness="1" pen_style="dashed"/>
+						<isee:series_style color="#C8C8C8" thickness="1"/>
+					</isee:series_styles>
+				</graph>
+				<table color="black" background="#E0E0E0" text_align="right" font_size="12pt" orientation="vertical" wrap_text="false" isee:auto_fit="true" isee:use_alternate_row_colors="false" isee:unlimited_table_length="false" blank_column_width="80" column_width="160" isee:report_month_names="false" interval="1" report_balances="beginning" report_flows="instantaneous" header_font_family="Arial"/>
+				<button color="black" background="#E0E0E0" font_size="12pt" transparent="false" corner_radius="0" isee:flat="false" icon_side="top"/>
+				<isee:annotation color="black" background="#E0E0E0" font_size="12pt" transparent="false" corner_radius="0" isee:flat="false" icon_side="top" popup_background_color="#FFFECF" popup_font_family="Arial"/>
+				<slider color="black" background="#E0E0E0" font_size="12pt" num_ticks="3" label_side="top" wrap_title="true" input_expands="true" input_width="100"/>
+				<isee:pie_input color="black" background="white" font_size="12pt" legend_position="bottom" isee:transparent="false"/>
+				<knob color="#66CC66" background="#E0E0E0" font_size="12pt" label_side="bottom" wrap_title="true"/>
+				<numeric_input color="black" background="#E0E0E0" font_size="12pt" label_side="left" wrap_title="true" input_expands="false" input_width="100"/>
+				<switch color="black" background="#E0E0E0" font_size="12pt" label_side="top" wrap_title="true" isee:appearance="switch"/>
+				<options color="black" background="white" appearance="radio-buttons" arrangement="vertical"/>
+				<graphical_input color="black" background="#E0E0E0" font_size="12pt"/>
+				<group_input color="black" background="#E0E0E0" font_size="12pt" header_font_family="Arial"/>
+				<lamp color="black" background="white" font_size="9pt"/>
+				<gauge color="black" background="white" font_size="9pt" needle_color="#F09F72" bar_color="#EEEEEE" bar_progress_color="black" appearance="radial" num_major_ticks="11" num_minor_ticks="11" show_numeric_value="true"/>
+				<isee:spatial_map color="black" background="white" font_size="12pt"/>
+				<isee:animation_object color="black" background="white" font_size="12pt"/>
+			</style>
+			<view isee:show_pages="false" isee:converter_size="name_only" page_width="1020" page_height="1320" zoom="140" isee:popup_graphs_are_comparative="true" type="stock_flow">
+				<style color="black" background="white" font_style="normal" font_weight="normal" text_decoration="none" text_align="center" vertical_text_align="center" font_color="black" font_family="Arial" font_size="10pt" padding="2" border_color="black" border_width="thin" border_style="none">
+					<stock color="blue" background="white" font_color="blue" font_size="9pt" label_side="top">
+						<shape type="rectangle" width="45" height="35"/>
+					</stock>
+					<flow color="blue" background="white" font_color="blue" font_size="9pt" label_side="bottom"/>
+					<module color="blue" background="white" font_color="blue" font_size="9pt" label_side="top">
+						<shape type="rectangle" width="55" height="45"/>
+					</module>
+					<aux color="blue" background="white" font_color="blue" font_size="9pt" label_side="bottom">
+						<shape type="name_only"/>
+					</aux>
+					<group color="red" background="white" font_color="red" font_size="9pt"/>
+					<connector color="#FF007F" background="white" font_color="#FF007F" font_size="9pt" isee:thickness="1"/>
+					<text_box color="black" background="white" text_align="left" vertical_text_align="top" font_size="12pt"/>
+					<numeric_display color="blue" background="white" font_size="9pt" isee:transparent="false"/>
+					<graph color="black" background="white" font_size="12pt" axis_color="#666666" grid_color="#C8C8C8" isee:graph_area_color="white" legend_position="bottom" isee:transparent="false" isee:hide_border="false">
+						<isee:series_styles>
+							<isee:series_style color="blue" thickness="1"/>
+							<isee:series_style color="red" thickness="1" pen_style="dot_dashed"/>
+							<isee:series_style color="fuchsia" thickness="1" pen_style="dotted"/>
+							<isee:series_style color="#008F44" thickness="1" pen_style="dashed"/>
+							<isee:series_style color="#FF7F00" thickness="1"/>
+							<isee:series_style color="#7F00FF" thickness="1" pen_style="dot_dashed"/>
+							<isee:series_style color="#0CA0FF" thickness="1" pen_style="dotted"/>
+							<isee:series_style color="lime" thickness="1" pen_style="dashed"/>
+							<isee:series_style color="#FF007F" thickness="1"/>
+							<isee:series_style color="aqua" thickness="1" pen_style="dot_dashed"/>
+							<isee:series_style color="#F586FF" thickness="1" pen_style="dotted"/>
+							<isee:series_style color="black" thickness="1" pen_style="dashed"/>
+							<isee:series_style color="#C8C8C8" thickness="1"/>
+						</isee:series_styles>
+					</graph>
+					<table color="black" background="#E0E0E0" text_align="right" font_size="12pt" orientation="vertical" wrap_text="false" isee:auto_fit="true" isee:use_alternate_row_colors="false" isee:unlimited_table_length="false" blank_column_width="80" column_width="160" isee:report_month_names="false" interval="1" report_balances="beginning" report_flows="instantaneous" header_font_family="Arial"/>
+				</style>
+				<connector uid="1" angle="216.027">
+					<from>Infectados</from>
+					<to>infeccion</to>
+				</connector>
+				<connector uid="2" angle="331.39">
+					<from>Susceptibles</from>
+					<to>infeccion</to>
+				</connector>
+				<connector uid="3" angle="337.751">
+					<from>Infectados</from>
+					<to>recuperacion</to>
+				</connector>
+				<connector uid="4" angle="330.255">
+					<from>tasa_de_recuperacion</from>
+					<to>recuperacion</to>
+				</connector>
+				<connector uid="5" angle="203.962">
+					<from>tasa_de_infeccion</from>
+					<to>infeccion</to>
+				</connector>
+				<stacked_container uid="6" x="44" y="326" width="492" height="282" visible_index="1">
+					<graph background="#FFFFC9" x="290" y="467" type="time_series" isee:time_precision="1" isee:time_scale_by="1" show_grid="true" include_units_in_legend="false" plot_numbers="true" isee:label_pie_slices="false" num_x_grid_lines="5" num_y_grid_lines="5" num_x_labels="5" num_y_labels="3" title="Evolución de la epidemia" isee:stacked_area_alpha="0.1" left_axis_multi_scale="false" left_axis_auto_scale="false" right_axis_multi_scale="true" right_axis_auto_scale="true">
+						<plot color="blue" pen_width="3" index="0" show_y_axis="true">
+							<format precision="1" scale_by="1"/>
+							<entity name="Infectados"/>
+							<scale min="0" max="1025"/>
+						</plot>
+						<plot color="red" pen_width="3" index="1" show_y_axis="true">
+							<format precision="1" scale_by="1"/>
+							<entity name="Recuperados"/>
+							<scale min="0" max="1025"/>
+						</plot>
+						<plot color="fuchsia" pen_width="3" index="2" show_y_axis="true">
+							<format precision="1" scale_by="1"/>
+							<entity name="Susceptibles"/>
+							<scale min="0" max="1025"/>
+						</plot>
+						<plot color="#008F44" pen_width="3" index="3" show_y_axis="true">
+							<format precision="1" scale_by="1"/>
+							<entity name="datos"/>
+							<scale min="0" max="1025"/>
+						</plot>
+					</graph>
+					<graph background="#FFFFC9" x="290" y="467" type="time_series" isee:time_precision="1" isee:time_scale_by="1" show_grid="true" include_units_in_legend="false" plot_numbers="true" isee:label_pie_slices="false" num_x_grid_lines="5" num_y_grid_lines="5" num_x_labels="5" num_y_labels="3" title="Untitled" isee:stacked_area_alpha="0.1" left_axis_multi_scale="false" left_axis_auto_scale="false" right_axis_multi_scale="true" right_axis_auto_scale="true">
+						<plot color="blue" pen_width="3" index="0" show_y_axis="true">
+							<format precision="1" scale_by="1"/>
+							<entity name="Infectados"/>
+							<scale min="0" max="500"/>
+						</plot>
+						<plot color="red" pen_width="3" index="1" show_y_axis="true">
+							<format precision="1" scale_by="1"/>
+							<entity name="datos"/>
+							<scale min="0" max="500"/>
+						</plot>
+					</graph>
+					<graph background="#FFFFC9" x="290" y="467" type="time_series" isee:time_precision="1" isee:time_scale_by="1" show_grid="true" include_units_in_legend="false" plot_numbers="true" isee:label_pie_slices="false" num_x_grid_lines="5" num_y_grid_lines="5" num_x_labels="5" num_y_labels="3" title="Untitled" isee:stacked_area_alpha="0.1" left_axis_multi_scale="true" left_axis_auto_scale="true" right_axis_multi_scale="true" right_axis_auto_scale="true">
+						<plot color="blue" pen_width="3" index="0" show_y_axis="true">
+							<format precision="1" scale_by="1"/>
+							<entity name="infeccion"/>
+						</plot>
+						<plot color="red" pen_width="3" index="1" show_y_axis="true">
+							<format precision="1" scale_by="1"/>
+							<entity name="recuperacion"/>
+						</plot>
+					</graph>
+				</stacked_container>
+				<stacked_container uid="7" x="487" y="187" width="475" height="270" minimized="true">
+					<table background="#E0E0E0" font_size="9pt" orientation="vertical" column_width="63" interval="1" report_balances="beginning" report_flows="summed" header_font_family="Arial" x="487" y="187" width="475" height="270" title="Untitled Table">
+						<item type="time"/>
+						<item>
+							<format precision="0.01" scale_by="1" delimit_000s="true"/>
+							<entity name="Infectados"/>
+						</item>
+					</table>
+				</stacked_container>
+				<text_box color="black" text_align="center" font_size="10pt" padding="1" appearance="transparent" uid="8" x="213" y="216" width="18" height="16">(R)</text_box>
+				<text_box color="black" text_align="center" font_size="10pt" padding="1" appearance="transparent" uid="9" x="263" y="216" width="18" height="16">(B)</text_box>
+				<text_box color="black" text_align="center" font_size="10pt" padding="1" appearance="transparent" uid="10" x="141" y="218" width="18" height="18">(B)</text_box>
+				<text_box color="black" font_weight="bold" text_align="center" padding="5" border_width="5" border_style="solid" appearance="transparent" uid="11" x="69" y="29" width="446" height="55">Modelo clásico de Suceptibles-Infectados-Recuperados es conocido como
+el modelo de Kermack-McKendrick como también se le conoce</text_box>
+				<stock x="245" y="196" name="Infectados"/>
+				<flow color="blue" label_angle="289.22" x="295" y="194" name="recuperacion">
+					<pts>
+						<pt x="267.5" y="194"/>
+						<pt x="334.5" y="194"/>
+					</pts>
+				</flow>
+				<flow x="180" y="196" name="infeccion">
+					<pts>
+						<pt x="149.5" y="196"/>
+						<pt x="222.5" y="196"/>
+					</pts>
+				</flow>
+				<stock x="127" y="197" name="Susceptibles"/>
+				<stock x="357" y="193" name="Recuperados"/>
+				<aux x="145.875" y="140" width="74.25" height="12" name="tasa de infeccion"/>
+				<aux x="257.375" y="139" width="89.25" height="12" name="tasa de recuperacion"/>
+				<aux x="470.375" y="251" width="25.25" height="12" name="datos"/>
+			</view>
+			<view isee:show_pages="false" background="white" page_width="788" page_height="528" home_view="true" type="interface">
+				<style/>
+				<button color="white" corner_radius="6" label="" uid="12" x="9" y="10" width="585" height="461">
+					<actions>
+						<action target="story" story="13" view="0">navigate</action>
+					</actions>
+					<image width="1000" height="750" size_to_parent="true">C:/Users/Miguel/Documents/1 Nube/Dropbox/Curso posgrado/2015/Día 2/Influenza/El modelo general/Graphics/shutterstock_53362708.jpg</image>
+				</button>
+			</view>
+			<isee:templates/>
+			<isee:stories>
+				<isee:story uid="13" name="Story 1">
+					<view isee:show_pages="false" background="white" page_width="788" page_height="528" type="interface">
+						<style/>
+						<isee:model_view uid="14" x="0" y="0" width="788" height="528" isee:locked="true" zoom="1" center_x="394" center_y="264" locked_view="true" transparent="true" use_visible_list="true">
+							<model name="Top-Level"/>
+							<isee:visible_list>
+								<item uid="7"/>
+								<item uid="6"/>
+							</isee:visible_list>
+							<isee:highlight_list/>
+						</isee:model_view>
+						<isee:annotation popup_font_family="Arial" popup_font_size="13pt" launcher_label="" show_by_default="true" hide_launcher="true" uid="15" x="450" y="273" width="20" height="20">
+							<popup x="280" y="48" width="360" height="199">
+								<text>1. El modelo propone que la cantidad de nuevas personas que resultan infectadas depende de la probabilidad de contacto entre personas suceptibles y enfermas (ley de acción de masas). 
+
+2. El modelo no toma personas del entorno ni las regresa al entorno, es un sistema cerrado, por lo tanto hay que considerar algunas reglas de conservación de materiales y energía, como una manera de asegurar la consistencia lógica del planteamiento.</text>
+							</popup>
+						</isee:annotation>
+					</view>
+					<view isee:show_pages="false" background="white" page_width="788" page_height="528" type="interface">
+						<style/>
+						<isee:model_view uid="16" x="0" y="0" width="788" height="528" isee:locked="true" zoom="1" center_x="394" center_y="264" locked_view="true" transparent="true" use_visible_list="true">
+							<model name="Top-Level"/>
+							<isee:visible_list>
+								<entity name="Susceptibles"/>
+								<item uid="7"/>
+								<item uid="6"/>
+							</isee:visible_list>
+							<isee:highlight_list>
+								<entity name="Susceptibles"/>
+							</isee:highlight_list>
+						</isee:model_view>
+						<isee:annotation popup_font_family="Arial" popup_font_size="13pt" launcher_label="" show_by_default="true" hide_launcher="true" uid="17" x="326" y="351" width="20" height="20">
+							<popup x="236" y="225" width="200" height="100">
+								<text>No todas las personas pueden adquirir la enfermedad, así que los susceptibles son sólo una fracción de la población total en un tiempo dado.</text>
+							</popup>
+						</isee:annotation>
+					</view>
+					<view isee:show_pages="false" background="white" page_width="788" page_height="528" type="interface">
+						<style/>
+						<isee:model_view uid="18" x="0" y="0" width="788" height="528" isee:locked="true" zoom="1" center_x="394" center_y="264" locked_view="true" transparent="true" use_visible_list="true">
+							<model name="Top-Level"/>
+							<isee:visible_list>
+								<entity name="Infectados"/>
+								<entity name="Susceptibles"/>
+								<item uid="7"/>
+								<item uid="6"/>
+							</isee:visible_list>
+							<isee:highlight_list>
+								<entity name="Infectados"/>
+							</isee:highlight_list>
+						</isee:model_view>
+						<isee:annotation popup_font_family="Arial" popup_font_size="13pt" launcher_label="" show_by_default="true" hide_launcher="true" uid="19" x="432" y="351" width="20" height="20">
+							<popup x="342" y="225" width="200" height="100">
+								<text>Cantidad total de personas que manifiestan la enfermedad en un tiempo dado.</text>
+							</popup>
+						</isee:annotation>
+					</view>
+					<view isee:show_pages="false" background="white" page_width="788" page_height="528" type="interface">
+						<style/>
+						<isee:model_view uid="20" x="0" y="0" width="788" height="528" isee:locked="true" zoom="1" center_x="394" center_y="264" locked_view="true" transparent="true" use_visible_list="true">
+							<model name="Top-Level"/>
+							<isee:visible_list>
+								<entity name="Recuperados"/>
+								<entity name="Infectados"/>
+								<entity name="Susceptibles"/>
+								<item uid="7"/>
+								<item uid="6"/>
+							</isee:visible_list>
+							<isee:highlight_list>
+								<entity name="Recuperados"/>
+							</isee:highlight_list>
+						</isee:model_view>
+						<isee:annotation popup_font_family="Arial" popup_font_size="13pt" launcher_label="" show_by_default="true" hide_launcher="true" uid="21" x="605" y="416" width="20" height="20">
+							<popup x="493" y="248" width="244" height="142">
+								<text>Al paso del tiempo las personas dejan de estar enfermas.
+
+Por procesos inmunológicos o de algún otro tipo, las personas recuperadas presentan resistencia al contagio.
+
+¿A dónde irán los muertos?</text>
+							</popup>
+						</isee:annotation>
+					</view>
+					<view isee:show_pages="false" background="white" page_width="788" page_height="528" type="interface">
+						<style/>
+						<isee:model_view uid="22" x="0" y="0" width="788" height="528" isee:locked="true" zoom="1" center_x="394" center_y="264" locked_view="true" transparent="true" use_visible_list="true">
+							<model name="Top-Level"/>
+							<isee:visible_list>
+								<item uid="2"/>
+								<entity name="tasa_de_infeccion"/>
+								<entity name="infeccion"/>
+								<entity name="Recuperados"/>
+								<entity name="Infectados"/>
+								<item uid="1"/>
+								<entity name="Susceptibles"/>
+								<item uid="5"/>
+								<item uid="7"/>
+								<item uid="6"/>
+							</isee:visible_list>
+							<isee:highlight_list>
+								<item uid="2"/>
+								<item uid="1"/>
+								<item uid="5"/>
+								<entity name="tasa_de_infeccion"/>
+								<entity name="infeccion"/>
+							</isee:highlight_list>
+						</isee:model_view>
+						<isee:annotation popup_font_family="Arial" popup_font_size="13pt" launcher_label="" show_by_default="true" hide_launcher="true" uid="23" x="390" y="377" width="20" height="20">
+							<popup x="300" y="251" width="200" height="100">
+								<text>Supondremos que el contagio de la enfermedad ocurre como una proporción de los contactos</text>
+							</popup>
+						</isee:annotation>
+					</view>
+					<view isee:show_pages="false" background="white" page_width="788" page_height="528" type="interface">
+						<style/>
+						<isee:model_view uid="24" x="0" y="0" width="788" height="528" isee:locked="true" zoom="1" center_x="394" center_y="264" locked_view="true" transparent="true" use_visible_list="true">
+							<model name="Top-Level"/>
+							<isee:visible_list>
+								<item uid="2"/>
+								<entity name="tasa_de_infeccion"/>
+								<entity name="infeccion"/>
+								<entity name="Recuperados"/>
+								<entity name="Infectados"/>
+								<item uid="1"/>
+								<entity name="Susceptibles"/>
+								<item uid="10"/>
+								<item uid="5"/>
+								<item uid="7"/>
+								<item uid="6"/>
+							</isee:visible_list>
+							<isee:highlight_list/>
+						</isee:model_view>
+						<isee:annotation popup_font_family="Arial" popup_font_size="13pt" launcher_label="" show_by_default="true" hide_launcher="true" uid="25" x="356.5" y="420" width="20" height="20">
+							<popup x="225" y="246" width="283" height="148">
+								<text>Este es un circuito de balance o negativo (B). 
+
+Las personas infectadas en la población hacen que disminuya la fracción de la población que es suceptible, lo que resultará en un menor número de contagios.</text>
+							</popup>
+						</isee:annotation>
+					</view>
+					<view isee:show_pages="false" background="white" page_width="788" page_height="528" type="interface">
+						<style/>
+						<isee:model_view uid="26" x="0" y="0" width="788" height="528" isee:locked="true" zoom="1" center_x="394" center_y="264" locked_view="true" transparent="true" use_visible_list="true">
+							<model name="Top-Level"/>
+							<isee:visible_list>
+								<item uid="8"/>
+								<item uid="2"/>
+								<entity name="tasa_de_infeccion"/>
+								<entity name="infeccion"/>
+								<entity name="Recuperados"/>
+								<entity name="Infectados"/>
+								<item uid="1"/>
+								<entity name="Susceptibles"/>
+								<item uid="10"/>
+								<item uid="5"/>
+								<item uid="7"/>
+								<item uid="6"/>
+							</isee:visible_list>
+							<isee:highlight_list/>
+						</isee:model_view>
+						<isee:annotation popup_font_family="Arial" popup_font_size="13pt" launcher_label="" show_by_default="true" hide_launcher="true" uid="27" x="467" y="362" width="20" height="20">
+							<popup x="355" y="245" width="244" height="91">
+								<text>Este circuito es reforzante o positivo (R).
+
+A mayor cantidad de personas infectadas corresponderá un mayor número de contagios.</text>
+							</popup>
+						</isee:annotation>
+					</view>
+					<view isee:show_pages="false" background="white" page_width="788" page_height="528" type="interface">
+						<style/>
+						<isee:model_view uid="28" x="0" y="0" width="788" height="528" isee:locked="true" zoom="1" center_x="394" center_y="264" locked_view="true" transparent="true" use_visible_list="true">
+							<model name="Top-Level"/>
+							<isee:visible_list>
+								<item uid="3"/>
+								<entity name="tasa_de_recuperacion"/>
+								<item uid="8"/>
+								<item uid="2"/>
+								<entity name="tasa_de_infeccion"/>
+								<entity name="infeccion"/>
+								<entity name="Recuperados"/>
+								<item uid="4"/>
+								<entity name="Infectados"/>
+								<entity name="recuperacion"/>
+								<item uid="1"/>
+								<entity name="Susceptibles"/>
+								<item uid="10"/>
+								<item uid="5"/>
+								<item uid="7"/>
+								<item uid="6"/>
+							</isee:visible_list>
+							<isee:highlight_list>
+								<item uid="3"/>
+								<item uid="4"/>
+								<entity name="tasa_de_recuperacion"/>
+								<entity name="recuperacion"/>
+							</isee:highlight_list>
+						</isee:model_view>
+						<isee:annotation popup_font_family="Arial" popup_font_size="13pt" launcher_label="" show_by_default="true" hide_launcher="true" uid="29" x="673.5" y="295" width="20" height="20">
+							<popup x="537" y="212" width="293" height="57">
+								<text>Pasado algún tiempo algunas personas sanan (o mueren) y forman un nuevo conjunto no expuesto a la infección.</text>
+							</popup>
+						</isee:annotation>
+					</view>
+					<view isee:show_pages="false" background="white" page_width="788" page_height="528" type="interface">
+						<style/>
+						<isee:model_view uid="30" x="0" y="0" width="788" height="528" isee:locked="true" zoom="1" center_x="394" center_y="264" locked_view="true" transparent="true" use_visible_list="true">
+							<model name="Top-Level"/>
+							<isee:visible_list>
+								<item uid="3"/>
+								<item uid="8"/>
+								<entity name="tasa_de_recuperacion"/>
+								<item uid="2"/>
+								<item uid="9"/>
+								<entity name="tasa_de_infeccion"/>
+								<entity name="infeccion"/>
+								<entity name="Recuperados"/>
+								<entity name="Infectados"/>
+								<item uid="4"/>
+								<entity name="Susceptibles"/>
+								<entity name="recuperacion"/>
+								<item uid="1"/>
+								<item uid="7"/>
+								<item uid="5"/>
+								<item uid="10"/>
+								<item uid="6"/>
+							</isee:visible_list>
+							<isee:highlight_list/>
+						</isee:model_view>
+						<isee:annotation popup_font_family="Arial" popup_font_size="13pt" launcher_label="" show_by_default="true" hide_launcher="true" uid="31" x="482.5" y="368" width="20" height="20">
+							<popup x="354" y="234" width="277" height="108">
+								<text>También es un circuito de balance. 
+
+A mayor cantidad de personas recuperadas corresponde una menor cantidad de individuos susceptibles en la población.</text>
+							</popup>
+						</isee:annotation>
+						<button label="Back" uid="32" x="52" y="493">
+							<actions>
+								<action target="back_page">navigate</action>
+							</actions>
+						</button>
+					</view>
+				</isee:story>
+			</isee:stories>
+		</views>
+	</model>
+</xmile>
+
