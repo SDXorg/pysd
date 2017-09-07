@@ -330,7 +330,7 @@ def main():
                 txt=txt.replace(')','')
                 if (txt == "-"):
                     nextflow=False
-                if (txt <> "+" and txt <> "-"):
+                if (txt is not "+" and txt is not "-"):
                     if (nextflow):
                         models[init_match.group('initname')].inflows.append(txt)
                         if (txt not in flows):
@@ -491,8 +491,11 @@ def main():
     # writing output
     if (not os.path.isdir(outPath)):
         os.mkdir(outPath)
-    ff=open(outPath+"/"+outputName+".R",'w')
-    ff.writelines(["if (require(deSolve) == F) {install.packages('deSolve',repos='http://cran.r-project.org');if (require(deSolve) == F) print ('Error: deSolve package is not installed on your machine')}\n"])
+    ff = open(outPath+"/"+outputName+".R",'w')
+    ff.writelines(["if (require(deSolve) == F) {", 
+                   "\tinstall.packages('deSolve', repos='http://cran.r-project.org');\n",
+                   "if (require(deSolve) == F)\n"
+                   "print ('Error: deSolve package is not installed on your machine')}\n"])
 
     ff.writelines(["model<-function(t,Y,parameters,...) { \n"])
     #-----
@@ -504,23 +507,25 @@ def main():
 
     ff.writelines(["\n"])
     #----
-    convlist=convertors.keys()
-    parms=[]
+    convlist = list(convertors.keys())
+    parms = []
     convT = []
     for conv in convlist:
         if (convertors[conv].value is not None):
-            ff.writelines(["\t",conv," <- parameters['",conv,"']\n"])
+            ff.writelines(["\t", conv, " <- parameters['", conv, "']\n"])
             parms.append(conv)
             convT.append(conv)
 
-    for conv in convT: convlist.remove(conv)
+    for conv in convT: 
+        convlist.remove(conv)
 
     ff.writelines(["\n"])
-    convT2=[]
+    convT2 = []
     for conv in convlist:
         if convertors[conv].isData:
             if (convertors[conv].Data.xname != 't'):
-                if (convertors[conv].Data.xname not in convT2 and convertors[conv].Data.xname in convlist):
+                if (convertors[conv].Data.xname not in convT2 and
+                    convertors[conv].Data.xname in convlist):
                     convT2.append(convertors[conv].Data.xname)
                     convWrite(convertors[conv].Data.xname)
                 ff.writelines(["\t",conv," <- inputData(",convertors[conv].Data.xname,", '",conv,"')\n"])
@@ -542,7 +547,7 @@ def main():
         if len(convlist) == len_conv: loop=False
 
     #------
-    flowlist=flows.keys()
+    flowlist = list(flows.keys())
     loop = True
     while (loop):
         len_flow = len(flowlist)
@@ -593,7 +598,7 @@ def main():
         ff.writelines(["  ###-------------\n"])
     #------
     rank=1
-    Eqs = models.keys()
+    Eqs = list(models.keys())
     loop = True
     EqsL=[]
     while (loop):
@@ -629,7 +634,7 @@ def main():
             if models[eq].init in convertors.keys():
                 models[eq].init = "parms['"+models[eq].init+"']"
 
-    convlist=convertors.keys()
+    convlist = list(convertors.keys())
     conv=[]
     for c in convlist:
         if (convertors[c].value is not None): conv.append(c)
@@ -646,7 +651,7 @@ def main():
     #------------------
     ## writing data & support functions
 
-    convlist=convertors.keys()
+    convlist = list(convertors.keys())
     conv=[]
     for c in convlist:
         if (convertors[c].isData): conv.append(c)
@@ -707,9 +712,9 @@ def main():
     ff.writelines(["out <- ode(func=model,y=Y,times=time,parms=parms,method='rk4')\n"])
     ff.writelines(["plot(out)\n"])
     ff.close()
-    print "STELLA model is successfully translated into R!\n"
-    print "Babak Naimi (naimi@itc.nl)\n"
-    print "Alexey Voinov (voinov@itc.nl)\n"
+    print ("STELLA model is successfully translated into R!\n")
+    print ("Babak Naimi (naimi@itc.nl)\n")
+    print ("Alexey Voinov (voinov@itc.nl)\n")
 
 
 if __name__ == '__main__':
