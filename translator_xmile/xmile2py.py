@@ -91,7 +91,7 @@ class XmileModel:
         self.name = name
         self.stocks = stocks
         self.auxs = auxs
-        
+
     def rTranslation(self):
         pass
         def FunctionTranslator(x):
@@ -146,18 +146,37 @@ class XmileModel:
                 print("%s = GRAPH(%s)" % (ax.name, ax.eqn))
                 print(", ".join([str(x) for x in ax.series]))
 
-#        # Metadata
-#        num_var = len(stocks) + len(flows) + len(aux)
-#        uses_arrays = int(soup.header.smile.attrs["uses_arrays"])
-#        meta_data = "".join([
-#                "{ The model has ", str(num_var), " (",
-#                str(num_var * uses_arrays), ") variables (array ",
-#                "expansion in parens).\n", "  In root model and 0",
-#                " additional modules with 0 sectors.\n", "  Stocks ",
-#                str(len(stocks)), " (", str(len(stocks) * uses_arrays),
-#                "), Flows: ", str(len(flows)), " (",
-#                str(len(flows) * uses_arrays), "), Converters: ",
-#                str(len(aux)), " (", str(len(aux) * uses_arrays), ")\n}"])
+        # Metadata
+        flows = set([])
+        for flw in self.stocks:
+            if hasattr(flw, "inflow_name"):
+                flows.add(flw.inflow_name)
+            if hasattr(flw, "outflow_name"):
+                flows.add(flw.outflow_name)
+
+        graphs, constants = 0, 0
+        for cst in self.auxs:
+            if "value" in cst.type:
+                constants += 1
+            if "series" in cst.type:
+                graphs += 1
+
+        num_var = len(self.stocks) + len(flows) + len(self.auxs)
+        meta_data = "".join([
+                "{ The model has ", str(num_var), " (",
+                str(num_var), ") variables (array ",
+                "expansion in parens).\n", "  In root model and 0",
+                " additional modules with 0 sectors.\n", "  Stocks: ",
+                str(len(self.stocks)), " (", str(len(self.stocks)),
+                "), Flows: ", str(len(flows)), " (",
+                str(len(flows)), "), Converters: ",
+                str(len(self.auxs)), " (", str(len(self.auxs)), ")\n",
+                  "  Constants: ", str(constants), " (", str(constants), "),",
+                  " Equations: ", str(len(self.stocks)), " (",
+                               str(len(self.stocks)), "),",
+                  " Graphicals: ", str(graphs), " (", str(graphs), ")}\n"])
+
+        print(meta_data)
 
 
 # %% Parsers
