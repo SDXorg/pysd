@@ -1,8 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Aug 27 23:45:45 2017
+@author: Miguel Equihua
+email: equihuam@gmail.com
+Location: Instituto de Ecología, AC (Xalapa, Veracruz México)
+Version: 0.1
 
-@author: Miguel
+Use: xmile2py <xmile file> <output directory>
+History
+--------
+Created on Sun Aug 27, 2017
+First fully operational version Thursday 7 Sep, 2017
+
 """
 
 from parsimonious.grammar import Grammar
@@ -17,8 +25,8 @@ def main():
         print("Usage: xmile2py <input_stella.stmx> <outname>\n")
         print("\t -- input_stella.stmx. This file type is a xml variant" +
               " text file use in STELLA models from version 10 and up\n")
-        print("\t -- outname is the name of an R project directory where" +
-              " the main R script (outname.R), data files and other" +
+        print("\t -- outname is the name of a directory where" +
+              " the main translated model, data files and other" +
               " functions will be stored\n")
         sys.exit()
 
@@ -37,31 +45,45 @@ def main():
 # os.chdir("C:/Users/Miguel/Documents/0 Versiones/2 Proyectos/pysd/translator_xmile")
 # model_file = "SIR_HK.stmx"
 
-    # Read model file
-    with open(model_file) as fmodel:
-        model_soup = bs(fmodel, "lxml")
-
     # Extract relevant information to build model
-    model_name = model_soup.header.find("name").text
-    print("Arg 1:", model_file)
-    print("Arg 2:", outputName)
-    print("Path:", outPath)
-    print("BaseName:", outName)
-    print(model_soup.prettify()[0:186])
-    print("Nombre del modelo:", model_name)
-
-    model_attributes = xmile_parser(model_soup)
+    model_attributes = xmile_parser(model_file)
 
     # output model file
-    with open(outPath + "/" + outputName + ".R", "w") as foutput:
-        model_output = XmileModel(model_name,
+    with open(outPath + "/" + outputName + ".txt", "w") as foutput:
+        model_output = XmileModel(model_attributes["model_name"],
                                   model_attributes["stocks"],
                                   model_attributes["auxs"]).show()
         foutput.writelines(model_output)
 
+    print("\n\n" + "*"*28 + "\nModel translation successful")
+    print("Model processed:", model_attributes["model_name"])
+    print("Translation can be found at:\n  ", outPath)
+    print("\n\n")
+
 
 # %%Model classes
 class XmileStock:
+    """ Class that stores Stock deffinition
+        Translated from *xmile* model specification
+
+    Attributes
+    ----------
+    :name: -- Name of the stock
+    :units: -- Units of measure for the stock contents
+    :eqn: --  Equation describing stock dynamics
+    :init: -- Initial condition of the stock
+    :inflow_name: -- Name of an input flow into the stock
+    :inflow: -- Equation of the input flow
+    :inflow_units: -- String describing the units of the flow
+    :outflow_name: -- Name of an input flow into the stock
+    :outflow: -- Equation of the input flow
+    :outflow_units: -- String describing the units of the flow
+
+    Methods
+    ---------
+    :__init__ -- Takes a stock dictionary as it only parameter (no default)
+    :show: -- Display the main features of the stock instance.
+    """
     def __init__(self, stock_dict):
         self.name = stock_dict["stock_name"]
         self.units = stock_dict["units"]
@@ -227,7 +249,16 @@ class XmileModel:
 
 
 # %% Parsers
-def xmile_parser(xmile_soup):
+def xmile_parser(model_file):
+    """ Parse a model from Stella
+        From version 10 and up (type "\*.stmx") or some other
+        **xmile** compliant file type.
+
+    Keyword arguments:
+    ----------
+    :model_file: -- Name of a model file of an **xmile** compliant
+                    type (no default)
+    """
     # Grammar deffinitions for stocks, flows and aux
     stock_grammar = r"""
         entry =  line+
@@ -255,7 +286,7 @@ def xmile_parser(xmile_soup):
         nl = ~"\n"
         """
 
-    flow_grammar = r"""\
+    flow_grammar = r"""
         entry =  line+
         line = ("<flow" (ws flow_disp_name)? ws
                         "name=" qtm flow_name qtm ">")? nl?
@@ -371,6 +402,13 @@ def xmile_parser(xmile_soup):
         def generic_visit(self, n, vc):
             pass
 
+    # Read model file
+    with open(model_file) as fmodel:
+        xmile_soup = bs(fmodel, "lxml")
+
+    # Extract relevant information to build model
+    model_name = xmile_soup.header.find("name").text
+
     # Extract equations block located in model/variables section of xmile file
     # First get flow equations
     flows = {}
@@ -395,7 +433,7 @@ def xmile_parser(xmile_soup):
         aux_parse = AuxParser(aux_grammar, ax.prettify()).entry
         aux_dict.append(XmileAux(aux_parse))
 
-    return {"stocks": stocks_cls, "auxs": aux_dict}
+    return {"model_name": model_name, "stocks": stocks_cls, "auxs": aux_dict}
 
 
 # %% Read xmile model (like stella 10 onwards)
