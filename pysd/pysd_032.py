@@ -13,6 +13,14 @@ Sept 2016: Major refactor, putting most internal code into the Model and Macro o
 """
 
 
+def read_xmile(xmile_file):
+    """ Construct a model object from `.xmile` file. """
+    from pysd.py_backend.xmile.xmile2py import translate_xmile
+    py_model_file = translate_xmile(xmile_file)
+    model = load(py_model_file)
+    model.xmile_file = xmile_file
+    return model
+
 def read_vensim(mdl_file):
     """
     Construct a model from Vensim `.mdl` file.
