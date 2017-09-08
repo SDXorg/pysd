@@ -44,6 +44,7 @@ def main():
 # model_file = "SIR_HK (stella 10).stmx"
 # os.chdir("C:/Users/Miguel/Documents/0 Versiones/2 Proyectos/pysd/translator_xmile")
 # model_file = "SIR_HK.stmx"
+# model_file = "m1.stmx"
 
     # Extract relevant information to build model
     model_attributes = xmile_parser(model_file)
@@ -176,6 +177,35 @@ class XmileModel:
                 'DT': 'DT'
                 }[x]
 
+    def build_R_script(self):
+        r_script = "".join(["if (require(deSolve) == F) \n{\n",
+                            "    tall.packages('deSolve', ",
+                            "repos='http://cran.r-project.org')\n",
+                            "    if (require(deSolve) == F)\n",
+                            "        print ('Error: deSolve is not installed",
+                            " on your machine')\n",
+                            "}\n\n"])
+
+        # Model building, generic elements of model function
+        r_script = "".join([r_script, "model <- function(t, Y, ",
+                            "parameters,...) \n{\n",
+                            "    Time <<- t\n"])
+
+        for stk in self.stocks:
+            r_script = "".join([r_script,
+                                "    {0} <- Y['{0}']\n".format(stk.name)])
+
+        for aux in auxs:
+            r_script = "".join([r_script, "\n"])
+
+#    for conv in convlist:
+#        if (convertors[conv].value is not None):
+#            ff.writelines(["\t", conv, " <- parameters['", conv, "']\n"])
+#            parms.append(conv)
+#            convT.append(conv)
+
+        return r_script
+
     def show(self):
         items = []
         for stk in self.stocks:
@@ -269,10 +299,14 @@ def xmile_parser(model_file):
                     (ws? "<inflow>"  nl ws inflow  nl ws "</inflow>" nl)?
                     (ws? "<outflow>" nl ws outflow nl ws "</outflow>" nl)?
                     (ws? "<non_negative>" nl ws "</non_negative>")?
-                    (ws "<units>" nl ws units nl ws "</units>" nl)?
+                    (ws? "<units>" nl ws units nl ws "</units>" nl)?
+                    (ws? "<display" skip nl)?
+                    (ws? "<label_side>" nl ws str nl ws "</label_side>" nl)?
+                    (ws? "<label_angle>" nl ws str nl ws "</label_angle>" nl)?
+                    (ws? "</display>" nl)?
                ("</stock>" nl)?
         stock = "stock"
-        stock_name = ~"[A-z]*"
+        stock_name = ~"[A-z0-9]*"
         stock_disp_name = "isee:display_name=" qtm str qtm
         qtm = '"'
         val_ini = ~"[0-9.]*"
@@ -282,6 +316,7 @@ def xmile_parser(model_file):
         label = ~"[A-z_ ]*"
         outflow = ~"[A-z]*"
         str = ~"[A-z0-9_]*"
+        skip = ~"."*
         ws = ~"\s"*
         nl = ~"\n"
         """
@@ -290,9 +325,15 @@ def xmile_parser(model_file):
         entry =  line+
         line = ("<flow" (ws flow_disp_name)? ws
                         "name=" qtm flow_name qtm ">")? nl?
-                   (ws? "<eqn>" nl)? (ws eqn nl)? (ws "</eqn>" nl)?
-                   (ws? "<non_negative>" nl ws "</non_negative>")?
-                   (ws "<units>" nl ws units nl ws "</units>" nl)?
+                   (ws? "<eqn>" nl)? (ws eqn nl)? (skip nl)?
+                   (ws? "<non_negative>" nl? ws? "</non_negative>")?
+                   (ws? "<units>" nl ws units nl ws "</units>" nl)?
+                   (ws? "<display" skip nl)?
+                   (ws? "<pts>" ws? nl)?
+                   (ws? "<pt x=" skip nl)?
+                   (ws? "</pt>" ws? nl)?
+                   (ws? "</pts>" ws? nl)?
+                   (ws? "</display>" ws? nl)?
                ("</flow>" nl)?
         flow_disp_name = "isee:display_name=" qtm str qtm
         flow_name = ~"[A-z]*"
@@ -301,6 +342,7 @@ def xmile_parser(model_file):
         units = ~"[A-z/]*"
         str = ~"[A-z0-9_]*"
         qtm = '"'
+        skip = ~"."*
         ws = ~"\s"*
         nl = ~"\n"
         """
@@ -308,17 +350,19 @@ def xmile_parser(model_file):
     aux_grammar = r"""
         entry =  line+
         line = ("<aux" ws (aux_disp_name ws)? "name=" qtm aux_name qtm ">" nl)?
-                   (ws "<eqn>" nl ws eqn_str nl ws "</eqn>" nl)?
-                   (ws "<units>" nl ws units nl ws "</units>" nl)?
-                   (ws "<gf>" nl)?
+                   (ws? "<eqn>" nl ws eqn_str nl ws "</eqn>" nl)?
+                   (ws? "<units>" nl ws units nl ws "</units>" nl)?
+                   (ws? "<display" skip nl)?
+                   (ws? "<gf>" nl)?
                        (ws "<xscale max=" qtm max qtm ws
                                    "min=" qtm min qtm ">" nl)?
-                       (ws "</xscale>" nl)?
-                       (ws "<yscale max=" str ws "min=" str ">" nl
-                        ws "</yscale>" nl)?
-                       (ws "<ypts>" nl ws ypts nl ws "</ypts>" nl)?
-                   (ws "</gf>" nl)?
-               (ws "</aux>" nl)?
+                       (ws? "</xscale>" nl)?
+                       (ws? "<yscale max=" str ws "min=" str ">" nl
+                        ws? "</yscale>" nl)?
+                       (ws? "<ypts>" nl ws ypts nl ws "</ypts>" nl)?
+                   (ws? "</gf>" nl)?
+                   (ws? "</display>" skip? nl)?
+               (ws? "</aux>" skip? nl)?
         aux_disp_name = "isee:display_name=" str
         min = ~"[0-9.]*"
         max = ~"[0-9.]*"
@@ -328,7 +372,8 @@ def xmile_parser(model_file):
         units = ~"[A-z/ ]*"
         str = ~"[A-z0-9\"_]*"
         qtm = '"'
-        ws = ~"\s*"
+        skip = ~"."*
+        ws = ~"\s"*
         nl = ~"\n"
         """
 
@@ -412,26 +457,35 @@ def xmile_parser(model_file):
     # Extract equations block located in model/variables section of xmile file
     # First get flow equations
     flows = {}
-    for flw in xmile_soup.variables.find_all("flow"):
-        flw_parse = FlowParser(flow_grammar, flw.prettify()).entry
-        name = flw_parse["flow_name"].replace(" ", "_")
-        flows[name] = flw_parse
+    for flw in xmile_soup.model.find_all("flow"):
+        if "eqn" in flw.prettify():
+            flw_parse = FlowParser(flow_grammar, flw.prettify()).entry
+            if "units" not in flw_parse:
+                flw_parse["units"] = ""
+            name = flw_parse["flow_name"].replace(" ", "_")
+            flows[name] = flw_parse
 
     # Extract stock collection attributes
     stocks_cls = []
-    for stk in xmile_soup.variables.find_all("stock"):
-        stock_parse = StockParser(stock_grammar, stk.prettify()).entry
-        if stk.inflow:
-            stock_parse["inflow"] = flows[stock_parse["inflow"]]
-        if stk.outflow:
-            stock_parse["outflow"] = flows[stock_parse["outflow"]]
-        stocks_cls.append(XmileStock(stock_parse))
+    for stk in xmile_soup.model.find_all("stock"):
+        if "eqn" in stk.prettify():
+            stock_parse = StockParser(stock_grammar, stk.prettify()).entry
+            if "units" not in stock_parse:
+                stock_parse["units"] = ""
+            if stk.inflow:
+                stock_parse["inflow"] = flows[stock_parse["inflow"]]
+            if stk.outflow:
+                stock_parse["outflow"] = flows[stock_parse["outflow"]]
+            stocks_cls.append(XmileStock(stock_parse))
 
     # Get aux variables
     aux_dict = []
-    for ax in xmile_soup.variables.find_all("aux"):
-        aux_parse = AuxParser(aux_grammar, ax.prettify()).entry
-        aux_dict.append(XmileAux(aux_parse))
+    for ax in xmile_soup.model.find_all("aux"):
+        if "eqn" in ax.prettify():
+            aux_parse = AuxParser(aux_grammar, ax.prettify()).entry
+            if "units" not in aux_parse:
+                aux_parse["units"] = ""
+            aux_dict.append(XmileAux(aux_parse))
 
     return {"model_name": model_name, "stocks": stocks_cls, "auxs": aux_dict}
 
