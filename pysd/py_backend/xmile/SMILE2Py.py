@@ -1,4 +1,4 @@
-'''
+"""
 Created August 14 2014
 James Houghton <james.p.houghton@gmail.com>
 
@@ -15,7 +15,7 @@ Alexey Prey Mulyukin <alexprey@yandex.ru>
     
 This module converts a string of SMILE syntax into Python
     
-'''
+"""
 import parsimonious
 from parsimonious.nodes import NodeVisitor
 
@@ -26,8 +26,8 @@ dictionary = {"abs":"abs", "int":"int", "exp":"np.exp", "inf":"np.inf", "log10":
               "poisson":"np.random.poisson", "ln":"np.ln", "exprnd":"np.random.exponential",
               "random":"np.random.rand", "min":"min", "max":"max", "arccos":"np.arccos",
               "arcsin":"np.arcsin", "arctan":"np.arctan",
-              "if_then_else":"self.functions.if_then_else",
-              "step":"self.functions.step", "pulse":"self.functions.pulse"
+              "if_then_else":"functions.if_then_else",
+              "step":"functions.step", "pulse":"functions.pulse"
              }
 
 operators = {
@@ -91,8 +91,8 @@ class SMILEParser(NodeVisitor):
     def visit_Keyword(self, n, vc):
         return dictionary[n.text.lower()]
     
-    def visit_Reference(self, n, (Identifier, _)):
-        convertedIdentifier = Identifier
+    def visit_Reference(self, n, vc):
+        convertedIdentifier = vc[0]
         if convertedIdentifier == 'dt':
             convertedIdentifier = 'time_step'
         
@@ -102,23 +102,25 @@ class SMILEParser(NodeVisitor):
             return convertedIdentifier
 
     def visit_Identifier(self, n, vc):
-        #todo: should check here that identifiers are not python keywords...
         string = n.text
         string = string.lower()
         string = string.strip()
         string = string.replace(' ', '_')
         return string
 
-    def visit_Call(self, n, (Translated_Keyword, _1, lparen, _2, args, _3, rparen)):
+    def visit_Call(self, n, vc):
+        Translated_Keyword, _1, lparen, _2, args, _3, rparen = vc
         return Translated_Keyword+'('+', '.join(args)+')'
 
     def visit_ArgList(self, n, args):
         return args
 
-    def visit_AddArg(self, n, (comma, _1, argument)):
+    def visit_AddArg(self, n, vc):
+        (comma, _1, argument) = vc
         return argument
 
-    def operationVisitor(self, n, (operator, _, operand)):
+    def operationVisitor(self, n, vc):
+        (operator, _, operand) = vc
         return operators[operator.lower()] + ' ' + operand.strip() + ' '
 
     visit_Conditional = operationVisitor

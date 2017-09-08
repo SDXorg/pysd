@@ -199,7 +199,7 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
     Parameters
     ----------
     identifier: basestring
-        the name of the stock
+        the python-safe name of the stock
 
     subs: list
         a list of subscript elements

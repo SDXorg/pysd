@@ -5,3 +5,4 @@ autopep8
 xarray
 tabulate
 yapf
+lxml
