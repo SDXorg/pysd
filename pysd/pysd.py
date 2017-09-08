@@ -2,7 +2,6 @@
 pysd.py
 
 Contains all the code that will be directly accessed by the user in normal operation.
-Also contains some private members to facilitate integration, setup, etc.
 
 History
 --------
@@ -12,8 +11,6 @@ Jan 2016: Rework to handle subscripts
 May 2016: Updates to handle grammar refactoring
 Sept 2016: Major refactor, putting most internal code into the Model and Macro objects
 """
-
-from . import functions
 
 
 def read_vensim(mdl_file):
@@ -34,11 +31,14 @@ def read_vensim(mdl_file):
     --------
     >>> model = read_vensim('../tests/test-models/samples/teacup/teacup.mdl')
     """
-    from .vensim2py import translate_vensim
+
+    from pysd.py_backend.vensim.vensim2py import translate_vensim
+    from pysd.py_backend import functions
     py_model_file = translate_vensim(mdl_file)
     model = functions.Model(py_model_file)
     model.mdl_file = mdl_file
     return model
+
 
 def load(py_model_file):
     """
@@ -54,15 +54,5 @@ def load(py_model_file):
     --------
     >>> model = load('../tests/test-models/samples/teacup/teacup.py')
     """
+    from pysd.py_backend import functions
     return functions.Model(py_model_file)
-
-
-
-
-
-
-
-
-
-
-

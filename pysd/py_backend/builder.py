@@ -11,8 +11,8 @@ xmile specific syntax.
 
 import textwrap
 import yapf
-from ._version import __version__
-from . import utils
+from pysd._version import __version__
+from pysd.py_backend import utils
 import os
 import warnings
 
@@ -57,7 +57,7 @@ def build(elements, subscript_dict, namespace, outfile_name):
     from pysd import utils
     import xarray as xr
 
-    from pysd.functions import cache
+    from pysd.py_backend.functions import cache
     from pysd import functions
 
     _subscript_dict = %(subscript_dict)s

@@ -5,8 +5,8 @@ model. Everything that requires knowledge of vensim syntax should be in this fil
 
 import re
 import parsimonious
-from . import builder
-from . import utils
+from pysd.py_backend import builder
+from pysd.py_backend import utils
 import textwrap
 import numpy as np
 import os
