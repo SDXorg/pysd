@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<xmile version="1.0" level="1" xmlns="http://www.systemdynamics.org/XMILE" xmlns:isee="http://iseesystems.com/XMILE">
+    <header>
+        <smile version="1.0">
+            <uses_arrays>
+                <dimensions>
+                    <dim name="Dim_Name_1" size="1" />
+                </dimensions>
+            </uses_arrays>
+        </smile>
+        <name />
+        <uuid>d155ab95-2b30-49cb-97ff-7b0c2e3737de</uuid>
+        <vendor>isee systems</vendor>
+        <product version="10.0" lang="en">iThink</product>
+    </header>
+    <sim_specs>
+        <start>1</start>
+        <stop>300</stop>
+        <dt>0.25</dt>
+        <method>Euler</method>
+        <time_units>Days</time_units>
+    </sim_specs>
+    <model_units />
+    <isee:prefs layer="interface" grid_width="20" grid_height="50" divide_by_zero_alert="true" link_high_level_map="true" show_module_prefix="true">
+        <isee:window width="1300" height="680" />
+        <isee:security />
+        <isee:print_setup width="552" height="730" orientation="portrait" />
+    </isee:prefs>
+    <isee:equation_prefs order_by="sector" />
+    <model>
+        <stock name="Biomass">
+            <eqn>100</eqn>
+            <inflow>Photosynthesis</inflow>
+            <outflow>Decomposition</outflow>
+            <outflow>Deforestation</outflow>
+            <non_negative />
+            <display x="204" y="226" color="blue">
+                <label_side>bottom</label_side>
+                <label_angle>226</label_angle>
+            </display>
+        </stock>
+        <aux name="P_hsat">
+            <eqn>800</eqn>
+            <display x="293" y="227" color="blue" />
+        </aux>
+        <stock name="CO2">
+            <eqn>100</eqn>
+            <inflow>Decomposition</inflow>
+            <inflow>F_Release</inflow>
+            <outflow>Photosynthesis</outflow>
+            <non_negative />
+            <display x="388" y="297" color="blue">
+                <label_side>bottom</label_side>
+                <label_angle>267</label_angle>
+            </display>
+        </stock>
+        <flow name="Decomposition">
+            <eqn>D_rate*Biomass</eqn>
+            <non_negative />
+            <display x="289" y="311" color="blue">
+                <pts>
+                    <pt x="211" y="241" />
+                    <pt x="211" y="311" />
+                    <pt x="368" y="311" />
+                </pts>
+            </display>
+        </flow>
+        <aux name="P_rate">
+            <eqn>0.09</eqn>
+            <display x="372" y="195" color="blue" />
+        </aux>
+        <aux name="D_rate">
+            <eqn>0.03</eqn>
+            <display x="186" y="327" color="blue" />
+        </aux>
+        <flow name="Photosynthesis">
+            <eqn>P_rate*Biomass*CO2/(P_hsat+CO2)</eqn>
+            <non_negative />
+            <display x="302" y="166" color="blue">
+                <label_side>top</label_side>
+                <pts>
+                    <pt x="395" y="282" />
+                    <pt x="395" y="166" />
+                    <pt x="210" y="166" />
+                    <pt x="210" y="211" />
+                </pts>
+            </display>
+        </flow>
+        <flow name="F_Release">
+            <eqn>20</eqn>
+            <non_negative />
+            <display x="448" y="307" color="blue">
+                <pts>
+                    <pt x="488" y="307" />
+                    <pt x="408" y="307" />
+                </pts>
+            </display>
+        </flow>
+        <flow name="Deforestation">
+            <doc>&#x0D;&#x0D;&#x0D;&#x0D;&#x0D;&#x0D;&#x0D;&#x0D;&#x0D;&#x0D;&#x0D;Make deforestation =20 and&#x0D;initial conditions for both variables = 1000</doc>
+            <eqn>Biomass*0.01</eqn>
+            <non_negative />
+            <display x="127" y="215" color="blue">
+                <label_side>top</label_side>
+                <label_angle>78</label_angle>
+                <pts>
+                    <pt x="184" y="215" />
+                    <pt x="71" y="215" />
+                </pts>
+            </display>
+        </flow>
+        <display show_pages="false" page_width="552" page_height="730" page_sequence="row" pages_row_count="2" pages_column_count="1" isee:show_values_on_hover="true" isee:converter_size="large" zoom="100" report_balances="ending" report_flows="summed" scroll_x="0" scroll_y="32">
+            <connector x="362" y="189" uid="0">
+                <from>P_rate</from>
+                <to>Photosynthesis</to>
+                <color>#FF007F</color>
+            </connector>
+            <connector x="375" y="280" uid="1">
+                <from>CO2</from>
+                <to>Photosynthesis</to>
+                <color>#FF007F</color>
+            </connector>
+            <connector x="214" y="209" uid="2">
+                <from>Biomass</from>
+                <to>Photosynthesis</to>
+                <color>#FF007F</color>
+            </connector>
+            <connector x="226" y="230" uid="3">
+                <from>Biomass</from>
+                <to>Decomposition</to>
+                <color>#FF007F</color>
+            </connector>
+            <connector x="283" y="220" uid="4">
+                <from>P_hsat</from>
+                <to>Photosynthesis</to>
+                <color>#FF007F</color>
+            </connector>
+            <connector x="198" y="327" uid="5">
+                <from>D_rate</from>
+                <to>Decomposition</to>
+                <color>#FF007F</color>
+            </connector>
+            <connector x="182" y="228" uid="6">
+                <from>Biomass</from>
+                <to>Deforestation</to>
+                <color>#FF007F</color>
+            </connector>
+            <stacked_container x="27" y="394" height="282" width="492" visible_index="0" uid="pad_116577776">
+                <graph type="time_series" title="Untitled Graph" background="#C8C8C8" show_grid="false" numbers_on_plots="true" isee:use_five_segments="false" isee:date_time="-707292196" cleared="true" time_precision="2" from="1" to="300">
+                    <plot pen_width="3" precision="2">
+                        <index>0</index>
+                        <color>red</color>
+                        <show_y_axis>true</show_y_axis>
+                        <entity name="Biomass" />
+                    </plot>
+                    <plot pen_width="3" precision="2">
+                        <index>1</index>
+                        <color>blue</color>
+                        <show_y_axis>true</show_y_axis>
+                        <entity name="CO2" />
+                    </plot>
+                </graph>
+            </stacked_container>
+            <pad_icon x="392" y="438" width="26" height="22" color="#0CA0FF" label="Graph 1" type="graph" icon_of="pad_116577776">
+                <label_side>bottom</label_side>
+            </pad_icon>
+            <text_box x="142" y="27" uid="7" color="black" font-family="Arial" font-size="24" font-weight="bold" text-align="center" margin="5" width="323" height="66">Debug Exercise 4: Biomass - CO2 Model</text_box>
+        </display>
+        <interface scroll_x="0" scroll_y="0" zoom="100">
+            <simulation_delay>0</simulation_delay>
+            <pages show="false" row_count="1" column_count="1" home_page="1" width="640" height="480" />
+        </interface>
+    </model>
+</xmile>

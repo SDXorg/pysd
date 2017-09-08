@@ -73,12 +73,8 @@ class XmileStock:
     :units: -- Units of measure for the stock contents
     :eqn: --  Equation describing stock dynamics
     :init: -- Initial condition of the stock
-    :inflow_name: -- Name of an input flow into the stock
-    :inflow: -- Equation of the input flow
-    :inflow_units: -- String describing the units of the flow
-    :outflow_name: -- Name of an input flow into the stock
-    :outflow: -- Equation of the input flow
-    :outflow_units: -- String describing the units of the flow
+    :inflow: -- List of input flow attributes (eqn, flow_name and units)
+    :outflow: -- List of output flow attributes (eqn, flow_name and units)
 
     Methods
     ---------
@@ -90,15 +86,12 @@ class XmileStock:
         self.units = stock_dict["units"]
         self.eqn = ""
         if "inflow" in stock_dict:
-            self.inflow_name = stock_dict["inflow"]["flow_name"]
-            self.inflow = stock_dict["inflow"]["eqn"]
-            self.eqn = self.eqn + stock_dict["inflow"]["eqn"]
-            self.inflow_units = stock_dict["inflow"]["units"]
+            self.inflow = stock_dict["inflow"]
+            self.eqn = " + ".join([f["eqn"] for f in self.inflow])
         if "outflow" in stock_dict:
-            self.outflow_name = stock_dict["outflow"]["flow_name"]
-            self.outflow = stock_dict["outflow"]["eqn"]
-            self.eqn = self.eqn + " - " + stock_dict["outflow"]["eqn"]
-            self.outflow_units = stock_dict["outflow"]["units"]
+            self.outflow = stock_dict["outflow"]
+            self.eqn = self.eqn + " - " +\
+                " - ".join([f["eqn"] for f in self.outflow])
         self.init = float(stock_dict["val_ini"])
         self.eqn = self.eqn.strip(" ")
 
@@ -142,7 +135,6 @@ class XmileAux:
                                   "\n  Equation: GRAPH({0})".format(self.eqn),
                                   "\n  Data series:",
                                   ", ".join([str(x) for x in self.series])])
-
         return aux_report
 
 
@@ -212,21 +204,22 @@ class XmileModel:
             eqn = stk.name + "(t)" + " = " + stk.name + " (t - dt)"
             fls = ""
             if hasattr(stk, "inflow"):
-                fls = stk.inflow_name
+                fls = " + ".join([f["flow_name"] for f in stk.inflow])
             if hasattr(stk, "outflow"):
-                fls = fls + " - " + stk.outflow_name
+                fls = fls + "- " + " - ".join(
+                        [f["flow_name"] for f in stk.outflow])
             item = [eqn + " + (" + fls + ") * dt"]
             item.extend(["    INIT " + stk.name + " = " + str(stk.init)])
 
             # Define flows
             if hasattr(stk, "inflow"):
                 item.extend(["    INFLOWS:"])
-                item.extend(["        " + stk.inflow_name +
-                             " = " + stk.inflow])
+                item.extend(["        " + f["flow_name"] + " = " +
+                             f["eqn"] for f in stk.inflow])
             if hasattr(stk, "outflow"):
                 item.extend(["    OUTFLOWS:"])
-                item.extend(["        " + stk.outflow_name +
-                             " = " + stk.outflow])
+                item.extend(["        " + f["flow_name"] + " = " +
+                             f["eqn"] for f in stk.outflow])
             items.append("\n".join(item))
 
         model_report = "".join(["Top-Level Model <{0}>:\n".format(self.name),
@@ -245,12 +238,12 @@ class XmileModel:
                                                    for x in ax.series])])
 
         # Metadata
-        flows = set([])
+        flows = set()
         for flw in self.stocks:
-            if hasattr(flw, "inflow_name"):
-                flows.add(flw.inflow_name)
-            if hasattr(flw, "outflow_name"):
-                flows.add(flw.outflow_name)
+            if hasattr(flw, "inflow"):
+                flows.update({f["flow_name"] for f in flw.inflow})
+            if hasattr(flw, "outflow"):
+                flows.update({f["flow_name"] for f in flw.outflow})
 
         graphs, constants = 0, 0
         for cst in self.auxs:
@@ -261,7 +254,7 @@ class XmileModel:
 
         num_var = len(self.stocks) + len(flows) + len(self.auxs)
         meta_data = "".join([
-                "{ The model has ", str(num_var), " (",
+                "\n{ The model has ", str(num_var), " (",
                 str(num_var), ") variables (array ",
                 "expansion in parens).\n", "  In root model and 0",
                 " additional modules with 0 sectors.\n", "  Stocks: ",
@@ -329,6 +322,8 @@ def xmile_parser(model_file):
                    (ws? "<non_negative>" nl? ws? "</non_negative>")?
                    (ws? "<units>" nl ws units nl ws "</units>" nl)?
                    (ws? "<display" skip nl)?
+                   (ws? "<label_side>" nl ws str nl ws "</label_side>" nl)?
+                   (ws? "<label_angle>" nl ws str nl ws "</label_angle>" nl)?
                    (ws? "<pts>" ws? nl)?
                    (ws? "<pt x=" skip nl)?
                    (ws? "</pt>" ws? nl)?
@@ -337,7 +332,7 @@ def xmile_parser(model_file):
                ("</flow>" nl)?
         flow_disp_name = "isee:display_name=" qtm str qtm
         flow_name = ~"[A-z]*"
-        eqn = ~"[A-z0-9.*/]*"
+        eqn = ~"[A-z0-9.*/\(\)_\+]*"
         val = ~"[0-9.]*"
         units = ~"[A-z/]*"
         str = ~"[A-z0-9_]*"
@@ -367,7 +362,7 @@ def xmile_parser(model_file):
         min = ~"[0-9.]*"
         max = ~"[0-9.]*"
         aux_name = ~"[A-z _]*"
-        eqn_str = ~"[A-z0-9.*/]*"
+        eqn_str = ~"[A-z0-9.*/\(\)]*"
         ypts = ~"[0-9.,-]*"
         units = ~"[A-z/ ]*"
         str = ~"[A-z0-9\"_]*"
@@ -473,9 +468,11 @@ def xmile_parser(model_file):
             if "units" not in stock_parse:
                 stock_parse["units"] = ""
             if stk.inflow:
-                stock_parse["inflow"] = flows[stock_parse["inflow"]]
+                stock_parse["inflow"] = [flows[f.text] for f in
+                                         stk.find_all("inflow")]
             if stk.outflow:
-                stock_parse["outflow"] = flows[stock_parse["outflow"]]
+                stock_parse["outflow"] = [flows[f.text] for f in
+                                          stk.find_all("outflow")]
             stocks_cls.append(XmileStock(stock_parse))
 
     # Get aux variables
