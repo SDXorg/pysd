@@ -299,15 +299,15 @@ def xmile_parser(model_file):
                     (ws? "</display>" nl)?
                ("</stock>" nl)?
         stock = "stock"
-        stock_name = ~"[A-z0-9]*"
+        stock_name = ~"[A-Za-z0-9$_ ]*"
         stock_disp_name = "isee:display_name=" qtm str qtm
         qtm = '"'
         val_ini = ~"[0-9.]*"
-        inflow = ~"[A-z]*"
+        inflow = ~"[A-Za-z0-9$_ ]*"
         val = ~"[0-9.]*"
         units = ~"[A-z]*"
         label = ~"[A-z_ ]*"
-        outflow = ~"[A-z]*"
+        outflow = ~"[A-Za-z0-9$_ ]*"
         str = ~"[A-z0-9_]*"
         skip = ~"."*
         ws = ~"\s"*
@@ -331,7 +331,7 @@ def xmile_parser(model_file):
                    (ws? "</display>" ws? nl)?
                ("</flow>" nl)?
         flow_disp_name = "isee:display_name=" qtm str qtm
-        flow_name = ~"[A-z]*"
+        flow_name = ~"[A-Za-z0-9$_ ]*"
         eqn = ~"[A-z0-9.*/\(\)_\+]*"
         val = ~"[0-9.]*"
         units = ~"[A-z/]*"
@@ -361,7 +361,7 @@ def xmile_parser(model_file):
         aux_disp_name = "isee:display_name=" str
         min = ~"[0-9.]*"
         max = ~"[0-9.]*"
-        aux_name = ~"[A-z _]*"
+        aux_name = ~"[A-Za-z0-9$_ ]*"
         eqn_str = ~"[A-z0-9.*/\(\)]*"
         ypts = ~"[0-9.,-]*"
         units = ~"[A-z/ ]*"
@@ -458,6 +458,7 @@ def xmile_parser(model_file):
             if "units" not in flw_parse:
                 flw_parse["units"] = ""
             name = flw_parse["flow_name"].replace(" ", "_")
+            flw_parse["flow_name"] = name
             flows[name] = flw_parse
 
     # Extract stock collection attributes
@@ -465,6 +466,8 @@ def xmile_parser(model_file):
     for stk in xmile_soup.model.find_all("stock"):
         if "eqn" in stk.prettify():
             stock_parse = StockParser(stock_grammar, stk.prettify()).entry
+            name = stock_parse["stock_name"].replace(" ", "_")
+            stock_parse["stock_name"] = name
             if "units" not in stock_parse:
                 stock_parse["units"] = ""
             if stk.inflow:
@@ -480,6 +483,8 @@ def xmile_parser(model_file):
     for ax in xmile_soup.model.find_all("aux"):
         if "eqn" in ax.prettify():
             aux_parse = AuxParser(aux_grammar, ax.prettify()).entry
+            name = aux_parse["aux_name"].replace(" ", "_")
+            aux_parse["aux_name"] = name
             if "units" not in aux_parse:
                 aux_parse["units"] = ""
             aux_dict.append(XmileAux(aux_parse))
