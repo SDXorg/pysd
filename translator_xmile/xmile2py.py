@@ -34,30 +34,28 @@ def main():
     model_file = sys.argv[1]
     outputName = sys.argv[2]
     outPath = os.path.abspath(outputName)
-    outName = os.path.basename(outputName)
 
     # Prepare directory to store output
     if (not os.path.isdir(outPath)):
         os.mkdir(outPath)
 
-# os.chdir("C:/Users/Miguel/Documents/1 Nube/Dropbox/Curso posgrado/2015/Día 2/Influenza/El modelo general")
-# model_file = "SIR_HK (stella 10).stmx"
-# os.chdir("C:/Users/Miguel/Documents/0 Versiones/2 Proyectos/pysd/translator_xmile")
-# model_file = "SIR_HK.stmx"
-# model_file = "m1.stmx"
-
     # Extract relevant information to build model
     model_attributes = xmile_parser(model_file)
+    model_translation = XmileModel(model_attributes["model_spec"],
+                                   model_attributes["stocks"],
+                                   model_attributes["auxs"])
 
     # output model file
     with open(outPath + "/" + outputName + ".txt", "w") as foutput:
-        model_output = XmileModel(model_attributes["model_name"],
-                                  model_attributes["stocks"],
-                                  model_attributes["auxs"]).show()
+        model_output = model_translation.show()
+        foutput.writelines(model_output)
+
+    with open(outPath + "/" + outputName + ".R", "w") as foutput:
+        model_output = model_translation.build_R_script()
         foutput.writelines(model_output)
 
     print("\n\n" + "*"*28 + "\nModel translation successful")
-    print("Model processed:", model_attributes["model_name"])
+    print("Model processed:", model_translation.name)
     print("Translation can be found at:\n  ", outPath)
     print("\n\n")
 
@@ -87,11 +85,11 @@ class XmileStock:
         self.eqn = ""
         if "inflow" in stock_dict:
             self.inflow = stock_dict["inflow"]
-            self.eqn = " + ".join([f["eqn"] for f in self.inflow])
+            self.eqn = " + ".join([f["flow_name"] for f in self.inflow])
         if "outflow" in stock_dict:
             self.outflow = stock_dict["outflow"]
             self.eqn = self.eqn + " - " +\
-                " - ".join([f["eqn"] for f in self.outflow])
+                " - ".join([f["flow_name"] for f in self.outflow])
         self.init = float(stock_dict["val_ini"])
         self.eqn = self.eqn.strip(" ")
 
@@ -139,13 +137,13 @@ class XmileAux:
 
 
 class XmileModel:
-    def __init__(self, name, stocks, auxs):
-        self.name = name
+    def __init__(self, spec, stocks, auxs):
+        self.name = spec["name"]
+        self.step = spec["step"]
+        self.start = spec["start"]
+        self.stop = spec["stop"]
         self.stocks = stocks
         self.auxs = auxs
-
-    def rTranslation(self):
-        pass
 
         def FunctionTranslator(x):
             return {
@@ -170,6 +168,7 @@ class XmileModel:
                 }[x]
 
     def build_R_script(self):
+        # Initialization section
         r_script = "".join(["if (require(deSolve) == F) \n{\n",
                             "    tall.packages('deSolve', ",
                             "repos='http://cran.r-project.org')\n",
@@ -178,23 +177,76 @@ class XmileModel:
                             " on your machine')\n",
                             "}\n\n"])
 
-        # Model building, generic elements of model function
+        # Model building, definition of main model function
         r_script = "".join([r_script, "model <- function(t, Y, ",
                             "parameters,...) \n{\n",
                             "    Time <<- t\n"])
 
+        stk_names = [s.name for s in self.stocks]
+        stk_names.sort()
+        lines = "".join(["    {0} <- Y['{0}']\n".format(stk)
+                         for stk in stk_names])
+        r_script = "".join([r_script, lines])
+
+        convertors = [a.name for a in self.auxs]
+        convertors.sort()
+        lines = "".join(["    {0} <- parameters['{0}']\n".format(aux)
+                         for aux in convertors])
+        r_script = "".join([r_script, "\n", lines])
+
+        flw_names = set()
         for stk in self.stocks:
+            if hasattr(stk, "inflow"):
+                flw_names = flw_names.union({f["flow_name"] + " <- " + f["eqn"]
+                                             for f in stk.inflow})
+            if hasattr(stk, "ouflow"):
+                flw_names = flw_names.union({f["flow_name"] + " <- " + f["eqn"]
+                                             for f in stk.outflow})
+
+        lines = "\n    ".join(flw_names)
+        r_script = "".join([r_script, "\n    ", lines, "\n"])
+
+        # diferential equation specification
+        lines, d_func = "", []
+        for deqn in self.stocks:
+            lines = "".join([lines, "d_", deqn.name, " = ",
+                             deqn.eqn, "\n    "])
+            d_func.append("d_" + deqn.name)
+
+        d_func = "    list(c(" + ", ".join(d_func) + "))\n}\n"
+
+        r_script = "".join([r_script, "\n    ", lines, "\n", d_func,
+                            "\n", "#" * 50])
+
+        # Define parameters
+        series, items = [], []
+        for ax in self.auxs:
+            if ax.type is "value":
+                items.append("".join(["{0} = {1}".format(ax.name,
+                                                         str(ax.value))]))
+            if ax.type is "series":
+                series.append("".join(series) + ax.name + " <- c(" +
+                              ", ".join(["c(" + str(x) + ", " + str(y) + ")"
+                                         for (x, y) in ax.series]) + ")\n")
+        if items:
             r_script = "".join([r_script,
-                                "    {0} <- Y['{0}']\n".format(stk.name)])
+                                "\n\nparms <- c(" + ", ".join(items) + ")\n"])
+        if series:
+            r_script = "".join([r_script, "".join(series) + "\n"])
 
-        for aux in auxs:
-            r_script = "".join([r_script, "\n"])
+        items = []
+        for stk in self.stocks:
+            items.append(stk.name + " = " + str(stk.init))
 
-#    for conv in convlist:
-#        if (convertors[conv].value is not None):
-#            ff.writelines(["\t", conv, " <- parameters['", conv, "']\n"])
-#            parms.append(conv)
-#            convT.append(conv)
+        lines = "Y <- c(" + ", ".join(items) + ")\n\n"
+        lines = "".join([lines, "source('", self.name, ".r_functions.R')\n",
+                         "DT <-", str(self.step), "\n",
+                         "time <- seq(0.001, 100, DT)\n",
+                         "out <-ode(func=model, y=Y, times=time," +
+                         " parms=parms, method='rk4')\n",
+                         "plot(out)"])
+
+        r_script = "".join([r_script, lines])
 
         return r_script
 
@@ -269,7 +321,6 @@ class XmileModel:
 
         model_report = "".join([model_report, meta_data])
         return model_report
-
 
 # %% Parsers
 def xmile_parser(model_file):
@@ -447,7 +498,12 @@ def xmile_parser(model_file):
         xmile_soup = bs(fmodel, "lxml")
 
     # Extract relevant information to build model
-    model_name = xmile_soup.header.find("name").text
+    model_spec = {"name": xmile_soup.header.find("name").text,
+                  "step": float(xmile_soup.find("dt").text),
+                  "start": int(xmile_soup.find("start").text),
+                  "stop": int(xmile_soup.find("stop").text)}
+    if model_spec["name"] is "":
+        model_spec["name"] = model_file.split(".")[0]
 
     # Extract equations block located in model/variables section of xmile file
     # First get flow equations
@@ -479,7 +535,7 @@ def xmile_parser(model_file):
             stocks_cls.append(XmileStock(stock_parse))
 
     # Get aux variables
-    aux_dict = []
+    aux_list = []
     for ax in xmile_soup.model.find_all("aux"):
         if "eqn" in ax.prettify():
             aux_parse = AuxParser(aux_grammar, ax.prettify()).entry
@@ -487,9 +543,9 @@ def xmile_parser(model_file):
             aux_parse["aux_name"] = name
             if "units" not in aux_parse:
                 aux_parse["units"] = ""
-            aux_dict.append(XmileAux(aux_parse))
+            aux_list.append(XmileAux(aux_parse))
 
-    return {"model_name": model_name, "stocks": stocks_cls, "auxs": aux_dict}
+    return {"model_spec": model_spec, "stocks": stocks_cls, "auxs": aux_list}
 
 
 # %% Read xmile model (like stella 10 onwards)
