@@ -46,11 +46,11 @@ def main():
                                    model_attributes["auxs"])
 
     # output model file
-    with open(outPath + "/" + outputName + ".txt", "w") as foutput:
+    with open(outPath + "/" + model_translation.name + ".txt", "w") as foutput:
         model_output = model_translation.show()
         foutput.writelines(model_output)
 
-    with open(outPath + "/" + outputName + ".R", "w") as foutput:
+    with open(outPath + "/" + model_translation.name + ".R", "w") as foutput:
         model_output = model_translation.build_R_script()
         foutput.writelines(model_output)
 
@@ -177,7 +177,7 @@ class XmileModel:
                             " on your machine')\n",
                             "}\n\n"])
 
-        # Model building, definition of main model function
+        # Definition of main model function
         r_script = "".join([r_script, "model <- function(t, Y, ",
                             "parameters,...) \n{\n",
                             "    Time <<- t\n"])
@@ -194,17 +194,20 @@ class XmileModel:
                          for aux in convertors])
         r_script = "".join([r_script, "\n", lines])
 
+        # Recover flow information and prepare suitable R commands
         flw_names = set()
         for stk in self.stocks:
             if hasattr(stk, "inflow"):
-                flw_names = flw_names.union({f["flow_name"] + " <- " + f["eqn"]
-                                             for f in stk.inflow})
-            if hasattr(stk, "ouflow"):
-                flw_names = flw_names.union({f["flow_name"] + " <- " + f["eqn"]
-                                             for f in stk.outflow})
+                flw_names = flw_names.union(
+                          {"\n    " + f["flow_name"] + " <- " + f["eqn"]
+                           for f in stk.inflow})
+            if hasattr(stk, "outflow"):
+                flw_names = flw_names.union(
+                          {"\n    " + f["flow_name"] + " <- " + f["eqn"]
+                           for f in stk.outflow})
 
-        lines = "\n    ".join(flw_names)
-        r_script = "".join([r_script, "\n    ", lines, "\n"])
+        lines = "".join(flw_names)
+        r_script = "".join([r_script, "", lines, "\n"])
 
         # diferential equation specification
         lines, d_func = "", []
@@ -218,7 +221,7 @@ class XmileModel:
         r_script = "".join([r_script, "\n    ", lines, "\n", d_func,
                             "\n", "#" * 50])
 
-        # Define parameters
+        # Define R object to store model parameters
         series, items = [], []
         for ax in self.auxs:
             if ax.type is "value":
@@ -234,16 +237,18 @@ class XmileModel:
         if series:
             r_script = "".join([r_script, "".join(series) + "\n"])
 
+        # Includes initial conditions for the stocks
         items = []
         for stk in self.stocks:
             items.append(stk.name + " = " + str(stk.init))
 
+        # Assemble command call to run the model in R
         lines = "Y <- c(" + ", ".join(items) + ")\n\n"
-        lines = "".join([lines, "source('", self.name, ".r_functions.R')\n",
+        lines = "".join([lines, "source('", self.name, "_r_functions.R')\n",
                          "DT <-", str(self.step), "\n",
                          "time <- seq(0.001, 100, DT)\n",
-                         "out <-ode(func=model, y=Y, times=time," +
-                         " parms=parms, method='rk4')\n",
+                         "out <-ode(func = model, y = Y, times = time," +
+                         " parms = parms, method = 'rk4')\n",
                          "plot(out)"])
 
         r_script = "".join([r_script, lines])
