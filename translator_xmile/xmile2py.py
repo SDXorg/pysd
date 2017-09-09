@@ -62,8 +62,8 @@ def main():
 
 # %%Model classes
 class XmileStock:
-    """ Class that stores Stock deffinition
-        Translated from *xmile* model specification
+    """Class that stores Stock deffinition
+       as translated from an *xmile* model specification
 
     Attributes
     ----------
@@ -76,7 +76,7 @@ class XmileStock:
 
     Methods
     ---------
-    :__init__ -- Takes a stock dictionary as it only parameter (no default)
+    :__init__ -- Takes a stock dictionary as its only parameter (no default)
     :show: -- Display the main features of the stock instance.
     """
     def __init__(self, stock_dict):
@@ -103,6 +103,24 @@ class XmileStock:
 
 
 class XmileAux:
+    """Class that stores converters deffinition
+       as translated from an original *xmile* model specification
+
+    Attributes
+    ----------
+    :name: -- Name of the converter.
+    :type: -- Either value if holding a constant or a data series if holding
+              a *graphical function*
+    :units: -- Units of measure for the converter constant.
+    :eqn: -- If converter holds a *graphical function*, then this holds an
+             equation related to that function.
+    :value: -- If converter is a constant this is its value.
+
+    Methods
+    ---------
+    :__init__: -- Takes an aux dictionary as its only parameter (no default)
+    :show: -- Display the main features of the converter instance.
+    """
     def __init__(self, aux_dict):
         self.name = aux_dict["aux_name"]
         if "ypts" in aux_dict:
@@ -137,7 +155,36 @@ class XmileAux:
 
 
 class XmileModel:
+    """Class that stores full model deffinition
+       as translated from an original stella or *xmile* compliant
+       model specification
+
+    Attributes
+    ----------
+    :name: -- Name of the model.
+    :step: -- Time step to run the model.
+    :start: -- Starting point of the time frame to run the model.
+    :stop: -- Ending point of the time frame to run the model.
+    :stocks: -- List of *stock class* objects.
+    :auxs: -- List of *aux class* objects.
+    :units: -- Units of measure for the converter constant.
+    :eqn: -- If converter holds a *graphical function*, then this holds an
+             equation related to that function.
+    :value: -- If converter is a constant this is its value.
+
+    Methods
+    ---------
+    :__init__: -- Assemble full model descriptor from a spec dictionary, a
+                  list of stock class objects and a list of aux class
+                  objects (no default).
+    :show: -- Display the main features of the converter instance.
+    :build_R_script: -- Prepares an scrip for R use with **deSolve** library.
+    """
     def __init__(self, spec, stocks, auxs):
+        """Takes an spec dictionary with model data, a list of stock class
+           and a list of aux class objects that fully describe the original
+           Stella or *xmile* model(no default)
+        """
         self.name = spec["name"]
         self.step = spec["step"]
         self.start = spec["start"]
@@ -168,6 +215,8 @@ class XmileModel:
                 }[x]
 
     def build_R_script(self):
+        """Prepares an scrip for R use with **deSolve** library.
+        """
         # Initialization section
         r_script = "".join(["if (require(deSolve) == F) \n{\n",
                             "    tall.packages('deSolve', ",
@@ -256,6 +305,9 @@ class XmileModel:
         return r_script
 
     def show(self):
+        """Display the main features of the full model.
+        """
+
         items = []
         for stk in self.stocks:
             eqn = stk.name + "(t)" + " = " + stk.name + " (t - dt)"
@@ -330,8 +382,9 @@ class XmileModel:
 # %% Parsers
 def xmile_parser(model_file):
     """ Parse a model from Stella
-        From version 10 and up (type "\*.stmx") or some other
-        **xmile** compliant file type.
+        as used from version 10 and up (type "\*.stmx") or some other
+        *xmile* compliant file type. It uses **BeautifullSoup** and
+        **parsimonious** to implement the parsing of *xmile* format.
 
     Keyword arguments:
     ----------
