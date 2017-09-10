@@ -218,30 +218,41 @@ class XmileModel:
         """Prepares an scrip for R use with **deSolve** library.
         """
         # Initialization section
-        r_script = "".join(["if (require(deSolve) == F) \n{\n",
+        r_script = "".join(["# Prepare libraries needed\n"
+                            "if (require(deSolve) == F) \n{\n",
                             "    tall.packages('deSolve', ",
                             "repos='http://cran.r-project.org')\n",
                             "    if (require(deSolve) == F)\n",
-                            "        print ('Error: deSolve is not installed",
+                            "      print ('Error: deSolve is not installed",
+                            " on your machine')\n",
+                            "}\n\n",
+                            "if (require(minpack.lm) == F) \n{\n",
+                            "    tall.packages('minpack.lm', ",
+                            "repos='http://cran.r-project.org')\n",
+                            "    if (require(minpack.lm) == F)\n",
+                            "      print ('Error: minpack.lm is not installed",
                             " on your machine')\n",
                             "}\n\n"])
 
         # Definition of main model function
-        r_script = "".join([r_script, "model <- function(t, Y, ",
-                            "parameters,...) \n{\n",
+        r_script = "".join([r_script,
+                            "# Function specifying full model\n",
+                            "model <- function(t, Y, ",
+                            "parameters, ...) \n{\n",
+                            "    # Time and other model variables\n",
                             "    Time <<- t\n"])
 
         stk_names = [s.name for s in self.stocks]
         stk_names.sort()
         lines = "".join(["    {0} <- Y['{0}']\n".format(stk)
                          for stk in stk_names])
-        r_script = "".join([r_script, lines])
+        r_script = "".join([r_script, lines, "\n    # Model parameters"])
 
         convertors = [a.name for a in self.auxs]
         convertors.sort()
         lines = "".join(["    {0} <- parameters['{0}']\n".format(aux)
                          for aux in convertors])
-        r_script = "".join([r_script, "\n", lines])
+        r_script = "".join([r_script, "\n", lines, "\n"])
 
         # Recover flow information and prepare suitable R commands
         flw_names = set()
@@ -256,18 +267,22 @@ class XmileModel:
                            for f in stk.outflow})
 
         lines = "".join(flw_names)
-        r_script = "".join([r_script, "", lines, "\n"])
+        r_script = "".join([r_script, "    # flow equations", lines, "\n\n",
+                            "    # Differential equations"])
 
         # diferential equation specification
         lines, d_func = "", []
         for deqn in self.stocks:
-            lines = "".join([lines, "d_", deqn.name, " = ",
+            lines = "".join([lines,
+                             "d_", deqn.name, " <- ",
                              deqn.eqn, "\n    "])
             d_func.append("d_" + deqn.name)
 
         d_func = "    list(c(" + ", ".join(d_func) + "))\n}\n"
 
-        r_script = "".join([r_script, "\n    ", lines, "\n", d_func,
+        r_script = "".join([r_script, "\n    ", lines, "\n",
+                            "    # Model output list\n",
+                            d_func,
                             "\n", "#" * 50])
 
         # Define R object to store model parameters
@@ -275,14 +290,21 @@ class XmileModel:
         for ax in self.auxs:
             if ax.type is "value":
                 items.append("".join(["{0} = {1}".format(ax.name,
-                                                         str(ax.value))]))
+                                                          str(ax.value))]))
             if ax.type is "series":
-                series.append("".join(series) + ax.name + " <- c(" +
+                series.append("".join(series) + ax.name +
+                              " <- data.frame(matrix(c(" +
                               ", ".join(["c(" + str(x) + ", " + str(y) + ")"
-                                         for (x, y) in ax.series]) + ")\n")
+                                         for (x, y) in ax.series]) +
+                              "), ncol = 2, byrow = T))\n" +
+                              "names(" + ax.name + ") <- c(" + "'" +
+                              ax.eqn.lower() + "'" + ", '" + ax.name + "')\n")
+
         if items:
-            r_script = "".join([r_script,
-                                "\n\nparms <- c(" + ", ".join(items) + ")\n"])
+            r_script = "".join([r_script, "\n\n",
+                                "# Paremeters and initial condition to" +
+                                " solve model\n", "parms <- c(" +
+                                ", ".join(items) + ")\n"])
         if series:
             r_script = "".join([r_script, "".join(series) + "\n"])
 
@@ -293,12 +315,40 @@ class XmileModel:
 
         # Assemble command call to run the model in R
         lines = "Y <- c(" + ", ".join(items) + ")\n\n"
-        lines = "".join([lines, "source('", self.name, "_r_functions.R')\n",
-                         "DT <-", str(self.step), "\n",
-                         "time <- seq(0.001, 100, DT)\n",
-                         "out <-ode(func = model, y = Y, times = time," +
-                         " parms = parms, method = 'rk4')\n",
-                         "plot(out)"])
+        lines = "".join([lines, "# Call for auxiliary components\n",
+                         "source('", self.name, "_r_functions.R')\n\n",
+                         "# Numerical integration specs\n"
+                         "DT <- ", str(self.step), "\n",
+                         "time <- seq(", str(self.start), " ,",
+                         str(self.stop), " , DT)\n\n",
+                         "# Use 'ode' function to solve model\n",
+                         "out <- ode(func = model, y = Y, times = time,",
+                         " parms = parms, method = 'rk4')\n\n",
+                         "# Plot model numerical solution\n"
+                         "plot(out)\n\n",
+                         "# Error function to fit model with 'nls.lm'\n",
+                         "ssq <- function(parms, t, data, y0, varList)\n{",
+                         "    # solve ODE for a given set of parameters\n",
+                         "    sol <- ode(func = model, y = y0, times = t,",
+                         " parms = parms, method = 'rk4')\n\n",
+                         "    # Match data to model output\n",
+                         "    solDF <- data.frame(sol)\n",
+                         "    solDF <- solDF[solDF$time %in% data$time, ]\n\n",
+                         "    # Difference fitted vs observed \n",
+                         "    solDF <- unlist(solDF[, varList])\n",
+                         "    obsDF <- unlist(data[, -1])\n",
+                         "    ssqres <- solDF - obsDF\n\n",
+                         "    # return predicted vs experimental residual\n",
+                         "    return(ssqres)\n}\n\n",
+                         "# Provide data, dataset and time sequence\n\n",
+                         "# parameter fitting using levenberg marquart",
+                         " algorithm. Provide parms as initial guess\n",
+                         "fittedModel <- nls.lm(par=parms, fn=ssq, y0 = Y, ",
+                         "t = time, data = datos, varList = varList)\n",
+                         "summary(fittedModel)\n",
+                         "fittedVals <- ode(func = model, y = Y, ",
+                         "times = time, parms = fittedModel$par, ",
+                         "method = 'rk4')\n\n"])
 
         r_script = "".join([r_script, lines])
 
