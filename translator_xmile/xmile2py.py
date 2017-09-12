@@ -142,7 +142,7 @@ class XmileAux:
         aux_report = "".join(["CONVERTER",
                               "\n  Name:", self.name,
                               "\n  Type:", self.type])
-        if self.type is "value":
+        if self.type == "value":
             aux_report = "".join([aux_report,
                                   "\n  Value:", self.value,
                                   "\n  Units:", self.units])
@@ -288,10 +288,10 @@ class XmileModel:
         # Define R object to store model parameters
         series, items = [], []
         for ax in self.auxs:
-            if ax.type is "value":
+            if ax.type == "value":
                 items.append("".join(["{0} = {1}".format(ax.name,
                                                           str(ax.value))]))
-            if ax.type is "series":
+            if ax.type == "series":
                 series.append("".join(series) + ax.name +
                               " <- data.frame(matrix(c(" +
                               ", ".join(["c(" + str(x) + ", " + str(y) + ")"
@@ -385,7 +385,7 @@ class XmileModel:
                                 "\n".join(items)])
 
         for ax in self.auxs:
-            if ax.type is "value":
+            if ax.type == "value":
                 model_report = "".join([model_report,
                                         "\n{0} = {1}".format(ax.name,
                                                              ax.value)])
@@ -610,7 +610,7 @@ def xmile_parser(model_file):
                   "step": float(xmile_soup.find("dt").text),
                   "start": int(xmile_soup.find("start").text),
                   "stop": int(xmile_soup.find("stop").text)}
-    if model_spec["name"] is "":
+    if model_spec["name"] == "":
         model_spec["name"] = model_file.split(".")[0]
 
     # Extract equations block located in model/variables section of xmile file
