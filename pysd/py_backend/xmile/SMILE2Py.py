@@ -97,7 +97,7 @@ class SMILEParser(NodeVisitor):
             convertedIdentifier = 'time_step'
 
         if self.context == 'eqn':
-            return 'self.' + convertedIdentifier + '()'
+            return convertedIdentifier + '()'
         elif self.context == 'defn':
             return convertedIdentifier
 
