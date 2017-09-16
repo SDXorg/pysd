@@ -15,7 +15,7 @@ from pysd._version import __version__
 from pysd.py_backend import utils
 import os
 import warnings
-
+import pkg_resources
 
 def build(elements, subscript_dict, namespace, outfile_name):
     """
@@ -72,6 +72,7 @@ def build(elements, subscript_dict, namespace, outfile_name):
            'outfile': outfile_name,
            'version': __version__}
 
+    #style_file = pkg_resources.resource_filename("pysd", "py_backend/output_style.yapf")
     style_file = os.path.dirname(os.path.realpath(__file__)) + '/output_style.yapf'
     text = text.replace('\t', '    ')
     text, changed = yapf.yapf_api.FormatCode(textwrap.dedent(text),

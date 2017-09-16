@@ -10,6 +10,7 @@ Alexey Prey Mulyukin
 from pysd.py_backend.xmile.SMILE2Py import SMILEParser
 from lxml import etree
 from pysd.py_backend import builder, utils
+from pysd.py_backend import utils
 
 
 def translate_xmile(xmile_file):
@@ -31,9 +32,18 @@ def translate_xmile(xmile_file):
         except:
             return default
 
+    # build model namespace
+    namespace = {'TIME': 'time', 'Time': 'time', 'time': 'time'}  # namespace of the python model
+    names_xpath = '//ns:model/ns:variables/ns:aux|' \
+                  '//ns:model/ns:variables/ns:flow|' \
+                  '//ns:model/ns:variables/ns:stock'
+
+    for element in root.xpath(names_xpath, namespaces={'ns': NS}):
+        name = element.attrib['name']
+        _, namespace = utils.make_python_identifier(name, namespace)
+
     model_elements = []
-    smile_parser = SMILEParser()
-    namespace = {'TIME': 'time', 'Time': 'time'}  # namespace of the python model
+    smile_parser = SMILEParser(namespace)
 
     # add aux and flow elements
     flaux_xpath = '//ns:model/ns:variables/ns:aux|//ns:model/ns:variables/ns:flow'
@@ -41,7 +51,7 @@ def translate_xmile(xmile_file):
         name = element.attrib['name']
         units = get_xpath_text(element, 'ns:units')
         doc = get_xpath_text(element, 'ns:doc')
-        py_name, namespace = utils.make_python_identifier(name, namespace)
+        py_name = namespace[name]
         eqn = get_xpath_text(element, 'ns:eqn')
         py_expr = smile_parser.parse(eqn)
 
@@ -61,7 +71,7 @@ def translate_xmile(xmile_file):
         name = element.attrib['name']
         units = get_xpath_text(element, 'ns:units')
         doc = get_xpath_text(element, 'ns:doc')
-        py_name, namespace = utils.make_python_identifier(name, namespace)
+        py_name = namespace[name]
 
         inflows = [e.text for e in
                    element.xpath('ns:inflow', namespaces={'ns': NS})]
