@@ -26,7 +26,7 @@ functions = {
     "abs": "abs", "int": "int", "exp": "np.exp", "inf": "np.inf", "log10": "np.log10",
     "pi": "np.pi", "sin": "np.sin", "cos": "np.cos", "sqrt": "np.sqrt", "tan": "np.tan",
     "lognormal": "np.random.lognormal", "normal": "np.random.normal",
-    "poisson": "np.random.poisson", "ln": "np.ln", "exprnd": "np.random.exponential",
+    "poisson": "np.random.poisson", "ln": "np.log", "exprnd": "np.random.exponential",
     "random": "np.random.rand", "min": "min", "max": "max", "arccos": "np.arccos",
     "arcsin": "np.arcsin", "arctan": "np.arctan",
     "if_then_else": "functions.if_then_else",

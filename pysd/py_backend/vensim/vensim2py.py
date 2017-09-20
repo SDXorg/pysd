@@ -491,8 +491,6 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
         'macros': '|'.join(reversed(sorted(macro_names_list, key=len)))
     }
 
-
-
     class ExpressionParser(parsimonious.NodeVisitor):
         # Todo: at some point, we could make the 'kind' identification recursive on expression,
         # so that if an expression is passed into a builder function, the information
