@@ -1,1 +1,1 @@
-include pysd/output_style.yapf
+include pysd/pyoutput_style.yapf

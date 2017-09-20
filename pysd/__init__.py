@@ -1,6 +1,7 @@
-from . import functions
-from . import testing
-from . import utils
+from .pysd import read_vensim, read_xmile, load
+from .py_backend import functions
+from .py_backend import utils
 from ._version import __version__
-from .pysd import read_vensim, load
+from . import testing
+from .py_backend.vensim.table2py import read_tabular
 

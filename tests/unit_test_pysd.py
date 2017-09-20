@@ -1,7 +1,7 @@
 import unittest
-
-import numpy as np
 import pandas as pd
+import numpy as np
+from pysd import utils
 
 test_model = 'test-models/samples/teacup/teacup.mdl'
 
@@ -352,6 +352,23 @@ class TestPySD(unittest.TestCase):
         import pysd
         model = pysd.read_vensim(test_model)
         self.assertEqual(model.mdl_file, test_model)
+
+    def test_incomplete_model(self):
+        import pysd
+        import warnings
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            model = pysd.read_vensim(
+                'test-models/tests/incomplete_equations/test_incomplete_model.mdl')
+        self.assertTrue(any([warn.category == SyntaxWarning for warn in w]))
+
+        with warnings.catch_warnings(record=True) as w:
+            model.run()
+        self.assertEqual(len(w), 1)
+
+
+
+
 
 class TestModelInteraction(unittest.TestCase):
     """ The tests in this class test pysd's interaction with itself

@@ -9,14 +9,13 @@ There should be nothing in this file that has to know about either vensim or
 xmile specific syntax.
 """
 
-import os
 import textwrap
-
 import yapf
-
-from . import utils
-from ._version import __version__
-
+from pysd._version import __version__
+from pysd.py_backend import utils
+import os
+import warnings
+import pkg_resources
 
 def build(elements, subscript_dict, namespace, outfile_name):
     """
@@ -58,7 +57,7 @@ def build(elements, subscript_dict, namespace, outfile_name):
     from pysd import utils
     import xarray as xr
 
-    from pysd.functions import cache
+    from pysd.py_backend.functions import cache
     from pysd import functions
 
     _subscript_dict = %(subscript_dict)s
@@ -170,25 +169,26 @@ def merge_partial_elements(element_list):
     """
     outs = dict()  # output data structure
     for element in element_list:
-        name = element['py_name']
-        if name not in outs:
-            outs[name] = {
-                'py_name': element['py_name'],
-                'real_name': element['real_name'],
-                'doc': element['doc'],
-                'py_expr': [element['py_expr']],  # in a list
-                'unit': element['unit'],
-                'subs': [element['subs']],
-                'kind': element['kind'],
-                'arguments': element['arguments']
-            }
+        if element['py_expr'] != "None":  # for
+            name = element['py_name']
+            if name not in outs:
+                outs[name] = {
+                    'py_name': element['py_name'],
+                    'real_name': element['real_name'],
+                    'doc': element['doc'],
+                    'py_expr': [element['py_expr']],  # in a list
+                    'unit': element['unit'],
+                    'subs': [element['subs']],
+                    'kind': element['kind'],
+                    'arguments': element['arguments']
+                }
 
-        else:
-            outs[name]['doc'] = outs[name]['doc'] or element['doc']
-            outs[name]['unit'] = outs[name]['unit'] or element['unit']
-            outs[name]['py_expr'] += [element['py_expr']]
-            outs[name]['subs'] += [element['subs']]
-            outs[name]['arguments'] = element['arguments']
+            else:
+                outs[name]['doc'] = outs[name]['doc'] or element['doc']
+                outs[name]['unit'] = outs[name]['unit'] or element['unit']
+                outs[name]['py_expr'] += [element['py_expr']]
+                outs[name]['subs'] += [element['subs']]
+                outs[name]['arguments'] = element['arguments']
 
     return list(outs.values())
 
@@ -201,7 +201,7 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
     Parameters
     ----------
     identifier: basestring
-        the name of the stock
+        the python-safe name of the stock
 
     subs: list
         a list of subscript elements
@@ -489,3 +489,19 @@ def add_macro(macro_name, filename, arg_names, arg_vals):
     }
 
     return "%s()" % stateful['py_name'], [stateful]
+
+
+def add_incomplete(var_name, dependencies):
+    """
+    Incomplete functions don't really need to be 'builders' as they
+     add no new real structure, but it's helpful to have a function
+     in which we can raise a warning about the incomplete equation
+     at translate time.
+    """
+    warnings.warn('%s has no equation specified' %var_name,
+                   SyntaxWarning, stacklevel=2)
+
+    # first arg is `self` reference
+    return "functions.incomplete(%s)" % ', '.join(dependencies[1:]), []
+
+

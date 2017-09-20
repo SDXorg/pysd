@@ -1,11 +1,12 @@
 import textwrap
-from numbers import Number
+
 from unittest import TestCase
 
 import numpy as np
+from pysd.py_backend.functions import cache
+from numbers import Number
 import xarray as xr
 
-from pysd.functions import cache
 
 
 def runner(string, ns=None):
@@ -13,13 +14,13 @@ def runner(string, ns=None):
     if not ns:
         ns = dict()
     ns.update({'cache': cache, 'xr': xr, 'np': np})
-    exec (code, ns)
+    exec(code, ns)
     return ns
 
 
 class TestBuildElement(TestCase):
     def test_no_subs_constant(self):
-        from pysd.builder import build_element
+        from pysd.py_backend.builder import build_element
         string = textwrap.dedent(
             build_element(element={'kind': 'constant',
                                    'subs': [[]],
@@ -37,7 +38,7 @@ class TestBuildElement(TestCase):
         self.assertEqual(a, .01)
 
     def test_no_subs_call(self):
-        from pysd.builder import build_element
+        from pysd.py_backend.builder import build_element
         string = textwrap.dedent(
             build_element(element={'kind': 'constant',
                                    'subs': [[]],
@@ -48,7 +49,7 @@ class TestBuildElement(TestCase):
                                    'unit': '',
                                    'arguments': ''},
                           subscript_dict={})
-            )
+        )
         ns = {'other_variable': lambda: 3}
         ns = runner(string, ns)
         a = ns['my_variable']()
@@ -59,7 +60,7 @@ class TestBuildElement(TestCase):
 class TestBuild(TestCase):
     def test_build(self):
         # Todo: add other builder-specific inclusions to this test
-        from pysd.builder import build
+        from pysd.py_backend.builder import build
         actual = textwrap.dedent(
             build(elements=[{'kind': 'component',
                              'subs': [[]],
@@ -68,7 +69,7 @@ class TestBuild(TestCase):
                              'real_name': 'StockA',
                              'py_expr': ["_state['stocka']"],
                              'unit': '',
-                             'arguments':''},
+                             'arguments': ''},
                             {'kind': 'component',
                              'subs': [[]],
                              'doc': 'Provides derivative for stocka function',
@@ -76,7 +77,7 @@ class TestBuild(TestCase):
                              'real_name': 'Implicit',
                              'py_expr': ['flowa()'],
                              'unit': 'See docs for stocka',
-                             'arguments':''},
+                             'arguments': ''},
                             {'kind': 'setup',
                              'subs': [[]],
                              'doc': 'Provides initial conditions for stocka function',
@@ -84,7 +85,7 @@ class TestBuild(TestCase):
                              'real_name': 'Implicit',
                              'py_expr': ['-10'],
                              'unit': 'See docs for stocka',
-                             'arguments':''}],
+                             'arguments': ''}],
                   namespace={'StockA': 'stocka'},
                   subscript_dict={'Dim1': ['A', 'B', 'C']},
                   outfile_name='return'))
@@ -95,7 +96,7 @@ class TestBuild(TestCase):
 
 class TestMergePartialElements(TestCase):
     def test_single_set(self):
-        from pysd.builder import merge_partial_elements
+        from pysd.py_backend.builder import merge_partial_elements
 
         self.assertEqual(
             merge_partial_elements(
@@ -119,26 +120,26 @@ class TestMergePartialElements(TestCase):
               }])
 
     def test_multiple_sets(self):
-        from pysd.builder import merge_partial_elements
+        from pysd.py_backend.builder import merge_partial_elements
         actual = merge_partial_elements(
-                [{'py_name': 'a', 'py_expr': 'ms', 'subs': ['Name1', 'element1'],
-                  'real_name': 'A', 'doc': 'Test', 'unit': None,
-                  'kind': 'component', 'arguments': ''},
-                 {'py_name': 'a', 'py_expr': 'njk', 'subs': ['Name1', 'element2'],
-                  'real_name': 'A', 'doc': None, 'unit': None,
-                  'kind': 'component', 'arguments': ''},
-                 {'py_name': 'a', 'py_expr': 'as', 'subs': ['Name1', 'element3'],
-                  'real_name': 'A', 'doc': '', 'unit': None,
-                  'kind': 'component', 'arguments': ''},
-                 {'py_name': 'b', 'py_expr': 'bgf', 'subs': ['Name1', 'element1'],
-                  'real_name': 'B', 'doc': 'Test', 'unit': None,
-                  'kind': 'component', 'arguments': ''},
-                 {'py_name': 'b', 'py_expr': 'r4', 'subs': ['Name1', 'element2'],
-                  'real_name': 'B', 'doc': None, 'unit': None,
-                  'kind': 'component', 'arguments': ''},
-                 {'py_name': 'b', 'py_expr': 'ymt', 'subs': ['Name1', 'element3'],
-                  'real_name': 'B', 'doc': '', 'unit': None,
-                  'kind': 'component', 'arguments': ''}])
+            [{'py_name': 'a', 'py_expr': 'ms', 'subs': ['Name1', 'element1'],
+              'real_name': 'A', 'doc': 'Test', 'unit': None,
+              'kind': 'component', 'arguments': ''},
+             {'py_name': 'a', 'py_expr': 'njk', 'subs': ['Name1', 'element2'],
+              'real_name': 'A', 'doc': None, 'unit': None,
+              'kind': 'component', 'arguments': ''},
+             {'py_name': 'a', 'py_expr': 'as', 'subs': ['Name1', 'element3'],
+              'real_name': 'A', 'doc': '', 'unit': None,
+              'kind': 'component', 'arguments': ''},
+             {'py_name': 'b', 'py_expr': 'bgf', 'subs': ['Name1', 'element1'],
+              'real_name': 'B', 'doc': 'Test', 'unit': None,
+              'kind': 'component', 'arguments': ''},
+             {'py_name': 'b', 'py_expr': 'r4', 'subs': ['Name1', 'element2'],
+              'real_name': 'B', 'doc': None, 'unit': None,
+              'kind': 'component', 'arguments': ''},
+             {'py_name': 'b', 'py_expr': 'ymt', 'subs': ['Name1', 'element3'],
+              'real_name': 'B', 'doc': '', 'unit': None,
+              'kind': 'component', 'arguments': ''}])
 
         expected = [{'py_name': 'a',
                      'py_expr': ['ms', 'njk', 'as'],
@@ -162,7 +163,7 @@ class TestMergePartialElements(TestCase):
         self.assertIn(actual[1], expected)
 
     def test_non_set(self):
-        from pysd.builder import merge_partial_elements
+        from pysd.py_backend.builder import merge_partial_elements
         actual = merge_partial_elements(
             [{'py_name': 'a', 'py_expr': 'ms', 'subs': ['Name1', 'element1'],
               'real_name': 'A', 'doc': 'Test', 'unit': None,
@@ -176,23 +177,23 @@ class TestMergePartialElements(TestCase):
              ])
 
         expected = [{'py_name': 'a',
-              'py_expr': ['ms', 'njk'],
-              'subs': [['Name1', 'element1'], ['Name1', 'element2']],
-              'kind': 'component',
-              'doc': 'Test',
-              'real_name': 'A',
-              'unit': None,
-              'arguments': ''
-              },
-             {'py_name': 'c',
-              'py_expr': ['as'],
-              'subs': [['Name1', 'element3']],
-              'kind': 'component',
-              'doc': 'hi',
-              'real_name': 'C',
-              'unit': None,
-              'arguments': ''
-              }]
+                     'py_expr': ['ms', 'njk'],
+                     'subs': [['Name1', 'element1'], ['Name1', 'element2']],
+                     'kind': 'component',
+                     'doc': 'Test',
+                     'real_name': 'A',
+                     'unit': None,
+                     'arguments': ''
+                     },
+                    {'py_name': 'c',
+                     'py_expr': ['as'],
+                     'subs': [['Name1', 'element3']],
+                     'kind': 'component',
+                     'doc': 'hi',
+                     'real_name': 'C',
+                     'unit': None,
+                     'arguments': ''
+                     }]
 
         self.assertIn(actual[0], expected)
         self.assertIn(actual[1], expected)

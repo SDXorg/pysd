@@ -100,14 +100,14 @@ class TestInputFunctions(unittest.TestCase):
 
 class TestStatsFunctions(unittest.TestCase):
     def test_bounded_normal(self):
-        from pysd.functions import bounded_normal
+        import pysd
         min_val = -4
         max_val = .2
         mean = -1
         std = .05
         seed = 1
         results = np.array(
-            [bounded_normal(min_val, max_val, mean, std, seed)
+            [pysd.functions.bounded_normal(min_val, max_val, mean, std, seed)
              for _ in range(1000)])
 
         self.assertGreaterEqual(results.min(), min_val)
@@ -120,9 +120,9 @@ class TestStatsFunctions(unittest.TestCase):
 class TestLogicFunctions(unittest.TestCase):
     def test_if_then_else_basic(self):
         """ If Then Else function"""
-        from pysd.functions import if_then_else
-        self.assertEqual(if_then_else(True, 1, 0), 1)
-        self.assertEqual(if_then_else(False, 1, 0), 0)
+        import pysd
+        self.assertEqual(pysd.functions.if_then_else(True, 1, 0), 1)
+        self.assertEqual(pysd.functions.if_then_else(False, 1, 0), 0)
 
     @unittest.skip('Not Yet Implemented')
     def test_if_then_else_with_subscripted_output(self):
@@ -145,7 +145,7 @@ class TestLogicFunctions(unittest.TestCase):
 class TestStateful(unittest.TestCase):
 
     def test_integ(self):
-        import pysd.functions
+        import pysd
 
         ddt_val = 5
         init_val = 10
@@ -179,7 +179,7 @@ class TestStateful(unittest.TestCase):
         self.assertEqual(stock(), 11)
 
     def test_stateful_identification(self):
-        import pysd.functions
+        import pysd
 
         stock = pysd.functions.Integ(lambda: 5,
                                      lambda: 7)
@@ -188,7 +188,7 @@ class TestStateful(unittest.TestCase):
                               pysd.functions.Stateful)
 
     def test_delay(self):
-        import pysd.functions
+        import pysd
 
         delay_a = pysd.functions.Delay(delay_input=lambda: 5,
                                        delay_time=lambda: 3,
@@ -202,7 +202,7 @@ class TestStateful(unittest.TestCase):
         self.assertEqual(delay_a.ddt()[0], 5-(4.234*3/3))
 
     def test_initial(self):
-        from pysd import functions
+        import pysd
         a = 1
         b = 2
 
@@ -215,13 +215,13 @@ class TestStateful(unittest.TestCase):
         # test that the function returns the first value
         # after it is called once
         f1_0 = func1()
-        initial_f10 = functions.Initial(lambda: func1())
+        initial_f10 = pysd.functions.Initial(lambda: func1())
         initial_f10.initialize()
         f1_i0 = initial_f10()
         self.assertEqual(f1_0, f1_i0)
 
         f2_0 = func2()
-        initial_f20 = functions.Initial(func2)
+        initial_f20 = pysd.functions.Initial(func2)
         initial_f20.initialize()
         f2_i0 = initial_f20()
         self.assertEqual(f2_0, f2_i0)
