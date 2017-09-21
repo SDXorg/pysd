@@ -79,8 +79,7 @@ functions = {
 
     "pulse": "functions.pulse_magnitude",
     "step": "functions.step",
-    
-    # "ramp" !TODO!
+    "ramp" "functions.ramp",
     
     # ===
     # 3.5.5 Time Functions

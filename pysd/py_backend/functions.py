@@ -744,9 +744,9 @@ class Model(Macro):
         return outputs
 
 
-def ramp(slope, start, finish):
+def ramp(slope, start, finish=0):
     """
-    Implements vensim's RAMP function
+    Implements vensim's and xmile's RAMP function
 
     Parameters
     ----------
@@ -755,7 +755,7 @@ def ramp(slope, start, finish):
     start: float
         Time at which the ramp begins
     finish: float
-        Time at which the ramo ends
+        Optional. Time at which the ramp ends
 
     Returns
     -------
@@ -770,10 +770,13 @@ def ramp(slope, start, finish):
     t = time()
     if t < start:
         return 0
-    elif t > finish:
-        return slope * (finish - start)
     else:
-        return slope * (t - start)
+        if finish <= 0:
+            return slope * (t - start)
+        elif t > finish:
+            return slope * (finish - start)
+        else:
+            return slope * (t - start)
 
 
 def step(value, tstep):
