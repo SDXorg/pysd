@@ -805,7 +805,6 @@ def pulse(start, duration):
     t = time()
     return 1 if start <= t < start + duration else 0
 
-
 def pulse_train(start, duration, repeat_time, end):
     """ Implements vensim's PULSE TRAIN function
 
@@ -819,6 +818,31 @@ def pulse_train(start, duration, repeat_time, end):
     else:
         return 0
 
+def pulse_magnitude(magnitude, start, repeat_time=0):
+    """ Implements xmile's PULSE function
+    
+    PULSE:             Generate a one-DT wide pulse at the given time
+       Parameters:     2 or 3:  (magnitude, first time[, interval])
+                       Without interval or when interval = 0, the PULSE is generated only once
+       Example:        PULSE(20, 12, 5) generates a pulse value of 20/DT at time 12, 17, 22, etc.
+    
+    In rage [-inf, start) returns 0
+    In range [start + n * repeat_time, start + n * repeat_time + dt) return magnitude/dt
+    In rage [start + n * repeat_time + dt, start + (n + 1) * repeat_time) return 0
+    """
+    t = time()
+    small = 1e-6  # What is considered zero according to Vensim Help
+    if repeat_time <= small:
+        if abs(t - start) < time_step:
+            return magnitude * time_step
+        else:
+            return 0
+    else:
+        if abs((t - start) % repeat_time) < time_step:
+            return magnitude * time_step
+        else
+            return 0
+    
 
 def lookup(x, xs, ys):
     """ Provides the working mechanism for lookup functions the builder builds """

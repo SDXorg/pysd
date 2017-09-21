@@ -76,16 +76,8 @@ functions = {
     # 3.5.4 Test Input Functions
     # http://docs.oasis-open.org/xmile/xmile/v1.0/csprd01/xmile-v1.0-csprd01.html#_Toc398039983
     # ===
-    
-    # !TODO!
-    #   This function works with wrong way for XMILE specification: http://docs.oasis-open.org/xmile/xmile/v1.0/csprd01/xmile-v1.0-csprd01.html#_Toc398039983
-    # ----------------------------------------------------------------------------------------------
-    # PULSE:            Generate a one-DT wide pulse at the given time
-    #   Parameters:     2 or 3:  (magnitude, first time[, interval])
-    #                   Without interval or when interval = 0, the PULSE is generated only once
-    #   Example:        PULSE(20, 12, 5) generates a pulse value of 20/DT at time 12, 17, 22, etc.
-    # ----------------------------------------------------------------------------------------------
-    "pulse": "functions.pulse" 
+
+    "pulse": "functions.pulse_magnitude",
     "step": "functions.step",
     
     # "ramp" !TODO!
