@@ -840,7 +840,7 @@ def pulse_magnitude(magnitude, start, repeat_time=0):
     else:
         if abs((t - start) % repeat_time) < time_step:
             return magnitude * time_step
-        else
+        else:
             return 0
     
 
