@@ -1,4 +1,6 @@
-expr = _ pre_oper? _ primary _ (in_oper _ expr)?
+expr = conditional_statement / (_ pre_oper? _ primary _ (in_oper _ expr)?)
+
+conditional_statement = "IF" _ expr _ "THEN" _ expr _ "ELSE" _ expr
 
 primary  = call / parens / number / identifier
 parens   = "(" _ expr _ ")"

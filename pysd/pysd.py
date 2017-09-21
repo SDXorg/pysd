@@ -15,6 +15,7 @@ Sept 2016: Major refactor, putting most internal code into the Model and Macro o
 
 def read_xmile(xmile_file):
     """ Construct a model object from `.xmile` file. """
+    from . import py_backend
     from .py_backend.xmile.xmile2py import translate_xmile
     py_model_file = translate_xmile(xmile_file)
     model = load(py_model_file)
@@ -40,8 +41,8 @@ def read_vensim(mdl_file):
     >>> model = read_vensim('../tests/test-models/samples/teacup/teacup.mdl')
     """
 
-    from pysd.py_backend.vensim.vensim2py import translate_vensim
-    from pysd.py_backend import functions
+    from .py_backend.vensim.vensim2py import translate_vensim
+    from .py_backend import functions
     py_model_file = translate_vensim(mdl_file)
     model = functions.Model(py_model_file)
     model.mdl_file = mdl_file
@@ -62,5 +63,5 @@ def load(py_model_file):
     --------
     >>> model = load('../tests/test-models/samples/teacup/teacup.py')
     """
-    from pysd.py_backend import functions
+    from .py_backend import functions
     return functions.Model(py_model_file)

@@ -79,7 +79,7 @@ functions = {
 
     "pulse": "functions.pulse_magnitude",
     "step": "functions.step",
-    "ramp" "functions.ramp",
+    "ramp": "functions.ramp",
     
     # ===
     # 3.5.5 Time Functions
@@ -165,6 +165,10 @@ class SMILEParser(NodeVisitor):
         self.context = context
         return self.visit(self.ast)
 
+    def visit_conditional_statement(self, n, vc):
+        _IF, _1, condition_expr, _2, _THEN, _3, then_expr, _4, _ELSE, _5, else_expr = vc
+        return "functions.if_then_else(" + condition_expr + ", " + then_expr + ", " + else_expr + ")"
+        
     def visit_identifier(self, n, vc):
         return self.extended_model_namespace[n.text] + '()'
 
