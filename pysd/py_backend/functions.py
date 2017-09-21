@@ -18,7 +18,11 @@ import imp
 import warnings
 import random
 import xarray as xr
-from inspect import signature
+
+try:
+    from inspect import signature
+except ImportError:
+    from sklearn.externals.funcsigs import signature
 
 try:
     import scipy.stats as stats
