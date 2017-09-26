@@ -40,8 +40,8 @@ def read_vensim(mdl_file):
     >>> model = read_vensim('../tests/test-models/samples/teacup/teacup.mdl')
     """
 
-    from pysd.py_backend.vensim.vensim2py import translate_vensim
-    from pysd.py_backend import functions
+    from .py_backend.vensim.vensim2py import translate_vensim
+    from .py_backend import functions
     py_model_file = translate_vensim(mdl_file)
     model = functions.Model(py_model_file)
     model.mdl_file = mdl_file
@@ -62,5 +62,5 @@ def load(py_model_file):
     --------
     >>> model = load('../tests/test-models/samples/teacup/teacup.py')
     """
-    from pysd.py_backend import functions
+    from .py_backend import functions
     return functions.Model(py_model_file)

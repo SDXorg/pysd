@@ -1,6 +1,6 @@
 import pandas as pd
 import warnings
-from pysd import read_vensim
+from ...pysd import read_vensim
 
 
 def read_tabular(table_file, sheetname='Sheet1'):

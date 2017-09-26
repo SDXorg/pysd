@@ -52,7 +52,7 @@ def create_extreme_conditions_test_matrix(model, filename=None):
         raise ValueError('Unknown file extension %s' % filename.split('.')[-1])
 
 
-def extreme_conditions_test(mdl_file, matrix=None, excel_file=None, errors='return'):
+def extreme_conditions_test(model, matrix=None, excel_file=None, errors='return'):
     """
 
     Parameters
@@ -75,13 +75,11 @@ def extreme_conditions_test(mdl_file, matrix=None, excel_file=None, errors='retu
     else:
         raise ValueError('Must supply a test matrix or refer to an external file')
 
-    model = _pysd.read_vensim(mdl_file)
-    py_mdl_file = model.py_model_file
 
     error_list = []
     for row_num, (index, row) in enumerate(matrix.iterrows()):
         try:
-            model = _pysd.load(py_mdl_file)
+            model.reload()
             result = model.run(params={index[0]: index[2]},
                                return_columns=row.index.values,
                                return_timestamps=0).loc[0]
@@ -261,7 +259,7 @@ def bounds_test(result, bounds=None, errors='return'):
                               for e in error_list])
 
 
-def sample_pspace(model, param_list=None, bounds=None, samples=100):
+def sample_pspace(model, param_list=None, bounds=None, samples=100, seed=None):
     """
     A DataFrame where each row represents a location in the parameter
     space, locations distributed to exercise the full range of values
@@ -320,7 +318,7 @@ def sample_pspace(model, param_list=None, bounds=None, samples=100):
     if param_list is None:
         doc = model.doc()
         param_list = sorted(list(set(doc[doc['Type'] == 'constant']['Real Name']) -
-                            {'FINAL TIME', 'INITIAL TIME', 'TIME STEP'}))
+                            {'FINAL TIME', 'INITIAL TIME', 'TIME STEP', 'TIME STEP'}))
 
     if isinstance(bounds, _pd.DataFrame):
         bounds = bounds.set_index('Real Name')
@@ -338,8 +336,11 @@ def sample_pspace(model, param_list=None, bounds=None, samples=100):
     else:
         raise ValueError('Unknown type: bounds')
 
+    if seed is not None:
+        _np.random.seed(seed)
+
     unit_lhs = _pd.DataFrame(_pyDOE.lhs(n=len(param_list), samples=samples),
-                             columns=param_list)
+                             columns=param_list)  # raw latin hypercube sample
 
     res = model.run(return_timestamps=[model.components.initial_time()])
     lhs = _pd.DataFrame(index=unit_lhs.index)
@@ -387,6 +388,8 @@ def summarize(model, cases, tests):
     applies each test function in the tests list
     and summarizes the results.
 
+    Reloads the model before each run
+
     Parameters
     ----------
     model: pysd Model object
@@ -405,7 +408,7 @@ def summarize(model, cases, tests):
 
     synopsis = _pd.DataFrame(columns=['variable', 'type', 'condition', 'cases'])
     for case_num, case in cases.iterrows():
-        result = model.run(dict(case))
+        result = model.run(dict(case), reload=True)
         error_df = _pd.DataFrame()
         for test_func in tests:
             error_df = error_df.append(test_func(result))

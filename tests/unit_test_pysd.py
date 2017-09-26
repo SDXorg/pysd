@@ -367,9 +367,6 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(len(w), 1)
 
 
-
-
-
 class TestModelInteraction(unittest.TestCase):
     """ The tests in this class test pysd's interaction with itself
         and other modules. """
