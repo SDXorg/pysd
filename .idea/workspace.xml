@@ -7,19 +7,11 @@
     <list default="true" id="a7e5b169-cc30-45fb-a7f9-e8e84f9c05bd" name="Default" comment="">
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/test-models/samples/Lotka_Volterra/behavior_tests.feature" />
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/test-models/samples/teacup/behavior_tests.feature" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/pysd/testing.py" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models" afterPath="$PROJECT_DIR$/tests/test-models" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/__init__.py" afterPath="$PROJECT_DIR$/pysd/__init__.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/pysd.py" afterPath="$PROJECT_DIR$/pysd/pysd.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/requirements.txt" afterPath="$PROJECT_DIR$/requirements.txt" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/sandbox.ipynb" afterPath="$PROJECT_DIR$/sandbox.ipynb" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/testing/gherkin_steps/step_definitions.py" afterPath="$PROJECT_DIR$/pysd/testing/gherkin_steps/step_definitions.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/samples/SIR/SIR.py" afterPath="$PROJECT_DIR$/tests/test-models/samples/SIR/SIR.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/samples/teacup/teacup.py" afterPath="$PROJECT_DIR$/tests/test-models/samples/teacup/teacup.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.py" afterPath="$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/number_handling/test_number_handling.py" afterPath="$PROJECT_DIR$/tests/test-models/tests/number_handling/test_number_handling.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/unit_test_testing.py" afterPath="$PROJECT_DIR$/tests/unit_test_testing.py" />
     </list>
     <ignored path="pysd.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -114,7 +106,7 @@
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestBuildElement_test_no_subs_constant.coverage" NAME="Unittest TestBuildElement.test_no_subs_constant Coverage Results" MODIFIED="1466780810057" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittests_in_TestMergePartialElements.coverage" NAME="Unittests in TestMergePartialElements Coverage Results" MODIFIED="1464267202582" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestIntegrationExamples_test_subscript_2d_arrays.coverage" NAME="Unittest TestIntegrationExamples.test_subscript_2d_arrays Coverage Results" MODIFIED="1467734353586" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
-    <SUITE FILE_PATH="coverage/pysd$Nosetests_for_tests_unit_test_testing.coverage" NAME="Nosetests for tests.unit_test_testing Coverage Results" MODIFIED="1502903485458" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/pysd$Nosetests_for_tests_unit_test_testing.coverage" NAME="Nosetests for tests.unit_test_testing Coverage Results" MODIFIED="1506460711971" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestIntegrationExamples_test_exponentiation.coverage" NAME="Unittest TestIntegrationExamples.test_exponentiation Coverage Results" MODIFIED="1467221301909" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestPySD_test_build_euler_timeseries_with_timestamps.coverage" NAME="Unittest TestPySD.test_build_euler_timeseries_with_timestamps Coverage Results" MODIFIED="1468197005013" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$speed_test.coverage" NAME="speed_test Coverage Results" MODIFIED="1464962309192" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
@@ -126,7 +118,7 @@
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestEquationStringParsing_test_basics.coverage" NAME="Unittest TestEquationStringParsing.test_basics Coverage Results" MODIFIED="1464355328930" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestIntegrationExamples_test_parentheses.coverage" NAME="Unittest TestIntegrationExamples.test_parentheses Coverage Results" MODIFIED="1468593285082" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestParse_general_expression_test_subscript_float_initialization.coverage" NAME="Unittest TestParse_general_expression.test_subscript_float_initialization Coverage Results" MODIFIED="1467378375394" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
-    <SUITE FILE_PATH="coverage/pysd$Nosetests_for_unit_test_testing_TestGherkin.coverage" NAME="Nosetests for unit_test_testing.TestGherkin Coverage Results" MODIFIED="1506452453183" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/pysd$Nosetests_for_unit_test_testing_TestGherkin.coverage" NAME="Nosetests for unit_test_testing.TestGherkin Coverage Results" MODIFIED="1506460158473" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Doctest_assert_frames_close.coverage" NAME="Doctest assert_frames_close Coverage Results" MODIFIED="1464272241186" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pysd" />
     <SUITE FILE_PATH="coverage/pysd$Nosetest_TestPySD_test__build_euler_timeseries.coverage" NAME="Nosetest TestPySD.test__build_euler_timeseries Coverage Results" MODIFIED="1475502201741" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Nosetest_TestIntegrationExamples_test_lookups.coverage" NAME="Nosetest TestIntegrationExamples.test_lookups Coverage Results" MODIFIED="1487088383166" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
@@ -872,8 +864,8 @@
           <file leaf-file-name="testing.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/pysd/testing/testing.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="396">
-                  <caret line="489" column="0" lean-forward="false" selection-start-line="489" selection-start-column="0" selection-end-line="489" selection-end-column="0" />
+                <state relative-caret-position="1323">
+                  <caret line="492" column="0" lean-forward="true" selection-start-line="492" selection-start-column="0" selection-end-line="492" selection-end-column="0" />
                   <folding>
                     <element signature="e#0#19#0" expanded="true" />
                   </folding>
@@ -914,8 +906,8 @@
           <file leaf-file-name="runner.py" pinned="false" current-in-tab="false">
             <entry file="file://$USER_HOME$/anaconda/lib/python3.6/site-packages/behave/runner.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="409">
-                  <caret line="719" column="0" lean-forward="false" selection-start-line="719" selection-start-column="0" selection-end-line="719" selection-end-column="0" />
+                <state relative-caret-position="411">
+                  <caret line="718" column="0" lean-forward="false" selection-start-line="718" selection-start-column="0" selection-end-line="718" selection-end-column="0" />
                   <folding />
                 </state>
               </provider>
@@ -934,8 +926,8 @@
           <file leaf-file-name="step_definitions.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/pysd/testing/gherkin_steps/step_definitions.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="44">
-                  <caret line="3" column="0" lean-forward="true" selection-start-line="3" selection-start-column="0" selection-end-line="3" selection-end-column="0" />
+                <state relative-caret-position="90">
+                  <caret line="6" column="34" lean-forward="true" selection-start-line="6" selection-start-column="34" selection-end-line="6" selection-end-column="34" />
                   <folding>
                     <element signature="e#0#20#0" expanded="true" />
                   </folding>
@@ -984,23 +976,40 @@
       </split-first>
       <split-second>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file leaf-file-name="behavior_tests.feature" pinned="false" current-in-tab="false">
+          <file leaf-file-name="behavior_tests.feature" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/tests/test-models/samples/Lotka_Volterra/behavior_tests.feature">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="90">
-                  <caret line="6" column="9" lean-forward="false" selection-start-line="6" selection-start-column="9" selection-end-line="6" selection-end-column="9" />
+                <state relative-caret-position="180">
+                  <caret line="12" column="25" lean-forward="true" selection-start-line="12" selection-start-column="25" selection-end-line="12" selection-end-column="25" />
                   <folding />
                 </state>
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="teacup.py" pinned="false" current-in-tab="true">
+          <file leaf-file-name="teacup.py" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/tests/test-models/samples/teacup/teacup.py">
               <provider selected="true" editor-type-id="text-editor">
                 <state relative-caret-position="360">
                   <caret line="24" column="29" lean-forward="false" selection-start-line="24" selection-start-column="29" selection-end-line="24" selection-end-column="29" />
                   <folding>
                     <element signature="e#95#126#0" expanded="true" />
+                    <marker date="1506460715000" expanded="true" signature="298:649" ph="..." />
+                    <marker date="1506460715000" expanded="true" signature="693:857" ph="..." />
+                    <marker date="1506460715000" expanded="true" signature="698:843" ph="&quot;&quot;&quot;Characteristic Time...&quot;&quot;&quot;" />
+                    <marker date="1506460715000" expanded="true" signature="899:1173" ph="..." />
+                    <marker date="1506460715000" expanded="true" signature="904:1094" ph="&quot;&quot;&quot;Heat Loss to Room...&quot;&quot;&quot;" />
+                    <marker date="1506460715000" expanded="true" signature="1213:1409" ph="..." />
+                    <marker date="1506460715000" expanded="true" signature="1218:1395" ph="&quot;&quot;&quot;Room Temperature...&quot;&quot;&quot;" />
+                    <marker date="1506460715000" expanded="true" signature="1452:1916" ph="..." />
+                    <marker date="1506460715000" expanded="true" signature="1457:1878" ph="&quot;&quot;&quot;Teacup Temperature...&quot;&quot;&quot;" />
+                    <marker date="1506460715000" expanded="true" signature="1950:2061" ph="..." />
+                    <marker date="1506460715000" expanded="true" signature="1955:2047" ph="&quot;&quot;&quot;FINAL TIME...&quot;&quot;&quot;" />
+                    <marker date="1506460715000" expanded="true" signature="2097:2211" ph="..." />
+                    <marker date="1506460715000" expanded="true" signature="2102:2198" ph="&quot;&quot;&quot;INITIAL TIME...&quot;&quot;&quot;" />
+                    <marker date="1506460715000" expanded="true" signature="2243:2375" ph="..." />
+                    <marker date="1506460715000" expanded="true" signature="2248:2352" ph="&quot;&quot;&quot;SAVEPER...&quot;&quot;&quot;" />
+                    <marker date="1506460715000" expanded="true" signature="2408:2526" ph="..." />
+                    <marker date="1506460715000" expanded="true" signature="2413:2509" ph="&quot;&quot;&quot;TIME STEP...&quot;&quot;&quot;" />
                   </folding>
                 </state>
               </provider>
@@ -1062,8 +1071,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/tests/test-models/tests/delays/test_delays.py" />
-        <option value="$PROJECT_DIR$/tests/test-models/tests/initial_function/test_initial.py" />
         <option value="$PROJECT_DIR$/tests/test-models/tests/subscript_2d_arrays/test_subscript_2d_arrays.py" />
         <option value="$PROJECT_DIR$/tests/integration_test_factory.py" />
         <option value="$PROJECT_DIR$/tests/test_utils.py" />
@@ -1113,6 +1120,8 @@
         <option value="$PROJECT_DIR$/pysd/pysd.py" />
         <option value="$PROJECT_DIR$/requirements.txt" />
         <option value="$PROJECT_DIR$/pysd/testing/testing.py" />
+        <option value="$PROJECT_DIR$/tests/test-models/samples/Lotka_Volterra/behavior_tests.feature" />
+        <option value="$PROJECT_DIR$/pysd/testing/gherkin_steps/step_definitions.py" />
       </list>
     </option>
   </component>
@@ -1123,8 +1132,10 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="width" value="1440" />
-    <option name="height" value="900" />
+    <option name="x" value="74" />
+    <option name="y" value="23" />
+    <option name="width" value="1830" />
+    <option name="height" value="1040" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -1266,7 +1277,6 @@
     <property name="SearchEverywhereHistoryKey" value="&#9;FILE&#9;file:///Users/houghton/Google_Drive/Academic Projects/PYSD/pysd/tests/test-models/tests/subscript_1d_arrays/test_subscript_1d_arrays.py" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="js-jscs-nodeInterpreter" value="/usr/local/bin/node" />
-    <property name="FullScreen" value="true" />
   </component>
   <component name="PyConsoleOptionsProvider">
     <option name="myPythonConsoleState">
@@ -1303,24 +1313,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python tests.Nosetests for unit_test_testing.TestGherkin">
-    <configuration default="false" name="Nosetests in tests" type="tests" factoryName="Nosetests" temporary="true" nameIsGenerated="true">
-      <option name="INTERPRETER_OPTIONS" value="" />
-      <option name="PARENT_ENVS" value="true" />
-      <envs />
-      <option name="SDK_HOME" value="" />
-      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
-      <option name="IS_MODULE_SDK" value="false" />
-      <option name="ADD_CONTENT_ROOTS" value="true" />
-      <option name="ADD_SOURCE_ROOTS" value="true" />
-      <module name="pysd" />
-      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
-      <option name="_new_regexPattern" value="&quot;&quot;" />
-      <option name="_new_additionalArguments" value="&quot;&quot;" />
-      <option name="_new_target" value="&quot;$PROJECT_DIR$/tests&quot;" />
-      <option name="_new_targetType" value="&quot;PATH&quot;" />
-      <method />
-    </configuration>
+  <component name="RunManager" selected="Python tests.Nosetests for tests.unit_test_testing">
     <configuration default="false" name="Nosetests for unit_test_testing.TestGherkin" type="tests" factoryName="Nosetests" temporary="true" nameIsGenerated="true">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
@@ -1386,6 +1379,23 @@
       <option name="_new_regexPattern" value="&quot;&quot;" />
       <option name="_new_additionalArguments" value="&quot;&quot;" />
       <option name="_new_target" value="&quot;unit_test_testing.TestGherkin.test_gherkin_tester&quot;" />
+      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+      <method />
+    </configuration>
+    <configuration default="false" name="Nosetests for tests.unit_test_testing" type="tests" factoryName="Nosetests" temporary="true" nameIsGenerated="true">
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <module name="pysd" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" enabled="false" sample_coverage="true" runner="coverage.py" />
+      <option name="_new_regexPattern" value="&quot;&quot;" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;tests.unit_test_testing&quot;" />
       <option name="_new_targetType" value="&quot;PYTHON&quot;" />
       <method />
     </configuration>
@@ -1642,19 +1652,19 @@
     <list size="7">
       <item index="0" class="java.lang.String" itemvalue="Python.Test Model Library" />
       <item index="1" class="java.lang.String" itemvalue="Python tests.Doctest assert_frames_close" />
-      <item index="2" class="java.lang.String" itemvalue="Python tests.Nosetests in tests" />
-      <item index="3" class="java.lang.String" itemvalue="Python tests.Nosetests for unit_test_testing.TestGherkin" />
-      <item index="4" class="java.lang.String" itemvalue="Python tests.Nosetests for unit_test_testing.TestGherkin.test_runs_gerkhin" />
-      <item index="5" class="java.lang.String" itemvalue="Python tests.Nosetests for testing.behavior_test" />
-      <item index="6" class="java.lang.String" itemvalue="Python tests.Nosetests for unit_test_testing.TestGherkin.test_gherkin_tester" />
+      <item index="2" class="java.lang.String" itemvalue="Python tests.Nosetests for unit_test_testing.TestGherkin" />
+      <item index="3" class="java.lang.String" itemvalue="Python tests.Nosetests for unit_test_testing.TestGherkin.test_runs_gerkhin" />
+      <item index="4" class="java.lang.String" itemvalue="Python tests.Nosetests for testing.behavior_test" />
+      <item index="5" class="java.lang.String" itemvalue="Python tests.Nosetests for unit_test_testing.TestGherkin.test_gherkin_tester" />
+      <item index="6" class="java.lang.String" itemvalue="Python tests.Nosetests for tests.unit_test_testing" />
     </list>
     <recent_temporary>
       <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python tests.Nosetests for unit_test_testing.TestGherkin" />
-        <item index="1" class="java.lang.String" itemvalue="Python tests.Nosetests for testing.behavior_test" />
-        <item index="2" class="java.lang.String" itemvalue="Python tests.Nosetests for unit_test_testing.TestGherkin.test_gherkin_tester" />
-        <item index="3" class="java.lang.String" itemvalue="Python tests.Nosetests for unit_test_testing.TestGherkin.test_runs_gerkhin" />
-        <item index="4" class="java.lang.String" itemvalue="Python tests.Nosetests in tests" />
+        <item index="0" class="java.lang.String" itemvalue="Python tests.Nosetests for tests.unit_test_testing" />
+        <item index="1" class="java.lang.String" itemvalue="Python tests.Nosetests for unit_test_testing.TestGherkin" />
+        <item index="2" class="java.lang.String" itemvalue="Python tests.Nosetests for testing.behavior_test" />
+        <item index="3" class="java.lang.String" itemvalue="Python tests.Nosetests for unit_test_testing.TestGherkin.test_gherkin_tester" />
+        <item index="4" class="java.lang.String" itemvalue="Python tests.Nosetests for unit_test_testing.TestGherkin.test_runs_gerkhin" />
       </list>
     </recent_temporary>
     <configuration default="true" type="tests" factoryName="Attests">
@@ -1724,11 +1734,11 @@
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="Nosetests_for_unit_test_testing_TestGherkin - 2017.09.26 at 11h 23m 50s.xml">
-      <configuration name="Nosetests for unit_test_testing.TestGherkin" configurationId="tests" />
+    <history-entry file="Nosetests_for_tests_unit_test_testing - 2017.09.26 at 16h 55m 05s.xml">
+      <configuration name="Nosetests for tests.unit_test_testing" configurationId="tests" />
     </history-entry>
-    <history-entry file="Nosetests_for_unit_test_testing_TestGherkin - 2017.09.26 at 11h 25m 10s.xml">
-      <configuration name="Nosetests for unit_test_testing.TestGherkin" configurationId="tests" />
+    <history-entry file="Nosetests_for_tests_unit_test_testing - 2017.09.26 at 17h 18m 36s.xml">
+      <configuration name="Nosetests for tests.unit_test_testing" configurationId="tests" />
     </history-entry>
     <history-entry file="Nosetests_for_unit_test_testing_TestGherkin - 2017.09.26 at 14h 50m 24s.xml">
       <configuration name="Nosetests for unit_test_testing.TestGherkin" configurationId="tests" />
@@ -1742,11 +1752,11 @@
     <history-entry file="Nosetests_for_unit_test_testing_TestGherkin - 2017.09.26 at 15h 01m 53s.xml">
       <configuration name="Nosetests for unit_test_testing.TestGherkin" configurationId="tests" />
     </history-entry>
-    <history-entry file="Nosetests_for_unit_test_testing_TestGherkin_test_gherkin_tester - 2017.09.23 at 17h 23m 45s.xml">
-      <configuration name="Nosetests for unit_test_testing.TestGherkin.test_gherkin_tester" configurationId="tests" />
+    <history-entry file="Nosetests_for_unit_test_testing_TestGherkin - 2017.09.26 at 17h 08m 56s.xml">
+      <configuration name="Nosetests for unit_test_testing.TestGherkin" configurationId="tests" />
     </history-entry>
-    <history-entry file="Nosetests_for_unit_test_testing_TestGherkin_test_gherkin_tester - 2017.09.23 at 17h 27m 10s.xml">
-      <configuration name="Nosetests for unit_test_testing.TestGherkin.test_gherkin_tester" configurationId="tests" />
+    <history-entry file="Nosetests_for_unit_test_testing_TestGherkin - 2017.09.26 at 17h 10m 07s.xml">
+      <configuration name="Nosetests for unit_test_testing.TestGherkin" configurationId="tests" />
     </history-entry>
     <history-entry file="Nosetests_in_tests - 2017.09.21 at 12h 12m 11s.xml">
       <configuration name="Nosetests in tests" configurationId="tests" />
@@ -1765,19 +1775,19 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="0" width="1440" height="900" extended-state="0" />
+    <frame x="74" y="23" width="1830" height="1040" extended-state="0" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2360515" sideWeight="0.4936306" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.18456376" sideWeight="0.4936306" order="1" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32771084" sideWeight="0.49753347" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39036146" sideWeight="0.4806867" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297568" sideWeight="0.48677248" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.21445782" sideWeight="0.4892704" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.21413502" sideWeight="0.4892704" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.23012048" sideWeight="0.48907682" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.1746988" sideWeight="0.49753347" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24892704" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22168675" sideWeight="0.5193133" order="11" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.30120483" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2637131" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.15574348" sideWeight="0.5063694" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.29470673" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -1891,11 +1901,6 @@
           <option name="timeStamp" value="521" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/pysd/testing/testing.py</url>
-          <line>490</line>
-          <option name="timeStamp" value="522" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$USER_HOME$/anaconda/lib/python3.6/site-packages/behave/__main__.py</url>
           <line>126</line>
           <option name="timeStamp" value="524" />
@@ -1910,6 +1915,21 @@
           <line>718</line>
           <option name="timeStamp" value="526" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pysd/testing/gherkin_steps/step_definitions.py</url>
+          <line>24</line>
+          <option name="timeStamp" value="527" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pysd/testing/gherkin_steps/step_definitions.py</url>
+          <line>12</line>
+          <option name="timeStamp" value="528" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pysd/testing/testing.py</url>
+          <line>490</line>
+          <option name="timeStamp" value="529" />
+        </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
         <breakpoints-dialog />
@@ -1920,7 +1940,7 @@
           <properties exception="BaseException" />
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="527" />
+      <option name="time" value="530" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="tests">
@@ -2133,14 +2153,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tests/test-models/samples/Lotka_Volterra/behavior_tests.feature">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="6" column="9" lean-forward="false" selection-start-line="6" selection-start-column="9" selection-end-line="6" selection-end-column="9" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pysd/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -2180,6 +2192,23 @@
           <caret line="24" column="29" lean-forward="false" selection-start-line="24" selection-start-column="29" selection-end-line="24" selection-end-column="29" />
           <folding>
             <element signature="e#95#126#0" expanded="true" />
+            <marker date="1506460715000" expanded="true" signature="298:649" ph="..." />
+            <marker date="1506460715000" expanded="true" signature="693:857" ph="..." />
+            <marker date="1506460715000" expanded="true" signature="698:843" ph="&quot;&quot;&quot;Characteristic Time...&quot;&quot;&quot;" />
+            <marker date="1506460715000" expanded="true" signature="899:1173" ph="..." />
+            <marker date="1506460715000" expanded="true" signature="904:1094" ph="&quot;&quot;&quot;Heat Loss to Room...&quot;&quot;&quot;" />
+            <marker date="1506460715000" expanded="true" signature="1213:1409" ph="..." />
+            <marker date="1506460715000" expanded="true" signature="1218:1395" ph="&quot;&quot;&quot;Room Temperature...&quot;&quot;&quot;" />
+            <marker date="1506460715000" expanded="true" signature="1452:1916" ph="..." />
+            <marker date="1506460715000" expanded="true" signature="1457:1878" ph="&quot;&quot;&quot;Teacup Temperature...&quot;&quot;&quot;" />
+            <marker date="1506460715000" expanded="true" signature="1950:2061" ph="..." />
+            <marker date="1506460715000" expanded="true" signature="1955:2047" ph="&quot;&quot;&quot;FINAL TIME...&quot;&quot;&quot;" />
+            <marker date="1506460715000" expanded="true" signature="2097:2211" ph="..." />
+            <marker date="1506460715000" expanded="true" signature="2102:2198" ph="&quot;&quot;&quot;INITIAL TIME...&quot;&quot;&quot;" />
+            <marker date="1506460715000" expanded="true" signature="2243:2375" ph="..." />
+            <marker date="1506460715000" expanded="true" signature="2248:2352" ph="&quot;&quot;&quot;SAVEPER...&quot;&quot;&quot;" />
+            <marker date="1506460715000" expanded="true" signature="2408:2526" ph="..." />
+            <marker date="1506460715000" expanded="true" signature="2413:2509" ph="&quot;&quot;&quot;TIME STEP...&quot;&quot;&quot;" />
           </folding>
         </state>
       </provider>
@@ -2228,26 +2257,34 @@
     </entry>
     <entry file="file://$USER_HOME$/anaconda/lib/python3.6/site-packages/behave/runner.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="409">
-          <caret line="719" column="0" lean-forward="false" selection-start-line="719" selection-start-column="0" selection-end-line="719" selection-end-column="0" />
+        <state relative-caret-position="411">
+          <caret line="718" column="0" lean-forward="false" selection-start-line="718" selection-start-column="0" selection-end-line="718" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/pysd/testing/testing.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="396">
-          <caret line="489" column="0" lean-forward="false" selection-start-line="489" selection-start-column="0" selection-end-line="489" selection-end-column="0" />
+        <state relative-caret-position="1323">
+          <caret line="492" column="0" lean-forward="true" selection-start-line="492" selection-start-column="0" selection-end-line="492" selection-end-column="0" />
           <folding>
             <element signature="e#0#19#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/tests/test-models/samples/Lotka_Volterra/behavior_tests.feature">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="180">
+          <caret line="12" column="25" lean-forward="true" selection-start-line="12" selection-start-column="25" selection-end-line="12" selection-end-column="25" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/pysd/testing/gherkin_steps/step_definitions.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="44">
-          <caret line="3" column="0" lean-forward="true" selection-start-line="3" selection-start-column="0" selection-end-line="3" selection-end-column="0" />
+        <state relative-caret-position="90">
+          <caret line="6" column="34" lean-forward="true" selection-start-line="6" selection-start-column="34" selection-end-line="6" selection-end-column="34" />
           <folding>
             <element signature="e#0#20#0" expanded="true" />
           </folding>
