@@ -10,3 +10,4 @@ xlwt
 funcsigs
 pydoe
 scipy.stats
+-e git+https://github.com/behave/behave.git#egg=behave
