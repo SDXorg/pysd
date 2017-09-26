@@ -3,6 +3,7 @@ import pandas as _pd
 import pyDOE as _pyDOE
 import scipy.stats.distributions as _dist
 import pysd as _pysd
+import os
 
 
 def create_extreme_conditions_test_matrix(model, filename=None):
@@ -476,3 +477,19 @@ def lookup_linter(model):
     Sterman 2000, table 14.1
 
     """
+    pass
+
+
+def behavior_test(feature_file):
+    from behave.configuration import Configuration
+    import behave.__main__ as bh
+
+
+    config = Configuration()
+
+    config.steps_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
+                                    'gherkin_steps')
+    config.paths = [os.path.normpath(feature_file)]
+
+    return_code = bh.run_behave(config)
+    return return_code

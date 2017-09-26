@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import scipy.stats
 import pysd
+import subprocess
 
 
 class TestBoundsChecker(unittest.TestCase):
@@ -137,15 +138,15 @@ class TestSamplePSpace(unittest.TestCase):
                            .9)
 
     def test_exponential_upper_bound(self):
-        self.assertGreater(scipy.stats.kstest(rvs=10-self.samples['Upper Bound Above 0'],
+        self.assertGreater(scipy.stats.kstest(rvs=10 - self.samples['Upper Bound Above 0'],
                                               cdf='expon', args=(0, 6)).pvalue,
                            .9)
 
-        self.assertGreater(scipy.stats.kstest(rvs=-5-self.samples['Upper Bound Below 0'],
+        self.assertGreater(scipy.stats.kstest(rvs=-5 - self.samples['Upper Bound Below 0'],
                                               cdf='expon', args=(0, 5)).pvalue,
                            .9)
 
-        self.assertGreater(scipy.stats.kstest(rvs=0-self.samples['Upper Bound 0'],
+        self.assertGreater(scipy.stats.kstest(rvs=0 - self.samples['Upper Bound 0'],
                                               cdf='expon', args=(0, 2)).pvalue,
                            .9)
 
@@ -181,7 +182,6 @@ class TestSummarize(unittest.TestCase):
             tests=[lambda res: pysd.testing.bounds_test(res, cls.bounds)])
 
     def test_index(self):
-
         # test that the various tests get properly aggregated, no duplicate indices
         self.assertEqual(max(pd.value_counts(self.summary.index)), 1)
 
@@ -218,3 +218,16 @@ class TestCheckTimestep(unittest.TestCase):
         errors = pysd.testing.timestep_test(self.model)
         self.assertEqual(len(errors), 0)
 
+
+class TestGherkin(unittest.TestCase):
+    # def test_runs_gerkhin(self):
+    #     test_file = 'test-models/samples/Lotka_Volterra/behavior_tests.feature'
+    #     result = subprocess.run(['behave', test_file],
+    #                             stdout=subprocess.PIPE,
+    #                             stderr=subprocess.PIPE)
+    #     result
+
+    def test_gherkin_tester(self):
+        from pysd.testing import behavior_test
+        test_file = 'test-models/samples/Lotka_Volterra/behavior_tests.feature'
+        behavior_test(test_file)

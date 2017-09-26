@@ -1,11 +1,16 @@
 pandas
+numpy
 parsimonious
+autopep8
 xarray
+tabulate
 yapf
 lxml
+xlwt
 funcsigs
 pydoe
+scipy.stats
+-e git+https://github.com/behave/behave.git#egg=behave
 xlrd
-xlwt
 regex
 chardet
