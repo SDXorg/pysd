@@ -319,7 +319,7 @@ def sample_pspace(model, param_list=None, bounds=None, samples=100, seed=None):
     if param_list is None:
         doc = model.doc()
         param_list = sorted(list(set(doc[doc['Type'] == 'constant']['Real Name']) -
-                            {'FINAL TIME', 'INITIAL TIME', 'TIME STEP', 'TIME STEP'}))
+                            {'FINAL TIME', 'INITIAL TIME', 'TIME STEP', 'SAVE PER'}))
 
     if isinstance(bounds, _pd.DataFrame):
         bounds = bounds.set_index('Real Name')
@@ -484,8 +484,7 @@ def behavior_test(feature_file):
     from behave.configuration import Configuration
     import behave.__main__ as bh
 
-
-    config = Configuration()
+    config = Configuration(command_args='-f pretty -s')
 
     config.steps_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                     'gherkin_steps')

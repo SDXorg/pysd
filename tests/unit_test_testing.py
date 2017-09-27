@@ -4,7 +4,6 @@ import pandas as pd
 import numpy as np
 import scipy.stats
 import pysd
-import subprocess
 
 
 class TestBoundsChecker(unittest.TestCase):
@@ -218,12 +217,6 @@ class TestCheckTimestep(unittest.TestCase):
 
 
 class TestGherkin(unittest.TestCase):
-    # def test_runs_gerkhin(self):
-    #     test_file = 'test-models/samples/Lotka_Volterra/behavior_tests.feature'
-    #     result = subprocess.run(['behave', test_file],
-    #                             stdout=subprocess.PIPE,
-    #                             stderr=subprocess.PIPE)
-    #     result
 
     def test_gherkin_tester(self):
         from pysd.testing import behavior_test
