@@ -9,10 +9,11 @@ There should be nothing in this file that has to know about either vensim or
 xmile specific syntax.
 """
 
+from __future__ import absolute_import
 import textwrap
 import yapf
-from pysd._version import __version__
-from pysd.py_backend import utils
+from .._version import __version__
+from ..py_backend import utils
 import os
 import warnings
 import pkg_resources
@@ -58,7 +59,7 @@ def build(elements, subscript_dict, namespace, outfile_name):
     import xarray as xr
 
     from pysd.py_backend.functions import cache
-    from pysd import functions
+    from pysd.py_backend import functions
 
     _subscript_dict = %(subscript_dict)s
 
@@ -68,6 +69,8 @@ def build(elements, subscript_dict, namespace, outfile_name):
 
     ''' % {'subscript_dict': repr(subscript_dict),
            'functions': '\n'.join(functions),
+           #'namespace': '{\n' + '\n'.join(['%s: %s' % (key, namespace[key]) for key in
+           #                                namespace.keys()]) + '\n}',
            'namespace': repr(namespace),
            'outfile': outfile_name,
            'version': __version__}

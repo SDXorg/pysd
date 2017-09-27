@@ -6,20 +6,19 @@ straightforward equivalent in python.
 
 """
 
-from __future__ import division
-
-import imp
-import random
-import warnings
+from __future__ import division, absolute_import
 from functools import wraps
-from funcsigs import signature
 
-import numpy as np
-import pandas as _pd
 import pandas as pd
-import xarray as xr
 
+import pandas as _pd
+import numpy as np
 from . import utils
+import imp
+import warnings
+import random
+import xarray as xr
+from funcsigs import signature
 
 try:
     import scipy.stats as stats
@@ -658,7 +657,8 @@ class Model(Macro):
         return_columns = []
         for key, value in self.components._namespace.items():
             sig = signature(getattr(self.components, value))
-            if len(sig.parameters) == 0:
+            # The `*args` reference handles the py2.7 decorator.
+            if len(set(sig.parameters) - {'args'}) == 0:
                 return_columns.append(key)
         return return_columns
 
