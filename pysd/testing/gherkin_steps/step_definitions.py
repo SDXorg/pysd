@@ -4,7 +4,7 @@ import nose.tools as test
 import os
 
 
-@given('The model "{model_file}"')
+@given("The model '{model_file}'")
 def load_model(context, model_file):
     ext = model_file.split('.')[-1].lower()
     dir = context._config.base_dir
@@ -20,8 +20,9 @@ def load_model(context, model_file):
         raise ValueError('Unknown model extension')
 
 
-@when('{variable} is set to {value:g}')
+@when("{variable} is set to {value:g}")
 def set_value(context, variable, value):
+    # todo: check that this is not used for state variables, and if it is, set the value...
     context.model.set_components({variable: value})
 
 
@@ -30,13 +31,77 @@ def run_model(context):
     context.result = context.model.run()
 
 
-@then('{variable} is immediately {value:g}')
-def check_immediate(context, variable, value):
-    test.assert_equal(getattr(context.model.components,
-                              context.model.components._namespace[variable])(),
-                      value)
+@then('{variable_1} is immediately equal to {variable_2}')
+def check_equal(context, variable_1, variable_2):
+    compare_variables(context, variable_1, variable_2, 'equal')
 
 
-@then('{variable} becomes {value:g} at time {time:g}')
-def check_future(context, variable, value, time):
-    test.assert_equal(context.result[variable].loc[time], value)
+@then('{variable_1} is equal to {variable_2} at time {time:g}')
+def check_equal(context, variable_1, variable_2, time):
+    compare_variables(context, variable_1, variable_2, 'equal', time)
+
+
+@then('{variable_1} is immediately less than {variable_2}')
+def check_equal(context, variable_1, variable_2):
+    compare_variables(context, variable_1, variable_2, 'less')
+
+
+@then('{variable_1} is less than {variable_2} at time {time:g}')
+def check_less(context, variable_1, variable_2, time):
+    compare_variables(context, variable_1, variable_2, 'less', time)
+
+
+@then('{variable_1} is immediately greater than {variable_2}')
+def check_equal(context, variable_1, variable_2):
+    compare_variables(context, variable_1, variable_2, 'greater')
+
+
+@then('{variable_1} is greater than {variable_2} at time {time:g}')
+def check_greater(context, variable_1, variable_2, time):
+    compare_variables(context, variable_1, variable_2, 'greater', time)
+
+
+def compare_variables(context, variable_1, variable_2, comparison, time=None):
+    """
+
+    Parameters
+    ----------
+    context
+    variable_1
+    variable_2
+    comparison
+    time
+        If time is 'None', then checks that the current values in the model compare
+
+    Returns
+    -------
+
+    """
+    if time is None and variable_1 in context.model.components._namespace:
+        val_1 = getattr(context.model.components,
+                        context.model.components._namespace[variable_1])()
+    elif hasattr(context, 'result') and variable_1 in context.result.columns:
+        val_1 = context.result[variable_1].loc[time]
+    else:
+        try:
+            val_1 = float(variable_1)
+        except:
+            raise ValueError('Could not understand "%s"' % variable_1)
+
+    if time is None and variable_2 in context.model.components._namespace:
+        val_2 = getattr(context.model.components,
+                        context.model.components._namespace[variable_2])()
+    elif hasattr(context, 'result') and variable_2 in context.result.columns:
+        val_2 = context.result[variable_2].loc[time]
+    else:
+        try:
+            val_2 = float(variable_2)
+        except:
+            raise ValueError('Could not understand "%s"' % variable_2)
+
+    if comparison == 'equal':
+        test.assert_equal(val_1, val_2)
+    elif comparison == 'less':
+        test.assert_less(val_1, val_2)
+    elif comparison == 'greater':
+        test.assert_greater(val_1, val_2)
