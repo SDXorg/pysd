@@ -6,3 +6,7 @@ xarray
 tabulate
 yapf
 lxml
+xlwt
+funcsigs
+pydoe
+scipy.stats

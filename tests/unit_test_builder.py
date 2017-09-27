@@ -1,9 +1,12 @@
 import textwrap
+
 from unittest import TestCase
-import xarray as xr
+
 import numpy as np
 from pysd.py_backend.functions import cache
 from numbers import Number
+import xarray as xr
+
 
 
 def runner(string, ns=None):

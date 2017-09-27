@@ -6,7 +6,7 @@ straightforward equivalent in python.
 
 """
 
-from __future__ import division
+from __future__ import division, absolute_import
 from functools import wraps
 
 import pandas as pd
@@ -18,11 +18,8 @@ import imp
 import warnings
 import random
 import xarray as xr
-
+from funcsigs import signature
 try:
-    from inspect import signature
-except ImportError:
-    from sklearn.externals.funcsigs import signature
 
 try:
     import scipy.stats as stats
@@ -459,15 +456,17 @@ class Macro(Stateful):
                 lines = docstring.split('\n')
                 collector.append({'Real Name': name,
                                   'Py Name': varname,
-                                  'Unit': lines[3],
-                                  'Comment': '\n'.join(lines[5:]).strip()})
+                                  'Unit': lines[3].strip(),
+                                  'Type': lines[5].strip(),
+                                  'Comment': '\n'.join(lines[7:]).strip()})
             except:
                 pass
 
         docs_df = _pd.DataFrame(collector)
         docs_df.fillna('None', inplace=True)
 
-        return docs_df[['Real Name', 'Py Name', 'Unit', 'Comment']]
+        order = ['Real Name', 'Py Name','Unit', 'Type', 'Comment']
+        return docs_df[order].sort_values(by='Real Name').reset_index(drop=True)
 
     def __str__(self):
         """ Return model source files """
@@ -659,7 +658,8 @@ class Model(Macro):
         return_columns = []
         for key, value in self.components._namespace.items():
             sig = signature(getattr(self.components, value))
-            if len(sig.parameters) == 0:
+            # The `*args` reference handles the py2.7 decorator.
+            if len(set(sig.parameters) - {'args'}) == 0:
                 return_columns.append(key)
         return return_columns
 

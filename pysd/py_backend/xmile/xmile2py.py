@@ -6,11 +6,10 @@ James Houghton <james.p.houghton@gmail.com>
 Alexey Prey Mulyukin
 
 """
-
-from pysd.py_backend.xmile.SMILE2Py import SMILEParser
+from __future__ import absolute_import
+from .SMILE2Py import SMILEParser
 from lxml import etree
-from pysd.py_backend import builder, utils
-from pysd.py_backend import utils
+from ...py_backend import builder, utils
 
 
 def translate_xmile(xmile_file):

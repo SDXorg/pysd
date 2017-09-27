@@ -2,11 +2,11 @@
 Translates vensim .mdl file to pieces needed by the builder module to write a python version of the
 model. Everything that requires knowledge of vensim syntax should be in this file.
 """
-
+from __future__ import absolute_import
 import re
 import parsimonious
-from pysd.py_backend import builder
-from pysd.py_backend import utils
+from ...py_backend import builder
+from ...py_backend import utils
 import textwrap
 import numpy as np
 import os
