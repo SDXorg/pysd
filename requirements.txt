@@ -1,7 +1,5 @@
 pandas
-numpy
 parsimonious
-autopep8
 xarray
 tabulate
 yapf
@@ -9,4 +7,3 @@ lxml
 xlwt
 funcsigs
 pydoe
-scipy.stats
