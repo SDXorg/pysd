@@ -23,26 +23,106 @@ import re
 
 # Here we define which python function each XMILE keyword corresponds to
 functions = {
-    "abs": "abs", "int": "int", "exp": "np.exp", "inf": "np.inf", "log10": "np.log10",
-    "pi": "np.pi", "sin": "np.sin", "cos": "np.cos", "sqrt": "np.sqrt", "tan": "np.tan",
-    "lognormal": "np.random.lognormal", "normal": "np.random.normal",
-    "poisson": "np.random.poisson", "ln": "np.log", "exprnd": "np.random.exponential",
-    "random": "np.random.rand", "min": "min", "max": "max", "arccos": "np.arccos",
-    "arcsin": "np.arcsin", "arctan": "np.arctan",
+    # ===
+    # 3.5.1 Mathematical Functions
+    # http://docs.oasis-open.org/xmile/xmile/v1.0/csprd01/xmile-v1.0-csprd01.html#_Toc398039980
+    # ===
+    
+    "abs": "abs", 
+    "arccos": "np.arccos",
+    "arcsin": "np.arcsin", 
+    "arctan": "np.arctan",
+    "cos": "np.cos", 
+    "sin": "np.sin", 
+    "tan": "np.tan",
+    "exp": "np.exp", 
+    "inf": "np.inf", 
+    "int": "int",
+    "ln": "np.log", 
+    "log10": "np.log10",
+    "max": "max", 
+    "min": "min",
+    "pi": "np.pi",
+    "sqrt": "np.sqrt", 
+    
+    # ===
+    # 3.5.2 Statistical Functions
+    # http://docs.oasis-open.org/xmile/xmile/v1.0/csprd01/xmile-v1.0-csprd01.html#_Toc398039981
+    # ===
+    
+    "exprnd": "np.random.exponential",
+    "lognormal": "np.random.lognormal", 
+    "normal": "np.random.normal",
+    "poisson": "np.random.poisson", 
+    "random": "np.random.rand", 
+    
+    # ====
+    # 3.5.3 Delay Functions
+    # http://docs.oasis-open.org/xmile/xmile/v1.0/csprd01/xmile-v1.0-csprd01.html#_Toc398039982
+    # ====
+    
+    # "delay" !TODO!
+    # "delay1" !TODO!
+    # "delay2" !TODO!
+    # "delay3" !TODO!
+    # "delayn" !TODO!
+    # "forcst" !TODO!
+    # "smth1" !TODO!
+    # "smth3" !TODO!
+    # "smthn" !TODO!
+    # "trend" !TODO!
+    
+    # ===
+    # 3.5.4 Test Input Functions
+    # http://docs.oasis-open.org/xmile/xmile/v1.0/csprd01/xmile-v1.0-csprd01.html#_Toc398039983
+    # ===
+
+    "pulse": "functions.pulse_magnitude",
+    "step": "functions.step",
+    "ramp": "functions.ramp",
+    
+    # ===
+    # 3.5.5 Time Functions
+    # http://docs.oasis-open.org/xmile/xmile/v1.0/csprd01/xmile-v1.0-csprd01.html#_Toc398039984
+    # ===
+    # Should we include as function list or it provided by another way?
+    
+    # "dt" !TODO!
+    # "starttime" !TODO!
+    # "stoptime" !TODO!
+    # "time" !TODO!
+    
+    # ===
+    # 3.5.6 Miscellaneous Functions
+    # http://docs.oasis-open.org/xmile/xmile/v1.0/csprd01/xmile-v1.0-csprd01.html#_Toc398039985
+    # ===
     "if_then_else": "functions.if_then_else",
-    "step": "functions.step", "pulse": "functions.pulse"
+    # "init" !TODO!
+    # "previous" !TODO!
+    # "self" !TODO!
 }
 
 prefix_operators = {
     "not": " not ",
-    "-": "-", "+": " ",
+    "-": "-", 
+    "+": " ",
 }
 
 infix_operators = {
-    "and": " and ", "or": " or ",
-    "=": "==", "<=": "<=", "<": "<", ">=": ">=", ">": ">", "<>": "!=",
-    "^": "**", "+": "+", "-": "-",
-    "*": "*", "/": "/", "mod": "%",
+    "and": " and ", 
+    "or": " or ",
+    "=": "==", 
+    "<=": "<=", 
+    "<": "<", 
+    ">=": ">=", 
+    ">": ">", 
+    "<>": "!=",
+    "^": "**", 
+    "+": "+", 
+    "-": "-",
+    "*": "*", 
+    "/": "/", 
+    "mod": "%",
 }
 
 builders = {}
@@ -79,10 +159,16 @@ class SMILEParser(NodeVisitor):
                 If context is set to equation, lone identifiers will be parsed as calls to elements
                 If context is set to definition, lone identifiers will be cleaned and returned.
         """
+        # !TODO! Should remove the inline comments from `text` before parsing the grammar
+        # http://docs.oasis-open.org/xmile/xmile/v1.0/csprd01/xmile-v1.0-csprd01.html#_Toc398039973
         self.ast = self.grammar.parse(text)
         self.context = context
         return self.visit(self.ast)
 
+    def visit_conditional_statement(self, n, vc):
+        _IF, _1, condition_expr, _2, _THEN, _3, then_expr, _4, _ELSE, _5, else_expr = vc
+        return "functions.if_then_else(" + condition_expr + ", " + then_expr + ", " + else_expr + ")"
+        
     def visit_identifier(self, n, vc):
         return self.extended_model_namespace[n.text] + '()'
 
