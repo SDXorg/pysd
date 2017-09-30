@@ -62,7 +62,7 @@ def main():
 
 # %%Model classes
 class XmileStock:
-    """Class that stores Stock deffinition
+    """Class that stores Stock definition
        as translated from an *xmile* model specification
 
     Attributes
@@ -491,7 +491,7 @@ def xmile_parser(model_file):
                ("</flow>" nl)?
         flow_disp_name = "isee:display_name=" qtm str qtm
         flow_name = ~"[A-Za-z0-9$_ ]*"
-        eqn = ~"[A-z0-9.*/\(\)_\+]*"
+        eqn = ~"[A-z0-9.*/\(\)_\+ ]*"
         val = ~"[0-9.]*"
         units = ~"[A-z/]*"
         str = ~"[A-z0-9_]*"
@@ -507,6 +507,8 @@ def xmile_parser(model_file):
                    (ws? "<eqn>" nl ws eqn_str nl ws "</eqn>" nl)?
                    (ws? "<units>" nl ws units nl ws "</units>" nl)?
                    (ws? "<display" skip nl)?
+                   (ws? "<format" skip nl)?
+                   (ws? "</format>" nl)?
                    (ws? "<gf>" nl)?
                        (ws "<xscale max=" qtm max qtm ws
                                    "min=" qtm min qtm ">" nl)?
@@ -602,7 +604,7 @@ def xmile_parser(model_file):
             pass
 
     # Read model file
-    with open(model_file) as fmodel:
+    with open(model_file, encoding="utf-8") as fmodel:
         xmile_soup = bs(fmodel, "lxml")
 
     # Extract relevant information to build model
@@ -622,6 +624,8 @@ def xmile_parser(model_file):
             if "units" not in flw_parse:
                 flw_parse["units"] = ""
             name = flw_parse["flow_name"].replace(" ", "_")
+            name = name.replace("á", "a").replace("é", "e").replace("í",
+                                "i").replace("ó", "o").replace("ú", "u").replace("ñ", "n")
             flw_parse["flow_name"] = name
             flows[name] = flw_parse
 
