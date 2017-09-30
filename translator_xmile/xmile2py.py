@@ -50,11 +50,16 @@ def main():
         model_output = model_translation.show()
         foutput.writelines(model_output)
 
-    with open(outPath + "/" + model_translation.name + ".R", "w") as foutput:
-        model_output = model_translation.build_R_script()
-        foutput.writelines(model_output)
+    r_model_solver, r_model_calibrate = model_translation.build_R_script
+    file_name = model_translation.name + "_solver.R"
+    with open(outPath + "/" + file_name, "w") as foutput:
+        foutput.writelines(r_model_solver)
 
-    print("\n\n" + "*"*28 + "\nModel translation successful")
+    r_model_calibrate = r_model_calibrate.replace("file_path", '"' + file_name + '"')
+    with open(outPath + "/" + file_name.replace("solver", "calibrate"), "w") as foutput:
+        foutput.writelines(r_model_calibrate)
+
+    print("\n\n" + "*" * 28 + "\nModel translation successful")
     print("Model processed:", model_translation.name)
     print("Translation can be found at:\n  ", outPath)
     print("\n\n")
@@ -79,6 +84,7 @@ class XmileStock:
     :__init__ -- Takes a stock dictionary as its only parameter (no default)
     :show: -- Display the main features of the stock instance.
     """
+
     def __init__(self, stock_dict):
         self.name = stock_dict["stock_name"]
         self.units = stock_dict["units"]
@@ -88,8 +94,8 @@ class XmileStock:
             self.eqn = " + ".join([f["flow_name"] for f in self.inflow])
         if "outflow" in stock_dict:
             self.outflow = stock_dict["outflow"]
-            self.eqn = self.eqn + " - " +\
-                " - ".join([f["flow_name"] for f in self.outflow])
+            self.eqn = self.eqn + " - " + \
+                       " - ".join([f["flow_name"] for f in self.outflow])
         self.init = float(stock_dict["val_ini"])
         self.eqn = self.eqn.strip(" ")
 
@@ -121,18 +127,19 @@ class XmileAux:
     :__init__: -- Takes an aux dictionary as its only parameter (no default)
     :show: -- Display the main features of the converter instance.
     """
+
     def __init__(self, aux_dict):
         self.name = aux_dict["aux_name"]
         if "ypts" in aux_dict:
             self.eqn = aux_dict["eqn_str"]
             self.type = "series"
-            step = (float(aux_dict["x_max"]) - float(aux_dict["x_min"]))\
-                / (len(aux_dict["ypts"].split(",")) - 1)
+            step = (float(aux_dict["x_max"]) - float(aux_dict["x_min"])) \
+                   / (len(aux_dict["ypts"].split(",")) - 1)
             yval = list(map(float, (aux_dict["ypts"].split(","))))
             self.series = list(map(lambda x, y: (x, float(y)),
                                    [float(aux_dict["x_min"]) + step * x
                                     for x in range(0, len(yval))],
-                               aux_dict["ypts"].split(",")))
+                                   aux_dict["ypts"].split(",")))
         else:
             self.units = aux_dict["units"]
             self.value = float(aux_dict["eqn_str"])
@@ -180,6 +187,7 @@ class XmileModel:
     :show: -- Display the main features of the converter instance.
     :build_R_script: -- Prepares an scrip for R use with **deSolve** library.
     """
+
     def __init__(self, spec, stocks, auxs):
         """Takes an spec dictionary with model data, a list of stock class
            and a list of aux class objects that fully describe the original
@@ -212,63 +220,64 @@ class XmileModel:
                 'PI': x.lower(),
                 'INT': 'floor',
                 'DT': 'DT'
-                }[x]
+            }[x]
 
+    @property
     def build_R_script(self):
         """Prepares an scrip for R use with **deSolve** library.
         """
         # Initialization section
-        r_script = "".join(["# Prepare libraries needed\n"
-                            "if (require(deSolve) == F) \n{\n",
-                            "    tall.packages('deSolve', ",
-                            "repos='http://cran.r-project.org')\n",
-                            "    if (require(deSolve) == F)\n",
-                            "      print ('Error: deSolve is not installed",
-                            " on your machine')\n",
-                            "}\n\n",
-                            "if (require(minpack.lm) == F) \n{\n",
-                            "    tall.packages('minpack.lm', ",
-                            "repos='http://cran.r-project.org')\n",
-                            "    if (require(minpack.lm) == F)\n",
-                            "      print ('Error: minpack.lm is not installed",
-                            " on your machine')\n",
-                            "}\n\n"])
+        r_script_slv = "".join(["# Prepare libraries needed\n"
+                                "if (require(deSolve) == F) \n{\n",
+                                "    tall.packages('deSolve', ",
+                                "repos='http://cran.r-project.org')\n",
+                                "    if (require(deSolve) == F)\n",
+                                "      print ('Error: deSolve is not installed",
+                                " on your machine')\n",
+                                "}\n\n",
+                                "if (require(minpack.lm) == F) \n{\n",
+                                "    tall.packages('minpack.lm', ",
+                                "repos='http://cran.r-project.org')\n",
+                                "    if (require(minpack.lm) == F)\n",
+                                "      print ('Error: minpack.lm is not installed",
+                                " on your machine')\n",
+                                "}\n\n"])
 
         # Definition of main model function
-        r_script = "".join([r_script,
-                            "# Function specifying full model\n",
-                            "model <- function(t, Y, ",
-                            "parameters, ...) \n{\n",
-                            "    # Time and other model variables\n",
-                            "    Time <<- t\n"])
+        r_script_slv = "".join([r_script_slv,
+                                "# Function fully specifying the translated model for R use\n",
+                                "model <- function(t, Y, ",
+                                "parameters, ...) \n{\n",
+                                "    # Time and other model variables\n",
+                                "    Time <<- t\n"])
 
         stk_names = [s.name for s in self.stocks]
         stk_names.sort()
         lines = "".join(["    {0} <- Y['{0}']\n".format(stk)
                          for stk in stk_names])
-        r_script = "".join([r_script, lines, "\n    # Model parameters"])
+        r_script_slv = "".join([r_script_slv, lines, "\n    # Model parameters"])
 
         convertors = [a.name for a in self.auxs]
         convertors.sort()
         lines = "".join(["    {0} <- parameters['{0}']\n".format(aux)
                          for aux in convertors])
-        r_script = "".join([r_script, "\n", lines, "\n"])
+        r_script_slv = "".join([r_script_slv, "\n", lines, "\n"])
 
         # Recover flow information and prepare suitable R commands
         flw_names = set()
         for stk in self.stocks:
             if hasattr(stk, "inflow"):
                 flw_names = flw_names.union(
-                          {"\n    " + f["flow_name"] + " <- " + f["eqn"]
-                           for f in stk.inflow})
+                    {"\n    " + f["flow_name"] + " <- " + f["eqn"]
+                     for f in stk.inflow})
             if hasattr(stk, "outflow"):
                 flw_names = flw_names.union(
-                          {"\n    " + f["flow_name"] + " <- " + f["eqn"]
-                           for f in stk.outflow})
+                    {"\n    " + f["flow_name"] + " <- " + f["eqn"]
+                     for f in stk.outflow})
 
         lines = "".join(flw_names)
-        r_script = "".join([r_script, "    # flow equations", lines, "\n\n",
-                            "    # Differential equations"])
+        r_script_slv = "".join([r_script_slv, "    # flow equations", lines, "\n\n",
+                                "    # Differential equations"])
 
         # diferential equation specification
         lines, d_func = "", []
@@ -280,17 +289,17 @@ class XmileModel:
 
         d_func = "    list(c(" + ", ".join(d_func) + "))\n}\n"
 
-        r_script = "".join([r_script, "\n    ", lines, "\n",
-                            "    # Model output list\n",
-                            d_func,
-                            "\n", "#" * 50])
+        r_script_slv = "".join([r_script_slv, "\n    ", lines, "\n",
+                                "    # Model output list\n",
+                                d_func,
+                                "\n", "#" * 50])
 
         # Define R object to store model parameters
         series, items = [], []
         for ax in self.auxs:
             if ax.type == "value":
                 items.append("".join(["{0} = {1}".format(ax.name,
-                                                          str(ax.value))]))
+                                                         str(ax.value))]))
             if ax.type == "series":
                 series.append("".join(series) + ax.name +
                               " <- data.frame(matrix(c(" +
@@ -301,12 +310,12 @@ class XmileModel:
                               ax.eqn.lower() + "'" + ", '" + ax.name + "')\n")
 
         if items:
-            r_script = "".join([r_script, "\n\n",
-                                "# Paremeters and initial condition to" +
-                                " solve model\n", "parms <- c(" +
-                                ", ".join(items) + ")\n"])
+            r_script_slv = "".join([r_script_slv, "\n\n",
+                                    "# Paremeters and initial condition to" +
+                                    " solve model\n", "parms <- c(" +
+                                    ", ".join(items) + ")\n"])
         if series:
-            r_script = "".join([r_script, "".join(series) + "\n"])
+            r_script_slv = "".join([r_script_slv, "".join(series) + "\n"])
 
         # Includes initial conditions for the stocks
         items = []
@@ -325,34 +334,38 @@ class XmileModel:
                          "out <- ode(func = model, y = Y, times = time,",
                          " parms = parms, method = 'rk4')\n\n",
                          "# Plot model numerical solution\n"
-                         "plot(out)\n\n",
-                         "# Error function to fit model with 'nls.lm'\n",
-                         "ssq <- function(parms, t, data, y0, varList)\n{",
-                         "    # solve ODE for a given set of parameters\n",
-                         "    sol <- ode(func = model, y = y0, times = t,",
-                         " parms = parms, method = 'rk4')\n\n",
-                         "    # Match data to model output\n",
-                         "    solDF <- data.frame(sol)\n",
-                         "    solDF <- solDF[solDF$time %in% data$time, ]\n\n",
-                         "    # Difference fitted vs observed \n",
-                         "    solDF <- unlist(solDF[, varList])\n",
-                         "    obsDF <- unlist(data[, -1])\n",
-                         "    ssqres <- solDF - obsDF\n\n",
-                         "    # return predicted vs experimental residual\n",
-                         "    return(ssqres)\n}\n\n",
-                         "# Provide data, dataset and time sequence\n\n",
-                         "# parameter fitting using levenberg marquart",
-                         " algorithm. Provide parms as initial guess\n",
-                         "fittedModel <- nls.lm(par=parms, fn=ssq, y0 = Y, ",
-                         "t = time, data = datos, varList = varList)\n",
-                         "summary(fittedModel)\n",
-                         "fittedVals <- ode(func = model, y = Y, ",
-                         "times = time, parms = fittedModel$par, ",
-                         "method = 'rk4')\n\n"])
+                         "plot(out)\n\n"])
+        r_script_slv = "".join([r_script_slv, lines])
 
-        r_script = "".join([r_script, lines])
+        r_script_cal = "".join(["# Sckeleton for model calibration\n",
+                                "# ********************************\n\n",
+                                "# load translated model function\n",
+                                "source (file_path)\n\n",
+                                "# Error function required to fit the model with 'nls.lm'\n",
+                                "ssq <- function(parms, t, data, y0, varList)\n{",
+                                "    # solve ODE for a given set of parameters\n",
+                                "    sol <- ode(func = model, y = y0, times = t,",
+                                " parms = parms, method = 'rk4')\n\n",
+                                "    # Match data to model output\n",
+                                "    solDF <- data.frame(sol)\n",
+                                "    solDF <- solDF[solDF$time %in% data$time, ]\n\n",
+                                "    # Difference fitted vs observed \n",
+                                "    solDF <- unlist(solDF[, varList])\n",
+                                "    obsDF <- unlist(data[, -1])\n",
+                                "    ssqres <- solDF - obsDF\n\n",
+                                "    # return predicted vs experimental residual\n",
+                                "    return(ssqres)\n}\n\n",
+                                "# Provide data, dataset and time sequence\n\n",
+                                "# parameter fitting using levenberg marquart",
+                                " algorithm. Provide parms as initial guess\n",
+                                "fittedModel <- nls.lm(par=parms, fn=ssq, y0 = Y, ",
+                                "t = time, data = datos, varList = varList)\n",
+                                "summary(fittedModel)\n",
+                                "fittedVals <- ode(func = model, y = Y, ",
+                                "times = time, parms = fittedModel$par, ",
+                                "method = 'rk4')\n\n"])
 
-        return r_script
+        return r_script_slv, r_script_cal
 
     def show(self):
         """Display the main features of the full model.
@@ -366,7 +379,7 @@ class XmileModel:
                 fls = " + ".join([f["flow_name"] for f in stk.inflow])
             if hasattr(stk, "outflow"):
                 fls = fls + "- " + " - ".join(
-                        [f["flow_name"] for f in stk.outflow])
+                    [f["flow_name"] for f in stk.outflow])
             item = [eqn + " + (" + fls + ") * dt"]
             item.extend(["    INIT " + stk.name + " = " + str(stk.init)])
 
@@ -413,21 +426,22 @@ class XmileModel:
 
         num_var = len(self.stocks) + len(flows) + len(self.auxs)
         meta_data = "".join([
-                "\n{ The model has ", str(num_var), " (",
-                str(num_var), ") variables (array ",
-                "expansion in parens).\n", "  In root model and 0",
-                " additional modules with 0 sectors.\n", "  Stocks: ",
-                str(len(self.stocks)), " (", str(len(self.stocks)),
-                "), Flows: ", str(len(flows)), " (",
-                str(len(flows)), "), Converters: ",
-                str(len(self.auxs)), " (", str(len(self.auxs)), ")\n",
-                "  Constants: ", str(constants), " (", str(constants), "),",
-                " Equations: ", str(len(self.stocks)), " (",
-                str(len(self.stocks)), "),",
-                " Graphicals: ", str(graphs), " (", str(graphs), ")}\n"])
+            "\n{ The model has ", str(num_var), " (",
+            str(num_var), ") variables (array ",
+            "expansion in parens).\n", "  In root model and 0",
+            " additional modules with 0 sectors.\n", "  Stocks: ",
+            str(len(self.stocks)), " (", str(len(self.stocks)),
+            "), Flows: ", str(len(flows)), " (",
+            str(len(flows)), "), Converters: ",
+            str(len(self.auxs)), " (", str(len(self.auxs)), ")\n",
+            "  Constants: ", str(constants), " (", str(constants), "),",
+            " Equations: ", str(len(self.stocks)), " (",
+            str(len(self.stocks)), "),",
+            " Graphicals: ", str(graphs), " (", str(graphs), ")}\n"])
 
         model_report = "".join([model_report, meta_data])
         return model_report
+
 
 # %% Parsers
 def xmile_parser(model_file):
@@ -509,6 +523,9 @@ def xmile_parser(model_file):
                    (ws? "<display" skip nl)?
                    (ws? "<format" skip nl)?
                    (ws? "</format>" nl)?
+                   (ws? "<thous_separator" skip nl)?
+                   (ws? "true" nl)?
+                   (ws? "</thous_separator>" nl)?
                    (ws? "<gf>" nl)?
                        (ws "<xscale max=" qtm max qtm ws
                                    "min=" qtm min qtm ">" nl)?
@@ -625,7 +642,8 @@ def xmile_parser(model_file):
                 flw_parse["units"] = ""
             name = flw_parse["flow_name"].replace(" ", "_")
             name = name.replace("á", "a").replace("é", "e").replace("í",
-                                "i").replace("ó", "o").replace("ú", "u").replace("ñ", "n")
+                                                                    "i").replace("ó", "o").replace("ú", "u").replace(
+                "ñ", "n")
             flw_parse["flow_name"] = name
             flows[name] = flw_parse
 
