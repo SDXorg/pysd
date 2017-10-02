@@ -50,7 +50,7 @@ def main():
         model_output = model_translation.show()
         foutput.writelines(model_output)
 
-    r_model_solver, r_model_calibrate = model_translation.build_R_script
+    r_model_solver, r_model_calibrate = model_translation.build_R_script()
     file_name = model_translation.name + "_solver.R"
     with open(outPath + "/" + file_name, "w") as foutput:
         foutput.writelines(r_model_solver)
@@ -222,7 +222,6 @@ class XmileModel:
                 'DT': 'DT'
             }[x]
 
-    @property
     def build_R_script(self):
         """Prepares an scrip for R use with **deSolve** library.
         """
@@ -325,7 +324,7 @@ class XmileModel:
         # Assemble command call to run the model in R
         lines = "Y <- c(" + ", ".join(items) + ")\n\n"
         lines = "".join([lines, "# Call for auxiliary components\n",
-                         "source('", self.name, "_r_functions.R')\n\n",
+                         "# source('", self.name, "_r_functions.R')\n\n",
                          "# Numerical integration specs\n"
                          "DT <- ", str(self.step), "\n",
                          "time <- seq(", str(self.start), " ,",
@@ -505,7 +504,7 @@ def xmile_parser(model_file):
                ("</flow>" nl)?
         flow_disp_name = "isee:display_name=" qtm str qtm
         flow_name = ~"[A-Za-z0-9$_ ]*"
-        eqn = ~"[A-z0-9.*/\(\)_\+ ]*"
+        eqn = ~"[A-z0-9.*/\(\)_\-\+ ]*"
         val = ~"[0-9.]*"
         units = ~"[A-z/]*"
         str = ~"[A-z0-9_]*"

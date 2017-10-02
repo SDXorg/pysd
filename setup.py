@@ -30,7 +30,7 @@ setup(
         'numpy',
         'parsimonious',
         'yapf',
-        'xarray'
+        'xarray', 'wx'
     ],
     package_data={'pysd': ['*.yapf']},
     include_package_data=True
