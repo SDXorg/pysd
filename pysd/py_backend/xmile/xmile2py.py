@@ -126,7 +126,7 @@ def translate_xmile(xmile_file):
     # remove timestamp pieces so as not to double-count
     model_elements_parsed = []
     for element in model_elements:
-        if element['real_name'].lower() not in ['initial time', 'final time', 'time step']:
+        if element['real_name'].lower() not in ['initial time', 'final time', 'time step', 'saveper']:
             model_elements_parsed.append(element)
     model_elements = model_elements_parsed
 
