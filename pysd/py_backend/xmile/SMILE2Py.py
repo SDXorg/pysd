@@ -20,6 +20,7 @@ import parsimonious
 from parsimonious.nodes import NodeVisitor
 import pkg_resources
 import re
+from ...py_backend import builder
 
 # Here we define which python function each XMILE keyword corresponds to
 functions = {
@@ -54,23 +55,7 @@ functions = {
     "lognormal": "np.random.lognormal", 
     "normal": "np.random.normal",
     "poisson": "np.random.poisson", 
-    "random": "np.random.rand", 
-    
-    # ====
-    # 3.5.3 Delay Functions
-    # http://docs.oasis-open.org/xmile/xmile/v1.0/csprd01/xmile-v1.0-csprd01.html#_Toc398039982
-    # ====
-    
-    # "delay" !TODO!
-    # "delay1" !TODO!
-    # "delay2" !TODO!
-    # "delay3" !TODO!
-    # "delayn" !TODO!
-    # "forcst" !TODO!
-    # "smth1" !TODO!
-    # "smth3" !TODO!
-    # "smthn" !TODO!
-    # "trend" !TODO!
+    "random": "np.random.rand",
     
     # ===
     # 3.5.4 Test Input Functions
@@ -125,7 +110,26 @@ infix_operators = {
     "mod": "%",
 }
 
-builders = {}
+# ====
+# 3.5.3 Delay Functions
+# http://docs.oasis-open.org/xmile/xmile/v1.0/csprd01/xmile-v1.0-csprd01.html#_Toc398039982
+# ====
+
+builders = {
+    # !TODO! Should correct handle the last args, because it's optionally
+    # "delay" !TODO! How to add the infinity delay?
+    "delay1": lambda element, subscript_dict, args: builder.add_n_delay(args[0], args[1], args[2], "1", element['subs'], subscript_dict),
+    "delay3": lambda element, subscript_dict, args: builder.add_n_delay(args[0], args[1], args[2], "3", element['subs'], subscript_dict),
+    "delayn": lambda element, subscript_dict, args: builder.add_n_delay(args[0], args[1], args[3], args[2], element['subs'], subscript_dict),
+    
+    # !TODO! Should correct handle the last args, because it's optionally
+    "smth1": lambda element, subscript_dict, args: builder.add_n_smooth(args[0], args[1], args[2], "1", element['subs'], subscript_dict),
+    "smth3": lambda element, subscript_dict, args: builder.add_n_smooth(args[0], args[1], args[2], "3", element['subs'], subscript_dict),
+    "smthn": lambda element, subscript_dict, args: builder.add_n_smooth(args[0], args[1], args[3], args[2], element['subs'], subscript_dict),
+    
+    # "forcst" !TODO!
+    # "trend" !TODO!
+}
 
 
 def format_word_list(word_list):
@@ -134,9 +138,15 @@ def format_word_list(word_list):
 
 
 class SMILEParser(NodeVisitor):
-    def __init__(self, model_namespace):
+    def __init__(self, model_namespace=None, subscript_dict=None):
+        if model_namespace is None:
+            model_namespace = {}
+        
+        if subscript_dict is None:
+            subscript_dict = {}
+            
         self.model_namespace = model_namespace
-
+        self.subscript_dict = subscript_dict
         self.extended_model_namespace = {
             key.replace(' ', '_'): value for key, value in self.model_namespace.items()}
         self.extended_model_namespace.update(self.model_namespace)
@@ -153,17 +163,25 @@ class SMILEParser(NodeVisitor):
 
         self.grammar = parsimonious.Grammar(grammar)
 
-    def parse(self, text, context='eqn'):
+    def parse(self, text, element, context='eqn'):
         """
            context : <string> 'eqn', 'defn'
                 If context is set to equation, lone identifiers will be parsed as calls to elements
                 If context is set to definition, lone identifiers will be cleaned and returned.
         """
+        
         # !TODO! Should remove the inline comments from `text` before parsing the grammar
         # http://docs.oasis-open.org/xmile/xmile/v1.0/csprd01/xmile-v1.0-csprd01.html#_Toc398039973
         self.ast = self.grammar.parse(text)
         self.context = context
-        return self.visit(self.ast)
+        self.element = element
+        self.new_structure = []
+        
+        py_expr = self.visit(self.ast)
+        
+        return ({
+            'py_expr': py_expr
+        }, self.new_structure)
 
     def visit_conditional_statement(self, n, vc):
         _IF, _1, condition_expr, _2, _THEN, _3, then_expr, _4, _ELSE, _5, else_expr = vc
@@ -175,6 +193,13 @@ class SMILEParser(NodeVisitor):
     def visit_func(self, n, vc):
         return functions[n.text.lower()]
 
+    def visit_build_call(self, n, vc):
+        builder_name = vc[0].lower();
+        arguments = [e.strip() for e in vc[4].split(",")]
+        name, structure = builders[builder_name](self.element, self.subscript_dict, arguments)
+        self.new_structure += structure
+        return name;
+        
     def visit_pre_oper(self, n, vc):
         return prefix_operators[n.text.lower()]
 
