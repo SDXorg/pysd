@@ -142,7 +142,7 @@ class XmileAux:
                                    aux_dict["ypts"].split(",")))
         else:
             self.units = aux_dict["units"]
-            self.value = float(aux_dict["eqn_str"])
+            self.value = aux_dict["eqn_str"]
             self.type = "value"
 
     def show(self):
@@ -333,13 +333,12 @@ class XmileModel:
                          "out <- ode(func = model, y = Y, times = time,",
                          " parms = parms, method = 'rk4')\n\n",
                          "# Plot model numerical solution\n"
-                         "plot(out)\n\n"])
+                         "plot(out)\n\n",
+                         "par(mfrow=c(1,1))\n"])
         r_script_slv = "".join([r_script_slv, lines])
 
         r_script_cal = "".join(["# Sckeleton for model calibration\n",
                                 "# ********************************\n\n",
-                                "# load translated model function\n",
-                                "source (file_path)\n\n",
                                 "# Error function required to fit the model with 'nls.lm'\n",
                                 "ssq <- function(parms, t, data, y0, varList)\n{",
                                 "    # solve ODE for a given set of parameters\n",
@@ -353,16 +352,34 @@ class XmileModel:
                                 "    obsDF <- unlist(data[, -1])\n",
                                 "    ssqres <- solDF - obsDF\n\n",
                                 "    # return predicted vs experimental residual\n",
-                                "    return(ssqres)\n}\n\n",
-                                "# Provide data, dataset and time sequence\n\n",
-                                "# parameter fitting using levenberg marquart",
-                                " algorithm. Provide parms as initial guess\n",
+                                "    return(ssqres)\n}\n# ********************************\n\n\n",
+                                "# Provide data, dataset and time sequence\n"])
+
+        if items:
+            r_script_cal = "".join([r_script_cal, "parms <- c(" +
+                                    ", ".join(items) + ")\n"])
+        if series:
+            r_script_cal = "".join([r_script_cal, "".join(series) + "\n"])
+
+        r_script_cal = "".join([r_script_cal,
+                                "#varList <- c(<include the names of all variables with calibration data>)\n\n",
+                                "# load translated model function\n",
+                                "source (file_path)\n\n",
+                                "# Fit model to calibration data using levenberg marquart\n",
+                                "# algorithm. Please, provide <parms> as initial guess\n",
                                 "fittedModel <- nls.lm(par=parms, fn=ssq, y0 = Y, ",
-                                "t = time, data = datos, varList = varList)\n",
-                                "summary(fittedModel)\n",
-                                "fittedVals <- ode(func = model, y = Y, ",
-                                "times = time, parms = fittedModel$par, ",
-                                "method = 'rk4')\n\n"])
+                                "t = time, data = datos, varList = varList)\n\n\n",
+                                "# Calibration results\n"
+                                "parameters <- fittedModel$par  # store calibrated parameters\n"
+                                "summary(fittedModel)\n\n",
+                                "# Fitted values and plotting\n"
+                                "fittedVals <- ode(func = model, y = Y, times = time, parms = fittedModel$par, ",
+                                "method = 'rk4')\n\n",
+                                "# Organizing fitted data in a data.frame\n"
+                                "fitted.data.df <- data.frame(fittedVals)\n\n",
+                                "# Plotting fitted & calibration data together\n"
+                                "plot(fitted.data.df[, 1], fitted.data.df[, 2], type = 'l', col = 'blue', lwd=2)\n",
+                                "points('<data to compare to fit>')  # Series to provide x, y data\n\n"])
 
         return r_script_slv, r_script_cal
 
@@ -463,6 +480,8 @@ def xmile_parser(model_file):
                     (ws? "<label>" nl ws label nl ws "</label>")?
                     (ws? "<inflow>"  nl ws inflow  nl ws "</inflow>" nl)?
                     (ws? "<outflow>" nl ws outflow nl ws "</outflow>" nl)?
+                    (ws? "<scale " skip nl)?
+                    (ws? "</scale>" nl)?
                     (ws? "<non_negative>" nl ws "</non_negative>")?
                     (ws? "<units>" nl ws units nl ws "</units>" nl)?
                     (ws? "<display" skip nl)?
@@ -491,6 +510,8 @@ def xmile_parser(model_file):
         line = ("<flow" (ws flow_disp_name)? ws
                         "name=" qtm flow_name qtm ">")? nl?
                    (ws? "<eqn>" nl)? (ws eqn nl)? (skip nl)?
+                   (ws? "<scale " skip nl)?
+                   (ws? "</scale>" nl)?
                    (ws? "<non_negative>" nl? ws? "</non_negative>")?
                    (ws? "<units>" nl ws units nl ws "</units>" nl)?
                    (ws? "<display" skip nl)?
@@ -517,11 +538,14 @@ def xmile_parser(model_file):
     aux_grammar = r"""
         entry =  line+
         line = ("<aux" ws (aux_disp_name ws)? "name=" qtm aux_name qtm ">" nl)?
-                   (ws? "<eqn>" nl ws eqn_str nl ws "</eqn>" nl)?
+                   (ws? "<eqn>" nl ws? eqn_str nl ws "</eqn>" nl)?
                    (ws? "<units>" nl ws units nl ws "</units>" nl)?
                    (ws? "<display" skip nl)?
                    (ws? "<format" skip nl)?
                    (ws? "</format>" nl)?
+                   (ws? "<scale " skip nl)?
+                   (ws? "</scale>" nl)?
+                   (ws? "<doc>" skip nl skip? nl? ws? "</doc>" nl)?
                    (ws? "<thous_separator" skip nl)?
                    (ws? "true" nl)?
                    (ws? "</thous_separator>" nl)?
@@ -539,15 +563,16 @@ def xmile_parser(model_file):
         min = ~"[0-9.]*"
         max = ~"[0-9.]*"
         aux_name = ~"[A-Za-z0-9$_ ]*"
-        eqn_str = ~"[A-z0-9.*/\(\)]*"
+        eqn_str = ~"[ A-z0-9.,+\-\^*/\(\)]*"
         ypts = ~"[0-9.,-]*"
         units = ~"[A-z/ ]*"
         str = ~"[A-z0-9\"_]*"
         qtm = '"'
-        skip = ~"."*
+        skip = ~".*"
         ws = ~"\s"*
         nl = ~"\n"
         """
+
 
     # Visitor classes
     class StockParser(NodeVisitor):
@@ -641,8 +666,7 @@ def xmile_parser(model_file):
                 flw_parse["units"] = ""
             name = flw_parse["flow_name"].replace(" ", "_")
             name = name.replace("á", "a").replace("é", "e").replace("í",
-                                                                    "i").replace("ó", "o").replace("ú", "u").replace(
-                "ñ", "n")
+                   "i").replace("ó", "o").replace("ú", "u").replace("ñ", "n")
             flw_parse["flow_name"] = name
             flows[name] = flw_parse
 

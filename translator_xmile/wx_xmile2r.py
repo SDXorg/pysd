@@ -33,7 +33,7 @@ class Xmile2RFrame(wx.Frame):
         self.abspath = os.path.abspath(__file__)
         self.dname = os.path.dirname(self.abspath)
         os.chdir(self.dname)
-        self.modelo = "<modelo Stella>"
+        self.modelo = "<Da enter para elegir el modelo Stella>"
         self.text_ctrl_modelo.SetLabelText(self.modelo)
 
         self.Bind(wx.EVT_TEXT_ENTER, self.al_cambiar_texto, self.text_ctrl_modelo)
@@ -45,7 +45,7 @@ class Xmile2RFrame(wx.Frame):
         # begin wxGlade: Xmile2RFrame.__set_properties
         self.SetTitle(_("XMILE -> R"))
         _icon = wx.NullIcon
-        _icon.CopyFromBitmap(wx.Bitmap("C:\\Users\\Miguel\\Pictures\\cropped-pymes1.jpg", wx.BITMAP_TYPE_ANY))
+        _icon.CopyFromBitmap(wx.Bitmap("Butterfly.ico", wx.BITMAP_TYPE_ANY))
         self.SetIcon(_icon)
         # end wxGlade
 
