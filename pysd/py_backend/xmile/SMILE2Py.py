@@ -166,8 +166,10 @@ class SMILEParser(NodeVisitor):
                 If context is set to definition, lone identifiers will be cleaned and returned.
         """
         
-        # !TODO! Should remove the inline comments from `text` before parsing the grammar
+        # Remove the inline comments from `text` before parsing the grammar
         # http://docs.oasis-open.org/xmile/xmile/v1.0/csprd01/xmile-v1.0-csprd01.html#_Toc398039973
+        text = re.sub(r"\{[^}]*\}", "", text)
+        
         self.ast = self.grammar.parse(text)
         self.context = context
         self.element = element
