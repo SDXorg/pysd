@@ -65,18 +65,7 @@ functions = {
     "pulse": "functions.pulse_magnitude",
     "step": "functions.step",
     "ramp": "functions.ramp",
-    
-    # ===
-    # 3.5.5 Time Functions
-    # http://docs.oasis-open.org/xmile/xmile/v1.0/csprd01/xmile-v1.0-csprd01.html#_Toc398039984
-    # ===
-    # Should we include as function list or it provided by another way?
-    
-    # "dt" !TODO!
-    # "starttime" !TODO!
-    # "stoptime" !TODO!
-    # "time" !TODO!
-    
+       
     # ===
     # 3.5.6 Miscellaneous Functions
     # http://docs.oasis-open.org/xmile/xmile/v1.0/csprd01/xmile-v1.0-csprd01.html#_Toc398039985
@@ -150,7 +139,14 @@ class SMILEParser(NodeVisitor):
         self.extended_model_namespace = {
             key.replace(' ', '_'): value for key, value in self.model_namespace.items()}
         self.extended_model_namespace.update(self.model_namespace)
+        
+        # ===
+        # 3.5.5 Time Functions
+        # http://docs.oasis-open.org/xmile/xmile/v1.0/csprd01/xmile-v1.0-csprd01.html#_Toc398039984
+        # ===
         self.extended_model_namespace.update({'dt': 'time_step'})
+        self.extended_model_namespace.update({'starttime': 'initial_time'})
+        self.extended_model_namespace.update({'endtime': 'final_time'})
 
         grammar = pkg_resources.resource_string("pysd", "py_backend/xmile/smile.grammar")
         grammar = grammar.decode('ascii').format(
