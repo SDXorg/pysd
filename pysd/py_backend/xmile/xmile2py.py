@@ -3,7 +3,7 @@ Deals with accessing the components of the xmile file, and
 formatting them for the builder
 
 James Houghton <james.p.houghton@gmail.com>
-Alexey Prey Mulyukin
+Alexey Prey Mulyukin <alexprey@yandex.ru> from sdCloud.io development team.
 
 """
 from __future__ import absolute_import
@@ -162,7 +162,17 @@ def translate_xmile(xmile_file):
         'arguments': '',
     })
 
-    # Todo: Saveper
+    model_elements.append({
+        'kind': 'constant',
+        'real_name': 'SAVE PER',
+        'unit': time_units,
+        'doc': 'The time step for the simulation results.',
+        'eqn': dt,
+        'py_name': 'saveper',
+        'subs': None,
+        'py_expr': py_dt,
+        'arguments': ''
+    })
 
     outfile_name = xmile_file.replace('.xmile', '.py')
 

@@ -3,7 +3,7 @@ Created August 14 2014
 James Houghton <james.p.houghton@gmail.com>
 
 Changed May 03 2017
-Alexey Prey Mulyukin <alexprey@yandex.ru>
+Alexey Prey Mulyukin <alexprey@yandex.ru> from sdCloud.io developement team
     Changes:
     
     [May 03 2017] Alexey Prey Mulyukin: Integrate support to
