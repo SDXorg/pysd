@@ -94,14 +94,14 @@ def translate_xmile(xmile_file):
 
         py_inflows = []
         for inputFlow in inflows:
-            tranlation, new_structure = smile_parser.parse(inputFlow, element)
-            py_inflows.append(tranlation['py_expr'])
+            translation, new_structure = smile_parser.parse(inputFlow, element)
+            py_inflows.append(translation['py_expr'])
             model_elements += new_structure
         
         py_outflows = []
         for outputFlow in outflows:
-            tranlation, new_structure = smile_parser.parse(outputFlow, element)
-            py_outflows.append(tranlation['py_expr'])
+            translation, new_structure = smile_parser.parse(outputFlow, element)
+            py_outflows.append(translation['py_expr'])
             model_elements += new_structure
         
         py_ddt = ' + '.join(py_inflows) if py_inflows else ''
@@ -109,7 +109,7 @@ def translate_xmile(xmile_file):
 
         initial_value = get_xpath_text(node, 'ns:eqn')
         translation, new_structure = smile_parser.parse(initial_value, element)
-        py_initial_value = tranlation['py_expr']
+        py_initial_value = translation['py_expr']
         model_elements += new_structure
 
         py_expr, new_structure = builder.add_stock(identifier=py_name,
