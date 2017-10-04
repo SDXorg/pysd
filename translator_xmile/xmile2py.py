@@ -200,6 +200,32 @@ class XmileModel:
         self.stocks = stocks
         self.auxs = auxs
 
+
+    def build_R_script(self):
+        """Prepares an scrip for R use with **deSolve** library.
+        """
+        import textwrap as tw
+
+        # Translate equation
+        def tranlate_eqn(eqn):
+            egn_grammar = """
+                entry = item (op item)?
+                  op = ~"[/\+\* \n]"*
+            """
+
+            class eqnParser(NodeVisitor):
+                def __init__(self, grammar, text):
+                    self.entry = {}
+                    ast = Grammar(grammar).parse(text)
+                    self.visit(ast)
+
+                def visit_flow_name(self, n, vc):
+                    self.entry['flow_name'] = n.text
+
+                def generic_visit(self, n, vc):
+                    pass
+
+        # Translate Stella function names into R version
         def FunctionTranslator(x):
             return {
                 'EXP': x.lower(),
@@ -222,9 +248,6 @@ class XmileModel:
                 'DT': 'DT'
             }[x]
 
-    def build_R_script(self):
-        """Prepares an scrip for R use with **deSolve** library.
-        """
         # Initialization section
         r_script_slv = "".join(["# Prepare libraries needed\n"
                                 "if (require(deSolve) == F) \n{\n",
@@ -252,14 +275,13 @@ class XmileModel:
 
         stk_names = [s.name for s in self.stocks]
         stk_names.sort()
-        lines = "".join(["    {0} <- Y['{0}']\n".format(stk)
-                         for stk in stk_names])
+        lines = "".join(["    {0} <- Y['{0}']\n".format(stk) for stk in stk_names])
         r_script_slv = "".join([r_script_slv, lines, "\n    # Model parameters"])
 
-        convertors = [a.name for a in self.auxs]
-        convertors.sort()
+        converters = [a.name for a in self.auxs]
+        converters.sort()
         lines = "".join(["    {0} <- parameters['{0}']\n".format(aux)
-                         for aux in convertors])
+                         for aux in converters])
         r_script_slv = "".join([r_script_slv, "\n", lines, "\n"])
 
         # Recover flow information and prepare suitable R commands
@@ -297,13 +319,13 @@ class XmileModel:
         series, items = [], []
         for ax in self.auxs:
             if ax.type == "value":
-                items.append("".join(["{0} = {1}".format(ax.name,
-                                                         str(ax.value))]))
+                items.append("".join(["{0} = {1}".format(ax.name, str(ax.value))]))
             if ax.type == "series":
+                data_series = ", ".join(["c(" + str(x) + ", " + str(y) + ")" for (x, y) in ax.series])
+                if len(data_series) > 70:
+                    data_series = "\n".join(tw.wrap(data_series, 80))
                 series.append("".join(series) + ax.name +
-                              " <- data.frame(matrix(c(" +
-                              ", ".join(["c(" + str(x) + ", " + str(y) + ")"
-                                         for (x, y) in ax.series]) +
+                              " <- data.frame(matrix(c(" + data_series +
                               "), ncol = 2, byrow = T))\n" +
                               "names(" + ax.name + ") <- c(" + "'" +
                               ax.eqn.lower() + "'" + ", '" + ax.name + "')\n")
@@ -569,7 +591,7 @@ def xmile_parser(model_file):
         str = ~"[A-z0-9\"_]*"
         qtm = '"'
         skip = ~".*"
-        ws = ~"\s"*
+        ws = ~"\s*"
         nl = ~"\n"
         """
 
