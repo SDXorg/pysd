@@ -105,16 +105,16 @@ infix_operators = {
 # ====
 
 builders = {
-    # !TODO! Should correct handle the last args, because it's optionally
+    # !TODO! Should correct handle the last args, should take the initial value of element instead the 0 if this parameter is missing
     # "delay" !TODO! How to add the infinity delay?
-    "delay1": lambda element, subscript_dict, args: builder.add_n_delay(args[0], args[1], args[2], "1", element['subs'], subscript_dict),
-    "delay3": lambda element, subscript_dict, args: builder.add_n_delay(args[0], args[1], args[2], "3", element['subs'], subscript_dict),
-    "delayn": lambda element, subscript_dict, args: builder.add_n_delay(args[0], args[1], args[3], args[2], element['subs'], subscript_dict),
+    "delay1": lambda element, subscript_dict, args: builder.add_n_delay(args[0], args[1], args[2] if len(args) > 2 else 0, "1", element['subs'], subscript_dict),
+    "delay3": lambda element, subscript_dict, args: builder.add_n_delay(args[0], args[1], args[2] if len(args) > 2 else 0, "3", element['subs'], subscript_dict),
+    "delayn": lambda element, subscript_dict, args: builder.add_n_delay(args[0], args[1], args[2] if len(args) > 3 else 0, args[2], element['subs'], subscript_dict),
     
     # !TODO! Should correct handle the last args, because it's optionally
-    "smth1": lambda element, subscript_dict, args: builder.add_n_smooth(args[0], args[1], args[2], "1", element['subs'], subscript_dict),
-    "smth3": lambda element, subscript_dict, args: builder.add_n_smooth(args[0], args[1], args[2], "3", element['subs'], subscript_dict),
-    "smthn": lambda element, subscript_dict, args: builder.add_n_smooth(args[0], args[1], args[3], args[2], element['subs'], subscript_dict),
+    "smth1": lambda element, subscript_dict, args: builder.add_n_smooth(args[0], args[1], args[2] if len(args) > 2 else 0, "1", element['subs'], subscript_dict),
+    "smth3": lambda element, subscript_dict, args: builder.add_n_smooth(args[0], args[1], args[2] if len(args) > 2 else 0, "3", element['subs'], subscript_dict),
+    "smthn": lambda element, subscript_dict, args: builder.add_n_smooth(args[0], args[1], args[2] if len(args) > 3 else 0, args[2], element['subs'], subscript_dict),
     
     # "forcst" !TODO!
     # "trend" !TODO!
