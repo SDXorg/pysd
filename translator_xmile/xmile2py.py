@@ -324,7 +324,7 @@ class XmileModel:
                 data_series = ", ".join(["c(" + str(x) + ", " + str(y) + ")" for (x, y) in ax.series])
                 if len(data_series) > 70:
                     data_series = "\n".join(tw.wrap(data_series, 80))
-                series.append("".join(series) + ax.name +
+                series.append(ax.name +
                               " <- data.frame(matrix(c(" + data_series +
                               "), ncol = 2, byrow = T))\n" +
                               "names(" + ax.name + ") <- c(" + "'" +
@@ -512,15 +512,15 @@ def xmile_parser(model_file):
                     (ws? "</display>" nl)?
                ("</stock>" nl)?
         stock = "stock"
-        stock_name = ~"[A-Za-z0-9$_ ]*"
+        stock_name = ~"[A-Za-z0-9$_ áéíóúñ]*"
         stock_disp_name = "isee:display_name=" qtm str qtm
         qtm = '"'
         val_ini = ~"[0-9.]*"
-        inflow = ~"[A-Za-z0-9$_ ]*"
+        inflow = ~"[A-Za-z0-9$_ áéíóúñ]*"
         val = ~"[0-9.]*"
         units = ~"[A-z]*"
         label = ~"[A-z_ ]*"
-        outflow = ~"[A-Za-z0-9$_ ]*"
+        outflow = ~"[A-Za-z0-9$_ áéíóúñ]*"
         str = ~"[A-z0-9_]*"
         skip = ~"."*
         ws = ~"\s"*
@@ -546,8 +546,8 @@ def xmile_parser(model_file):
                    (ws? "</display>" ws? nl)?
                ("</flow>" nl)?
         flow_disp_name = "isee:display_name=" qtm str qtm
-        flow_name = ~"[A-Za-z0-9$_ ]*"
-        eqn = ~"[A-z0-9.*/\(\)_\-\+ ]*"
+        flow_name = ~"[A-Za-z0-9$_ áéíóúñ]*"
+        eqn = ~"[A-z0-9.*/\(\)_\-\+ áéíóúñ]*"
         val = ~"[0-9.]*"
         units = ~"[A-z/]*"
         str = ~"[A-z0-9_]*"
@@ -572,20 +572,22 @@ def xmile_parser(model_file):
                    (ws? "true" nl)?
                    (ws? "</thous_separator>" nl)?
                    (ws? "<gf>" nl)?
+                   (ws? "<gf discrete=" qtm ("false" / "true") qtm ">" nl)? 
                        (ws "<xscale max=" qtm max qtm ws
                                    "min=" qtm min qtm ">" nl)?
                        (ws? "</xscale>" nl)?
                        (ws? "<yscale max=" str ws "min=" str ">" nl
                         ws? "</yscale>" nl)?
                        (ws? "<ypts>" nl ws ypts nl ws "</ypts>" nl)?
+                       (ws? "<xpts>" nl ws skip nl ws "</xpts>" nl)?                       
                    (ws? "</gf>" nl)?
                    (ws? "</display>" skip? nl)?
                (ws? "</aux>" skip? nl)?
         aux_disp_name = "isee:display_name=" str
         min = ~"[0-9.]*"
         max = ~"[0-9.]*"
-        aux_name = ~"[A-Za-z0-9$_ ]*"
-        eqn_str = ~"[ A-z0-9.,+\-\^*/\(\)]*"
+        aux_name = ~"[A-Za-z0-9$_ áéíóúñ]*"
+        eqn_str = ~"[ A-z0-9.,+\-\^*/\(\)áéíóúñ]*"
         ypts = ~"[0-9.,-]*"
         units = ~"[A-z/ ]*"
         str = ~"[A-z0-9\"_]*"
@@ -698,15 +700,21 @@ def xmile_parser(model_file):
         if "eqn" in stk.prettify():
             stock_parse = StockParser(stock_grammar, stk.prettify()).entry
             name = stock_parse["stock_name"].replace(" ", "_")
+            name = name.replace("á", "a").replace("é", "e").replace("í",
+                   "i").replace("ó", "o").replace("ú", "u").replace("ñ", "n")
             stock_parse["stock_name"] = name
             if "units" not in stock_parse:
                 stock_parse["units"] = ""
             if stk.inflow:
-                stock_parse["inflow"] = [flows[f.text] for f in
-                                         stk.find_all("inflow")]
+                all_flows = [item.text.replace("á","a").replace("é", "e").replace("í",
+                                          "i").replace("ó", "o").replace("ú", "u").replace("ñ", "n")
+                             for item in stk.find_all("inflow")]
+                stock_parse["inflow"] = [flows[f] for f in all_flows]
             if stk.outflow:
-                stock_parse["outflow"] = [flows[f.text] for f in
-                                          stk.find_all("outflow")]
+                all_flows = [item.text.replace("á","a").replace("é", "e").replace("í",
+                                          "i").replace("ó", "o").replace("ú", "u").replace("ñ", "n")
+                             for item in stk.find_all("outflow")]
+                stock_parse["outflow"] = [flows[f] for f in all_flows]
             stocks_cls.append(XmileStock(stock_parse))
 
     # Get aux variables
