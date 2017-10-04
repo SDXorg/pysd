@@ -71,7 +71,6 @@ functions = {
     # http://docs.oasis-open.org/xmile/xmile/v1.0/csprd01/xmile-v1.0-csprd01.html#_Toc398039985
     # ===
     "if_then_else": "functions.if_then_else",
-    # "init" !TODO!
     # "previous" !TODO!
     # "self" !TODO!
 }
@@ -118,6 +117,8 @@ builders = {
     
     # "forcst" !TODO!
     # "trend" !TODO!
+    
+    "init": lambda element, subscript_dict, args: builder.add_initial(args[0]),
 }
 
 
