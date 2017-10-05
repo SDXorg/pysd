@@ -413,6 +413,50 @@ def add_n_smooth(smooth_input, smooth_time, initial_value, order, subs, subscrip
     return "%s()" % stateful['py_name'], [stateful]
 
 
+def add_n_trend(trend_input, average_time, initial_trend, subs, subscript_dict):
+    """Trend.
+
+        Parameters
+        ----------
+        trend_input: <string>
+
+        average_time: <string>
+
+
+        trend_initial: <string>
+
+        subs: list of strings
+            List of strings of subscript indices that correspond to the
+            list of expressions, and collectively define the shape of the output
+            See `builder.add_flaux` for more info
+
+        Returns
+        -------
+        reference: basestring
+            reference to the trend object `__call__` method, which will return the output
+            of the trend process
+
+        new_structure: list
+            list of element construction dictionaries for the builder to assemble
+        """
+
+    stateful = {
+        'py_name': utils.make_python_identifier('smooth_%s_%s_%s' % (trend_input,
+                                                                        average_time,
+                                                                        initial_trend))[0],
+        'real_name': 'Smooth of %s' % trend_input,
+        'doc': 'Trend average time: %s \n Trend initial value %s' % (
+            average_time, initial_trend),
+        'py_expr': 'functions.Trend(lambda: %s, lambda: %s, lambda: %s)' % (
+            trend_input, average_time, initial_trend),
+        'unit': 'None',
+        'subs': '',
+        'kind': 'stateful',
+        'arguments': ''
+    }
+
+    return "%s()" % stateful['py_name'], [stateful]
+
 def add_initial(initial_input):
     """
     Constructs a stateful object for handling vensim's 'Initial' functionality

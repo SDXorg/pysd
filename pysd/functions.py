@@ -221,6 +221,23 @@ class Smooth(Stateful):
         targets[0] = self.input_func()
         return (targets - self.state) * self.order / self.smooth_time_func()
 
+class Trend(Stateful):
+    def __init__(self, trend_input, average_time, initial_trend):
+        super(Trend, self).__init__()
+        self.init_func = initial_trend
+        self.average_time_function = average_time
+        self.input_func = trend_input
+
+    def initialize(self):
+        self.state = self.input_func()/(1+self.init_func()*self.average_time_function())
+
+    def __call__(self):
+        return zidz(self.input_func()-self.state,self.average_time_function()*abs(self.state))
+
+
+    def ddt(self):
+        return (self.input_func() - self.state)/self.average_time_function()
+
 
 class Initial(Stateful):
     def __init__(self, func):
@@ -335,11 +352,11 @@ class Macro(Stateful):
             # we don't call the overridden method when Macro is subclassed as Model
 
     def ddt(self):
-        return np.array([component.ddt() for component in self._stateful_elements])
+        return np.array([component.ddt() for component in self._stateful_elements], dtype=object)
 
     @property
     def state(self):
-        return np.array([component.state for component in self._stateful_elements])
+        return np.array([component.state for component in self._stateful_elements], dtype=object)
 
     @state.setter
     def state(self, new_value):
