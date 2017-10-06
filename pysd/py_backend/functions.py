@@ -19,6 +19,7 @@ import warnings
 import random
 import xarray as xr
 from funcsigs import signature
+import os
 
 try:
     import scipy.stats as stats
@@ -267,7 +268,7 @@ class Macro(Stateful):
         self.time = None
 
         # need a unique identifier for the imported module.
-        module_name = py_model_file + str(random.randint(0, 1000000))
+        module_name = os.path.splitext(py_model_file)[0] + str(random.randint(0, 1000000))
         self.components = imp.load_source(module_name,
                                           py_model_file)
 
