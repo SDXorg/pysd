@@ -18,6 +18,7 @@ from parsimonious.nodes import NodeVisitor
 from bs4 import BeautifulSoup as bs
 import sys
 import os
+import re
 
 
 def main():
@@ -130,6 +131,7 @@ class XmileAux:
 
     def __init__(self, aux_dict):
         self.name = aux_dict["aux_name"]
+        self.parameter = False
         if "ypts" in aux_dict:
             self.eqn = aux_dict["eqn_str"]
             self.type = "series"
@@ -162,7 +164,7 @@ class XmileAux:
 
 
 class XmileModel:
-    """Class that stores full model deffinition
+    """Class that stores full model definition
        as translated from an original stella or *xmile* compliant
        model specification
 
@@ -285,22 +287,20 @@ class XmileModel:
         r_script_slv = "".join([r_script_slv, "\n", lines, "\n"])
 
         # Recover flow information and prepare suitable R commands
-        flw_names = set()
+        params_set, flw_names = set(),set()
         for stk in self.stocks:
             if hasattr(stk, "inflow"):
-                flw_names = flw_names.union(
-                    {"\n    " + f["flow_name"] + " <- " + f["eqn"]
-                     for f in stk.inflow})
+                flw_names = flw_names.union({"\n    " + f["flow_name"] + " <- " + f["eqn"] for f in stk.inflow})
+                params_set = params_set.union({i for f in stk.inflow for i in re.split(r"[*/+-]", f["eqn"])})
             if hasattr(stk, "outflow"):
-                flw_names = flw_names.union(
-                    {"\n    " + f["flow_name"] + " <- " + f["eqn"]
-                     for f in stk.outflow})
+                flw_names = flw_names.union({"\n    " + f["flow_name"] + " <- " + f["eqn"] for f in stk.outflow})
+                params_set = params_set.union({i for f in stk.inflow for i in re.split(r"[*/+-]", f["eqn"])})
 
         lines = "".join(flw_names)
         r_script_slv = "".join([r_script_slv, "    # flow equations", lines, "\n\n",
                                 "    # Differential equations"])
 
-        # diferential equation specification
+        # differential equation specification
         lines, d_func = "", []
         for deqn in self.stocks:
             lines = "".join([lines,
