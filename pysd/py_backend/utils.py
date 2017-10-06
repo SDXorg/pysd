@@ -1,5 +1,6 @@
-import re
 import keyword
+import re
+
 import numpy as np
 import pandas as pd
 import xarray as xr

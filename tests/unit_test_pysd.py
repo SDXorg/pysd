@@ -91,7 +91,6 @@ class TestPySD(unittest.TestCase):
         self.assertFalse((result0 == result1).all().all())
         self.assertTrue((result1 == result2).all().all())
 
-
     def test_run_return_columns_pysafe_names(self):
         """Addresses https://github.com/JamesPHoughton/pysd/issues/26"""
         import pysd
@@ -193,8 +192,19 @@ class TestPySD(unittest.TestCase):
 
         doc = model.doc()
         self.assertIsInstance(doc, pd.DataFrame)
-        self.assertIn('Teacup Temperature', doc['Real Name'].values)
-        self.assertIn('teacup_temperature', doc['Py Name'].values)
+        self.assertSetEqual({'Characteristic Time', 'Teacup Temperature',
+                             'FINAL TIME', 'Heat Loss to Room', 'INITIAL TIME',
+                             'Room Temperature', 'SAVEPER', 'TIME STEP'},
+                            set(doc['Real Name'].values))
+
+        self.assertEqual(doc[doc['Real Name'] == 'Heat Loss to Room']['Unit'].values[0],
+                         'Degrees Fahrenheit/Minute')
+        self.assertEqual(doc[doc['Real Name'] == 'Teacup Temperature']['Py Name'].values[0],
+                         'teacup_temperature')
+        self.assertEqual(doc[doc['Real Name'] == 'INITIAL TIME']['Comment'].values[0],
+                         'The initial time for the simulation.')
+        self.assertEqual(doc[doc['Real Name'] == 'Characteristic Time']['Type'].values[0],
+                         'constant')
 
     def test_cache(self):
         # Todo: test stepwise and runwise caching
@@ -357,9 +367,6 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(len(w), 1)
 
 
-
-
-
 class TestModelInteraction(unittest.TestCase):
     """ The tests in this class test pysd's interaction with itself
         and other modules. """
@@ -423,11 +430,10 @@ class TestModelInteraction(unittest.TestCase):
         self.assertEqual(new, 345)
         self.assertNotEqual(old, new)
 
-
 class TestMultiRun(unittest.TestCase):
     def test_delay_reinitializes(self):
         import pysd
         model = pysd.read_vensim('../tests/test-models/tests/delays/test_delays.mdl')
         res1 = model.run()
         res2 = model.run()
-        self.assertTrue(all(res1==res2))
+        self.assertTrue(all(res1 == res2))

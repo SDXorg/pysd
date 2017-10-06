@@ -9,13 +9,14 @@ There should be nothing in this file that has to know about either vensim or
 xmile specific syntax.
 """
 
+from __future__ import absolute_import
 import textwrap
 import yapf
-from ._version import __version__
-from . import utils
+from .._version import __version__
+from ..py_backend import utils
 import os
 import warnings
-
+import pkg_resources
 
 def build(elements, subscript_dict, namespace, outfile_name):
     """
@@ -57,8 +58,8 @@ def build(elements, subscript_dict, namespace, outfile_name):
     from pysd import utils
     import xarray as xr
 
-    from pysd.functions import cache
-    from pysd import functions
+    from pysd.py_backend.functions import cache
+    from pysd.py_backend import functions
 
     _subscript_dict = %(subscript_dict)s
 
@@ -68,6 +69,8 @@ def build(elements, subscript_dict, namespace, outfile_name):
 
     ''' % {'subscript_dict': repr(subscript_dict),
            'functions': '\n'.join(functions),
+           #'namespace': '{\n' + '\n'.join(['%s: %s' % (key, namespace[key]) for key in
+           #                                namespace.keys()]) + '\n}',
            'namespace': repr(namespace),
            'outfile': outfile_name,
            'version': __version__}
@@ -144,6 +147,8 @@ def build_element(element, subscript_dict):
         %(real_name)s
 
         %(unit)s
+        
+        %(kind)s
 
         %(doc)s
         """
@@ -199,7 +204,7 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
     Parameters
     ----------
     identifier: basestring
-        the name of the stock
+        the python-safe name of the stock
 
     subs: list
         a list of subscript elements
