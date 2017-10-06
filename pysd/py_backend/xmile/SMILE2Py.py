@@ -104,16 +104,61 @@ infix_operators = {
 # ====
 
 builders = {
-    # !TODO! Should correct handle the last args, should take the initial value of element instead the 0 if this parameter is missing
     # "delay" !TODO! How to add the infinity delay?
-    "delay1": lambda element, subscript_dict, args: builder.add_n_delay(args[0], args[1], args[2] if len(args) > 2 else 0, "1", element['subs'], subscript_dict),
-    "delay3": lambda element, subscript_dict, args: builder.add_n_delay(args[0], args[1], args[2] if len(args) > 2 else 0, "3", element['subs'], subscript_dict),
-    "delayn": lambda element, subscript_dict, args: builder.add_n_delay(args[0], args[1], args[2] if len(args) > 3 else 0, args[2], element['subs'], subscript_dict),
     
-    # !TODO! Should correct handle the last args, because it's optionally
-    "smth1": lambda element, subscript_dict, args: builder.add_n_smooth(args[0], args[1], args[2] if len(args) > 2 else 0, "1", element['subs'], subscript_dict),
-    "smth3": lambda element, subscript_dict, args: builder.add_n_smooth(args[0], args[1], args[2] if len(args) > 2 else 0, "3", element['subs'], subscript_dict),
-    "smthn": lambda element, subscript_dict, args: builder.add_n_smooth(args[0], args[1], args[2] if len(args) > 3 else 0, args[2], element['subs'], subscript_dict),
+    "delay1": lambda element, subscript_dict, args: builder.add_n_delay(
+            delay_input = args[0], 
+            delay_time = args[1], 
+            initial_value = args[2] if len(args) > 2 else args[0], 
+            order = "1", 
+            subs = element['subs'], 
+            subscript_dict = subscript_dict
+        ),
+        
+    "delay3": lambda element, subscript_dict, args: builder.add_n_delay(
+            delay_input = args[0], 
+            delay_time = args[1], 
+            initial_value = args[2] if len(args) > 2 else args[0], 
+            order = "3", 
+            subs = element['subs'], 
+            subscript_dict = subscript_dict
+        ),
+    
+    "delayn": lambda element, subscript_dict, args: builder.add_n_delay(
+            delay_input = args[0], 
+            delay_time = args[1], 
+            input_value = args[2] if len(args) > 3 else args[0], 
+            order = args[2], 
+            subs = element['subs'], 
+            subscript_dict = subscript_dict
+        ),
+    
+    "smth1": lambda element, subscript_dict, args: builder.add_n_smooth(
+            smooth_input = args[0], 
+            smooth_time = args[1], 
+            initial_value = args[2] if len(args) > 2 else args[0], 
+            order = "1", 
+            subs = element['subs'], 
+            subscript_dict = subscript_dict
+        ),
+    
+    "smth3": lambda element, subscript_dict, args: builder.add_n_smooth(
+            smooth_input = args[0], 
+            smooth_time = args[1], 
+            initial_value = args[2] if len(args) > 2 else args[0], 
+            order = "3", 
+            subs = element['subs'], 
+            subscript_dict = subscript_dict
+        ),
+    
+    "smthn": lambda element, subscript_dict, args: builder.add_n_smooth(
+            smooth_input = args[0], 
+            smooth_time = args[1], 
+            initial_value = args[2] if len(args) > 3 else args[0], 
+            order = args[2], 
+            subs = element['subs'], 
+            subscript_dict = subscript_dict
+        ),
     
     # "forcst" !TODO!
     # "trend" !TODO!
