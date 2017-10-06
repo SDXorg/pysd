@@ -23,22 +23,26 @@ def translate_xmile(xmile_file):
     root = etree.parse(xmile_file, parser=xml_parser).getroot()
     NS = root.nsmap[None]  # namespace of the xmile document
 
-    def get_xpath_text(element, path, ns={'ns': NS}, default=''):
+    def get_xpath_text(node, path, ns={'ns': NS}, default=''):
         """ Safe access of occassionally missing elements """
         # defined here to take advantage of NS in default
         try:
-            return element.xpath(path, namespaces=ns)[0].text
+            return node.xpath(path, namespaces=ns)[0].text
         except:
             return default
 
     # build model namespace
-    namespace = {'TIME': 'time', 'Time': 'time', 'time': 'time'}  # namespace of the python model
+    namespace = {
+        'TIME': 'time', 
+        'Time': 'time', 
+        'time': 'time'
+    }  # namespace of the python model
     names_xpath = '//ns:model/ns:variables/ns:aux|' \
                   '//ns:model/ns:variables/ns:flow|' \
                   '//ns:model/ns:variables/ns:stock'
 
-    for element in root.xpath(names_xpath, namespaces={'ns': NS}):
-        name = element.attrib['name']
+    for node in root.xpath(names_xpath, namespaces={'ns': NS}):
+        name = node.attrib['name']
         _, namespace = utils.make_python_identifier(name, namespace)
 
     model_elements = []
@@ -46,21 +50,23 @@ def translate_xmile(xmile_file):
     
     # add aux and flow elements
     flaux_xpath = '//ns:model/ns:variables/ns:aux|//ns:model/ns:variables/ns:flow'
-    for element in root.xpath(flaux_xpath, namespaces={'ns': NS}):
-        name = element.attrib['name']
-        units = get_xpath_text(element, 'ns:units')
-        doc = get_xpath_text(element, 'ns:doc')
+    for node in root.xpath(flaux_xpath, namespaces={'ns': NS}):
+        name = node.attrib['name']
+        units = get_xpath_text(node, 'ns:units')
+        doc = get_xpath_text(node, 'ns:doc')
         py_name = namespace[name]
-        eqn = get_xpath_text(element, 'ns:eqn')
+        eqn = get_xpath_text(node, 'ns:eqn')
         
-        element = {'kind': 'component',  # Not always the case - could be constant!
-                               'real_name': name,
-                               'unit': units,
-                               'doc': doc,
-                               'eqn': eqn,
-                               'py_name': py_name,
-                               'subs': [],  # Todo later
-                               'arguments': '',}
+        element = {
+            'kind': 'component',  # Not always the case - could be constant!
+            'real_name': name,
+            'unit': units,
+            'doc': doc,
+            'eqn': eqn,
+            'py_name': py_name,
+            'subs': [],  # Todo later
+            'arguments': '',
+        }
                 
         tranlation, new_structure = smile_parser.parse(eqn, element)
         element.update(tranlation)
@@ -75,29 +81,32 @@ def translate_xmile(xmile_file):
         doc = get_xpath_text(node, 'ns:doc')
         py_name = namespace[name]
         
-        inflows = [e.text for e in
-                   node.xpath('ns:inflow', namespaces={'ns': NS})]
-        outflows = [e.text for e in
-                    node.xpath('ns:outflow', namespaces={'ns': NS})]
+        # Extract input and output flows equations
+        inflows = [n.text for n in node.xpath('ns:inflow', namespaces={'ns': NS})]
+        outflows = [n.text for n in node.xpath('ns:outflow', namespaces={'ns': NS})]
         
-        eqn = ' + '.join(inflows)
-        eqn += ' - ' + ' - '.join(outflows) if outflows else ''
+        eqn = ' + '.join(inflows) if inflows else ''
+        eqn += (' - ' + ' - '.join(outflows)) if outflows else ''
         
-        element = {'kind': 'component',  # Not always the case - could be constant!
-                   'real_name': name,
-                   'unit': units,
-                   'doc': doc,
-                   'eqn': eqn,
-                   'py_name': py_name,
-                   'subs': [],  # Todo later
-                   'arguments': '' }
+        element = {
+            'kind': 'component',  # Not always the case - could be constant!
+            'real_name': name,
+            'unit': units,
+            'doc': doc,
+            'eqn': eqn,
+            'py_name': py_name,
+            'subs': [],  # Todo later
+            'arguments': '' 
+        }
 
+        # Parse each flow equations
         py_inflows = []
         for inputFlow in inflows:
             translation, new_structure = smile_parser.parse(inputFlow, element)
             py_inflows.append(translation['py_expr'])
             model_elements += new_structure
         
+        # Parse each flow equations
         py_outflows = []
         for outputFlow in outflows:
             translation, new_structure = smile_parser.parse(outputFlow, element)
@@ -105,10 +114,11 @@ def translate_xmile(xmile_file):
             model_elements += new_structure
         
         py_ddt = ' + '.join(py_inflows) if py_inflows else ''
-        py_ddt += ' - ' + ' - '.join(py_outflows) if py_outflows else ''
+        py_ddt += (' - ' + ' - '.join(py_outflows)) if py_outflows else ''
 
-        initial_value = get_xpath_text(node, 'ns:eqn')
-        translation, new_structure = smile_parser.parse(initial_value, element)
+        # Read the initial value equation for stock element
+        initial_value_eqn = get_xpath_text(node, 'ns:eqn')
+        translation, new_structure = smile_parser.parse(initial_value_eqn, element)
         py_initial_value = translation['py_expr']
         model_elements += new_structure
 
@@ -120,7 +130,6 @@ def translate_xmile(xmile_file):
                                                   )
         element['py_expr'] = py_expr
         model_elements.append(element)
-
         model_elements += new_structure
 
     # remove timestamp pieces so as not to double-count
@@ -131,6 +140,8 @@ def translate_xmile(xmile_file):
     model_elements = model_elements_parsed
 
     # Add timeseries information
+    
+    # Read the start time of simulation
     time_units = root.xpath('//ns:sim_specs', namespaces={'ns': NS})[0].attrib['time_units']
     tstart = root.xpath('//ns:sim_specs/ns:start', namespaces={'ns': NS})[0].text
     element = {
@@ -148,8 +159,8 @@ def translate_xmile(xmile_file):
     model_elements.append(element)
     model_elements += new_structure
 
+    # Read the final time of simulation
     tstop = root.xpath('//ns:sim_specs/ns:stop', namespaces={'ns': NS})[0].text
-    
     element = {
         'kind': 'constant',
         'real_name': 'FINAL TIME',
@@ -166,6 +177,7 @@ def translate_xmile(xmile_file):
     model_elements.append(element)
     model_elements += new_structure
 
+    # Read the time step of simulation
     dt = root.xpath('//ns:sim_specs/ns:dt', namespaces={'ns': NS})[0].text
     element = {
         'kind': 'constant',
@@ -182,6 +194,7 @@ def translate_xmile(xmile_file):
     model_elements.append(element)
     model_elements += new_structure
     
+    # Add the SAVEPER attribute to the model
     model_elements.append({
         'kind': 'constant',
         'real_name': 'SAVEPER',
