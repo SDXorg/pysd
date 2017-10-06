@@ -30,6 +30,13 @@ def translate_xmile(xmile_file):
             return node.xpath(path, namespaces=ns)[0].text
         except:
             return default
+            
+    def is_constant_expression(py_expr):
+        try:
+            val = float(py_expr)
+            return True
+        except ValueError:
+            return False
 
     # build model namespace
     namespace = {
@@ -58,7 +65,7 @@ def translate_xmile(xmile_file):
         eqn = get_xpath_text(node, 'ns:eqn')
         
         element = {
-            'kind': 'component',  # Not always the case - could be constant!
+            'kind': 'component',
             'real_name': name,
             'unit': units,
             'doc': doc,
@@ -70,6 +77,9 @@ def translate_xmile(xmile_file):
                 
         tranlation, new_structure = smile_parser.parse(eqn, element)
         element.update(tranlation)
+        if is_constant_expression(element['py_expr']):
+            element['kind'] = 'constant'
+        
         model_elements += new_structure
         model_elements.append(element)
 
@@ -89,7 +99,7 @@ def translate_xmile(xmile_file):
         eqn += (' - ' + ' - '.join(outflows)) if outflows else ''
         
         element = {
-            'kind': 'component',  # Not always the case - could be constant!
+            'kind': 'component' if inflows or outflows else 'constant',
             'real_name': name,
             'unit': units,
             'doc': doc,
