@@ -446,10 +446,10 @@ def add_n_trend(trend_input, average_time, initial_trend, subs, subscript_dict):
         """
 
     stateful = {
-        'py_name': utils.make_python_identifier('smooth_%s_%s_%s' % (trend_input,
+        'py_name': utils.make_python_identifier('trend_%s_%s_%s' % (trend_input,
                                                                         average_time,
                                                                         initial_trend))[0],
-        'real_name': 'Smooth of %s' % trend_input,
+        'real_name': 'trend of %s' % trend_input,
         'doc': 'Trend average time: %s \n Trend initial value %s' % (
             average_time, initial_trend),
         'py_expr': 'functions.Trend(lambda: %s, lambda: %s, lambda: %s)' % (
