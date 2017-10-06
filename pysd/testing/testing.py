@@ -426,10 +426,10 @@ def summarize(model, cases, tests):
     return synopsis
 
 
-def timestep_test(model, threshold=.99, errors='return'):
+def timestep_test(model, threshold=.001, errors='return'):
     """
     Assess that the current timestep is appropriate for the model.
-     
+
     This function runs the model once with its current timestep,
     and then again with the timestep at two random fractions of
     that value.
@@ -440,20 +440,30 @@ def timestep_test(model, threshold=.99, errors='return'):
     some oscillatory modes might be bisectable by the timestep and
     not yield a meaningful difference in simulation. This approach
     makes that type of occurrence very unlikely.
-    
-    
+
+
     Parameters
     ----------
     model
-    threshold
+    threshold: Maximum absolute fractional
     errors
 
     Returns
     -------
 
     """
-    pass
+    dt = model.components.time_step()
+    run1 = model.run({'TIME STEP': dt}, reload=True)
+    run2 = model.run({'TIME STEP': dt / 2}, reload=True)
 
+    error = (run1 - run2) / run1
+    max_errors = error.max().sort_values(ascending=False)
+    if max_errors.max() > threshold:
+        if errors == 'raise':
+            print(max_errors)
+            raise ValueError('Results are Sensitive to Timestep')
+        elif errors == 'return':
+            return max_errors[max_errors > threshold]
 
 def lookup_linter(model):
     """
