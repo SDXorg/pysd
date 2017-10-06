@@ -114,17 +114,14 @@ class Xmile2RFrame(wx.Frame):
             os.mkdir(outPath)
 
         # Extract relevant information to build model
-        model_attributes = xmile2py.xmile_parser(self.modelo)
-        model_translation = xmile2py.XmileModel(model_attributes["model_spec"],
-                                       model_attributes["stocks"],
-                                       model_attributes["auxs"])
+        model_translation = xmile2py.xmile_parser(self.modelo)
 
         # output model file
         with open(outPath + "/" + model_translation.name + ".txt", "w") as foutput:
             model_output = model_translation.show()
             foutput.writelines(model_output)
 
-        r_model_solver, r_model_calibrate = model_translation.build_R_script()
+        r_model_solver, r_model_calibrate = model_translation.build_R_script
         file_name = model_translation.name + "_solver.R"
         with open(outPath + "/" + file_name, "w") as foutput:
             foutput.writelines(r_model_solver)
