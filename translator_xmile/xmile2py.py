@@ -141,21 +141,20 @@ class XmileAux:
         if "ypts" in aux_dict:
             self.eqn = aux_dict["eqn_str"]
             self.type = "series"
-            step = (float(aux_dict["x_max"]) - float(aux_dict["x_min"])) \
-                   / (len(aux_dict["ypts"].split(",")) - 1)
+            self.x_max = aux_dict["x_max"]
+            self.x_min = aux_dict["x_min"]
+            step = (float(self.x_max) - float(self.x_min)) / (len(aux_dict["ypts"].split(",")) - 1)
             yval = list(map(float, (aux_dict["ypts"].split(","))))
-            self.series = list(map(lambda x, y: (x, float(y)),
-                                   [float(aux_dict["x_min"]) + step * x
-                                    for x in range(0, len(yval))],
-                                   aux_dict["ypts"].split(",")))
+            self.series = list(map(lambda x, y: (x, float(y)), [float(self.x_min) + step * x
+                                    for x in range(0, len(yval))], aux_dict["ypts"].split(",")))
         else:
             self.units = aux_dict["units"]
-            self.eqn = aux_dict["eqn_str"]
-            self.value = aux_dict["eqn_str"]
-            if isfloat(self.eqn):
+            if isfloat(aux_dict["eqn_str"]):
                 self.type = "value"
+                self.value = aux_dict["eqn_str"]
             else:
                 self.type = "equation"
+                self.eqn = aux_dict["eqn_str"]
 
 
     def show(self):
@@ -337,13 +336,23 @@ class XmileModel:
                                 d_func,
                                 "\n", "#" * 50])
 
-        # Define R object to store model parameters
-        series, items = [], []
+        # Define R object to store model parameters and supporting functions
+        # TODO
+        def setup_R_eqn(eqn):
+            pass
+
+        sup_funcs, series, items = [], [], []
         for ax in self.auxs:
+            if ax.type == "equation":
+                eqn = setup_R_eqn(ax.eqn)
+                sup_funcs.append("".join([ax.name, " <- function(t)\n{\n    ", ax.eqn, "\n}\n"]))
             if ax.is_parameter:
                 if ax.type == "value":
-                    items.append("".join(["{0} = {1}".format(ax.name, str(ax.value))]))
+                    items.append("".join([ax.name, " = ", ax.value]))
                 if ax.type == "series":
+                    if ax.eqn == "TIME":
+                        sup_funcs.append("".join([ax.name, "_lkp <- function(t)\n{\n    ",
+                                                  ax.name, "[floor((t - 1) %% ", ax.x_max, ") + 1, 2]\n}\n"]))
                     data_series = ", ".join(["c(" + str(x) + ", " + str(y) + ")" for (x, y) in ax.series])
                     if len(data_series) > 70:
                         data_series = "\n".join(tw.wrap(data_series, 80))
@@ -352,14 +361,14 @@ class XmileModel:
                                   "), ncol = 2, byrow = T))\n" +
                                   "names(" + ax.name + ") <- c(" + "'" +
                                   ax.eqn.lower() + "'" + ", '" + ax.name + "')\n")
-
+        if sup_funcs:
+            r_script_slv = "".join([r_script_slv, "\n\n# Supporting functions\n", "\n".join(sup_funcs)])
         if items:
-            r_script_slv = "".join([r_script_slv, "\n\n",
-                                    "# Paremeters and initial condition to" +
-                                    " solve model\n", "parms <- c(" +
-                                    ", ".join(items) + ")\n"])
+            r_script_slv = "".join([r_script_slv, "\n\n" +
+                                    "# Paremeters and initial condition to solve model\n",
+                                    "parms <- c(" + ", ".join(items) + ")\n\n"])
         if series:
-            r_script_slv = "".join([r_script_slv, "".join(series) + "\n"])
+            r_script_slv = "".join([r_script_slv, "".join(series) + "\n\n"])
 
         # Includes initial conditions for the stocks
         items = []
@@ -459,16 +468,16 @@ class XmileModel:
                                 "\n".join(items)])
 
         for ax in self.auxs:
-            if ax.type == "value" or ax.type == "equation":
-                model_report = "".join([model_report,
-                                        "\n{0} = {1}".format(ax.name,
-                                                             ax.value)])
+            if ax.type == "value":
+                model_report = "".join([model_report, "\n", ax.name, " = ", ax.value, "\n"])
+            elif ax.type == "equation":
+                model_report = "".join([model_report, "\n", ax.name, " = ", ax.eqn, "\n"])
             else:
                 model_report = "".join([model_report,
                                         "\n{0} = GRAPH({1})".format(ax.name,
-                                                                    ax.eqn),
+                                                                ax.eqn),
                                         ", ".join([str(x)
-                                                       for x in ax.series])])
+                                                   for x in ax.series])])
 
 
         # Metadata
