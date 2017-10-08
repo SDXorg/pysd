@@ -43,7 +43,6 @@ def main():
     # Extract relevant information to build model
     model_translation = xmile_parser(model_file)
 
-
     # output model file
     with open(outPath + "/" + model_translation.name + ".txt", "w") as foutput:
         model_output = model_translation.show()
@@ -62,6 +61,7 @@ def main():
     print("Model processed:", model_translation.name)
     print("Translation can be found at:\n  ", outPath)
     print("\n\n")
+
 
 # test for eqn containing a single number
 def isfloat(value):
@@ -146,7 +146,8 @@ class XmileAux:
             step = (float(self.x_max) - float(self.x_min)) / (len(aux_dict["ypts"].split(",")) - 1)
             yval = list(map(float, (aux_dict["ypts"].split(","))))
             self.series = list(map(lambda x, y: (x, float(y)), [float(self.x_min) + step * x
-                                    for x in range(0, len(yval))], aux_dict["ypts"].split(",")))
+                                                                for x in range(0, len(yval))],
+                                   aux_dict["ypts"].split(",")))
         else:
             self.units = aux_dict["units"]
             if isfloat(aux_dict["eqn_str"]):
@@ -155,7 +156,6 @@ class XmileAux:
             else:
                 self.type = "equation"
                 self.eqn = aux_dict["eqn_str"]
-
 
     def show(self):
         aux_report = "".join(["CONVERTER",
@@ -189,7 +189,7 @@ class XmileModel:
     :auxs_set: -- Collection of all converter names in the model
     :parameters_set -- Collection of variable names used within equations
     :stocks: -- List of *stock class* objects.
-    :auxs: -- List of *aux class* objects.
+    :auxs: -- Dictionary by name of *aux class* objects.
     :units: -- Units of measure for the converter constant.
     :eqn: -- If converter holds a *graphical function*, then this holds an
              equation related to that function.
@@ -221,14 +221,12 @@ class XmileModel:
         self.stocks = stocks
         self.auxs = auxs
 
-
-    @property
     def build_R_script(self):
         """Prepares an scrip for R use with **deSolve** library.
         """
         import textwrap as tw
 
-        # Translate equation
+        #TODO Translate equation
         def tranlate_eqn(eqn):
             egn_grammar = """
                 entry = item (op item)?
@@ -247,28 +245,12 @@ class XmileModel:
                 def generic_visit(self, n, vc):
                     pass
 
-        # Translate Stella function names into R version
-        def FunctionTranslator(x):
-            return {
-                'EXP': x.lower(),
-                'MIN': x.lower(),
-                'MAX': x.lower(),
-                'MEAN': x.lower(),
-                'SUM': x.lower(),
-                'ABS': x.lower(),
-                'SIN': x.lower(),
-                'COS': x.lower(),
-                'TAN': x.lower(),
-                'LOG10': x.lower(),
-                'SQRT': x.lower(),
-                'ROUND': x.lower(),
-                'LOGN': 'log',
-                'ARCTAN': 'atan',
-                'TIME': 't',
-                'PI': x.lower(),
-                'INT': 'floor',
-                'DT': 'DT'
-            }[x]
+
+                # Translate Stella function names into R version
+        Functions_R = {'EXP': "exp", 'MIN': "min", 'MAX': "max", 'MEAN': "mean", 'SUM': "sum",
+            'ABS': "abs", 'SIN': "sin", 'COS': "cos", 'TAN': "tan", 'LOG10': "log10",
+            'LOGN': 'log', 'SQRT': "sqrt", 'ROUND': "round", 'ARCTAN': 'atan', 'TIME': 't',
+            'PI': "pi", 'INT': 'floor', "RANDOM": "random"}
 
         # Initialization section
         r_script_slv = "".join(["# Prepare libraries needed\n"
@@ -290,24 +272,23 @@ class XmileModel:
         # Definition of main model function
         r_script_slv = "".join([r_script_slv,
                                 "# Function fully specifying the translated model for R use\n",
-                                "model <- function(t, Y, ",
-                                "parameters, ...) \n{\n",
-                                "    # Time and other model variables\n",
-                                "    Time <<- t\n"])
+                                "model <- function(t, Y, ", "parameters, ...) \n{\n",
+                                "    # Time and other model variables\n", "    Time <<- t\n"])
 
+        # Stock values given as input for each time step
         stk_names = [s.name for s in self.stocks]
         stk_names.sort()
         lines = "".join(["    {0} <- Y['{0}']\n".format(stk) for stk in stk_names])
         r_script_slv = "".join([r_script_slv, lines, "\n    # Model parameters"])
 
-        converters = [a.name for a in self.auxs if a.is_parameter and a.type == "value"]
-
+        # Model parameters specified as single values
+        converters = [a.name for k, a in self.auxs.items() if a.is_parameter and a.type == "value"]
         converters.sort()
-        lines = "".join(["    {0} <- parameters['{0}']\n".format(aux)
-                         for aux in converters])
+
+        lines = "".join(["    {0} <- parameters['{0}']\n".format(aux) for aux in converters])
         r_script_slv = "".join([r_script_slv, "\n", lines, "\n"])
 
-        # Recover flow information and prepare suitable R commands
+        # Flow information necessary to prepare suitable R commands
         flw_equations = set()
         for stk in self.stocks:
             if hasattr(stk, "inflow"):
@@ -317,7 +298,39 @@ class XmileModel:
                 flw_equations = flw_equations.union({"\n    " + f["flow_name"] + " <- " +
                                                      f["eqn"] for f in stk.outflow})
 
-        lines = "".join(flw_equations)
+        #TODO convert into function? identifying supporting functions needed
+        #  Collects function names needed for supporting functions
+        supporting_eqn = {}
+        for eqn in flw_equations:
+            eqn_items = re.split(r"[*+/\-\n< ]", eqn)
+            eqn_items = [e for e in eqn_items if e != "" and e != ","]
+            for eqn_i in eqn_items:
+                if eqn_i in self.parameters_set:
+                    if self.auxs[eqn_i].type == "series":
+                        supporting_eqn.update({eqn_i : eqn_i + "_lkp(t) "})
+                    elif self.auxs[eqn_i].type == "equation":
+                        supporting_eqn.update({eqn_i : eqn_i + "(t) "})
+
+        for ax_k, ax_v in self.auxs.items():
+            if ax_v.type == "equation":
+                eqn_items = re.split(r"[(){}\[*+/-]", ax_v.eqn)
+                eqn_items = [e for e in eqn_items if e != "" and e != ","]
+                for eqn_i in eqn_items:
+                    if eqn_i in Functions_R:
+                        supporting_eqn.update({eqn_i: Functions_R[eqn_i]})
+                    elif not re.findall("^[0-9)^]", eqn_i) and  not eqn_i in self.auxs_set and eqn_i != "":
+                            supporting_eqn.update({eqn_i: eqn_i.lower()})
+                    else:
+                        if eqn_i in self.auxs:
+                            if self.auxs[eqn_i].type == "equation":
+                                supporting_eqn.update({eqn_i: eqn_i})
+
+        for eqn_k, eqn_v in supporting_eqn.items():
+            flw_equations = {re.sub(eqn_k, eqn_v, eqn) for eqn in flw_equations}
+
+        flw_equations = {re.sub(r"(?<!<)([*+/-])", r" \1 ", eqn) for eqn in flw_equations}
+
+        lines = "".join(sorted(flw_equations))
         r_script_slv = "".join([r_script_slv, "    # flow equations", lines, "\n\n",
                                 "    # Differential equations"])
 
@@ -337,30 +350,50 @@ class XmileModel:
                                 "\n", "#" * 50])
 
         # Define R object to store model parameters and supporting functions
-        # TODO
-        def setup_R_eqn(eqn):
-            pass
-
         sup_funcs, series, items = [], [], []
-        for ax in self.auxs:
-            if ax.type == "equation":
-                eqn = setup_R_eqn(ax.eqn)
-                sup_funcs.append("".join([ax.name, " <- function(t)\n{\n    ", ax.eqn, "\n}\n"]))
-            if ax.is_parameter:
-                if ax.type == "value":
-                    items.append("".join([ax.name, " = ", ax.value]))
-                if ax.type == "series":
-                    if ax.eqn == "TIME":
-                        sup_funcs.append("".join([ax.name, "_lkp <- function(t)\n{\n    ",
-                                                  ax.name, "[floor((t - 1) %% ", ax.x_max, ") + 1, 2]\n}\n"]))
-                    data_series = ", ".join(["c(" + str(x) + ", " + str(y) + ")" for (x, y) in ax.series])
+        for ax_k, ax_v in self.auxs.items():
+            if ax_v.type == "equation":
+                # Translate xmile functions to R names from supporting_eqn keys
+                new_eqn = ax_v.eqn
+                for i_k, i_v in supporting_eqn.items():
+                    if i_k in ax_v.eqn:
+                        if i_k in Functions_R:
+                            new_eqn = re.sub(i_k, i_v, new_eqn)
+                        elif i_k + "(" in ax_v.eqn.replace(" ", ""):
+                            new_eqn = re.sub(i_k + "\(", i_v + "(t,", new_eqn)
+                        else:
+                            new_eqn = re.sub(i_k, i_v + "(t)", new_eqn)
+
+                # A little bit of equation formatting
+                new_eqn = re.sub(r"([*+/-])", r" \1 ", new_eqn)
+                new_eqn = re.sub(r"(,)", r"\1 ", new_eqn)
+                new_eqn = re.sub("[ ]{2,}", " ", new_eqn)
+                sup_funcs.append("".join([ax_v.name, " <- function(t)\n{\n    ", new_eqn, "\n}\n"]))
+
+            if ax_v.is_parameter:
+                if ax_v.type == "value":
+                    items.append("".join([ax_v.name, " = ", ax_v.value]))
+                if ax_v.type == "series":
+                    if ax_v.eqn == "TIME":
+                        sup_funcs.append("".join([ax_v.name, "_lkp <- function(t)\n{\n    ",
+                                                  ax_v.name, "[floor((t - 1) %% ", ax_v.x_max, ") + 1, 2]\n}\n"]))
+                    data_series = ", ".join(["c(" + str(x) + ", " + str(y) + ")" for (x, y) in ax_v.series])
                     if len(data_series) > 70:
                         data_series = "\n".join(tw.wrap(data_series, 80))
-                    series.append(ax.name +
+                    series.append(ax_v.name +
                                   " <- data.frame(matrix(c(" + data_series +
                                   "), ncol = 2, byrow = T))\n" +
-                                  "names(" + ax.name + ") <- c(" + "'" +
-                                  ax.eqn.lower() + "'" + ", '" + ax.name + "')\n")
+                                  "names(" + ax_v.name + ") <- c(" + "'" +
+                                  ax_v.eqn.lower() + "'" + ", '" + ax_v.name + "')\n")
+
+        for fnc_def in supporting_eqn.keys() - self.auxs.keys() - Functions_R.keys():
+            if fnc_def == "SINWAVE":
+                sup_funcs.append("\nsinwave <- function(t, a, ph)\n{\n    " + "  a * sin(2 * t * pi / ph )" + "\n}\n")
+            elif fnc_def == "RANDOM":
+                sup_funcs.append("\nrandom <- function(min, max)\n{\n     runif(1, min, max)" + "\n}\n")
+            else:
+                sup_funcs.append("\nFalta por definir " + fnc_def)
+
         if sup_funcs:
             r_script_slv = "".join([r_script_slv, "\n\n# Supporting functions\n", "\n".join(sup_funcs)])
         if items:
@@ -467,18 +500,14 @@ class XmileModel:
         model_report = "".join(["Top-Level Model <{0}>:\n".format(self.name),
                                 "\n".join(items)])
 
-        for ax in self.auxs:
-            if ax.type == "value":
-                model_report = "".join([model_report, "\n", ax.name, " = ", ax.value, "\n"])
-            elif ax.type == "equation":
-                model_report = "".join([model_report, "\n", ax.name, " = ", ax.eqn, "\n"])
+        for ax_k, ax_v in self.auxs.items():
+            if ax_v.type == "value":
+                model_report = "".join([model_report, "\n", ax_v.name, " = ", ax_v.value, "\n"])
+            elif ax_v.type == "equation":
+                model_report = "".join([model_report, "\n", ax_v.name, " = ", ax_v.eqn, "\n"])
             else:
-                model_report = "".join([model_report,
-                                        "\n{0} = GRAPH({1})".format(ax.name,
-                                                                ax.eqn),
-                                        ", ".join([str(x)
-                                                   for x in ax.series])])
-
+                model_report = "".join([model_report, "\n{0} = GRAPH({1})".format(ax_v.name, ax_v.eqn),
+                                        ", ".join([str(x) for x in ax_v.series])])
 
         # Metadata
         flows = set()
@@ -489,10 +518,10 @@ class XmileModel:
                 flows.update({f["flow_name"] for f in flw.outflow})
 
         graphs, constants = 0, 0
-        for cst in self.auxs:
-            if "value" in cst.type:
+        for cst_k, cst_v in self.auxs.items():
+            if "value" in cst_v.type:
                 constants += 1
-            if "series" in cst.type:
+            if "series" in cst_v.type:
                 graphs += 1
 
         num_var = len(self.stocks) + len(flows) + len(self.auxs)
@@ -526,7 +555,6 @@ def xmile_parser(model_file):
     :model_file: -- Name of a model file of an **xmile** compliant
                     type (no default)
     """
-
 
     # Grammar deffinitions for stocks, flows and aux
     stock_grammar = r"""
@@ -632,7 +660,6 @@ def xmile_parser(model_file):
         nl = ~"\n"
         """
 
-
     # Visitor classes
     class StockParser(NodeVisitor):
         def __init__(self, grammar, text):
@@ -725,12 +752,13 @@ def xmile_parser(model_file):
                 flw_parse["units"] = ""
             name = flw_parse["flow_name"].replace(" ", "_")
             name = name.replace("á", "a").replace("é", "e").replace("í",
-                   "i").replace("ó", "o").replace("ú", "u").replace("ñ", "n")
+                                                                    "i").replace("ó", "o").replace("ú", "u").replace(
+                "ñ", "n")
             flw_parse["flow_name"] = name
             flows_set = flows_set.union([name])
             flows[name] = flw_parse
             if not isfloat(flw_parse["eqn"]):
-               parameters_set = parameters_set.union(re.split(r"[*/+-]", flw_parse["eqn"]))
+                parameters_set = parameters_set.union(re.split(r"[*/+-]", flw_parse["eqn"]))
 
     # Extract stock collection attributes
     stocks_list, stocks_set = [], set()
@@ -738,27 +766,28 @@ def xmile_parser(model_file):
         if "eqn" in stk.prettify():
             stock_parse = StockParser(stock_grammar, stk.prettify()).entry
             name = stock_parse["stock_name"].replace(" ", "_")
-            name = name.replace("á", "a").replace("é", "e").replace("í",
-                   "i").replace("ó", "o").replace("ú", "u").replace("ñ", "n")
+            name = name.replace("á", "a").replace("é", "e").replace("í", "i")
+            name = name.replace("ó", "o").replace("ú", "u").replace("ñ", "n")
             stock_parse["stock_name"] = name
             stocks_set = stocks_set.union([name])
             parameters_set = parameters_set - stocks_set - flows_set
             if "units" not in stock_parse:
                 stock_parse["units"] = ""
             if stk.inflow:
-                all_flows = [item.text.replace("á","a").replace("é", "e").replace("í",
-                                          "i").replace("ó", "o").replace("ú", "u").replace("ñ", "n")
-                             for item in stk.find_all("inflow")]
+                all_flows = [item.text.replace("á", "a").replace("é", "e").
+                                       replace("í","i").replace("ó", "o").replace("ú", "u").
+                                       replace("ñ", "n") for item in stk.find_all("inflow")]
                 stock_parse["inflow"] = [flows[f] for f in all_flows]
+
             if stk.outflow:
-                all_flows = [item.text.replace("á","a").replace("é", "e").replace("í",
-                                          "i").replace("ó", "o").replace("ú", "u").replace("ñ", "n")
-                             for item in stk.find_all("outflow")]
+                all_flows = [item.text.replace("á", "a").replace("é", "e").
+                                       replace("í", "i").replace("ó", "o").replace("ú", "u").
+                                       replace("ñ", "n") for item in stk.find_all("outflow")]
                 stock_parse["outflow"] = [flows[f] for f in all_flows]
             stocks_list.append(XmileStock(stock_parse))
 
     # Get aux variables
-    auxs_list, auxs_set = [], parameters_set
+    auxs_dict, auxs_set = {}, parameters_set
     for ax in xmile_soup.model.find_all("aux"):
         if "eqn" in ax.prettify():
             aux_parse = AuxParser(aux_grammar, ax.prettify()).entry
@@ -771,10 +800,9 @@ def xmile_parser(model_file):
                 aux_parse["is_parameter"] = True
             else:
                 aux_parse["is_parameter"] = False
+            auxs_dict.update({name: XmileAux(aux_parse)})
 
-            auxs_list.append(XmileAux(aux_parse))
-
-    model_translation = XmileModel(model_spec, stocks_list, auxs_list)
+    model_translation = XmileModel(model_spec, stocks_list, auxs_dict)
     model_translation.stocks_set = stocks_set
     model_translation.flows_set = flows_set
     model_translation.parameters_set = parameters_set

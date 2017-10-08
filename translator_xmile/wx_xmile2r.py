@@ -117,18 +117,18 @@ class Xmile2RFrame(wx.Frame):
         model_translation = xmile2py.xmile_parser(self.modelo)
 
         # output model file
-        with open(outPath + "/" + model_translation.name + ".txt", "w") as foutput:
+        with open(outPath + "/" + model_translation.name + ".txt", "w") as f_output:
             model_output = model_translation.show()
-            foutput.writelines(model_output)
+            f_output.writelines(model_output)
 
-        r_model_solver, r_model_calibrate = model_translation.build_R_script
+        (r_model_solver, r_model_calibrate) = model_translation.build_R_script()
         file_name = model_translation.name + "_solver.R"
-        with open(outPath + "/" + file_name, "w") as foutput:
-            foutput.writelines(r_model_solver)
+        with open(outPath + "/" + file_name, "w") as f_output:
+            f_output.writelines(r_model_solver)
 
         r_model_calibrate = r_model_calibrate.replace("file_path", '"' + file_name + '"')
-        with open(outPath + "/" + file_name.replace("solver", "calibrate"), "w") as foutput:
-            foutput.writelines(r_model_calibrate)
+        with open(outPath + "/" + file_name.replace("solver", "calibrate"), "w") as f_output:
+            f_output.writelines(r_model_calibrate)
 
         self.text_ctrl_resutado.SetValue("".join(["*" * 28,
                                                   "\nModel translation successful",
