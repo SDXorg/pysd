@@ -226,31 +226,13 @@ class XmileModel:
         """
         import textwrap as tw
 
-        #TODO Translate equation
-        def tranlate_eqn(eqn):
-            egn_grammar = """
-                entry = item (op item)?
-                  op = ~"[/\+\* \n]"*
-            """
-
-            class eqnParser(NodeVisitor):
-                def __init__(self, grammar, text):
-                    self.entry = {}
-                    ast = Grammar(grammar).parse(text)
-                    self.visit(ast)
-
-                def visit_flow_name(self, n, vc):
-                    self.entry['flow_name'] = n.text
-
-                def generic_visit(self, n, vc):
-                    pass
-
 
                 # Translate Stella function names into R version
         Functions_R = {'EXP': "exp", 'MIN': "min", 'MAX': "max", 'MEAN': "mean", 'SUM': "sum",
             'ABS': "abs", 'SIN': "sin", 'COS': "cos", 'TAN': "tan", 'LOG10': "log10",
             'LOGN': 'log', 'SQRT': "sqrt", 'ROUND': "round", 'ARCTAN': 'atan', 'TIME': 't',
-            'PI': "pi", 'INT': 'floor', "RANDOM": "random"}
+            'PI': "pi", 'INT': 'floor'}
+        Time_independet = {"RANDOM" : "random"}
 
         # Initialization section
         r_script_slv = "".join(["# Prepare libraries needed\n"
@@ -311,6 +293,7 @@ class XmileModel:
                     elif self.auxs[eqn_i].type == "equation":
                         supporting_eqn.update({eqn_i : eqn_i + "(t) "})
 
+        calibration_data = set()
         for ax_k, ax_v in self.auxs.items():
             if ax_v.type == "equation":
                 eqn_items = re.split(r"[(){}\[*+/-]", ax_v.eqn)
@@ -324,6 +307,10 @@ class XmileModel:
                         if eqn_i in self.auxs:
                             if self.auxs[eqn_i].type == "equation":
                                 supporting_eqn.update({eqn_i: eqn_i})
+            else:
+                if ax_v.type == "series" and not ax_v.is_parameter:
+                    calibration_data.update({ax_k})
+
 
         for eqn_k, eqn_v in supporting_eqn.items():
             flw_equations = {re.sub(eqn_k, eqn_v, eqn) for eqn in flw_equations}
@@ -357,7 +344,7 @@ class XmileModel:
                 new_eqn = ax_v.eqn
                 for i_k, i_v in supporting_eqn.items():
                     if i_k in ax_v.eqn:
-                        if i_k in Functions_R:
+                        if i_k in Functions_R or i_k in Time_independet:
                             new_eqn = re.sub(i_k, i_v, new_eqn)
                         elif i_k + "(" in ax_v.eqn.replace(" ", ""):
                             new_eqn = re.sub(i_k + "\(", i_v + "(t,", new_eqn)
@@ -392,7 +379,7 @@ class XmileModel:
             elif fnc_def == "RANDOM":
                 sup_funcs.append("\nrandom <- function(min, max)\n{\n     runif(1, min, max)" + "\n}\n")
             else:
-                sup_funcs.append("\nFalta por definir " + fnc_def)
+                sup_funcs.append("\nMissing definition for: " + fnc_def)
 
         if sup_funcs:
             r_script_slv = "".join([r_script_slv, "\n\n# Supporting functions\n", "\n".join(sup_funcs)])
@@ -424,6 +411,7 @@ class XmileModel:
                          "par(mfrow=c(1,1))\n"])
         r_script_slv = "".join([r_script_slv, lines])
 
+        #TODO Have to add provided calibration data from Stella model
         r_script_cal = "".join(["# Sckeleton for model calibration\n",
                                 "# ********************************\n\n",
                                 "# Error function required to fit the model with 'nls.lm'\n",
@@ -436,37 +424,57 @@ class XmileModel:
                                 "    solDF <- solDF[solDF$time %in% data$time, ]\n\n",
                                 "    # Difference fitted vs observed \n",
                                 "    solDF <- unlist(solDF[, varList])\n",
-                                "    obsDF <- unlist(data[, -1])\n",
+                                "    obsDF <- unlist(data[, varList])\n",
                                 "    ssqres <- solDF - obsDF\n\n",
                                 "    # return predicted vs experimental residual\n",
                                 "    return(ssqres)\n}\n# ********************************\n\n\n",
                                 "# Provide data, dataset and time sequence\n"])
 
+        # Adding calibration data if available: series not in the parameters list
+        series = []
+        for d in calibration_data:
+            ax = self.auxs[d]
+            data_series = ", ".join(["c(" + str(x) + ", " + str(y) + ")" for (x, y) in ax.series])
+            if len(data_series) > 70:
+                data_series = "\n".join(tw.wrap(data_series, 80))
+
+            series.append(ax.name +
+                          " <- data.frame(matrix(c(" + data_series +
+                          "), ncol = 2, byrow = T))\n" +
+                          "names(" + ax.name + ") <- c(" + "'" +
+                          ax.eqn.lower() + "'" + ", '" + ax.name + "')\n\n")
+
         if items:
             r_script_cal = "".join([r_script_cal, "parms <- c(" +
-                                    ", ".join(items) + ")\n"])
+                                    ", ".join(items) + ")\n\n"])
         if series:
             r_script_cal = "".join([r_script_cal, "".join(series) + "\n"])
 
+        time = self.auxs[next(iter(calibration_data))].name + "$time"
         r_script_cal = "".join([r_script_cal,
-                                "#varList <- c(<include the names of all variables with calibration data>)\n\n",
-                                "# load translated model function\n",
-                                "source (file_path)\n\n",
-                                "# Fit model to calibration data using levenberg marquart\n",
-                                "# algorithm. Please, provide <parms> as initial guess\n",
-                                "fittedModel <- nls.lm(par=parms, fn=ssq, y0 = Y, ",
-                                "t = time, data = datos, varList = varList)\n\n\n",
-                                "# Calibration results\n"
-                                "parameters <- fittedModel$par  # store calibrated parameters\n"
-                                "summary(fittedModel)\n\n",
-                                "# Fitted values and plotting\n"
-                                "fittedVals <- ode(func = model, y = Y, times = time, parms = fittedModel$par, ",
-                                "method = 'rk4')\n\n",
-                                "# Organizing fitted data in a data.frame\n"
-                                "fitted.data.df <- data.frame(fittedVals)\n\n",
-                                "# Plotting fitted & calibration data together\n"
-                                "plot(fitted.data.df[, 1], fitted.data.df[, 2], type = 'l', col = 'blue', lwd=2)\n",
-                                "points('<data to compare to fit>')  # Series to provide x, y data\n\n"])
+                            "# include the names of all variables with calibration data\n",
+                            "varList <- c("+ ", ".join(['"'+ d +'"' for d in calibration_data]) +")\n\n",
+                            "# Set-up data into a data.frame with time column. \n",
+                            "# Verify correspondence between data and variable name in the model\n"
+                            "data <- data.frame(time=" + time + ",\n    " + ",\n    ".join([d +
+                                                "=" + d + "$" + d for d in calibration_data]) +")\n\n",
+                            "# load translated model function\n",
+                            "source (file_path)\n\n",
+                            "# Fit model to calibration data using levenberg marquart\n",
+                            "# algorithm. Please, provide <parms> as initial guess\n",
+                            "fittedModel <- nls.lm(par=parms, fn=ssq, y0 = Y, ",
+                            "t = time, data = data, varList = varList)\n\n\n",
+                            "# Calibration results\n"
+                            "parameters <- fittedModel$par  # store calibrated parameters\n"
+                            "summary(fittedModel)\n\n",
+                            "# Fitted values and plotting\n"
+                            "fittedVals <- ode(func = model, y = Y, times = time, parms = fittedModel$par, ",
+                            "method = 'rk4')\n\n",
+                            "# Organizing fitted data in a data.frame\n"
+                            "fitted.data.df <- data.frame(fittedVals)\n\n",
+                            "# Plotting fitted & calibration data together\n"
+                            "plot(fitted.data.df[, 1], fitted.data.df[, 2], type = 'l', col = 'blue', lwd=2)\n",
+                            "points('<data to compare to fit>')  # Series to provide x, y data\n\n"])
 
         return r_script_slv, r_script_cal
 
