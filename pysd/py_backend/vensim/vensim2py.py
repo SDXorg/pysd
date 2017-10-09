@@ -315,155 +315,157 @@ def parse_units(units_str):
 
 
 functions = {
-        # element-wise functions
-        "abs": "abs",
-        "integer": "int",
-        "exp": "np.exp",
-        "sin": "np.sin",
-        "cos": "np.cos",
-        "sqrt": "np.sqrt",
-        "tan": "np.tan",
-        "lognormal": "np.random.lognormal",
-        "random normal":
+    # element-wise functions
+    "abs": "abs",
+    "integer": "int",
+    "exp": "np.exp",
+    "sin": "np.sin",
+    "cos": "np.cos",
+    "sqrt": "np.sqrt",
+    "tan": "np.tan",
+    "lognormal": "np.random.lognormal",
+    "random normal":
         "functions.bounded_normal",
-        "poisson": "np.random.poisson",
-        "ln": "np.log",
-        "log": "functions.log",
-        "exprnd": "np.random.exponential",
-        "random uniform": "functions.random_uniform",
-        "sum": "np.sum",
-        "arccos": "np.arccos",
-        "arcsin": "np.arcsin",
-        "arctan": "np.arctan",
-        "if then else": "functions.if_then_else",
-        "step": "functions.step",
-        "modulo": "np.mod",
-        "pulse": "functions.pulse",
-        "pulse train": "functions.pulse_train",
-        "ramp": "functions.ramp",
-        "min": "np.minimum",
-        "max": "np.maximum",
-        "active initial": "functions.active_initial",
-        "xidz": "functions.xidz",
-        "zidz": "functions.zidz",
-        "game": "",  # In the future, may have an actual `functions.game` pass through
+    "poisson": "np.random.poisson",
+    "ln": "np.log",
+    "log": "functions.log",
+    "exprnd": "np.random.exponential",
+    "random uniform": "functions.random_uniform",
+    "sum": "np.sum",
+    "arccos": "np.arccos",
+    "arcsin": "np.arcsin",
+    "arctan": "np.arctan",
+    "if then else": "functions.if_then_else",
+    "step": "functions.step",
+    "modulo": "np.mod",
+    "pulse": "functions.pulse",
+    "pulse train": "functions.pulse_train",
+    "ramp": "functions.ramp",
+    "min": "np.minimum",
+    "max": "np.maximum",
+    "active initial": "functions.active_initial",
+    "xidz": "functions.xidz",
+    "zidz": "functions.zidz",
+    "game": "",  # In the future, may have an actual `functions.game` pass through
 
-        # vector functions
-        "vmin": "np.min",
-        "vmax": "np.max",
-        "prod": "np.prod"
-    }
+    # vector functions
+    "vmin": "np.min",
+    "vmax": "np.max",
+    "prod": "np.prod"
+}
 
 builders = {
-        "integ": lambda element, subscript_dict, args: builder.add_stock(
-                identifier = element['py_name'],
-                subs = element['subs'],
-                expression = args[0],
-                initial_condition = args[1],
-                subscript_dict = subscript_dict
-            ),
+    "integ": lambda element, subscript_dict, args: builder.add_stock(
+        identifier=element['py_name'],
+        subs=element['subs'],
+        expression=args[0],
+        initial_condition=args[1],
+        subscript_dict=subscript_dict
+    ),
 
-        "delay1": lambda element, subscript_dict, args: builder.add_n_delay(
-                delay_input = args[0],
-                delay_time = args[1],
-                initial_value = args[0],
-                order = '1',
-                subs = element['subs'],
-                subscript_dict = subscript_dict
-            ),
+    "delay1": lambda element, subscript_dict, args: builder.add_n_delay(
+        delay_input=args[0],
+        delay_time=args[1],
+        initial_value=args[0],
+        order='1',
+        subs=element['subs'],
+        subscript_dict=subscript_dict
+    ),
 
-        "delay1i": lambda element, subscript_dict, args: builder.add_n_delay(
-                delay_input = args[0],
-                delay_time = args[1],
-                initial_value = args[2],
-                order = '1',
-                subs = element['subs'],
-                subscript_dict = subscript_dict
-            ),
+    "delay1i": lambda element, subscript_dict, args: builder.add_n_delay(
+        delay_input=args[0],
+        delay_time=args[1],
+        initial_value=args[2],
+        order='1',
+        subs=element['subs'],
+        subscript_dict=subscript_dict
+    ),
 
-        "delay3": lambda element, subscript_dict, args: builder.add_n_delay(
-                delay_input = args[0],
-                delay_time = args[1],
-                initial_value = args[0],
-                order = '3',
-                subs = element['subs'],
-                subscript_dict = subscript_dict
-            ),
+    "delay3": lambda element, subscript_dict, args: builder.add_n_delay(
+        delay_input=args[0],
+        delay_time=args[1],
+        initial_value=args[0],
+        order='3',
+        subs=element['subs'],
+        subscript_dict=subscript_dict
+    ),
 
-        "delay3i": lambda element, subscript_dict, args: builder.add_n_delay(
-                delay_input = args[0],
-                delay_time = args[1],
-                initial_value = args[2],
-                order = '3',
-                subs = element['subs'],
-                subscript_dict = subscript_dict
-            ),
+    "delay3i": lambda element, subscript_dict, args: builder.add_n_delay(
+        delay_input=args[0],
+        delay_time=args[1],
+        initial_value=args[2],
+        order='3',
+        subs=element['subs'],
+        subscript_dict=subscript_dict
+    ),
 
-        "delay n": lambda element, subscript_dict, args: builder.add_n_delay(
-                delay_input = args[0],
-                delay_time = args[1],
-                initial_value = args[2],
-                order = args[3],
-                subs = element['subs'],
-                subscript_dict = subscript_dict
-            ),
+    "delay n": lambda element, subscript_dict, args: builder.add_n_delay(
+        delay_input=args[0],
+        delay_time=args[1],
+        initial_value=args[2],
+        order=args[3],
+        subs=element['subs'],
+        subscript_dict=subscript_dict
+    ),
 
-        "smooth": lambda element, subscript_dict, args: builder.add_n_smooth(
-                smooth_input = args[0],
-                smooth_time = args[1],
-                initial_value = args[0],
-                order = '1',
-                subs = element['subs'],
-                subscript_dict = subscript_dict
-            ),
+    "smooth": lambda element, subscript_dict, args: builder.add_n_smooth(
+        smooth_input=args[0],
+        smooth_time=args[1],
+        initial_value=args[0],
+        order='1',
+        subs=element['subs'],
+        subscript_dict=subscript_dict
+    ),
 
-        "smoothi": lambda element, subscript_dict, args: builder.add_n_smooth(
-                smooth_input = args[0],
-                smooth_time = args[1],
-                initial_value = args[2],
-                order = '1',
-                subs = element['subs'],
-                subscript_dict = subscript_dict
-            ),
+    "smoothi": lambda element, subscript_dict, args: builder.add_n_smooth(
+        smooth_input=args[0],
+        smooth_time=args[1],
+        initial_value=args[2],
+        order='1',
+        subs=element['subs'],
+        subscript_dict=subscript_dict
+    ),
 
-        "smooth3": lambda element, subscript_dict, args: builder.add_n_smooth(
-                smooth_input = args[0],
-                smooth_time = args[1],
-                initial_value = args[0],
-                order = '3',
-                subs = element['subs'],
-                subscript_dict = subscript_dict
-            ),
+    "smooth3": lambda element, subscript_dict, args: builder.add_n_smooth(
+        smooth_input=args[0],
+        smooth_time=args[1],
+        initial_value=args[0],
+        order='3',
+        subs=element['subs'],
+        subscript_dict=subscript_dict
+    ),
 
-        "smooth3i": lambda element, subscript_dict, args: builder.add_n_smooth(
-                smooth_input = args[0],
-                smooth_time = args[1],
-                initial_value = args[2],
-                order = '3',
-                subs = element['subs'],
-                subscript_dict = subscript_dict
-            ),
+    "smooth3i": lambda element, subscript_dict, args: builder.add_n_smooth(
+        smooth_input=args[0],
+        smooth_time=args[1],
+        initial_value=args[2],
+        order='3',
+        subs=element['subs'],
+        subscript_dict=subscript_dict
+    ),
 
-        "smooth n": lambda element, subscript_dict, args: builder.add_n_smooth(
-                smooth_input = args[0],
-                smooth_time = args[1],
-                initial_value = args[2],
-                order = args[3],
-                subs = element['subs'],
-                subscript_dict = subscript_dict
-            ),
+    "smooth n": lambda element, subscript_dict, args: builder.add_n_smooth(
+        smooth_input=args[0],
+        smooth_time=args[1],
+        initial_value=args[2],
+        order=args[3],
+        subs=element['subs'],
+        subscript_dict=subscript_dict
+    ),
 
-        "trend": lambda element, subscript_dict, in_var, avg_time, init_trend: builder.add_n_trend(
-            in_var,
-            avg_time,
-            init_trend,
-            element['subs'],
-            subscript_dict),
+    "trend": lambda element, subscript_dict, args: builder.add_n_trend(
+        trend_input=args[0],
+        average_time=args[1],
+        initial_trend=args[2],
+        subs=element['subs'],
+        subscript_dict=subscript_dict),
 
-        "initial": lambda element, subscript_dict, args: builder.add_initial(args[0]),
+    "initial": lambda element, subscript_dict, args: builder.add_initial(args[0]),
 
-        "a function of": lambda element, subscript_dict, args: builder.add_incomplete(element['real_name'], args)
-    }
+    "a function of": lambda element, subscript_dict, args: builder.add_incomplete(
+        element['real_name'], args)
+}
+
 
 def parse_general_expression(element, namespace=None, subscript_dict=None, macro_list=None):
     """

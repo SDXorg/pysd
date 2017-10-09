@@ -18,6 +18,7 @@ import os
 import warnings
 import pkg_resources
 
+
 def build(elements, subscript_dict, namespace, outfile_name):
     """
     Actually constructs and writes the python representation of the model
@@ -69,7 +70,7 @@ def build(elements, subscript_dict, namespace, outfile_name):
 
     ''' % {'subscript_dict': repr(subscript_dict),
            'functions': '\n'.join(functions),
-           #'namespace': '{\n' + '\n'.join(['%s: %s' % (key, namespace[key]) for key in
+           # 'namespace': '{\n' + '\n'.join(['%s: %s' % (key, namespace[key]) for key in
            #                                namespace.keys()]) + '\n}',
            'namespace': repr(namespace),
            'outfile': outfile_name,
@@ -447,8 +448,8 @@ def add_n_trend(trend_input, average_time, initial_trend, subs, subscript_dict):
 
     stateful = {
         'py_name': utils.make_python_identifier('trend_%s_%s_%s' % (trend_input,
-                                                                        average_time,
-                                                                        initial_trend))[0],
+                                                                    average_time,
+                                                                    initial_trend))[0],
         'real_name': 'trend of %s' % trend_input,
         'doc': 'Trend average time: %s \n Trend initial value %s' % (
             average_time, initial_trend),
@@ -461,6 +462,7 @@ def add_n_trend(trend_input, average_time, initial_trend, subs, subscript_dict):
     }
 
     return "%s()" % stateful['py_name'], [stateful]
+
 
 def add_initial(initial_input):
     """
@@ -545,10 +547,8 @@ def add_incomplete(var_name, dependencies):
      in which we can raise a warning about the incomplete equation
      at translate time.
     """
-    warnings.warn('%s has no equation specified' %var_name,
-                   SyntaxWarning, stacklevel=2)
+    warnings.warn('%s has no equation specified' % var_name,
+                  SyntaxWarning, stacklevel=2)
 
     # first arg is `self` reference
     return "functions.incomplete(%s)" % ', '.join(dependencies[1:]), []
-
-
