@@ -4,7 +4,7 @@ block_cipher = None
 
 
 a = Analysis(['wx_xmile2r.py'],
-             pathex=['C:\\Users\\Miguel\\Documents\\0 Versiones\\2 Proyectos\\pysd\\translator_xmile'],
+             pathex=['C:\\Users\\Miguel\\Documents\\0 Versiones\\2 Proyectos\\pysd\\translator_xmile\\Windows-app'],
              binaries=[],
              datas=[],
              hiddenimports=[],
@@ -25,4 +25,4 @@ exe = EXE(pyz,
           debug=False,
           strip=False,
           upx=True,
-          console=True )
+          console=True , icon='Butterfly.ico')
