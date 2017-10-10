@@ -42,8 +42,13 @@ def check_equal(context, variable_1, variable_2, time):
 
 
 @then('{variable_1} is immediately less than {variable_2}')
-def check_equal(context, variable_1, variable_2):
+def check_less(context, variable_1, variable_2):
     compare_variables(context, variable_1, variable_2, 'less')
+
+
+@then('{variable_1} is always less than {variable_2}')
+def check_less(context, variable_1, variable_2):
+    compare_variables(context, variable_1, variable_2, 'less', 'all')
 
 
 @then('{variable_1} is less than {variable_2} at time {time:g}')
@@ -52,8 +57,13 @@ def check_less(context, variable_1, variable_2, time):
 
 
 @then('{variable_1} is immediately greater than {variable_2}')
-def check_equal(context, variable_1, variable_2):
+def check_greater(context, variable_1, variable_2):
     compare_variables(context, variable_1, variable_2, 'greater')
+
+
+@then('{variable_1} is always greater than {variable_2}')
+def check_greater(context, variable_1, variable_2):
+    compare_variables(context, variable_1, variable_2, 'greater', 'all')
 
 
 @then('{variable_1} is greater than {variable_2} at time {time:g}')
@@ -81,7 +91,11 @@ def compare_variables(context, variable_1, variable_2, comparison, time=None):
         val_1 = getattr(context.model.components,
                         context.model.components._namespace[variable_1])()
     elif hasattr(context, 'result') and variable_1 in context.result.columns:
-        val_1 = context.result[variable_1].loc[time]
+        if time == 'all':
+            val_1 = context.result[variable_1].loc[:]
+        else:
+            val_1 = context.result[variable_1].loc[time]
+
     else:
         try:
             val_1 = float(variable_1)
@@ -92,7 +106,10 @@ def compare_variables(context, variable_1, variable_2, comparison, time=None):
         val_2 = getattr(context.model.components,
                         context.model.components._namespace[variable_2])()
     elif hasattr(context, 'result') and variable_2 in context.result.columns:
-        val_2 = context.result[variable_2].loc[time]
+        if time == 'all':
+            val_2 = context.result[variable_2].loc[:]
+        else:
+            val_2 = context.result[variable_2].loc[time]
     else:
         try:
             val_2 = float(variable_2)
@@ -105,3 +122,11 @@ def compare_variables(context, variable_1, variable_2, comparison, time=None):
         test.assert_less(val_1, val_2)
     elif comparison == 'greater':
         test.assert_greater(val_1, val_2)
+
+
+@then('we see that {scenario}')
+def run_scenario(context, scenario):
+    scenarios_available = context._stack[1]['feature'].scenarios
+    scenario_names = [s.name for s in scenarios_available]
+    if scenario in scenario_names:
+        scenarios_available[scenario_names.index(scenario)].run(context._runner)

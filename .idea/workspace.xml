@@ -5,14 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a7e5b169-cc30-45fb-a7f9-e8e84f9c05bd" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models" afterPath="$PROJECT_DIR$/tests/test-models" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/testing/testing.py" afterPath="$PROJECT_DIR$/pysd/testing/testing.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/testing/gherkin_steps/step_definitions.py" afterPath="$PROJECT_DIR$/pysd/testing/gherkin_steps/step_definitions.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/samples/SIR/SIR.py" afterPath="$PROJECT_DIR$/tests/test-models/samples/SIR/SIR.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/samples/teacup/teacup.py" afterPath="$PROJECT_DIR$/tests/test-models/samples/teacup/teacup.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.py" afterPath="$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/number_handling/test_number_handling.py" afterPath="$PROJECT_DIR$/tests/test-models/tests/number_handling/test_number_handling.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/tests/smooth/test_smooth.mdl" afterPath="$PROJECT_DIR$/tests/test-models/tests/smooth/test_smooth.mdl" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/unit_test_testing.py" afterPath="$PROJECT_DIR$/tests/unit_test_testing.py" />
     </list>
     <ignored path="pysd.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -38,7 +37,7 @@
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestParse_general_expression_test_subscript_1d_constant.coverage" NAME="Unittest TestParse_general_expression.test_subscript_1d_constant Coverage Results" MODIFIED="1467377467131" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Doctest_make_coord_dict.coverage" NAME="Doctest make_coord_dict Coverage Results" MODIFIED="1465995392857" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/pysd" />
     <SUITE FILE_PATH="coverage/pysd$Nosetests_in_TestIntegrationExamples.coverage" NAME="Nosetests in TestIntegrationExamples Coverage Results" MODIFIED="1488469954770" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
-    <SUITE FILE_PATH="coverage/pysd$Nosetests_in_tests.coverage" NAME="Nosetests in tests Coverage Results" MODIFIED="1506535262410" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/pysd$Nosetests_in_tests.coverage" NAME="Nosetests in tests Coverage Results" MODIFIED="1507663762103" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Nosetest_TestPySD_test_run_includes_last_value.coverage" NAME="Nosetest TestPySD.test_run_includes_last_value Coverage Results" MODIFIED="1475249607181" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Nosetest_TestIntegrationExamples_test_macro_expression.coverage" NAME="Nosetest TestIntegrationExamples.test_macro_expression Coverage Results" MODIFIED="1475502533880" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestEquationStringParsing_test_pathological_names.coverage" NAME="Unittest TestEquationStringParsing.test_pathological_names Coverage Results" MODIFIED="1467392416557" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
@@ -114,7 +113,7 @@
     <SUITE FILE_PATH="coverage/pysd$Nosetest_TestIntegrationExamples_test_macro_output.coverage" NAME="Nosetest TestIntegrationExamples.test_macro_output Coverage Results" MODIFIED="1490384037542" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittests_in_TestIntegrationExamples.coverage" NAME="Unittests in TestIntegrationExamples Coverage Results" MODIFIED="1469111165299" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestPySD_test_set_constant_parameter.coverage" NAME="Unittest TestPySD.test_set_constant_parameter Coverage Results" MODIFIED="1467380901876" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
-    <SUITE FILE_PATH="coverage/pysd$Nosetests_for_tests_unit_test_testing_TestGherkin_test_gherkin_tester.coverage" NAME="Nosetests for tests.unit_test_testing.TestGherkin.test_gherkin_tester Coverage Results" MODIFIED="1506522912073" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
+    <SUITE FILE_PATH="coverage/pysd$Nosetests_for_tests_unit_test_testing_TestGherkin_test_gherkin_tester.coverage" NAME="Nosetests for tests.unit_test_testing.TestGherkin.test_gherkin_tester Coverage Results" MODIFIED="1507313100310" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestIntegrationExamples_test_line_continuation.coverage" NAME="Unittest TestIntegrationExamples.test_line_continuation Coverage Results" MODIFIED="1467144562229" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Nosetests_for_unit_test_testing_TestBoundsChecker_testCreateRangeTestTemplate.coverage" NAME="Nosetests for unit_test_testing.TestBoundsChecker.testCreateRangeTestTemplate Coverage Results" MODIFIED="1502286052006" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/pysd$Unittest_TestEquationStringParsing_test_basics.coverage" NAME="Unittest TestEquationStringParsing.test_basics Coverage Results" MODIFIED="1464355328930" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
@@ -860,17 +859,113 @@
     </favorites_list>
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.5">
+    <splitter split-orientation="horizontal" split-proportion="0.44979647">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
           <file leaf-file-name="testing.py" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/pysd/testing/testing.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="486">
-                  <caret line="448" column="10" lean-forward="true" selection-start-line="448" selection-start-column="10" selection-end-line="448" selection-end-column="10" />
+                <state relative-caret-position="909">
+                  <caret line="468" column="6" lean-forward="false" selection-start-line="468" selection-start-column="6" selection-end-line="468" selection-end-column="6" />
                   <folding>
                     <element signature="e#0#19#0" expanded="true" />
                   </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="gherkin.grammar" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/pysd/testing/gherkin.grammar">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="0">
+                  <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="step_definitions.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/pysd/testing/gherkin_steps/step_definitions.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="930">
+                  <caret line="62" column="0" lean-forward="false" selection-start-line="62" selection-start-column="0" selection-end-line="62" selection-end-column="0" />
+                  <folding>
+                    <element signature="e#0#20#0" expanded="true" />
+                  </folding>
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="model.py" pinned="false" current-in-tab="false">
+            <entry file="file://$USER_HOME$/anaconda/lib/python3.6/site-packages/behave/model.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="10425">
+                  <caret line="705" column="0" lean-forward="false" selection-start-line="705" selection-start-column="0" selection-end-line="705" selection-end-column="0" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="matchers.py" pinned="false" current-in-tab="false">
+            <entry file="file://$USER_HOME$/anaconda/lib/python3.6/site-packages/behave/matchers.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="1350">
+                  <caret line="96" column="0" lean-forward="false" selection-start-line="96" selection-start-column="0" selection-end-line="96" selection-end-column="0" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="__main__.py" pinned="false" current-in-tab="false">
+            <entry file="file://$USER_HOME$/anaconda/lib/python3.6/site-packages/behave/__main__.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="1755">
+                  <caret line="126" column="0" lean-forward="false" selection-start-line="126" selection-start-column="0" selection-end-line="126" selection-end-column="0" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="runner.py" pinned="false" current-in-tab="false">
+            <entry file="file://$USER_HOME$/anaconda/lib/python3.6/site-packages/behave/runner.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="10590">
+                  <caret line="718" column="0" lean-forward="false" selection-start-line="718" selection-start-column="0" selection-end-line="718" selection-end-column="0" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="pysd.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/pysd/pysd.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="390">
+                  <caret line="26" column="7" lean-forward="false" selection-start-line="26" selection-start-column="7" selection-end-line="26" selection-end-column="7" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="_version.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/pysd/_version.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="30">
+                  <caret line="2" column="0" lean-forward="false" selection-start-line="2" selection-start-column="0" selection-end-line="2" selection-end-column="0" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+        </leaf>
+      </split-first>
+      <split-second>
+        <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+          <file leaf-file-name="Lotka_Volterra.mdl" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/tests/test-models/samples/Lotka_Volterra/Lotka_Volterra.mdl">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="0">
+                  <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+                  <folding />
                 </state>
               </provider>
             </entry>
@@ -885,15 +980,21 @@
               </provider>
             </entry>
           </file>
-        </leaf>
-      </split-first>
-      <split-second>
-        <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-          <file leaf-file-name="Lotka_Volterra.mdl" pinned="false" current-in-tab="true">
-            <entry file="file://$PROJECT_DIR$/tests/test-models/samples/Lotka_Volterra/Lotka_Volterra.mdl">
+          <file leaf-file-name="integration_test_xmile_pathway.py" pinned="false" current-in-tab="false">
+            <entry file="file://$PROJECT_DIR$/tests/integration_test_xmile_pathway.py">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="0">
+                <state relative-caret-position="-5300">
                   <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+                  <folding />
+                </state>
+              </provider>
+            </entry>
+          </file>
+          <file leaf-file-name="unit_test_testing.py" pinned="false" current-in-tab="true">
+            <entry file="file://$PROJECT_DIR$/tests/unit_test_testing.py">
+              <provider selected="true" editor-type-id="text-editor">
+                <state relative-caret-position="525">
+                  <caret line="223" column="10" lean-forward="true" selection-start-line="223" selection-start-column="10" selection-end-line="223" selection-end-column="10" />
                   <folding />
                 </state>
               </provider>
@@ -994,11 +1095,11 @@
         <option value="$PROJECT_DIR$/pysd/__init__.py" />
         <option value="$PROJECT_DIR$/pysd/pysd.py" />
         <option value="$PROJECT_DIR$/requirements.txt" />
+        <option value="$PROJECT_DIR$/pysd/_version.py" />
+        <option value="$PROJECT_DIR$/pysd/testing/testing.py" />
+        <option value="$PROJECT_DIR$/tests/test-models/samples/Lotka_Volterra/behavior_tests.feature" />
         <option value="$PROJECT_DIR$/pysd/testing/gherkin_steps/step_definitions.py" />
         <option value="$PROJECT_DIR$/tests/unit_test_testing.py" />
-        <option value="$PROJECT_DIR$/pysd/_version.py" />
-        <option value="$PROJECT_DIR$/tests/test-models/samples/Lotka_Volterra/behavior_tests.feature" />
-        <option value="$PROJECT_DIR$/pysd/testing/testing.py" />
       </list>
     </option>
   </component>
@@ -1009,8 +1110,9 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="width" value="1440" />
-    <option name="height" value="896" />
+    <option name="x" value="-1920" />
+    <option name="width" value="1920" />
+    <option name="height" value="1080" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -1042,7 +1144,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -1065,7 +1166,7 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
-              <option name="myItemId" value="pysd" />
+              <option name="myItemId" value="tests" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -1082,13 +1183,10 @@
               <option name="myItemId" value="pysd" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="testing" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
           </PATH>
         </subPane>
       </pane>
+      <pane id="Scratches" />
       <pane id="Scope" />
     </panes>
   </component>
@@ -1556,13 +1654,7 @@
     <servers />
   </component>
   <component name="TestHistory">
-    <history-entry file="Nosetests_for_tests_unit_test_testing_TestGherkin_test_gherkin_tester - 2017.09.27 at 10h 16m 46s.xml">
-      <configuration name="Nosetests for tests.unit_test_testing.TestGherkin.test_gherkin_tester" configurationId="tests" />
-    </history-entry>
-    <history-entry file="Nosetests_for_tests_unit_test_testing_TestGherkin_test_gherkin_tester - 2017.09.27 at 10h 35m 02s.xml">
-      <configuration name="Nosetests for tests.unit_test_testing.TestGherkin.test_gherkin_tester" configurationId="tests" />
-    </history-entry>
-    <history-entry file="Nosetests_for_tests_unit_test_testing_TestGherkin_test_gherkin_tester - 2017.09.27 at 10h 35m 13s.xml">
+    <history-entry file="Nosetests_for_tests_unit_test_testing_TestGherkin_test_gherkin_tester - 2017.10.06 at 14h 17m 31s.xml">
       <configuration name="Nosetests for tests.unit_test_testing.TestGherkin.test_gherkin_tester" configurationId="tests" />
     </history-entry>
     <history-entry file="Nosetests_for_unit_test_testing_TestGherkin - 2017.09.26 at 17h 08m 56s.xml">
@@ -1586,6 +1678,12 @@
     <history-entry file="Nosetests_in_tests - 2017.09.27 at 14h 02m 05s.xml">
       <configuration name="Nosetests in tests" configurationId="tests" />
     </history-entry>
+    <history-entry file="Nosetests_in_tests - 2017.10.06 at 13h 25m 29s.xml">
+      <configuration name="Nosetests in tests" configurationId="tests" />
+    </history-entry>
+    <history-entry file="Nosetests_in_tests - 2017.10.10 at 15h 30m 15s.xml">
+      <configuration name="Nosetests in tests" configurationId="tests" />
+    </history-entry>
   </component>
   <component name="TodoView" selected-index="1">
     <todo-panel id="selected-file">
@@ -1597,19 +1695,19 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="0" width="1440" height="896" extended-state="6" />
+    <frame x="-1920" y="0" width="1920" height="1080" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.24964234" sideWeight="0.4936306" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2172524" sideWeight="0.4936306" order="1" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32771084" sideWeight="0.49753347" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39036146" sideWeight="0.4806867" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297568" sideWeight="0.48677248" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.46746987" sideWeight="0.4892704" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32793522" sideWeight="0.4892704" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.23012048" sideWeight="0.48907682" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.1746988" sideWeight="0.49753347" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24892704" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22168675" sideWeight="0.5193133" order="11" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2637131" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22139303" sideWeight="0.5193133" order="11" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2636816" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.15574348" sideWeight="0.5063694" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.29470673" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
@@ -1718,16 +1816,6 @@
           <option name="timeStamp" value="521" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$USER_HOME$/anaconda/lib/python3.6/site-packages/behave/__main__.py</url>
-          <line>126</line>
-          <option name="timeStamp" value="524" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$USER_HOME$/anaconda/lib/python3.6/site-packages/behave/runner.py</url>
-          <line>625</line>
-          <option name="timeStamp" value="525" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$USER_HOME$/anaconda/lib/python3.6/site-packages/behave/runner.py</url>
           <line>718</line>
           <option name="timeStamp" value="526" />
@@ -1739,8 +1827,13 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/pysd/testing/gherkin_steps/step_definitions.py</url>
+          <line>70</line>
+          <option name="timeStamp" value="530" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/pysd/testing/gherkin_steps/step_definitions.py</url>
           <line>12</line>
-          <option name="timeStamp" value="528" />
+          <option name="timeStamp" value="531" />
         </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
@@ -1752,7 +1845,7 @@
           <properties exception="BaseException" />
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="530" />
+      <option name="time" value="532" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="tests">
@@ -1763,9 +1856,6 @@
     </watches-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/macro_multi_macros/expression_macro.py" />
-    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/macro_multi_macros/second_macro.py" />
-    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/input_functions/test_inputs.py" />
     <entry file="file://$PROJECT_DIR$/tests/test-models/tests/ln/test_ln.py" />
     <entry file="file://$PROJECT_DIR$/setup.cfg">
       <provider selected="true" editor-type-id="text-editor">
@@ -1909,13 +1999,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pysd/testing/gherkin.grammar">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/pysd/py_backend/__init__.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
@@ -1934,13 +2017,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/tests/test-models/samples/teacup/behavior_tests.feature">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="6" column="42" lean-forward="false" selection-start-line="6" selection-start-column="42" selection-end-line="6" selection-end-column="42" />
         </state>
       </provider>
     </entry>
@@ -1965,13 +2041,6 @@
           <folding>
             <element signature="e#0#38#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pysd/pysd.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="187">
-          <caret line="26" column="7" lean-forward="false" selection-start-line="26" selection-start-column="7" selection-end-line="26" selection-end-column="7" />
         </state>
       </provider>
     </entry>
@@ -2003,36 +2072,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tests/unit_test_testing.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="90">
-          <caret line="6" column="0" lean-forward="true" selection-start-line="6" selection-start-column="0" selection-end-line="6" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pysd/_version.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="30">
-          <caret line="2" column="0" lean-forward="true" selection-start-line="2" selection-start-column="0" selection-end-line="2" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/anaconda/lib/python3.6/site-packages/behave/runner.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="411">
-          <caret line="718" column="0" lean-forward="false" selection-start-line="718" selection-start-column="0" selection-end-line="718" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/anaconda/lib/python3.6/site-packages/behave/__main__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="459">
-          <caret line="126" column="0" lean-forward="false" selection-start-line="126" selection-start-column="0" selection-end-line="126" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/anaconda/lib/python3.6/argparse.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="15">
@@ -2044,16 +2083,90 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="15">
           <caret line="465" column="16" lean-forward="false" selection-start-line="465" selection-start-column="4" selection-end-line="465" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/test-models/samples/Lotka_Volterra/Lotka_Volterra.mdl">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/test-models/samples/teacup/behavior_tests.feature" />
+    <entry file="file://$PROJECT_DIR$/pysd/testing/gherkin.grammar">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pysd/pysd.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="390">
+          <caret line="26" column="7" lean-forward="false" selection-start-line="26" selection-start-column="7" selection-end-line="26" selection-end-column="7" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pysd/_version.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="30">
+          <caret line="2" column="0" lean-forward="false" selection-start-line="2" selection-start-column="0" selection-end-line="2" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda/lib/python3.6/site-packages/behave/__main__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1755">
+          <caret line="126" column="0" lean-forward="false" selection-start-line="126" selection-start-column="0" selection-end-line="126" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda/lib/python3.6/site-packages/behave/matchers.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1350">
+          <caret line="96" column="0" lean-forward="false" selection-start-line="96" selection-start-column="0" selection-end-line="96" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda/lib/python3.6/site-packages/behave/runner.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="10590">
+          <caret line="718" column="0" lean-forward="false" selection-start-line="718" selection-start-column="0" selection-end-line="718" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$USER_HOME$/anaconda/lib/python3.6/site-packages/behave/model.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="10425">
+          <caret line="705" column="0" lean-forward="false" selection-start-line="705" selection-start-column="0" selection-end-line="705" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/pysd/testing/gherkin_steps/step_definitions.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="750">
-          <caret line="50" column="53" lean-forward="false" selection-start-line="50" selection-start-column="53" selection-end-line="50" selection-end-column="53" />
+        <state relative-caret-position="930">
+          <caret line="62" column="0" lean-forward="false" selection-start-line="62" selection-start-column="0" selection-end-line="62" selection-end-column="0" />
           <folding>
             <element signature="e#0#20#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pysd/testing/testing.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="909">
+          <caret line="468" column="6" lean-forward="false" selection-start-line="468" selection-start-column="6" selection-end-line="468" selection-end-column="6" />
+          <folding>
+            <element signature="e#0#19#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -2066,21 +2179,19 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tests/test-models/samples/Lotka_Volterra/Lotka_Volterra.mdl">
+    <entry file="file://$PROJECT_DIR$/tests/integration_test_xmile_pathway.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
+        <state relative-caret-position="-5300">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/pysd/testing/testing.py">
+    <entry file="file://$PROJECT_DIR$/tests/unit_test_testing.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="486">
-          <caret line="448" column="10" lean-forward="true" selection-start-line="448" selection-start-column="10" selection-end-line="448" selection-end-column="10" />
-          <folding>
-            <element signature="e#0#19#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="525">
+          <caret line="223" column="10" lean-forward="true" selection-start-line="223" selection-start-column="10" selection-end-line="223" selection-end-column="10" />
+          <folding />
         </state>
       </provider>
     </entry>
