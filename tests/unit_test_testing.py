@@ -205,13 +205,11 @@ class TestCheckTimestep(unittest.TestCase):
         cls.model = pysd.read_vensim(
             'test-models/tests/euler_step_vs_saveper/test_euler_step_vs_saveper.mdl')
 
-    @unittest.skip
     def test_throws_error(self):
         self.model.set_components({'TIME STEP': 1})
         errors = pysd.testing.timestep_test(self.model)
         self.assertGreater(len(errors), 0)
 
-    @unittest.skip
     def test_no_error(self):
         self.model.set_components({'TIME STEP': .01})
         errors = pysd.testing.timestep_test(self.model)
