@@ -314,17 +314,19 @@ class TestPySD(unittest.TestCase):
 
     def test_default_returns_with_construction_functions(self):
         """
-        If the run function is called with no arguments
+        If the run function is called with no arguments, should still be able
+        to get default return functions.
 
         """
         import pysd
         model = pysd.read_vensim('test-models/tests/delays/test_delays.mdl')
         ret = model.run()
-        self.assertTrue({'Stock Delay1I',
-                         'Stock Delay3I',
-                         'Stock Delay1',
-                         'Stock DelayN',
-                         'Stock Delay3'} <=
+        self.assertTrue({'Initial Value',
+                         'Input',
+                         'Order Variable',
+                         'Output Delay1',
+                         'Output Delay1I',
+                         'Output Delay3'} <=
                         set(ret.columns.values))
 
     def test_default_returns_with_lookups(self):
@@ -429,6 +431,7 @@ class TestModelInteraction(unittest.TestCase):
         model.run()
         self.assertEqual(new, 345)
         self.assertNotEqual(old, new)
+
 
 class TestMultiRun(unittest.TestCase):
     def test_delay_reinitializes(self):

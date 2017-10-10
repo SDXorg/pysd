@@ -19,6 +19,7 @@ import warnings
 import random
 import xarray as xr
 from funcsigs import signature
+import os
 
 try:
     import scipy.stats as stats
@@ -221,6 +222,23 @@ class Smooth(Stateful):
         targets[0] = self.input_func()
         return (targets - self.state) * self.order / self.smooth_time_func()
 
+class Trend(Stateful):
+    def __init__(self, trend_input, average_time, initial_trend):
+        super(Trend, self).__init__()
+        self.init_func = initial_trend
+        self.average_time_function = average_time
+        self.input_func = trend_input
+
+    def initialize(self):
+        self.state = self.input_func()/(1+self.init_func()*self.average_time_function())
+
+    def __call__(self):
+        return zidz(self.input_func()-self.state,self.average_time_function()*abs(self.state))
+
+
+    def ddt(self):
+        return (self.input_func() - self.state)/self.average_time_function()
+
 
 class Initial(Stateful):
     def __init__(self, func):
@@ -267,7 +285,7 @@ class Macro(Stateful):
         self.time = None
 
         # need a unique identifier for the imported module.
-        module_name = py_model_file + str(random.randint(0, 1000000))
+        module_name = os.path.splitext(py_model_file)[0] + str(random.randint(0, 1000000))
         self.components = imp.load_source(module_name,
                                           py_model_file)
 
@@ -335,11 +353,11 @@ class Macro(Stateful):
             # we don't call the overridden method when Macro is subclassed as Model
 
     def ddt(self):
-        return np.array([component.ddt() for component in self._stateful_elements])
+        return np.array([component.ddt() for component in self._stateful_elements], dtype=object)
 
     @property
     def state(self):
-        return np.array([component.state for component in self._stateful_elements])
+        return np.array([component.state for component in self._stateful_elements], dtype=object)
 
     @state.setter
     def state(self, new_value):
@@ -747,9 +765,9 @@ class Model(Macro):
         return outputs
 
 
-def ramp(slope, start, finish):
+def ramp(slope, start, finish=0):
     """
-    Implements vensim's RAMP function
+    Implements vensim's and xmile's RAMP function
 
     Parameters
     ----------
@@ -758,7 +776,7 @@ def ramp(slope, start, finish):
     start: float
         Time at which the ramp begins
     finish: float
-        Time at which the ramo ends
+        Optional. Time at which the ramp ends
 
     Returns
     -------
@@ -773,10 +791,13 @@ def ramp(slope, start, finish):
     t = time()
     if t < start:
         return 0
-    elif t > finish:
-        return slope * (finish - start)
     else:
-        return slope * (t - start)
+        if finish <= 0:
+            return slope * (t - start)
+        elif t > finish:
+            return slope * (finish - start)
+        else:
+            return slope * (t - start)
 
 
 def step(value, tstep):
@@ -808,7 +829,6 @@ def pulse(start, duration):
     t = time()
     return 1 if start <= t < start + duration else 0
 
-
 def pulse_train(start, duration, repeat_time, end):
     """ Implements vensim's PULSE TRAIN function
 
@@ -822,6 +842,31 @@ def pulse_train(start, duration, repeat_time, end):
     else:
         return 0
 
+def pulse_magnitude(magnitude, start, repeat_time=0):
+    """ Implements xmile's PULSE function
+    
+    PULSE:             Generate a one-DT wide pulse at the given time
+       Parameters:     2 or 3:  (magnitude, first time[, interval])
+                       Without interval or when interval = 0, the PULSE is generated only once
+       Example:        PULSE(20, 12, 5) generates a pulse value of 20/DT at time 12, 17, 22, etc.
+    
+    In rage [-inf, start) returns 0
+    In range [start + n * repeat_time, start + n * repeat_time + dt) return magnitude/dt
+    In rage [start + n * repeat_time + dt, start + (n + 1) * repeat_time) return 0
+    """
+    t = time()
+    small = 1e-6  # What is considered zero according to Vensim Help
+    if repeat_time <= small:
+        if abs(t - start) < time_step:
+            return magnitude * time_step
+        else:
+            return 0
+    else:
+        if abs((t - start) % repeat_time) < time_step:
+            return magnitude * time_step
+        else:
+            return 0
+    
 
 def lookup(x, xs, ys):
     """ Provides the working mechanism for lookup functions the builder builds """

@@ -16,6 +16,7 @@ from __future__ import absolute_import
 
 def read_xmile(xmile_file):
     """ Construct a model object from `.xmile` file. """
+    from . import py_backend
     from .py_backend.xmile.xmile2py import translate_xmile
     py_model_file = translate_xmile(xmile_file)
     model = load(py_model_file)

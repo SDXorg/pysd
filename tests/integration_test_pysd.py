@@ -146,6 +146,11 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/lookups_inline_bounded/test_lookups_inline_bounded.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    def test_lookups_with_expr(self):
+        from.test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/lookups_with_expr/test_lookups_with_expr.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_macro_cross_reference(self):
         from .test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/macro_cross_reference/test_macro_cross_reference.mdl')
@@ -351,6 +356,11 @@ class TestIntegrationExamples(unittest.TestCase):
     def test_time(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/time/test_time.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
+    def test_trend(self):
+        from .test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/trend/test_trend.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_trig(self):
