@@ -139,7 +139,7 @@ class XmileAux:
         self.name = aux_dict["aux_name"]
         self.is_parameter = aux_dict["is_parameter"]
         if "ypts" in aux_dict:
-            self.eqn = aux_dict["eqn_str"]
+            self.eqn = aux_dict["eqn"]
             self.type = "series"
             self.x_max = aux_dict["x_max"]
             self.x_min = aux_dict["x_min"]
@@ -150,12 +150,12 @@ class XmileAux:
                                    aux_dict["ypts"].split(",")))
         else:
             self.units = aux_dict["units"]
-            if isfloat(aux_dict["eqn_str"]):
+            if isfloat(aux_dict["eqn"]):
                 self.type = "value"
-                self.value = aux_dict["eqn_str"]
+                self.value = aux_dict["eqn"]
             else:
                 self.type = "equation"
-                self.eqn = aux_dict["eqn_str"]
+                self.eqn = aux_dict["eqn"]
 
     def show(self):
         aux_report = "".join(["CONVERTER",
@@ -602,7 +602,7 @@ def xmile_parser(model_file):
         entry =  line+
         line = ("<flow" (ws flow_disp_name)? ws
                         "name=" qtm flow_name qtm ">")? nl?
-                   (ws? "<eqn>" nl)? (ws eqn nl)? (skip nl)?
+                   (ws? "<eqn>" nl eqn? "</eqn>" nl)?
                    (ws? "<scale " skip nl)?
                    (ws? "</scale>" nl)?
                    (ws? "<non_negative>" nl? ws? "</non_negative>")?
@@ -618,7 +618,7 @@ def xmile_parser(model_file):
                ("</flow>" nl)?
         flow_disp_name = "isee:display_name=" qtm str qtm
         flow_name = ~"[A-Za-z0-9$_ áéíóúñ]*"
-        eqn = ~"[A-z0-9.*/\(\)_\-\+ áéíóúñ]*"
+        eqn = ~"[ A-z0-9.,;&+*/áéíóúñ\-\^\(\)\n]*"
         val = ~"[0-9.]*"
         units = ~"[A-z/]*"
         str = ~"[A-z0-9_]*"
@@ -631,7 +631,7 @@ def xmile_parser(model_file):
     aux_grammar = r"""
         entry =  line+
         line = ("<aux" ws (aux_disp_name ws)? "name=" qtm aux_name qtm ">" nl)?
-                   (ws? "<eqn>" nl ws? eqn_str nl ws "</eqn>" nl)?
+                   (ws? "<eqn>" nl eqn? "</eqn>" nl)?
                    (ws? "<units>" nl ws units nl ws "</units>" nl)?
                    (ws? "<display" skip nl)?
                    (ws? "<format" skip nl)?
@@ -658,7 +658,7 @@ def xmile_parser(model_file):
         min = ~"[0-9.]*"
         max = ~"[0-9.]*"
         aux_name = ~"[A-Za-z0-9$_ áéíóúñ]*"
-        eqn_str = ~"[ A-z0-9.,+\-\^*/\(\)áéíóúñ]*"
+        eqn = ~"[ A-z0-9.,;&+*/áéíóúñ\-\^\(\)\n]*"
         ypts = ~"[0-9.,-]*"
         units = ~"[A-z/ ]*"
         str = ~"[A-z0-9\"_]*"
@@ -720,8 +720,8 @@ def xmile_parser(model_file):
         def visit_aux_name(self, n, vc):
             self.entry['aux_name'] = n.text
 
-        def visit_eqn_str(self, n, vc):
-            self.entry['eqn_str'] = n.text
+        def visit_eqn(self, n, vc):
+            self.entry['eqn'] = n.text
 
         def visit_units(self, n, vc):
             self.entry['units'] = n.text
@@ -756,12 +756,12 @@ def xmile_parser(model_file):
     for flw in xmile_soup.model.find_all("flow"):
         if "eqn" in flw.prettify():
             flw_parse = FlowParser(flow_grammar, flw.prettify()).entry
+            flw_parse["eqn"] = flw_parse["eqn"].replace("\n", " ").strip(" ")
             if "units" not in flw_parse:
                 flw_parse["units"] = ""
             name = flw_parse["flow_name"].replace(" ", "_")
-            name = name.replace("á", "a").replace("é", "e").replace("í",
-                                                                    "i").replace("ó", "o").replace("ú", "u").replace(
-                "ñ", "n")
+            name = name.replace("á", "a").replace("é", "e").replace("í", "i").\
+                        replace("ó", "o").replace("ú", "u").replace("ñ", "n")
             flw_parse["flow_name"] = name
             flows_set = flows_set.union([name])
             flows[name] = flw_parse
@@ -801,6 +801,7 @@ def xmile_parser(model_file):
             aux_parse = AuxParser(aux_grammar, ax.prettify()).entry
             name = aux_parse["aux_name"].replace(" ", "_")
             aux_parse["aux_name"] = name
+            aux_parse["eqn"] = aux_parse["eqn"].replace("\n", " ").strip(" ")
             auxs_set = auxs_set.union([name])
             if "units" not in aux_parse:
                 aux_parse["units"] = ""
