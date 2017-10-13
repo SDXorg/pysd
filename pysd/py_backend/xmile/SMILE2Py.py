@@ -165,7 +165,7 @@ builders = {
     "trend": lambda element, subscript_dict, args: builder.add_n_trend(
             trend_input = args[0], 
             average_time = args[1], 
-            initial_trend args[2] if len(args) > 2 else 0,
+            initial_trend = args[2] if len(args) > 2 else 0,
             subs = element['subs'], 
             subscript_dict = subscript_dict
         ),
