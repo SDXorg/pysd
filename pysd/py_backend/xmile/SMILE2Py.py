@@ -127,7 +127,7 @@ builders = {
     "delayn": lambda element, subscript_dict, args: builder.add_n_delay(
             delay_input = args[0], 
             delay_time = args[1], 
-            input_value = args[2] if len(args) > 3 else args[0], 
+            initial_value = args[2] if len(args) > 3 else args[0], 
             order = args[2], 
             subs = element['subs'], 
             subscript_dict = subscript_dict
@@ -161,12 +161,14 @@ builders = {
         ),
     
     # "forcst" !TODO!
+    
     "trend": lambda element, subscript_dict, args: builder.add_n_trend(
-        trend_input=args[0],
-        average_time=args[1],
-        initial_trend=args[2],
-        subs=element['subs'],
-        subscript_dict=subscript_dict),
+            trend_input = args[0], 
+            average_time = args[1], 
+            initial_trend = args[2] if len(args) > 2 else 0,
+            subs = element['subs'], 
+            subscript_dict = subscript_dict
+        ),
     
     "init": lambda element, subscript_dict, args: builder.add_initial(args[0]),
 }
