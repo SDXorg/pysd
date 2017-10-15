@@ -315,6 +315,7 @@ class XmileModel:
         for eqn_k, eqn_v in supporting_eqn.items():
             flw_equations = {re.sub(eqn_k, eqn_v, eqn) for eqn in flw_equations}
 
+        # Equation formatting in the model function block
         flw_equations = {re.sub(r"(?<!<)([*+/-])", r" \1 ", eqn) for eqn in flw_equations}
 
         lines = "".join(sorted(flw_equations))
@@ -324,17 +325,13 @@ class XmileModel:
         # differential equation specification
         lines, d_func = "", []
         for d_eqn in self.stocks:
-            lines = "".join([lines,
-                             "d_", d_eqn.name, " <- ",
-                             d_eqn.eqn, "\n    "])
+            lines = "".join([lines, "d_", d_eqn.name, " <- ", d_eqn.eqn, "\n    "])
             d_func.append("d_" + d_eqn.name)
 
         d_func = "    list(c(" + ", ".join(d_func) + "))\n}\n"
 
-        r_script_slv = "".join([r_script_slv, "\n    ", lines, "\n",
-                                "    # Model output list\n",
-                                d_func,
-                                "\n", "#" * 50])
+        r_script_slv = "".join([r_script_slv, "\n    ", lines, "\n", "    # Model output list\n",
+                                d_func, "\n", "#" * 50])
 
         # Define R object to store model parameters and supporting functions
         sup_funcs, series, items = [], [], []
@@ -384,9 +381,9 @@ class XmileModel:
         if sup_funcs:
             r_script_slv = "".join([r_script_slv, "\n\n# Supporting functions\n", "\n".join(sup_funcs)])
         if items:
-            r_script_slv = "".join([r_script_slv, "\n\n" +
-                                    "# Paremeters and initial condition to solve model\n",
-                                    "parms <- c(" + ", ".join(items) + ")\n\n"])
+            parms_str = "c(" + ", ".join(items) + ")"
+            r_script_slv = "".join([r_script_slv, "\n\n", "# Paremeters and initial condition to solve model\n",
+                                    "parms <- ", parms_str, "\n\n"])
         if series:
             r_script_slv = "".join([r_script_slv, "".join(series) + "\n\n"])
 
@@ -444,9 +441,6 @@ class XmileModel:
                           "names(" + ax.name + ") <- c(" + "'" +
                           ax.eqn.lower() + "'" + ", '" + ax.name + "')\n\n")
 
-        if items:
-            r_script_cal = "".join([r_script_cal, "parms <- c(" +
-                                    ", ".join(items) + ")\n\n"])
         if series:
             r_script_cal = "".join([r_script_cal, "".join(series) + "\n"])
 
@@ -455,22 +449,24 @@ class XmileModel:
                             "# include the names of all variables with calibration data\n",
                             "varList <- c("+ ", ".join(['"'+ d +'"' for d in calibration_data]) +")\n\n",
                             "# Set-up data into a data.frame with time column. \n",
-                            "# Verify correspondence between data and variable name in the model\n"
-                            "data <- data.frame(time=" + time + ",\n    " + ",\n    ".join([d +
-                                                "=" + d + "$" + d for d in calibration_data]) +")\n\n",
+                            "# Verify correspondence between data and variable name in the model\n",
+                            "data <- data.frame(time=", time, ",\n    ",
+                            ",\n    ".join([d + "=" + d + "$" + d for d in calibration_data]), ")\n\n",
                             "# load translated model function\n",
                             "source (file_path)\n\n",
                             "# Fit model to calibration data using levenberg marquart\n",
-                            "# algorithm. Please, provide <parms> as initial guess\n",
-                            "fittedModel <- nls.lm(par=parms, fn=ssq, y0 = Y, ",
-                            "t = time, data = data, varList = varList)\n\n\n",
-                            "# Calibration results\n"
-                            "parameters <- fittedModel$par  # store calibrated parameters\n"
-                            "summary(fittedModel)\n\n",
-                            "# Fitted values and plotting\n"
-                            "fittedVals <- ode(func = model, y = Y, times = time, parms = fittedModel$par, ",
+                            "# algorithm. Please, provide parameter initial guess values\n",
+                            "Y0 <- c(" + ", ".join(items) + ")\n",
+                            "parm.0 <- " + parms_str + "\n",
+                            "fittedModel <- nls.lm(par=parm.0, fn=ssq, y0 = Y0, ",
+                            "t = time, data = data, varList = varList)\n\n",
+                            "# Calibration results\n",
+                            "summary(fittedModel)\n",
+                            "parameters <- fittedModel$par  # store calibrated parameters\n\n",
+                            "# Fitted values and plotting\n",
+                            "fittedVals <- ode(func = model, y = Y, times = time, parms = parameters, ",
                             "method = 'rk4')\n\n",
-                            "# Organizing fitted data in a data.frame\n"
+                            "# Organizing fitted data in a data.frame\n",
                             "fitted.data.df <- data.frame(fittedVals)\n\n",
                             "# Plotting fitted & calibration data together\n"
                             "plot(fitted.data.df[, 1], fitted.data.df[, 2], type = 'l', col = 'blue', lwd=2)\n",
