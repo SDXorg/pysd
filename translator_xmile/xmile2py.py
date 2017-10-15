@@ -331,7 +331,7 @@ class XmileModel:
         d_func = "    list(c(" + ", ".join(d_func) + "))\n}\n"
 
         r_script_slv = "".join([r_script_slv, "\n    ", lines, "\n", "    # Model output list\n",
-                                d_func, "\n", "#" * 50])
+                                d_func, "\n", "#" * 50, "\n\n"])
 
         # Define R object to store model parameters and supporting functions
         sup_funcs, series, items = [], [], []
@@ -364,10 +364,8 @@ class XmileModel:
                     data_series = ", ".join(["c(" + str(x) + ", " + str(y) + ")" for (x, y) in ax_v.series])
                     if len(data_series) > 70:
                         data_series = "\n".join(tw.wrap(data_series, 80))
-                    series.append(ax_v.name +
-                                  " <- data.frame(matrix(c(" + data_series +
-                                  "), ncol = 2, byrow = T))\n" +
-                                  "names(" + ax_v.name + ") <- c(" + "'" +
+                    series.append(ax_v.name + " <- data.frame(matrix(c(" + data_series +
+                                  "), ncol = 2, byrow = T))\n" + "names(" + ax_v.name + ") <- c(" + "'" +
                                   ax_v.eqn.lower() + "'" + ", '" + ax_v.name + "')\n")
 
         for fnc_def in supporting_eqn.keys() - self.auxs.keys() - Functions_R.keys():
@@ -376,16 +374,17 @@ class XmileModel:
             elif fnc_def == "RANDOM":
                 sup_funcs.append("\nrandom <- function(min, max)\n{\n     runif(1, min, max)" + "\n}\n")
             else:
-                sup_funcs.append("\nMissing definition for: " + fnc_def)
+                sup_funcs.append("\nMissing definition for: " + fnc_def + "\n")
 
         if sup_funcs:
-            r_script_slv = "".join([r_script_slv, "\n\n# Supporting functions\n", "\n".join(sup_funcs)])
+            r_script_slv = "".join([r_script_slv, "\n# Supporting functions\n", "\n".join(sup_funcs), "\n"])
+        if series:
+            r_script_slv = "".join([r_script_slv, "".join(series) + "\n"])
         if items:
             parms_str = "c(" + ", ".join(items) + ")"
-            r_script_slv = "".join([r_script_slv, "\n\n", "# Paremeters and initial condition to solve model\n",
-                                    "parms <- ", parms_str, "\n\n"])
-        if series:
-            r_script_slv = "".join([r_script_slv, "".join(series) + "\n\n"])
+            parms_str = parms_str[:70] + parms_str[70:].replace(", ", ",\n" + " "*9, 1)
+            r_script_slv = "".join([r_script_slv, "# Paremeters and initial condition to solve model\n",
+                                    "parms <- ", parms_str, "\n"])
 
         # Includes initial conditions for the stocks
         items = []

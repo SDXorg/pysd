@@ -4,10 +4,10 @@
     <option name="SCOPE_TYPE" value="3" />
   </component>
   <component name="BookmarkManager">
-    <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="630" mnemonic="1" />
-    <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="797" mnemonic="2" />
-    <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="600" mnemonic="3" />
+    <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="792" mnemonic="2" />
+    <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="595" mnemonic="3" />
     <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="230" mnemonic="4" />
+    <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="335" mnemonic="1" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a7e5b169-cc30-45fb-a7f9-e8e84f9c05bd" name="Default" comment="">
@@ -849,8 +849,8 @@
       <file leaf-file-name="xmile2py.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/translator_xmile/xmile2py.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="270">
-              <caret line="758" column="75" lean-forward="false" selection-start-line="758" selection-start-column="75" selection-end-line="758" selection-end-column="75" />
+            <state relative-caret-position="198">
+              <caret line="384" column="53" lean-forward="false" selection-start-line="384" selection-start-column="53" selection-end-line="384" selection-end-column="53" />
               <folding>
                 <element signature="e#304#344#0" expanded="true" />
               </folding>
@@ -861,7 +861,7 @@
       <file leaf-file-name="wx_xmile2r.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/translator_xmile/wx_xmile2r.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3186">
+            <state relative-caret-position="-42">
               <caret line="123" column="0" lean-forward="false" selection-start-line="123" selection-start-column="0" selection-end-line="123" selection-end-column="0" />
               <folding />
             </state>
@@ -871,8 +871,8 @@
       <file leaf-file-name="scratch.txt" pinned="false" current-in-tab="false">
         <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="108">
-              <caret line="4" column="58" lean-forward="false" selection-start-line="4" selection-start-column="58" selection-end-line="4" selection-end-column="58" />
+            <state relative-caret-position="562">
+              <caret line="26" column="40" lean-forward="true" selection-start-line="26" selection-start-column="40" selection-end-line="26" selection-end-column="40" />
               <folding />
             </state>
           </provider>
@@ -889,9 +889,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>run</find>
-      <find>lookup =</find>
-      <find>lookup</find>
       <find>with</find>
       <find>doc</find>
       <find>flow_n</find>
@@ -919,6 +916,9 @@
       <find>lkp</find>
       <find>eqn_str</find>
       <find>parameters_set</find>
+      <find>time</find>
+      <find>\1</find>
+      <find>parms</find>
     </findStrings>
     <replaceStrings>
       <replace />
@@ -1067,11 +1067,6 @@
           <expand>
             <path>
               <item name="pysd" type="b2602c69:ProjectViewProjectNode" />
-              <item name="pysd" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="pysd" type="b2602c69:ProjectViewProjectNode" />
-              <item name="pysd" type="462c0819:PsiDirectoryNode" />
               <item name="pysd" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
@@ -1601,7 +1596,21 @@
       <option name="project" value="LOCAL" />
       <updated>1507485193153</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="Prepare to parse IF...THEN...ELSE">
+      <created>1507697317201</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1507697317201</updated>
+    </task>
+    <task id="LOCAL-00012" summary="Prepare to parse IF...THEN...ELSE">
+      <created>1508081144240</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1508081144240</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1643,20 +1652,19 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-11" y="-11" width="1942" height="1102" extended-state="6" />
+    <frame x="-9" y="-9" width="1938" height="1098" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.13189189" sideWeight="0.2970297" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.13372718" sideWeight="0.29346094" order="1" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32664436" sideWeight="0.49753347" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3890086" sideWeight="0.50107414" order="0" side_tool="true" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33620688" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32441473" sideWeight="0.5021482" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22952586" sideWeight="0.48907682" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.23968785" sideWeight="0.49753347" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.23922414" sideWeight="0.49753347" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32435346" sideWeight="0.5021482" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.17513514" sideWeight="0.47971782" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22090517" sideWeight="0.5193133" order="11" side_tool="false" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33110368" sideWeight="0.4989259" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.13189189" sideWeight="0.7029703" order="0" side_tool="true" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.13372718" sideWeight="0.7065391" order="0" side_tool="true" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33081895" sideWeight="0.4989259" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33261803" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
@@ -1666,6 +1674,7 @@
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22650602" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Coverage" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297568" sideWeight="0.5132275" order="4" side_tool="true" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33620688" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297568" sideWeight="0.48677248" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Concurrent Activities Diagram" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32891566" sideWeight="0.5" order="12" side_tool="false" content_ui="tabs" />
@@ -1703,7 +1712,8 @@
     <MESSAGE value="Added icon for windows app" />
     <MESSAGE value="Added supporting functions" />
     <MESSAGE value="Developped supporting function for R." />
-    <option name="LAST_COMMIT_MESSAGE" value="Developped supporting function for R." />
+    <MESSAGE value="Prepare to parse IF...THEN...ELSE" />
+    <option name="LAST_COMMIT_MESSAGE" value="Prepare to parse IF...THEN...ELSE" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1720,18 +1730,8 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/translator_xmile/xmile2py.py</url>
-          <line>285</line>
-          <option name="timeStamp" value="640" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/translator_xmile/xmile2py.py</url>
-          <line>804</line>
-          <option name="timeStamp" value="641" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/translator_xmile/xmile2py.py</url>
-          <line>764</line>
-          <option name="timeStamp" value="642" />
+          <line>383</line>
+          <option name="timeStamp" value="644" />
         </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
@@ -1743,7 +1743,7 @@
           <properties exception="BaseException" />
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="643" />
+      <option name="time" value="646" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="tests">
@@ -1752,10 +1752,7 @@
         <watch expression="index" />
       </configuration>
       <configuration name="PythonConfigurationType">
-        <watch expression="aux_parse" language="Python" />
-        <watch expression="aux_parse[&quot;eqn&quot;]" language="Python" />
-        <watch expression="auxs_dict" language="Python" />
-        <watch expression="parameters_set" language="Python" />
+        <watch expression="parms_str" language="Python" />
       </configuration>
     </watches-manager>
   </component>
@@ -1932,14 +1929,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="108">
-          <caret line="4" column="58" lean-forward="false" selection-start-line="4" selection-start-column="58" selection-end-line="4" selection-end-column="58" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://C:/Anaconda3/Lib/site-packages/wx/core.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="188">
@@ -1954,9 +1943,17 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="562">
+          <caret line="26" column="40" lean-forward="true" selection-start-line="26" selection-start-column="40" selection-end-line="26" selection-end-column="40" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/translator_xmile/wx_xmile2r.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3186">
+        <state relative-caret-position="-42">
           <caret line="123" column="0" lean-forward="false" selection-start-line="123" selection-start-column="0" selection-end-line="123" selection-end-column="0" />
           <folding />
         </state>
@@ -1964,8 +1961,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/translator_xmile/xmile2py.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="270">
-          <caret line="758" column="75" lean-forward="false" selection-start-line="758" selection-start-column="75" selection-end-line="758" selection-end-column="75" />
+        <state relative-caret-position="198">
+          <caret line="384" column="53" lean-forward="false" selection-start-line="384" selection-start-column="53" selection-end-line="384" selection-end-column="53" />
           <folding>
             <element signature="e#304#344#0" expanded="true" />
           </folding>
