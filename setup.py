@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-from distutils.core import setup
+from setuptools import setup
 
 exec(open('pysd/_version.py').read())
 print(__version__)
@@ -17,7 +17,7 @@ setup(
     license='LICENSE.txt',
     description='System Dynamics Modeling in Python',
     long_description=long_description,
-    keywords=['System Dynamics', 'Vensim'],
+    keywords=['System Dynamics', 'Vensim', 'XMILE'],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'License :: OSI Approved :: MIT License',
@@ -32,6 +32,6 @@ setup(
         'yapf',
         'xarray'
     ],
-    package_data={'pysd': ['*.yapf']},
+    package_data={'pysd': ['py_backend/output_style.yapf']},
     include_package_data=True
 )
