@@ -5,30 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a7e5b169-cc30-45fb-a7f9-e8e84f9c05bd" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/dist/pysd-0.1.0.tar.gz" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/dist/pysd-0.1.1.tar.gz" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/dist/pysd-0.2.1.tar.gz" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/dist/pysd-0.2.2.tar.gz" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/dist/pysd-0.2.3.tar.gz" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/dist/pysd-0.2.4.tar.gz" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/dist/pysd-0.2.5.tar.gz" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/dist/pysd-0.2.6.tar.gz" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/dist/pysd-0.3.0.tar.gz" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/dist/pysd-0.3.2.tar.gz" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/dist/pysd-0.5.0.macosx-10.5-x86_64.tar.gz" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/dist/pysd-0.6.0.tar.gz" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/dist/pysd-0.6.2.macosx-10.6-x86_64.tar.gz" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/dist/pysd-0.6.3.tar.gz" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/dist/pysd-0.7.1.tar.gz" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/dist/pysd-0.7.2.tar.gz" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/dist/pysd-0.7.4.tar.gz" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/dist/pysd-0.7.5.tar.gz" afterPath="" />
-      <change type="DELETED" beforePath="$PROJECT_DIR$/dist/pysd-0.7.8.tar.gz" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/MANIFEST" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/dist/pysd-0.8.0-py2.py3-none-any.whl" afterPath="" />
+      <change type="DELETED" beforePath="$PROJECT_DIR$/dist/pysd-0.8.0.tar.gz" afterPath="" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models" afterPath="$PROJECT_DIR$/tests/test-models" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/LICENSE" afterPath="$PROJECT_DIR$/LICENSE" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/MANIFEST" afterPath="$PROJECT_DIR$/MANIFEST" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/MANIFEST.in" afterPath="$PROJECT_DIR$/MANIFEST.in" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/pysd/_version.py" afterPath="$PROJECT_DIR$/pysd/_version.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/setup.py" afterPath="$PROJECT_DIR$/setup.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/samples/SIR/SIR.py" afterPath="$PROJECT_DIR$/tests/test-models/samples/SIR/SIR.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test-models/samples/teacup/teacup.py" afterPath="$PROJECT_DIR$/tests/test-models/samples/teacup/teacup.py" />
@@ -885,41 +866,21 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="integration_test_pysd.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="integration_test_pysd.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/tests/integration_test_pysd.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="795">
+            <state relative-caret-position="538">
               <caret line="53" column="0" lean-forward="false" selection-start-line="53" selection-start-column="0" selection-end-line="53" selection-end-column="0" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="_version.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/pysd/_version.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="30">
-              <caret line="2" column="0" lean-forward="false" selection-start-line="2" selection-start-column="0" selection-end-line="2" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="MANIFEST.in" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/MANIFEST.in">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="0">
-              <caret line="0" column="34" lean-forward="false" selection-start-line="0" selection-start-column="34" selection-end-line="0" selection-end-column="34" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="setup.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="setup.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/setup.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="45">
-              <caret line="3" column="0" lean-forward="false" selection-start-line="3" selection-start-column="0" selection-end-line="3" selection-end-column="0" />
+            <state relative-caret-position="255">
+              <caret line="20" column="17" lean-forward="false" selection-start-line="20" selection-start-column="17" selection-end-line="20" selection-end-column="17" />
               <folding>
                 <element signature="e#0#37#0" expanded="true" />
               </folding>
@@ -1164,7 +1125,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <PATH>
@@ -1177,8 +1137,23 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="pysd" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="pysd" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="dist" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
         </subPane>
       </pane>
+      <pane id="Scratches" />
       <pane id="Scope" />
     </panes>
   </component>
@@ -1696,17 +1671,17 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="0" width="1440" height="900" extended-state="0" />
-    <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16523606" sideWeight="0.4936306" order="1" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3282981" sideWeight="0.49753347" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39036146" sideWeight="0.4806867" order="0" side_tool="true" content_ui="tabs" />
-      <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297568" sideWeight="0.48677248" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.35783133" sideWeight="0.4892704" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Documentation" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="FLOATING" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="173" y="196" width="1240" height="700" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.35783133" sideWeight="0.4892704" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.23012048" sideWeight="0.48907682" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.1746988" sideWeight="0.49753347" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.25662652" sideWeight="0.5193133" order="11" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16738197" sideWeight="0.4936306" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="Database" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297568" sideWeight="0.48677248" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.24892704" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25662652" sideWeight="0.5193133" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2433735" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.15574348" sideWeight="0.5063694" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.7911302" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -1714,7 +1689,6 @@
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Documentation" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="FLOATING" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" x="173" y="196" width="1240" height="700" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22650602" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Coverage" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297568" sideWeight="0.5132275" order="4" side_tool="true" content_ui="tabs" />
       <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
@@ -1935,7 +1909,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -1992,7 +1965,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="600">
           <caret line="40" column="0" lean-forward="false" selection-start-line="40" selection-start-column="0" selection-end-line="40" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2022,9 +1994,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="702">
           <caret line="559" column="0" lean-forward="false" selection-start-line="559" selection-start-column="0" selection-end-line="559" selection-end-column="0" />
-          <folding>
-            <element signature="e#146#194#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -2032,9 +2001,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="6480">
           <caret line="432" column="0" lean-forward="false" selection-start-line="432" selection-start-column="0" selection-end-line="432" selection-end-column="0" />
-          <folding>
-            <element signature="e#327#365#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -2042,9 +2008,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="15">
           <caret line="5" column="0" lean-forward="false" selection-start-line="5" selection-start-column="0" selection-end-line="5" selection-end-column="0" />
-          <folding>
-            <element signature="e#0#19#0" expanded="false" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -2052,65 +2015,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="6765">
           <caret line="451" column="29" lean-forward="false" selection-start-line="446" selection-start-column="4" selection-end-line="451" selection-end-column="29" />
-          <folding>
-            <element signature="e#191#229#0" expanded="false" />
-            <marker date="1508181865000" expanded="true" signature="12151:15428" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="15524:25383" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="15529:16898" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1508181865000" expanded="true" signature="17022:17197" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="17260:17440" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="17447:17608" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="18144:19731" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1508181865000" expanded="true" signature="19735:20472" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="19744:19901" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="20528:25083" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="20537:20793" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="20826:20999" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="21042:21125" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="21163:21267" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="21305:21386" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="21427:21469" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="21511:21554" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="21597:21693" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="21729:21766" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="21810:22332" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="22193:22305" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="22371:23513" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="22425:23447" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="22774:22942" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="23159:23318" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1508181865000" expanded="true" signature="23322:23445" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="23561:23844" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="23888:24181" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="24225:24697" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="24740:24816" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="24851:24922" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="24961:24987" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="25028:25083" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="25235:25382" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="25236:25341" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="25423:26705" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="25525:25730" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1508181865000" expanded="true" signature="25872:26587" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="25905:26003" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="26038:26092" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="26132:26491" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="26368:26452" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="26532:26587" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="26639:26704" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="26751:29241" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="26903:27089" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="27465:27592" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="27653:27889" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="27710:27889" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="27895:28076" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="28251:28945" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="28323:28841" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="29275:30608" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="29280:29823" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1508181865000" expanded="true" signature="30117:30427" ph="..." />
-            <marker date="1508181865000" expanded="true" signature="30219:30427" ph="..." />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -2118,7 +2022,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="120">
           <caret line="11" column="40" lean-forward="false" selection-start-line="11" selection-start-column="40" selection-end-line="11" selection-end-column="40" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2159,7 +2062,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="5985">
           <caret line="399" column="25" lean-forward="false" selection-start-line="399" selection-start-column="25" selection-end-line="399" selection-end-column="25" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2171,27 +2073,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/tests/integration_test_pysd.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="795">
-          <caret line="53" column="0" lean-forward="false" selection-start-line="53" selection-start-column="0" selection-end-line="53" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/.gitmodules">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/MANIFEST">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="75">
-          <caret line="5" column="15" lean-forward="true" selection-start-line="5" selection-start-column="15" selection-end-line="5" selection-end-column="15" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2199,7 +2084,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="300">
           <caret line="20" column="0" lean-forward="true" selection-start-line="20" selection-start-column="0" selection-end-line="20" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2207,7 +2091,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2215,7 +2098,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="105">
           <caret line="7" column="9" lean-forward="true" selection-start-line="7" selection-start-column="9" selection-end-line="7" selection-end-column="9" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2223,7 +2105,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="135">
           <caret line="9" column="0" lean-forward="false" selection-start-line="9" selection-start-column="0" selection-end-line="9" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -2231,14 +2112,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="414">
           <caret line="327" column="42" lean-forward="false" selection-start-line="327" selection-start-column="42" selection-end-line="327" selection-end-column="42" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/pysd/_version.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="30">
-          <caret line="2" column="0" lean-forward="false" selection-start-line="2" selection-start-column="0" selection-end-line="2" selection-end-column="0" />
           <folding />
         </state>
       </provider>
@@ -2253,11 +2126,35 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/setup.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="45">
-          <caret line="3" column="0" lean-forward="false" selection-start-line="3" selection-start-column="0" selection-end-line="3" selection-end-column="0" />
+        <state relative-caret-position="255">
+          <caret line="20" column="17" lean-forward="false" selection-start-line="20" selection-start-column="17" selection-end-line="20" selection-end-column="17" />
           <folding>
             <element signature="e#0#37#0" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/MANIFEST">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="120">
+          <caret line="8" column="0" lean-forward="true" selection-start-line="8" selection-start-column="0" selection-end-line="8" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pysd/_version.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="30">
+          <caret line="2" column="0" lean-forward="false" selection-start-line="2" selection-start-column="0" selection-end-line="2" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/tests/integration_test_pysd.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="538">
+          <caret line="53" column="0" lean-forward="false" selection-start-line="53" selection-start-column="0" selection-end-line="53" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>

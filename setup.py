@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 exec(open('pysd/_version.py').read())
 print(__version__)
@@ -12,7 +12,7 @@ setup(
     version=__version__,
     author='James Houghton',
     author_email='james.p.houghton@gmail.com',
-    packages=['pysd'],
+    packages=find_packages(exclude=['docs', 'tests', 'dist', 'build']),
     url='https://github.com/JamesPHoughton/pysd',
     license='LICENSE.txt',
     description='System Dynamics Modeling in Python',
@@ -32,6 +32,6 @@ setup(
         'yapf',
         'xarray'
     ],
-    package_data={'pysd': ['py_backend/output_style.yapf']},
+    package_data={'py_backend': ['output_style.yapf']},
     include_package_data=True
 )
