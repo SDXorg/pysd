@@ -122,13 +122,14 @@ class Xmile2RFrame(wx.Frame):
             f_output.writelines(model_output)
 
         (r_model_solver, r_model_calibrate) = model_translation.build_R_script()
+        r_model_setwd = "".join(["#Working directory\n", "setwd(\"", outPath.replace("\\", "/"), "\")", "\n\n"])
         file_name = model_translation.name + "_solver.R"
         with open(outPath + "/" + file_name, "w") as f_output:
-            f_output.writelines(r_model_solver)
+            f_output.writelines(r_model_setwd + r_model_solver)
 
         r_model_calibrate = r_model_calibrate.replace("file_path", '"' + file_name + '"')
         with open(outPath + "/" + file_name.replace("solver", "calibrate"), "w") as f_output:
-            f_output.writelines(r_model_calibrate)
+            f_output.writelines(r_model_setwd + r_model_calibrate)
 
         self.text_ctrl_resutado.SetValue("".join(["*" * 28,
                                                   "\nModel translation successful",

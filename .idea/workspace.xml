@@ -4,14 +4,15 @@
     <option name="SCOPE_TYPE" value="3" />
   </component>
   <component name="BookmarkManager">
-    <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="792" mnemonic="2" />
-    <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="595" mnemonic="3" />
+    <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="794" mnemonic="2" />
+    <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="597" mnemonic="3" />
     <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="230" mnemonic="4" />
     <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="335" mnemonic="1" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a7e5b169-cc30-45fb-a7f9-e8e84f9c05bd" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/translator_xmile/wx_xmile2r.py" afterPath="$PROJECT_DIR$/translator_xmile/wx_xmile2r.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/translator_xmile/xmile2py.py" afterPath="$PROJECT_DIR$/translator_xmile/xmile2py.py" />
     </list>
     <ignored path="pysd.iws" />
@@ -849,8 +850,8 @@
       <file leaf-file-name="xmile2py.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/translator_xmile/xmile2py.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="198">
-              <caret line="384" column="53" lean-forward="false" selection-start-line="384" selection-start-column="53" selection-end-line="384" selection-end-column="53" />
+            <state relative-caret-position="200">
+              <caret line="452" column="89" lean-forward="false" selection-start-line="452" selection-start-column="89" selection-end-line="452" selection-end-column="89" />
               <folding>
                 <element signature="e#304#344#0" expanded="true" />
               </folding>
@@ -861,8 +862,8 @@
       <file leaf-file-name="wx_xmile2r.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/translator_xmile/wx_xmile2r.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-42">
-              <caret line="123" column="0" lean-forward="false" selection-start-line="123" selection-start-column="0" selection-end-line="123" selection-end-column="0" />
+            <state relative-caret-position="176">
+              <caret line="115" column="24" lean-forward="false" selection-start-line="115" selection-start-column="24" selection-end-line="115" selection-end-column="24" />
               <folding />
             </state>
           </provider>
@@ -889,9 +890,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>with</find>
-      <find>doc</find>
-      <find>flow_n</find>
       <find>soup</find>
       <find>stock_dict</find>
       <find>flow</find>
@@ -919,6 +917,9 @@
       <find>time</find>
       <find>\1</find>
       <find>parms</find>
+      <find>sin</find>
+      <find>varList</find>
+      <find>varLi</find>
     </findStrings>
     <replaceStrings>
       <replace />
@@ -992,8 +993,8 @@
         <option value="$PROJECT_DIR$/pysd/testing.py" />
         <option value="$PROJECT_DIR$/tests/unit_test_pysd.py" />
         <option value="/fragment.py" />
-        <option value="$PROJECT_DIR$/translator_xmile/wx_xmile2r.py" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch.txt" />
+        <option value="$PROJECT_DIR$/translator_xmile/wx_xmile2r.py" />
         <option value="$PROJECT_DIR$/translator_xmile/xmile2py.py" />
       </list>
     </option>
@@ -1610,7 +1611,14 @@
       <option name="project" value="LOCAL" />
       <updated>1508081144240</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="Small R script formatting correction">
+      <created>1508094193543</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1508094193543</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
     <servers />
   </component>
   <component name="TestHistory">
@@ -1713,7 +1721,8 @@
     <MESSAGE value="Added supporting functions" />
     <MESSAGE value="Developped supporting function for R." />
     <MESSAGE value="Prepare to parse IF...THEN...ELSE" />
-    <option name="LAST_COMMIT_MESSAGE" value="Prepare to parse IF...THEN...ELSE" />
+    <MESSAGE value="Small R script formatting correction" />
+    <option name="LAST_COMMIT_MESSAGE" value="Small R script formatting correction" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -1730,8 +1739,8 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/translator_xmile/xmile2py.py</url>
-          <line>383</line>
-          <option name="timeStamp" value="644" />
+          <line>448</line>
+          <option name="timeStamp" value="646" />
         </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
@@ -1743,7 +1752,7 @@
           <properties exception="BaseException" />
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="646" />
+      <option name="time" value="647" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="tests">
@@ -1752,7 +1761,8 @@
         <watch expression="index" />
       </configuration>
       <configuration name="PythonConfigurationType">
-        <watch expression="parms_str" language="Python" />
+        <watch expression="calibration_data" language="Python" />
+        <watch expression="self.stocks_set" language="Python" />
       </configuration>
     </watches-manager>
   </component>
@@ -1953,16 +1963,16 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/translator_xmile/wx_xmile2r.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-42">
-          <caret line="123" column="0" lean-forward="false" selection-start-line="123" selection-start-column="0" selection-end-line="123" selection-end-column="0" />
+        <state relative-caret-position="176">
+          <caret line="115" column="24" lean-forward="false" selection-start-line="115" selection-start-column="24" selection-end-line="115" selection-end-column="24" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/translator_xmile/xmile2py.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="198">
-          <caret line="384" column="53" lean-forward="false" selection-start-line="384" selection-start-column="53" selection-end-line="384" selection-end-column="53" />
+        <state relative-caret-position="200">
+          <caret line="452" column="89" lean-forward="false" selection-start-line="452" selection-start-column="89" selection-end-line="452" selection-end-column="89" />
           <folding>
             <element signature="e#304#344#0" expanded="true" />
           </folding>
