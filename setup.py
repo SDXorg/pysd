@@ -31,7 +31,6 @@ setup(
         'parsimonious',
         'yapf',
         'xarray',
-        'tabulate',
         'lxml',
         'xlwt',        
         'funcsigs',
