@@ -605,13 +605,13 @@ def xmile_parser(model_file):
                    (ws? "<non_negative>" nl? ws? "</non_negative>")?
                    (ws? "<units>" nl ws units nl ws "</units>" nl)?
                    (ws? "<display" skip nl)?
-                   (ws? "<label_side>" nl ws str nl ws "</label_side>" nl)?
-                   (ws? "<label_angle>" nl ws str nl ws "</label_angle>" nl)?
-                   (ws? "<pts>" ws? nl)?
-                   (ws? "<pt x=" skip nl)?
-                   (ws? "</pt>" ws? nl)?
-                   (ws? "</pts>" ws? nl)?
-                   (ws? "</display>" ws? nl)?
+                   (ws? "<label_side>" nl? ws? str nl? ws? "</label_side>" nl?)?
+                   (ws? "<label_angle>" nl? ws? str nl? ws? "</label_angle>" nl?)?
+                   (ws? "<pts>" ws? nl?)?
+                   (ws? "<pt x=" skip nl?)?
+                   (ws? "</pt>" ws? nl?)?
+                   (ws? "</pts>" ws? nl?)?
+                   (ws? "</display>" ws? nl?)?
                ("</flow>" nl)?
         flow_disp_name = "isee:display_name=" qtm str qtm
         flow_name = ~"[A-Za-z0-9$_ áéíóúñ]*"
@@ -636,6 +636,8 @@ def xmile_parser(model_file):
                    (ws? "<scale " skip nl)?
                    (ws? "</scale>" nl)?
                    (ws? "<doc>" skip nl skip? nl? ws? "</doc>" nl)?
+                   (ws? "<label_side>" nl? ws? str nl? ws? "</label_side>" nl?)?
+                   (ws? "<label_angle>" nl? ws? str nl? ws? "</label_angle>" nl?)?
                    (ws? "<thous_separator" skip nl)?
                    (ws? "true" nl)?
                    (ws? "</thous_separator>" nl)?

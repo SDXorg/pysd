@@ -4,7 +4,7 @@
     <option name="SCOPE_TYPE" value="3" />
   </component>
   <component name="BookmarkManager">
-    <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="794" mnemonic="2" />
+    <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="796" mnemonic="2" />
     <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="597" mnemonic="3" />
     <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="230" mnemonic="4" />
     <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="335" mnemonic="1" />
@@ -12,6 +12,7 @@
   <component name="ChangeListManager">
     <list default="true" id="a7e5b169-cc30-45fb-a7f9-e8e84f9c05bd" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/translator_xmile/xmile2py.py" afterPath="$PROJECT_DIR$/translator_xmile/xmile2py.py" />
     </list>
     <ignored path="pysd.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -848,8 +849,8 @@
       <file leaf-file-name="xmile2py.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/translator_xmile/xmile2py.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="200">
-              <caret line="452" column="89" lean-forward="false" selection-start-line="452" selection-start-column="89" selection-end-line="452" selection-end-column="89" />
+            <state relative-caret-position="96">
+              <caret line="640" column="0" lean-forward="false" selection-start-line="640" selection-start-column="0" selection-end-line="640" selection-end-column="0" />
               <folding>
                 <element signature="e#304#344#0" expanded="true" />
               </folding>
@@ -857,21 +858,32 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="wx_xmile2r.py" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/translator_xmile/wx_xmile2r.py">
+      <file leaf-file-name="scratch.txt" pinned="false" current-in-tab="false">
+        <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="176">
-              <caret line="115" column="24" lean-forward="false" selection-start-line="115" selection-start-column="24" selection-end-line="115" selection-end-column="24" />
+            <state relative-caret-position="288">
+              <caret line="3" column="7" lean-forward="false" selection-start-line="3" selection-start-column="7" selection-end-line="3" selection-end-column="7" />
+              <caret line="12" column="16" lean-forward="false" selection-start-line="12" selection-start-column="16" selection-end-line="12" selection-end-column="16" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="scratch.txt" pinned="false" current-in-tab="false">
-        <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.txt">
+      <file leaf-file-name="wx_xmile2r.py" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/translator_xmile/wx_xmile2r.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="562">
-              <caret line="26" column="40" lean-forward="true" selection-start-line="26" selection-start-column="40" selection-end-line="26" selection-end-column="40" />
+            <state relative-caret-position="187">
+              <caret line="116" column="0" lean-forward="false" selection-start-line="116" selection-start-column="0" selection-end-line="116" selection-end-column="0" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="core.py" pinned="false" current-in-tab="false">
+        <entry file="file://C:/Anaconda3/Lib/site-packages/wx/core.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="197">
+              <caret line="2080" column="0" lean-forward="false" selection-start-line="2080" selection-start-column="0" selection-end-line="2080" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -991,8 +1003,8 @@
         <option value="$PROJECT_DIR$/pysd/testing.py" />
         <option value="$PROJECT_DIR$/tests/unit_test_pysd.py" />
         <option value="/fragment.py" />
-        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch.txt" />
         <option value="$PROJECT_DIR$/translator_xmile/wx_xmile2r.py" />
+        <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch.txt" />
         <option value="$PROJECT_DIR$/translator_xmile/xmile2py.py" />
       </list>
     </option>
@@ -1004,10 +1016,10 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="1" />
-    <option name="y" value="23" />
-    <option name="width" value="1440" />
-    <option name="height" value="873" />
+    <option name="x" value="260" />
+    <option name="y" value="40" />
+    <option name="width" value="1400" />
+    <option name="height" value="1000" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -1039,6 +1051,27 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="pysd" type="b2602c69:ProjectViewProjectNode" />
+              <item name="pysd" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="pysd" type="b2602c69:ProjectViewProjectNode" />
+              <item name="pysd" type="462c0819:PsiDirectoryNode" />
+              <item name="pysd" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="pysd" type="b2602c69:ProjectViewProjectNode" />
+              <item name="pysd" type="462c0819:PsiDirectoryNode" />
+              <item name="translator_xmile" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
       <pane id="Scope">
         <subPane subId="Project Files">
           <expand>
@@ -1056,22 +1089,6 @@
             <path>
               <item name="" type="1a2a3e82:ScratchProjectViewPane$MyProjectNode" />
               <item name="Scratches" type="d62648e6:ScratchProjectViewPane$MyRootNode" />
-            </path>
-          </expand>
-          <select />
-        </subPane>
-      </pane>
-      <pane id="ProjectPane">
-        <subPane>
-          <expand>
-            <path>
-              <item name="pysd" type="b2602c69:ProjectViewProjectNode" />
-              <item name="pysd" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="pysd" type="b2602c69:ProjectViewProjectNode" />
-              <item name="pysd" type="462c0819:PsiDirectoryNode" />
-              <item name="translator_xmile" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -1668,16 +1685,16 @@
     <frame x="-9" y="-9" width="1938" height="1098" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.13372718" sideWeight="0.29346094" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.14017186" sideWeight="0.29346094" order="1" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32664436" sideWeight="0.49753347" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3890086" sideWeight="0.50107414" order="0" side_tool="true" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32435346" sideWeight="0.5021482" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22952586" sideWeight="0.48907682" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.23922414" sideWeight="0.49753347" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32435346" sideWeight="0.5021482" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.17513514" sideWeight="0.47971782" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22090517" sideWeight="0.5193133" order="11" side_tool="false" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.13372718" sideWeight="0.7065391" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33081895" sideWeight="0.4989259" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.13372718" sideWeight="0.7065391" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33261803" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
@@ -1747,6 +1764,11 @@
           <line>448</line>
           <option name="timeStamp" value="646" />
         </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/translator_xmile/xmile2py.py</url>
+          <line>796</line>
+          <option name="timeStamp" value="648" />
+        </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
         <breakpoints-dialog />
@@ -1757,7 +1779,7 @@
           <properties exception="BaseException" />
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="647" />
+      <option name="time" value="649" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="tests">
@@ -1766,8 +1788,8 @@
         <watch expression="index" />
       </configuration>
       <configuration name="PythonConfigurationType">
-        <watch expression="calibration_data" language="Python" />
-        <watch expression="self.stocks_set" language="Python" />
+        <watch expression="ax" language="Python" />
+        <watch expression="ax.prettify()" language="Python" />
       </configuration>
     </watches-manager>
   </component>
@@ -1807,13 +1829,6 @@
     <entry file="file://$USER_HOME$/anaconda/lib/python3.6/site-packages/pandas/core/generic.py" />
     <entry file="file://$USER_HOME$/anaconda/lib/python3.6/unittest/case.py" />
     <entry file="file://$PROJECT_DIR$/tests/test-models/samples/teacup/teacup.py" />
-    <entry file="file://$PROJECT_DIR$/pysd/pysd.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="196">
-          <caret line="17" column="0" lean-forward="false" selection-start-line="17" selection-start-column="0" selection-end-line="17" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$USER_HOME$/anaconda/lib/python3.6/traceback.py" />
     <entry file="file://$USER_HOME$/anaconda/lib/python3.6/site-packages/nose/case.py" />
     <entry file="file://$PROJECT_DIR$/pysd/__init__.py">
@@ -1831,23 +1846,9 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/tests/test-models/tests/variable_ranges/test_variable_ranges.mdl" />
-    <entry file="file://$PROJECT_DIR$/pysd/utils.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="869">
-          <caret line="340" column="0" lean-forward="true" selection-start-line="340" selection-start-column="0" selection-end-line="340" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/tests/test-models/tests/smooth/test_smooth.mdl" />
     <entry file="file://$PROJECT_DIR$/tests/test-models/tests/smooth/test_smooth.py" />
     <entry file="file://$USER_HOME$/anaconda/lib/python3.6/site-packages/xarray/core/formatting.py" />
-    <entry file="file://$PROJECT_DIR$/pysd/testing.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3314">
-          <caret line="254" column="0" lean-forward="false" selection-start-line="254" selection-start-column="0" selection-end-line="254" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/tests/test-models/tests/incomplete_equations/test_incomplete_model.py" />
     <entry file="file://$PROJECT_DIR$/pysd/builder.py">
       <provider selected="true" editor-type-id="text-editor">
@@ -1944,13 +1945,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://C:/Anaconda3/Lib/site-packages/wx/core.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="188">
-          <caret line="2080" column="0" lean-forward="false" selection-start-line="2080" selection-start-column="0" selection-end-line="2080" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://C:/Anaconda3/Lib/site-packages/bs4/element.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="179">
@@ -1958,26 +1952,59 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/pysd/utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3480">
+          <caret line="340" column="0" lean-forward="false" selection-start-line="340" selection-start-column="0" selection-end-line="340" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pysd/pysd.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="24">
+          <caret line="17" column="0" lean-forward="false" selection-start-line="17" selection-start-column="0" selection-end-line="17" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/pysd/testing.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="521">
+          <caret line="121" column="0" lean-forward="false" selection-start-line="121" selection-start-column="0" selection-end-line="121" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="562">
-          <caret line="26" column="40" lean-forward="true" selection-start-line="26" selection-start-column="40" selection-end-line="26" selection-end-column="40" />
+        <state relative-caret-position="288">
+          <caret line="3" column="7" lean-forward="false" selection-start-line="3" selection-start-column="7" selection-end-line="3" selection-end-column="7" />
+          <caret line="12" column="16" lean-forward="false" selection-start-line="12" selection-start-column="16" selection-end-line="12" selection-end-column="16" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://C:/Anaconda3/Lib/site-packages/wx/core.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="197">
+          <caret line="2080" column="0" lean-forward="false" selection-start-line="2080" selection-start-column="0" selection-end-line="2080" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/translator_xmile/wx_xmile2r.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="176">
-          <caret line="115" column="24" lean-forward="false" selection-start-line="115" selection-start-column="24" selection-end-line="115" selection-end-column="24" />
+        <state relative-caret-position="187">
+          <caret line="116" column="0" lean-forward="false" selection-start-line="116" selection-start-column="0" selection-end-line="116" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/translator_xmile/xmile2py.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="200">
-          <caret line="452" column="89" lean-forward="false" selection-start-line="452" selection-start-column="89" selection-end-line="452" selection-end-column="89" />
+        <state relative-caret-position="96">
+          <caret line="640" column="0" lean-forward="false" selection-start-line="640" selection-start-column="0" selection-end-line="640" selection-end-column="0" />
           <folding>
             <element signature="e#304#344#0" expanded="true" />
           </folding>
