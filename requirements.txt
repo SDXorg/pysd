@@ -1,10 +1,9 @@
 pandas
 parsimonious
 xarray
-tabulate
 yapf
 lxml
-xlwt
 funcsigs
 pydoe
 xlrd
+xlwt

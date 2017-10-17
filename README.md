@@ -9,6 +9,7 @@ Simulating System Dynamics Models in Python
 
 This project is a simple library for running [System Dynamics](http://en.wikipedia.org/wiki/System_dynamics) models in python, with the purpose of improving integration of *Big Data* and *Machine Learning* into the SD workflow. 
 
+
 ### Resources
 See the [project documentation](http://pysd.readthedocs.org/) for information about:
 
@@ -43,3 +44,10 @@ The command should be something like:
 ```shell
 git clone --recursive https://github.com/JamesPHoughton/pysd.git
 ```
+
+### Contributors
+Many people have contributed to developing this project - by
+[submitting code](https://github.com/JamesPHoughton/pysd/graphs/contributors), bug reports, and advice.
+
+Special thanks to the [sdCloud.io](http://sdcloud.io) development team, who have
+made great contributions to XMILE support, and for integrating PySD into their cloud-based model simulation environment.

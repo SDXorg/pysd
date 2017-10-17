@@ -30,8 +30,18 @@ setup(
         'numpy',
         'parsimonious',
         'yapf',
-        'xarray'
+        'xarray',
+        'lxml',
+        'xlwt',        
+        'funcsigs',
+        'pydoe',
+        'xlrd'
     ],
-    package_data={'py_backend': ['output_style.yapf']},
+    package_data={
+        'py_backend': [
+            'output_style.yapf',
+            'xmile/smile.grammar'
+        ]
+    },
     include_package_data=True
 )
