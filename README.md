@@ -9,6 +9,10 @@ Simulating System Dynamics Models in Python
 
 This project is a simple library for running [System Dynamics](http://en.wikipedia.org/wiki/System_dynamics) models in python, with the purpose of improving integration of *Big Data* and *Machine Learning* into the SD workflow. 
 
+![sdCloud.io project logo](https://lh4.googleusercontent.com/Lamv8JlvBLBdmqTbwW9kBaE88c59jZclM8e6qg8d_3pM9_Jkf2b2VaKAtr9YaQRonyY6lenj2bhzXMQ=w1635-h958 "sdCloud.io project logo")
+
+This project supported by [sdCloud.io](http://sdcloud.io) development team to improve expirience with XMILE models.
+
 ### Resources
 See the [project documentation](http://pysd.readthedocs.org/) for information about:
 
