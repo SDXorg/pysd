@@ -127,12 +127,14 @@ class Xmile2RFrame(wx.Frame):
         with open(outPath + "/" + file_name, "w") as f_output:
             f_output.writelines(r_model_setwd + r_model_solver)
 
-        cal_section = "\nNo calibration data, calibration skeleton not produced\n"
-        if r_model_calibrate:
-            cal_section = "\nPossible calibration data found, calibration skeleton produced\n"
-            r_model_calibrate = r_model_calibrate.replace("file_path", '"' + file_name + '"')
-            with open(outPath + "/" + file_name.replace("solver", "calibrate"), "w") as f_output:
-                f_output.writelines(r_model_setwd + r_model_calibrate)
+        if "Missing calibration data" in r_model_calibrate:
+            cal_section = "\nNo calibration data found.\n"
+        else:
+            cal_section = "\nPossible calibration data found, please verify processing suggestions\n"
+
+        r_model_calibrate = r_model_calibrate.replace("file_path", '"' + file_name + '"')
+        with open(outPath + "/" + file_name.replace("solver", "calibrate"), "w") as f_output:
+            f_output.writelines(r_model_setwd + r_model_calibrate)
 
         self.text_ctrl_resutado.SetValue("".join(["*" * 28,
                                                   "\nModel translation successful",
