@@ -95,6 +95,7 @@ class XmileStock:
     def __init__(self, stock_dict):
         self.name = stock_dict["stock_name"]
         self.units = stock_dict["units"]
+        self.eqn = ""
         if "inflow" in stock_dict:
             self.inflow = stock_dict["inflow"]
             self.eqn = " + ".join([f["flow_name"] for f in self.inflow])
@@ -284,7 +285,7 @@ class XmileModel:
         #  Collects function names needed for supporting functions
         supporting_eqn = {}
         for eqn in flw_equations:
-            eqn_items = re.split(r"[*+/\-\n< ]", eqn)
+            eqn_items = re.split(r"[*+/\-\n< ()]", eqn)
             eqn_items = [e for e in eqn_items if e != "" and e != ","]
             for eqn_i in eqn_items:
                 if eqn_i in self.parameters_set:
@@ -443,35 +444,38 @@ class XmileModel:
         if series:
             r_script_cal = "".join([r_script_cal, "".join(series) + "\n"])
 
-        time = self.auxs[next(iter(calibration_data))].name + "$time"
-        r_script_cal = "".join([r_script_cal,
-                            "# include the names of all variables with calibration data\n",
-                            "varList <- c("+ ", ".join(['"'+ d +'"' for d in sorted(self.stocks_set)]) +")\n\n",
-                            "# Set-up data into a data.frame with time column. \n",
-                            "# Verify correspondence between data and variable name in the model\n",
-                            "data <- data.frame(time=", time, ",\n    ",
-                            ",\n    ".join([d + "$" + d for d in sorted(calibration_data)]), ")\n\n",
-                            "# Verify this varList for proper calibration data match\n",
-                            "names(data) <- c(\"time\", varList)\n\n",
-                            "# load translated model function\n",
-                            "source (file_path)\n\n",
-                            "# Fit model to calibration data using levenberg marquart\n",
-                            "# algorithm. Please, provide parameter initial guess values\n",
-                            "Y0 <- c(" + ", ".join(items) + ")\n",
-                            "parm.0 <- " + parms_str + "\n",
-                            "fittedModel <- nls.lm(par=parm.0, fn=ssq, y0 = Y0, ",
-                            "t = time, data = data, varList = varList)\n\n",
-                            "# Calibration results\n",
-                            "summary(fittedModel)\n",
-                            "parameters <- fittedModel$par  # store calibrated parameters\n\n",
-                            "# Fitted values and plotting\n",
-                            "fittedVals <- ode(func = model, y = Y, times = time, parms = parameters, ",
-                            "method = 'rk4')\n\n",
-                            "# Organizing fitted data in a data.frame\n",
-                            "fitted.data.df <- data.frame(fittedVals)\n\n",
-                            "# Plotting fitted & calibration data together\n"
-                            "plot(fitted.data.df[, 1], fitted.data.df[, 2], type = 'l', col = 'blue', lwd=2)\n",
-                            "points('<data to compare to fit>')  # Series to provide x, y data\n\n"])
+        if calibration_data:
+            time = self.auxs[next(iter(calibration_data))].name + "$time"
+            r_script_cal = "".join([r_script_cal,
+                                "# include the names of all variables with calibration data\n",
+                                "varList <- c("+ ", ".join(['"'+ d +'"' for d in sorted(self.stocks_set)]) +")\n\n",
+                                "# Set-up data into a data.frame with time column. \n",
+                                "# Verify correspondence between data and variable name in the model\n",
+                                "data <- data.frame(time=", time, ",\n    ",
+                                ",\n    ".join([d + "$" + d for d in sorted(calibration_data)]), ")\n\n",
+                                "# Verify this varList for proper calibration data match\n",
+                                "names(data) <- c(\"time\", varList)\n\n",
+                                "# load translated model function\n",
+                                "source (file_path)\n\n",
+                                "# Fit model to calibration data using levenberg marquart\n",
+                                "# algorithm. Please, provide parameter initial guess values\n",
+                                "Y0 <- c(" + ", ".join(items) + ")\n",
+                                "parm.0 <- " + parms_str + "\n",
+                                "fittedModel <- nls.lm(par=parm.0, fn=ssq, y0 = Y0, ",
+                                "t = time, data = data, varList = varList)\n\n",
+                                "# Calibration results\n",
+                                "summary(fittedModel)\n",
+                                "parameters <- fittedModel$par  # store calibrated parameters\n\n",
+                                "# Fitted values and plotting\n",
+                                "fittedVals <- ode(func = model, y = Y, times = time, parms = parameters, ",
+                                "method = 'rk4')\n\n",
+                                "# Organizing fitted data in a data.frame\n",
+                                "fitted.data.df <- data.frame(fittedVals)\n\n",
+                                "# Plotting fitted & calibration data together\n"
+                                "plot(fitted.data.df[, 1], fitted.data.df[, 2], type = 'l', col = 'blue', lwd=2)\n",
+                                "points('<data to compare to fit>')  # Series to provide x, y data\n\n"])
+        else:
+            r_script_cal = []
 
         return r_script_slv, r_script_cal
 
@@ -602,6 +606,7 @@ def xmile_parser(model_file):
                    (ws? "<eqn>" nl eqn? "</eqn>" nl)?
                    (ws? "<scale " skip nl)?
                    (ws? "</scale>" nl)?
+                   (ws? "<doc>" skip nl skip? nl? ws? "</doc>" nl)?
                    (ws? "<non_negative>" nl? ws? "</non_negative>")?
                    (ws? "<units>" nl ws units nl ws "</units>" nl)?
                    (ws? "<display" skip nl)?
@@ -765,7 +770,9 @@ def xmile_parser(model_file):
             flows_set = flows_set.union([name])
             flows[name] = flw_parse
             if not isfloat(flw_parse["eqn"]):
-                parameters_set = parameters_set.union(re.split(r"[*/+-]", flw_parse["eqn"]))
+                eqn_items = re.split(r"[*/+\-()]", flw_parse["eqn"])
+                eqn_items = [ei for ei in eqn_items if ei != "" and not isfloat(ei)]
+                parameters_set = parameters_set.union(eqn_items)
 
     # Extract stock collection attributes
     stocks_list, stocks_set = [], set()
@@ -777,7 +784,6 @@ def xmile_parser(model_file):
             name = name.replace("ó", "o").replace("ú", "u").replace("ñ", "n")
             stock_parse["stock_name"] = name
             stocks_set = stocks_set.union([name])
-            parameters_set = parameters_set - stocks_set - flows_set
             if "units" not in stock_parse:
                 stock_parse["units"] = ""
             if stk.inflow:
@@ -792,6 +798,7 @@ def xmile_parser(model_file):
                                        replace("ñ", "n") for item in stk.find_all("outflow")]
                 stock_parse["outflow"] = [flows[f] for f in all_flows]
             stocks_list.append(XmileStock(stock_parse))
+    parameters_set = parameters_set - stocks_set - flows_set
 
     # Get aux variables
     auxs_dict, auxs_set = {}, parameters_set
