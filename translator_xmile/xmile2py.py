@@ -40,27 +40,34 @@ def main():
     if (not os.path.isdir(outPath)):
         os.mkdir(outPath)
 
-    # Extract relevant information to build model
-    model_translation = xmile_parser(model_file)
+        # Extract relevant information to build model
+        model_translation = xmile2py.xmile_parser(self.modelo)
 
-    # output model file
-    with open(outPath + "/" + model_translation.name + ".txt", "w") as foutput:
-        model_output = model_translation.show()
-        foutput.writelines(model_output)
+        # output model file
+        with open(outPath + "/" + model_translation.name + ".txt", "w") as f_output:
+            model_output = model_translation.show()
+            f_output.writelines(model_output)
 
-    r_model_solver, r_model_calibrate = model_translation.build_R_script
-    file_name = model_translation.name + "_solver.R"
-    with open(outPath + "/" + file_name, "w") as foutput:
-        foutput.writelines(r_model_solver)
+        (r_model_solver, r_model_calibrate) = model_translation.build_R_script()
+        r_model_setwd = "".join(["#Working directory\n", "setwd(\"", outPath.replace("\\", "/"), "\")", "\n\n"])
+        file_name = model_translation.name + "_solver.R"
+        with open(outPath + "/" + file_name, "w") as f_output:
+            f_output.writelines(r_model_setwd + r_model_solver)
 
-    r_model_calibrate = r_model_calibrate.replace("file_path", '"' + file_name + '"')
-    with open(outPath + "/" + file_name.replace("solver", "calibrate"), "w") as foutput:
-        foutput.writelines(r_model_calibrate)
+        if "Missing calibration data" in r_model_calibrate:
+            cal_section = "\nNo calibration data found.\n"
+        else:
+            cal_section = "\nPossible calibration data found, please verify processing suggestions\n"
 
-    print("\n\n" + "*" * 28 + "\nModel translation successful")
-    print("Model processed:", model_translation.name)
-    print("Translation can be found at:\n  ", outPath)
-    print("\n\n")
+        r_model_calibrate = r_model_calibrate.replace("file_path", '"' + file_name + '"')
+        with open(outPath + "/" + file_name.replace("solver", "calibrate"), "w") as f_output:
+            f_output.writelines(r_model_setwd + r_model_calibrate)
+
+        print("\n\n" + "*" * 28 + "\nModel translation successful")
+        print("Model processed:", model_translation.name)
+        cal_section,
+        print("Translation can be found at:\n  ", outPath)
+        print("\n\n")
 
 
 # test for eqn containing a single number

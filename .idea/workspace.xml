@@ -4,15 +4,13 @@
     <option name="SCOPE_TYPE" value="3" />
   </component>
   <component name="BookmarkManager">
-    <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="803" mnemonic="2" />
-    <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="601" mnemonic="3" />
-    <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="231" mnemonic="4" />
-    <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="336" mnemonic="1" />
+    <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="810" mnemonic="2" />
+    <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="608" mnemonic="3" />
+    <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="238" mnemonic="4" />
+    <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="343" mnemonic="1" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a7e5b169-cc30-45fb-a7f9-e8e84f9c05bd" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/translator_xmile/wx_xmile2r.py" afterPath="$PROJECT_DIR$/translator_xmile/wx_xmile2r.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/translator_xmile/xmile2py.py" afterPath="$PROJECT_DIR$/translator_xmile/xmile2py.py" />
     </list>
     <ignored path="pysd.iws" />
@@ -850,8 +848,8 @@
       <file leaf-file-name="xmile2py.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/translator_xmile/xmile2py.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="440">
-              <caret line="772" column="47" lean-forward="false" selection-start-line="772" selection-start-column="47" selection-end-line="772" selection-end-column="47" />
+            <state relative-caret-position="534">
+              <caret line="52" column="56" lean-forward="true" selection-start-line="52" selection-start-column="56" selection-end-line="52" selection-end-column="56" />
               <folding>
                 <element signature="e#304#344#0" expanded="true" />
               </folding>
@@ -873,9 +871,17 @@
       <file leaf-file-name="wx_xmile2r.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/translator_xmile/wx_xmile2r.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="395">
-              <caret line="140" column="0" lean-forward="false" selection-start-line="140" selection-start-column="0" selection-end-line="140" selection-end-column="0" />
-              <folding />
+            <state relative-caret-position="774">
+              <caret line="143" column="59" lean-forward="false" selection-start-line="115" selection-start-column="8" selection-end-line="143" selection-end-column="59" />
+              <folding>
+                <marker date="1508358905514" expanded="true" signature="281:6437" ph="..." />
+                <marker date="1508358905514" expanded="true" signature="4354:6340" ph="..." />
+                <marker date="1508358905514" expanded="true" signature="5813:5879" ph="..." />
+                <marker date="1508358905514" expanded="true" signature="5931:6337" ph="..." />
+                <marker date="1508358905514" expanded="true" signature="6375:6437" ph="..." />
+                <marker date="1508358905514" expanded="true" signature="6493:6654" ph="..." />
+                <marker date="1508358905514" expanded="true" signature="6515:6654" ph="..." />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -995,8 +1001,8 @@
         <option value="$PROJECT_DIR$/tests/unit_test_pysd.py" />
         <option value="/fragment.py" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch.txt" />
-        <option value="$PROJECT_DIR$/translator_xmile/xmile2py.py" />
         <option value="$PROJECT_DIR$/translator_xmile/wx_xmile2r.py" />
+        <option value="$PROJECT_DIR$/translator_xmile/xmile2py.py" />
       </list>
     </option>
   </component>
@@ -1042,17 +1048,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scratches">
-        <subPane>
-          <expand>
-            <path>
-              <item name="" type="1a2a3e82:ScratchProjectViewPane$MyProjectNode" />
-              <item name="Scratches" type="d62648e6:ScratchProjectViewPane$MyRootNode" />
-            </path>
-          </expand>
-          <select />
-        </subPane>
-      </pane>
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -1080,6 +1075,17 @@
             <path>
               <item name="Root" type="cbb8eebc:String" user="Root" />
               <item name="pysd" type="cbb8eebc:String" user="pysd" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+      <pane id="Scratches">
+        <subPane>
+          <expand>
+            <path>
+              <item name="" type="1a2a3e82:ScratchProjectViewPane$MyProjectNode" />
+              <item name="Scratches" type="d62648e6:ScratchProjectViewPane$MyRootNode" />
             </path>
           </expand>
           <select />
@@ -1676,16 +1682,16 @@
     <frame x="-9" y="-9" width="1938" height="1098" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.14232008" sideWeight="0.28867623" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.14178303" sideWeight="0.28867623" order="1" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32664436" sideWeight="0.49753347" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3890086" sideWeight="0.50107414" order="0" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32435346" sideWeight="0.5021482" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32435346" sideWeight="0.5021482" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22952586" sideWeight="0.48907682" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.23922414" sideWeight="0.49753347" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.17513514" sideWeight="0.47971782" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22090517" sideWeight="0.5193133" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33081895" sideWeight="0.4989259" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.14232008" sideWeight="0.71132374" order="0" side_tool="true" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.14232008" sideWeight="0.71132374" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33261803" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
@@ -1752,7 +1758,7 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/translator_xmile/xmile2py.py</url>
-          <line>443</line>
+          <line>450</line>
           <option name="timeStamp" value="655" />
         </line-breakpoint>
       </breakpoints>
@@ -1976,22 +1982,29 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="49824">
           <caret line="2080" column="0" lean-forward="false" selection-start-line="2080" selection-start-column="0" selection-end-line="2080" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/translator_xmile/wx_xmile2r.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="395">
-          <caret line="140" column="0" lean-forward="false" selection-start-line="140" selection-start-column="0" selection-end-line="140" selection-end-column="0" />
-          <folding />
+        <state relative-caret-position="774">
+          <caret line="143" column="59" lean-forward="false" selection-start-line="115" selection-start-column="8" selection-end-line="143" selection-end-column="59" />
+          <folding>
+            <marker date="1508358905514" expanded="true" signature="281:6437" ph="..." />
+            <marker date="1508358905514" expanded="true" signature="4354:6340" ph="..." />
+            <marker date="1508358905514" expanded="true" signature="5813:5879" ph="..." />
+            <marker date="1508358905514" expanded="true" signature="5931:6337" ph="..." />
+            <marker date="1508358905514" expanded="true" signature="6375:6437" ph="..." />
+            <marker date="1508358905514" expanded="true" signature="6493:6654" ph="..." />
+            <marker date="1508358905514" expanded="true" signature="6515:6654" ph="..." />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/translator_xmile/xmile2py.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="440">
-          <caret line="772" column="47" lean-forward="false" selection-start-line="772" selection-start-column="47" selection-end-line="772" selection-end-column="47" />
+        <state relative-caret-position="534">
+          <caret line="52" column="56" lean-forward="true" selection-start-line="52" selection-start-column="56" selection-end-line="52" selection-end-column="56" />
           <folding>
             <element signature="e#304#344#0" expanded="true" />
           </folding>
