@@ -4,13 +4,15 @@
     <option name="SCOPE_TYPE" value="3" />
   </component>
   <component name="BookmarkManager">
-    <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="810" mnemonic="2" />
-    <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="608" mnemonic="3" />
+    <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="808" mnemonic="2" />
+    <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="606" mnemonic="3" />
     <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="238" mnemonic="4" />
-    <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="343" mnemonic="1" />
+    <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="341" mnemonic="1" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a7e5b169-cc30-45fb-a7f9-e8e84f9c05bd" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/translator_xmile/wx_xmile2r.py" afterPath="$PROJECT_DIR$/translator_xmile/wx_xmile2r.py" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/translator_xmile/xmile2py.py" afterPath="$PROJECT_DIR$/translator_xmile/xmile2py.py" />
     </list>
     <ignored path="pysd.iws" />
@@ -845,11 +847,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file leaf-file-name="xmile2py.py" pinned="false" current-in-tab="true">
+      <file leaf-file-name="xmile2py.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/translator_xmile/xmile2py.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="534">
-              <caret line="52" column="56" lean-forward="true" selection-start-line="52" selection-start-column="56" selection-end-line="52" selection-end-column="56" />
+            <state relative-caret-position="392">
+              <caret line="225" column="21" lean-forward="false" selection-start-line="225" selection-start-column="13" selection-end-line="225" selection-end-column="21" />
               <folding>
                 <element signature="e#304#344#0" expanded="true" />
               </folding>
@@ -860,7 +862,7 @@
       <file leaf-file-name="scratch.txt" pinned="false" current-in-tab="false">
         <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="288">
+            <state relative-caret-position="237">
               <caret line="3" column="7" lean-forward="false" selection-start-line="3" selection-start-column="7" selection-end-line="3" selection-end-column="7" />
               <caret line="12" column="16" lean-forward="false" selection-start-line="12" selection-start-column="16" selection-end-line="12" selection-end-column="16" />
               <folding />
@@ -868,20 +870,24 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="wx_xmile2r.py" pinned="false" current-in-tab="false">
+      <file leaf-file-name="wx_xmile2r.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/translator_xmile/wx_xmile2r.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="774">
-              <caret line="143" column="59" lean-forward="false" selection-start-line="115" selection-start-column="8" selection-end-line="143" selection-end-column="59" />
+            <state relative-caret-position="299">
+              <caret line="153" column="9" lean-forward="false" selection-start-line="153" selection-start-column="9" selection-end-line="153" selection-end-column="9" />
               <folding>
-                <marker date="1508358905514" expanded="true" signature="281:6437" ph="..." />
-                <marker date="1508358905514" expanded="true" signature="4354:6340" ph="..." />
-                <marker date="1508358905514" expanded="true" signature="5813:5879" ph="..." />
-                <marker date="1508358905514" expanded="true" signature="5931:6337" ph="..." />
-                <marker date="1508358905514" expanded="true" signature="6375:6437" ph="..." />
-                <marker date="1508358905514" expanded="true" signature="6493:6654" ph="..." />
-                <marker date="1508358905514" expanded="true" signature="6515:6654" ph="..." />
+                <element signature="e#112#121#0" expanded="true" />
               </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="core.py" pinned="false" current-in-tab="false">
+        <entry file="file://C:/Anaconda3/Lib/site-packages/wx/core.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="120">
+              <caret line="2080" column="0" lean-forward="false" selection-start-line="2080" selection-start-column="0" selection-end-line="2080" selection-end-column="0" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -897,12 +903,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>flow</find>
-      <find>parse</find>
-      <find>flowparser</find>
-      <find>show</find>
-      <find>r_script</find>
-      <find>Error</find>
       <find>path</find>
       <find>gra</find>
       <find>plot</find>
@@ -920,18 +920,25 @@
       <find>eqn_str</find>
       <find>time</find>
       <find>\1</find>
-      <find>parms</find>
       <find>sin</find>
       <find>varList</find>
       <find>varLi</find>
       <find>parameters.set</find>
       <find>self.parameters_set</find>
+      <find>data</find>
+      <find>converters</find>
+      <find>parameters</find>
       <find>parameters_set</find>
+      <find>flows_set</find>
+      <find>nex</find>
+      <find>parms</find>
+      <find>auxs_set</find>
     </findStrings>
     <replaceStrings>
       <replace />
       <replace>r_script_slv</replace>
       <replace>eqn</replace>
+      <replace>cal_data</replace>
     </replaceStrings>
   </component>
   <component name="Git.Settings">
@@ -1001,8 +1008,8 @@
         <option value="$PROJECT_DIR$/tests/unit_test_pysd.py" />
         <option value="/fragment.py" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch.txt" />
-        <option value="$PROJECT_DIR$/translator_xmile/wx_xmile2r.py" />
         <option value="$PROJECT_DIR$/translator_xmile/xmile2py.py" />
+        <option value="$PROJECT_DIR$/translator_xmile/wx_xmile2r.py" />
       </list>
     </option>
   </component>
@@ -1069,23 +1076,23 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope">
-        <subPane subId="Project Files">
-          <expand>
-            <path>
-              <item name="Root" type="cbb8eebc:String" user="Root" />
-              <item name="pysd" type="cbb8eebc:String" user="pysd" />
-            </path>
-          </expand>
-          <select />
-        </subPane>
-      </pane>
       <pane id="Scratches">
         <subPane>
           <expand>
             <path>
               <item name="" type="1a2a3e82:ScratchProjectViewPane$MyProjectNode" />
               <item name="Scratches" type="d62648e6:ScratchProjectViewPane$MyRootNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+      <pane id="Scope">
+        <subPane subId="Project Files">
+          <expand>
+            <path>
+              <item name="Root" type="cbb8eebc:String" user="Root" />
+              <item name="pysd" type="cbb8eebc:String" user="pysd" />
             </path>
           </expand>
           <select />
@@ -1682,16 +1689,16 @@
     <frame x="-9" y="-9" width="1938" height="1098" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.14178303" sideWeight="0.28867623" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.15037593" sideWeight="0.28389156" order="1" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32664436" sideWeight="0.49753347" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3890086" sideWeight="0.50107414" order="0" side_tool="true" content_ui="tabs" />
-      <window_info id="Run" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32435346" sideWeight="0.5021482" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22952586" sideWeight="0.48907682" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.23922414" sideWeight="0.49753347" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32435346" sideWeight="0.5021482" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.17513514" sideWeight="0.47971782" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22090517" sideWeight="0.5193133" order="11" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.1482277" sideWeight="0.71610844" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33081895" sideWeight="0.4989259" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.14232008" sideWeight="0.71132374" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33261803" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
@@ -1757,9 +1764,9 @@
           <option name="timeStamp" value="471" />
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/translator_xmile/xmile2py.py</url>
-          <line>450</line>
-          <option name="timeStamp" value="655" />
+          <url>file://$PROJECT_DIR$/translator_xmile/wx_xmile2r.py</url>
+          <line>151</line>
+          <option name="timeStamp" value="663" />
         </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
@@ -1771,7 +1778,7 @@
           <properties exception="BaseException" />
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="656" />
+      <option name="time" value="664" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="tests">
@@ -1780,12 +1787,14 @@
         <watch expression="index" />
       </configuration>
       <configuration name="PythonConfigurationType">
-        <watch expression="ax_k" language="Python" />
-        <watch expression="ax_v" language="Python" />
-        <watch expression="flw_equations" language="Python" />
-        <watch expression="time" language="Python" />
-        <watch expression="self.auxs" language="Python" />
-        <watch expression="calibration_data" language="Python" />
+        <watch expression="model_translation" language="Python" />
+        <watch expression="parameters_file" language="Python" />
+        <watch expression="parameters_file" language="Python" />
+        <watch expression="cal_data_file" language="Python" />
+        <watch expression="model_translation.auxs.keys()" language="Python" />
+        <watch expression="model_translation.parameters_set" language="Python" />
+        <watch expression="model_translation.auxs" language="Python" />
+        <watch expression="cal_data" language="Python" />
       </configuration>
     </watches-manager>
   </component>
@@ -1971,42 +1980,37 @@
     </entry>
     <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="288">
+        <state relative-caret-position="237">
           <caret line="3" column="7" lean-forward="false" selection-start-line="3" selection-start-column="7" selection-end-line="3" selection-end-column="7" />
           <caret line="12" column="16" lean-forward="false" selection-start-line="12" selection-start-column="16" selection-end-line="12" selection-end-column="16" />
           <folding />
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/translator_xmile/xmile2py.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="392">
+          <caret line="225" column="21" lean-forward="false" selection-start-line="225" selection-start-column="13" selection-end-line="225" selection-end-column="21" />
+          <folding>
+            <element signature="e#304#344#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://C:/Anaconda3/Lib/site-packages/wx/core.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="49824">
+        <state relative-caret-position="120">
           <caret line="2080" column="0" lean-forward="false" selection-start-line="2080" selection-start-column="0" selection-end-line="2080" selection-end-column="0" />
+          <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/translator_xmile/wx_xmile2r.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="774">
-          <caret line="143" column="59" lean-forward="false" selection-start-line="115" selection-start-column="8" selection-end-line="143" selection-end-column="59" />
+        <state relative-caret-position="299">
+          <caret line="153" column="9" lean-forward="false" selection-start-line="153" selection-start-column="9" selection-end-line="153" selection-end-column="9" />
           <folding>
-            <marker date="1508358905514" expanded="true" signature="281:6437" ph="..." />
-            <marker date="1508358905514" expanded="true" signature="4354:6340" ph="..." />
-            <marker date="1508358905514" expanded="true" signature="5813:5879" ph="..." />
-            <marker date="1508358905514" expanded="true" signature="5931:6337" ph="..." />
-            <marker date="1508358905514" expanded="true" signature="6375:6437" ph="..." />
-            <marker date="1508358905514" expanded="true" signature="6493:6654" ph="..." />
-            <marker date="1508358905514" expanded="true" signature="6515:6654" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/translator_xmile/xmile2py.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="534">
-          <caret line="52" column="56" lean-forward="true" selection-start-line="52" selection-start-column="56" selection-end-line="52" selection-end-column="56" />
-          <folding>
-            <element signature="e#304#344#0" expanded="true" />
+            <element signature="e#112#121#0" expanded="true" />
           </folding>
         </state>
       </provider>

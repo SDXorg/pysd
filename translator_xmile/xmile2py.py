@@ -245,14 +245,14 @@ class XmileModel:
         # Initialization section
         r_script_slv = "".join(["# Prepare libraries needed\n"
                                 "if (require(deSolve) == F) \n{\n",
-                                "    tall.packages('deSolve', ",
+                                "    install.packages('deSolve', ",
                                 "repos='http://cran.r-project.org')\n",
                                 "    if (require(deSolve) == F)\n",
                                 "      print ('Error: deSolve is not installed",
                                 " on your machine')\n",
                                 "}\n\n",
                                 "if (require(minpack.lm) == F) \n{\n",
-                                "    tall.packages('minpack.lm', ",
+                                "    install.packages('minpack.lm', ",
                                 "repos='http://cran.r-project.org')\n",
                                 "    if (require(minpack.lm) == F)\n",
                                 "      print ('Error: minpack.lm is not installed",
@@ -272,10 +272,8 @@ class XmileModel:
         r_script_slv = "".join([r_script_slv, lines, "\n    # Model parameters"])
 
         # Model parameters specified as single values
-        converters = [a.name for k, a in self.auxs.items() if a.is_parameter and a.type == "value"]
-        converters.sort()
-
-        lines = "".join(["    {0} <- parameters['{0}']\n".format(aux) for aux in converters])
+        parameter_vals = [a for a in self.parameters_set if self.auxs[a].type == "value"]
+        lines = "".join(["    {0} <- parameters['{0}']\n".format(aux) for aux in parameter_vals])
         r_script_slv = "".join([r_script_slv, "\n", lines, "\n"])
 
         # Flow information necessary to prepare suitable R commands
@@ -342,7 +340,7 @@ class XmileModel:
                                 d_func, "\n", "#" * 50, "\n\n"])
 
         # Define R object to store model parameters and supporting functions
-        sup_funcs, series, items = [], [], []
+        sup_funcs, series = [], []
         for ax_k, ax_v in self.auxs.items():
             if ax_v.type == "equation":
                 # Translate xmile functions to R names from supporting_eqn keys
@@ -362,19 +360,16 @@ class XmileModel:
                 new_eqn = re.sub("[ ]{2,}", " ", new_eqn)
                 sup_funcs.append("".join([ax_v.name, " <- function(t)\n{\n    ", new_eqn, "\n}\n"]))
 
-            if ax_v.is_parameter:
-                if ax_v.type == "value":
-                    items.append("".join([ax_v.name, " = ", ax_v.value]))
-                if ax_v.type == "series":
-                    if ax_v.eqn == "TIME":
-                        sup_funcs.append("".join([ax_v.name, "_lkp <- function(t)\n{\n    ",
-                                                  ax_v.name, "[floor((t - 1) %% ", ax_v.x_max, ") + 1, 2]\n}\n"]))
-                    data_series = ", ".join(["c(" + str(x) + ", " + str(y) + ")" for (x, y) in ax_v.series])
-                    if len(data_series) > 70:
-                        data_series = "\n".join(tw.wrap(data_series, 80))
-                    series.append(ax_v.name + " <- data.frame(matrix(c(" + data_series +
-                                  "), ncol = 2, byrow = T))\n" + "names(" + ax_v.name + ") <- c(" + "'" +
-                                  ax_v.eqn.lower() + "'" + ", '" + ax_v.name + "')\n")
+            if ax_v.is_parameter and ax_v.type == "series":
+                if ax_v.eqn == "TIME":
+                    sup_funcs.append("".join([ax_v.name, "_lkp <- function(t)\n{\n    ",
+                                              ax_v.name, "[floor((t - 1) %% ", ax_v.x_max, ") + 1, 2]\n}\n"]))
+                data_series = ", ".join(["c(" + str(x) + ", " + str(y) + ")" for (x, y) in ax_v.series])
+                if len(data_series) > 70:
+                    data_series = "\n".join(tw.wrap(data_series, 80))
+                series.append(ax_v.name + " <- data.frame(matrix(c(" + data_series +
+                              "), ncol = 2, byrow = T))\n" + "names(" + ax_v.name + ") <- c(" + "'" +
+                              ax_v.eqn.lower() + "'" + ", '" + ax_v.name + "')\n")
 
         for fnc_def in supporting_eqn.keys() - self.auxs.keys() - Functions_R.keys():
             if fnc_def == "SINWAVE":
@@ -388,11 +383,14 @@ class XmileModel:
             r_script_slv = "".join([r_script_slv, "\n# Supporting functions\n", "\n".join(sup_funcs), "\n"])
         if series:
             r_script_slv = "".join([r_script_slv, "".join(series) + "\n"])
-        if items:
-            parms_str = "c(" + ", ".join(items) + ")"
-            parms_str = parms_str[:70] + parms_str[70:].replace(", ", ",\n" + " "*9, 1)
-            r_script_slv = "".join([r_script_slv, "# Paremeters and initial condition to solve model\n",
-                                    "parms <- ", parms_str, "\n"])
+
+        # Build Parameters vector and add it to both R script and PEST auxiliary data
+        items = ["".join([self.auxs[p].name, " = ", self.auxs[p].value]) for p in parameter_vals]
+        parms_str = "c(" + ", ".join(items) + ")"
+        parms_str = parms_str[:70] + parms_str[70:].replace(", ", ",\n" + " "*9, 1)
+        r_script_slv = "".join([r_script_slv, "# Paremeters and initial condition to solve model\n",
+                                "parms <- ", parms_str, "\n"])
+        pest_aux_data  = {"parameters": [(self.auxs[p].name, self.auxs[p].value) for p in parameter_vals]}
 
         # Includes initial conditions for the stocks
         items = []
@@ -457,11 +455,11 @@ class XmileModel:
                                 "# include the names of all variables with calibration data\n",
                                 "varList <- c("+ ", ".join(['"'+ d +'"' for d in sorted(self.stocks_set)]) +")\n\n",
                                 "# Set-up data into a data.frame with time column. \n",
-                                "# Verify correspondence between data and variable name in the model\n",
-                                "data <- data.frame(time=", time, ",\n    ",
+                                "# Verify correspondence between cal_data and variable name in the model\n",
+                                "cal_data <- data.frame(time=", time, ",\n    ",
                                 ",\n    ".join([d + "$" + d for d in sorted(calibration_data)]), ")\n\n",
                                 "# Verify this varList for proper calibration data match\n",
-                                "names(data) <- c(\"time\", varList)\n\n",
+                                "names(cal_data) <- c(\"time\", varList)\n\n",
                                 "# load translated model function\n",
                                 "source (file_path)\n\n",
                                 "# Fit model to calibration data using levenberg marquart\n",
@@ -469,7 +467,7 @@ class XmileModel:
                                 "Y0 <- c(" + ", ".join(items) + ")\n",
                                 "parm.0 <- " + parms_str + "\n",
                                 "fittedModel <- nls.lm(par=parm.0, fn=ssq, y0 = Y0, ",
-                                "t = time, data = data, varList = varList)\n\n",
+                                "t = time, data = cal_data, varList = varList)\n\n",
                                 "# Calibration results\n",
                                 "summary(fittedModel)\n",
                                 "parameters <- fittedModel$par  # store calibrated parameters\n\n",

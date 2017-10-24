@@ -72,10 +72,10 @@ class Xmile2RFrame(wx.Frame):
         sizer_2.Add(sizer_5, 1, wx.EXPAND, 0)
         static_line_1 = wx.StaticLine(self, wx.ID_ANY)
         sizer_2.Add(static_line_1, 0, wx.EXPAND, 0)
-        sizer_6.Add((5, 50), 1, wx.EXPAND, 0)
-        sizer_6.Add(self.text_ctrl_resutado, 50, wx.ALL | wx.EXPAND,2)
-        sizer_6.Add((5, 50), 1, wx.EXPAND, 0)
-        sizer_2.Add(sizer_6, 6, wx.EXPAND, 0)
+        sizer_6.Add((10, 60), 1, wx.EXPAND, 0)
+        sizer_6.Add(self.text_ctrl_resutado, 60, wx.ALL | wx.EXPAND,2)
+        sizer_6.Add((10, 60), 1, wx.EXPAND, 0)
+        sizer_2.Add(sizer_6, 10, wx.EXPAND, 0)
         static_line_2 = wx.StaticLine(self, wx.ID_ANY)
         sizer_2.Add(static_line_2, 0, wx.EXPAND, 0)
         sizer_2.Add((20, 13), 0, wx.EXPAND, 0)
@@ -93,10 +93,12 @@ class Xmile2RFrame(wx.Frame):
         # end wxGlade
 
     def al_cambiar_texto(self, event):  # wxGlade: Xmile2RFrame.<event_handler>
-        openFileDialog = wx.FileDialog(self, "Abrir", "", "",
-                                       "Archivos Stella (*.stmx)|*.stmx",
+        openFileDialog = wx.FileDialog(self, "Abrir", "", "", "Archivos Stella (*.stmx)|*.stmx",
                                        wx.FD_OPEN | wx.FD_FILE_MUST_EXIST)
-        openFileDialog.ShowModal()
+
+        if openFileDialog.ShowModal() == wx.ID_CANCEL:
+            return  # the user changed their mind
+
         self.modelo = openFileDialog.GetPath()
         openFileDialog.Destroy()
         os.chdir(os.path.dirname(self.modelo))
@@ -135,6 +137,28 @@ class Xmile2RFrame(wx.Frame):
         r_model_calibrate = r_model_calibrate.replace("file_path", '"' + file_name + '"')
         with open(outPath + "/" + file_name.replace("solver", "calibrate"), "w") as f_output:
             f_output.writelines(r_model_setwd + r_model_calibrate)
+
+        # Prepare files for PEST use
+        parameters_file = ", ".join([p for p in sorted(model_translation.parameters_set)
+                                   if model_translation.auxs[p].type == "value"]) + "\n"
+        parameters_file = parameters_file + ", ".join([model_translation.auxs[p].value for p in
+                                                       sorted(model_translation.parameters_set) if
+                                                       model_translation.auxs[p].type == "value"]) + "\n"
+        with open(outPath + "/" + "parameters_PEST.csv", "w") as f_output:
+            f_output.writelines(parameters_file)
+
+        cal_data = [p for p in model_translation.auxs_set if p not in model_translation.parameters_set and
+                         model_translation.auxs[p].type == "series"]
+        cal_data = sorted(cal_data)
+
+        cal_data_file = list([["time"] + cal_data])
+        for i in range(0, len(model_translation.auxs[cal_data[0]].series)):
+            line = [i]
+            line.extend([model_translation.auxs[d].series[i][1] for d in cal_data])
+            cal_data_file.append(line)
+
+        with open(outPath + "/" + "data_PEST.csv", "w") as f_output:
+            [f_output.write(", ".join(list(map(str, p))) + "\n") for p in cal_data_file]
 
         self.text_ctrl_resutado.SetValue("".join(["*" * 28,
                                                   "\nModel translation successful",
