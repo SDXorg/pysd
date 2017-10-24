@@ -160,6 +160,13 @@ class Xmile2RFrame(wx.Frame):
         with open(outPath + "/" + "data_PEST.csv", "w") as f_output:
             [f_output.write(", ".join(list(map(str, p))) + "\n") for p in cal_data_file]
 
+        template = parameters_file[0:parameters_file.index("\n")].split(", ")
+        template_file = ",".join(["#" + t[0:] + " " * (11 - len(t)) + "#" if len(t) <= 10 else "#" + t[0:10] + " #"
+                                 for t in template]) + "\n"
+        template_file = "\n".join(["ptf #", ",".join(template), template_file])
+        with open(outPath + "/" + "template_PEST.tpl", "w") as f_output:
+            f_output.writelines(template_file)
+
         self.text_ctrl_resutado.SetValue("".join(["*" * 28,
                                                   "\nModel translation successful",
                                                   "\nModel processed:", model_translation.name,
