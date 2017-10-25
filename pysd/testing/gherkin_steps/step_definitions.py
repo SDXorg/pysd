@@ -1,6 +1,7 @@
 from behave import *
 import pysd
 import nose.tools as test
+import pandas as pd
 import os
 
 
@@ -29,6 +30,11 @@ def set_value(context, variable, value):
 @when('the model is run')
 def run_model(context):
     context.result = context.model.run()
+
+
+@then('{variable_1} is always equal to {variable_2}')
+def check_equal(context, variable_1, variable_2):
+    compare_variables(context, variable_1, variable_2, 'equal', 'all')
 
 
 @then('{variable_1} is immediately equal to {variable_2}')
@@ -100,7 +106,7 @@ def compare_variables(context, variable_1, variable_2, comparison, time=None):
         try:
             val_1 = float(variable_1)
         except:
-            raise ValueError('Could not understand "%s"' % variable_1)
+            raise ValueError('Could not understand "%s" (did you run the model?)' % variable_1)
 
     if time is None and variable_2 in context.model.components._namespace:
         val_2 = getattr(context.model.components,
@@ -116,12 +122,24 @@ def compare_variables(context, variable_1, variable_2, comparison, time=None):
         except:
             raise ValueError('Could not understand "%s"' % variable_2)
 
-    if comparison == 'equal':
-        test.assert_equal(val_1, val_2)
-    elif comparison == 'less':
-        test.assert_less(val_1, val_2)
-    elif comparison == 'greater':
-        test.assert_greater(val_1, val_2)
+    if time == 'all':
+        try:
+            if comparison == 'equal':
+                test.assert_true(all(val_1 == val_2))
+            elif comparison == 'less':
+                test.assert_true(all(val_1 < val_2))
+            elif comparison == 'greater':
+                test.assert_true(all(val_1 > val_2))
+        except AssertionError:
+            raise AssertionError('%s is not %s %s' %(repr(val_1), comparison, val_2))
+
+    else:
+        if comparison == 'equal':
+            test.assert_equal(val_1, val_2)
+        elif comparison == 'less':
+            test.assert_less(val_1, val_2)
+        elif comparison == 'greater':
+            test.assert_greater(val_1, val_2)
 
 
 @then('we see that {scenario}')
