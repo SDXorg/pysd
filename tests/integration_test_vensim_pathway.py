@@ -61,6 +61,11 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/delays/test_delays.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    def test_delay_pipeline(self):
+        from.test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/delay_pipeline/test_pipeline_delays.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_euler_step_vs_saveper(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/euler_step_vs_saveper/test_euler_step_vs_saveper.mdl')
