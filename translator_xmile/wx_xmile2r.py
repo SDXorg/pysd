@@ -139,26 +139,25 @@ class Xmile2RFrame(wx.Frame):
             f_output.writelines(r_model_setwd + r_model_calibrate)
 
         # Prepare files for PEST use
-        parameters_file = ", ".join([p for p in sorted(model_translation.parameters_set)
-                                   if model_translation.auxs[p].type == "value"]) + "\n"
-        parameters_file = parameters_file + ", ".join([model_translation.auxs[p].value for p in
-                                                       sorted(model_translation.parameters_set) if
-                                                       model_translation.auxs[p].type == "value"]) + "\n"
+        parameters = [p for p in sorted(model_translation.parameters_set) if model_translation.auxs[p].type == "value"]
+        parameters_file = ", ".join(parameters) + "\n"
+        parameters_file = parameters_file + ", ".join([model_translation.auxs[p].value for p in parameters]) + "\n"
         with open(outPath + "/" + "parameters_PEST.csv", "w") as f_output:
             f_output.writelines(parameters_file)
 
-        cal_data = [p for p in model_translation.auxs_set if p not in model_translation.parameters_set and
+        # List of names of calibration data series
+        calib_data = [p for p in model_translation.auxs_set if p not in model_translation.parameters_set and
                          model_translation.auxs[p].type == "series"]
-        cal_data = sorted(cal_data)
+        calib_data = sorted(calib_data)
 
-        cal_data_file = list([["time"] + cal_data])
-        for i in range(0, len(model_translation.auxs[cal_data[0]].series)):
+        calib_data_file = list([["time"] + calib_data])
+        for i in range(0, len(model_translation.auxs[calib_data[0]].series)):
             line = [i]
-            line.extend([model_translation.auxs[d].series[i][1] for d in cal_data])
-            cal_data_file.append(line)
+            line.extend([model_translation.auxs[d].series[i][1] for d in calib_data])
+            calib_data_file.append(line)
 
         with open(outPath + "/" + "data_PEST.csv", "w") as f_output:
-            [f_output.write(", ".join(list(map(str, p))) + "\n") for p in cal_data_file]
+            [f_output.write(", ".join(list(map(str, p))) + "\n") for p in calib_data_file]
 
         template = parameters_file[0:parameters_file.index("\n")].split(", ")
         template_file = ",".join(["#" + t[0:] + " " * (11 - len(t)) + "#" if len(t) <= 10 else "#" + t[0:10] + " #"
@@ -166,6 +165,21 @@ class Xmile2RFrame(wx.Frame):
         template_file = "\n".join(["ptf #", ",".join(template), template_file])
         with open(outPath + "/" + "template_PEST.tpl", "w") as f_output:
             f_output.writelines(template_file)
+
+        # File describing timeseries for calibration
+        instr_file = "pif #\nl2 #,# !"
+        for i in range(0, len(model_translation.auxs[calib_data[0]].series)):
+            if i == 0:
+                instr_file = instr_file + "! #,# !".join([d[0:4] + str(i) for d in calib_data]) + "!\n"
+            else:
+                instr_file = instr_file + "l1 #,# !" + "! #,# !".join([d[0:4] + str(i) for d in calib_data]) + "!\n"
+        with open(outPath + "/" + "instructions_PEST.ins", "w") as f_output:
+            f_output.writelines(instr_file)
+
+
+
+
+
 
         self.text_ctrl_resutado.SetValue("".join(["*" * 28,
                                                   "\nModel translation successful",

@@ -11,7 +11,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a7e5b169-cc30-45fb-a7f9-e8e84f9c05bd" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/translator_xmile/wx_xmile2r.py" afterPath="$PROJECT_DIR$/translator_xmile/wx_xmile2r.py" />
     </list>
     <ignored path="pysd.iws" />
@@ -849,68 +848,10 @@
       <file leaf-file-name="xmile2py.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/translator_xmile/xmile2py.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3859">
+            <state relative-caret-position="2184">
               <caret line="232" column="21" lean-forward="false" selection-start-line="232" selection-start-column="21" selection-end-line="232" selection-end-column="21" />
               <folding>
                 <element signature="e#304#344#0" expanded="true" />
-                <marker date="1508860477350" expanded="true" signature="468:1159" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="23484:23527" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="23484:26678" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="23548:26678" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="23668:24635" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="23907:24013" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="24205:24378" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="24281:24376" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="24418:24593" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="24495:24591" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="24669:24763" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="24811:25287" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="25100:25287" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="25141:25285" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="25361:25575" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="25656:25792" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="25888:26589" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="26723:37734" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="26728:27116" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-                <marker date="1508860477350" expanded="true" signature="27191:28553" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-                <marker date="1508860477350" expanded="true" signature="28574:29834" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-                <marker date="1508860477350" expanded="true" signature="29854:31715" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-                <marker date="1508860477350" expanded="true" signature="31774:32398" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="31817:31920" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="31964:32010" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="32051:32094" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="32134:32176" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="32217:32260" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="32299:32340" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="32381:32398" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="32434:32882" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="32477:32580" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="32623:32668" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="32705:32744" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="32783:32824" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="32865:32882" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="32917:33597" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="32960:33063" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="33105:33149" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="33186:33225" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="33264:33305" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="33342:33383" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="33420:33461" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="33499:33539" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="33580:33597" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="33814:34042" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="34136:34241" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="34347:35222" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="34383:35222" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="35003:35222" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="35356:36645" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="35392:36645" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="35893:36225" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="35923:36154" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="36254:36589" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="36284:36517" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="36824:37446" ph="..." />
-                <marker date="1508860477350" expanded="true" signature="36859:37446" ph="..." />
               </folding>
             </state>
           </provider>
@@ -919,7 +860,7 @@
       <file leaf-file-name="scratch.txt" pinned="false" current-in-tab="false">
         <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="204">
+            <state relative-caret-position="288">
               <caret line="3" column="7" lean-forward="false" selection-start-line="3" selection-start-column="7" selection-end-line="3" selection-end-column="7" />
               <caret line="12" column="16" lean-forward="false" selection-start-line="12" selection-start-column="16" selection-end-line="12" selection-end-column="16" />
               <folding />
@@ -930,8 +871,8 @@
       <file leaf-file-name="wx_xmile2r.py" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/translator_xmile/wx_xmile2r.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="290">
-              <caret line="164" column="58" lean-forward="false" selection-start-line="164" selection-start-column="58" selection-end-line="164" selection-end-column="58" />
+            <state relative-caret-position="444">
+              <caret line="181" column="0" lean-forward="true" selection-start-line="181" selection-start-column="0" selection-end-line="181" selection-end-column="0" />
               <folding>
                 <element signature="e#112#121#0" expanded="true" />
               </folding>
@@ -942,7 +883,7 @@
       <file leaf-file-name="core.py" pinned="false" current-in-tab="false">
         <entry file="file://C:/Anaconda3/Lib/site-packages/wx/core.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="120">
+            <state relative-caret-position="49416">
               <caret line="2063" column="0" lean-forward="false" selection-start-line="2063" selection-start-column="0" selection-end-line="2063" selection-end-column="0" />
               <folding />
             </state>
@@ -1133,23 +1074,23 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scratches">
-        <subPane>
-          <expand>
-            <path>
-              <item name="" type="1a2a3e82:ScratchProjectViewPane$MyProjectNode" />
-              <item name="Scratches" type="d62648e6:ScratchProjectViewPane$MyRootNode" />
-            </path>
-          </expand>
-          <select />
-        </subPane>
-      </pane>
       <pane id="Scope">
         <subPane subId="Project Files">
           <expand>
             <path>
               <item name="Root" type="cbb8eebc:String" user="Root" />
               <item name="pysd" type="cbb8eebc:String" user="pysd" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+      <pane id="Scratches">
+        <subPane>
+          <expand>
+            <path>
+              <item name="" type="1a2a3e82:ScratchProjectViewPane$MyProjectNode" />
+              <item name="Scratches" type="d62648e6:ScratchProjectViewPane$MyRootNode" />
             </path>
           </expand>
           <select />
@@ -1743,19 +1684,19 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1936" height="1096" extended-state="6" />
+    <frame x="-9" y="-9" width="1938" height="1098" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.15191898" sideWeight="0.28389156" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.15413533" sideWeight="0.28389156" order="1" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32664436" sideWeight="0.49753347" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3890086" sideWeight="0.50107414" order="0" side_tool="true" content_ui="tabs" />
       <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22952586" sideWeight="0.48907682" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.23922414" sideWeight="0.49753347" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32395834" sideWeight="0.5021482" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32327586" sideWeight="0.5021482" order="5" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.17513514" sideWeight="0.47971782" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22090517" sideWeight="0.5193133" order="11" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.1482277" sideWeight="0.71610844" order="0" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33020833" sideWeight="0.4989259" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3297414" sideWeight="0.4989259" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33261803" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
@@ -1822,8 +1763,8 @@
         </line-breakpoint>
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/translator_xmile/wx_xmile2r.py</url>
-          <line>162</line>
-          <option name="timeStamp" value="664" />
+          <line>169</line>
+          <option name="timeStamp" value="665" />
         </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
@@ -1835,7 +1776,7 @@
           <properties exception="BaseException" />
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="665" />
+      <option name="time" value="666" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="tests">
@@ -1844,15 +1785,8 @@
         <watch expression="index" />
       </configuration>
       <configuration name="PythonConfigurationType">
-        <watch expression="template_file" language="Python" />
-        <watch expression="model_translation" language="Python" />
-        <watch expression="parameters_file" language="Python" />
-        <watch expression="parameters_file" language="Python" />
-        <watch expression="cal_data_file" language="Python" />
-        <watch expression="model_translation.auxs.keys()" language="Python" />
-        <watch expression="model_translation.parameters_set" language="Python" />
-        <watch expression="model_translation.auxs" language="Python" />
-        <watch expression="cal_data" language="Python" />
+        <watch expression="instr_file" language="Python" />
+        <watch expression="calib_data" language="Python" />
       </configuration>
     </watches-manager>
   </component>
@@ -2038,93 +1972,35 @@
     </entry>
     <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.txt">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="204">
+        <state relative-caret-position="288">
           <caret line="3" column="7" lean-forward="false" selection-start-line="3" selection-start-column="7" selection-end-line="3" selection-end-column="7" />
           <caret line="12" column="16" lean-forward="false" selection-start-line="12" selection-start-column="16" selection-end-line="12" selection-end-column="16" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/translator_xmile/xmile2py.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3859">
-          <caret line="232" column="21" lean-forward="false" selection-start-line="232" selection-start-column="21" selection-end-line="232" selection-end-column="21" />
-          <folding>
-            <element signature="e#304#344#0" expanded="true" />
-            <marker date="1508860477350" expanded="true" signature="468:1159" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="23484:23527" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="23484:26678" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="23548:26678" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="23668:24635" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="23907:24013" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="24205:24378" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="24281:24376" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="24418:24593" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="24495:24591" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="24669:24763" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="24811:25287" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="25100:25287" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="25141:25285" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="25361:25575" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="25656:25792" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="25888:26589" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="26723:37734" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="26728:27116" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1508860477350" expanded="true" signature="27191:28553" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1508860477350" expanded="true" signature="28574:29834" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1508860477350" expanded="true" signature="29854:31715" ph="&quot;&quot;&quot;...&quot;&quot;&quot;" />
-            <marker date="1508860477350" expanded="true" signature="31774:32398" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="31817:31920" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="31964:32010" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="32051:32094" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="32134:32176" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="32217:32260" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="32299:32340" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="32381:32398" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="32434:32882" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="32477:32580" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="32623:32668" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="32705:32744" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="32783:32824" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="32865:32882" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="32917:33597" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="32960:33063" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="33105:33149" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="33186:33225" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="33264:33305" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="33342:33383" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="33420:33461" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="33499:33539" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="33580:33597" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="33814:34042" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="34136:34241" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="34347:35222" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="34383:35222" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="35003:35222" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="35356:36645" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="35392:36645" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="35893:36225" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="35923:36154" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="36254:36589" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="36284:36517" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="36824:37446" ph="..." />
-            <marker date="1508860477350" expanded="true" signature="36859:37446" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://C:/Anaconda3/Lib/site-packages/wx/core.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="120">
+        <state relative-caret-position="49416">
           <caret line="2063" column="0" lean-forward="false" selection-start-line="2063" selection-start-column="0" selection-end-line="2063" selection-end-column="0" />
           <folding />
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/translator_xmile/xmile2py.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="2184">
+          <caret line="232" column="21" lean-forward="false" selection-start-line="232" selection-start-column="21" selection-end-line="232" selection-end-column="21" />
+          <folding>
+            <element signature="e#304#344#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/translator_xmile/wx_xmile2r.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="290">
-          <caret line="164" column="58" lean-forward="false" selection-start-line="164" selection-start-column="58" selection-end-line="164" selection-end-column="58" />
+        <state relative-caret-position="444">
+          <caret line="181" column="0" lean-forward="true" selection-start-line="181" selection-start-column="0" selection-end-line="181" selection-end-column="0" />
           <folding>
             <element signature="e#112#121#0" expanded="true" />
           </folding>
