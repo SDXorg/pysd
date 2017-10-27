@@ -160,11 +160,19 @@ class Xmile2RFrame(wx.Frame):
             [f_output.write(", ".join(list(map(str, p))) + "\n") for p in calib_data_file]
 
         template = parameters_file[0:parameters_file.index("\n")].split(", ")
-        template_file = ",".join(["#" + t[0:] + " " * (11 - len(t)) + "#" if len(t) <= 10 else "#" + t[0:10] + " #"
-                                 for t in template]) + "\n"
+        tpl_parm_names = {t: t if len(t) <= 10 else {t: t[0:10]} for t in template}
+        template_file = ",".join(["#{:10} #".format(t) for n, t in tpl_parm_names.items()]) + "\n"
         template_file = "\n".join(["ptf #", ",".join(template), template_file])
         with open(outPath + "/" + "template_PEST.tpl", "w") as f_output:
             f_output.writelines(template_file)
+
+        # Parameter descriptor file
+        param_descript = "  single point\n"
+        for p_name, p_n10 in tpl_parm_names.items():
+            param_descript = param_descript + "{:>14}{:26.16E}".format(p_n10, float(model_translation.auxs[p_name].value))
+            param_descript  = param_descript  + "     1.000000         0.000000\n"
+        with open(outPath + "/" + "parameters.par", "w") as f_output:
+            f_output.writelines(param_descript)
 
         # File describing timeseries for calibration
         instr_file = "pif #\nl2 #,# !"
