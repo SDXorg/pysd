@@ -139,54 +139,72 @@ class Xmile2RFrame(wx.Frame):
             f_output.writelines(r_model_setwd + r_model_calibrate)
 
         # Prepare files for PEST use
-        parameters = [p for p in sorted(model_translation.parameters_set) if model_translation.auxs[p].type == "value"]
-        parameters_file = ", ".join(parameters) + "\n"
-        parameters_file = parameters_file + ", ".join([model_translation.auxs[p].value for p in parameters]) + "\n"
-        with open(outPath + "/" + "parameters_PEST.csv", "w") as f_output:
+        param_names_orig = [p for p in model_translation.parameters_set if model_translation.auxs[p].type == "value"]
+        param_names_PEST = {t: (t if len(t) <= 10 else t[0:10]) for t in param_names_orig}
+
+        parameters_file = ", ".join(sorted(param_names_orig)) + "\n"
+        parameters_file = parameters_file + ", ".join([model_translation.auxs[p].value for p in
+                                                       sorted(param_names_orig)]) + "\n"
+        with open(outPath + "/" + "PEST_parameters.csv", "w") as f_output:
             f_output.writelines(parameters_file)
 
-        # List of names of calibration data series
-        calib_data = [p for p in model_translation.auxs_set if p not in model_translation.parameters_set and
-                         model_translation.auxs[p].type == "series"]
-        calib_data = sorted(calib_data)
-
-        calib_data_file = list([["time"] + calib_data])
-        for i in range(0, len(model_translation.auxs[calib_data[0]].series)):
-            line = [i]
-            line.extend([model_translation.auxs[d].series[i][1] for d in calib_data])
-            calib_data_file.append(line)
-
-        with open(outPath + "/" + "data_PEST.csv", "w") as f_output:
-            [f_output.write(", ".join(list(map(str, p))) + "\n") for p in calib_data_file]
-
-        template = parameters_file[0:parameters_file.index("\n")].split(", ")
-        tpl_parm_names = {t: t if len(t) <= 10 else {t: t[0:10]} for t in template}
-        template_file = ",".join(["#{:10} #".format(t) for n, t in tpl_parm_names.items()]) + "\n"
-        template_file = "\n".join(["ptf #", ",".join(template), template_file])
-        with open(outPath + "/" + "template_PEST.tpl", "w") as f_output:
+        # Parameter equivalence file
+        template_file = ",".join(["#{:10} #".format(t) for n, t in sorted(param_names_PEST.items())]) + "\n"
+        template_file = "\n".join(["ptf #", ",".join(sorted(param_names_orig)), template_file])
+        with open(outPath + "/" + "PEST_template.tpl", "w") as f_output:
             f_output.writelines(template_file)
 
         # Parameter descriptor file
         param_descript = "  single point\n"
-        for p_name, p_n10 in tpl_parm_names.items():
-            param_descript = param_descript + "{:>14}{:26.16E}".format(p_n10, float(model_translation.auxs[p_name].value))
+        for p_name, p_n10 in param_names_PEST.items():
+            param_descript = param_descript + "{:>14}{:26.16E}".format(p_n10,
+                                                                       float(model_translation.auxs[p_name].value))
             param_descript  = param_descript  + "     1.000000         0.000000\n"
-        with open(outPath + "/" + "parameters.par", "w") as f_output:
+        with open(outPath + "/" + "PEST_parameters.par", "w") as f_output:
             f_output.writelines(param_descript)
 
-        # File describing timeseries for calibration
-        instr_file = "pif #\nl2 #,# !"
-        for i in range(0, len(model_translation.auxs[calib_data[0]].series)):
+        # List of names of possible calibration data series found in XMILE container
+        calib_data_names_orig = [p for p in model_translation.auxs_set
+                                 if p not in model_translation.parameters_set and
+                                 model_translation.auxs[p].type == "series"]
+        calib_data_names_orig = sorted(calib_data_names_orig)
+        calib_data_names_PEST = {t: (t if len(t) <= 4 else t[0:4]) for t in calib_data_names_orig}
+
+        # Prepare files with time series data and those describing them for PEST
+        obf_file = ""
+        for i in range(0, len(model_translation.auxs[calib_data_names_orig[0]].series)):
             if i == 0:
-                instr_file = instr_file + "! #,# !".join([d[0:4] + str(i) for d in calib_data]) + "!\n"
+                # Calibration data for csv file
+                calib_data_file = list([["time"] + calib_data_names_orig])
+                line = [i]
+                line.extend([model_translation.auxs[d].series[i][1] for d in calib_data_names_orig])
+                calib_data_file.append(line)
+
+                # Instructions file (*.ins)
+                instr_file = "pif #\nl2 #,# !"
+                instr_file = instr_file + "! #,# !".join([n + str(i) for k, n in
+                                                          sorted(calib_data_names_PEST.items())]) + "!\n"
+                obf_file = obf_file.join(["{:>10}{:>20.6f}\n".format(n + str(i), model_translation.auxs[k].series[i][1])
+                                          for k, n in sorted(calib_data_names_PEST.items())])
             else:
-                instr_file = instr_file + "l1 #,# !" + "! #,# !".join([d[0:4] + str(i) for d in calib_data]) + "!\n"
-        with open(outPath + "/" + "instructions_PEST.ins", "w") as f_output:
+                # Calibration data for csv file
+                line = [i]
+                line.extend([model_translation.auxs[d].series[i][1] for d in calib_data_names_orig])
+                calib_data_file.append(line)
+
+                instr_file = instr_file + "l1 #,# !" + "! #,# !".join([d + str(i) for k, d in
+                                                                       sorted(calib_data_names_PEST.items())]) + "!\n"
+                obf_file = obf_file.join(["{:>10}{:20.6f}\n".format(n + str(i), model_translation.auxs[k].series[i][1])
+                                          for k, n in sorted(calib_data_names_PEST.items())])
+        # Write Calibration data time series file in plain comma separated format (CSV)
+        with open(outPath + "/" + "PEST_data.csv", "w") as f_output:
+            [f_output.write(", ".join(list(map(str, p))) + "\n") for p in calib_data_file]
+
+        # Write file describing calibration data
+        with open(outPath + "/" + "PEST_instructions.ins", "w") as f_output:
             f_output.writelines(instr_file)
 
-
-
-
+        # Output of "observations" file "*.obf"
 
 
         self.text_ctrl_resutado.SetValue("".join(["*" * 28,
