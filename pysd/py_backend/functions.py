@@ -222,6 +222,7 @@ class Smooth(Stateful):
         targets[0] = self.input_func()
         return (targets - self.state) * self.order / self.smooth_time_func()
 
+
 class Trend(Stateful):
     def __init__(self, trend_input, average_time, initial_trend):
         super(Trend, self).__init__()
@@ -230,14 +231,13 @@ class Trend(Stateful):
         self.input_func = trend_input
 
     def initialize(self):
-        self.state = self.input_func()/(1+self.init_func()*self.average_time_function())
+        self.state = self.input_func() / (1 + self.init_func() * self.average_time_function())
 
     def __call__(self):
-        return zidz(self.input_func()-self.state,self.average_time_function()*abs(self.state))
-
+        return zidz(self.input_func() - self.state, self.average_time_function() * abs(self.state))
 
     def ddt(self):
-        return (self.input_func() - self.state)/self.average_time_function()
+        return (self.input_func() - self.state) / self.average_time_function()
 
 
 class Initial(Stateful):
@@ -322,7 +322,6 @@ class Macro(Stateful):
         self.components.functions.time = self.time  # rewrite functions so we don't need this
 
         remaining = set(self._stateful_elements)
-        initialized = set()
 
         while remaining:
             progress = set()
@@ -334,7 +333,6 @@ class Macro(Stateful):
                     pass
 
             if progress:
-                initialized.update(progress)
                 remaining.difference_update(progress)
             else:
                 raise KeyError('Unresolvable Reference: Probable circular initialization' +
@@ -470,7 +468,7 @@ class Macro(Stateful):
         docs_df = _pd.DataFrame(collector)
         docs_df.fillna('None', inplace=True)
 
-        order = ['Real Name', 'Py Name','Unit', 'Type', 'Comment']
+        order = ['Real Name', 'Py Name', 'Unit', 'Type', 'Comment']
         return docs_df[order].sort_values(by='Real Name').reset_index(drop=True)
 
     def __str__(self):
@@ -817,6 +815,7 @@ def pulse(start, duration):
     t = time()
     return 1 if start <= t < start + duration else 0
 
+
 def pulse_train(start, duration, repeat_time, end):
     """ Implements vensim's PULSE TRAIN function
 
@@ -829,6 +828,7 @@ def pulse_train(start, duration, repeat_time, end):
         return 1 if (t - start) % repeat_time < duration else 0
     else:
         return 0
+
 
 def pulse_magnitude(magnitude, start, repeat_time=0):
     """ Implements xmile's PULSE function
@@ -854,7 +854,7 @@ def pulse_magnitude(magnitude, start, repeat_time=0):
             return magnitude * time_step
         else:
             return 0
-    
+
 
 def lookup(x, xs, ys):
     """ Provides the working mechanism for lookup functions the builder builds """
