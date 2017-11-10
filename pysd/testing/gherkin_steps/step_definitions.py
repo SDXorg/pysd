@@ -2,6 +2,7 @@ from behave import *
 import pysd
 import nose.tools as test
 import pandas as pd
+import numpy as np
 import os
 
 
@@ -24,6 +25,7 @@ def load_model(context, model_file):
 @when("{variable} is set to {value:g}")
 def set_value(context, variable, value):
     # todo: check that this is not used for state variables, and if it is, set the value...
+
     context.model.set_components({variable: value})
 
 
@@ -77,6 +79,7 @@ def check_greater(context, variable_1, variable_2, time):
     compare_variables(context, variable_1, variable_2, 'greater', time)
 
 
+
 def compare_variables(context, variable_1, variable_2, comparison, time=None):
     """
 
@@ -96,11 +99,19 @@ def compare_variables(context, variable_1, variable_2, comparison, time=None):
     if time is None and variable_1 in context.model.components._namespace:
         val_1 = getattr(context.model.components,
                         context.model.components._namespace[variable_1])()
+
     elif hasattr(context, 'result') and variable_1 in context.result.columns:
         if time == 'all':
             val_1 = context.result[variable_1].loc[:]
-        else:
+        elif time in context.result.index:
             val_1 = context.result[variable_1].loc[time]
+        elif context.result.index.min() < time < context.result.index.max():
+            context.result.loc[time] = np.nan
+            context.result = context.result.interpolate()
+            val_1 = context.result[variable_1].loc[time]
+        else:
+            raise ValueError('Not able to find a value for %s at time %f' % (repr(variable_1),
+                                                                             time))
 
     else:
         try:
@@ -111,11 +122,19 @@ def compare_variables(context, variable_1, variable_2, comparison, time=None):
     if time is None and variable_2 in context.model.components._namespace:
         val_2 = getattr(context.model.components,
                         context.model.components._namespace[variable_2])()
+
     elif hasattr(context, 'result') and variable_2 in context.result.columns:
         if time == 'all':
             val_2 = context.result[variable_2].loc[:]
-        else:
+        elif time in context.result.index:
             val_2 = context.result[variable_2].loc[time]
+        elif context.result.index.min() < time < context.result.index.max():
+            context.result.loc[time] = np.nan
+            context.result = context.result.interpolate()
+            val_2 = context.result[variable_2].loc[time]
+        else:
+            raise ValueError('Not able to find a value for %s at time %f' % (repr(variable_2),
+                                                                             time))
     else:
         try:
             val_2 = float(variable_2)
