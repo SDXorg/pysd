@@ -1,6 +1,6 @@
 from __future__ import print_function
 
-from distutils.core import setup
+from setuptools import setup, find_packages
 
 exec(open('pysd/_version.py').read())
 print(__version__)
@@ -12,12 +12,12 @@ setup(
     version=__version__,
     author='James Houghton',
     author_email='james.p.houghton@gmail.com',
-    packages=['pysd'],
+    packages=find_packages(exclude=['docs', 'tests', 'dist', 'build']),
     url='https://github.com/JamesPHoughton/pysd',
     license='LICENSE.txt',
     description='System Dynamics Modeling in Python',
     long_description=long_description,
-    keywords=['System Dynamics', 'Vensim'],
+    keywords=['System Dynamics', 'Vensim', 'XMILE'],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'License :: OSI Approved :: MIT License',
@@ -30,8 +30,18 @@ setup(
         'numpy',
         'parsimonious',
         'yapf',
-        'xarray'
+        'xarray',
+        'lxml',
+        'xlwt',        
+        'funcsigs',
+        'pydoe',
+        'xlrd'
     ],
-    package_data={'pysd': ['*.yapf']},
+    package_data={
+        'py_backend': [
+            'output_style.yapf',
+            'xmile/smile.grammar'
+        ]
+    },
     include_package_data=True
 )

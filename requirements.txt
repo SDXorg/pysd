@@ -2,11 +2,10 @@ pandas
 numpy
 parsimonious
 xarray
-tabulate
 yapf
 lxml
-xlwt
 funcsigs
 pydoe
 -e git+https://github.com/behave/behave.git#egg=behave
 xlrd
+xlwt
