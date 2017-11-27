@@ -1,0 +1,46 @@
+Archivos para usar PEST
+
+Entrada
+    Stella_entrada.csv
+
+Salida
+    Stella_salida.csv
+*.tpl
+    ptf #
+    infection rate,recovery rate
+    #infectrate #,#recoverrate#
+
+*.ins
+    pif @
+    l2 @,@ !infected1!
+    l1 @,@ !infected2!
+    l1 @,@ !infected3!
+    l1 @,@ !infected4!
+
+*.par
+    single point
+      infectrate   1.5000000E-03   1.000000   0.000000
+     recoverrate   0.5000000       1.000000   0.000000
+
+*.obf
+     infected1                 14
+     infected2                 28
+     infected3                 50
+     infected4                 66
+     infected5                156
+     infected6                190
+     infected7                156
+     infected8                108
+     infected9                 68
+     infected10                77
+     infected11                33
+     infected12                65
+     infected13                24
+
+*.pst
+
+*.bat
+    @echo off
+    echo > output.csv
+    start /min /wait "" "C:\Program Files (x86)\isee systems\STELLA 10.0\STELLA.EXE" -r SIR.stmx
+

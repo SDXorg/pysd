@@ -286,7 +286,7 @@ class XmileModel:
                 flw_equations = flw_equations.union({"\n    " + f["flow_name"] + " <- " +
                                                      f["eqn"] for f in stk.outflow})
 
-        #TODO convert into function? identifying supporting functions needed
+        #TODO convert into function identifying supporting functions needed
         #  Collects function names needed for supporting functions
         supporting_eqn = {}
         for eqn in flw_equations:
@@ -413,7 +413,7 @@ class XmileModel:
                          "par(mfrow=c(1,1))\n"])
         r_script_slv = "".join([r_script_slv, lines])
 
-        #TODO Have to add provided calibration data from Stella model
+        # Calibration skeleton, including calibration data from Stella model if possible
         r_script_cal = "".join(["# Sckeleton for model calibration\n",
                                 "# ********************************\n\n",
                                 "# Error function required to fit the model with 'nls.lm'\n",
