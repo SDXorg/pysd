@@ -518,6 +518,10 @@ class Model(Macro):
         self.time.stage = 'Load'
         self.initialize()
 
+    def getPysdCompilerVersion(self):
+        """ Returns the version of pysd complier that used for generating this model """
+        return self.components.__pysd_version__
+        
     def initialize(self):
         """ Initializes the simulation model """
         self.time.update(self.components.initial_time())

@@ -67,6 +67,8 @@ def build(elements, subscript_dict, namespace, outfile_name):
 
     _namespace = %(namespace)s
 
+    __pysd_version__ = "%(version)s"
+    
     %(functions)s
 
     ''' % {'subscript_dict': repr(subscript_dict),
