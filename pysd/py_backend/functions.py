@@ -305,6 +305,10 @@ class Macro(Stateful):
     def __call__(self):
         return self.return_func()
 
+    def get_pysd_compiler_version(self):
+        """ Returns the version of pysd complier that used for generating this model """
+        return self.components.__pysd_version__
+        
     def initialize(self, initialization_order=None):
         """
         This function tries to initialize the stateful objects.
@@ -503,10 +507,6 @@ class Model(Macro):
         self.time = Time()
         self.time.stage = 'Load'
         self.initialize()
-
-    def getPysdCompilerVersion(self):
-        """ Returns the version of pysd complier that used for generating this model """
-        return self.components.__pysd_version__
         
     def initialize(self):
         """ Initializes the simulation model """
