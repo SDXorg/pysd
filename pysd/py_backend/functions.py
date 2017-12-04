@@ -68,8 +68,9 @@ def cache(horizon):
         def cached(*args):
             """Step wise cache function"""
             try:  # fails if cache is out of date or not instantiated
-                assert cached.t == func.__globals__['time']()
+                assert cached.cache_t == func.__globals__['time']()
                 assert hasattr(cached, 'cache_val')
+                assert cached.cache_val is not None
             except (AssertionError, AttributeError):
                 cached.cache_val = func(*args)
                 cached.cache_t = func.__globals__['time']()
