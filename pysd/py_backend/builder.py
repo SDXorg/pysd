@@ -15,6 +15,7 @@ import yapf
 from .._version import __version__
 from ..py_backend import utils
 import os
+import os.path
 import warnings
 import pkg_resources
 
@@ -51,7 +52,7 @@ def build(elements, subscript_dict, namespace, outfile_name):
 
     text = '''
     """
-    Python model %(outfile)s
+    Python model "%(outfile)s"
     Translated using PySD version %(version)s
     """
     from __future__ import division
@@ -66,6 +67,8 @@ def build(elements, subscript_dict, namespace, outfile_name):
 
     _namespace = %(namespace)s
 
+    __pysd_version__ = "%(version)s"
+    
     %(functions)s
 
     ''' % {'subscript_dict': repr(subscript_dict),
@@ -73,7 +76,7 @@ def build(elements, subscript_dict, namespace, outfile_name):
            # 'namespace': '{\n' + '\n'.join(['%s: %s' % (key, namespace[key]) for key in
            #                                namespace.keys()]) + '\n}',
            'namespace': repr(namespace),
-           'outfile': outfile_name,
+           'outfile': os.path.basename(outfile_name),
            'version': __version__}
 
     style_file = os.path.dirname(os.path.realpath(__file__)) + '/output_style.yapf'
