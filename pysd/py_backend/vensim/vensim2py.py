@@ -11,6 +11,68 @@ import textwrap
 import numpy as np
 import os
 
+# Changes made for init replacement are lines 14 to 75 and 840 to 845
+# setting to compare output with init replacement
+init_replacement = True
+
+def replace_init_values(element,model_elements):
+    ''' This function takes all init values that are numeric and translates them into
+    an init variable. Then that init variable is created and added to the list. This happens before
+    namespace assignment and so on, so built models should be fine.
+
+    Problem are init values for delay functions
+
+    in DelayN and SmoothN, the initial value is the second to last element, contrary to all the others...
+     why?!, I ask
+
+     Input is INTEG ( inflow-outflow, 4)
+     Output is INTEG ( inflow-outflow, init stock)'''
+
+    # Those are all the functions that have an init variable
+    # The init test model has all the elements in this list and returns the correct outputs
+    reg_list = ('INTEG', 'DELAY1I', 'DELAY3I', 'SMOOTHI', 'SMOOTH3I')
+    n_list = ('DELAY N', 'SMOOTH N')
+    #checks if init expr is numeric
+    def constant(expr):
+        try:
+            float(expr)
+            return True
+        except ValueError:
+            return False
+    def deconstruct_init(pos,element,model_elements):
+        f, expr = element['expr'].split('(',1)
+        expr = expr.rsplit(')', 1)[0]
+        # The code below splits first level commas, but not commas within brackets, such as in MAX ( X , Y )
+        # and returns 3 or 4 elements depending on which function
+        # This is seperated in order to be able to replace the init element and put it back together
+        expr_split = re.split(',\s*(?![^()]*\))',expr)
+        init = expr_split[-pos]
+        if constant(init):
+            init_expr = 'init %s' % element['real_name']
+            expr_split[-pos] = init_expr
+            expr = ', '.join(expr_split)
+            element['expr'] = '%s(%s)' % (f,expr)
+            # we could also do it for 'eqn', althouh I'm not sure if that's even necessary
+            # it was tested without and there are no performance issues, maybe we leave it?
+            # The init element is added as a seperate variable to the model elements so it's included in the translation
+            init_element = {'eqn': '%s=%s' % (init_expr, init),
+                            'unit': element['unit'],
+                            'doc': 'initial value for %s' % element['real_name'],
+                            'kind': 'component',
+                            'real_name': init_expr,
+                            'subs': element['subs'],
+                            'expr': init}
+            model_elements.append(init_element)
+            return element,model_elements
+    if element['expr'].startswith(reg_list):
+        pos = 1
+        deconstruct_init(pos,element,model_elements)
+    elif element['expr'].startswith(n_list):
+        pos = 2
+        deconstruct_init(pos,element,model_elements)
+    else:
+        pass
+    return element, model_elements
 
 def get_file_sections(file_str):
     """
@@ -513,6 +575,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
        'real_name': None}])
 
     """
+
     if namespace is None:
         namespace = {}
     if subscript_dict is None:
@@ -773,6 +836,13 @@ def translate_section(section, macro_list):
     for macro in macro_list:
         if macro['name'] is not '_main_':
             name, namespace = utils.make_python_identifier(macro['name'], namespace)
+
+    # replace init values with init variables prior to the whole parsing
+    # could be done in the parsing as well but I don't have the skills to figure that out (SK)
+    if init_replacement:
+        for element in model_elements:
+            if element['kind'] not in ['subdef', 'section']:
+                replace_init_values(element,model_elements)
 
     # add model elements
     for element in model_elements:
