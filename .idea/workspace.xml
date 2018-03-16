@@ -7,10 +7,19 @@
     <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="808" mnemonic="2" />
     <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="606" mnemonic="3" />
     <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="238" mnemonic="4" />
+    <bookmark url="file://$PROJECT_DIR$/translator_xmile/wx_xmile2r.py" description="PEST preparation" line="140" mnemonic="A" />
     <bookmark url="file://$PROJECT_DIR$/translator_xmile/xmile2py.py" line="341" mnemonic="1" />
+    <bookmark url="file://$PROJECT_DIR$/translator_xmile/wx_xmile2r.py" description="Entrada.csv" line="147" mnemonic="B" />
+    <bookmark url="file://$PROJECT_DIR$/translator_xmile/wx_xmile2r.py" description="tpl" line="153" mnemonic="C" />
+    <bookmark url="file://$PROJECT_DIR$/translator_xmile/wx_xmile2r.py" description="par" line="162" mnemonic="D" />
+    <bookmark url="file://$PROJECT_DIR$/translator_xmile/wx_xmile2r.py" description="Salida.csv" line="199" mnemonic="E" />
+    <bookmark url="file://$PROJECT_DIR$/translator_xmile/wx_xmile2r.py" description="ins" line="203" mnemonic="F" />
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a7e5b169-cc30-45fb-a7f9-e8e84f9c05bd" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/pysd.iml" afterPath="$PROJECT_DIR$/.idea/pysd.iml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="pysd.iws" />
@@ -842,14 +851,15 @@
         <favorite_root url="file://$PROJECT_DIR$/tests/integration_test_factory.py" type="psiFile" klass="com.intellij.ide.projectView.impl.nodes.PsiFileNode" />
       </favorite_root>
     </favorites_list>
+    <favorites_list name="Etiquetas" />
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file leaf-file-name="xmile2py.py" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/translator_xmile/xmile2py.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3859">
-              <caret line="232" column="21" lean-forward="false" selection-start-line="232" selection-start-column="21" selection-end-line="232" selection-end-column="21" />
+            <state relative-caret-position="15246">
+              <caret line="731" column="35" lean-forward="false" selection-start-line="731" selection-start-column="35" selection-end-line="731" selection-end-column="35" />
               <folding>
                 <element signature="e#304#344#0" expanded="true" />
               </folding>
@@ -857,25 +867,24 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="scratch.txt" pinned="false" current-in-tab="false">
-        <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.txt">
+      <file leaf-file-name="wx_xmile2r.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/translator_xmile/wx_xmile2r.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="204">
-              <caret line="3" column="7" lean-forward="false" selection-start-line="3" selection-start-column="7" selection-end-line="3" selection-end-column="7" />
-              <caret line="12" column="16" lean-forward="false" selection-start-line="12" selection-start-column="16" selection-end-line="12" selection-end-column="16" />
-              <folding />
+            <state relative-caret-position="21">
+              <caret line="58" column="11" lean-forward="false" selection-start-line="58" selection-start-column="11" selection-end-line="58" selection-end-column="11" />
+              <folding>
+                <element signature="e#112#121#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="wx_xmile2r.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/translator_xmile/wx_xmile2r.py">
+      <file leaf-file-name="PEST_Auxiliares.txt" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/translator_xmile/PEST_Auxiliares.txt">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="584">
-              <caret line="201" column="0" lean-forward="true" selection-start-line="201" selection-start-column="0" selection-end-line="201" selection-end-column="0" />
-              <folding>
-                <element signature="e#112#121#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="0">
+              <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+              <folding />
             </state>
           </provider>
         </entry>
@@ -891,8 +900,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>plot</find>
-      <find>&lt;/scale</find>
       <find>_R</find>
       <find>NodeVisitor</find>
       <find>self.auxs</find>
@@ -921,6 +928,8 @@
       <find>auxs_set</find>
       <find>tpl_parm_names</find>
       <find>model_translation.parameters_set</find>
+      <find>model_tr</find>
+      <find>csv</find>
     </findStrings>
     <replaceStrings>
       <replace />
@@ -997,8 +1006,8 @@
         <option value="$PROJECT_DIR$/tests/unit_test_pysd.py" />
         <option value="/fragment.py" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch.txt" />
-        <option value="$PROJECT_DIR$/translator_xmile/xmile2py.py" />
         <option value="$PROJECT_DIR$/translator_xmile/wx_xmile2r.py" />
+        <option value="$PROJECT_DIR$/translator_xmile/xmile2py.py" />
       </list>
     </option>
   </component>
@@ -1007,6 +1016,9 @@
   <component name="JsGulpfileManager">
     <detection-done>true</detection-done>
     <sorting>DEFINITION_ORDER</sorting>
+  </component>
+  <component name="NamedScopeManager">
+    <scope name="Miguel" pattern="file[pysd]:translator_xmile/*||file[pysd]:translator_xmile//*" />
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
     <option name="x" value="260" />
@@ -1019,18 +1031,23 @@
       <profile-state>
         <expanded-state>
           <State>
-            <id>JavaScript</id>
+            <id />
           </State>
           <State>
-            <id>JavaScript function metricsJavaScript</id>
+            <id>Python</id>
           </State>
         </expanded-state>
+        <selected-state>
+          <State>
+            <id>PyCompatibilityInspection</id>
+          </State>
+        </selected-state>
       </profile-state>
     </entry>
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
-    <navigator currentView="ProjectPane" proportions="" version="1">
+    <navigator currentView="Scope" currentSubView="Miguel" proportions="" version="1">
       <flattenPackages />
       <showMembers ProjectPane="true" />
       <showModules />
@@ -1045,6 +1062,20 @@
     </navigator>
     <panes>
       <pane id="Scope">
+        <subPane subId="Miguel">
+          <expand>
+            <path>
+              <item name="Root" type="cbb8eebc:String" user="Root" />
+              <item name="pysd" type="cbb8eebc:String" user="pysd" />
+            </path>
+            <path>
+              <item name="Root" type="cbb8eebc:String" user="Root" />
+              <item name="pysd" type="cbb8eebc:String" user="pysd" />
+              <item name="translator_xmile" type="cbb8eebc:String" user="translator_xmile" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
         <subPane subId="Project Files">
           <expand>
             <path>
@@ -1060,11 +1091,6 @@
           <expand>
             <path>
               <item name="pysd" type="b2602c69:ProjectViewProjectNode" />
-              <item name="pysd" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="pysd" type="b2602c69:ProjectViewProjectNode" />
-              <item name="pysd" type="462c0819:PsiDirectoryNode" />
               <item name="pysd" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
@@ -1090,12 +1116,13 @@
     </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
-    <property name="settings.editor.selected.configurable" value="preferences.keymap" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/translator_xmile/PEST_Auxiliares.txt" />
+    <property name="settings.editor.selected.configurable" value="reference.settingsdialog.IDE.editor.colors.General" />
     <property name="SearchEverywhereHistoryKey" value="&#9;FILE&#9;file:///Users/houghton/Google_Drive/Academic Projects/PYSD/pysd/tests/test-models/tests/subscript_1d_arrays/test_subscript_1d_arrays.py" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="js-jscs-nodeInterpreter" value="/usr/local/bin/node" />
-    <property name="com.intellij.ide.scratch.LRUPopupBuilder$2/Languages" value="TEXT" />
+    <property name="com.intellij.ide.scratch.LRUPopupBuilder$2/Languages" value="TEXT&#10;YouTrack" />
+    <property name="run.code.analysis.last.selected.profile" value="pProject Default" />
   </component>
   <component name="PyConsoleOptionsProvider">
     <option name="myPythonConsoleState">
@@ -1111,6 +1138,7 @@
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="C:\Users\Miguel\Documents\0 Versiones\2 Proyectos\pysd\translator_xmile" />
+      <recent name="C:\Users\equih\.PyCharmCE2017.2\config\scratches" />
       <recent name="$PROJECT_DIR$/tests/test-models/tests" />
       <recent name="$PROJECT_DIR$" />
     </key>
@@ -1465,7 +1493,7 @@
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
     </configuration>
-    <configuration name="wx_xmile2r" type="PythonConfigurationType" factoryName="Python" temporary="true">
+    <configuration name="wx_xmile2r" type="PythonConfigurationType" factoryName="Python">
       <option name="INTERPRETER_OPTIONS" value="" />
       <option name="PARENT_ENVS" value="true" />
       <envs>
@@ -1505,19 +1533,18 @@
       <item index="0" class="java.lang.String" itemvalue="Python.Test Model Library" />
       <item index="1" class="java.lang.String" itemvalue="Python.teacup" />
       <item index="2" class="java.lang.String" itemvalue="Python tests.Doctest assert_frames_close" />
-      <item index="3" class="java.lang.String" itemvalue="Python.xmile2py" />
-      <item index="4" class="java.lang.String" itemvalue="Python.wx_xmile2r" />
+      <item index="3" class="java.lang.String" itemvalue="Python.wx_xmile2r" />
+      <item index="4" class="java.lang.String" itemvalue="Python.xmile2py" />
       <item index="5" class="java.lang.String" itemvalue="Python tests.Nosetests in unit_test_testing.py" />
       <item index="6" class="java.lang.String" itemvalue="Python tests.Nosetests for tests.unit_test_testing.TestStaticTestMatrix.test_static_test_matrix" />
       <item index="7" class="java.lang.String" itemvalue="Python tests.Nosetests in tests" />
     </list>
     <recent_temporary>
-      <list size="5">
-        <item index="0" class="java.lang.String" itemvalue="Python.wx_xmile2r" />
-        <item index="1" class="java.lang.String" itemvalue="Python.xmile2py" />
-        <item index="2" class="java.lang.String" itemvalue="Python tests.Nosetests in tests" />
-        <item index="3" class="java.lang.String" itemvalue="Python tests.Nosetests in unit_test_testing.py" />
-        <item index="4" class="java.lang.String" itemvalue="Python tests.Nosetests for tests.unit_test_testing.TestStaticTestMatrix.test_static_test_matrix" />
+      <list size="4">
+        <item index="0" class="java.lang.String" itemvalue="Python.xmile2py" />
+        <item index="1" class="java.lang.String" itemvalue="Python tests.Nosetests in tests" />
+        <item index="2" class="java.lang.String" itemvalue="Python tests.Nosetests in unit_test_testing.py" />
+        <item index="3" class="java.lang.String" itemvalue="Python tests.Nosetests for tests.unit_test_testing.TestStaticTestMatrix.test_static_test_matrix" />
       </list>
     </recent_temporary>
   </component>
@@ -1675,19 +1702,19 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1936" height="1096" extended-state="6" />
+    <frame x="-9" y="-9" width="1938" height="1098" extended-state="6" />
     <layout>
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.16204691" sideWeight="0.28" order="1" side_tool="false" content_ui="combo" />
-      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32664436" sideWeight="0.49753347" order="9" side_tool="false" content_ui="tabs" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.1707841" sideWeight="0.6097902" order="1" side_tool="false" content_ui="combo" />
+      <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3265086" sideWeight="0.49753347" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.3890086" sideWeight="0.50107414" order="0" side_tool="true" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22952586" sideWeight="0.48907682" order="2" side_tool="false" content_ui="tabs" />
-      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.23854166" sideWeight="0.49753347" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32291666" sideWeight="0.5021482" order="5" side_tool="false" content_ui="tabs" />
-      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.17513514" sideWeight="0.47971782" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32219827" sideWeight="0.5021482" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22888888" sideWeight="0.48907682" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Python Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2374582" sideWeight="0.49753347" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.17508055" sideWeight="0.46817538" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.22090517" sideWeight="0.5193133" order="11" side_tool="false" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.15724947" sideWeight="0.72" order="0" side_tool="true" content_ui="tabs" />
-      <window_info id="Debug" active="true" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32916668" sideWeight="0.4989259" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33261803" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32887402" sideWeight="0.4989259" order="6" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.16380237" sideWeight="0.3902098" order="0" side_tool="true" content_ui="tabs" />
+      <window_info id="Data View" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33243823" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -1751,11 +1778,6 @@
           <line>773</line>
           <option name="timeStamp" value="471" />
         </line-breakpoint>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/translator_xmile/wx_xmile2r.py</url>
-          <line>184</line>
-          <option name="timeStamp" value="670" />
-        </line-breakpoint>
       </breakpoints>
       <breakpoints-dialog>
         <breakpoints-dialog />
@@ -1766,7 +1788,7 @@
           <properties exception="BaseException" />
         </breakpoint>
       </default-breakpoints>
-      <option name="time" value="671" />
+      <option name="time" value="678" />
     </breakpoint-manager>
     <watches-manager>
       <configuration name="tests">
@@ -1775,22 +1797,11 @@
         <watch expression="index" />
       </configuration>
       <configuration name="PythonConfigurationType">
-        <watch expression="param_names_orig" language="Python" />
-        <watch expression="param_names_PEST" language="Python" />
-        <watch expression="template_file" language="Python" />
-        <watch expression="instr_file" language="Python" />
-        <watch expression="calib_data_names_PEST" language="Python" />
-        <watch expression="calib_data_names_orig" language="Python" />
-        <watch expression="obf_file" language="Python" />
+        <watch expression="ourPath" language="Python" />
       </configuration>
     </watches-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/lookups/test_lookups.mdl" />
-    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/lookups_funcnames/README.md" />
-    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscript_individually_defined_1_of_2d_arrays_from_floats/subscript_individually_defined_1_of_2d_arrays_from_floats.mdl" />
-    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscript_3d_arrays_widthwise/test_subscript_3d_arrays_widthwise.mdl" />
-    <entry file="file://$PROJECT_DIR$/tests/test-models/tests/subscript_3d_arrays_widthwise/test_subscript_3d_arrays_widthwise.py" />
     <entry file="file://$PROJECT_DIR$/tests/unit_test_functions.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="315">
@@ -1907,7 +1918,6 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Old/translators/vensim2py.py" />
-    <entry file="file://C:/Anaconda3/Lib/site-packages/parsimonious/nodes.py" />
     <entry file="file://$PROJECT_DIR$/translator_xmile/wx_xmile2r.py" />
     <entry file="file://$PROJECT_DIR$/translator_xmile/Windows-app/Xmile2R.wxg">
       <provider selected="true" editor-type-id="text-editor">
@@ -1965,25 +1975,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="204">
-          <caret line="3" column="7" lean-forward="false" selection-start-line="3" selection-start-column="7" selection-end-line="3" selection-end-column="7" />
-          <caret line="12" column="16" lean-forward="false" selection-start-line="12" selection-start-column="16" selection-end-line="12" selection-end-column="16" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/translator_xmile/xmile2py.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3859">
-          <caret line="232" column="21" lean-forward="false" selection-start-line="232" selection-start-column="21" selection-end-line="232" selection-end-column="21" />
-          <folding>
-            <element signature="e#304#344#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://C:/Anaconda3/Lib/site-packages/wx/core.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="206">
@@ -1991,15 +1982,70 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.youtrack" />
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/PEST_FAuxiliares.txt" />
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.txt" />
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch_1.txt" />
+    <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/PEST_Auxiliares.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="21">
+          <caret line="11" column="0" lean-forward="false" selection-start-line="11" selection-start-column="0" selection-end-line="11" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/translator_xmile/PEST_Auxiliares.txt">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://C:/Anaconda3/Lib/site-packages/parsimonious/nodes.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="189">
+          <caret line="216" column="0" lean-forward="false" selection-start-line="216" selection-start-column="0" selection-end-line="216" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/translator_xmile/xmile2py.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="15246">
+          <caret line="731" column="35" lean-forward="false" selection-start-line="731" selection-start-column="35" selection-end-line="731" selection-end-column="35" />
+          <folding>
+            <element signature="e#304#344#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/translator_xmile/wx_xmile2r.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="584">
-          <caret line="201" column="0" lean-forward="true" selection-start-line="201" selection-start-column="0" selection-end-line="201" selection-end-column="0" />
+        <state relative-caret-position="21">
+          <caret line="58" column="11" lean-forward="false" selection-start-line="58" selection-start-column="11" selection-end-line="58" selection-end-column="11" />
           <folding>
             <element signature="e#112#121#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+  </component>
+  <component name="masterDetails">
+    <states>
+      <state key="ScopeChooserConfigurable.UI">
+        <settings>
+          <last-edited>Miguel</last-edited>
+          <splitter-proportions>
+            <option name="proportions">
+              <list>
+                <option value="0.2" />
+              </list>
+            </option>
+          </splitter-proportions>
+          <order>
+            <scope name="Miguel" />
+          </order>
+        </settings>
+      </state>
+    </states>
   </component>
 </project>
