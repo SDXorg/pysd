@@ -16,9 +16,12 @@ import os
 init_replacement = True
 
 def replace_init_values(element,model_elements):
-    ''' This function takes all init values that are numeric and translates them into
+    """
+    This function takes all init values that are numeric and translates them into
     an init variable. Then that init variable is created and added to the list. This happens before
     namespace assignment and so on, so built models should be fine.
+
+    Can probably be done with Parsimonious, but I don't know how
 
     Problem are init values for delay functions
 
@@ -26,7 +29,18 @@ def replace_init_values(element,model_elements):
      why?!, I ask
 
      Input is INTEG ( inflow-outflow, 4)
-     Output is INTEG ( inflow-outflow, init stock)'''
+     Output is INTEG ( inflow-outflow, init stock)
+
+    Parameters
+    ----------
+    element: dict, Current model element in reviewed
+    model_elements: list, all the model elements (needs to be returned in case there is a new init variable that needs
+    to be added to the list
+
+    Returns
+    -------
+    updated element and elements list
+    """
 
     # Those are all the functions that have an init variable
     # The init test model has all the elements in this list and returns the correct outputs
@@ -44,7 +58,7 @@ def replace_init_values(element,model_elements):
         expr = expr.rsplit(')', 1)[0]
         # The code below splits first level commas, but not commas within brackets, such as in MAX ( X , Y )
         # and returns 3 or 4 elements depending on which function
-        # This is seperated in order to be able to replace the init element and put it back together
+        # This is separated in order to be able to replace the init element and put it back together
         expr_split = re.split(',\s*(?![^()]*\))',expr)
         init = expr_split[-pos]
         if constant(init):
