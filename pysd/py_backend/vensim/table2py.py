@@ -66,7 +66,7 @@ def read_tabular(table_file, sheetname='Sheet1'):
 
     mdl_file = table_file.replace(extension, 'mdl')
 
-    with open(mdl_file, 'w') as outfile:
+    with open(mdl_file, 'w', encoding='UTF-8') as outfile:
         for element in table.to_dict(orient='records'):
             outfile.write(
                 "%(Variable)s = \n"

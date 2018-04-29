@@ -88,7 +88,7 @@ def build(elements, subscript_dict, namespace, outfile_name):
     if outfile_name == 'return':
         return text
 
-    with open(outfile_name, 'w') as out:
+    with open(outfile_name, 'w', encoding='UTF-8') as out:
         out.write(text)
 
 
