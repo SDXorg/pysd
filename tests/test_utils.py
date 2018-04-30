@@ -22,10 +22,10 @@ def runner(model_file):
 
     # load canonical output
     try:
-        canon = pd.read_csv(directory + '/output.csv', index_col='Time')
+        canon = pd.read_csv(directory + '/output.csv', index_col='Time', encoding='UTF-8')
     except IOError:
         try:
-            canon = pd.read_table(directory + '/output.tab', index_col='Time')
+            canon = pd.read_table(directory + '/output.tab', index_col='Time', encoding='UTF-8')
         except IOError:
             raise IOError('Canonical output file not found')
 

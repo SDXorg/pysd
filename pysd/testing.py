@@ -202,9 +202,9 @@ def bounds_test(result, bounds=None, errors='return'):
         if bounds.split('.')[-1] in ['xls', 'xlsx']:
             bounds = _pd.read_excel(bounds, sheetname='Bounds', index_col='Real Name')
         elif bounds.split('.')[-1] == 'csv':
-            bounds = _pd.read_csv(bounds, index_col='Real Name')
+            bounds = _pd.read_csv(bounds, index_col='Real Name', encoding='UTF-8')
         elif bounds.split('.')[-1] == 'tab':
-            bounds = _pd.read_csv(bounds, sep='\t', index_col='Real Name')
+            bounds = _pd.read_csv(bounds, sep='\t', index_col='Real Name', encoding='UTF-8')
         else:
             raise ValueError('Unknown file type: bounds')
     else:
@@ -328,9 +328,9 @@ def sample_pspace(model, param_list=None, bounds=None, samples=100, seed=None):
         if bounds.split('.')[-1] in ['xls', 'xlsx']:
             bounds = _pd.read_excel(bounds, sheetname='Bounds', index_col='Real Name')
         elif bounds.split('.')[-1] == 'csv':
-            bounds = _pd.read_csv(bounds, index_col='Real Name')
+            bounds = _pd.read_csv(bounds, index_col='Real Name', encoding='UTF-8')
         elif bounds.split('.')[-1] == 'tab':
-            bounds = _pd.read_csv(bounds, sep='\t', index_col='Real Name')
+            bounds = _pd.read_csv(bounds, sep='\t', index_col='Real Name', encoding='UTF-8')
         else:
             raise ValueError('Unknown file type: bounds')
     else:
