@@ -1,5 +1,5 @@
 import keyword
-import re
+import regex as re
 
 import numpy as np
 import pandas as pd
@@ -262,14 +262,14 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
 
     if convert == 'hex':
         # Convert invalid characters to hex
-        s = ''.join([c.encode("hex") if re.findall('[^0-9a-zA-Z_]', c) else c for c in s])
+        s = ''.join([c.encode("hex") if re.findall('[^\p{l}\p{m}\p{n}_]', c) else c for c in s])
 
     elif convert == 'drop':
         # Remove invalid characters
-        s = re.sub('[^0-9a-zA-Z_]', '', s)
+        s = re.sub('[^\p{l}\p{m}\p{n}_]', '', s)
 
     # Remove leading characters until we find a letter or underscore
-    s = re.sub('^[^a-zA-Z_]+', '', s)
+    s = re.sub('^[^\p{l}_]+', '', s)
 
     # Check that the string is not a python identifier
     while (s in keyword.kwlist or

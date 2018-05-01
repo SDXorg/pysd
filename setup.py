@@ -35,7 +35,8 @@ setup(
         'xlwt',        
         'funcsigs',
         'pydoe',
-        'xlrd'
+        'xlrd',
+        'regex'
     ],
     package_data={
         'py_backend': [
