@@ -152,6 +152,8 @@ def build_element(element, subscript_dict):
 
         %(unit)s
         
+        %(lims)s
+        
         %(kind)s
 
         %(doc)s
@@ -186,6 +188,7 @@ def merge_partial_elements(element_list):
                     'py_expr': [element['py_expr']],  # in a list
                     'unit': element['unit'],
                     'subs': [element['subs']],
+                    'lims': element['lims'],
                     'kind': element['kind'],
                     'arguments': element['arguments']
                 }
@@ -272,6 +275,7 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
             'subs': subs,
             'doc': 'Provides initial conditions for %s function' % identifier,
             'unit': 'See docs for %s' % identifier,
+            'lims': 'None',
             'arguments': ''
         })
 
@@ -282,6 +286,7 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
             'doc': 'Provides derivative for %s function' % identifier,
             'subs': subs,
             'unit': 'See docs for %s' % identifier,
+            'lims': 'None',
             'py_expr': expression,
             'arguments': ''
         })
@@ -293,6 +298,7 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
         'doc': 'Integrates Expression %s' % expression,
         'py_expr': stateful_py_expr,
         'unit': 'None',
+        'lims': 'None',
         'subs': '',
         'kind': 'stateful',
         'arguments': ''
@@ -356,6 +362,7 @@ def add_n_delay(delay_input, delay_time, initial_value, order, subs, subscript_d
         'py_expr': 'functions.Delay(lambda: %s, lambda: %s, lambda: %s, lambda: %s)' % (
             delay_input, delay_time, initial_value, order),
         'unit': 'None',
+        'lims': 'None',
         'subs': '',
         'kind': 'stateful',
         'arguments': ''
@@ -459,6 +466,7 @@ def add_n_trend(trend_input, average_time, initial_trend, subs, subscript_dict):
         'py_expr': 'functions.Trend(lambda: %s, lambda: %s, lambda: %s)' % (
             trend_input, average_time, initial_trend),
         'unit': 'None',
+        'lims': 'None',
         'subs': '',
         'kind': 'stateful',
         'arguments': ''
@@ -493,6 +501,7 @@ def add_initial(initial_input):
         'py_expr': 'functions.Initial(lambda: %s)' % (
             initial_input),
         'unit': 'None',
+        'lims': 'None',
         'subs': '',
         'kind': 'stateful',
         'arguments': ''
@@ -535,6 +544,7 @@ def add_macro(macro_name, filename, arg_names, arg_vals):
         'doc': 'Instantiates the Macro',
         'py_expr': "functions.Macro('%s', %s, '%s')" % (filename, func_args, macro_name),
         'unit': 'None',
+        'lims': 'None',
         'subs': '',
         'kind': 'stateful',
         'arguments': ''

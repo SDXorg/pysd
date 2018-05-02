@@ -171,8 +171,10 @@ def get_model_elements(model_str):
             self.visit(ast)
 
         def visit_entry(self, n, vc):
+            units, lims = parse_units(vc[2].strip())
             self.entries.append({'eqn': vc[0].strip(),
-                                 'unit': vc[2].strip(),
+                                 'unit': units,
+                                 'lims': str(lims),
                                  'doc': vc[4].strip(),
                                  'kind': 'entry'})
 
@@ -180,6 +182,7 @@ def get_model_elements(model_str):
             if vc[2].strip() != "Simulation Control Parameters":
                 self.entries.append({'eqn': '',
                                      'unit': '',
+                                     'lims': '',
                                      'doc': vc[2].strip(),
                                      'kind': 'section'})
 
@@ -320,7 +323,15 @@ def parse_units(units_str):
     >>> parse_units('Widgets [0,100]')
 
     """
-    return units_str
+    if units_str[-1] == ']':
+        units, lims = units_str.rsplit('[')  # type: str, str
+    else:
+        units = units_str
+        lims = '?, ?]'
+
+    lims = tuple([float(x) if x.strip() != '?' else None for x in lims.strip(']').split(',')])
+
+    return units.strip(), lims
 
 
 functions = {
