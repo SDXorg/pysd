@@ -3,5 +3,6 @@
 build/
 *.vdf
 *.2mdl
-.idea/*
 pysd.egg*
+
+.idea/*
