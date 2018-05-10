@@ -206,12 +206,97 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(doc[doc['Real Name'] == 'Characteristic Time']['Type'].values[0],
                          'constant')
 
-    def test_cache(self):
-        # Todo: test stepwise and runwise caching
-        import pysd
-        model = pysd.read_vensim(test_model)
-        model.run()
-        self.assertIsNotNone(model.components.room_temperature.cache_val)
+    def test_stepwise_cache(self):
+        run_history = []
+        result_history = []
+
+        global time
+        time = lambda: 0  # for testing cache function
+        from pysd.py_backend.functions import cache
+
+        @cache('step')
+        def upstream(run_hist, res_hist):
+            run_hist.append('U')
+            return 'up'
+
+        def downstream(run_hist, res_hist):
+            run_hist.append('D')
+            result_history.append(upstream(run_hist, res_hist))
+            return 'down'
+
+        # initially neither function has a chache value
+        self.assertFalse(hasattr(upstream, 'cache_val'))
+        self.assertFalse(hasattr(downstream, 'cache_val'))
+
+        # when the functions are called,
+        # the cache is instantiated in the upstream (cached) function
+        result_history.append(downstream(run_history, result_history))
+        self.assertTrue(hasattr(upstream, 'cache_val'))
+        self.assertFalse(hasattr(downstream, 'cache_val'))
+        self.assertEqual(upstream.cache_t, 0)
+        self.assertListEqual(run_history, ['D', 'U'])
+        self.assertListEqual(result_history, ['up', 'down'])
+
+        # at the second call, the uncached function is run,
+        # but the cached upstream function returns its prior value
+        result_history.append(downstream(run_history, result_history))
+        self.assertEqual(upstream.cache_t, 0)
+        self.assertListEqual(run_history, ['D', 'U', 'D'])
+        self.assertListEqual(result_history, ['up', 'down', 'up', 'down'])
+
+        # when the time is reset, both functions are run again.
+        time = lambda: 2
+
+        result_history.append(downstream(run_history, result_history))
+        self.assertEqual(upstream.cache_t, 2)
+        self.assertListEqual(run_history, ['D', 'U', 'D', 'D', 'U'])
+        self.assertListEqual(result_history,
+                             ['up', 'down', 'up', 'down', 'up', 'down'])
+
+    def test_runwise_cache(self):
+        run_history = []
+        result_history = []
+
+        global time
+        time = lambda: 0  # for testing cache function
+        from pysd.py_backend.functions import cache
+
+        @cache('run')
+        def upstream(run_hist, res_hist):
+            run_hist.append('U')
+            return 'up'
+
+        def downstream(run_hist, res_hist):
+            run_hist.append('D')
+            result_history.append(upstream(run_hist, res_hist))
+            return 'down'
+
+        # initially neither function has a chache value
+        self.assertFalse(hasattr(upstream, 'cache_val'))
+        self.assertFalse(hasattr(downstream, 'cache_val'))
+
+        # when the functions are called,
+        # the cache is instantiated in the upstream (cached) function
+        result_history.append(downstream(run_history, result_history))
+        self.assertTrue(hasattr(upstream, 'cache_val'))
+        self.assertFalse(hasattr(downstream, 'cache_val'))
+        self.assertFalse(hasattr(upstream, 'cache_t'))
+        self.assertListEqual(run_history, ['D', 'U'])
+        self.assertListEqual(result_history, ['up', 'down'])
+
+        # at the second call, the uncached function is run,
+        # but the cached upstream function returns its prior value
+        result_history.append(downstream(run_history, result_history))
+        self.assertListEqual(run_history, ['D', 'U', 'D'])
+        self.assertListEqual(result_history, ['up', 'down', 'up', 'down'])
+
+        # when the time is reset, this has no impact on the upstream cache.
+        time = lambda: 2
+
+        result_history.append(downstream(run_history, result_history))
+        self.assertListEqual(run_history, ['D', 'U', 'D', 'D'])
+        self.assertListEqual(result_history,
+                             ['up', 'down', 'up', 'down', 'up', 'down'])
 
     def test_initialize(self):
         import pysd
