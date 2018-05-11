@@ -915,7 +915,7 @@ def translate_vensim(mdl_file):
     #>>> translate_vensim('../../tests/test-models/tests/limits/test_limits.mdl')
 
     """
-    with open(mdl_file, 'rU') as in_file:
+    with open(mdl_file, 'rU', errors='replace') as in_file:
         text = in_file.read()
 
     outfile_name = mdl_file.replace('.mdl', '.py')
