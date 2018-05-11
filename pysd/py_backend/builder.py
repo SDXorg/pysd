@@ -484,7 +484,7 @@ def add_initial(initial_input):
 
     """
     stateful = {
-        'py_name': utils.make_python_identifier('initial_%s' % initial_input)[0],
+        'py_name': utils.make_python_identifier('initializer_%s' % initial_input)[0],
         'real_name': 'Smooth of %s' % initial_input,
         'doc': 'Returns the value taken on during the initialization phase',
         'py_expr': 'functions.Initial(lambda: %s)' % (
