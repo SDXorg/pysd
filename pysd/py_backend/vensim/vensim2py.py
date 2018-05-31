@@ -317,14 +317,23 @@ def parse_units(units_str):
     Examples
     --------
     >>> parse_units('Widgets/Month [-10,10,1]')
+    ('Widgets/Month', (-10,10,1))
 
     >>> parse_units('Month [0,?]')
+    ('Month', [-10, None])
 
     >>> parse_units('Widgets [0,100]')
+    ('Widgets', (0, 100))
+
+    >>> parse_units('Widgets')
+    ('Widgets', (None, None))
+
+    >>> parse_units('[0, 100]')
+    ('', (0, 100))
 
     """
     if not len(units_str):
-        return units_str
+        return units_str, (None, None)
 
     if units_str[-1] == ']':
         units, lims = units_str.rsplit('[')  # type: str, str
