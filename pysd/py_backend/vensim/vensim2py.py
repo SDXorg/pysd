@@ -48,7 +48,7 @@ def get_file_sections(file_str):
     main = !":MACRO:" ~r".+(?!:MACRO:)"
 
     name = basic_id / escape_group
-    basic_id = ~r"[a-zA-Z][a-zA-Z0-9_\s]*"
+    basic_id = ~r"[a-zA-Z][a-zA-Z0-9_\'\$\s]*"
 
     # between quotes, either escaped quote or character that is not a quote
     escape_group = "\"" ( "\\\"" / ~r"[^\"]" )* "\""
