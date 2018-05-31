@@ -186,7 +186,12 @@ def merge_partial_elements(element_list):
             name = element['py_name']
             if name not in outs:
                 # Use 'expr' for Vensim models, and 'eqn' for Xmile (This makes the Vensim equation prettier.)
-                eqn = element['expr'] if 'expr' in element else element['eqn']
+                try:
+                    eqn = element['expr'] if 'expr' in element else element['eqn']
+                except KeyError:
+                    print(element)
+                    print('************************')
+                    print(element_list)
                 outs[name] = {
                     'py_name': element['py_name'],
                     'real_name': element['real_name'],
