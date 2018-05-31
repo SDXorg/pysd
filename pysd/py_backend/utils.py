@@ -261,14 +261,16 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
     s = re.sub('[\\s\\t\\n]+', '_', s)
 
     if convert == 'hex':
-        # Convert invalid characters to hex
+        # Convert invalid characters to hex. Note: \p{l} designates all Unicode letter characters (any language),
+        # \p{m} designates all mark symbols (e.g., vowel marks in Indian scrips, such as the final ે in નમસ્તે)
+        # and \p{n} designates all numbers. We allow any of these to be present in the regex.
         s = ''.join([c.encode("hex") if re.findall('[^\p{l}\p{m}\p{n}_]', c) else c for c in s])
 
     elif convert == 'drop':
         # Remove invalid characters
         s = re.sub('[^\p{l}\p{m}\p{n}_]', '', s)
 
-    # Remove leading characters until we find a letter or underscore
+    # Remove leading characters until we find a letter or underscore. Only letters can be leading characters.
     s = re.sub('^[^\p{l}_]+', '', s)
 
     # Check that the string is not a python identifier
