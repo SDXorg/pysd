@@ -439,6 +439,8 @@ def add_n_smooth(smooth_input, smooth_time, initial_value, order, subs, subscrip
         'py_expr': 'functions.Smooth(lambda: %s, lambda: %s, lambda: %s, lambda: %s)' % (
             smooth_input, smooth_time, initial_value, order),
         'unit': 'None',
+        'lims': 'None',
+        'eqn': 'None',
         'subs': '',
         'kind': 'stateful',
         'arguments': ''
