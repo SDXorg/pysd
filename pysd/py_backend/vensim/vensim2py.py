@@ -323,6 +323,9 @@ def parse_units(units_str):
     >>> parse_units('Widgets [0,100]')
 
     """
+    if not len(units_str):
+        return units_str
+
     if units_str[-1] == ']':
         units, lims = units_str.rsplit('[')  # type: str, str
     else:
