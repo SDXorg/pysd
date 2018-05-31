@@ -153,7 +153,7 @@ def translate_xmile(xmile_file):
     
     # Read the start time of simulation
     sim_spec_node = root.xpath('//ns:sim_specs', namespaces={'ns': NS});
-    time_units = sim_spec_node[0].attrib['time_units'] if (len(sim_spec_node) > 0 and sim_spec_node[0].attrib.has_key('time_units')) else ""
+    time_units = sim_spec_node[0].attrib['time_units'] if (len(sim_spec_node) > 0 and 'time_units' in sim_spec_node[0].attrib) else ""
     
     tstart = root.xpath('//ns:sim_specs/ns:start', namespaces={'ns': NS})[0].text
     element = {
@@ -198,7 +198,7 @@ def translate_xmile(xmile_file):
         dt_node = dt_node[0]
         dt_eqn = dt_node.text
         # If reciprocal mode are defined for `dt`, we should inverse value
-        if (dt_node.attrib.has_key("reciprocal") and dt_node.attrib["reciprocal"].lower() == "true"):
+        if ("reciprocal" in dt_node.attrib and dt_node.attrib["reciprocal"].lower() == "true"):
             dt_eqn = "1/" + dt_eqn
     
     element = {

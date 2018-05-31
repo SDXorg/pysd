@@ -323,7 +323,7 @@ def get_return_elements(return_columns, namespace, subscript_dict):
             name = col
             address = {}
         
-        if namespace.has_key(name):
+        if name in namespace:
             py_name = namespace[name]
         else:
             if name in namespace.values():
