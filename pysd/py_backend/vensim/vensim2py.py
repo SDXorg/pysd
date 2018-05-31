@@ -236,7 +236,7 @@ def get_equation_components(equation_str):
 
     subscript = basic_id / escape_group
 
-    basic_id = ~r"[a-zA-Z][a-zA-Z0-9_\s]*"
+    basic_id = ~r"[a-zA-Z][a-zA-Z0-9_\$\'\s]*"
     escape_group = "\"" ( "\\\"" / ~r"[^\"]" )* "\""
     _ = ~r"[\s\\]*"  # whitespace character
     """
