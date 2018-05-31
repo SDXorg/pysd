@@ -190,18 +190,28 @@ def translate_xmile(xmile_file):
     model_elements += new_structure
 
     # Read the time step of simulation
-    dt = root.xpath('//ns:sim_specs/ns:dt', namespaces={'ns': NS})[0].text
+    dt_node = root.xpath('//ns:sim_specs/ns:dt', namespaces={'ns': NS})
+    
+    # Use default value for time step if `dt` is not specified in model
+    dt_eqn = "1.0"
+    if len(dt_node) > 0:
+        dt_node = dt_node[0]
+        dt_eqn = dt_node.text
+        # If reciprocal mode are defined for `dt`, we should inverse value
+        if (dt_node.attrib.has_key("reciprocal") and dt_node.attrib["reciprocal"].lower() == "true"):
+            dt_eqn = "1/" + dt_eqn
+    
     element = {
         'kind': 'constant',
         'real_name': 'TIME STEP',
         'unit': time_units,
         'doc': 'The time step for the simulation.',
-        'eqn': dt,
+        'eqn': dt_eqn,
         'py_name': 'time_step',
         'subs': None,
         'arguments': '',
     }
-    translation, new_structure = smile_parser.parse(dt, element)
+    translation, new_structure = smile_parser.parse(dt_eqn, element)
     element.update(translation)
     model_elements.append(element)
     model_elements += new_structure
@@ -212,7 +222,7 @@ def translate_xmile(xmile_file):
         'real_name': 'SAVEPER',
         'unit': time_units,
         'doc': 'The time step for the simulation.',
-        'eqn': dt,
+        'eqn': dt_eqn,
         'py_name': 'saveper',
         'py_expr': 'time_step()',
         'subs': None,
