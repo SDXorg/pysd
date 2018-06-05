@@ -46,7 +46,8 @@ def translate_xmile(xmile_file):
     }  # namespace of the python model
     names_xpath = '//ns:model/ns:variables/ns:aux|' \
                   '//ns:model/ns:variables/ns:flow|' \
-                  '//ns:model/ns:variables/ns:stock'
+                  '//ns:model/ns:variables/ns:stock|' \
+                  '//ns:model/ns:variables/ns:gf'
 
     for node in root.xpath(names_xpath, namespaces={'ns': NS}):
         name = node.attrib['name']
@@ -75,14 +76,60 @@ def translate_xmile(xmile_file):
             'arguments': '',
         }
                 
-        tranlation, new_structure = smile_parser.parse(eqn, element)
-        element.update(tranlation)
-        if is_constant_expression(element['py_expr']):
-            element['kind'] = 'constant'
+        gf_node = node.xpath("ns:gf", namespaces={'ns': NS})
+        if len(gf_node) > 0:
+            # TODO Extract to separate method
+            # TODO Implement `xscale` support
+            # TODO Implement `yscale` support
+            xs = get_xpath_text(gf_node[0], 'ns:xpts').split(',')
+            ys = get_xpath_text(gf_node[0], 'ns:ypts').split(',')
+
+            element.update({
+                'kind': 'lookup',
+                'py_expr': "functions.lookup(x, [%(xs)s], [%(ys)s])" % {
+                    'xs': ','.join(xs),
+                    'ys': ','.join(ys)
+                },
+                'arguments': 'x'
+            })
+        else:
+            tranlation, new_structure = smile_parser.parse(eqn, element)
+            element.update(tranlation)
+            if is_constant_expression(element['py_expr']):
+                element['kind'] = 'constant'
         
         model_elements += new_structure
         model_elements.append(element)
 
+    # add gf aux elements
+    gf_xpath = '//ns:model/ns:variables/ns:gf'
+    for node in root.xpath(gf_xpath, namespaces={'ns': NS}):
+        name = node.attrib['name']
+        py_name = namespace[name]
+        doc = get_xpath_text(node, 'ns:doc')
+        
+        # TODO Extract to separate method
+        # TODO Implement `xscale` support
+        # TODO Implement `yscale` support
+        xs = get_xpath_text(node, 'ns:xpts').split(',')
+        ys = get_xpath_text(node, 'ns:ypts').split(',')
+        
+        element = {
+            'kind': 'lookup',
+            'real_name': name,
+            'unit': '',
+            'doc': doc,
+            'eqn': '',
+            'py_name': py_name,
+            'py_expr': "functions.lookup(x, [%(xs)s], [%(ys)s])" % {
+                    'xs': ','.join(xs),
+                    'ys': ','.join(ys)
+                },
+            'arguments': 'x',
+            'subs': [],  # Todo later
+        }
+        model_elements.append(element)
+        
     # add stock elements
     stock_xpath = '//ns:model/ns:variables/ns:stock'
     for node in root.xpath(stock_xpath, namespaces={'ns': NS}):
