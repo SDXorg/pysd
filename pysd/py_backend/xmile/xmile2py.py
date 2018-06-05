@@ -11,6 +11,7 @@ from .SMILE2Py import SMILEParser
 from lxml import etree
 from ...py_backend import builder, utils
 
+import numpy as np
 
 def translate_xmile(xmile_file):
     """ Translate an xmile model file into a python class.
@@ -37,6 +38,34 @@ def translate_xmile(xmile_file):
             return True
         except ValueError:
             return False
+
+    def parse_lookup_xml_node(node):
+        ys_node = node.xpath('ns:ypts', namespaces={'ns': NS})[0]
+        ys = np.fromstring(ys_node.text, dtype=np.float, sep=ys_node.attrib['sep'] if 'sep' in ys_node.attrib else ',')
+        xscale_node = node.xpath('ns:xscale', namespaces={'ns': NS})
+        if len(xscale_node) > 0:
+            xmin = xscale_node[0].attrib['min']
+            xmax = xscale_node[0].attrib['max']
+            xs = np.linspace(float(xmin), float(xmax), len(ys))
+        else:
+            xs_node = node.xpath('ns:xpts', namespaces={'ns': NS})[0]
+            xs = np.fromstring(xs_node.text, dtype=np.float, sep=xs_node.attrib['sep'] if 'sep' in xs_node.attrib else ',')
+
+        type = node.attrib['type'] if 'type' in node.attrib else 'continuous'
+        functions_map = {
+            'continuous': 'functions.lookup',
+            'extrapolation': 'functions.lookup_extrapolation',
+            'discrete': 'functions.lookup_discrete'
+        }
+        lookup_function = functions_map[type] if type in functions_map else functions_map['continuous']
+
+        return {
+            'name': node.attrib['name'] if 'name' in node.attrib else '',
+            'xs': xs,
+            'ys': ys,
+            'type': type,
+            'function': lookup_function
+        }
 
     # build model namespace
     namespace = {
@@ -75,55 +104,53 @@ def translate_xmile(xmile_file):
             'subs': [],  # Todo later
             'arguments': '',
         }
-                
+
+        tranlation, new_structure = smile_parser.parse(eqn, element)
+        element.update(tranlation)
+        if is_constant_expression(element['py_expr']):
+            element['kind'] = 'constant'
+        model_elements += new_structure
+
         gf_node = node.xpath("ns:gf", namespaces={'ns': NS})
         if len(gf_node) > 0:
-            # TODO Extract to separate method
-            # TODO Implement `xscale` support
-            # TODO Implement `yscale` support
-            xs = get_xpath_text(gf_node[0], 'ns:xpts').split(',')
-            ys = get_xpath_text(gf_node[0], 'ns:ypts').split(',')
+            gf_data = parse_lookup_xml_node(gf_node[0])
 
             element.update({
                 'kind': 'lookup',
-                'py_expr': "functions.lookup(x, [%(xs)s], [%(ys)s])" % {
-                    'xs': ','.join(xs),
-                    'ys': ','.join(ys)
+                # This lookup declared as inline, so we should implement inline mode for flow and aux
+                'arguments': "x = None",
+                'py_expr': "%(function)s(%(x)s, [%(xs)s], [%(ys)s]) if x is None else %(function)s(x, [%(xs)s], [%(ys)s])" % {
+                    'function': gf_data['function'],
+                    'xs': ','.join("%10.3f" % x for x in gf_data['xs']),
+                    'ys': ','.join("%10.3f" % x for x in gf_data['ys']),
+                    'x': element['py_expr']
                 },
-                'arguments': 'x'
             })
-        else:
-            tranlation, new_structure = smile_parser.parse(eqn, element)
-            element.update(tranlation)
-            if is_constant_expression(element['py_expr']):
-                element['kind'] = 'constant'
-        
-        model_elements += new_structure
+
         model_elements.append(element)
 
-    # add gf aux elements
+    # add gf elements
     gf_xpath = '//ns:model/ns:variables/ns:gf'
     for node in root.xpath(gf_xpath, namespaces={'ns': NS}):
         name = node.attrib['name']
         py_name = namespace[name]
+
+        units = get_xpath_text(node, 'ns:units')
         doc = get_xpath_text(node, 'ns:doc')
-        
-        # TODO Extract to separate method
-        # TODO Implement `xscale` support
-        # TODO Implement `yscale` support
-        xs = get_xpath_text(node, 'ns:xpts').split(',')
-        ys = get_xpath_text(node, 'ns:ypts').split(',')
+
+        gf_data = parse_lookup_xml_node(node)
         
         element = {
             'kind': 'lookup',
             'real_name': name,
-            'unit': '',
+            'unit': units,
             'doc': doc,
             'eqn': '',
             'py_name': py_name,
-            'py_expr': "functions.lookup(x, [%(xs)s], [%(ys)s])" % {
-                    'xs': ','.join(xs),
-                    'ys': ','.join(ys)
+            'py_expr': "%(function)s(x, [%(xs)s], [%(ys)s])" % {
+                    'function': gf_data['function'],
+                    'xs': ','.join("%10.3f" % x for x in gf_data['xs']),
+                    'ys': ','.join("%10.3f" % x for x in gf_data['ys']),
                 },
             'arguments': 'x',
             'subs': [],  # Todo later

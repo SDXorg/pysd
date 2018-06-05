@@ -865,6 +865,19 @@ def lookup(x, xs, ys):
     """ Provides the working mechanism for lookup functions the builder builds """
     return np.interp(x, xs, ys)
 
+def lookup_extrapolation(x, xs, ys):
+    """ Provides the working mechanism for lookup functions in extrapolation mode """
+    # TODO Should implement extrapolation instead interpolation with boundries
+    return np.interp(x, xs, ys)
+
+def lookup_discrete(x, xs, ys):
+    """ Provides the working mechanism for lookup functions in discrete mode """
+    for index in range(0, len(xs)):
+        xpoint = xs[index]
+        if x <= xpoint:
+            return ys[index]
+    return ys[len(ys) - 1]
+
 
 def if_then_else(condition, val_if_true, val_if_false):
     return np.where(condition, val_if_true, val_if_false)
