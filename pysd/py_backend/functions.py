@@ -867,7 +867,17 @@ def lookup(x, xs, ys):
 
 def lookup_extrapolation(x, xs, ys):
     """ Provides the working mechanism for lookup functions in extrapolation mode """
-    # TODO Should implement extrapolation instead interpolation with boundries
+    length = len(xs)
+    if x < xs[0]:
+        dx = xs[1] - xs[0]
+        dy = ys[1] - ys[0]
+        k = dy / dx
+        return ys[0] + (x - xs[0]) * k
+    if x > xs[length - 1]:
+        dx = xs[length - 1] - xs[length - 2]
+        dy = ys[length - 1] - ys[length - 2]
+        k = dy / dx
+        return ys[length - 1] + (x - xs[length - 1]) * k
     return np.interp(x, xs, ys)
 
 def lookup_discrete(x, xs, ys):
