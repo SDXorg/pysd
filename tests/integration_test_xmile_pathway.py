@@ -150,6 +150,21 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/lookups/test_lookups.xmile')
         assert_frames_close(output, canon, rtol=rtol)
 
+    def test_lookups_xscale(self):
+        from.test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/lookups/test_lookups_xscale.xmile')
+        assert_frames_close(output, canon, rtol=rtol)
+
+    def test_lookups_xpts_sep(self):
+        from.test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/lookups/test_lookups_xpts_sep.xmile')
+        assert_frames_close(output, canon, rtol=rtol)
+
+    def test_lookups_ypts_sep(self):
+        from.test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/lookups/test_lookups_ypts_sep.xmile')
+        assert_frames_close(output, canon, rtol=rtol)
+
     @unittest.skip('no xmile')
     def test_lookups_funcnames(self):
         from.test_utils import runner, assert_frames_close
