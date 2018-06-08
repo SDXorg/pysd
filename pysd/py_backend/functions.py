@@ -862,11 +862,17 @@ def pulse_magnitude(magnitude, start, repeat_time=0):
 
 
 def lookup(x, xs, ys):
-    """ Provides the working mechanism for lookup functions the builder builds """
+    """
+    Intermediate values are calculated with linear interpolation between the intermediate points.
+    Out-of-range values are the same as the closest endpoint (i.e, no extrapolation is performed).
+    """
     return np.interp(x, xs, ys)
 
 def lookup_extrapolation(x, xs, ys):
-    """ Provides the working mechanism for lookup functions in extrapolation mode """
+    """
+    Intermediate values are calculated with linear interpolation between the intermediate points.
+    Out-of-range values are calculated with linear extrapolation from the last two values at either end.
+    """
     length = len(xs)
     if x < xs[0]:
         dx = xs[1] - xs[0]
@@ -881,11 +887,13 @@ def lookup_extrapolation(x, xs, ys):
     return np.interp(x, xs, ys)
 
 def lookup_discrete(x, xs, ys):
-    """ Provides the working mechanism for lookup functions in discrete mode """
+    """
+    Intermediate values take on the value associated with the next lower x-coordinate (also called a step-wise function). The last two points of a discrete graphical function must have the same y value.
+    Out-of-range values are the same as the closest endpoint (i.e, no extrapolation is performed).
+    """
     for index in range(0, len(xs)):
-        xpoint = xs[index]
-        if x <= xpoint:
-            return ys[index]
+        if x < xs[index]:
+            return ys[index - 1] if index > 0 else ys[index]
     return ys[len(ys) - 1]
 
 
