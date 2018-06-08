@@ -402,6 +402,7 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/trend/test_trend.xmile')
         assert_frames_close(output, canon, rtol=rtol)
 
+    @unittest.skip('no xmile')
     def test_xidz_zidz(self):
         from .test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/xidz_zidz/xidz_zidz.xmile')
