@@ -8,3 +8,4 @@ pydoe
 xlrd
 xlwt
 regex
+chardet

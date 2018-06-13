@@ -36,7 +36,8 @@ setup(
         'funcsigs',
         'pydoe',
         'xlrd',
-        'regex'
+        'regex',
+        'chardet'
     ],
     package_data={
         'py_backend': [
