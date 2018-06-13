@@ -47,7 +47,7 @@ if run:
 
         ''' % {'tests': ''.join(tests)})
 
-    with open('integration_test_pysd.py', 'w') as ofile:
+    with open('integration_test_pysd.py', 'w', encoding='UTF-8') as ofile:
         ofile.write(file_string)
 
     print('generated %i integration tests' % len(tests))

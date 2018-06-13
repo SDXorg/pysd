@@ -29,6 +29,8 @@ class TestBuildElement(TestCase):
                                    'real_name': 'My Variable',
                                    'py_expr': ['0.01'],
                                    'unit': '',
+                                   'eqn': '',
+                                   'lims': '',
                                    'arguments': ''},
                           subscript_dict={})
         )
@@ -46,6 +48,8 @@ class TestBuildElement(TestCase):
                                    'py_name': 'my_variable',
                                    'real_name': 'My Variable',
                                    'py_expr': ['other_variable()'],
+                                   'eqn': '',
+                                   'lims': '',
                                    'unit': '',
                                    'arguments': ''},
                           subscript_dict={})
@@ -68,6 +72,8 @@ class TestBuild(TestCase):
                              'py_name': 'stocka',
                              'real_name': 'StockA',
                              'py_expr': ["_state['stocka']"],
+                             'eqn': '',
+                             'lims': '',
                              'unit': '',
                              'arguments': ''},
                             {'kind': 'component',
@@ -77,6 +83,8 @@ class TestBuild(TestCase):
                              'real_name': 'Implicit',
                              'py_expr': ['flowa()'],
                              'unit': 'See docs for stocka',
+                             'eqn': '',
+                             'lims': '',
                              'arguments': ''},
                             {'kind': 'setup',
                              'subs': [[]],
@@ -85,6 +93,8 @@ class TestBuild(TestCase):
                              'real_name': 'Implicit',
                              'py_expr': ['-10'],
                              'unit': 'See docs for stocka',
+                             'eqn': '',
+                             'lims': '',
                              'arguments': ''}],
                   namespace={'StockA': 'stocka'},
                   subscript_dict={'Dim1': ['A', 'B', 'C']},
@@ -101,13 +111,13 @@ class TestMergePartialElements(TestCase):
         self.assertEqual(
             merge_partial_elements(
                 [{'py_name': 'a', 'py_expr': 'ms', 'subs': ['Name1', 'element1'],
-                  'real_name': 'A', 'doc': 'Test', 'unit': None,
+                  'real_name': 'A', 'doc': 'Test', 'unit': None, 'eqn': '', 'lims': '',
                   'kind': 'component', 'arguments': ''},
                  {'py_name': 'a', 'py_expr': 'njk', 'subs': ['Name1', 'element2'],
-                  'real_name': 'A', 'doc': None, 'unit': None,
+                  'real_name': 'A', 'doc': None, 'unit': None, 'eqn': '', 'lims': '',
                   'kind': 'component', 'arguments': ''},
                  {'py_name': 'a', 'py_expr': 'as', 'subs': ['Name1', 'element3'],
-                  'real_name': 'A', 'doc': '', 'unit': None,
+                  'real_name': 'A', 'doc': '', 'unit': None, 'eqn': '', 'lims': '',
                   'kind': 'component', 'arguments': ''}]),
             [{'py_name': 'a',
               'py_expr': ['ms', 'njk', 'as'],
@@ -116,6 +126,8 @@ class TestMergePartialElements(TestCase):
               'doc': 'Test',
               'real_name': 'A',
               'unit': None,
+              'eqn': '',
+              'lims': '',
               'arguments': ''
               }])
 
@@ -123,22 +135,22 @@ class TestMergePartialElements(TestCase):
         from pysd.py_backend.builder import merge_partial_elements
         actual = merge_partial_elements(
             [{'py_name': 'a', 'py_expr': 'ms', 'subs': ['Name1', 'element1'],
-              'real_name': 'A', 'doc': 'Test', 'unit': None,
+              'real_name': 'A', 'doc': 'Test', 'unit': None, 'eqn': '', 'lims': '',
               'kind': 'component', 'arguments': ''},
              {'py_name': 'a', 'py_expr': 'njk', 'subs': ['Name1', 'element2'],
-              'real_name': 'A', 'doc': None, 'unit': None,
+              'real_name': 'A', 'doc': None, 'unit': None, 'eqn': '', 'lims': '',
               'kind': 'component', 'arguments': ''},
              {'py_name': 'a', 'py_expr': 'as', 'subs': ['Name1', 'element3'],
-              'real_name': 'A', 'doc': '', 'unit': None,
+              'real_name': 'A', 'doc': '', 'unit': None, 'eqn': '', 'lims': '',
               'kind': 'component', 'arguments': ''},
              {'py_name': 'b', 'py_expr': 'bgf', 'subs': ['Name1', 'element1'],
-              'real_name': 'B', 'doc': 'Test', 'unit': None,
+              'real_name': 'B', 'doc': 'Test', 'unit': None, 'eqn': '', 'lims': '',
               'kind': 'component', 'arguments': ''},
              {'py_name': 'b', 'py_expr': 'r4', 'subs': ['Name1', 'element2'],
-              'real_name': 'B', 'doc': None, 'unit': None,
+              'real_name': 'B', 'doc': None, 'unit': None, 'eqn': '', 'lims': '',
               'kind': 'component', 'arguments': ''},
              {'py_name': 'b', 'py_expr': 'ymt', 'subs': ['Name1', 'element3'],
-              'real_name': 'B', 'doc': '', 'unit': None,
+              'real_name': 'B', 'doc': '', 'unit': None, 'eqn': '', 'lims': '',
               'kind': 'component', 'arguments': ''}])
 
         expected = [{'py_name': 'a',
@@ -148,6 +160,7 @@ class TestMergePartialElements(TestCase):
                      'doc': 'Test',
                      'real_name': 'A',
                      'unit': None,
+                     'eqn': '', 'lims': '',
                      'arguments': ''
                      },
                     {'py_name': 'b',
@@ -157,6 +170,7 @@ class TestMergePartialElements(TestCase):
                      'doc': 'Test',
                      'real_name': 'B',
                      'unit': None,
+                     'eqn': '', 'lims': '',
                      'arguments': ''
                      }]
         self.assertIn(actual[0], expected)
@@ -166,13 +180,13 @@ class TestMergePartialElements(TestCase):
         from pysd.py_backend.builder import merge_partial_elements
         actual = merge_partial_elements(
             [{'py_name': 'a', 'py_expr': 'ms', 'subs': ['Name1', 'element1'],
-              'real_name': 'A', 'doc': 'Test', 'unit': None,
+              'real_name': 'A', 'doc': 'Test', 'unit': None, 'eqn': '', 'lims': '',
               'kind': 'component', 'arguments': ''},
              {'py_name': 'a', 'py_expr': 'njk', 'subs': ['Name1', 'element2'],
-              'real_name': 'A', 'doc': None, 'unit': None,
+              'real_name': 'A', 'doc': None, 'unit': None, 'eqn': '', 'lims': '',
               'kind': 'component', 'arguments': ''},
              {'py_name': 'c', 'py_expr': 'as', 'subs': ['Name1', 'element3'],
-              'real_name': 'C', 'doc': 'hi', 'unit': None,
+              'real_name': 'C', 'doc': 'hi', 'unit': None, 'eqn': '', 'lims': '',
               'kind': 'component', 'arguments': ''},
              ])
 
@@ -183,6 +197,8 @@ class TestMergePartialElements(TestCase):
                      'doc': 'Test',
                      'real_name': 'A',
                      'unit': None,
+                     'eqn': '',
+                     'lims': '',
                      'arguments': ''
                      },
                     {'py_name': 'c',
@@ -192,6 +208,8 @@ class TestMergePartialElements(TestCase):
                      'doc': 'hi',
                      'real_name': 'C',
                      'unit': None,
+                     'eqn': '',
+                     'lims': '',
                      'arguments': ''
                      }]
 
