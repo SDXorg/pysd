@@ -449,6 +449,7 @@ class Macro(Stateful):
 
         self.py_model_file = py_model_file
 
+
     def __call__(self):
         return self.return_func()
 

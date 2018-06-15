@@ -724,3 +724,15 @@ def build_function_call(function_def, user_arguments):
         return function_def['name'] + "(" + ", ".join(arguments) + ")"
 
     return function_def['name'] + "(" + ",".join(user_arguments) + ")"
+
+def build_function_call(function_def, user_arguments):
+    if isinstance(function_def, str):
+        return function_def + "(" + ",".join(user_arguments) + ")"
+
+    if "require_time" in function_def and function_def["require_time"]:
+        user_arguments.insert(0, "__data['time']")
+
+    if "require_scope" in function_def and function_def["require_scope"]:
+        user_arguments.insert(0, "__data['scope']")
+
+    return function_def['name'] + "(" + ",".join(user_arguments) + ")"
