@@ -335,9 +335,8 @@ def get_return_elements(return_columns, namespace, subscript_dict):
         
         if py_name not in capture_elements:
             capture_elements += [py_name]
-            # Don't add aliases columns to the same elements of model
-            # (f.ex. when `namespace` parameter contains multiple aliases to same element)
-            return_addresses[col] = (py_name, address)
+
+        return_addresses[col] = (py_name, address)
             
     return list(capture_elements), return_addresses
 

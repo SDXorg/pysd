@@ -666,11 +666,17 @@ class Model(Macro):
         or other functions that take parameters.
         """
         return_columns = []
+        parsed_expr = []
+
         for key, value in self.components._namespace.items():
             sig = signature(getattr(self.components, value))
             # The `*args` reference handles the py2.7 decorator.
             if len(set(sig.parameters) - {'args'}) == 0:
-                return_columns.append(key)
+                expr = self.components._namespace[key]
+                if expr in parsed_expr:
+                    return_columns.append(key)
+                    parsed_expr.append(expr)
+
         return return_columns
 
     def set_initial_condition(self, initial_condition):
