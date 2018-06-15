@@ -10,14 +10,16 @@ xmile specific syntax.
 """
 
 from __future__ import absolute_import
-import textwrap
-import yapf
-from .._version import __version__
-from ..py_backend import utils
+
 import os
 import os.path
+import textwrap
 import warnings
-import pkg_resources
+
+import yapf
+
+from .._version import __version__
+from ..py_backend import utils
 
 
 def build(elements, subscript_dict, namespace, outfile_name):
@@ -88,7 +90,7 @@ def build(elements, subscript_dict, namespace, outfile_name):
     if outfile_name == 'return':
         return text
 
-    with open(outfile_name, 'w') as out:
+    with open(outfile_name, 'w', encoding='UTF-8') as out:
         out.write(text)
 
 
@@ -149,8 +151,12 @@ def build_element(element, subscript_dict):
     def %(py_name)s(%(arguments)s):
         """
         %(real_name)s
+        
+        %(eqn)s
 
         %(unit)s
+        
+        %(lims)s
         
         %(kind)s
 
@@ -179,6 +185,9 @@ def merge_partial_elements(element_list):
         if element['py_expr'] != "None":  # for
             name = element['py_name']
             if name not in outs:
+                # Use 'expr' for Vensim models, and 'eqn' for Xmile (This makes the Vensim equation prettier.)
+                eqn = element['expr'] if 'expr' in element else element['eqn']
+
                 outs[name] = {
                     'py_name': element['py_name'],
                     'real_name': element['real_name'],
@@ -186,6 +195,8 @@ def merge_partial_elements(element_list):
                     'py_expr': [element['py_expr']],  # in a list
                     'unit': element['unit'],
                     'subs': [element['subs']],
+                    'lims': element['lims'],
+                    'eqn': eqn,
                     'kind': element['kind'],
                     'arguments': element['arguments']
                 }
@@ -193,6 +204,8 @@ def merge_partial_elements(element_list):
             else:
                 outs[name]['doc'] = outs[name]['doc'] or element['doc']
                 outs[name]['unit'] = outs[name]['unit'] or element['unit']
+                outs[name]['lims'] = outs[name]['lims'] or element['lims']
+                outs[name]['eqn'] = outs[name]['eqn'] or element['eqn']
                 outs[name]['py_expr'] += [element['py_expr']]
                 outs[name]['subs'] += [element['subs']]
                 outs[name]['arguments'] = element['arguments']
@@ -272,6 +285,8 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
             'subs': subs,
             'doc': 'Provides initial conditions for %s function' % identifier,
             'unit': 'See docs for %s' % identifier,
+            'lims': 'None',
+            'eqn': 'None',
             'arguments': ''
         })
 
@@ -282,6 +297,8 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
             'doc': 'Provides derivative for %s function' % identifier,
             'subs': subs,
             'unit': 'See docs for %s' % identifier,
+            'lims': 'None',
+            'eqn': 'None',
             'py_expr': expression,
             'arguments': ''
         })
@@ -293,6 +310,8 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
         'doc': 'Integrates Expression %s' % expression,
         'py_expr': stateful_py_expr,
         'unit': 'None',
+        'lims': 'None',
+        'eqn': 'None',
         'subs': '',
         'kind': 'stateful',
         'arguments': ''
@@ -356,6 +375,8 @@ def add_n_delay(delay_input, delay_time, initial_value, order, subs, subscript_d
         'py_expr': 'functions.Delay(lambda: %s, lambda: %s, lambda: %s, lambda: %s)' % (
             delay_input, delay_time, initial_value, order),
         'unit': 'None',
+        'lims': 'None',
+        'eqn': 'None',
         'subs': '',
         'kind': 'stateful',
         'arguments': ''
@@ -414,6 +435,8 @@ def add_n_smooth(smooth_input, smooth_time, initial_value, order, subs, subscrip
         'py_expr': 'functions.Smooth(lambda: %s, lambda: %s, lambda: %s, lambda: %s)' % (
             smooth_input, smooth_time, initial_value, order),
         'unit': 'None',
+        'lims': 'None',
+        'eqn': 'None',
         'subs': '',
         'kind': 'stateful',
         'arguments': ''
@@ -459,6 +482,8 @@ def add_n_trend(trend_input, average_time, initial_trend, subs, subscript_dict):
         'py_expr': 'functions.Trend(lambda: %s, lambda: %s, lambda: %s)' % (
             trend_input, average_time, initial_trend),
         'unit': 'None',
+        'lims': 'None',
+        'eqn': 'None',
         'subs': '',
         'kind': 'stateful',
         'arguments': ''
@@ -493,6 +518,8 @@ def add_initial(initial_input):
         'py_expr': 'functions.Initial(lambda: %s)' % (
             initial_input),
         'unit': 'None',
+        'lims': 'None',
+        'eqn': 'None',
         'subs': '',
         'kind': 'stateful',
         'arguments': ''
@@ -535,6 +562,8 @@ def add_macro(macro_name, filename, arg_names, arg_vals):
         'doc': 'Instantiates the Macro',
         'py_expr': "functions.Macro('%s', %s, '%s')" % (filename, func_args, macro_name),
         'unit': 'None',
+        'lims': 'None',
+        'eqn': 'None',
         'subs': '',
         'kind': 'stateful',
         'arguments': ''

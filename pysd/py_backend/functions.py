@@ -464,16 +464,18 @@ class Macro(Stateful):
                 lines = docstring.split('\n')
                 collector.append({'Real Name': name,
                                   'Py Name': varname,
-                                  'Unit': lines[3].strip(),
-                                  'Type': lines[5].strip(),
-                                  'Comment': '\n'.join(lines[7:]).strip()})
+                                  'Eqn': lines[3].strip(),
+                                  'Unit': lines[5].strip(),
+                                  'Lims': lines[7].strip(),
+                                  'Type': lines[9].strip(),
+                                  'Comment': '\n'.join(lines[9:]).strip()})
             except:
                 pass
 
         docs_df = _pd.DataFrame(collector)
         docs_df.fillna('None', inplace=True)
 
-        order = ['Real Name', 'Py Name', 'Unit', 'Type', 'Comment']
+        order = ['Real Name', 'Py Name', 'Unit', 'Lims', 'Type', 'Eqn', 'Comment']
         return docs_df[order].sort_values(by='Real Name').reset_index(drop=True)
 
     def __str__(self):

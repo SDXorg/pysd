@@ -3,6 +3,6 @@
 build/
 *.vdf
 *.2mdl
-.idea/workspace.xml
-.idea/*
 pysd.egg*
+
+.idea/*

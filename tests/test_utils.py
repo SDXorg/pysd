@@ -5,6 +5,7 @@ import os.path
 
 import numpy as np
 import pandas as pd
+from chardet.universaldetector import UniversalDetector
 
 import pysd
 
@@ -22,10 +23,12 @@ def runner(model_file):
 
     # load canonical output
     try:
-        canon = pd.read_csv(directory + '/output.csv', index_col='Time')
+        encoding = detect_encoding(directory + '/output.csv')
+        canon = pd.read_csv(directory + '/output.csv', encoding=encoding, index_col='Time')
     except IOError:
         try:
-            canon = pd.read_table(directory + '/output.tab', index_col='Time')
+            encoding = detect_encoding(directory + '/output.tab')
+            canon = pd.read_table(directory + '/output.tab', encoding=encoding, index_col='Time')
         except IOError:
             raise IOError('Canonical output file not found')
 
@@ -79,7 +82,7 @@ def assert_frames_close(actual, expected, **kwargs):
         'test set columns must be equal to those in actual/observed set.'
 
     assert (expected.index.values == actual.index.values).all(), \
-        'test set and actual set must share a common index'\
+        'test set and actual set must share a common index' \
         'instead found' + expected.index.values + 'vs' + actual.index.values
 
     for col in expected.columns:
@@ -92,4 +95,14 @@ def assert_frames_close(actual, expected, **kwargs):
 
 
 def assert_allclose(x, y, rtol=1.e-5, atol=1.e-5):
-    assert np.all(np.less_equal(abs(x-y), atol + rtol * abs(y)))
+    assert np.all(np.less_equal(abs(x - y), atol + rtol * abs(y)))
+
+
+def detect_encoding(file):
+    detector = UniversalDetector()
+    for line in open(file, 'rb').readlines():
+        print(line)
+        detector.feed(line)
+        if detector.done: break
+    detector.close()
+    return detector.result['encoding']

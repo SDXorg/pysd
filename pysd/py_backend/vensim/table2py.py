@@ -41,9 +41,9 @@ def read_tabular(table_file, sheetname='Sheet1'):
         if extension in ['xls', 'xlsx']:
             table = pd.read_excel(table_file, sheetname=sheetname)
         elif extension == 'csv':
-            table = pd.read_csv(table_file)
+            table = pd.read_csv(table_file, encoding='UTF-8')
         elif extension == 'tab':
-            table = pd.read_csv(table_file, sep='\t')
+            table = pd.read_csv(table_file, sep='\t', encoding='UTF-8')
         else:
             raise ValueError('Unknown file or table type')
     else:
@@ -66,7 +66,7 @@ def read_tabular(table_file, sheetname='Sheet1'):
 
     mdl_file = table_file.replace(extension, 'mdl')
 
-    with open(mdl_file, 'w') as outfile:
+    with open(mdl_file, 'w', encoding='UTF-8') as outfile:
         for element in table.to_dict(orient='records'):
             outfile.write(
                 "%(Variable)s = \n"
