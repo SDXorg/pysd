@@ -368,14 +368,29 @@ functions = {
     "arcsin": "np.arcsin",
     "arctan": "np.arctan",
     "if then else": "functions.if_then_else",
-    "step": "functions.step",
+    "step": {
+        "name": "functions.step",
+        "require_time": True
+    },
     "modulo": "np.mod",
-    "pulse": "functions.pulse",
-    "pulse train": "functions.pulse_train",
-    "ramp": "functions.ramp",
+    "pulse": {
+        "name": "functions.pulse",
+        "require_time": True
+    },
+    "pulse train": {
+        "name": "functions.pulse_train",
+        "require_time": True
+    },
+    "ramp": {
+        "name": "functions.ramp",
+        "require_time": True
+    },
     "min": "np.minimum",
     "max": "np.maximum",
-    "active initial": "functions.active_initial",
+    "active initial": {
+        "name": "functions.active_initial",
+        "require_time": True
+    },
     "xidz": "functions.xidz",
     "zidz": "functions.zidz",
     "game": "",  # In the future, may have an actual `functions.game` pass through
@@ -635,9 +650,11 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             self.translation = s
             return s
 
-        def visit_func(self, n, vc):
+        def visit_call(self, n, vc):
             self.kind = 'component'
-            return functions[n.text.lower()]
+            function_name = vc[0].lower()
+            arguments = [e.strip() for e in vc[4].split(",")]
+            return builder.build_function_call(functions[function_name], arguments)
 
         def visit_in_oper(self, n, vc):
             return in_ops[n.text.lower()]

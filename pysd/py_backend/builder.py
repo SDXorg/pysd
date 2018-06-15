@@ -71,6 +71,18 @@ def build(elements, subscript_dict, namespace, outfile_name):
 
     __pysd_version__ = "%(version)s"
     
+    __data = {
+        'scope': None,
+        'time': lambda: 0
+    }
+
+    def _init_outer_references(data):
+        for key in data:
+            __data[key] = data[key]
+    
+    def time():
+        return __data['time']()
+    
     %(functions)s
 
     ''' % {'subscript_dict': repr(subscript_dict),
@@ -560,7 +572,7 @@ def add_macro(macro_name, filename, arg_names, arg_vals):
             [utils.make_python_identifier(f)[0] for f in arg_vals]),
         'real_name': 'Macro Instantiation of ' + macro_name,
         'doc': 'Instantiates the Macro',
-        'py_expr': "functions.Macro('%s', %s, '%s')" % (filename, func_args, macro_name),
+        'py_expr': "functions.Macro('%s', %s, '%s', __data['time'])" % (filename, func_args, macro_name),
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',
@@ -584,3 +596,15 @@ def add_incomplete(var_name, dependencies):
 
     # first arg is `self` reference
     return "functions.incomplete(%s)" % ', '.join(dependencies[1:]), []
+
+def build_function_call(function_def, user_arguments):
+    if isinstance(function_def, str):
+        return function_def + "(" + ",".join(user_arguments) + ")"
+
+    if "require_time" in function_def and function_def["require_time"]:
+        user_arguments.insert(0, "__data['time']")
+
+    if "require_scope" in function_def and function_def["require_scope"]:
+        user_arguments.insert(0, "__data['scope']")
+
+    return function_def['name'] + "(" + ",".join(user_arguments) + ")"

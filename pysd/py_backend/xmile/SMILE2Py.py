@@ -62,9 +62,18 @@ functions = {
     # http://docs.oasis-open.org/xmile/xmile/v1.0/csprd01/xmile-v1.0-csprd01.html#_Toc398039983
     # ===
 
-    "pulse": "functions.pulse_magnitude",
-    "step": "functions.step",
-    "ramp": "functions.ramp",
+    "pulse": {
+        "name": "functions.pulse_magnitude",
+        "require_time": True
+    },
+    "step": {
+        "name": "functions.step",
+        "require_time": True
+    },
+    "ramp": {
+        "name": "functions.ramp",
+        "require_time": True
+    },
        
     # ===
     # 3.5.6 Miscellaneous Functions
@@ -249,19 +258,21 @@ class SMILEParser(NodeVisitor):
 
     def visit_quoted_identifier(self, n, vc):
         return self.extended_model_namespace[vc[1]] + '()'
-        
-    def visit_func(self, n, vc):
-        return functions[n.text.lower()]
+
+    def visit_call(self, n, vc):
+        function_name = vc[0].lower()
+        arguments = [e.strip() for e in vc[4].split(",")]
+        return builder.build_function_call(functions[function_name], arguments)
 
     def visit_user_call(self, n, vc):
         return vc[0] + '(' + vc[4] + ')'
         
     def visit_build_call(self, n, vc):
-        builder_name = vc[0].lower();
+        builder_name = vc[0].lower()
         arguments = [e.strip() for e in vc[4].split(",")]
         name, structure = builders[builder_name](self.element, self.subscript_dict, arguments)
         self.new_structure += structure
-        return name;
+        return name
         
     def visit_pre_oper(self, n, vc):
         return prefix_operators[n.text.lower()]
