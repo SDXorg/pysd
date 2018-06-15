@@ -673,7 +673,7 @@ class Model(Macro):
             # The `*args` reference handles the py2.7 decorator.
             if len(set(sig.parameters) - {'args'}) == 0:
                 expr = self.components._namespace[key]
-                if expr in parsed_expr:
+                if not expr in parsed_expr:
                     return_columns.append(key)
                     parsed_expr.append(expr)
 
