@@ -467,11 +467,11 @@ class Macro(Stateful):
                 lines = docstring.split('\n')
                 collector.append({'Real Name': name,
                                   'Py Name': varname,
-                                  'Eqn': lines[3].strip(),
-                                  'Unit': lines[5].strip(),
-                                  'Lims': lines[7].strip(),
-                                  'Type': lines[9].strip(),
-                                  'Comment': '\n'.join(lines[9:]).strip()})
+                                  'Eqn': lines[2].replace("Original Eqn:", "").strip(),
+                                  'Unit': lines[3].replace("Units:", "").strip(),
+                                  'Lims': lines[4].replace("Limits:", "").strip(),
+                                  'Type': lines[5].replace("Type:", "").strip(),
+                                  'Comment': '\n'.join(lines[7:]).strip()})
             except:
                 pass
 

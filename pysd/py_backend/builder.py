@@ -11,8 +11,8 @@ xmile specific syntax.
 
 from __future__ import absolute_import
 
-import os
 import os.path
+import pkg_resources
 import textwrap
 import warnings
 
@@ -81,7 +81,7 @@ def build(elements, subscript_dict, namespace, outfile_name):
            'outfile': os.path.basename(outfile_name),
            'version': __version__}
 
-    style_file = os.path.dirname(os.path.realpath(__file__)) + '/output_style.yapf'
+    style_file = pkg_resources.resource_filename("pysd", "py_backend/output_style.yapf")
     text = text.replace('\t', '    ')
     text, changed = yapf.yapf_api.FormatCode(textwrap.dedent(text),
                                              style_config=style_file)
@@ -150,15 +150,11 @@ def build_element(element, subscript_dict):
     %(cache)s
     def %(py_name)s(%(arguments)s):
         """
-        %(real_name)s
-        
-        %(eqn)s
-
-        %(unit)s
-        
-        %(lims)s
-        
-        %(kind)s
+        Real Name: %(real_name)s
+        Original Eqn: %(eqn)s
+        Units: %(unit)s
+        Limits: %(lims)s
+        Type: %(kind)s
 
         %(doc)s
         """

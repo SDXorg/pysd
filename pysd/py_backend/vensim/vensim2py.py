@@ -10,6 +10,7 @@ from ...py_backend import utils
 import textwrap
 import numpy as np
 import os
+import warnings
 
 
 def get_file_sections(file_str):
@@ -716,6 +717,11 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             builder_name = call.strip().lower()
             name, structure = builders[builder_name](element, subscript_dict, arglist)
             self.new_structure += structure
+
+            if builder_name == 'delay fixed':
+                warnings.warn("Delay fixed only approximates solution, may not give the same "
+                              "result as vensim")
+
             return name
 
         def visit_macro_call(self, n, vc):
