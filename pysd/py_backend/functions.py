@@ -188,7 +188,10 @@ class Delay(Stateful):
         self.order = None
 
     def initialize(self):
-        self.order = self.order_func()  # The order can only be set once
+        order = self.order_func()
+        if order != int(order):
+            warnings.warn('Casting delay order from %f to %i' % (order, int(order)))
+        self.order = int(order)  # The order can only be set once
         init_state_value = self.init_func() * self.delay_time_func() / self.order
         self.state = np.array([init_state_value] * self.order)
 

@@ -431,6 +431,15 @@ builders = {
         subscript_dict=subscript_dict
     ),
 
+    "delay fixed": lambda element, subscript_dict, args: builder.add_n_delay(
+        delay_input=args[0],
+        delay_time='round('+args[1]+' / time_step() ) * time_step()',
+        initial_value=args[2],
+        order=args[1]+' / time_step()',
+        subs=element['subs'],
+        subscript_dict=subscript_dict
+    ),
+
     "delay n": lambda element, subscript_dict, args: builder.add_n_delay(
         delay_input=args[0],
         delay_time=args[1],
