@@ -638,7 +638,11 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
         def visit_func(self, n, vc):
             self.kind = 'component'
             return functions[n.text.lower()]
-
+            
+		def visit_call(self, n, vc):
+			print(n, vc)
+			return n.text
+			
         def visit_in_oper(self, n, vc):
             return in_ops[n.text.lower()]
 
