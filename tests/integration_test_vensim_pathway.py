@@ -133,7 +133,7 @@ class TestIntegrationExamples(unittest.TestCase):
         
     def test_lookups_without_range(self):
         from.test_utils import runner, assert_frames_close
-        output, canon = runner('test-models/tests/lookups/test_lookups_without_range.mdl')
+        output, canon = runner('test-models/tests/lookups_without_range/test_lookups_without_range.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_lookups_funcnames(self):
