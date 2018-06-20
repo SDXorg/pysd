@@ -11,6 +11,7 @@ from .SMILE2Py import SMILEParser
 from lxml import etree
 from ...py_backend import builder, utils
 
+import numpy as np
 
 def translate_xmile(xmile_file):
     """ Translate an xmile model file into a python class.
@@ -50,6 +51,34 @@ def translate_xmile(xmile_file):
         except ValueError:
             return False
 
+    def parse_lookup_xml_node(node):
+        ys_node = node.xpath('ns:ypts', namespaces={'ns': NS})[0]
+        ys = np.fromstring(ys_node.text, dtype=np.float, sep=ys_node.attrib['sep'] if 'sep' in ys_node.attrib else ',')
+        xscale_node = node.xpath('ns:xscale', namespaces={'ns': NS})
+        if len(xscale_node) > 0:
+            xmin = xscale_node[0].attrib['min']
+            xmax = xscale_node[0].attrib['max']
+            xs = np.linspace(float(xmin), float(xmax), len(ys))
+        else:
+            xs_node = node.xpath('ns:xpts', namespaces={'ns': NS})[0]
+            xs = np.fromstring(xs_node.text, dtype=np.float, sep=xs_node.attrib['sep'] if 'sep' in xs_node.attrib else ',')
+
+        type = node.attrib['type'] if 'type' in node.attrib else 'continuous'
+        functions_map = {
+            'continuous': 'functions.lookup',
+            'extrapolation': 'functions.lookup_extrapolation',
+            'discrete': 'functions.lookup_discrete'
+        }
+        lookup_function = functions_map[type] if type in functions_map else functions_map['continuous']
+
+        return {
+            'name': node.attrib['name'] if 'name' in node.attrib else '',
+            'xs': xs,
+            'ys': ys,
+            'type': type,
+            'function': lookup_function
+        }
+
     # build model namespace
     namespace = {
         'TIME': 'time',
@@ -58,7 +87,8 @@ def translate_xmile(xmile_file):
     }  # namespace of the python model
     names_xpath = '//ns:model/ns:variables/ns:aux|' \
                   '//ns:model/ns:variables/ns:flow|' \
-                  '//ns:model/ns:variables/ns:stock'
+                  '//ns:model/ns:variables/ns:stock|' \
+                  '//ns:model/ns:variables/ns:gf'
 
     for node in root.xpath(names_xpath, namespaces={'ns': NS}):
         name = node.attrib['name']
@@ -96,6 +126,52 @@ def translate_xmile(xmile_file):
             element['kind'] = 'constant'
 
         model_elements += new_structure
+
+        gf_node = node.xpath("ns:gf", namespaces={'ns': NS})
+        if len(gf_node) > 0:
+            gf_data = parse_lookup_xml_node(gf_node[0])
+
+            element.update({
+                'kind': 'lookup',
+                # This lookup declared as inline, so we should implement inline mode for flow and aux
+                'arguments': "x = None",
+                'py_expr': "%(function)s(%(x)s, [%(xs)s], [%(ys)s]) if x is None else %(function)s(x, [%(xs)s], [%(ys)s])" % {
+                    'function': gf_data['function'],
+                    'xs': ','.join("%10.3f" % x for x in gf_data['xs']),
+                    'ys': ','.join("%10.3f" % x for x in gf_data['ys']),
+                    'x': element['py_expr']
+                },
+            })
+
+        model_elements.append(element)
+
+    # add gf elements
+    gf_xpath = '//ns:model/ns:variables/ns:gf'
+    for node in root.xpath(gf_xpath, namespaces={'ns': NS}):
+        name = node.attrib['name']
+        py_name = namespace[name]
+
+        units = get_xpath_text(node, 'ns:units')
+        doc = get_xpath_text(node, 'ns:doc')
+
+        gf_data = parse_lookup_xml_node(node)
+
+        element = {
+            'kind': 'lookup',
+            'real_name': name,
+            'unit': units,
+            'lims': None,
+            'doc': doc,
+            'eqn': '',
+            'py_name': py_name,
+            'py_expr': "%(function)s(x, [%(xs)s], [%(ys)s])" % {
+                    'function': gf_data['function'],
+                    'xs': ','.join("%10.3f" % x for x in gf_data['xs']),
+                    'ys': ','.join("%10.3f" % x for x in gf_data['ys']),
+                },
+            'arguments': 'x',
+            'subs': [],  # Todo later
+        }
         model_elements.append(element)
 
     # add stock elements
@@ -171,8 +247,7 @@ def translate_xmile(xmile_file):
 
     # Read the start time of simulation
     sim_spec_node = root.xpath('//ns:sim_specs', namespaces={'ns': NS});
-    time_units = sim_spec_node[0].attrib['time_units'] if (
-                len(sim_spec_node) > 0 and sim_spec_node[0].attrib.has_key('time_units')) else ""
+    time_units = sim_spec_node[0].attrib['time_units'] if (len(sim_spec_node) > 0 and 'time_units' in sim_spec_node[0].attrib) else ""
 
     tstart = root.xpath('//ns:sim_specs/ns:start', namespaces={'ns': NS})[0].text
     element = {
@@ -211,19 +286,29 @@ def translate_xmile(xmile_file):
     model_elements += new_structure
 
     # Read the time step of simulation
-    dt = root.xpath('//ns:sim_specs/ns:dt', namespaces={'ns': NS})[0].text
+    dt_node = root.xpath('//ns:sim_specs/ns:dt', namespaces={'ns': NS})
+
+    # Use default value for time step if `dt` is not specified in model
+    dt_eqn = "1.0"
+    if len(dt_node) > 0:
+        dt_node = dt_node[0]
+        dt_eqn = dt_node.text
+        # If reciprocal mode are defined for `dt`, we should inverse value
+        if ("reciprocal" in dt_node.attrib and dt_node.attrib["reciprocal"].lower() == "true"):
+            dt_eqn = "1/" + dt_eqn
+
     element = {
         'kind': 'constant',
         'real_name': 'TIME STEP',
         'unit': time_units,
         'lims': None,
         'doc': 'The time step for the simulation.',
-        'eqn': dt,
+        'eqn': dt_eqn,
         'py_name': 'time_step',
         'subs': None,
         'arguments': '',
     }
-    translation, new_structure = smile_parser.parse(dt, element)
+    translation, new_structure = smile_parser.parse(dt_eqn, element)
     element.update(translation)
     model_elements.append(element)
     model_elements += new_structure
@@ -235,7 +320,7 @@ def translate_xmile(xmile_file):
         'unit': time_units,
         'lims': None,
         'doc': 'The time step for the simulation.',
-        'eqn': dt,
+        'eqn': dt_eqn,
         'py_name': 'saveper',
         'py_expr': 'time_step()',
         'subs': None,

@@ -666,11 +666,17 @@ class Model(Macro):
         or other functions that take parameters.
         """
         return_columns = []
+        parsed_expr = []
+
         for key, value in self.components._namespace.items():
             sig = signature(getattr(self.components, value))
             # The `*args` reference handles the py2.7 decorator.
             if len(set(sig.parameters) - {'args'}) == 0:
-                return_columns.append(key)
+                expr = self.components._namespace[key]
+                if not expr in parsed_expr:
+                    return_columns.append(key)
+                    parsed_expr.append(expr)
+
         return return_columns
 
     def set_initial_condition(self, initial_condition):
@@ -864,8 +870,39 @@ def pulse_magnitude(magnitude, start, repeat_time=0):
 
 
 def lookup(x, xs, ys):
-    """ Provides the working mechanism for lookup functions the builder builds """
+    """
+    Intermediate values are calculated with linear interpolation between the intermediate points.
+    Out-of-range values are the same as the closest endpoint (i.e, no extrapolation is performed).
+    """
     return np.interp(x, xs, ys)
+
+def lookup_extrapolation(x, xs, ys):
+    """
+    Intermediate values are calculated with linear interpolation between the intermediate points.
+    Out-of-range values are calculated with linear extrapolation from the last two values at either end.
+    """
+    length = len(xs)
+    if x < xs[0]:
+        dx = xs[1] - xs[0]
+        dy = ys[1] - ys[0]
+        k = dy / dx
+        return ys[0] + (x - xs[0]) * k
+    if x > xs[length - 1]:
+        dx = xs[length - 1] - xs[length - 2]
+        dy = ys[length - 1] - ys[length - 2]
+        k = dy / dx
+        return ys[length - 1] + (x - xs[length - 1]) * k
+    return np.interp(x, xs, ys)
+
+def lookup_discrete(x, xs, ys):
+    """
+    Intermediate values take on the value associated with the next lower x-coordinate (also called a step-wise function). The last two points of a discrete graphical function must have the same y value.
+    Out-of-range values are the same as the closest endpoint (i.e, no extrapolation is performed).
+    """
+    for index in range(0, len(xs)):
+        if x < xs[index]:
+            return ys[index - 1] if index > 0 else ys[index]
+    return ys[len(ys) - 1]
 
 
 def if_then_else(condition, val_if_true, val_if_false):

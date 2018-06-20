@@ -314,38 +314,30 @@ def get_return_elements(return_columns, namespace, subscript_dict):
     --------
 
     """
-    # Todo: clean up duplicated code
     capture_elements = list()
     return_addresses = dict()
     for col in return_columns:
         if '[' in col:
             name, location = col.strip(']').split('[')
             subs = [l.strip() for l in location.split(',')]
-            try:
-                py_name = namespace[name]
-            except KeyError:
-                if name in namespace.values():
-                    py_name = name
-                else:
-                    raise KeyError(name + " not found as model element")
-
-            if py_name not in capture_elements:
-                capture_elements += [py_name]
             address = make_coord_dict(subs, subscript_dict)
-            return_addresses[col] = (py_name, address)
         else:
-            try:
-                py_name = namespace[col]
-            except KeyError:
-                if col in namespace.values():
-                    py_name = col
-                else:
-                    raise KeyError(col + " not found as model element")
+            name = col
+            address = {}
+        
+        if name in namespace:
+            py_name = namespace[name]
+        else:
+            if name in namespace.values():
+                py_name = name
+            else:
+                raise KeyError(name + " not found as model element")
+        
+        if py_name not in capture_elements:
+            capture_elements += [py_name]
 
-            if py_name not in capture_elements:
-                capture_elements += [py_name]
-            return_addresses[col] = (py_name, {})
-
+        return_addresses[col] = (py_name, address)
+            
     return list(capture_elements), return_addresses
 
 
