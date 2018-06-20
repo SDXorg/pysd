@@ -580,7 +580,6 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
     lookup_call = id _ "(" _ (expr _ ","? _)* ")"  # these don't need their args parsed...    
     call = func _ "(" _ (expr _ ","? _)* ")"  # these don't need their args parsed...
     active_initial = ~r"active initial"I _ "(" _ expr _ "," _ expr _ ")"
-    
     build_call = builder _ "(" _ arguments _ ")"
     macro_call = macro _ "(" _ arguments _ ")"
     parens   = "(" _ expr _ ")"
