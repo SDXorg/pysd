@@ -238,6 +238,12 @@ class SMILEParser(NodeVisitor):
         _IF, _1, condition_expr, _2, _THEN, _3, then_expr, _4, _ELSE, _5, else_expr = vc
         return "functions.if_then_else(" + condition_expr + ", " + then_expr + ", " + else_expr + ")"
         
+    def visit_user_call_identifier(self, n, vc):
+        return self.extended_model_namespace[n.text]
+        
+    def visit_user_call_quoted_identifier(self, n, vc):
+        return self.extended_model_namespace[vc[1]]
+        
     def visit_identifier(self, n, vc):
         return self.extended_model_namespace[n.text] + '()'
 
@@ -247,6 +253,9 @@ class SMILEParser(NodeVisitor):
     def visit_func(self, n, vc):
         return functions[n.text.lower()]
 
+    def visit_user_call(self, n, vc):
+        return vc[0] + '(' + vc[4] + ')'
+        
     def visit_build_call(self, n, vc):
         builder_name = vc[0].lower();
         arguments = [e.strip() for e in vc[4].split(",")]

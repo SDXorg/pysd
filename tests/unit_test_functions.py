@@ -142,6 +142,120 @@ class TestLogicFunctions(unittest.TestCase):
         self.fail()
 
 
+class TestLookup(unittest.TestCase):
+    def test_lookup(self):
+        import pysd
+
+        xpts = [0, 1, 2, 3,  5,  6, 7, 8]
+        ypts = [0, 0, 1, 1, -1, -1, 0, 0]
+
+        expected_xpts = np.arange(-0.5, 8.5, 0.5)
+        expected_ypts = [
+            0,
+            0, 0,
+            0, 0.5,
+            1, 1,
+            1, 0.5, 0, -0.5, -1,
+            -1, -1, -0.5,
+            0, 0, 0, 0
+        ]
+
+        for index in range(0, len(xpts)):
+            x = xpts[index]
+            y = ypts[index]
+
+            result = pysd.functions.lookup(x, xpts, ypts)
+
+            self.assertEqual(y, result, "Wrong result at X=" + str(x))
+
+    def test_lookup_extrapolation_inbounds(self):
+        import pysd
+
+        xpts = [0, 1, 2, 3,  5,  6, 7, 8]
+        ypts = [0, 0, 1, 1, -1, -1, 0, 0]
+
+        expected_xpts = np.arange(-0.5, 8.5, 0.5)
+        expected_ypts = [
+            0,
+            0, 0,
+            0, 0.5,
+            1, 1,
+            1, 0.5, 0, -0.5, -1,
+            -1, -1, -0.5,
+            0, 0, 0, 0
+        ]
+
+        for index in range(0, len(expected_xpts)):
+            x = expected_xpts[index]
+            y = expected_ypts[index]
+
+            result = pysd.functions.lookup_extrapolation(x, xpts, ypts)
+
+            self.assertEqual(y, result, "Wrong result at X=" + str(x))
+
+    def test_lookup_extrapolation_two_points(self):
+        import pysd
+
+        xpts = [0, 1]
+        ypts = [0, 1]
+
+        expected_xpts = np.arange(-0.5, 1.5, 0.5)
+        expected_ypts = [-0.5, 0.0, 0.5, 1.0, 1.5]
+
+        for index in range(0, len(expected_xpts)):
+            x = expected_xpts[index]
+            y = expected_ypts[index]
+
+            result = pysd.functions.lookup_extrapolation(x, xpts, ypts)
+
+            self.assertEqual(y, result, "Wrong result at X=" + str(x))
+
+    def test_lookup_extrapolation_outbounds(self):
+        import pysd
+
+        xpts = [0, 1, 2, 3]
+        ypts = [0, 1, 1, 0]
+
+        expected_xpts = np.arange(-0.5, 3.5, 0.5)
+        expected_ypts = [
+            -0.5,
+            0.0, 0.5, 1.0,
+            1.0, 1.0,
+            0.5, 0,
+            -0.5
+        ]
+
+        for index in range(0, len(expected_xpts)):
+            x = expected_xpts[index]
+            y = expected_ypts[index]
+
+            result = pysd.functions.lookup_extrapolation(x, xpts, ypts)
+
+            self.assertEqual(y, result, "Wrong result at X=" + str(x))
+
+    def test_lookup_discrete(self):
+        import pysd
+
+        xpts = [0, 1, 2, 3,  5,  6, 7, 8]
+        ypts = [0, 0, 1, 1, -1, -1, 0, 0]
+
+        expected_xpts = np.arange(-0.5, 8.5, 0.5)
+        expected_ypts = [
+            0, 0, 0, 0, 0,
+            1, 1, 1, 1, 1, 1,
+            -1, -1, -1, -1,
+            0, 0, 0, 0
+        ]
+
+        for index in range(0, len(expected_xpts)):
+            x = expected_xpts[index]
+            y = expected_ypts[index]
+
+            result = pysd.functions.lookup_discrete(x, xpts, ypts)
+
+            self.assertEqual(y, result, "Wrong result at X=" + str(x))
+
+
 class TestStateful(unittest.TestCase):
 
     def test_integ(self):
