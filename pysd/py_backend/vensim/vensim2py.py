@@ -748,9 +748,10 @@ def parse_lookup_expression(element):
     """ This syntax parses lookups that are defined with their own element """
 
     lookup_grammar = r"""
-    lookup = _ "(" _ "[" ~r"[^\]]*" "]" _ "," _ ( "(" _ number _ "," _ number _ ")" _ ","? _ )+ ")"
+    lookup = _ "(" range? _ ( "(" _ number _ "," _ number _ ")" _ ","? _ )+ ")"
     number = ("+"/"-")? ~r"\d+\.?\d*(e[+-]\d+)?"
     _ = ~r"[\s\\]*"  # whitespace character
+	range = _ "[" ~r"[^\]]*" "]" _ ","
     """
     parser = parsimonious.Grammar(lookup_grammar)
     tree = parser.parse(element['expr'])
@@ -766,7 +767,7 @@ def parse_lookup_expression(element):
             return ''
 
         def visit_lookup(self, n, vc):
-            pairs = vc[9]
+            pairs = max(vc, key=len)
             mixed_list = pairs.replace('(', '').replace(')', '').split(',')
             xs = mixed_list[::2]
             ys = mixed_list[1::2]

@@ -130,6 +130,11 @@ class TestIntegrationExamples(unittest.TestCase):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/lookups/test_lookups.mdl')
         assert_frames_close(output, canon, rtol=rtol)
+        
+    def test_lookups_without_range(self):
+        from.test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/lookups_without_range/test_lookups_without_range.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
 
     def test_lookups_funcnames(self):
         from.test_utils import runner, assert_frames_close
