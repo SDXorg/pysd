@@ -643,9 +643,12 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
         def visit_active_initial(self, n, vc):
             string = "functions.active_initial(lambda: %(expr)s, %(init)s)" % {
                 'expr': vc[4],
-                'init': str(np.float64(vc[8]))
+                'init': vc[8]
             }
             return string
+            
+        def visit_number(self, n, vc):
+            return str(float(n.text))
             
         def visit_in_oper(self, n, vc):
             return in_ops[n.text.lower()]
