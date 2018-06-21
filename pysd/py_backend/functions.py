@@ -222,7 +222,7 @@ class Smooth(Stateful):
         return self.state[-1]
 
     def ddt(self):
-        targets = np.roll(self.state, 1)
+        targets = list(map(np.float64, np.roll(self.state, 1)))
         targets[0] = self.input_func()
         return (targets - self.state) * self.order / self.smooth_time_func()
 

@@ -657,9 +657,6 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             }
             return string
             
-        def visit_number(self, n, vc):
-            return str(float(n.text))
-            
         def visit_in_oper(self, n, vc):
             return in_ops[n.text.lower()]
 
