@@ -215,7 +215,7 @@ class Smooth(Stateful):
         self.order = None
 
     def initialize(self):
-        self.order = self.order_func()  # The order can only be set once
+        self.order = int(np.around(self.order_func()))  # The order can only be set once
         self.state = np.array([self.init_func()] * self.order)
 
     def __call__(self):
