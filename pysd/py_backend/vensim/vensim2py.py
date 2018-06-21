@@ -376,7 +376,7 @@ functions = {
     "ramp": "functions.ramp",
     "min": "np.minimum",
     "max": "np.maximum",
-    "active initial": "functions.active_initial",
+    #"active initial": "functions.active_initial",
     "xidz": "functions.xidz",
     "zidz": "functions.zidz",
     "game": "",  # In the future, may have an actual `functions.game` pass through
@@ -584,11 +584,12 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
 
     expression_grammar = r"""
     expr_type = array / expr / empty
-    expr = _ pre_oper? _ (lookup_def / build_call / macro_call / lookup_call / call / parens / number / reference) _ (in_oper _ expr)?
+    expr = _ pre_oper? _ (lookup_def / build_call / macro_call / lookup_call / call / active_initial / parens / number / reference) _ (in_oper _ expr)?
 
     lookup_def = ~r"(WITH\ LOOKUP)"I _ "(" _ expr _ "," _ "(" _  ("[" ~r"[^\]]*" "]" _ ",")?  ( "(" _ expr _ "," _ expr _ ")" _ ","? _ )+ _ ")" _ ")"
-    lookup_call = id _ "(" _ (expr _ ","? _)* ")"  # these don't need their args parsed...
+    lookup_call = id _ "(" _ (expr _ ","? _)* ")"  # these don't need their args parsed...    
     call = func _ "(" _ (expr _ ","? _)* ")"  # these don't need their args parsed...
+    active_initial = ~r"active initial"I _ "(" _ expr _ "," _ expr _ ")"
     build_call = builder _ "(" _ arguments _ ")"
     macro_call = macro _ "(" _ arguments _ ")"
     parens   = "(" _ expr _ ")"
@@ -649,6 +650,16 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             self.kind = 'component'
             return functions[n.text.lower()]
 
+        def visit_active_initial(self, n, vc):
+            string = "functions.active_initial(lambda: %(expr)s, %(init)s)" % {
+                'expr': vc[4],
+                'init': vc[8]
+            }
+            return string
+            
+        def visit_number(self, n, vc):
+            return str(float(n.text))
+            
         def visit_in_oper(self, n, vc):
             return in_ops[n.text.lower()]
 
@@ -766,7 +777,7 @@ def parse_lookup_expression(element):
     lookup = _ "(" range? _ ( "(" _ number _ "," _ number _ ")" _ ","? _ )+ ")"
     number = ("+"/"-")? ~r"\d+\.?\d*(e[+-]\d+)?"
     _ = ~r"[\s\\]*"  # whitespace character
-	range = _ "[" ~r"[^\]]*" "]" _ ","
+    range = _ "[" ~r"[^\]]*" "]" _ ","
     """
     parser = parsimonious.Grammar(lookup_grammar)
     tree = parser.parse(element['expr'])

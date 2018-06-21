@@ -978,7 +978,7 @@ def active_initial(expr, init_val):
     if time.stage == 'Initialization':
         return init_val
     else:
-        return expr
+        return expr()
 
 
 def random_uniform(m, x, s):
