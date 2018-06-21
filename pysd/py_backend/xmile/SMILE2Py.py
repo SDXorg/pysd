@@ -64,15 +64,30 @@ functions = {
 
     "pulse": {
         "name": "functions.pulse_magnitude",
-        "require_time": True
+        "parameters": [
+            {"name": 'time', "type": "time"},
+            {"name": 'magnitude'},
+            {"name": 'start'},
+            {"name": "repeat_time", "optional": True}
+        ]
     },
     "step": {
         "name": "functions.step",
-        "require_time": True
+        "parameters": [
+            {"name": 'time', "type": 'time'},
+            {"name": 'value'},
+            {"name": 'tstep'}
+        ]
     },
+    # time, slope, start, finish=0
     "ramp": {
         "name": "functions.ramp",
-        "require_time": True
+        "parameters": [
+            {"name": 'time', "type": 'time'},
+            {"name": 'slope'},
+            {"name": 'start'},
+            {"name": 'finish', "optional": True}
+        ]
     },
        
     # ===

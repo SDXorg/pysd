@@ -356,8 +356,7 @@ functions = {
     "sqrt": "np.sqrt",
     "tan": "np.tan",
     "lognormal": "np.random.lognormal",
-    "random normal":
-        "functions.bounded_normal",
+    "random normal": "functions.bounded_normal",
     "poisson": "np.random.poisson",
     "ln": "np.log",
     "log": "functions.log",
@@ -370,26 +369,51 @@ functions = {
     "if then else": "functions.if_then_else",
     "step": {
         "name": "functions.step",
-        "require_time": True
+        "parameters": [
+            {"name": 'time', "type": 'time'},
+            {"name": 'value'},
+            {"name": 'tstep'}
+        ]
     },
     "modulo": "np.mod",
     "pulse": {
         "name": "functions.pulse",
-        "require_time": True
+        "parameters": [
+            {"name": 'time', "type": 'time'},
+            {"name": 'start'},
+            {"name": "duration"}
+        ]
     },
+    # time, start, duration, repeat_time, end
     "pulse train": {
         "name": "functions.pulse_train",
-        "require_time": True
+        "parameters": [
+            {"name": 'time', "type": 'time'},
+            {"name": 'start'},
+            {"name": 'duration'},
+            {"name": 'repeat_time'},
+            {"name": 'end'}
+        ]
     },
     "ramp": {
         "name": "functions.ramp",
-        "require_time": True
+        "parameters": [
+            {"name": 'time', "type": 'time'},
+            {"name": 'slope'},
+            {"name": 'start'},
+            {"name": 'finish', "optional": True}
+        ]
     },
     "min": "np.minimum",
     "max": "np.maximum",
+    # time, expr, init_val
     "active initial": {
         "name": "functions.active_initial",
-        "require_time": True
+        "parameters": [
+            {"name": 'time', "type": 'time'},
+            {"name": 'expr', "type": 'lambda'},
+            {"name": 'init_val'}
+        ]
     },
     "xidz": "functions.xidz",
     "zidz": "functions.zidz",

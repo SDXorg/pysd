@@ -597,14 +597,55 @@ def add_incomplete(var_name, dependencies):
     # first arg is `self` reference
     return "functions.incomplete(%s)" % ', '.join(dependencies[1:]), []
 
+
 def build_function_call(function_def, user_arguments):
+    """
+
+    Parameters
+    ----------
+    function_def: function definition map with following keys
+        - name: name of the function
+        - parameters: list with description of all parameters of this function
+            - name
+            - optional?
+            - type: [
+                "expression", - provide converted expression as parameter for runtime evaluating before the method call
+                "lambda",     - provide lambda expression as parameter for delayed runtime evaluation in the method call
+                "time",       - provide access to current instance of time object
+                "scope"       - provide access to current instance of scope object (instance of Macro object)
+            ]
+    user_arguments: list of arguments provided from model
+
+    Returns
+    -------
+
+    """
     if isinstance(function_def, str):
         return function_def + "(" + ",".join(user_arguments) + ")"
 
-    if "require_time" in function_def and function_def["require_time"]:
-        user_arguments.insert(0, "__data['time']")
+    if "parameters" in function_def:
+        parameters = function_def["parameters"]
+        arguments = []
+        argument_idx = 0
+        for parameter_idx in range(len(parameters)):
+            parameter_def = parameters[parameter_idx]
+            is_optional = parameter_def["optional"] if "optional" in parameter_def else False
+            if argument_idx >= len(user_arguments) and is_optional:
+                break
 
-    if "require_scope" in function_def and function_def["require_scope"]:
-        user_arguments.insert(0, "__data['scope']")
+            parameter_type = parameter_def["type"] if "type" in parameter_def else "expression"
+
+            user_argument = user_arguments[argument_idx]
+            if parameter_type in ["expression", "lambda"]:
+                argument_idx += 1
+
+            arguments.append({
+                "expression": user_argument,
+                "lambda": "lambda: (" + user_argument + ")",
+                "time": "__data['time']",
+                "scope": "__data['scope']"
+            }[parameter_type])
+
+        return function_def['name'] + "(" + ", ".join(arguments) + ")"
 
     return function_def['name'] + "(" + ",".join(user_arguments) + ")"
