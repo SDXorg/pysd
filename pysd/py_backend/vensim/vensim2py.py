@@ -10,6 +10,7 @@ from ...py_backend import utils
 import textwrap
 import numpy as np
 import os
+import warnings
 
 
 def get_file_sections(file_str):
@@ -430,6 +431,15 @@ builders = {
         subscript_dict=subscript_dict
     ),
 
+    "delay fixed": lambda element, subscript_dict, args: builder.add_n_delay(
+        delay_input=args[0],
+        delay_time='round('+args[1]+' / time_step() ) * time_step()',
+        initial_value=args[2],
+        order=args[1]+' / time_step()',
+        subs=element['subs'],
+        subscript_dict=subscript_dict
+    ),
+
     "delay n": lambda element, subscript_dict, args: builder.add_n_delay(
         delay_input=args[0],
         delay_time=args[1],
@@ -646,9 +656,6 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             }
             return string
             
-        def visit_number(self, n, vc):
-            return str(float(n.text))
-            
         def visit_in_oper(self, n, vc):
             return in_ops[n.text.lower()]
 
@@ -717,6 +724,11 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             builder_name = call.strip().lower()
             name, structure = builders[builder_name](element, subscript_dict, arglist)
             self.new_structure += structure
+
+            if builder_name == 'delay fixed':
+                warnings.warn("Delay fixed only approximates solution, may not give the same "
+                              "result as vensim")
+
             return name
 
         def visit_macro_call(self, n, vc):

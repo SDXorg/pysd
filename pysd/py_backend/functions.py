@@ -188,7 +188,10 @@ class Delay(Stateful):
         self.order = None
 
     def initialize(self):
-        self.order = self.order_func()  # The order can only be set once
+        order = self.order_func()
+        if order != int(order):
+            warnings.warn('Casting delay order from %f to %i' % (order, int(order)))
+        self.order = int(order)  # The order can only be set once
         init_state_value = self.init_func() * self.delay_time_func() / self.order
         self.state = np.array([init_state_value] * self.order)
 
@@ -212,14 +215,14 @@ class Smooth(Stateful):
         self.order = None
 
     def initialize(self):
-        self.order = self.order_func()  # The order can only be set once
+        self.order = int(np.around(self.order_func()))  # The order can only be set once
         self.state = np.array([self.init_func()] * self.order)
 
     def __call__(self):
         return self.state[-1]
 
     def ddt(self):
-        targets = np.roll(self.state, 1)
+        targets = list(map(np.float64, np.roll(self.state, 1)))
         targets[0] = self.input_func()
         return (targets - self.state) * self.order / self.smooth_time_func()
 
@@ -464,11 +467,11 @@ class Macro(Stateful):
                 lines = docstring.split('\n')
                 collector.append({'Real Name': name,
                                   'Py Name': varname,
-                                  'Eqn': lines[3].strip(),
-                                  'Unit': lines[5].strip(),
-                                  'Lims': lines[7].strip(),
-                                  'Type': lines[9].strip(),
-                                  'Comment': '\n'.join(lines[9:]).strip()})
+                                  'Eqn': lines[2].replace("Original Eqn:", "").strip(),
+                                  'Unit': lines[3].replace("Units:", "").strip(),
+                                  'Lims': lines[4].replace("Limits:", "").strip(),
+                                  'Type': lines[5].replace("Type:", "").strip(),
+                                  'Comment': '\n'.join(lines[7:]).strip()})
             except:
                 pass
 
