@@ -375,7 +375,6 @@ functions = {
     "ramp": "functions.ramp",
     "min": "np.minimum",
     "max": "np.maximum",
-    #"active initial": "functions.active_initial",
     "xidz": "functions.xidz",
     "zidz": "functions.zidz",
     "game": "",  # In the future, may have an actual `functions.game` pass through
@@ -579,7 +578,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
     lookup_def = ~r"(WITH\ LOOKUP)"I _ "(" _ expr _ "," _ "(" _  ("[" ~r"[^\]]*" "]" _ ",")?  ( "(" _ expr _ "," _ expr _ ")" _ ","? _ )+ _ ")" _ ")"
     lookup_call = id _ "(" _ (expr _ ","? _)* ")"  # these don't need their args parsed...    
     call = func _ "(" _ (expr _ ","? _)* ")"  # these don't need their args parsed...
-    active_initial = ~r"active initial"I _ "(" _ expr _ "," _ expr _ ")"
+    active_initial_call = ~r"active initial"I _ "(" _ expr _ "," _ expr _ ")"
     build_call = builder _ "(" _ arguments _ ")"
     macro_call = macro _ "(" _ arguments _ ")"
     parens   = "(" _ expr _ ")"
@@ -640,8 +639,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             self.kind = 'component'
             return functions[n.text.lower()]
 
-        def visit_active_initial(self, n, vc):
-            string = "functions.active_initial(lambda: %(expr)s, %(init)s)" % {
+        def visit_active_initial_call(self, n, vc):
+            string = "functions.active_initial(lambda: %(expr)s, lambda: %(init)s)" % {
                 'expr': vc[4],
                 'init': vc[8]
             }

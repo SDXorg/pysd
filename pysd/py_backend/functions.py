@@ -973,7 +973,7 @@ def active_initial(expr, init_val):
 
     """
     if time.stage == 'Initialization':
-        return init_val
+        return init_val()
     else:
         return expr()
 
