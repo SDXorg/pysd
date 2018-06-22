@@ -573,7 +573,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
 
     expression_grammar = r"""
     expr_type = array / expr / empty
-    expr = _ pre_oper? _ (lookup_def / build_call / macro_call / lookup_call / call / active_initial / parens / number / reference) _ (in_oper _ expr)?
+    expr = _ pre_oper? _ (lookup_def / build_call / macro_call / lookup_call / call / active_initial_call / parens / number / reference) _ (in_oper _ expr)?
 
     lookup_def = ~r"(WITH\ LOOKUP)"I _ "(" _ expr _ "," _ "(" _  ("[" ~r"[^\]]*" "]" _ ",")?  ( "(" _ expr _ "," _ expr _ ")" _ ","? _ )+ _ ")" _ ")"
     lookup_call = id _ "(" _ (expr _ ","? _)* ")"  # these don't need their args parsed...    
