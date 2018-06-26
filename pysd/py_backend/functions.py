@@ -7,20 +7,23 @@ straightforward equivalent in python.
 """
 
 from __future__ import division, absolute_import
-from functools import wraps
 
-import pandas as pd
-
-import pandas as _pd
-import numpy as np
-from . import utils
 import imp
-import warnings
-import random
 import inspect
+import os
+import random
+import re
+import string
+import warnings
+from functools import wraps, reduce
+
+import numpy as np
+import pandas as _pd
+import pandas as pd
 import xarray as xr
 from funcsigs import signature
-import os
+
+from . import utils
 
 try:
     import scipy.stats as stats
@@ -173,7 +176,7 @@ class Delay(Stateful):
     # This method forces them to acknowledge that additional structure is being created
     # in the delay object.
 
-    def __init__(self, delay_input, delay_time, initial_value, order):
+    def __init__(self, delay_input, delay_time, initial_value, order, subs, subscript_dict):
         """
 
         Parameters
@@ -189,6 +192,8 @@ class Delay(Stateful):
         self.input_func = delay_input
         self.order_func = order
         self.order = None
+        self.subs = subs
+        self.subscript_dict = subscript_dict
 
     def initialize(self):
         order = self.order_func()
@@ -196,7 +201,14 @@ class Delay(Stateful):
             warnings.warn('Casting delay order from %f to %i' % (order, int(order)))
         self.order = int(order)  # The order can only be set once
         init_state_value = self.init_func() * self.delay_time_func() / self.order
-        self.state = np.array([init_state_value] * self.order)
+        if self.subs:
+            coords = {d: self.subscript_dict[d] for d in self.subs}
+            size = [len(d) for d in coords.values()]
+            data = np.full((self.order, *size), init_state_value)
+            coords_final = {'delay': np.arange(self.order), **coords}
+            self.state = xr.DataArray(data=data, dims=['delay'] + self.subs, coords=coords_final)
+        else:
+            self.state = np.array([init_state_value] * self.order)
 
     def __call__(self):
         return self.state[-1] / (self.delay_time_func() / self.order)
@@ -263,6 +275,135 @@ class Initial(Stateful):
         pass
 
 
+class Data(Stateful):
+    def __init__(self, file, tab, time_row_or_col, cell, interp, time, root, coords):
+        super(Data, self).__init__()
+        self.file = _resolve_file(file, root=root)
+        self.tab = tab
+        self.time_row_or_col = time_row_or_col
+        self.cell = cell
+        self.time_func = time
+        self.interp = interp
+        self.coords = coords
+
+    def initialize(self):
+        time_across = self.time_row_or_col.isnumeric()
+        size = int(np.product([len(v) for v in self.coords.values()]))
+
+        time_data, data = _get_series_data(
+            file=self.file, tab=self.tab, series_across=time_across, series_row_or_col=self.time_row_or_col,
+            cell=self.cell, size=size
+        )
+        self.state = xr.DataArray(
+            data=data, coords={'time': time_data, **self.coords}, dims=['time'] + list(self.coords)
+        )
+
+    def ddt(self):
+        return 0  # todo: is this correct?
+
+    def update(self, state):
+        # this doesn't change once it's set up.
+        pass
+
+    def __call__(self):
+
+        time = self.time_func()
+        if time > self.state['time'][-1]:
+            return self.state['time'][-1]
+        elif time < self.state['time'][0]:
+            return self.state['time'][0]
+
+        if self.interp == 'interpolate' or self.interp is None:  # 'interpolate' is the default
+            return self.state.interp(time=time)
+        elif self.interp == 'look forward':
+            next_t = self.state['time'][self.state['time'] >= time][0]
+            return self.state.sel(time=next_t)
+        elif self.interp == 'hold backward':
+            last_t = self.state['time'][self.state['time'] <= time][-1]
+            return self.state.sel(time=last_t)
+
+        # For :raw: (or actually any other/invalid) keyword directives
+        try:
+            return self.state.sel(time=time)
+        except KeyError:
+            return np.nan
+
+
+class ExtLookup(Stateful):
+    def __init__(self, file, tab, x_row_or_col, cell, root, coords):
+        super(ExtLookup, self).__init__()
+        self.file = _resolve_file(file, root=root)
+        self.tab = tab
+        self.x_row_or_col = x_row_or_col
+        self.cell = cell
+        self.coords = coords
+
+    def initialize(self):
+        x_across = self.x_row_or_col.isnumeric()
+        size = int(np.product([len(v) for v in self.coords.values()]))
+
+        x_data, data = _get_series_data(
+            file=self.file, tab=self.tab, series_across=x_across, series_row_or_col=self.x_row_or_col,
+            cell=self.cell, size=size
+        )
+        self.state = xr.DataArray(
+            data=data, coords={'x': x_data, **self.coords}, dims=['x'] + list(self.coords)
+        )
+
+    def ddt(self):
+        return 0
+
+    def update(self, state):
+        # this doesn't change once it's set up.
+        pass
+
+    def __call__(self, x):
+        if x > self.state['x'][-1]:
+            return self.state['x'][-1]
+        elif x < self.state['x'][0]:
+            return self.state['x'][0]
+
+        return self.state.interp(x=x)
+
+
+class ExtConstant(Stateful):
+    def __init__(self, file, tab, cell, root, coords):
+        super(ExtConstant, self).__init__()
+        self.file = _resolve_file(file, root=root)
+        self.tab = tab
+        self.transpose = cell[-1] == '*'
+        self.cell = cell.strip('*')
+        self.coords = coords
+
+    def initialize(self):
+        dims = list(self.coords)
+        start_row, start_col = _split_excel_cell(self.cell)
+        end_row = start_row
+        end_col = start_col
+        if dims:
+            if self.transpose:
+                end_row = start_row + len(self.coords[dims[-1]]) - 1
+            else:
+                end_col = _num_to_col(_col_to_num(start_col) + len(self.coords[dims[-1]]) - 1)
+
+            if len(dims) >= 2:
+                if self.transpose:
+                    end_col = _num_to_col(_col_to_num(start_col) + len(self.coords[dims[-2]]) - 1)
+                else:
+                    end_row = start_row + len(self.coords[dims[-2]]) - 1
+        data = _get_data_from_file(self.file, tab=self.tab, rows=[start_row, end_row], cols=[start_col, end_col])
+        self.state = xr.DataArray(
+            data=data, coords=self.coords, dims=list(self.coords)
+        )
+
+    def ddt(self):
+        return 0
+
+    def update(self, state):
+        # this doesn't change once it's set up.
+        pass
+
+
 class Macro(Stateful):
     """
     The Model class implements a stateful representation of the system,
@@ -309,14 +450,13 @@ class Macro(Stateful):
 
         self.py_model_file = py_model_file
 
-
     def __call__(self):
         return self.return_func()
 
     def get_pysd_compiler_version(self):
         """ Returns the version of pysd complier that used for generating this model """
         return self.components.__pysd_version__
-        
+
     def initialize(self, initialization_order=None):
         """
         This function tries to initialize the stateful objects.
@@ -543,7 +683,7 @@ class Model(Macro):
         super(Model, self).__init__(py_model_file, None, None, Time())
         self.time.stage = 'Load'
         self.initialize()
-        
+
     def initialize(self):
         """ Initializes the simulation model """
         self.time.update(self.components.initial_time())
@@ -883,12 +1023,12 @@ def pulse_train(time, start, duration, repeat_time, end):
 
 def pulse_magnitude(time, magnitude, start, repeat_time=0):
     """ Implements xmile's PULSE function
-    
+
     PULSE:             Generate a one-DT wide pulse at the given time
        Parameters:     2 or 3:  (magnitude, first time[, interval])
                        Without interval or when interval = 0, the PULSE is generated only once
        Example:        PULSE(20, 12, 5) generates a pulse value of 20/DT at time 12, 17, 22, etc.
-    
+
     In rage [-inf, start) returns 0
     In range [start + n * repeat_time, start + n * repeat_time + dt) return magnitude/dt
     In rage [start + n * repeat_time + dt, start + (n + 1) * repeat_time) return 0
@@ -912,7 +1052,8 @@ def lookup(x, xs, ys):
     Intermediate values are calculated with linear interpolation between the intermediate points.
     Out-of-range values are the same as the closest endpoint (i.e, no extrapolation is performed).
     """
-    return np.interp(x, xs, ys)
+    return _preserve_array(np.interp(x, xs, ys), ref=x)
+
 
 def lookup_extrapolation(x, xs, ys):
     """
@@ -932,6 +1073,7 @@ def lookup_extrapolation(x, xs, ys):
         return ys[length - 1] + (x - xs[length - 1]) * k
     return np.interp(x, xs, ys)
 
+
 def lookup_discrete(x, xs, ys):
     """
     Intermediate values take on the value associated with the next lower x-coordinate (also called a step-wise function). The last two points of a discrete graphical function must have the same y value.
@@ -944,7 +1086,7 @@ def lookup_discrete(x, xs, ys):
 
 
 def if_then_else(condition, val_if_true, val_if_false):
-    return np.where(condition, val_if_true, val_if_false)
+    return xr.where(condition, val_if_true, val_if_false)
 
 
 def xidz(numerator, denominator, value_if_denom_is_zero):
@@ -1038,3 +1180,147 @@ def log(x, base):
     base: base of the logarithm
     """
     return np.log(x) / np.log(base)
+
+
+def and_(x, y):
+    return _preserve_array(np.logical_and(x, y), ref=[x, y])
+
+
+def or_(x, y):
+    return _preserve_array(np.logical_or(x, y), ref=[x, y])
+
+
+def sum(x, dim=None):
+    return x.sum(dim=dim)
+
+
+def prod(x, dim=None):
+    return x.prod(dim=dim)
+
+
+def vmin(x, dim=None):
+    return x.min(dim=dim)
+
+
+def vmax(x, dim=None):
+    return x.max(dim=dim)
+
+
+def _preserve_array(value, ref):
+    if not isinstance(ref, list):
+        ref = [ref]
+    array = next((r for r in ref if isinstance(r, xr.DataArray)), None)
+    if array is not None:
+        return xr.DataArray(data=value, coords=array.coords, dims=array.dims).squeeze()
+    else:
+        return value
+
+
+def get_direct_subscript(file, tab, firstcell, lastcell, prefix):
+    file = _resolve_file(file)
+
+    row_first, col_first = _split_excel_cell(firstcell)
+    row_last, col_last = _split_excel_cell(lastcell)
+    data = _get_data_from_file(
+        file, tab,
+        rows=[row_first, row_last],
+        cols=[col_first, col_last]
+    )
+    return [prefix + str(d) for d in data.flatten()]
+
+
+get_xls_subscript = get_direct_subscript
+
+
+def _get_series_data(file, tab, series_across, series_row_or_col, cell, size):
+    if series_across:
+        series_data = _get_data_from_file(file, tab, rows=int(series_row_or_col), cols=None, dropna=True)
+        first_data_row, first_col = _split_excel_cell(cell)
+        last_col = first_col + series_data.size - 1
+
+        last_data_row = first_data_row + size - 1
+        data = _get_data_from_file(
+            file, tab, rows=[first_data_row, last_data_row], cols=[first_col, last_col])
+    else:
+        first_row, first_col = _split_excel_cell(cell)
+        series_data = _get_data_from_file(
+            file, tab, rows=[first_row, None], cols=series_row_or_col, dropna=True
+        )
+
+        last_row = first_row + series_data.size - 1
+        cols = [first_col, _col_to_num(first_col) + size - 1]
+        data = _get_data_from_file(file, tab, rows=[first_row, last_row], cols=cols)
+
+    return series_data, data
+
+
+def _get_data_from_file(file, tab, rows, cols, dropna=False):
+    ext = os.path.splitext(file)[1].lower()
+    if ext in ['.xls', '.xlsx']:
+        if rows is None:
+            skip = nrows = None
+        elif isinstance(rows, int):
+            skip = rows
+            nrows = None
+        else:
+            skip = rows[0] - 1
+            nrows = rows[1] - skip if rows[1] is not None else None
+        if isinstance(cols, list):
+            cols = [_num_to_col(c) if isinstance(c, int) else c for c in cols]
+            usecols = cols[0] + ":" + cols[1]
+        else:
+            usecols = cols
+
+        data = pd.read_excel(
+            file, sheet_name=tab, header=None, skiprows=skip, nrows=nrows, usecols=usecols
+        )
+        if dropna:
+            data = data.dropna()
+        data = data.values
+        if isinstance(rows, int) or (isinstance(rows, list) and rows[0] == rows[1]):
+            data = data[0]
+        if isinstance(cols, str) or (isinstance(cols, list) and cols[0].lower() == cols[1].lower()):
+            data = data[:, 0]
+
+        return data
+
+    raise NotImplementedError(ext)
+
+
+def _split_excel_cell(cell):
+    return int(re.sub("[a-zA-Z]+", "", cell)), re.sub("[^a-zA-Z]+", "", cell)
+
+
+def _resolve_file(file, root=None, possible_ext=None):
+    possible_ext = possible_ext or ['.xls', '.xlsx', '.odt', '.txt', '.tab']
+
+    if file[0] == '?':
+        file = os.path.join(root, file[1:])
+
+    if os.path.isfile(file):
+        return file
+
+    for ext in possible_ext:
+        if os.path.isfile(file + ext):
+            return file + ext
+
+    raise FileNotFoundError(file)
+
+
+def _col_to_num(col):
+    return reduce(lambda r, x: r * 26 + x + 1, map(string.ascii_lowercase.index, col.lower()), 0)
+
+
+def _num_to_col(num):
+    chars = []
+
+    def divmod_excel(n):
+        a, b = divmod(n, 26)
+        if b == 0:
+            return a - 1, b + 26
+        return a, b
+
+    while num > 0:
+        num, d = divmod_excel(num)
+        chars.append(string.ascii_uppercase[d - 1])
+    return ''.join(reversed(chars)).lower()
