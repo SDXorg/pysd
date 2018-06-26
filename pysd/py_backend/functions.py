@@ -19,7 +19,6 @@ from functools import wraps, reduce
 
 import numpy as np
 import pandas as _pd
-import pandas as pd
 import xarray as xr
 from funcsigs import signature
 
@@ -457,7 +456,7 @@ class Macro(Stateful):
         """ Returns the version of pysd complier that used for generating this model """
         return self.components.__pysd_version__
 
-    def initialize(self, initialization_order=None):
+    def initialize(self):
         """
         This function tries to initialize the stateful objects.
 
@@ -536,7 +535,7 @@ class Macro(Stateful):
         # with a pandas series being passed in as a dictionary element.
 
         for key, value in params.items():
-            if isinstance(value, pd.Series):
+            if isinstance(value, _pd.Series):
                 new_function = self._timeseries_component(value)
             elif callable(value):
                 new_function = value
@@ -1271,7 +1270,7 @@ def _get_data_from_file(file, tab, rows, cols, dropna=False):
         else:
             usecols = cols
 
-        data = pd.read_excel(
+        data = _pd.read_excel(
             file, sheet_name=tab, header=None, skiprows=skip, nrows=nrows, usecols=usecols
         )
         if dropna:
