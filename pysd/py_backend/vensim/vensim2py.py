@@ -7,6 +7,7 @@ import re
 import parsimonious
 from ...py_backend import builder
 from ...py_backend import utils
+from io import open
 import textwrap
 import numpy as np
 import os
@@ -232,7 +233,7 @@ def get_equation_components(equation_str):
     This is so that when everything comes back together, we can manage
     any potential namespace conflicts properly
     """
-
+    
     component_structure_grammar = r"""
     entry = component / subscript_definition / lookup_definition
     component = name _ subscriptlist? _ "=" _ expression
@@ -881,7 +882,7 @@ def translate_vensim(mdl_file):
     """
     with open(mdl_file, 'r', encoding='UTF-8') as in_file:
         text = in_file.read()
-
+        
     outfile_name = mdl_file.replace('.mdl', '.py')
     out_dir = os.path.dirname(outfile_name)
 

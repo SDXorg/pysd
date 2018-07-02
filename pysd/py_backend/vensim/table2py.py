@@ -1,7 +1,7 @@
 import pandas as pd
 import warnings
 from ...pysd import read_vensim
-
+from io import open
 
 def read_tabular(table_file, sheetname='Sheet1'):
     """
