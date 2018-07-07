@@ -9,7 +9,6 @@ straightforward equivalent in python.
 from __future__ import division, absolute_import
 
 import imp
-import inspect
 import os
 import random
 import re
@@ -22,7 +21,7 @@ import pandas as _pd
 import xarray as xr
 from funcsigs import signature
 
-from . import utils
+from pysd import utils
 
 try:
     import scipy.stats as stats
@@ -449,7 +448,6 @@ class Macro(Stateful):
 
         self.py_model_file = py_model_file
 
-
     def __call__(self):
         return self.return_func()
 
@@ -543,9 +541,11 @@ class Macro(Stateful):
             else:
                 new_function = self._constant_component(value)
 
-            func_name = utils.get_value_by_insensitive_key_or_value(key, self.components._namespace)
-
-            if func_name is None:
+            if key in self.components._namespace.keys():
+                func_name = self.components._namespace[key]
+            elif key in self.components._namespace.values():
+                func_name = key
+            else:
                 raise NameError('%s is not recognized as a model component' % key)
 
             if '_integ_' + func_name in dir(self.components):  # this won't handle other statefuls...
@@ -580,10 +580,13 @@ class Macro(Stateful):
 
         for key, value in state.items():
             # TODO Implement map with reference between component and stateful element?
-            component_name = utils.get_value_by_insensitive_key_or_value(key, self.components._namespace)
-            if component_name is not None:
-                stateful_name = '_integ_%s' % component_name
-            else:
+            if key in self.components._namespace.keys():
+                component_name = self.components._namespace[key]
+                stateful_name = '_integ_%s' % self.components._namespace[key]
+            elif key in self.components._namespace.values():
+                component_name = key
+                stateful_name = '_integ_%s' % key
+            else:  # allow the user to specify the stateful object directly
                 component_name = key
                 stateful_name = key
 
@@ -741,8 +744,6 @@ class Model(Macro):
                 self.components.final_time() + self.components.saveper(),
                 self.components.saveper(), dtype=np.float64
             )
-        elif inspect.isclass(range) and isinstance(return_timestamps, range):
-            return_timestamps_array = np.array(return_timestamps, ndmin=1)
         elif isinstance(return_timestamps, (list, int, float, np.ndarray)):
             return_timestamps_array = np.array(return_timestamps, ndmin=1)
         elif isinstance(return_timestamps, _pd.Series):
@@ -1055,7 +1056,6 @@ def lookup(x, xs, ys):
     return _preserve_array(np.interp(x, xs, ys), ref=x)
 
 
-
 def lookup_extrapolation(x, xs, ys):
     """
     Intermediate values are calculated with linear interpolation between the intermediate points.
@@ -1331,7 +1331,7 @@ def get_xls_data(file, tab, time_row_col, cell):
     """
     Implements vensim's GET XLS DATA function.
     """
-    data = pd.read_excel(file, sheet_name=tab)
+    data = _pd.read_excel(file, sheet_name=tab)
     return data.to_numpy()
 
 
