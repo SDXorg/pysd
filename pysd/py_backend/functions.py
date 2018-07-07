@@ -17,6 +17,7 @@ from . import utils
 import imp
 import warnings
 import random
+import inspect
 import xarray as xr
 from funcsigs import signature
 import os
@@ -584,6 +585,8 @@ class Model(Macro):
                 self.components.final_time() + self.components.saveper(),
                 self.components.saveper(), dtype=np.float64
             )
+        elif inspect.isclass(range) and isinstance(return_timestamps, range):
+            return_timestamps_array = np.array(return_timestamps, ndmin=1)
         elif isinstance(return_timestamps, (list, int, float, np.ndarray)):
             return_timestamps_array = np.array(return_timestamps, ndmin=1)
         elif isinstance(return_timestamps, _pd.Series):
