@@ -51,6 +51,11 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/delay_parentheses/test_delay_parentheses.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    def test_delay_pipeline(self):
+        from.test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/delay_pipeline/test_pipeline_delays.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_delays(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/delays/test_delays.mdl')
@@ -129,6 +134,11 @@ class TestIntegrationExamples(unittest.TestCase):
     def test_lookups(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/lookups/test_lookups.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+        
+    def test_lookups_without_range(self):
+        from.test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/lookups_without_range/test_lookups_without_range.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_lookups_funcnames(self):

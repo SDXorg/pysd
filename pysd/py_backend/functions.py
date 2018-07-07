@@ -190,7 +190,10 @@ class Delay(Stateful):
         self.order = None
 
     def initialize(self):
-        self.order = self.order_func()  # The order can only be set once
+        order = self.order_func()
+        if order != int(order):
+            warnings.warn('Casting delay order from %f to %i' % (order, int(order)))
+        self.order = int(order)  # The order can only be set once
         init_state_value = self.init_func() * self.delay_time_func() / self.order
         self.state = np.array([init_state_value] * self.order)
 
@@ -429,19 +432,32 @@ class Macro(Stateful):
         self.time.update(t)
 
         for key, value in state.items():
+            # TODO Implement map with reference between component and stateful element?
             if key in self.components._namespace.keys():
-                element_name = 'integ_%s' % self.components._namespace[key]
+                component_name = self.components._namespace[key]
+                stateful_name = 'integ_%s' % self.components._namespace[key]
             elif key in self.components._namespace.values():
-                element_name = 'integ_%s' % key
+                component_name = key
+                stateful_name = 'integ_%s' % key
             else:  # allow the user to specify the stateful object directly
-                element_name = key
+                component_name = key
+                stateful_name = key
 
-            try:
-                element = getattr(self.components, element_name)
-                element.update(value)
-            except AttributeError:
-                print("'%s' has no state elements, assignment failed")
-                raise
+            # Try to update stateful component
+            if hasattr(self.components, stateful_name):
+                try:
+                    element = getattr(self.components, stateful_name)
+                    element.update(value)
+                except AttributeError:
+                    print("'%s' has no state elements, assignment failed")
+                    raise
+            else:
+                # Try to override component
+                try:
+                    setattr(self.components, component_name, self._constant_component(value))
+                except AttributeError:
+                    print("'%s' has no component, assignment failed")
+                    raise
 
     def clear_caches(self):
         """ Clears the Caches for all model elements """
@@ -471,11 +487,11 @@ class Macro(Stateful):
                 lines = docstring.split('\n')
                 collector.append({'Real Name': name,
                                   'Py Name': varname,
-                                  'Eqn': lines[3].strip(),
-                                  'Unit': lines[5].strip(),
-                                  'Lims': lines[7].strip(),
-                                  'Type': lines[9].strip(),
-                                  'Comment': '\n'.join(lines[9:]).strip()})
+                                  'Eqn': lines[2].replace("Original Eqn:", "").strip(),
+                                  'Unit': lines[3].replace("Units:", "").strip(),
+                                  'Lims': lines[4].replace("Limits:", "").strip(),
+                                  'Type': lines[5].replace("Type:", "").strip(),
+                                  'Comment': '\n'.join(lines[7:]).strip()})
             except:
                 pass
 
@@ -574,7 +590,7 @@ class Model(Macro):
                 self.components.final_time() + self.components.saveper(),
                 self.components.saveper(), dtype=np.float64
             )
-        elif isinstance(return_timestamps, (list, int, float, range, np.ndarray)):
+        elif isinstance(return_timestamps, (list, int, float, np.ndarray)):
             return_timestamps_array = np.array(return_timestamps, ndmin=1)
         elif isinstance(return_timestamps, _pd.Series):
             return_timestamps_array = return_timestamps.as_matrix()
