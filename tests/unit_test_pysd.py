@@ -349,23 +349,23 @@ class TestPySD(unittest.TestCase):
         self.assertGreater(stocks1['Teacup Temperature'].loc[10],
                            stocks2['Teacup Temperature'].loc[10])
 
-    def test_set_initial_condition(self):
+    def test_set_initial_condition_origin_full(self):
         import pysd
         model = pysd.read_vensim(test_model)
         initial_temp = model.components.teacup_temperature()
         initial_time = model.components.time()
 
         new_state = {'Teacup Temperature': 500}
-        new_time = np.random.rand()
+        new_time = 10
 
         model.set_initial_condition((new_time, new_state))
         set_temp = model.components.teacup_temperature()
         set_time = model.components.time()
 
-        self.assertNotEqual(set_temp, initial_temp)
+        self.assertNotEqual(set_temp, initial_temp, "Test definition is wrong, please change configuration")
         self.assertEqual(set_temp, 500)
 
-        self.assertNotEqual(initial_time, new_time)
+        self.assertNotEqual(initial_time, new_time, "Test definition is wrong, please change configuration")
         self.assertEqual(new_time, set_time)
 
         model.set_initial_condition('original')
@@ -374,6 +374,70 @@ class TestPySD(unittest.TestCase):
 
         self.assertEqual(initial_temp, set_temp)
         self.assertEqual(initial_time, set_time)
+
+    def test_set_initial_condition_origin_short(self):
+        import pysd
+        model = pysd.read_vensim(test_model)
+        initial_temp = model.components.teacup_temperature()
+        initial_time = model.components.time()
+
+        new_state = {'Teacup Temperature': 500}
+        new_time = 10
+
+        model.set_initial_condition((new_time, new_state))
+        set_temp = model.components.teacup_temperature()
+        set_time = model.components.time()
+
+        self.assertNotEqual(set_temp, initial_temp, "Test definition is wrong, please change configuration")
+        self.assertEqual(set_temp, 500)
+
+        self.assertNotEqual(initial_time, new_time, "Test definition is wrong, please change configuration")
+        self.assertEqual(new_time, set_time)
+
+        model.set_initial_condition('o')
+        set_temp = model.components.teacup_temperature()
+        set_time = model.components.time()
+
+        self.assertEqual(initial_temp, set_temp)
+        self.assertEqual(initial_time, set_time)
+
+    def test_set_initial_condition_for_stock_component(self):
+        import pysd
+        model = pysd.read_vensim(test_model)
+        initial_temp = model.components.teacup_temperature()
+        initial_time = model.components.time()
+
+        new_state = {'Teacup Temperature': 500}
+        new_time = 10
+
+        model.set_initial_condition((new_time, new_state))
+        set_temp = model.components.teacup_temperature()
+        set_time = model.components.time()
+
+        self.assertNotEqual(set_temp, initial_temp, "Test definition is wrong, please change configuration")
+        self.assertEqual(set_temp, 500)
+
+        self.assertNotEqual(initial_time, 10, "Test definition is wrong, please change configuration")
+        self.assertEqual(set_time, 10)
+
+    def test_set_initial_condition_for_constant_component(self):
+        import pysd
+        model = pysd.read_vensim(test_model)
+        initial_temp = model.components.teacup_temperature()
+        initial_time = model.components.time()
+
+        new_state = {'Room Temperature': 100}
+        new_time = 10
+
+        model.set_initial_condition((new_time, new_state))
+        set_temp = model.components.room_temperature()
+        set_time = model.components.time()
+
+        self.assertNotEqual(set_temp, initial_temp, "Test definition is wrong, please change configuration")
+        self.assertEqual(set_temp, 100)
+
+        self.assertNotEqual(initial_time, 10, "Test definition is wrong, please change configuration")
+        self.assertEqual(set_time, 10)
 
     def test__build_euler_timeseries(self):
         import pysd
