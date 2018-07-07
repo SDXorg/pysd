@@ -338,7 +338,7 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(model.components.teacup_temperature(), 202)
 
         # Test setting with stateful object name
-        model.set_state(new_time + 2, {'integ_teacup_temperature': 302})
+        model.set_state(new_time + 2, {'_integ_teacup_temperature': 302})
         self.assertEqual(model.components.teacup_temperature(), 302)
 
     def test_replace_element(self):

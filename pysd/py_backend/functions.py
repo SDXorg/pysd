@@ -401,7 +401,7 @@ class Macro(Stateful):
             else:
                 raise NameError('%s is not recognized as a model component' % key)
 
-            if 'integ_' + func_name in dir(self.components):  # this won't handle other statefuls...
+            if '_integ_' + func_name in dir(self.components):  # this won't handle other statefuls...
                 warnings.warn("Replacing the equation of stock {} with params".format(key),
                               stacklevel=2)
 
@@ -435,10 +435,10 @@ class Macro(Stateful):
             # TODO Implement map with reference between component and stateful element?
             if key in self.components._namespace.keys():
                 component_name = self.components._namespace[key]
-                stateful_name = 'integ_%s' % self.components._namespace[key]
+                stateful_name = '_integ_%s' % self.components._namespace[key]
             elif key in self.components._namespace.values():
                 component_name = key
-                stateful_name = 'integ_%s' % key
+                stateful_name = '_integ_%s' % key
             else:  # allow the user to specify the stateful object directly
                 component_name = key
                 stateful_name = key
