@@ -399,3 +399,14 @@ def visit_addresses(frame, return_addresses):
             outdict[real_name] = frame[pyname]
 
     return outdict
+
+
+def get_value_by_insensitive_key_or_value(key, dict):
+    lower_key = key.lower()
+    for real_key, real_value in dict.items():
+        if real_key.lower() == lower_key:
+            return dict[real_key]
+        if real_value.lower() == lower_key:
+            return real_value
+
+    return None
