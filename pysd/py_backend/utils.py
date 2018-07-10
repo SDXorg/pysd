@@ -262,7 +262,7 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
 
     if convert == 'hex':
         # Convert invalid characters to hex. Note: \p{l} designates all Unicode letter characters (any language),
-        # \p{m} designates all mark symbols (e.g., vowel marks in Indian scrips, such as the final ે in નમસ્તે)
+        # \p{m} designates all mark symbols (e.g., vowel marks in Indian scrips, such as the final)
         # and \p{n} designates all numbers. We allow any of these to be present in the regex.
         s = ''.join([c.encode("hex") if re.findall('[^\p{l}\p{m}\p{n}_]', c) else c for c in s])
 
