@@ -603,15 +603,15 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
     array = (number _ ("," / ";")? _)+ !~r"."  # negative lookahead for anything other than an array
     number = ~r"\d+\.?\d*(e[+-]\d+)?"
 
-    id = ~r"(%(ids)s)"I
-    sub_name = ~r"(%(sub_names)s)"I  # subscript names (if none, use non-printable character)
-    sub_element = ~r"(%(sub_elems)s)"I  # subscript elements (if none, use non-printable character)
+    id = ~r"(%(ids)s)"IU
+    sub_name = ~r"(%(sub_names)s)"IU  # subscript names (if none, use non-printable character)
+    sub_element = ~r"(%(sub_elems)s)"IU  # subscript elements (if none, use non-printable character)
 
-    func = ~r"(%(funcs)s)"I  # functions (case insensitive)
-    in_oper = ~r"(%(in_ops)s)"I  # infix operators (case insensitive)
-    pre_oper = ~r"(%(pre_ops)s)"I  # prefix operators (case insensitive)
-    builder = ~r"(%(builders)s)"I  # builder functions (case insensitive)
-    macro = ~r"(%(macros)s)"I  # macros from model file (if none, use non-printable character)
+    func = ~r"(%(funcs)s)"IU  # functions (case insensitive)
+    in_oper = ~r"(%(in_ops)s)"IU  # infix operators (case insensitive)
+    pre_oper = ~r"(%(pre_ops)s)"IU  # prefix operators (case insensitive)
+    builder = ~r"(%(builders)s)"IU  # builder functions (case insensitive)
+    macro = ~r"(%(macros)s)"IU  # macros from model file (if none, use non-printable character)
 
     _ = ~r"[\s\\]*"  # whitespace character
     empty = "" # empty string
