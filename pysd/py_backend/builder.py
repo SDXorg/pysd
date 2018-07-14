@@ -48,7 +48,9 @@ def build(elements, subscript_dict, namespace, outfile_name):
     # Todo: Sort elements (alphabetically? group stock funcs?)
     elements = merge_partial_elements(elements)
     functions = [build_element(element, subscript_dict) for element in elements]
-
+    # if we don't replace those, we run into an error with unicode encoding when the model is read
+    # if the model starts with U 14.07.18/sk
+    outfile_name = outfile_name.replace('\\','\\\\')
     text = '''
     """
     Python model %(outfile)s
