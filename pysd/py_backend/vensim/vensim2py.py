@@ -841,6 +841,7 @@ def translate_section(section, macro_list):
     for element in model_elements:
         if element['kind'] == 'component' and 'py_expr' not in element:
             # Todo: if there is new structure, it should be added to the namespace...
+            print(element)
             translation, new_structure = parse_general_expression(element,
                                                                   namespace=namespace,
                                                                   subscript_dict=subscript_dict,
