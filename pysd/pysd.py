@@ -7,7 +7,7 @@ History
 --------
 August 15, 2014: created
 June 6 2015: Major updates - version 0.2.5
-Jan 2016: Rework to handle subscripts
+Jan 2016: Rework to handle subscripts 
 May 2016: Updates to handle grammar refactoring
 Sept 2016: Major refactor, putting most internal code into the Model and Macro objects
 """

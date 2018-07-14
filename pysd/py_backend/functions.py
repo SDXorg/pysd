@@ -17,6 +17,7 @@ from . import utils
 import imp
 import warnings
 import random
+import inspect
 import xarray as xr
 from funcsigs import signature
 import os
@@ -387,11 +388,9 @@ class Macro(Stateful):
             else:
                 new_function = self._constant_component(value)
 
-            if key in self.components._namespace.keys():
-                func_name = self.components._namespace[key]
-            elif key in self.components._namespace.values():
-                func_name = key
-            else:
+            func_name = utils.get_value_by_insensitive_key_or_value(key, self.components._namespace)
+
+            if func_name is None:
                 raise NameError('%s is not recognized as a model component' % key)
 
             if 'integ_' + func_name in dir(self.components):  # this won't handle other statefuls...
@@ -425,19 +424,29 @@ class Macro(Stateful):
         self.time.update(t)
 
         for key, value in state.items():
-            if key in self.components._namespace.keys():
-                element_name = 'integ_%s' % self.components._namespace[key]
-            elif key in self.components._namespace.values():
-                element_name = 'integ_%s' % key
-            else:  # allow the user to specify the stateful object directly
-                element_name = key
+            # TODO Implement map with reference between component and stateful element?
+            component_name = utils.get_value_by_insensitive_key_or_value(key, self.components._namespace)
+            if component_name is not None:
+                stateful_name = 'integ_%s' % component_name
+            else:
+                component_name = key
+                stateful_name = key
 
-            try:
-                element = getattr(self.components, element_name)
-                element.update(value)
-            except AttributeError:
-                print("'%s' has no state elements, assignment failed")
-                raise
+            # Try to update stateful component
+            if hasattr(self.components, stateful_name):
+                try:
+                    element = getattr(self.components, stateful_name)
+                    element.update(value)
+                except AttributeError:
+                    print("'%s' has no state elements, assignment failed")
+                    raise
+            else:
+                # Try to override component
+                try:
+                    setattr(self.components, component_name, self._constant_component(value))
+                except AttributeError:
+                    print("'%s' has no component, assignment failed")
+                    raise
 
     def clear_caches(self):
         """ Clears the Caches for all model elements """
@@ -571,7 +580,9 @@ class Model(Macro):
                 self.components.final_time() + self.components.saveper(),
                 self.components.saveper(), dtype=np.float64
             )
-        elif isinstance(return_timestamps, (list, int, float, range, np.ndarray)):
+        elif inspect.isclass(range) and isinstance(return_timestamps, range):
+            return_timestamps_array = np.array(return_timestamps, ndmin=1)
+        elif isinstance(return_timestamps, (list, int, float, np.ndarray)):
             return_timestamps_array = np.array(return_timestamps, ndmin=1)
         elif isinstance(return_timestamps, _pd.Series):
             return_timestamps_array = return_timestamps.as_matrix()

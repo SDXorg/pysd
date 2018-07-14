@@ -15,9 +15,9 @@ import os.path
 import pkg_resources
 import textwrap
 import warnings
-
 import yapf
 
+from io import open
 from .._version import __version__
 from ..py_backend import utils
 
