@@ -835,6 +835,8 @@ def translate_section(section, macro_list):
     # they don't actually need to be python-safe
     subscript_dict = {e['real_name']: e['subs'] for e in model_elements if e['kind'] == 'subdef'}
 
+    print(namespace)
+
     # Parse components to python syntax.
     for element in model_elements:
         if element['kind'] == 'component' and 'py_expr' not in element:
