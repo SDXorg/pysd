@@ -2,15 +2,7 @@ Vensim Translation
 ==================
 
 PySD parses a vensim '.mdl' file and translates the result into python, creating a new file in the
-same directory as the original. For example, the Vensim file :download:`Teacup.mdl<../../tests/test-models/samples/teacup/Teacup.mdl>`:
-
-.. literalinclude:: ../../tests/test-models/samples/teacup/Teacup.mdl
-   :lines: 1-51
-
-becomes :download:`Teacup.py<../../tests/test-models/samples/teacup/Teacup.py>`:
-
-.. literalinclude:: ../../tests/test-models/samples/teacup/Teacup.py
-   :language: python
+same directory as the original. For example, the Vensim file `Teacup.mdl <https://github.com/JamesPHoughton/PySD-Cookbook/blob/master/source/models/Teacup/Teacup.mdl>`_ becomes `Teacup.py <https://github.com/JamesPHoughton/PySD-Cookbook/blob/master/source/models/Teacup/Teacup.py>`_ .
 
 This allows model execution independent of the Vensim environment, which can be handy for deploying
 models as backends to other products, or for performing massively parallel distributed computation.
