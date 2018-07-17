@@ -603,7 +603,10 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
     array = (number _ ("," / ";")? _)+ !~r"."  # negative lookahead for anything other than an array
     number = ~r"\d+\.?\d*(e[+-]\d+)?"
 
-    id = ~r"\w[\w\d_\s\']*"IU
+    id = ( basic_id / escape_group )
+    basic_id = ~r"\w[\w\d_\s\']*"IU
+    escape_group = "\"" ( "\\\"" / ~r"[^\"]"IU )* "\""
+    
     sub_name = ~r"(%(sub_names)s)"IU  # subscript names (if none, use non-printable character)
     sub_element = ~r"(%(sub_elems)s)"IU  # subscript elements (if none, use non-printable character)
 
