@@ -665,7 +665,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             return id_str + '()'
 
         def visit_id(self, n, vc):
-            return namespace[n.text]
+            return namespace[n.text.strip()]
 
         def visit_lookup_def(self, n, vc):
             """ This exists because vensim has multiple ways of doing lookups.
