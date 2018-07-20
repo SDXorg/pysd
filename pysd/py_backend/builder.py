@@ -287,7 +287,7 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
 
     # describe the stateful object
     stateful = {
-        'py_name': 'integ_%s' % identifier,
+        'py_name': '_integ_%s' % identifier,
         'real_name': 'Representation of  %s' % identifier,
         'doc': 'Integrates Expression %s' % expression,
         'py_expr': stateful_py_expr,
