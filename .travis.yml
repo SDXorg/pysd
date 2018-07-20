@@ -4,6 +4,7 @@ python:
   - "3.5"
   - "3.6"
 # command to install dependencies
+cache: pip
 install:
   - pip install cython
   - pip install --upgrade pip setuptools wheel
