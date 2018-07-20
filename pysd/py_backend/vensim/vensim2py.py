@@ -186,10 +186,10 @@ def _include_common_grammar(source_grammar):
     name = basic_id / escape_group
     
     # This takes care of models with Unicode variable names
-    basic_id = id_start (id_continue / ~r"[\'\$\s]"IU)*
+    basic_id = id_start id_continue*
+    
     id_start = ~r"[\w]"IU
-               
-    id_continue = id_start / ~r"[0-9]"
+    id_continue = id_start / ~r"[0-9\'\$\s\_]"
 
     # between quotes, either escaped quote or character that is not a quote
     escape_group = "\"" ( "\\\"" / ~r"[^\"]" )* "\""
@@ -580,13 +580,13 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
     in_ops_list = [re.escape(x) for x in in_ops.keys()]
     pre_ops_list = [re.escape(x) for x in pre_ops.keys()]
     if macro_list is not None and len(macro_list) > 0:
-        macro_names_list = [x['name'] for x in macro_list]
+        macro_names_list = [re.escape(x['name']) for x in macro_list]
     else:
         macro_names_list = ['\\a']
 
     expression_grammar = r"""
     expr_type = array / expr / empty
-    expr = _ pre_oper? _ (lookup_def / build_call / macro_call / lookup_call / call / parens / number / reference) _ (in_oper _ expr)?
+    expr = _ pre_oper? _ (lookup_def / build_call / macro_call / call / lookup_call / parens / number / reference) _ (in_oper _ expr)?
 
     lookup_def = ~r"(WITH\ LOOKUP)"I _ "(" _ expr _ "," _ "(" _  ("[" ~r"[^\]]*" "]" _ ",")?  ( "(" _ expr _ "," _ expr _ ")" _ ","? _ )+ _ ")" _ ")"
     lookup_call = id _ "(" _ (expr _ ","? _)* ")"  # these don't need their args parsed...
@@ -603,7 +603,10 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
     array = (number _ ("," / ";")? _)+ !~r"."  # negative lookahead for anything other than an array
     number = ~r"\d+\.?\d*(e[+-]\d+)?"
 
-    id = ~r"(%(ids)s)"IU
+    id = ( basic_id / escape_group )
+    basic_id = ~r"\w[\w\d_\s\']*"IU
+    escape_group = "\"" ( "\\\"" / ~r"[^\"]"IU )* "\""
+    
     sub_name = ~r"(%(sub_names)s)"IU  # subscript names (if none, use non-printable character)
     sub_element = ~r"(%(sub_elems)s)"IU  # subscript elements (if none, use non-printable character)
 
@@ -620,14 +623,13 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
         # peg parser doesn't quit early when finding a partial keyword
         'sub_names': '|'.join(reversed(sorted(sub_names_list, key=len))),
         'sub_elems': '|'.join(reversed(sorted(sub_elems_list, key=len))),
-        'ids': '|'.join(reversed(sorted(ids_list, key=len))),
         'funcs': '|'.join(reversed(sorted(functions.keys(), key=len))),
         'in_ops': '|'.join(reversed(sorted(in_ops_list, key=len))),
         'pre_ops': '|'.join(reversed(sorted(pre_ops_list, key=len))),
         'builders': '|'.join(reversed(sorted(builders.keys(), key=len))),
         'macros': '|'.join(reversed(sorted(macro_names_list, key=len)))
     }
-
+    
     class ExpressionParser(parsimonious.NodeVisitor):
         # Todo: at some point, we could make the 'kind' identification recursive on expression,
         # so that if an expression is passed into a builder function, the information
@@ -663,7 +665,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             return id_str + '()'
 
         def visit_id(self, n, vc):
-            return namespace[n.text]
+            return namespace[n.text.strip()]
 
         def visit_lookup_def(self, n, vc):
             """ This exists because vensim has multiple ways of doing lookups.
@@ -835,13 +837,10 @@ def translate_section(section, macro_list):
     # they don't actually need to be python-safe
     subscript_dict = {e['real_name']: e['subs'] for e in model_elements if e['kind'] == 'subdef'}
 
-    print(namespace)
-
     # Parse components to python syntax.
     for element in model_elements:
         if element['kind'] == 'component' and 'py_expr' not in element:
             # Todo: if there is new structure, it should be added to the namespace...
-            print(element)
             translation, new_structure = parse_general_expression(element,
                                                                   namespace=namespace,
                                                                   subscript_dict=subscript_dict,
