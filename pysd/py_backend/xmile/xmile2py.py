@@ -152,7 +152,9 @@ def translate_xmile(xmile_file):
     # Add timeseries information
     
     # Read the start time of simulation
-    time_units = root.xpath('//ns:sim_specs', namespaces={'ns': NS})[0].attrib['time_units']
+    sim_spec_node = root.xpath('//ns:sim_specs', namespaces={'ns': NS});
+    time_units = sim_spec_node[0].attrib['time_units'] if (len(sim_spec_node) > 0 and sim_spec_node[0].attrib.has_key('time_units')) else ""
+    
     tstart = root.xpath('//ns:sim_specs/ns:start', namespaces={'ns': NS})[0].text
     element = {
         'kind': 'constant',

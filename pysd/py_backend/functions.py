@@ -858,7 +858,7 @@ def pulse_magnitude(magnitude, start, repeat_time=0):
 
 def lookup(x, xs, ys):
     """ Provides the working mechanism for lookup functions the builder builds """
-    return np.interp(x, xs, ys)
+    return np.interp([x], xs, ys)[0]
 
 
 def if_then_else(condition, val_if_true, val_if_false):

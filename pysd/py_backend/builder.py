@@ -345,7 +345,7 @@ def add_n_delay(delay_input, delay_time, initial_value, order, subs, subscript_d
     # that delay the output by different amounts, they'll overwrite the original function...
 
     stateful = {
-        'py_name': utils.make_python_identifier('delay_%s_%s_%s_%s' % (delay_input,
+        'py_name': utils.make_python_identifier('_delay_%s_%s_%s_%s' % (delay_input,
                                                                        delay_time,
                                                                        initial_value,
                                                                        order))[0],
@@ -403,7 +403,7 @@ def add_n_smooth(smooth_input, smooth_time, initial_value, order, subs, subscrip
         """
 
     stateful = {
-        'py_name': utils.make_python_identifier('smooth_%s_%s_%s_%s' % (smooth_input,
+        'py_name': utils.make_python_identifier('_smooth_%s_%s_%s_%s' % (smooth_input,
                                                                         smooth_time,
                                                                         initial_value,
                                                                         order))[0],
@@ -449,7 +449,7 @@ def add_n_trend(trend_input, average_time, initial_trend, subs, subscript_dict):
         """
 
     stateful = {
-        'py_name': utils.make_python_identifier('trend_%s_%s_%s' % (trend_input,
+        'py_name': utils.make_python_identifier('_trend_%s_%s_%s' % (trend_input,
                                                                     average_time,
                                                                     initial_trend))[0],
         'real_name': 'trend of %s' % trend_input,
@@ -486,7 +486,7 @@ def add_initial(initial_input):
 
     """
     stateful = {
-        'py_name': utils.make_python_identifier('initializer_%s' % initial_input)[0],
+        'py_name': utils.make_python_identifier('_initial_%s' % initial_input)[0],
         'real_name': 'Smooth of %s' % initial_input,
         'doc': 'Returns the value taken on during the initialization phase',
         'py_expr': 'functions.Initial(lambda: %s)' % (

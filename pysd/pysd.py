@@ -11,7 +11,6 @@ Jan 2016: Rework to handle subscripts
 May 2016: Updates to handle grammar refactoring
 Sept 2016: Major refactor, putting most internal code into the Model and Macro objects
 """
-from __future__ import absolute_import
 
 
 def read_xmile(xmile_file):
@@ -22,7 +21,6 @@ def read_xmile(xmile_file):
     model = load(py_model_file)
     model.xmile_file = xmile_file
     return model
-
 
 def read_vensim(mdl_file):
     """

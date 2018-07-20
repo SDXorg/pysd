@@ -241,6 +241,9 @@ class SMILEParser(NodeVisitor):
     def visit_identifier(self, n, vc):
         return self.extended_model_namespace[n.text] + '()'
 
+    def visit_quoted_identifier(self, n, vc):
+        return self.extended_model_namespace[vc[1]] + '()'
+        
     def visit_func(self, n, vc):
         return functions[n.text.lower()]
 
