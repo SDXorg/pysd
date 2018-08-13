@@ -52,26 +52,26 @@ class TestBoundsChecker(unittest.TestCase):
         os.remove(cls.file_name)
 
 
-class TestExtremeConditions(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        cls.file_name = 'test_extremes_empty.xls'
-        cls.model_file = 'test-models/tests/variable_ranges/test_variable_ranges.mdl'
-        cls.model = pysd.read_vensim('test-models/tests/variable_ranges/test_variable_ranges.mdl')
-        pysd.testing.create_extreme_conditions_test_matrix(cls.model, cls.file_name)
-        cls.filled_file_name = 'test-models/tests/variable_ranges/test_extremes.xls'
+# class TestExtremeConditions(unittest.TestCase):
+    # @classmethod
+    # def setUpClass(cls):
+        # cls.file_name = 'test_extremes_empty.xls'
+        # cls.model_file = 'test-models/tests/variable_ranges/test_variable_ranges.mdl'
+        # cls.model = pysd.read_vensim('test-models/tests/variable_ranges/test_variable_ranges.mdl')
+        # pysd.testing.create_extreme_conditions_test_matrix(cls.model, cls.file_name)
+        # cls.filled_file_name = 'test-models/tests/variable_ranges/test_extremes.xls'
 
-    def test_create_range_test_template(self):
-        self.assertTrue(os.path.isfile(self.file_name))
-    @unittest.skip
-    def test_static_test_matrix(self):
-        errors = pysd.testing.extreme_conditions_test(self.model_file,
-                                                      excel_file=self.filled_file_name)
-        self.assertEqual(len(errors), 1)
+    # def test_create_range_test_template(self):
+        # self.assertTrue(os.path.isfile(self.file_name))
+    # @unittest.skip
+    # def test_static_test_matrix(self):
+        # errors = pysd.testing.extreme_conditions_test(self.model_file,
+                                                      # excel_file=self.filled_file_name)
+        # self.assertEqual(len(errors), 1)
 
-    @classmethod
-    def tearDownClass(cls):
-        os.remove(cls.file_name)
+    # @classmethod
+    # def tearDownClass(cls):
+        # os.remove(cls.file_name)
 
 
 class TestSamplePSpace(unittest.TestCase):
