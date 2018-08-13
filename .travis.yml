@@ -12,10 +12,8 @@ install:
   - pip install .
   - pip install -r requirements.txt
   - pip install coveralls
-  - python setup.py install  
 # command to run tests
 script:
   - cd tests
   - nosetests --with-coverage --cover-package=pysd
-  - nosetests
   - coveralls
