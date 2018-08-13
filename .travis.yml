@@ -16,5 +16,6 @@ install:
 # command to run tests
 script:
     - cd tests
-    - nosetests --with-coverage --cover-package=pysd
-    - coveralls
+#   - nosetests --with-coverage --cover-package=pysd
+    - nosetests
+#   - coveralls
