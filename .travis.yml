@@ -1,7 +1,7 @@
 language: python
 python:
 #  - "2.7"
-# - "3.5"
+#  - "3.5"
   - "3.6"
 # command to install dependencies
 cache: pip
@@ -15,7 +15,7 @@ install:
   - python setup.py install  
 # command to run tests
 script:
-    - cd tests
-#   - nosetests --with-coverage --cover-package=pysd
-    - nosetests
-#   - coveralls
+  - cd tests
+  - nosetests --with-coverage --cover-package=pysd
+  - nosetests
+  - coveralls
