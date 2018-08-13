@@ -124,8 +124,16 @@ def extreme_conditions_test(model, matrix=None, excel_file=None, errors='return'
 
 
 def _get_bounds(unit_string):
-    parts = unit_string.split('[')
-    return parts[-1].strip(']').split(',') if len(parts) > 1 else ['?', '?']
+    return unit_string.strip('() ').split(',')
+
+
+def _set_bounds(unit_string, type="Min"):
+    if unit_string.strip(' ') == "None" and type == "Min":
+        return float('-inf')
+    elif unit_string.strip(' ') == "None" and type == "Max":
+        return float('+inf')
+    else:
+        return float(unit_string)
 
 
 def create_bounds_test_matrix(model, filename=None):
@@ -151,9 +159,9 @@ def create_bounds_test_matrix(model, filename=None):
     """
 
     docs = model.doc()
-    docs['bounds'] = docs['Unit'].apply(_get_bounds)
-    docs['Min'] = docs['bounds'].apply(lambda x: float(x[0].replace('?', '-inf')))
-    docs['Max'] = docs['bounds'].apply(lambda x: float(x[1].replace('?', '+inf')))
+    docs['bounds'] = docs['Lims'].apply(_get_bounds)
+    docs['Min'] = docs['bounds'].apply(lambda x: float(_set_bounds(x[0], "Min")))
+    docs['Max'] = docs['bounds'].apply(lambda x: float(_set_bounds(x[1], "Max")))
 
     output = docs[['Real Name', 'Comment',
                    'Unit', 'Min', 'Max']].sort_values(by='Real Name')
