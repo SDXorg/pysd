@@ -250,7 +250,7 @@ class TestIntegrationExamples(unittest.TestCase):
 
     def test_subscript_multiples(self):
         from.test_utils import runner, assert_frames_close
-        output, canon = runner('test-models/tests/subscript multiples/test_multiple_subscripts.mdl')
+        output, canon = runner('test-models/tests/subscript_multiples/test_multiple_subscripts.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_1d_arrays(self):
