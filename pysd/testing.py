@@ -19,9 +19,12 @@ def create_extreme_conditions_test_matrix(model, filename=None):
     Also, omit table functions
     """
     docs = model.doc()
-    docs['bounds'] = docs['Unit'].apply(_get_bounds)
-    docs['Min'] = docs['bounds'].apply(lambda x: float(x[0].replace('?', '-inf')))
-    docs['Max'] = docs['bounds'].apply(lambda x: float(x[1].replace('?', '+inf')))
+    # docs['bounds'] = docs['Unit'].apply(_get_bounds)
+    # docs['Min'] = docs['bounds'].apply(lambda x: float(x[0].replace('?', '-inf')))
+    # docs['Max'] = docs['bounds'].apply(lambda x: float(x[1].replace('?', '+inf')))
+    docs['bounds'] = docs['Lims'].apply(_get_bounds)
+    docs['Min'] = docs['bounds'].apply(lambda x: float(_set_bounds(x[0], "Min")))
+    docs['Max'] = docs['bounds'].apply(lambda x: float(_set_bounds(x[1], "Max")))
 
     collector = []
     for i, row in docs.iterrows():
