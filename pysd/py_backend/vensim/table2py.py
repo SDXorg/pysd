@@ -75,6 +75,6 @@ def read_tabular(table_file, sheetname='Sheet1'):
                 "\t~\t %(Comment)s \n\t|\n\n" % element
             )
 
-        outfile.write(r'\\\---/// Sketch information - this is where sketch stuff would go.')
+        outfile.write(u'\\\---/// Sketch information - this is where sketch stuff would go.')
 
     return read_vensim(mdl_file)
