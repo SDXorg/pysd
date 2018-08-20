@@ -95,7 +95,6 @@ def assert_frames_close(actual, expected, **kwargs):
 
 
 def assert_allclose(x, y, rtol=1.e-5, atol=1.e-5):
-    print(np.less_equal(abs(x - y), atol + rtol * abs(y)))
     assert np.all(np.less_equal(abs(x - y), atol + rtol * abs(y)))
 
 
