@@ -47,7 +47,7 @@ git clone --recursive https://github.com/JamesPHoughton/pysd.git
 
 ### Extensions
 
-You can use PySD in [R](https://www.r-project.org/) via the [PySD2R](https://github.com/JimDuggan/pysd2r) package.
+You can use PySD in [R](https://www.r-project.org/) via the [PySD2R](https://github.com/JimDuggan/pysd2r) package, also available on [cran](https://CRAN.R-project.org/package=pysd2r).
 
 ### Contributors
 
