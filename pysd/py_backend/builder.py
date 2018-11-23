@@ -154,11 +154,11 @@ def build_element(element, subscript_dict):
     element['doc'] = element['doc'].replace('\\', '\n    ').encode('unicode-escape')
 
     if 'unit' in element:
-        element['unit'] = element['unit'].encode('utf8')
+        element['unit'] = element['unit']
     if 'real_name' in element:
-        element['real_name'] = element['real_name'].encode('utf8')
+        element['real_name'] = element['real_name']
     if 'eqn' in element:
-        element['eqn'] = element['eqn'].encode('utf8')
+        element['eqn'] = element['eqn']
     
     if element['kind'] == 'stateful':
         func = '''
