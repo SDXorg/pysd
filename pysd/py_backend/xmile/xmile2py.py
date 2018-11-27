@@ -329,9 +329,8 @@ def translate_xmile(xmile_file):
     })
 
     file_name, file_extension = os.path.splitext(xmile_file)
-    base_dir = os.path.dirname(xmile_file)
 
-    outfile_name = base_dir + os.path.sep + file_name + '.py'
+    outfile_name = file_name + '.py'
 
     builder.build(elements=model_elements,
                   subscript_dict={},
