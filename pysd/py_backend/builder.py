@@ -150,8 +150,16 @@ def build_element(element, subscript_dict):
                     'ulines': '-' * len(element['real_name']),
                     'contents': contents.replace('\n',
                                                  '\n' + ' ' * indent)})  # indent lines 2 onward
-    element['doc'] = element['doc'].replace('\\', '\n    ')
+    
+    element['doc'] = element['doc'].replace('\\', '\n    ').encode('unicode-escape')
 
+    if 'unit' in element:
+        element['unit'] = element['unit'].encode('unicode-escape')
+    if 'real_name' in element:
+        element['real_name'] = element['real_name'].encode('unicode-escape')
+    if 'eqn' in element:
+        element['eqn'] = element['eqn'].encode('unicode-escape')
+    
     if element['kind'] == 'stateful':
         func = '''
     %(py_name)s = %(py_expr)s

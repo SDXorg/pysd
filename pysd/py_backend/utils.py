@@ -262,7 +262,7 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
 
     if convert == 'hex':
         # Convert invalid characters to hex. Note: \p{l} designates all Unicode letter characters (any language),
-        # \p{m} designates all mark symbols (e.g., vowel marks in Indian scrips, such as the final ે in નમસ્તે)
+        # \p{m} designates all mark symbols (e.g., vowel marks in Indian scrips, such as the final)
         # and \p{n} designates all numbers. We allow any of these to be present in the regex.
         s = ''.join([c.encode("hex") if re.findall('[^\p{l}\p{m}\p{n}_]', c) else c for c in s])
 
@@ -399,3 +399,14 @@ def visit_addresses(frame, return_addresses):
             outdict[real_name] = frame[pyname]
 
     return outdict
+
+
+def get_value_by_insensitive_key_or_value(key, dict):
+    lower_key = key.lower()
+    for real_key, real_value in dict.items():
+        if real_key.lower() == lower_key:
+            return dict[real_key]
+        if real_value.lower() == lower_key:
+            return real_value
+
+    return None

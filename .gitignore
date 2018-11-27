@@ -6,3 +6,4 @@ build/
 pysd.egg*
 
 .idea/*
+docs/_build/*
