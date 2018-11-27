@@ -11,6 +11,7 @@ from .SMILE2Py import SMILEParser
 from lxml import etree
 from ...py_backend import builder, utils
 
+import os.path
 import numpy as np
 
 def translate_xmile(xmile_file):
@@ -327,7 +328,10 @@ def translate_xmile(xmile_file):
         'arguments': '',
     })
 
-    outfile_name = xmile_file.replace('.xmile', '.py')
+    file_name, file_extension = os.path.splitext(xmile_file)
+    base_dir = os.path.dirname(xmile_file)
+
+    outfile_name = base_dir + os.path.sep + file_name + '.py'
 
     builder.build(elements=model_elements,
                   subscript_dict={},
