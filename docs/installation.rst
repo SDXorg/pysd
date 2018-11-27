@@ -31,7 +31,7 @@ In the source directory use the command
 
 Required Dependencies
 ---------------------
-PySD is built on python 2.7, and may not work as advertized on 3.x.
+PySD was originally built on python 2.7, but will work with 3.x.
 
 PySD calls on the core Python data analytics stack, and a third party parsing library:
 
@@ -63,7 +63,5 @@ These modules can be installed using pip with syntax similar to the above.
 
 Additional Resources
 --------------------
-The PySD Cookbook contains a recipe on
-:doc:`pysdcookbook:Installation_and_Setup` that can help you get set up
-with both python and PySD.
+The `PySD Cookbook <https://github.com/JamesPHoughton/PySD-Cookbook>`_ contains recipes that can help you get set up with PySD.
 

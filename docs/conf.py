@@ -35,7 +35,8 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 print os.path.abspath('../')
 sys.path.insert(0, os.path.abspath('../')) #this *should* be adding to the beginning...
-
+sys.path.insert(0, os.path.abspath('../pysd/'))
+sys.path.insert(0, os.path.abspath('../pysd/py_backend/'))
 
 # Build the translated functions file
 #from pysd import vensim2py
@@ -169,7 +170,7 @@ todo_include_todos = True
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+# html_static_path = ['_static']
 
 # Add any extra paths that contain custom files (such as robots.txt or
 # .htaccess) here, relative to this directory. These files are copied
