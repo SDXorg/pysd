@@ -81,7 +81,7 @@ def assert_frames_close(actual, expected, **kwargs):
     assert set(expected.columns) == set(actual.columns), \
         'test set columns must be equal to those in actual/observed set.'
 
-    assert (expected.index.values == actual.index.values).all(), \
+    assert np.all(np.equal(expected.index.values, actual.index.values)), \
         'test set and actual set must share a common index' \
         'instead found' + expected.index.values + 'vs' + actual.index.values
 
@@ -91,7 +91,9 @@ def assert_frames_close(actual, expected, **kwargs):
                             actual[col].values,
                             **kwargs)
         except AssertionError as e:
-            raise AssertionError('Column: ' + str(col) + ' is not close.')
+            assertion_details = 'Expected values: ' + np.array2string(expected[col].values, precision=2, separator=', ') + \
+                '\nActual values:   ' + np.array2string(actual[col].values, precision=2, separator=',', suppress_small=True)
+            raise AssertionError('Column: ' + str(col) + ' is not close.\n' + assertion_details)
 
 
 def assert_allclose(x, y, rtol=1.e-5, atol=1.e-5):
