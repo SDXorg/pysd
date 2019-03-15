@@ -519,14 +519,21 @@ class Macro(Stateful):
 
 
 class Time(object):
-    def __init__(self):
-        self._t = None
+    def __init__(self, t=None, dt=None):
+        self._t = t
+        self._step = dt
         self.stage = None
 
     def __call__(self):
         return self._t
 
+    def step(self):
+        return self._step
+
     def update(self, value):
+        if self._t is not None:
+            self._step = value - self._t
+
         self._t = value
 
 
@@ -889,13 +896,13 @@ def pulse_magnitude(time, magnitude, start, repeat_time=0):
     t = time()
     small = 1e-6  # What is considered zero according to Vensim Help
     if repeat_time <= small:
-        if abs(t - start) < time_step:
-            return magnitude * time_step
+        if abs(t - start) < time.step():
+            return magnitude * time.step()
         else:
             return 0
     else:
-        if abs((t - start) % repeat_time) < time_step:
-            return magnitude * time_step
+        if abs((t - start) % repeat_time) < time.step():
+            return magnitude * time.step()
         else:
             return 0
 

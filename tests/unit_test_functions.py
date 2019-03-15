@@ -61,6 +61,37 @@ class TestInputFunctions(unittest.TestCase):
         # after train
         self.assertEqual(functions.pulse_train(lambda: 15, 1, 3, 5, 13), 0)
 
+    def test_pulse_magnitude(self):
+        from pysd import functions
+
+        # Pulse function with repeat time
+        # before first impulse
+        self.assertEqual(functions.pulse_magnitude(functions.Time(0, 1), 10, 2, 5), 0)
+        # first impulse
+        self.assertEqual(functions.pulse_magnitude(functions.Time(2, 1), 10, 2, 5), 10)
+        # after first impulse and before second
+        self.assertEqual(functions.pulse_magnitude(functions.Time(4, 1), 10, 2, 5), 0)
+        # second impulse
+        self.assertEqual(functions.pulse_magnitude(functions.Time(7, 1), 10, 2, 5), 10)
+        # after second and before third impulse
+        self.assertEqual(functions.pulse_magnitude(functions.Time(9, 1), 10, 2, 5), 0)
+        # third impulse
+        self.assertEqual(functions.pulse_magnitude(functions.Time(12, 1), 10, 2, 5), 10)
+        # after third impulse
+        self.assertEqual(functions.pulse_magnitude(functions.Time(14, 1), 10, 2, 5), 0)
+
+        # Pulse function without repeat time
+        # before first impulse
+        self.assertEqual(functions.pulse_magnitude(functions.Time(0, 1), 10, 2), 0)
+        # first impulse
+        self.assertEqual(functions.pulse_magnitude(functions.Time(2, 1), 10, 2), 10)
+        # after first impulse and before second
+        self.assertEqual(functions.pulse_magnitude(functions.Time(4, 1), 10, 2), 0)
+        # second impulse
+        self.assertEqual(functions.pulse_magnitude(functions.Time(7, 1), 10, 2), 0)
+        # after second and before third impulse
+        self.assertEqual(functions.pulse_magnitude(functions.Time(9, 1), 10, 2), 0)
+
     def test_xidz(self):
         from pysd import functions
         self.assertEqual(functions.xidz(1, -0.00000001, 5), 5)
