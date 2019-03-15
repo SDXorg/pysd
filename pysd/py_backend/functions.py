@@ -273,7 +273,7 @@ class Macro(Stateful):
     execution.
     """
 
-    def __init__(self, py_model_file, params=None, return_func=None, time=None):
+    def __init__(self, py_model_file, params=None, return_func=None, time=None, time_initialization=None):
         """
         The model object will be created with components drawn from a translated python
         model file.
@@ -290,6 +290,7 @@ class Macro(Stateful):
         """
         super(Macro, self).__init__()
         self.time = time
+        self.time_initialization = time_initialization
 
         # need a unique identifier for the imported module.
         module_name = os.path.splitext(py_model_file)[0] + str(random.randint(0, 1000000))
@@ -327,6 +328,13 @@ class Macro(Stateful):
         In this case, just skip initializing `Stock A` for now, and
         go on to the other state initializations. Then come back to it and try again.
         """
+
+        # Initialize time
+        if self.time is None:
+            if self.time_initialization is None:
+                self.time = Time()
+            else:
+                self.time = self.time_initialization()
 
         # if self.time is None:
         #     self.time = time
@@ -689,13 +697,14 @@ class Model(Macro):
         parsed_expr = []
 
         for key, value in self.components._namespace.items():
-            sig = signature(getattr(self.components, value))
-            # The `*args` reference handles the py2.7 decorator.
-            if len(set(sig.parameters) - {'args'}) == 0:
-                expr = self.components._namespace[key]
-                if not expr in parsed_expr:
-                    return_columns.append(key)
-                    parsed_expr.append(expr)
+            if hasattr(self.components, value):
+                sig = signature(getattr(self.components, value))
+                # The `*args` reference handles the py2.7 decorator.
+                if len(set(sig.parameters) - {'args'}) == 0:
+                    expr = self.components._namespace[key]
+                    if not expr in parsed_expr:
+                        return_columns.append(key)
+                        parsed_expr.append(expr)
 
         return return_columns
 

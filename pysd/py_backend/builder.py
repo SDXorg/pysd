@@ -576,7 +576,7 @@ def add_macro(macro_name, filename, arg_names, arg_vals):
             [utils.make_python_identifier(f)[0] for f in arg_vals]),
         'real_name': 'Macro Instantiation of ' + macro_name,
         'doc': 'Instantiates the Macro',
-        'py_expr': "functions.Macro('%s', %s, '%s', __data['time'])" % (filename, func_args, macro_name),
+        'py_expr': "functions.Macro('%s', %s, '%s', time_initialization=lambda: __data['time'])" % (filename, func_args, macro_name),
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',

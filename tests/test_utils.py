@@ -103,7 +103,6 @@ def assert_allclose(x, y, rtol=1.e-5, atol=1.e-5):
 def detect_encoding(file):
     detector = UniversalDetector()
     for line in open(file, 'rb').readlines():
-        print(line)
         detector.feed(line)
         if detector.done: break
     detector.close()
