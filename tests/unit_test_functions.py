@@ -8,91 +8,98 @@ class TestInputFunctions(unittest.TestCase):
         """Test functions.ramp"""
         from pysd import functions
 
-        functions.time = lambda: 14
-        self.assertEqual(functions.ramp(.5, 10, 18), 2)
+        self.assertEqual(functions.ramp(lambda: 14, .5, 10, 18), 2)
 
-        functions.time = lambda: 4
-        self.assertEqual(functions.ramp(.5, 10, 18), 0)
+        self.assertEqual(functions.ramp(lambda: 4, .5, 10, 18), 0)
 
-        functions.time = lambda: 24
-        self.assertEqual(functions.ramp(.5, 10, 18), 4)
+        self.assertEqual(functions.ramp(lambda: 24, .5, 10, 18), 4)
 
     def test_step(self):
         from pysd import functions
 
-        functions.time = lambda: 5
-        self.assertEqual(functions.step(1, 10), 0)
+        self.assertEqual(functions.step(lambda: 5, 1, 10), 0)
 
-        functions.time = lambda: 15
-        self.assertEqual(functions.step(1, 10), 1)
+        self.assertEqual(functions.step(lambda: 15, 1, 10), 1)
 
-        functions.time = lambda: 10
-        self.assertEqual(functions.step(1, 10), 1)
+        self.assertEqual(functions.step(lambda: 10, 1, 10), 1)
 
     def test_pulse(self):
         from pysd import functions
 
-        functions.time = lambda: 0
-        self.assertEqual(functions.pulse(1, 3), 0)
+        self.assertEqual(functions.pulse(lambda: 0, 1, 3), 0)
 
-        functions.time = lambda: 1
-        self.assertEqual(functions.pulse(1, 3), 1)
+        self.assertEqual(functions.pulse(lambda: 1, 1, 3), 1)
 
-        functions.time = lambda: 2
-        self.assertEqual(functions.pulse(1, 3), 1)
+        self.assertEqual(functions.pulse(lambda: 2, 1, 3), 1)
 
-        functions.time = lambda: 4
-        self.assertEqual(functions.pulse(1, 3), 0)
+        self.assertEqual(functions.pulse(lambda: 4, 1, 3), 0)
 
-        functions.time = lambda: 5
-        self.assertEqual(functions.pulse(1, 3), 0)
+        self.assertEqual(functions.pulse(lambda: 5, 1, 3), 0)
 
     def test_pulse_chain(self):
         from pysd import functions
         # before train starts
-        functions.time = lambda: 0
-        self.assertEqual(functions.pulse_train(1, 3, 5, 12), 0)
+        self.assertEqual(functions.pulse_train(lambda: 0, 1, 3, 5, 12), 0)
         # on train start
-        functions.time = lambda: 1
-        self.assertEqual(functions.pulse_train(1, 3, 5, 12), 1)
+        self.assertEqual(functions.pulse_train(lambda: 1, 1, 3, 5, 12), 1)
         # within first pulse
-        functions.time = lambda: 2
-        self.assertEqual(functions.pulse_train(1, 3, 5, 12), 1)
+        self.assertEqual(functions.pulse_train(lambda: 2, 1, 3, 5, 12), 1)
         # end of first pulse
-        functions.time = lambda: 4
-        self.assertEqual(functions.pulse_train(1, 3, 5, 12), 0)
+        self.assertEqual(functions.pulse_train(lambda: 4, 1, 3, 5, 12), 0)
         # after first pulse before second
-        functions.time = lambda: 5
-        self.assertEqual(functions.pulse_train(1, 3, 5, 12), 0)
+        self.assertEqual(functions.pulse_train(lambda: 5, 1, 3, 5, 12), 0)
         # on start of second pulse
-        functions.time = lambda: 6
-        self.assertEqual(functions.pulse_train(1, 3, 5, 12), 1)
+        self.assertEqual(functions.pulse_train(lambda: 6, 1, 3, 5, 12), 1)
         # within second pulse
-        functions.time = lambda: 7
-        self.assertEqual(functions.pulse_train(1, 3, 5, 12), 1)
+        self.assertEqual(functions.pulse_train(lambda: 7, 1, 3, 5, 12), 1)
         # after second pulse
-        functions.time = lambda: 10
-        self.assertEqual(functions.pulse_train(1, 3, 5, 12), 0)
+        self.assertEqual(functions.pulse_train(lambda: 10, 1, 3, 5, 12), 0)
         # on third pulse
-        functions.time = lambda: 11
-        self.assertEqual(functions.pulse_train(1, 3, 5, 12), 1)
+        self.assertEqual(functions.pulse_train(lambda: 11, 1, 3, 5, 12), 1)
         # on train end
-        functions.time = lambda: 12
-        self.assertEqual(functions.pulse_train(1, 3, 5, 12), 0)
+        self.assertEqual(functions.pulse_train(lambda: 12, 1, 3, 5, 12), 0)
         # after train
-        functions.time = lambda: 15
-        self.assertEqual(functions.pulse_train(1, 3, 5, 13), 0)
+        self.assertEqual(functions.pulse_train(lambda: 15, 1, 3, 5, 13), 0)
+
+    def test_pulse_magnitude(self):
+        from pysd import functions
+
+        # Pulse function with repeat time
+        # before first impulse
+        self.assertEqual(functions.pulse_magnitude(functions.Time(0, 1), 10, 2, 5), 0)
+        # first impulse
+        self.assertEqual(functions.pulse_magnitude(functions.Time(2, 1), 10, 2, 5), 10)
+        # after first impulse and before second
+        self.assertEqual(functions.pulse_magnitude(functions.Time(4, 1), 10, 2, 5), 0)
+        # second impulse
+        self.assertEqual(functions.pulse_magnitude(functions.Time(7, 1), 10, 2, 5), 10)
+        # after second and before third impulse
+        self.assertEqual(functions.pulse_magnitude(functions.Time(9, 1), 10, 2, 5), 0)
+        # third impulse
+        self.assertEqual(functions.pulse_magnitude(functions.Time(12, 1), 10, 2, 5), 10)
+        # after third impulse
+        self.assertEqual(functions.pulse_magnitude(functions.Time(14, 1), 10, 2, 5), 0)
+
+        # Pulse function without repeat time
+        # before first impulse
+        self.assertEqual(functions.pulse_magnitude(functions.Time(0, 1), 10, 2), 0)
+        # first impulse
+        self.assertEqual(functions.pulse_magnitude(functions.Time(2, 1), 10, 2), 10)
+        # after first impulse and before second
+        self.assertEqual(functions.pulse_magnitude(functions.Time(4, 1), 10, 2), 0)
+        # second impulse
+        self.assertEqual(functions.pulse_magnitude(functions.Time(7, 1), 10, 2), 0)
+        # after second and before third impulse
+        self.assertEqual(functions.pulse_magnitude(functions.Time(9, 1), 10, 2), 0)
 
     def test_xidz(self):
         from pysd import functions
-        # functions.time = lambda: 5 ## any time will and should do
         self.assertEqual(functions.xidz(1, -0.00000001, 5), 5)
         self.assertEqual(functions.xidz(1, 0, 5), 5)
         self.assertEqual(functions.xidz(1, 8, 5), 0.125)
 
     def test_zidz(self):
         from pysd import functions
-        # functions.time = lambda: 5 ## any time will and should do
         self.assertEqual(functions.zidz(1, -0.00000001), 0)
         self.assertEqual(functions.zidz(1, 0), 0)
         self.assertEqual(functions.zidz(1, 8), 0.125)

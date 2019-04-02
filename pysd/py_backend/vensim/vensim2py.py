@@ -359,8 +359,7 @@ functions = {
     "sqrt": "np.sqrt",
     "tan": "np.tan",
     "lognormal": "np.random.lognormal",
-    "random normal":
-        "functions.bounded_normal",
+    "random normal": "functions.bounded_normal",
     "poisson": "np.random.poisson",
     "ln": "np.log",
     "log": "functions.log",
@@ -371,14 +370,54 @@ functions = {
     "arcsin": "np.arcsin",
     "arctan": "np.arctan",
     "if then else": "functions.if_then_else",
-    "step": "functions.step",
+    "step": {
+        "name": "functions.step",
+        "parameters": [
+            {"name": 'time', "type": 'time'},
+            {"name": 'value'},
+            {"name": 'tstep'}
+        ]
+    },
     "modulo": "np.mod",
-    "pulse": "functions.pulse",
-    "pulse train": "functions.pulse_train",
-    "ramp": "functions.ramp",
+    "pulse": {
+        "name": "functions.pulse",
+        "parameters": [
+            {"name": 'time', "type": 'time'},
+            {"name": 'start'},
+            {"name": "duration"}
+        ]
+    },
+    # time, start, duration, repeat_time, end
+    "pulse train": {
+        "name": "functions.pulse_train",
+        "parameters": [
+            {"name": 'time', "type": 'time'},
+            {"name": 'start'},
+            {"name": 'duration'},
+            {"name": 'repeat_time'},
+            {"name": 'end'}
+        ]
+    },
+    "ramp": {
+        "name": "functions.ramp",
+        "parameters": [
+            {"name": 'time', "type": 'time'},
+            {"name": 'slope'},
+            {"name": 'start'},
+            {"name": 'finish', "optional": True}
+        ]
+    },
     "min": "np.minimum",
     "max": "np.maximum",
-    "active initial": "functions.active_initial",
+    # time, expr, init_val
+    "active initial": {
+        "name": "functions.active_initial",
+        "parameters": [
+            {"name": 'time', "type": 'time'},
+            {"name": 'expr', "type": 'lambda'},
+            {"name": 'init_val'}
+        ]
+    },
     "xidz": "functions.xidz",
     "zidz": "functions.zidz",
     "game": "",  # In the future, may have an actual `functions.game` pass through
@@ -649,9 +688,11 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             self.translation = s
             return s
 
-        def visit_func(self, n, vc):
+        def visit_call(self, n, vc):
             self.kind = 'component'
-            return functions[n.text.lower()]
+            function_name = vc[0].lower()
+            arguments = [e.strip() for e in vc[4].split(",")]
+            return builder.build_function_call(functions[function_name], arguments)
 
         def visit_in_oper(self, n, vc):
             return in_ops[n.text.lower()]

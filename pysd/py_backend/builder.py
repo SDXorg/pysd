@@ -71,6 +71,18 @@ def build(elements, subscript_dict, namespace, outfile_name):
 
     __pysd_version__ = "%(version)s"
     
+    __data = {
+        'scope': None,
+        'time': lambda: 0
+    }
+
+    def _init_outer_references(data):
+        for key in data:
+            __data[key] = data[key]
+    
+    def time():
+        return __data['time']()
+    
     %(functions)s
 
     ''' % {'subscript_dict': repr(subscript_dict),
@@ -309,7 +321,7 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
 
     # describe the stateful object
     stateful = {
-        'py_name': 'integ_%s' % identifier,
+        'py_name': '_integ_%s' % identifier,
         'real_name': 'Representation of  %s' % identifier,
         'doc': 'Integrates Expression %s' % expression,
         'py_expr': stateful_py_expr,
@@ -369,7 +381,7 @@ def add_n_delay(delay_input, delay_time, initial_value, order, subs, subscript_d
     # that delay the output by different amounts, they'll overwrite the original function...
 
     stateful = {
-        'py_name': utils.make_python_identifier('delay_%s_%s_%s_%s' % (delay_input,
+        'py_name': utils.make_python_identifier('_delay_%s_%s_%s_%s' % (delay_input,
                                                                        delay_time,
                                                                        initial_value,
                                                                        order))[0],
@@ -429,7 +441,7 @@ def add_n_smooth(smooth_input, smooth_time, initial_value, order, subs, subscrip
         """
 
     stateful = {
-        'py_name': utils.make_python_identifier('smooth_%s_%s_%s_%s' % (smooth_input,
+        'py_name': utils.make_python_identifier('_smooth_%s_%s_%s_%s' % (smooth_input,
                                                                         smooth_time,
                                                                         initial_value,
                                                                         order))[0],
@@ -477,7 +489,7 @@ def add_n_trend(trend_input, average_time, initial_trend, subs, subscript_dict):
         """
 
     stateful = {
-        'py_name': utils.make_python_identifier('trend_%s_%s_%s' % (trend_input,
+        'py_name': utils.make_python_identifier('_trend_%s_%s_%s' % (trend_input,
                                                                     average_time,
                                                                     initial_trend))[0],
         'real_name': 'trend of %s' % trend_input,
@@ -516,7 +528,7 @@ def add_initial(initial_input):
 
     """
     stateful = {
-        'py_name': utils.make_python_identifier('initial_%s' % initial_input)[0],
+        'py_name': utils.make_python_identifier('_initial_%s' % initial_input)[0],
         'real_name': 'Smooth of %s' % initial_input,
         'doc': 'Returns the value taken on during the initialization phase',
         'py_expr': 'functions.Initial(lambda: %s)' % (
@@ -560,11 +572,11 @@ def add_macro(macro_name, filename, arg_names, arg_vals):
                                       zip(arg_names, arg_vals)])
 
     stateful = {
-        'py_name': 'macro_' + macro_name + '_' + '_'.join(
+        'py_name': '_macro_' + macro_name + '_' + '_'.join(
             [utils.make_python_identifier(f)[0] for f in arg_vals]),
         'real_name': 'Macro Instantiation of ' + macro_name,
         'doc': 'Instantiates the Macro',
-        'py_expr': "functions.Macro('%s', %s, '%s')" % (filename, func_args, macro_name),
+        'py_expr': "functions.Macro('%s', %s, '%s', time_initialization=lambda: __data['time'])" % (filename, func_args, macro_name),
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',
@@ -588,3 +600,56 @@ def add_incomplete(var_name, dependencies):
 
     # first arg is `self` reference
     return "functions.incomplete(%s)" % ', '.join(dependencies[1:]), []
+
+
+def build_function_call(function_def, user_arguments):
+    """
+
+    Parameters
+    ----------
+    function_def: function definition map with following keys
+        - name: name of the function
+        - parameters: list with description of all parameters of this function
+            - name
+            - optional?
+            - type: [
+                "expression", - provide converted expression as parameter for runtime evaluating before the method call
+                "lambda",     - provide lambda expression as parameter for delayed runtime evaluation in the method call
+                "time",       - provide access to current instance of time object
+                "scope"       - provide access to current instance of scope object (instance of Macro object)
+            ]
+    user_arguments: list of arguments provided from model
+
+    Returns
+    -------
+
+    """
+    if isinstance(function_def, str):
+        return function_def + "(" + ",".join(user_arguments) + ")"
+
+    if "parameters" in function_def:
+        parameters = function_def["parameters"]
+        arguments = []
+        argument_idx = 0
+        for parameter_idx in range(len(parameters)):
+            parameter_def = parameters[parameter_idx]
+            is_optional = parameter_def["optional"] if "optional" in parameter_def else False
+            if argument_idx >= len(user_arguments) and is_optional:
+                break
+
+            parameter_type = parameter_def["type"] if "type" in parameter_def else "expression"
+
+            user_argument = user_arguments[argument_idx]
+            if parameter_type in ["expression", "lambda"]:
+                argument_idx += 1
+
+            arguments.append({
+                "expression": user_argument,
+                "lambda": "lambda: (" + user_argument + ")",
+                "time": "__data['time']",
+                "scope": "__data['scope']"
+            }[parameter_type])
+
+        return function_def['name'] + "(" + ", ".join(arguments) + ")"
+
+    return function_def['name'] + "(" + ",".join(user_arguments) + ")"

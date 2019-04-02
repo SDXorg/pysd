@@ -69,12 +69,14 @@ def cache(horizon):
         def cached(*args):
             """Step wise cache function"""
             try:  # fails if cache is out of date or not instantiated
-                assert cached.cache_t == func.__globals__['time']()
+                data = func.__globals__['__data']
+                assert cached.cache_t == data['time']()
                 assert hasattr(cached, 'cache_val')
                 assert cached.cache_val is not None
             except (AssertionError, AttributeError):
                 cached.cache_val = func(*args)
-                cached.cache_t = func.__globals__['time']()
+                data = func.__globals__['__data']
+                cached.cache_t = data['time']()
             return cached.cache_val
 
         return cached
@@ -271,7 +273,7 @@ class Macro(Stateful):
     execution.
     """
 
-    def __init__(self, py_model_file, params=None, return_func=None):
+    def __init__(self, py_model_file, params=None, return_func=None, time=None, time_initialization=None):
         """
         The model object will be created with components drawn from a translated python
         model file.
@@ -287,13 +289,13 @@ class Macro(Stateful):
         return_func
         """
         super(Macro, self).__init__()
-        self.time = None
+        self.time = time
+        self.time_initialization = time_initialization
 
         # need a unique identifier for the imported module.
         module_name = os.path.splitext(py_model_file)[0] + str(random.randint(0, 1000000))
         self.components = imp.load_source(module_name,
                                           py_model_file)
-
         if params is not None:
             self.set_components(params)
 
@@ -306,6 +308,7 @@ class Macro(Stateful):
             self.return_func = lambda: 0
 
         self.py_model_file = py_model_file
+
 
     def __call__(self):
         return self.return_func()
@@ -325,10 +328,22 @@ class Macro(Stateful):
         In this case, just skip initializing `Stock A` for now, and
         go on to the other state initializations. Then come back to it and try again.
         """
+
+        # Initialize time
         if self.time is None:
-            self.time = time
-        self.components.time = self.time
-        self.components.functions.time = self.time  # rewrite functions so we don't need this
+            if self.time_initialization is None:
+                self.time = Time()
+            else:
+                self.time = self.time_initialization()
+
+        # if self.time is None:
+        #     self.time = time
+        # self.components.time = self.time
+        # self.components.functions.time = self.time  # rewrite functions so we don't need this
+        self.components._init_outer_references({
+            'scope': self,
+            'time': self.time
+        })
 
         remaining = set(self._stateful_elements)
 
@@ -393,7 +408,7 @@ class Macro(Stateful):
             if func_name is None:
                 raise NameError('%s is not recognized as a model component' % key)
 
-            if 'integ_' + func_name in dir(self.components):  # this won't handle other statefuls...
+            if '_integ_' + func_name in dir(self.components):  # this won't handle other statefuls...
                 warnings.warn("Replacing the equation of stock {} with params".format(key),
                               stacklevel=2)
 
@@ -403,7 +418,7 @@ class Macro(Stateful):
         """ Internal function for creating a timeseries model element """
         # this is only called if the set_component function recognizes a pandas series
         # Todo: raise a warning if extrapolating from the end of the series.
-        return lambda: np.interp(self.components.time(), series.index, series.values)
+        return lambda: np.interp(self.time(), series.index, series.values)
 
     def _constant_component(self, value):
         """ Internal function for creating a constant model element """
@@ -427,7 +442,7 @@ class Macro(Stateful):
             # TODO Implement map with reference between component and stateful element?
             component_name = utils.get_value_by_insensitive_key_or_value(key, self.components._namespace)
             if component_name is not None:
-                stateful_name = 'integ_%s' % component_name
+                stateful_name = '_integ_%s' % component_name
             else:
                 component_name = key
                 stateful_name = key
@@ -504,22 +519,28 @@ class Macro(Stateful):
 
 
 class Time(object):
-    def __init__(self):
-        self._t = None
+    def __init__(self, t=None, dt=None):
+        self._t = t
+        self._step = dt
         self.stage = None
 
     def __call__(self):
         return self._t
 
+    def step(self):
+        return self._step
+
     def update(self, value):
+        if self._t is not None:
+            self._step = value - self._t
+
         self._t = value
 
 
 class Model(Macro):
     def __init__(self, py_model_file):
         """ Sets up the python objects """
-        super(Model, self).__init__(py_model_file, None, None)
-        self.time = Time()
+        super(Model, self).__init__(py_model_file, None, None, Time())
         self.time.stage = 'Load'
         self.initialize()
         
@@ -683,13 +704,14 @@ class Model(Macro):
         parsed_expr = []
 
         for key, value in self.components._namespace.items():
-            sig = signature(getattr(self.components, value))
-            # The `*args` reference handles the py2.7 decorator.
-            if len(set(sig.parameters) - {'args'}) == 0:
-                expr = self.components._namespace[key]
-                if not expr in parsed_expr:
-                    return_columns.append(key)
-                    parsed_expr.append(expr)
+            if hasattr(self.components, value):
+                sig = signature(getattr(self.components, value))
+                # The `*args` reference handles the py2.7 decorator.
+                if len(set(sig.parameters) - {'args'}) == 0:
+                    expr = self.components._namespace[key]
+                    if not expr in parsed_expr:
+                        return_columns.append(key)
+                        parsed_expr.append(expr)
 
         return return_columns
 
@@ -778,12 +800,14 @@ class Model(Macro):
         return outputs
 
 
-def ramp(slope, start, finish=0):
+def ramp(time, slope, start, finish=0):
     """
     Implements vensim's and xmile's RAMP function
 
     Parameters
     ----------
+    time: function
+        The current time of modelling
     slope: float
         The slope of the ramp starting at zero at time start
     start: float
@@ -813,7 +837,7 @@ def ramp(slope, start, finish=0):
             return slope * (t - start)
 
 
-def step(value, tstep):
+def step(time, value, tstep):
     """"
     Implements vensim's STEP function
 
@@ -832,7 +856,7 @@ def step(value, tstep):
     return value if time() >= tstep else 0
 
 
-def pulse(start, duration):
+def pulse(time, start, duration):
     """ Implements vensim's PULSE function
 
     In range [-inf, start) returns 0
@@ -843,7 +867,7 @@ def pulse(start, duration):
     return 1 if start <= t < start + duration else 0
 
 
-def pulse_train(start, duration, repeat_time, end):
+def pulse_train(time, start, duration, repeat_time, end):
     """ Implements vensim's PULSE TRAIN function
 
     In range [-inf, start) returns 0
@@ -857,7 +881,7 @@ def pulse_train(start, duration, repeat_time, end):
         return 0
 
 
-def pulse_magnitude(magnitude, start, repeat_time=0):
+def pulse_magnitude(time, magnitude, start, repeat_time=0):
     """ Implements xmile's PULSE function
     
     PULSE:             Generate a one-DT wide pulse at the given time
@@ -872,13 +896,13 @@ def pulse_magnitude(magnitude, start, repeat_time=0):
     t = time()
     small = 1e-6  # What is considered zero according to Vensim Help
     if repeat_time <= small:
-        if abs(t - start) < time_step:
-            return magnitude * time_step
+        if abs(t - start) < time.step():
+            return magnitude * time.step()
         else:
             return 0
     else:
-        if abs((t - start) % repeat_time) < time_step:
-            return magnitude * time_step
+        if abs((t - start) % repeat_time) < time.step():
+            return magnitude * time.step()
         else:
             return 0
 
@@ -974,11 +998,13 @@ def zidz(numerator, denominator):
         return numerator * 1.0 / denominator
 
 
-def active_initial(expr, init_val):
+def active_initial(time, expr, init_val):
     """
     Implements vensim's ACTIVE INITIAL function
     Parameters
     ----------
+    time: function
+        The current time function
     expr
     init_val
 
@@ -989,7 +1015,7 @@ def active_initial(expr, init_val):
     if time.stage == 'Initialization':
         return init_val
     else:
-        return expr
+        return expr()
 
 
 def random_uniform(m, x, s):
