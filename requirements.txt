@@ -9,7 +9,10 @@ lxml
 xlwt
 funcsigs
 pydoe
+<<<<<<< HEAD
 scipy.stats
+=======
+>>>>>>> 299c876ab1c045379089601cd418b08ed3071e51
 -e git+https://github.com/behave/behave.git#egg=behave
 xlrd
 regex
