@@ -1,6 +1,15 @@
+"""
+This file is useful for autogenerating a number of test cases from the
+test-models subrepo. The problem is that it overwrites the existing
+set of integration tests, and will get rid of comments, skipped tests, etc.
+So, we probably don't want to acutally use itunless we're really serious
+about redoing the whole test suite.
+"""
+
 from __future__ import print_function
 
 run = False
+
 
 if run:
 

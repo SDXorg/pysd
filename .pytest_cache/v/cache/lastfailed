@@ -1,0 +1,19 @@
+{
+  "tests/test-models/tests/abs/test_abs.py::test_abs": true,
+  "tests/test-models/tests/exp/test_exp.py::test_exp": true,
+  "tests/test-models/tests/function_capitalization/test_function_capitalization.py::test_all_lower_abs": true,
+  "tests/test-models/tests/function_capitalization/test_function_capitalization.py::test_allcaps_abs": true,
+  "tests/test-models/tests/function_capitalization/test_function_capitalization.py::test_mixed_case_abs": true,
+  "tests/test-models/tests/input_functions/test_inputs.py::test_pulse": true,
+  "tests/test-models/tests/input_functions/test_inputs.py::test_pulse_train": true,
+  "tests/test-models/tests/input_functions/test_inputs.py::test_ramp": true,
+  "tests/test-models/tests/input_functions/test_inputs.py::test_step": true,
+  "tests/test-models/tests/ln/test_ln.py::test_ln": true,
+  "tests/test-models/tests/sqrt/test_sqrt.py::test_sqrt": true,
+  "tests/test-models/tests/trig/test_trig.py::test_arccos": true,
+  "tests/test-models/tests/trig/test_trig.py::test_arcsin": true,
+  "tests/test-models/tests/trig/test_trig.py::test_arctan": true,
+  "tests/test-models/tests/trig/test_trig.py::test_cos": true,
+  "tests/test-models/tests/trig/test_trig.py::test_sin": true,
+  "tests/test-models/tests/trig/test_trig.py::test_tan": true
+}

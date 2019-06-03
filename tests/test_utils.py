@@ -81,6 +81,9 @@ def assert_frames_close(actual, expected, **kwargs):
     assert set(expected.columns) == set(actual.columns), \
         'test set columns must be equal to those in actual/observed set.'
 
+    assert len(expected.index) == len(actual.index), \
+        'test set and actual set do not have same length indices'
+
     assert (expected.index.values == actual.index.values).all(), \
         'test set and actual set must share a common index' \
         'instead found' + expected.index.values + 'vs' + actual.index.values

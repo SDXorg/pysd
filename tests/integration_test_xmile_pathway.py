@@ -65,6 +65,7 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/delays/test_delays.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    @unittest.skip('Test model is incorrect, needs to be rewritten by hand, not auto-translated')
     def test_euler_step_vs_saveper(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner(
@@ -189,17 +190,20 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/macro_cross_reference/test_macro_cross_reference.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    @unittest.skip('no xmile')
     def test_macro_expression(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/macro_expression/test_macro_expression.xmile')
         assert_frames_close(output, canon, rtol=rtol)
 
+    @unittest.skip('no xmile')
     def test_macro_multi_expression(self):
         from .test_utils import runner, assert_frames_close
         output, canon = runner(
             'test-models/tests/macro_multi_expression/test_macro_multi_expression.xmile')
         assert_frames_close(output, canon, rtol=rtol)
 
+    @unittest.skip('no xmile')
     def test_macro_multi_macros(self):
         from .test_utils import runner, assert_frames_close
         output, canon = runner(
@@ -212,6 +216,7 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/macro_output/test_macro_output.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    @unittest.skip('no xmile')
     def test_macro_stock(self):
         from .test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/macro_stock/test_macro_stock.xmile')
@@ -257,11 +262,13 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/smooth/test_smooth.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    @unittest.skip('This test incorrectly translated from Vensim')
     def test_smooth_and_stock(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/smooth_and_stock/test_smooth_and_stock.xmile')
         assert_frames_close(output, canon, rtol=rtol)
 
+    @unittest.skip('https://github.com/JamesPHoughton/pysd/issues/124')
     def test_special_characters(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner(
@@ -273,12 +280,14 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/sqrt/test_sqrt.xmile')
         assert_frames_close(output, canon, rtol=rtol)
 
+    @unittest.skip('no xmile')
     def test_subscript_multiples(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner(
             'test-models/tests/subscript multiples/test_multiple_subscripts.xmile')
         assert_frames_close(output, canon, rtol=rtol)
 
+    @unittest.skip('no xmile')
     def test_subscript_1d_arrays(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner(
@@ -316,6 +325,7 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscript_aggregation/test_subscript_aggregation.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    @unittest.skip('no xmile')
     def test_subscript_constant_call(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner(
@@ -370,6 +380,7 @@ class TestIntegrationExamples(unittest.TestCase):
             'test-models/tests/subscript_subranges/test_subscript_subrange.xmile')
         assert_frames_close(output, canon, rtol=rtol)
 
+    @unittest.skip('no xmile')
     def test_subscript_subranges_equal(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner(
@@ -382,6 +393,7 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscript_switching/subscript_switching.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    @unittest.skip('no xmile')
     def test_subscript_updimensioning(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner(
