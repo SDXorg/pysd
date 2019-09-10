@@ -230,6 +230,7 @@ def get_equation_components(equation_str):
         - *component* - normal model expression or constant
         - *lookup* - a lookup table
         - *subdef* - a subscript definition
+        - *data* -  a data variable
 
     Examples
     --------
@@ -244,14 +245,17 @@ def get_equation_components(equation_str):
     """
 
     component_structure_grammar = _include_common_grammar(r"""
-    entry = component / subscript_definition / lookup_definition
+    entry = component / test_definition / subscript_definition / lookup_definition / data_definition
     component = name _ subscriptlist? _ "=" _ expression
-    subscript_definition = name _ ":" _ subscript _ ("," _ subscript)*
+    subscript_definition = name _ ":" expression
+    data_definition = name _ subscriptlist? _ &keyword _ ":=" _ expression
     lookup_definition = name _ &"(" _ expression  # uses lookahead assertion to capture whole group
+    test_definition = name _ subscriptlist? _ &keyword _ expression
 
     name = basic_id / escape_group
     subscriptlist = '[' _ subscript _ ("," _ subscript)* _ ']'
     expression = ~r".*"  # expression could be anything, at this point.
+    keyword = ":" _ basic_id _ ":"
 
     subscript = basic_id / escape_group
     """)
@@ -269,6 +273,7 @@ def get_equation_components(equation_str):
             self.real_name = None
             self.expression = None
             self.kind = None
+            self.keyword = None
             self.visit(ast)
 
         def visit_subscript_definition(self, n, vc):
@@ -279,6 +284,12 @@ def get_equation_components(equation_str):
 
         def visit_component(self, n, vc):
             self.kind = 'component'
+
+        def visit_data_definition(self, n, vc):
+            self.kind = 'data'
+
+        def visit_keyword(self, n, vc):
+            self.keyword = n.text.strip()
 
         def visit_name(self, n, vc):
             (name,) = vc
@@ -302,7 +313,8 @@ def get_equation_components(equation_str):
     return {'real_name': parse_object.real_name,
             'subs': parse_object.subscripts,
             'expr': parse_object.expression,
-            'kind': parse_object.kind}
+            'kind': parse_object.kind,
+            'keyword': parse_object.keyword}
 
 
 def parse_units(units_str):
