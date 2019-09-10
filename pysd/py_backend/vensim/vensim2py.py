@@ -3,15 +3,18 @@ Translates vensim .mdl file to pieces needed by the builder module to write a py
 model. Everything that requires knowledge of vensim syntax should be in this file.
 """
 from __future__ import absolute_import
+
+import os
 import re
+import textwrap
+import warnings
+from io import open
+
+import numpy as np
 import parsimonious
+
 from ...py_backend import builder
 from ...py_backend import utils
-from io import open
-import textwrap
-import numpy as np
-import os
-import warnings
 
 
 def get_file_sections(file_str):
@@ -203,6 +206,7 @@ def _include_common_grammar(source_grammar):
     {common_grammar}
     """.format(source_grammar=source_grammar, common_grammar=common_grammar)
 
+
 def get_equation_components(equation_str):
     """
     Breaks down a string representing only the equation part of a model element.
@@ -239,7 +243,7 @@ def get_equation_components(equation_str):
 
     Notes
     -----
-    in this function we dont create python identifiers, we use real names.
+    in this function we don't create python identifiers, we use real names.
     This is so that when everything comes back together, we can manage
     any potential namespace conflicts properly
     """
@@ -496,9 +500,9 @@ builders = {
 
     "delay fixed": lambda element, subscript_dict, args: builder.add_n_delay(
         delay_input=args[0],
-        delay_time='round('+args[1]+' / time_step() ) * time_step()',
+        delay_time='round(' + args[1] + ' / time_step() ) * time_step()',
         initial_value=args[2],
-        order=args[1]+' / time_step()',
+        order=args[1] + ' / time_step()',
         subs=element['subs'],
         subscript_dict=subscript_dict
     ),
@@ -690,7 +694,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
         'builders': '|'.join(reversed(sorted(builders.keys(), key=len))),
         'macros': '|'.join(reversed(sorted(macro_names_list, key=len)))
     }
-    
+
     class ExpressionParser(parsimonious.NodeVisitor):
         # Todo: at some point, we could make the 'kind' identification recursive on expression,
         # so that if an expression is passed into a builder function, the information
