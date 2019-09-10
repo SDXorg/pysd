@@ -440,7 +440,13 @@ functions = {
     # vector functions
     "vmin": "np.min",
     "vmax": "np.max",
-    "prod": "np.prod"
+    "prod": "np.prod",
+
+    # data functions
+    "get xls data": "functions.get_xls_data",
+    "get direct data": "functions.get_direct_data",
+    "get xls constants": "functions.get_xls_constants",
+    "get xls lookups":  "functions.get_xls_lookups"
 }
 
 builders = {
