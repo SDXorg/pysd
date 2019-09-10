@@ -9,19 +9,21 @@ straightforward equivalent in python.
 from __future__ import division, absolute_import
 
 import imp
+import inspect
 import os
 import random
 import re
 import string
 import warnings
-from functools import wraps, reduce
+from functools import reduce
+from functools import wraps
 
 import numpy as np
 import pandas as _pd
 import xarray as xr
 from funcsigs import signature
 
-from pysd import utils
+from . import utils
 
 try:
     import scipy.stats as stats
@@ -541,11 +543,9 @@ class Macro(Stateful):
             else:
                 new_function = self._constant_component(value)
 
-            if key in self.components._namespace.keys():
-                func_name = self.components._namespace[key]
-            elif key in self.components._namespace.values():
-                func_name = key
-            else:
+            func_name = utils.get_value_by_insensitive_key_or_value(key, self.components._namespace)
+
+            if func_name is None:
                 raise NameError('%s is not recognized as a model component' % key)
 
             if '_integ_' + func_name in dir(self.components):  # this won't handle other statefuls...
@@ -580,13 +580,10 @@ class Macro(Stateful):
 
         for key, value in state.items():
             # TODO Implement map with reference between component and stateful element?
-            if key in self.components._namespace.keys():
-                component_name = self.components._namespace[key]
-                stateful_name = '_integ_%s' % self.components._namespace[key]
-            elif key in self.components._namespace.values():
-                component_name = key
-                stateful_name = '_integ_%s' % key
-            else:  # allow the user to specify the stateful object directly
+            component_name = utils.get_value_by_insensitive_key_or_value(key, self.components._namespace)
+            if component_name is not None:
+                stateful_name = '_integ_%s' % component_name
+            else:
                 component_name = key
                 stateful_name = key
 
@@ -744,6 +741,8 @@ class Model(Macro):
                 self.components.final_time() + self.components.saveper(),
                 self.components.saveper(), dtype=np.float64
             )
+        elif inspect.isclass(range) and isinstance(return_timestamps, range):
+            return_timestamps_array = np.array(return_timestamps, ndmin=1)
         elif isinstance(return_timestamps, (list, int, float, np.ndarray)):
             return_timestamps_array = np.array(return_timestamps, ndmin=1)
         elif isinstance(return_timestamps, _pd.Series):
@@ -1325,6 +1324,23 @@ def _num_to_col(num):
         num, d = divmod_excel(num)
         chars.append(string.ascii_uppercase[d - 1])
     return ''.join(reversed(chars)).lower()
+
+
+def get_xls_data(file, tab, time_row_col, cell):
+    """
+    Implements vensim's GET XLS DATA function.
+    """
+    data = _pd.read_excel(file, sheet_name=tab)
+    return data.to_numpy()
+
+
+def get_direct_data(file, tab, time_row_col, cell):
+    ext = os.path.splitext(file)[1]
+
+    if ext.lower() in ['.xls', '.xlsx']:
+        return get_xls_data(file, tab=tab, time_row_col=time_row_col, cell=cell)
+    else:
+        raise NotImplementedError
 
 
 def get_xls_data(file, tab, time_row_col, cell):
