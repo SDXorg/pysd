@@ -401,8 +401,7 @@ functions = {
     "sqrt": "np.sqrt",
     "tan": "np.tan",
     "lognormal": "np.random.lognormal",
-    "random normal":
-        "functions.bounded_normal",
+    "random normal": "functions.bounded_normal",
     "poisson": "np.random.poisson",
     "ln": "np.log",
     "log": "functions.log",
@@ -412,9 +411,6 @@ functions = {
     "arccos": "np.arccos",
     "arcsin": "np.arcsin",
     "arctan": "np.arctan",
-    "tanh": "np.tanh",
-    "sinh": "np.sinh",
-    "cosh": "np.cosh",
     "if then else": "functions.if_then_else",
     "step": {
         "name": "functions.step",
@@ -734,7 +730,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
     arguments = (expr _ ","? _)*
 
     reference = id _ subscript_list?
-    subscript_list = "[" _ ((sub_name / sub_element) "!"? _ ","? _)+ "]"
+    subscript_list = "[" _ ((sub_name / sub_element) _ ","? _)+ "]"
 
     array = (number _ ("," / ";")? _)+ !~r"."  # negative lookahead for anything other than an array
     number = ~r"\d+\.?\d*(e[+-]\d+)?"
