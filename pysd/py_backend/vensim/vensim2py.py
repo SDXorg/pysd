@@ -3,15 +3,19 @@ Translates vensim .mdl file to pieces needed by the builder module to write a py
 model. Everything that requires knowledge of vensim syntax should be in this file.
 """
 from __future__ import absolute_import
+
+import os
 import re
+import textwrap
+import warnings
+from io import open
+
+import numpy as np
 import parsimonious
+
+from .. import functions as funcs
 from ...py_backend import builder
 from ...py_backend import utils
-from io import open
-import textwrap
-import numpy as np
-import os
-import warnings
 
 
 def get_file_sections(file_str):
@@ -203,7 +207,8 @@ def _include_common_grammar(source_grammar):
     {common_grammar}
     """.format(source_grammar=source_grammar, common_grammar=common_grammar)
 
-def get_equation_components(equation_str):
+
+def get_equation_components(equation_str, root_path):
     """
     Breaks down a string representing only the equation part of a model element.
     Recognizes the various types of model elements that may exist, and identifies them.
@@ -212,6 +217,9 @@ def get_equation_components(equation_str):
     ----------
     equation_str : basestring
         the first section in each model element - the full equation.
+
+    root_path: basestring
+        the root path of the vensim file (necessary to resolve external data file paths)
 
     Returns
     -------
@@ -230,6 +238,7 @@ def get_equation_components(equation_str):
         - *component* - normal model expression or constant
         - *lookup* - a lookup table
         - *subdef* - a subscript definition
+        - *data* -  a data variable
 
     Examples
     --------
@@ -238,22 +247,29 @@ def get_equation_components(equation_str):
 
     Notes
     -----
-    in this function we dont create python identifiers, we use real names.
+    in this function we don't create python identifiers, we use real names.
     This is so that when everything comes back together, we can manage
     any potential namespace conflicts properly
     """
 
     component_structure_grammar = _include_common_grammar(r"""
-    entry = component / subscript_definition / lookup_definition
+    entry = component / data_definition / test_definition / subscript_definition / lookup_definition
     component = name _ subscriptlist? _ "=" _ expression
-    subscript_definition = name _ ":" _ subscript _ ("," _ subscript)*
+    subscript_definition = name _ ":" _ (imported_subscript / literal_subscript)
+    data_definition = name _ subscriptlist? _ keyword? _ ":=" _ expression
     lookup_definition = name _ &"(" _ expression  # uses lookahead assertion to capture whole group
+    test_definition = name _ subscriptlist? _ &keyword _ expression
 
     name = basic_id / escape_group
+    literal_subscript = subscript _ ("," _ subscript)*
+    imported_subscript = func _ "(" _ (string _ ","? _)* ")"
     subscriptlist = '[' _ subscript _ ("," _ subscript)* _ ']'
     expression = ~r".*"  # expression could be anything, at this point.
+    keyword = ":" _ basic_id _ ":"
 
     subscript = basic_id / escape_group
+    func = basic_id
+    string = "\'" ( "\\\'" / ~r"[^\']"IU )* "\'"
     """)
 
     # replace any amount of whitespace  with a single space
@@ -269,6 +285,7 @@ def get_equation_components(equation_str):
             self.real_name = None
             self.expression = None
             self.kind = None
+            self.keyword = None
             self.visit(ast)
 
         def visit_subscript_definition(self, n, vc):
@@ -279,6 +296,20 @@ def get_equation_components(equation_str):
 
         def visit_component(self, n, vc):
             self.kind = 'component'
+
+        def visit_data_definition(self, n, vc):
+            self.kind = 'data'
+
+        def visit_test_definition(self, n, vc):
+            self.kind = 'test'
+
+        def visit_keyword(self, n, vc):
+            self.keyword = n.text.strip()
+
+        def visit_imported_subscript(self, n, vc):
+            f_str = vc[0]
+            args_str = vc[4]  # todo: make this less fragile?
+            self.subscripts += get_external_data(f_str, args_str, root_path)
 
         def visit_name(self, n, vc):
             (name,) = vc
@@ -302,7 +333,16 @@ def get_equation_components(equation_str):
     return {'real_name': parse_object.real_name,
             'subs': parse_object.subscripts,
             'expr': parse_object.expression,
-            'kind': parse_object.kind}
+            'kind': parse_object.kind,
+            'keyword': parse_object.keyword}
+
+
+def get_external_data(func_str, args_str, root_path):
+    f = subscript_functions[func_str.lower()]
+    args = [x.strip().strip("\'") for x in args_str.split(',')]  # todo: make this less fragile?
+    if args[0][0] == '?':
+        args[0] = os.path.join(root_path, args[0][1:])
+    return f(*args)
 
 
 def parse_units(units_str):
@@ -359,7 +399,8 @@ functions = {
     "sqrt": "np.sqrt",
     "tan": "np.tan",
     "lognormal": "np.random.lognormal",
-    "random normal": "functions.bounded_normal",
+    "random normal":
+        "functions.bounded_normal",
     "poisson": "np.random.poisson",
     "ln": "np.log",
     "log": "functions.log",
@@ -369,6 +410,9 @@ functions = {
     "arccos": "np.arccos",
     "arcsin": "np.arcsin",
     "arctan": "np.arctan",
+    "tanh": "np.tanh",
+    "sinh": "np.sinh",
+    "cosh": "np.cosh",
     "if then else": "functions.if_then_else",
     "step": {
         "name": "functions.step",
@@ -425,8 +469,23 @@ functions = {
     # vector functions
     "vmin": "np.min",
     "vmax": "np.max",
-    "prod": "np.prod"
+    "prod": "np.prod",
+
 }
+
+subscript_functions = {
+    "get xls subscript": funcs.get_xls_subscript,
+    "get direct subscript": funcs.get_direct_subscript
+}
+
+data_functions = {
+    "get xls data": "functions.get_xls_data",
+    "get direct data": "functions.get_direct_data",
+    "get xls constants": "functions.get_xls_constants",
+    "get xls lookups": "functions.get_xls_lookups"
+}
+
+functions.update(data_functions)
 
 builders = {
     "integ": lambda element, subscript_dict, args: builder.add_stock(
@@ -475,9 +534,9 @@ builders = {
 
     "delay fixed": lambda element, subscript_dict, args: builder.add_n_delay(
         delay_input=args[0],
-        delay_time='round('+args[1]+' / time_step() ) * time_step()',
+        delay_time='round(' + args[1] + ' / time_step() ) * time_step()',
         initial_value=args[2],
-        order=args[1]+' / time_step()',
+        order=args[1] + ' / time_step()',
         subs=element['subs'],
         subscript_dict=subscript_dict
     ),
@@ -625,10 +684,10 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
 
     expression_grammar = r"""
     expr_type = array / expr / empty
-    expr = _ pre_oper? _ (lookup_def / build_call / macro_call / call / lookup_call / parens / number / reference) _ (in_oper _ expr)?
+    expr = _ pre_oper? _ (lookup_def / build_call / macro_call / call / lookup_call / parens / number / string / reference) _ (in_oper _ expr)?
 
     lookup_def = ~r"(WITH\ LOOKUP)"I _ "(" _ expr _ "," _ "(" _  ("[" ~r"[^\]]*" "]" _ ",")?  ( "(" _ expr _ "," _ expr _ ")" _ ","? _ )+ _ ")" _ ")"
-    lookup_call = id _ "(" _ (expr _ ","? _)* ")"  # these don't need their args parsed...
+    lookup_call = (id _ subscript_list?) _ "(" _ (expr _ ","? _)* ")"  # these don't need their args parsed...
     call = func _ "(" _ (expr _ ","? _)* ")"  # these don't need their args parsed...
     build_call = builder _ "(" _ arguments _ ")"
     macro_call = macro _ "(" _ arguments _ ")"
@@ -637,10 +696,11 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
     arguments = (expr _ ","? _)*
 
     reference = id _ subscript_list?
-    subscript_list = "[" _ ((sub_name / sub_element) _ ","? _)+ "]"
+    subscript_list = "[" _ ((sub_name / sub_element) "!"? _ ","? _)+ "]"
 
     array = (number _ ("," / ";")? _)+ !~r"."  # negative lookahead for anything other than an array
     number = ~r"\d+\.?\d*(e[+-]\d+)?"
+    string = "\'" ( "\\\'" / ~r"[^\']"IU )* "\'"
 
     id = ( basic_id / escape_group )
     basic_id = ~r"\w[\w\d_\s\']*"IU
@@ -668,7 +728,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
         'builders': '|'.join(reversed(sorted(builders.keys(), key=len))),
         'macros': '|'.join(reversed(sorted(macro_names_list, key=len)))
     }
-    
+
     class ExpressionParser(parsimonious.NodeVisitor):
         # Todo: at some point, we could make the 'kind' identification recursive on expression,
         # so that if an expression is passed into a builder function, the information
@@ -689,8 +749,9 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             return s
 
         def visit_call(self, n, vc):
-            self.kind = 'component'
             function_name = vc[0].lower()
+            if function_name not in data_functions:
+                self.kind = 'component'
             arguments = [e.strip() for e in vc[4].split(",")]
             return builder.build_function_call(functions[function_name], arguments)
 
@@ -845,14 +906,14 @@ def parse_lookup_expression(element):
             'arguments': 'x'}
 
 
-def translate_section(section, macro_list):
+def translate_section(section, macro_list, root_path):
     model_elements = get_model_elements(section['string'])
 
     # extract equation components
     model_docstring = ''
     for entry in model_elements:
         if entry['kind'] == 'entry':
-            entry.update(get_equation_components(entry['eqn']))
+            entry.update(get_equation_components(entry['eqn'], root_path))
         elif entry['kind'] == 'section':
             model_docstring += entry['doc']
 
@@ -880,7 +941,7 @@ def translate_section(section, macro_list):
 
     # Parse components to python syntax.
     for element in model_elements:
-        if element['kind'] == 'component' and 'py_expr' not in element:
+        if (element['kind'] == 'component' and 'py_expr' not in element) or element['kind'] == 'data':
             # Todo: if there is new structure, it should be added to the namespace...
             translation, new_structure = parse_general_expression(element,
                                                                   namespace=namespace,
@@ -893,7 +954,7 @@ def translate_section(section, macro_list):
             element.update(parse_lookup_expression(element))
 
     # send the pieces to be built
-    build_elements = [e for e in model_elements if e['kind'] not in ['subdef', 'section']]
+    build_elements = [e for e in model_elements if e['kind'] not in ['subdef', 'test', 'section']]
     builder.build(build_elements,
                   subscript_dict,
                   namespace,
@@ -924,6 +985,7 @@ def translate_vensim(mdl_file):
     #>>> translate_vensim('../../tests/test-models/tests/limits/test_limits.mdl')
 
     """
+    root_path = os.path.split(mdl_file)[0]
     with open(mdl_file, 'r', encoding='UTF-8') as in_file:
         text = in_file.read()
 
@@ -942,6 +1004,6 @@ def translate_vensim(mdl_file):
     macro_list = [s for s in file_sections if s['name'] is not '_main_']
 
     for section in file_sections:
-        translate_section(section, macro_list)
+        translate_section(section, macro_list, root_path)
 
     return outfile_name
