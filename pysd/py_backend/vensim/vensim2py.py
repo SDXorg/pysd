@@ -401,7 +401,8 @@ functions = {
     "sqrt": "np.sqrt",
     "tan": "np.tan",
     "lognormal": "np.random.lognormal",
-    "random normal": "functions.bounded_normal",
+    "random normal":
+        "functions.bounded_normal",
     "poisson": "np.random.poisson",
     "ln": "np.log",
     "log": "functions.log",
@@ -411,6 +412,9 @@ functions = {
     "arccos": "np.arccos",
     "arcsin": "np.arcsin",
     "arctan": "np.arctan",
+    "tanh": "np.tanh",
+    "sinh": "np.sinh",
+    "cosh": "np.cosh",
     "if then else": "functions.if_then_else",
     "step": {
         "name": "functions.step",
@@ -487,6 +491,15 @@ data_ops = {
     'get data stdv': '',
     'get data total points': ''
 }
+
+data_functions = {
+    "get xls data": "functions.get_xls_data",
+    "get direct data": "functions.get_direct_data",
+    "get xls constants": "functions.get_xls_constants",
+    "get xls lookups": "functions.get_xls_lookups"
+}
+
+functions.update(data_functions)
 
 builders = {
     "integ": lambda element, subscript_dict, args: builder.add_stock(
@@ -730,7 +743,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
     arguments = (expr _ ","? _)*
 
     reference = id _ subscript_list?
-    subscript_list = "[" _ ((sub_name / sub_element) _ ","? _)+ "]"
+    subscript_list = "[" _ ((sub_name / sub_element) "!"? _ ","? _)+ "]"
 
     array = (number _ ("," / ";")? _)+ !~r"."  # negative lookahead for anything other than an array
     number = ~r"\d+\.?\d*(e[+-]\d+)?"
@@ -785,8 +798,9 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             return s
 
         def visit_call(self, n, vc):
-            self.kind = 'component'
             function_name = vc[0].lower()
+            if function_name not in data_functions:
+                self.kind = 'component'
             arguments = [e.strip() for e in vc[4].split(",")]
             return builder.build_function_call(functions[function_name], arguments)
 

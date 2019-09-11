@@ -1341,20 +1341,3 @@ def get_direct_data(file, tab, time_row_col, cell):
         return get_xls_data(file, tab=tab, time_row_col=time_row_col, cell=cell)
     else:
         raise NotImplementedError
-
-
-def get_xls_data(file, tab, time_row_col, cell):
-    """
-    Implements vensim's GET XLS DATA function.
-    """
-    data = _pd.read_excel(file, sheet_name=tab)
-    return data.to_numpy()
-
-
-def get_direct_data(file, tab, time_row_col, cell):
-    ext = os.path.splitext(file)[1]
-
-    if ext.lower() in ['.xls', '.xlsx']:
-        return get_xls_data(file, tab=tab, time_row_col=time_row_col, cell=cell)
-    else:
-        raise NotImplementedError
