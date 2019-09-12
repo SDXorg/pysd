@@ -284,7 +284,7 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
             dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
             shape = [len(coords[dim]) for dim in dims]
             initial_condition = textwrap.dedent("""\
-                xr.DataArray(data=np.ones(%(shape)s)*%(value)s,
+                xr.DataArray(data=np.full(%(shape)s, %(value)s),
                              coords=%(coords)s,
                              dims=%(dims)s )""" % {
                 'shape': shape,
