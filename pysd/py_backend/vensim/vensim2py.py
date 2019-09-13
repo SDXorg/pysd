@@ -493,10 +493,21 @@ data_ops = {
 }
 
 data_functions = {
-    "get xls data": "functions.get_xls_data",
     "get direct data": "functions.get_direct_data",
     "get xls constants": "functions.get_xls_constants",
     "get xls lookups": "functions.get_xls_lookups"
+}
+
+data_ops = {
+    'get data at time': '',
+    'get data between times': '',
+    'get data last time': '',
+    'get data max': '',
+    'get data min': '',
+    'get data median': '',
+    'get data mean': '',
+    'get data stdv': '',
+    'get data total points': ''
 }
 
 functions.update(data_functions)

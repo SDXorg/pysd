@@ -404,6 +404,76 @@ class ExtConstant(Stateful):
         pass
 
 
+class Data(Stateful):
+    def __init__(self, file, tab, time_row_or_col, cell, interp, time, root, coords):
+        super(Data, self).__init__()
+        self.file = _resolve_file(file, root=root)
+        self.tab = tab
+        self.time_row_or_col = time_row_or_col
+        self.cell = cell
+        self.time_func = time
+        self.interp = interp
+        self.coords = coords
+
+    def initialize(self):
+        time_across = self.time_row_or_col.isnumeric()
+        if time_across:
+            time_data = _get_data_from_file(self.file, self.tab, rows=self.time_row_or_col, cols=NotImplemented)
+            data = _get_data_from_file()
+        else:
+            time_data = _get_data_from_file(self.file, self.tab, rows=self.time_row_or_col, cols=NotImplemented)
+            data = NotImplemented
+        self.state = xr.DataArray(
+            data=data, coords={'time': time_data, **self.coords}, dims=['time'] + list(self.coords)
+        )
+
+    def ddt(self):
+        raise NotImplementedError
+
+    def __call__(self):
+        if self.interp == 'interpolate':
+            return self.state.interp(time=self.time_func())
+        elif self.interp == 'look forward':
+            raise NotImplementedError
+        elif self.interp == 'hold backward':
+            raise NotImplementedError
+        return NotImplementedError
+
+
+class ExtConstant(Stateful):
+    def __init__(self, file, tab, cell, root, coords):
+        super(ExtConstant, self).__init__()
+        self.file = _resolve_file(file, root=root)
+        self.tab = tab
+        self.transpose = cell[-1] == '*'
+        self.cell = cell.strip('*')
+        self.coords = coords
+
+    def initialize(self):
+        dims = list(self.coords)
+        start_row, start_col = _split_excel_cell(self.cell)
+        end_row = start_row
+        end_col = start_col
+        if dims:
+            if self.transpose:
+                end_row = start_row + len(self.coords[dims[-1]]) - 1
+            else:
+                end_col = _num_to_col(_col_to_num(start_col) + len(self.coords[dims[-1]]) - 1)
+
+            if len(dims) >= 2:
+                if self.transpose:
+                    end_col = _num_to_col(_col_to_num(start_col) + len(self.coords[dims[-2]]) - 1)
+                else:
+                    end_row = start_row + len(self.coords[dims[-2]]) - 1
+        data = _get_data_from_file(self.file, tab=self.tab, rows=[start_row, end_row], cols=[start_col, end_col])
+        self.state = xr.DataArray(
+            data=data, coords=self.coords, dims=list(self.coords)
+        )
+
+    def ddt(self):
+        return 0
+
+
 class Macro(Stateful):
     """
     The Model class implements a stateful representation of the system,
