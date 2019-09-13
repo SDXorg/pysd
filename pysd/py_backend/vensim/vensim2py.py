@@ -479,10 +479,21 @@ subscript_functions = {
 }
 
 data_functions = {
-    "get xls data": "functions.get_xls_data",
     "get direct data": "functions.get_direct_data",
     "get xls constants": "functions.get_xls_constants",
     "get xls lookups": "functions.get_xls_lookups"
+}
+
+data_ops = {
+    'get data at time': '',
+    'get data between times': '',
+    'get data last time': '',
+    'get data max': '',
+    'get data min': '',
+    'get data median': '',
+    'get data mean': '',
+    'get data stdv': '',
+    'get data total points': ''
 }
 
 functions.update(data_functions)
@@ -602,11 +613,33 @@ builders = {
         subs=element['subs'],
         subscript_dict=subscript_dict),
 
+    "get xls data": lambda element, subscript_dict, args: builder.add_data(
+        identifier=element['py_name'],
+        file=args[0],
+        tab=args[1],
+        time_row_or_col=args[2],
+        cell=args[3],
+        subs=element['subs'],
+        subscript_dict=subscript_dict,
+        keyword=element['keyword']
+    ),
+
+    "get xls constants": lambda element, subscript_dict, args: builder.add_ext_constant(
+        identifier=element['py_name'],
+        file=args[0],
+        tab=args[1],
+        cell=args[2],
+        subs=element['subs'],
+        subscript_dict=subscript_dict
+    ),
+
     "initial": lambda element, subscript_dict, args: builder.add_initial(args[0]),
 
     "a function of": lambda element, subscript_dict, args: builder.add_incomplete(
         element['real_name'], args)
 }
+
+builders['get direct data'] = builders['get xls data']  # Both are implemented identically in PySD
 
 
 def parse_general_expression(element, namespace=None, subscript_dict=None, macro_list=None):

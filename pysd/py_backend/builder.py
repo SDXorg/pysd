@@ -12,12 +12,13 @@ xmile specific syntax.
 from __future__ import absolute_import
 
 import os.path
-import pkg_resources
 import textwrap
 import warnings
+from io import open
+
+import pkg_resources
 import yapf
 
-from io import open
 from .._version import __version__
 from ..py_backend import utils
 
@@ -61,6 +62,7 @@ def build(elements, subscript_dict, namespace, outfile_name):
     import numpy as np
     from pysd import utils
     import xarray as xr
+    import os
 
     from pysd.py_backend.functions import cache
     from pysd.py_backend import functions
@@ -75,6 +77,8 @@ def build(elements, subscript_dict, namespace, outfile_name):
         'scope': None,
         'time': lambda: 0
     }
+    
+    _root = os.path.dirname(__file__)
 
     def _init_outer_references(data):
         for key in data:
@@ -95,8 +99,15 @@ def build(elements, subscript_dict, namespace, outfile_name):
 
     style_file = pkg_resources.resource_filename("pysd", "py_backend/output_style.yapf")
     text = text.replace('\t', '    ')
-    text, changed = yapf.yapf_api.FormatCode(textwrap.dedent(text),
-                                             style_config=style_file)
+    try:
+        text, changed = yapf.yapf_api.FormatCode(textwrap.dedent(text),
+                                                 style_config=style_file)
+    except:
+        # This is unfortunate but necessary because yapf is apparently not compliant with PEP 3131
+        # (https://www.python.org/dev/peps/pep-3131/)
+        # Alternatively we could skip formatting altogether, or replace yapf with black for all cases?
+        import black
+        text = black.format_file_contents(textwrap.dedent(text), fast=True, mode=black.FileMode())
 
     # this is used for testing
     if outfile_name == 'return':
@@ -150,16 +161,16 @@ def build_element(element, subscript_dict):
                     'ulines': '-' * len(element['real_name']),
                     'contents': contents.replace('\n',
                                                  '\n' + ' ' * indent)})  # indent lines 2 onward
-    
+
     element['doc'] = element['doc'].replace('\\', '\n    ').encode('unicode-escape')
 
     if 'unit' in element:
-        element['unit'] = element['unit'].encode('utf8')
+        element['unit'] = element['unit']
     if 'real_name' in element:
-        element['real_name'] = element['real_name'].encode('utf8')
+        element['real_name'] = element['real_name']
     if 'eqn' in element:
-        element['eqn'] = element['eqn'].encode('utf8')
-    
+        element['eqn'] = element['eqn']
+
     if element['kind'] == 'stateful':
         func = '''
     %(py_name)s = %(py_expr)s
@@ -382,9 +393,9 @@ def add_n_delay(delay_input, delay_time, initial_value, order, subs, subscript_d
 
     stateful = {
         'py_name': utils.make_python_identifier('_delay_%s_%s_%s_%s' % (delay_input,
-                                                                       delay_time,
-                                                                       initial_value,
-                                                                       order))[0],
+                                                                        delay_time,
+                                                                        initial_value,
+                                                                        order))[0],
         'real_name': 'Delay of %s' % delay_input,
         'doc': 'Delay time: %s \n Delay initial value %s \n Delay order %s' % (
             delay_time, initial_value, order),
@@ -442,9 +453,9 @@ def add_n_smooth(smooth_input, smooth_time, initial_value, order, subs, subscrip
 
     stateful = {
         'py_name': utils.make_python_identifier('_smooth_%s_%s_%s_%s' % (smooth_input,
-                                                                        smooth_time,
-                                                                        initial_value,
-                                                                        order))[0],
+                                                                         smooth_time,
+                                                                         initial_value,
+                                                                         order))[0],
         'real_name': 'Smooth of %s' % smooth_input,
         'doc': 'Smooth time: %s \n Smooth initial value %s \n Smooth order %s' % (
             smooth_time, initial_value, order),
@@ -490,8 +501,8 @@ def add_n_trend(trend_input, average_time, initial_trend, subs, subscript_dict):
 
     stateful = {
         'py_name': utils.make_python_identifier('_trend_%s_%s_%s' % (trend_input,
-                                                                    average_time,
-                                                                    initial_trend))[0],
+                                                                     average_time,
+                                                                     initial_trend))[0],
         'real_name': 'trend of %s' % trend_input,
         'doc': 'Trend average time: %s \n Trend initial value %s' % (
             average_time, initial_trend),
@@ -544,6 +555,47 @@ def add_initial(initial_input):
     return "%s()" % stateful['py_name'], [stateful]
 
 
+def add_data(identifier, file, tab, time_row_or_col, cell, subs, subscript_dict, keyword):
+    coords = {dim: subscript_dict[dim] for dim in subs}
+    keyword = '"%s"' % keyword.strip(':').lower() if isinstance(keyword, str) else keyword
+    stateful = {
+        'py_name': utils.make_python_identifier('_data_%s' % identifier)[0],
+        'real_name': 'Data for %s' % identifier,
+        'doc': 'Provides data for data variable %s' % identifier,
+        'py_expr': 'functions.Data('
+                   'file=%s, tab=%s, time_row_or_col=%s, cell=%s, time=time, root=_root, coords=%s, interp=%s'
+                   ')' % (
+                       file, tab, time_row_or_col, cell, coords, keyword
+                   ),
+        'unit': 'None',
+        'lims': 'None',
+        'eqn': 'None',
+        'subs': subs,
+        'kind': 'stateful',
+        'arguments': ''
+    }
+
+    return "%s()" % stateful['py_name'], [stateful]
+
+
+def add_ext_constant(identifier, file, tab, cell, subs, subscript_dict):
+    coords = {dim: subscript_dict[dim] for dim in subs}
+    stateful = {
+        'py_name': utils.make_python_identifier('_data_%s' % identifier)[0],
+        'real_name': 'Data for %s' % identifier,
+        'doc': 'Provides data for constant data variable %s' % identifier,
+        'py_expr': 'functions.ExtConstant(file=%s, tab=%s, root=_root, cell=%s, coords=%s)' % (file, tab, cell, coords),
+        'unit': 'None',
+        'lims': 'None',
+        'eqn': 'None',
+        'subs': subs,
+        'kind': 'stateful',
+        'arguments': ''
+    }
+
+    return "%s()" % stateful['py_name'], [stateful]
+
+
 def add_macro(macro_name, filename, arg_names, arg_vals):
     """
     Constructs a stateful object instantiating a 'Macro'
@@ -576,7 +628,8 @@ def add_macro(macro_name, filename, arg_names, arg_vals):
             [utils.make_python_identifier(f)[0] for f in arg_vals]),
         'real_name': 'Macro Instantiation of ' + macro_name,
         'doc': 'Instantiates the Macro',
-        'py_expr': "functions.Macro('%s', %s, '%s', time_initialization=lambda: __data['time'])" % (filename, func_args, macro_name),
+        'py_expr': "functions.Macro('%s', %s, '%s', time_initialization=lambda: __data['time'])" % (
+            filename, func_args, macro_name),
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',
@@ -601,14 +654,55 @@ def add_incomplete(var_name, dependencies):
     # first arg is `self` reference
     return "functions.incomplete(%s)" % ', '.join(dependencies[1:]), []
 
+
 def build_function_call(function_def, user_arguments):
+    """
+
+    Parameters
+    ----------
+    function_def: function definition map with following keys
+        - name: name of the function
+        - parameters: list with description of all parameters of this function
+            - name
+            - optional?
+            - type: [
+                "expression", - provide converted expression as parameter for runtime evaluating before the method call
+                "lambda",     - provide lambda expression as parameter for delayed runtime evaluation in the method call
+                "time",       - provide access to current instance of time object
+                "scope"       - provide access to current instance of scope object (instance of Macro object)
+            ]
+    user_arguments: list of arguments provided from model
+
+    Returns
+    -------
+
+    """
     if isinstance(function_def, str):
         return function_def + "(" + ",".join(user_arguments) + ")"
 
-    if "require_time" in function_def and function_def["require_time"]:
-        user_arguments.insert(0, "__data['time']")
+    if "parameters" in function_def:
+        parameters = function_def["parameters"]
+        arguments = []
+        argument_idx = 0
+        for parameter_idx in range(len(parameters)):
+            parameter_def = parameters[parameter_idx]
+            is_optional = parameter_def["optional"] if "optional" in parameter_def else False
+            if argument_idx >= len(user_arguments) and is_optional:
+                break
 
-    if "require_scope" in function_def and function_def["require_scope"]:
-        user_arguments.insert(0, "__data['scope']")
+            parameter_type = parameter_def["type"] if "type" in parameter_def else "expression"
+
+            user_argument = user_arguments[argument_idx]
+            if parameter_type in ["expression", "lambda"]:
+                argument_idx += 1
+
+            arguments.append({
+                                 "expression": user_argument,
+                                 "lambda": "lambda: (" + user_argument + ")",
+                                 "time": "__data['time']",
+                                 "scope": "__data['scope']"
+                             }[parameter_type])
+
+        return function_def['name'] + "(" + ", ".join(arguments) + ")"
 
     return function_def['name'] + "(" + ",".join(user_arguments) + ")"
