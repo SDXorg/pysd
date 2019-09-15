@@ -801,8 +801,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
 
         def visit_reference(self, n, vc):
             self.kind = 'component'
-            id_str = vc[0]
-            return id_str + '()'
+            vc[0] += '()'
+            return ''.join([x.strip(',') for x in vc])
 
         def visit_id(self, n, vc):
             return namespace[n.text.strip()]
