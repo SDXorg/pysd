@@ -581,7 +581,7 @@ def add_data(identifier, file, tab, time_row_or_col, cell, subs, subscript_dict,
 def add_ext_constant(identifier, file, tab, cell, subs, subscript_dict):
     coords = {dim: subscript_dict[dim] for dim in subs}
     stateful = {
-        'py_name': utils.make_python_identifier('_data_%s' % identifier)[0],
+        'py_name': utils.make_python_identifier('_ext_constant_%s' % identifier)[0],
         'real_name': 'Data for %s' % identifier,
         'doc': 'Provides data for constant data variable %s' % identifier,
         'py_expr': 'functions.ExtConstant(file=%s, tab=%s, root=_root, cell=%s, coords=%s)' % (file, tab, cell, coords),
@@ -594,6 +594,25 @@ def add_ext_constant(identifier, file, tab, cell, subs, subscript_dict):
     }
 
     return "%s()" % stateful['py_name'], [stateful]
+
+
+def add_ext_lookup(identifier, file, tab, x_row_or_col, cell, subs, subscript_dict):
+    coords = {dim: subscript_dict[dim] for dim in subs}
+    stateful = {
+        'py_name': utils.make_python_identifier('_ext_lookup_%s' % identifier)[0],
+        'real_name': 'External lookup data for %s' % identifier,
+        'doc': 'Provides data for external lookup variable %s' % identifier,
+        'py_expr': 'functions.ExtLookup(file=%s, tab=%s, root=_root, x_row_or_col=%s, cell=%s, coords=%s)'
+                   % (file, tab, x_row_or_col, cell, coords),
+        'unit': 'None',
+        'lims': 'None',
+        'eqn': 'None',
+        'subs': subs,
+        'kind': 'stateful',
+        'arguments': 'x'
+    }
+
+    return "%s(x)" % stateful['py_name'], [stateful]
 
 
 def add_macro(macro_name, filename, arg_names, arg_vals):

@@ -338,6 +338,8 @@ def get_equation_components(equation_str, root_path):
 
 
 def get_external_data(func_str, args_str, root_path):
+    # The py model file must be recompiled if external file subscripts change. This could be avoided
+    # if we switch to function-defined subscript values instead of hard-coding them.
     f = subscript_functions[func_str.lower()]
     args = [x.strip().strip("\'") for x in args_str.split(',')]  # todo: make this less fragile?
     if args[0][0] == '?':
@@ -478,12 +480,6 @@ subscript_functions = {
     "get direct subscript": funcs.get_direct_subscript
 }
 
-data_functions = {
-    "get direct data": "functions.get_direct_data",
-    "get xls constants": "functions.get_xls_constants",
-    "get xls lookups": "functions.get_xls_lookups"
-}
-
 data_ops = {
     'get data at time': '',
     'get data between times': '',
@@ -495,8 +491,6 @@ data_ops = {
     'get data stdv': '',
     'get data total points': ''
 }
-
-functions.update(data_functions)
 
 builders = {
     "integ": lambda element, subscript_dict, args: builder.add_stock(
@@ -633,6 +627,16 @@ builders = {
         subscript_dict=subscript_dict
     ),
 
+    "get xls lookups": lambda element, subscript_dict, args: builder.add_ext_lookup(
+        identifier=element['py_name'],
+        file=args[0],
+        tab=args[1],
+        x_row_or_col=args[2],
+        cell=args[3],
+        subs=element['subs'],
+        subscript_dict=subscript_dict
+    ),
+
     "initial": lambda element, subscript_dict, args: builder.add_initial(args[0]),
 
     "a function of": lambda element, subscript_dict, args: builder.add_incomplete(
@@ -640,6 +644,7 @@ builders = {
 }
 
 builders['get direct data'] = builders['get xls data']  # Both are implemented identically in PySD
+builders['get direct lookups'] = builders['get xls lookups']  # Both are implemented identically in PySD
 
 
 def parse_general_expression(element, namespace=None, subscript_dict=None, macro_list=None):
@@ -770,6 +775,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             self.translation = ""
             self.kind = 'constant'  # change if we reference anything else
             self.new_structure = []
+            self.arguments = None
             self.visit(ast)
 
         def visit_expr_type(self, n, vc):
@@ -782,9 +788,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             return s
 
         def visit_call(self, n, vc):
+            self.kind = 'component'
             function_name = vc[0].lower()
-            if function_name not in data_functions:
-                self.kind = 'component'
             arguments = [e.strip() for e in vc[4].split(",")]
             return builder.build_function_call(functions[function_name], arguments)
 
@@ -857,6 +862,9 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             name, structure = builders[builder_name](element, subscript_dict, arglist)
             self.new_structure += structure
 
+            if builder_name in ['get xls lookups', 'get direct lookups']:
+                self.arguments = 'x'
+
             if builder_name == 'delay fixed':
                 warnings.warn("Delay fixed only approximates solution, may not give the same "
                               "result as vensim")
@@ -894,7 +902,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
 
     return ({'py_expr': parse_object.translation,
              'kind': parse_object.kind,
-             'arguments': ''},
+             'arguments': parse_object.arguments or ''},
             parse_object.new_structure)
 
 
