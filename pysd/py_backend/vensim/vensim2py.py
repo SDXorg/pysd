@@ -510,8 +510,6 @@ data_ops = {
     'get data total points': ''
 }
 
-functions.update(data_functions)
-
 builders = {
     "integ": lambda element, subscript_dict, args: builder.add_stock(
         identifier=element['py_name'],
@@ -643,6 +641,16 @@ builders = {
         file=args[0],
         tab=args[1],
         cell=args[2],
+        subs=element['subs'],
+        subscript_dict=subscript_dict
+    ),
+
+    "get xls lookups": lambda element, subscript_dict, args: builder.add_ext_lookup(
+        identifier=element['py_name'],
+        file=args[0],
+        tab=args[1],
+        x_row_or_col=args[2],
+        cell=args[3],
         subs=element['subs'],
         subscript_dict=subscript_dict
     ),
@@ -809,9 +817,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             return s
 
         def visit_call(self, n, vc):
+            self.kind = 'component'
             function_name = vc[0].lower()
-            if function_name not in data_functions:
-                self.kind = 'component'
             arguments = [e.strip() for e in vc[4].split(",")]
             return builder.build_function_call(functions[function_name], arguments)
 
