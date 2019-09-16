@@ -390,7 +390,6 @@ def add_n_delay(delay_input, delay_time, initial_value, order, subs, subscript_d
     """
     # the py name has to be unique to all the passed parameters, or if there are two things
     # that delay the output by different amounts, they'll overwrite the original function...
-
     stateful = {
         'py_name': utils.make_python_identifier('_delay_%s_%s_%s_%s' % (delay_input,
                                                                         delay_time,
@@ -399,8 +398,8 @@ def add_n_delay(delay_input, delay_time, initial_value, order, subs, subscript_d
         'real_name': 'Delay of %s' % delay_input,
         'doc': 'Delay time: %s \n Delay initial value %s \n Delay order %s' % (
             delay_time, initial_value, order),
-        'py_expr': 'functions.Delay(lambda: %s, lambda: %s, lambda: %s, lambda: %s)' % (
-            delay_input, delay_time, initial_value, order),
+        'py_expr': 'functions.Delay(lambda: %s, lambda: %s, lambda: %s, lambda: %s, %s, %s)' % (
+            delay_input, delay_time, initial_value, order, subs, subscript_dict),
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',

@@ -408,7 +408,7 @@ functions = {
     "log": "functions.log",
     "exprnd": "np.random.exponential",
     "random uniform": "functions.random_uniform",
-    "sum": "np.sum",
+    "sum": "functions.sum",
     "arccos": "np.arccos",
     "arcsin": "np.arcsin",
     "arctan": "np.arctan",
@@ -469,9 +469,9 @@ functions = {
     "game": "",  # In the future, may have an actual `functions.game` pass through
 
     # vector functions
-    "vmin": "np.min",
-    "vmax": "np.max",
-    "prod": "np.prod",
+    "vmin": "functions.min",
+    "vmax": "functions.max",
+    "prod": "functions.prod",
 
 }
 
@@ -875,9 +875,9 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             # Implements basic "!" subscript functionality in Vensim. Does NOT work for matrix diagonals in
             # FUNC(variable[sub1!,sub1!]) functions, nor with
             # But works quite well for simple axis specifications, such as "SUM(variable[axis1, axis2!])
-            axis = [str(i) for i, s in enumerate(subs) if s[-1] == '!']
+            axis = ['"%s"' % s.strip('!') for s in subs if s[-1] == '!']
             if axis:
-                string += ', axis=(%s)' % ','.join(axis)
+                string += ', dim=(%s)' % ','.join(axis)
             return string
 
         def visit_build_call(self, n, vc):
