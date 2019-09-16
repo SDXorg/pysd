@@ -786,6 +786,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
 
         def visit_expr(self, n, vc):
             if self.in_oper:
+                # This is rather inelegant, and possibly could be better implemented with a serious reorganization
+                # of the grammar specification for general expressions.
                 args = [x for x in vc if len(x.strip())]
                 if len(args) == 3:
                     args = [''.join(args[0:2]), args[2]]
@@ -867,9 +869,12 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             subs = [x.strip() for x in refs.split(',')]
             coordinates = utils.make_coord_dict(subs, subscript_dict)
             if len(coordinates):
-                string = '.loc[%s]' % repr(coordinates)
+                string = '.loc[%s].squeeze()' % repr(coordinates)
             else:
                 string = ' '
+            # Implements basic "!" subscript functionality in Vensim. Does NOT work for matrix diagonals in
+            # FUNC(variable[sub1!,sub1!]) functions, nor with
+            # But works quite well for simple axis specifications, such as "SUM(variable[axis1, axis2!])
             axis = [str(i) for i, s in enumerate(subs) if s[-1] == '!']
             if axis:
                 string += ', axis=(%s)' % ','.join(axis)
