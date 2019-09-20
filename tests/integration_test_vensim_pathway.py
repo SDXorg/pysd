@@ -280,7 +280,7 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscript_3d_arrays_widthwise/test_subscript_3d_arrays_widthwise.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('in branch')
+    # @unittest.skip('in branch')
     def test_subscript_aggregation(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscript_aggregation/test_subscript_aggregation.mdl')

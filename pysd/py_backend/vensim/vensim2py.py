@@ -469,8 +469,8 @@ functions = {
     "game": "",  # In the future, may have an actual `functions.game` pass through
 
     # vector functions
-    "vmin": "functions.min",
-    "vmax": "functions.max",
+    "vmin": "functions.vmin",
+    "vmax": "functions.vmax",
     "prod": "functions.prod",
 
 }
@@ -804,6 +804,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             return s
 
         def visit_in_oper_expr(self, n, vc):
+            # We have to pull out the internal operator because the Python "and" and "or" operator do not work with
+            # numpy arrays or xarray DataArrays. We will later replace it with the functions.and_ or functions.or_.
             self.in_oper = vc[0]
             return ''.join(filter(None, vc[1:])).strip()
 
@@ -873,7 +875,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             else:
                 string = ' '
             # Implements basic "!" subscript functionality in Vensim. Does NOT work for matrix diagonals in
-            # FUNC(variable[sub1!,sub1!]) functions, nor with
+            # FUNC(variable[sub1!,sub1!]) functions, nor with complex operations within the vector function
             # But works quite well for simple axis specifications, such as "SUM(variable[axis1, axis2!])
             axis = ['"%s"' % s.strip('!') for s in subs if s[-1] == '!']
             if axis:
