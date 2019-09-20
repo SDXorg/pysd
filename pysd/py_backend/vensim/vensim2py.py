@@ -830,6 +830,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             return s
 
         def visit_in_oper_expr(self, n, vc):
+            # We have to pull out the internal operator because the Python "and" and "or" operator do not work with
+            # numpy arrays or xarray DataArrays. We will later replace it with the functions.and_ or functions.or_.
             self.in_oper = vc[0]
             return ''.join(filter(None, vc[1:])).strip()
 
