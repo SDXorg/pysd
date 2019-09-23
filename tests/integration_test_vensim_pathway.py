@@ -137,7 +137,8 @@ class TestIntegrationExamples(unittest.TestCase):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/lookups/test_lookups.mdl')
         assert_frames_close(output, canon, rtol=rtol)
-        
+
+    @unittest.skip('File not found')
     def test_lookups_without_range(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/lookups_without_range/test_lookups_without_range.mdl')
@@ -250,6 +251,7 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/sqrt/test_sqrt.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    @unittest.skip('File not found')
     def test_subscript_multiples(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscript_multiples/test_multiple_subscripts.mdl')
@@ -323,25 +325,25 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscript_mixed_assembly/test_subscript_mixed_assembly.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('in branch')
+    # @unittest.skip('in branch')
     def test_subscript_selection(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscript_selection/subscript_selection.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('failing in py3')
+    # @unittest.skip('failing in py3')
     def test_subscript_subranges(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscript_subranges/test_subscript_subrange.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('failing in py3')
+    # @unittest.skip('failing in py3')
     def test_subscript_subranges_equal(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscript_subranges_equal/test_subscript_subrange_equal.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('in branch')
+    # @unittest.skip('in branch')
     def test_subscript_switching(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscript_switching/subscript_switching.mdl')

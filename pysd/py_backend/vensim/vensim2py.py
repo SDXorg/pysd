@@ -208,7 +208,7 @@ def _include_common_grammar(source_grammar):
     """.format(source_grammar=source_grammar, common_grammar=common_grammar)
 
 
-def get_equation_components(equation_str, root_path):
+def get_equation_components(equation_str, root_path=None):
     """
     Breaks down a string representing only the equation part of a model element.
     Recognizes the various types of model elements that may exist, and identifies them.
@@ -701,7 +701,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
     in_ops = {
         "+": "+", "-": "-", "*": "*", "/": "/", "^": "**", "=": "==", "<=": "<=", "<>": "!=",
         "<": "<", ">=": ">=", ">": ">",
-        ":and:": " and ", ":or:": " or "}  # spaces important for word-based operators
+        ":and:": " & ", ":or:": " | "}  # spaces perhaps important?
 
     pre_ops = {
         "-": "-", ":not:": " not ",  # spaces important for word-based operators
@@ -722,9 +722,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
 
     expression_grammar = r"""
     expr_type = array / expr / empty
-    expr = _ pre_oper? _ (lookup_def / build_call / macro_call / call / lookup_call / parens / number / string / reference) _ in_oper_expr?
+    expr = _ pre_oper? _ (lookup_def / build_call / macro_call / call / lookup_call / parens / number / string / reference) _ (in_oper _ expr)?
 
-    in_oper_expr = (in_oper _ expr)
     lookup_def = ~r"(WITH\ LOOKUP)"I _ "(" _ expr _ "," _ "(" _  ("[" ~r"[^\]]*" "]" _ ",")?  ( "(" _ expr _ "," _ expr _ ")" _ ","? _ )+ _ ")" _ ")"
     lookup_call = (id _ subscript_list?) _ "(" _ (expr _ ","? _)* ")"  # these don't need their args parsed...
     call = func _ "(" _ (expr _ ","? _)* ")"  # these don't need their args parsed...
@@ -785,29 +784,9 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             self.translation = s
 
         def visit_expr(self, n, vc):
-            if self.in_oper:
-                # This is rather inelegant, and possibly could be better implemented with a serious reorganization
-                # of the grammar specification for general expressions.
-                args = [x for x in vc if len(x.strip())]
-                if len(args) == 3:
-                    args = [''.join(args[0:2]), args[2]]
-                if self.in_oper  == ' and ':
-                    s = 'functions.and_(%s)' % ','.join(args)
-                elif self.in_oper == ' or ':
-                    s = 'functions.or_(%s)' % ','.join(args)
-                else:
-                    s = self.in_oper.join(args)
-                self.in_oper = None
-            else:
-                s = ''.join(filter(None, vc)).strip()
+            s = ''.join(filter(None, vc)).strip()
             self.translation = s
             return s
-
-        def visit_in_oper_expr(self, n, vc):
-            # We have to pull out the internal operator because the Python "and" and "or" operator do not work with
-            # numpy arrays or xarray DataArrays. We will later replace it with the functions.and_ or functions.or_.
-            self.in_oper = vc[0]
-            return ''.join(filter(None, vc[1:])).strip()
 
         def visit_call(self, n, vc):
             self.kind = 'component'

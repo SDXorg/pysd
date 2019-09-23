@@ -670,7 +670,7 @@ def add_incomplete(var_name, dependencies):
                   SyntaxWarning, stacklevel=2)
 
     # first arg is `self` reference
-    return "functions.incomplete(%s)" % ', '.join(dependencies[1:]), []
+    return "functions.incomplete(%s)" % ', '.join(dependencies), []
 
 
 def build_function_call(function_def, user_arguments):

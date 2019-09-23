@@ -71,7 +71,7 @@ class TestEquationStringParsing(unittest.TestCase):
         from pysd.py_backend.vensim.vensim2py import get_equation_components
         self.assertEqual(
             get_equation_components(r'constant = 25'),
-            {'expr': '25', 'kind': 'component', 'subs': [], 'real_name': 'constant'}
+            {'expr': '25', 'kind': 'component', 'subs': [], 'real_name': 'constant', 'keyword': None}
         )
 
     def test_equals_handling(self):
@@ -80,7 +80,7 @@ class TestEquationStringParsing(unittest.TestCase):
         self.assertEqual(
             get_equation_components(r'Boolean = IF THEN ELSE(1 = 1, 1, 0)'),
             {'expr': 'IF THEN ELSE(1 = 1, 1, 0)', 'kind': 'component', 'subs': [],
-             'real_name': 'Boolean'}
+             'real_name': 'Boolean', 'keyword': None}
         )
 
     def test_whitespace_handling(self):
@@ -89,7 +89,7 @@ class TestEquationStringParsing(unittest.TestCase):
         self.assertEqual(
             get_equation_components(r'''constant\t =
                                                         \t25\t '''),
-            {'expr': '25', 'kind': 'component', 'subs': [], 'real_name': 'constant'}
+            {'expr': '25', 'kind': 'component', 'subs': [], 'real_name': 'constant', 'keyword': None}
         )
 
         # test eliminating vensim's line continuation character
@@ -97,7 +97,7 @@ class TestEquationStringParsing(unittest.TestCase):
             get_equation_components(r"""constant [Sub1, \\
                                      Sub2] = 10, 12; 14, 16;"""),
             {'expr': '10, 12; 14, 16;', 'kind': 'component', 'subs': ['Sub1', 'Sub2'],
-             'real_name': 'constant'}
+             'real_name': 'constant', 'keyword': None}
         )
 
     def test_subscript_definition_parsing(self):
@@ -105,7 +105,7 @@ class TestEquationStringParsing(unittest.TestCase):
         self.assertEqual(
             get_equation_components(r'''Sub1: Entry 1, Entry 2, Entry 3 '''),
             {'expr': None, 'kind': 'subdef', 'subs': ['Entry 1', 'Entry 2', 'Entry 3'],
-             'real_name': 'Sub1'}
+             'real_name': 'Sub1', 'keyword': None}
         )
 
     def test_subscript_references(self):
@@ -113,25 +113,25 @@ class TestEquationStringParsing(unittest.TestCase):
         self.assertEqual(
             get_equation_components(r'constant [Sub1, Sub2] = 10, 12; 14, 16;'),
             {'expr': '10, 12; 14, 16;', 'kind': 'component', 'subs': ['Sub1', 'Sub2'],
-             'real_name': 'constant'}
+             'real_name': 'constant', 'keyword': None}
         )
 
         self.assertEqual(
             get_equation_components(r'function [Sub1] = other function[Sub1]'),
             {'expr': 'other function[Sub1]', 'kind': 'component', 'subs': ['Sub1'],
-             'real_name': 'function'}
+             'real_name': 'function', 'keyword': None}
         )
 
         self.assertEqual(
             get_equation_components(r'constant ["S1,b", "S1,c"] = 1, 2; 3, 4;'),
             {'expr': '1, 2; 3, 4;', 'kind': 'component', 'subs': ['"S1,b"', '"S1,c"'],
-             'real_name': 'constant'}
+             'real_name': 'constant', 'keyword': None}
         )
 
         self.assertEqual(
             get_equation_components(r'constant ["S1=b", "S1=c"] = 1, 2; 3, 4;'),
             {'expr': '1, 2; 3, 4;', 'kind': 'component', 'subs': ['"S1=b"', '"S1=c"'],
-             'real_name': 'constant'}
+             'real_name': 'constant', 'keyword': None}
         )
 
     def test_lookup_definitions(self):
@@ -139,26 +139,26 @@ class TestEquationStringParsing(unittest.TestCase):
         self.assertEqual(
             get_equation_components(r'table([(0,-1)-(45,1)],(0,0),(5,0))'),
             {'expr': '([(0,-1)-(45,1)],(0,0),(5,0))', 'kind': 'lookup', 'subs': [],
-             'real_name': 'table'}
+             'real_name': 'table', 'keyword': None}
         )
 
         self.assertEqual(
             get_equation_components(r'table2 ([(0,-1)-(45,1)],(0,0),(5,0))'),
             {'expr': '([(0,-1)-(45,1)],(0,0),(5,0))', 'kind': 'lookup', 'subs': [],
-             'real_name': 'table2'}
+             'real_name': 'table2', 'keyword': None}
         )
 
     def test_pathological_names(self):
         from pysd.py_backend.vensim.vensim2py import get_equation_components
         self.assertEqual(
             get_equation_components(r'"silly-string" = 25'),
-            {'expr': '25', 'kind': 'component', 'subs': [], 'real_name': '"silly-string"'}
+            {'expr': '25', 'kind': 'component', 'subs': [], 'real_name': '"silly-string"', 'keyword': None}
         )
 
         self.assertEqual(
             get_equation_components(r'"pathological\\-string" = 25'),
             {'expr': '25', 'kind': 'component', 'subs': [],
-             'real_name': r'"pathological\\-string"'}
+             'real_name': r'"pathological\\-string"', 'keyword': None}
         )
 
 
@@ -328,7 +328,7 @@ class TestParse_general_expression(unittest.TestCase):
         self.assertEqual(a.loc[{'Dim1': 'A', 'Dim2': 'D'}], 1)
         self.assertEqual(a.loc[{'Dim1': 'B', 'Dim2': 'E'}], 4)
 
-    @unittest.skip('in branch')
+    # unittest.skip('in branch')
     def test_subscript_reference(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
         res = parse_general_expression({'expr': 'Var A[Dim1, Dim2]'},
@@ -342,16 +342,16 @@ class TestParse_general_expression(unittest.TestCase):
                                      {'Var B': 'var_b'},
                                      {'Dim1': ['A', 'B'],
                                       'Dim2': ['C', 'D', 'E']})
-        self.assertEqual(res[0]['py_expr'], "var_b().loc[{'Dim2': ['C']}]")
+        self.assertEqual(res[0]['py_expr'], "var_b().loc[{'Dim2': ['C']}].squeeze()")
 
         res = parse_general_expression({'expr': 'Var C[Dim1, C, H]'},
                                      {'Var C': 'var_c'},
                                      {'Dim1': ['A', 'B'],
                                       'Dim2': ['C', 'D', 'E'],
                                       'Dim3': ['F', 'G', 'H', 'I']})
-        self.assertEqual(res[0]['py_expr'], "var_c().loc[{'Dim2': ['C'], 'Dim3': ['H']}]")
+        self.assertEqual(res[0]['py_expr'], "var_c().loc[{'Dim2': ['C'], 'Dim3': ['H']}].squeeze()")
 
-    @unittest.skip('in branch')
+    # @unittest.skip('in branch')
     def test_subscript_ranges(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
         res = parse_general_expression({'expr': 'Var D[Range1]'},
@@ -360,10 +360,10 @@ class TestParse_general_expression(unittest.TestCase):
                                       'Range1': ['C', 'D', 'E']})
         self.assertEqual(res[0]['py_expr'], "var_c().loc[{'Dim1': ['C', 'D', 'E']}]")
 
-    @unittest.skip('need to write this properly')
+    # @unittest.skip('need to write this properly')
     def test_incomplete_expression(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
-        res = parse_general_expression({'expr': 'A FUNCTION OF(Unspecified Eqn,Var A,Var B)'},
+        res = parse_general_expression({'expr': 'A FUNCTION OF(Unspecified Eqn,Var A,Var B)', 'real_name': 'something'},
                                        {'Unspecified Eqn': 'unspecified_eqn',
                                         'Var A': 'var_a',
                                         'Var B': 'var_b'})
