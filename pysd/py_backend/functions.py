@@ -440,9 +440,9 @@ class Macro(Stateful):
         if params is not None:
             self.set_components(params)
 
-        self._stateful_elements = [getattr(self.components, name) for name in dir(self.components)
+        self._stateful_elements = {name: getattr(self.components, name) for name in dir(self.components)
                                    if isinstance(getattr(self.components, name),
-                                                 Stateful)]
+                                                 Stateful)}
         if return_func is not None:
             self.return_func = getattr(self.components, return_func)
         else:
@@ -485,7 +485,7 @@ class Macro(Stateful):
             'time': self.time
         })
 
-        remaining = set(self._stateful_elements)
+        remaining = set(self._stateful_elements.values())
 
         while remaining:
             progress = set()
@@ -503,15 +503,15 @@ class Macro(Stateful):
                                '\n'.join([repr(e) for e in remaining]))
 
     def ddt(self):
-        return np.array([component.ddt() for component in self._stateful_elements], dtype=object)
+        return xr.Dataset({name: component.ddt() for name, component in self._stateful_elements.items()})
 
     @property
     def state(self):
-        return np.array([component.state for component in self._stateful_elements], dtype=object)
+        return xr.Dataset({name: component.state for name, component in self._stateful_elements.items()})
 
     @state.setter
     def state(self, new_value):
-        [component.update(val) for component, val in zip(self._stateful_elements, new_value)]
+        [component.update(val) for component, val in zip(self._stateful_elements.values(), new_value.values())]
 
     def set_components(self, params):
         """ Set the value of exogenous model elements.
