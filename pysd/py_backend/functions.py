@@ -933,7 +933,7 @@ class Model(Macro):
             self.time.update(t2)  # this will clear the stepwise caches
 
         # need to add one more time step, because we run only the state updates in the previous
-        # loop and thus may be one short.
+        # loop after saving outputs and thus may be one short.
         if self.time() in return_timestamps:
             outputs.append({key: getattr(self.components, key)() for key in capture_elements})
 
