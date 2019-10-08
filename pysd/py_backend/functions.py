@@ -205,8 +205,8 @@ class Delay(Stateful):
             coords = {d: self.subscript_dict[d] for d in self.subs}
             size = [len(d) for d in coords.values()]
             data = np.full((self.order, *size), init_state_value)
-            coords_final = {'delay': np.arange(self.order), **coords}
-            self.state = xr.DataArray(data=data, dims=['delay'] + self.subs, coords=coords_final)
+            coords_final = {'__delay': np.arange(self.order), **coords}
+            self.state = xr.DataArray(data=data, dims=['__delay'] + self.subs, coords=coords_final)
         else:
             self.state = np.array([init_state_value] * self.order)
 
@@ -221,23 +221,31 @@ class Delay(Stateful):
 
 
 class Smooth(Stateful):
-    def __init__(self, smooth_input, smooth_time, initial_value, order):
+    def __init__(self, smooth_input, smooth_time, initial_value, order, subs, subscript_dict):
         super(Smooth, self).__init__()
         self.init_func = initial_value
         self.smooth_time_func = smooth_time
         self.input_func = smooth_input
         self.order_func = order
         self.order = None
+        self.subs = subs
+        self.subscript_dict = subscript_dict
 
     def initialize(self):
         self.order = self.order_func()  # The order can only be set once
-        self.state = np.array([self.init_func()] * self.order)
+        coords = {d: self.subscript_dict[d] for d in self.subs}
+        size = [len(d) for d in coords.values()]
+        data = np.full((self.order, *size), self.init_func())
+        coords_final = {'__smooth': np.arange(self.order), **coords}
+        self.state = xr.DataArray(data=data, dims=['__smooth'] + self.subs, coords=coords_final)
 
     def __call__(self):
+        if len(self.state.dims) == 1:
+            return self.state[-1].values
         return self.state[-1]
 
     def ddt(self):
-        targets = np.roll(self.state, 1)
+        targets = self.state.roll({'__smooth': 1}, roll_coords=False)
         targets[0] = self.input_func()
         return (targets - self.state) * self.order / self.smooth_time_func()
 
@@ -819,15 +827,25 @@ class Model(Macro):
         self.time.stage = 'Run'
         self.clear_caches()
 
+        subscript_dict = self.components._subscript_dict
         capture_elements, return_addresses = utils.get_return_elements(
-            return_columns, self.components._namespace, self.components._subscript_dict)
+            return_columns, self.components._namespace, subscript_dict
+        )
 
-        res = self._integrate(t_series, capture_elements, return_timestamps)
+        inic_vals = {vr: getattr(self.components, vr)() for vr in capture_elements}
+        coords = {
+            vr: [('Time', return_timestamps)] + (
+                [(cd, subscript_dict[cd]) for cd in vl.dims] if isinstance(vl, xr.DataArray) else []
+            )
+            for vr, vl in inic_vals.items()
+        }
+        res = xr.Dataset(data_vars={vr: xr.DataArray(np.nan, coords=coords[vr]) for vr in inic_vals})
+        self._integrate(t_series, res, return_timestamps)
 
-        return_df = utils.make_flat_df(res, return_addresses)
-        return_df.index = return_timestamps
+        # return_df = utils.make_flat_df(res, return_addresses)
+        # return_df.index = return_timestamps
 
-        return return_df
+        return res.rename({v[0]: k for k, v in return_addresses.items()})
 
     def reload(self):
         """Reloads the model from the translated model file, so that all the
@@ -905,7 +923,7 @@ class Model(Macro):
         """
         self.state = self.state + self.ddt() * dt
 
-    def _integrate(self, time_steps, capture_elements, return_timestamps):
+    def _integrate(self, time_steps, outputs, return_timestamps):
         """
         Performs euler integration
 
@@ -917,27 +935,20 @@ class Model(Macro):
             which model elements to capture - uses pysafe names
         return_timestamps:
             which subset of 'timesteps' should be values be returned?
-
-        Returns
-        -------
-        outputs: list of dictionaries
-
         """
-        # Todo: consider adding the timestamp to the return elements, and using that as the index
-        outputs = []
 
         for t2 in time_steps[1:]:
             if self.time() in return_timestamps:
-                outputs.append({key: getattr(self.components, key)() for key in capture_elements})
+                for key in outputs.data_vars:
+                    outputs[key].loc[{'Time': self.time()}] = getattr(self.components, key)()
             self._euler_step(t2 - self.time())
             self.time.update(t2)  # this will clear the stepwise caches
 
         # need to add one more time step, because we run only the state updates in the previous
         # loop after saving outputs and thus may be one short.
         if self.time() in return_timestamps:
-            outputs.append({key: getattr(self.components, key)() for key in capture_elements})
-
-        return outputs
+            for key in outputs.data_vars:
+                outputs[key].loc[{'Time': self.time()}] = getattr(self.components, key)()
 
 
 def ramp(time, slope, start, finish=0):

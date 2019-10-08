@@ -458,8 +458,8 @@ def add_n_smooth(smooth_input, smooth_time, initial_value, order, subs, subscrip
         'real_name': 'Smooth of %s' % smooth_input,
         'doc': 'Smooth time: %s \n Smooth initial value %s \n Smooth order %s' % (
             smooth_time, initial_value, order),
-        'py_expr': 'functions.Smooth(lambda: %s, lambda: %s, lambda: %s, lambda: %s)' % (
-            smooth_input, smooth_time, initial_value, order),
+        'py_expr': 'functions.Smooth(lambda: %s, lambda: %s, lambda: %s, lambda: %s, subs=%s, subscript_dict=%s)' % (
+            smooth_input, smooth_time, initial_value, order, subs, subscript_dict),
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',
