@@ -194,6 +194,7 @@ class Delay(Stateful):
         self.order = None
         self.subs = subs
         self.subscript_dict = subscript_dict
+        self.id = hex(np.random.randint(1e10))  # Need unique id for __delay dim when combined later in xr.Dataset
 
     def initialize(self):
         order = self.order_func()
@@ -201,21 +202,19 @@ class Delay(Stateful):
             warnings.warn('Casting delay order from %f to %i' % (order, int(order)))
         self.order = int(order)  # The order can only be set once
         init_state_value = self.init_func() * self.delay_time_func() / self.order
-        if self.subs:
-            coords = {d: self.subscript_dict[d] for d in self.subs}
-            size = [len(d) for d in coords.values()]
-            data = np.full((self.order, *size), init_state_value)
-            coords_final = {'__delay': np.arange(self.order), **coords}
-            self.state = xr.DataArray(data=data, dims=['__delay'] + self.subs, coords=coords_final)
-        else:
-            self.state = np.array([init_state_value] * self.order)
+
+        coords = {d: self.subscript_dict[d] for d in self.subs}
+        size = [len(d) for d in coords.values()]
+        data = np.full((self.order, *size), init_state_value)
+        coords_final = {'__delay'+self.id: np.arange(self.order), **coords}
+        self.state = xr.DataArray(data=data, dims=['__delay'+self.id] + self.subs, coords=coords_final)
 
     def __call__(self):
         return self.state[-1] / (self.delay_time_func() / self.order)
 
     def ddt(self):
         outflows = self.state / (self.delay_time_func() / self.order)
-        inflows = np.roll(outflows, 1)
+        inflows = outflows.roll({'__delay'+self.id: 1}, roll_coords=False)
         inflows[0] = self.input_func()
         return inflows - outflows
 
