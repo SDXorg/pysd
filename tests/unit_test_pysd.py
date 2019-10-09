@@ -1,7 +1,8 @@
 import unittest
-import pandas as pd
+
 import numpy as np
-from pysd import utils
+import pandas as pd
+import xarray as xr
 
 test_model = 'test-models/samples/teacup/teacup.mdl'
 
@@ -459,9 +460,9 @@ class TestPySD(unittest.TestCase):
         model = pysd.read_vensim(test_model)
         res = model._integrate(time_steps=list(range(5)),
                                capture_elements=['teacup_temperature'],
-                               return_timestamps=list(range(0, 5, 2)))
-        self.assertIsInstance(res, list)
-        self.assertIsInstance(res[0], dict)
+                               return_timestamps=list(range(0, 5, 2)),
+                               subscript_dict={})
+        self.assertIsInstance(res, xr.Dataset)
 
     def test_default_returns_with_construction_functions(self):
         """
@@ -478,7 +479,7 @@ class TestPySD(unittest.TestCase):
                          'Output Delay1',
                          'Output Delay1I',
                          'Output Delay3'} <=
-                        set(ret.columns.values))
+                        set(ret.data_vars))
 
     def test_default_returns_with_lookups(self):
         """
@@ -492,7 +493,7 @@ class TestPySD(unittest.TestCase):
         self.assertTrue({'accumulation',
                          'rate',
                          'lookup function call'} <=
-                        set(ret.columns.values))
+                        set(ret.data_vars))
 
     def test_py_model_file(self):
         """Addresses https://github.com/JamesPHoughton/pysd/issues/86"""
