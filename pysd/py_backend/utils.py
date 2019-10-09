@@ -124,12 +124,20 @@ def make_coord_dict(subs, subscript_dict, terse=True):
     >>>                 terse=False)
     {'Dim2': ['D'], 'Dim1': ['A', 'B', 'C']}
     """
+    ranges = {}
+    for dim in list(subscript_dict):
+        sbs = subscript_dict[dim]
+        if any(all(s in v for s in sbs) for k, v in subscript_dict.items() if k != dim):
+            ranges[dim] = subscript_dict.pop(dim)
     sub_elems_list = [y for x in subscript_dict.values() for y in x]
     coordinates = {}
     for sub in subs:
         if sub in sub_elems_list:
             name = find_subscript_name(subscript_dict, sub)
             coordinates[name] = [sub]
+        elif sub in ranges:
+            name = next(k for k, v in subscript_dict.items() if all(s in v for s in ranges[sub]))
+            coordinates[name] = ranges[sub]
         elif not terse:
             coordinates[sub] = subscript_dict[sub]
     return coordinates
