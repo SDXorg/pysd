@@ -828,9 +828,8 @@ class Model(Macro):
         self.clear_caches()
 
         subscript_dict = self.components._subscript_dict
-        capture_elements, return_addresses = utils.get_return_elements(
-            return_columns, self.components._namespace, subscript_dict
-        )
+        return_addresses = {self.components._namespace[vr]: vr for vr in return_columns}
+        capture_elements = list(return_addresses)
 
         inic_vals = {vr: getattr(self.components, vr)() for vr in capture_elements}
         coords = {
@@ -845,7 +844,7 @@ class Model(Macro):
         # return_df = utils.make_flat_df(res, return_addresses)
         # return_df.index = return_timestamps
 
-        return res.rename({v[0]: k for k, v in return_addresses.items()})
+        return res.rename(return_addresses)
 
     def reload(self):
         """Reloads the model from the translated model file, so that all the

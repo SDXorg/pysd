@@ -314,6 +314,8 @@ def get_return_elements(return_columns, namespace, subscript_dict):
     --------
 
     """
+    
+    # todo: Is this made completely obsolete by the use of Xarray? Wanted to check before deleting...
     capture_elements = list()
     return_addresses = dict()
     for col in return_columns:

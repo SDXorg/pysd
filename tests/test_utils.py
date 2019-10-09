@@ -29,14 +29,67 @@ def runner(model_file):
     except IOError:
         try:
             encoding = detect_encoding(directory + '/output.tab')
-            canon = pd.read_table(directory + '/output.tab', encoding=encoding, index_col='Time').to_xarray()
+            canon = pd.read_csv(directory + '/output.tab', encoding=encoding, index_col='Time', sep='\t').to_xarray()
         except IOError:
             raise IOError('Canonical output file not found')
+
+    # Need to recreate canonical subscripts
+    canon = recreate_subscripts(canon)
 
     # run model
     output = model.run(return_columns=canon.data_vars)
 
     return output, canon
+
+
+def recreate_subscripts(ds):
+    sub_cols = [
+        c for c in ds.data_vars if '[' in c and c.endswith(']')
+    ]  # Not a perfect test, but you'd have to try especially hard to break this.
+    
+    # First, tease out base variable names and their subscripts
+    dict_sub_vars = {}
+    for c in sub_cols:
+        base_var, subs = c.rstrip(']').split('[')
+        subs = subs.split(',')
+        if base_var not in dict_sub_vars:
+            dict_sub_vars[base_var] = []
+        dict_sub_vars[base_var].append((subs, ds[c].values))
+        ds = ds.drop(c)  # No need to keep this in the dataset anymore
+    
+    # Next, infer coordinates and variable data for each variable
+    sub_coords = {}
+    sub_vars = {}
+    for var, info in dict_sub_vars.items():
+        
+        subs = list(zip(*info))[0]
+        by_dims = [sorted(list(set(d))) for d in zip(*subs)]
+        dim_names = []  # Names of coords for this specific variable
+        for dim in by_dims:
+            # Note: this *may* break with ranges or other fancy stuff
+            try:
+                d_name = next(n for n, d in sub_coords.items() if dim == d)
+            except StopIteration:
+                d_name = 'dim' + str(len(sub_coords) + 1)
+                sub_coords[d_name] = dim
+            dim_names.append(d_name)
+        
+        # Now get data
+        n_time = ds['Time'].values.size
+        data = np.empty([n_time] + [len(d) for d in by_dims])
+        for sb, dt in info:
+            inds = [sub_coords[d].index(i) for i, d in zip(sb, dim_names)]
+            slc = tuple([slice(None)] + [slice(ind, ind + 1) for ind in inds])
+            data[slc] = dt.reshape([n_time] + [1]*len(dim_names))
+
+        sub_vars[var] = [data, ['Time'] + dim_names]
+    
+    # Apply coordinates
+    ds = ds.assign_coords(sub_coords)
+
+    # Apply fully subscripted variables
+    ds = ds.assign({name: xr.DataArray(data, dims=dims) for name, (data, dims) in sub_vars.items()})
+    return ds
 
 
 def assert_frames_close(actual, expected, **kwargs):
