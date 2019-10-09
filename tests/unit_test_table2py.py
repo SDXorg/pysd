@@ -1,5 +1,6 @@
 import unittest
-import pandas as pd
+
+import xarray as xr
 
 
 class TestReadTabular(unittest.TestCase):
@@ -7,7 +8,7 @@ class TestReadTabular(unittest.TestCase):
         import pysd
         model = pysd.read_tabular('test-models/samples/teacup/teacup_mdl.tab')
         result = model.run()
-        self.assertTrue(isinstance(result, pd.DataFrame))  # return a dataframe
-        self.assertTrue('Teacup Temperature' in result.columns.values)  # contains correct column
+        self.assertTrue(isinstance(result, xr.Dataset))  # return a dataset
+        self.assertTrue('Teacup Temperature' in result.data_vars)  # contains correct column
         self.assertGreater(len(result), 3)  # has multiple rows
         self.assertTrue(result.notnull().all().all())  # there are no null values in the set
