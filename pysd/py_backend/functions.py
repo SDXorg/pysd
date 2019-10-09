@@ -206,15 +206,15 @@ class Delay(Stateful):
         coords = {d: self.subscript_dict[d] for d in self.subs}
         size = [len(d) for d in coords.values()]
         data = np.full((self.order, *size), init_state_value)
-        coords_final = {'__delay'+self.id: np.arange(self.order), **coords}
-        self.state = xr.DataArray(data=data, dims=['__delay'+self.id] + self.subs, coords=coords_final)
+        coords_final = {'__delay' + self.id: np.arange(self.order), **coords}
+        self.state = xr.DataArray(data=data, dims=['__delay' + self.id] + self.subs, coords=coords_final)
 
     def __call__(self):
         return self.state[-1] / (self.delay_time_func() / self.order)
 
     def ddt(self):
         outflows = self.state / (self.delay_time_func() / self.order)
-        inflows = outflows.roll({'__delay'+self.id: 1}, roll_coords=False)
+        inflows = outflows.roll({'__delay' + self.id: 1}, roll_coords=False)
         inflows[0] = self.input_func()
         return inflows - outflows
 
@@ -236,8 +236,8 @@ class Smooth(Stateful):
         coords = {d: self.subscript_dict[d] for d in self.subs}
         size = [len(d) for d in coords.values()]
         data = np.full((self.order, *size), self.init_func())
-        coords_final = {'__smooth'+self.id: np.arange(self.order), **coords}
-        self.state = xr.DataArray(data=data, dims=['__smooth'+self.id] + self.subs, coords=coords_final)
+        coords_final = {'__smooth' + self.id: np.arange(self.order), **coords}
+        self.state = xr.DataArray(data=data, dims=['__smooth' + self.id] + self.subs, coords=coords_final)
 
     def __call__(self):
         if len(self.state.dims) == 1:
@@ -245,7 +245,7 @@ class Smooth(Stateful):
         return self.state[-1]
 
     def ddt(self):
-        targets = self.state.roll({'__smooth'+self.id: 1}, roll_coords=False)
+        targets = self.state.roll({'__smooth' + self.id: 1}, roll_coords=False)
         targets[0] = self.input_func()
         return (targets - self.state) * self.order / self.smooth_time_func()
 
@@ -831,15 +831,7 @@ class Model(Macro):
         return_addresses = {self.components._namespace[vr]: vr for vr in return_columns}
         capture_elements = list(return_addresses)
 
-        inic_vals = {vr: getattr(self.components, vr)() for vr in capture_elements}
-        coords = {
-            vr: [('Time', return_timestamps)] + (
-                [(cd, subscript_dict[cd]) for cd in vl.dims] if isinstance(vl, xr.DataArray) else []
-            )
-            for vr, vl in inic_vals.items()
-        }
-        res = xr.Dataset(data_vars={vr: xr.DataArray(np.nan, coords=coords[vr]) for vr in inic_vals})
-        self._integrate(t_series, res, return_timestamps)
+        res = self._integrate(t_series, capture_elements, return_timestamps, subscript_dict=subscript_dict)
 
         # return_df = utils.make_flat_df(res, return_addresses)
         # return_df.index = return_timestamps
@@ -922,7 +914,7 @@ class Model(Macro):
         """
         self.state = self.state + self.ddt() * dt
 
-    def _integrate(self, time_steps, outputs, return_timestamps):
+    def _integrate(self, time_steps, capture_elements, return_timestamps, subscript_dict):
         """
         Performs euler integration
 
@@ -934,7 +926,18 @@ class Model(Macro):
             which model elements to capture - uses pysafe names
         return_timestamps:
             which subset of 'timesteps' should be values be returned?
+        subscript_dict:
+            the subscript dictionary
         """
+
+        inic_vals = {vr: getattr(self.components, vr)() for vr in capture_elements}
+        coords = {
+            vr: [('Time', return_timestamps)] + (
+                [(cd, subscript_dict[cd]) for cd in vl.dims] if isinstance(vl, xr.DataArray) else []
+            )
+            for vr, vl in inic_vals.items()
+        }
+        outputs = xr.Dataset(data_vars={vr: xr.DataArray(np.nan, coords=coords[vr]) for vr in inic_vals})
 
         for t2 in time_steps[1:]:
             if self.time() in return_timestamps:
@@ -948,6 +951,8 @@ class Model(Macro):
         if self.time() in return_timestamps:
             for key in outputs.data_vars:
                 outputs[key].loc[{'Time': self.time()}] = getattr(self.components, key)()
+
+        return outputs
 
 
 def ramp(time, slope, start, finish=0):
