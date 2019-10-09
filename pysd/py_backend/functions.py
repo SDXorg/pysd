@@ -230,14 +230,15 @@ class Smooth(Stateful):
         self.order = None
         self.subs = subs
         self.subscript_dict = subscript_dict
+        self.id = hex(np.random.randint(1e10))  # Need unique id for __smooth dim when combined later in xr.Dataset
 
     def initialize(self):
         self.order = self.order_func()  # The order can only be set once
         coords = {d: self.subscript_dict[d] for d in self.subs}
         size = [len(d) for d in coords.values()]
         data = np.full((self.order, *size), self.init_func())
-        coords_final = {'__smooth': np.arange(self.order), **coords}
-        self.state = xr.DataArray(data=data, dims=['__smooth'] + self.subs, coords=coords_final)
+        coords_final = {'__smooth'+self.id: np.arange(self.order), **coords}
+        self.state = xr.DataArray(data=data, dims=['__smooth'+self.id] + self.subs, coords=coords_final)
 
     def __call__(self):
         if len(self.state.dims) == 1:
@@ -245,7 +246,7 @@ class Smooth(Stateful):
         return self.state[-1]
 
     def ddt(self):
-        targets = self.state.roll({'__smooth': 1}, roll_coords=False)
+        targets = self.state.roll({'__smooth'+self.id: 1}, roll_coords=False)
         targets[0] = self.input_func()
         return (targets - self.state) * self.order / self.smooth_time_func()
 
