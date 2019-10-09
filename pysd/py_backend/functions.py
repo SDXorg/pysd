@@ -229,7 +229,7 @@ class Smooth(Stateful):
         self.order = None
         self.subs = subs
         self.subscript_dict = subscript_dict
-        self.id = hex(np.random.randint(1e10))  # Need unique id for __smooth dim when combined later in xr.Dataset
+        self.id = hex(np.random.randint(int(1e10)))  # Need unique id for __smooth dim when combined later in xr.Dataset
 
     def initialize(self):
         self.order = self.order_func()  # The order can only be set once
@@ -933,7 +933,7 @@ class Model(Macro):
         inic_vals = {vr: getattr(self.components, vr)() for vr in capture_elements}
         coords = {
             vr: [('Time', return_timestamps)] + (
-                [(cd, subscript_dict[cd]) for cd in vl.dims] if isinstance(vl, xr.DataArray) else []
+                [(cd, vl.coords[cd].values) for cd in vl.dims] if isinstance(vl, xr.DataArray) else []
             )
             for vr, vl in inic_vals.items()
         }
@@ -942,7 +942,9 @@ class Model(Macro):
         for t2 in time_steps[1:]:
             if self.time() in return_timestamps:
                 for key in outputs.data_vars:
-                    outputs[key].loc[{'Time': self.time()}] = getattr(self.components, key)()
+                    outputs[key].loc[{'Time': self.time()}] = outputs[key].loc[
+                        {'Time': self.time()}
+                    ].combine_first(getattr(self.components, key)())
             self._euler_step(t2 - self.time())
             self.time.update(t2)  # this will clear the stepwise caches
 
@@ -950,7 +952,9 @@ class Model(Macro):
         # loop after saving outputs and thus may be one short.
         if self.time() in return_timestamps:
             for key in outputs.data_vars:
-                outputs[key].loc[{'Time': self.time()}] = getattr(self.components, key)()
+                outputs[key].loc[{'Time': self.time()}] = outputs[key].loc[
+                    {'Time': self.time()}
+                ].combine_first(getattr(self.components, key)())
 
         return outputs
 
