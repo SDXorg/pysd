@@ -317,22 +317,22 @@ class Data(Stateful):
 
         time = self.time_func()
         if time > self.state['time'][-1]:
-            return self.state['time'][-1]
+            return self.state['time'][-1].drop('time')
         elif time < self.state['time'][0]:
-            return self.state['time'][0]
+            return self.state['time'][0].drop('time')
 
         if self.interp == 'interpolate' or self.interp is None:  # 'interpolate' is the default
-            return self.state.interp(time=time)
+            return self.state.interp(time=time).drop('time')
         elif self.interp == 'look forward':
             next_t = self.state['time'][self.state['time'] >= time][0]
-            return self.state.sel(time=next_t)
+            return self.state.sel(time=next_t).drop('time')
         elif self.interp == 'hold backward':
             last_t = self.state['time'][self.state['time'] <= time][-1]
-            return self.state.sel(time=last_t)
+            return self.state.sel(time=last_t).drop('time')
 
         # For :raw: (or actually any other/invalid) keyword directives
         try:
-            return self.state.sel(time=time)
+            return self.state.sel(time=time).drop('time')
         except KeyError:
             return np.nan
 
@@ -940,23 +940,23 @@ class Model(Macro):
         outputs = xr.Dataset(data_vars={vr: xr.DataArray(np.nan, coords=coords[vr]) for vr in inic_vals})
 
         for t2 in time_steps[1:]:
-            if self.time() in return_timestamps:
-                for key in outputs.data_vars:
-                    outputs[key].loc[{'Time': self.time()}] = outputs[key].loc[
-                        {'Time': self.time()}
-                    ].combine_first(getattr(self.components, key)())
+            self._save_time_step(outputs=outputs, return_timestamps=return_timestamps)
             self._euler_step(t2 - self.time())
             self.time.update(t2)  # this will clear the stepwise caches
 
         # need to add one more time step, because we run only the state updates in the previous
         # loop after saving outputs and thus may be one short.
+        self._save_time_step(outputs=outputs, return_timestamps=return_timestamps)
+
+        return outputs
+    
+    def _save_time_step(self, outputs, return_timestamps):
+        # This slightly more complex implementation is necessary for subranges.
         if self.time() in return_timestamps:
             for key in outputs.data_vars:
                 outputs[key].loc[{'Time': self.time()}] = outputs[key].loc[
                     {'Time': self.time()}
                 ].combine_first(getattr(self.components, key)())
-
-        return outputs
 
 
 def ramp(time, slope, start, finish=0):
