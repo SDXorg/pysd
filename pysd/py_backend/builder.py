@@ -12,6 +12,7 @@ xmile specific syntax.
 from __future__ import absolute_import
 
 import os.path
+import re
 import textwrap
 import warnings
 from io import open
@@ -152,7 +153,10 @@ def build_element(element, subscript_dict):
         raise AttributeError("Bad value for 'kind'")
 
     if len(element['py_expr']) > 1:
-        contents = 'return utils.xrmerge([%(das)s,])' % {'das': ',\n'.join(element['py_expr'])}
+        # In this case, we **do** need to retain one-dimensional subscripts
+        contents = 'return utils.xrmerge([%(das)s,])' % {
+            'das': ',\n'.join([re.sub(r'\.squeeze\(\)$', '', e) for e in element['py_expr']])
+        }
     else:
         contents = 'return %(py_expr)s' % {'py_expr': element['py_expr'][0]}
 
