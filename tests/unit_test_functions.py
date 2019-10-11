@@ -314,7 +314,8 @@ class TestStateful(unittest.TestCase):
         delay_a = pysd.functions.Delay(delay_input=lambda: 5,
                                        delay_time=lambda: 3,
                                        initial_value=lambda: 4.234,
-                                       order=lambda: 3)
+                                       order=lambda: 3,
+                                       subs=[], subscript_dict={})
 
         delay_a.initialize()
 

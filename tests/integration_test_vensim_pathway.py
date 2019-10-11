@@ -239,7 +239,6 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/smooth_and_stock/test_smooth_and_stock.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('in branch')
     def test_special_characters(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/special_characters/test_special_variable_names.mdl')
@@ -287,7 +286,6 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscript_aggregation/test_subscript_aggregation.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('in branch')
     def test_subscript_constant_call(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscript_constant_call/test_subscript_constant_call.mdl')
@@ -318,37 +316,32 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscript_individually_defined_stocks/test_subscript_individually_defined_stocks.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('in branch')
     def test_subscript_mixed_assembly(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscript_mixed_assembly/test_subscript_mixed_assembly.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    # @unittest.skip('in branch')
     def test_subscript_selection(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscript_selection/subscript_selection.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    # @unittest.skip('failing in py3')
     def test_subscript_subranges(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscript_subranges/test_subscript_subrange.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    # @unittest.skip('failing in py3')
     def test_subscript_subranges_equal(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscript_subranges_equal/test_subscript_subrange_equal.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    # @unittest.skip('in branch')
+    @unittest.skip('in branch')
     def test_subscript_switching(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscript_switching/subscript_switching.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('in branch')
     def test_subscript_updimensioning(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscript_updimensioning/test_subscript_updimensioning.mdl')
@@ -360,7 +353,6 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscripted_delays/test_subscripted_delays.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('in branch')
     def test_subscripted_flows(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscripted_flows/test_subscripted_flows.mdl')
