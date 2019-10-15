@@ -155,8 +155,8 @@ def build_element(element, subscript_dict):
     if len(element['py_expr']) > 1:
         # In this case, we **do** need to retain one-dimensional subscripts
         contents = 'return utils.xrmerge([%(das)s,])' % {
-            'das': ',\n'.join([re.sub(r'\.squeeze\(\)$', '', e) for e in element['py_expr']])
-        }
+            'das': ',\n'.join([re.sub(r'\.squeeze\(\)', '', e) for e in element['py_expr']])
+        }  # Note: this will crash if somebody decides to name a variable ".squeeze()", or something containing that
     else:
         contents = 'return %(py_expr)s' % {'py_expr': element['py_expr'][0]}
 
