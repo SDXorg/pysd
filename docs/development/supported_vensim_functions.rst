@@ -85,3 +85,11 @@
 +------------------------------+------------------------------+
 
  `np` corresponds to the numpy package
+
+.. warning::
+   Due to an unfortunate difference in the order of operations of Vensim and Python, arguments to boolean operators
+   (e.g., ``:AND:`` and ``:OR:``) should be parenthesised in the Vensim equation to avoid subtle and frustrating bugs.
+
+   For example, ``x > 0 :AND: 1 > y`` will be intepreted as ``(x > 0) :AND: (1 > y)`` by Vensim
+   but as ``x > (0 and 1) > y`` by Python. Specify the equation as ``(x > 0) :AND: (1 > y)`` in Vensim to avoid
+   any ambiguity.
