@@ -125,6 +125,7 @@ def make_coord_dict(subs, subscript_dict, terse=True):
     {'Dim2': ['D'], 'Dim1': ['A', 'B', 'C']}
     """
     ranges = {}
+    subscript_dict = subscript_dict.copy()
     for dim in list(subscript_dict):
         sbs = subscript_dict[dim]
         if any(all(s in v for s in sbs) for k, v in subscript_dict.items() if k != dim):

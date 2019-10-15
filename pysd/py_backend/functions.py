@@ -949,7 +949,7 @@ class Model(Macro):
         self._save_time_step(outputs=outputs, return_timestamps=return_timestamps)
 
         return outputs
-    
+
     def _save_time_step(self, outputs, return_timestamps):
         # This slightly more complex implementation is necessary for subranges.
         if self.time() in return_timestamps:
@@ -1223,6 +1223,31 @@ def vmin(x, dim=None):
 
 def vmax(x, dim=None):
     return x.max(dim=dim)
+
+
+def ensure_coords(value, coords):
+    """
+    This function ensures that the return value is a DataArray with the correct coordinates. This is necessary
+    for subscript updimensioning, constant call, and mixed assembly to work correctly.
+
+    Parameters
+    ----------
+    value: np.ndarray or float or int or xr.DataArray
+        The value to format
+    coords: dict
+        Dictionary of desired coordinates
+    Returns
+    -------
+    xr.DataArray
+
+    """
+    if isinstance(value, xr.DataArray):
+        missing = {k: v for k, v in coords.items() if k not in value.coords}
+        if missing:
+            return value.expand_dims(missing, axis=-1)
+        return value
+    else:
+        return xr.DataArray(data=value, coords=coords, dims=list(coords))
 
 
 def _preserve_array(value, ref):

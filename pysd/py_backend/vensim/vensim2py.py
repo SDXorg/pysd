@@ -13,6 +13,7 @@ from io import open
 import numpy as np
 import parsimonious
 
+from pysd.py_backend.utils import make_coord_dict
 from .. import functions as funcs
 from ...py_backend import builder
 from ...py_backend import utils
@@ -805,7 +806,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             self.kind = 'constant'  # change if we reference anything else
             self.new_structure = []
             self.arguments = None
-            self.in_oper = None
+            self.has_coords = False  # Change if we specify coords in the parsing step
             self.visit(ast)
 
         def visit_expr_type(self, n, vc):
@@ -881,6 +882,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
                 else:
                     data = np.tile(float(n.text), shape)
                 datastr = np.array2string(data, separator=',').replace('\n', '').replace(' ', '')
+                self.has_coords = True
                 return textwrap.dedent("""\
                     xr.DataArray(data=%(datastr)s,
                                  coords=%(coords)s,
@@ -955,10 +957,15 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
 
     tree = parser.parse(element['expr'])
     parse_object = ExpressionParser(tree)
-
-    return ({'py_expr': parse_object.translation,
-             'kind': parse_object.kind,
-             'arguments': parse_object.arguments or ''},
+    
+    need_reindex = ('subs' in element and element['subs']) and not parse_object.has_coords
+    return ({
+                'py_expr': 'functions.ensure_coords({expr}, {coords})'.format(
+                    expr=parse_object.translation,
+                    coords=make_coord_dict(element['subs'], subscript_dict=subscript_dict, terse=False)
+                ) if need_reindex else parse_object.translation,
+                'kind': parse_object.kind,
+                'arguments': parse_object.arguments or ''},
             parse_object.new_structure)
 
 

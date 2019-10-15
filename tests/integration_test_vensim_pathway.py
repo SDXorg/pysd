@@ -336,7 +336,7 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscript_subranges_equal/test_subscript_subrange_equal.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('in branch')
+    # @unittest.skip('in branch')
     def test_subscript_switching(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscript_switching/subscript_switching.mdl')
@@ -347,7 +347,7 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscript_updimensioning/test_subscript_updimensioning.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('requires subscript updimensioning')
+    # @unittest.skip('requires subscript updimensioning')
     def test_subscripted_delays(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscripted_delays/test_subscripted_delays.mdl')
