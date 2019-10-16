@@ -5,10 +5,9 @@ import os.path
 
 import numpy as np
 import pandas as pd
+import pysd
 import xarray as xr
 from chardet.universaldetector import UniversalDetector
-
-import pysd
 
 
 def runner(model_file):
@@ -143,12 +142,19 @@ def assert_frames_close(actual, expected, **kwargs):
     for col in expected.data_vars:
         try:
             # Need to drop all nan dimensions for subranges to work (as xarray automatically fills missing indices
-            # on subrange dims with nans).
-            data_actual = actual[col]
-            for dim in data_actual.dims:
-                data_actual = data_actual.dropna(dim, how='all')
+            # on subrange dims with nans, which is not what Vensim does, which is annoying).
+            # Also need to sort by coordinate labels to make sure that actual and expected coordinates match up.
 
-            assert_allclose(expected[col].values,
+            data_actual = actual[col]
+
+            # Fill na in expected because Vensim prints out empty values for constants when time ≥ 1
+            data_expect = expected[col].fillna(expected[col][0])
+
+            for d_act, d_exp in zip(data_actual.dims, data_expect.dims):
+                data_actual = data_actual.sortby(d_act).dropna(d_act, how='all')
+                data_expect = data_expect.sortby(d_exp)
+
+            assert_allclose(data_expect.values,
                             data_actual.values,
                             **kwargs)
         except AssertionError as e:

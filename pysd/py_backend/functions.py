@@ -134,6 +134,12 @@ class Stateful(object):
     def update(self, state):
         self.state = state
 
+    def ddt(self):
+        raise NotImplementedError
+
+    def apply_ddt(self, ddt, dt):
+        self.update(self.state + ddt * dt)
+
 
 class Integ(Stateful):
     def __init__(self, ddt, initial_value):
@@ -147,7 +153,7 @@ class Integ(Stateful):
         """
         super(Integ, self).__init__()
         self.init_func = initial_value
-        self.ddt = ddt
+        self._ddt = ddt
         self.coords = None
 
     def initialize(self):
@@ -166,6 +172,9 @@ class Integ(Stateful):
             self._state = ensure_coords(value=new_value, coords=self.coords)
         else:
             self._state = new_value
+
+    def ddt(self):
+        return self._ddt()
 
 
 class Delay(Stateful):
@@ -507,7 +516,7 @@ class Macro(Stateful):
                                '\n'.join([repr(e) for e in remaining]))
 
     def ddt(self):
-        return xr.Dataset({name: component.ddt() for name, component in self._stateful_elements.items()})
+        return {name: component.ddt() for name, component in self._stateful_elements.items()}
 
     @property
     def state(self):
@@ -515,7 +524,8 @@ class Macro(Stateful):
 
     @state.setter
     def state(self, new_value):
-        [component.update(val) for component, val in zip(self._stateful_elements.values(), new_value.values())]
+        for component, val in new_value.items():
+            self._stateful_elements[component].update(val)
 
     def set_components(self, params):
         """ Set the value of exogenous model elements.
@@ -567,6 +577,30 @@ class Macro(Stateful):
     def _constant_component(self, value):
         """ Internal function for creating a constant model element """
         return lambda: value
+
+    def _euler_step(self, dt):
+        """ Performs a single step in the euler integration,
+        updating stateful components
+
+        Parameters
+        ----------
+        dt : float
+            This is the amount to increase time by this step
+        """
+        # Here we unfortunately have to iterate twice through the stateful elements, once to get ddt and once to
+        # update their states. Otherwise, the result is variable depending on the order of the stateful elements
+        # when one element's ddt depends on the state of a different stateful.
+        ddts = {}
+        for name, stateful in self._stateful_elements.items():
+            ddts[name] = stateful.ddt()
+
+        # Now apply changes
+        for name, stateful in self._stateful_elements.items():
+            stateful.apply_ddt(ddts[name], dt)
+
+    def apply_ddt(self, ddt, dt):
+        for name, val in ddt.items():
+            self._stateful_elements[name].apply_ddt(val, dt)
 
     def set_state(self, t, state):
         """ Set the system state.
@@ -899,17 +933,6 @@ class Model(Macro):
         else:
             raise TypeError('Check documentation for valid entries')
 
-    def _euler_step(self, dt):
-        """ Performs a single step in the euler integration,
-        updating stateful components
-
-        Parameters
-        ----------
-        dt : float
-            This is the amount to increase time by this step
-        """
-        self.state = self.state + self.ddt() * dt
-
     def _integrate(self, time_steps, capture_elements, return_timestamps, subscript_dict):
         """
         Performs euler integration
@@ -949,10 +972,9 @@ class Model(Macro):
     def _save_time_step(self, outputs, return_timestamps):
         # This slightly more complex implementation is necessary for subranges.
         if self.time() in return_timestamps:
+            index = {'Time': self.time()}
             for key in outputs.data_vars:
-                outputs[key].loc[{'Time': self.time()}] = outputs[key].loc[
-                    {'Time': self.time()}
-                ].combine_first(getattr(self.components, key)())
+                outputs[key].loc[index] = outputs[key].loc[index].combine_first(getattr(self.components, key)())
 
 
 def ramp(time, slope, start, finish=0):
