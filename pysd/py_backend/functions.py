@@ -148,13 +148,13 @@ class Integ(Stateful):
         super(Integ, self).__init__()
         self.init_func = initial_value
         self.ddt = ddt
-        self.shape_info = None
+        self.coords = None
 
     def initialize(self):
-        self.state = self.init_func()
-        if isinstance(self.state, xr.DataArray):
-            self.shape_info = {'dims': self.state.dims,
-                               'coords': self.state.coords}
+        init = self.init_func()
+        if isinstance(init, xr.DataArray):
+            self.coords = init.coords
+        self.state = init
 
     @property
     def state(self):
@@ -162,8 +162,8 @@ class Integ(Stateful):
 
     @state.setter
     def state(self, new_value):
-        if self.shape_info is not None:
-            self._state = xr.DataArray(data=new_value, **self.shape_info)
+        if self.coords is not None:
+            self._state = ensure_coords(value=new_value, coords=self.coords)
         else:
             self._state = new_value
 
@@ -194,7 +194,7 @@ class Delay(Stateful):
         self.order = None
         self.subs = subs
         self.subscript_dict = subscript_dict
-        self.id = hex(np.random.randint(1e10))  # Need unique id for __delay dim when combined later in xr.Dataset
+        self.id = hex(np.random.randint(int(1e10)))  # Need unique id for __delay dim when combined later in xr.Dataset
 
     def initialize(self):
         order = self.order_func()
@@ -204,10 +204,8 @@ class Delay(Stateful):
         init_state_value = self.init_func() * self.delay_time_func() / self.order
 
         coords = {d: self.subscript_dict[d] for d in self.subs}
-        size = [len(d) for d in coords.values()]
-        data = np.full((self.order, *size), init_state_value)
         coords_final = {'__delay' + self.id: np.arange(self.order), **coords}
-        self.state = xr.DataArray(data=data, dims=['__delay' + self.id] + self.subs, coords=coords_final)
+        self.state = ensure_coords(init_state_value, coords=coords_final)
 
     def __call__(self):
         return self.state[-1] / (self.delay_time_func() / self.order)
@@ -234,10 +232,8 @@ class Smooth(Stateful):
     def initialize(self):
         self.order = self.order_func()  # The order can only be set once
         coords = {d: self.subscript_dict[d] for d in self.subs}
-        size = [len(d) for d in coords.values()]
-        data = np.full((self.order, *size), self.init_func())
         coords_final = {'__smooth' + self.id: np.arange(self.order), **coords}
-        self.state = xr.DataArray(data=data, dims=['__smooth' + self.id] + self.subs, coords=coords_final)
+        self.state = ensure_coords(self.init_func(), coords=coords_final)
 
     def __call__(self):
         if len(self.state.dims) == 1:
@@ -1244,7 +1240,7 @@ def ensure_coords(value, coords):
     if isinstance(value, xr.DataArray):
         missing = {k: v for k, v in coords.items() if k not in value.coords}
         if missing:
-            return value.expand_dims(missing, axis=-1)
+            return value.expand_dims(missing, axis=[list(coords).index(x) for x in missing])
         return value
     else:
         return xr.DataArray(data=value, coords=coords, dims=list(coords))
