@@ -190,7 +190,7 @@ def bounds_test(result, bounds=None, errors='return'):
 
     Parameters
     ----------
-    result : pandas dataframe
+    result : xr.DataSet
         Probably the output of a PySD run, a pandas DF whose column names are specified
          as rows in the bounds matrix, and whose values will be tested for conformance to
          the bounds.
@@ -222,7 +222,7 @@ def bounds_test(result, bounds=None, errors='return'):
         raise ValueError('Unknown type: bounds')
 
     error_list = []
-    for colname in result.columns:
+    for colname in result.data_vars:
         if colname in bounds.index:
             lower_bound = bounds['Min'].loc[colname]
             below_bounds = result[colname] < lower_bound
@@ -231,8 +231,8 @@ def bounds_test(result, bounds=None, errors='return'):
                     'column': colname,
                     'condition': lower_bound,
                     'type': 'below support',
-                    'beginning': below_bounds[below_bounds].index[0],
-                    'index': below_bounds[below_bounds].index.summary().split(':')[1],
+                    'beginning': below_bounds[below_bounds]['Time'][0],
+                    'index': below_bounds[below_bounds].to_dataframe().index.summary().split(':')[1],
                     'test': 'b.%i.%i' % ((bounds.index == colname).argmax(), 0)
                 })
 
@@ -243,8 +243,8 @@ def bounds_test(result, bounds=None, errors='return'):
                     'column': colname,
                     'condition': upper_bound,
                     'type': 'above support',
-                    'beginning': above_bounds[above_bounds].index[0],
-                    'index': above_bounds[above_bounds].index.summary().split(':')[1],
+                    'beginning': above_bounds[above_bounds]['Time'][0],
+                    'index': above_bounds[above_bounds].to_dataframe().index.summary().split(':')[1],
                     'test': 'b.%i.%i' % ((bounds.index == colname).argmax(), 1)
                 })
 
@@ -254,8 +254,8 @@ def bounds_test(result, bounds=None, errors='return'):
                     'column': colname,
                     'condition': '',
                     'type': 'NaN',
-                    'beginning': nans[nans].index[0],
-                    'index': nans[nans].index.summary().split(':')[1],
+                    'beginning': nans[nans]['Time'][0],
+                    'index': nans[nans].to_dataframe().index.summary().split(':')[1],
                     'test': 'b.%i.nan' % (bounds.index == colname).argmax()
                 })
     if len(error_list) == 0:
@@ -266,7 +266,7 @@ def bounds_test(result, bounds=None, errors='return'):
         return df.sort_values(by='beginning').set_index('test')[
             ['column', 'type', 'condition', 'index']]
     elif errors == 'raise':
-        raise AssertionError(["'%(column)s' is %(type) %(bound) at %(index)s" % e
+        raise AssertionError(["'{column}' is {type} {condition} at {index}".format(**e)
                               for e in error_list])
 
 
@@ -357,7 +357,7 @@ def sample_pspace(model, param_list=None, bounds=None, samples=100, seed=None):
     lhs = _pd.DataFrame(index=unit_lhs.index)
     for param in param_list:
         lower, upper = bounds[['Min', 'Max']].loc[param]
-        value = res[param].iloc[0]
+        value = res[param].isel(Time=0)
 
         if lower == upper:
             lhs[param] = lower
@@ -390,7 +390,7 @@ def sample_pspace(model, param_list=None, bounds=None, samples=100, seed=None):
         else:
             raise ValueError('Problem with lower: %s or upper: %s bounds' % (lower, upper))
 
-    return lhs
+    return lhs.to_xarray()
 
 
 def summarize(model, cases, tests):

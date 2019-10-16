@@ -33,16 +33,16 @@ class TestBoundsChecker(unittest.TestCase):
         self.assertEqual(len(errors), 2)
 
     def test_identify_nan(self):
-        new_result = self.result.copy()
-        new_result.loc[:3, 'Lower Bounded Stock'] = np.NaN
+        new_result = self.result.copy(deep=True)
+        new_result['Lower Bounded Stock'].loc[:3] = np.NaN
 
         errors = pysd.testing.bounds_test(new_result, bounds=self.bounds)
         self.assertEqual(len(errors), 3)
 
     def test_no_issues(self):
-        new_result = self.result.copy()
-        new_result.loc[:, 'Lower Bounded Stock'] = 10
-        new_result.loc[:, 'Broken Upper Bounded Variable'] = 1
+        new_result = self.result.copy(deep=True)
+        new_result['Lower Bounded Stock'][:] = 10
+        new_result['Broken Upper Bounded Variable'][:] = 1
 
         errors = pysd.testing.bounds_test(new_result, bounds=self.bounds)
         self.assertIsNone(errors)
