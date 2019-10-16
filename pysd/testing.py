@@ -418,7 +418,8 @@ def summarize(model, cases, tests):
     # Todo: This should be easily parallelizable
 
     synopsis = _pd.DataFrame(columns=['variable', 'type', 'condition', 'cases'])
-    for case_num, case in cases.iterrows():
+    for case_num, index in enumerate(cases['index'].values):
+        case = cases.loc[{'index': index}]
         result = model.run(dict(case), reload=True)
         error_df = _pd.DataFrame()
         for test_func in tests:

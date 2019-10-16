@@ -5,9 +5,10 @@ import os.path
 
 import numpy as np
 import pandas as pd
-import pysd
 import xarray as xr
 from chardet.universaldetector import UniversalDetector
+
+import pysd
 
 
 def runner(model_file):
@@ -107,17 +108,20 @@ def assert_frames_close(actual, expected, **kwargs):
 
     Examples
     --------
-    # todo: change examples to xr.Dataset
-    >>> assert_frames_close(pd.DataFrame(100, index=range(5), columns=range(3)),
-    ...                   pd.DataFrame(100, index=range(5), columns=range(3)))
+    >>> assert_frames_close(
+    ...     xr.Dataset({'a': ('Time', np.full(5,100)), 'b': ('Time', np.full(5,100))}, coords={'Time': range(5)}),
+    ...     xr.Dataset({'a': ('Time', np.full(5,100)), 'b': ('Time', np.full(5,100))}, coords={'Time': range(5)})
+    ... )
 
-    >>> assert_frames_close(pd.DataFrame(100, index=range(5), columns=range(3)),
-    ...                   pd.DataFrame(110, index=range(5), columns=range(3)),
-    ...                   rtol=.2)
+    >>> assert_frames_close(
+    ...     xr.Dataset({'a': ('Time', np.full(5,100)), 'b': ('Time', np.full(5,100))}, coords={'Time': range(5)}),
+    ...     xr.Dataset({'a': ('Time', np.full(5,110)), 'b': ('Time', np.full(5,110))}, coords={'Time': range(5)}),
+    ...  rtol=.2)
 
-    >>> assert_frames_close(pd.DataFrame(100, index=range(5), columns=range(3)),
-    ...                   pd.DataFrame(150, index=range(5), columns=range(3)),
-    ...                   rtol=.2)  # doctest: +IGNORE_EXCEPTION_DETAIL
+    >>> assert_frames_close(
+    ...     xr.Dataset({'a': ('Time', np.full(5,100)), 'b': ('Time', np.full(5,100))}, coords={'Time': range(5)}),
+    ...     xr.Dataset({'a': ('Time', np.full(5,150)), 'b': ('Time', np.full(5,110))}, coords={'Time': range(5)}),
+    ...  rtol=.2)  # doctest: +IGNORE_EXCEPTION_DETAIL
     Traceback (most recent call last):
     ...
     AssertionError:

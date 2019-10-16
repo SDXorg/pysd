@@ -1,8 +1,11 @@
 import os
 import unittest
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 import scipy.stats
+import xarray as xr
+
 import pysd
 
 
@@ -63,6 +66,7 @@ class TestExtremeConditions(unittest.TestCase):
 
     def test_create_range_test_template(self):
         self.assertTrue(os.path.isfile(self.file_name))
+
     @unittest.skip
     def test_static_test_matrix(self):
         errors = pysd.testing.extreme_conditions_test(self.model_file,
@@ -92,9 +96,9 @@ class TestSamplePSpace(unittest.TestCase):
                                                  samples=cls.n_samples)
 
     def test_correct_shape(self):
-        self.assertIsInstance(self.samples, pd.DataFrame)
-        self.assertEqual(len(self.samples.index), self.n_samples)
-        self.assertSetEqual(set(self.samples.columns),
+        self.assertIsInstance(self.samples, xr.Dataset)
+        self.assertEqual(len(self.samples['index']), self.n_samples)
+        self.assertSetEqual(set(self.samples.data_vars),
                             set(self.param_names))
 
     def test_values_within_bounds(self):
@@ -137,15 +141,15 @@ class TestSamplePSpace(unittest.TestCase):
                            .9)
 
     def test_exponential_upper_bound(self):
-        self.assertGreater(scipy.stats.kstest(rvs=10-self.samples['Upper Bound Above 0'],
+        self.assertGreater(scipy.stats.kstest(rvs=10 - self.samples['Upper Bound Above 0'],
                                               cdf='expon', args=(0, 6)).pvalue,
                            .9)
 
-        self.assertGreater(scipy.stats.kstest(rvs=-5-self.samples['Upper Bound Below 0'],
+        self.assertGreater(scipy.stats.kstest(rvs=-5 - self.samples['Upper Bound Below 0'],
                                               cdf='expon', args=(0, 5)).pvalue,
                            .9)
 
-        self.assertGreater(scipy.stats.kstest(rvs=0-self.samples['Upper Bound 0'],
+        self.assertGreater(scipy.stats.kstest(rvs=0 - self.samples['Upper Bound 0'],
                                               cdf='expon', args=(0, 2)).pvalue,
                            .9)
 
@@ -155,7 +159,7 @@ class TestSamplePSpace(unittest.TestCase):
         samples = pysd.testing.sample_pspace(model=model,
                                              samples=n_samples)
 
-        self.assertSetEqual(set(samples.columns), {'Characteristic Time', 'Room Temperature'})
+        self.assertSetEqual(set(samples.data_vars), {'Characteristic Time', 'Room Temperature'})
 
 
 class TestSummarize(unittest.TestCase):
@@ -181,7 +185,6 @@ class TestSummarize(unittest.TestCase):
             tests=[lambda res: pysd.testing.bounds_test(res, cls.bounds)])
 
     def test_index(self):
-
         # test that the various tests get properly aggregated, no duplicate indices
         self.assertEqual(max(pd.value_counts(self.summary.index)), 1)
 
@@ -217,4 +220,3 @@ class TestCheckTimestep(unittest.TestCase):
         self.model.set_components({'TIME STEP': .01})
         errors = pysd.testing.timestep_test(self.model)
         self.assertEqual(len(errors), 0)
-

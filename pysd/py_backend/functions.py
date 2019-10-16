@@ -854,6 +854,11 @@ class Model(Macro):
         if return_columns is None:
             return_columns = self._default_return_columns()
 
+        for c in list(return_columns):
+            if c not in self.components._namespace:
+                return_columns.remove(c)
+                return_columns.append(next(k for k, v in self.components._namespace.items() if v == c))
+
         self.time.stage = 'Run'
         self.clear_caches()
 

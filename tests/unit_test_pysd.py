@@ -3,6 +3,7 @@ import unittest
 import numpy as np
 import pandas as pd
 import xarray as xr
+import xarray.testing as xrt
 
 test_model = 'test-models/samples/teacup/teacup.mdl'
 
@@ -12,8 +13,8 @@ class TestPySD(unittest.TestCase):
         import pysd
         model = pysd.read_vensim(test_model)
         stocks = model.run()
-        self.assertTrue(isinstance(stocks, pd.DataFrame))  # return a dataframe
-        self.assertTrue('Teacup Temperature' in stocks.columns.values)  # contains correct column
+        self.assertTrue(isinstance(stocks, xr.Dataset))  # return an xarray dataset
+        self.assertTrue('Teacup Temperature' in stocks.data_vars)  # contains correct column
         self.assertGreater(len(stocks), 3)  # has multiple rows
         self.assertTrue(stocks.notnull().all().all())  # there are no null values in the set
 
@@ -21,7 +22,7 @@ class TestPySD(unittest.TestCase):
         import pysd
         model = pysd.read_vensim(test_model)
         res = model.run()
-        self.assertEqual(res.index[-1], model.components.final_time())
+        self.assertEqual(res['Time'][-1], model.components.final_time())
 
     def test_run_build_timeseries(self):
         import pysd
@@ -34,7 +35,7 @@ class TestPySD(unittest.TestCase):
 
         res = model.run()
 
-        actual = list(res.index)
+        actual = list(res['Time'])
         expected = [3., 4., 5., 6., 7.]
         self.assertSequenceEqual(actual, expected)
 
@@ -44,10 +45,10 @@ class TestPySD(unittest.TestCase):
         model = pysd.read_vensim(test_model)
         timestamps = np.random.rand(5).cumsum()
         stocks = model.run(return_timestamps=timestamps)
-        self.assertTrue((stocks.index.values == timestamps).all())
+        self.assertTrue((stocks['Time'].values == timestamps).all())
 
         stocks = model.run(return_timestamps=5)
-        self.assertEqual(stocks.index[0], 5)
+        self.assertEqual(stocks['Time'][0], 5)
 
     def test_run_return_timestamps_past_final_time(self):
         """ If the user enters a timestamp that is longer than the euler
@@ -57,7 +58,7 @@ class TestPySD(unittest.TestCase):
         model = pysd.read_vensim(test_model)
         return_timestamps = list(range(0, 100, 10))
         stocks = model.run(return_timestamps=return_timestamps)
-        self.assertSequenceEqual(return_timestamps, list(stocks.index))
+        self.assertSequenceEqual(return_timestamps, list(stocks['Time']))
 
     def test_return_timestamps_with_range(self):
         """
@@ -68,7 +69,7 @@ class TestPySD(unittest.TestCase):
         model = pysd.read_vensim(test_model)
         return_timestamps = range(0, 100, 10)
         stocks = model.run(return_timestamps=return_timestamps)
-        self.assertSequenceEqual(return_timestamps, list(stocks.index))
+        self.assertSequenceEqual(return_timestamps, list(stocks['Time']))
 
     def test_run_return_columns_original_names(self):
         """Addresses https://github.com/JamesPHoughton/pysd/issues/26
@@ -77,7 +78,7 @@ class TestPySD(unittest.TestCase):
         model = pysd.read_vensim(test_model)
         return_columns = ['Room Temperature', 'Teacup Temperature']
         result = model.run(return_columns=return_columns)
-        self.assertEqual(set(result.columns), set(return_columns))
+        self.assertEqual(set(result.data_vars), set(return_columns))
 
     def test_run_reload(self):
         """ Addresses https://github.com/JamesPHoughton/pysd/issues/99"""
@@ -88,9 +89,10 @@ class TestPySD(unittest.TestCase):
         result2 = model.run()
         result3 = model.run(reload=True)
 
-        self.assertTrue((result0 == result3).all().all())
-        self.assertFalse((result0 == result1).all().all())
-        self.assertTrue((result1 == result2).all().all())
+        xrt.assert_equal(result0, result3)
+        with self.assertRaises(AssertionError):
+            xrt.assert_equal(result0, result1)
+        xrt.assert_equal(result1, result2)
 
     def test_run_return_columns_pysafe_names(self):
         """Addresses https://github.com/JamesPHoughton/pysd/issues/26"""
@@ -98,15 +100,15 @@ class TestPySD(unittest.TestCase):
         model = pysd.read_vensim(test_model)
         return_columns = ['room_temperature', 'teacup_temperature']
         result = model.run(return_columns=return_columns)
-        self.assertEqual(set(result.columns), set(return_columns))
+        self.assertEqual(set(result.data_vars), set(return_columns))
 
     def test_initial_conditions_tuple_pysafe_names(self):
         import pysd
         model = pysd.read_vensim(test_model)
         stocks = model.run(initial_condition=(3000, {'teacup_temperature': 33}),
                            return_timestamps=list(range(3000, 3010)))
-        self.assertEqual(stocks.index[0], 3000)
-        self.assertEqual(stocks['Teacup Temperature'].iloc[0], 33)
+        self.assertEqual(stocks['Time'][0], 3000)
+        self.assertEqual(stocks['Teacup Temperature'].isel(Time=0), 33)
 
     def test_initial_conditions_tuple_original_names(self):
         """ Responds to https://github.com/JamesPHoughton/pysd/issues/77"""
@@ -114,8 +116,8 @@ class TestPySD(unittest.TestCase):
         model = pysd.read_vensim(test_model)
         stocks = model.run(initial_condition=(3000, {'Teacup Temperature': 33}),
                            return_timestamps=list(range(3000, 3010)))
-        self.assertEqual(stocks.index[0], 3000)
-        self.assertEqual(stocks['Teacup Temperature'].iloc[0], 33)
+        self.assertEqual(stocks['Time'][0], 3000)
+        self.assertEqual(stocks['Teacup Temperature'].isel(Time=0), 33)
 
     def test_initial_conditions_current(self):
         import pysd
@@ -123,8 +125,8 @@ class TestPySD(unittest.TestCase):
         stocks1 = model.run(return_timestamps=list(range(0, 31)))
         stocks2 = model.run(initial_condition='current',
                             return_timestamps=list(range(30, 45)))
-        self.assertEqual(stocks1['Teacup Temperature'].iloc[-1],
-                         stocks2['Teacup Temperature'].iloc[0])
+        self.assertEqual(stocks1['Teacup Temperature'].isel(Time=-1),
+                         stocks2['Teacup Temperature'].isel(Time=0))
 
     def test_initial_condition_bad_value(self):
         import pysd
@@ -151,7 +153,7 @@ class TestPySD(unittest.TestCase):
         res = model.run(params={'room_temperature': temp_timeseries},
                         return_columns=['room_temperature'],
                         return_timestamps=timeseries)
-        self.assertTrue((res['room_temperature'] == temp_timeseries).all())
+        self.assertTrue((res['Room Temperature'] == temp_timeseries).all())
 
     def test_set_component_with_real_name(self):
         import pysd
@@ -183,9 +185,9 @@ class TestPySD(unittest.TestCase):
         model = pysd.read_vensim(test_model)
         model.set_components({'Room Temperature': test_func})
         res = model.run(return_columns=['Room Temperature'])
-        self.assertEqual(test_func(), res['Room Temperature'].iloc[0])
+        self.assertEqual(test_func(), res['Room Temperature'].isel(Time=0))
 
-    @unittest.skip('to be fixed')
+    #@unittest.skip('to be fixed')
     def test_docs(self):
         """ Test that the model prints some documentation """
         import pysd
@@ -203,7 +205,7 @@ class TestPySD(unittest.TestCase):
                          'Degrees Fahrenheit/Minute')
         self.assertEqual(doc[doc['Real Name'] == 'Teacup Temperature']['Py Name'].values[0],
                          'teacup_temperature')
-        self.assertEqual(doc[doc['Real Name'] == 'INITIAL TIME']['Comment'].values[0],
+        self.assertEqual(doc[doc['Real Name'] == 'INITIAL TIME']['Comment'].values[0].strip("'b"),
                          'The initial time for the simulation.')
         self.assertEqual(doc[doc['Real Name'] == 'Characteristic Time']['Type'].values[0],
                          'constant')
