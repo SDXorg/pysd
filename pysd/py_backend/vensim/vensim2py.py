@@ -668,6 +668,10 @@ builders = {
 
     "initial": lambda element, subscript_dict, args: builder.add_initial(args[0]),
 
+    # Vensim inconveniently adds the variable's own name to its list of parameters
+    # in the case of incomplete equations. Actually not always. But sometimes. Such
+    # as if the incomplete equation has units or a doc. Or perhaps both. I'm not sure.
+    # Anyhow we have to get rid of it, if Vensim has decided that it is to be there.
     "a function of": lambda element, subscript_dict, args: builder.add_incomplete(
         element['real_name'], [x for x in args if x != element['py_name'] + '()'])
 }
