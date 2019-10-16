@@ -669,7 +669,7 @@ builders = {
     "initial": lambda element, subscript_dict, args: builder.add_initial(args[0]),
 
     "a function of": lambda element, subscript_dict, args: builder.add_incomplete(
-        element['real_name'], args)
+        element['real_name'], [x for x in args if x != element['py_name'] + '()'])
 }
 
 builders['get direct data'] = builders['get xls data']  # Both are implemented identically in PySD
