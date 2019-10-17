@@ -1223,14 +1223,6 @@ def log(x, base):
     return np.log(x) / np.log(base)
 
 
-def and_(x, y):
-    return _preserve_array(np.logical_and(x, y), ref=[x, y])
-
-
-def or_(x, y):
-    return _preserve_array(np.logical_or(x, y), ref=[x, y])
-
-
 def sum(x, dim=None):
     return x.sum(dim=dim)
 

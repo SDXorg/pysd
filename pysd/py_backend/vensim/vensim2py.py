@@ -481,17 +481,6 @@ subscript_functions = {
     "get direct subscript": funcs.get_direct_subscript
 }
 
-data_ops = {
-    'get data at time': '',
-    'get data between times': '',
-    'get data last time': '',
-    'get data max': '',
-    'get data min': '',
-    'get data median': '',
-    'get data mean': '',
-    'get data stdv': '',
-    'get data total points': ''
-}
 
 builders = {
     "integ": lambda element, subscript_dict, args: builder.add_stock(
