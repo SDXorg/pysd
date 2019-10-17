@@ -493,24 +493,6 @@ data_ops = {
     'get data total points': ''
 }
 
-data_functions = {
-    "get direct data": "functions.get_direct_data",
-    "get xls constants": "functions.get_xls_constants",
-    "get xls lookups": "functions.get_xls_lookups"
-}
-
-data_ops = {
-    'get data at time': '',
-    'get data between times': '',
-    'get data last time': '',
-    'get data max': '',
-    'get data min': '',
-    'get data median': '',
-    'get data mean': '',
-    'get data stdv': '',
-    'get data total points': ''
-}
-
 builders = {
     "integ": lambda element, subscript_dict, args: builder.add_stock(
         identifier=element['py_name'],
@@ -656,16 +638,6 @@ builders = {
         subscript_dict=subscript_dict
     ),
 
-    "get xls lookups": lambda element, subscript_dict, args: builder.add_ext_lookup(
-        identifier=element['py_name'],
-        file=args[0],
-        tab=args[1],
-        x_row_or_col=args[2],
-        cell=args[3],
-        subs=element['subs'],
-        subscript_dict=subscript_dict
-    ),
-
     "initial": lambda element, subscript_dict, args: builder.add_initial(args[0]),
 
     # Vensim inconveniently adds the variable's own name to its list of parameters
@@ -755,9 +727,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
 
     expression_grammar = r"""
     expr_type = array / expr / empty
-    expr = _ pre_oper? _ (lookup_def / build_call / macro_call / call / lookup_call / parens / number / string / reference) _ in_oper_expr?
+    expr = _ pre_oper? _ (lookup_def / build_call / macro_call / call / lookup_call / parens / number / string / reference) _ (in_oper _ expr)?
 
-    in_oper_expr = (in_oper _ expr)
     lookup_def = ~r"(WITH\ LOOKUP)"I _ "(" _ expr _ "," _ "(" _  ("[" ~r"[^\]]*" "]" _ ",")?  ( "(" _ expr _ "," _ expr _ ")" _ ","? _ )+ _ ")" _ ")"
     lookup_call = (id _ subscript_list?) _ "(" _ (expr _ ","? _)* ")"  # these don't need their args parsed...
     call = func _ "(" _ (expr _ ","? _)* ")"  # these don't need their args parsed...
@@ -818,27 +789,9 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             self.translation = s
 
         def visit_expr(self, n, vc):
-            if self.in_oper:
-                args = [x for x in vc if len(x.strip())]
-                if len(args) == 3:
-                    args = [''.join(args[0:2]), args[2]]
-                if self.in_oper  == ' and ':
-                    s = 'functions.and_(%s)' % ','.join(args)
-                elif self.in_oper == ' or ':
-                    s = 'functions.or_(%s)' % ','.join(args)
-                else:
-                    s = self.in_oper.join(args)
-                self.in_oper = None
-            else:
-                s = ''.join(filter(None, vc)).strip()
+            s = ''.join(filter(None, vc)).strip()
             self.translation = s
             return s
-
-        def visit_in_oper_expr(self, n, vc):
-            # We have to pull out the internal operator because the Python "and" and "or" operator do not work with
-            # numpy arrays or xarray DataArrays. We will later replace it with the functions.and_ or functions.or_.
-            self.in_oper = vc[0]
-            return ''.join(filter(None, vc[1:])).strip()
 
         def visit_call(self, n, vc):
             self.kind = 'component'

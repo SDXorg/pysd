@@ -15,7 +15,6 @@ import random
 import re
 import string
 import warnings
-from functools import reduce
 from functools import wraps, reduce
 
 import numpy as np
@@ -1294,6 +1293,7 @@ def get_direct_subscript(file, tab, firstcell, lastcell, prefix):
         cols=[col_first, col_last]
     )
     return [prefix + str(d) for d in data.flatten()]
+
 
 get_xls_subscript = get_direct_subscript
 

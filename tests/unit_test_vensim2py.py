@@ -361,7 +361,8 @@ class TestParse_general_expression(unittest.TestCase):
 
     def test_incomplete_expression(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
-        res = parse_general_expression({'expr': 'A FUNCTION OF(Unspecified Eqn,Var A,Var B)', 'real_name': 'something'},
+        res = parse_general_expression({'expr': 'A FUNCTION OF(Unspecified Eqn,Var A,Var B)',
+                                        'real_name': 'something', 'py_name': 'something'},
                                        {'Unspecified Eqn': 'unspecified_eqn',
                                         'Var A': 'var_a',
                                         'Var B': 'var_b'})
