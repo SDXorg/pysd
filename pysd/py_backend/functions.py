@@ -666,7 +666,7 @@ class Model(Macro):
 
         if params:
             self.set_components(params)
-
+        self.clear_caches()
         self.set_initial_condition(initial_condition)
 
         return_timestamps = self._format_return_timestamps(return_timestamps)
