@@ -13,7 +13,7 @@ class TestIntegrationExamples(unittest.TestCase):
 
     def test_excel(self):
         from pysd import read_vensim
-        model = read_vensim('/home/diego/Desktop/pysd-test/my_tests/excel.mdl')
+        model = read_vensim('my_tests/excel.mdl')
         model.run()
         self.assertTrue(True)
 
