@@ -1,0 +1,35 @@
+a = 
+	GET XLS DATA('test.xlsx', 'test', '1', 'B1') ~~|
+
+b = 
+	GET XLS CONSTANTS('test.xlsx', 'test', 'B1') ~~|
+
+s:
+    sub1, sub2 ~~|
+
+c[sub1] = 
+    GET XLS LOOKUPS('test.xlsx', 'test', '1', 'B1') ~~|
+
+stock_a = INTEG(a,b) ~~|
+
+
+FINAL TIME  = 2013
+	~	Year
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 2010
+	~	Year
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP
+	~	Year [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 0.03125
+	~	Year [0,?]
+	~	The time step for the simulation.
+	|

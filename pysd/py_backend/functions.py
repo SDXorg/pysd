@@ -24,6 +24,26 @@ import xarray as xr
 from funcsigs import signature
 
 from . import utils
+import sys
+
+import traceback
+
+class Excels():
+    _instance = None
+    _Excels = {}
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(Excels, cls).__new__(cls)
+        return cls._instance
+
+    def read(cls, file):
+        if file in cls._Excels:
+            return cls._Excels[file]
+        else: 
+            excel = pd.ExcelFile(file)
+            cls._Excels[file] = excel
+            return excel
 
 try:
     import scipy.stats as stats
@@ -197,16 +217,19 @@ class Delay(Stateful):
 
     def initialize(self):
         order = self.order_func()
+        if isinstance(order, xr.DataArray): order = order.values
+        while isinstance(order, np.ndarray): 
+            order = order[0]
         if order != int(order):
             warnings.warn('Casting delay order from %f to %i' % (order, int(order)))
         self.order = int(order)  # The order can only be set once
         init_state_value = self.init_func() * self.delay_time_func() / self.order
         if self.subs:
-            coords = {d: self.subscript_dict[d] for d in self.subs}
+            coords = utils.make_coord_dict(self.subs, self.subscript_dict, terse=False)
             size = [len(d) for d in coords.values()]
             data = np.full((self.order, *size), init_state_value)
             coords_final = {'delay': np.arange(self.order), **coords}
-            self.state = xr.DataArray(data=data, dims=['delay'] + self.subs, coords=coords_final)
+            self.state = xr.DataArray(data=data, dims=['delay'] + list(coords.keys()), coords=coords_final)
         else:
             self.state = np.array([init_state_value] * self.order)
 
@@ -289,13 +312,18 @@ class Data(Stateful):
     def initialize(self):
         time_across = self.time_row_or_col.isnumeric()
         size = int(np.product([len(v) for v in self.coords.values()]))
-
+        
         time_data, data = _get_series_data(
             file=self.file, tab=self.tab, series_across=time_across, series_row_or_col=self.time_row_or_col,
             cell=self.cell, size=size
         )
+
+        reshape_dims = tuple( [len(i) for i in self.coords.values()] + [len(time_data)] )
+        if len(reshape_dims)>0:
+            data = reshape(data, reshape_dims)
+        
         self.state = xr.DataArray(
-            data=data, coords={'time': time_data, **self.coords}, dims=['time'] + list(self.coords)
+            data=data, coords={**self.coords, 'time': time_data}, dims=list(self.coords)+['time']
         )
 
     def ddt(self):
@@ -346,6 +374,12 @@ class ExtLookup(Stateful):
             file=self.file, tab=self.tab, series_across=x_across, series_row_or_col=self.x_row_or_col,
             cell=self.cell, size=size
         )
+
+
+        reshape_dims = tuple( [len(x_data)] + [len(i) for i in self.coords.values()] )
+        if len(reshape_dims)>0:
+            data = reshape(data, reshape_dims)
+
         self.state = xr.DataArray(
             data=data, coords={'x': x_data, **self.coords}, dims=['x'] + list(self.coords)
         )
@@ -358,11 +392,20 @@ class ExtLookup(Stateful):
         pass
 
     def __call__(self, x):
+        return self._call(x)
+
+    def _call(self, x):
+        
+        if isinstance(x, xr.DataArray):
+            return xr.DataArray(data=self._call(x.values), coords=x.coords, dims=x.dims)
+        
+        if isinstance(x, np.ndarray):
+            return np.array([self._call(i) for i in x])
+
         if x > self.state['x'][-1]:
             return self.state['x'][-1]
         elif x < self.state['x'][0]:
             return self.state['x'][0]
-
         return self.state.interp(x=x)
 
 
@@ -392,6 +435,11 @@ class ExtConstant(Stateful):
                 else:
                     end_row = start_row + len(self.coords[dims[-2]]) - 1
         data = _get_data_from_file(self.file, tab=self.tab, rows=[start_row, end_row], cols=[start_col, end_col])
+    
+        reshape_dims = tuple([len(i) for i in self.coords.values()])
+        
+        if len(reshape_dims)>0: data = reshape(data, reshape_dims) 
+
         self.state = xr.DataArray(
             data=data, coords=self.coords, dims=list(self.coords)
         )
@@ -437,6 +485,7 @@ class Macro(Stateful):
         module_name = os.path.splitext(py_model_file)[0] + str(random.randint(0, 1000000))
         self.components = imp.load_source(module_name,
                                           py_model_file)
+
         if params is not None:
             self.set_components(params)
 
@@ -476,17 +525,13 @@ class Macro(Stateful):
             else:
                 self.time = self.time_initialization()
 
-        # if self.time is None:
-        #     self.time = time
-        # self.components.time = self.time
-        # self.components.functions.time = self.time  # rewrite functions so we don't need this
         self.components._init_outer_references({
             'scope': self,
             'time': self.time
         })
 
         remaining = set(self._stateful_elements)
-
+    
         while remaining:
             progress = set()
             for element in remaining:
@@ -806,7 +851,7 @@ class Model(Macro):
 
         if params:
             self.set_components(params)
-
+        self.clear_caches()
         self.set_initial_condition(initial_condition)
 
         return_timestamps = self._format_return_timestamps(return_timestamps)
@@ -1085,9 +1130,31 @@ def lookup_discrete(x, xs, ys):
     return ys[len(ys) - 1]
 
 
-def if_then_else(condition, val_if_true, val_if_false):
-    return xr.where(condition, val_if_true, val_if_false)
+def align(base, to_align):
+    if not isinstance(base, xr.DataArray) or not isinstance(to_align, xr.DataArray):
+        return to_align
 
+    intersection = {}
+    basedims = set(base.dims)
+    for dim in to_align.dims:
+        if dim in basedims:
+            coordA=set([str(i.values) for i in to_align.coords[dim]])
+            coordB=set([str(i.values) for i in base.coords[dim]])
+            intersection[dim] = list( coordA & coordB )
+        else:
+            intersection[dim] = [str(i.values) for i in to_align.coords[dim]]
+
+    return to_align.loc[intersection]
+    
+def if_then_else(condition, val_if_true, val_if_false):
+    
+    if isinstance(condition, xr.DataArray):
+        if condition.values.size == 1:
+            return val_if_true if condition.values[0] else val_if_false
+        else:
+            return xr.where(condition, val_if_true, val_if_false)
+    else:
+        return val_if_true if condition else val_if_false
 
 def xidz(numerator, denominator, value_if_denom_is_zero):
     """
@@ -1231,30 +1298,97 @@ def get_direct_subscript(file, tab, firstcell, lastcell, prefix):
 
 get_xls_subscript = get_direct_subscript
 
+def _isFloat(n):
+    try:
+        if (n == "nan"): return False
+        float(n)
+        return True
+    except ValueError:
+        return False
+
+def reshape(data, dims):
+    
+    if isinstance(data, (np.int64, np.float64)):
+        return np.array(data).reshape(dims)
+    elif isinstance(data, (pd.Series, pd.DataFrame)):
+        return data.values.reshape(dims)
+    elif isinstance(data, pd.DataFrame):
+        return data
+
+def str_to_int(s):
+    if len(s) == 1: return ord(s.upper()) - ord('A') + 1
+    else:
+        big =   ord(s[0].upper()) - ord('A') + 1
+        small = ord(s[1].upper()) - ord('A') + 1
+        return big * (ord('Z')-ord('A')+1) + small
+
+def to_ABC(x):
+    if x < 26: return chr(ord('A')+x)
+    return to_ABC(int(x/26)-1) + to_ABC(int(x%26))
 
 def _get_series_data(file, tab, series_across, series_row_or_col, cell, size):
+    
     if series_across:
-        series_data = _get_data_from_file(file, tab, rows=int(series_row_or_col), cols=None, dropna=True)
+        # Get serie from 1 to size
+    
+        series_data = _get_data_from_file(file, tab, rows=int(series_row_or_col)-1, cols=None, dropna=False)
         first_data_row, first_col = _split_excel_cell(cell)
-        last_col = first_col + series_data.size - 1
 
+        original_index = list(series_data.index)
+        first_col = first_col.upper()
+
+
+        series_raw = [i for i in series_data]
+        series_data = series_data[str_to_int(first_col)-1:]
+        
+        series_data = [i for i in series_data]
+        try:
+            a = series_data[-1]
+        except:
+            raise
+
+        index = -1
+        asize = len(series_data)
+        
+        while not _isFloat(str(series_data[asize+index])):
+            index -= 1
+        index += 1
+
+        if index != 0:
+            series_data = series_data[:asize+index]
+            last_col = to_ABC(original_index[index])
+        else:
+            last_col = to_ABC(original_index[-1])
         last_data_row = first_data_row + size - 1
         data = _get_data_from_file(
             file, tab, rows=[first_data_row, last_data_row], cols=[first_col, last_col])
+        
+        if isinstance(data, pd.DataFrame): data = data.dropna(how="all", axis="columns")
+        else: data = data.dropna()
+        
+
     else:
         first_row, first_col = _split_excel_cell(cell)
         series_data = _get_data_from_file(
-            file, tab, rows=[first_row, None], cols=series_row_or_col, dropna=True
+            file, tab, rows=[first_row, None], cols=series_row_or_col, axis="rows", dropna=True
         )
 
         last_row = first_row + series_data.size - 1
         cols = [first_col, _col_to_num(first_col) + size - 1]
         data = _get_data_from_file(file, tab, rows=[first_row, last_row], cols=cols)
+    
+    series_data = pd.Series(series_data)
+
+    series_data = series_data.dropna()
+    series_data = pd.Series(series_data.values[:len(data)])
+
+    if isinstance(data, pd.Series):
+        data = pd.Series(data.values[:len(series_data)])
 
     return series_data, data
 
 
-def _get_data_from_file(file, tab, rows, cols, dropna=False):
+def _get_data_from_file(file, tab, rows, cols, axis="columns", dropna=False):
     ext = os.path.splitext(file)[1].lower()
     if ext in ['.xls', '.xlsx']:
         if rows is None:
@@ -1271,17 +1405,24 @@ def _get_data_from_file(file, tab, rows, cols, dropna=False):
         else:
             usecols = cols
 
-        data = pd.read_excel(
-            file, sheet_name=tab, header=None, skiprows=skip, nrows=nrows, usecols=usecols
-        )
+        excel_store = Excels() 
+        excel = excel_store.read(file)
+        
+        data = excel.parse(sheet_name=tab, header=None, skiprows=skip, nrows=nrows, usecols=usecols)
+        
         if dropna:
-            data = data.dropna()
-        data = data.values
+            data = data.dropna(how="all", axis=axis)
+        
         if isinstance(rows, int) or (isinstance(rows, list) and rows[0] == rows[1]):
-            data = data[0]
+            data = data.iloc[0]
         if isinstance(cols, str) or (isinstance(cols, list) and cols[0].lower() == cols[1].lower()):
-            data = data[:, 0]
-
+            if isinstance(data, pd.DataFrame):
+                data = data[:, 0]
+            elif isinstance(data, pd.Series):
+                data.index = range(data.size)
+                data = data[0]
+            else: 
+                raise NotImplementedError
         return data
 
     raise NotImplementedError(ext)

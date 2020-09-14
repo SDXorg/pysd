@@ -106,6 +106,7 @@ def build(elements, subscript_dict, namespace, outfile_name):
         # This is unfortunate but necessary because yapf is apparently not compliant with PEP 3131
         # (https://www.python.org/dev/peps/pep-3131/)
         # Alternatively we could skip formatting altogether, or replace yapf with black for all cases?
+        
         import black
         text = black.format_file_contents(textwrap.dedent(text), fast=True, mode=black.FileMode())
 
@@ -555,7 +556,7 @@ def add_initial(initial_input):
 
 
 def add_data(identifier, file, tab, time_row_or_col, cell, subs, subscript_dict, keyword):
-    coords = {dim: subscript_dict[dim] for dim in subs}
+    coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
     keyword = '"%s"' % keyword.strip(':').lower() if isinstance(keyword, str) else keyword
     stateful = {
         'py_name': utils.make_python_identifier('_data_%s' % identifier)[0],
@@ -576,11 +577,21 @@ def add_data(identifier, file, tab, time_row_or_col, cell, subs, subscript_dict,
 
     return "%s()" % stateful['py_name'], [stateful]
 
-
+build_names = set()
 def add_ext_constant(identifier, file, tab, cell, subs, subscript_dict):
-    coords = {dim: subscript_dict[dim] for dim in subs}
+    
+    coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
+    
+    name = utils.make_python_identifier('_ext_constant_%s' % identifier)[0]
+    if name in build_names: 
+        name += '1'
+        number = 2
+        while name in build_names:
+            name = name[:-1] + str(number)
+            number+=1
+    build_names.add(name)
     stateful = {
-        'py_name': utils.make_python_identifier('_ext_constant_%s' % identifier)[0],
+        'py_name': name,
         'real_name': 'Data for %s' % identifier,
         'doc': 'Provides data for constant data variable %s' % identifier,
         'py_expr': 'functions.ExtConstant(file=%s, tab=%s, root=_root, cell=%s, coords=%s)' % (file, tab, cell, coords),
@@ -596,7 +607,8 @@ def add_ext_constant(identifier, file, tab, cell, subs, subscript_dict):
 
 
 def add_ext_lookup(identifier, file, tab, x_row_or_col, cell, subs, subscript_dict):
-    coords = {dim: subscript_dict[dim] for dim in subs}
+    
+    coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
     stateful = {
         'py_name': utils.make_python_identifier('_ext_lookup_%s' % identifier)[0],
         'real_name': 'External lookup data for %s' % identifier,

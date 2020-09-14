@@ -317,7 +317,10 @@ def get_return_elements(return_columns, namespace, subscript_dict):
     capture_elements = list()
     return_addresses = dict()
     for col in return_columns:
-        if '[' in col:
+        if col[0] == col[-1] and col[0] == '"':
+            name = col
+            address = {}
+        elif '[' in col:
             name, location = col.strip(']').split('[')
             subs = [l.strip() for l in location.split(',')]
             address = make_coord_dict(subs, subscript_dict)
@@ -410,3 +413,39 @@ def get_value_by_insensitive_key_or_value(key, dict):
             return real_value
 
     return None
+
+def dimension_dataarray(da, dims, coords):
+    
+    values = None
+    if isinstance(da, xr.DataArray): values = da.values
+    elif isinstance(da, np.ndarray): values = da
+    else: values = np.array(da)
+    
+    reshape_dims = tuple( [len(i) for i in coords.values()] )
+    if values.size == 1:
+        data = np.tile(values, reshape_dims)
+    elif values.size in reshape_dims:
+        reshape_dims2 = list(reshape_dims)
+        reshape_dims2.remove(values.size)
+        if len(reshape_dims2) != 0:
+            reshape_dims2 = tuple(reshape_dims2)
+            data = np.tile(values, reshape_dims2)
+            data = data.reshape(reshape_dims)
+        else:
+            data = values.reshape(reshape_dims)
+    else:
+        if set(reshape_dims) == set([len(i) for i in da.coords.values()]):
+            data = values.reshape(reshape_dims)
+        else:
+            return da
+            data = values
+            coords = da.coords
+
+    return xr.DataArray(data=data, coords=coords, dims=dims)
+    
+def round(x):
+
+    try:
+        return round(x)
+    except:
+        return x
