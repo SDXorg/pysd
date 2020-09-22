@@ -11,6 +11,7 @@ from __future__ import division, absolute_import
 import imp
 import inspect
 import os
+import sys
 import random
 import re
 import string
@@ -24,7 +25,6 @@ import xarray as xr
 from funcsigs import signature
 
 from . import utils
-import sys
 
 import traceback
 
@@ -319,7 +319,7 @@ class Data(Stateful):
         )
 
         reshape_dims = tuple( [len(i) for i in self.coords.values()] + [len(time_data)] )
-        if len(reshape_dims)>0:
+        if len(reshape_dims) > 1:
             data = reshape(data, reshape_dims)
         
         self.state = xr.DataArray(
@@ -371,18 +371,19 @@ class ExtLookup(Stateful):
         size = int(np.product([len(v) for v in self.coords.values()]))
 
         x_data, data = _get_series_data(
-            file=self.file, tab=self.tab, series_across=x_across, series_row_or_col=self.x_row_or_col,
-            cell=self.cell, size=size
-        )
-
+            file=self.file, tab=self.tab, series_across=x_across,
+            series_row_or_col=self.x_row_or_col,
+            cell=self.cell, size=size)
 
         reshape_dims = tuple( [len(x_data)] + [len(i) for i in self.coords.values()] )
-        if len(reshape_dims)>0:
+
+        if len(reshape_dims) > 1:
             data = reshape(data, reshape_dims)
 
         self.state = xr.DataArray(
-            data=data, coords={'x': x_data, **self.coords}, dims=['x'] + list(self.coords)
-        )
+            data=data, coords={'x': x_data, **self.coords},
+            dims=['x'] + list(self.coords))
+        # TODO add interpolation to missing values
 
     def ddt(self):
         return 0
@@ -399,14 +400,15 @@ class ExtLookup(Stateful):
         if isinstance(x, xr.DataArray):
             return xr.DataArray(data=self._call(x.values), coords=x.coords, dims=x.dims)
         
-        if isinstance(x, np.ndarray):
+        elif isinstance(x, np.ndarray):
             return np.array([self._call(i) for i in x])
 
-        if x > self.state['x'][-1]:
-            return self.state['x'][-1]
-        elif x < self.state['x'][0]:
-            return self.state['x'][0]
-        return self.state.interp(x=x)
+        
+        if x > self.state['x'].values[-1]:
+            return self.state.values[-1]
+        elif x < self.state['x'].values[0]:
+            return self.state.values[0]
+        return self.state.interp(x=x).values
 
 
 class ExtConstant(Stateful):
@@ -434,15 +436,21 @@ class ExtConstant(Stateful):
                     end_col = _num_to_col(_col_to_num(start_col) + len(self.coords[dims[-2]]) - 1)
                 else:
                     end_row = start_row + len(self.coords[dims[-2]]) - 1
-        data = _get_data_from_file(self.file, tab=self.tab, rows=[start_row, end_row], cols=[start_col, end_col])
-    
-        reshape_dims = tuple([len(i) for i in self.coords.values()])
-        
-        if len(reshape_dims)>0: data = reshape(data, reshape_dims) 
 
-        self.state = xr.DataArray(
-            data=data, coords=self.coords, dims=list(self.coords)
-        )
+        data = _get_data_from_file(self.file, tab=self.tab, rows=[start_row, end_row], cols=[start_col, end_col])
+        if self.transpose:
+            data = data.transpose()    
+
+        if len(self.coords.values()) > 0:
+            reshape_dims = tuple([len(i) for i in self.coords.values()])
+        
+            if len(reshape_dims) > 1: data = reshape(data, reshape_dims) 
+
+            self.state = xr.DataArray(
+                data=data, coords=self.coords, dims=list(self.coords)
+            )
+        else:
+            self.state = data
 
     def ddt(self):
         return 0
@@ -1322,52 +1330,66 @@ def str_to_int(s):
         small = ord(s[1].upper()) - ord('A') + 1
         return big * (ord('Z')-ord('A')+1) + small
 
-def to_ABC(x):
-    if x < 26: return chr(ord('A')+x)
-    return to_ABC(int(x/26)-1) + to_ABC(int(x%26))
+def to_ABC(x_v):
+    
+    def _to_ABC(x):
+       if x < 26: return chr(ord('A')+x)
+       return _to_ABC(int(x/26)-1) + _to_ABC(int(x%26))
+
+    try:
+        len(x_v)
+        return [_to_ABC(x) for x in x_v]
+    except:
+        return _to_ABC(x_v)
 
 def _get_series_data(file, tab, series_across, series_row_or_col, cell, size):
     
     if series_across:
         # Get serie from 1 to size
     
-        series_data = _get_data_from_file(file, tab, rows=int(series_row_or_col)-1, cols=None, dropna=False)
+        series_data = _get_data_from_file(file, tab,
+                                          rows=int(series_row_or_col)-1, 
+                                          cols=None, dropna=False)
         first_data_row, first_col = _split_excel_cell(cell)
 
-        original_index = list(series_data.index)
         first_col = first_col.upper()
+        first_col_float = str_to_int(first_col)-1
 
+        original_index = np.array(series_data.index)[first_col_float:]
+        series_data = series_data[first_col_float:]
 
-        series_raw = [i for i in series_data]
-        series_data = series_data[str_to_int(first_col)-1:]
+        series_data = pd.to_numeric(series_data, errors='coerce')
+        valid_values = ~np.isnan(series_data)
+        original_index = original_index[valid_values]
+        series_data = series_data[valid_values]
+
+        if len(series_data) == 0:
+            sys.exit("Dimension given in:\n"
+                     + "File name:\t{}\nSheet name:\t{}\n".format(file, tab)
+                     + "Row number:\t{}\n".format(series_row_or_col)
+                     + " has length 0")
         
-        series_data = [i for i in series_data]
-        try:
-            a = series_data[-1]
-        except:
-            raise
-
-        index = -1
-        asize = len(series_data)
-        
-        while not _isFloat(str(series_data[asize+index])):
-            index -= 1
-        index += 1
-
-        if index != 0:
-            series_data = series_data[:asize+index]
-            last_col = to_ABC(original_index[index])
-        else:
-            last_col = to_ABC(original_index[-1])
+        last_col = to_ABC(original_index[-1])
         last_data_row = first_data_row + size - 1
+ 
+        if (np.diff(original_index) != 1).any():
+            missing_index = np.arange(original_index[0], original_index[-1]+1)
+            missing_index = np.setdiff1d(missing_index, original_index)
+            cells = to_ABC(missing_index)
+            cells = [cell + series_row_or_col for cell in cells]
+            warnings.warn("\n\tDimension value missing or non-valid in:\n"
+                + "\tFile name:\t{}\n\tSheet name:\t{}".format(file, tab)
+                + "\n\tCell(s):\t{}\n".format(cells)
+                + "\tthe corresponding column(s) to the "
+                + "missing/non-valid value(s) will be ignored\n\n")
+                      
         data = _get_data_from_file(
-            file, tab, rows=[first_data_row, last_data_row], cols=[first_col, last_col])
-        
-        if isinstance(data, pd.DataFrame): data = data.dropna(how="all", axis="columns")
-        else: data = data.dropna()
-        
+            file, tab, rows=[first_data_row, last_data_row],
+            cols=original_index, dropna=False)
+        data = data.transpose()
 
     else:
+        # TODO improve the lookup as before to remove/Warning when missing values
         first_row, first_col = _split_excel_cell(cell)
         series_data = _get_data_from_file(
             file, tab, rows=[first_row, None], cols=series_row_or_col, axis="rows", dropna=True
@@ -1376,14 +1398,6 @@ def _get_series_data(file, tab, series_across, series_row_or_col, cell, size):
         last_row = first_row + series_data.size - 1
         cols = [first_col, _col_to_num(first_col) + size - 1]
         data = _get_data_from_file(file, tab, rows=[first_row, last_row], cols=cols)
-    
-    series_data = pd.Series(series_data)
-
-    series_data = series_data.dropna()
-    series_data = pd.Series(series_data.values[:len(data)])
-
-    if isinstance(data, pd.Series):
-        data = pd.Series(data.values[:len(series_data)])
 
     return series_data, data
 
@@ -1408,16 +1422,19 @@ def _get_data_from_file(file, tab, rows, cols, axis="columns", dropna=False):
         excel_store = Excels() 
         excel = excel_store.read(file)
         
-        data = excel.parse(sheet_name=tab, header=None, skiprows=skip, nrows=nrows, usecols=usecols)
+        data = excel.parse(sheet_name=tab, header=None, skiprows=skip,
+                           nrows=nrows, usecols=usecols)
         
         if dropna:
             data = data.dropna(how="all", axis=axis)
         
-        if isinstance(rows, int) or (isinstance(rows, list) and rows[0] == rows[1]):
+        if isinstance(rows, int) or\
+           (isinstance(rows, list) and rows[0] == rows[1]):
             data = data.iloc[0]
-        if isinstance(cols, str) or (isinstance(cols, list) and cols[0].lower() == cols[1].lower()):
+        if isinstance(cols, str) or\
+           (isinstance(cols, list) and cols[0].lower() == cols[1].lower()):
             if isinstance(data, pd.DataFrame):
-                data = data[:, 0]
+                data = data.iloc[:, 0]
             elif isinstance(data, pd.Series):
                 data.index = range(data.size)
                 data = data[0]
@@ -1465,3 +1482,4 @@ def _num_to_col(num):
         num, d = divmod_excel(num)
         chars.append(string.ascii_uppercase[d - 1])
     return ''.join(reversed(chars)).lower()
+
