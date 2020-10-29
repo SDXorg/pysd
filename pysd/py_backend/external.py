@@ -1,7 +1,14 @@
 import re
+import os
+import warnings
+import pandas as pd
+import numpy as np
+import xarray as xr
 
 class Excels():
-
+    """
+    Class to save the read Excel files and thus avoud double reading
+    """
     _instance = None
     _Excels = {}
 
@@ -11,18 +18,35 @@ class Excels():
         return cls._instance
 
     def read(cls, file_name):
+        """
+        Read the Excel file or return the previously read one
+        """
         if file_name in cls._Excels:
             return cls._Excels[file_name]
         else: 
             excel = pd.ExcelFile(file_name)
             cls._Excels[file_name] = excel
-           return excel
+            return excel
+
+    def clean(cls):
+        """
+        Clean the dictionary of read files
+        """
+        cls._Excels = {}
  
 class External():
-
+    """
+    Main class of external objects
+    """
+    def __init__(self, file_name, tab):
         self.file = file_name
         self.tab = tab
-    def _get_data_from_file(rows, cols, axis="columns", dropna=False):
+
+    def _get_data_from_file(self, rows, cols, axis="columns", dropna=False):
+        """
+        Function thar reads data from excel file
+        """
+        # TODO document well 
         ext = os.path.splitext(self.file)[1].lower()
         if ext in ['.xls', '.xlsx']:
             if rows is None:
@@ -39,7 +63,7 @@ class External():
             else:
                 usecols = cols
 
-            excel = cls.read(self.file)
+            excel = Excels().read(self.file)
             
             data = excel.parse(sheet_name=self.tab, header=None, skiprows=skip,
                                nrows=nrows, usecols=usecols)
@@ -64,12 +88,15 @@ class External():
         raise NotImplementedError(ext)
 
     def _get_series_data(self, series_across, series_row_or_col, cell, size):
-        
+        """
+        Function thar reads series data from excel file
+        """
+        # TODO document well 
         if series_across:
             # Get serie from 1 to size
         
-            series_data = _get_data_from_file(rows=int(series_row_or_col)-1, 
-                                              cols=None, dropna=False)
+            series_data = self._get_data_from_file(rows=int(series_row_or_col)-1, 
+                                                   cols=None, dropna=False)
             first_data_row, first_col = self._split_excel_cell(cell)
     
             first_col = first_col.upper()
@@ -105,21 +132,23 @@ class External():
                               + "\tthe corresponding column(s) to the "
                               + "missing/non-valid value(s) will be ignored\n\n")
                           
-            data = _get_data_from_file(rows=[first_data_row, last_data_row],
-                                       cols=original_index, dropna=False)
+            data = self._get_data_from_file(
+                rows=[first_data_row, last_data_row],
+                cols=original_index, dropna=False
+            )
             data = data.transpose()
     
         else:
             # TODO improve the lookup as before to remove/Warning when missing values
             first_row, first_col = self._split_excel_cell(cell)
-            series_data = _get_data_from_file(rows=[first_row, None],
-                                              cols=series_row_or_col,
-                                              axis="rows", 
-                                              dropna=True)
+            series_data = self._get_data_from_file(rows=[first_row, None],
+                                                   cols=series_row_or_col,
+                                                   axis="rows", 
+                                                   dropna=True)
     
             last_row = first_row + series_data.size - 1
             cols = [first_col, self.col_to_num(first_col) + size]
-            data = _get_data_from_file(self, rows=[first_row, last_row], cols=cols)
+            data = self._get_data_from_file(rows=[first_row, last_row], cols=cols)
     
         return series_data, data
 
@@ -163,7 +192,7 @@ class External():
     @staticmethod
     def num_to_col(num):
         """
-        Transforms the column number to name. Also working with lists
+        Transforms the column number to name. Also working with lists.
         
         Parameters
         ----------
@@ -189,7 +218,7 @@ class External():
     @staticmethod
     def _split_excel_cell(cell):
         """
-        Splits cell number and letter
+        Splits cell number and letter.
         
         Parameters
         ----------
@@ -203,10 +232,37 @@ class External():
         """
         return int(re.sub("[a-zA-Z]+", "", cell)), re.sub("[^a-zA-Z]+", "", cell)
 
+    @staticmethod
+    def reshape(data, dims):
+        """
+        Reshapes an xarray.DataArray or np.ndarray in the given dimensions.
 
-class Data(External):
+        Parameters
+        ----------
+        data: xarray.DataArray/numpy.ndarray
+          Data to be reshaped
+        dims: tuple
+          The dimensions to reshape.
+
+        Returns
+        -------
+        numpy.ndarray
+          reshaped array
+        """
+        try:
+            data = data.values
+        except AttributeError:
+            pass
+
+        return data.reshape(dims)
+
+
+class ExtData(External):
+    """
+    Class for Vensim GET XLS DATA/GET DIRECT DATA
+    """
     def __init__(self, file_name, tab, time_row_or_col, cell, interp, time, root, coords):
-        super(Data, self).__init__(file_name, tab)
+        super(ExtData, self).__init__(file_name, tab)
         self.time_row_or_col = time_row_or_col
         self.cell = cell
         self.time_func = time
@@ -218,14 +274,15 @@ class Data(External):
         time_across = self.time_row_or_col.isnumeric()
         size = int(np.product([len(v) for v in self.coords.values()]))
 
-        time_data, data = _get_series_data(series_across=time_across,
-                                           series_row_or_col=self.time_row_or_col,
+        time_data, data = self._get_series_data(
+            series_across=time_across,
+            series_row_or_col=self.time_row_or_col,
             cell=self.cell, size=size
         )
 
         reshape_dims = tuple( [len(i) for i in self.coords.values()] + [len(time_data)] )
         if len(reshape_dims) > 1:
-            data = reshape(data, reshape_dims)
+            data = self.reshape(data, reshape_dims)
 
         self.state = xr.DataArray(
             data=data, coords={**self.coords, 'time': time_data}, dims=list(self.coords)+['time']
@@ -254,28 +311,31 @@ class Data(External):
         except KeyError:
             return np.nan
 
+
 class ExtLookup(External):
+    """
+    Class for Vensim GET XLS LOOKUPS/GET DIRECT LOOKUPS
+    """
     def __init__(self, file_name, tab, x_row_or_col, cell, root, coords):
-        super(ExtConstant, self).__init__(file_name, tab)
+        super(ExtLookup, self).__init__(file_name, tab)
         self.x_row_or_col = x_row_or_col
         self.cell = cell
         self.coords = coords
-        self.initialize()
 
     def initialize(self):
         x_across = self.x_row_or_col.isnumeric()
         size = int(np.product([len(v) for v in self.coords.values()]))
 
-        x_data, data = _get_series_data(series_across=x_across,
-                                        series_row_or_col=self.x_row_or_col,
-                                        cell=self.cell, size=size)
+        x_data, data = self._get_series_data(series_across=x_across,
+                                             series_row_or_col=self.x_row_or_col,
+                                             cell=self.cell, size=size)
 
         reshape_dims = tuple( [len(x_data)] + [len(i) for i in self.coords.values()] )
 
         if len(reshape_dims) > 1:
-            data = reshape(data, reshape_dims)
+            data = self.reshape(data, reshape_dims)
 
-        self.state = xr.DataArray(
+        self.data = xr.DataArray(
             data=data, coords={'x': x_data, **self.coords},
             dims=['x'] + list(self.coords))
         # TODO add interpolation to missing values
@@ -291,19 +351,22 @@ class ExtLookup(External):
             return np.array([self._call(i) for i in x])
 
         
-        if x > self.state['x'].values[-1]:
-            return self.state.values[-1]
-        elif x < self.state['x'].values[0]:
-            return self.state.values[0]
-        return self.state.interp(x=x).values
+        if x > self.data['x'].values[-1]:
+            return self.data.values[-1]
+        elif x < self.data['x'].values[0]:
+            return self.data.values[0]
+        return self.data.interp(x=x).values
+
 
 class ExtConstant(External):
+    """
+    Class for Vensim GET XLS CONSTANT/GET DIRECT CONSTANT
+    """
     def __init__(self, file_name, tab, cell, root, coords):
         super(ExtConstant, self).__init__(file_name, tab)
         self.transpose = cell[-1] == '*'
         self.cell = cell.strip('*')
         self.coords = coords
-        self.initialize()
 
     def initialize(self):
         dims = list(self.coords)
@@ -314,22 +377,22 @@ class ExtConstant(External):
             if self.transpose:
                 end_row = start_row + len(self.coords[dims[-1]]) - 1
             else:
-                end_col = self.num_to_col(col_to_num(start_col) + len(self.coords[dims[-1]]))
+                end_col = self.num_to_col(self.col_to_num(start_col) + len(self.coords[dims[-1]]) -1)
 
             if len(dims) >= 2:
                 if self.transpose:
-                    end_col = self.num_to_col(col_to_num(start_col) + len(self.coords[dims[-2]]))
+                    end_col = self.num_to_col(self.col_to_num(start_col) + len(self.coords[dims[-2]]))
                 else:
                     end_row = start_row + len(self.coords[dims[-2]]) - 1
 
-        data = _get_data_from_file(self.file, tab=self.tab, rows=[start_row, end_row], cols=[start_col, end_col])
+        data = self._get_data_from_file(rows=[start_row, end_row], cols=[start_col, end_col])
         if self.transpose:
             data = data.transpose()    
 
         if len(self.coords.values()) > 0:
             reshape_dims = tuple([len(i) for i in self.coords.values()])
         
-            if len(reshape_dims) > 1: data = reshape(data, reshape_dims) 
+            if len(reshape_dims) > 1: data = self.reshape(data, reshape_dims) 
 
             self.value = xr.DataArray(
                 data=data, coords=self.coords, dims=list(self.coords)
@@ -340,35 +403,26 @@ class ExtConstant(External):
     def __call__(self):
         return self.value
 
-def get_direct_subscript(file, tab, firstcell, lastcell, prefix):
-    file = _resolve_file(file)
 
-    row_first, col_first = self._split_excel_cell(firstcell)
-    row_last, col_last = self._split_excel_cell(lastcell)
-    data = _get_data_from_file(
-        file, tab,
-        rows=[row_first, row_last],
-        cols=[col_first, col_last]
-    )
-    return [prefix + str(d) for d in data.flatten()]
+def ExtSubscript(External):
+    """
+    Class for Vensim GET XLS SUBSCRIPT/GET DIRECT SUBSCRIPT
+    """
+    def __init__(self, file_name, tab, firstcell, lastcell, prefix):
+        super(ExtSubscript, self).__init__(file_name, tab)
+        self.firstcell = firstcell
+        self.lastcell = lastcell
+        self.prefix = prefix
 
-
-get_xls_subscript = get_direct_subscript
-
-def _isFloat(n):
-    try:
-        if (n == "nan"): return False
-        float(n)
-        return True
-    except ValueError:
-        return False
-
-def reshape(data, dims):
+    def initialize(self):
+        row_first, col_first = self._split_excel_cell(self.firstcell)
+        row_last, col_last = self._split_excel_cell(self.lastcell)
+        data = self._get_data_from_file(rows=[row_first, row_last],
+                                        cols=[col_first, col_last])
     
-    if isinstance(data, (np.int64, np.float64)):
-        return np.array(data).reshape(dims)
-    elif isinstance(data, (pd.Series, pd.DataFrame)):
-        return data.values.reshape(dims)
-    elif isinstance(data, pd.DataFrame):
-        return data
+        self.subscript = [self.prefix + str(d) for d in data.flatten()]
+
+    def __call__(self):
+        return self.subscript
+
 

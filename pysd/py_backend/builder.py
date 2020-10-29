@@ -60,12 +60,11 @@ def build(elements, subscript_dict, namespace, outfile_name):
     """
     from __future__ import division
     import numpy as np
-    from pysd import utils
+    from pysd import utils, functions, external
     import xarray as xr
     import os
 
     from pysd.py_backend.functions import cache
-    from pysd.py_backend import functions
 
     _subscript_dict = %(subscript_dict)s
 
@@ -141,13 +140,13 @@ def build_element(element, subscript_dict):
     """
     if element['kind'] == 'constant':
         cache_type = "@cache('run')"
-    elif element['kind'] in ['setup', 'stateful']:  # setups only get called once, caching is wasted
+    elif element['kind'] in ['setup', 'stateful', 'external']:  # setups only get called once, caching is wasted
         cache_type = ''
     elif element['kind'] == 'component':
         cache_type = "@cache('step')"
     elif element['kind'] == 'stateful':
         cache_type = ''
-    elif element['kind'] == 'lookup':  # lookups may be called with different values in a round
+    elif element['kind'] in ['lookup', 'extlookup']:  # lookups may be called with different values in a round
         cache_type = ''
     else:
         raise AttributeError("Bad value for 'kind'")
@@ -172,7 +171,7 @@ def build_element(element, subscript_dict):
     if 'eqn' in element:
         element['eqn'] = element['eqn']
 
-    if element['kind'] == 'stateful':
+    if element['kind'] in ['stateful', 'external']:
         func = '''
     %(py_name)s = %(py_expr)s
             ''' % {'py_name': element['py_name'], 'py_expr': element['py_expr'][0]}
@@ -555,31 +554,89 @@ def add_initial(initial_input):
     return "%s()" % stateful['py_name'], [stateful]
 
 
-def add_data(identifier, file, tab, time_row_or_col, cell, subs, subscript_dict, keyword):
+def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs, subscript_dict, keyword):
+    """
+    Constructs a external object for handling Vensim's GET XLS DATA/GET DIRECT DATA functionality
+
+    Parameters
+    ----------
+    identifier: basestring
+        the python-safe name of the external values
+    file_name: str
+        filepath to the data
+    tab: str
+        tab where the data is
+    time_row_or_col: str
+        identifier to the starting point of the time dimension
+    cell: str
+        cell identifier where the data starts
+    subs: list of strings
+        List of strings of subscript indices that correspond to the
+        list of expressions, and collectively define the shape of the output
+        See `builder.add_flaux` for more info
+    keyword: str
+        Data retrieval method ('interpolate', 'look forward', 'hold backward')
+
+    Returns
+    -------
+    reference: basestring
+        reference to the ExtData object `__call__` method,
+        which will return the retrieved value of data for the current time step
+    new_structure: list
+        list of element construction dictionaries for the builder to assemble
+    """
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
     keyword = '"%s"' % keyword.strip(':').lower() if isinstance(keyword, str) else keyword
-    stateful = {
-        'py_name': utils.make_python_identifier('_data_%s' % identifier)[0],
-        'real_name': 'Data for %s' % identifier,
+    external = {
+        'py_name': utils.make_python_identifier('ext_data_%s' % identifier)[0],
+        'real_name': 'External data for %s' % identifier,
         'doc': 'Provides data for data variable %s' % identifier,
-        'py_expr': 'functions.Data('
-                   'file=%s, tab=%s, time_row_or_col=%s, cell=%s, time=time, root=_root, coords=%s, interp=%s'
-                   ')' % (
-                       file, tab, time_row_or_col, cell, coords, keyword
-                   ),
+        'py_expr': 'external.ExtData(file_name=%s,\n'
+                   '                 tab=%s,\n'
+                   '                 time_row_or_col=%s,\n'
+                   '                 cell=%s,\n'
+                   '                 root=_root,\n'
+                   '                 coords=%s,\n'
+                   '                 interp=%s)'
+                   % (file_name, tab, time_row_or_col, cell, coords, keyword),
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',
         'subs': subs,
-        'kind': 'stateful',
+        'kind': 'external',
         'arguments': ''
     }
 
-    return "%s()" % stateful['py_name'], [stateful]
+    return "%s(time())" % external['py_name'], [external]
 
 build_names = set()
-def add_ext_constant(identifier, file, tab, cell, subs, subscript_dict):
-    
+def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
+    """
+    Constructs a external object for handling Vensim's GET XLS DATA/GET DIRECT DATA functionality
+
+    Parameters
+    ----------
+    identifier: basestring
+        the python-safe name of the external values
+    file_name: str
+        filepath to the data
+    tab: str
+        tab where the data is
+    cell: str
+        cell identifier where the data starts
+    subs: list of strings
+        List of strings of subscript indices that correspond to the
+        list of expressions, and collectively define the shape of the output
+        See `builder.add_flaux` for more info
+
+    Returns
+    -------
+    reference: basestring
+        reference to the ExtConstant object `__call__` method,
+        which will return the read value of the data
+    new_structure: list
+        list of element construction dictionaries for the builder to assemble
+    """
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
     
     name = utils.make_python_identifier('_ext_constant_%s' % identifier)[0]
@@ -590,40 +647,130 @@ def add_ext_constant(identifier, file, tab, cell, subs, subscript_dict):
             name = name[:-1] + str(number)
             number+=1
     build_names.add(name)
-    stateful = {
+    external = {
         'py_name': name,
-        'real_name': 'Data for %s' % identifier,
+        'real_name': 'External constant for %s' % identifier,
         'doc': 'Provides data for constant data variable %s' % identifier,
-        'py_expr': 'functions.ExtConstant(file=%s, tab=%s, root=_root, cell=%s, coords=%s)' % (file, tab, cell, coords),
+        'py_expr': 'external.ExtConstant(file_name=%s,\n'
+                   '                     tab=%s,\n'
+                   '                     root=_root,\n'
+                   '                     cell=%s,\n'
+                   '                     coords=%s)'
+                   % (file_name, tab, cell, coords),
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',
         'subs': subs,
-        'kind': 'stateful',
+        'kind': 'external',
         'arguments': ''
     }
 
-    return "%s()" % stateful['py_name'], [stateful]
+    return "%s()" % external['py_name'], [external]
 
 
-def add_ext_lookup(identifier, file, tab, x_row_or_col, cell, subs, subscript_dict):
-    
+def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell, subs, subscript_dict):
+    """
+    Constructs a external object for handling Vensim's GET XLS LOOKUPS/GET DIRECT LOOKUPS functionality
+
+    Parameters
+    ----------
+    identifier: basestring
+        the python-safe name of the external values
+    file_name: str
+        filepath to the data
+    tab: str
+        tab where the data is
+    x_row_or_col: str
+        identifier to the starting point of the lookup dimension
+    cell: str
+        cell identifier where the data starts
+    subs: list of strings
+        List of strings of subscript indices that correspond to the
+        list of expressions, and collectively define the shape of the output
+        See `builder.add_flaux` for more info
+
+    Returns
+    -------
+    reference: basestring
+        reference to the ExtLookup object `__call__` method,
+        which will return the retrieved value of data after interpolating it
+    new_structure: list
+        list of element construction dictionaries for the builder to assemble
+    """
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
-    stateful = {
+    external = {
         'py_name': utils.make_python_identifier('_ext_lookup_%s' % identifier)[0],
         'real_name': 'External lookup data for %s' % identifier,
         'doc': 'Provides data for external lookup variable %s' % identifier,
-        'py_expr': 'functions.ExtLookup(file=%s, tab=%s, root=_root, x_row_or_col=%s, cell=%s, coords=%s)'
-                   % (file, tab, x_row_or_col, cell, coords),
+        'py_expr': 'external.ExtLookup(file_name=%s,\n'
+                   '                   tab=%s,\n'
+                   '                   root=_root,\n'
+                   '                   x_row_or_col=%s,\n'
+                   '                   cell=%s,\n'
+                   '                   coords=%s)'
+                   % (file_name, tab, x_row_or_col, cell, coords),
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',
         'subs': subs,
-        'kind': 'stateful',
+        'kind': 'external',
         'arguments': 'x'
     }
 
-    return "%s(x)" % stateful['py_name'], [stateful]
+    return "%s(x)" % external['py_name'], [external]
+
+def add_ext_subscript(identifier, file_name, tab, firstcell, lastcell, prefix, subs, subscript_dict):
+    """
+    Constructs a external object for handling Vensim's GET XLS SUBSCRIPT/GET DIRECT SUBSCRIPT functionality
+
+    Parameters
+    ----------
+    identifier: basestring
+        the python-safe name of the external values
+    file_name: str
+        filepath to the data
+    tab: str
+        tab where the data is
+    firstcell: str
+         first cell identifier
+    lastcell: str
+         last cell identifier
+    prefix: str
+         prefix of the subscript
+    subs: list of strings
+        List of strings of subscript indices that correspond to the
+        list of expressions, and collectively define the shape of the output
+        See `builder.add_flaux` for more info
+
+    Returns
+    -------
+    reference: basestring
+        reference to the ExtSubscript object `__call__` method,
+        which will return the read value of the subscripts
+    new_structure: list
+        list of element construction dictionaries for the builder to assemble
+    """
+    coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
+    external = {
+        'py_name': utils.make_python_identifier('_ext_subscript_%s' % identifier)[0],
+        'real_name': 'External subscripts for %s' % identifier,
+        'doc': 'Provides data for constant data variable %s' % identifier,
+        'py_expr': 'external.ExtSubscript(file_name=%s,\n'
+                   '                      tab=%s,\n'
+                   '                      root=_root,\n'
+                   '                      firstcell=%s,\n'
+                   '                      lastcell=%s,\n'
+                   '                      prefix=%s)'
+                   % (file_name, tab, firstcell, lastcell, prefix),
+        'unit': 'None',
+        'lims': 'None',
+        'eqn': 'None',
+        'subs': subs,
+        'kind': 'external',
+        'arguments': ''
+    }
+
+    return "%s()" % external['py_name'], [external]
 
 
 def add_macro(macro_name, filename, arg_names, arg_vals):

@@ -23,6 +23,7 @@ import xarray as xr
 from funcsigs import signature
 
 from . import utils
+from .external import External
 
 import traceback
 
@@ -316,9 +317,16 @@ class Macro(Stateful):
         if params is not None:
             self.set_components(params)
 
-        self._stateful_elements = [getattr(self.components, name) for name in dir(self.components)
-                                   if isinstance(getattr(self.components, name),
-                                                 Stateful)]
+        # Get the collections of stateful elements and external elements
+        self._stateful_elements = [
+            getattr(self.components, name) for name in dir(self.components)
+            if isinstance(getattr(self.components, name), Stateful)
+        ]
+        self._external_elements = [
+            getattr(self.components, name) for name in dir(self.components)
+            if isinstance(getattr(self.components, name), External)
+        ]
+
         if return_func is not None:
             self.return_func = getattr(self.components, return_func)
         else:
@@ -357,8 +365,14 @@ class Macro(Stateful):
             'time': self.time
         })
 
+        # Initialize external elements
+        for element in self._external_elements:
+            element.initialize()
+        
+        self.components.external.Excels().clean()
+
+        # Initialize stateful elements
         remaining = set(self._stateful_elements)
-    
         while remaining:
             progress = set()
             for element in remaining:
@@ -924,7 +938,7 @@ def lookup(x, xs, ys):
     Intermediate values are calculated with linear interpolation between the intermediate points.
     Out-of-range values are the same as the closest endpoint (i.e, no extrapolation is performed).
     """
-    return _preserve_array(np.interp(x, xs, ys), ref=x)
+    return utils.preserve_array(np.interp(x, xs, ys), ref=x)
 
 
 def lookup_extrapolation(x, xs, ys):
@@ -938,7 +952,7 @@ def lookup_extrapolation(x, xs, ys):
         dy = ys[1] - ys[0]
         k = dy / dx
         return ys[0] + (x - xs[0]) * k
-    if x > xs[length - 1]:
+    if x > xs[-1]:
         dx = xs[length - 1] - xs[length - 2]
         dy = ys[length - 1] - ys[length - 2]
         k = dy / dx
@@ -1077,68 +1091,57 @@ def log(x, base):
 
 
 def and_(x, y):
-    return _preserve_array(np.logical_and(x, y), ref=[x, y])
+    return xr.ufuncs.logical_and(x, y)
 
 
 def or_(x, y):
-    return _preserve_array(np.logical_or(x, y), ref=[x, y])
+    return xr.ufuncs.logical_or(x, y)
 
 
 def sum(x, dim=None):
+
+    # Return float if x is DataArray and dim is None
+    if dim is None:
+        try:
+           x = x.values
+        except AttributeError:
+           pass
+
     return x.sum(dim=dim)
 
 
 def prod(x, dim=None):
+
+    # Return float if x is DataArray and dim is None
+    if dim is None:
+        try:
+           x = x.values
+        except AttributeError:
+           pass
+
     return x.prod(dim=dim)
 
 
 def vmin(x, dim=None):
+
+    # Return float if x is DataArray and dim is None
+    if dim is None:
+        try:
+           x = x.values
+        except AttributeError:
+           pass
+
     return x.min(dim=dim)
 
 
 def vmax(x, dim=None):
+
+    # Return float if x is DataArray and dim is None
+    if dim is None:
+        try:
+           x = x.values
+        except AttributeError:
+           pass
+
     return x.max(dim=dim)
-
-
-def _preserve_array(value, ref):
-    if not isinstance(ref, list):
-        ref = [ref]
-    array = next((r for r in ref if isinstance(r, xr.DataArray)), None)
-    if array is not None:
-        return xr.DataArray(data=value, coords=array.coords, dims=array.dims).squeeze()
-    else:
-        return value
-
-
-def get_direct_subscript(file, tab, firstcell, lastcell, prefix):
-    file = _resolve_file(file)
-
-    row_first, col_first = _split_excel_cell(firstcell)
-    row_last, col_last = _split_excel_cell(lastcell)
-    data = _get_data_from_file(
-        file, tab,
-        rows=[row_first, row_last],
-        cols=[col_first, col_last]
-    )
-    return [prefix + str(d) for d in data.flatten()]
-
-
-get_xls_subscript = get_direct_subscript
-
-def _isFloat(n):
-    try:
-        if (n == "nan"): return False
-        float(n)
-        return True
-    except ValueError:
-        return False
-
-def reshape(data, dims):
-    
-    if isinstance(data, (np.int64, np.float64)):
-        return np.array(data).reshape(dims)
-    elif isinstance(data, (pd.Series, pd.DataFrame)):
-        return data.values.reshape(dims)
-    elif isinstance(data, pd.DataFrame):
-        return data
 

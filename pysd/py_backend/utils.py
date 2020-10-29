@@ -449,3 +449,13 @@ def round(x):
         return round(x)
     except:
         return x
+
+def preserve_array(value, ref):
+    if not isinstance(ref, list):
+        ref = [ref]
+    array = next((r for r in ref if isinstance(r, xr.DataArray)), None)
+    if array is not None:
+        return xr.DataArray(data=value, coords=array.coords, dims=array.dims).squeeze()
+    else:
+        return value
+

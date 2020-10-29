@@ -309,11 +309,6 @@ def get_equation_components(equation_str, root_path=None):
         def visit_keyword(self, n, vc):
             self.keyword = n.text.strip()
 
-        def visit_imported_subscript(self, n, vc):
-            f_str = vc[0]
-            args_str = vc[4]  # todo: make this less fragile?
-            self.subscripts += get_external_data(f_str, args_str, root_path)
-
         def visit_name(self, n, vc):
             (name,) = vc
             self.real_name = name.strip()
@@ -338,16 +333,6 @@ def get_equation_components(equation_str, root_path=None):
             'expr': parse_object.expression,
             'kind': parse_object.kind,
             'keyword': parse_object.keyword}
-
-
-def get_external_data(func_str, args_str, root_path):
-    # The py model file must be recompiled if external file subscripts change. This could be avoided
-    # if we switch to function-defined subscript values instead of hard-coding them.
-    f = subscript_functions[func_str.lower()]
-    args = [x.strip().strip("\'") for x in args_str.split(',')]  # todo: make this less fragile?
-    if args[0][0] == '?':
-        args[0] = os.path.join(root_path, args[0][1:])
-    return f(*args)
 
 
 def parse_units(units_str):
@@ -478,11 +463,6 @@ functions = {
 
 }
 
-subscript_functions = {
-    "get xls subscript": funcs.get_xls_subscript,
-    "get direct subscript": funcs.get_direct_subscript
-}
-
 data_ops = {
     'get data at time': '',
     'get data between times': '',
@@ -610,9 +590,9 @@ builders = {
         subs=element['subs'],
         subscript_dict=subscript_dict),
 
-    "get xls data": lambda element, subscript_dict, args: builder.add_data(
+    "get xls data": lambda element, subscript_dict, args: builder.add_ext_data(
         identifier=element['py_name'],
-        file=args[0],
+        file_name=args[0],
         tab=args[1],
         time_row_or_col=args[2],
         cell=args[3],
@@ -623,26 +603,16 @@ builders = {
 
     "get xls constants": lambda element, subscript_dict, args: builder.add_ext_constant(
         identifier=element['py_name'],
-        file=args[0],
+        file_name=args[0],
         tab=args[1],
         cell=args[2],
         subs=element['subs'],
         subscript_dict=subscript_dict
     ),
-
-    "get direct constants": lambda element, subscript_dict, args: builder.add_ext_constant(
-        identifier=element['py_name'],
-        file=args[0],
-        tab=args[1],
-        cell=args[2],
-        subs=element['subs'],
-        subscript_dict=subscript_dict
-    ),
-    
 
     "get xls lookups": lambda element, subscript_dict, args: builder.add_ext_lookup(
         identifier=element['py_name'],
-        file=args[0],
+        file_name=args[0],
         tab=args[1],
         x_row_or_col=args[2],
         cell=args[3],
@@ -650,14 +620,29 @@ builders = {
         subscript_dict=subscript_dict
     ),
 
+    "get xls subscript": lambda element, subscript_dict, args: builder.add_ext_subscript(
+        identifier=element['py_name'],
+        file_name=args[0],
+        tab=args[1],
+        firstcell=args[2],
+        lastcell=args[3],
+        prefix=args[4],
+        subs=element['subs'],
+        subscript_dict=subscript_dict
+    ),
+
+
     "initial": lambda element, subscript_dict, args: builder.add_initial(args[0]),
 
     "a function of": lambda element, subscript_dict, args: builder.add_incomplete(
         element['real_name'], args)
 }
 
-builders['get direct data'] = builders['get xls data']  # Both are implemented identically in PySD
-builders['get direct lookups'] = builders['get xls lookups']  # Both are implemented identically in PySD
+# direct and xls methods are identically implemented in PySD
+builders['get direct data'] = builders['get xls data'] 
+builders['get direct lookups'] = builders['get xls lookups']
+builders['get direct constants'] = builders['get xls constants']
+builders['get direct subscript'] = builders['get xls subscript']
 
 
 def get_childs_types(n):
@@ -955,8 +940,15 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
 
             self.new_structure += structure
 
+            # External lookups
             if builder_name in ['get xls lookups', 'get direct lookups']:
                 self.arguments = 'x'
+                self.kind = 'lookup'
+
+            # External constants
+            if builder_name in ['get xls constants', 'get direct constants',\
+                                'get xls subscript', 'get direct subscript']:
+                self.kind = 'constant'
 
             if builder_name == 'delay fixed':
                 warnings.warn("Delay fixed only approximates solution, may not give the same "
