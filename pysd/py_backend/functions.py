@@ -938,6 +938,7 @@ def lookup(x, xs, ys):
     Intermediate values are calculated with linear interpolation between the intermediate points.
     Out-of-range values are the same as the closest endpoint (i.e, no extrapolation is performed).
     """
+    #TODO avoid using preserve_array and try with xr.DataArray.interp
     return utils.preserve_array(np.interp(x, xs, ys), ref=x)
 
 
@@ -1089,8 +1090,9 @@ def log(x, base):
     """
     return np.log(x) / np.log(base)
 
-
+#TODO document this new functions...
 def and_(x, y):
+    #TODO check logical operations between matrix and vectors
     return xr.ufuncs.logical_and(x, y)
 
 

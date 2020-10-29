@@ -14,8 +14,7 @@ import numpy as np
 import parsimonious
 
 from .. import functions as funcs
-from ...py_backend import builder
-from ...py_backend import utils
+from .. import builder, utils, external
 
 
 def get_file_sections(file_str):
@@ -309,6 +308,11 @@ def get_equation_components(equation_str, root_path=None):
         def visit_keyword(self, n, vc):
             self.keyword = n.text.strip()
 
+        def visit_imported_subscript(self, n, vc):
+            f_str = vc[0]
+            args_str = vc[4]  # todo: make this less fragile?
+            self.subscripts += get_external_data(f_str, args_str, root_path)
+
         def visit_name(self, n, vc):
             (name,) = vc
             self.real_name = name.strip()
@@ -333,6 +337,21 @@ def get_equation_components(equation_str, root_path=None):
             'expr': parse_object.expression,
             'kind': parse_object.kind,
             'keyword': parse_object.keyword}
+
+
+def get_external_data(func_str, args_str, root_path):
+    """
+    Gets the subscripts from external files calling the class external.ExtSubscript
+    """
+    # The py model file must be recompiled if external file subscripts change. This could be avoided
+    # if we switch to function-defined subscript values instead of hard-coding them.
+    f = subscript_functions[func_str.lower()]
+    args = [x.strip().strip("\'") for x in args_str.split(',')]  # todo: make this less fragile?
+
+    if args[0][0] == '?':
+        args[0] = os.path.join(root_path, args[0][1:])
+
+    return f(*args).subscript
 
 
 def parse_units(units_str):
@@ -473,6 +492,11 @@ data_ops = {
     'get data mean': '',
     'get data stdv': '',
     'get data total points': ''
+}
+
+subscript_functions = {
+    "get xls subscript": external.ExtSubscript,
+    "get direct subscript": external.ExtSubscript
 }
 
 builders = {
@@ -620,18 +644,6 @@ builders = {
         subscript_dict=subscript_dict
     ),
 
-    "get xls subscript": lambda element, subscript_dict, args: builder.add_ext_subscript(
-        identifier=element['py_name'],
-        file_name=args[0],
-        tab=args[1],
-        firstcell=args[2],
-        lastcell=args[3],
-        prefix=args[4],
-        subs=element['subs'],
-        subscript_dict=subscript_dict
-    ),
-
-
     "initial": lambda element, subscript_dict, args: builder.add_initial(args[0]),
 
     "a function of": lambda element, subscript_dict, args: builder.add_incomplete(
@@ -642,7 +654,6 @@ builders = {
 builders['get direct data'] = builders['get xls data'] 
 builders['get direct lookups'] = builders['get xls lookups']
 builders['get direct constants'] = builders['get xls constants']
-builders['get direct subscript'] = builders['get xls subscript']
 
 
 def get_childs_types(n):
@@ -919,7 +930,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             subs = [x.strip() for x in refs.split(',')]
             coordinates = utils.make_coord_dict(subs, subscript_dict)
             if len(coordinates):
-                string = '.loc[%s].squeeze().expand_dims(dict([(i,len(j)) for i,j in %s.items()]))' % (repr(coordinates), repr(coordinates))
+                string = '.loc[%s].squeeze().expand_dims(dict([(i,len(j)) for i,j in %s.items()]))'\
+                          % (repr(coordinates), repr(coordinates))
             else:
                 string = ' '
             # Implements basic "!" subscript functionality in Vensim. Does NOT work for matrix diagonals in
@@ -930,6 +942,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             if axis:
                 string += ', dim=(%s)' % ','.join(axis)
             return string
+
 
         def visit_build_call(self, n, vc):
             call = vc[0]
@@ -946,8 +959,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
                 self.kind = 'lookup'
 
             # External constants
-            if builder_name in ['get xls constants', 'get direct constants',\
-                                'get xls subscript', 'get direct subscript']:
+            if builder_name in ['get xls constants', 'get direct constants']:
                 self.kind = 'constant'
 
             if builder_name == 'delay fixed':
@@ -1067,7 +1079,7 @@ def translate_section(section, macro_list, root_path):
 
     # add macro functions to namespace
     for macro in macro_list:
-        if macro['name'] is not '_main_':
+        if macro['name'] != '_main_':
             name, namespace = utils.make_python_identifier(macro['name'], namespace)
 
     # add model elements
@@ -1146,7 +1158,7 @@ def translate_vensim(mdl_file):
             section['py_name'] = utils.make_python_identifier(section['name'])[0]
             section['file_name'] = out_dir + '/' + section['py_name'] + '.py'
 
-    macro_list = [s for s in file_sections if s['name'] is not '_main_']
+    macro_list = [s for s in file_sections if s['name'] != '_main_']
 
     for section in file_sections:
         translate_section(section, macro_list, root_path)

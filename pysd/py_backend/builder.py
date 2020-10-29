@@ -719,59 +719,6 @@ def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell, subs, subscri
 
     return "%s(x)" % external['py_name'], [external]
 
-def add_ext_subscript(identifier, file_name, tab, firstcell, lastcell, prefix, subs, subscript_dict):
-    """
-    Constructs a external object for handling Vensim's GET XLS SUBSCRIPT/GET DIRECT SUBSCRIPT functionality
-
-    Parameters
-    ----------
-    identifier: basestring
-        the python-safe name of the external values
-    file_name: str
-        filepath to the data
-    tab: str
-        tab where the data is
-    firstcell: str
-         first cell identifier
-    lastcell: str
-         last cell identifier
-    prefix: str
-         prefix of the subscript
-    subs: list of strings
-        List of strings of subscript indices that correspond to the
-        list of expressions, and collectively define the shape of the output
-        See `builder.add_flaux` for more info
-
-    Returns
-    -------
-    reference: basestring
-        reference to the ExtSubscript object `__call__` method,
-        which will return the read value of the subscripts
-    new_structure: list
-        list of element construction dictionaries for the builder to assemble
-    """
-    coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
-    external = {
-        'py_name': utils.make_python_identifier('_ext_subscript_%s' % identifier)[0],
-        'real_name': 'External subscripts for %s' % identifier,
-        'doc': 'Provides data for constant data variable %s' % identifier,
-        'py_expr': 'external.ExtSubscript(file_name=%s,\n'
-                   '                      tab=%s,\n'
-                   '                      root=_root,\n'
-                   '                      firstcell=%s,\n'
-                   '                      lastcell=%s,\n'
-                   '                      prefix=%s)'
-                   % (file_name, tab, firstcell, lastcell, prefix),
-        'unit': 'None',
-        'lims': 'None',
-        'eqn': 'None',
-        'subs': subs,
-        'kind': 'external',
-        'arguments': ''
-    }
-
-    return "%s()" % external['py_name'], [external]
-
 
 def add_macro(macro_name, filename, arg_names, arg_vals):
     """

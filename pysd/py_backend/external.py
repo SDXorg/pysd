@@ -71,6 +71,7 @@ class External():
             if dropna:
                 data = data.dropna(how="all", axis=axis)
             
+            #print(data)
             if isinstance(rows, int) or\
                (isinstance(rows, list) and rows[0] == rows[1]):
                 data = data.iloc[0]
@@ -404,25 +405,18 @@ class ExtConstant(External):
         return self.value
 
 
-def ExtSubscript(External):
+class ExtSubscript(External):
     """
     Class for Vensim GET XLS SUBSCRIPT/GET DIRECT SUBSCRIPT
     """
     def __init__(self, file_name, tab, firstcell, lastcell, prefix):
         super(ExtSubscript, self).__init__(file_name, tab)
-        self.firstcell = firstcell
-        self.lastcell = lastcell
-        self.prefix = prefix
 
-    def initialize(self):
-        row_first, col_first = self._split_excel_cell(self.firstcell)
-        row_last, col_last = self._split_excel_cell(self.lastcell)
+        row_first, col_first = self._split_excel_cell(firstcell)
+        row_last, col_last = self._split_excel_cell(lastcell)
         data = self._get_data_from_file(rows=[row_first, row_last],
                                         cols=[col_first, col_last])
-    
-        self.subscript = [self.prefix + str(d) for d in data.flatten()]
 
-    def __call__(self):
-        return self.subscript
+        self.subscript = [prefix + str(d) for d in data.values.flatten()]
 
 
