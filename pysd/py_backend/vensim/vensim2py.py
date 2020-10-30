@@ -953,7 +953,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
 
             self.new_structure += structure
 
-            # External lookups
+             External lookups
             if builder_name in ['get xls lookups', 'get direct lookups']:
                 self.arguments = 'x'
                 self.kind = 'lookup'

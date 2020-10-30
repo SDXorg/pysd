@@ -67,11 +67,10 @@ class External():
             
             data = excel.parse(sheet_name=self.tab, header=None, skiprows=skip,
                                nrows=nrows, usecols=usecols)
-            
+ 
             if dropna:
                 data = data.dropna(how="all", axis=axis)
-            
-            #print(data)
+ 
             if isinstance(rows, int) or\
                (isinstance(rows, list) and rows[0] == rows[1]):
                 data = data.iloc[0]
@@ -285,32 +284,35 @@ class ExtData(External):
         if len(reshape_dims) > 1:
             data = self.reshape(data, reshape_dims)
 
-        self.state = xr.DataArray(
+        self.data = xr.DataArray(
             data=data, coords={**self.coords, 'time': time_data}, dims=list(self.coords)+['time']
         )
 
     def __call__(self):
+       return self.data
 
-        time = self.time_func()
-        if time > self.state['time'][-1]:
-            return self.state['time'][-1]
-        elif time < self.state['time'][0]:
-            return self.state['time'][0]
+    #def __call__(self):
 
-        if self.interp == 'interpolate' or self.interp is None:  # 'interpolate' is the default
-            return self.state.interp(time=time)
-        elif self.interp == 'look forward':
-            next_t = self.state['time'][self.state['time'] >= time][0]
-            return self.state.sel(time=next_t)
-        elif self.interp == 'hold backward':
-            last_t = self.state['time'][self.state['time'] <= time][-1]
-            return self.state.sel(time=last_t)
+    #    time = self.time_func()
+    #    if time > self.state['time'][-1]:
+    #        return self.state['time'][-1]
+    #    elif time < self.state['time'][0]:
+    #        return self.state['time'][0]
 
-        # For :raw: (or actually any other/invalid) keyword directives
-        try:
-            return self.state.sel(time=time)
-        except KeyError:
-            return np.nan
+    #    if self.interp == 'interpolate' or self.interp is None:  # 'interpolate' is the default
+    #        return self.state.interp(time=time)
+    #    elif self.interp == 'look forward':
+    #        next_t = self.state['time'][self.state['time'] >= time][0]
+    #        return self.state.sel(time=next_t)
+    #    elif self.interp == 'hold backward':
+    #        last_t = self.state['time'][self.state['time'] <= time][-1]
+    #        return self.state.sel(time=last_t)
+
+    #    # For :raw: (or actually any other/invalid) keyword directives
+    #    try:
+    #        return self.state.sel(time=time)
+    #    except KeyError:
+    #        return np.nan
 
 
 class ExtLookup(External):
@@ -322,7 +324,7 @@ class ExtLookup(External):
         self.x_row_or_col = x_row_or_col
         self.cell = cell
         self.coords = coords
-
+            
     def initialize(self):
         x_across = self.x_row_or_col.isnumeric()
         size = int(np.product([len(v) for v in self.coords.values()]))
@@ -341,8 +343,10 @@ class ExtLookup(External):
             dims=['x'] + list(self.coords))
         # TODO add interpolation to missing values
 
-    def __call__(self, x):
-        return self._call(x)
+    def __call__(self):
+        return self.data
+    #def __call__(self, x):
+    #    return self._call(x)
 
     def _call(self, x):        
         if isinstance(x, xr.DataArray):

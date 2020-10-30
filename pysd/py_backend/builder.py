@@ -140,18 +140,19 @@ def build_element(element, subscript_dict):
     """
     if element['kind'] == 'constant':
         cache_type = "@cache('run')"
-    elif element['kind'] in ['setup', 'stateful', 'external']:  # setups only get called once, caching is wasted
+    elif element['kind'] in ['setup', 'stateful',
+                             'external', 'external_add']:  # setups only get called once, caching is wasted
         cache_type = ''
     elif element['kind'] == 'component':
         cache_type = "@cache('step')"
     elif element['kind'] == 'stateful':
         cache_type = ''
-    elif element['kind'] in ['lookup', 'extlookup']:  # lookups may be called with different values in a round
+    elif element['kind'] in ['lookup']:  # lookups may be called with different values in a round
         cache_type = ''
     else:
         raise AttributeError("Bad value for 'kind'")
 
-    if len(element['py_expr']) > 1:
+    if len(element['py_expr']) > 1 and "ADD" not in element['py_expr'][-1]:
         contents = 'return utils.xrmerge([%(das)s,])' % {'das': ',\n'.join(element['py_expr'])}
     else:
         contents = 'return %(py_expr)s' % {'py_expr': element['py_expr'][0]}
@@ -175,6 +176,12 @@ def build_element(element, subscript_dict):
         func = '''
     %(py_name)s = %(py_expr)s
             ''' % {'py_name': element['py_name'], 'py_expr': element['py_expr'][0]}
+
+    elif element['kind'] == 'external_add':
+        py_name = element['py_name'].split("ADD")[0]
+        func = '''
+    %(py_name)s%(py_expr)s
+            ''' % {'py_name': py_name, 'py_expr': element['py_expr'][0]}
 
     else:
         func = '''
@@ -296,7 +303,7 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
             shape = [len(coords[dim]) for dim in dims]
             initial_condition = textwrap.dedent("""\
                 xr.DataArray(data=np.full(%(shape)s, %(value)s),
-                             coords=%(coords)s,
+              m             coords=%(coords)s,
                              dims=%(dims)s )""" % {
                 'shape': shape,
                 'value': initial_condition,
@@ -638,10 +645,11 @@ def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
         list of element construction dictionaries for the builder to assemble
     """
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
-    
+    kind = 'external'
     name = utils.make_python_identifier('_ext_constant_%s' % identifier)[0]
     if name in build_names: 
-        name += '1'
+        kind = 'extenal_add'
+        name += 'ADD_1'
         number = 2
         while name in build_names:
             name = name[:-1] + str(number)
@@ -698,22 +706,40 @@ def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell, subs, subscri
         list of element construction dictionaries for the builder to assemble
     """
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
+    name = utils.make_python_identifier('_ext_constant_%s' % identifier)[0]
+    if name in build_names: 
+        kind = 'external_add'
+        name += 'ADD_1'
+        number = 2
+        while name in build_names:
+            name = name[:-1] + str(number)
+            number+=1
+        py_expr = '.add(file_name=%s,\n'\
+                  '     tab=%s,\n'\
+                  '     root=_root,\n'\
+                  '     x_row_or_col=%s,\n'\
+                  '     cell=%s,\n'\
+                  '     coords=%s)'
+    else:
+        kind = 'external'
+        py_expr = 'external.ExtLookup(file_name=%s,\n'\
+                  '                   tab=%s,\n'\
+                  '                   root=_root,\n'\
+                  '                   x_row_or_col=%s,\n'\
+                  '                   cell=%s,\n'\
+                  '                   coords=%s)'
+    build_names.add(name)
+
     external = {
-        'py_name': utils.make_python_identifier('_ext_lookup_%s' % identifier)[0],
+        'py_name': name,
         'real_name': 'External lookup data for %s' % identifier,
         'doc': 'Provides data for external lookup variable %s' % identifier,
-        'py_expr': 'external.ExtLookup(file_name=%s,\n'
-                   '                   tab=%s,\n'
-                   '                   root=_root,\n'
-                   '                   x_row_or_col=%s,\n'
-                   '                   cell=%s,\n'
-                   '                   coords=%s)'
-                   % (file_name, tab, x_row_or_col, cell, coords),
+        'py_expr': py_expr % (file_name, tab, x_row_or_col, cell, coords),
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',
         'subs': subs,
-        'kind': 'external',
+        'kind': kind,
         'arguments': 'x'
     }
 
