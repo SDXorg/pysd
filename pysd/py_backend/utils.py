@@ -291,6 +291,42 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
     return s, namespace
 
 
+def make_add_identifier(identifier, build_names):
+    """
+    Takes an existing used Python identifier and attatch a unique
+    identifier with ADD_# ending.
+
+    Used for add new information to an existing external object.
+    build_names will be updated inside this functions as a set
+    is mutable.
+
+    Parameters
+    ----------
+    string : <basestring>
+        Existing python identifier
+    build_names : <set>
+        Set of the already used identifiers for external objects.
+
+    Returns
+    -------
+    identifier : <string>
+        A vaild python identifier based on the input indentifier and the existing ones
+    """
+    identifier += 'ADD_'
+    number = 1
+    # iterate until finding a non-used identifier
+    while identifier + str(number) in build_names:
+        number += 1
+
+    #update identifier
+    identifier += str(number)
+
+    # update the build names
+    build_names.add(identifier)
+
+    return identifier
+
+
 def get_return_elements(return_columns, namespace, subscript_dict):
     """
     Takes a list of return elements formatted in vensim's format

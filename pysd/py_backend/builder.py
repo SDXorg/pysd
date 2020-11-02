@@ -560,6 +560,9 @@ def add_initial(initial_input):
 
     return "%s()" % stateful['py_name'], [stateful]
 
+# Variable to save identifiers of external objects
+build_names = set()
+
 
 def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs, subscript_dict, keyword):
     """
@@ -594,29 +597,53 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs, subscr
     """
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
     keyword = '"%s"' % keyword.strip(':').lower() if isinstance(keyword, str) else keyword
+    name = utils.make_python_identifier('ext_data_%s' % identifier)[0]
+
+    # Check if the object already exists
+    if name in build_names: 
+        # Create a new py_name with ADD_# ending
+        # This object name will not be used in the model as
+        # the information is added to the existing object
+        # with add method.
+        kind = 'external_add'
+        name = utils.make_add_identifier(name, build_names)
+        py_expr = '.add(file_name=%s,\n'\
+                  '     tab=%s,\n'\
+                  '     time_row_or_col=%s,\n'\
+                  '     root=_root,\n'\
+                  '     cell=%s,\n'\
+                  '     coords=%s,\n'\
+                  '     interp=%s)'
+    else:
+        # Regular name will be used and a new object will be created
+        # in the model file.
+        build_names.add(name)
+        kind = 'external'
+        py_expr = 'external.ExtData(file_name=%s,\n'\
+                  '                 tab=%s,\n'\
+                  '                 time_row_or_col=%s,\n'\
+                  '                 root=_root,\n'\
+                  '                 cell=%s,\n'\
+                  '                 coords=%s,\n'\
+                  '                 interp=%s)'
+
     external = {
-        'py_name': utils.make_python_identifier('ext_data_%s' % identifier)[0],
+        'py_name': name,
         'real_name': 'External data for %s' % identifier,
         'doc': 'Provides data for data variable %s' % identifier,
-        'py_expr': 'external.ExtData(file_name=%s,\n'
-                   '                 tab=%s,\n'
-                   '                 time_row_or_col=%s,\n'
-                   '                 cell=%s,\n'
-                   '                 root=_root,\n'
-                   '                 coords=%s,\n'
-                   '                 interp=%s)'
-                   % (file_name, tab, time_row_or_col, cell, coords, keyword),
+        'py_expr': py_expr % (file_name, tab, time_row_or_col,
+                              cell, coords, keyword),
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',
         'subs': subs,
-        'kind': 'external',
+        'kind': kind,
         'arguments': ''
     }
 
     return "%s(time())" % external['py_name'], [external]
 
-build_names = set()
+
 def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
     """
     Constructs a external object for handling Vensim's GET XLS DATA/GET DIRECT DATA functionality
@@ -645,31 +672,42 @@ def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
         list of element construction dictionaries for the builder to assemble
     """
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
-    kind = 'external'
     name = utils.make_python_identifier('_ext_constant_%s' % identifier)[0]
+
+    # Check if the object already exists
     if name in build_names: 
-        kind = 'extenal_add'
-        name += 'ADD_1'
-        number = 2
-        while name in build_names:
-            name = name[:-1] + str(number)
-            number+=1
+        # Create a new py_name with ADD_# ending
+        # This object name will not be used in the model as
+        # the information is added to the existing object
+        # with add method.
+        kind = 'external_add'
+        name = utils.make_add_identifier(name, build_names)
+        py_expr = '.add(file_name=%s,\n'\
+                  '     tab=%s,\n'\
+                  '     root=_root,\n'\
+                  '     cell=%s,\n'\
+                  '     coords=%s)'
+    else:
+        # Regular name will be used and a new object will be created
+        # in the model file.
+        kind = 'external'
+        py_expr = 'external.ExtConstant(file_name=%s,\n'\
+                  '                     tab=%s,\n'\
+                  '                     root=_root,\n'\
+                  '                     cell=%s,\n'\
+                  '                     coords=%s)'
     build_names.add(name)
+
     external = {
         'py_name': name,
         'real_name': 'External constant for %s' % identifier,
         'doc': 'Provides data for constant data variable %s' % identifier,
-        'py_expr': 'external.ExtConstant(file_name=%s,\n'
-                   '                     tab=%s,\n'
-                   '                     root=_root,\n'
-                   '                     cell=%s,\n'
-                   '                     coords=%s)'
-                   % (file_name, tab, cell, coords),
+        'py_expr': py_expr % (file_name, tab, cell, coords),
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',
         'subs': subs,
-        'kind': 'external',
+        'kind': kind,
         'arguments': ''
     }
 
@@ -706,14 +744,16 @@ def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell, subs, subscri
         list of element construction dictionaries for the builder to assemble
     """
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
-    name = utils.make_python_identifier('_ext_constant_%s' % identifier)[0]
+    name = utils.make_python_identifier('_ext_lookup_%s' % identifier)[0]
+
+    # Check if the object already exists
     if name in build_names: 
+        # Create a new py_name with ADD_# ending
+        # This object name will not be used in the model as
+        # the information is added to the existing object
+        # with add method.
         kind = 'external_add'
-        name += 'ADD_1'
-        number = 2
-        while name in build_names:
-            name = name[:-1] + str(number)
-            number+=1
+        name = utils.make_add_identifier(name, build_names)
         py_expr = '.add(file_name=%s,\n'\
                   '     tab=%s,\n'\
                   '     root=_root,\n'\
@@ -721,6 +761,8 @@ def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell, subs, subscri
                   '     cell=%s,\n'\
                   '     coords=%s)'
     else:
+        # Regular name will be used and a new object will be created
+        # in the model file.
         kind = 'external'
         py_expr = 'external.ExtLookup(file_name=%s,\n'\
                   '                   tab=%s,\n'\

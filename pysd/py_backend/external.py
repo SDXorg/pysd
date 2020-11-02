@@ -4,6 +4,7 @@ import warnings
 import pandas as pd
 import numpy as np
 import xarray as xr
+from . import utils
 
 class Excels():
     """
@@ -38,9 +39,6 @@ class External():
     """
     Main class of external objects
     """
-    def __init__(self, file_name, tab):
-        self.file = file_name
-        self.tab = tab
 
     def _get_data_from_file(self, rows, cols, axis="columns", dropna=False):
         """
@@ -154,7 +152,7 @@ class External():
 
     def _resolve_file(self, root=None, possible_ext=None):
 
-        possible_ext = possible_ext or ['.xls', '.xlsx', '.odt', '.txt', '.tab']
+        possible_ext = possible_ext or ['', '.xls', '.xlsx', '.odt', '.txt', '.tab']
  
         if self.file[0] == '?':
             self.file = os.path.join(root, self.file[1:])
@@ -164,8 +162,50 @@ class External():
                 if os.path.isfile(self.file + ext):
                     self.file = self.file + ext
                     return
- 
-        raise FileNotFoundError(self.file)
+        
+            raise FileNotFoundError(self.file)
+
+        else:
+             return
+
+    def _initialize_data(self, dim_name):
+        """
+        Initialize one element of DATA or LOOKUPS
+
+        Parameters
+        ----------
+        dim_name: str
+            Dimension name.
+            "lookup_dim" for LOOKUPS, "time" for DATA.
+
+        Returns
+        -------
+        data: xarray.DataArray
+            Dataarray with the time or interpolation dimension
+            as first dimension.
+        """
+        self._resolve_file(root=self.root)
+        x_across = self.x_row_or_col.isnumeric()
+        size = int(np.product([len(v) for v in self.coords.values()]))
+
+        time_data, data = self._get_series_data(
+            series_across=x_across,
+            series_row_or_col=self.x_row_or_col,
+            cell=self.cell, size=size
+        )
+
+        reshape_dims = tuple([len(time_data)]+ [len(i) for i in self.coords.values()])
+        if len(reshape_dims) > 1:
+            data = self.reshape(data, reshape_dims)
+
+        data = xr.DataArray(
+            data=data,
+            coords={dim_name: time_data, **self.coords},
+            dims=[dim_name] + list(self.coords)
+        )
+
+        return data
+
 
     @staticmethod
     def col_to_num(col):
@@ -261,58 +301,66 @@ class ExtData(External):
     """
     Class for Vensim GET XLS DATA/GET DIRECT DATA
     """
-    def __init__(self, file_name, tab, time_row_or_col, cell, interp, time, root, coords):
-        super(ExtData, self).__init__(file_name, tab)
-        self.time_row_or_col = time_row_or_col
-        self.cell = cell
-        self.time_func = time
+    def __init__(self, file_name, tab, time_row_or_col, cell, interp, root, coords):
+        self.files = [file_name]
+        self.tabs = [tab]
+        self.time_row_or_cols = [time_row_or_col]
+        self.cells = [cell]
+        self.roots = [root]
+        self.coordss = [coords]
+
+        # This value should be unique
         self.interp = interp
-        self.coords = coords
+
+    def add(self, file_name, tab, time_row_or_col, cell, interp, root, coords):
+        """
+        Add information to retrieve new dimension in an already declared object
+        """
+        self.files.append(file_name)
+        self.tabs.append(tab)
+        self.time_row_or_cols.append(time_row_or_col)
+        self.cells.append(cell)
+        self.roots.append(root)
+        self.coordss.append(coords)
 
     def initialize(self):
-        self._resolve_file(root=root)
-        time_across = self.time_row_or_col.isnumeric()
-        size = int(np.product([len(v) for v in self.coords.values()]))
+        """
+        Initialize all elements and create the self.data xarray.DataArray
+        """
+        data = []
+        zipped = zip(self.files, self.tabs, self.time_row_or_cols,
+                     self.cells, self.roots, self.coordss)
+        for self.file, self.tab, self.x_row_or_col,\
+            self.cell, self.root, self.coords in zipped:
+            data.append(self._initialize_data("time"))
+        self.data = utils.xrmerge(data)
 
-        time_data, data = self._get_series_data(
-            series_across=time_across,
-            series_row_or_col=self.time_row_or_col,
-            cell=self.cell, size=size
-        )
+    def __call__(self, time):
 
-        reshape_dims = tuple( [len(i) for i in self.coords.values()] + [len(time_data)] )
-        if len(reshape_dims) > 1:
-            data = self.reshape(data, reshape_dims)
+        if time > self.data['time'].values[-1]:
+            outdata = self.data[-1]
+        elif time < self.data['time'].values[0]:
+            outdata = self.data[0]
+        elif self.interp == 'interpolate' or self.interp is None:  # 'interpolate' is the default
+            outdata = self.data.interp(time=time)
+        elif self.interp == 'look forward':
+            next_t = self.data['time'][self.data['time'] >= time][0]
+            outdata = self.data.sel(time=next_t)
+        elif self.interp == 'hold backward':
+            last_t = self.data['time'][self.data['time'] <= time][-1]
+            outdata = self.data.sel(time=last_t)
+        else:
+            # For :raw: (or actually any other/invalid) keyword directives
+            try:
+                outdata = self.data.sel(time=time)
+            except KeyError:
+                return np.nan
 
-        self.data = xr.DataArray(
-            data=data, coords={**self.coords, 'time': time_data}, dims=list(self.coords)+['time']
-        )
-
-    def __call__(self):
-       return self.data
-
-    #def __call__(self):
-
-    #    time = self.time_func()
-    #    if time > self.state['time'][-1]:
-    #        return self.state['time'][-1]
-    #    elif time < self.state['time'][0]:
-    #        return self.state['time'][0]
-
-    #    if self.interp == 'interpolate' or self.interp is None:  # 'interpolate' is the default
-    #        return self.state.interp(time=time)
-    #    elif self.interp == 'look forward':
-    #        next_t = self.state['time'][self.state['time'] >= time][0]
-    #        return self.state.sel(time=next_t)
-    #    elif self.interp == 'hold backward':
-    #        last_t = self.state['time'][self.state['time'] <= time][-1]
-    #        return self.state.sel(time=last_t)
-
-    #    # For :raw: (or actually any other/invalid) keyword directives
-    #    try:
-    #        return self.state.sel(time=time)
-    #    except KeyError:
-    #        return np.nan
+        # if output from the lookup is a float return as float and not xarray
+        try:
+            return float(outdata)
+        except TypeError:
+            return outdata
 
 
 class ExtLookup(External):
@@ -320,33 +368,38 @@ class ExtLookup(External):
     Class for Vensim GET XLS LOOKUPS/GET DIRECT LOOKUPS
     """
     def __init__(self, file_name, tab, x_row_or_col, cell, root, coords):
-        super(ExtLookup, self).__init__(file_name, tab)
-        self.x_row_or_col = x_row_or_col
-        self.cell = cell
-        self.coords = coords
-            
+        self.files = [file_name]
+        self.tabs = [tab]
+        self.x_row_or_cols = [x_row_or_col]
+        self.cells = [cell]
+        self.roots = [root]
+        self.coordss = [coords]
+
+    def add(self, file_name, tab, x_row_or_col, cell, root, coords):
+        """
+        Add information to retrieve new dimension in an already declared object
+        """
+        self.files.append(file_name)
+        self.tabs.append(tab)
+        self.x_row_or_cols.append(x_row_or_col)
+        self.cells.append(cell)
+        self.roots.append(root)
+        self.coordss.append(coords)
+
     def initialize(self):
-        x_across = self.x_row_or_col.isnumeric()
-        size = int(np.product([len(v) for v in self.coords.values()]))
+        """
+        Initialize all elements and create the self.data xarray.DataArray
+        """
+        data = []
+        zipped = zip(self.files, self.tabs, self.x_row_or_cols,
+                     self.cells, self.roots, self.coordss)
+        for self.file, self.tab, self.x_row_or_col,\
+            self.cell, self.root, self.coords in zipped:
+            data.append(self._initialize_data("lookup_dim"))
+        self.data = utils.xrmerge(data)
 
-        x_data, data = self._get_series_data(series_across=x_across,
-                                             series_row_or_col=self.x_row_or_col,
-                                             cell=self.cell, size=size)
-
-        reshape_dims = tuple( [len(x_data)] + [len(i) for i in self.coords.values()] )
-
-        if len(reshape_dims) > 1:
-            data = self.reshape(data, reshape_dims)
-
-        self.data = xr.DataArray(
-            data=data, coords={'x': x_data, **self.coords},
-            dims=['x'] + list(self.coords))
-        # TODO add interpolation to missing values
-
-    def __call__(self):
-        return self.data
-    #def __call__(self, x):
-    #    return self._call(x)
+    def __call__(self, x):
+        return self._call(x)
 
     def _call(self, x):        
         if isinstance(x, xr.DataArray):
@@ -355,12 +408,18 @@ class ExtLookup(External):
         elif isinstance(x, np.ndarray):
             return np.array([self._call(i) for i in x])
 
-        
-        if x > self.data['x'].values[-1]:
-            return self.data.values[-1]
-        elif x < self.data['x'].values[0]:
-            return self.data.values[0]
-        return self.data.interp(x=x).values
+        if x > self.data['lookup_dim'].values[-1]:
+            outdata = self.data[-1]
+        elif x < self.data['lookup_dim'].values[0]:
+            outdata = self.data[0]
+        else: 
+            outdata = self.data.interp(lookup_dim=x)
+
+        # if output from the lookup is a float return as float and not xarray
+        try:
+            return float(outdata)
+        except TypeError:
+            return outdata
 
 
 class ExtConstant(External):
@@ -368,12 +427,41 @@ class ExtConstant(External):
     Class for Vensim GET XLS CONSTANT/GET DIRECT CONSTANT
     """
     def __init__(self, file_name, tab, cell, root, coords):
-        super(ExtConstant, self).__init__(file_name, tab)
-        self.transpose = cell[-1] == '*'
-        self.cell = cell.strip('*')
-        self.coords = coords
+        self.files = [file_name]
+        self.tabs = [tab]
+        self.transposes = [cell[-1] == '*']
+        self.cells = [cell.strip('*')]
+        self.roots = [root]
+        self.coordss = [coords]
+
+    def add(self, file_name, tab, cell, root, coords):
+        """
+        Add information to retrieve new dimension in an already declared object
+        """
+        self.files.append(file_name)
+        self.tabs.append(tab)
+        self.transposes.append(cell[-1] == '*')
+        self.cells.append(cell.strip('*'))
+        self.roots.append(root)
+        self.coordss.append(coords)
 
     def initialize(self):
+        """
+        Initialize all elements and create the self.data xarray.DataArray
+        """
+        data = []
+        zipped = zip(self.files, self.tabs, self.transposes,
+                     self.cells, self.roots, self.coordss)
+        for self.file, self.tab, self.transpose,\
+            self.cell, self.root, self.coords in zipped:
+            data.append(self._initialize())
+        self.data = utils.xrmerge(data)
+
+    def _initialize(self):
+        """
+        Initialize one element
+        """
+        self._resolve_file(root=self.root)
         dims = list(self.coords)
         start_row, start_col = self._split_excel_cell(self.cell)
         end_row = start_row
@@ -394,19 +482,20 @@ class ExtConstant(External):
         if self.transpose:
             data = data.transpose()    
 
+        # Create only an xarray if the data is not 0 dimensional
         if len(self.coords.values()) > 0:
             reshape_dims = tuple([len(i) for i in self.coords.values()])
         
             if len(reshape_dims) > 1: data = self.reshape(data, reshape_dims) 
 
-            self.value = xr.DataArray(
+            data = xr.DataArray(
                 data=data, coords=self.coords, dims=list(self.coords)
             )
-        else:
-            self.value = data
+
+        return data
 
     def __call__(self):
-        return self.value
+        return self.data
 
 
 class ExtSubscript(External):
@@ -414,7 +503,8 @@ class ExtSubscript(External):
     Class for Vensim GET XLS SUBSCRIPT/GET DIRECT SUBSCRIPT
     """
     def __init__(self, file_name, tab, firstcell, lastcell, prefix):
-        super(ExtSubscript, self).__init__(file_name, tab)
+        self.file_name = file_name
+        self.tab = tab
 
         row_first, col_first = self._split_excel_cell(firstcell)
         row_last, col_last = self._split_excel_cell(lastcell)
