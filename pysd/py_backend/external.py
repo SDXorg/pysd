@@ -47,43 +47,57 @@ class External():
         # TODO document well 
         ext = os.path.splitext(self.file)[1].lower()
         if ext in ['.xls', '.xlsx']:
+            # rows not specified
             if rows is None:
                 skip = nrows = None
+            # rows is an int of the first value
             elif isinstance(rows, int):
                 skip = rows
                 nrows = None
+            # rows my be a list of first and last value or a numpy.ndarray of valid values
             else:
                 skip = rows[0] - 1
-                nrows = rows[1] - skip if rows[1] is not None else None
+                nrows = rows[-1] - skip if rows[-1] is not None else None
+            # cols is a list of first and last value
             if isinstance(cols, list):
                 cols = [self.num_to_col(c) if isinstance(c, int) else c for c in cols]
                 usecols = cols[0] + ":" + cols[1]
+            # cols is a int/col_name or a np.ndarray of valid values
             else:
                 usecols = cols
 
+            # read data
             excel = Excels().read(self.file)
             
             data = excel.parse(sheet_name=self.tab, header=None, skiprows=skip,
                                nrows=nrows, usecols=usecols)
+
+            # avoid the rows not passed in rows numpy.ndarray
+            if isinstance(rows, np.ndarray):
+                data = data.iloc[(rows - rows[0])]
+
  
             if dropna:
                 data = data.dropna(how="all", axis=axis)
  
+            # if it is a single row remove its dimension
             if isinstance(rows, int) or\
                (isinstance(rows, list) and rows[0] == rows[1]):
                 data = data.iloc[0]
+
+            # if it is a single col remove its dimension
             if isinstance(cols, str) or\
                (isinstance(cols, list) and cols[0].lower() == cols[1].lower()):
-                if isinstance(data, pd.DataFrame):
+                try:
+                    # if there are multile rows
                     data = data.iloc[:, 0]
-                elif isinstance(data, pd.Series):
-                    data.index = range(data.size)
-                    data = data[0]
-                else: 
-                    raise NotImplementedError
+                except:
+                    # if there are no rows
+                    data = data.iloc[0]
+
             return data
 
-        raise NotImplementedError(ext)
+        raise NotImplementedError("The files with extension" + ext + "are not implemented")
 
     def _get_series_data(self, series_across, series_row_or_col, cell, size):
         """
@@ -91,63 +105,106 @@ class External():
         """
         # TODO document well 
         if series_across:
-            # Get serie from 1 to size
-        
+            # Horizontal data (dimension values in a row)
+
+            # get the dimension values
             series_data = self._get_data_from_file(rows=int(series_row_or_col)-1, 
                                                    cols=None, dropna=False)
+
             first_data_row, first_col = self._split_excel_cell(cell)
     
             first_col = first_col.upper()
             first_col_float = self.col_to_num(first_col)
     
+            # get a vector of the series index
             original_index = np.array(series_data.index)[first_col_float:]
             series_data = series_data[first_col_float:]
     
+            # remove nan or missing values from dimension
             series_data = pd.to_numeric(series_data, errors='coerce')
             valid_values = ~np.isnan(series_data)
             original_index = original_index[valid_values]
             series_data = series_data[valid_values]
-    
+
+            # check if the series has no len 0
             if len(series_data) == 0:
-                sys.exit("Dimension given in:\n"
-                         + "File name:\t{}\n".format(self.file)
-                         + "Sheet name:\t{}\n".format(self.tab)
-                         + "Row number:\t{}\n".format(series_row_or_col)
-                         + " has length 0")
+                raise ValueError("Dimension given in:\n"
+                                 + "File name:\t{}\n".format(self.file)
+                                 + "Sheet name:\t{}\n".format(self.tab)
+                                 + "Row number:\t{}\n".format(series_row_or_col)
+                                 + " has length 0")
             
             last_col = self.num_to_col(original_index[-1])
             last_data_row = first_data_row + size - 1
-     
+
+            # Warning if there is missing value in the dimension
             if (np.diff(original_index) != 1).any():
                 missing_index = np.arange(original_index[0], original_index[-1]+1)
                 missing_index = np.setdiff1d(missing_index, original_index)
-                cells = self.num_to_col(missing_index)
-                cells = [cell + series_row_or_col for cell in cells]
+                cols = self.num_to_col(missing_index)
+                cells = [col + series_row_or_col for col in cols]
                 warnings.warn("\n\tDimension value missing or non-valid in:\n"
                               + "File name:\t{}\n".format(self.file)
                               + "Sheet name:\t{}\n".format(self.tab)
                               + "\n\tCell(s):\t{}\n".format(cells)
                               + "\tthe corresponding column(s) to the "
                               + "missing/non-valid value(s) will be ignored\n\n")
-                          
+
+            # read data
             data = self._get_data_from_file(
                 rows=[first_data_row, last_data_row],
                 cols=original_index, dropna=False
             )
             data = data.transpose()
-    
+
         else:
-            # TODO improve the lookup as before to remove/Warning when missing values
+            # Vertical data (dimension values in a column)
+
+            # get the dimension values
             first_row, first_col = self._split_excel_cell(cell)
             series_data = self._get_data_from_file(rows=[first_row, None],
                                                    cols=series_row_or_col,
                                                    axis="rows", 
-                                                   dropna=True)
-    
-            last_row = first_row + series_data.size - 1
-            cols = [first_col, self.col_to_num(first_col) + size]
-            data = self._get_data_from_file(rows=[first_row, last_row], cols=cols)
-    
+                                                   dropna=False)
+
+            # get a vector of the series index
+            original_index = np.array(series_data.index)
+            series_data = pd.to_numeric(series_data, errors='coerce')
+
+            # remove nan or missing values from dimension
+            valid_values = ~np.isnan(series_data)
+            original_index = original_index[valid_values]
+            series_data = series_data[valid_values]
+ 
+            # check if the series has no len 0
+            if len(series_data) == 0:
+                raise ValueError("Dimension given in:\n"
+                                 + "File name:\t{}\n".format(self.file)
+                                 + "Sheet name:\t{}\n".format(self.tab)
+                                 + "Column:\t{}\n".format(series_row_or_col)
+                                 + " has length 0")
+
+            last_row = original_index[-1] + first_row
+            last_col = self.num_to_col(self.col_to_num(first_col) + size - 1)
+ 
+            # Warning if there is missing value in the dimension
+            if (np.diff(original_index) != 1).any():
+                missing_index = np.arange(original_index[0], original_index[-1]+1)
+                missing_index = np.setdiff1d(missing_index, original_index) + first_row
+                cells = [series_row_or_col + str(row) for row in missing_index]
+                warnings.warn("\n\tDimension value missing or non-valid in:\n"
+                              + "File name:\t{}\n".format(self.file)
+                              + "Sheet name:\t{}\n".format(self.tab)
+                              + "\n\tCell(s):\t{}\n".format(cells)
+                              + "\tthe corresponding column(s) to the "
+                              + "missing/non-valid value(s) will be ignored\n\n")
+
+            # read data
+            data = self._get_data_from_file(
+                rows=first_row+original_index,
+                cols=[first_col, last_col],
+                dropna=False)
+
         return series_data, data
 
     def _resolve_file(self, root=None, possible_ext=None):
@@ -188,19 +245,30 @@ class External():
         x_across = self.x_row_or_col.isnumeric()
         size = int(np.product([len(v) for v in self.coords.values()]))
 
-        time_data, data = self._get_series_data(
+        x_data, data = self._get_series_data(
             series_across=x_across,
             series_row_or_col=self.x_row_or_col,
             cell=self.cell, size=size
         )
 
-        reshape_dims = tuple([len(time_data)]+ [len(i) for i in self.coords.values()])
+        # Check if the lookup/time dimension is strictly monotonous
+        x_data_diff = np.diff(x_data.values)
+        if np.any(x_data_diff >= 0) and np.any(x_data_diff <= 0):
+            row_or_col = "Row number" if x_across else "Column"
+            print(x_data)
+            raise ValueError("Dimension given in:\n"
+                             + "\tFile name:\t{}\n".format(self.file)
+                             + "\tSheet name:\t{}\n".format(self.tab)
+                             + "\t{}:\t{}\n".format(row_or_col, self.x_row_or_col)
+                             + " is not strictly monotonous")
+
+        reshape_dims = tuple([len(x_data)]+ [len(i) for i in self.coords.values()])
         if len(reshape_dims) > 1:
             data = self.reshape(data, reshape_dims)
 
         data = xr.DataArray(
             data=data,
-            coords={dim_name: time_data, **self.coords},
+            coords={dim_name: x_data, **self.coords},
             dims=[dim_name] + list(self.coords)
         )
 

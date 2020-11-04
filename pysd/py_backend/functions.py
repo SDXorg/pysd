@@ -1109,6 +1109,8 @@ def sum(x, dim=None):
         except AttributeError:
            pass
 
+        return x.sum()
+
     return x.sum(dim=dim)
 
 
@@ -1120,6 +1122,8 @@ def prod(x, dim=None):
            x = x.values
         except AttributeError:
            pass
+
+        return x.prod()
 
     return x.prod(dim=dim)
 
@@ -1133,6 +1137,8 @@ def vmin(x, dim=None):
         except AttributeError:
            pass
 
+        return x.min()
+
     return x.min(dim=dim)
 
 
@@ -1144,6 +1150,8 @@ def vmax(x, dim=None):
            x = x.values
         except AttributeError:
            pass
+
+        return x.max()
 
     return x.max(dim=dim)
 
