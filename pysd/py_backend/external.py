@@ -6,12 +6,21 @@ import numpy as np
 import xarray as xr
 from . import utils
 
+try:
+    # Optional dependency as openpyxl requires python 3.6 or greater
+    # Used for reading data giving cell range names
+    from openpyxl import load_workbook
+except ModuleNotFoundError:
+    warnings.warn("Not able to import openpyxl."
+                  + "You will not be able to read Excel data"
+                  + " by cell range names.")
+
 class Excels():
     """
-    Class to save the read Excel files and thus avoud double reading
+    Class to save the read Excel files and thus avoid double reading
     """
     _instance = None
-    _Excels = {}
+    _Excels, _Excels_opyxl = {}, {}
 
     def __new__(cls):
         if cls._instance is None:
@@ -24,27 +33,58 @@ class Excels():
         """
         if file_name in cls._Excels:
             return cls._Excels[file_name]
-        else: 
+        else:
             excel = pd.ExcelFile(file_name)
             cls._Excels[file_name] = excel
+            return excel
+
+    def read_opyxl(cls, file_name):
+        """
+        Read the Excel file using OpenPyXL or return the previously read one
+        """
+        if file_name in cls._Excels:
+            return cls._Excels_opyxl[file_name]
+        else:
+            excel = load_workbook(file_name, read_only=True)
+            cls._Excels_opyxl[file_name] = excel
             return excel
 
     def clean(cls):
         """
         Clean the dictionary of read files
         """
-        cls._Excels = {}
+        cls._Excels, cls._Excels_opyxl = {}, {}
+
  
 class External():
     """
     Main class of external objects
     """
 
-    def _get_data_from_file(self, rows, cols, axis="columns", dropna=False):
+    def _get_data_from_file(self, rows, cols):
         """
-        Function thar reads data from excel file
+        Function to read data from excel file using rows and columns
+        
+        Parameters
+        ----------
+        rows: None, int, list or array
+            if None, then will continue reading until no more data is available in the new row
+            if int, then will start reading the table for the given row number
+            if list, then will read between first and second row of the lis
+            if array, then will read the given row numbers
+        cols:  None, str, int, list or array
+            if None, then will continue reading until no more data is available in the new column
+            if str, then will read only the given column by its name
+            if list, then will read between the given columns
+            if array, then will read the given columns names/numbers
+
+        Returns
+        -------
+        data: pandas.DataFrame, pandas.Series or float
+            depending on the shape of the requested data
         """
-        # TODO document well 
+        # TODO move to openpyxl to avoid pandas dependency in this file.
+        # This must by a future implementation as openpyxl requires python 3.6 or greater
         ext = os.path.splitext(self.file)[1].lower()
         if ext in ['.xls', '.xlsx']:
             # rows not specified
@@ -76,10 +116,6 @@ class External():
             if isinstance(rows, np.ndarray):
                 data = data.iloc[(rows - rows[0])]
 
- 
-            if dropna:
-                data = data.dropna(how="all", axis=axis)
- 
             # if it is a single row remove its dimension
             if isinstance(rows, int) or\
                (isinstance(rows, list) and rows[0] == rows[1]):
@@ -97,19 +133,69 @@ class External():
 
             return data
 
-        raise NotImplementedError("The files with extension" + ext + "are not implemented")
+        raise NotImplementedError("The files with extension "
+                                  + ext + " are not implemented")
+
+    def _get_data_from_file_opyxl(self, cellname):
+        """
+        Function to read data from excel file using cell range name
+        
+        Parameters
+        ----------
+        cellname: str
+            the cell range name
+
+        Returns
+        -------
+        data: numpy.ndarray or float
+            depending on the shape of the requested data
+        """
+        # read data
+        excel = Excels().read_opyxl(self.file)
+        coordinates = excel.defined_names[cellname].destinations
+        for sheet, cells in coordinates:
+            if sheet == self.tab:
+                values = excel[sheet][cells]
+                try:
+                    return np.array([[i.value for i in j] for j in values], dtype=float)
+                except TypeError:
+                    return values.value
+            else:
+                raise ValueError("The cell range name:\t {}".format(cellname)
+                                 + "\n\t Doesn't exist in:"
+                                 + "File name:\t{}\n".format(self.file)
+                                 + "Sheet name:\t{}\n".format(self.tab))
 
     def _get_series_data(self, series_across, series_row_or_col, cell, size):
         """
-        Function thar reads series data from excel file
+        Function thar reads series and data from excel file for DATA and LOOKUPS
+        
+        Parameters
+        ----------
+        series_across: "row", "column" or "name"
+            The way to read series file.
+        series_row_or_col: int or str
+            If series_across is "row" the row number where the series data is.
+            If series_across is "column" the column name where the series data is.
+            If series_across is "name" the cell range name where the series data is.
+        cell:
+            If series_across is not "name, the top left cell where the data table starts.
+            Else the name of the cell range where the data is.
+        size:
+            The size of the 2nd dimension of the data.
+        
+        Returns
+        -------
+        series_data, data: ndarray (1D), ndarray(1D/2D)
+            The values of the series and data.
+
         """
-        # TODO document well 
-        if series_across:
+        if series_across == "row":
             # Horizontal data (dimension values in a row)
 
             # get the dimension values
             series_data = self._get_data_from_file(rows=int(series_row_or_col)-1, 
-                                                   cols=None, dropna=False)
+                                                   cols=None)
 
             first_data_row, first_col = self._split_excel_cell(cell)
     
@@ -153,19 +239,16 @@ class External():
             # read data
             data = self._get_data_from_file(
                 rows=[first_data_row, last_data_row],
-                cols=original_index, dropna=False
-            )
+                cols=original_index)
             data = data.transpose()
 
-        else:
+        elif series_across == "column":
             # Vertical data (dimension values in a column)
 
             # get the dimension values
             first_row, first_col = self._split_excel_cell(cell)
             series_data = self._get_data_from_file(rows=[first_row, None],
-                                                   cols=series_row_or_col,
-                                                   axis="rows", 
-                                                   dropna=False)
+                                                   cols=series_row_or_col)
 
             # get a vector of the series index
             original_index = np.array(series_data.index)
@@ -202,9 +285,82 @@ class External():
             # read data
             data = self._get_data_from_file(
                 rows=first_row+original_index,
-                cols=[first_col, last_col],
-                dropna=False)
+                cols=[first_col, last_col])
 
+        else:
+            # get series data
+            series_data = self._get_data_from_file_opyxl(series_row_or_col)
+    
+            try:
+                series_shape = series_data.shape
+            except AttributeError:
+                # Error if the lookup/time dimension has len 0 or 1
+                raise ValueError("\n\tDimension given in:\n"
+                                 + "File name:\t{}\n".format(self.file)
+                                 + "Sheet name:\t{}\n".format(self.tab)
+                                 + "Dimension name:\t{}\n".format(series_row_or_col)
+                                 + " is not a vector")
+    
+            if series_shape[0] == 1:
+                # horizontal definition of lookup/time dimension
+                series_data = series_data[0]
+                transpose = True
+    
+            elif series_shape[1] == 1:
+                # vertical definition of lookup/time dimension
+                series_data = series_data[:, 0]
+                transpose = False
+    
+            else:
+                # Error if the lookup/time dimension is 2D
+                raise ValueError("\n\tDimension given in:\n"
+                                 + "File name:\t{}\n".format(self.file)
+                                 + "Sheet name:\t{}\n".format(self.tab)
+                                 + "Dimension name:\t{}\n".format(series_row_or_col)
+                                 + " is a table and not a vector")
+    
+            # Substract missing values in the series
+            nan_index = np.isnan(series_data)
+            
+            if nan_index.any():
+                series_data = series_data[~nan_index]
+                warnings.warn("\n\tDimension value missing or non-valid in:\n"
+                              + "File name:\t{}\n".format(self.file)
+                              + "Sheet name:\t{}\n".format(self.tab)
+                              + "Dimension name:\t{}\n".format(series_row_or_col)
+                              + "\tthe corresponding data value(s) to the "
+                              + "missing/non-valid value(s) will be ignored\n\n")
+            # get data
+            data = _get_data_from_file_opyxl(cell)
+            
+            if transpose:
+                # transpose for horizontal definition of dimension
+                data = data.transpose()
+    
+            if data.shape[1] != size:
+                # Given coordinates length is different than lentgh of 2nd dimension
+                raise ValueError("\n\tData given in:\n"
+                                  + "File name:\t{}\n".format(self.file)
+                                  + "Sheet name:\t{}\n".format(self.tab)
+                                  + "Data name:\t{}\n".format(cell)
+                                  + " has not the same size as the given coordinates")
+    
+            if data.shape[1] == 1:
+                # remove second dimension of data if its shape is (N, 1)
+                data = data[:, 0]
+            
+            try:
+                # substract missing values from series and check 1st dimension
+                data = data[~nan_index]
+            except IndexError:
+                raise ValueError("\n\tDimension and data given in:\n"
+                                  + "File name:\t{}\n".format(self.file)
+                                  + "Sheet name:\t{}\n".format(self.tab)
+                                  + "Dimension name:\t{}\n".format(series_row_or_col)
+                                  + "Data name:\t{}\n".format(cell)
+                                  + " don't have the same length in the 1st dimension")
+
+        # TODO manage data NA and missing values
         return series_data, data
 
     def _resolve_file(self, root=None, possible_ext=None):
@@ -242,34 +398,32 @@ class External():
             as first dimension.
         """
         self._resolve_file(root=self.root)
-        x_across = self.x_row_or_col.isnumeric()
-        size = int(np.product([len(v) for v in self.coords.values()]))
+        series_across = self._series_selector(self.x_row_or_col, self.cell):
+        size = _compute_shape(self.coords, self.dim, reshape_len=1)[0]
 
-        x_data, data = self._get_series_data(
-            series_across=x_across,
+        series, data = self._get_series_data(
+            series_across=series_across,
             series_row_or_col=self.x_row_or_col,
             cell=self.cell, size=size
         )
 
         # Check if the lookup/time dimension is strictly monotonous
-        x_data_diff = np.diff(x_data.values)
-        if np.any(x_data_diff >= 0) and np.any(x_data_diff <= 0):
-            row_or_col = "Row number" if x_across else "Column"
-            print(x_data)
+        series_diff = np.diff(series.values)
+        if np.any(series_diff >= 0) and np.any(series_diff <= 0):
             raise ValueError("Dimension given in:\n"
                              + "\tFile name:\t{}\n".format(self.file)
                              + "\tSheet name:\t{}\n".format(self.tab)
-                             + "\t{}:\t{}\n".format(row_or_col, self.x_row_or_col)
+                             + "\t{}:\t{}\n".format(series_across, self.x_row_or_col)
                              + " is not strictly monotonous")
 
-        reshape_dims = tuple([len(x_data)]+ [len(i) for i in self.coords.values()])
+        reshape_dims = tuple([len(series)] + _compute_shape(self.coords, self.dims))
         if len(reshape_dims) > 1:
             data = self.reshape(data, reshape_dims)
 
         data = xr.DataArray(
             data=data,
             coords={dim_name: x_data, **self.coords},
-            dims=[dim_name] + list(self.coords)
+            dims=[dim_name] + self.dim
         )
 
         return data
@@ -326,24 +480,38 @@ class External():
     @staticmethod
     def _split_excel_cell(cell):
         """
-        Splits cell number and letter.
-        
+        Splits a cell value given in a string.
+        Returns None for non-valid cell formats.
+
         Parameters
         ----------
         cell: str
-          Cell name such as "A1"
-        
+          Cell like string, such as "A1", "b16", "AC19"...
+          If it is not a cell like string will return None.
+
         Returns
         -------
-        tuple (int, str)
-          Cell number, Cell letter
+        row number, column name: int, str
+          If the cell input is valid.
+      
         """
-        return int(re.sub("[a-zA-Z]+", "", cell)), re.sub("[^a-zA-Z]+", "", cell)
+        split = re.findall('\d+|\D+', cell)
+        try:
+            # check that we only have two values [column, row]
+            assert len(split) == 2
+            # check that the column name has no special characters
+            assert not re.compile('[^a-zA-Z]+').search(split[0])
+            # check that row number is not 0
+            assert int(split[1]) != 0
+            return int(split[1]), split[0]
+        except AssertionError:
+            return
 
     @staticmethod
     def reshape(data, dims):
         """
-        Reshapes an xarray.DataArray or np.ndarray in the given dimensions.
+        Reshapes an pandas.DataFrame, pandas.Series, xarray.DataArray
+        or np.ndarray in the given dimensions.
 
         Parameters
         ----------
@@ -364,23 +532,110 @@ class External():
 
         return data.reshape(dims)
 
+    @staticmethod
+    def _compute_shape(coords, dims, reshape_len=None):
+        """
+        Computes the 'shape' of a coords dictionary.
+        Function used to rearange data in xarrays and
+        to compute the number of rows/columns to be read in a file.
+        
+        Parameters
+        ----------
+        coords: dict 
+          Dictionary of the dimension names as a keys with their
+          values.
+        dims: list
+          Ordered list of the dimensions.
+        reshape_len: int (optional)
+          Number of dimensions of the output shape.
+          The shape will ony compute the corresponent table
+          dimensions to read from Excel, then, the dimensions 
+          with length one will be ignored at first.
+          Lately, it will complete with 1 on the left of the shape
+          if the reshape_len value is bigger than the length of shape.
+          Will raise a ValueError if we try to reshape to a reshape_len
+          smaller than the initial shape.
+        
+        Returns
+        -------
+        shape: list
+          Shape of the ordered dictionary or of the desired table or vector
+          
+        Note
+        ----
+        Dictionaries in Python >= 3.7 are ordered, which means that
+        we could remove dims if there is a not backward compatible
+        version of the library which only works in Python 3.7+. For now,
+        the dimensions list is passed to make it work properly for all the users.
+        """
+        if not reshape_len:
+            return [len(coords[dim]) for dim in dims]
+    
+        shape = [len(coords[dim]) for dim in dims if len(coords[dim]) > 1]
+    
+        shape_len = len(shape)
+        
+        if shape_len > reshape_len:
+            raise ValueError("The shape of the coords to read in a "
+                             + " external file must be at most " 
+                             + "{} dimensional".format(reshape_len))
+            
+        return [1]*(reshape_len-shape_len) + shape
+    
+    @staticmethod
+    def _series_selector(x_row_or_col, cell):
+        """
+        Selects if a series data (DATA/LOOKUPS), should be read by columns, rows or cell name.
+        Based on the input format of x_row_or_col and cell.
+        The format of the 2 variables must be consistent.
+        
+        Parameters
+        ----------
+        x_row_or_col: str
+          String of a number if series is given in a row, letter if series is given in a column
+          or name if the series is given by cell range name.
+        cell: str
+          Cell identificator, such as "A1", or name if the data is given by cell range name.
+    
+        Returns
+        -------
+        series_across: str
+          "row" if series is given in a row
+          "column" if series is given in a column
+          "name" if series and data are given by range name
+    
+        """
+        if x_row_or_col.isnumeric():
+            # if x_row_or_col is numeric the series must be a row
+            return "row"
+    
+        else:
+            if _split_excel_cell(cell):
+                # if the cell can be splitted means that the format is "A1" like
+                # then the series must be a column
+                return "column"
+            else:
+                return "name"
+
 
 class ExtData(External):
     """
     Class for Vensim GET XLS DATA/GET DIRECT DATA
     """
-    def __init__(self, file_name, tab, time_row_or_col, cell, interp, root, coords):
+    def __init__(self, file_name, tab, time_row_or_col, cell, interp, root, coords, dims=None):
         self.files = [file_name]
         self.tabs = [tab]
         self.time_row_or_cols = [time_row_or_col]
         self.cells = [cell]
         self.roots = [root]
         self.coordss = [coords]
+        #TODO replace by dims readed ones to make compatible with Python < 3.7
+        self.dims = [list(coords)]
 
         # This value should be unique
         self.interp = interp
 
-    def add(self, file_name, tab, time_row_or_col, cell, interp, root, coords):
+    def add(self, file_name, tab, time_row_or_col, cell, interp, root, coords, dims=None):
         """
         Add information to retrieve new dimension in an already declared object
         """
@@ -390,6 +645,8 @@ class ExtData(External):
         self.cells.append(cell)
         self.roots.append(root)
         self.coordss.append(coords)
+        #TODO replace by dims readed ones to make compatible with Python < 3.7
+        self.dims.append(list(coords))
 
     def initialize(self):
         """
@@ -397,9 +654,10 @@ class ExtData(External):
         """
         data = []
         zipped = zip(self.files, self.tabs, self.time_row_or_cols,
-                     self.cells, self.roots, self.coordss)
-        for self.file, self.tab, self.x_row_or_col,\
-            self.cell, self.root, self.coords in zipped:
+                     self.cells, self.roots, self.coordss, self.dims)
+        for (self.file, self.tab, self.x_row_or_col,
+             self.cell, self.root, self.coords, self.dim)\
+          in zipped:
             data.append(self._initialize_data("time"))
         self.data = utils.xrmerge(data)
 
@@ -435,15 +693,17 @@ class ExtLookup(External):
     """
     Class for Vensim GET XLS LOOKUPS/GET DIRECT LOOKUPS
     """
-    def __init__(self, file_name, tab, x_row_or_col, cell, root, coords):
+    def __init__(self, file_name, tab, x_row_or_col, cell, root, coords, dims=None):
         self.files = [file_name]
         self.tabs = [tab]
         self.x_row_or_cols = [x_row_or_col]
         self.cells = [cell]
         self.roots = [root]
         self.coordss = [coords]
+        #TODO replace by dims readed ones to make compatible with Python < 3.7
+        self.dims = [list(coords)]
 
-    def add(self, file_name, tab, x_row_or_col, cell, root, coords):
+    def add(self, file_name, tab, x_row_or_col, cell, root, coords, dims=None):
         """
         Add information to retrieve new dimension in an already declared object
         """
@@ -453,6 +713,8 @@ class ExtLookup(External):
         self.cells.append(cell)
         self.roots.append(root)
         self.coordss.append(coords)
+        #TODO replace by dims readed ones to make compatible with Python < 3.7
+        self.dims.append(list(coords))
 
     def initialize(self):
         """
@@ -460,9 +722,10 @@ class ExtLookup(External):
         """
         data = []
         zipped = zip(self.files, self.tabs, self.x_row_or_cols,
-                     self.cells, self.roots, self.coordss)
-        for self.file, self.tab, self.x_row_or_col,\
-            self.cell, self.root, self.coords in zipped:
+                     self.cells, self.roots, self.coordss, self.dims)
+        for (self.file, self.tab, self.x_row_or_col,
+             self.cell, self.root, self.coords, self.dim)\
+          in zipped:
             data.append(self._initialize_data("lookup_dim"))
         self.data = utils.xrmerge(data)
 
@@ -494,15 +757,17 @@ class ExtConstant(External):
     """
     Class for Vensim GET XLS CONSTANT/GET DIRECT CONSTANT
     """
-    def __init__(self, file_name, tab, cell, root, coords):
+    def __init__(self, file_name, tab, cell, root, coords, dim=None):
         self.files = [file_name]
         self.tabs = [tab]
         self.transposes = [cell[-1] == '*']
         self.cells = [cell.strip('*')]
         self.roots = [root]
         self.coordss = [coords]
+        #TODO replace by dims readed ones to make compatible with Python < 3.7
+        self.dims = [list(coords)]
 
-    def add(self, file_name, tab, cell, root, coords):
+    def add(self, file_name, tab, cell, root, coords, dim=None):
         """
         Add information to retrieve new dimension in an already declared object
         """
@@ -512,6 +777,8 @@ class ExtConstant(External):
         self.cells.append(cell.strip('*'))
         self.roots.append(root)
         self.coordss.append(coords)
+        #TODO replace by dims readed ones to make compatible with Python < 3.7
+        self.dims.append(list(coords))
 
     def initialize(self):
         """
@@ -519,9 +786,10 @@ class ExtConstant(External):
         """
         data = []
         zipped = zip(self.files, self.tabs, self.transposes,
-                     self.cells, self.roots, self.coordss)
-        for self.file, self.tab, self.transpose,\
-            self.cell, self.root, self.coords in zipped:
+                     self.cells, self.roots, self.coordss, self.dims)
+        for (self.file, self.tab, self.transpose,
+            self.cell, self.root, self.coords, self.dim)\
+          in zipped:
             data.append(self._initialize())
         self.data = utils.xrmerge(data)
 
@@ -530,38 +798,54 @@ class ExtConstant(External):
         Initialize one element
         """
         self._resolve_file(root=self.root)
-        dims = list(self.coords)
-        start_row, start_col = self._split_excel_cell(self.cell)
-        end_row = start_row
-        end_col = start_col
-        if dims:
-            if self.transpose:
-                end_row = start_row + len(self.coords[dims[-1]]) - 1
-            else:
-                end_col = self.num_to_col(self.col_to_num(start_col) + len(self.coords[dims[-1]]) -1)
-
-            if len(dims) >= 2:
-                if self.transpose:
-                    end_col = self.num_to_col(self.col_to_num(start_col) + len(self.coords[dims[-2]]))
-                else:
-                    end_row = start_row + len(self.coords[dims[-2]]) - 1
-
-        data = self._get_data_from_file(rows=[start_row, end_row], cols=[start_col, end_col])
+        split = _split_excel_cell(self.cell)
+        if split:
+            series_across = "cell"
+            cell = split
+        else:
+            series_across = "name"
+            cell = self.cell
+        
+        shape = _compute_shape(self.coords, self.dims, reshape_len=2)
+        
         if self.transpose:
-            data = data.transpose()    
+            shape.reverse()
+        
+        _get_constant_data(data_across, cell, shape)
+        
+        if self.transpose:
+            data = data.transpose()
+
 
         # Create only an xarray if the data is not 0 dimensional
-        if len(self.coords.values()) > 0:
-            reshape_dims = tuple([len(i) for i in self.coords.values()])
+        if len(self.dims) > 0:
+            reshape_dims = tuple(_compute_shape(self.coords, self.dims))
         
             if len(reshape_dims) > 1: data = self.reshape(data, reshape_dims) 
 
             data = xr.DataArray(
-                data=data, coords=self.coords, dims=list(self.coords)
+                data=data, coords=self.coords, dims=self.dims
             )
 
         return data
 
+def _get_constant_data(self, data_across, cell, shape):
+    if data_across == "cell":
+        
+        start_row, start_col = cell
+        
+        end_row = start_row + size[0] - 1
+        end_col = self.num_to_col(self.col_to_num(start_col) + size[1] - 1)
+
+        return self._get_data_from_file(rows=[start_row, end_row], cols=[start_col, end_col])
+            
+    else:
+        data = self._get_data_from_file_opyxl(cell)
+        
+        # TODO check dims
+        
+        return data
+    
     def __call__(self):
         return self.data
 
