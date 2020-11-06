@@ -478,6 +478,7 @@ def dimension_dataarray(da, dims, coords):
             coords = da.coords
 
     return xr.DataArray(data=data, coords=coords, dims=dims)
+
     
 def round(x):
 
@@ -485,6 +486,7 @@ def round(x):
         return round(x)
     except:
         return x
+
 
 def preserve_array(value, ref):
     if not isinstance(ref, list):
@@ -495,3 +497,10 @@ def preserve_array(value, ref):
     else:
         return value
 
+
+def add_entries_underscore(dictionaries):
+    for dictionary in dictionaries:
+        keys = list(dictionary)
+        for name in keys:
+            dictionary[re.sub(' ', '_', name)] = dictionary[name]
+    return

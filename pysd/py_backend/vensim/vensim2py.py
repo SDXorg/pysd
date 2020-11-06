@@ -655,6 +655,14 @@ builders['get direct data'] = builders['get xls data']
 builders['get direct lookups'] = builders['get xls lookups']
 builders['get direct constants'] = builders['get xls constants']
 
+#expand dictionaries to detect _ in Vensim def
+utils.add_entries_underscore([
+    functions,
+    data_ops,
+    subscript_functions,
+    builders
+])
+
 
 def get_childs_types(n):
     if n.children:
@@ -1008,7 +1016,7 @@ def parse_lookup_expression(element, subscript_dict):
     lookup_grammar = r"""
     lookup = _ "(" _ (regularLookup / excelLookup) _ ")"
     regularLookup = range? _ ( "(" _ number _ "," _ number _ ")" _ ","? _ )+ 
-    excelLookup = ~"GET (XLS|DIRECT) LOOKUPS"I _ "(" _ args (_ "," _ args)* _ ")"  
+    excelLookup = ~"GET( |_)(XLS|DIRECT)( |_)LOOKUPS"I _ "(" _ args (_ "," _ args)* _ ")"  
     args = ~r"[^,()]*"
     number = ("+"/"-")? ~r"\d+\.?\d*(e[+-]\d+)?"
     _ =  ~r"[\s\\]*" #~r"[\ \t\n]*" #~r"[\s\\]*"  # whitespace character
