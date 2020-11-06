@@ -303,7 +303,7 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
             shape = [len(coords[dim]) for dim in dims]
             initial_condition = textwrap.dedent("""\
                 xr.DataArray(data=np.full(%(shape)s, %(value)s),
-              m             coords=%(coords)s,
+                             coords=%(coords)s,
                              dims=%(dims)s )""" % {
                 'shape': shape,
                 'value': initial_condition,
@@ -596,6 +596,7 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs, subscr
         list of element construction dictionaries for the builder to assemble
     """
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
+    dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
     keyword = '"%s"' % keyword.strip(':').lower() if isinstance(keyword, str) else keyword
     name = utils.make_python_identifier('ext_data_%s' % identifier)[0]
 
@@ -613,6 +614,7 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs, subscr
                   '     root=_root,\n'\
                   '     cell=%s,\n'\
                   '     coords=%s,\n'\
+                  '     dims=%s,\n'\
                   '     interp=%s)'
     else:
         # Regular name will be used and a new object will be created
@@ -625,14 +627,16 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs, subscr
                   '                 root=_root,\n'\
                   '                 cell=%s,\n'\
                   '                 coords=%s,\n'\
-                  '                 interp=%s)'
+                  '                 dims=%s,\n'\
+                  '                 interp=%s,\n'\
+                  '                 py_name=\'{}\')'.format(name)
 
     external = {
         'py_name': name,
         'real_name': 'External data for %s' % identifier,
         'doc': 'Provides data for data variable %s' % identifier,
         'py_expr': py_expr % (file_name, tab, time_row_or_col,
-                              cell, coords, keyword),
+                              cell, coords, dims, keyword),
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',
@@ -672,6 +676,7 @@ def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
         list of element construction dictionaries for the builder to assemble
     """
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
+    dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
     name = utils.make_python_identifier('_ext_constant_%s' % identifier)[0]
 
     # Check if the object already exists
@@ -686,7 +691,8 @@ def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
                   '     tab=%s,\n'\
                   '     root=_root,\n'\
                   '     cell=%s,\n'\
-                  '     coords=%s)'
+                  '     coords=%s,\n'\
+                  '     dims=%s)'
     else:
         # Regular name will be used and a new object will be created
         # in the model file.
@@ -695,14 +701,16 @@ def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
                   '                     tab=%s,\n'\
                   '                     root=_root,\n'\
                   '                     cell=%s,\n'\
-                  '                     coords=%s)'
+                  '                     coords=%s,\n'\
+                  '                     dims=%s,\n'\
+                  '                     py_name=\'{}\')'.format(name)
     build_names.add(name)
 
     external = {
         'py_name': name,
         'real_name': 'External constant for %s' % identifier,
         'doc': 'Provides data for constant data variable %s' % identifier,
-        'py_expr': py_expr % (file_name, tab, cell, coords),
+        'py_expr': py_expr % (file_name, tab, cell, coords, dims),
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',
@@ -744,6 +752,7 @@ def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell, subs, subscri
         list of element construction dictionaries for the builder to assemble
     """
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
+    dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
     name = utils.make_python_identifier('_ext_lookup_%s' % identifier)[0]
 
     # Check if the object already exists
@@ -759,7 +768,8 @@ def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell, subs, subscri
                   '     root=_root,\n'\
                   '     x_row_or_col=%s,\n'\
                   '     cell=%s,\n'\
-                  '     coords=%s)'
+                  '     coords=%s,\n'\
+                  '     dims=%s)'
     else:
         # Regular name will be used and a new object will be created
         # in the model file.
@@ -769,14 +779,16 @@ def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell, subs, subscri
                   '                   root=_root,\n'\
                   '                   x_row_or_col=%s,\n'\
                   '                   cell=%s,\n'\
-                  '                   coords=%s)'
+                  '                   coords=%s,\n'\
+                  '                   dims=%s,\n'\
+                  '                   py_name=\'{}\')'.format(name)
     build_names.add(name)
 
     external = {
         'py_name': name,
         'real_name': 'External lookup data for %s' % identifier,
         'doc': 'Provides data for external lookup variable %s' % identifier,
-        'py_expr': py_expr % (file_name, tab, x_row_or_col, cell, coords),
+        'py_expr': py_expr % (file_name, tab, x_row_or_col, cell, coords, dims),
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',
