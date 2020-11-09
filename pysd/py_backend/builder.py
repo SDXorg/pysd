@@ -650,7 +650,7 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs, subscr
 
 def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
     """
-    Constructs a external object for handling Vensim's GET XLS DATA/GET DIRECT DATA functionality
+    Constructs a external object for handling Vensim's GET XLS CONSTANT/GET DIRECT CONSTANT functionality
 
     Parameters
     ----------
