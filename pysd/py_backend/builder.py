@@ -598,7 +598,7 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs, subscr
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
     dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
     keyword = '"%s"' % keyword.strip(':').lower() if isinstance(keyword, str) else keyword
-    name = utils.make_python_identifier('ext_data_%s' % identifier)[0]
+    name = utils.make_python_identifier('_ext_data_%s' % identifier)[0]
 
     # Check if the object already exists
     if name in build_names: 
