@@ -386,6 +386,11 @@ def add_n_delay(delay_input, delay_time, initial_value, order, subs, subscript_d
         build time, this must be an integer and cannot be calculated from other
         model components. Anything else will yield a ValueError.
 
+    subs: list of strings
+        List of strings of subscript indices that correspond to the
+        list of expressions, and collectively define the shape of the output
+        See `builder.add_flaux` for more info
+
     Returns
     -------
     reference: basestring
@@ -395,6 +400,8 @@ def add_n_delay(delay_input, delay_time, initial_value, order, subs, subscript_d
     new_structure: list
         list of element construction dictionaries for the builder to assemble
     """
+    coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
+    dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
     # the py name has to be unique to all the passed parameters, or if there are two things
     # that delay the output by different amounts, they'll overwrite the original function...
     stateful = {
@@ -406,7 +413,7 @@ def add_n_delay(delay_input, delay_time, initial_value, order, subs, subscript_d
         'doc': 'Delay time: %s \n Delay initial value %s \n Delay order %s' % (
             delay_time, initial_value, order),
         'py_expr': 'functions.Delay(lambda: %s, lambda: %s, lambda: %s, lambda: %s, %s, %s)' % (
-            delay_input, delay_time, initial_value, order, subs, subscript_dict),
+            delay_input, delay_time, initial_value, order, coords, dims),
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',

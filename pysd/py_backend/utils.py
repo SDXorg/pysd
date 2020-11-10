@@ -502,14 +502,27 @@ def get_value_by_insensitive_key_or_value(key, dict):
 
     return None
 
-def dimension_dataarray(da, dims, coords):
+# Studying the need for this function
+def darray(da, coords, dims):
+    """
+    Returns a xarray.DataArray object with the given coords and dims
+    """
+    if isinstance(da, xr.DataArray):
+        dacoords = {coord: list(da.coords[coord].values)
+                   for coord in da.coords}
+        if da.dims == tuple(dims) and dacoords == coords:
+            # If the input data already has the output format
+            # return it. 
+            # TODO This case should be avoided when building
+            # the model modifiying vensim/vensim2py.py file
+            return da
+        values = da.values
+    elif isinstance(da, np.ndarray):
+        values = da
+    else:
+        values = np.array(da)
     
-    values = None
-    if isinstance(da, xr.DataArray): values = da.values
-    elif isinstance(da, np.ndarray): values = da
-    else: values = np.array(da)
-    
-    reshape_dims = tuple( [len(i) for i in coords.values()] )
+    reshape_dims = tuple(compute_shape(coords, dims))
     if values.size == 1:
         data = np.tile(values, reshape_dims)
     elif values.size in reshape_dims:

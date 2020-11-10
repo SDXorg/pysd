@@ -178,7 +178,7 @@ class Delay(Stateful):
     # This method forces them to acknowledge that additional structure is being created
     # in the delay object.
 
-    def __init__(self, delay_input, delay_time, initial_value, order, subs, subscript_dict):
+    def __init__(self, delay_input, delay_time, initial_value, order, coords=None, dims=None):
         """
 
         Parameters
@@ -187,6 +187,8 @@ class Delay(Stateful):
         delay_time: function
         initial_value: function
         order: function
+        coords: dictionary (optional)
+        dims: list (optional)
         """
         super(Delay, self).__init__()
         self.init_func = initial_value
@@ -194,24 +196,30 @@ class Delay(Stateful):
         self.input_func = delay_input
         self.order_func = order
         self.order = None
-        self.subs = subs
-        self.subscript_dict = subscript_dict
+        self.coords = coords
+        self.dims = dims
 
     def initialize(self):
         order = self.order_func()
-        if isinstance(order, xr.DataArray): order = order.values
+        if isinstance(order, xr.DataArray):
+            order = order.values
         while isinstance(order, np.ndarray): 
             order = order[0]
         if order != int(order):
             warnings.warn('Casting delay order from %f to %i' % (order, int(order)))
         self.order = int(order)  # The order can only be set once
+
         init_state_value = self.init_func() * self.delay_time_func() / self.order
-        if self.subs:
-            coords = utils.make_coord_dict(self.subs, self.subscript_dict, terse=False)
-            size = [len(d) for d in coords.values()]
-            data = np.full((self.order, *size), init_state_value)
-            coords_final = {'delay': np.arange(self.order), **coords}
-            self.state = xr.DataArray(data=data, dims=['delay'] + list(coords.keys()), coords=coords_final)
+
+        if self.coords:
+            shape = utils.compute_shape(self.coords, self.dims)
+            #data = np.full((self.order, *shape), init_state_value)  # not working in python2
+            data = np.full([self.order] + shape, init_state_value)
+            #coords_final = {'delay': np.arange(self.order), **coords}  # not working in python2
+            coords = self.coords.copy()
+            coords['delay'] = np.arange(self.order)
+            self.state = xr.DataArray(data=data, dims=['delay'] + self.dims, coords=coords)
+
         else:
             self.state = np.array([init_state_value] * self.order)
 
