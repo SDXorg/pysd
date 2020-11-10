@@ -546,9 +546,11 @@ builders = {
 
     "delay fixed": lambda element, subscript_dict, args: builder.add_n_delay(
         delay_input=args[0],
-        delay_time='utils.round(' + args[1] + ' / time_step() ) * time_step()',
+        delay_time='time_step()' if args[1]=='time_step()'\
+                   else 'utils.round(' + args[1] + ' / time_step() ) * time_step()',
         initial_value=args[2],
-        order=args[1] + ' / time_step()',
+        order='1.' if args[1]=='time_step()'\
+              else args[1] + ' / time_step()',
         subs=element['subs'],
         subscript_dict=subscript_dict
     ),
