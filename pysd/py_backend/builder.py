@@ -400,8 +400,15 @@ def add_n_delay(delay_input, delay_time, initial_value, order, subs, subscript_d
     new_structure: list
         list of element construction dictionaries for the builder to assemble
     """
-    coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
-    dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
+
+    py_expr = 'functions.Delay(lambda: %s, lambda: %s, lambda: %s, lambda: %s)' % (
+        delay_input, delay_time, initial_value, order)
+
+    if subs:
+        coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
+        dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
+        py_expr = py_expr[:-1] + ', %s, %s)' % (coords, dims)
+
     # the py name has to be unique to all the passed parameters, or if there are two things
     # that delay the output by different amounts, they'll overwrite the original function...
     stateful = {
@@ -412,8 +419,7 @@ def add_n_delay(delay_input, delay_time, initial_value, order, subs, subscript_d
         'real_name': 'Delay of %s' % delay_input,
         'doc': 'Delay time: %s \n Delay initial value %s \n Delay order %s' % (
             delay_time, initial_value, order),
-        'py_expr': 'functions.Delay(lambda: %s, lambda: %s, lambda: %s, lambda: %s, %s, %s)' % (
-            delay_input, delay_time, initial_value, order, coords, dims),
+        'py_expr': py_expr,
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',
@@ -617,8 +623,8 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs, subscr
         name = utils.make_add_identifier(name, build_names)
         py_expr = '.add(file_name=%s,\n'\
                   '     tab=%s,\n'\
-                  '     time_row_or_col=%s,\n'\
                   '     root=_root,\n'\
+                  '     time_row_or_col=%s,\n'\
                   '     cell=%s,\n'\
                   '     coords=%s,\n'\
                   '     dims=%s,\n'\
@@ -630,8 +636,8 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs, subscr
         kind = 'external'
         py_expr = 'external.ExtData(file_name=%s,\n'\
                   '                 tab=%s,\n'\
-                  '                 time_row_or_col=%s,\n'\
                   '                 root=_root,\n'\
+                  '                 time_row_or_col=%s,\n'\
                   '                 cell=%s,\n'\
                   '                 coords=%s,\n'\
                   '                 dims=%s,\n'\
