@@ -10,10 +10,16 @@ try:
     # Optional dependency as openpyxl requires python 3.6 or greater
     # Used for reading data giving cell range names
     from openpyxl import load_workbook
+
 except ModuleNotFoundError:
-    warnings.warn("Not able to import openpyxl."
-                  + "You will not be able to read Excel data"
-                  + " by cell range names.")
+    warnings.warn(
+      "Not able to import openpyxl.\n"
+      + "You will not be able to read Excel data by cell range names.\n"
+      + " You can read Excels in the usual way as long as the reading "
+      + "information is by cell name (such as 'A1') and by row number "
+      + "or column letter in the case of GET DATA or GET LOOKUPS.\n\n"
+      )
+
 
 class Excels():
     """
@@ -27,6 +33,7 @@ class Excels():
             cls._instance = super(Excels, cls).__new__(cls)
         return cls._instance
 
+    @classmethod
     def read(cls, file_name):
         """
         Read the Excel file or return the previously read one
@@ -38,6 +45,7 @@ class Excels():
             cls._Excels[file_name] = excel
             return excel
 
+    @classmethod
     def read_opyxl(cls, file_name):
         """
         Read the Excel file using OpenPyXL or return the previously read one
@@ -49,6 +57,7 @@ class Excels():
             cls._Excels_opyxl[file_name] = excel
             return excel
 
+    @classmethod
     def clean(cls):
         """
         Clean the dictionary of read files
