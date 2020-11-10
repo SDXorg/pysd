@@ -300,7 +300,7 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
         if subs and initial_condition_numeric:
             coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
             dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
-            shape = [len(coords[dim]) for dim in dims]
+            shape = utils.compute_shape(coords, dims)
             initial_condition = textwrap.dedent("""\
                 xr.DataArray(data=np.full(%(shape)s, %(value)s),
                              coords=%(coords)s,

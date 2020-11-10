@@ -925,7 +925,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             if 'subs' in element and element['subs']:  # first test handles when subs is not defined
                 coords = utils.make_coord_dict(element['subs'], subscript_dict, terse=False)
                 dims = [utils.find_subscript_name(subscript_dict, sub) for sub in element['subs']]
-                shape = [len(coords[dim]) for dim in dims]
+                shape = utils.compute_shape(coords, dims)
                 if ';' in n.text or ',' in n.text:
                     text = n.text.strip(';').replace(' ', '').replace(';', ',')
                     data = np.array([float(s) for s in text.split(',')])
