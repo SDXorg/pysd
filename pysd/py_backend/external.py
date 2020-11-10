@@ -50,7 +50,7 @@ class Excels():
         """
         Read the Excel file using OpenPyXL or return the previously read one
         """
-        if file_name in cls._Excels:
+        if file_name in cls._Excels_opyxl:
             return cls._Excels_opyxl[file_name]
         else:
             excel = load_workbook(file_name, read_only=True)
@@ -169,7 +169,19 @@ class External():
         # read data
         excel = Excels().read_opyxl(self.file)
         try:
-            coordinates = excel.defined_names[cellname].destinations
+            # Get the local id of the sheet, needed for searching in locals names
+            sheetId = excel.sheetnames.index(self.tab)
+        except ValueError:
+            # Error if it is not able to get the localSheetId
+            raise ValueError(self.py_name + "\n"
+                                 + "The sheet doesn't exist...\n"
+                                 + self._file_sheet)
+
+        try:
+            # Search for global and local names
+            cellrange = excel.defined_names.get(cellname)\
+                        or excel.defined_names.get(cellname, sheetId)
+            coordinates = cellrange.destinations
             for sheet, cells in coordinates:
                 if sheet == self.tab:
                     values = excel[sheet][cells]
