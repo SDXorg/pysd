@@ -658,12 +658,12 @@ builders['get direct lookups'] = builders['get xls lookups']
 builders['get direct constants'] = builders['get xls constants']
 
 #expand dictionaries to detect _ in Vensim def
-utils.add_entries_underscore([
+utils.add_entries_underscore(
     functions,
     data_ops,
     subscript_functions,
     builders
-])
+)
 
 
 def get_childs_types(n):

@@ -479,16 +479,19 @@ def compute_shape(coords, dims, reshape_len=None):
     if not reshape_len:
         return [len(coords[dim]) for dim in dims]
 
+    # get the shape of the coordinates bigger than 1
     shape = [len(coords[dim]) for dim in dims if len(coords[dim]) > 1]
 
     shape_len = len(shape)
-
+    
+    # return an error when the current shape is bigger than the requested one
     if shape_len > reshape_len:
         raise ValueError(self.py_name + "\n"
                          + "The shape of the coords to read in a "
                          + " external file must be at most "
                          + "{} dimensional".format(reshape_len))
 
+    # complete with 1s on the left
     return [1]*(reshape_len-shape_len) + shape
 
 
@@ -563,7 +566,24 @@ def preserve_array(value, ref):
         return value
 
 
-def add_entries_underscore(dictionaries):
+
+def add_entries_underscore(*dictionaries):
+    """
+    Expands dictionaries adding new keys underscoring the white spaces
+    in the old ones. As the dictionaries are mutable objects this functions
+    will add the new entries to the already existing dictionaries with
+    no need to return a new one.
+
+    Parameters
+    ----------
+    *dictionaries: Dictionary or dictionaries
+        The dictionary or dictionaries to add the entries with underscore.
+
+    Return
+    ------
+    None
+
+    """
     for dictionary in dictionaries:
         keys = list(dictionary)
         for name in keys:
