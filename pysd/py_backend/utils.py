@@ -440,6 +440,58 @@ def visit_addresses(frame, return_addresses):
     return outdict
 
 
+def compute_shape(coords, dims, reshape_len=None):
+    """
+    Computes the 'shape' of a coords dictionary.
+    Function used to rearange data in xarrays and
+    to compute the number of rows/columns to be read in a file.
+    
+    Parameters
+    ----------
+    coords: dict 
+      Dictionary of the dimension names as a keys with their
+      values.
+    dims: list
+      Ordered list of the dimensions.
+    reshape_len: int (optional)
+      Number of dimensions of the output shape.
+      The shape will ony compute the corresponent table
+      dimensions to read from Excel, then, the dimensions 
+      with length one will be ignored at first.
+      Lately, it will complete with 1 on the left of the shape
+      if the reshape_len value is bigger than the length of shape.
+      Will raise a ValueError if we try to reshape to a reshape_len
+      smaller than the initial shape.
+    
+    Returns
+    -------
+    shape: list
+      Shape of the ordered dictionary or of the desired table or vector
+      
+    Note
+    ----
+    Dictionaries in Python >= 3.7 are ordered, which means that
+    we could remove dims if there is a not backward compatible
+    version of the library which only works in Python 3.7+. For now,
+    the dimensions list is passed to make it work properly for all the users.
+
+    """
+    if not reshape_len:
+        return [len(coords[dim]) for dim in dims]
+
+    shape = [len(coords[dim]) for dim in dims if len(coords[dim]) > 1]
+
+    shape_len = len(shape)
+
+    if shape_len > reshape_len:
+        raise ValueError(self.py_name + "\n"
+                         + "The shape of the coords to read in a "
+                         + " external file must be at most "
+                         + "{} dimensional".format(reshape_len))
+
+    return [1]*(reshape_len-shape_len) + shape
+
+
 def get_value_by_insensitive_key_or_value(key, dict):
     lower_key = key.lower()
     for real_key, real_value in dict.items():

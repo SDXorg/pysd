@@ -410,7 +410,7 @@ class External():
         """
         self._resolve_file(root=self.root)
         series_across = self._series_selector(self.x_row_or_col, self.cell)
-        size = self._compute_shape(self.coords, self.dims, reshape_len=1)[0]
+        size = utils.compute_shape(self.coords, self.dims, reshape_len=1)[0]
 
         series, data = self._get_series_data(
             series_across=series_across,
@@ -427,7 +427,7 @@ class External():
                              + "\t{}:\t{}\n".format(series_across, self.x_row_or_col)
                              + " is not strictly monotonous")
 
-        reshape_dims = tuple([len(series)] + self._compute_shape(self.coords, self.dims))
+        reshape_dims = tuple([len(series)] + utils.compute_shape(self.coords, self.dims))
         if len(reshape_dims) > 1:
             data = self._reshape(data, reshape_dims)
 
@@ -550,58 +550,6 @@ class External():
 
         return data.reshape(dims)
 
-    @staticmethod
-    def _compute_shape(coords, dims, reshape_len=None):
-        """
-        Computes the 'shape' of a coords dictionary.
-        Function used to rearange data in xarrays and
-        to compute the number of rows/columns to be read in a file.
-        
-        Parameters
-        ----------
-        coords: dict 
-          Dictionary of the dimension names as a keys with their
-          values.
-        dims: list
-          Ordered list of the dimensions.
-        reshape_len: int (optional)
-          Number of dimensions of the output shape.
-          The shape will ony compute the corresponent table
-          dimensions to read from Excel, then, the dimensions 
-          with length one will be ignored at first.
-          Lately, it will complete with 1 on the left of the shape
-          if the reshape_len value is bigger than the length of shape.
-          Will raise a ValueError if we try to reshape to a reshape_len
-          smaller than the initial shape.
-        
-        Returns
-        -------
-        shape: list
-          Shape of the ordered dictionary or of the desired table or vector
-          
-        Note
-        ----
-        Dictionaries in Python >= 3.7 are ordered, which means that
-        we could remove dims if there is a not backward compatible
-        version of the library which only works in Python 3.7+. For now,
-        the dimensions list is passed to make it work properly for all the users.
-
-        """
-        if not reshape_len:
-            return [len(coords[dim]) for dim in dims]
-    
-        shape = [len(coords[dim]) for dim in dims if len(coords[dim]) > 1]
-    
-        shape_len = len(shape)
-        
-        if shape_len > reshape_len:
-            raise ValueError(self.py_name + "\n"
-                             + "The shape of the coords to read in a "
-                             + " external file must be at most " 
-                             + "{} dimensional".format(reshape_len))
-            
-        return [1]*(reshape_len-shape_len) + shape
-    
     def _series_selector(self, x_row_or_col, cell):
         """
         Selects if a series data (DATA/LOOKUPS), should be read by columns, rows or cell name.
@@ -836,7 +784,7 @@ class ExtConstant(External):
             data_across = "name"
             cell = self.cell
         
-        shape = self._compute_shape(self.coords, self.dims, reshape_len=2)
+        shape = utils.compute_shape(self.coords, self.dims, reshape_len=2)
         
         if self.transpose:
             shape.reverse()
@@ -849,7 +797,7 @@ class ExtConstant(External):
 
         # Create only an xarray if the data is not 0 dimensional
         if len(self.dims) > 0:
-            reshape_dims = tuple(self._compute_shape(self.coords, self.dims))
+            reshape_dims = tuple(utils.compute_shape(self.coords, self.dims))
         
             if len(reshape_dims) > 1:
                 data = self._reshape(data, reshape_dims) 
@@ -861,6 +809,25 @@ class ExtConstant(External):
         return data
 
     def _get_constant_data(self, data_across, cell, shape):
+        """
+        Function thar reads data from excel file for CONSTANT
+        
+        Parameters
+        ----------
+        data_across: "cell" or "name"
+            The way to read data file.
+        cell: int or str
+            If data_across is "cell" the lefttop split cell value where the data is.
+            If data_across is "name" the cell range name where the data is.
+        shape:
+            The shape of the data in 2D.
+        
+        Returns
+        -------
+        data: float/ndarray(1D/2D)
+            The values of the data.
+
+        """
         if data_across == "cell":
             # read data from topleft cell name using pandas
             start_row, start_col = cell
