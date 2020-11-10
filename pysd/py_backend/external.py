@@ -658,7 +658,11 @@ class ExtData(External):
         try:
             return float(outdata)
         except TypeError:
-            return outdata
+            # Necessary to re-convert the DataArray to avoid the time dimension
+            return  xr.DataArray(data=outdata.values,
+                                 coords=self.coords,
+                                 dims=self.dims)
+
 
 
 class ExtLookup(External):
@@ -725,7 +729,10 @@ class ExtLookup(External):
         try:
             return float(outdata)
         except TypeError:
-            return outdata
+            # Necessary to re-convert the DataArray to avoid the lookup dimension
+            return  xr.DataArray(data=outdata.values,
+                                 coords=self.coords,
+                                 dims=self.dims)
 
 
 class ExtConstant(External):
