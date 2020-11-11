@@ -1,9 +1,13 @@
 import os
+import sys
+import imp
 import unittest
 
 import numpy as np
 
 _root = os.path.dirname(__file__)
+_py_version = sys.version_info[0]*10 + sys.version_info[1]
+_exp = imp.load_source('expected_data', 'data/expected_data.py')
 
 # Following test are designed to test the full working of External subclasses
 # For 1D data for each class and for all cases are computed
@@ -18,7 +22,6 @@ class TestData(unittest.TestCase):
         ExtData test for 1d horizontal series interpolation
         """
         import pysd
-        from data.expected_data import xpts, interp_1d
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -41,7 +44,7 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(xpts, interp_1d):
+        for x, y in zip(_exp.xpts, _exp.interp_1d):
             self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
     def test_data_interp_v1d(self):
@@ -49,7 +52,6 @@ class TestData(unittest.TestCase):
         ExtData test for 1d vertical series interpolation
         """
         import pysd
-        from data.expected_data import xpts, interp_1d
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -72,15 +74,16 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(xpts, interp_1d):
+        for x, y in zip(_exp.xpts, _exp.interp_1d):
             self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for pytho >= 3.6")
     def test_data_interp_hn1d(self):
         """
         ExtData test for 1d horizontal series interpolation by cellrange names
         """
         import pysd
-        from data.expected_data import xpts, interp_1d
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -103,15 +106,16 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(xpts, interp_1d):
+        for x, y in zip(_exp.xpts, _exp.interp_1d):
             self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
-
+            
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for pytho >= 3.6")
     def test_data_interp_vn1d(self):
         """
         ExtData test for 1d vertical series interpolation by cellrange names
         """
         import pysd
-        from data.expected_data import xpts, interp_1d
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -134,7 +138,7 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(xpts, interp_1d):
+        for x, y in zip(_exp.xpts, _exp.interp_1d):
             self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
     def test_data_forward_h1d(self):
@@ -142,7 +146,6 @@ class TestData(unittest.TestCase):
         ExtData test for 1d horizontal series look forward
         """
         import pysd
-        from data.expected_data import xpts, forward_1d
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -165,7 +168,7 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(xpts, forward_1d):
+        for x, y in zip(_exp.xpts, _exp.forward_1d):
            self.assertEqual(y, data(x), "Wrong result at X=" + str(x)) 
  
     def test_data_forward_v1d(self):
@@ -173,7 +176,6 @@ class TestData(unittest.TestCase):
         ExtData test for 1d vertical series look forward
         """
         import pysd
-        from data.expected_data import xpts, forward_1d
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -196,15 +198,16 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(xpts, forward_1d):
+        for x, y in zip(_exp.xpts, _exp.forward_1d):
            self.assertEqual(y, data(x), "Wrong result at X=" + str(x)) 
- 
+
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for pytho >= 3.6")
     def test_data_forward_hn1d(self):
         """
         ExtData test for 1d horizontal series look forward by cell range names
         """
         import pysd
-        from data.expected_data import xpts, forward_1d
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -227,15 +230,16 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(xpts, forward_1d):
+        for x, y in zip(_exp.xpts, _exp.forward_1d):
            self.assertEqual(y, data(x), "Wrong result at X=" + str(x)) 
- 
+
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for pytho >= 3.6")
     def test_data_forward_vn1d(self):
         """
         ExtData test for 1d vertical series look forward by cell range names
         """
         import pysd
-        from data.expected_data import xpts, forward_1d
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -258,7 +262,7 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(xpts, forward_1d):
+        for x, y in zip(_exp.xpts, _exp.forward_1d):
            self.assertEqual(y, data(x), "Wrong result at X=" + str(x)) 
  
     def test_data_backward_h1d(self):
@@ -266,7 +270,6 @@ class TestData(unittest.TestCase):
         ExtData test for 1d horizontal series hold backward
         """
         import pysd
-        from data.expected_data import xpts, backward_1d
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -289,7 +292,7 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(xpts, backward_1d):
+        for x, y in zip(_exp.xpts, _exp.backward_1d):
            self.assertEqual(y, data(x), "Wrong result at X=" + str(x)) 
   
     def test_data_backward_v1d(self):
@@ -297,7 +300,6 @@ class TestData(unittest.TestCase):
         ExtData test for 1d vertical series hold backward by cell range names
         """
         import pysd
-        from data.expected_data import xpts, backward_1d
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -320,15 +322,16 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(xpts, backward_1d):
+        for x, y in zip(_exp.xpts, _exp.backward_1d):
            self.assertEqual(y, data(x), "Wrong result at X=" + str(x)) 
- 
+
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for pytho >= 3.6")
     def test_data_backward_hn1d(self):
         """
         ExtData test for 1d horizontal series hold backward by cell range names
         """
         import pysd
-        from data.expected_data import xpts, backward_1d
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -351,15 +354,16 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(xpts, backward_1d):
+        for x, y in zip(_exp.xpts, _exp.backward_1d):
            self.assertEqual(y, data(x), "Wrong result at X=" + str(x)) 
- 
+
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for pytho >= 3.6")
     def test_data_backward_vn1d(self):
         """
         ExtData test for 1d vertical series hold backward by cell range names
         """
         import pysd
-        from data.expected_data import xpts, backward_1d
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -382,15 +386,16 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(xpts, backward_1d):
+        for x, y in zip(_exp.xpts, _exp.backward_1d):
            self.assertEqual(y, data(x), "Wrong result at X=" + str(x)) 
 
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for pytho >= 3.6")
     def test_data_interp_vn2d(self):
         """
         ExtData test for 2d vertical series interpolation by cell range names
         """
         import pysd
-        from data.expected_data import xpts, interp_2d
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -413,15 +418,16 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(xpts, interp_2d):
+        for x, y in zip(_exp.xpts, _exp.interp_2d):
            self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
 
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for pytho >= 3.6")
     def test_data_forward_hn2d(self):
         """
         ExtData test for 2d vertical series look forward by cell range names
         """
         import pysd
-        from data.expected_data import xpts, forward_2d
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -444,7 +450,7 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(xpts, forward_2d):
+        for x, y in zip(_exp.xpts, _exp.forward_2d):
            self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
 
     def test_data_backward_v2d(self):
@@ -452,7 +458,6 @@ class TestData(unittest.TestCase):
         ExtData test for 2d vertical series hold backward
         """
         import pysd
-        from data.expected_data import xpts, backward_2d
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -475,7 +480,7 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(xpts, backward_2d):
+        for x, y in zip(_exp.xpts, _exp.backward_2d):
            self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
 
     def test_data_interp_h3d(self):
@@ -483,7 +488,6 @@ class TestData(unittest.TestCase):
         ExtData test for 3d horizontal series interpolation
         """
         import pysd
-        from data.expected_data import xpts, interp_3d
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -517,7 +521,7 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(xpts, interp_3d):
+        for x, y in zip(_exp.xpts, _exp.interp_3d):
            self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
 
     def test_data_forward_v3d(self):
@@ -525,7 +529,6 @@ class TestData(unittest.TestCase):
         ExtData test for 3d vertical series look forward
         """
         import pysd
-        from data.expected_data import xpts, forward_3d
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -559,15 +562,16 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(xpts, forward_3d):
+        for x, y in zip(_exp.xpts, _exp.forward_3d):
            self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
 
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for pytho >= 3.6")
     def test_data_backward_hn3d(self):
         """
         ExtData test for 3d horizontal series hold backward by cellrange names
         """
         import pysd
-        from data.expected_data import xpts, backward_3d
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -601,7 +605,7 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(xpts, backward_3d):
+        for x, y in zip(_exp.xpts, _exp.backward_3d):
            self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
 
 
@@ -612,7 +616,6 @@ class TestLookup(unittest.TestCase):
         ExtLookup test for 1d horizontal series
         """
         import pysd
-        from data.expected_data import xpts, interp_1d
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -633,7 +636,7 @@ class TestLookup(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(xpts, interp_1d):
+        for x, y in zip(_exp.xpts, _exp.interp_1d):
             self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
     def test_lookup_v1d(self):
@@ -641,7 +644,6 @@ class TestLookup(unittest.TestCase):
         ExtLookup test for 1d vertical series
         """
         import pysd
-        from data.expected_data import xpts, interp_1d
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -662,15 +664,16 @@ class TestLookup(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(xpts, interp_1d):
+        for x, y in zip(_exp.xpts, _exp.interp_1d):
             self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for pytho >= 3.6")
     def test_lookup_hn1d(self):
         """
         ExtLookup test for 1d horizontal series by cellrange names
         """
         import pysd
-        from data.expected_data import xpts, interp_1d
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -691,15 +694,16 @@ class TestLookup(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(xpts, interp_1d):
+        for x, y in zip(_exp.xpts, _exp.interp_1d):
             self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for pytho >= 3.6")
     def test_lookup_vn1d(self):
         """
         ExtLookup test for 1d vertical series by cellrange names
         """
         import pysd
-        from data.expected_data import xpts, interp_1d
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -720,7 +724,7 @@ class TestLookup(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(xpts, interp_1d):
+        for x, y in zip(_exp.xpts, _exp.interp_1d):
             self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
     def test_lookup_h2d(self):
@@ -728,7 +732,6 @@ class TestLookup(unittest.TestCase):
         ExtLookup test for 2d horizontal series
         """
         import pysd
-        from data.expected_data import xpts, interp_2d
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -749,15 +752,16 @@ class TestLookup(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(xpts, interp_2d):
+        for x, y in zip(_exp.xpts, _exp.interp_2d):
             self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
 
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for pytho >= 3.6")
     def test_lookup_vn3d(self):
         """
         ExtLookup test for 3d vertical series by cellrange names
         """
         import pysd
-        from data.expected_data import xpts, interp_3d
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -788,7 +792,7 @@ class TestLookup(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(xpts, interp_3d):
+        for x, y in zip(_exp.xpts, _exp.interp_3d):
            self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
 
 
@@ -829,6 +833,8 @@ class TestConstant(unittest.TestCase):
         self.assertEqual(data.data, -1)
         self.assertEqual(data2.data, 0)
 
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for pytho >= 3.6")
     def test_constant_n0d(self):
         """
         ExtConstant test for 0d data by cellrange names
@@ -869,7 +875,6 @@ class TestConstant(unittest.TestCase):
         ExtConstant test for horizontal 1d data
         """
         import pysd
-        from data.expected_data import constant_1d
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -887,14 +892,13 @@ class TestConstant(unittest.TestCase):
                                          py_name=py_name)
         data.initialize()
 
-        self.assertTrue(data.data.equals(constant_1d))
+        self.assertTrue(data.data.equals(_exp.constant_1d))
 
     def test_constant_v1d(self):
         """
         ExtConstant test for vertical 1d data
         """
         import pysd
-        from data.expected_data import constant_1d
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -912,14 +916,15 @@ class TestConstant(unittest.TestCase):
                                          py_name=py_name)
         data.initialize()
 
-        self.assertTrue(data.data.equals(constant_1d))
+        self.assertTrue(data.data.equals(_exp.constant_1d))
 
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for pytho >= 3.6")
     def test_constant_hn1d(self):
         """
         ExtConstant test for horizontal 1d data by cellrange names
         """
         import pysd
-        from data.expected_data import constant_1d
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -937,14 +942,15 @@ class TestConstant(unittest.TestCase):
                                          py_name=py_name)
         data.initialize()
 
-        self.assertTrue(data.data.equals(constant_1d))
+        self.assertTrue(data.data.equals(_exp.constant_1d))
 
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for pytho >= 3.6")
     def test_constant_vn1d(self):
         """
         ExtConstant test for vertical 1d data by cellrange names
         """
         import pysd
-        from data.expected_data import constant_1d
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -962,14 +968,13 @@ class TestConstant(unittest.TestCase):
                                          py_name=py_name)
         data.initialize()
 
-        self.assertTrue(data.data.equals(constant_1d))
+        self.assertTrue(data.data.equals(_exp.constant_1d))
 
     def test_constant_h2d(self):
         """
         ExtConstant test for horizontal 2d data
         """
         import pysd
-        from data.expected_data import constant_2d
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -987,14 +992,13 @@ class TestConstant(unittest.TestCase):
                                          py_name=py_name)
         data.initialize()
 
-        self.assertTrue(data.data.equals(constant_2d))
+        self.assertTrue(data.data.equals(_exp.constant_2d))
 
     def test_constant_v2d(self):
         """
         ExtConstant test for vertical 2d data
         """
         import pysd
-        from data.expected_data import constant_2d
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -1012,14 +1016,15 @@ class TestConstant(unittest.TestCase):
                                          py_name=py_name)
         data.initialize()
 
-        self.assertTrue(data.data.equals(constant_2d))
+        self.assertTrue(data.data.equals(_exp.constant_2d))
 
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for pytho >= 3.6")
     def test_constant_hn2d(self):
         """
         ExtConstant test for horizontal 2d data by cellrange names
         """
         import pysd
-        from data.expected_data import constant_2d
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -1037,14 +1042,15 @@ class TestConstant(unittest.TestCase):
                                          py_name=py_name)
         data.initialize()
 
-        self.assertTrue(data.data.equals(constant_2d))
+        self.assertTrue(data.data.equals(_exp.constant_2d))
 
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for pytho >= 3.6")
     def test_constant_vn2d(self):
         """
         ExtConstant test for vertical 2d data by cellrange names
         """
         import pysd
-        from data.expected_data import constant_2d
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -1062,14 +1068,13 @@ class TestConstant(unittest.TestCase):
                                          py_name=py_name)
         data.initialize()
 
-        self.assertTrue(data.data.equals(constant_2d))
+        self.assertTrue(data.data.equals(_exp.constant_2d))
 
     def test_constant_h3d(self):
         """
         ExtConstant test for horizontal 3d data
         """
         import pysd
-        from data.expected_data import constant_3d
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -1101,14 +1106,13 @@ class TestConstant(unittest.TestCase):
 
         data.initialize()
 
-        self.assertTrue(data.data.equals(constant_3d))
+        self.assertTrue(data.data.equals(_exp.constant_3d))
 
     def test_constant_v3d(self):
         """
         ExtConstant test for vertical 3d data
         """
         import pysd
-        from data.expected_data import constant_3d
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -1140,14 +1144,15 @@ class TestConstant(unittest.TestCase):
 
         data.initialize()
 
-        self.assertTrue(data.data.equals(constant_3d))
+        self.assertTrue(data.data.equals(_exp.constant_3d))
 
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for pytho >= 3.6")
     def test_constant_hn3d(self):
         """
         ExtConstant test for horizontal 3d data by cellrange names
         """
         import pysd
-        from data.expected_data import constant_3d
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -1179,14 +1184,15 @@ class TestConstant(unittest.TestCase):
 
         data.initialize()
 
-        self.assertTrue(data.data.equals(constant_3d))
+        self.assertTrue(data.data.equals(_exp.constant_3d))
 
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for pytho >= 3.6")
     def test_constant_vn3d(self):
         """
         ExtConstant test for vertical 3d data by cellrange names
         """
         import pysd
-        from data.expected_data import constant_3d
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -1218,7 +1224,7 @@ class TestConstant(unittest.TestCase):
 
         data.initialize()
 
-        self.assertTrue(data.data.equals(constant_3d))
+        self.assertTrue(data.data.equals(_exp.constant_3d))
 
 
 class TestSubscript(unittest.TestCase):

@@ -11,7 +11,7 @@ try:
     # Used for reading data giving cell range names
     from openpyxl import load_workbook
 
-except ModuleNotFoundError:
+except Exception:
     warnings.warn(
       "Not able to import openpyxl.\n"
       + "You will not be able to read Excel data by cell range names.\n"
@@ -65,7 +65,7 @@ class Excels():
         cls._Excels, cls._Excels_opyxl = {}, {}
 
  
-class External():
+class External(object):
     """
     Main class of external objects
     """
@@ -452,9 +452,12 @@ class External():
         if len(reshape_dims) > 1:
             data = self._reshape(data, reshape_dims)
 
+        coords = self.coords.copy()
+        coords[dim_name] = series
+
         data = xr.DataArray(
             data=data,
-            coords={dim_name: series, **self.coords},
+            coords=coords,
             dims=[dim_name] + self.dims
         )
 
@@ -602,11 +605,12 @@ class External():
           "name" if series and data are given by range name
     
         """
-        if x_row_or_col.isnumeric():
+        try:
             # if x_row_or_col is numeric the series must be a row
+            int(x_row_or_col)
             return "row"
     
-        else:
+        except ValueError:
             if self._split_excel_cell(cell):
                 # if the cell can be splitted means that the format is "A1" like
                 # then the series must be a column
