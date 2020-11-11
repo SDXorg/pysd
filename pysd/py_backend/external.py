@@ -887,6 +887,8 @@ class ExtConstant(External):
             try:
                 if shape[0] == 1 and shape[1] != 1:
                     assert shape[1] == len(data)
+                elif shape[0] != 1 and shape[1] == 1:
+                    assert shape[0] == len(data)
                 elif shape[0] == 1 and shape[1] == 1:
                     assert isinstance(data, float)
                 else:
