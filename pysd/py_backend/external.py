@@ -634,16 +634,12 @@ class ExtData(External):
         self.roots.append(root)
         self.coordss.append(coords)
 
-        try:
-            assert interp == self.interp
-        except AssertionError:
+        if interp != self.interp:
             raise ValueError(self.py_name + "\n"
                             "Error matching interpolation method with "
                             + "previously defined one")
 
-        try:
-            assert dims == self.dims
-        except AssertionError:
+        if dims != self.dims:
             raise ValueError(self.py_name + "\n"
                             "Error matching dimensions with previous data")
 
@@ -685,11 +681,8 @@ class ExtData(External):
         try:
             return float(outdata)
         except TypeError:
-            # Necessary to re-convert the DataArray to avoid the time dimension
-            return  xr.DataArray(data=outdata.values,
-                                 coords=self.coords,
-                                 dims=self.dims)
-
+            # Remove time coord from the DataArray
+            return  outdata.reset_coords('time', drop=True)
 
 
 class ExtLookup(External):
@@ -716,9 +709,8 @@ class ExtLookup(External):
         self.cells.append(cell)
         self.roots.append(root)
         self.coordss.append(coords)
-        try:
-            assert dims == self.dims
-        except AssertionError:
+
+        if dims != self.dims:
             raise ValueError(self.py_name + "\n"
                             "Error matching dimensions with previous data")
 
@@ -756,10 +748,8 @@ class ExtLookup(External):
         try:
             return float(outdata)
         except TypeError:
-            # Necessary to re-convert the DataArray to avoid the lookup dimension
-            return  xr.DataArray(data=outdata.values,
-                                 coords=self.coords,
-                                 dims=self.dims)
+            # Remove lookup dimension coord from the DataArray
+            return  outdata.reset_coords('lookup_dim', drop=True)
 
 
 class ExtConstant(External):
@@ -786,9 +776,8 @@ class ExtConstant(External):
         self.cells.append(cell.strip('*'))
         self.roots.append(root)
         self.coordss.append(coords)
-        try:
-            assert dims == self.dims
-        except AssertionError:
+
+        if dims != self.dims:
             raise ValueError(self.py_name + "\n"
                             "Error matching dimensions with previous data")
 
