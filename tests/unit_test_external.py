@@ -9,6 +9,63 @@ _root = os.path.dirname(__file__)
 _py_version = sys.version_info[0]*10 + sys.version_info[1]
 _exp = imp.load_source('expected_data', 'data/expected_data.py')
 
+# Following test are for Excels class
+class TestExcels(unittest.TestCase):
+    def test_read_clean(self):
+        """
+        Test for reading files with pandas
+        """
+        import pysd
+        import pandas as pd
+
+        file_name = "data/input.xlsx"
+
+        # reading a file
+        excel = pysd.external.Excels.read(file_name)
+        self.assertTrue(isinstance(excel, pd.ExcelFile))
+
+        # check if it is in the dictionary
+        self.assertEqual(list(pysd.external.Excels._Excels),
+                         [file_name])
+
+        pysd.external.Excels.read(file_name)
+        self.assertEqual(list(pysd.external.Excels._Excels),
+                         [file_name])
+
+        # clean
+        pysd.external.Excels.clean()
+        self.assertEqual(list(pysd.external.Excels._Excels),
+                         [])
+
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for Python >= 3.6")       
+    def test_read_clean_opyxl(self):
+        """
+        Test for reading files with openpyxl
+        """
+        import pysd
+        from openpyxl import Workbook
+
+        file_name = "data/input.xlsx"
+
+        # reading a file
+        excel = pysd.external.Excels.read_opyxl(file_name)
+        self.assertTrue(isinstance(excel, Workbook))
+
+        # check if it is in the dictionary
+        self.assertEqual(list(pysd.external.Excels._Excels_opyxl),
+                         [file_name])
+
+        pysd.external.Excels.read_opyxl(file_name)
+        self.assertEqual(list(pysd.external.Excels._Excels_opyxl),
+                         [file_name])
+
+        # clean                
+        pysd.external.Excels.clean()
+        self.assertEqual(list(pysd.external.Excels._Excels_opyxl),
+                         [])     
+
+
 # Following test are designed to test the simple methods of External
 
 class TestExternalMethods(unittest.TestCase):
@@ -107,6 +164,7 @@ class TestExternalMethods(unittest.TestCase):
         self.assertEqual(series_selector("Ae_23", "aa_44"), "name")
         self.assertEqual(series_selector("Aeee3", "3a"), "name")
         self.assertEqual(series_selector("Aeee", "aajh2"), "name")
+
 
 # Following test are designed to test the full working of External subclasses
 # For 1D data for each class and for all cases are computed
