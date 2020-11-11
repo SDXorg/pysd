@@ -912,8 +912,8 @@ class ExtSubscript(External):
     Class for Vensim GET XLS SUBSCRIPT/GET DIRECT SUBSCRIPT
     """
     def __init__(self, file_name, tab, firstcell, lastcell, prefix):
-        super(ExtConstant, self).__init__("Hardcoded external subscript")
-        self.file_name = file_name
+        super(ExtSubscript, self).__init__("Hardcoded external subscript")
+        self.file = file_name
         self.tab = tab
 
         row_first, col_first = self._split_excel_cell(firstcell)
