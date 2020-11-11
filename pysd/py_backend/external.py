@@ -472,12 +472,12 @@ class External():
     def _col_to_num(col):
         """
         Transforms the column name to int
-        
+
         Parameters
         ----------
         col: str
           Column name
-    
+
         Returns
         -------
         int
@@ -485,10 +485,17 @@ class External():
         """
         if len(col) == 1: 
             return ord(col.upper()) - ord('A')
-        else:
+        elif len(col) == 2:
             left = ord(col[0].upper()) - ord('A') + 1
             right = ord(col[1].upper()) - ord('A')
             return left * (ord('Z')-ord('A')+1) + right
+        else:
+            left = ord(col[0].upper()) - ord('A') + 1
+            center = ord(col[1].upper()) - ord('A') + 1
+            right = ord(col[2].upper()) - ord('A')
+            return (left * ((ord('Z')-ord('A')+1)**2)\
+                   + center * (ord('Z')-ord('A')+1)\
+                   + right)
 
     @staticmethod
     def _num_to_col(num):
@@ -542,6 +549,8 @@ class External():
             assert not re.compile('[^a-zA-Z]+').search(split[0])
             # check that row number is not 0
             assert int(split[1]) != 0
+            # the column name has as maximum 3 letters
+            assert len(split[0]) <= 3
             return int(split[1]), split[0]
         except AssertionError:
             return
