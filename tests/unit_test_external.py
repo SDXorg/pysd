@@ -948,7 +948,7 @@ class TestConstant(unittest.TestCase):
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
-        cell = "data_1d"
+        cell = "data_1d*"
         coords = {'val': [0, 1, 2, 3, 5, 6, 7, 8]}
         dims = ['val']
         py_name = "test_constant_vn1d"
@@ -964,19 +964,307 @@ class TestConstant(unittest.TestCase):
 
         self.assertTrue(data.data.equals(constant_1d))
 
+    def test_constant_h2d(self):
+        """
+        ExtConstant test for horizontal 2d data
+        """
+        import pysd
+        from data.expected_data import constant_2d
+
+        file_name = "data/input.xlsx"
+        tab = "Horizontal"
+        cell = "C5"
+        coords = {'ABC': ['A', 'B', 'C'], 'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        dims = ['ABC', 'val']
+        py_name = "test_constant_h2d"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         tab=tab,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         dims=dims,
+                                         py_name=py_name)
+        data.initialize()
+
+        self.assertTrue(data.data.equals(constant_2d))
+
+    def test_constant_v2d(self):
+        """
+        ExtConstant test for vertical 2d data
+        """
+        import pysd
+        from data.expected_data import constant_2d
+
+        file_name = "data/input.xlsx"
+        tab = "Vertical"
+        cell = "C5*"
+        coords = {'ABC': ['A', 'B', 'C'], 'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        dims = ['ABC', 'val']
+        py_name = "test_constant_v2d"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         tab=tab,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         dims=dims,
+                                         py_name=py_name)
+        data.initialize()
+
+        self.assertTrue(data.data.equals(constant_2d))
+
+    def test_constant_hn2d(self):
+        """
+        ExtConstant test for horizontal 2d data by cellrange names
+        """
+        import pysd
+        from data.expected_data import constant_2d
+
+        file_name = "data/input.xlsx"
+        tab = "Horizontal"
+        cell = "data_2d"
+        coords = {'ABC': ['A', 'B', 'C'], 'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        dims = ['ABC', 'val']
+        py_name = "test_constant_hn2d"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         tab=tab,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         dims=dims,
+                                         py_name=py_name)
+        data.initialize()
+
+        self.assertTrue(data.data.equals(constant_2d))
+
+    def test_constant_vn2d(self):
+        """
+        ExtConstant test for vertical 2d data by cellrange names
+        """
+        import pysd
+        from data.expected_data import constant_2d
+
+        file_name = "data/input.xlsx"
+        tab = "Vertical"
+        cell = "data_2d*"
+        coords = {'ABC': ['A', 'B', 'C'], 'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        dims = ['ABC', 'val']
+        py_name = "test_constant_vn2d"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         tab=tab,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         dims=dims,
+                                         py_name=py_name)
+        data.initialize()
+
+        self.assertTrue(data.data.equals(constant_2d))
+
+    def test_constant_h3d(self):
+        """
+        ExtConstant test for horizontal 3d data
+        """
+        import pysd
+        from data.expected_data import constant_3d
+
+        file_name = "data/input.xlsx"
+        tab = "Horizontal"
+        cell = "C5"
+        cell2 = "C8"
+        coords = {'XY': ['X'],
+                  'ABC': ['A', 'B', 'C'],
+                  'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        coords2 = {'XY': ['Y'],
+                   'ABC': ['A', 'B', 'C'],
+                   'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        dims = ['ABC', 'XY', 'val']
+        py_name = "test_constant_h3d"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         tab=tab,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         dims=dims,
+                                         py_name=py_name)
+        
+        data.add(file_name=file_name,
+                 tab=tab,
+                 root=_root,
+                 cell=cell2,
+                 coords=coords2,
+                 dims=dims)
+
+        data.initialize()
+
+        self.assertTrue(data.data.equals(constant_3d))
+
+    def test_constant_v3d(self):
+        """
+        ExtConstant test for vertical 3d data
+        """
+        import pysd
+        from data.expected_data import constant_3d
+
+        file_name = "data/input.xlsx"
+        tab = "Vertical"
+        cell = "C5*"
+        cell2 = "F5*"
+        coords = {'XY': ['X'],
+                  'ABC': ['A', 'B', 'C'],
+                  'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        coords2 = {'XY': ['Y'],
+                   'ABC': ['A', 'B', 'C'],
+                   'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        dims = ['ABC', 'XY', 'val']
+        py_name = "test_constant_v3d"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         tab=tab,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         dims=dims,
+                                         py_name=py_name)
+        
+        data.add(file_name=file_name,
+                 tab=tab,
+                 root=_root,
+                 cell=cell2,
+                 coords=coords2,
+                 dims=dims)
+
+        data.initialize()
+
+        self.assertTrue(data.data.equals(constant_3d))
+
+    def test_constant_hn3d(self):
+        """
+        ExtConstant test for horizontal 3d data by cellrange names
+        """
+        import pysd
+        from data.expected_data import constant_3d
+
+        file_name = "data/input.xlsx"
+        tab = "Horizontal"
+        cell = "data_2d"
+        cell2 = "data_2db"
+        coords = {'XY': ['X'],
+                  'ABC': ['A', 'B', 'C'],
+                  'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        coords2 = {'XY': ['Y'],
+                   'ABC': ['A', 'B', 'C'],
+                   'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        dims = ['ABC', 'XY', 'val']
+        py_name = "test_constant_hn3d"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         tab=tab,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         dims=dims,
+                                         py_name=py_name)
+        
+        data.add(file_name=file_name,
+                 tab=tab,
+                 root=_root,
+                 cell=cell2,
+                 coords=coords2,
+                 dims=dims)
+
+        data.initialize()
+
+        self.assertTrue(data.data.equals(constant_3d))
+
+    def test_constant_vn3d(self):
+        """
+        ExtConstant test for vertical 3d data by cellrange names
+        """
+        import pysd
+        from data.expected_data import constant_3d
+
+        file_name = "data/input.xlsx"
+        tab = "Vertical"
+        cell = "data_2d*"
+        cell2 = "data_2db*"
+        coords = {'XY': ['X'],
+                  'ABC': ['A', 'B', 'C'],
+                  'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        coords2 = {'XY': ['Y'],
+                   'ABC': ['A', 'B', 'C'],
+                   'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        dims = ['ABC', 'XY', 'val']
+        py_name = "test_constant_vn2d"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         tab=tab,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         dims=dims,
+                                         py_name=py_name)
+        
+        data.add(file_name=file_name,
+                 tab=tab,
+                 root=_root,
+                 cell=cell2,
+                 coords=coords2,
+                 dims=dims)
+
+        data.initialize()
+
+        self.assertTrue(data.data.equals(constant_3d))
 
 
+class TestSubscript(unittest.TestCase):
 
+    def test_subscript_h(self):
+        """
+        ExtSubscript test for horizontal subscripts
+        """
+        import pysd
 
+        file_name = "data/input.xlsx"
+        tab = "Horizontal"
+        firstcell = "C4"
+        lastcell = "J4"
+        prefix = 'val'
+        expected = ['val0', 'val1', 'val2', 'val3', 
+                    'val5', 'val6', 'val7', 'val8']
 
+        data = pysd.external.ExtSubscript(file_name=file_name,
+                                          tab=tab,
+                                          firstcell=firstcell,
+                                          lastcell=lastcell,
+                                          prefix=prefix)
 
+        self.assertTrue(data.subscript, expected)
 
+    def test_subscript_v(self):
+        """
+        ExtSubscript test for vertical subscripts
+        """
+        import pysd
 
+        file_name = "data/input.xlsx"
+        tab = "Horizontal"
+        firstcell = "B5"
+        lastcell = "B7"
+        prefix = ''
+        expected = ['A', 'B', 'C']
 
+        data = pysd.external.ExtSubscript(file_name=file_name,
+                                          tab=tab,
+                                          firstcell=firstcell,
+                                          lastcell=lastcell,
+                                          prefix=prefix)
 
-
-
-
+        self.assertTrue(data.subscript, expected)
 
 
 
