@@ -377,7 +377,7 @@ class Macro(Stateful):
         for element in self._external_elements:
             element.initialize()
         
-        self.components.external.Excels().clean()
+        self.components.external.Excels.clean()
 
         # Initialize stateful elements
         remaining = set(self._stateful_elements)

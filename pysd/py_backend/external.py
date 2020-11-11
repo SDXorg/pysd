@@ -122,7 +122,7 @@ class External(object):
                 usecols = cols
 
             # read data
-            excel = Excels().read(self.file)
+            excel = Excels.read(self.file)
             
             data = excel.parse(sheet_name=self.tab, header=None, skiprows=skip,
                                nrows=nrows, usecols=usecols)
@@ -167,7 +167,7 @@ class External(object):
             depending on the shape of the requested data
         """
         # read data
-        excel = Excels().read_opyxl(self.file)
+        excel = Excels.read_opyxl(self.file)
         try:
             # Get the local id of the sheet, needed for searching in locals names
             sheetId = excel.sheetnames.index(self.tab)
