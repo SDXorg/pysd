@@ -5,6 +5,12 @@ import numpy as np
 
 _root = os.path.dirname(__file__)
 
+# Following test are designed to test the full working of External subclasses
+# For 1D data for each class and for all cases are computed
+# For 2D, 3D only some cases are computed as the complete set of test will
+# cover all the possibilities
+# Data with missing or NaN values are not tested
+
 class TestData(unittest.TestCase):
 
     def test_data_interp_h1d(self):
@@ -617,13 +623,13 @@ class TestLookup(unittest.TestCase):
         py_name = "test_lookup_h1d"
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                     tab=tab,
-                                     x_row_or_col=x_row_or_col,
-                                     root=_root,
-                                     cell=cell,
-                                     coords=coords,
-                                     dims=dims,
-                                     py_name=py_name)
+                                       tab=tab,
+                                       x_row_or_col=x_row_or_col,
+                                       root=_root,
+                                       cell=cell,
+                                       coords=coords,
+                                       dims=dims,
+                                       py_name=py_name)
 
         data.initialize()
 
@@ -646,13 +652,13 @@ class TestLookup(unittest.TestCase):
         py_name = "test_lookup_v1d"
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                     tab=tab,
-                                     x_row_or_col=x_row_or_col,
-                                     root=_root,
-                                     cell=cell,
-                                     coords=coords,
-                                     dims=dims,
-                                     py_name=py_name)
+                                       tab=tab,
+                                       x_row_or_col=x_row_or_col,
+                                       root=_root,
+                                       cell=cell,
+                                       coords=coords,
+                                       dims=dims,
+                                       py_name=py_name)
 
         data.initialize()
 
@@ -675,13 +681,13 @@ class TestLookup(unittest.TestCase):
         py_name = "test_lookup_h1nd"
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                     tab=tab,
-                                     x_row_or_col=x_row_or_col,
-                                     root=_root,
-                                     cell=cell,
-                                     coords=coords,
-                                     dims=dims,
-                                     py_name=py_name)
+                                       tab=tab,
+                                       x_row_or_col=x_row_or_col,
+                                       root=_root,
+                                       cell=cell,
+                                       coords=coords,
+                                       dims=dims,
+                                       py_name=py_name)
 
         data.initialize()
 
@@ -704,13 +710,13 @@ class TestLookup(unittest.TestCase):
         py_name = "test_lookup_vn1d"
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                     tab=tab,
-                                     x_row_or_col=x_row_or_col,
-                                     root=_root,
-                                     cell=cell,
-                                     coords=coords,
-                                     dims=dims,
-                                     py_name=py_name)
+                                       tab=tab,
+                                       x_row_or_col=x_row_or_col,
+                                       root=_root,
+                                       cell=cell,
+                                       coords=coords,
+                                       dims=dims,
+                                       py_name=py_name)
 
         data.initialize()
 
@@ -764,13 +770,13 @@ class TestLookup(unittest.TestCase):
         py_name = "test_lookup_vn3d"
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                     tab=tab,
-                                     x_row_or_col=x_row_or_col,
-                                     root=_root,
-                                     cell=cell_1,
-                                     coords=coords_1,
-                                     dims=dims,
-                                     py_name=py_name)
+                                       tab=tab,
+                                       x_row_or_col=x_row_or_col,
+                                       root=_root,
+                                       cell=cell_1,
+                                       coords=coords_1,
+                                       dims=dims,
+                                       py_name=py_name)
         
         data.add(file_name=file_name,
                  tab=tab,
@@ -784,5 +790,205 @@ class TestLookup(unittest.TestCase):
 
         for x, y in zip(xpts, interp_3d):
            self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
+
+
+class TestConstant(unittest.TestCase):
+
+    def test_constant_0d(self):
+        """
+        ExtConstant test for 0d data
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        tab = "Horizontal"
+        cell = "F7"
+        cell2 = "C5"
+        coords = {}
+        dims = []
+        py_name = "test_constant_0d"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         tab=tab,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         dims=dims,
+                                         py_name=py_name)
+
+        data2 = pysd.external.ExtConstant(file_name=file_name,
+                                          tab=tab,
+                                          root=_root,
+                                          cell=cell2,
+                                          coords=coords,
+                                          dims=dims,
+                                          py_name=py_name)
+        data.initialize()
+        data2.initialize()
+
+        self.assertEqual(data.data, -1)
+        self.assertEqual(data2.data, 0)
+
+    def test_constant_n0d(self):
+        """
+        ExtConstant test for 0d data by cellrange names
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        tab = "Horizontal"
+        cell = "constant"
+        cell2 = "constant2"
+        coords = {}
+        dims = []
+        py_name = "test_constant_0d"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         tab=tab,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         dims=dims,
+                                         py_name=py_name)
+
+        data2 = pysd.external.ExtConstant(file_name=file_name,
+                                          tab=tab,
+                                          root=_root,
+                                          cell=cell2,
+                                          coords=coords,
+                                          dims=dims,
+                                          py_name=py_name)
+        data.initialize()
+        data2.initialize()
+
+        self.assertEqual(data.data, -1)
+        self.assertEqual(data2.data, 0)
+      
+    def test_constant_h1d(self):
+        """
+        ExtConstant test for horizontal 1d data
+        """
+        import pysd
+        from data.expected_data import constant_1d
+
+        file_name = "data/input.xlsx"
+        tab = "Horizontal"
+        cell = "C5"
+        coords = {'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        dims = ['val']
+        py_name = "test_constant_h1d"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         tab=tab,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         dims=dims,
+                                         py_name=py_name)
+        data.initialize()
+
+        self.assertTrue(data.data.equals(constant_1d))
+
+    def test_constant_v1d(self):
+        """
+        ExtConstant test for vertical 1d data
+        """
+        import pysd
+        from data.expected_data import constant_1d
+
+        file_name = "data/input.xlsx"
+        tab = "Vertical"
+        cell = "C5*"
+        coords = {'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        dims = ['val']
+        py_name = "test_constant_v1d"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         tab=tab,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         dims=dims,
+                                         py_name=py_name)
+        data.initialize()
+
+        self.assertTrue(data.data.equals(constant_1d))
+
+    def test_constant_hn1d(self):
+        """
+        ExtConstant test for horizontal 1d data by cellrange names
+        """
+        import pysd
+        from data.expected_data import constant_1d
+
+        file_name = "data/input.xlsx"
+        tab = "Horizontal"
+        cell = "data_1d"
+        coords = {'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        dims = ['val']
+        py_name = "test_constant_hn1d"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         tab=tab,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         dims=dims,
+                                         py_name=py_name)
+        data.initialize()
+
+        self.assertTrue(data.data.equals(constant_1d))
+
+    def test_constant_vn1d(self):
+        """
+        ExtConstant test for vertical 1d data by cellrange names
+        """
+        import pysd
+        from data.expected_data import constant_1d
+
+        file_name = "data/input.xlsx"
+        tab = "Vertical"
+        cell = "data_1d"
+        coords = {'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        dims = ['val']
+        py_name = "test_constant_vn1d"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         tab=tab,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         dims=dims,
+                                         py_name=py_name)
+        data.initialize()
+
+        self.assertTrue(data.data.equals(constant_1d))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

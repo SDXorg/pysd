@@ -1,13 +1,41 @@
 import numpy as np
 import xarray as xr
 
-coords_1d = {'ABC': ['A', 'B', 'C']}
-dims_1d = ['ABC']
+# constant
+coords_1d = {'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+dims_1d = ['val']
 
-coords_2d = {'ABC': ['A', 'B', 'C'], 'XY': ['X', 'Y']}
-dims_2d = ['XY', 'ABC']
+coords_2d = {'ABC': ['A', 'B', 'C'], 'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+dims_2d = ['ABC', 'val']
+
+coords_3d = {'ABC': ['A', 'B', 'C'], 'val': [0, 1, 2, 3, 5, 6, 7, 8], 'XY': ['X', 'Y']}
+dims_3d = ['ABC', 'XY', 'val']
+
+constant_1d = [0, 0, 1, 1, -1, -1, 0, 0]
+
+constant_2d = [
+    [0, 0, 1, 1, -1, -1, 0, 0],
+    [0, 1, 1, -1, -1, 0, 0, 0],
+    [1, 1, -1, -1, 0, 0, 0, 0]
+]
+
+constant_3d = [
+    [[0, 0, 1, 1, -1, -1, 0, 0], [1, -1, -1, 0, 0, 0, 0, 1]],
+    [[0, 1, 1, -1, -1, 0, 0, 0], [-1, -1, 0, 0, 0, 0, 1, 1]],
+    [[1, 1, -1, -1, 0, 0, 0, 0], [-1, 0, 0, 0, 0, 1, 1, -1]]
+]
+
+constant_1d = xr.DataArray(constant_1d, coords_1d, dims_1d)
+constant_2d = xr.DataArray(constant_2d, coords_2d, dims_2d)
+constant_3d = xr.DataArray(constant_3d, coords_3d, dims_3d)
 
 # lookup/data 
+
+coords_1dl = {'ABC': ['A', 'B', 'C']}
+dims_1dl = ['ABC']
+
+coords_2dl = {'ABC': ['A', 'B', 'C'], 'XY': ['X', 'Y']}
+dims_2dl = ['XY', 'ABC']
 
 xpts = np.arange(-0.5, 8.5, 0.5)
 
@@ -114,13 +142,13 @@ forward_2dl = [
     [0, 0, 0]
 ]
 
-interp_2d = [xr.DataArray(data, coords_1d, dims_1d)
+interp_2d = [xr.DataArray(data, coords_1dl, dims_1dl)
              for data in interp_2dl]
 
-backward_2d = [xr.DataArray(data, coords_1d, dims_1d)
+backward_2d = [xr.DataArray(data, coords_1dl, dims_1dl)
                for data in backward_2dl]
 
-forward_2d = [xr.DataArray(data, coords_1d, dims_1d)
+forward_2d = [xr.DataArray(data, coords_1dl, dims_1dl)
               for data in forward_2dl]
               
 
@@ -191,13 +219,13 @@ forward_3dl = [
 ]
 
 
-interp_3d = [xr.DataArray(data, coords_2d, dims_2d)
+interp_3d = [xr.DataArray(data, coords_2dl, dims_2dl)
              for data in interp_3dl]
 
-backward_3d = [xr.DataArray(data, coords_2d, dims_2d)
+backward_3d = [xr.DataArray(data, coords_2dl, dims_2dl)
                for data in backward_3dl]
 
-forward_3d = [xr.DataArray(data, coords_2d, dims_2d)
+forward_3d = [xr.DataArray(data, coords_2dl, dims_2dl)
               for data in forward_3dl]
 
 
