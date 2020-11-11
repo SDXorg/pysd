@@ -620,8 +620,6 @@ class ExtData(External):
         self.roots = [root]
         self.coordss = [coords]
         self.dims = dims
-
-        # This value should be unique
         self.interp = interp
 
     def add(self, file_name, tab, time_row_or_col, cell,
@@ -635,6 +633,14 @@ class ExtData(External):
         self.cells.append(cell)
         self.roots.append(root)
         self.coordss.append(coords)
+
+        try:
+            assert interp == self.interp
+        except AssertionError:
+            raise ValueError(self.py_name + "\n"
+                            "Error matching interpolation method with "
+                            + "previously defined one")
+
         try:
             assert dims == self.dims
         except AssertionError:
