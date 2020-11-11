@@ -9,6 +9,105 @@ _root = os.path.dirname(__file__)
 _py_version = sys.version_info[0]*10 + sys.version_info[1]
 _exp = imp.load_source('expected_data', 'data/expected_data.py')
 
+# Following test are designed to test the simple methods of External
+
+class TestExternalMethods(unittest.TestCase):
+
+    def test_num_to_col_and_col_to_num(self):
+        """
+        External._num_to_col and External._col_to_num test
+        """
+        import pysd
+
+        num_to_col = pysd.external.External._num_to_col
+        col_to_num = pysd.external.External._col_to_num
+
+        # Check col_to_num
+        self.assertEqual(col_to_num("A"), 0)
+        self.assertEqual(col_to_num("Z"), 25)
+        self.assertEqual(col_to_num("a"), col_to_num("B")-1)
+        self.assertEqual(col_to_num("Z"), col_to_num("aa")-1)
+        self.assertEqual(col_to_num("Zz"), col_to_num("AaA")-1)
+        
+        cols = ["A", "AA", "AAA", "Z", "ZZ", "ZZZ",
+                "N", "WB", "ASJ", "K", "HG", "BTF"]
+               
+        # Check num_to_col inverts col_to_num
+        for col in cols:
+            self.assertEqual(num_to_col(col_to_num(col)), col)
+
+    def test_split_excel_cell(self):
+        """
+        External._split_excel_cell test
+        """
+        import pysd
+
+        split_excel_cell = pysd.external.External._split_excel_cell
+        
+        # No cells, function must return nothing
+        nocells = ["A2A", "H0", "0", "5A", "A_1", "ZZZZ1", "A"]
+        
+        for nocell in nocells:
+            self.assertFalse(split_excel_cell(nocell))
+        
+        # Cells
+        cells = [(2, "A", "A2"), (574, "h", "h574"),
+                 (2, "Va", "Va2"), (2, "ABA", "ABA2")]
+  
+        for row, col, cell in cells:
+            self.assertEqual((row, col), split_excel_cell(cell))
+
+    def test_reshape(self):
+        """
+        External._reshape test
+        """
+        import pysd
+        import numpy as np
+        import pandas as pd
+
+        reshape = pysd.external.External._reshape
+        
+        data1d = np.array([2, 3, 5, 6])
+        data2d = np.array([[2, 3, 5, 6],
+                           [1, 7, 5, 8]])
+                           
+        series1d = pd.Series(data1d)
+        df2d = pd.DataFrame(data2d)
+
+        shapes1d = [(4,), (4, 1, 1), (1, 1, 4), (1, 4, 1)]
+        shapes2d = [(2, 4), (2, 4, 1), (1, 2, 4), (2, 1, 4)]
+        
+        for shape_i in shapes1d:
+            self.assertEqual(reshape(data1d, shape_i).shape, shape_i)
+            self.assertEqual(reshape(series1d, shape_i).shape, shape_i)
+        
+        for shape_i in shapes2d:
+            self.assertEqual(reshape(data2d, shape_i).shape, shape_i)
+            self.assertEqual(reshape(df2d, shape_i).shape, shape_i)              
+
+    def test_series_selector(self):
+        """
+        External._series_selector test
+        """
+        import pysd
+
+        series_selector = pysd.external.External._series_selector
+
+        # row selector
+        self.assertEqual(series_selector("12", "A5"), "row")
+
+        # column selector
+        self.assertEqual(series_selector("A", "a44"), "column")
+        self.assertEqual(series_selector("A", "AC44"), "column")
+        self.assertEqual(series_selector("A", "Bae2"), "column")
+
+        # name selector    
+        self.assertEqual(series_selector("Att", "a44b"), "name")
+        self.assertEqual(series_selector("Adfs", "a0"), "name")
+        self.assertEqual(series_selector("Ae_23", "aa_44"), "name")
+        self.assertEqual(series_selector("Aeee3", "3a"), "name")
+        self.assertEqual(series_selector("Aeee", "aajh2"), "name")
+
 # Following test are designed to test the full working of External subclasses
 # For 1D data for each class and for all cases are computed
 # For 2D, 3D only some cases are computed as the complete set of test will
@@ -78,7 +177,7 @@ class TestData(unittest.TestCase):
             self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
     @unittest.skipIf(_py_version < 36,
-                     "openpyxl only supported for pytho >= 3.6")
+                     "openpyxl only supported for Python >= 3.6")
     def test_data_interp_hn1d(self):
         """
         ExtData test for 1d horizontal series interpolation by cellrange names
@@ -110,7 +209,7 @@ class TestData(unittest.TestCase):
             self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
             
     @unittest.skipIf(_py_version < 36,
-                     "openpyxl only supported for pytho >= 3.6")
+                     "openpyxl only supported for Python >= 3.6")
     def test_data_interp_vn1d(self):
         """
         ExtData test for 1d vertical series interpolation by cellrange names
@@ -202,7 +301,7 @@ class TestData(unittest.TestCase):
            self.assertEqual(y, data(x), "Wrong result at X=" + str(x)) 
 
     @unittest.skipIf(_py_version < 36,
-                     "openpyxl only supported for pytho >= 3.6")
+                     "openpyxl only supported for Python >= 3.6")
     def test_data_forward_hn1d(self):
         """
         ExtData test for 1d horizontal series look forward by cell range names
@@ -234,7 +333,7 @@ class TestData(unittest.TestCase):
            self.assertEqual(y, data(x), "Wrong result at X=" + str(x)) 
 
     @unittest.skipIf(_py_version < 36,
-                     "openpyxl only supported for pytho >= 3.6")
+                     "openpyxl only supported for Python >= 3.6")
     def test_data_forward_vn1d(self):
         """
         ExtData test for 1d vertical series look forward by cell range names
@@ -326,7 +425,7 @@ class TestData(unittest.TestCase):
            self.assertEqual(y, data(x), "Wrong result at X=" + str(x)) 
 
     @unittest.skipIf(_py_version < 36,
-                     "openpyxl only supported for pytho >= 3.6")
+                     "openpyxl only supported for Python >= 3.6")
     def test_data_backward_hn1d(self):
         """
         ExtData test for 1d horizontal series hold backward by cell range names
@@ -358,7 +457,7 @@ class TestData(unittest.TestCase):
            self.assertEqual(y, data(x), "Wrong result at X=" + str(x)) 
 
     @unittest.skipIf(_py_version < 36,
-                     "openpyxl only supported for pytho >= 3.6")
+                     "openpyxl only supported for Python >= 3.6")
     def test_data_backward_vn1d(self):
         """
         ExtData test for 1d vertical series hold backward by cell range names
@@ -390,7 +489,7 @@ class TestData(unittest.TestCase):
            self.assertEqual(y, data(x), "Wrong result at X=" + str(x)) 
 
     @unittest.skipIf(_py_version < 36,
-                     "openpyxl only supported for pytho >= 3.6")
+                     "openpyxl only supported for Python >= 3.6")
     def test_data_interp_vn2d(self):
         """
         ExtData test for 2d vertical series interpolation by cell range names
@@ -422,7 +521,7 @@ class TestData(unittest.TestCase):
            self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
 
     @unittest.skipIf(_py_version < 36,
-                     "openpyxl only supported for pytho >= 3.6")
+                     "openpyxl only supported for Python >= 3.6")
     def test_data_forward_hn2d(self):
         """
         ExtData test for 2d vertical series look forward by cell range names
@@ -566,7 +665,7 @@ class TestData(unittest.TestCase):
            self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
 
     @unittest.skipIf(_py_version < 36,
-                     "openpyxl only supported for pytho >= 3.6")
+                     "openpyxl only supported for Python >= 3.6")
     def test_data_backward_hn3d(self):
         """
         ExtData test for 3d horizontal series hold backward by cellrange names
@@ -668,7 +767,7 @@ class TestLookup(unittest.TestCase):
             self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
     @unittest.skipIf(_py_version < 36,
-                     "openpyxl only supported for pytho >= 3.6")
+                     "openpyxl only supported for Python >= 3.6")
     def test_lookup_hn1d(self):
         """
         ExtLookup test for 1d horizontal series by cellrange names
@@ -698,7 +797,7 @@ class TestLookup(unittest.TestCase):
             self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
     @unittest.skipIf(_py_version < 36,
-                     "openpyxl only supported for pytho >= 3.6")
+                     "openpyxl only supported for Python >= 3.6")
     def test_lookup_vn1d(self):
         """
         ExtLookup test for 1d vertical series by cellrange names
@@ -756,7 +855,7 @@ class TestLookup(unittest.TestCase):
             self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
 
     @unittest.skipIf(_py_version < 36,
-                     "openpyxl only supported for pytho >= 3.6")
+                     "openpyxl only supported for Python >= 3.6")
     def test_lookup_vn3d(self):
         """
         ExtLookup test for 3d vertical series by cellrange names
@@ -834,7 +933,7 @@ class TestConstant(unittest.TestCase):
         self.assertEqual(data2.data, 0)
 
     @unittest.skipIf(_py_version < 36,
-                     "openpyxl only supported for pytho >= 3.6")
+                     "openpyxl only supported for Python >= 3.6")
     def test_constant_n0d(self):
         """
         ExtConstant test for 0d data by cellrange names
@@ -919,7 +1018,7 @@ class TestConstant(unittest.TestCase):
         self.assertTrue(data.data.equals(_exp.constant_1d))
 
     @unittest.skipIf(_py_version < 36,
-                     "openpyxl only supported for pytho >= 3.6")
+                     "openpyxl only supported for Python >= 3.6")
     def test_constant_hn1d(self):
         """
         ExtConstant test for horizontal 1d data by cellrange names
@@ -945,7 +1044,7 @@ class TestConstant(unittest.TestCase):
         self.assertTrue(data.data.equals(_exp.constant_1d))
 
     @unittest.skipIf(_py_version < 36,
-                     "openpyxl only supported for pytho >= 3.6")
+                     "openpyxl only supported for Python >= 3.6")
     def test_constant_vn1d(self):
         """
         ExtConstant test for vertical 1d data by cellrange names
@@ -1019,7 +1118,7 @@ class TestConstant(unittest.TestCase):
         self.assertTrue(data.data.equals(_exp.constant_2d))
 
     @unittest.skipIf(_py_version < 36,
-                     "openpyxl only supported for pytho >= 3.6")
+                     "openpyxl only supported for Python >= 3.6")
     def test_constant_hn2d(self):
         """
         ExtConstant test for horizontal 2d data by cellrange names
@@ -1045,7 +1144,7 @@ class TestConstant(unittest.TestCase):
         self.assertTrue(data.data.equals(_exp.constant_2d))
 
     @unittest.skipIf(_py_version < 36,
-                     "openpyxl only supported for pytho >= 3.6")
+                     "openpyxl only supported for Python >= 3.6")
     def test_constant_vn2d(self):
         """
         ExtConstant test for vertical 2d data by cellrange names
@@ -1147,7 +1246,7 @@ class TestConstant(unittest.TestCase):
         self.assertTrue(data.data.equals(_exp.constant_3d))
 
     @unittest.skipIf(_py_version < 36,
-                     "openpyxl only supported for pytho >= 3.6")
+                     "openpyxl only supported for Python >= 3.6")
     def test_constant_hn3d(self):
         """
         ExtConstant test for horizontal 3d data by cellrange names
@@ -1187,7 +1286,7 @@ class TestConstant(unittest.TestCase):
         self.assertTrue(data.data.equals(_exp.constant_3d))
 
     @unittest.skipIf(_py_version < 36,
-                     "openpyxl only supported for pytho >= 3.6")
+                     "openpyxl only supported for Python >= 3.6")
     def test_constant_vn3d(self):
         """
         ExtConstant test for vertical 3d data by cellrange names
@@ -1272,17 +1371,5 @@ class TestSubscript(unittest.TestCase):
 
         self.assertTrue(data.subscript, expected)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+# TODO add test as the previous ones but with missing and NaN values
 
