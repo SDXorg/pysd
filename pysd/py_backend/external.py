@@ -583,7 +583,8 @@ class External(object):
 
         return data.reshape(dims)
 
-    def _series_selector(self, x_row_or_col, cell):
+    @classmethod
+    def _series_selector(cls, x_row_or_col, cell):
         """
         Selects if a series data (DATA/LOOKUPS), should be read by columns, rows or cell name.
         Based on the input format of x_row_or_col and cell.
@@ -611,7 +612,7 @@ class External(object):
             return "row"
     
         except ValueError:
-            if self._split_excel_cell(cell):
+            if cls._split_excel_cell(cell):
                 # if the cell can be splitted means that the format is "A1" like
                 # then the series must be a column
                 return "column"
