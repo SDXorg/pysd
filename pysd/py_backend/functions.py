@@ -212,19 +212,23 @@ class Delay(Stateful):
         init_state_value = self.init_func() * self.delay_time_func() / self.order
 
         if self.coords:
-            shape = utils.compute_shape(self.coords, self.dims)
-            #data = np.full((self.order, *shape), init_state_value)  # not working in python2
-            data = np.full([self.order] + shape, init_state_value)
-            #coords_final = {'delay': np.arange(self.order), **coords}  # not working in python2
+            # subscripted delay
+            # brodcast init_state_value with the dimensions
             coords = self.coords.copy()
             coords['delay'] = np.arange(self.order)
-            self.state = xr.DataArray(data=data, dims=['delay'] + self.dims, coords=coords)
+
+            data = xr.DataArray(data=0, dims=['delay'] + self.dims, coords=coords)
+            self.state = data + init_state_value
 
         else:
             self.state = np.array([init_state_value] * self.order)
 
     def __call__(self):
-        return self.state[-1] / (self.delay_time_func() / self.order)
+        if self.coords:
+            return self.state[-1].reset_coords('delay', drop=True)\
+                   / (self.delay_time_func() / self.order)
+        else:
+            return self.state[-1] / (self.delay_time_func() / self.order)
 
     def ddt(self):
         outflows = self.state / (self.delay_time_func() / self.order)
@@ -946,8 +950,7 @@ def lookup(x, xs, ys):
     Intermediate values are calculated with linear interpolation between the intermediate points.
     Out-of-range values are the same as the closest endpoint (i.e, no extrapolation is performed).
     """
-    #TODO avoid using preserve_array and try with xr.DataArray.interp
-    return utils.preserve_array(np.interp(x, xs, ys), ref=x)
+    return np.interp(x, xs, ys)
 
 
 def lookup_extrapolation(x, xs, ys):
@@ -1112,12 +1115,7 @@ def sum(x, dim=None):
 
     # Return float if x is DataArray and dim is None
     if dim is None:
-        try:
-           x = x.values
-        except AttributeError:
-           pass
-
-        return x.sum()
+        return float(x.sum())
 
     return x.sum(dim=dim)
 
@@ -1126,12 +1124,7 @@ def prod(x, dim=None):
 
     # Return float if x is DataArray and dim is None
     if dim is None:
-        try:
-           x = x.values
-        except AttributeError:
-           pass
-
-        return x.prod()
+        return float(x.prod())
 
     return x.prod(dim=dim)
 
@@ -1140,12 +1133,7 @@ def vmin(x, dim=None):
 
     # Return float if x is DataArray and dim is None
     if dim is None:
-        try:
-           x = x.values
-        except AttributeError:
-           pass
-
-        return x.min()
+        return float(x.min())
 
     return x.min(dim=dim)
 
@@ -1154,12 +1142,7 @@ def vmax(x, dim=None):
 
     # Return float if x is DataArray and dim is None
     if dim is None:
-        try:
-           x = x.values
-        except AttributeError:
-           pass
-
-        return x.max()
+        return float(x.max())
 
     return x.max(dim=dim)
 

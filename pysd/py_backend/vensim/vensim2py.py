@@ -841,21 +841,24 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
                 arguments = [arguments[-1]] + arguments[:-1]
 
             py_expr = builder.build_function_call(functions[function_name], arguments)
-
-            return py_expr
-            # I think I solved the problem of the following 
-            # if 'subs' in element and element['subs']:
-            #     # TODO this is unnecessary when resizing data arrays of the same shape
-            #     # should be avoided in these cases to clean the model code
-            #     coords = utils.make_coord_dict(element['subs'], subscript_dict, terse=False)
-            #     dims = [utils.find_subscript_name(subscript_dict, sub) for sub in element['subs']]
-            #     shape = [len(coords[dim]) for dim in dims]
-            #     types = get_childs_types(n)
-            #     datastr = "utils.darray(" + py_expr + ", " + repr(coords) +  ", " + repr(dims) + ")" 
-            #     return datastr
+            if 'subs' in element and element['subs']:
+                # TODO this is unnecessary when resizing data arrays
+                # of the same shape should be avoided in these cases
+                # to clean the model code
+               
+                coords = utils.make_coord_dict(element['subs'],
+                                               subscript_dict,
+                                               terse=False)
+                dims = [utils.find_subscript_name(subscript_dict, sub) 
+                        for sub in element['subs']]
+                shape = [len(coords[dim]) for dim in dims]
+                datastr = "utils.darray(" + py_expr + ", "\
+                          + repr(coords) + ", "\
+                          + repr(dims) + ")"
+                return datastr
  
-            # else:
-            #     return py_expr
+            else:
+                return py_expr
 
         def visit_in_oper(self, n, vc):
             return in_ops[n.text.lower()]
@@ -875,21 +878,23 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
                     external_args.append(child)
                 else:
                     py_expr += child
+            
 
-            return py_expr
-
-            # I think I solved the problem of the following 
-            #if 'subs' in element and element['subs']:
-            #    # TODO this is unnecessary when resizing data arrays of the same shape
-            #    # should be avoided in these cases to clean the model code
-            #    coords = utils.make_coord_dict(element['subs'], subscript_dict, terse=False)
-            #    dims = [utils.find_subscript_name(subscript_dict, sub) for sub in element['subs']]
-            #    shape = [len(coords[dim]) for dim in dims]
-            #    types = get_childs_types(n)
-            #    datastr = "utils.darray(" + py_expr + ", " + repr(coords) +  ", " + repr(dims) + ")" + ','.join(external_args) 
-            #    return datastr
-            #else:
-            #    return ''.join([x.strip(',') for x in vc])
+            if 'subs' in element and element['subs']:
+                # TODO this is unnecessary when resizing data arrays of the same shape
+                # should be avoided in these cases to clean the model code
+                coords = utils.make_coord_dict(element['subs'],
+                                               subscript_dict,
+                                               terse=False)
+                dims = [utils.find_subscript_name(subscript_dict, sub)
+                        for sub in element['subs']]
+                datastr = "utils.darray(" + py_expr + ", "\
+                          + repr(coords) + ", "\
+                          + repr(dims) + ")"\
+                          + ','.join(external_args) 
+                return datastr
+            else:
+                return ''.join([x.strip(',') for x in vc])
 
         def visit_id(self, n, vc):
             return namespace[n.text.strip()]

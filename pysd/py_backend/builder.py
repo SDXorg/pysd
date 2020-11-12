@@ -152,10 +152,18 @@ def build_element(element, subscript_dict):
     else:
         raise AttributeError("Bad value for 'kind'")
 
-    if len(element['py_expr']) > 1 and "ADD" not in element['py_expr'][-1]:
-        contents = 'return utils.xrmerge([%(das)s,])' % {'das': ',\n'.join(element['py_expr'])}
+    # remove the elements with ADD in their name
+    # as these wones are directly added to the
+    # objcet via .add method
+    py_expr_n = [py_expr for py_expr
+                 in element['py_expr']
+                 if "ADD" not in py_expr]
+    
+    if len(py_expr_n) > 1:
+        contents = 'return utils.xrmerge([%(das)s,])'\
+                   % {'das': ',\n'.join(py_expr_n)}
     else:
-        contents = 'return %(py_expr)s' % {'py_expr': element['py_expr'][0]}
+        contents = 'return %(py_expr)s' % {'py_expr': py_expr_n[0]}
 
     indent = 8
     element.update({'cache': cache_type,

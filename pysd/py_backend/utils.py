@@ -428,12 +428,14 @@ def visit_addresses(frame, return_addresses):
     """
     outdict = dict()
     for real_name, (pyname, address) in return_addresses.items():
+        #xrval = frame[pyname]
+        #if address and not isinstance(xrval, (float, int)):
         if address:
-            xrval = frame[pyname].loc[address]
-            if xrval.size > 1:
-                outdict[real_name] = xrval
-            else:
-                outdict[real_name] = float(np.squeeze(xrval.values))
+           xrval = frame[pyname].loc[address]
+           if xrval.size > 1:
+               outdict[real_name] = xrval
+           else:
+               outdict[real_name] = float(np.squeeze(xrval.values))
         else:
             outdict[real_name] = frame[pyname]
 
@@ -510,42 +512,44 @@ def darray(da, coords, dims):
     """
     Returns a xarray.DataArray object with the given coords and dims
     """
-    if isinstance(da, xr.DataArray):
-        dacoords = {coord: list(da.coords[coord].values)
-                   for coord in da.coords}
-        if da.dims == tuple(dims) and dacoords == coords:
-            # If the input data already has the output format
-            # return it. 
-            # TODO This case should be avoided when building
-            # the model modifiying vensim/vensim2py.py file
-            return da
-        values = da.values
-    elif isinstance(da, np.ndarray):
-        values = da
-    else:
-        values = np.array(da)
-    
-    reshape_dims = tuple(compute_shape(coords, dims))
-    if values.size == 1:
-        data = np.tile(values, reshape_dims)
-    elif values.size in reshape_dims:
-        reshape_dims2 = list(reshape_dims)
-        reshape_dims2.remove(values.size)
-        if len(reshape_dims2) != 0:
-            reshape_dims2 = tuple(reshape_dims2)
-            data = np.tile(values, reshape_dims2)
-            data = data.reshape(reshape_dims)
-        else:
-            data = values.reshape(reshape_dims)
-    else:
-        if set(reshape_dims) == set([len(i) for i in da.coords.values()]):
-            data = values.reshape(reshape_dims)
-        else:
-            return da
-            data = values
-            coords = da.coords
+    return xr.DataArray(0, coords, dims) + da
+    #if isinstance(da, xr.DataArray):
+    #    dacoords = {coord: list(da.coords[coord].values)
+    #               for coord in da.coords}
+    #    if da.dims == tuple(dims) and dacoords == coords:
+    #        # If the input data already has the output format
+    #        # return it. 
+    #        # TODO This case should be avoided when building
+    #        # the model modifiying vensim/vensim2py.py file
+    #        return da
+    #    values = da.values
+    #
+    #elif isinstance(da, np.ndarray):
+    #    values = da
+    #else:
+    #    values = np.array(da)
+    #
+    #reshape_dims = tuple(compute_shape(coords, dims))
+    #if values.size == 1:
+    #    data = np.tile(values, reshape_dims)
+    #elif values.size in reshape_dims:
+    #    reshape_dims2 = list(reshape_dims)
+    #    reshape_dims2.remove(values.size)
+    #    if len(reshape_dims2) != 0:
+    #        reshape_dims2 = tuple(reshape_dims2)
+    #        data = np.tile(values, reshape_dims2)
+    #        data = data.reshape(reshape_dims)
+    #    else:
+    #        data = values.reshape(reshape_dims)
+    #else:
+    #    if set(reshape_dims) == set([len(i) for i in da.coords.values()]):
+    #        data = values.reshape(reshape_dims)
+    #    else:
+    #        return da
+    #        data = values
+    #        coords = da.coords
 
-    return xr.DataArray(data=data, coords=coords, dims=dims)
+    #return xr.DataArray(data=data, coords=coords, dims=dims)
 
     
 def round(x):
@@ -556,14 +560,14 @@ def round(x):
         return x
 
 
-def preserve_array(value, ref):
-    if not isinstance(ref, list):
-        ref = [ref]
-    array = next((r for r in ref if isinstance(r, xr.DataArray)), None)
-    if array is not None:
-        return xr.DataArray(data=value, coords=array.coords, dims=array.dims).squeeze()
-    else:
-        return value
+#def preserve_array(value, ref):
+#    if not isinstance(ref, list):
+#        ref = [ref]
+#    array = next((r for r in ref if isinstance(r, xr.DataArray)), None)
+#    if array is not None:
+#        return xr.DataArray(data=value, coords=array.coords, dims=array.dims).squeeze()
+#    else:
+#        return value
 
 
 
