@@ -171,14 +171,7 @@ def build_element(element, subscript_dict):
                     'contents': contents.replace('\n',
                                                  '\n' + ' ' * indent)})  # indent lines 2 onward
 
-    element['doc'] = element['doc'].replace('\\', '\n    ').encode('unicode-escape')
-
-    if 'unit' in element:
-        element['unit'] = element['unit']
-    if 'real_name' in element:
-        element['real_name'] = element['real_name']
-    if 'eqn' in element:
-        element['eqn'] = element['eqn']
+    element['doc'] = element['doc'].replace('\\', '\n    ')
 
     if element['kind'] in ['stateful', 'external']:
         func = '''
