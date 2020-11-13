@@ -9,8 +9,10 @@ _root = os.path.dirname(__file__)
 _py_version = sys.version_info[0]*10 + sys.version_info[1]
 _exp = imp.load_source('expected_data', 'data/expected_data.py')
 
-# Following test are for Excels class
 class TestExcels(unittest.TestCase):
+    """
+    Tests for Excels class
+    """
     def test_read_clean(self):
         """
         Test for reading files with pandas
@@ -66,9 +68,11 @@ class TestExcels(unittest.TestCase):
                          [])     
 
 
-# Following test are designed to test the simple methods of External
 
 class TestExternalMethods(unittest.TestCase):
+    """
+    Test for simple methods of External
+    """
 
     def test_num_to_col_and_col_to_num(self):
         """
@@ -165,15 +169,84 @@ class TestExternalMethods(unittest.TestCase):
         self.assertEqual(series_selector("Aeee3", "3a"), "name")
         self.assertEqual(series_selector("Aeee", "aajh2"), "name")
 
-
-# Following test are designed to test the full working of External subclasses
-# For 1D data for each class and for all cases are computed
-# For 2D, 3D only some cases are computed as the complete set of test will
-# cover all the possibilities
-# Data with missing or NaN values are not tested
-
+                    
 class TestData(unittest.TestCase):
+    """
+    Test for the full working procedure of ExtData
+    class when the data is properly given in the Excel file
+    For 1D data all cases are computed.
+    For 2D, 3D only some cases are computed as the complete set of 
+    test will cover all the possibilities.
+    """
+    
+    # The first two test are for length 0 series and only the retrieved data is
+    # calculated as the interpolation result will be constant
+    def test_data_interp_h1d_1(self):
+        """
+        ExtData test for 1d horizontal series interpolation with len 1
+        """
+        import pysd
+        import xarray as xr
 
+        # test as well no file extension
+        file_name = "data/input"
+        tab = "Horizontal"
+        time_row_or_col = "16"
+        cell = "B17"
+        coords = {}
+        dims = []
+        interp = None
+        py_name = "test_data_interp_h1d_1"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     tab=tab,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     dims=dims,
+                                     interp=interp,
+                                     py_name=py_name)
+
+        data.initialize()
+        
+        # test the __str__ method
+        print(data)
+
+        self.assertTrue(data.data.equals(xr.DataArray([5],{'time':[4]},['time'])))
+        
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for Python >= 3.6")
+    def test_data_interp_hn1d_1(self):
+        """
+        ExtData test for 1d horizontal series interpolation with len 1
+        """
+        import pysd
+        import xarray as xr
+
+        file_name = "data/input.xlsx"
+        tab = "Horizontal"
+        time_row_or_col = "time_1"
+        cell = "data_1"
+        coords = {}
+        dims = []
+        interp = None
+        py_name = "test_data_interp_h1d_1"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     tab=tab,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     dims=dims,
+                                     interp=interp,
+                                     py_name=py_name)
+
+        data.initialize()
+
+        self.assertTrue(data.data.equals(xr.DataArray([5],{'time':[4]},['time'])))
+            
     def test_data_interp_h1d(self):
         """
         ExtData test for 1d horizontal series interpolation
@@ -722,6 +795,7 @@ class TestData(unittest.TestCase):
         for x, y in zip(_exp.xpts, _exp.forward_3d):
            self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
 
+
     @unittest.skipIf(_py_version < 36,
                      "openpyxl only supported for Python >= 3.6")
     def test_data_backward_hn3d(self):
@@ -765,8 +839,50 @@ class TestData(unittest.TestCase):
         for x, y in zip(_exp.xpts, _exp.backward_3d):
            self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
 
+    def test_data_raw_h1d(self):
+        """
+        ExtData test for 1d horizontal series raw
+        """
+        import pysd
 
+        file_name = "data/input.xlsx"
+        tab = "Horizontal"
+        time_row_or_col = "4"
+        cell = "C5"
+        coords = {}
+        dims = []
+        interp = "raw"
+        py_name = "test_data_forward_h1d"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     tab=tab,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     dims=dims,
+                                     interp=interp,
+                                     py_name=py_name)
+
+        data.initialize()
+
+        for x, y in zip(_exp.xpts, _exp.raw_1d):
+           data_x = data(x)
+           if np.isnan(y):
+               equal = np.isnan(data_x)
+           else:
+               equal = y == data_x
+           self.assertTrue(equal, "Wrong result at X=" + str(x)) 
+ 
+ 
 class TestLookup(unittest.TestCase):
+    """
+    Test for the full working procedure of ExtLookup
+    class when the data is properly given in the Excel file
+    For 1D data for all cases are computed.
+    For 2D, 3D only some cases are computed as the complete set of 
+    test will cover all the possibilities.
+    """
 
     def test_lookup_h1d(self):
         """
@@ -954,6 +1070,11 @@ class TestLookup(unittest.TestCase):
 
 
 class TestConstant(unittest.TestCase):
+    """
+    Test for the full working procedure of ExtConstant
+    class when the data is properly given in the Excel file
+    For 1D, 2D and 3D all cases are computed.
+    """
 
     def test_constant_0d(self):
         """
@@ -987,8 +1108,8 @@ class TestConstant(unittest.TestCase):
         data.initialize()
         data2.initialize()
 
-        self.assertEqual(data.data, -1)
-        self.assertEqual(data2.data, 0)
+        self.assertEqual(data(), -1)
+        self.assertEqual(data2(), 0)
 
     @unittest.skipIf(_py_version < 36,
                      "openpyxl only supported for Python >= 3.6")
@@ -1024,8 +1145,8 @@ class TestConstant(unittest.TestCase):
         data.initialize()
         data2.initialize()
 
-        self.assertEqual(data.data, -1)
-        self.assertEqual(data2.data, 0)
+        self.assertEqual(data(), -1)
+        self.assertEqual(data2(), 0)
       
     def test_constant_h1d(self):
         """
@@ -1049,7 +1170,7 @@ class TestConstant(unittest.TestCase):
                                          py_name=py_name)
         data.initialize()
 
-        self.assertTrue(data.data.equals(_exp.constant_1d))
+        self.assertTrue(data().equals(_exp.constant_1d))
 
     def test_constant_v1d(self):
         """
@@ -1073,7 +1194,7 @@ class TestConstant(unittest.TestCase):
                                          py_name=py_name)
         data.initialize()
 
-        self.assertTrue(data.data.equals(_exp.constant_1d))
+        self.assertTrue(data().equals(_exp.constant_1d))
 
     @unittest.skipIf(_py_version < 36,
                      "openpyxl only supported for Python >= 3.6")
@@ -1099,7 +1220,7 @@ class TestConstant(unittest.TestCase):
                                          py_name=py_name)
         data.initialize()
 
-        self.assertTrue(data.data.equals(_exp.constant_1d))
+        self.assertTrue(data().equals(_exp.constant_1d))
 
     @unittest.skipIf(_py_version < 36,
                      "openpyxl only supported for Python >= 3.6")
@@ -1125,7 +1246,7 @@ class TestConstant(unittest.TestCase):
                                          py_name=py_name)
         data.initialize()
 
-        self.assertTrue(data.data.equals(_exp.constant_1d))
+        self.assertTrue(data().equals(_exp.constant_1d))
 
     def test_constant_h2d(self):
         """
@@ -1149,7 +1270,7 @@ class TestConstant(unittest.TestCase):
                                          py_name=py_name)
         data.initialize()
 
-        self.assertTrue(data.data.equals(_exp.constant_2d))
+        self.assertTrue(data().equals(_exp.constant_2d))
 
     def test_constant_v2d(self):
         """
@@ -1173,7 +1294,7 @@ class TestConstant(unittest.TestCase):
                                          py_name=py_name)
         data.initialize()
 
-        self.assertTrue(data.data.equals(_exp.constant_2d))
+        self.assertTrue(data().equals(_exp.constant_2d))
 
     @unittest.skipIf(_py_version < 36,
                      "openpyxl only supported for Python >= 3.6")
@@ -1199,7 +1320,7 @@ class TestConstant(unittest.TestCase):
                                          py_name=py_name)
         data.initialize()
 
-        self.assertTrue(data.data.equals(_exp.constant_2d))
+        self.assertTrue(data().equals(_exp.constant_2d))
 
     @unittest.skipIf(_py_version < 36,
                      "openpyxl only supported for Python >= 3.6")
@@ -1225,7 +1346,7 @@ class TestConstant(unittest.TestCase):
                                          py_name=py_name)
         data.initialize()
 
-        self.assertTrue(data.data.equals(_exp.constant_2d))
+        self.assertTrue(data().equals(_exp.constant_2d))
 
     def test_constant_h3d(self):
         """
@@ -1263,7 +1384,7 @@ class TestConstant(unittest.TestCase):
 
         data.initialize()
 
-        self.assertTrue(data.data.equals(_exp.constant_3d))
+        self.assertTrue(data().equals(_exp.constant_3d))
 
     def test_constant_v3d(self):
         """
@@ -1301,7 +1422,7 @@ class TestConstant(unittest.TestCase):
 
         data.initialize()
 
-        self.assertTrue(data.data.equals(_exp.constant_3d))
+        self.assertTrue(data().equals(_exp.constant_3d))
 
     @unittest.skipIf(_py_version < 36,
                      "openpyxl only supported for Python >= 3.6")
@@ -1341,7 +1462,7 @@ class TestConstant(unittest.TestCase):
 
         data.initialize()
 
-        self.assertTrue(data.data.equals(_exp.constant_3d))
+        self.assertTrue(data().equals(_exp.constant_3d))
 
     @unittest.skipIf(_py_version < 36,
                      "openpyxl only supported for Python >= 3.6")
@@ -1381,10 +1502,14 @@ class TestConstant(unittest.TestCase):
 
         data.initialize()
 
-        self.assertTrue(data.data.equals(_exp.constant_3d))
+        self.assertTrue(data().equals(_exp.constant_3d))
 
 
 class TestSubscript(unittest.TestCase):
+    """
+    Test for the full working procedure of ExtSubscript
+    class when the data is properly given in the Excel file
+    """
 
     def test_subscript_h(self):
         """
@@ -1429,5 +1554,734 @@ class TestSubscript(unittest.TestCase):
 
         self.assertTrue(data.subscript, expected)
 
-# TODO add test as the previous ones but with missing and NaN values
+
+class TestWarningsErrors(unittest.TestCase):
+    """
+    Test for the warnings and errors of External and its subclasses
+    """
+    
+    def test_not_implemented_file(self):
+        """
+        Test for not implemented file
+        """
+        import pysd
+
+        file_name = "data/not_implemented_file.ods"
+        tab = "Horizontal"
+        time_row_or_col = "4"
+        cell = "C5"
+        coords = {}
+        dims = []
+        interp = None
+        py_name = "test_not_implemented_file"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     tab=tab,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     dims=dims,
+                                     interp=interp,
+                                     py_name=py_name)
+                                     
+        with self.assertRaises(NotImplementedError):
+            data.initialize()
+
+    def test_non_existent_file(self):
+        """
+        Test for non-existent file
+        """
+        import pysd
+
+        file_name = "data/non_existent.xls"
+        tab = "Horizontal"
+        time_row_or_col = "4"
+        cell = "C5"
+        coords = {}
+        dims = []
+        interp = None
+        py_name = "test_non_existent_file"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     tab=tab,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     dims=dims,
+                                     interp=interp,
+                                     py_name=py_name)
+                                     
+        with self.assertRaises(IOError):
+            data.initialize()
+
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for Python >= 3.6")
+    def test_non_existent_sheet_pyxl(self):
+        """
+        Test for non-existent sheet with openpyxl
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        tab = "Non-Existent"
+        time_row_or_col = "time"
+        cell = "data_1d"
+        coords = {}
+        dims = []
+        interp = None
+        py_name = "test_non_existent_sheet_pyxl"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     tab=tab,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     dims=dims,
+                                     interp=interp,
+                                     py_name=py_name)
+                                     
+        with self.assertRaises(ValueError):
+            data.initialize()
+
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for Python >= 3.6")
+    def test_non_existent_cellrange_name_pyxl(self):
+        """
+        Test for non-existent cellrange name with openpyxl
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        tab = "Horizontal"
+        time_row_or_col = "time"
+        cell = "non_exixtent"
+        coords = {}
+        dims = []
+        interp = None
+        py_name = "est_non_existent_cellrange_name_pyxl"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     tab=tab,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     dims=dims,
+                                     interp=interp,
+                                     py_name=py_name)
+                                     
+        with self.assertRaises(AttributeError):
+            data.initialize()
+  
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for Python >= 3.6")
+    def test_non_existent_cellrange_name_in_sheet_pyxl(self):
+        """
+        Test for non-existent cellrange name with openpyxl
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        tab = "Horizontal missing"
+        cell = "constant"
+        coords = {}
+        dims = []
+        py_name = "est_non_existent_cellrange_name_in_sheet_pyxl"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         tab=tab,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         dims=dims,
+                                         py_name=py_name)
+                                     
+        with self.assertRaises(AttributeError):
+            data.initialize()
+    @unittest.skipIf(_py_version >= 36,
+                     "openpyxl only supported for Python >= 3.6")
+    def test_not_able_to_import_openpyxl(self):
+        """
+        Test for the warining raised after trying to import openpyxl in Python < 3.6
+        """
+        from warnings import catch_warnings
+        
+        with catch_warnings(record=True) as w:
+            from pysd import external
+            self.assertEqual(len(w), 1)
+            self.assertTrue(issubclass(w[-1].category, UserWarning))
+            self.assertTrue("openpyxl" in str(w[-1].message))
+
+    # Following test are for ExtData class only
+    # as the initialization of ExtLookup uses the same function
+    
+    @unittest.skipIf(_py_version < 36,
+                     "more warnings are arised for Python < 3.6")
+    def test_data_interp_h1dm(self):
+        """
+        Test for warning 1d horizontal series interpolation with missing data
+        """
+        import pysd
+        from warnings import catch_warnings
+
+        file_name = "data/input.xlsx"
+        tab = "Horizontal missing"
+        time_row_or_col = "4"
+        cell = "C5"
+        coords = {}
+        dims = []
+        interp = None
+        py_name = "test_data_interp_h1dm"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     tab=tab,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     dims=dims,
+                                     interp=interp,
+                                     py_name=py_name)
+
+        with catch_warnings(record=True) as w:
+            data.initialize()
+            wu = [wus for wus in w if issubclass(wus.category, UserWarning)]
+            self.assertEqual(len(wu), 1)
+            self.assertTrue("missing" in str(wu[-1].message))
+
+        print(data.data)
+        for x, y in zip(_exp.xpts, _exp.interp_1d):
+            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+
+
+    @unittest.skipIf(_py_version < 36,
+                     "more warnings are arised for Python < 3.6")
+    def test_data_interp_v1dm(self):
+        """
+        Test for warning 1d vertical series interpolation with missing data
+        """
+        import pysd
+        from warnings import catch_warnings
+
+        file_name = "data/input.xlsx"
+        tab = "Vertical missing"
+        time_row_or_col = "B"
+        cell = "C5"
+        coords = {}
+        dims = []
+        interp = None
+        py_name = "test_data_interp_v1dm"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     tab=tab,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     dims=dims,
+                                     interp=interp,
+                                     py_name=py_name)
+
+        with catch_warnings(record=True) as w:
+            data.initialize()
+            self.assertEqual(len(w), 1)       
+            self.assertTrue(issubclass(w[-1].category, UserWarning))
+            self.assertTrue("missing" in str(w[-1].message))
+
+        for x, y in zip(_exp.xpts, _exp.interp_1d):
+            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+ 
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for Python >= 3.6")      
+    def test_data_interp_hn1dm(self):
+        """
+        Test for warning 1d horizontal series by cellrange names
+        when series has missing or NaN data
+        """
+        import pysd
+        from warnings import catch_warnings
+
+        file_name = "data/input.xlsx"
+        tab = "Horizontal missing"
+        time_row_or_col = "time_missing"
+        cell = "data_1d"
+        coords = {}
+        dims = []
+        interp = None
+        py_name = "test_data_interp_h1dm"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     tab=tab,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     dims=dims,
+                                     interp=interp,
+                                     py_name=py_name)
+
+        with catch_warnings(record=True) as w:
+            data.initialize()
+            self.assertEqual(len(w), 1)       
+            self.assertTrue(issubclass(w[-1].category, UserWarning))
+            self.assertTrue("missing" in str(w[-1].message))
+
+        for x, y in zip(_exp.xpts, _exp.interp_1d):
+            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+
+    def test_data_interp_h1d0(self):
+        """
+        Test for error 1d horizontal series for len 0 series
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        tab = "Horizontal missing"
+        time_row_or_col = "3"
+        cell = "C5"
+        coords = {}
+        dims = []
+        interp = None
+        py_name = "test_data_interp_h1d0"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     tab=tab,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     dims=dims,
+                                     interp=interp,
+                                     py_name=py_name)
+
+        with self.assertRaises(ValueError):
+            data.initialize()
+
+    def test_data_interp_v1d0(self):
+        """
+        Test for error 1d vertical series for len 0 series
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        tab = "Vertical missing"
+        time_row_or_col = "A"
+        cell = "C5"
+        coords = {}
+        dims = []
+        interp = None
+        py_name = "test_data_interp_v1d0"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     tab=tab,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     dims=dims,
+                                     interp=interp,
+                                     py_name=py_name)
+
+        
+        with self.assertRaises(ValueError):
+            data.initialize()
+ 
+ 
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for Python >= 3.6")      
+    def test_data_interp_hn1d0(self):
+        """
+        Test for error in series by cellrange names
+        when series has length 0
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        tab = "Horizontal missing"
+        time_row_or_col = "len_0"
+        cell = "data_1d"
+        coords = {}
+        dims = []
+        interp = None
+        py_name = "test_data_interp_h1d0"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     tab=tab,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     dims=dims,
+                                     interp=interp,
+                                     py_name=py_name)
+
+        with self.assertRaises(ValueError):
+            data.initialize()
+
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for Python >= 3.6")      
+    def test_data_interp_hn1dt(self):
+        """
+        Test for error in series by cellrange names
+        when series is a table
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        tab = "Horizontal"
+        time_row_or_col = "data_2d"
+        cell = "data_1d"
+        coords = {}
+        dims = []
+        interp = None
+        py_name = "test_data_interp_h1dt"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     tab=tab,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     dims=dims,
+                                     interp=interp,
+                                     py_name=py_name)
+
+        with self.assertRaises(ValueError):
+            data.initialize()
+            
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for Python >= 3.6")              
+    def test_data_interp_hns(self):
+        """
+        Test for error in data when it doen't have the shame
+        shape as the given coordinates
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        tab = "Horizontal"
+        time_row_or_col = "time"
+        cell = "data_2d"
+        coords = {'ABC': ['A', 'B']}
+        dims = ['ABC']
+        interp = None
+        py_name = "test_data_interp_hns"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     tab=tab,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     dims=dims,
+                                     interp=interp,
+                                     py_name=py_name)
+
+        with self.assertRaises(ValueError):
+            data.initialize()
+     
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for Python >= 3.6")              
+    def test_data_interp_vnss(self):
+        """
+        Test for error in data when it doen't have the shame
+        shape in the first dimension as the length of series
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        tab = "Vertical missing"
+        time_row_or_col = "time_short"
+        cell = "data_2d_short"
+        coords = {'ABC': ['A', 'B', 'C']}
+        dims = ['ABC']
+        interp = None
+        py_name = "test_data_interp_vnss"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     tab=tab,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     dims=dims,
+                                     interp=interp,
+                                     py_name=py_name)
+
+        with self.assertRaises(ValueError):
+            data.initialize()
+
+    # Following test are independent of the reading option
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for Python >= 3.6")              
+    def test_data_interp_hnnm(self):
+        """
+        Test for error in series when the series is not
+        strictly monotonous
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        tab = "No monotonous"
+        time_row_or_col = "time"
+        cell = "data_1d"
+        coords = {}
+        dims = []
+        interp = None
+        py_name = "test_data_interp_hnnm"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     tab=tab,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     dims=dims,
+                                     interp=interp,
+                                     py_name=py_name)
+
+        with self.assertRaises(ValueError):
+            data.initialize()
+
+    def test_data_h3d_interpnv(self):
+        """
+        ExtData test for error when the interpolation method is not valid
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        tab = "Horizontal"
+        time_row_or_col = "4"
+        cell = "C5"
+        coords= {'ABC': ['A', 'B', 'C'], 'XY':['X']}
+        dims = ['XY', 'ABC']
+        interp = "hold forward"
+        py_name = "test_data_h3d_interpnv"
+
+        with self.assertRaises(ValueError):
+            data = pysd.external.ExtData(file_name=file_name,
+                                         tab=tab,
+                                         time_row_or_col=time_row_or_col,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         dims=dims,
+                                         interp=interp,
+                                         py_name=py_name)
+                
+    def test_data_h3d_interp(self):
+        """
+        ExtData test for error when the interpolation method is different
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        tab = "Horizontal"
+        time_row_or_col = "4"
+        cell_1 = "C5"
+        cell_2 = "C8"
+        coords_1 = {'ABC': ['A', 'B', 'C'], 'XY':['X']}
+        coords_2 = {'ABC': ['A', 'B', 'C'], 'XY':['Y']}
+        dims = ['XY', 'ABC']
+        interp = None
+        interp2 ="look forward"
+        py_name = "test_data_h3d_interp"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     tab=tab,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell_1,
+                                     coords=coords_1,
+                                     dims=dims,
+                                     interp=interp,
+                                     py_name=py_name)
+        
+        with self.assertRaises(ValueError):
+            data.add(file_name=file_name,
+                     tab=tab,
+                     time_row_or_col=time_row_or_col,
+                     root=_root,
+                     cell=cell_2,
+                     coords=coords_2,
+                     dims=dims,
+                     interp=interp2)
+                     
+    def test_data_h3d_add(self):
+        """
+        ExtData test for error when add doesn't have the same dim
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        tab = "Horizontal"
+        time_row_or_col = "4"
+        cell_1 = "C5"
+        cell_2 = "C8"
+        coords_1 = {'ABC': ['A', 'B', 'C'], 'XY':['X']}
+        coords_2 = {'ABC': ['A', 'B', 'C'], 'XY':['Y']}
+        dims = ['XY', 'ABC']
+        dims2 = ['ABC', 'Xy']
+        interp = None
+        py_name = "test_data_h3d_add"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     tab=tab,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell_1,
+                                     coords=coords_1,
+                                     dims=dims,
+                                     interp=interp,
+                                     py_name=py_name)
+        
+        with self.assertRaises(ValueError):
+            data.add(file_name=file_name,
+                     tab=tab,
+                     time_row_or_col=time_row_or_col,
+                     root=_root,
+                     cell=cell_2,
+                     coords=coords_2,
+                     dims=dims2,
+                     interp=interp)
+
+
+    def test_lookup_h3d_add(self):
+        """
+        ExtLookup test for error when add doesn't have the same dim
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        tab = "Horizontal"
+        x_row_or_col = "4"
+        cell_1 = "C5"
+        cell_2 = "C8"
+        coords_1 = {'ABC': ['A', 'B', 'C'], 'XY':['X']}
+        coords_2 = {'ABC': ['A', 'B', 'C'], 'XY':['Y']}
+        dims = ['XY', 'ABC']
+        dims2 = ['ABC']
+        py_name = "test_lookup_h3d_add"
+
+        data = pysd.external.ExtLookup(file_name=file_name,
+                                       tab=tab,
+                                       x_row_or_col=x_row_or_col,
+                                       root=_root,
+                                       cell=cell_1,
+                                       coords=coords_1,
+                                       dims=dims,
+                                       py_name=py_name)
+        
+        with self.assertRaises(ValueError):
+            data.add(file_name=file_name,
+                     tab=tab,
+                     x_row_or_col=x_row_or_col,
+                     root=_root,
+                     cell=cell_2,
+                     coords=coords_2,
+                     dims=dims2)
+
+    def test_constant_h3d_add(self):
+        """
+        ExtConstant test for error when add doesn't have the same dim
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        tab = "Horizontal"
+        cell = "C5"
+        cell2 = "C8"
+        coords = {'XY': ['X'],
+                  'ABC': ['A', 'B', 'C'],
+                  'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        coords2 = {'XY': ['Y'],
+                   'ABC': ['A', 'B', 'C'],
+                   'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        dims = ['ABC', 'XY', 'val']
+        dims2 = ['ABC', 'XY', 'val2']
+        py_name = "test_constant_h3d_add"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         tab=tab,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         dims=dims,
+                                         py_name=py_name)
+        
+        with self.assertRaises(ValueError):
+            data.add(file_name=file_name,
+                     tab=tab,
+                     root=_root,
+                     cell=cell2,
+                     coords=coords2,
+                     dims=dims2)
+        
+    def test_lookup_h1d_nf(self):
+        """
+        Error in ExtLookup when a non 0 dimensional array is passed
+        """
+        import pysd
+        import xarray as xr
+
+        file_name = "data/input.xlsx"
+        tab = "Horizontal"
+        x_row_or_col = "4"
+        cell = "C5"
+        coords = {}
+        dims = []
+        py_name = "test_lookup_h1d"
+
+        data = pysd.external.ExtLookup(file_name=file_name,
+                                       tab=tab,
+                                       x_row_or_col=x_row_or_col,
+                                       root=_root,
+                                       cell=cell,
+                                       coords=coords,
+                                       dims=dims,
+                                       py_name=py_name)
+
+        data.initialize()
+        
+        data(np.array([1]))
+        data(xr.DataArray([1]))
+        
+        with self.assertRaises(TypeError):
+            data(np.array([1, 2]))
+            data(xr.DataArray([1, 1]))
+
+
+            
+    @unittest.skipIf(_py_version < 36,
+                     "openpyxl only supported for Python >= 3.6")     
+                              
+    def test_constant_hns(self):
+        """
+        Test for error in data when it doen't have the shame
+        shape as the given coordinates
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        tab = "Horizontal"
+        cell = "data_2d"
+        coords = {'ABC': ['A', 'B']}
+        dims = ['ABC']
+        interp = None
+        py_name = "test_constant_hns"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         tab=tab,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         dims=dims,
+                                         py_name=py_name)
+
+        with self.assertRaises(ValueError):
+            data.initialize()
+  
 

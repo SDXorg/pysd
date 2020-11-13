@@ -25,13 +25,7 @@ class Excels():
     """
     Class to save the read Excel files and thus avoid double reading
     """
-    _instance = None
     _Excels, _Excels_opyxl = {}, {}
-
-    def __new__(cls):
-        if cls._instance is None:
-            cls._instance = super(Excels, cls).__new__(cls)
-        return cls._instance
 
     @classmethod
     def read(cls, file_name):
@@ -82,8 +76,7 @@ class External(object):
         
         Parameters
         ----------
-        rows: None, int, list or array
-            if None, then will continue reading until no more data is available in the new row
+        rows: int, list or array
             if int, then will start reading the table for the given row number
             if list, then will read between first and second row of the lis
             if array, then will read the given row numbers
@@ -102,11 +95,8 @@ class External(object):
         # This must by a future implementation as openpyxl requires python 3.6 or greater
         ext = os.path.splitext(self.file)[1].lower()
         if ext in ['.xls', '.xlsx']:
-            # rows not specified
-            if rows is None:
-                skip = nrows = None
             # rows is an int of the first value
-            elif isinstance(rows, int):
+            if isinstance(rows, int):
                 skip = rows
                 nrows = None
             # rows my be a list of first and last value or a numpy.ndarray of valid values
@@ -178,9 +168,9 @@ class External(object):
                                  + self._file_sheet)
 
         try:
-            # Search for global and local names
-            cellrange = excel.defined_names.get(cellname)\
-                        or excel.defined_names.get(cellname, sheetId)
+            # Search for local and global names
+            cellrange = excel.defined_names.get(cellname, sheetId)\
+                        or excel.defined_names.get(cellname)
             coordinates = cellrange.destinations
             for sheet, cells in coordinates:
                 if sheet == self.tab:
@@ -189,9 +179,9 @@ class External(object):
                         return np.array([[i.value for i in j] for j in values], dtype=float)
                     except TypeError:
                         return float(values.value)
-            raise KeyError
+            raise AttributeError
 
-        except KeyError:
+        except (KeyError, AttributeError):
             # key error if the cell range name doesn't exist in the file or in the tab
             raise AttributeError(self.py_name + "\n"
                            + "The cell range name:\t {}\n".format(cellname)
@@ -322,16 +312,10 @@ class External(object):
         else:
             # get series data
             series = self._get_data_from_file_opyxl(series_row_or_col)
-    
-            try:
-                series_shape = series.shape
-            except AttributeError:
-                # Error if the lookup/time dimension has len 0 or 1
-                raise ValueError(self.py_name + "\n"
-                                 + "Dimension given in:\n"
-                                 + self._file_sheet
-                                 + "\tDimension name:\t{}\n".format(series_row_or_col)
-                                 + " is not a vector")
+            if isinstance(series, float):
+                series = np.array([[series]])
+
+            series_shape = series.shape
     
             if series_shape[0] == 1:
                 # horizontal definition of lookup/time dimension
@@ -348,22 +332,36 @@ class External(object):
                 raise ValueError(self.py_name + "\n"
                                  + "Dimension given in:\n"
                                  + self._file_sheet
-                                 + "\tDimension name:\t{}\n".format(series_row_or_col)
+                                 + "\tDimentime_missingsion name:"
+                                 + "\t{}\n".format(series_row_or_col)
                                  + " is a table and not a vector")
-    
             # Substract missing values in the series
             nan_index = np.isnan(series)
-            
+ 
+            if nan_index.all():
+                raise ValueError(self.py_name + "\n"
+                                 + "Dimension given in:\n"
+                                 + self._file_sheet
+                                 + "\tDimension name:"
+                                 + "\t{}\n".format(series_row_or_col)
+                                 + " has length 0")
+    
+           
             if nan_index.any():
                 series = series[~nan_index]
                 warnings.warn(self.py_name + "\n"
                               + "Dimension value missing or non-valid in:\n"
                               + self._file_sheet
-                              + "\tDimension name:\t{}\n".format(series_row_or_col)
+                              + "\tDimension name:"
+                              + "\t{}\n".format(series_row_or_col)
                               + " the corresponding data value(s) to the "
-                              + "missing/non-valid value(s) will be ignored\n\n")
+                              + "missing/non-valid value(s) "
+                              + "will be ignored\n\n")
             # get data
             data = self._get_data_from_file_opyxl(cell)
+
+            if isinstance(data, float):
+                data = np.array([[data]])
             
             if transpose:
                 # transpose for horizontal definition of dimension
@@ -385,7 +383,7 @@ class External(object):
                 # substract missing values from series and check 1st dimension
                 data = data[~nan_index]
             except IndexError:
-                raise ValueError(self.py_name() + "\n"
+                raise ValueError(self.py_name + "\n"
                                  + "Dimension and data given in:\n"
                                  + self._file_sheet
                                  + "\tDimension name:\t{}\n".format(series_row_or_col)
@@ -408,7 +406,9 @@ class External(object):
                     self.file = self.file + ext
                     return
         
-            raise FileNotFoundError(self.file)
+            # raise FileNotFoundError(self.file)
+            # python2 compatibility
+            raise IOError("File Not Found: " + self.file)
 
         else:
              return
@@ -636,6 +636,15 @@ class ExtData(External):
         self.dims = dims
         self.interp = interp
 
+        # check if the interpolation method is valid
+        if self.interp and\
+          self.interp not in ["interpolate", "raw",\
+                              "look forward", "hold backward"]:
+            raise ValueError(self.py_name + "\n"
+                             + " The interpolation method (interp) must be "
+                             + "'raw', 'interpolate', "
+                             + "'look forward' or 'hold backward")
+
     def add(self, file_name, tab, time_row_or_col, cell,
             interp, root, coords, dims):
         """
@@ -672,12 +681,15 @@ class ExtData(External):
 
     def __call__(self, time):
 
-        if time > self.data['time'].values[-1]:
+        if self.interp == "raw":
+            try:
+                outdata = self.data.sel(time=time)
+            except KeyError:
+                return np.nan
+        elif time > self.data['time'].values[-1]:
             outdata = self.data[-1]
         elif time < self.data['time'].values[0]:
             outdata = self.data[0]
-        elif self.interp == 'interpolate' or self.interp is None:  # 'interpolate' is the default
-            outdata = self.data.interp(time=time)
         elif self.interp == 'look forward':
             next_t = self.data['time'][self.data['time'] >= time][0]
             outdata = self.data.sel(time=next_t)
@@ -685,11 +697,7 @@ class ExtData(External):
             last_t = self.data['time'][self.data['time'] <= time][-1]
             outdata = self.data.sel(time=last_t)
         else:
-            # For :raw: (or actually any other/invalid) keyword directives
-            try:
-                outdata = self.data.sel(time=time)
-            except KeyError:
-                return np.nan
+            outdata = self.data.interp(time=time)
 
         # if output from the lookup is a float return as float and not xarray
         try:
@@ -742,14 +750,12 @@ class ExtLookup(External):
         self.data = utils.xrmerge(data)
 
     def __call__(self, x):
-        return self._call(x)
-
-    def _call(self, x):        
-        if isinstance(x, xr.DataArray):
-            return xr.DataArray(data=self._call(x.values), coords=x.coords, dims=x.dims)
-        
-        elif isinstance(x, np.ndarray):
-            return np.array([self._call(i) for i in x])
+        try:
+            x = float(x)
+        except TypeError:
+            raise TypeError(self.py_name + "\n"
+                            + "the argument of the Lookup must be float"
+                            + "or 0 dimensional array. ")
 
         if x > self.data['lookup_dim'].values[-1]:
             outdata = self.data[-1]
