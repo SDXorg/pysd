@@ -91,7 +91,6 @@ def assert_frames_close(actual, expected, **kwargs):
                             actual[col].values,
                             **kwargs)
         except AssertionError as e:
-            
             assertion_details = 'Expected values: ' + np.array2string(expected[col].values, precision=2, separator=', ') + \
                 '\nActual values:   ' + np.array2string(actual[col].values, precision=2, separator=',', suppress_small=True)
             raise AssertionError('Column: ' + str(col) + ' is not close.\n' + assertion_details)
