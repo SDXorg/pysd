@@ -156,7 +156,7 @@ class TestLookup(unittest.TestCase):
         xpts = [0, 1, 2, 3,  5,  6, 7, 8]
         ypts = [0, 0, 1, 1, -1, -1, 0, 0]
 
-        expected_xpts = np.arange(-0.5, 8.5, 0.5)
+        expected_xpts = np.arange(-0.5, 8.6, 0.5)
         expected_ypts = [
             0,
             0, 0,
@@ -181,7 +181,7 @@ class TestLookup(unittest.TestCase):
         xpts = [0, 1, 2, 3,  5,  6, 7, 8]
         ypts = [0, 0, 1, 1, -1, -1, 0, 0]
 
-        expected_xpts = np.arange(-0.5, 8.5, 0.5)
+        expected_xpts = np.arange(-0.5, 8.6, 0.5)
         expected_ypts = [
             0,
             0, 0,
@@ -206,7 +206,7 @@ class TestLookup(unittest.TestCase):
         xpts = [0, 1]
         ypts = [0, 1]
 
-        expected_xpts = np.arange(-0.5, 1.5, 0.5)
+        expected_xpts = np.arange(-0.5, 1.6, 0.5)
         expected_ypts = [-0.5, 0.0, 0.5, 1.0, 1.5]
 
         for index in range(0, len(expected_xpts)):
@@ -223,7 +223,7 @@ class TestLookup(unittest.TestCase):
         xpts = [0, 1, 2, 3]
         ypts = [0, 1, 1, 0]
 
-        expected_xpts = np.arange(-0.5, 3.5, 0.5)
+        expected_xpts = np.arange(-0.5, 3.6, 0.5)
         expected_ypts = [
             -0.5,
             0.0, 0.5, 1.0,
@@ -246,7 +246,7 @@ class TestLookup(unittest.TestCase):
         xpts = [0, 1, 2, 3,  5,  6, 7, 8]
         ypts = [0, 0, 1, 1, -1, -1, 0, 0]
 
-        expected_xpts = np.arange(-0.5, 8.5, 0.5)
+        expected_xpts = np.arange(-0.5, 8.6, 0.5)
         expected_ypts = [
             0, 0, 0, 0, 0,
             1, 1, 1, 1, 1, 1,
@@ -320,8 +320,62 @@ class TestStateful(unittest.TestCase):
 
         self.assertEqual(delay_a(), 4.234)
 
-        self.assertEqual(delay_a.ddt()[0], 5-(4.234*3/3))
+        self.assertEqual(delay_a.ddt()[0], 5-4.234)
 
+    def test_delay_subscript(self):
+        """
+        Test for subscripted delay
+        """
+        import pysd
+        import xarray as xr
+
+        coords = {'d1':[9,1],'d2':[2,4]}
+        dims = ['d1', 'd2']
+        xr_input = xr.DataArray([[1,2],[3,4]], coords, dims)
+        xr_initial = xr.DataArray([10, 0.5], {'d1':[9,1]}, ['d1'])
+        _, xr_initial_e = xr.broadcast(xr_input, xr_initial)
+        xr_delay_time = xr.DataArray([3,2], {'d2':[2,4]}, ['d2'])
+        _, xr_delay_time_e = xr.broadcast(xr_input, xr_delay_time)
+        
+        # if only the delay_input is xarray
+        delay_a = pysd.functions.Delay(delay_input=lambda: xr_input,
+                                       delay_time=lambda: 3,
+                                       initial_value=lambda: 4.234,
+                                       order=lambda: 3,
+                                       coords=coords,
+                                       dims=dims)
+
+        delay_a.initialize()
+
+        self.assertTrue(delay_a().equals(xr.DataArray(4.234, coords,dims)))
+        delay_ddt = delay_a.ddt()[0].reset_coords('delay', drop=True)
+        self.assertTrue(delay_ddt.equals(xr_input-4.234))
+        
+        # if delay input and initial_value are xarray (differents shapes checked)
+        delay_b = pysd.functions.Delay(delay_input=lambda: xr_input,
+                                       delay_time=lambda: 3,
+                                       initial_value=lambda: xr_initial,
+                                       order=lambda: 3,
+                                       coords=coords,
+                                       dims=dims)
+
+        delay_b.initialize()
+        
+        self.assertTrue(delay_b().equals(xr_initial_e))
+        delay_ddt = delay_b.ddt()[0].reset_coords('delay', drop=True)
+
+        self.assertTrue(delay_ddt.equals(xr_input-xr_initial_e))
+        
+        # if delay input and delay_time are xarray (differents shapes checked)        
+        delay_c = pysd.functions.Delay(delay_input=lambda: xr_input,
+                                       delay_time=lambda: xr_delay_time,
+                                       initial_value=lambda: 4.234,
+                                       order=lambda: 3,
+                                       coords=coords,
+                                       dims=dims)
+
+        delay_c.initialize()   
+              
     def test_initial(self):
         import pysd
         a = 1
