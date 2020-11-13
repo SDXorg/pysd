@@ -323,13 +323,8 @@ class TestPySD(unittest.TestCase):
     def test_set_state(self):
         import pysd
         model = pysd.read_vensim(test_model)
+
         initial_temp = model.components.teacup_temperature()
-        model.components.teacup_temperature()
-        model.components.teacup_temperature()
-        model.components.teacup_temperature()
-        model.components.teacup_temperature()
-        model.components.teacup_temperature()
-        model.components.teacup_temperature()
         initial_time = model.components.time()
 
         new_time = np.random.rand()
@@ -511,7 +506,6 @@ class TestPySD(unittest.TestCase):
         model = pysd.read_vensim(test_model)
         self.assertEqual(model.mdl_file, test_model)
 
-    @unittest.skip('infinite_loop')
     def test_incomplete_model(self):
         import pysd
         import warnings
