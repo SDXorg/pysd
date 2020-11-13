@@ -196,6 +196,7 @@ class Delay(Stateful):
         self.input_func = delay_input
         self.order_func = order
         self.order = None
+        self.broadcast = 0
         self.coords = coords
         self.dims = dims
 
@@ -217,8 +218,14 @@ class Delay(Stateful):
             coords = self.coords.copy()
             coords['delay'] = np.arange(self.order)
 
-            data = xr.DataArray(data=0, dims=['delay'] + self.dims, coords=coords)
-            self.state = data + init_state_value
+            # broadcast self.state
+            broadcast  = xr.DataArray(data=0,\
+                dims=['delay'] + self.dims, coords=coords)
+            self.state = broadcast + init_state_value
+
+            # for broadcasting in the future
+            self.broadcast  = xr.DataArray(data=0,\
+                dims=self.dims, coords=self.coords)
 
         else:
             self.state = np.array([init_state_value] * self.order)
@@ -233,9 +240,11 @@ class Delay(Stateful):
     def ddt(self):
         outflows = self.state / (self.delay_time_func() / self.order)
         inflows = np.roll(outflows, 1)
-        inflows[0] = self.input_func()
+        if self.coords:
+            inflows[0] = (self.broadcast + self.input_func()).values
+        else:
+            inflows[0] = self.input_func()
         return inflows - outflows
-
 
 class Smooth(Stateful):
     def __init__(self, smooth_input, smooth_time, initial_value, order):
@@ -983,22 +992,6 @@ def lookup_discrete(x, xs, ys):
     return ys[len(ys) - 1]
 
 
-def align(base, to_align):
-    if not isinstance(base, xr.DataArray) or not isinstance(to_align, xr.DataArray):
-        return to_align
-
-    intersection = {}
-    basedims = set(base.dims)
-    for dim in to_align.dims:
-        if dim in basedims:
-            coordA=set([str(i.values) for i in to_align.coords[dim]])
-            coordB=set([str(i.values) for i in base.coords[dim]])
-            intersection[dim] = list( coordA & coordB )
-        else:
-            intersection[dim] = [str(i.values) for i in to_align.coords[dim]]
-
-    return to_align.loc[intersection]
-    
 def if_then_else(condition, val_if_true, val_if_false):
     
     if isinstance(condition, xr.DataArray):
