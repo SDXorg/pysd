@@ -442,7 +442,7 @@ def visit_addresses(frame, return_addresses):
     return outdict
 
 
-def compute_shape(coords, dims, reshape_len=None):
+def compute_shape(coords, dims, reshape_len=None, py_name=''):
     """
     Computes the 'shape' of a coords dictionary.
     Function used to rearange data in xarrays and
@@ -464,6 +464,8 @@ def compute_shape(coords, dims, reshape_len=None):
       if the reshape_len value is bigger than the length of shape.
       Will raise a ValueError if we try to reshape to a reshape_len
       smaller than the initial shape.
+    py_name: str
+      Name to print if an error is raised.
     
     Returns
     -------
@@ -488,7 +490,7 @@ def compute_shape(coords, dims, reshape_len=None):
     
     # return an error when the current shape is bigger than the requested one
     if shape_len > reshape_len:
-        raise ValueError(self.py_name + "\n"
+        raise ValueError(py_name + "\n"
                          + "The shape of the coords to read in a "
                          + " external file must be at most "
                          + "{} dimensional".format(reshape_len))

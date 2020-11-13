@@ -431,7 +431,8 @@ class External(object):
         """
         self._resolve_file(root=self.root)
         series_across = self._series_selector(self.x_row_or_col, self.cell)
-        size = utils.compute_shape(self.coords, self.dims, reshape_len=1)[0]
+        size = utils.compute_shape(self.coords, self.dims,
+                                   reshape_len=1, py_name=self.py_name)[0]
 
         series, data = self._get_series_data(
             series_across=series_across,
@@ -827,7 +828,8 @@ class ExtConstant(External):
             data_across = "name"
             cell = self.cell
         
-        shape = utils.compute_shape(self.coords, self.dims, reshape_len=2)
+        shape = utils.compute_shape(self.coords, self.dims,
+                                    reshape_len=2, py_name=self.py_name)
         
         if self.transpose:
             shape.reverse()
