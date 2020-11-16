@@ -6,6 +6,7 @@ from __future__ import absolute_import
 
 import os
 import re
+from ast import literal_eval
 import textwrap
 import warnings
 from io import open
@@ -834,13 +835,68 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
         def visit_call(self, n, vc):
             self.kind = 'component'
 
+            # remove dimensions info (produced by !)
+
             function_name = vc[0].lower()
             arguments = []
-            while len(','.join(arguments)) < len(vc[4]):
-                arguments.append(self.args.pop())
+            
+            #TODO change the output of ExpressionParser.visit_subscript_list
+            # to be able to give the information of dims in other format than a string
+            # to make this method much simpler
+
+            # dims where the function is applied will be stored here
+            dims = set()
+            # expression without DIM=[] pattern
+            expr = "".join(re.split(" DIM=\[[\"a-zA-Z,\s]+\]", vc[4]))
+
+            while len(','.join(arguments)) < len(expr):
+                args = self.args.pop()
+                # get dimensions
+                dim = re.findall(" DIM=\[\"[\"a-zA-Z,\s]+\"\]", args)
+                for d in dim:
+                    dims.update(literal_eval(d.split(" DIM=")[1]))
+                # remove DIM=[] pattern from args
+                args = "".join(re.split(" DIM=\[[\"a-zA-Z,\s]+\]", args))
+                arguments.append(args)
                 arguments = [arguments[-1]] + arguments[:-1]
+            # add dimensions as last argument
+            if dims:
+                arguments += ["dim="+str(tuple(dims))]
 
             py_expr = builder.build_function_call(functions[function_name], arguments)
+
+            if 'subs' in element and element['subs']:
+                # TODO this is unnecessary when resizing data arrays
+                # of the same shape should be avoided in these cases
+                # to clean the model code
+               
+                coords = utils.make_coord_dict(element['subs'],
+                                               subscript_dict,
+                                               terse=False)
+                dims = [utils.find_subscript_name(subscript_dict, sub) 
+                        for sub in element['subs']]
+                shape = [len(coords[dim]) for dim in dims]
+                datastr = "utils.darray(" + py_expr + ", "\
+                          + repr(coords) + ", "\
+                          + repr(dims) + ")"
+                return datastr
+ 
+            else:
+                return py_expr
+
+        def visit_in_oper(self, n, vc):
+            return in_ops[n.text.lower()]
+
+        def visit_pre_oper(self, n, vc):
+            return pre_ops[n.text.lower()]
+
+        def visit_reference(self, n, vc):
+            self.kind = 'component'
+            vc[0] += '()'
+            py_expr = vc[0]
+
+            py_expr = builder.build_function_call(functions[function_name], arguments)
+
             if 'subs' in element and element['subs']:
                 # TODO this is unnecessary when resizing data arrays
                 # of the same shape should be avoided in these cases
@@ -878,7 +934,6 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
                     external_args.append(child)
                 else:
                     py_expr += child
-            
 
             if 'subs' in element and element['subs']:
                 # TODO this is unnecessary when resizing data arrays of the same shape
@@ -963,8 +1018,11 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             # But works quite well for simple axis specifications, such as "SUM(variable[axis1, axis2!])
 
             axis = ['"%s"' % s.strip('!') for s in subs if s[-1] == '!']
+
+            # TODO find another way to store dim information insted of in the string
+            # this would simplify ExpressionParser.visit_call
             if axis:
-                string += ', dim=(%s)' % ','.join(axis)
+                string += 'DIM=[%s]' % ','.join(axis)
             return string
 
 
