@@ -238,7 +238,6 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/smooth_and_stock/test_smooth_and_stock.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('takes too long')
     def test_special_characters(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/special_characters/test_special_variable_names.mdl')
@@ -279,7 +278,6 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscript_3d_arrays_widthwise/test_subscript_3d_arrays_widthwise.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('takes too long')
     def test_subscript_aggregation(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscript_aggregation/test_subscript_aggregation.mdl')
@@ -338,7 +336,7 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscript_subranges_equal/test_subscript_subrange_equal.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('failling/ takes too long')
+    @unittest.skip('failling')
     def test_subscript_switching(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscript_switching/subscript_switching.mdl')
@@ -349,13 +347,11 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscript_updimensioning/test_subscript_updimensioning.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('takes too long')
     def test_subscripted_delays(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscripted_delays/test_subscripted_delays.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('takes too long')
     def test_subscripted_flows(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscripted_flows/test_subscripted_flows.mdl')
