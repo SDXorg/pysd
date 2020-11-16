@@ -142,7 +142,7 @@ def build_element(element, subscript_dict):
         cache_type = "@cache('run')"
     elif element['kind'] == 'component':
         cache_type = "@cache('step')"
-    elif element['kind'] in ['lookup']: 
+    elif element['kind'] == 'lookup': 
         # lookups may be called with different values in a round
         cache_type = ''
     elif element['kind'] in ['setup', 'stateful',
