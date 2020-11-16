@@ -1086,46 +1086,116 @@ def incomplete(*args):
 
 def log(x, base):
     """
-    Implements vensim's LOG function with change of base
+    Implements Vensim's LOG function with change of base
+
     Parameters
     ----------
     x: input value
     base: base of the logarithm
+
+    Returns
+    -------
+    float
+      the log of 'x' in base 'base'
     """
     return np.log(x) / np.log(base)
 
 
 def sum(x, dim=None):
+    """
+    Implements Vensim's SUM function
 
-    # Return float if x is DataArray and dim is None
-    if dim is None:
+    Parameters
+    ----------
+    x: xarray.DataArray
+      Input value
+    dim: list of strs (optional)
+      Dimensions to apply the function over.
+      If not given the function will be applied over all dimensions
+    
+    Returns
+    -------
+    xarray.DataArray or float
+      The result of the sum operation in the given dimensions
+    
+    """
+    # float returned if the function is applied over all the dimensions
+    if dim is None or set(x.dims) == set(dim):
         return float(x.sum())
 
     return x.sum(dim=dim)
 
 
 def prod(x, dim=None):
+    """
+    Implements Vensim's PROD function
 
-    # Return float if x is DataArray and dim is None
-    if dim is None:
+    Parameters
+    ----------
+    x: xarray.DataArray
+      Input value
+    dim: list of strs (optional)
+      Dimensions to apply the function over.
+      If not given the function will be applied over all dimensions
+    
+    Returns
+    -------
+    xarray.DataArray or float
+      The result of the product operation in the given dimensions
+    
+    """
+    # float returned if the function is applied over all the dimensions
+    if dim is None or set(x.dims) == set(dim):
         return float(x.prod())
 
     return x.prod(dim=dim)
 
 
 def vmin(x, dim=None):
+    """
+    Implements Vensim's Vmin function
 
-    # Return float if x is DataArray and dim is None
-    if dim is None:
+    Parameters
+    ----------
+    x: xarray.DataArray
+      Input value
+    dim: list of strs (optional)
+      Dimensions to apply the function over.
+      If not given the function will be applied over all dimensions
+    
+    Returns
+    -------
+    xarray.DataArray or float
+      The result of the minimum value over the given dimensions
+    
+    """
+    # float returned if the function is applied over all the dimensions
+    if dim is None or set(x.dims) == set(dim):
         return float(x.min())
 
     return x.min(dim=dim)
 
 
 def vmax(x, dim=None):
+    """
+    Implements Vensim's VMAX function
 
-    # Return float if x is DataArray and dim is None
-    if dim is None:
+    Parameters
+    ----------
+    x: xarray.DataArray
+      Input value
+    dim: list of strs (optional)
+      Dimensions to apply the function over.
+      If not given the function will be applied over all dimensions
+    
+    Returns
+    -------
+    xarray.DataArray or float
+      The result of the maximum value over the dimensions
+    
+    """
+    # float returned if the function is applied over all the dimensions
+    if dim is None or set(x.dims) == set(dim):
         return float(x.max())
 
     return x.max(dim=dim)
