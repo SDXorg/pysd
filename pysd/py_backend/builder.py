@@ -140,14 +140,14 @@ def build_element(element, subscript_dict):
     """
     if element['kind'] == 'constant':
         cache_type = "@cache('run')"
-    elif element['kind'] in ['setup', 'stateful',
-                             'external', 'external_add']:  # setups only get called once, caching is wasted
-        cache_type = ''
     elif element['kind'] == 'component':
         cache_type = "@cache('step')"
-    elif element['kind'] == 'stateful':
+    elif element['kind'] in ['lookup']: 
+        # lookups may be called with different values in a round
         cache_type = ''
-    elif element['kind'] in ['lookup']:  # lookups may be called with different values in a round
+    elif element['kind'] in ['setup', 'stateful',
+                             'external', 'external_add']: 
+        # setups only get called once, caching is wasted
         cache_type = ''
     else:
         raise AttributeError("Bad value for 'kind'")
