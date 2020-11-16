@@ -86,6 +86,9 @@ def assert_frames_close(actual, expected, **kwargs):
         'instead found' + expected.index.values + 'vs' + actual.index.values
 
     for col in expected.columns:
+        # if for Vensim outputs where constant values are only in the first row
+        if np.isnan(expected[col].values[1:]).all():
+            expected[col] = expected[col].values[0]
         try:
             assert_allclose(expected[col].values,
                             actual[col].values,
