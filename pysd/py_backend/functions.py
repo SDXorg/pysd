@@ -1094,15 +1094,6 @@ def log(x, base):
     """
     return np.log(x) / np.log(base)
 
-#TODO document this new functions...
-def and_(x, y):
-    #TODO check logical operations between matrix and vectors
-    return xr.ufuncs.logical_and(x, y)
-
-
-def or_(x, y):
-    return xr.ufuncs.logical_or(x, y)
-
 
 def sum(x, dim=None):
 
