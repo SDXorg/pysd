@@ -239,7 +239,7 @@ class Delay(Stateful):
 
     def ddt(self):
         outflows = self.state / (self.delay_time_func() / self.order)
-        inflows = np.roll(outflows, 1)
+        inflows = np.roll(outflows, 1, axis=0)
         if self.coords:
             inflows[0] = (self.broadcast + self.input_func()).values
         else:
