@@ -866,53 +866,19 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             py_expr = builder.build_function_call(functions[function_name], arguments)
 
             if 'subs' in element and element['subs']:
-                # TODO this is unnecessary when resizing data arrays
-                # of the same shape should be avoided in these cases
-                # to clean the model code
-               
+                # TODO this is unnecessary when resizing data arrays of the same shape
+                # should be avoided in these cases to clean the model code
+                
+                # global elemnt has coordinates
                 coords = utils.make_coord_dict(element['subs'],
                                                subscript_dict,
                                                terse=False)
-                dims = [utils.find_subscript_name(subscript_dict, sub) 
+                dims = [utils.find_subscript_name(subscript_dict, sub)
                         for sub in element['subs']]
-                shape = [len(coords[dim]) for dim in dims]
-                datastr = "utils.darray(" + py_expr + ", "\
-                          + repr(coords) + ", "\
-                          + repr(dims) + ")"
-                return datastr
- 
-            else:
-                return py_expr
 
-        def visit_in_oper(self, n, vc):
-            return in_ops[n.text.lower()]
-
-        def visit_pre_oper(self, n, vc):
-            return pre_ops[n.text.lower()]
-
-        def visit_reference(self, n, vc):
-            self.kind = 'component'
-            vc[0] += '()'
-            py_expr = vc[0]
-
-            py_expr = builder.build_function_call(functions[function_name], arguments)
-
-            if 'subs' in element and element['subs']:
-                # TODO this is unnecessary when resizing data arrays
-                # of the same shape should be avoided in these cases
-                # to clean the model code
-               
-                coords = utils.make_coord_dict(element['subs'],
-                                               subscript_dict,
-                                               terse=False)
-                dims = [utils.find_subscript_name(subscript_dict, sub) 
-                        for sub in element['subs']]
-                shape = [len(coords[dim]) for dim in dims]
-                datastr = "utils.darray(" + py_expr + ", "\
-                          + repr(coords) + ", "\
-                          + repr(dims) + ")"
-                return datastr
- 
+                return "utils.rearrange(" + py_expr + ", "\
+                        + repr(coords) + ", "\
+                        + repr(dims) + ")"
             else:
                 return py_expr
 
@@ -935,19 +901,69 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
                 else:
                     py_expr += child
 
-            if 'subs' in element and element['subs']:
+            try:
+                given_subs = literal_eval(re.split(" DIM=\[[\"a-zA-Z,\s]+\]", vc[-1])[-1])
+                assert isinstance(given_subs, list)
+                py_expr = py_expr.split(str(given_subs))[0]
+            except (SyntaxError, AssertionError):
+                given_subs = None
+
+            if ('subs' in element and element['subs'])\
+              or given_subs:
                 # TODO this is unnecessary when resizing data arrays of the same shape
                 # should be avoided in these cases to clean the model code
-                coords = utils.make_coord_dict(element['subs'],
-                                               subscript_dict,
-                                               terse=False)
-                dims = [utils.find_subscript_name(subscript_dict, sub)
-                        for sub in element['subs']]
-                datastr = "utils.darray(" + py_expr + ", "\
-                          + repr(coords) + ", "\
-                          + repr(dims) + ")"\
+                # this is difficult to know as we can have same coordinates
+                #  given and in the element but then the xarray.DataArray
+                # object may change the name of 1 coordinate to do an operation
+
+                if ('subs' in element and element['subs']):
+                    # global elemnt has coordinates
+                    coords_e = utils.make_coord_dict(element['subs'],
+                                                     subscript_dict,
+                                                     terse=False)
+                    dims_e = [utils.find_subscript_name(subscript_dict, sub)
+                              for sub in element['subs']]
+                else: 
+                    # global element has no coordinates
+                    coords = utils.make_coord_dict(given_subs,
+                                                 subscript_dict,
+                                                 terse=False)
+                    dims = [utils.find_subscript_name(subscript_dict, sub)
+                          for sub in given_subs]
+                    return "utils.rearrange(" + py_expr + ", "\
+                           + repr(coords) + ", "\
+                           + repr(dims) + ")"\
+                           + ','.join(external_args)
+
+
+                if given_subs and given_subs != element['subs']:
+                    coords_g = utils.make_coord_dict(given_subs,
+                                                 subscript_dict,
+                                                 terse=False)
+                    dims_g = [utils.find_subscript_name(subscript_dict, sub)
+                          for sub in given_subs]
+                else:
+                    # both element have same coordinates or no given coordinates
+                    return "utils.rearrange(" + py_expr + ", "\
+                              + repr(coords_e) + ", "\
+                              + repr(dims_e) + ")"\
+                              + ','.join(external_args) 
+
+                if set(dims_g).issubset(dims_e):
+                    return "utils.rearrange(" + py_expr + ", "\
+                           + repr(coords_e) + ", "\
+                           + repr(dims_e) + ")"\
+                           + ','.join(external_args)
+                elif set(dims_e).issubset(dims_g):
+                    return "utils.rearrange(" + py_expr + ", "\
+                           + repr(coords_g) + ", "\
+                           + repr(dims_g) + ")"\
+                           + ','.join(external_args)
+
+                return "utils.rearrange(" + py_expr + ", "\
+                          + repr(coords_g) + ", "\
+                          + repr(dims_g) + ")"\
                           + ','.join(external_args) 
-                return datastr
             else:
                 return ''.join([x.strip(',') for x in vc])
 
@@ -1008,21 +1024,22 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             refs = vc[4]
             subs = [x.strip() for x in refs.split(',')]
             coordinates = utils.make_coord_dict(subs, subscript_dict)
-            if len(coordinates):
-                string = '.loc[%s].squeeze().expand_dims(dict([(i,len(j)) for i,j in %s.items()]))'\
-                          % (repr(coordinates), repr(coordinates))
-            else:
-                string = ' '
+            axis = ['"%s"' % s.strip('!') for s in subs if s[-1] == '!']
+            string = ''
+
             # Implements basic "!" subscript functionality in Vensim. Does NOT work for matrix diagonals in
             # FUNC(variable[sub1!,sub1!]) functions, nor with complex operations within the vector function
-            # But works quite well for simple axis specifications, such as "SUM(variable[axis1, axis2!])
-
-            axis = ['"%s"' % s.strip('!') for s in subs if s[-1] == '!']
-
-            # TODO find another way to store dim information insted of in the string
             # this would simplify ExpressionParser.visit_call
             if axis:
-                string += 'DIM=[%s]' % ','.join(axis)
+                string += ' DIM=[%s]' % ','.join(axis)
+
+            if len(coordinates):
+                string += '.loc[%s].squeeze().expand_dims(dict([(i,len(j)) for i,j in %s.items()]))'\
+                          % (repr(coordinates), repr(coordinates))
+            else:
+                string +=  str(["%s" % s.strip('!') for s in subs])
+
+
             return string
 
 

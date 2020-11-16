@@ -336,7 +336,7 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscript_subranges_equal/test_subscript_subrange_equal.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('failling')
+    @unittest.skip('failling when trying to make flat df')
     def test_subscript_switching(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscript_switching/subscript_switching.mdl')
