@@ -416,4 +416,75 @@ class TestStateful(unittest.TestCase):
         self.assertNotEqual(f2_1, f2_i1)
         self.assertEqual(f2_i1, f2_0)
 
+    def test_sum(self):
+        """
+        Test for sum function
+        """
+        import pysd
+        import xarray as xr
+
+        coords = {'d1':[9,1], 'd2':[2,4]}
+        coords_d1, coords_d2 = {'d1':[9,1]}, {'d2':[2,4]}
+        dims = ['d1', 'd2']
+
+        data = xr.DataArray([[1,2],[3,4]], coords, dims)
+
+        self.assertTrue(pysd.functions.sum(data, dim=['d1']).equals(xr.DataArray([4, 6], coords_d2, ['d2'])))
+        self.assertTrue(pysd.functions.sum(data, dim=['d2']).equals(xr.DataArray([3, 7], coords_d1, ['d1'])))
+        self.assertEqual(pysd.functions.sum(data, dim=['d1', 'd2']), 10)
+        self.assertEqual(pysd.functions.sum(data), 10)
+
+    def test_prod(self):
+        """
+        Test for sum function
+        """
+        import pysd
+        import xarray as xr
+
+        coords = {'d1':[9,1], 'd2':[2,4]}
+        coords_d1, coords_d2 = {'d1':[9,1]}, {'d2':[2,4]}
+        dims = ['d1', 'd2']
+
+        data = xr.DataArray([[1,2],[3,4]], coords, dims)
+
+        self.assertTrue(pysd.functions.prod(data, dim=['d1']).equals(xr.DataArray([3, 8], coords_d2, ['d2'])))
+        self.assertTrue(pysd.functions.prod(data, dim=['d2']).equals(xr.DataArray([2, 12], coords_d1, ['d1'])))
+        self.assertEqual(pysd.functions.prod(data, dim=['d1', 'd2']), 24)
+        self.assertEqual(pysd.functions.prod(data), 24)
+
+    def test_vmin(self):
+        """
+        Test for vmin function
+        """
+        import pysd
+        import xarray as xr
+
+        coords = {'d1':[9,1], 'd2':[2,4]}
+        coords_d1, coords_d2 = {'d1':[9,1]}, {'d2':[2,4]}
+        dims = ['d1', 'd2']
+
+        data = xr.DataArray([[1,2],[3,4]], coords, dims)
+
+        self.assertTrue(pysd.functions.vmin(data, dim=['d1']).equals(xr.DataArray([1, 2], coords_d2, ['d2'])))
+        self.assertTrue(pysd.functions.vmin(data, dim=['d2']).equals(xr.DataArray([1, 3], coords_d1, ['d1'])))
+        self.assertEqual(pysd.functions.vmin(data, dim=['d1', 'd2']), 1)
+        self.assertEqual(pysd.functions.vmin(data), 1)
+
+    def test_vmax(self):
+        """
+        Test for vmax function
+        """
+        import pysd
+        import xarray as xr
+
+        coords = {'d1':[9,1], 'd2':[2,4]}
+        coords_d1, coords_d2 = {'d1':[9,1]}, {'d2':[2,4]}
+        dims = ['d1', 'd2']
+
+        data = xr.DataArray([[1,2],[3,4]], coords, dims)
+
+        self.assertTrue(pysd.functions.vmax(data, dim=['d1']).equals(xr.DataArray([3, 4], coords_d2, ['d2'])))
+        self.assertTrue(pysd.functions.vmax(data, dim=['d2']).equals(xr.DataArray([2, 4], coords_d1, ['d1'])))
+        self.assertEqual(pysd.functions.vmax(data, dim=['d1', 'd2']), 4)
+        self.assertEqual(pysd.functions.vmax(data), 4)
 
