@@ -163,7 +163,29 @@ def build_element(element, subscript_dict):
         contents = 'return utils.xrmerge([%(das)s,])'\
                    % {'das': ',\n'.join(py_expr_n)}
     else:
-        contents = 'return %(py_expr)s' % {'py_expr': py_expr_n[0]}
+        if element['kind'] == 'component'\
+          and 'subs' in element\
+          and element['subs'][0] not in ['', [], None]:
+            # up-dimensioning
+            coords = utils.make_coord_dict(element['subs'][0],
+                                         subscript_dict,
+                                         terse=False)
+            dims = [utils.find_subscript_name(subscript_dict, sub)
+                  for sub in element['subs'][0]]
+            # re arrange the python object
+            left_side = 'utils.rearrange('
+            right_side = ', %(coords)s, %(dims)s)' % {'coords': coords, 'dims': dims}
+            if left_side == py_expr_n[0][:len(left_side)]\
+              and  right_side == py_expr_n[0][-len(right_side):]:
+                # avoid double calling
+                contents = 'return %(py_expr)s' % {'py_expr': py_expr_n[0]}
+            else:
+                contents = 'return %(left_side)s %(py_expr)s %(right_side)s'\
+                           % {'py_expr': py_expr_n[0],
+                              'left_side': left_side,
+                              'right_side': right_side}
+        else:
+            contents = 'return %(py_expr)s' % {'py_expr': py_expr_n[0]}
 
     indent = 8
     element.update({'cache': cache_type,

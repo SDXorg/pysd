@@ -1,3 +1,4 @@
+import warnings
 import keyword
 import regex as re
 
@@ -431,7 +432,7 @@ def visit_addresses(frame, return_addresses):
         if address:
            xrval = frame[pyname].loc[address]
            if xrval.size > 1:
-               outdict[real_name] = xrval
+                   outdict[real_name] = xrval
            else:
                outdict[real_name] = float(np.squeeze(xrval.values))
         else:

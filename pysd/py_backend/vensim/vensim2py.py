@@ -349,10 +349,7 @@ def get_external_data(func_str, args_str, root_path):
     f = subscript_functions[func_str.lower()]
     args = [x.strip().strip("\'") for x in args_str.split(',')]  # todo: make this less fragile?
 
-    if args[0][0] == '?':
-        args[0] = os.path.join(root_path, args[0][1:])
-
-    return f(*args).subscript
+    return f(*args, root=root_path).subscript
 
 
 def parse_units(units_str):
@@ -773,6 +770,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
     reference = id _ subscript_list?
     subscript_list = "[" _ ~"\""? _ ((sub_name / sub_element) _ ~"\""? _ "!"? _ ","? _)+ _ "]"
     
+    
     array = (number _ ("," / ";")? _)+ !~r"."  # negative lookahead for anything other than an array
     string = "\'" ( "\\\'" / ~r"[^\']"IU )* "\'"
 
@@ -802,14 +800,13 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
 
     parser = parsimonious.Grammar(expression_grammar)
 
-    build_names = set()
-
     class ExpressionParser(parsimonious.NodeVisitor):
         # Todo: at some point, we could make the 'kind' identification recursive on expression,
         # so that if an expression is passed into a builder function, the information
         # about whether it is a constant, or calls another function, goes with it.
         def __init__(self, ast):
             self.translation = ""
+            self.subs = None
             self.kind = 'constant'  # change if we reference anything else
             self.new_structure = []
             self.arguments = None
@@ -864,23 +861,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
                 arguments += ["dim="+str(tuple(dims))]
 
             py_expr = builder.build_function_call(functions[function_name], arguments)
-
-            if 'subs' in element and element['subs']:
-                # TODO this is unnecessary when resizing data arrays of the same shape
-                # should be avoided in these cases to clean the model code
-                
-                # global elemnt has coordinates
-                coords = utils.make_coord_dict(element['subs'],
-                                               subscript_dict,
-                                               terse=False)
-                dims = [utils.find_subscript_name(subscript_dict, sub)
-                        for sub in element['subs']]
-
-                return "utils.rearrange(" + py_expr + ", "\
-                        + repr(coords) + ", "\
-                        + repr(dims) + ")"
-            else:
-                return py_expr
+            return py_expr
 
         def visit_in_oper(self, n, vc):
             return in_ops[n.text.lower()]
@@ -902,70 +883,57 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
                     py_expr += child
 
             try:
+                # The object was given with subscript, will use the subscript to rearrange
+                # if necessary
+                # this would look much simpler and easier moving to an own data class where we can
+                # subset data using expressions like py_name[dim1, dim2]
+
+                # remove function dimensions if they are given
                 given_subs = literal_eval(re.split(" DIM=\[[\"a-zA-Z,\s]+\]", vc[-1])[-1])
+                # assert that we have a list
                 assert isinstance(given_subs, list)
+                # remove the subscript from the py_expr
                 py_expr = py_expr.split(str(given_subs))[0]
-            except (SyntaxError, AssertionError):
-                given_subs = None
-
-            if ('subs' in element and element['subs'])\
-              or given_subs:
-                # TODO this is unnecessary when resizing data arrays of the same shape
-                # should be avoided in these cases to clean the model code
-                # this is difficult to know as we can have same coordinates
-                #  given and in the element but then the xarray.DataArray
-                # object may change the name of 1 coordinate to do an operation
-
-                if ('subs' in element and element['subs']):
-                    # global elemnt has coordinates
-                    coords_e = utils.make_coord_dict(element['subs'],
-                                                     subscript_dict,
-                                                     terse=False)
-                    dims_e = [utils.find_subscript_name(subscript_dict, sub)
-                              for sub in element['subs']]
-                else: 
-                    # global element has no coordinates
-                    coords = utils.make_coord_dict(given_subs,
-                                                 subscript_dict,
-                                                 terse=False)
-                    dims = [utils.find_subscript_name(subscript_dict, sub)
-                          for sub in given_subs]
-                    return "utils.rearrange(" + py_expr + ", "\
-                           + repr(coords) + ", "\
-                           + repr(dims) + ")"\
-                           + ','.join(external_args)
-
-
-                if given_subs and given_subs != element['subs']:
-                    coords_g = utils.make_coord_dict(given_subs,
-                                                 subscript_dict,
-                                                 terse=False)
-                    dims_g = [utils.find_subscript_name(subscript_dict, sub)
-                          for sub in given_subs]
-                else:
-                    # both element have same coordinates or no given coordinates
-                    return "utils.rearrange(" + py_expr + ", "\
-                              + repr(coords_e) + ", "\
-                              + repr(dims_e) + ")"\
-                              + ','.join(external_args) 
-
-                if set(dims_g).issubset(dims_e):
-                    return "utils.rearrange(" + py_expr + ", "\
-                           + repr(coords_e) + ", "\
-                           + repr(dims_e) + ")"\
-                           + ','.join(external_args)
-                elif set(dims_e).issubset(dims_g):
-                    return "utils.rearrange(" + py_expr + ", "\
-                           + repr(coords_g) + ", "\
-                           + repr(dims_g) + ")"\
-                           + ','.join(external_args)
-
+                # compute coords and dims
+                coords = utils.make_coord_dict(given_subs,
+                                             subscript_dict,
+                                             terse=False)
+                dims = [utils.find_subscript_name(subscript_dict, sub)
+                      for sub in given_subs]
+                # re arrange the python object
                 return "utils.rearrange(" + py_expr + ", "\
-                          + repr(coords_g) + ", "\
-                          + repr(dims_g) + ")"\
-                          + ','.join(external_args) 
+                       + repr(coords) + ", "\
+                       + repr(dims) + ")"\
+                       + ','.join(external_args)
+            except (SyntaxError, AssertionError):
+                return ''.join([x.strip(',') for x in vc])
+
+        def visit_lookup_call(self, n, vc):
+            self.kind = 'lookup'
+
+            # The object was given with subscript, will use the subscript to rearrange
+            # if necessary
+            # this would look much simpler and easier moving to an own data class where we can
+            # subset data using expressions like py_name[dim1, dim2]
+
+            # remove function dimensions if they are given
+            name_sub = re.findall("[a-zA-Z\d\s\_]+|\[[\'a-zA-Z,\s]+\]", vc[0])
+            if len(name_sub) == 2:
+                py_expr = name_sub[0] + ''.join(vc[1:])
+                given_subs = literal_eval(name_sub[1])
+                # compute coords and dims
+                coords = utils.make_coord_dict(given_subs,
+                                             subscript_dict,
+                                             terse=False)
+                dims = [utils.find_subscript_name(subscript_dict, sub)
+                      for sub in given_subs]
+                # re arrange the python object
+                return "utils.rearrange(" + py_expr + ", "\
+                       + repr(coords) + ", "\
+                       + repr(dims) + ")"
             else:
                 return ''.join([x.strip(',') for x in vc])
+
 
         def visit_id(self, n, vc):
             return namespace[n.text.strip()]
@@ -1037,9 +1005,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
                 string += '.loc[%s].squeeze().expand_dims(dict([(i,len(j)) for i,j in %s.items()]))'\
                           % (repr(coordinates), repr(coordinates))
             else:
-                string +=  str(["%s" % s.strip('!') for s in subs])
-
-
+                string += str(["%s" % s.strip('!') for s in subs])
             return string
 
 
