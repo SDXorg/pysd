@@ -1527,6 +1527,7 @@ class TestSubscript(unittest.TestCase):
 
         data = pysd.external.ExtSubscript(file_name=file_name,
                                           tab=tab,
+                                          root=_root,
                                           firstcell=firstcell,
                                           lastcell=lastcell,
                                           prefix=prefix)
@@ -1548,6 +1549,7 @@ class TestSubscript(unittest.TestCase):
 
         data = pysd.external.ExtSubscript(file_name=file_name,
                                           tab=tab,
+                                          root=_root,
                                           firstcell=firstcell,
                                           lastcell=lastcell,
                                           prefix=prefix)

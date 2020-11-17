@@ -67,7 +67,7 @@ class TestBuild(TestCase):
         from pysd.py_backend.builder import build
         actual = textwrap.dedent(
             build(elements=[{'kind': 'component',
-                             'subs': [[]],
+                             'subs': [],
                              'doc': '',
                              'py_name': 'stocka',
                              'real_name': 'StockA',
@@ -77,7 +77,7 @@ class TestBuild(TestCase):
                              'unit': '',
                              'arguments': ''},
                             {'kind': 'component',
-                             'subs': [[]],
+                             'subs': '',
                              'doc': 'Provides derivative for stocka function',
                              'py_name': '_dstocka_dt',
                              'real_name': 'Implicit',
@@ -87,7 +87,7 @@ class TestBuild(TestCase):
                              'lims': '',
                              'arguments': ''},
                             {'kind': 'setup',
-                             'subs': [[]],
+                             'subs': None,
                              'doc': 'Provides initial conditions for stocka function',
                              'py_name': 'init_stocka',
                              'real_name': 'Implicit',
