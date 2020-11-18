@@ -356,14 +356,13 @@ def get_return_elements(return_columns, namespace, subscript_dict):
     for col in return_columns:
         if col[0] == col[-1] and col[0] == '"':
             name = col
-            address = {}
+            address = None
         elif '[' in col:
             name, location = col.strip(']').split('[')
-            subs = [l.strip() for l in location.split(',')]
-            address = make_coord_dict(subs, subscript_dict)
+            address = tuple([l.strip() for l in location.split(',')])
         else:
             name = col
-            address = {}
+            address = None
         
         if name in namespace:
             py_name = namespace[name]
@@ -509,10 +508,11 @@ def get_value_by_insensitive_key_or_value(key, dict):
     return None
 
 # Studying the need for this function
-def rearrange(data, coords, dims):
+def rearrange(data, coords_i, dims):
     """
     Returns a xarray.DataArray object with the given coords and dims
     """
+    coords = {dim: coords_i[dim] for dim in dims}
     if isinstance(data, xr.DataArray):
         dacoords = {coord: list(data.coords[coord].values)
                    for coord in data.coords}

@@ -19,10 +19,8 @@ class TestUtils(TestCase):
                                 {'Dim1': ['Entry 1', 'Entry 2'],
                                  'Dim2': ['Column 1', 'Column 2']}),
             (['inflow_a'],
-             {'Inflow A[Entry 1,Column 1]': ('inflow_a', {'Dim1': ['Entry 1'],
-                                                          'Dim2': ['Column 1']}),
-              'Inflow A[Entry 1,Column 2]': ('inflow_a', {'Dim1': ['Entry 1'],
-                                                          'Dim2': ['Column 2']})}
+             {'Inflow A[Entry 1,Column 1]': ('inflow_a', ('Entry 1', 'Column 1')),
+              'Inflow A[Entry 1,Column 2]': ('inflow_a', ('Entry 1', 'Column 2'))}
              )
         )
 
@@ -36,8 +34,8 @@ class TestUtils(TestCase):
                                 namespace={'Inflow A': 'inflow_a',
                                            'Inflow B': 'inflow_b'}),
             (['inflow_a', 'inflow_b'],
-             {'Inflow A': ('inflow_a', {}),
-              'Inflow B': ('inflow_b', {})}
+             {'Inflow A': ('inflow_a', None),
+              'Inflow B': ('inflow_b', None)}
              )
         )
 
@@ -51,8 +49,8 @@ class TestUtils(TestCase):
                                 namespace={'Inflow A': 'inflow_a',
                                            'Inflow B': 'inflow_b'}),
             (['inflow_a', 'inflow_b'],
-             {'inflow_a': ('inflow_a', {}),
-              'inflow_b': ('inflow_b', {})}
+             {'inflow_a': ('inflow_a', None),
+              'inflow_b': ('inflow_b', None)}
              )
         )
         

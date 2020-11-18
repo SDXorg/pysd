@@ -140,7 +140,7 @@ def build_element(element, subscript_dict):
     """
     if element['kind'] == 'constant':
         cache_type = "@cache('run')"
-    elif element['kind'] == 'component':
+    elif element['kind'] in ['component', 'component_ext_data']:
         cache_type = "@cache('step')"
     elif element['kind'] == 'lookup': 
         # lookups may be called with different values in a round
@@ -160,33 +160,32 @@ def build_element(element, subscript_dict):
                  if "ADD" not in py_expr]
     
     if len(py_expr_n) > 1:
-        contents = 'return utils.xrmerge([%(das)s,])'\
+        contents = 'utils.xrmerge([%(das)s,])'\
                    % {'das': ',\n'.join(py_expr_n)}
     else:
-        if element['kind'] == 'component'\
-          and 'subs' in element\
-          and element['subs'][0] not in ['', [], None]:
-            # up-dimensioning
-            coords = utils.make_coord_dict(element['subs'][0],
-                                         subscript_dict,
-                                         terse=False)
-            dims = [utils.find_subscript_name(subscript_dict, sub)
-                  for sub in element['subs'][0]]
-            # re arrange the python object
-            left_side = 'utils.rearrange('
-            right_side = ', %(coords)s, %(dims)s)' % {'coords': coords, 'dims': dims}
-            if left_side == py_expr_n[0][:len(left_side)]\
-              and  right_side == py_expr_n[0][-len(right_side):]:
-                # avoid double calling
-                contents = 'return %(py_expr)s' % {'py_expr': py_expr_n[0]}
-            else:
-                contents = 'return %(left_side)s %(py_expr)s %(right_side)s'\
-                           % {'py_expr': py_expr_n[0],
-                              'left_side': left_side,
-                              'right_side': right_side}
-        else:
-            contents = 'return %(py_expr)s' % {'py_expr': py_expr_n[0]}
+        contents = '%(py_expr)s' % {'py_expr': py_expr_n[0]}
 
+    if element['kind'] in ['component', 'setup']\
+      and 'subs' in element\
+      and element['subs'][0] not in ['', [], None]:
+        # for up-dimensioning and reordering
+        coords = utils.make_coord_dict(element['subs'][0],
+                                       subscript_dict,
+                                       terse=False)
+        dims = [utils.find_subscript_name(subscript_dict, sub)
+                for sub in element['subs'][0]]
+        # re arrange the python object
+        left_side = 'utils.rearrange('
+        right_side = ', _subscript_dict, %(dims)s)' % {'dims': dims}
+        # we pass the _subscript_dict as in this case the
+        # variable must have all the coords to given dimensions
+        contents = 'return %(left_side)s %(contents)s %(right_side)s'\
+                   % {'contents': contents,
+                      'left_side': left_side,
+                      'right_side': right_side}
+    else:
+        contents = 'return %(contents)s' % {'contents': contents}
+  
     indent = 8
     element.update({'cache': cache_type,
                     'ulines': '-' * len(element['real_name']),

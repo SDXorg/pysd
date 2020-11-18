@@ -1026,6 +1026,10 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             if builder_name in ['get xls constants', 'get direct constants']:
                 self.kind = 'constant'
 
+            # External data
+            if builder_name in ['get xls data', 'get direct data']:
+                self.kind = 'component_ext_data'
+
             if builder_name == 'delay fixed':
                 warnings.warn("Delay fixed only approximates solution, may not give the same "
                               "result as vensim")

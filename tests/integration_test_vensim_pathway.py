@@ -88,7 +88,7 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/game/test_game.mdl')
         assert_frames_close(output, canon, rtol=rtol)
      
-    def test_get_lookups_data_xls(self): 
+    def test_get_lookups_data_3d_xls(self): 
         """
         Test for usage of GET DIRECT/XLS LOOKUPS/DATA from a Excel file
         All the possible combinations of lentgh-wise and different dimensions
@@ -97,8 +97,8 @@ class TestIntegrationExamples(unittest.TestCase):
         """
         from.test_utils import runner, assert_frames_close
         output, canon = runner(
-          'test-models/tests/get_lookups_data_xls/'
-          + 'test_get_lookups_data_xls.mdl'
+          'test-models/tests/get_lookups_data_3d_xls/'
+          + 'test_get_lookups_data_3d_xls.mdl'
         )
         assert_frames_close(output, canon, rtol=rtol)
     def test_get_subscript_3d_arrays_xls(self): 
@@ -363,7 +363,6 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscript_subranges_equal/test_subscript_subrange_equal.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('failling when trying to make flat df due to python dimensions names, the model seems to run okay')
     def test_subscript_switching(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscript_switching/subscript_switching.mdl')
