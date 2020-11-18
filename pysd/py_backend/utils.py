@@ -1,4 +1,3 @@
-import warnings
 import keyword
 import regex as re
 
@@ -304,14 +303,15 @@ def make_add_identifier(identifier, build_names):
     Parameters
     ----------
     string : <basestring>
-        Existing python identifier
+      Existing python identifier
     build_names : <set>
-        Set of the already used identifiers for external objects.
+      Set of the already used identifiers for external objects.
 
     Returns
     -------
     identifier : <string>
-        A vaild python identifier based on the input indentifier and the existing ones
+      A vaild python identifier based on the input indentifier
+      and the existing ones
     """
     identifier += 'ADD_'
     number = 1
@@ -319,7 +319,7 @@ def make_add_identifier(identifier, build_names):
     while identifier + str(number) in build_names:
         number += 1
 
-    #update identifier
+    # update identifier
     identifier += str(number)
 
     # update the build names
@@ -363,7 +363,7 @@ def get_return_elements(return_columns, namespace, subscript_dict):
         else:
             name = col
             address = None
-        
+
         if name in namespace:
             py_name = namespace[name]
         else:
@@ -371,12 +371,12 @@ def get_return_elements(return_columns, namespace, subscript_dict):
                 py_name = name
             else:
                 raise KeyError(name + " not found as model element")
-        
+
         if py_name not in capture_elements:
             capture_elements += [py_name]
 
         return_addresses[col] = (py_name, address)
-            
+
     return list(capture_elements), return_addresses
 
 
@@ -429,11 +429,11 @@ def visit_addresses(frame, return_addresses):
     outdict = dict()
     for real_name, (pyname, address) in return_addresses.items():
         if address:
-           xrval = frame[pyname].loc[address]
-           if xrval.size > 1:
-                   outdict[real_name] = xrval
-           else:
-               outdict[real_name] = float(np.squeeze(xrval.values))
+            xrval = frame[pyname].loc[address]
+            if xrval.size > 1:
+                outdict[real_name] = xrval
+            else:
+                outdict[real_name] = float(np.squeeze(xrval.values))
         else:
             outdict[real_name] = frame[pyname]
 
@@ -445,10 +445,10 @@ def compute_shape(coords, dims, reshape_len=None, py_name=''):
     Computes the 'shape' of a coords dictionary.
     Function used to rearange data in xarrays and
     to compute the number of rows/columns to be read in a file.
-    
+
     Parameters
     ----------
-    coords: dict 
+    coords: dict
       Dictionary of the dimension names as a keys with their
       values.
     dims: list
@@ -456,7 +456,7 @@ def compute_shape(coords, dims, reshape_len=None, py_name=''):
     reshape_len: int (optional)
       Number of dimensions of the output shape.
       The shape will ony compute the corresponent table
-      dimensions to read from Excel, then, the dimensions 
+      dimensions to read from Excel, then, the dimensions
       with length one will be ignored at first.
       Lately, it will complete with 1 on the left of the shape
       if the reshape_len value is bigger than the length of shape.
@@ -464,12 +464,12 @@ def compute_shape(coords, dims, reshape_len=None, py_name=''):
       smaller than the initial shape.
     py_name: str
       Name to print if an error is raised.
-    
+
     Returns
     -------
     shape: list
       Shape of the ordered dictionary or of the desired table or vector
-      
+
     Note
     ----
     Dictionaries in Python >= 3.7 are ordered, which means that
@@ -485,7 +485,7 @@ def compute_shape(coords, dims, reshape_len=None, py_name=''):
     shape = [len(coords[dim]) for dim in dims if len(coords[dim]) > 1]
 
     shape_len = len(shape)
-    
+
     # return an error when the current shape is bigger than the requested one
     if shape_len > reshape_len:
         raise ValueError(py_name + "\n"
@@ -507,7 +507,7 @@ def get_value_by_insensitive_key_or_value(key, dict):
 
     return None
 
-# Studying the need for this function
+
 def rearrange(data, coords_i, dims):
     """
     Returns a xarray.DataArray object with the given coords and dims
@@ -516,17 +516,17 @@ def rearrange(data, coords_i, dims):
     coords = {dim: coords_i[dim] for dim in dims}
     if isinstance(data, xr.DataArray):
         dacoords = {coord: list(data.coords[coord].values)
-                   for coord in data.coords}
+                    for coord in data.coords}
         if data.dims == tuple(dims) and dacoords == coords:
             # If the input data already has the output format
-            # return it. 
+            # return it.
             return data
         if set(data.dims).issubset(dims):
             # The coordinates are expanded or transposed
             return xr.DataArray(0, coords, dims) + data
 
         values = data.values
-   
+
     elif isinstance(data, np.ndarray):
         values = data
     else:
@@ -534,11 +534,11 @@ def rearrange(data, coords_i, dims):
             return xr.DataArray(data=float(data), coords=coords, dims=dims)
         except TypeError:
             values = np.array(data)
-    
+
     reshape_dims = tuple(compute_shape(coords, dims))
     if values.shape == reshape_dims:
         return xr.DataArray(data=values, coords=coords, dims=dims)
- 
+
     if values.size == 1:
         new_data = np.tile(values, reshape_dims)
     elif values.size in reshape_dims:
@@ -557,20 +557,20 @@ def rearrange(data, coords_i, dims):
             raise ValueError("Trying to rearrange a {}".format(type(data))
                              + " with dimensions {}".format(data.shape)
                              + " using the coords {}".format(coords)
-                             + " and dims {}".format(dims) 
+                             + " and dims {}".format(dims)
                              + "\nBut any change could be made..."
                              + "\n Input data:", data)
 
     return xr.DataArray(data=new_data, coords=coords, dims=dims)
 
-    
+
 def round(x):
     """
     Redefinition of round function with try except
     """
     try:
         return round(x)
-    except:
+    except Exception:
         return x
 
 
@@ -596,3 +596,4 @@ def add_entries_underscore(*dictionaries):
         for name in keys:
             dictionary[re.sub(' ', '_', name)] = dictionary[name]
     return
+

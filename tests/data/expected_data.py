@@ -8,7 +8,8 @@ dims_1d = ['val']
 coords_2d = {'ABC': ['A', 'B', 'C'], 'val': [0, 1, 2, 3, 5, 6, 7, 8]}
 dims_2d = ['ABC', 'val']
 
-coords_3d = {'ABC': ['A', 'B', 'C'], 'val': [0, 1, 2, 3, 5, 6, 7, 8], 'XY': ['X', 'Y']}
+coords_3d = {'ABC': ['A', 'B', 'C'], 'val': [0, 1, 2, 3, 5, 6, 7, 8],
+             'XY': ['X', 'Y']}
 dims_3d = ['ABC', 'XY', 'val']
 
 constant_1d = [0, 0, 1, 1, -1, -1, 0, 0]
@@ -29,7 +30,7 @@ constant_1d = xr.DataArray(constant_1d, coords_1d, dims_1d)
 constant_2d = xr.DataArray(constant_2d, coords_2d, dims_2d)
 constant_3d = xr.DataArray(constant_3d, coords_3d, dims_3d)
 
-# lookup/data 
+# lookup/data
 
 coords_1dl = {'ABC': ['A', 'B', 'C']}
 dims_1dl = ['ABC']
@@ -59,16 +60,16 @@ backward_1d = [
     0, 0,
     1, 1,
     1, 1, 1, 1,
-    -1, -1, 
     -1, -1,
-     0, 0,
-     0, 0
+    -1, -1,
+    0, 0,
+    0, 0
 ]
 
 forward_1d = [
     0, 0,
     0, 0,
-    1, 1, 
+    1, 1,
     1, 1,
     -1, -1, -1, -1,
     -1, -1,
@@ -166,7 +167,6 @@ backward_2d = [xr.DataArray(data, coords_1dl, dims_1dl)
 
 forward_2d = [xr.DataArray(data, coords_1dl, dims_1dl)
               for data in forward_2dl]
-              
 
 
 # 3d lookup/data
@@ -246,5 +246,4 @@ backward_3d = [xr.DataArray(data, coords_2dl, dims_2dl)
 
 forward_3d = [xr.DataArray(data, coords_2dl, dims_2dl)
               for data in forward_3dl]
-
 

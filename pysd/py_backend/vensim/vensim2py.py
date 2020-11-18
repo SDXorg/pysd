@@ -188,22 +188,22 @@ def get_model_elements(model_str):
 def _include_common_grammar(source_grammar):
     common_grammar = r"""
     name = basic_id / escape_group
-    
+
     # This takes care of models with Unicode variable names
     basic_id = id_start id_continue*
-    
+
     id_start = ~r"[\w]"IU
     id_continue = id_start / ~r"[0-9\'\$\s\_]"
 
     # between quotes, either escaped quote or character that is not a quote
     escape_group = "\"" ( "\\\"" / ~r"[^\"]" )* "\""
-    
+
     _ = ~r"[\s\\]*"  # whitespace character
     """
 
     return r"""
     {source_grammar}
-    
+
     {common_grammar}
     """.format(source_grammar=source_grammar, common_grammar=common_grammar)
 
@@ -239,7 +239,7 @@ def get_equation_components(equation_str, root_path=None):
         - *lookup* - a lookup table
         - *subdef* - a subscript definition
         - *data* -  a data variable
-    
+
     keyword: basestring or None
 
     Examples
@@ -274,7 +274,7 @@ def get_equation_components(equation_str, root_path=None):
     string = "\'" ( "\\\'" / ~r"[^\']"IU )* "\'"
     """
     )
-    
+
     # replace any amount of whitespace  with a single space
     equation_str = equation_str.replace('\\t', ' ')
     equation_str = re.sub(r"\s+", ' ', equation_str)
@@ -654,7 +654,7 @@ builders = {
 }
 
 # direct and xls methods are identically implemented in PySD
-builders['get direct data'] = builders['get xls data'] 
+builders['get direct data'] = builders['get xls data']
 builders['get direct lookups'] = builders['get xls lookups']
 builders['get direct constants'] = builders['get xls constants']
 
@@ -729,8 +729,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
         subscript_dict = {}
 
     in_ops = {
-        "+": "+", "-": "-", "*": "*", "/": "/", "^": "**", "=": "==", "<=": "<=", "<>": "!=",
-        "<": "<", ">=": ">=", ">": ">",
+        "+": "+", "-": "-", "*": "*", "/": "/", "^": "**", "=": "==",
+        "<=": "<=", "<>": "!=", "<": "<", ">=": ">=", ">": ">",
         ":and:": " & ", ":or:": " | "}  # spaces perhaps important?
 
     pre_ops = {
@@ -755,13 +755,13 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
     expr = _ pre_oper? _ (lookup_def / build_call / macro_call / call / lookup_call / parens / number / string / reference) _ (in_oper _ expr)?
 
     lookup_def = lookup_with_def / lookup_regular_def
-    lookup_regular_def = range? _ ( "(" _ number _ "," _ number _ ")" _ ","? _ )+ 
+    lookup_regular_def = range? _ ( "(" _ number _ "," _ number _ ")" _ ","? _ )+
     number = ("+"/"-")? ~r"\d+\.?\d*(e[+-]\d+)?"
 	range = _ "[" ~r"[^\]]*" "]" _ ","
     lookup_with_def = ~r"(WITH\ LOOKUP)"I _ "(" _ expr _ "," _ "(" _  ("[" ~r"[^\]]*" "]" _ ",")?  ( "(" _ expr _ "," _ expr _ ")" _ ","? _ )+ _ ")" _ ")"
     lookup_call = lookup_call_subs _ "(" _ (expr _ ","? _)* ")"  # these don't need their args parsed...
     lookup_call_subs = id _ subscript_list?
-    
+
     param = (expr)+
 
     call = func _ "(" _ (param _ ","? _)* ")"  # these don't need their args parsed...
@@ -773,13 +773,13 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
 
     reference = id _ subscript_list?
     subscript_list = "[" _ ~"\""? _ ((sub_name / sub_element) _ ~"\""? _ "!"? _ ","? _)+ _ "]"
-    
-    
+
+
     array = (number _ ("," / ";")? _)+ !~r"."  # negative lookahead for anything other than an array
     string = "\'" ( "\\\'" / ~r"[^\']"IU )* "\'"
 
     id = ( basic_id / escape_group )
-    
+
     sub_name = ~r"(%(sub_names)s)"IU  # subscript names (if none, use non-printable character)
     sub_element = ~r"(%(sub_elems)s)"IU  # subscript elements (if none, use non-printable character)
 
@@ -805,15 +805,17 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
     parser = parsimonious.Grammar(expression_grammar)
 
     class ExpressionParser(parsimonious.NodeVisitor):
-        # Todo: at some point, we could make the 'kind' identification recursive on expression,
-        # so that if an expression is passed into a builder function, the information
-        # about whether it is a constant, or calls another function, goes with it.
+        # TODO: at some point, we could make the 'kind' identification
+        # recursive on expression, so that if an expression is passed into
+        # a builder function, the information  about whether it is a constant,
+        # or calls another function, goes with it.
+
         def __init__(self, ast):
             self.translation = ""
-            self.subs = None # the subscript list if given
-            self.lookup_subs = [] # the subscript list if given
-            self.apply_dim = set() # the dimensions with ! if given
-            self.kind = 'constant'  # change if we reference anything else
+            self.subs = None  # the subscript list if given
+            self.lookup_subs = []  # the subscript list if given
+            self.apply_dim = set()  # the dimensions with ! if given
+            self.kind = 'constant'   # change if we reference anything else
             self.new_structure = []
             self.arguments = None
             self.in_oper = None
@@ -828,13 +830,13 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             s = ''.join(filter(None, vc)).strip()
             self.translation = s
             return s
-        
+
         def visit_param(self, n, vc):
             s = ''.join(filter(None, vc)).strip()
             self.translation = s
             self.args.append(s)
             return s
-            
+
         def visit_call(self, n, vc):
             self.kind = 'component'
 
@@ -848,7 +850,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
                 arguments += ["dim="+str(tuple(self.apply_dim))]
                 self.apply_dim = set()
 
-            return builder.build_function_call(functions[function_name], arguments)
+            return builder.build_function_call(functions[function_name],
+                                               arguments)
 
         def visit_in_oper(self, n, vc):
             return in_ops[n.text.lower()]
@@ -869,8 +872,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
 
             if self.subs:
                 coords = utils.make_coord_dict(self.subs,
-                                             subscript_dict,
-                                             terse=False)
+                                               subscript_dict,
+                                               terse=False)
                 dims = [utils.find_subscript_name(subscript_dict, sub)
                         for sub in self.subs]
                 self.subs = None
@@ -882,7 +885,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
 
         def visit_lookup_call_subs(self, n, vc):
             # needed to avoid doing the rearrange in the lookup arguments
-            # lookup_subs list makes possible to work with lookups inside lookups
+            # lookup_subs list makes possible to work with
+            # lookups inside lookups
             if self.subs:
                 self.subs = None
                 self.lookup_subs.append(self.subs)
@@ -968,25 +972,28 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             subs = [x.strip() for x in refs.split(',')]
             coordinates = utils.make_coord_dict(subs, subscript_dict)
 
-            # Implements basic "!" subscript functionality in Vensim. Does NOT work for matrix diagonals in
+            # Implements basic "!" subscript functionality in Vensim.
+            # Does NOT work for matrix diagonals in
             # FUNC(variable[sub1!,sub1!]) functions
-            self.apply_dim.update(["%s" % s.strip('!') for s in subs if s[-1] == '!'])
+            self.apply_dim.update(["%s" % s.strip('!') for s in subs
+                                   if s[-1] == '!'])
 
             if len(coordinates):
-                return '.loc[%s].squeeze().expand_dims(dict([(i,len(j)) for i,j in %s.items()]))'\
-                          % (repr(coordinates), repr(coordinates))
+                return '.loc[%s].squeeze().expand_dims(dict([(i,len(j))'\
+                       'for i,j in %s.items()]))'\
+                       % (repr(coordinates), repr(coordinates))
 
             self.subs = ["%s" % s.strip('!') for s in subs]
 
             return ""
-
 
         def visit_build_call(self, n, vc):
             call = vc[0]
             arglist = vc[4]
             self.kind = 'component'
             builder_name = call.strip().lower()
-            name, structure = builders[builder_name](element, subscript_dict, arglist)     
+            name, structure = builders[builder_name](element, subscript_dict,
+                                                     arglist)
 
             self.new_structure += structure
 
@@ -1003,8 +1010,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
                 self.kind = 'component_ext_data'
 
             if builder_name == 'delay fixed':
-                warnings.warn("Delay fixed only approximates solution, may not give the same "
-                              "result as vensim")
+                warnings.warn("Delay fixed only approximates solution,"
+                              " may not give the same result as vensim")
 
             return name
 
@@ -1048,8 +1055,8 @@ def parse_lookup_expression(element, subscript_dict):
 
     lookup_grammar = r"""
     lookup = _ "(" _ (regularLookup / excelLookup) _ ")"
-    regularLookup = range? _ ( "(" _ number _ "," _ number _ ")" _ ","? _ )+ 
-    excelLookup = ~"GET( |_)(XLS|DIRECT)( |_)LOOKUPS"I _ "(" _ args (_ "," _ args)* _ ")"  
+    regularLookup = range? _ ( "(" _ number _ "," _ number _ ")" _ ","? _ )+
+    excelLookup = ~"GET( |_)(XLS|DIRECT)( |_)LOOKUPS"I _ "(" _ args (_ "," _ args)* _ ")"
     args = ~r"[^,()]*"
     number = ("+"/"-")? ~r"\d+\.?\d*(e[+-]\d+)?"
     _ =  ~r"[\s\\]*" #~r"[\ \t\n]*" #~r"[\s\\]*"  # whitespace character
@@ -1081,13 +1088,13 @@ def parse_lookup_expression(element, subscript_dict):
             self.translation = string
 
         def visit_excelLookup(self, n, vc):
-            
+
             source = vc[4]
             _, name, col, cell = [i.strip() for i in vc[5].split(',')]
             args = [source, name, col, cell]
-            
+
             trans, structure = builders["get xls lookups"](element, subscript_dict, args)
-            
+
             self.translation = trans
             self.new_structure += structure
 
@@ -1143,12 +1150,12 @@ def translate_section(section, macro_list, root_path):
                                                                   macro_list=macro_list)
             element.update(translation)
             model_elements += new_structure
-        
+
         elif element['kind'] == 'lookup':
-            translation, new_structure = parse_lookup_expression(element, subscript_dict)        
+            translation, new_structure = parse_lookup_expression(element, subscript_dict)
             element.update(translation)
             model_elements += new_structure
-            
+
     # send the pieces to be built
     build_elements = [e for e in model_elements if e['kind'] not in ['subdef', 'test', 'section']]
     builder.build(build_elements,
@@ -1204,3 +1211,4 @@ def translate_vensim(mdl_file):
         translate_section(section, macro_list, root_path)
 
     return outfile_name
+

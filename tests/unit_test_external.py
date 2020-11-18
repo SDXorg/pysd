@@ -9,6 +9,7 @@ _root = os.path.dirname(__file__)
 _py_version = sys.version_info[0]*10 + sys.version_info[1]
 _exp = imp.load_source('expected_data', 'data/expected_data.py')
 
+
 class TestExcels(unittest.TestCase):
     """
     Tests for Excels class
@@ -40,7 +41,7 @@ class TestExcels(unittest.TestCase):
                          [])
 
     @unittest.skipIf(_py_version < 36,
-                     "openpyxl only supported for Python >= 3.6")       
+                     "openpyxl only supported for Python >= 3.6")
     def test_read_clean_opyxl(self):
         """
         Test for reading files with openpyxl
@@ -62,11 +63,10 @@ class TestExcels(unittest.TestCase):
         self.assertEqual(list(pysd.external.Excels._Excels_opyxl),
                          [file_name])
 
-        # clean                
+        # clean
         pysd.external.Excels.clean()
         self.assertEqual(list(pysd.external.Excels._Excels_opyxl),
-                         [])     
-
+                         [])
 
 
 class TestExternalMethods(unittest.TestCase):
@@ -89,10 +89,10 @@ class TestExternalMethods(unittest.TestCase):
         self.assertEqual(col_to_num("a"), col_to_num("B")-1)
         self.assertEqual(col_to_num("Z"), col_to_num("aa")-1)
         self.assertEqual(col_to_num("Zz"), col_to_num("AaA")-1)
-        
+
         cols = ["A", "AA", "AAA", "Z", "ZZ", "ZZZ",
                 "N", "WB", "ASJ", "K", "HG", "BTF"]
-               
+
         # Check num_to_col inverts col_to_num
         for col in cols:
             self.assertEqual(num_to_col(col_to_num(col)), col)
@@ -104,17 +104,17 @@ class TestExternalMethods(unittest.TestCase):
         import pysd
 
         split_excel_cell = pysd.external.External._split_excel_cell
-        
+
         # No cells, function must return nothing
         nocells = ["A2A", "H0", "0", "5A", "A_1", "ZZZZ1", "A"]
-        
+
         for nocell in nocells:
             self.assertFalse(split_excel_cell(nocell))
-        
+
         # Cells
         cells = [(2, "A", "A2"), (574, "h", "h574"),
                  (2, "Va", "Va2"), (2, "ABA", "ABA2")]
-  
+
         for row, col, cell in cells:
             self.assertEqual((row, col), split_excel_cell(cell))
 
@@ -127,24 +127,24 @@ class TestExternalMethods(unittest.TestCase):
         import pandas as pd
 
         reshape = pysd.external.External._reshape
-        
+
         data1d = np.array([2, 3, 5, 6])
         data2d = np.array([[2, 3, 5, 6],
                            [1, 7, 5, 8]])
-                           
+
         series1d = pd.Series(data1d)
         df2d = pd.DataFrame(data2d)
 
         shapes1d = [(4,), (4, 1, 1), (1, 1, 4), (1, 4, 1)]
         shapes2d = [(2, 4), (2, 4, 1), (1, 2, 4), (2, 1, 4)]
-        
+
         for shape_i in shapes1d:
             self.assertEqual(reshape(data1d, shape_i).shape, shape_i)
             self.assertEqual(reshape(series1d, shape_i).shape, shape_i)
-        
+
         for shape_i in shapes2d:
             self.assertEqual(reshape(data2d, shape_i).shape, shape_i)
-            self.assertEqual(reshape(df2d, shape_i).shape, shape_i)              
+            self.assertEqual(reshape(df2d, shape_i).shape, shape_i)
 
     def test_series_selector(self):
         """
@@ -162,23 +162,23 @@ class TestExternalMethods(unittest.TestCase):
         self.assertEqual(series_selector("A", "AC44"), "column")
         self.assertEqual(series_selector("A", "Bae2"), "column")
 
-        # name selector    
+        # name selector
         self.assertEqual(series_selector("Att", "a44b"), "name")
         self.assertEqual(series_selector("Adfs", "a0"), "name")
         self.assertEqual(series_selector("Ae_23", "aa_44"), "name")
         self.assertEqual(series_selector("Aeee3", "3a"), "name")
         self.assertEqual(series_selector("Aeee", "aajh2"), "name")
 
-                    
+
 class TestData(unittest.TestCase):
     """
     Test for the full working procedure of ExtData
     class when the data is properly given in the Excel file
     For 1D data all cases are computed.
-    For 2D, 3D only some cases are computed as the complete set of 
+    For 2D, 3D only some cases are computed as the complete set of
     test will cover all the possibilities.
     """
-    
+
     # The first two test are for length 0 series and only the retrieved data is
     # calculated as the interpolation result will be constant
     def test_data_interp_h1d_1(self):
@@ -209,12 +209,14 @@ class TestData(unittest.TestCase):
                                      py_name=py_name)
 
         data.initialize()
-        
+
         # test the __str__ method
         print(data)
 
-        self.assertTrue(data.data.equals(xr.DataArray([5],{'time':[4]},['time'])))
-        
+        expected = xr.DataArray([5], {'time': [4]}, ['time'])
+
+        self.assertTrue(data.data.equals(expected))
+
     @unittest.skipIf(_py_version < 36,
                      "openpyxl only supported for Python >= 3.6")
     def test_data_interp_hn1d_1(self):
@@ -245,8 +247,10 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        self.assertTrue(data.data.equals(xr.DataArray([5],{'time':[4]},['time'])))
-            
+        expected = xr.DataArray([5], {'time': [4]}, ['time'])
+
+        self.assertTrue(data.data.equals(expected))
+
     def test_data_interp_h1d(self):
         """
         ExtData test for 1d horizontal series interpolation
@@ -338,7 +342,7 @@ class TestData(unittest.TestCase):
 
         for x, y in zip(_exp.xpts, _exp.interp_1d):
             self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
-            
+
     @unittest.skipIf(_py_version < 36,
                      "openpyxl only supported for Python >= 3.6")
     def test_data_interp_vn1d(self):
@@ -399,8 +403,8 @@ class TestData(unittest.TestCase):
         data.initialize()
 
         for x, y in zip(_exp.xpts, _exp.forward_1d):
-           self.assertEqual(y, data(x), "Wrong result at X=" + str(x)) 
- 
+            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+
     def test_data_forward_v1d(self):
         """
         ExtData test for 1d vertical series look forward
@@ -429,7 +433,7 @@ class TestData(unittest.TestCase):
         data.initialize()
 
         for x, y in zip(_exp.xpts, _exp.forward_1d):
-           self.assertEqual(y, data(x), "Wrong result at X=" + str(x)) 
+            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
     @unittest.skipIf(_py_version < 36,
                      "openpyxl only supported for Python >= 3.6")
@@ -461,7 +465,7 @@ class TestData(unittest.TestCase):
         data.initialize()
 
         for x, y in zip(_exp.xpts, _exp.forward_1d):
-           self.assertEqual(y, data(x), "Wrong result at X=" + str(x)) 
+            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
     @unittest.skipIf(_py_version < 36,
                      "openpyxl only supported for Python >= 3.6")
@@ -493,8 +497,8 @@ class TestData(unittest.TestCase):
         data.initialize()
 
         for x, y in zip(_exp.xpts, _exp.forward_1d):
-           self.assertEqual(y, data(x), "Wrong result at X=" + str(x)) 
- 
+            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+
     def test_data_backward_h1d(self):
         """
         ExtData test for 1d horizontal series hold backward
@@ -523,8 +527,8 @@ class TestData(unittest.TestCase):
         data.initialize()
 
         for x, y in zip(_exp.xpts, _exp.backward_1d):
-           self.assertEqual(y, data(x), "Wrong result at X=" + str(x)) 
-  
+            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+
     def test_data_backward_v1d(self):
         """
         ExtData test for 1d vertical series hold backward by cell range names
@@ -553,7 +557,7 @@ class TestData(unittest.TestCase):
         data.initialize()
 
         for x, y in zip(_exp.xpts, _exp.backward_1d):
-           self.assertEqual(y, data(x), "Wrong result at X=" + str(x)) 
+            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
     @unittest.skipIf(_py_version < 36,
                      "openpyxl only supported for Python >= 3.6")
@@ -585,7 +589,7 @@ class TestData(unittest.TestCase):
         data.initialize()
 
         for x, y in zip(_exp.xpts, _exp.backward_1d):
-           self.assertEqual(y, data(x), "Wrong result at X=" + str(x)) 
+            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
     @unittest.skipIf(_py_version < 36,
                      "openpyxl only supported for Python >= 3.6")
@@ -617,7 +621,7 @@ class TestData(unittest.TestCase):
         data.initialize()
 
         for x, y in zip(_exp.xpts, _exp.backward_1d):
-           self.assertEqual(y, data(x), "Wrong result at X=" + str(x)) 
+            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
     @unittest.skipIf(_py_version < 36,
                      "openpyxl only supported for Python >= 3.6")
@@ -649,7 +653,7 @@ class TestData(unittest.TestCase):
         data.initialize()
 
         for x, y in zip(_exp.xpts, _exp.interp_2d):
-           self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
+            self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
 
     @unittest.skipIf(_py_version < 36,
                      "openpyxl only supported for Python >= 3.6")
@@ -681,7 +685,7 @@ class TestData(unittest.TestCase):
         data.initialize()
 
         for x, y in zip(_exp.xpts, _exp.forward_2d):
-           self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
+            self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
 
     def test_data_backward_v2d(self):
         """
@@ -711,7 +715,7 @@ class TestData(unittest.TestCase):
         data.initialize()
 
         for x, y in zip(_exp.xpts, _exp.backward_2d):
-           self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
+            self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
 
     def test_data_interp_h3d(self):
         """
@@ -724,8 +728,8 @@ class TestData(unittest.TestCase):
         time_row_or_col = "4"
         cell_1 = "C5"
         cell_2 = "C8"
-        coords_1 = {'ABC': ['A', 'B', 'C'], 'XY':['X']}
-        coords_2 = {'ABC': ['A', 'B', 'C'], 'XY':['Y']}
+        coords_1 = {'ABC': ['A', 'B', 'C'], 'XY': ['X']}
+        coords_2 = {'ABC': ['A', 'B', 'C'], 'XY': ['Y']}
         dims = ['XY', 'ABC']
         interp = None
         py_name = "test_data_interp_h3d"
@@ -739,7 +743,7 @@ class TestData(unittest.TestCase):
                                      dims=dims,
                                      interp=interp,
                                      py_name=py_name)
-        
+
         data.add(file_name=file_name,
                  tab=tab,
                  time_row_or_col=time_row_or_col,
@@ -752,7 +756,7 @@ class TestData(unittest.TestCase):
         data.initialize()
 
         for x, y in zip(_exp.xpts, _exp.interp_3d):
-           self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
+            self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
 
     def test_data_forward_v3d(self):
         """
@@ -765,8 +769,8 @@ class TestData(unittest.TestCase):
         time_row_or_col = "B"
         cell_1 = "C5"
         cell_2 = "F5"
-        coords_1 = {'ABC': ['A', 'B', 'C'], 'XY':['X']}
-        coords_2 = {'ABC': ['A', 'B', 'C'], 'XY':['Y']}
+        coords_1 = {'ABC': ['A', 'B', 'C'], 'XY': ['X']}
+        coords_2 = {'ABC': ['A', 'B', 'C'], 'XY': ['Y']}
         dims = ['XY', 'ABC']
         interp = "look forward"
         py_name = "test_data_forward_v3d"
@@ -780,7 +784,7 @@ class TestData(unittest.TestCase):
                                      dims=dims,
                                      interp=interp,
                                      py_name=py_name)
-        
+
         data.add(file_name=file_name,
                  tab=tab,
                  time_row_or_col=time_row_or_col,
@@ -793,8 +797,7 @@ class TestData(unittest.TestCase):
         data.initialize()
 
         for x, y in zip(_exp.xpts, _exp.forward_3d):
-           self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
-
+            self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
 
     @unittest.skipIf(_py_version < 36,
                      "openpyxl only supported for Python >= 3.6")
@@ -809,8 +812,8 @@ class TestData(unittest.TestCase):
         time_row_or_col = "time"
         cell_1 = "data_2d"
         cell_2 = "data_2db"
-        coords_1 = {'ABC': ['A', 'B', 'C'], 'XY':['X']}
-        coords_2 = {'ABC': ['A', 'B', 'C'], 'XY':['Y']}
+        coords_1 = {'ABC': ['A', 'B', 'C'], 'XY': ['X']}
+        coords_2 = {'ABC': ['A', 'B', 'C'], 'XY': ['Y']}
         dims = ['XY', 'ABC']
         interp = "hold backward"
         py_name = "test_data_backward_hn3d"
@@ -824,7 +827,7 @@ class TestData(unittest.TestCase):
                                      dims=dims,
                                      interp=interp,
                                      py_name=py_name)
-        
+
         data.add(file_name=file_name,
                  tab=tab,
                  time_row_or_col=time_row_or_col,
@@ -837,7 +840,7 @@ class TestData(unittest.TestCase):
         data.initialize()
 
         for x, y in zip(_exp.xpts, _exp.backward_3d):
-           self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
+            self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
 
     def test_data_raw_h1d(self):
         """
@@ -867,20 +870,20 @@ class TestData(unittest.TestCase):
         data.initialize()
 
         for x, y in zip(_exp.xpts, _exp.raw_1d):
-           data_x = data(x)
-           if np.isnan(y):
-               equal = np.isnan(data_x)
-           else:
-               equal = y == data_x
-           self.assertTrue(equal, "Wrong result at X=" + str(x)) 
- 
- 
+            data_x = data(x)
+            if np.isnan(y):
+                equal = np.isnan(data_x)
+            else:
+                equal = y == data_x
+            self.assertTrue(equal, "Wrong result at X=" + str(x))
+
+
 class TestLookup(unittest.TestCase):
     """
     Test for the full working procedure of ExtLookup
     class when the data is properly given in the Excel file
     For 1D data for all cases are computed.
-    For 2D, 3D only some cases are computed as the complete set of 
+    For 2D, 3D only some cases are computed as the complete set of
     test will cover all the possibilities.
     """
 
@@ -1015,13 +1018,13 @@ class TestLookup(unittest.TestCase):
         py_name = "test_lookup_h2d"
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                     tab=tab,
-                                     x_row_or_col=x_row_or_col,
-                                     root=_root,
-                                     cell=cell,
-                                     coords=coords,
-                                     dims=dims,
-                                     py_name=py_name)
+                                       tab=tab,
+                                       x_row_or_col=x_row_or_col,
+                                       root=_root,
+                                       cell=cell,
+                                       coords=coords,
+                                       dims=dims,
+                                       py_name=py_name)
 
         data.initialize()
 
@@ -1041,8 +1044,8 @@ class TestLookup(unittest.TestCase):
         x_row_or_col = "time"
         cell_1 = "data_2d"
         cell_2 = "data_2db"
-        coords_1 = {'ABC': ['A', 'B', 'C'], 'XY':['X']}
-        coords_2 = {'ABC': ['A', 'B', 'C'], 'XY':['Y']}
+        coords_1 = {'ABC': ['A', 'B', 'C'], 'XY': ['X']}
+        coords_2 = {'ABC': ['A', 'B', 'C'], 'XY': ['Y']}
         dims = ['XY', 'ABC']
         py_name = "test_lookup_vn3d"
 
@@ -1054,7 +1057,7 @@ class TestLookup(unittest.TestCase):
                                        coords=coords_1,
                                        dims=dims,
                                        py_name=py_name)
-        
+
         data.add(file_name=file_name,
                  tab=tab,
                  x_row_or_col=x_row_or_col,
@@ -1066,7 +1069,7 @@ class TestLookup(unittest.TestCase):
         data.initialize()
 
         for x, y in zip(_exp.xpts, _exp.interp_3d):
-           self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
+            self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
 
 
 class TestConstant(unittest.TestCase):
@@ -1147,7 +1150,7 @@ class TestConstant(unittest.TestCase):
 
         self.assertEqual(data(), -1)
         self.assertEqual(data2(), 0)
-      
+
     def test_constant_h1d(self):
         """
         ExtConstant test for horizontal 1d data
@@ -1374,7 +1377,7 @@ class TestConstant(unittest.TestCase):
                                          coords=coords,
                                          dims=dims,
                                          py_name=py_name)
-        
+
         data.add(file_name=file_name,
                  tab=tab,
                  root=_root,
@@ -1412,7 +1415,7 @@ class TestConstant(unittest.TestCase):
                                          coords=coords,
                                          dims=dims,
                                          py_name=py_name)
-        
+
         data.add(file_name=file_name,
                  tab=tab,
                  root=_root,
@@ -1452,7 +1455,7 @@ class TestConstant(unittest.TestCase):
                                          coords=coords,
                                          dims=dims,
                                          py_name=py_name)
-        
+
         data.add(file_name=file_name,
                  tab=tab,
                  root=_root,
@@ -1492,7 +1495,7 @@ class TestConstant(unittest.TestCase):
                                          coords=coords,
                                          dims=dims,
                                          py_name=py_name)
-        
+
         data.add(file_name=file_name,
                  tab=tab,
                  root=_root,
@@ -1522,7 +1525,7 @@ class TestSubscript(unittest.TestCase):
         firstcell = "C4"
         lastcell = "J4"
         prefix = 'val'
-        expected = ['val0', 'val1', 'val2', 'val3', 
+        expected = ['val0', 'val1', 'val2', 'val3',
                     'val5', 'val6', 'val7', 'val8']
 
         data = pysd.external.ExtSubscript(file_name=file_name,
@@ -1561,7 +1564,7 @@ class TestWarningsErrors(unittest.TestCase):
     """
     Test for the warnings and errors of External and its subclasses
     """
-    
+
     def test_not_implemented_file(self):
         """
         Test for not implemented file
@@ -1586,7 +1589,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      dims=dims,
                                      interp=interp,
                                      py_name=py_name)
-                                     
+
         with self.assertRaises(NotImplementedError):
             data.initialize()
 
@@ -1614,7 +1617,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      dims=dims,
                                      interp=interp,
                                      py_name=py_name)
-                                     
+
         with self.assertRaises(IOError):
             data.initialize()
 
@@ -1644,7 +1647,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      dims=dims,
                                      interp=interp,
                                      py_name=py_name)
-                                     
+
         with self.assertRaises(ValueError):
             data.initialize()
 
@@ -1674,10 +1677,10 @@ class TestWarningsErrors(unittest.TestCase):
                                      dims=dims,
                                      interp=interp,
                                      py_name=py_name)
-                                     
+
         with self.assertRaises(AttributeError):
             data.initialize()
-  
+
     @unittest.skipIf(_py_version < 36,
                      "openpyxl only supported for Python >= 3.6")
     def test_non_existent_cellrange_name_in_sheet_pyxl(self):
@@ -1700,17 +1703,19 @@ class TestWarningsErrors(unittest.TestCase):
                                          coords=coords,
                                          dims=dims,
                                          py_name=py_name)
-                                     
+
         with self.assertRaises(AttributeError):
             data.initialize()
+
     @unittest.skipIf(_py_version >= 36,
                      "openpyxl only supported for Python >= 3.6")
     def test_not_able_to_import_openpyxl(self):
         """
-        Test for the warining raised after trying to import openpyxl in Python < 3.6
+        Test for the warining raised after trying to import openpyxl
+        in Python < 3.6
         """
         from warnings import catch_warnings
-        
+
         with catch_warnings(record=True) as w:
             from pysd import external
             self.assertEqual(len(w), 1)
@@ -1719,7 +1724,7 @@ class TestWarningsErrors(unittest.TestCase):
 
     # Following test are for ExtData class only
     # as the initialization of ExtLookup uses the same function
-    
+
     @unittest.skipIf(_py_version < 36,
                      "more warnings are arised for Python < 3.6")
     def test_data_interp_h1dm(self):
@@ -1758,7 +1763,6 @@ class TestWarningsErrors(unittest.TestCase):
         for x, y in zip(_exp.xpts, _exp.interp_1d):
             self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
-
     @unittest.skipIf(_py_version < 36,
                      "more warnings are arised for Python < 3.6")
     def test_data_interp_v1dm(self):
@@ -1789,15 +1793,15 @@ class TestWarningsErrors(unittest.TestCase):
 
         with catch_warnings(record=True) as w:
             data.initialize()
-            self.assertEqual(len(w), 1)       
+            self.assertEqual(len(w), 1)
             self.assertTrue(issubclass(w[-1].category, UserWarning))
             self.assertTrue("missing" in str(w[-1].message))
 
         for x, y in zip(_exp.xpts, _exp.interp_1d):
             self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
- 
+
     @unittest.skipIf(_py_version < 36,
-                     "openpyxl only supported for Python >= 3.6")      
+                     "openpyxl only supported for Python >= 3.6")
     def test_data_interp_hn1dm(self):
         """
         Test for warning 1d horizontal series by cellrange names
@@ -1827,7 +1831,7 @@ class TestWarningsErrors(unittest.TestCase):
 
         with catch_warnings(record=True) as w:
             data.initialize()
-            self.assertEqual(len(w), 1)       
+            self.assertEqual(len(w), 1)
             self.assertTrue(issubclass(w[-1].category, UserWarning))
             self.assertTrue("missing" in str(w[-1].message))
 
@@ -1887,13 +1891,11 @@ class TestWarningsErrors(unittest.TestCase):
                                      interp=interp,
                                      py_name=py_name)
 
-        
         with self.assertRaises(ValueError):
             data.initialize()
- 
- 
+
     @unittest.skipIf(_py_version < 36,
-                     "openpyxl only supported for Python >= 3.6")      
+                     "openpyxl only supported for Python >= 3.6")
     def test_data_interp_hn1d0(self):
         """
         Test for error in series by cellrange names
@@ -1924,7 +1926,7 @@ class TestWarningsErrors(unittest.TestCase):
             data.initialize()
 
     @unittest.skipIf(_py_version < 36,
-                     "openpyxl only supported for Python >= 3.6")      
+                     "openpyxl only supported for Python >= 3.6")
     def test_data_interp_hn1dt(self):
         """
         Test for error in series by cellrange names
@@ -1953,9 +1955,9 @@ class TestWarningsErrors(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             data.initialize()
-            
+
     @unittest.skipIf(_py_version < 36,
-                     "openpyxl only supported for Python >= 3.6")              
+                     "openpyxl only supported for Python >= 3.6")
     def test_data_interp_hns(self):
         """
         Test for error in data when it doen't have the shame
@@ -1984,9 +1986,9 @@ class TestWarningsErrors(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             data.initialize()
-     
+
     @unittest.skipIf(_py_version < 36,
-                     "openpyxl only supported for Python >= 3.6")              
+                     "openpyxl only supported for Python >= 3.6")
     def test_data_interp_vnss(self):
         """
         Test for error in data when it doen't have the shame
@@ -2018,7 +2020,7 @@ class TestWarningsErrors(unittest.TestCase):
 
     # Following test are independent of the reading option
     @unittest.skipIf(_py_version < 36,
-                     "openpyxl only supported for Python >= 3.6")              
+                     "openpyxl only supported for Python >= 3.6")
     def test_data_interp_hnnm(self):
         """
         Test for error in series when the series is not
@@ -2058,22 +2060,22 @@ class TestWarningsErrors(unittest.TestCase):
         tab = "Horizontal"
         time_row_or_col = "4"
         cell = "C5"
-        coords= {'ABC': ['A', 'B', 'C'], 'XY':['X']}
+        coords = {'ABC': ['A', 'B', 'C'], 'XY': ['X']}
         dims = ['XY', 'ABC']
         interp = "hold forward"
         py_name = "test_data_h3d_interpnv"
 
         with self.assertRaises(ValueError):
-            data = pysd.external.ExtData(file_name=file_name,
-                                         tab=tab,
-                                         time_row_or_col=time_row_or_col,
-                                         root=_root,
-                                         cell=cell,
-                                         coords=coords,
-                                         dims=dims,
-                                         interp=interp,
-                                         py_name=py_name)
-                
+            pysd.external.ExtData(file_name=file_name,
+                                  tab=tab,
+                                  time_row_or_col=time_row_or_col,
+                                  root=_root,
+                                  cell=cell,
+                                  coords=coords,
+                                  dims=dims,
+                                  interp=interp,
+                                  py_name=py_name)
+
     def test_data_h3d_interp(self):
         """
         ExtData test for error when the interpolation method is different
@@ -2085,11 +2087,11 @@ class TestWarningsErrors(unittest.TestCase):
         time_row_or_col = "4"
         cell_1 = "C5"
         cell_2 = "C8"
-        coords_1 = {'ABC': ['A', 'B', 'C'], 'XY':['X']}
-        coords_2 = {'ABC': ['A', 'B', 'C'], 'XY':['Y']}
+        coords_1 = {'ABC': ['A', 'B', 'C'], 'XY': ['X']}
+        coords_2 = {'ABC': ['A', 'B', 'C'], 'XY': ['Y']}
         dims = ['XY', 'ABC']
         interp = None
-        interp2 ="look forward"
+        interp2 = "look forward"
         py_name = "test_data_h3d_interp"
 
         data = pysd.external.ExtData(file_name=file_name,
@@ -2101,7 +2103,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      dims=dims,
                                      interp=interp,
                                      py_name=py_name)
-        
+
         with self.assertRaises(ValueError):
             data.add(file_name=file_name,
                      tab=tab,
@@ -2111,7 +2113,7 @@ class TestWarningsErrors(unittest.TestCase):
                      coords=coords_2,
                      dims=dims,
                      interp=interp2)
-                     
+
     def test_data_h3d_add(self):
         """
         ExtData test for error when add doesn't have the same dim
@@ -2123,8 +2125,8 @@ class TestWarningsErrors(unittest.TestCase):
         time_row_or_col = "4"
         cell_1 = "C5"
         cell_2 = "C8"
-        coords_1 = {'ABC': ['A', 'B', 'C'], 'XY':['X']}
-        coords_2 = {'ABC': ['A', 'B', 'C'], 'XY':['Y']}
+        coords_1 = {'ABC': ['A', 'B', 'C'], 'XY': ['X']}
+        coords_2 = {'ABC': ['A', 'B', 'C'], 'XY': ['Y']}
         dims = ['XY', 'ABC']
         dims2 = ['ABC', 'Xy']
         interp = None
@@ -2139,7 +2141,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      dims=dims,
                                      interp=interp,
                                      py_name=py_name)
-        
+
         with self.assertRaises(ValueError):
             data.add(file_name=file_name,
                      tab=tab,
@@ -2149,7 +2151,6 @@ class TestWarningsErrors(unittest.TestCase):
                      coords=coords_2,
                      dims=dims2,
                      interp=interp)
-
 
     def test_lookup_h3d_add(self):
         """
@@ -2162,8 +2163,8 @@ class TestWarningsErrors(unittest.TestCase):
         x_row_or_col = "4"
         cell_1 = "C5"
         cell_2 = "C8"
-        coords_1 = {'ABC': ['A', 'B', 'C'], 'XY':['X']}
-        coords_2 = {'ABC': ['A', 'B', 'C'], 'XY':['Y']}
+        coords_1 = {'ABC': ['A', 'B', 'C'], 'XY': ['X']}
+        coords_2 = {'ABC': ['A', 'B', 'C'], 'XY': ['Y']}
         dims = ['XY', 'ABC']
         dims2 = ['ABC']
         py_name = "test_lookup_h3d_add"
@@ -2176,7 +2177,7 @@ class TestWarningsErrors(unittest.TestCase):
                                        coords=coords_1,
                                        dims=dims,
                                        py_name=py_name)
-        
+
         with self.assertRaises(ValueError):
             data.add(file_name=file_name,
                      tab=tab,
@@ -2213,7 +2214,7 @@ class TestWarningsErrors(unittest.TestCase):
                                          coords=coords,
                                          dims=dims,
                                          py_name=py_name)
-        
+
         with self.assertRaises(ValueError):
             data.add(file_name=file_name,
                      tab=tab,
@@ -2221,7 +2222,7 @@ class TestWarningsErrors(unittest.TestCase):
                      cell=cell2,
                      coords=coords2,
                      dims=dims2)
-        
+
     def test_lookup_h1d_nf(self):
         """
         Error in ExtLookup when a non 0 dimensional array is passed
@@ -2247,19 +2248,16 @@ class TestWarningsErrors(unittest.TestCase):
                                        py_name=py_name)
 
         data.initialize()
-        
+
         data(np.array([1]))
         data(xr.DataArray([1]))
-        
+
         with self.assertRaises(TypeError):
             data(np.array([1, 2]))
             data(xr.DataArray([1, 1]))
 
-
-            
     @unittest.skipIf(_py_version < 36,
-                     "openpyxl only supported for Python >= 3.6")     
-                              
+                     "openpyxl only supported for Python >= 3.6")
     def test_constant_hns(self):
         """
         Test for error in data when it doen't have the shame
@@ -2272,7 +2270,6 @@ class TestWarningsErrors(unittest.TestCase):
         cell = "data_2d"
         coords = {'ABC': ['A', 'B']}
         dims = ['ABC']
-        interp = None
         py_name = "test_constant_hns"
 
         data = pysd.external.ExtConstant(file_name=file_name,
@@ -2285,5 +2282,4 @@ class TestWarningsErrors(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             data.initialize()
-  
 

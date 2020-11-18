@@ -204,7 +204,7 @@ class Delay(Stateful):
         order = self.order_func()
         if isinstance(order, xr.DataArray):
             order = order.values
-        while isinstance(order, np.ndarray): 
+        while isinstance(order, np.ndarray):
             order = order[0]
         if order != int(order):
             warnings.warn('Casting delay order from %f to %i' % (order, int(order)))
@@ -389,7 +389,7 @@ class Macro(Stateful):
         # Initialize external elements
         for element in self._external_elements:
             element.initialize()
-        
+
         self.components.external.Excels.clean()
 
         # Initialize stateful elements
@@ -996,6 +996,7 @@ def if_then_else(condition, val_if_true, val_if_false):
     # TODO make it work with xarrays
     return np.where(condition, val_if_true, val_if_false)
 
+
 def xidz(numerator, denominator, value_if_denom_is_zero):
     """
     Implements Vensim's XIDZ function.
@@ -1107,12 +1108,12 @@ def sum(x, dim=None):
     dim: list of strs (optional)
       Dimensions to apply the function over.
       If not given the function will be applied over all dimensions
-    
+
     Returns
     -------
     xarray.DataArray or float
       The result of the sum operation in the given dimensions
-    
+
     """
     # float returned if the function is applied over all the dimensions
     if dim is None or set(x.dims) == set(dim):
@@ -1132,12 +1133,12 @@ def prod(x, dim=None):
     dim: list of strs (optional)
       Dimensions to apply the function over.
       If not given the function will be applied over all dimensions
-    
+
     Returns
     -------
     xarray.DataArray or float
       The result of the product operation in the given dimensions
-    
+
     """
     # float returned if the function is applied over all the dimensions
     if dim is None or set(x.dims) == set(dim):
@@ -1157,12 +1158,12 @@ def vmin(x, dim=None):
     dim: list of strs (optional)
       Dimensions to apply the function over.
       If not given the function will be applied over all dimensions
-    
+
     Returns
     -------
     xarray.DataArray or float
       The result of the minimum value over the given dimensions
-    
+
     """
     # float returned if the function is applied over all the dimensions
     if dim is None or set(x.dims) == set(dim):
@@ -1182,12 +1183,12 @@ def vmax(x, dim=None):
     dim: list of strs (optional)
       Dimensions to apply the function over.
       If not given the function will be applied over all dimensions
-    
+
     Returns
     -------
     xarray.DataArray or float
       The result of the maximum value over the dimensions
-    
+
     """
     # float returned if the function is applied over all the dimensions
     if dim is None or set(x.dims) == set(dim):

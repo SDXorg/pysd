@@ -53,7 +53,7 @@ class TestUtils(TestCase):
               'inflow_b': ('inflow_b', None)}
              )
         )
-        
+
     def test_get_return_elements_not_found_error(self):
         """"
         Test for not found element
@@ -67,7 +67,7 @@ class TestUtils(TestCase):
                                                 'Dim2': ['Column 1', 'Column 2']},
                                 namespace={'Inflow A': 'inflow_a',
                                            'Inflow B': 'inflow_b'})
- 
+
 
     def test_make_flat_df(self):
         import pysd
@@ -179,16 +179,16 @@ class TestUtils(TestCase):
     def test_doctests(self):
         import pysd
         doctest.DocTestSuite(pysd.utils)
-    
+
     def test_compute_shape(self):
         """"
         Test for computing the shape of an array giving coordinates dictionary
         and ordered dimensions.
         """
         import pysd
-        
+
         compute_shape =  pysd.utils.compute_shape
-        
+
         coords = [
           {},
           {'XY': ['X'],
@@ -204,8 +204,7 @@ class TestUtils(TestCase):
            'val': [1, 2, 3, 4, 5, 6, 7, 8]},
           {'val': [1, 2, 3, 4, 5, 6, 7, 8]}
          ]
-                  
-                  
+
         dims = [
           [],
           ['ABC', 'XY', 'val'],
@@ -214,10 +213,10 @@ class TestUtils(TestCase):
           ['val', 'ABC'],
           ['val']
         ]
-        
+
         shapes = [[], [3, 1, 8], [5, 3, 1], [3, 8, 2], [8, 3], [8]]
-        
-        for c, d,s in zip(coords, dims, shapes):
+
+        for c, d, s in zip(coords, dims, shapes):
             self.assertEqual(compute_shape(c, d), s)
 
     def test_compute_shape_reshape(self):
@@ -226,9 +225,9 @@ class TestUtils(TestCase):
         and ordered dimensions with reshape.
         """
         import pysd
-        
+
         compute_shape =  pysd.utils.compute_shape
-        
+
         coords = [
           {'XY': ['X'],
            'ABC': ['A', 'B', 'C'],
@@ -243,7 +242,7 @@ class TestUtils(TestCase):
            'val': [1, 2, 3, 4, 5, 6, 7, 8]},
           {'val': [1, 2, 3, 4, 5, 6, 7, 8]}
         ]
-      
+
         dims = [
           ['ABC', 'XY', 'val'],
           ['val', 'ABC', 'XY'],
@@ -260,7 +259,7 @@ class TestUtils(TestCase):
         ]
 
         for i, shapes in enumerate(shapes123):
-            for c, d,s in zip(coords, dims, shapes):
+            for c, d, s in zip(coords, dims, shapes):
                 print(s)
                 if s:
                     self.assertEqual(compute_shape(c, d, i+1), s)
@@ -273,48 +272,48 @@ class TestUtils(TestCase):
         Test for add_entries_undescore
         """
         import pysd
-        
-        dict1 = {'CD': 10, 'L F':5}
+
+        dict1 = {'CD': 10, 'L F': 5}
         dict2 = {'a b': 1, 'C': 2, 'L M H': 4}
-        
+
         dict1b = dict1.copy()
-      
+
         add_entries_underscore =  pysd.utils.add_entries_underscore
-        
+
         add_entries_underscore(dict1b)
-        
+
         self.assertTrue('L_F' in dict1b)
         self.assertEqual(dict1b['L F'], dict1b['L_F'])
 
         add_entries_underscore(dict1, dict2)
-        
+
         self.assertTrue('L_F' in dict1)
         self.assertEqual(dict1['L F'], dict1['L_F'])
         self.assertTrue('a_b' in dict2)
         self.assertEqual(dict2['a b'], dict2['a_b'])
         self.assertTrue('L_M_H' in dict2)
         self.assertEqual(dict2['L M H'], dict2['L_M_H'])
-        
+
     def test_make_add_identifier(self):
         """
         Test make_add_identifier for the .add methods py_name
         """
         import pysd
-        
+
         make_add_identifier =  pysd.utils.make_add_identifier
-        
+
         build_names = set()
-        
+
         name = "values"
         build_names.add(name)
-        
+
         self.assertEqual(make_add_identifier(name, build_names), "valuesADD_1")
         self.assertEqual(make_add_identifier(name, build_names), "valuesADD_2")
         self.assertEqual(make_add_identifier(name, build_names), "valuesADD_3")
-        
+
         name2 = "bb_a"
         build_names.add(name2)
         self.assertEqual(make_add_identifier(name2, build_names), "bb_aADD_1")
         self.assertEqual(make_add_identifier(name, build_names), "valuesADD_4")
-        self.assertEqual(make_add_identifier(name2, build_names), "bb_aADD_2")      
-        
+        self.assertEqual(make_add_identifier(name2, build_names), "bb_aADD_2")
+

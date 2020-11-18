@@ -71,21 +71,21 @@ def build(elements, subscript_dict, namespace, outfile_name):
     _namespace = %(namespace)s
 
     __pysd_version__ = "%(version)s"
-    
+
     __data = {
         'scope': None,
         'time': lambda: 0
     }
-    
+
     _root = os.path.dirname(__file__)
 
     def _init_outer_references(data):
         for key in data:
             __data[key] = data[key]
-    
+
     def time():
         return __data['time']()
-    
+
     %(functions)s
 
     ''' % {'subscript_dict': repr(subscript_dict),
@@ -101,13 +101,15 @@ def build(elements, subscript_dict, namespace, outfile_name):
     try:
         text, changed = yapf.yapf_api.FormatCode(textwrap.dedent(text),
                                                  style_config=style_file)
-    except:
-        # This is unfortunate but necessary because yapf is apparently not compliant with PEP 3131
-        # (https://www.python.org/dev/peps/pep-3131/)
-        # Alternatively we could skip formatting altogether, or replace yapf with black for all cases?
-        
+    except Exception:
+        # This is unfortunate but necessary because yapf is apparently not
+        # compliant with PEP 3131 (https://www.python.org/dev/peps/pep-3131/)
+        # Alternatively we could skip formatting altogether,
+        # or replace yapf with black for all cases?
+
         import black
-        text = black.format_file_contents(textwrap.dedent(text), fast=True, mode=black.FileMode())
+        text = black.format_file_contents(textwrap.dedent(text), fast=True,
+                                          mode=black.FileMode())
 
     # this is used for testing
     if outfile_name == 'return':
@@ -142,11 +144,11 @@ def build_element(element, subscript_dict):
         cache_type = "@cache('run')"
     elif element['kind'] in ['component', 'component_ext_data']:
         cache_type = "@cache('step')"
-    elif element['kind'] == 'lookup': 
+    elif element['kind'] == 'lookup':
         # lookups may be called with different values in a round
         cache_type = ''
     elif element['kind'] in ['setup', 'stateful',
-                             'external', 'external_add']: 
+                             'external', 'external_add']:
         # setups only get called once, caching is wasted
         cache_type = ''
     else:
@@ -158,7 +160,7 @@ def build_element(element, subscript_dict):
     py_expr_n = [py_expr for py_expr
                  in element['py_expr']
                  if "ADD" not in py_expr]
-    
+
     if len(py_expr_n) > 1:
         contents = 'utils.xrmerge([%(das)s,])'\
                    % {'das': ',\n'.join(py_expr_n)}
@@ -166,12 +168,9 @@ def build_element(element, subscript_dict):
         contents = '%(py_expr)s' % {'py_expr': py_expr_n[0]}
 
     if element['kind'] in ['component', 'setup']\
-      and 'subs' in element\
-      and element['subs'][0] not in ['', [], None]:
+       and 'subs' in element\
+       and element['subs'][0] not in ['', [], None]:
         # for up-dimensioning and reordering
-        coords = utils.make_coord_dict(element['subs'][0],
-                                       subscript_dict,
-                                       terse=False)
         dims = [utils.find_subscript_name(subscript_dict, sub)
                 for sub in element['subs'][0]]
         # re arrange the python object
@@ -185,19 +184,21 @@ def build_element(element, subscript_dict):
                       'right_side': right_side}
     else:
         contents = 'return %(contents)s' % {'contents': contents}
-  
+
     indent = 8
     element.update({'cache': cache_type,
                     'ulines': '-' * len(element['real_name']),
                     'contents': contents.replace('\n',
-                                                 '\n' + ' ' * indent)})  # indent lines 2 onward
+                                                 '\n' + ' ' * indent)})
+                                                 # indent lines 2 onward
 
     element['doc'] = element['doc'].replace('\\', '\n    ')
 
     if element['kind'] in ['stateful', 'external']:
         func = '''
     %(py_name)s = %(py_expr)s
-            ''' % {'py_name': element['py_name'], 'py_expr': element['py_expr'][0]}
+            ''' % {'py_name': element['py_name'],
+                   'py_expr': element['py_expr'][0]}
 
     elif element['kind'] == 'external_add':
         py_name = element['py_name'].split("ADD")[0]
@@ -241,7 +242,8 @@ def merge_partial_elements(element_list):
         if element['py_expr'] != "None":  # for
             name = element['py_name']
             if name not in outs:
-                # Use 'expr' for Vensim models, and 'eqn' for Xmile (This makes the Vensim equation prettier.)
+                # Use 'expr' for Vensim models, and 'eqn' for Xmile
+                # (This makes the Vensim equation prettier.)
                 eqn = element['expr'] if 'expr' in element else element['eqn']
 
                 outs[name] = {
@@ -595,13 +597,16 @@ def add_initial(initial_input):
 
     return "%s()" % stateful['py_name'], [stateful]
 
+
 # Variable to save identifiers of external objects
 build_names = set()
 
 
-def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs, subscript_dict, keyword):
+def add_ext_data(identifier, file_name, tab, time_row_or_col,
+                 cell, subs, subscript_dict, keyword):
     """
-    Constructs a external object for handling Vensim's GET XLS DATA/GET DIRECT DATA functionality
+    Constructs a external object for handling Vensim's GET XLS DATA and
+    GET DIRECT DATA functionality
 
     Parameters
     ----------
@@ -632,11 +637,12 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs, subscr
     """
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
     dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
-    keyword = '"%s"' % keyword.strip(':').lower() if isinstance(keyword, str) else keyword
+    keyword = '"%s"' % keyword.strip(':').lower()\
+              if isinstance(keyword, str) else keyword
     name = utils.make_python_identifier('_ext_data_%s' % identifier)[0]
 
     # Check if the object already exists
-    if name in build_names: 
+    if name in build_names:
         # Create a new py_name with ADD_# ending
         # This object name will not be used in the model as
         # the information is added to the existing object
@@ -685,7 +691,8 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs, subscr
 
 def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
     """
-    Constructs a external object for handling Vensim's GET XLS CONSTANT/GET DIRECT CONSTANT functionality
+    Constructs a external object for handling Vensim's GET XLS CONSTANT and
+    GET DIRECT CONSTANT functionality
 
     Parameters
     ----------
@@ -715,7 +722,7 @@ def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
     name = utils.make_python_identifier('_ext_constant_%s' % identifier)[0]
 
     # Check if the object already exists
-    if name in build_names: 
+    if name in build_names:
         # Create a new py_name with ADD_# ending
         # This object name will not be used in the model as
         # the information is added to the existing object
@@ -757,9 +764,11 @@ def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
     return "%s()" % external['py_name'], [external]
 
 
-def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell, subs, subscript_dict):
+def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell,
+                   subs, subscript_dict):
     """
-    Constructs a external object for handling Vensim's GET XLS LOOKUPS/GET DIRECT LOOKUPS functionality
+    Constructs a external object for handling Vensim's GET XLS LOOKUPS and
+    GET DIRECT LOOKUPS functionality
 
     Parameters
     ----------
@@ -791,7 +800,7 @@ def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell, subs, subscri
     name = utils.make_python_identifier('_ext_lookup_%s' % identifier)[0]
 
     # Check if the object already exists
-    if name in build_names: 
+    if name in build_names:
         # Create a new py_name with ADD_# ending
         # This object name will not be used in the model as
         # the information is added to the existing object
@@ -945,3 +954,4 @@ def build_function_call(function_def, user_arguments):
         return function_def['name'] + "(" + ", ".join(arguments) + ")"
 
     return function_def['name'] + "(" + ",".join(user_arguments) + ")"
+
