@@ -480,6 +480,9 @@ functions = {
 
 }
 
+# list of fuctions that accept a dimension to apply over
+vectorial_funcs = ["sum", "prod", "vmax", "vmin"]
+
 data_ops = {
     'get data at time': '',
     'get data between times': '',
@@ -756,7 +759,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
     number = ("+"/"-")? ~r"\d+\.?\d*(e[+-]\d+)?"
 	range = _ "[" ~r"[^\]]*" "]" _ ","
     lookup_with_def = ~r"(WITH\ LOOKUP)"I _ "(" _ expr _ "," _ "(" _  ("[" ~r"[^\]]*" "]" _ ",")?  ( "(" _ expr _ "," _ expr _ ")" _ ","? _ )+ _ ")" _ ")"
-    lookup_call = (id _ subscript_list?) _ "(" _ (expr _ ","? _)* ")"  # these don't need their args parsed...
+    lookup_call = lookup_call_subs _ "(" _ (expr _ ","? _)* ")"  # these don't need their args parsed...
+    lookup_call_subs = id _ subscript_list?
     
     param = (expr)+
 
@@ -806,7 +810,9 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
         # about whether it is a constant, or calls another function, goes with it.
         def __init__(self, ast):
             self.translation = ""
-            self.subs = None
+            self.subs = None # the subscript list if given
+            self.lookup_subs = [] # the subscript list if given
+            self.apply_dim = set() # the dimensions with ! if given
             self.kind = 'constant'  # change if we reference anything else
             self.new_structure = []
             self.arguments = None
@@ -835,33 +841,14 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             # remove dimensions info (produced by !)
 
             function_name = vc[0].lower()
-            arguments = []
-            
-            #TODO change the output of ExpressionParser.visit_subscript_list
-            # to be able to give the information of dims in other format than a string
-            # to make this method much simpler
+            arguments = [e.strip() for e in vc[4].split(",")]
 
-            # dims where the function is applied will be stored here
-            dims = set()
-            # expression without DIM=[] pattern
-            expr = "".join(re.split(" DIM=\[[\"a-zA-Z,\s]+\]", vc[4]))
-
-            while len(','.join(arguments)) < len(expr):
-                args = self.args.pop()
-                # get dimensions
-                dim = re.findall(" DIM=\[\"[\"a-zA-Z,\s]+\"\]", args)
-                for d in dim:
-                    dims.update(literal_eval(d.split(" DIM=")[1]))
-                # remove DIM=[] pattern from args
-                args = "".join(re.split(" DIM=\[[\"a-zA-Z,\s]+\]", args))
-                arguments.append(args)
-                arguments = [arguments[-1]] + arguments[:-1]
             # add dimensions as last argument
-            if dims:
-                arguments += ["dim="+str(tuple(dims))]
+            if self.apply_dim and function_name in vectorial_funcs:
+                arguments += ["dim="+str(tuple(self.apply_dim))]
+                self.apply_dim = set()
 
-            py_expr = builder.build_function_call(functions[function_name], arguments)
-            return py_expr
+            return builder.build_function_call(functions[function_name], arguments)
 
         def visit_in_oper(self, n, vc):
             return in_ops[n.text.lower()]
@@ -870,70 +857,58 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             return pre_ops[n.text.lower()]
 
         def visit_reference(self, n, vc):
+
             self.kind = 'component'
             vc[0] += '()'
-            py_expr = vc[0]
-            external_args = []
-            
-            for child in vc[1:]:
-                child = child.strip(',')
-                if len(child) > 7 and 'dim' in child[3:7]:
-                    external_args.append(child)
-                else:
-                    py_expr += child
 
-            try:
-                # The object was given with subscript, will use the subscript to rearrange
-                # if necessary
-                # this would look much simpler and easier moving to an own data class where we can
-                # subset data using expressions like py_name[dim1, dim2]
+            if re.match("\[.+\]", vc[-1]):
+                # sometimes the subscript list are not consumed (fix?)
+                py_expr = "".join(vc[:-1])
+            else:
+                py_expr = "".join(vc)
 
-                # remove function dimensions if they are given
-                given_subs = literal_eval(re.split(" DIM=\[[\"a-zA-Z,\s]+\]", vc[-1])[-1])
-                # assert that we have a list
-                assert isinstance(given_subs, list)
-                # remove the subscript from the py_expr
-                py_expr = py_expr.split(str(given_subs))[0]
-                # compute coords and dims
-                coords = utils.make_coord_dict(given_subs,
+            if self.subs:
+                coords = utils.make_coord_dict(self.subs,
                                              subscript_dict,
                                              terse=False)
                 dims = [utils.find_subscript_name(subscript_dict, sub)
-                      for sub in given_subs]
-                # re arrange the python object
+                        for sub in self.subs]
+                self.subs = None
                 return "utils.rearrange(" + py_expr + ", "\
                        + repr(coords) + ", "\
-                       + repr(dims) + ")"\
-                       + ','.join(external_args)
-            except (SyntaxError, AssertionError):
-                return ''.join([x.strip(',') for x in vc])
+                       + repr(dims) + ")"
+
+            return py_expr
+
+        def visit_lookup_call_subs(self, n, vc):
+            # needed to avoid doing the rearrange in the lookup arguments
+            # lookup_subs list makes possible to work with lookups inside lookups
+            if self.subs:
+                self.subs = None
+                self.lookup_subs.append(self.subs)
+                self.subs = None
+            else:
+                self.lookup_subs.append(None)
+
+            return vc[0]
 
         def visit_lookup_call(self, n, vc):
             self.kind = 'lookup'
 
-            # The object was given with subscript, will use the subscript to rearrange
-            # if necessary
-            # this would look much simpler and easier moving to an own data class where we can
-            # subset data using expressions like py_name[dim1, dim2]
+            py_expr = ''.join([x.strip(',') for x in vc])
 
-            # remove function dimensions if they are given
-            name_sub = re.findall("[a-zA-Z\d\s\_]+|\[[\'a-zA-Z,\s]+\]", vc[0])
-            if len(name_sub) == 2:
-                py_expr = name_sub[0] + ''.join(vc[1:])
-                given_subs = literal_eval(name_sub[1])
-                # compute coords and dims
-                coords = utils.make_coord_dict(given_subs,
-                                             subscript_dict,
-                                             terse=False)
+            lookup_subs = self.lookup_subs.pop()
+            if lookup_subs:
+                coords = utils.make_coord_dict(lookup_subs,
+                                               subscript_dict,
+                                               terse=False)
                 dims = [utils.find_subscript_name(subscript_dict, sub)
-                      for sub in given_subs]
-                # re arrange the python object
+                        for sub in lookup_subs]
                 return "utils.rearrange(" + py_expr + ", "\
                        + repr(coords) + ", "\
                        + repr(dims) + ")"
-            else:
-                return ''.join([x.strip(',') for x in vc])
 
+            return py_expr
 
         def visit_id(self, n, vc):
             return namespace[n.text.strip()]
@@ -992,21 +967,18 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             refs = vc[4]
             subs = [x.strip() for x in refs.split(',')]
             coordinates = utils.make_coord_dict(subs, subscript_dict)
-            axis = ['"%s"' % s.strip('!') for s in subs if s[-1] == '!']
-            string = ''
 
             # Implements basic "!" subscript functionality in Vensim. Does NOT work for matrix diagonals in
-            # FUNC(variable[sub1!,sub1!]) functions, nor with complex operations within the vector function
-            # this would simplify ExpressionParser.visit_call
-            if axis:
-                string += ' DIM=[%s]' % ','.join(axis)
+            # FUNC(variable[sub1!,sub1!]) functions
+            self.apply_dim.update(["%s" % s.strip('!') for s in subs if s[-1] == '!'])
 
             if len(coordinates):
-                string += '.loc[%s].squeeze().expand_dims(dict([(i,len(j)) for i,j in %s.items()]))'\
+                return '.loc[%s].squeeze().expand_dims(dict([(i,len(j)) for i,j in %s.items()]))'\
                           % (repr(coordinates), repr(coordinates))
-            else:
-                string += str(["%s" % s.strip('!') for s in subs])
-            return string
+
+            self.subs = ["%s" % s.strip('!') for s in subs]
+
+            return ""
 
 
         def visit_build_call(self, n, vc):
