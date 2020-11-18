@@ -512,6 +512,7 @@ def rearrange(data, coords_i, dims):
     """
     Returns a xarray.DataArray object with the given coords and dims
     """
+    # subset used coords as sometimes all coords are passed
     coords = {dim: coords_i[dim] for dim in dims}
     if isinstance(data, xr.DataArray):
         dacoords = {coord: list(data.coords[coord].values)
@@ -519,8 +520,6 @@ def rearrange(data, coords_i, dims):
         if data.dims == tuple(dims) and dacoords == coords:
             # If the input data already has the output format
             # return it. 
-            # TODO This case should be avoided when building
-            # the model modifiying vensim/vensim2py.py file
             return data
         if set(data.dims).issubset(dims):
             # The coordinates are expanded or transposed
@@ -555,9 +554,12 @@ def rearrange(data, coords_i, dims):
         if set(reshape_dims) == set([len(i) for i in data.coords.values()]):
             new_data = values.reshape(reshape_dims)
         else:
-            return data
-            new_data = values
-            coords = data.coords
+            raise ValueError("Trying to rearrange a {}".format(type(data))
+                             + " with dimensions {}".format(data.shape)
+                             + " using the coords {}".format(coords)
+                             + " and dims {}".format(dims) 
+                             + "\nBut any change could be made..."
+                             + "\n Input data:", data)
 
     return xr.DataArray(data=new_data, coords=coords, dims=dims)
 

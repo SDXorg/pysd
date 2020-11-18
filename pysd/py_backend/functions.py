@@ -967,17 +967,16 @@ def lookup_extrapolation(x, xs, ys):
     Intermediate values are calculated with linear interpolation between the intermediate points.
     Out-of-range values are calculated with linear extrapolation from the last two values at either end.
     """
-    length = len(xs)
     if x < xs[0]:
         dx = xs[1] - xs[0]
         dy = ys[1] - ys[0]
         k = dy / dx
         return ys[0] + (x - xs[0]) * k
     if x > xs[-1]:
-        dx = xs[length - 1] - xs[length - 2]
-        dy = ys[length - 1] - ys[length - 2]
+        dx = xs[-1] - xs[-2]
+        dy = ys[-1] - ys[-2]
         k = dy / dx
-        return ys[length - 1] + (x - xs[length - 1]) * k
+        return ys[-1] + (x - xs[-1]) * k
     return np.interp(x, xs, ys)
 
 
@@ -989,18 +988,13 @@ def lookup_discrete(x, xs, ys):
     for index in range(0, len(xs)):
         if x < xs[index]:
             return ys[index - 1] if index > 0 else ys[index]
-    return ys[len(ys) - 1]
+    return ys[-1]
 
 
 def if_then_else(condition, val_if_true, val_if_false):
-    
-    if isinstance(condition, xr.DataArray):
-        if condition.values.size == 1:
-            return val_if_true if condition.values[0] else val_if_false
-        else:
-            return xr.where(condition, val_if_true, val_if_false)
-    else:
-        return val_if_true if condition else val_if_false
+    # TODO document
+    # TODO make it work with xarrays
+    return np.where(condition, val_if_true, val_if_false)
 
 def xidz(numerator, denominator, value_if_denom_is_zero):
     """
@@ -1074,6 +1068,7 @@ def active_initial(time, expr, init_val):
 
 
 def random_uniform(m, x, s):
+    # TODO document
     return np.random.uniform(m, x)
 
 
