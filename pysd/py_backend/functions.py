@@ -217,15 +217,23 @@ class Delay(Stateful):
             # brodcast init_state_value with the dimensions
             coords = self.coords.copy()
             coords['delay'] = np.arange(self.order)
+            # TODO replace cleaner version for Python 3 (when deprecate Py2)
+            # # broadcast self.state
+            # broadcast  = xr.DataArray(0, coords, ['delay'] + dims)
+            # self.state = broadcast + init_state_value
+            #
+            # # for broadcasting in the future
+            # self.broadcast  = xr.DataArray(0, self.coords, self.dims)
+            dims = ['delay'] + self.dims
+            data = np.zeros(utils.compute_shape(coords, dims))
 
             # broadcast self.state
-            broadcast  = xr.DataArray(data=0,\
-                dims=['delay'] + self.dims, coords=coords)
+            broadcast  = xr.DataArray(data, coords, dims)
             self.state = broadcast + init_state_value
 
             # for broadcasting in the future
-            self.broadcast  = xr.DataArray(data=0,\
-                dims=self.dims, coords=self.coords)
+            data = np.zeros(utils.compute_shape(self.coords, self.dims))
+            self.broadcast  = xr.DataArray(data, self.coords, self.dims)
 
         else:
             self.state = np.array([init_state_value] * self.order)

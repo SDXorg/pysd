@@ -523,7 +523,10 @@ def rearrange(data, coords_i, dims):
             return data
         if set(data.dims).issubset(dims):
             # The coordinates are expanded or transposed
-            return xr.DataArray(0, coords, dims) + data
+            # TODO replace cleaner version for Python 3 (when deprecate Py2)
+            # return xr.DataArray(0, coords, dims)
+            return xr.DataArray(np.zeros(compute_shape(coords, dims)),
+                                coords, dims) + data
 
         values = data.values
 
@@ -531,7 +534,10 @@ def rearrange(data, coords_i, dims):
         values = data
     else:
         try:
-            return xr.DataArray(data=float(data), coords=coords, dims=dims)
+            # TODO replace cleaner version for Python 3 (when deprecate Py2)
+            # return xr.DataArray(float(data), coords, dims)
+            return xr.DataArray(np.full(compute_shape(coords, dims),
+                                        float(data)), coords, dims)
         except TypeError:
             values = np.array(data)
 

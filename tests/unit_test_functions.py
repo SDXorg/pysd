@@ -347,7 +347,10 @@ class TestStateful(unittest.TestCase):
 
         delay_a.initialize()
 
-        self.assertTrue(delay_a().equals(xr.DataArray(4.234, coords, dims)))
+        # TODO replace by the following when we deprecate Py2
+        # self.assertTrue(delay_a().equals(xr.DataArray(4.234, coords, dims)))
+        self.assertTrue(delay_a().equals(xr.DataArray(np.full((2,2), 4.234),
+                                                      coords, dims)))
         delay_ddt = delay_a.ddt()[0].reset_coords('delay', drop=True)
         self.assertTrue(delay_ddt.equals(xr_input-4.234))
 

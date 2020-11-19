@@ -1707,21 +1707,6 @@ class TestWarningsErrors(unittest.TestCase):
         with self.assertRaises(AttributeError):
             data.initialize()
 
-    @unittest.skipIf(_py_version >= 36,
-                     "openpyxl only supported for Python >= 3.6")
-    def test_not_able_to_import_openpyxl(self):
-        """
-        Test for the warining raised after trying to import openpyxl
-        in Python < 3.6
-        """
-        from warnings import catch_warnings
-
-        with catch_warnings(record=True) as w:
-            from pysd import external
-            self.assertEqual(len(w), 1)
-            self.assertTrue(issubclass(w[-1].category, UserWarning))
-            self.assertTrue("openpyxl" in str(w[-1].message))
-
     # Following test are for ExtData class only
     # as the initialization of ExtLookup uses the same function
 

@@ -6,7 +6,6 @@ from __future__ import absolute_import
 
 import os
 import re
-from ast import literal_eval
 import textwrap
 import warnings
 from io import open
@@ -666,16 +665,6 @@ utils.add_entries_underscore(
     builders
 )
 
-
-def get_childs_types(n):
-    if n.children:
-        childs = set()
-        for i in n.children:
-            childs.add(i.expr_name)
-            childs = childs | get_childs_types(i)
-        return childs
-    else:
-        return set([n.expr_name])
 
 def parse_general_expression(element, namespace=None, subscript_dict=None, macro_list=None):
     """

@@ -11,6 +11,7 @@ xmile specific syntax.
 
 from __future__ import absolute_import
 
+import sys
 import os.path
 import textwrap
 import warnings
@@ -193,6 +194,17 @@ def build_element(element, subscript_dict):
                                                  # indent lines 2 onward
 
     element['doc'] = element['doc'].replace('\\', '\n    ')
+
+    if sys.version_info[0] == 2:
+        # TODO remove when we stop supporting Python2 (rm 'import sys' also)
+        # avoiding the encode prints well all the symbols in the documentation
+        element['doc'] = element['doc'].encode('unicode-escape')
+        if 'unit' in element:
+            element['unit'] = element['unit'].encode('unicode-escape')
+        if 'real_name' in element:
+            element['real_name'] = element['real_name'].encode('unicode-escape')
+        if 'eqn' in element:
+            element['eqn'] = element['eqn'].encode('unicode-escape')
 
     if element['kind'] in ['stateful', 'external']:
         func = '''
@@ -637,7 +649,7 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col,
     """
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
     dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
-    keyword = '"%s"' % keyword.strip(':').lower()\
+    keyword = "'%s'" % keyword.strip(':').lower()\
               if isinstance(keyword, str) else keyword
     name = utils.make_python_identifier('_ext_data_%s' % identifier)[0]
 
