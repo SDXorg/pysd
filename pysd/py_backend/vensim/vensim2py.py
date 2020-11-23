@@ -720,7 +720,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
     in_ops = {
         "+": "+", "-": "-", "*": "*", "/": "/", "^": "**", "=": "==",
         "<=": "<=", "<>": "!=", "<": "<", ">=": ">=", ">": ">",
-        ":and:": " & ", ":or:": " | "}  # spaces perhaps important?
+        ":and:": " and ", ":or:": " or "}  # spaces important for word-based operators
 
     pre_ops = {
         "-": "-", ":not:": " not ",  # spaces important for word-based operators
