@@ -508,12 +508,12 @@ def get_value_by_insensitive_key_or_value(key, dict):
     return None
 
 
-def rearrange(data, coords_i, dims):
+def rearrange(data, dims, subscript_dict):
     """
     Returns a xarray.DataArray object with the given coords and dims
     """
     # subset used coords as sometimes all coords are passed
-    coords = {dim: coords_i[dim] for dim in dims}
+    coords = {dim: subscript_dict[dim] for dim in dims}
     if isinstance(data, xr.DataArray):
         dacoords = {coord: list(data.coords[coord].values)
                     for coord in data.coords}

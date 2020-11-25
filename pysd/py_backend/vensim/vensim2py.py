@@ -509,6 +509,7 @@ builders = {
     ),
 
     "delay1": lambda element, subscript_dict, args: builder.add_n_delay(
+        identifier=element['py_name'],
         delay_input=args[0],
         delay_time=args[1],
         initial_value=args[0],
@@ -518,6 +519,7 @@ builders = {
     ),
 
     "delay1i": lambda element, subscript_dict, args: builder.add_n_delay(
+        identifier=element['py_name'],
         delay_input=args[0],
         delay_time=args[1],
         initial_value=args[2],
@@ -527,6 +529,7 @@ builders = {
     ),
 
     "delay3": lambda element, subscript_dict, args: builder.add_n_delay(
+        identifier=element['py_name'],
         delay_input=args[0],
         delay_time=args[1],
         initial_value=args[0],
@@ -536,6 +539,7 @@ builders = {
     ),
 
     "delay3i": lambda element, subscript_dict, args: builder.add_n_delay(
+        identifier=element['py_name'],
         delay_input=args[0],
         delay_time=args[1],
         initial_value=args[2],
@@ -545,6 +549,7 @@ builders = {
     ),
 
     "delay fixed": lambda element, subscript_dict, args: builder.add_n_delay(
+        identifier=element['py_name'],
         delay_input=args[0],
         delay_time='time_step()' if args[1]=='time_step()'\
                    else 'utils.round(' + args[1] + ' / time_step() ) * time_step()',
@@ -556,6 +561,7 @@ builders = {
     ),
 
     "delay n": lambda element, subscript_dict, args: builder.add_n_delay(
+        identifier=element['py_name'],
         delay_input=args[0],
         delay_time=args[1],
         initial_value=args[2],
@@ -565,6 +571,7 @@ builders = {
     ),
 
     "smooth": lambda element, subscript_dict, args: builder.add_n_smooth(
+        identifier=element['py_name'],
         smooth_input=args[0],
         smooth_time=args[1],
         initial_value=args[0],
@@ -574,6 +581,7 @@ builders = {
     ),
 
     "smoothi": lambda element, subscript_dict, args: builder.add_n_smooth(
+        identifier=element['py_name'],
         smooth_input=args[0],
         smooth_time=args[1],
         initial_value=args[2],
@@ -583,6 +591,7 @@ builders = {
     ),
 
     "smooth3": lambda element, subscript_dict, args: builder.add_n_smooth(
+        identifier=element['py_name'],
         smooth_input=args[0],
         smooth_time=args[1],
         initial_value=args[0],
@@ -592,6 +601,7 @@ builders = {
     ),
 
     "smooth3i": lambda element, subscript_dict, args: builder.add_n_smooth(
+        identifier=element['py_name'],
         smooth_input=args[0],
         smooth_time=args[1],
         initial_value=args[2],
@@ -601,6 +611,7 @@ builders = {
     ),
 
     "smooth n": lambda element, subscript_dict, args: builder.add_n_smooth(
+        identifier=element['py_name'],
         smooth_input=args[0],
         smooth_time=args[1],
         initial_value=args[2],
@@ -610,6 +621,7 @@ builders = {
     ),
 
     "trend": lambda element, subscript_dict, args: builder.add_n_trend(
+        identifier=element['py_name'],
         trend_input=args[0],
         average_time=args[1],
         initial_trend=args[2],
@@ -867,8 +879,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
                         for sub in self.subs]
                 self.subs = None
                 return "utils.rearrange(" + py_expr + ", "\
-                       + repr(coords) + ", "\
-                       + repr(dims) + ")"
+                       + repr(dims) + ", _subscript_dict)"
 
             return py_expr
 
@@ -898,8 +909,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
                 dims = [utils.find_subscript_name(subscript_dict, sub)
                         for sub in lookup_subs]
                 return "utils.rearrange(" + py_expr + ", "\
-                       + repr(coords) + ", "\
-                       + repr(dims) + ")"
+                       + repr(dims) + ", _subscript_dict)"
 
             return py_expr
 

@@ -10,8 +10,8 @@ from __future__ import division, absolute_import
 
 import imp
 import inspect
-import os
 import sys
+import os
 import random
 import warnings
 from functools import wraps
@@ -178,7 +178,7 @@ class Delay(Stateful):
     # This method forces them to acknowledge that additional structure is being created
     # in the delay object.
 
-    def __init__(self, delay_input, delay_time, initial_value, order, coords=None, dims=None):
+    def __init__(self, delay_input, delay_time, initial_value, order):
         """
 
         Parameters
@@ -196,9 +196,7 @@ class Delay(Stateful):
         self.input_func = delay_input
         self.order_func = order
         self.order = None
-        self.broadcast = 0
-        self.coords = coords
-        self.dims = dims
+        self.shape_info = None
 
     def initialize(self):
         order = self.order_func()
@@ -212,34 +210,27 @@ class Delay(Stateful):
 
         init_state_value = self.init_func() * self.delay_time_func() / self.order
 
-        if self.coords:
-            # subscripted delay
-            # brodcast init_state_value with the dimensions
-            coords = self.coords.copy()
-            coords['delay'] = np.arange(self.order)
-            # TODO replace cleaner version for Python 3 (when deprecate Py2)
-            # # broadcast self.state
-            # broadcast  = xr.DataArray(0, coords, ['delay'] + dims)
-            # self.state = broadcast + init_state_value
-            #
-            # # for broadcasting in the future
-            # self.broadcast  = xr.DataArray(0, self.coords, self.dims)
-            dims = ['delay'] + self.dims
-            data = np.zeros(utils.compute_shape(coords, dims))
-
+        if isinstance(init_state_value, xr.DataArray):
             # broadcast self.state
-            broadcast  = xr.DataArray(data, coords, dims)
-            self.state = broadcast + init_state_value
+            self.state = init_state_value.expand_dims({
+                'delay': np.arange(self.order)}, axis=0)
 
-            # for broadcasting in the future
-            data = np.zeros(utils.compute_shape(self.coords, self.dims))
-            self.broadcast  = xr.DataArray(data, self.coords, self.dims)
+            if sys.version_info[0] == 2:
+                # TODO remove when we stop supporting Python2 (rm 'import sys')
+                dims = ['delay'] + list(init_state_value.dims)
+                coords = dict(init_state_value.coords.indexes)
+                coords['delay'] = np.arange(self.order)
+                init_state_value = np.tile(init_state_value,
+                    [self.order] + [1 for i in init_state_value.dims])
+                self.state = xr.DataArray(init_state_value, coords, dims)
 
+            self.shape_info = {'dims': self.state.dims,
+                               'coords': self.state.coords}
         else:
             self.state = np.array([init_state_value] * self.order)
 
     def __call__(self):
-        if self.coords:
+        if self.shape_info:
             return self.state[-1].reset_coords('delay', drop=True)\
                    / (self.delay_time_func() / self.order)
         else:
@@ -248,8 +239,8 @@ class Delay(Stateful):
     def ddt(self):
         outflows = self.state / (self.delay_time_func() / self.order)
         inflows = np.roll(outflows, 1, axis=0)
-        if self.coords:
-            inflows[0] = (self.broadcast + self.input_func()).values
+        if self.shape_info:
+            inflows[0] = self.input_func().values
         else:
             inflows[0] = self.input_func()
         return inflows - outflows

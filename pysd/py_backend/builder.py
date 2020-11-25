@@ -163,10 +163,12 @@ def build_element(element, subscript_dict):
                  if "ADD" not in py_expr]
 
     if len(py_expr_n) > 1:
-        contents = 'utils.xrmerge([%(das)s,])'\
+        py_expr = 'utils.xrmerge([%(das)s,])'\
                    % {'das': ',\n'.join(py_expr_n)}
     else:
-        contents = '%(py_expr)s' % {'py_expr': py_expr_n[0]}
+        py_expr = '%(py_expr)s' % {'py_expr': py_expr_n[0]}
+
+    contents = 'return %(py_expr)s' % {'py_expr': py_expr}
 
     if element['kind'] in ['component', 'setup']\
        and 'subs' in element\
@@ -176,15 +178,15 @@ def build_element(element, subscript_dict):
                 for sub in element['subs'][0]]
         # re arrange the python object
         left_side = 'utils.rearrange('
-        right_side = ', _subscript_dict, %(dims)s)' % {'dims': dims}
-        # we pass the _subscript_dict as in this case the
-        # variable must have all the coords to given dimensions
-        contents = 'return %(left_side)s %(contents)s %(right_side)s'\
-                   % {'contents': contents,
-                      'left_side': left_side,
-                      'right_side': right_side}
-    else:
-        contents = 'return %(contents)s' % {'contents': contents}
+        right_side = ', %(dims)s, _subscript_dict)' % {'dims': dims}
+        if left_side !=  py_expr[:16]\
+          or right_side != py_expr[-len(right_side):]:
+            # we pass the _subscript_dict as in this case the
+            # variable must have all the coords to given dimensions
+            contents = 'return %(left_side)s %(py_expr)s %(right_side)s'\
+                       % {'py_expr': py_expr,
+                          'left_side': left_side,
+                          'right_side': right_side}
 
     indent = 8
     element.update({'cache': cache_type,
@@ -325,27 +327,6 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
     else:
         stateful_py_expr = 'functions.Integ(lambda: _d%s_dt(), lambda: _init_%s())' % (identifier,
                                                                                        identifier)
-
-        try:
-            decoded = initial_condition.decode('unicode-escape')
-            initial_condition_numeric = decoded.isnumeric()
-        except AttributeError:
-            # I believe this should be okay for Py3 but should be checked
-            initial_condition_numeric = initial_condition.isnumeric()
-
-        if subs and initial_condition_numeric:
-            coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
-            dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
-            shape = utils.compute_shape(coords, dims)
-            initial_condition = textwrap.dedent("""\
-                xr.DataArray(data=np.full(%(shape)s, %(value)s),
-                             coords=%(coords)s,
-                             dims=%(dims)s )""" % {
-                'shape': shape,
-                'value': initial_condition,
-                'coords': repr(coords),
-                'dims': repr(dims)})
-
         # create the stock initialization element
         new_structure.append({
             'py_name': '_init_%s' % identifier,
@@ -391,7 +372,7 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
     return "%s()" % stateful['py_name'], new_structure
 
 
-def add_n_delay(delay_input, delay_time, initial_value, order, subs, subscript_dict):
+def add_n_delay(identifier, delay_input, delay_time, initial_value, order, subs, subscript_dict):
     """
     Creates code to instantiate a stateful 'Delay' object,
     and provides reference to that object's output.
@@ -403,6 +384,8 @@ def add_n_delay(delay_input, delay_time, initial_value, order, subs, subscript_d
 
     Parameters
     ----------
+    identifier: basestring
+        the python-safe name of the stock
 
     delay_input: <string>
         Reference to the model component that is the input to the delay
@@ -437,25 +420,67 @@ def add_n_delay(delay_input, delay_time, initial_value, order, subs, subscript_d
         list of element construction dictionaries for the builder to assemble
     """
 
-    py_expr = 'functions.Delay(lambda: %s, lambda: %s, lambda: %s, lambda: %s)' % (
-        delay_input, delay_time, initial_value, order)
+    new_structure = []
 
-    if subs:
-        coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
-        dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
-        py_expr = py_expr[:-1] + ', %s, %s)' % (coords, dims)
+    if len(subs) == 0:
+        stateful_py_expr = 'functions.Delay(lambda: %s, lambda: %s,'\
+                           'lambda: %s, lambda: %s)' % (
+                           delay_input, delay_time, initial_value, order)
+
+    else:
+        stateful_py_expr = 'functions.Delay(lambda: _delinput_%s(),'\
+                           'lambda: _deltime_%s(), lambda: _init_%s(),'\
+                           'lambda: %s)' % (
+                           identifier, identifier, identifier, order)
+
+        # create the stock initialization element
+        new_structure.append({
+            'py_name': '_init_%s' % identifier,
+            'real_name': 'Implicit',
+            'kind': 'setup',  # not explicitly specified in the model file, but must exist
+            'py_expr': initial_value,
+            'subs': subs,
+            'doc': 'Provides initial conditions for %s function' % identifier,
+            'unit': 'See docs for %s' % identifier,
+            'lims': 'None',
+            'eqn': 'None',
+            'arguments': ''
+        })
+
+        new_structure.append({
+            'py_name': '_deltime_%s' % identifier,
+            'real_name': 'Implicit',
+            'kind': 'component',
+            'doc': 'Provides delay time for %s function' % identifier,
+            'subs': subs,
+            'unit': 'See docs for %s' % identifier,
+            'lims': 'None',
+            'eqn': 'None',
+            'py_expr': delay_time,
+            'arguments': ''
+        })
+
+        new_structure.append({
+            'py_name': '_delinput_%s' % identifier,
+            'real_name': 'Implicit',
+            'kind': 'component',
+            'doc': 'Provides input for %s function' % identifier,
+            'subs': subs,
+            'unit': 'See docs for %s' % identifier,
+            'lims': 'None',
+            'eqn': 'None',
+            'py_expr': delay_input,
+            'arguments': ''
+        })
 
     # the py name has to be unique to all the passed parameters, or if there are two things
     # that delay the output by different amounts, they'll overwrite the original function...
     stateful = {
-        'py_name': utils.make_python_identifier('_delay_%s_%s_%s_%s' % (delay_input,
-                                                                        delay_time,
-                                                                        initial_value,
-                                                                        order))[0],
+        'py_name': '_delay_%s' % identifier,
         'real_name': 'Delay of %s' % delay_input,
         'doc': 'Delay time: %s \n Delay initial value %s \n Delay order %s' % (
             delay_time, initial_value, order),
-        'py_expr': py_expr,
+        'py_expr': stateful_py_expr,
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',
@@ -463,54 +488,56 @@ def add_n_delay(delay_input, delay_time, initial_value, order, subs, subscript_d
         'kind': 'stateful',
         'arguments': ''
     }
+    new_structure.append(stateful)
 
-    return "%s()" % stateful['py_name'], [stateful]
+    return "%s()" % stateful['py_name'], new_structure
 
 
-def add_n_smooth(smooth_input, smooth_time, initial_value, order, subs, subscript_dict):
-    """Constructs stock and flow chains that implement the calculation of
-        a smoothing function.
+def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order, subs, subscript_dict):
+    """
+    Constructs stock and flow chains that implement the calculation of
+    a smoothing function.
 
-        Parameters
-        ----------
-        smooth_input: <string>
-            Reference to the model component that is the input to the smoothing function
+    Parameters
+    ----------
+    identifier: basestring
+        the python-safe name of the stock
 
-        smooth_time: <string>
-            Can be a number (in string format) or a reference to another model element
-            which will calculate the delay. This is calculated throughout the simulation
-            at runtime.
+    smooth_input: <string>
+        Reference to the model component that is the input to the smoothing function
 
-        initial_value: <string>
-            This is used to initialize the stocks that are present in the delay. We
-            initialize the stocks with equal values so that the outflow in the first
-            timestep is equal to this value.
+    smooth_time: <string>
+        Can be a number (in string format) or a reference to another model element
+        which will calculate the delay. This is calculated throughout the simulation
+        at runtime.
 
-        order: string
-            The number of stocks in the delay pipeline. As we construct the delays at
-            build time, this must be an integer and cannot be calculated from other
-            model components. Anything else will yield a ValueError.
+    initial_value: <string>
+        This is used to initialize the stocks that are present in the delay. We
+        initialize the stocks with equal values so that the outflow in the first
+        timestep is equal to this value.
 
-        subs: list of strings
-            List of strings of subscript indices that correspond to the
-            list of expressions, and collectively define the shape of the output
-            See `builder.add_flaux` for more info
+    order: string
+        The number of stocks in the delay pipeline. As we construct the delays at
+        build time, this must be an integer and cannot be calculated from other
+        model components. Anything else will yield a ValueError.
 
-        Returns
-        -------
-        reference: basestring
-            reference to the smooth object `__call__` method, which will return the output
-            of the smooth process
+    subs: list of strings
+        List of strings of subscript indices that correspond to the
+        list of expressions, and collectively define the shape of the output
+        See `builder.add_flaux` for more info
 
-        new_structure: list
-            list of element construction dictionaries for the builder to assemble
-        """
+    Returns
+    -------
+    reference: basestring
+        reference to the smooth object `__call__` method, which will return the output
+        of the smooth process
+
+    new_structure: list
+        list of element construction dictionaries for the builder to assemble
+    """
 
     stateful = {
-        'py_name': utils.make_python_identifier('_smooth_%s_%s_%s_%s' % (smooth_input,
-                                                                         smooth_time,
-                                                                         initial_value,
-                                                                         order))[0],
+        'py_name': '_smooth_%s' % identifier,
         'real_name': 'Smooth of %s' % smooth_input,
         'doc': 'Smooth time: %s \n Smooth initial value %s \n Smooth order %s' % (
             smooth_time, initial_value, order),
@@ -527,37 +554,39 @@ def add_n_smooth(smooth_input, smooth_time, initial_value, order, subs, subscrip
     return "%s()" % stateful['py_name'], [stateful]
 
 
-def add_n_trend(trend_input, average_time, initial_trend, subs, subscript_dict):
-    """Trend.
+def add_n_trend(identifier, trend_input, average_time, initial_trend, subs, subscript_dict):
+    """
+    Trend.
 
-        Parameters
-        ----------
-        trend_input: <string>
+    Parameters
+    ----------
+    identifier: basestring
+        the python-safe name of the stock
 
-        average_time: <string>
+    trend_input: <string>
+
+    average_time: <string>
 
 
-        trend_initial: <string>
+    trend_initial: <string>
 
-        subs: list of strings
-            List of strings of subscript indices that correspond to the
-            list of expressions, and collectively define the shape of the output
-            See `builder.add_flaux` for more info
+    subs: list of strings
+        List of strings of subscript indices that correspond to the
+        list of expressions, and collectively define the shape of the output
+        See `builder.add_flaux` for more info
 
-        Returns
-        -------
-        reference: basestring
-            reference to the trend object `__call__` method, which will return the output
-            of the trend process
+    Returns
+    -------
+    reference: basestring
+        reference to the trend object `__call__` method, which will return the output
+        of the trend process
 
-        new_structure: list
-            list of element construction dictionaries for the builder to assemble
-        """
+    new_structure: list
+        list of element construction dictionaries for the builder to assemble
+    """
 
     stateful = {
-        'py_name': utils.make_python_identifier('_trend_%s_%s_%s' % (trend_input,
-                                                                     average_time,
-                                                                     initial_trend))[0],
+        'py_name': '_trend_%s' % identifier,
         'real_name': 'trend of %s' % trend_input,
         'doc': 'Trend average time: %s \n Trend initial value %s' % (
             average_time, initial_trend),

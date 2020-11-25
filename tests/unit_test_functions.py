@@ -332,52 +332,20 @@ class TestStateful(unittest.TestCase):
         coords = {'d1': [9, 1], 'd2': [2, 4]}
         dims = ['d1', 'd2']
         xr_input = xr.DataArray([[1, 2], [3, 4]], coords, dims)
-        xr_initial = xr.DataArray([10, 0.5], {'d1': [9, 1]}, ['d1'])
-        _, xr_initial_e = xr.broadcast(xr_input, xr_initial)
-        xr_delay_time = xr.DataArray([3, 2], {'d2': [2, 4]}, ['d2'])
-        _, xr_delay_time_e = xr.broadcast(xr_input, xr_delay_time)
+        xr_initial = xr.DataArray([[10, 10], [0.5, 0.5]], coords, dims)
+        xr_delay_time = xr.DataArray([[3, 2], [3, 2]], coords, dims)
 
-        # if only the delay_input is xarray
-        delay_a = pysd.functions.Delay(delay_input=lambda: xr_input,
-                                       delay_time=lambda: 3,
-                                       initial_value=lambda: 4.234,
-                                       order=lambda: 3,
-                                       coords=coords,
-                                       dims=dims)
-
-        delay_a.initialize()
-
-        # TODO replace by the following when we deprecate Py2
-        # self.assertTrue(delay_a().equals(xr.DataArray(4.234, coords, dims)))
-        self.assertTrue(delay_a().equals(xr.DataArray(np.full((2,2), 4.234),
-                                                      coords, dims)))
-        delay_ddt = delay_a.ddt()[0].reset_coords('delay', drop=True)
-        self.assertTrue(delay_ddt.equals(xr_input-4.234))
-
-        # if delay input and initial_value are xarray (differents dims)
-        delay_b = pysd.functions.Delay(delay_input=lambda: xr_input,
-                                       delay_time=lambda: 3,
-                                       initial_value=lambda: xr_initial,
-                                       order=lambda: 3,
-                                       coords=coords,
-                                       dims=dims)
-
-        delay_b.initialize()
-
-        self.assertTrue(delay_b().equals(xr_initial_e))
-        delay_ddt = delay_b.ddt()[0].reset_coords('delay', drop=True)
-
-        self.assertTrue(delay_ddt.equals(xr_input-xr_initial_e))
-
-        # if delay input and delay_time are xarray (differents dims)
-        delay_c = pysd.functions.Delay(delay_input=lambda: xr_input,
+        delay = pysd.functions.Delay(delay_input=lambda: xr_input,
                                        delay_time=lambda: xr_delay_time,
-                                       initial_value=lambda: 4.234,
-                                       order=lambda: 3,
-                                       coords=coords,
-                                       dims=dims)
+                                       initial_value=lambda: xr_initial,
+                                       order=lambda: 2)
 
-        delay_c.initialize()
+        delay.initialize()
+
+        self.assertTrue(delay().equals(xr_initial))
+        delay_ddt = delay.ddt()[0].reset_coords('delay', drop=True)
+
+        self.assertTrue(delay_ddt.equals(xr_input-xr_initial))
 
     def test_initial(self):
         import pysd

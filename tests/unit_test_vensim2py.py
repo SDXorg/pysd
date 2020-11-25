@@ -236,6 +236,7 @@ class TestParse_general_expression(unittest.TestCase):
         from pysd.py_backend.functions import Delay
         from pysd import functions
         res = parse_general_expression({'expr': 'DELAY1(Variable, DelayTime)',
+                                        'py_name': 'test_delay',
                                         'subs': []},
                                        {'Variable': 'variable',
                                         'DelayTime': 'delaytime'},
@@ -259,6 +260,7 @@ class TestParse_general_expression(unittest.TestCase):
         from pysd.py_backend.functions import Smooth
         import pysd.py_backend.functions as functions  # for eval statement
         res = parse_general_expression({'expr': 'SMOOTH(Variable, DelayTime)',
+                                        'py_name': 'test_smooth',
                                         'subs': []},
                                        {'Variable': 'variable',
                                         'DelayTime': 'delaytime'},
