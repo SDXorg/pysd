@@ -978,9 +978,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
                                    if s[-1] == '!'])
 
             if len(coordinates):
-                return '.loc[%s].squeeze().expand_dims(dict([(i,len(j))'\
-                       'for i,j in %s.items()]))'\
-                       % (repr(coordinates), repr(coordinates))
+                return ".loc[%s].squeeze().reset_coords(%s, drop=True)"\
+                       % (repr(coordinates), repr(list(coordinates)))
 
             self.subs = ["%s" % s.strip('!') for s in subs]
 

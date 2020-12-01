@@ -449,8 +449,7 @@ def compute_shape(coords, dims, reshape_len=None, py_name=''):
     Parameters
     ----------
     coords: dict
-      Dictionary of the dimension names as a keys with their
-      values.
+      Dictionary of the dimension names as a keys with their values.
     dims: list
       Ordered list of the dimensions.
     reshape_len: int (optional)
@@ -508,12 +507,29 @@ def get_value_by_insensitive_key_or_value(key, dict):
     return None
 
 
-def rearrange(data, dims, subscript_dict):
+def rearrange(data, dims, coords, switch=True):
     """
     Returns a xarray.DataArray object with the given coords and dims
+
+    Paramters
+    ---------
+      data: float or xarray.DataArray
+        The input data to rearrange.
+      dims: list
+        Ordered list of the dimensions.
+      coords: dict
+        Dictionary of the dimension names as a keys with their values.
+      switch: bool
+        Flag to denote if the dimensions can be switched. Default True,
+        The False is used to rearrange general expressions
+
+    Returns
+    -------
+      xarray.DataArray
+
     """
-    # subset used coords as sometimes all coords are passed
-    coords = {dim: subscript_dict[dim] for dim in dims}
+    # subset used coords in general coords will be the subscript_dict
+    coords = {dim: coords[dim] for dim in dims}
     if isinstance(data, xr.DataArray):
         dacoords = {coord: list(data.coords[coord].values)
                     for coord in data.coords}
@@ -521,53 +537,24 @@ def rearrange(data, dims, subscript_dict):
             # If the input data already has the output format
             # return it.
             return data
-        if set(data.dims).issubset(dims):
-            # The coordinates are expanded or transposed
-            # TODO replace cleaner version for Python 3 (when deprecate Py2)
-            # return xr.DataArray(0, coords, dims)
-            return xr.DataArray(np.zeros(compute_shape(coords, dims)),
-                                coords, dims) + data
 
-        values = data.values
+        reshape_dims = tuple(compute_shape(coords, dims))
 
-    elif isinstance(data, np.ndarray):
-        values = data
+        if data.shape == reshape_dims and switch:
+            # Allows switching dimensions names and transpositions
+            return xr.DataArray(data=data.values, coords=coords, dims=dims)
+
+        # The coordinates are expanded or transposed
+        # TODO replace cleaner version for Python 3 (when deprecate Py2)
+        # return xr.DataArray(0, coords, dims)
+        return xr.DataArray(np.zeros(compute_shape(coords, dims)),
+                            coords, dims) + data
+
     else:
-        try:
-            # TODO replace cleaner version for Python 3 (when deprecate Py2)
-            # return xr.DataArray(float(data), coords, dims)
-            return xr.DataArray(np.full(compute_shape(coords, dims),
-                                        float(data)), coords, dims)
-        except TypeError:
-            values = np.array(data)
-
-    reshape_dims = tuple(compute_shape(coords, dims))
-    if values.shape == reshape_dims:
-        return xr.DataArray(data=values, coords=coords, dims=dims)
-
-    if values.size == 1:
-        new_data = np.tile(values, reshape_dims)
-    elif values.size in reshape_dims:
-        reshape_dims2 = list(reshape_dims)
-        reshape_dims2.remove(values.size)
-        if len(reshape_dims2) != 0:
-            reshape_dims2 = tuple(reshape_dims2)
-            new_data = np.tile(values, reshape_dims2)
-            new_data = new_data.reshape(reshape_dims)
-        else:
-            new_data = values.reshape(reshape_dims)
-    else:
-        if set(reshape_dims) == set([len(i) for i in data.coords.values()]):
-            new_data = values.reshape(reshape_dims)
-        else:
-            raise ValueError("Trying to rearrange a {}".format(type(data))
-                             + " with dimensions {}".format(data.shape)
-                             + " using the coords {}".format(coords)
-                             + " and dims {}".format(dims)
-                             + "\nBut any change could be made..."
-                             + "\n Input data:", data)
-
-    return xr.DataArray(data=new_data, coords=coords, dims=dims)
+        # TODO replace cleaner version for Python 3 (when deprecate Py2)
+        # return xr.DataArray(float(data), coords, dims)
+        return xr.DataArray(np.full(compute_shape(coords, dims),
+                                    float(data)), coords, dims)
 
 
 def round(x):

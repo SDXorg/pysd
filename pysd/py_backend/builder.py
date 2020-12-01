@@ -155,18 +155,32 @@ def build_element(element, subscript_dict):
     else:
         raise AttributeError("Bad value for 'kind'")
 
-    # remove the elements with ADD in their name
+    # check the elements with ADD in their name
     # as these wones are directly added to the
     # objcet via .add method
-    py_expr_n = [py_expr for py_expr
-                 in element['py_expr']
-                 if "ADD" not in py_expr]
+    py_expr_no_ADD = ["ADD" not in py_expr for py_expr in element['py_expr']]
 
-    if len(py_expr_n) > 1:
+    if sum(py_expr_no_ADD) > 1:
+        py_expr_i = []
+        # need to append true to the end as the next element is checked
+        py_expr_no_ADD.append(True)
+        for i, (py_expr, subs) in\
+          enumerate(zip(element['py_expr'], element['subs'])):
+            if py_expr_no_ADD[i] and py_expr_no_ADD[i+1]:
+                # rearrange if the element doesn't come from external
+                dims = [utils.find_subscript_name(subscript_dict, sub)
+                            for sub in subs]
+                coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
+                py_expr_i.append('utils.rearrange(%(py_expr)s, %(dims)s, %(coords)s)'
+                    % {'py_expr': py_expr, 'dims': dims, 'coords': coords})
+            elif py_expr_no_ADD[i] and not py_expr_no_ADD[i+1]:
+                # if next element has ADD the current element comes from a
+                # external class, no need to rearrange
+                py_expr_i.append(py_expr)
         py_expr = 'utils.xrmerge([%(das)s,])'\
-                   % {'das': ',\n'.join(py_expr_n)}
+                   % {'das': ',\n'.join(py_expr_i)}
     else:
-        py_expr = '%(py_expr)s' % {'py_expr': py_expr_n[0]}
+        py_expr = '%(py_expr)s' % {'py_expr': element['py_expr'][0]}
 
     contents = 'return %(py_expr)s' % {'py_expr': py_expr}
 
@@ -178,7 +192,7 @@ def build_element(element, subscript_dict):
                 for sub in element['subs'][0]]
         # re arrange the python object
         left_side = 'utils.rearrange('
-        right_side = ', %(dims)s, _subscript_dict)' % {'dims': dims}
+        right_side = ', %(dims)s, _subscript_dict, switch=False)' % {'dims': dims}
         if left_side !=  py_expr[:16]\
           or right_side != py_expr[-len(right_side):]:
             # we pass the _subscript_dict as in this case the
