@@ -502,9 +502,9 @@ subscript_functions = {
 builders = {
     "integ": lambda element, subscript_dict, args: builder.add_stock(
         identifier=element['py_name'],
-        subs=element['subs'],
         expression=args[0],
         initial_condition=args[1],
+        subs=element['subs'],
         subscript_dict=subscript_dict
     ),
 
@@ -552,7 +552,8 @@ builders = {
         identifier=element['py_name'],
         delay_input=args[0],
         delay_time='time_step()' if args[1]=='time_step()'\
-                   else 'utils.round(' + args[1] + ' / time_step() ) * time_step()',
+                   else 'utils.round(' + args[1]\
+                        + ' / time_step() ) * time_step()',
         initial_value=args[2],
         order='1.' if args[1]=='time_step()'\
               else args[1] + ' / time_step()',
@@ -639,7 +640,8 @@ builders = {
         keyword=element['keyword']
     ),
 
-    "get xls constants": lambda element, subscript_dict, args: builder.add_ext_constant(
+    "get xls constants": lambda element, subscript_dict, args:\
+        builder.add_ext_constant(
         identifier=element['py_name'],
         file_name=args[0],
         tab=args[1],
@@ -648,7 +650,8 @@ builders = {
         subscript_dict=subscript_dict
     ),
 
-    "get xls lookups": lambda element, subscript_dict, args: builder.add_ext_lookup(
+    "get xls lookups": lambda element, subscript_dict, args:\
+        builder.add_ext_lookup(
         identifier=element['py_name'],
         file_name=args[0],
         tab=args[1],
@@ -658,10 +661,11 @@ builders = {
         subscript_dict=subscript_dict
     ),
 
-    "initial": lambda element, subscript_dict, args: builder.add_initial(args[0]),
+    "initial": lambda element, subscript_dict, args:\
+        builder.add_initial(args[0]),
 
-    "a function of": lambda element, subscript_dict, args: builder.add_incomplete(
-        element['real_name'], args)
+    "a function of": lambda element, subscript_dict, args:\
+        builder.add_incomplete(element['real_name'], args)
 }
 
 # direct and xls methods are identically implemented in PySD
@@ -669,7 +673,7 @@ builders['get direct data'] = builders['get xls data']
 builders['get direct lookups'] = builders['get xls lookups']
 builders['get direct constants'] = builders['get xls constants']
 
-#expand dictionaries to detect _ in Vensim def
+# expand dictionaries to detect _ in Vensim def
 utils.add_entries_underscore(
     functions,
     data_ops,

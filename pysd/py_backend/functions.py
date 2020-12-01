@@ -205,18 +205,21 @@ class Delay(Stateful):
         while isinstance(order, np.ndarray):
             order = order[0]
         if order != int(order):
-            warnings.warn('Casting delay order from %f to %i' % (order, int(order)))
+            warnings.warn('Casting delay order from %f to %i' % (
+                order, int(order)))
         self.order = int(order)  # The order can only be set once
 
-        init_state_value = self.init_func() * self.delay_time_func() / self.order
+        init_state_value = self.init_func() * self.delay_time_func()\
+                           / self.order
 
         if isinstance(init_state_value, xr.DataArray):
             # broadcast self.state
-            self.state = init_state_value.expand_dims({
-                'delay': np.arange(self.order)}, axis=0)
-
-            if sys.version_info[0] == 2:
-                # TODO remove when we stop supporting Python2 (rm 'import sys')
+            if sys.version_info[0]*10 + sys.version_info[1] >= 36:
+                self.state = init_state_value.expand_dims({
+                    'delay': np.arange(self.order)}, axis=0)
+            else:
+                # TODO remove when we stop supporting Python 2 and
+                # Python < 3.6 (rm also 'import sys' if not necessary)
                 dims = ['delay'] + list(init_state_value.dims)
                 coords = dict(init_state_value.coords.indexes)
                 coords['delay'] = np.arange(self.order)

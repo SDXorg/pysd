@@ -642,15 +642,16 @@ class ExtData(External):
     """
     Class for Vensim GET XLS DATA/GET DIRECT DATA
     """
+
     def __init__(self, file_name, tab, time_row_or_col, cell,
-                 interp, root, coords, dims, py_name):
+                 interp, coords, dims, root, py_name):
         super(ExtData, self).__init__(py_name)
         self.files = [file_name]
         self.tabs = [tab]
         self.time_row_or_cols = [time_row_or_col]
         self.cells = [cell]
-        self.roots = [root]
         self.coordss = [coords]
+        self.root = root
         self.dims = dims
         self.interp = interp
 
@@ -664,7 +665,7 @@ class ExtData(External):
                              + "'look forward' or 'hold backward")
 
     def add(self, file_name, tab, time_row_or_col, cell,
-            interp, root, coords, dims):
+            interp, coords, dims):
         """
         Add information to retrieve new dimension in an already declared object
         """
@@ -672,7 +673,6 @@ class ExtData(External):
         self.tabs.append(tab)
         self.time_row_or_cols.append(time_row_or_col)
         self.cells.append(cell)
-        self.roots.append(root)
         self.coordss.append(coords)
 
         if interp != self.interp:
@@ -690,9 +690,9 @@ class ExtData(External):
         """
         data = []
         zipped = zip(self.files, self.tabs, self.time_row_or_cols,
-                     self.cells, self.roots, self.coordss)
+                     self.cells, self.coordss)
         for (self.file, self.tab, self.x_row_or_col,
-             self.cell, self.root, self.coords) in zipped:
+             self.cell, self.coords) in zipped:
             data.append(self._initialize_data("time"))
         self.data = utils.xrmerge(data)
 
@@ -728,18 +728,19 @@ class ExtLookup(External):
     """
     Class for Vensim GET XLS LOOKUPS/GET DIRECT LOOKUPS
     """
+
     def __init__(self, file_name, tab, x_row_or_col, cell,
-                 root, coords, dims, py_name):
+                 coords, dims, root, py_name):
         super(ExtLookup, self).__init__(py_name)
         self.files = [file_name]
         self.tabs = [tab]
         self.x_row_or_cols = [x_row_or_col]
         self.cells = [cell]
-        self.roots = [root]
+        self.root = root
         self.coordss = [coords]
         self.dims = dims
 
-    def add(self, file_name, tab, x_row_or_col, cell, root, coords, dims):
+    def add(self, file_name, tab, x_row_or_col, cell, coords, dims):
         """
         Add information to retrieve new dimension in an already declared object
         """
@@ -747,7 +748,6 @@ class ExtLookup(External):
         self.tabs.append(tab)
         self.x_row_or_cols.append(x_row_or_col)
         self.cells.append(cell)
-        self.roots.append(root)
         self.coordss.append(coords)
 
         if dims != self.dims:
@@ -760,9 +760,9 @@ class ExtLookup(External):
         """
         data = []
         zipped = zip(self.files, self.tabs, self.x_row_or_cols,
-                     self.cells, self.roots, self.coordss)
+                     self.cells, self.coordss)
         for (self.file, self.tab, self.x_row_or_col,
-             self.cell, self.root, self.coords) in zipped:
+             self.cell, self.coords) in zipped:
             data.append(self._initialize_data("lookup_dim"))
         self.data = utils.xrmerge(data)
 
@@ -793,17 +793,18 @@ class ExtConstant(External):
     """
     Class for Vensim GET XLS CONSTANT/GET DIRECT CONSTANT
     """
-    def __init__(self, file_name, tab, cell, root, coords, dims, py_name):
+
+    def __init__(self, file_name, tab, cell, coords, dims, root, py_name):
         super(ExtConstant, self).__init__(py_name)
         self.files = [file_name]
         self.tabs = [tab]
         self.transposes = [cell[-1] == '*']
         self.cells = [cell.strip('*')]
-        self.roots = [root]
+        self.root = root
         self.coordss = [coords]
         self.dims = dims
 
-    def add(self, file_name, tab, cell, root, coords, dims):
+    def add(self, file_name, tab, cell, coords, dims):
         """
         Add information to retrieve new dimension in an already declared object
         """
@@ -811,7 +812,6 @@ class ExtConstant(External):
         self.tabs.append(tab)
         self.transposes.append(cell[-1] == '*')
         self.cells.append(cell.strip('*'))
-        self.roots.append(root)
         self.coordss.append(coords)
 
         if dims != self.dims:
@@ -824,9 +824,9 @@ class ExtConstant(External):
         """
         data = []
         zipped = zip(self.files, self.tabs, self.transposes,
-                     self.cells, self.roots, self.coordss)
+                     self.cells, self.coordss)
         for (self.file, self.tab, self.transpose,
-             self.cell, self.root, self.coords) in zipped:
+             self.cell, self.coords) in zipped:
             data.append(self._initialize())
         self.data = utils.xrmerge(data)
 
@@ -941,6 +941,7 @@ class ExtSubscript(External):
     """
     Class for Vensim GET XLS SUBSCRIPT/GET DIRECT SUBSCRIPT
     """
+
     def __init__(self, file_name, tab, firstcell, lastcell, prefix, root):
         super(ExtSubscript, self).__init__("Hardcoded external subscript")
         self.file = file_name

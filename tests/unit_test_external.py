@@ -747,7 +747,6 @@ class TestData(unittest.TestCase):
         data.add(file_name=file_name,
                  tab=tab,
                  time_row_or_col=time_row_or_col,
-                 root=_root,
                  cell=cell_2,
                  coords=coords_2,
                  dims=dims,
@@ -788,7 +787,6 @@ class TestData(unittest.TestCase):
         data.add(file_name=file_name,
                  tab=tab,
                  time_row_or_col=time_row_or_col,
-                 root=_root,
                  cell=cell_2,
                  coords=coords_2,
                  dims=dims,
@@ -831,7 +829,6 @@ class TestData(unittest.TestCase):
         data.add(file_name=file_name,
                  tab=tab,
                  time_row_or_col=time_row_or_col,
-                 root=_root,
                  cell=cell_2,
                  coords=coords_2,
                  dims=dims,
@@ -1061,7 +1058,6 @@ class TestLookup(unittest.TestCase):
         data.add(file_name=file_name,
                  tab=tab,
                  x_row_or_col=x_row_or_col,
-                 root=_root,
                  cell=cell_2,
                  coords=coords_2,
                  dims=dims)
@@ -1380,7 +1376,6 @@ class TestConstant(unittest.TestCase):
 
         data.add(file_name=file_name,
                  tab=tab,
-                 root=_root,
                  cell=cell2,
                  coords=coords2,
                  dims=dims)
@@ -1418,7 +1413,6 @@ class TestConstant(unittest.TestCase):
 
         data.add(file_name=file_name,
                  tab=tab,
-                 root=_root,
                  cell=cell2,
                  coords=coords2,
                  dims=dims)
@@ -1458,7 +1452,6 @@ class TestConstant(unittest.TestCase):
 
         data.add(file_name=file_name,
                  tab=tab,
-                 root=_root,
                  cell=cell2,
                  coords=coords2,
                  dims=dims)
@@ -1498,7 +1491,6 @@ class TestConstant(unittest.TestCase):
 
         data.add(file_name=file_name,
                  tab=tab,
-                 root=_root,
                  cell=cell2,
                  coords=coords2,
                  dims=dims)
@@ -1851,6 +1843,8 @@ class TestWarningsErrors(unittest.TestCase):
         with self.assertRaises(ValueError):
             data.initialize()
 
+    @unittest.skipIf(_py_version > 20 and _py_version < 36,
+                     "in py 3.5 arises a IndexError")
     def test_data_interp_v1d0(self):
         """
         Test for error 1d vertical series for len 0 series
@@ -2093,7 +2087,6 @@ class TestWarningsErrors(unittest.TestCase):
             data.add(file_name=file_name,
                      tab=tab,
                      time_row_or_col=time_row_or_col,
-                     root=_root,
                      cell=cell_2,
                      coords=coords_2,
                      dims=dims,
@@ -2131,7 +2124,6 @@ class TestWarningsErrors(unittest.TestCase):
             data.add(file_name=file_name,
                      tab=tab,
                      time_row_or_col=time_row_or_col,
-                     root=_root,
                      cell=cell_2,
                      coords=coords_2,
                      dims=dims2,
@@ -2167,7 +2159,6 @@ class TestWarningsErrors(unittest.TestCase):
             data.add(file_name=file_name,
                      tab=tab,
                      x_row_or_col=x_row_or_col,
-                     root=_root,
                      cell=cell_2,
                      coords=coords_2,
                      dims=dims2)
@@ -2203,7 +2194,6 @@ class TestWarningsErrors(unittest.TestCase):
         with self.assertRaises(ValueError):
             data.add(file_name=file_name,
                      tab=tab,
-                     root=_root,
                      cell=cell2,
                      coords=coords2,
                      dims=dims2)

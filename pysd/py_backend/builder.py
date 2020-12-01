@@ -52,7 +52,8 @@ def build(elements, subscript_dict, namespace, outfile_name):
     # Todo: Make presence of subscript_dict instantiation conditional on usage
     # Todo: Sort elements (alphabetically? group stock funcs?)
     elements = merge_partial_elements(elements)
-    functions = [build_element(element, subscript_dict) for element in elements]
+    functions = [build_element(element, subscript_dict)
+                 for element in elements]
 
     text = '''
     """
@@ -170,19 +171,20 @@ def build_element(element, subscript_dict):
                 # rearrange if the element doesn't come from external
                 dims = [utils.find_subscript_name(subscript_dict, sub)
                             for sub in subs]
-                coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
-                py_expr_i.append('utils.rearrange(%(py_expr)s, %(dims)s, %(coords)s)'
-                    % {'py_expr': py_expr, 'dims': dims, 'coords': coords})
+                coords = utils.make_coord_dict(subs, subscript_dict,
+                                               terse=False)
+                py_expr_i.append('utils.rearrange(%s, %s, %s)' % (
+                    py_expr, dims, coords))
             elif py_expr_no_ADD[i] and not py_expr_no_ADD[i+1]:
                 # if next element has ADD the current element comes from a
                 # external class, no need to rearrange
                 py_expr_i.append(py_expr)
-        py_expr = 'utils.xrmerge([%(das)s,])'\
-                   % {'das': ',\n'.join(py_expr_i)}
+        py_expr = 'utils.xrmerge([%s,])' % (
+            ',\n'.join(py_expr_i))
     else:
-        py_expr = '%(py_expr)s' % {'py_expr': element['py_expr'][0]}
+        py_expr = element['py_expr'][0]
 
-    contents = 'return %(py_expr)s' % {'py_expr': py_expr}
+    contents = 'return %s' % py_expr
 
     if element['kind'] in ['component', 'setup']\
        and 'subs' in element\
@@ -192,15 +194,13 @@ def build_element(element, subscript_dict):
                 for sub in element['subs'][0]]
         # re arrange the python object
         left_side = 'utils.rearrange('
-        right_side = ', %(dims)s, _subscript_dict, switch=False)' % {'dims': dims}
+        right_side = ', %s, _subscript_dict, switch=False)' % dims
         if left_side !=  py_expr[:16]\
           or right_side != py_expr[-len(right_side):]:
             # we pass the _subscript_dict as in this case the
             # variable must have all the coords to given dimensions
-            contents = 'return %(left_side)s %(py_expr)s %(right_side)s'\
-                       % {'py_expr': py_expr,
-                          'left_side': left_side,
-                          'right_side': right_side}
+            contents = 'return %s %s %s' % (
+                left_side, py_expr, right_side)
 
     indent = 8
     element.update({'cache': cache_type,
@@ -266,10 +266,17 @@ def merge_partial_elements(element_list):
     -------
     """
     outs = dict()  # output data structure
+
+    # needed to preserve the order python < 3.6 compatibility
+    # when using .add method for External
+    outs_names = []
+
     for element in element_list:
         if element['py_expr'] != "None":  # for
             name = element['py_name']
             if name not in outs:
+                outs_names.append(name)
+
                 # Use 'expr' for Vensim models, and 'eqn' for Xmile
                 # (This makes the Vensim equation prettier.)
                 eqn = element['expr'] if 'expr' in element else element['eqn']
@@ -296,10 +303,11 @@ def merge_partial_elements(element_list):
                 outs[name]['subs'] += [element['subs']]
                 outs[name]['arguments'] = element['arguments']
 
-    return list(outs.values())
+    return [outs[name] for name in outs_names]
 
 
-def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
+def add_stock(identifier, expression, initial_condition,
+              subs, subscript_dict):
     """
     Creates new model element dictionaries for the model elements associated
     with a stock.
@@ -309,14 +317,15 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
     identifier: basestring
         the python-safe name of the stock
 
-    subs: list
-        a list of subscript elements
-
     expression: basestring
         The formula which forms the derivative of the stock
 
     initial_condition: basestring
         Formula which forms the initial condition for the stock
+
+    subs: list of strings
+        List of strings of subscript indices that correspond to the
+        list of expressions, and collectively define the shape of the output
 
     subscript_dict: dictionary
         Dictionary describing the possible dimensions of the stock's subscripts
@@ -324,28 +333,30 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
     Returns
     -------
     reference: string
-        a string to use in place of the 'INTEG...' pieces in the element expression string,
-        a reference to the stateful object
+        a string to use in place of the 'INTEG...' pieces in the element
+        expression string, a reference to the stateful object
     new_structure: list
 
-        list of additional model element dictionaries. When there are subscripts,
-        constructs an external 'init' and 'ddt' function so that these can be appropriately
-        aggregated
+        list of additional model element dictionaries. When there are
+        subscripts, constructs an external 'init' and 'ddt' function so
+        that these can be appropriately aggregated
 
     """
     new_structure = []
 
     if len(subs) == 0:
-        stateful_py_expr = 'functions.Integ(lambda: %s, lambda: %s)' % (expression,
-                                                                        initial_condition)
+        stateful_py_expr = 'functions.Integ(lambda: %s, lambda: %s)' % (
+            expression, initial_condition)
     else:
-        stateful_py_expr = 'functions.Integ(lambda: _d%s_dt(), lambda: _init_%s())' % (identifier,
-                                                                                       identifier)
+        stateful_py_expr = 'functions.Integ(lambda: _d%s_dt(), lambda: '\
+                           '_init_%s())' % (identifier, identifier)
+
+        # following elements not specified in the model file, but must exist
         # create the stock initialization element
         new_structure.append({
             'py_name': '_init_%s' % identifier,
             'real_name': 'Implicit',
-            'kind': 'setup',  # not explicitly specified in the model file, but must exist
+            'kind': 'setup',
             'py_expr': initial_condition,
             'subs': subs,
             'doc': 'Provides initial conditions for %s function' % identifier,
@@ -386,15 +397,16 @@ def add_stock(identifier, subs, expression, initial_condition, subscript_dict):
     return "%s()" % stateful['py_name'], new_structure
 
 
-def add_n_delay(identifier, delay_input, delay_time, initial_value, order, subs, subscript_dict):
+def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
+                subs, subscript_dict):
     """
     Creates code to instantiate a stateful 'Delay' object,
     and provides reference to that object's output.
 
-    The name of the stateful object is based upon the passed in parameters, so if
-    there are multiple places where identical delay functions are referenced, the
-    translated python file will only maintain one stateful object, and reference it
-    multiple times.
+    The name of the stateful object is based upon the passed in parameters,
+    so if there are multiple places where identical delay functions are
+    referenced, the translated python file will only maintain one stateful
+    object, and reference it multiple times.
 
     Parameters
     ----------
@@ -405,35 +417,37 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order, subs,
         Reference to the model component that is the input to the delay
 
     delay_time: <string>
-        Can be a number (in string format) or a reference to another model element
-        which will calculate the delay. This is calculated throughout the simulation
-        at runtime.
+        Can be a number (in string format) or a reference to another model
+        element which will calculate the delay. This is calculated throughout
+        the simulation at runtime.
 
     initial_value: <string>
-        This is used to initialize the stocks that are present in the delay. We
-        initialize the stocks with equal values so that the outflow in the first
-        timestep is equal to this value.
+        This is used to initialize the stocks that are present in the delay.
+        We initialize the stocks with equal values so that the outflow in
+        the first timestep is equal to this value.
 
     order: string
-        The number of stocks in the delay pipeline. As we construct the delays at
-        build time, this must be an integer and cannot be calculated from other
-        model components. Anything else will yield a ValueError.
+        The number of stocks in the delay pipeline. As we construct the
+        delays at build time, this must be an integer and cannot be calculated
+        from other model components. Anything else will yield a ValueError.
 
     subs: list of strings
         List of strings of subscript indices that correspond to the
         list of expressions, and collectively define the shape of the output
-        See `builder.add_flaux` for more info
+
+    subscript_dict: dictionary
+        Dictionary describing the possible dimensions of the stock's subscripts
 
     Returns
     -------
     reference: basestring
-        reference to the delay object `__call__` method, which will return the output
-        of the delay process
+        reference to the delay object `__call__` method, which will return
+        the output of the delay process
 
     new_structure: list
         list of element construction dictionaries for the builder to assemble
-    """
 
+    """
     new_structure = []
 
     if len(subs) == 0:
@@ -447,11 +461,12 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order, subs,
                            'lambda: %s)' % (
                            identifier, identifier, identifier, order)
 
-        # create the stock initialization element
+        # following elements not specified in the model file, but must exist
+        # create the delay initialization element
         new_structure.append({
             'py_name': '_init_%s' % identifier,
             'real_name': 'Implicit',
-            'kind': 'setup',  # not explicitly specified in the model file, but must exist
+            'kind': 'setup', # not specified in the model file, but must exist
             'py_expr': initial_value,
             'subs': subs,
             'doc': 'Provides initial conditions for %s function' % identifier,
@@ -487,8 +502,7 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order, subs,
             'arguments': ''
         })
 
-    # the py name has to be unique to all the passed parameters, or if there are two things
-    # that delay the output by different amounts, they'll overwrite the original function...
+    # describe the stateful object
     stateful = {
         'py_name': '_delay_%s' % identifier,
         'real_name': 'Delay of %s' % delay_input,
@@ -507,7 +521,8 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order, subs,
     return "%s()" % stateful['py_name'], new_structure
 
 
-def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order, subs, subscript_dict):
+def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order,
+                 subs, subscript_dict):
     """
     Constructs stock and flow chains that implement the calculation of
     a smoothing function.
@@ -518,38 +533,41 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order, su
         the python-safe name of the stock
 
     smooth_input: <string>
-        Reference to the model component that is the input to the smoothing function
+        Reference to the model component that is the input to the
+        smoothing function
 
     smooth_time: <string>
-        Can be a number (in string format) or a reference to another model element
-        which will calculate the delay. This is calculated throughout the simulation
-        at runtime.
+        Can be a number (in string format) or a reference to another model
+        element which will calculate the delay. This is calculated throughout
+        the simulation at runtime.
 
     initial_value: <string>
-        This is used to initialize the stocks that are present in the delay. We
-        initialize the stocks with equal values so that the outflow in the first
-        timestep is equal to this value.
+        This is used to initialize the stocks that are present in the delay.
+        We initialize the stocks with equal values so that the outflow in
+        the first timestep is equal to this value.
 
     order: string
-        The number of stocks in the delay pipeline. As we construct the delays at
-        build time, this must be an integer and cannot be calculated from other
-        model components. Anything else will yield a ValueError.
+        The number of stocks in the delay pipeline. As we construct the delays
+        at build time, this must be an integer and cannot be calculated from
+        other model components. Anything else will yield a ValueError.
 
     subs: list of strings
         List of strings of subscript indices that correspond to the
         list of expressions, and collectively define the shape of the output
-        See `builder.add_flaux` for more info
+
+    subscript_dict: dictionary
+        Dictionary describing the possible dimensions of the stock's subscripts
 
     Returns
     -------
     reference: basestring
-        reference to the smooth object `__call__` method, which will return the output
-        of the smooth process
+        reference to the smooth object `__call__` method, which will return
+        the output of the smooth process
 
     new_structure: list
         list of element construction dictionaries for the builder to assemble
-    """
 
+    """
     stateful = {
         'py_name': '_smooth_%s' % identifier,
         'real_name': 'Smooth of %s' % smooth_input,
@@ -568,7 +586,8 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order, su
     return "%s()" % stateful['py_name'], [stateful]
 
 
-def add_n_trend(identifier, trend_input, average_time, initial_trend, subs, subscript_dict):
+def add_n_trend(identifier, trend_input, average_time, initial_trend,
+                subs, subscript_dict):
     """
     Trend.
 
@@ -587,18 +606,20 @@ def add_n_trend(identifier, trend_input, average_time, initial_trend, subs, subs
     subs: list of strings
         List of strings of subscript indices that correspond to the
         list of expressions, and collectively define the shape of the output
-        See `builder.add_flaux` for more info
+
+    subscript_dict: dictionary
+        Dictionary describing the possible dimensions of the stock's subscripts
 
     Returns
     -------
     reference: basestring
-        reference to the trend object `__call__` method, which will return the output
-        of the trend process
+        reference to the trend object `__call__` method, which will return the
+        output of the trend process
 
     new_structure: list
         list of element construction dictionaries for the builder to assemble
-    """
 
+    """
     stateful = {
         'py_name': '_trend_%s' % identifier,
         'real_name': 'trend of %s' % trend_input,
@@ -624,7 +645,8 @@ def add_initial(initial_input):
     Parameters
     ----------
     initial_input: basestring
-        The expression which will be evaluated, and the first value of which returned
+        The expression which will be evaluated, and the first value of
+        which returned
 
     Returns
     -------
@@ -637,7 +659,8 @@ def add_initial(initial_input):
 
     """
     stateful = {
-        'py_name': utils.make_python_identifier('_initial_%s' % initial_input)[0],
+        'py_name': utils.make_python_identifier('_initial_%s'
+                                                % initial_input)[0],
         'real_name': 'Smooth of %s' % initial_input,
         'doc': 'Returns the value taken on during the initialization phase',
         'py_expr': 'functions.Initial(lambda: %s)' % (
@@ -657,8 +680,8 @@ def add_initial(initial_input):
 build_names = set()
 
 
-def add_ext_data(identifier, file_name, tab, time_row_or_col,
-                 cell, subs, subscript_dict, keyword):
+def add_ext_data(identifier, file_name, tab, time_row_or_col, cell,
+                 subs, subscript_dict, keyword):
     """
     Constructs a external object for handling Vensim's GET XLS DATA and
     GET DIRECT DATA functionality
@@ -678,7 +701,8 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col,
     subs: list of strings
         List of strings of subscript indices that correspond to the
         list of expressions, and collectively define the shape of the output
-        See `builder.add_flaux` for more info
+    subscript_dict: dictionary
+        Dictionary describing the possible dimensions of the stock's subscripts
     keyword: str
         Data retrieval method ('interpolate', 'look forward', 'hold backward')
 
@@ -689,6 +713,7 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col,
         which will return the retrieved value of data for the current time step
     new_structure: list
         list of element construction dictionaries for the builder to assemble
+
     """
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
     dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
@@ -704,35 +729,21 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col,
         # with add method.
         kind = 'external_add'
         name = utils.make_add_identifier(name, build_names)
-        py_expr = '.add(file_name=%s,\n'\
-                  '     tab=%s,\n'\
-                  '     root=_root,\n'\
-                  '     time_row_or_col=%s,\n'\
-                  '     cell=%s,\n'\
-                  '     coords=%s,\n'\
-                  '     dims=%s,\n'\
-                  '     interp=%s)'
+        py_expr = '.add(%s, %s, %s, %s, %s, %s, %s)'
     else:
         # Regular name will be used and a new object will be created
         # in the model file.
         build_names.add(name)
         kind = 'external'
-        py_expr = 'external.ExtData(file_name=%s,\n'\
-                  '                 tab=%s,\n'\
-                  '                 root=_root,\n'\
-                  '                 time_row_or_col=%s,\n'\
-                  '                 cell=%s,\n'\
-                  '                 coords=%s,\n'\
-                  '                 dims=%s,\n'\
-                  '                 interp=%s,\n'\
-                  '                 py_name=\'{}\')'.format(name)
+        py_expr = 'external.ExtData(%s, %s, %s, %s, %s, %s, %s,'\
+                  '                 _root, \'{}\')'.format(name)
 
     external = {
         'py_name': name,
         'real_name': 'External data for %s' % identifier,
         'doc': 'Provides data for data variable %s' % identifier,
         'py_expr': py_expr % (file_name, tab, time_row_or_col,
-                              cell, coords, dims, keyword),
+                              cell, keyword, coords, dims),
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',
@@ -744,7 +755,8 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col,
     return "%s(time())" % external['py_name'], [external]
 
 
-def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
+def add_ext_constant(identifier, file_name, tab, cell,
+                     subs, subscript_dict):
     """
     Constructs a external object for handling Vensim's GET XLS CONSTANT and
     GET DIRECT CONSTANT functionality
@@ -762,7 +774,8 @@ def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
     subs: list of strings
         List of strings of subscript indices that correspond to the
         list of expressions, and collectively define the shape of the output
-        See `builder.add_flaux` for more info
+    subscript_dict: dictionary
+        Dictionary describing the possible dimensions of the stock's subscripts
 
     Returns
     -------
@@ -771,6 +784,7 @@ def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
         which will return the read value of the data
     new_structure: list
         list of element construction dictionaries for the builder to assemble
+
     """
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
     dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
@@ -784,23 +798,13 @@ def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
         # with add method.
         kind = 'external_add'
         name = utils.make_add_identifier(name, build_names)
-        py_expr = '.add(file_name=%s,\n'\
-                  '     tab=%s,\n'\
-                  '     root=_root,\n'\
-                  '     cell=%s,\n'\
-                  '     coords=%s,\n'\
-                  '     dims=%s)'
+        py_expr = '.add(%s, %s, %s, %s, %s)'
     else:
         # Regular name will be used and a new object will be created
         # in the model file.
         kind = 'external'
-        py_expr = 'external.ExtConstant(file_name=%s,\n'\
-                  '                     tab=%s,\n'\
-                  '                     root=_root,\n'\
-                  '                     cell=%s,\n'\
-                  '                     coords=%s,\n'\
-                  '                     dims=%s,\n'\
-                  '                     py_name=\'{}\')'.format(name)
+        py_expr = 'external.ExtConstant(%s, %s, %s, %s, %s,'\
+                  '                     _root, \'{}\')'.format(name)
     build_names.add(name)
 
     external = {
@@ -840,7 +844,8 @@ def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell,
     subs: list of strings
         List of strings of subscript indices that correspond to the
         list of expressions, and collectively define the shape of the output
-        See `builder.add_flaux` for more info
+    subscript_dict: dictionary
+        Dictionary describing the possible dimensions of the stock's subscripts
 
     Returns
     -------
@@ -849,6 +854,7 @@ def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell,
         which will return the retrieved value of data after interpolating it
     new_structure: list
         list of element construction dictionaries for the builder to assemble
+
     """
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
     dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
@@ -862,25 +868,13 @@ def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell,
         # with add method.
         kind = 'external_add'
         name = utils.make_add_identifier(name, build_names)
-        py_expr = '.add(file_name=%s,\n'\
-                  '     tab=%s,\n'\
-                  '     root=_root,\n'\
-                  '     x_row_or_col=%s,\n'\
-                  '     cell=%s,\n'\
-                  '     coords=%s,\n'\
-                  '     dims=%s)'
+        py_expr = '.add(%s, %s, %s, %s, %s, %s)'
     else:
         # Regular name will be used and a new object will be created
         # in the model file.
         kind = 'external'
-        py_expr = 'external.ExtLookup(file_name=%s,\n'\
-                  '                   tab=%s,\n'\
-                  '                   root=_root,\n'\
-                  '                   x_row_or_col=%s,\n'\
-                  '                   cell=%s,\n'\
-                  '                   coords=%s,\n'\
-                  '                   dims=%s,\n'\
-                  '                   py_name=\'{}\')'.format(name)
+        py_expr = 'external.ExtLookup(%s, %s, %s, %s, %s, %s,\n'\
+                  '                   _root, \'{}\')'.format(name)
     build_names.add(name)
 
     external = {
@@ -918,12 +912,12 @@ def add_macro(macro_name, filename, arg_names, arg_vals):
     reference: basestring
         reference to the Initial object `__call__` method,
         which will return the first calculated value of `initial_input`
-
     new_structure: list
         list of element construction dictionaries for the builder to assemble
 
     """
-    func_args = '{ %s }' % ', '.join(["'%s': lambda: %s" % (key, val) for key, val in
+    func_args = '{ %s }' % ', '.join(["'%s': lambda: %s" % (key, val)
+                                      for key, val in
                                       zip(arg_names, arg_vals)])
 
     stateful = {
@@ -931,8 +925,9 @@ def add_macro(macro_name, filename, arg_names, arg_vals):
             [utils.make_python_identifier(f)[0] for f in arg_vals]),
         'real_name': 'Macro Instantiation of ' + macro_name,
         'doc': 'Instantiates the Macro',
-        'py_expr': "functions.Macro('%s', %s, '%s', time_initialization=lambda: __data['time'])" % (
-            filename, func_args, macro_name),
+        'py_expr': "functions.Macro('%s', %s, '%s',"\
+                   "time_initialization=lambda: __data['time'])" % (
+                   filename, func_args, macro_name),
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',
@@ -969,10 +964,14 @@ def build_function_call(function_def, user_arguments):
             - name
             - optional?
             - type: [
-                "expression", - provide converted expression as parameter for runtime evaluating before the method call
-                "lambda",     - provide lambda expression as parameter for delayed runtime evaluation in the method call
-                "time",       - provide access to current instance of time object
-                "scope"       - provide access to current instance of scope object (instance of Macro object)
+                "expression", - provide converted expression as parameter for
+                                runtime evaluating before the method call
+                "lambda",     - provide lambda expression as parameter for
+                                delayed runtime evaluation in the method call
+                "time",       - provide access to current instance of
+                                time object
+                "scope"       - provide access to current instance of
+                                scope object (instance of Macro object)
             ]
     user_arguments: list of arguments provided from model
 
@@ -989,11 +988,13 @@ def build_function_call(function_def, user_arguments):
         argument_idx = 0
         for parameter_idx in range(len(parameters)):
             parameter_def = parameters[parameter_idx]
-            is_optional = parameter_def["optional"] if "optional" in parameter_def else False
+            is_optional = parameter_def["optional"]\
+                if "optional" in parameter_def else False
             if argument_idx >= len(user_arguments) and is_optional:
                 break
 
-            parameter_type = parameter_def["type"] if "type" in parameter_def else "expression"
+            parameter_type = parameter_def["type"]\
+                if "type" in parameter_def else "expression"
 
             user_argument = user_arguments[argument_idx]
             if parameter_type in ["expression", "lambda"]:
@@ -1009,4 +1010,3 @@ def build_function_call(function_def, user_arguments):
         return function_def['name'] + "(" + ", ".join(arguments) + ")"
 
     return function_def['name'] + "(" + ",".join(user_arguments) + ")"
-
