@@ -275,6 +275,12 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/rounding/test_rounding.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    @unittest.skip('working on it')
+    def test_sample_if_true(self):
+        from.test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/sample_if_true/test_sample_if_true.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_smooth(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/smooth/test_smooth.mdl')
@@ -340,6 +346,12 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscript_docs/subscript_docs.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    @unittest.skip('working on it')
+    def test_subscript_element_name(self):
+        from.test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/subscript_element_name/test_subscript_element_name.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_subscript_individually_defined_1_of_2d_arrays(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscript_individually_defined_1_of_2d_arrays/subscript_individually_defined_1_of_2d_arrays.mdl')
@@ -388,6 +400,11 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscript_switching/subscript_switching.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    def test_subscript_transposition(self):
+        from.test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/subscript_transposition/test_subscript_transposition.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_subscript_updimensioning(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscript_updimensioning/test_subscript_updimensioning.mdl')
@@ -401,6 +418,30 @@ class TestIntegrationExamples(unittest.TestCase):
     def test_subscripted_flows(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscripted_flows/test_subscripted_flows.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
+    @unittest.skip('working on it')
+    def test_subscripted_if_then_else(self):
+        from.test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/subscripted_if_then_else/test_subscripted_if_then_else.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
+    @unittest.skip('working on it')
+    def test_subscripted_smooth(self):
+        from.test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/subscripted_smooth/test_subscripted_smooth.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
+    @unittest.skip('working on it')
+    def test_subscripted_trend(self):
+        from.test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/subscripted_trend/test_subscripted_trend.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
+    @unittest.skip('working on it')
+    def test_subscripted_xidz(self):
+        from.test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/subscripted_xidz/test_subscripted_xidz.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_time(self):
