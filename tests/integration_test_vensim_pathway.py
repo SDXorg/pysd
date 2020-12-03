@@ -372,7 +372,6 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscript_individually_defined_stocks/test_subscript_individually_defined_stocks.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('in branch')
     def test_subscript_mixed_assembly(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscript_mixed_assembly/test_subscript_mixed_assembly.mdl')
@@ -389,7 +388,6 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscript_subranges/test_subscript_subrange.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('failing in py3')
     def test_subscript_subranges_equal(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscript_subranges_equal/test_subscript_subrange_equal.mdl')
