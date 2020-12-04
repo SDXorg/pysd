@@ -418,7 +418,6 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscripted_flows/test_subscripted_flows.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('working on it')
     def test_subscripted_if_then_else(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscripted_if_then_else/test_subscripted_if_then_else.mdl')
@@ -436,7 +435,6 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscripted_trend/test_subscripted_trend.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('working on it')
     def test_subscripted_xidz(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscripted_xidz/test_subscripted_xidz.mdl')

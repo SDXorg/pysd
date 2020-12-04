@@ -45,6 +45,7 @@ except ImportError:
         """ Warning: using unbounded normal due to no scipy """
         return np.random.normal(mean, std)
 
+small_vensim = 1e-6  # What is considered zero according to Vensim Help
 
 def cache(horizon):
     """
@@ -943,8 +944,7 @@ def pulse_magnitude(time, magnitude, start, repeat_time=0):
     In rage [start + n * repeat_time + dt, start + (n + 1) * repeat_time) return 0
     """
     t = time()
-    small = 1e-6  # What is considered zero according to Vensim Help
-    if repeat_time <= small:
+    if repeat_time <= small_vensim:
         if abs(t - start) < time.step():
             return magnitude * time.step()
         else:
@@ -994,9 +994,26 @@ def lookup_discrete(x, xs, ys):
 
 
 def if_then_else(condition, val_if_true, val_if_false):
-    # TODO document
-    # TODO make it work with xarrays
-    return np.where(condition, val_if_true, val_if_false)
+    """
+    Implements Vensim's IF THEN ELSE function.
+
+    Parameters
+    ----------
+    condition: bool or xarray.DataArray of bools
+    val_if_true: float/bool or xarray.DataArray
+        Value to return when condition is true.
+    val_if_false: float/bool or xarray.DataArray
+        Value to return when condition is false.
+
+    Returns
+    -------
+    The value depending on the condition.
+    """
+    # TODO lazzy evaluation
+    if isinstance(condition, xr.DataArray):
+        return xr.where(condition, val_if_true, val_if_false)
+
+    return val_if_true if condition else val_if_false
 
 
 def xidz(numerator, denominator, value_if_denom_is_zero):
@@ -1007,19 +1024,24 @@ def xidz(numerator, denominator, value_if_denom_is_zero):
 
     Parameters
     ----------
-    numerator: float
-    denominator: float
+    numerator: float or xarray.DataArray
+    denominator: float or xarray.DataArray
         Components of the division operation
-    value_if_denom_is_zero: float
+    value_if_denom_is_zero: float or xarray.DataArray
         The value to return if the denominator is zero
 
     Returns
     -------
     numerator / denominator if denominator > 1e-6
     otherwise, returns value_if_denom_is_zero
+
     """
-    small = 1e-6  # What is considered zero according to Vensim Help
-    if abs(denominator) < small:
+    if isinstance(denominator, xr.DataArray):
+        return xr.where(np.abs(denominator) < small_vensim,
+                        value_if_denom_is_zero,
+                        numerator * 1.0 / denominator)
+
+    if abs(denominator) < small_vensim:
         return value_if_denom_is_zero
     else:
         return numerator * 1.0 / denominator
@@ -1032,19 +1054,23 @@ def zidz(numerator, denominator):
 
     Parameters
     ----------
-    numerator: float
+    numerator: float or xarray.DataArray
         value to be divided
-    denominator: float
+    denominator: float or xarray.DataArray
         value to devide by
 
     Returns
     -------
     result of division numerator/denominator if denominator is not zero,
     otherwise zero.
+
     """
-    # Todo: make this work for arrays
-    small = 1e-6  # What is considered zero according to Vensim Help
-    if abs(denominator) < small:
+    if isinstance(denominator, xr.DataArray):
+        return xr.where(np.abs(denominator) < small_vensim,
+                        0,
+                        numerator * 1.0 / denominator)
+
+    if abs(denominator) < small_vensim:
         return 0
     else:
         return numerator * 1.0 / denominator
