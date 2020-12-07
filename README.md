@@ -9,6 +9,7 @@ Simulating System Dynamics Models in Python
 
 This project is a simple library for running [System Dynamics](http://en.wikipedia.org/wiki/System_dynamics) models in python, with the purpose of improving integration of *Big Data* and *Machine Learning* into the SD workflow. 
 
+**Note that as of December 2020, new updates will assume the user is running at least Python 3.6. If you need support for Python 2, please use the release here: https://github.com/JamesPHoughton/pysd/releases/tag/LastPy2**
 
 ### Resources
 See the [project documentation](http://pysd.readthedocs.org/) for information about:
