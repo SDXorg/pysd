@@ -1,12 +1,12 @@
 """
-functions.py
-
-These are supports for functions that are included in modeling software but have no
-straightforward equivalent in python.
-
+These functions have no direct analog in the standard python data analytics
+stack, or require information about the internal state of the system beyond
+what is present in the function call. We provide them in a structure that
+makes it easy for the model elements to call.
 """
 
 from __future__ import division, absolute_import
+
 
 import imp
 import inspect
@@ -942,6 +942,7 @@ def pulse_magnitude(time, magnitude, start, repeat_time=0):
     In rage [-inf, start) returns 0
     In range [start + n * repeat_time, start + n * repeat_time + dt) return magnitude/dt
     In rage [start + n * repeat_time + dt, start + (n + 1) * repeat_time) return 0
+
     """
     t = time()
     if repeat_time <= small_vensim:

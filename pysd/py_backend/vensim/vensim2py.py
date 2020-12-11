@@ -1,7 +1,9 @@
 """
-Translates vensim .mdl file to pieces needed by the builder module to write a python version of the
-model. Everything that requires knowledge of vensim syntax should be in this file.
+These functions translate vensim .mdl file to pieces needed by the builder
+module to write a python version of the model. Everything that requires
+knowledge of vensim syntax should be here.
 """
+
 from __future__ import absolute_import
 
 import os
@@ -1182,12 +1184,6 @@ def translate_vensim(mdl_file):
     Examples
     --------
     >>> translate_vensim('../tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl')
-
-    #>>> translate_vensim('../../tests/test-models/tests/abs/test_abs.mdl')
-
-    #>>> translate_vensim('../../tests/test-models/tests/exponentiation/exponentiation.mdl')
-
-    #>>> translate_vensim('../../tests/test-models/tests/limits/test_limits.mdl')
 
     """
 

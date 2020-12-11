@@ -1,11 +1,11 @@
-"""builder.py
-Refactored May 26 2016
-James Houghton
-james.p.houghton@gmail.com
+"""
+These elements are used by the translator to construct the model from the
+interpreted results. It is technically possible to use these functions to
+build a model from scratch. But - it would be rather error prone.
 
 This is code to assemble a pysd model once all of the elements have
 been translated from their native language into python compatible syntax.
-There should be nothing in this file that has to know about either vensim or
+There should be nothing here that has to know about either vensim or
 xmile specific syntax.
 """
 
@@ -20,9 +20,11 @@ from io import open
 import pkg_resources
 import yapf
 
-from .._version import __version__
-from ..py_backend import utils
+from . import utils
 
+sys.path.append("..")
+
+from _version import __version__
 
 def build(elements, subscript_dict, namespace, outfile_name):
     """

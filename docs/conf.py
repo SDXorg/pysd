@@ -33,7 +33,7 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-print os.path.abspath('../')
+print(os.path.abspath('../'))
 sys.path.insert(0, os.path.abspath('../')) #this *should* be adding to the beginning...
 sys.path.insert(0, os.path.abspath('../pysd/'))
 sys.path.insert(0, os.path.abspath('../pysd/py_backend/'))
@@ -78,9 +78,9 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'PySD'
-copyright = u'2016, James Houghton'
-author = u'James Houghton'
+project = 'PySD'
+copyright = '2016, James Houghton'
+author = 'James Houghton'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -255,8 +255,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  (master_doc, 'PySD.tex', u'PySD Documentation',
-   u'James Houghton', 'manual'),
+  (master_doc, 'PySD.tex', 'PySD Documentation',
+   'James Houghton', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
@@ -285,7 +285,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'pysd', u'PySD Documentation',
+    (master_doc, 'pysd', 'PySD Documentation',
      [author], 1)
 ]
 
@@ -299,7 +299,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  (master_doc, 'PySD', u'PySD Documentation',
+  (master_doc, 'PySD', 'PySD Documentation',
    author, 'PySD', 'One line description of project.',
    'Miscellaneous'),
 ]

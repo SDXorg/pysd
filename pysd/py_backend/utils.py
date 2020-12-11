@@ -1,3 +1,9 @@
+"""
+These are general utilities used by the builder.py, functions.py or the
+model file. Vensim's function equivalents should not go here but in 
+functions.py
+"""
+
 import keyword
 import regex as re
 
@@ -511,7 +517,7 @@ def rearrange(data, dims, coords, switch=True):
     """
     Returns a xarray.DataArray object with the given coords and dims
 
-    Paramters
+    Parameters
     ---------
       data: float or xarray.DataArray
         The input data to rearrange.

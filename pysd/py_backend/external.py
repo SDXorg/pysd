@@ -1,3 +1,9 @@
+"""
+These classes are a collection of the needed tools to read external data.
+The External type objects created by these classes are initialized before
+the Stateful objects by functions.Model.initialize.
+"""
+
 import re
 import os
 import warnings
@@ -791,7 +797,7 @@ class ExtLookup(External):
 
 class ExtConstant(External):
     """
-    Class for Vensim GET XLS CONSTANT/GET DIRECT CONSTANT
+    Class for Vensim GET XLS CONSTANTS/GET DIRECT CONSTANTS
     """
 
     def __init__(self, file_name, tab, cell, coords, dims, root, py_name):

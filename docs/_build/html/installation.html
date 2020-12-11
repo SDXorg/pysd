@@ -1,58 +1,72 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Installation &mdash; PySD 0.7.5 documentation</title>
+  <title>Installation &mdash; PySD 0.10.0 documentation</title>
   
 
   
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
   
 
   
-  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
-
-  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-
-  
-  
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PySD 0.7.5 documentation" href="index.html"/>
-        <link rel="next" title="Basic Usage" href="basic_usage.html"/>
-        <link rel="prev" title="PySD" href="index.html"/> 
-
-  
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
-
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Basic Usage" href="basic_usage.html" />
+    <link rel="prev" title="PySD" href="index.html" /> 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
+   
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-nav-search">
-        
-          <a href="index.html" class="fa fa-home"> PySD</a>
-        
-        
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> PySD
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.10
+              </div>
+            
+          
+
+          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -60,12 +74,18 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-      </div>
 
-      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+        </div>
+
         
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
-          
+            
+            
+              
+            
+            
               <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#installing-via-pip">Installing via pip</a></li>
@@ -75,64 +95,74 @@
 <li class="toctree-l2"><a class="reference internal" href="#additional-resources">Additional Resources</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="basic_usage.html">Basic Usage</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="basic_usage.html#importing-a-model-and-getting-started">Importing a model and getting started</a></li>
-<li class="toctree-l2"><a class="reference internal" href="basic_usage.html#running-the-model">Running the Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="basic_usage.html#outputting-various-run-information">Outputting various run information</a></li>
-<li class="toctree-l2"><a class="reference internal" href="basic_usage.html#setting-parameter-values">Setting parameter values</a></li>
-<li class="toctree-l2"><a class="reference internal" href="basic_usage.html#setting-simulation-initial-conditions">Setting simulation initial conditions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="basic_usage.html#querying-current-values">Querying current values</a></li>
-<li class="toctree-l2"><a class="reference internal" href="basic_usage.html#supported-functions">Supported functions</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">Advanced Usage</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="advanced_usage.html#replacing-model-components-with-more-complex-objects">Replacing model components with more complex objects</a></li>
-<li class="toctree-l2"><a class="reference internal" href="advanced_usage.html#supplying-additional-arguments-to-the-integrator">Supplying additional arguments to the integrator</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="basic_usage.html">Basic Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">Advanced Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="functions.html">User Functions Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="development/development_index.html">Developer Documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="development/about.html">About the Project</a></li>
-<li class="toctree-l2"><a class="reference internal" href="development/contributing.html">Contributing to PySD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="development/pathway.html">PySD Development Pathway</a></li>
-<li class="toctree-l2"><a class="reference internal" href="development/structure.html">Structure of the PySD module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="development/complement.html">Complementary Projects</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="development/development_index.html">Developer Documentation</a></li>
 </ul>
 
+            
           
+        </div>
         
       </div>
-      &nbsp;
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">PySD</a>
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PySD</a>
+        
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
-          <div role="navigation" aria-label="breadcrumbs navigation">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>Installation</li>
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Installation</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          <a href="_sources/installation.txt" rel="nofollow"> View page source</a>
+            
+            <a href="_sources/installation.rst.txt" rel="nofollow"> View page source</a>
+          
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
-          <div role="main" class="document">
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
@@ -140,32 +170,32 @@
 <h2>Installing via pip<a class="headerlink" href="#installing-via-pip" title="Permalink to this headline">¶</a></h2>
 <p>To install the PySD package from the Python package index into an established
 Python environment, use the pip command:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>pip install pysd
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip install pysd
 </pre></div>
 </div>
 </div>
 <div class="section" id="installing-from-source">
 <h2>Installing from source<a class="headerlink" href="#installing-from-source" title="Permalink to this headline">¶</a></h2>
 <p>To install from the source, clone the project with git:</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>git clone https://github.com/JamesPHoughton/pysd.git
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git clone https://github.com/JamesPHoughton/pysd.git
 </pre></div>
 </div>
 <p>Or download the latest version from the project webpage: <a class="reference external" href="https://github.com/JamesPHoughton/pysd">https://github.com/JamesPHoughton/pysd</a></p>
 <p>In the source directory use the command</p>
-<div class="highlight-bash"><div class="highlight"><pre><span></span>python setup.py install
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>python setup.py install
 </pre></div>
 </div>
 </div>
 <div class="section" id="required-dependencies">
 <h2>Required Dependencies<a class="headerlink" href="#required-dependencies" title="Permalink to this headline">¶</a></h2>
-<p>PySD is built on python 2.7, and may not work as advertized on 3.x.</p>
+<p>PySD was originally built on python 2.7, but will work with 3.x.</p>
 <p>PySD calls on the core Python data analytics stack, and a third party parsing library:</p>
 <ul class="simple">
-<li>Numpy</li>
-<li>Scipy</li>
-<li>Pandas</li>
-<li>Matplotlib</li>
-<li>Parsimonious</li>
+<li><p>Numpy</p></li>
+<li><p>Scipy</p></li>
+<li><p>Pandas</p></li>
+<li><p>Matplotlib</p></li>
+<li><p>Parsimonious</p></li>
 </ul>
 <p>These modules should build automatically if you are installing via <cite>pip</cite>. If you are building from
 the source code, or if pip fails to load them, they can be loaded with the same <cite>pip</cite> syntax as
@@ -175,10 +205,10 @@ above.</p>
 <h2>Optional Dependencies<a class="headerlink" href="#optional-dependencies" title="Permalink to this headline">¶</a></h2>
 <p>These Python libraries bring additional data analytics capabilities to the analysis of SD models:</p>
 <ul class="simple">
-<li>PyMC: a library for performing Markov chain Monte Carlo analysis</li>
-<li>Scikit-learn: a library for performing machine learning in Python</li>
-<li>NetworkX: a library for constructing networks</li>
-<li>GeoPandas: a library for manipulating geographic data</li>
+<li><p>PyMC: a library for performing Markov chain Monte Carlo analysis</p></li>
+<li><p>Scikit-learn: a library for performing machine learning in Python</p></li>
+<li><p>NetworkX: a library for constructing networks</p></li>
+<li><p>GeoPandas: a library for manipulating geographic data</p></li>
 </ul>
 <p>Additionally, the System Dynamics Translator utility developed by Robert Ward is useful for
 translating models from other system dynamics formats into the XMILE standard, to be read by PySD.</p>
@@ -186,22 +216,22 @@ translating models from other system dynamics formats into the XMILE standard, t
 </div>
 <div class="section" id="additional-resources">
 <h2>Additional Resources<a class="headerlink" href="#additional-resources" title="Permalink to this headline">¶</a></h2>
-<p>The PySD Cookbook contains a recipe on
-<span class="xref doc">Installation_and_Setup</span> that can help you get set up
-with both python and PySD.</p>
+<p>The <a class="reference external" href="https://github.com/JamesPHoughton/PySD-Cookbook">PySD Cookbook</a> contains recipes that can help you get set up with PySD.</p>
 </div>
 </div>
 
 
+           </div>
+           
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="basic_usage.html" class="btn btn-neutral float-right" title="Basic Usage">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="basic_usage.html" class="btn btn-neutral float-right" title="Basic Usage" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="index.html" class="btn btn-neutral" title="PySD"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral float-left" title="PySD" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -210,13 +240,22 @@ with both python and PySD.</p>
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2016, James Houghton.
+        
+        &copy; Copyright 2016, James Houghton
+
     </p>
   </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
-  
 </footer>
+
         </div>
       </div>
 
@@ -225,37 +264,15 @@ with both python and PySD.</p>
   </div>
   
 
-
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'0.7.5',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
-        };
-    </script>
-      <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
-      <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>
