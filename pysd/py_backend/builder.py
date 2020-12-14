@@ -22,9 +22,7 @@ import yapf
 
 from . import utils
 
-sys.path.append("..")
-
-from _version import __version__
+from .._version import __version__
 
 def build(elements, subscript_dict, namespace, outfile_name):
     """
@@ -69,6 +67,7 @@ def build(elements, subscript_dict, namespace, outfile_name):
     import os
 
     from pysd.py_backend.functions import cache
+    from pysd.py_backend.utils import subs
 
     _subscript_dict = %(subscript_dict)s
 
@@ -188,6 +187,8 @@ def build_element(element, subscript_dict):
 
     contents = 'return %s' % py_expr
 
+    element['subs_dec'] = ''
+
     if element['kind'] in ['component', 'setup']\
        and 'subs' in element\
        and element['subs'][0] not in ['', [], None]:
@@ -195,14 +196,7 @@ def build_element(element, subscript_dict):
         dims = [utils.find_subscript_name(subscript_dict, sub)
                 for sub in element['subs'][0]]
         # re arrange the python object
-        left_side = 'utils.rearrange('
-        right_side = ', %s, _subscript_dict, switch=False)' % dims
-        if left_side !=  py_expr[:16]\
-          or right_side != py_expr[-len(right_side):]:
-            # we pass the _subscript_dict as in this case the
-            # variable must have all the coords to given dimensions
-            contents = 'return %s %s %s' % (
-                left_side, py_expr, right_side)
+        element['subs_dec'] = '@subs(%s, _subscript_dict)' % dims
 
     indent = 8
     element.update({'cache': cache_type,
@@ -239,6 +233,7 @@ def build_element(element, subscript_dict):
     else:
         func = '''
     %(cache)s
+    %(subs_dec)s
     def %(py_name)s(%(arguments)s):
         """
         Real Name: %(real_name)s

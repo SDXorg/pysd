@@ -446,27 +446,47 @@ class Macro(Stateful):
         # with a pandas series being passed in as a dictionary element.
 
         for key, value in params.items():
+
+            func_name = utils.get_value_by_insensitive_key_or_value(key,
+                self.components._namespace)
+
+            if func_name is None:
+                raise NameError('%s is not recognized as a model component'
+                                % key)
+
+            func = getattr(self.components, func_name)
+            sig = signature(func)
+
+            # TODO: make this less fragile
+            if str(sig) == '()':
+                original_data = func()
+            else:
+                original_data = func(0)
+            if isinstance(original_data, xr.DataArray):
+                shape_info = {'dims': original_data.dims,
+                              'coords': original_data.coords}
+            else:
+                shape_info = None
+
             if isinstance(value, pd.Series):
-                new_function = self._timeseries_component(value)
+                new_function = self._timeseries_component(value, shape_info)
             elif callable(value):
                 new_function = value
             else:
-                new_function = self._constant_component(value)
+                new_function = self._constant_component(value, shape_info)
 
-            func_name = utils.get_value_by_insensitive_key_or_value(key, self.components._namespace)
-
-            if func_name is None:
-                raise NameError('%s is not recognized as a model component' % key)
-
-            if '_integ_' + func_name in dir(self.components):  # this won't handle other statefuls...
-                warnings.warn("Replacing the equation of stock {} with params".format(key),
+            # this won't handle other statefuls...
+            if '_integ_' + func_name in dir(self.components):
+                warnings.warn("Replacing the equation of stock"
+                              + "{} with params".format(key),
                               stacklevel=2)
 
             setattr(self.components, func_name, new_function)
 
     def _timeseries_component(self, series):
         """ Internal function for creating a timeseries model element """
-        # this is only called if the set_component function recognizes a pandas series
+        # this is only called if the set_component function recognizes a
+        # pandas series
         # Todo: raise a warning if extrapolating from the end of the series.
         return lambda: np.interp(self.time(), series.index, series.values)
 

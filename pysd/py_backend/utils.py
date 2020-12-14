@@ -1,6 +1,6 @@
 """
 These are general utilities used by the builder.py, functions.py or the
-model file. Vensim's function equivalents should not go here but in 
+model file. Vensim's function equivalents should not go here but in
 functions.py
 """
 
@@ -10,6 +10,8 @@ import regex as re
 import numpy as np
 import pandas as pd
 import xarray as xr
+
+from functools import wraps
 
 
 def dict_find(in_dict, value):
@@ -562,6 +564,37 @@ def rearrange(data, dims, coords, switch=True):
         return xr.DataArray(np.full(compute_shape(coords, dims),
                                     float(data)), coords, dims)
 
+def subs(dims, subcoords):
+    def decorator(function):
+        @wraps(function)
+        def wrapper(*args):
+            data = function(*args)
+            coords = {dim: subcoords[dim] for dim in dims}
+
+            if isinstance(data, xr.DataArray):
+                dacoords = {coord: list(data.coords[coord].values)
+                        for coord in data.coords}
+                if data.dims == tuple(dims) and dacoords == coords:
+                    # If the input data already has the output format
+                    # return it.
+                    return data
+
+                reshape_dims = tuple(compute_shape(coords, dims))
+
+                # The coordinates are expanded or transposed
+                # TODO replace cleaner version for Python 3 (when deprecate Py2)
+                # return xr.DataArray(0, coords, dims)
+                return xr.DataArray(np.zeros(compute_shape(coords, dims)),
+                                    coords, dims) + data
+
+            else:
+                # TODO replace cleaner version for Python 3 (when deprecate Py2)
+                # return xr.DataArray(float(data), coords, dims)
+                return xr.DataArray(np.full(compute_shape(coords, dims),
+                                            float(data)), coords, dims)
+
+        return wrapper
+    return decorator
 
 def round(x):
     """
