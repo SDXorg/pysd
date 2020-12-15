@@ -684,7 +684,8 @@ utils.add_entries_underscore(
 )
 
 
-def parse_general_expression(element, namespace=None, subscript_dict=None, macro_list=None):
+def parse_general_expression(element, namespace=None, subscript_dict=None,
+                             macro_list=None, elements_subs_dict=None):
     """
     Parses a normal expression
     # its annoying that we have to construct and compile the grammar every time...
@@ -869,6 +870,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
         def visit_reference(self, n, vc):
 
             self.kind = 'component'
+
             vc[0] += '()'
 
             if re.match("\[.+\]", vc[-1]):
@@ -878,6 +880,9 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
                 py_expr = "".join(vc)
 
             if self.subs:
+                if elements_subs_dict[py_expr[:-2]] == self.subs:
+                    self.subs = None
+                    return py_expr
                 coords = utils.make_coord_dict(self.subs,
                                                subscript_dict,
                                                terse=False)
@@ -908,7 +913,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             py_expr = ''.join([x.strip(',') for x in vc])
 
             lookup_subs = self.lookup_subs.pop()
-            if lookup_subs:
+            if lookup_subs and elements_subs_dict[py_expr] != lookup_subs:
                 coords = utils.make_coord_dict(lookup_subs,
                                                subscript_dict,
                                                terse=False)
@@ -1133,25 +1138,31 @@ def translate_section(section, macro_list, root_path):
         if macro['name'] != '_main_':
             name, namespace = utils.make_python_identifier(macro['name'], namespace)
 
-    # add model elements
-    for element in model_elements:
-        if element['kind'] not in ['subdef', 'section']:
-            element['py_name'], namespace = utils.make_python_identifier(element['real_name'],
-                                                                         namespace)
-
     # Create a namespace for the subscripts
     # as these aren't used to create actual python functions, but are just labels on arrays,
     # they don't actually need to be python-safe
     subscript_dict = {e['real_name']: e['subs'] for e in model_elements if e['kind'] == 'subdef'}
 
+    elements_subs_dict = {}
+    # add model elements
+    for element in model_elements:
+        if element['kind'] not in ['subdef', 'section']:
+            element['py_name'], namespace = utils.make_python_identifier(element['real_name'],
+                                                                         namespace)
+            elements_subs_dict[element['py_name']] = [
+                utils.find_subscript_name(subscript_dict, sub)
+                for sub in element['subs']]
+
     # Parse components to python syntax.
     for element in model_elements:
         if (element['kind'] == 'component' and 'py_expr' not in element) or element['kind'] == 'data':
             # Todo: if there is new structure, it should be added to the namespace...
-            translation, new_structure = parse_general_expression(element,
-                                                                  namespace=namespace,
-                                                                  subscript_dict=subscript_dict,
-                                                                  macro_list=macro_list)
+            translation, new_structure = parse_general_expression(
+                element,
+                namespace=namespace,
+                subscript_dict=subscript_dict,
+                macro_list=macro_list,
+                elements_subs_dict=elements_subs_dict)
             element.update(translation)
             model_elements += new_structure
 

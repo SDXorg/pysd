@@ -48,6 +48,12 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/constant_expressions/test_constant_expressions.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    @unittest.skip('to be fixed')
+    def test_delay_numeric_error(self):
+        from.test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/delay_numeric_error/test_delay_numeric_error.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_delay_parentheses(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/delay_parentheses/test_delay_parentheses.mdl')

@@ -12,9 +12,10 @@ import imp
 import inspect
 import sys
 import os
+import re
 import random
 import warnings
-from functools import wraps
+from ast import literal_eval
 
 import numpy as np
 import pandas as _pd
@@ -24,6 +25,8 @@ from funcsigs import signature
 
 from . import utils
 from .external import External
+from .decorators import subs
+from .decorators import cache  # for backward compatibility
 
 import traceback
 
@@ -46,69 +49,6 @@ except ImportError:
         return np.random.normal(mean, std)
 
 small_vensim = 1e-6  # What is considered zero according to Vensim Help
-
-def cache(horizon):
-    """
-    Put a wrapper around a model function
-
-    Decorators with parameters are tricky, you have to
-    essentially create a decorator that returns a decorator,
-    which itself then returns the function wrapper.
-
-    Parameters
-    ----------
-    horizon: string
-        - 'step' means cache just until the next timestep
-        - 'run' means cache until the next initialization of the model
-
-    Returns
-    -------
-    new_func: decorated function
-        function wrapping the original function, handling caching
-
-    """
-
-    def cache_step(func):
-        """ Decorator for caching at a step level"""
-
-        @wraps(func)
-        def cached(*args):
-            """Step wise cache function"""
-            try:  # fails if cache is out of date or not instantiated
-                data = func.__globals__['__data']
-                assert cached.cache_t == data['time']()
-                assert hasattr(cached, 'cache_val')
-                assert cached.cache_val is not None
-            except (AssertionError, AttributeError):
-                cached.cache_val = func(*args)
-                data = func.__globals__['__data']
-                cached.cache_t = data['time']()
-            return cached.cache_val
-
-        return cached
-
-    def cache_run(func):
-        """ Decorator for caching at  the run level"""
-
-        @wraps(func)
-        def cached(*args):
-            """Run wise cache function"""
-            try:  # fails if cache is not instantiated
-                return cached.cache_val
-            except AttributeError:
-                cached.cache_val = func(*args)
-                return cached.cache_val
-
-        return cached
-
-    if horizon == 'step':
-        return cache_step
-
-    elif horizon == 'run':
-        return cache_run
-
-    else:
-        raise (AttributeError('Bad horizon for cache decorator'))
 
 
 class Stateful(object):
@@ -384,6 +324,9 @@ class Macro(Stateful):
             else:
                 self.time = self.time_initialization()
 
+        self.components.cache.clean()
+        self.components.cache.time = self.time()
+
         self.components._init_outer_references({
             'scope': self,
             'time': self.time
@@ -449,31 +392,22 @@ class Macro(Stateful):
 
             func_name = utils.get_value_by_insensitive_key_or_value(key,
                 self.components._namespace)
+            try:
+                dims = literal_eval(re.findall("Subs: .+",
+                        getattr(self.components, func_name).__doc__)[0][6:])
+            except Exception:
+                dims = None
 
             if func_name is None:
                 raise NameError('%s is not recognized as a model component'
                                 % key)
 
-            func = getattr(self.components, func_name)
-            sig = signature(func)
-
-            # TODO: make this less fragile
-            if str(sig) == '()':
-                original_data = func()
-            else:
-                original_data = func(0)
-            if isinstance(original_data, xr.DataArray):
-                shape_info = {'dims': original_data.dims,
-                              'coords': original_data.coords}
-            else:
-                shape_info = None
-
             if isinstance(value, pd.Series):
-                new_function = self._timeseries_component(value, shape_info)
+                new_function = self._timeseries_component(value, dims)
             elif callable(value):
                 new_function = value
             else:
-                new_function = self._constant_component(value, shape_info)
+                new_function = self._constant_component(value, dims)
 
             # this won't handle other statefuls...
             if '_integ_' + func_name in dir(self.components):
@@ -483,15 +417,28 @@ class Macro(Stateful):
 
             setattr(self.components, func_name, new_function)
 
-    def _timeseries_component(self, series):
+    def _timeseries_component(self, series, dims):
         """ Internal function for creating a timeseries model element """
         # this is only called if the set_component function recognizes a
         # pandas series
-        # Todo: raise a warning if extrapolating from the end of the series.
-        return lambda: np.interp(self.time(), series.index, series.values)
+        # TODO: raise a warning if extrapolating from the end of the series.
+        if isinstance(series.values[0], xr.DataArray):
+            return lambda: utils.rearrange(xr.concat(series.values,
+                series.index).interp(concat_dim=self.time()).reset_coords(
+                'concat_dim', drop=True),dims, self.components._subscript_dict)
 
-    def _constant_component(self, value):
+        else:
+             if dims:
+                 return lambda: utils.rearrange(np.interp(self.time(),
+                     series.index, series.values),
+                     dims, self.components._subscript_dict)
+             return lambda: np.interp(self.time(), series.index, series.values)
+
+    def _constant_component(self, value, dims):
         """ Internal function for creating a constant model element """
+        if dims:
+            return lambda: utils.rearrange(value, dims,
+                                           self.components._subscript_dict)
         return lambda: value
 
     def set_state(self, t, state):
@@ -507,20 +454,38 @@ class Macro(Stateful):
             The keys to this dictionary may be either pysafe names or original model file names
         """
         self.time.update(t)
+        self.components.cache.reset(t)
 
         for key, value in state.items():
             # TODO Implement map with reference between component and stateful element?
-            component_name = utils.get_value_by_insensitive_key_or_value(key, self.components._namespace)
+            component_name = utils.get_value_by_insensitive_key_or_value(key,
+                self.components._namespace)
             if component_name is not None:
                 stateful_name = '_integ_%s' % component_name
             else:
                 component_name = key
                 stateful_name = key
+            try:
+                if component_name[:7] == '_integ_':
+                    # we need to check the original expression to retrieve
+                    # the dimensions
+                    dims = literal_eval(re.findall("Subs: .+",
+                        getattr(self.components,
+                        component_name[7:]).__doc__)[0][6:])
+                else:
+                    dims = literal_eval(re.findall("Subs: .+",
+                        getattr(self.components,
+                        component_name).__doc__)[0][6:])
+            except Exception:
+                dims = None
 
             # Try to update stateful component
             if hasattr(self.components, stateful_name):
                 try:
                     element = getattr(self.components, stateful_name)
+                    if dims:
+                        value = utils.rearrange(value, dims,
+                            self.components._subscript_dict)
                     element.update(value)
                 except AttributeError:
                     print("'%s' has no state elements, assignment failed")
@@ -528,17 +493,11 @@ class Macro(Stateful):
             else:
                 # Try to override component
                 try:
-                    setattr(self.components, component_name, self._constant_component(value))
+                    setattr(self.components, component_name,
+                            self._constant_component(value, dims))
                 except AttributeError:
                     print("'%s' has no component, assignment failed")
                     raise
-
-    def clear_caches(self):
-        """ Clears the Caches for all model elements """
-        for element_name in dir(self.components):
-            element = getattr(self.components, element_name)
-            if hasattr(element, 'cache_val'):
-                delattr(element, 'cache_val')
 
     def doc(self):
         """
@@ -557,22 +516,37 @@ class Macro(Stateful):
         collector = []
         for name, varname in self.components._namespace.items():
             try:
+                # TODO correct this when Original Eqn is in several lines
                 docstring = getattr(self.components, varname).__doc__
                 lines = docstring.split('\n')
-                collector.append({'Real Name': name,
-                                  'Py Name': varname,
-                                  'Eqn': lines[2].replace("Original Eqn:", "").strip(),
-                                  'Unit': lines[3].replace("Units:", "").strip(),
-                                  'Lims': lines[4].replace("Limits:", "").strip(),
-                                  'Type': lines[5].replace("Type:", "").strip(),
-                                  'Comment': '\n'.join(lines[7:]).strip()})
-            except:
+
+                for unit_line in range(3, 9):
+                    # this loop detects where Units: starts as
+                    # sometimes eqn could be split in several lines
+                    if re.findall('Units: ', lines[unit_line]):
+                        break
+                if unit_line == 3:
+                    eqn = lines[2].replace("Original Eqn:", "").strip()
+                else:
+                    eqn = '; '.join([l.strip() for l in lines[3:unit_line]])
+
+                collector.append(
+                    {'Real Name': name,
+                     'Py Name': varname,
+                     'Eqn': eqn,
+                     'Unit': lines[unit_line].replace("Units:", "").strip(),
+                     'Lims': lines[unit_line+1].replace("Limits:", "").strip(),
+                     'Type': lines[unit_line+2].replace("Type:", "").strip(),
+                     'Subs': lines[unit_line+3].replace("Subs:", "").strip(),
+                     'Comment': '\n'.join(lines[(unit_line+4):]).strip()})
+            except Exception:
                 pass
 
         docs_df = _pd.DataFrame(collector)
         docs_df.fillna('None', inplace=True)
 
-        order = ['Real Name', 'Py Name', 'Unit', 'Lims', 'Type', 'Eqn', 'Comment']
+        order = ['Real Name', 'Py Name', 'Unit', 'Lims',
+                 'Type', 'Subs', 'Eqn', 'Comment']
         return docs_df[order].sort_values(by='Real Name').reset_index(drop=True)
 
     def __str__(self):
@@ -736,7 +710,6 @@ class Model(Macro):
 
         if params:
             self.set_components(params)
-        self.clear_caches()
         self.set_initial_condition(initial_condition)
 
         return_timestamps = self._format_return_timestamps(return_timestamps)
@@ -747,7 +720,7 @@ class Model(Macro):
             return_columns = self._default_return_columns()
 
         self.time.stage = 'Run'
-        self.clear_caches()
+        self.components.cache.clean()
 
         capture_elements, return_addresses = utils.get_return_elements(
             return_columns, self.components._namespace, self.components._subscript_dict)
@@ -861,6 +834,7 @@ class Model(Macro):
                 outputs.append({key: getattr(self.components, key)() for key in capture_elements})
             self._euler_step(t2 - self.time())
             self.time.update(t2)  # this will clear the stepwise caches
+            self.components.cache.reset(t2)
 
         # need to add one more time step, because we run only the state updates in the previous
         # loop and thus may be one short.

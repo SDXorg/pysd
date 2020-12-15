@@ -515,7 +515,7 @@ def get_value_by_insensitive_key_or_value(key, dict):
     return None
 
 
-def rearrange(data, dims, coords, switch=True):
+def rearrange(data, dims, coords):
     """
     Returns a xarray.DataArray object with the given coords and dims
 
@@ -539,16 +539,7 @@ def rearrange(data, dims, coords, switch=True):
     # subset used coords in general coords will be the subscript_dict
     coords = {dim: coords[dim] for dim in dims}
     if isinstance(data, xr.DataArray):
-        dacoords = {coord: list(data.coords[coord].values)
-                    for coord in data.coords}
-        if data.dims == tuple(dims) and dacoords == coords:
-            # If the input data already has the output format
-            # return it.
-            return data
-
-        reshape_dims = tuple(compute_shape(coords, dims))
-
-        if data.shape == reshape_dims and switch:
+        if data.shape == tuple(compute_shape(coords, dims)):
             # Allows switching dimensions names and transpositions
             return xr.DataArray(data=data.values, coords=coords, dims=dims)
 
@@ -563,38 +554,6 @@ def rearrange(data, dims, coords, switch=True):
         # return xr.DataArray(float(data), coords, dims)
         return xr.DataArray(np.full(compute_shape(coords, dims),
                                     float(data)), coords, dims)
-
-def subs(dims, subcoords):
-    def decorator(function):
-        @wraps(function)
-        def wrapper(*args):
-            data = function(*args)
-            coords = {dim: subcoords[dim] for dim in dims}
-
-            if isinstance(data, xr.DataArray):
-                dacoords = {coord: list(data.coords[coord].values)
-                        for coord in data.coords}
-                if data.dims == tuple(dims) and dacoords == coords:
-                    # If the input data already has the output format
-                    # return it.
-                    return data
-
-                reshape_dims = tuple(compute_shape(coords, dims))
-
-                # The coordinates are expanded or transposed
-                # TODO replace cleaner version for Python 3 (when deprecate Py2)
-                # return xr.DataArray(0, coords, dims)
-                return xr.DataArray(np.zeros(compute_shape(coords, dims)),
-                                    coords, dims) + data
-
-            else:
-                # TODO replace cleaner version for Python 3 (when deprecate Py2)
-                # return xr.DataArray(float(data), coords, dims)
-                return xr.DataArray(np.full(compute_shape(coords, dims),
-                                            float(data)), coords, dims)
-
-        return wrapper
-    return decorator
 
 def round(x):
     """

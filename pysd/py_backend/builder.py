@@ -62,12 +62,10 @@ def build(elements, subscript_dict, namespace, outfile_name):
     """
     from __future__ import division
     import numpy as np
-    from pysd import utils, functions, external
     import xarray as xr
+    from pysd import utils, functions, external
+    from pysd import cache, subs
     import os
-
-    from pysd.py_backend.functions import cache
-    from pysd.py_backend.utils import subs
 
     _subscript_dict = %(subscript_dict)s
 
@@ -144,9 +142,9 @@ def build_element(element, subscript_dict):
 
     """
     if element['kind'] == 'constant':
-        cache_type = "@cache('run')"
+        cache_type = "@cache.run"
     elif element['kind'] in ['component', 'component_ext_data']:
-        cache_type = "@cache('step')"
+        cache_type = "@cache.step"
     elif element['kind'] == 'lookup':
         # lookups may be called with different values in a round
         cache_type = ''
@@ -188,15 +186,26 @@ def build_element(element, subscript_dict):
     contents = 'return %s' % py_expr
 
     element['subs_dec'] = ''
+    element['subs_doc'] = 'None'
 
-    if element['kind'] in ['component', 'setup']\
-       and 'subs' in element\
+
+    if 'subs' in element\
        and element['subs'][0] not in ['', [], None]:
         # for up-dimensioning and reordering
         dims = [utils.find_subscript_name(subscript_dict, sub)
                 for sub in element['subs'][0]]
-        # re arrange the python object
-        element['subs_dec'] = '@subs(%s, _subscript_dict)' % dims
+        # We add the list of the subs to the __doc__ of the function
+        # this will give more information to the user and make possible
+        # to rewrite subscripted values with model.run(params=X) or
+        # model.run(initial_condition=(n,x))
+        element['subs_doc'] = '%s' % dims
+        if element['kind'] in ['component', 'setup']:
+            # the decorator is not always necessary as the objects
+            # defined as xarrays in the model will have the right
+            # dimensions always, we should try to reduce to the
+            # maximum when we use it
+            # re arrange the python object
+            element['subs_dec'] = '@subs(%s, _subscript_dict)' % dims
 
     indent = 8
     element.update({'cache': cache_type,
@@ -216,7 +225,7 @@ def build_element(element, subscript_dict):
         if 'real_name' in element:
             element['real_name'] = element['real_name'].encode('unicode-escape')
         if 'eqn' in element:
-            element['eqn'] = element['eqn'].encode('unicode-escape')
+            element['eqn'] = [e.encode('unicode-escape') for e in element['eqn']]
 
     if element['kind'] in ['stateful', 'external']:
         func = '''
@@ -231,6 +240,17 @@ def build_element(element, subscript_dict):
             ''' % {'py_name': py_name, 'py_expr': element['py_expr'][0]}
 
     else:
+        sep = '\n' + ' '*10
+        if len(element['eqn']) == 1:
+            # Original equation in the same line
+            element['eqn'] = element['eqn'][0]
+        elif len(element['eqn']) > 5:
+            # First and last original equations separated by vertical dots
+            element['eqn'] = sep + element['eqn'][0] + (sep+'  .')*3\
+                             + sep + element['eqn'][-1]
+        else:
+            # From 2 to 5 equations in different lines
+            element['eqn'] = sep + sep.join(element['eqn'])
         func = '''
     %(cache)s
     %(subs_dec)s
@@ -241,6 +261,7 @@ def build_element(element, subscript_dict):
         Units: %(unit)s
         Limits: %(lims)s
         Type: %(kind)s
+        Subs: %(subs_doc)s
 
         %(doc)s
         """
@@ -286,16 +307,19 @@ def merge_partial_elements(element_list):
                     'unit': element['unit'],
                     'subs': [element['subs']],
                     'lims': element['lims'],
-                    'eqn': eqn,
+                    'eqn': [eqn],
                     'kind': element['kind'],
                     'arguments': element['arguments']
                 }
 
             else:
+                eqn = element['expr'] if 'expr' in element else element['eqn']
+
                 outs[name]['doc'] = outs[name]['doc'] or element['doc']
                 outs[name]['unit'] = outs[name]['unit'] or element['unit']
                 outs[name]['lims'] = outs[name]['lims'] or element['lims']
                 outs[name]['eqn'] = outs[name]['eqn'] or element['eqn']
+                outs[name]['eqn'] += [eqn]
                 outs[name]['py_expr'] += [element['py_expr']]
                 outs[name]['subs'] += [element['subs']]
                 outs[name]['arguments'] = element['arguments']
