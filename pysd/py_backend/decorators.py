@@ -1,3 +1,7 @@
+"""
+These are the decorators used by the functions in the model file.
+functions.py
+"""
 from functools import wraps
 from .utils import compute_shape
 import xarray as xr
@@ -25,13 +29,15 @@ def subs(dims, subcoords):
                     return data
 
                 # The coordinates are expanded or transposed
-                # TODO replace cleaner version for Python 3 (when deprecate Py2)
+                # TODO replace cleaner version for Python 3
+                # (when deprecate Py2)
                 # return xr.DataArray(0, coords, dims)
                 return xr.DataArray(np.zeros(compute_shape(coords, dims)),
                                     coords, dims) + data
 
             else:
-                # TODO replace cleaner version for Python 3 (when deprecate Py2)
+                # TODO replace cleaner version for Python 3
+                # (when deprecate Py2)
                 # return xr.DataArray(float(data), coords, dims)
                 return xr.DataArray(np.full(compute_shape(coords, dims),
                                             float(data)), coords, dims)
@@ -47,14 +53,14 @@ class Cache(object):
     """
     def __init__(self):
         self.types = ['run', 'step']
-        self.data = {t:{} for t in self.types}
+        self.data = {t: {} for t in self.types}
         self.time = None
 
     def __call__(self, horizon):
         """
         THIS CALL HAS BEEN ADDED TO MAKE PYSD BACKWARDS COMPATIBLE:
         IN A FUTURE UPDATE WHEN PYSD IS NO MORE BACKWARDS COMPATIBLE
-        IT SHOULD BE ERASED
+        IT SHOULD BE REMOVED
         THE NENW FUNCTIONS ARE ADDED BELLOW WHICH SHOULD BE CALLED AS:
             @cache.run, @cache.steep
         INSTEAF OF:
@@ -79,7 +85,7 @@ class Cache(object):
             @wraps(func)
             def cached_func(*args):
                 """Run wise cache function"""
-                try: # fails if cache is not instantiated
+                try:  # fails if cache is not instantiated
                     return self.data['run'][func.__name__]
                 except KeyError:
                     value = func(*args)
@@ -92,7 +98,7 @@ class Cache(object):
             @wraps(func)
             def cached_func(*args):
                 """Step wise cache function"""
-                try: # fails if cache is not instantiated or if it is None
+                try:  # fails if cache is not instantiated or if it is None
                     value = self.data['step'][func.__name__]
                     assert value is not None
                 except (KeyError, AssertionError):
@@ -113,7 +119,7 @@ class Cache(object):
         @wraps(func)
         def cached_func(*args):
             """Run wise cache function"""
-            try: # fails if cache is not instantiated
+            try:  # fails if cache is not instantiated
                 return self.data['run'][func.__name__]
             except KeyError:
                 value = func(*args)
@@ -126,7 +132,7 @@ class Cache(object):
         @wraps(func)
         def cached_func(*args):
             """Step wise cache function"""
-            try: # fails if cache is not instantiated or if it is None
+            try:  # fails if cache is not instantiated or if it is None
                 value = self.data['step'][func.__name__]
                 assert value is not None
             except (KeyError, AssertionError):
@@ -169,4 +175,5 @@ class Cache(object):
             self.data[k] = {}
 
 
+# create cache object, this way we can still keep importing cache as before
 cache = Cache()

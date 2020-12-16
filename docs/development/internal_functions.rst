@@ -6,7 +6,7 @@ This section documents the functions that are going on behaind the scenes, for t
 Special functions needed for model execution
 --------------------------------------------
 
-.. automodule:: py_backend.functions 
+.. automodule:: py_backend.functions
    :members:
    :undoc-members:
    :private-members:
@@ -29,6 +29,14 @@ External data reading
 ---------------------
 
 .. automodule:: py_backend.external
+   :members:
+   :undoc-members:
+   :private-members:
+
+
+Decorators used in the model file
+---------------------------------
+.. automodule:: py_backend.decorators
    :members:
    :undoc-members:
    :private-members:

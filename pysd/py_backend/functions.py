@@ -7,7 +7,6 @@ makes it easy for the model elements to call.
 
 from __future__ import division, absolute_import
 
-
 import imp
 import inspect
 import sys
@@ -25,14 +24,11 @@ from funcsigs import signature
 
 from . import utils
 from .external import External
-from .decorators import subs
 from .decorators import cache  # for backward compatibility
 
-import traceback
 
 try:
     import scipy.stats as stats
-
 
     def bounded_normal(minimum, maximum, mean, std, seed):
         """ Implements vensim's BOUNDED NORMAL function """
@@ -43,7 +39,6 @@ except ImportError:
     warnings.warn("Scipy required for functions:"
                   "- Bounded Normal (falling back to unbounded normal)")
 
-
     def bounded_normal(minimum, maximum, mean, std, seed):
         """ Warning: using unbounded normal due to no scipy """
         return np.random.normal(mean, std)
@@ -53,8 +48,9 @@ small_vensim = 1e-6  # What is considered zero according to Vensim Help
 
 class Stateful(object):
     # the integrator needs to be able to 'get' the current state of the object,
-    # and get the derivative. It calculates the new state, and updates it. The state
-    # can be any object which is subject to basic (element-wise) algebraic operations
+    # and get the derivative. It calculates the new state, and updates it.
+    # The state can be any object which is subject to basic (element-wise)
+    # algebraic operations
     def __init__(self):
         self._state = None
 
@@ -114,10 +110,10 @@ class Integ(Stateful):
 class Delay(Stateful):
     # note that we could have put the `delay_input` argument as a parameter to
     # the `__call__` function, and more closely mirrored the vensim syntax.
-    # However, people may get confused this way in thinking that they need only one
-    # delay object and can call it with various arguments to delay whatever is convenient.
-    # This method forces them to acknowledge that additional structure is being created
-    # in the delay object.
+    # However, people may get confused this way in thinking that they need
+    # only one delay object and can call it with various arguments to delay
+    # whatever is convenient. This method forces them to acknowledge that
+    # additional structure is being created in the delay object.
 
     def __init__(self, delay_input, delay_time, initial_value, order):
         """
@@ -189,6 +185,7 @@ class Delay(Stateful):
             inflows[0] = self.input_func()
         return inflows - outflows
 
+
 class Smooth(Stateful):
     def __init__(self, smooth_input, smooth_time, initial_value, order):
         super(Smooth, self).__init__()
@@ -219,10 +216,12 @@ class Trend(Stateful):
         self.input_func = trend_input
 
     def initialize(self):
-        self.state = self.input_func() / (1 + self.init_func() * self.average_time_function())
+        self.state = self.input_func()\
+            / (1 + self.init_func() * self.average_time_function())
 
     def __call__(self):
-        return zidz(self.input_func() - self.state, self.average_time_function() * abs(self.state))
+        return zidz(self.input_func() - self.state,
+                    self.average_time_function() * abs(self.state))
 
     def ddt(self):
         return (self.input_func() - self.state) / self.average_time_function()
@@ -247,17 +246,19 @@ class Initial(Stateful):
 class Macro(Stateful):
     """
     The Model class implements a stateful representation of the system,
-    and contains the majority of methods for accessing and modifying model components.
+    and contains the majority of methods for accessing and modifying model
+    components.
 
-    When the instance in question also serves as the root model object (as opposed to a
-    macro or submodel within another model) it will have added methods to facilitate
-    execution.
+    When the instance in question also serves as the root model object
+    (as opposed to a macro or submodel within another model) it will have
+    added methods to facilitate execution.
     """
 
-    def __init__(self, py_model_file, params=None, return_func=None, time=None, time_initialization=None):
+    def __init__(self, py_model_file, params=None, return_func=None,
+                 time=None, time_initialization=None):
         """
-        The model object will be created with components drawn from a translated python
-        model file.
+        The model object will be created with components drawn from a
+        translated python model file.
 
         Parameters
         ----------
@@ -274,7 +275,8 @@ class Macro(Stateful):
         self.time_initialization = time_initialization
 
         # need a unique identifier for the imported module.
-        module_name = os.path.splitext(py_model_file)[0] + str(random.randint(0, 1000000))
+        module_name = os.path.splitext(py_model_file)[0]\
+                      + str(random.randint(0, 1000000))
         self.components = imp.load_source(module_name,
                                           py_model_file)
 
@@ -302,7 +304,10 @@ class Macro(Stateful):
         return self.return_func()
 
     def get_pysd_compiler_version(self):
-        """ Returns the version of pysd complier that used for generating this model """
+        """
+        Returns the version of pysd complier that used for generating
+        this model
+        """
         return self.components.__pysd_version__
 
     def initialize(self, initialization_order=None):
@@ -310,11 +315,12 @@ class Macro(Stateful):
         This function tries to initialize the stateful objects.
 
         In the case where an initialization function for `Stock A` depends on
-        the value of `Stock B`, if we try to initialize `Stock A` before `Stock B`
-        then we will get an error, as the value will not yet exist.
+        the value of `Stock B`, if we try to initialize `Stock A` before
+        `Stock B` then we will get an error, as the value will not yet exist.
 
         In this case, just skip initializing `Stock A` for now, and
-        go on to the other state initializations. Then come back to it and try again.
+        go on to the other state initializations. Then come back to it and
+        try again.
         """
 
         # Initialize time
@@ -366,6 +372,27 @@ class Macro(Stateful):
     def state(self, new_value):
         [component.update(val) for component, val in zip(self._stateful_elements, new_value)]
 
+    def get_coords(self, param):
+        """
+        Returns the the coordinates and dims of model element if it has,
+        otherwise returns None
+        >>> model.set_components('birth_rate')
+        >>> model.set_components('Birth Rate')
+        """
+        func_name = utils.get_value_by_insensitive_key_or_value(param,
+            self.components._namespace) or param
+
+        try:
+            # TODO: make this less fragile, may crash if the component
+            # takes arguments and is a xarray
+            value = getattr(self.components, func_name)()
+            dims = list(value.dims)
+            coords = {coord: list(value.coords[coord].values)
+                      for coord in value.coords}
+            return coords, dims
+        except Exception:
+            return None
+
     def set_components(self, params):
         """ Set the value of exogenous model elements.
         Element values can be passed as keyword=value pairs in the function call.
@@ -393,10 +420,25 @@ class Macro(Stateful):
             func_name = utils.get_value_by_insensitive_key_or_value(key,
                 self.components._namespace)
             try:
-                dims = literal_eval(re.findall("Subs: .+",
-                        getattr(self.components, func_name).__doc__)[0][6:])
+                # TODO: make this less fragile, may crash if the component
+                # takes arguments and is an xarray
+                # can use the __doc__ but will not be backward compatible:
+                # dims = literal_eval(re.findall("Subs: .+",
+                # getattr(self.components, func_name).__doc__)[0][6:])
+                dims = getattr(self.components, func_name)().dims
             except Exception:
                 dims = None
+
+            if isinstance(value, np.ndarray):
+                # TODO: Remove when we have no backward compatible update
+                warnings.warn('using numpy.array for setting subscripted '
+                              + 'variables is deprecated, use a '
+                              + 'xarray.DataArray with the correct '
+                              + 'dimensions instead (https://pysd.readthedocs.io/en/master/basic_usage.html)',
+                              DeprecationWarning, stacklevel=2)
+                coords = {dim: self.components._subscript_dict[dim]
+                          for dim in dims}
+                value = xr.DataArray(value, coords, dims)
 
             if func_name is None:
                 raise NameError('%s is not recognized as a model component'
@@ -428,11 +470,11 @@ class Macro(Stateful):
                 'concat_dim', drop=True),dims, self.components._subscript_dict)
 
         else:
-             if dims:
-                 return lambda: utils.rearrange(np.interp(self.time(),
-                     series.index, series.values),
-                     dims, self.components._subscript_dict)
-             return lambda: np.interp(self.time(), series.index, series.values)
+            if dims:
+                return lambda: utils.rearrange(np.interp(self.time(),
+                    series.index, series.values),
+                    dims, self.components._subscript_dict)
+            return lambda: np.interp(self.time(), series.index, series.values)
 
     def _constant_component(self, value, dims):
         """ Internal function for creating a constant model element """
@@ -451,7 +493,8 @@ class Macro(Stateful):
 
         state : dict
             A (possibly partial) dictionary of the system state.
-            The keys to this dictionary may be either pysafe names or original model file names
+            The keys to this dictionary may be either pysafe names or
+            original model file names
         """
         self.time.update(t)
         self.components.cache.reset(t)
@@ -465,19 +508,32 @@ class Macro(Stateful):
             else:
                 component_name = key
                 stateful_name = key
+
             try:
+                # TODO make this less fragile (avoid using the __doc__)
                 if component_name[:7] == '_integ_':
                     # we need to check the original expression to retrieve
                     # the dimensions
                     dims = literal_eval(re.findall("Subs: .+",
                         getattr(self.components,
-                        component_name[7:]).__doc__)[0][6:])
+                                component_name[7:]).__doc__)[0][6:])
                 else:
                     dims = literal_eval(re.findall("Subs: .+",
                         getattr(self.components,
-                        component_name).__doc__)[0][6:])
+                                component_name).__doc__)[0][6:])
             except Exception:
                 dims = None
+
+            if isinstance(value, np.ndarray):
+                # TODO: Remove when we have no backward compatible update
+                warnings.warn('using numpy.array for setting subscripted '
+                              + 'variables is deprecated, use a '
+                              + 'xarray.DataArray with the correct '
+                              + 'dimensions instead (https://pysd.readthedocs.io/en/master/basic_usage.html)',
+                              DeprecationWarning, stacklevel=2)
+                coords = {dim: self.components._subscript_dict[dim]
+                          for dim in dims}
+                value = xr.DataArray(value, coords, dims)
 
             # Try to update stateful component
             if hasattr(self.components, stateful_name):
@@ -501,8 +557,9 @@ class Macro(Stateful):
 
     def doc(self):
         """
-        Formats a table of documentation strings to help users remember variable names, and
-        understand how they are translated into python safe names.
+        Formats a table of documentation strings to help users remember
+        variable names, and understand how they are translated into
+        python safe names.
 
         Returns
         -------

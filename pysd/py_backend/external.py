@@ -960,4 +960,3 @@ class ExtSubscript(External):
                                         cols=[col_first, col_last])
 
         self.subscript = [prefix + str(d) for d in data.values.flatten()]
-

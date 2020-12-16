@@ -392,7 +392,8 @@ def parse_units(units_str):
         units = units_str
         lims = '?, ?]'
 
-    lims = tuple([float(x) if x.strip() != '?' else None for x in lims.strip(']').split(',')])
+    lims = tuple([float(x) if x.strip() != '?' else None
+                  for x in lims.strip(']').split(',')])
 
     return units.strip(), lims
 
@@ -701,14 +702,19 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
     macro_list: list of dictionaries
         [{'name': 'M', 'py_name':'m', 'filename':'path/to/file', 'args':['arg1', 'arg2']}]
 
+    elements_subs_dict : dictionary
+        The dictionary with element python names as keys and their merged
+        subscripts as values.
+
     Returns
     -------
     translation
 
     new_elements: list of dictionaries
-        If the expression contains builder functions, those builders will create new elements
-        to add to our running list (that will eventually be output to a file) such as stock
-        initialization and derivative funcs, etc.
+        If the expression contains builder functions, those builders will
+        create new elements to add to our running list (that will eventually
+        be output to a file) such as stock initialization and derivative
+        funcs, etc.
 
 
     Examples
@@ -874,7 +880,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
             vc[0] += '()'
 
             if re.match("\[.+\]", vc[-1]):
-                # sometimes the subscript list are not consumed (fix?)
+                # sometimes the subscript list are not consumed
+                # this is because visit_lookup_call_subs is not visited (fix?)
                 py_expr = "".join(vc[:-1])
             else:
                 py_expr = "".join(vc)
@@ -898,6 +905,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
             # needed to avoid doing the rearrange in the lookup arguments
             # lookup_subs list makes possible to work with
             # lookups inside lookups
+            # TODO: this is not visited by lookups call when having subs
+            # instead visit_reference is called, need to fix that
             if self.subs:
                 self.subs = None
                 self.lookup_subs.append(self.subs)
@@ -1049,7 +1058,6 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
         def generic_visit(self, n, vc):
             return ''.join(filter(None, vc)) or n.text
 
-
     tree = parser.parse(element['expr'])
     parse_object = ExpressionParser(tree)
 
@@ -1069,7 +1077,7 @@ def parse_lookup_expression(element, subscript_dict):
     args = ~r"[^,()]*"
     number = ("+"/"-")? ~r"\d+\.?\d*(e[+-]\d+)?"
     _ =  ~r"[\s\\]*" #~r"[\ \t\n]*" #~r"[\s\\]*"  # whitespace character
-	range = _ "[" ~r"[^\]]*" "]" _ ","
+    range = _ "[" ~r"[^\]]*" "]" _ ","
     """
     parser = parsimonious.Grammar(lookup_grammar)
     tree = parser.parse(element['expr'])
@@ -1136,7 +1144,8 @@ def translate_section(section, macro_list, root_path):
     # add macro functions to namespace
     for macro in macro_list:
         if macro['name'] != '_main_':
-            name, namespace = utils.make_python_identifier(macro['name'], namespace)
+            name, namespace =\
+                utils.make_python_identifier(macro['name'], namespace)
 
     # Create a namespace for the subscripts
     # as these aren't used to create actual python functions, but are just labels on arrays,
@@ -1147,8 +1156,10 @@ def translate_section(section, macro_list, root_path):
     # add model elements
     for element in model_elements:
         if element['kind'] not in ['subdef', 'section']:
-            element['py_name'], namespace = utils.make_python_identifier(element['real_name'],
-                                                                         namespace)
+            element['py_name'], namespace =\
+                utils.make_python_identifier(element['real_name'], namespace)
+            # dictionary to save the subscripts of each element so we can avoid
+            # using utils.rearrange when calling them with the same dimensions
             elements_subs_dict[element['py_name']] = [
                 utils.find_subscript_name(subscript_dict, sub)
                 for sub in element['subs']]
@@ -1220,4 +1231,3 @@ def translate_vensim(mdl_file):
         translate_section(section, macro_list, root_path)
 
     return outfile_name
-

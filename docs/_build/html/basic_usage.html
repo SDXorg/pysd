@@ -216,7 +216,7 @@
 <span class="go">…</span>
 </pre></div>
 </div>
-<p>If the measured data that we are comparing with our model comes in at irregular timestamps, we may want to sample the model at timestamps to match. The .run() function gives us this ability with the return_timestamps keyword argument:</p>
+<p>If the measured data that we are comparing with our model comes in at irregular timestamps, we may want to sample the model at timestamps to match. The <code class="xref py py-func docutils literal notranslate"><span class="pre">run()</span></code> function gives us this ability with the return_timestamps keyword argument:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">return_timestamps</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mf">9.5</span><span class="p">,</span><span class="mf">13.178</span><span class="p">,</span><span class="mi">21</span><span class="p">,</span><span class="mi">25</span><span class="p">,</span><span class="mi">30</span><span class="p">])</span>
 
 <span class="go">t       Teacup Temperature</span>
@@ -231,18 +231,52 @@
 </div>
 <div class="section" id="setting-parameter-values">
 <h2>Setting parameter values<a class="headerlink" href="#setting-parameter-values" title="Permalink to this headline">¶</a></h2>
-<p>In many cases, we want to modify the parameters of the model to investigate its behavior under different assumptions. There are several ways to do this in PySD, but the .run() function gives us a convenient method in the params keyword argument.</p>
+<p>In many cases, we want to modify the parameters of the model to investigate its behavior under different assumptions. There are several ways to do this in PySD, but the <code class="xref py py-func docutils literal notranslate"><span class="pre">run()</span></code> function gives us a convenient method in the params keyword argument.</p>
 <p>This argument expects a dictionary whose keys correspond to the components of the model.  The associated values can either be a constant, or a Pandas series whose indices are timestamps and whose values are the values that the model component should take on at the corresponding time. For instance, in our model we can set the room temperature to a constant value:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Room Temperature&#39;</span><span class="p">:</span><span class="mi">20</span><span class="p">})</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Room Temperature&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">})</span>
 </pre></div>
 </div>
 <p>Alternately, if we believe the room temperature is changing over the course of the simulation, we can give the run function a set of time-series values in the form of a Pandas series, and PySD will linearly interpolate between the given values in the course of its integration:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="n">temp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">),</span> <span class="n">data</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="mi">80</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+<span class="n">temp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">),</span> <span class="n">data</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
 <span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Room Temperature&#39;</span><span class="p">:</span><span class="n">temp</span><span class="p">})</span>
 </pre></div>
 </div>
-<p>Note that once parameters are set by the run command, they are permanently changed within the model. We can also change model parameters without running the model, using PySD’s <code class="xref py py-func docutils literal notranslate"><span class="pre">set_components(params={})()</span></code> method, which takes the same params dictionary as the run function. We might choose to do this in situations where we’ll be running the model many times, and only want to spend time setting the parameters once.</p>
+<p>If the parameter value to change is a subscripted variable (vector, matrix…), there are three different options to set new value. Suposse we have ‘Subscripted var’ with dims <code class="xref py py-data docutils literal notranslate"><span class="pre">['dim1',</span> <span class="pre">'dim2']</span></code> and coordinates <code class="xref py py-data docutils literal notranslate"><span class="pre">{'dim1':</span> <span class="pre">[1,</span> <span class="pre">2],</span> <span class="pre">'dim2':</span> <span class="pre">[1,</span> <span class="pre">2]}</span></code>. A constant value can be used and all the values will be replaced:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Subscripted var&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>A partial <em>xarray.DataArray</em> can be used, for example a new variable with ‘dim2’ but not ‘dim2’, the result will be repeated in the remaining dimensions:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
+<span class="n">new_value</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">],</span> <span class="p">{</span><span class="s1">&#39;dim2&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]},</span> <span class="p">[</span><span class="s1">&#39;dim2&#39;</span><span class="p">])</span>
+<span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Subscripted var&#39;</span><span class="p">:</span> <span class="n">new_value</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>Same dimensions <em>xarray.DataArray</em> can be used (recommended):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
+<span class="n">new_value</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">],[</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">]],</span> <span class="p">{</span><span class="s1">&#39;dim1&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="s1">&#39;dim2&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]},</span> <span class="p">[</span><span class="s1">&#39;dim1&#39;</span><span class="p">,</span> <span class="s1">&#39;dim2&#39;</span><span class="p">])</span>
+<span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Subscripted var&#39;</span><span class="p">:</span> <span class="n">new_value</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>In the same way, a Pandas series can be used with constan values, partially defined <em>xarray.DataArrays</em> or same dimensions <em>xarray.DataArrays</em>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>That once parameters are set by the run command, they are permanently changed within the model. We can also change model parameters without running the model, using PySD’s <code class="xref py py-data docutils literal notranslate"><span class="pre">set_components(params={})</span></code> method, which takes the same params dictionary as the run function. We might choose to do this in situations where we’ll be running the model many times, and only want to spend time setting the parameters once.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you need to know the dimensions of a variable, you can check them by using <code class="xref py py-data docutils literal notranslate"><span class="pre">get_coords(variable__name)</span></code> function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">get_coords</span><span class="p">(</span><span class="s1">&#39;Room Temperature&#39;</span><span class="p">)</span>
+
+<span class="go">None</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">get_coords</span><span class="p">(</span><span class="s1">&#39;Subscripted var&#39;</span><span class="p">)</span>
+
+<span class="go">({&#39;dim1&#39;: [1, 2], &#39;dim2&#39;: [1, 2]}, [&#39;dim1&#39;, &#39;dim2&#39;])</span>
+</pre></div>
+</div>
+<p>this will return the coords dictionary and the dimensions list if the variable is subscripted or ‘None’ if the variable is an scalar.</p>
+</div>
 </div>
 <div class="section" id="setting-simulation-initial-conditions">
 <h2>Setting simulation initial conditions<a class="headerlink" href="#setting-simulation-initial-conditions" title="Permalink to this headline">¶</a></h2>
@@ -250,6 +284,7 @@
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">initial_condition</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;Teacup Temperature&#39;</span><span class="p">:</span><span class="mi">33</span><span class="p">}))</span>
 </pre></div>
 </div>
+<p>The new value setted can be a <em>xarray.DataArray</em> as it is explained in the previous section.</p>
 <p>Additionally we can run the model forward from its current position, by passing the initial_condition argument the keyword ‘current’. After having run the model from time zero to thirty, we can ask the model to continue running forward for another chunk of time:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">initial_condition</span><span class="o">=</span><span class="s1">&#39;current&#39;</span><span class="p">,</span>
           <span class="n">return_timestamps</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">31</span><span class="p">,</span><span class="mi">45</span><span class="p">))</span>

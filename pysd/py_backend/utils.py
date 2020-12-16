@@ -11,8 +11,6 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from functools import wraps
-
 
 def dict_find(in_dict, value):
     """ Helper function for looking up directory keys by their values.
@@ -103,20 +101,21 @@ def find_subscript_name(subscript_dict, element):
 
 def make_coord_dict(subs, subscript_dict, terse=True):
     """
-    This is for assisting with the lookup of a particular element, such that the output
-    of this function would take the place of %s in this expression
+    This is for assisting with the lookup of a particular element, such that
+    the output of this function would take the place of %s in this expression
 
     `variable.loc[%s]`
 
     Parameters
     ----------
     subs: list of strings
-        coordinates, either as names of dimensions, or positions within a dimension
+        coordinates, either as names of dimensions, or positions within
+        a dimension
     subscript_dict: dict
         the full dictionary of subscript names and values
     terse: Binary Flag
-        - If true, includes only elements that do not cover the full range of values in their
-          respective dimension
+        - If true, includes only elements that do not cover the full range of
+          values in their respective dimension
         - If false, returns all dimensions
 
     Returns
@@ -269,22 +268,28 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
     s = re.sub('[\\s\\t\\n]+', '_', s)
 
     if convert == 'hex':
-        # Convert invalid characters to hex. Note: \p{l} designates all Unicode letter characters (any language),
-        # \p{m} designates all mark symbols (e.g., vowel marks in Indian scrips, such as the final)
-        # and \p{n} designates all numbers. We allow any of these to be present in the regex.
-        s = ''.join([c.encode("hex") if re.findall('[^\p{l}\p{m}\p{n}_]', c) else c for c in s])
+        # Convert invalid characters to hex. Note: \p{l} designates all
+        # Unicode letter characters (any language), \p{m} designates all
+        # mark symbols (e.g., vowel marks in Indian scrips, such as the final)
+        # and \p{n} designates all numbers. We allow any of these to be
+        # present in the regex.
+        s = ''.join([c.encode("hex") if re.findall('[^\p{l}\p{m}\p{n}_]', c)
+                     else c for c in s])
 
     elif convert == 'drop':
         # Remove invalid characters
         s = re.sub('[^\p{l}\p{m}\p{n}_]', '', s)
 
-    # Remove leading characters until we find a letter or underscore. Only letters can be leading characters.
+    # TODO: we should make all the identifiers start by a letter, and let
+    # the _ only for stateful and external elements (_integ_name...)
+    # Remove leading characters until we find a letter or underscore.
+    # Only letters can be leading characters.
     s = re.sub('^[^\p{l}_]+', '', s)
 
     # Check that the string is not a python identifier
     while (s in keyword.kwlist or
-                   s in namespace.values() or
-                   s in reserved_words):
+           s in namespace.values() or
+           s in reserved_words):
         if handle == 'throw':
             raise NameError(s + ' already exists in namespace or is a reserved word')
         if handle == 'force':
@@ -367,7 +372,7 @@ def get_return_elements(return_columns, namespace, subscript_dict):
             address = None
         elif '[' in col:
             name, location = col.strip(']').split('[')
-            address = tuple([l.strip() for l in location.split(',')])
+            address = tuple([loc.strip() for loc in location.split(',')])
         else:
             name = col
             address = None
@@ -391,8 +396,8 @@ def get_return_elements(return_columns, namespace, subscript_dict):
 def make_flat_df(frames, return_addresses):
     """
     Takes a list of dictionaries, each representing what is returned from the
-    model at a particular time, and creates a dataframe whose columns correspond
-    to the keys of `return addresses`
+    model at a particular time, and creates a dataframe whose columns
+    correspond to the keys of `return addresses`
 
     Parameters
     ----------
@@ -401,8 +406,8 @@ def make_flat_df(frames, return_addresses):
     return_addresses: a dictionary,
         keys will be column names of the resulting dataframe, and are what the
         user passed in as 'return_columns'. Values are a tuple:
-        (py_name, {coords dictionary}) which tells us where to look for the value
-        to put in that specific column.
+        (py_name, {coords dictionary}) which tells us where to look for the
+        value to put in that specific column.
 
     Returns
     -------
@@ -426,8 +431,8 @@ def visit_addresses(frame, return_addresses):
     return_addresses: a dictionary,
         keys will be column names of the resulting dataframe, and are what the
         user passed in as 'return_columns'. Values are a tuple:
-        (py_name, {coords dictionary}) which tells us where to look for the value
-        to put in that specific column.
+        (py_name, {coords dictionary}) which tells us where to look for the
+        value to put in that specific column.
 
     Returns
     -------
@@ -555,6 +560,7 @@ def rearrange(data, dims, coords):
         return xr.DataArray(np.full(compute_shape(coords, dims),
                                     float(data)), coords, dims)
 
+
 def round(x):
     """
     Redefinition of round function with try except
@@ -587,4 +593,3 @@ def add_entries_underscore(*dictionaries):
         for name in keys:
             dictionary[re.sub(' ', '_', name)] = dictionary[name]
     return
-

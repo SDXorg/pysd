@@ -24,6 +24,11 @@ from . import utils
 
 from .._version import __version__
 
+
+# Variable to save identifiers of external objects
+build_names = set()
+
+
 def build(elements, subscript_dict, namespace, outfile_name):
     """
     Actually constructs and writes the python representation of the model
@@ -112,6 +117,9 @@ def build(elements, subscript_dict, namespace, outfile_name):
         text = black.format_file_contents(textwrap.dedent(text), fast=True,
                                           mode=black.FileMode())
 
+    # this is needed if more than one model are translated in the same session
+    build_names.clear()
+
     # this is used for testing
     if outfile_name == 'return':
         return text
@@ -169,7 +177,7 @@ def build_element(element, subscript_dict):
             if py_expr_no_ADD[i] and py_expr_no_ADD[i+1]:
                 # rearrange if the element doesn't come from external
                 dims = [utils.find_subscript_name(subscript_dict, sub)
-                            for sub in subs]
+                        for sub in subs]
                 coords = utils.make_coord_dict(subs, subscript_dict,
                                                terse=False)
                 py_expr_i.append('utils.rearrange(%s, %s, %s)' % (
@@ -187,7 +195,6 @@ def build_element(element, subscript_dict):
 
     element['subs_dec'] = ''
     element['subs_doc'] = 'None'
-
 
     if 'subs' in element\
        and element['subs'][0] not in ['', [], None]:
@@ -474,13 +481,13 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
     if len(subs) == 0:
         stateful_py_expr = 'functions.Delay(lambda: %s, lambda: %s,'\
                            'lambda: %s, lambda: %s)' % (
-                           delay_input, delay_time, initial_value, order)
+                               delay_input, delay_time, initial_value, order)
 
     else:
         stateful_py_expr = 'functions.Delay(lambda: _delinput_%s(),'\
                            'lambda: _deltime_%s(), lambda: _init_%s(),'\
                            'lambda: %s)' % (
-                           identifier, identifier, identifier, order)
+                               identifier, identifier, identifier, order)
 
         # following elements not specified in the model file, but must exist
         # create the delay initialization element
@@ -695,10 +702,6 @@ def add_initial(initial_input):
     }
 
     return "%s()" % stateful['py_name'], [stateful]
-
-
-# Variable to save identifiers of external objects
-build_names = set()
 
 
 def add_ext_data(identifier, file_name, tab, time_row_or_col, cell,

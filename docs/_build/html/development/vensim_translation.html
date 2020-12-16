@@ -526,7 +526,7 @@ equation, units, and docstring.</p>
 
 <dl class="py function">
 <dt id="py_backend.vensim.vensim2py.parse_general_expression">
-<code class="sig-prename descclassname">py_backend.vensim.vensim2py.</code><code class="sig-name descname">parse_general_expression</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">element</span></em>, <em class="sig-param"><span class="n">namespace</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">subscript_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">macro_list</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/vensim/vensim2py.html#parse_general_expression"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.vensim.vensim2py.parse_general_expression" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">py_backend.vensim.vensim2py.</code><code class="sig-name descname">parse_general_expression</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">element</span></em>, <em class="sig-param"><span class="n">namespace</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">subscript_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">macro_list</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">elements_subs_dict</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/vensim/vensim2py.html#parse_general_expression"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.vensim.vensim2py.parse_general_expression" title="Permalink to this definition">¶</a></dt>
 <dd><p>Parses a normal expression
 # its annoying that we have to construct and compile the grammar every time…</p>
 <dl class="field-list simple">
@@ -536,14 +536,17 @@ equation, units, and docstring.</p>
 <li><p><strong>namespace</strong> (<em>dictionary</em>) – </p></li>
 <li><p><strong>subscript_dict</strong> (<em>dictionary</em>) – </p></li>
 <li><p><strong>macro_list</strong> (<em>list of dictionaries</em>) – [{‘name’: ‘M’, ‘py_name’:’m’, ‘filename’:’path/to/file’, ‘args’:[‘arg1’, ‘arg2’]}]</p></li>
+<li><p><strong>elements_subs_dict</strong> (<em>dictionary</em>) – The dictionary with element python names as keys and their merged
+subscripts as values.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><ul class="simple">
 <li><p><em>translation</em></p></li>
-<li><p><strong>new_elements</strong> (<em>list of dictionaries</em>) – If the expression contains builder functions, those builders will create new elements
-to add to our running list (that will eventually be output to a file) such as stock
-initialization and derivative funcs, etc.</p></li>
+<li><p><strong>new_elements</strong> (<em>list of dictionaries</em>) – If the expression contains builder functions, those builders will
+create new elements to add to our running list (that will eventually
+be output to a file) such as stock initialization and derivative
+funcs, etc.</p></li>
 </ul>
 </p>
 </dd>
