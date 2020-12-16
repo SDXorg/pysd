@@ -187,7 +187,6 @@ class TestPySD(unittest.TestCase):
         # test for backward compatibility to remove in the future
         import warnings
         import xarray as xr
-        import numpy as np
         import pysd
 
         coords = {'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3'],
@@ -198,6 +197,7 @@ class TestPySD(unittest.TestCase):
 
         model = pysd.read_vensim(test_model_subs)
         with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
             res = model.run(initial_condition=(5, {'initial_values': input_}),
                             return_columns=['Initial Values'],
                             return_timestamps=list(range(5, 10)))
@@ -309,7 +309,6 @@ class TestPySD(unittest.TestCase):
         # test for backward compatibility to remove in the future
         import warnings
         import xarray as xr
-        import numpy as np
         import pysd
 
         coords = {'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3'],
@@ -320,6 +319,7 @@ class TestPySD(unittest.TestCase):
 
         model = pysd.read_vensim(test_model_subs)
         with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
             model.set_components({'initial_values': input_, 'final_time': 10})
         res = model.run(return_columns=['Initial Values'])
         self.assertTrue(output.equals(res['Initial Values'].iloc[0]))
@@ -700,7 +700,6 @@ class TestPySD(unittest.TestCase):
             # test for backward compatibility to remove in the future
         import warnings
         import xarray as xr
-        import numpy as np
         import pysd
         coords = {'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3'],
                   'Second Dimension Subscript': ['Column 1', 'Column 2']}
@@ -719,6 +718,7 @@ class TestPySD(unittest.TestCase):
 
         # Test that we can set with real names
         with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
             model.set_state(new_time, {'Stock A': input1})
         self.assertFalse(initial_stock.equals(output1))
         self.assertTrue(model.components.stock_a().equals(output1))
@@ -728,6 +728,7 @@ class TestPySD(unittest.TestCase):
 
         # Test setting with pysafe names
         with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
             model.set_state(new_time + 1, {'stock_a': input2})
         self.assertTrue(model.components.stock_a().equals(output2))
         self.assertEqual(len(w), 1)
@@ -736,6 +737,7 @@ class TestPySD(unittest.TestCase):
 
         # Test setting with stateful object name
         with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
             model.set_state(new_time + 2, {'_integ_stock_a': input3})
         self.assertTrue(model.components.stock_a().equals(output3))
         self.assertEqual(len(w), 1)
