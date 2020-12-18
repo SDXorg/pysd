@@ -521,16 +521,10 @@ def rearrange(data, dims, coords):
             return xr.DataArray(data=data.values, coords=coords, dims=dims)
 
         # The coordinates are expanded or transposed
-        # TODO replace cleaner version for Python 3 (when deprecate Py2)
-        # return xr.DataArray(0, coords, dims)
-        return xr.DataArray(np.zeros(compute_shape(coords, dims)),
-                            coords, dims) + data
+        return xr.DataArray(0, coords, dims) + data
 
     else:
-        # TODO replace cleaner version for Python 3 (when deprecate Py2)
-        # return xr.DataArray(float(data), coords, dims)
-        return xr.DataArray(np.full(compute_shape(coords, dims),
-                                    float(data)), coords, dims)
+        return xr.DataArray(data, coords, dims)
 
 
 def round_(x):

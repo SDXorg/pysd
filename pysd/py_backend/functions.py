@@ -414,16 +414,12 @@ class Macro(Stateful):
             except Exception:
                 dims = None
 
-            if isinstance(value, np.ndarray):
-                # TODO: Remove when we have no backward compatible update
-                warnings.warn('using numpy.array for setting subscripted '
-                              + 'variables is deprecated, use a '
-                              + 'xarray.DataArray with the correct '
-                              + 'dimensions instead (https://pysd.readthedocs.io/en/master/basic_usage.html)',
-                              DeprecationWarning, stacklevel=2)
-                coords = {dim: self.components._subscript_dict[dim]
-                          for dim in dims}
-                value = xr.DataArray(value, coords, dims)
+            if isinstance(value, np.ndarray) or isinstance(value, list):
+                raise ValueError('When setting ' + key +'\n'
+                                 + 'Setting subscripted must be done'
+                                 + 'using a xarray.DataArray with the '
+                                 + 'correct dimensions or a constant value '
+                                 + '(https://pysd.readthedocs.io/en/master/basic_usage.html)')
 
             if func_name is None:
                 raise NameError('%s is not recognized as a model component'
@@ -509,16 +505,12 @@ class Macro(Stateful):
             except Exception:
                 dims = None
 
-            if isinstance(value, np.ndarray):
-                # TODO: Remove when we have no backward compatible update
-                warnings.warn('using numpy.array for setting subscripted '
-                              + 'variables is deprecated, use a '
-                              + 'xarray.DataArray with the correct '
-                              + 'dimensions instead (https://pysd.readthedocs.io/en/master/basic_usage.html)',
-                              DeprecationWarning, stacklevel=2)
-                coords = {dim: self.components._subscript_dict[dim]
-                          for dim in dims}
-                value = xr.DataArray(value, coords, dims)
+            if isinstance(value, np.ndarray) or isinstance(value, list):
+                raise ValueError('When setting ' + key +'\n'
+                                 + 'Setting subscripted must be done'
+                                 + 'using a xarray.DataArray with the '
+                                 + 'correct dimensions or a constant value '
+                                 + '(https://pysd.readthedocs.io/en/master/basic_usage.html)')
 
             # Try to update stateful component
             if hasattr(self.components, stateful_name):
@@ -635,11 +627,6 @@ class Model(Macro):
         self.time.update(self.components.initial_time())
         self.time.stage = 'Initialization'
         super(Model, self).initialize()
-
-    def reset_state(self):
-        warnings.warn('reset_state is deprecated. use `initialize` instead',
-                      DeprecationWarning, stacklevel=2)
-        self.initialize()
 
     def _build_euler_timeseries(self, return_timestamps=None):
         """
