@@ -12,34 +12,6 @@ import pandas as pd
 import xarray as xr
 
 
-def dict_find(in_dict, value):
-    """ Helper function for looking up directory keys by their values.
-     This isn't robust to repeated values
-
-    Parameters
-    ----------
-    in_dict : dictionary
-        A dictionary containing `value`
-
-    value : any type
-        What we wish to find in the dictionary
-
-    Returns
-    -------
-    key: basestring
-        The key at which the value can be found
-
-    Examples
-    --------
-    >>> dict_find({'Key1': 'A', 'Key2': 'B'}, 'B')
-    'Key2'
-
-    """
-    # TODO make this robust to repeated values
-    # TODO make this robust to missing values
-    return list(in_dict.keys())[list(in_dict.values()).index(value)]
-
-
 def xrmerge(das, accept_new=True):
     """
     Merges xarrays with different dimension sets
@@ -561,14 +533,14 @@ def rearrange(data, dims, coords):
                                     float(data)), coords, dims)
 
 
-def round(x):
+def round_(x):
     """
-    Redefinition of round function with try except
+    Redefinition of round function to make it work with floats and xarrays
     """
-    try:
-        return round(x)
-    except Exception:
-        return x
+    if isinstance(x, xr.DataArray):
+        return x.round()
+
+    return round(x)
 
 
 def add_entries_underscore(*dictionaries):

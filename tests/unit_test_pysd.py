@@ -557,13 +557,10 @@ class TestPySD(unittest.TestCase):
         import pysd
         model = pysd.read_vensim(test_model)
         initial_temp = model.components.teacup_temperature()
-        print(initial_temp)
         model.run()
         final_temp = model.components.teacup_temperature()
-        print(final_temp)
         model.initialize()
         reset_temp = model.components.teacup_temperature()
-        print(reset_temp)
         self.assertNotEqual(initial_temp, final_temp)
         self.assertEqual(initial_temp, reset_temp)
 

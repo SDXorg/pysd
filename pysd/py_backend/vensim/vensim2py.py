@@ -555,7 +555,7 @@ builders = {
         identifier=element['py_name'],
         delay_input=args[0],
         delay_time='time_step()' if args[1]=='time_step()'\
-                   else 'utils.round(' + args[1]\
+                   else 'utils.round_(' + args[1]\
                         + ' / time_step() ) * time_step()',
         initial_value=args[2],
         order='1.' if args[1]=='time_step()'\

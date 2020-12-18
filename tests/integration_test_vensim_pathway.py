@@ -48,8 +48,9 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/constant_expressions/test_constant_expressions.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('to be fixed')
+    @unittest.skip('to be fixed #225')
     def test_delay_numeric_error(self):
+        # issue https://github.com/JamesPHoughton/pysd/issues/225
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/delay_numeric_error/test_delay_numeric_error.mdl')
         assert_frames_close(output, canon, rtol=rtol)
@@ -59,14 +60,16 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/delay_parentheses/test_delay_parentheses.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('to be fixed')
+    @unittest.skip('to be fixed #147')
     def test_delay_pipeline(self):
+        # issue https://github.com/JamesPHoughton/pysd/issues/147
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/delay_pipeline/test_pipeline_delays.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('to be fixed')
+    @unittest.skip('to be fixed #147')
     def test_delays(self):
+        # issue https://github.com/JamesPHoughton/pysd/issues/147
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/delays/test_delays.mdl')
         assert_frames_close(output, canon, rtol=rtol)
@@ -96,6 +99,7 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/game/test_game.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    # TODO remove skip for 1.0.0
     @unittest.skipIf(_py_version < 36,
                      "failling: needs black" +
                      "black only supported for Python >= 3.6")
@@ -281,8 +285,9 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/rounding/test_rounding.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('working on it')
+    @unittest.skip('working on it #217')
     def test_sample_if_true(self):
+        # issue https://github.com/JamesPHoughton/pysd/issues/217
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/sample_if_true/test_sample_if_true.mdl')
         assert_frames_close(output, canon, rtol=rtol)
@@ -352,8 +357,9 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscript_docs/subscript_docs.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('working on it')
+    @unittest.skip('working on it #216')
     def test_subscript_element_name(self):
+        # issue https://github.com/JamesPHoughton/pysd/issues/216
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscript_element_name/test_subscript_element_name.mdl')
         assert_frames_close(output, canon, rtol=rtol)
@@ -429,14 +435,16 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscripted_if_then_else/test_subscripted_if_then_else.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('working on it')
+    @unittest.skip('working on it #226')
     def test_subscripted_smooth(self):
+        # issue https://github.com/JamesPHoughton/pysd/issues/226
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscripted_smooth/test_subscripted_smooth.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('working on it')
+    @unittest.skip('working on it #226')
     def test_subscripted_trend(self):
+        # issue https://github.com/JamesPHoughton/pysd/issues/226
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscripted_trend/test_subscripted_trend.mdl')
         assert_frames_close(output, canon, rtol=rtol)

@@ -267,6 +267,17 @@ class TestUtils(TestCase):
                     with self.assertRaises(ValueError):
                         compute_shape(c, d, i+1)
 
+    def test_round_(self):
+        import pysd
+        coords = {'d1': [9, 1], 'd2': [2, 4]}
+        dims = ['d1', 'd2']
+        xr_input = xr.DataArray([[1.2, 2.7], [3.05, 4]], coords, dims)
+        xr_output = xr.DataArray([[1., 3.], [3., 4.]], coords, dims)
+
+        self.assertEqual(pysd.utils.round_(2.7), 3)
+        self.assertEqual(pysd.utils.round_(4.2), 4)
+        self.assertTrue(pysd.utils.round_(xr_input).equals(xr_output))
+
     def test_add_entries_underscore(self):
         """"
         Test for add_entries_undescore

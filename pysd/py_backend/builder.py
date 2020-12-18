@@ -165,7 +165,7 @@ def build_element(element, subscript_dict):
 
     # check the elements with ADD in their name
     # as these wones are directly added to the
-    # objcet via .add method
+    # external objecets via .add method
     py_expr_no_ADD = ["ADD" not in py_expr for py_expr in element['py_expr']]
 
     if sum(py_expr_no_ADD) > 1:
@@ -239,8 +239,10 @@ def build_element(element, subscript_dict):
     %(py_name)s = %(py_expr)s
             ''' % {'py_name': element['py_name'],
                    'py_expr': element['py_expr'][0]}
-
+   
     elif element['kind'] == 'external_add':
+        # external expressions to be added with .add method
+        # remove the ADD from the end
         py_name = element['py_name'].split("ADD")[0]
         func = '''
     %(py_name)s%(py_expr)s
