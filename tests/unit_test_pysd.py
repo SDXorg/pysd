@@ -4,6 +4,7 @@ import numpy as np
 from pysd import utils
 
 test_model = 'test-models/samples/teacup/teacup.mdl'
+test_model_subs = 'test-models/tests/subscript_2d_arrays/test_subscript_2d_arrays.mdl'
 
 
 class TestPySD(unittest.TestCase):
@@ -131,6 +132,81 @@ class TestPySD(unittest.TestCase):
         with self.assertRaises(ValueError):
             model.run(initial_condition='bad value')
 
+    def test_initial_conditions_subscripted_value_with_constant(self):
+        import xarray as xr
+        import pysd
+
+        coords = {'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3'],
+                  'Second Dimension Subscript': ['Column 1', 'Column 2']}
+        dims = ['One Dimensional Subscript', 'Second Dimension Subscript']
+        output = xr.DataArray([[5, 5], [5, 5], [5, 5]], coords, dims)
+
+        model = pysd.read_vensim(test_model_subs)
+        res = model.run(initial_condition=(5, {'initial_values': 5}),
+                        return_columns=['Initial Values'],
+                        return_timestamps=list(range(5, 10)))
+        self.assertTrue(output.equals(res['Initial Values'].iloc[0]))
+        self.assertEqual(res.index[0], 5)
+
+    def test_initial_conditions_subscripted_value_with_partial_xarray(self):
+        import xarray as xr
+        import pysd
+
+        coords = {'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3'],
+                  'Second Dimension Subscript': ['Column 1', 'Column 2']}
+        dims = ['One Dimensional Subscript', 'Second Dimension Subscript']
+        output = xr.DataArray([[5, 3], [5, 3], [5, 3]], coords, dims)
+        input_val = xr.DataArray([5, 3],
+            {'Second Dimension Subscript': ['Column 1', 'Column 2']},
+            ['Second Dimension Subscript'])
+
+        model = pysd.read_vensim(test_model_subs)
+        res = model.run(initial_condition=(5, {'Initial Values': input_val}),
+                        return_columns=['Initial Values'],
+                        return_timestamps=list(range(5, 10)))
+        self.assertTrue(output.equals(res['Initial Values'].iloc[0]))
+        self.assertEqual(res.index[0], 5)
+
+    def test_initial_conditions_subscripted_value_with_xarray(self):
+        import xarray as xr
+        import pysd
+
+        coords = {'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3'],
+                  'Second Dimension Subscript': ['Column 1', 'Column 2']}
+        dims = ['One Dimensional Subscript', 'Second Dimension Subscript']
+        output = xr.DataArray([[5, 3], [4, 8], [9, 3]], coords, dims)
+
+        model = pysd.read_vensim(test_model_subs)
+        res = model.run(initial_condition=(5, {'initial_values': output}),
+                        return_columns=['Initial Values'],
+                        return_timestamps=list(range(5, 10)))
+        self.assertTrue(output.equals(res['Initial Values'].iloc[0]))
+        self.assertEqual(res.index[0], 5)
+
+    def test_initial_conditions_subscripted_value_with_numpy(self):
+        # test for backward compatibility to remove in the future
+        import warnings
+        import xarray as xr
+        import pysd
+
+        coords = {'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3'],
+                  'Second Dimension Subscript': ['Column 1', 'Column 2']}
+        dims = ['One Dimensional Subscript', 'Second Dimension Subscript']
+        output = xr.DataArray([[5, 3], [4, 8], [9, 3]], coords, dims)
+        input_ = np.array([[5, 3], [4, 8], [9, 3]])
+
+        model = pysd.read_vensim(test_model_subs)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            res = model.run(initial_condition=(5, {'initial_values': input_}),
+                            return_columns=['Initial Values'],
+                            return_timestamps=list(range(5, 10)))
+        self.assertTrue(output.equals(res['Initial Values'].iloc[0]))
+        self.assertEqual(res.index[0], 5)
+        self.assertEqual(len(w), 1)
+        self.assertTrue(
+            'deprecated' in str(w[0].message))
+
     def test_set_constant_parameter(self):
         """ In response to: re: https://github.com/JamesPHoughton/pysd/issues/5"""
         import pysd
@@ -184,7 +260,145 @@ class TestPySD(unittest.TestCase):
         res = model.run(return_columns=['Room Temperature'])
         self.assertEqual(test_func(), res['Room Temperature'].iloc[0])
 
-    @unittest.skip('to be fixed')
+    def test_set_subscripted_value_with_constant(self):
+        import xarray as xr
+        import pysd
+
+        coords = {'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3'],
+                  'Second Dimension Subscript': ['Column 1', 'Column 2']}
+        dims = ['One Dimensional Subscript', 'Second Dimension Subscript']
+        output = xr.DataArray([[5, 5], [5, 5], [5, 5]], coords, dims)
+
+        model = pysd.read_vensim(test_model_subs)
+        model.set_components({'initial_values': 5, 'final_time': 10})
+        res = model.run(return_columns=['Initial Values'])
+        self.assertTrue(output.equals(res['Initial Values'].iloc[0]))
+
+    def test_set_subscripted_value_with_partial_xarray(self):
+        import xarray as xr
+        import pysd
+
+        coords = {'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3'],
+                  'Second Dimension Subscript': ['Column 1', 'Column 2']}
+        dims = ['One Dimensional Subscript', 'Second Dimension Subscript']
+        output = xr.DataArray([[5, 3], [5, 3], [5, 3]], coords, dims)
+        input_val = xr.DataArray([5, 3],
+            {'Second Dimension Subscript': ['Column 1', 'Column 2']},
+            ['Second Dimension Subscript'])
+
+        model = pysd.read_vensim(test_model_subs)
+        model.set_components({'Initial Values': input_val, 'final_time': 10})
+        res = model.run(return_columns=['Initial Values'])
+        self.assertTrue(output.equals(res['Initial Values'].iloc[0]))
+
+    def test_set_subscripted_value_with_xarray(self):
+        import xarray as xr
+        import pysd
+
+        coords = {'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3'],
+                  'Second Dimension Subscript': ['Column 1', 'Column 2']}
+        dims = ['One Dimensional Subscript', 'Second Dimension Subscript']
+        output = xr.DataArray([[5, 3], [4, 8], [9, 3]], coords, dims)
+
+        model = pysd.read_vensim(test_model_subs)
+        model.set_components({'initial_values': output, 'final_time': 10})
+        res = model.run(return_columns=['Initial Values'])
+        self.assertTrue(output.equals(res['Initial Values'].iloc[0]))
+
+    def test_set_subscripted_value_with_numpy(self):
+        # test for backward compatibility to remove in the future
+        import warnings
+        import xarray as xr
+        import pysd
+
+        coords = {'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3'],
+                  'Second Dimension Subscript': ['Column 1', 'Column 2']}
+        dims = ['One Dimensional Subscript', 'Second Dimension Subscript']
+        output = xr.DataArray([[5, 3], [4, 8], [9, 3]], coords, dims)
+        input_ = np.array([[5, 3], [4, 8], [9, 3]])
+
+        model = pysd.read_vensim(test_model_subs)
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            model.set_components({'initial_values': input_, 'final_time': 10})
+        res = model.run(return_columns=['Initial Values'])
+        self.assertTrue(output.equals(res['Initial Values'].iloc[0]))
+        self.assertEqual(len(w), 1)
+        self.assertTrue(
+            'deprecated' in str(w[0].message))
+
+    def test_set_subscripted_timeseries_parameter_with_constant(self):
+        import xarray as xr
+        import pysd
+
+        coords = {'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3'],
+                  'Second Dimension Subscript': ['Column 1', 'Column 2']}
+        dims = ['One Dimensional Subscript', 'Second Dimension Subscript']
+
+        model = pysd.read_vensim(test_model_subs)
+        timeseries = list(range(10))
+        val_series = [50 + rd for rd in
+                      np.random.rand(len(timeseries)).cumsum()]
+        xr_series = [xr.DataArray([[val,val],[val,val],[val,val]], coords, dims)
+                     for val in val_series]
+
+        temp_timeseries = pd.Series(index=timeseries,
+                                    data=val_series)
+        res = model.run(params={'initial_values': temp_timeseries, 'final_time': 10},
+                        return_columns=['initial_values'],
+                        return_timestamps=timeseries)
+
+        self.assertTrue(np.all([r.equals(t) for r,t in
+            zip(res['initial_values'].values, xr_series)]))
+
+    def test_set_subscripted_timeseries_parameter_with_partial_xarray(self):
+        import xarray as xr
+        import pysd
+
+        coords = {'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3'],
+                  'Second Dimension Subscript': ['Column 1', 'Column 2']}
+        dims = ['One Dimensional Subscript', 'Second Dimension Subscript']
+        out_b = xr.DataArray([[0, 0], [0, 0], [0, 0]], coords, dims)
+        input_val = xr.DataArray([5, 3],
+            {'Second Dimension Subscript': ['Column 1', 'Column 2']},
+            ['Second Dimension Subscript'])
+
+        model = pysd.read_vensim(test_model_subs)
+        timeseries = list(range(10))
+        val_series = [input_val + rd for rd in
+                      np.random.rand(len(timeseries)).cumsum()]
+        temp_timeseries = pd.Series(index=timeseries,
+                                    data=val_series)
+        out_series = [out_b + val
+                     for val in val_series]
+        model.set_components({'initial_values': temp_timeseries, 'final_time': 10})
+        res = model.run(return_columns=['initial_values'])
+        self.assertTrue(np.all([r.equals(t) for r,t in
+            zip(res['initial_values'].values, out_series)]))
+
+
+    def test_set_subscripted_timeseries_parameter_with_xarray(self):
+        import xarray as xr
+        import pysd
+
+        coords = {'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3'],
+                  'Second Dimension Subscript': ['Column 1', 'Column 2']}
+        dims = ['One Dimensional Subscript', 'Second Dimension Subscript']
+
+        init_val = xr.DataArray([[5, 3], [4, 8], [9, 3]], coords, dims)
+
+        model = pysd.read_vensim(test_model_subs)
+        timeseries = list(range(10))
+        temp_timeseries = pd.Series(index=timeseries,
+                                    data=[init_val + rd for rd in
+                                          np.random.rand(len(timeseries)).cumsum()])
+        res = model.run(params={'initial_values': temp_timeseries, 'final_time': 10},
+                        return_columns=['initial_values'],
+                        return_timestamps=timeseries)
+
+        self.assertTrue(np.all([r.equals(t) for r,t in
+            zip(res['initial_values'].values, temp_timeseries.values)]))
+
     def test_docs(self):
         """ Test that the model prints some documentation """
         import pysd
@@ -207,14 +421,36 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(doc[doc['Real Name'] == 'Characteristic Time']['Type'].values[0],
                          'constant')
 
-    @unittest.skip('TODO fix test with new architecture of time proposing')
+    def test_docs_multiline_eqn(self):
+        """ Test that the model prints some documentation """
+        import pysd
+
+        path2model = 'test-models/tests/multiple_lines_def/'\
+                     + 'test_multiple_lines_def.mdl'
+        model = pysd.read_vensim(path2model)
+
+        doc = model.doc()
+
+        self.assertEqual(doc[doc['Real Name'] == 'price']['Unit'].values[0],
+                         'euros/kg')
+        self.assertEqual(doc[doc['Real Name'] == 'price']['Py Name'].values[0],
+                         'price')
+        self.assertTrue(doc[doc['Real Name'] == 'price']['Subs'].values[0] in
+                        ["['fruits']", "[u'fruits']"])
+        self.assertEqual(doc[doc['Real Name'] == 'price']['Eqn'].values[0],
+                         '1.2; .; .; .; 1.4')
+
+
     def test_stepwise_cache(self):
+        # Checks backward compatibility, must be changed to @cache.step when deprecated
         run_history = []
         result_history = []
 
         global time
         time = lambda: 0  # for testing cache function
         from pysd.py_backend.functions import cache
+
+        cache.time = time()
 
         @cache('step')
         def upstream(run_hist, res_hist):
@@ -227,41 +463,50 @@ class TestPySD(unittest.TestCase):
             return 'down'
 
         # initially neither function has a chache value
-        self.assertFalse(hasattr(upstream, 'cache_val'))
-        self.assertFalse(hasattr(downstream, 'cache_val'))
+        self.assertFalse('upstream' in cache.data['step'])
+        self.assertFalse('downstream' in cache.data['step'])
 
         # when the functions are called,
         # the cache is instantiated in the upstream (cached) function
         result_history.append(downstream(run_history, result_history))
-        self.assertTrue(hasattr(upstream, 'cache_val'))
-        self.assertFalse(hasattr(downstream, 'cache_val'))
-        self.assertEqual(upstream.cache_t, 0)
+        self.assertTrue('upstream' in cache.data['step'])
+        self.assertFalse('upstream' in cache.data['run'])
+        self.assertFalse('downstream' in cache.data['step'])
+        self.assertEqual(cache.time, 0)
         self.assertListEqual(run_history, ['D', 'U'])
         self.assertListEqual(result_history, ['up', 'down'])
+
+        # cleaning only run cache shouldn't affect the step cache
+        cache.clean('run')
+        self.assertTrue('upstream' in cache.data['step'])
 
         # at the second call, the uncached function is run,
         # but the cached upstream function returns its prior value
         result_history.append(downstream(run_history, result_history))
-        self.assertEqual(upstream.cache_t, 0)
+        self.assertEqual(cache.time, 0)
         self.assertListEqual(run_history, ['D', 'U', 'D'])
         self.assertListEqual(result_history, ['up', 'down', 'up', 'down'])
 
         # when the time is reset, both functions are run again.
         time = lambda: 2
+        cache.reset(time())
 
         result_history.append(downstream(run_history, result_history))
-        self.assertEqual(upstream.cache_t, 2)
+        self.assertEqual(cache.time, 2)
         self.assertListEqual(run_history, ['D', 'U', 'D', 'D', 'U'])
         self.assertListEqual(result_history,
                              ['up', 'down', 'up', 'down', 'up', 'down'])
 
     def test_runwise_cache(self):
+        # Checks backward compatibility, must be changed to @cache.run when deprecated
         run_history = []
         result_history = []
 
         global time
         time = lambda: 0  # for testing cache function
         from pysd.py_backend.functions import cache
+
+        cache.time = time()
 
         @cache('run')
         def upstream(run_hist, res_hist):
@@ -274,28 +519,36 @@ class TestPySD(unittest.TestCase):
             return 'down'
 
         # initially neither function has a chache value
-        self.assertFalse(hasattr(upstream, 'cache_val'))
-        self.assertFalse(hasattr(downstream, 'cache_val'))
+        self.assertFalse('upstream' in cache.data['run'])
+        self.assertFalse('downstream' in cache.data['run'])
 
         # when the functions are called,
         # the cache is instantiated in the upstream (cached) function
         result_history.append(downstream(run_history, result_history))
-        self.assertTrue(hasattr(upstream, 'cache_val'))
-        self.assertFalse(hasattr(downstream, 'cache_val'))
-        self.assertFalse(hasattr(upstream, 'cache_t'))
+        self.assertEqual(cache.time, 0)
+        self.assertTrue('upstream' in cache.data['run'])
+        self.assertFalse('upstream' in cache.data['step'])
+        self.assertFalse('downstream' in cache.data['run'])
         self.assertListEqual(run_history, ['D', 'U'])
         self.assertListEqual(result_history, ['up', 'down'])
+
+        # cleaning only step cache shouldn't affect the step cache
+        cache.clean('step')
+        self.assertTrue('upstream' in cache.data['run'])
 
         # at the second call, the uncached function is run,
         # but the cached upstream function returns its prior value
         result_history.append(downstream(run_history, result_history))
+        self.assertEqual(cache.time, 0)
         self.assertListEqual(run_history, ['D', 'U', 'D'])
         self.assertListEqual(result_history, ['up', 'down', 'up', 'down'])
 
         # when the time is reset, this has no impact on the upstream cache.
         time = lambda: 2
+        cache.reset(time())
 
         result_history.append(downstream(run_history, result_history))
+        self.assertEqual(cache.time, 2)
         self.assertListEqual(run_history, ['D', 'U', 'D', 'D'])
         self.assertListEqual(result_history,
                              ['up', 'down', 'up', 'down', 'up', 'down'])
@@ -341,6 +594,152 @@ class TestPySD(unittest.TestCase):
         # Test setting with stateful object name
         model.set_state(new_time + 2, {'_integ_teacup_temperature': 302})
         self.assertEqual(model.components.teacup_temperature(), 302)
+
+    def test_set_state_subscripted_value_with_constant(self):
+        import xarray as xr
+        import pysd
+
+        coords = {'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3'],
+                  'Second Dimension Subscript': ['Column 1', 'Column 2']}
+        dims = ['One Dimensional Subscript', 'Second Dimension Subscript']
+        output_b = xr.DataArray([[0, 0], [0, 0], [0, 0]], coords, dims)
+
+        new_time = np.random.rand()
+
+        model = pysd.read_vensim(test_model_subs)
+        initial_stock = model.components.stock_a()
+        initial_time = model.components.time()
+
+        # Test that we can set with real names
+        model.set_state(new_time, {'Stock A': 500})
+        self.assertFalse(initial_stock.equals(output_b + 500))
+        self.assertTrue(model.components.stock_a().equals(output_b + 500))
+
+        # Test setting with pysafe names
+        model.set_state(new_time + 1, {'stock_a': 202})
+        self.assertTrue(model.components.stock_a().equals(output_b + 202))
+
+        # Test setting with stateful object name
+        model.set_state(new_time + 2, {'_integ_stock_a': 302})
+        self.assertTrue(model.components.stock_a().equals(output_b + 302))
+
+
+    def test_set_state_subscripted_value_with_partial_xarray(self):
+        import xarray as xr
+        import pysd
+
+        coords = {'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3'],
+                  'Second Dimension Subscript': ['Column 1', 'Column 2']}
+        dims = ['One Dimensional Subscript', 'Second Dimension Subscript']
+        output1 = xr.DataArray([[5, 3], [5, 3], [5, 3]], coords, dims)
+        input_val1 = xr.DataArray([5, 3],
+            {'Second Dimension Subscript': ['Column 1', 'Column 2']},
+            ['Second Dimension Subscript'])
+
+        output2 = xr.DataArray([[55, 33], [55, 33], [55, 33]], coords, dims)
+        input_val2 = xr.DataArray([55, 33],
+            {'Second Dimension Subscript': ['Column 1', 'Column 2']},
+            ['Second Dimension Subscript'])
+
+        output3 = xr.DataArray([[40, 20], [40, 20], [40, 20]], coords, dims)
+        input_val3 = xr.DataArray([40, 20],
+            {'Second Dimension Subscript': ['Column 1', 'Column 2']},
+            ['Second Dimension Subscript'])
+
+        new_time = np.random.rand()
+
+        model = pysd.read_vensim(test_model_subs)
+        initial_stock = model.components.stock_a()
+
+        # Test that we can set with real names
+        model.set_state(new_time, {'Stock A': input_val1})
+        self.assertFalse(initial_stock.equals(output1))
+        self.assertTrue(model.components.stock_a().equals(output1))
+
+        # Test setting with pysafe names
+        model.set_state(new_time + 1, {'stock_a': input_val2})
+        self.assertTrue(model.components.stock_a().equals(output2))
+
+        # Test setting with stateful object name
+        model.set_state(new_time + 2, {'_integ_stock_a': input_val3})
+        self.assertTrue(model.components.stock_a().equals(output3))
+
+    def test_set_state_subscripted_value_with_xarray(self):
+        import xarray as xr
+        import pysd
+
+        coords = {'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3'],
+                  'Second Dimension Subscript': ['Column 1', 'Column 2']}
+        dims = ['One Dimensional Subscript', 'Second Dimension Subscript']
+        output1 = xr.DataArray([[5, 3], [4, 8], [9, 3]], coords, dims)
+        output2 = xr.DataArray([[53, 43], [84, 80], [29, 63]], coords, dims)
+        output3 = xr.DataArray([[54, 32], [40, 87], [93, 93]], coords, dims)
+
+        new_time = np.random.rand()
+
+        model = pysd.read_vensim(test_model_subs)
+        initial_stock = model.components.stock_a()
+
+        # Test that we can set with real names
+        model.set_state(new_time, {'Stock A': output1})
+        self.assertFalse(initial_stock.equals(output1))
+        self.assertTrue(model.components.stock_a().equals(output1))
+
+        # Test setting with pysafe names
+        model.set_state(new_time + 1, {'stock_a': output2})
+        self.assertTrue(model.components.stock_a().equals(output2))
+
+        # Test setting with stateful object name
+        model.set_state(new_time + 2, {'_integ_stock_a': output3})
+        self.assertTrue(model.components.stock_a().equals(output3))
+
+    def test_set_state_subscripted_value_with_numpy(self):
+            # test for backward compatibility to remove in the future
+        import warnings
+        import xarray as xr
+        import pysd
+        coords = {'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3'],
+                  'Second Dimension Subscript': ['Column 1', 'Column 2']}
+        dims = ['One Dimensional Subscript', 'Second Dimension Subscript']
+        output1 = xr.DataArray([[5, 3], [4, 8], [9, 3]], coords, dims)
+        input1 = np.array([[5, 3], [4, 8], [9, 3]])
+        output2 = xr.DataArray([[53, 43], [84, 80], [29, 63]], coords, dims)
+        input2 = np.array([[53, 43], [84, 80], [29, 63]])
+        output3 = xr.DataArray([[54, 32], [40, 87], [93, 93]], coords, dims)
+        input3 = np.array([[54, 32], [40, 87], [93, 93]])
+
+        new_time = np.random.rand()
+
+        model = pysd.read_vensim(test_model_subs)
+        initial_stock = model.components.stock_a()
+
+        # Test that we can set with real names
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            model.set_state(new_time, {'Stock A': input1})
+        self.assertFalse(initial_stock.equals(output1))
+        self.assertTrue(model.components.stock_a().equals(output1))
+        self.assertEqual(len(w), 1)
+        self.assertTrue(
+            'deprecated' in str(w[0].message))
+
+        # Test setting with pysafe names
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            model.set_state(new_time + 1, {'stock_a': input2})
+        self.assertTrue(model.components.stock_a().equals(output2))
+        self.assertEqual(len(w), 1)
+        self.assertTrue(
+            'deprecated' in str(w[0].message))
+
+        # Test setting with stateful object name
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            model.set_state(new_time + 2, {'_integ_stock_a': input3})
+        self.assertTrue(model.components.stock_a().equals(output3))
+        self.assertEqual(len(w), 1)
+        self.assertTrue(
+            'deprecated' in str(w[0].message))
 
     def test_replace_element(self):
         import pysd
@@ -441,6 +840,31 @@ class TestPySD(unittest.TestCase):
         self.assertNotEqual(initial_time, 10, "Test definition is wrong, please change configuration")
         self.assertEqual(set_time, 10)
 
+    #TODO
+    def test_get_coords(self):
+        import pysd
+
+        coords = {'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3'],
+                  'Second Dimension Subscript': ['Column 1', 'Column 2']}
+        dims = ['One Dimensional Subscript', 'Second Dimension Subscript']
+
+        coords_dims = (coords, dims)
+
+        model = pysd.read_vensim(test_model)
+        model2 = pysd.read_vensim(test_model_subs)
+
+        self.assertIsNone(model.get_coords('Room Temperature'))
+        self.assertIsNone(model.get_coords('room_temperature'))
+        self.assertIsNone(model.get_coords('teacup_temperature'))
+        self.assertIsNone(model.get_coords('_integ_teacup_temperature'))
+
+        self.assertEqual(model2.get_coords('Initial Values'), coords_dims)
+        self.assertEqual(model2.get_coords('initial_values'), coords_dims)
+        self.assertEqual(model2.get_coords('Stock A'), coords_dims)
+        self.assertEqual(model2.get_coords('stock_a'), coords_dims)
+        self.assertEqual(model2.get_coords('_integ_stock_a'), coords_dims)
+
+
     def test__build_euler_timeseries(self):
         import pysd
         model = pysd.read_vensim(test_model)
@@ -506,6 +930,7 @@ class TestPySD(unittest.TestCase):
         model = pysd.read_vensim(test_model)
         self.assertEqual(model.mdl_file, test_model)
 
+    @unittest.skip('infinite loop')
     def test_incomplete_model(self):
         import pysd
         import warnings

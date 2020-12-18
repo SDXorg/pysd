@@ -4,6 +4,7 @@ build/
 *.vdf
 *.2mdl
 pysd.egg*
+.vscode/
 
 .idea/*
 docs/_build/*

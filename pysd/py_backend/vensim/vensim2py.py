@@ -1,17 +1,22 @@
 """
-Translates vensim .mdl file to pieces needed by the builder module to write a python version of the
-model. Everything that requires knowledge of vensim syntax should be in this file.
+These functions translate vensim .mdl file to pieces needed by the builder
+module to write a python version of the model. Everything that requires
+knowledge of vensim syntax should be here.
 """
+
 from __future__ import absolute_import
-import re
-import parsimonious
-from ...py_backend import builder
-from ...py_backend import utils
-from io import open
-import textwrap
-import numpy as np
+
 import os
+import re
+import textwrap
 import warnings
+from io import open
+
+import numpy as np
+import parsimonious
+
+from .. import functions as funcs
+from .. import builder, utils, external
 
 
 def get_file_sections(file_str):
@@ -148,7 +153,7 @@ def get_model_elements(model_str):
     sketch = ~r".*"  #anything
 
     # Either an escape group, or a character that is not tilde or pipe
-    element = (escape_group / ~r"[^~|]")*
+    element = ( escape_group / ~r"[^~|]")*
     """)
 
     parser = parsimonious.Grammar(model_structure_grammar)
@@ -184,26 +189,27 @@ def get_model_elements(model_str):
 def _include_common_grammar(source_grammar):
     common_grammar = r"""
     name = basic_id / escape_group
-    
+
     # This takes care of models with Unicode variable names
     basic_id = id_start id_continue*
-    
+
     id_start = ~r"[\w]"IU
     id_continue = id_start / ~r"[0-9\'\$\s\_]"
 
     # between quotes, either escaped quote or character that is not a quote
     escape_group = "\"" ( "\\\"" / ~r"[^\"]" )* "\""
-    
+
     _ = ~r"[\s\\]*"  # whitespace character
     """
 
     return r"""
     {source_grammar}
-    
+
     {common_grammar}
     """.format(source_grammar=source_grammar, common_grammar=common_grammar)
 
-def get_equation_components(equation_str):
+
+def get_equation_components(equation_str, root_path=None):
     """
     Breaks down a string representing only the equation part of a model element.
     Recognizes the various types of model elements that may exist, and identifies them.
@@ -212,6 +218,9 @@ def get_equation_components(equation_str):
     ----------
     equation_str : basestring
         the first section in each model element - the full equation.
+
+    root_path: basestring
+        the root path of the vensim file (necessary to resolve external data file paths)
 
     Returns
     -------
@@ -230,6 +239,9 @@ def get_equation_components(equation_str):
         - *component* - normal model expression or constant
         - *lookup* - a lookup table
         - *subdef* - a subscript definition
+        - *data* -  a data variable
+
+    keyword: basestring or None
 
     Examples
     --------
@@ -238,23 +250,31 @@ def get_equation_components(equation_str):
 
     Notes
     -----
-    in this function we dont create python identifiers, we use real names.
+    in this function we don't create python identifiers, we use real names.
     This is so that when everything comes back together, we can manage
     any potential namespace conflicts properly
     """
 
     component_structure_grammar = _include_common_grammar(r"""
-    entry = component / subscript_definition / lookup_definition
-    component = name _ subscriptlist? _ "=" _ expression
-    subscript_definition = name _ ":" _ subscript _ ("," _ subscript)*
-    lookup_definition = name _ &"(" _ expression  # uses lookahead assertion to capture whole group
+    entry = component / data_definition / test_definition / subscript_definition / lookup_definition
+    component = name _ subscriptlist? _ "=" "="? _ expression
+    subscript_definition = name _ ":" _ (imported_subscript / literal_subscript)
+    data_definition = name _ subscriptlist? _ keyword? _ ":=" _ expression
+    lookup_definition = name _ subscriptlist? &"(" _ expression  # uses lookahead assertion to capture whole group
+    test_definition = name _ subscriptlist? _ &keyword _ expression
 
     name = basic_id / escape_group
-    subscriptlist = '[' _ subscript _ ("," _ subscript)* _ ']'
+    literal_subscript = subscript _ ("," _ subscript _)*
+    imported_subscript = func _ "(" _ (string _ ","? _)* ")"
+    subscriptlist = '[' _ subscript _ ("," _ subscript _)* _ ']'
     expression = ~r".*"  # expression could be anything, at this point.
+    keyword = ":" _ basic_id _ ":"
 
     subscript = basic_id / escape_group
-    """)
+    func = basic_id
+    string = "\'" ( "\\\'" / ~r"[^\']"IU )* "\'"
+    """
+    )
 
     # replace any amount of whitespace  with a single space
     equation_str = equation_str.replace('\\t', ' ')
@@ -269,6 +289,7 @@ def get_equation_components(equation_str):
             self.real_name = None
             self.expression = None
             self.kind = None
+            self.keyword = None
             self.visit(ast)
 
         def visit_subscript_definition(self, n, vc):
@@ -279,6 +300,20 @@ def get_equation_components(equation_str):
 
         def visit_component(self, n, vc):
             self.kind = 'component'
+
+        def visit_data_definition(self, n, vc):
+            self.kind = 'data'
+
+        def visit_test_definition(self, n, vc):
+            self.kind = 'test'
+
+        def visit_keyword(self, n, vc):
+            self.keyword = n.text.strip()
+
+        def visit_imported_subscript(self, n, vc):
+            f_str = vc[0]
+            args_str = vc[4]  # todo: make this less fragile?
+            self.subscripts += get_external_data(f_str, args_str, root_path)
 
         def visit_name(self, n, vc):
             (name,) = vc
@@ -302,7 +337,20 @@ def get_equation_components(equation_str):
     return {'real_name': parse_object.real_name,
             'subs': parse_object.subscripts,
             'expr': parse_object.expression,
-            'kind': parse_object.kind}
+            'kind': parse_object.kind,
+            'keyword': parse_object.keyword}
+
+
+def get_external_data(func_str, args_str, root_path):
+    """
+    Gets the subscripts from external files calling the class external.ExtSubscript
+    """
+    # The py model file must be recompiled if external file subscripts change. This could be avoided
+    # if we switch to function-defined subscript values instead of hard-coding them.
+    f = subscript_functions[func_str.lower()]
+    args = [x.strip().strip("\'") for x in args_str.split(',')]  # todo: make this less fragile?
+
+    return f(*args, root=root_path).subscript
 
 
 def parse_units(units_str):
@@ -344,7 +392,8 @@ def parse_units(units_str):
         units = units_str
         lims = '?, ?]'
 
-    lims = tuple([float(x) if x.strip() != '?' else None for x in lims.strip(']').split(',')])
+    lims = tuple([float(x) if x.strip() != '?' else None
+                  for x in lims.strip(']').split(',')])
 
     return units.strip(), lims
 
@@ -359,16 +408,20 @@ functions = {
     "sqrt": "np.sqrt",
     "tan": "np.tan",
     "lognormal": "np.random.lognormal",
-    "random normal": "functions.bounded_normal",
+    "random normal":
+        "functions.bounded_normal",
     "poisson": "np.random.poisson",
     "ln": "np.log",
     "log": "functions.log",
     "exprnd": "np.random.exponential",
     "random uniform": "functions.random_uniform",
-    "sum": "np.sum",
+    "sum": "functions.sum",
     "arccos": "np.arccos",
     "arcsin": "np.arcsin",
     "arctan": "np.arctan",
+    "tanh": "np.tanh",
+    "sinh": "np.sinh",
+    "cosh": "np.cosh",
     "if then else": "functions.if_then_else",
     "step": {
         "name": "functions.step",
@@ -423,21 +476,43 @@ functions = {
     "game": "",  # In the future, may have an actual `functions.game` pass through
 
     # vector functions
-    "vmin": "np.min",
-    "vmax": "np.max",
-    "prod": "np.prod"
+    "vmin": "functions.vmin",
+    "vmax": "functions.vmax",
+    "prod": "functions.prod",
+
+}
+
+# list of fuctions that accept a dimension to apply over
+vectorial_funcs = ["sum", "prod", "vmax", "vmin"]
+
+data_ops = {
+    'get data at time': '',
+    'get data between times': '',
+    'get data last time': '',
+    'get data max': '',
+    'get data min': '',
+    'get data median': '',
+    'get data mean': '',
+    'get data stdv': '',
+    'get data total points': ''
+}
+
+subscript_functions = {
+    "get xls subscript": external.ExtSubscript,
+    "get direct subscript": external.ExtSubscript
 }
 
 builders = {
     "integ": lambda element, subscript_dict, args: builder.add_stock(
         identifier=element['py_name'],
-        subs=element['subs'],
         expression=args[0],
         initial_condition=args[1],
+        subs=element['subs'],
         subscript_dict=subscript_dict
     ),
 
     "delay1": lambda element, subscript_dict, args: builder.add_n_delay(
+        identifier=element['py_name'],
         delay_input=args[0],
         delay_time=args[1],
         initial_value=args[0],
@@ -447,6 +522,7 @@ builders = {
     ),
 
     "delay1i": lambda element, subscript_dict, args: builder.add_n_delay(
+        identifier=element['py_name'],
         delay_input=args[0],
         delay_time=args[1],
         initial_value=args[2],
@@ -456,6 +532,7 @@ builders = {
     ),
 
     "delay3": lambda element, subscript_dict, args: builder.add_n_delay(
+        identifier=element['py_name'],
         delay_input=args[0],
         delay_time=args[1],
         initial_value=args[0],
@@ -465,6 +542,7 @@ builders = {
     ),
 
     "delay3i": lambda element, subscript_dict, args: builder.add_n_delay(
+        identifier=element['py_name'],
         delay_input=args[0],
         delay_time=args[1],
         initial_value=args[2],
@@ -474,15 +552,20 @@ builders = {
     ),
 
     "delay fixed": lambda element, subscript_dict, args: builder.add_n_delay(
+        identifier=element['py_name'],
         delay_input=args[0],
-        delay_time='round('+args[1]+' / time_step() ) * time_step()',
+        delay_time='time_step()' if args[1]=='time_step()'\
+                   else 'utils.round_(' + args[1]\
+                        + ' / time_step() ) * time_step()',
         initial_value=args[2],
-        order=args[1]+' / time_step()',
+        order='1.' if args[1]=='time_step()'\
+              else args[1] + ' / time_step()',
         subs=element['subs'],
         subscript_dict=subscript_dict
     ),
 
     "delay n": lambda element, subscript_dict, args: builder.add_n_delay(
+        identifier=element['py_name'],
         delay_input=args[0],
         delay_time=args[1],
         initial_value=args[2],
@@ -492,6 +575,7 @@ builders = {
     ),
 
     "smooth": lambda element, subscript_dict, args: builder.add_n_smooth(
+        identifier=element['py_name'],
         smooth_input=args[0],
         smooth_time=args[1],
         initial_value=args[0],
@@ -501,6 +585,7 @@ builders = {
     ),
 
     "smoothi": lambda element, subscript_dict, args: builder.add_n_smooth(
+        identifier=element['py_name'],
         smooth_input=args[0],
         smooth_time=args[1],
         initial_value=args[2],
@@ -510,6 +595,7 @@ builders = {
     ),
 
     "smooth3": lambda element, subscript_dict, args: builder.add_n_smooth(
+        identifier=element['py_name'],
         smooth_input=args[0],
         smooth_time=args[1],
         initial_value=args[0],
@@ -519,6 +605,7 @@ builders = {
     ),
 
     "smooth3i": lambda element, subscript_dict, args: builder.add_n_smooth(
+        identifier=element['py_name'],
         smooth_input=args[0],
         smooth_time=args[1],
         initial_value=args[2],
@@ -528,6 +615,7 @@ builders = {
     ),
 
     "smooth n": lambda element, subscript_dict, args: builder.add_n_smooth(
+        identifier=element['py_name'],
         smooth_input=args[0],
         smooth_time=args[1],
         initial_value=args[2],
@@ -537,20 +625,68 @@ builders = {
     ),
 
     "trend": lambda element, subscript_dict, args: builder.add_n_trend(
+        identifier=element['py_name'],
         trend_input=args[0],
         average_time=args[1],
         initial_trend=args[2],
         subs=element['subs'],
         subscript_dict=subscript_dict),
 
-    "initial": lambda element, subscript_dict, args: builder.add_initial(args[0]),
+    "get xls data": lambda element, subscript_dict, args: builder.add_ext_data(
+        identifier=element['py_name'],
+        file_name=args[0],
+        tab=args[1],
+        time_row_or_col=args[2],
+        cell=args[3],
+        subs=element['subs'],
+        subscript_dict=subscript_dict,
+        keyword=element['keyword']
+    ),
 
-    "a function of": lambda element, subscript_dict, args: builder.add_incomplete(
-        element['real_name'], args)
+    "get xls constants": lambda element, subscript_dict, args:\
+        builder.add_ext_constant(
+        identifier=element['py_name'],
+        file_name=args[0],
+        tab=args[1],
+        cell=args[2],
+        subs=element['subs'],
+        subscript_dict=subscript_dict
+    ),
+
+    "get xls lookups": lambda element, subscript_dict, args:\
+        builder.add_ext_lookup(
+        identifier=element['py_name'],
+        file_name=args[0],
+        tab=args[1],
+        x_row_or_col=args[2],
+        cell=args[3],
+        subs=element['subs'],
+        subscript_dict=subscript_dict
+    ),
+
+    "initial": lambda element, subscript_dict, args:\
+        builder.add_initial(args[0]),
+
+    "a function of": lambda element, subscript_dict, args:\
+        builder.add_incomplete(element['real_name'], args)
 }
 
+# direct and xls methods are identically implemented in PySD
+builders['get direct data'] = builders['get xls data']
+builders['get direct lookups'] = builders['get xls lookups']
+builders['get direct constants'] = builders['get xls constants']
 
-def parse_general_expression(element, namespace=None, subscript_dict=None, macro_list=None):
+# expand dictionaries to detect _ in Vensim def
+utils.add_entries_underscore(
+    functions,
+    data_ops,
+    subscript_functions,
+    builders
+)
+
+
+def parse_general_expression(element, namespace=None, subscript_dict=None,
+                             macro_list=None, elements_subs_dict=None):
     """
     Parses a normal expression
     # its annoying that we have to construct and compile the grammar every time...
@@ -566,14 +702,19 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
     macro_list: list of dictionaries
         [{'name': 'M', 'py_name':'m', 'filename':'path/to/file', 'args':['arg1', 'arg2']}]
 
+    elements_subs_dict : dictionary
+        The dictionary with element python names as keys and their merged
+        subscripts as values.
+
     Returns
     -------
     translation
 
     new_elements: list of dictionaries
-        If the expression contains builder functions, those builders will create new elements
-        to add to our running list (that will eventually be output to a file) such as stock
-        initialization and derivative funcs, etc.
+        If the expression contains builder functions, those builders will
+        create new elements to add to our running list (that will eventually
+        be output to a file) such as stock initialization and derivative
+        funcs, etc.
 
 
     Examples
@@ -602,8 +743,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
         subscript_dict = {}
 
     in_ops = {
-        "+": "+", "-": "-", "*": "*", "/": "/", "^": "**", "=": "==", "<=": "<=", "<>": "!=",
-        "<": "<", ">=": ">=", ">": ">",
+        "+": "+", "-": "-", "*": "*", "/": "/", "^": "**", "=": "==",
+        "<=": "<=", "<>": "!=", "<": "<", ">=": ">=", ">": ">",
         ":and:": " and ", ":or:": " or "}  # spaces important for word-based operators
 
     pre_ops = {
@@ -614,7 +755,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
     # in the following, if lists are empty use non-printable character
     # everything needs to be escaped before going into the grammar, in case it includes quotes
     sub_names_list = [re.escape(x) for x in subscript_dict.keys()] or ['\\a']
-    sub_elems_list = [re.escape(y) for x in subscript_dict.values() for y in x] or ['\\a']
+    sub_elems_list = [re.escape(y).replace('"', "") for x in subscript_dict.values() for y in x] or ['\\a']
     ids_list = [re.escape(x) for x in namespace.keys()] or ['\\a']
     in_ops_list = [re.escape(x) for x in in_ops.keys()]
     pre_ops_list = [re.escape(x) for x in pre_ops.keys()]
@@ -623,13 +764,21 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
     else:
         macro_names_list = ['\\a']
 
-    expression_grammar = r"""
+    expression_grammar = _include_common_grammar(r"""
     expr_type = array / expr / empty
-    expr = _ pre_oper? _ (lookup_def / build_call / macro_call / call / lookup_call / parens / number / reference) _ (in_oper _ expr)?
+    expr = _ pre_oper? _ (lookup_def / build_call / macro_call / call / lookup_call / parens / number / string / reference) _ (in_oper _ expr)?
 
-    lookup_def = ~r"(WITH\ LOOKUP)"I _ "(" _ expr _ "," _ "(" _  ("[" ~r"[^\]]*" "]" _ ",")?  ( "(" _ expr _ "," _ expr _ ")" _ ","? _ )+ _ ")" _ ")"
-    lookup_call = id _ "(" _ (expr _ ","? _)* ")"  # these don't need their args parsed...
-    call = func _ "(" _ (expr _ ","? _)* ")"  # these don't need their args parsed...
+    lookup_def = lookup_with_def / lookup_regular_def
+    lookup_regular_def = range? _ ( "(" _ number _ "," _ number _ ")" _ ","? _ )+
+    number = ("+"/"-")? ~r"\d+\.?\d*(e[+-]\d+)?"
+	range = _ "[" ~r"[^\]]*" "]" _ ","
+    lookup_with_def = ~r"(WITH\ LOOKUP)"I _ "(" _ expr _ "," _ "(" _  ("[" ~r"[^\]]*" "]" _ ",")?  ( "(" _ expr _ "," _ expr _ ")" _ ","? _ )+ _ ")" _ ")"
+    lookup_call = lookup_call_subs _ "(" _ (expr _ ","? _)* ")"  # these don't need their args parsed...
+    lookup_call_subs = id _ subscript_list?
+
+    param = (expr)+
+
+    call = func _ "(" _ (param _ ","? _)* ")"  # these don't need their args parsed...
     build_call = builder _ "(" _ arguments _ ")"
     macro_call = macro _ "(" _ arguments _ ")"
     parens   = "(" _ expr _ ")"
@@ -637,15 +786,14 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
     arguments = (expr _ ","? _)*
 
     reference = id _ subscript_list?
-    subscript_list = "[" _ ((sub_name / sub_element) _ ","? _)+ "]"
+    subscript_list = "[" _ ~"\""? _ ((sub_name / sub_element) _ ~"\""? _ "!"? _ ","? _)+ _ "]"
+
 
     array = (number _ ("," / ";")? _)+ !~r"."  # negative lookahead for anything other than an array
-    number = ~r"\d+\.?\d*(e[+-]\d+)?"
+    string = "\'" ( "\\\'" / ~r"[^\']"IU )* "\'"
 
     id = ( basic_id / escape_group )
-    basic_id = ~r"\w[\w\d_\s\']*"IU
-    escape_group = "\"" ( "\\\"" / ~r"[^\"]"IU )* "\""
-    
+
     sub_name = ~r"(%(sub_names)s)"IU  # subscript names (if none, use non-printable character)
     sub_element = ~r"(%(sub_elems)s)"IU  # subscript elements (if none, use non-printable character)
 
@@ -655,7 +803,6 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
     builder = ~r"(%(builders)s)"IU  # builder functions (case insensitive)
     macro = ~r"(%(macros)s)"IU  # macros from model file (if none, use non-printable character)
 
-    _ = ~r"[\s\\]*"  # whitespace character
     empty = "" # empty string
     """ % {
         # In the following, we have to sort keywords in decreasing order of length so that the
@@ -667,16 +814,26 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
         'pre_ops': '|'.join(reversed(sorted(pre_ops_list, key=len))),
         'builders': '|'.join(reversed(sorted(builders.keys(), key=len))),
         'macros': '|'.join(reversed(sorted(macro_names_list, key=len)))
-    }
-    
+    })
+
+    parser = parsimonious.Grammar(expression_grammar)
+
     class ExpressionParser(parsimonious.NodeVisitor):
-        # Todo: at some point, we could make the 'kind' identification recursive on expression,
-        # so that if an expression is passed into a builder function, the information
-        # about whether it is a constant, or calls another function, goes with it.
+        # TODO: at some point, we could make the 'kind' identification
+        # recursive on expression, so that if an expression is passed into
+        # a builder function, the information  about whether it is a constant,
+        # or calls another function, goes with it.
+
         def __init__(self, ast):
             self.translation = ""
-            self.kind = 'constant'  # change if we reference anything else
+            self.subs = None  # the subscript list if given
+            self.lookup_subs = []  # the subscript list if given
+            self.apply_dim = set()  # the dimensions with ! if given
+            self.kind = 'constant'   # change if we reference anything else
             self.new_structure = []
+            self.arguments = None
+            self.in_oper = None
+            self.args = []
             self.visit(ast)
 
         def visit_expr_type(self, n, vc):
@@ -688,11 +845,27 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             self.translation = s
             return s
 
+        def visit_param(self, n, vc):
+            s = ''.join(filter(None, vc)).strip()
+            self.translation = s
+            self.args.append(s)
+            return s
+
         def visit_call(self, n, vc):
             self.kind = 'component'
+
+            # remove dimensions info (produced by !)
+
             function_name = vc[0].lower()
             arguments = [e.strip() for e in vc[4].split(",")]
-            return builder.build_function_call(functions[function_name], arguments)
+
+            # add dimensions as last argument
+            if self.apply_dim and function_name in vectorial_funcs:
+                arguments += ["dim="+str(tuple(self.apply_dim))]
+                self.apply_dim = set()
+
+            return builder.build_function_call(functions[function_name],
+                                               arguments)
 
         def visit_in_oper(self, n, vc):
             return in_ops[n.text.lower()]
@@ -701,14 +874,81 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             return pre_ops[n.text.lower()]
 
         def visit_reference(self, n, vc):
+
             self.kind = 'component'
-            id_str = vc[0]
-            return id_str + '()'
+
+            vc[0] += '()'
+
+            if re.match("\[.+\]", vc[-1]):
+                # sometimes the subscript list are not consumed
+                # this is because visit_lookup_call_subs is not visited (fix?)
+                py_expr = "".join(vc[:-1])
+            else:
+                py_expr = "".join(vc)
+
+            if self.subs:
+                if elements_subs_dict[py_expr[:-2]] == self.subs:
+                    self.subs = None
+                    return py_expr
+                coords = utils.make_coord_dict(self.subs,
+                                               subscript_dict,
+                                               terse=False)
+                dims = [utils.find_subscript_name(subscript_dict, sub)
+                        for sub in self.subs]
+                self.subs = None
+                return "utils.rearrange(" + py_expr + ", "\
+                       + repr(dims) + ", _subscript_dict)"
+
+            return py_expr
+
+        def visit_lookup_call_subs(self, n, vc):
+            # needed to avoid doing the rearrange in the lookup arguments
+            # lookup_subs list makes possible to work with
+            # lookups inside lookups
+            # TODO: this is not visited by lookups call when having subs
+            # instead visit_reference is called, need to fix that
+            if self.subs:
+                self.subs = None
+                self.lookup_subs.append(self.subs)
+                self.subs = None
+            else:
+                self.lookup_subs.append(None)
+
+            return vc[0]
+
+        def visit_lookup_call(self, n, vc):
+            self.kind = 'lookup'
+
+            py_expr = ''.join([x.strip(',') for x in vc])
+
+            lookup_subs = self.lookup_subs.pop()
+            if lookup_subs and elements_subs_dict[py_expr] != lookup_subs:
+                coords = utils.make_coord_dict(lookup_subs,
+                                               subscript_dict,
+                                               terse=False)
+                dims = [utils.find_subscript_name(subscript_dict, sub)
+                        for sub in lookup_subs]
+                return "utils.rearrange(" + py_expr + ", "\
+                       + repr(dims) + ", _subscript_dict)"
+
+            return py_expr
 
         def visit_id(self, n, vc):
             return namespace[n.text.strip()]
 
-        def visit_lookup_def(self, n, vc):
+        def visit_lookup_regular_def(self, n, vc):
+            pairs = max(vc, key=len)
+            mixed_list = pairs.replace('(', '').replace(')', '').split(',')
+            xs = mixed_list[::2]
+            ys = mixed_list[1::2]
+            string = "functions.lookup(x, [%(xs)s], [%(ys)s])" % {
+                'xs': ','.join(xs),
+                'ys': ','.join(ys)
+            }
+            self.arguments = 'x'
+            return string
+
+        def visit_lookup_with_def(self, n, vc):
             """ This exists because vensim has multiple ways of doing lookups.
             Which is frustrating."""
             x_val = vc[4]
@@ -727,10 +967,11 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
             if 'subs' in element and element['subs']:  # first test handles when subs is not defined
                 coords = utils.make_coord_dict(element['subs'], subscript_dict, terse=False)
                 dims = [utils.find_subscript_name(subscript_dict, sub) for sub in element['subs']]
-                shape = [len(coords[dim]) for dim in dims]
+                shape = utils.compute_shape(coords, dims)
                 if ';' in n.text or ',' in n.text:
                     text = n.text.strip(';').replace(' ', '').replace(';', ',')
-                    data = np.array([float(s) for s in text.split(',')]).reshape(shape)
+                    data = np.array([float(s) for s in text.split(',')])
+                    data = data.reshape(shape)
                 else:
                     data = np.tile(float(n.text), shape)
                 datastr = np.array2string(data, separator=',').replace('\n', '').replace(' ', '')
@@ -746,26 +987,49 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
                 return n.text.replace(' ', '')
 
         def visit_subscript_list(self, n, vc):
-            refs = vc[2]
+            refs = vc[4]
             subs = [x.strip() for x in refs.split(',')]
             coordinates = utils.make_coord_dict(subs, subscript_dict)
+
+            # Implements basic "!" subscript functionality in Vensim.
+            # Does NOT work for matrix diagonals in
+            # FUNC(variable[sub1!,sub1!]) functions
+            self.apply_dim.update(["%s" % s.strip('!') for s in subs
+                                   if s[-1] == '!'])
+
             if len(coordinates):
-                return '.loc[%s]' % repr(coordinates)
-            else:
-                return ' '
+                return ".loc[%s].squeeze().reset_coords(%s, drop=True)"\
+                       % (repr(coordinates), repr(list(coordinates)))
+
+            self.subs = ["%s" % s.strip('!') for s in subs]
+
+            return ""
 
         def visit_build_call(self, n, vc):
             call = vc[0]
             arglist = vc[4]
             self.kind = 'component'
-
             builder_name = call.strip().lower()
-            name, structure = builders[builder_name](element, subscript_dict, arglist)
+            name, structure = builders[builder_name](element, subscript_dict,
+                                                     arglist)
+
             self.new_structure += structure
 
+            if builder_name in ['get xls lookups', 'get direct lookups']:
+                self.arguments = 'x'
+                self.kind = 'lookup'
+
+            # External constants
+            if builder_name in ['get xls constants', 'get direct constants']:
+                self.kind = 'constant'
+
+            # External data
+            if builder_name in ['get xls data', 'get direct data']:
+                self.kind = 'component_ext_data'
+
             if builder_name == 'delay fixed':
-                warnings.warn("Delay fixed only approximates solution, may not give the same "
-                              "result as vensim")
+                warnings.warn("Delay fixed only approximates solution,"
+                              " may not give the same result as vensim")
 
             return name
 
@@ -794,24 +1058,26 @@ def parse_general_expression(element, namespace=None, subscript_dict=None, macro
         def generic_visit(self, n, vc):
             return ''.join(filter(None, vc)) or n.text
 
-    parser = parsimonious.Grammar(expression_grammar)
     tree = parser.parse(element['expr'])
     parse_object = ExpressionParser(tree)
 
     return ({'py_expr': parse_object.translation,
              'kind': parse_object.kind,
-             'arguments': ''},
+             'arguments': parse_object.arguments or ''},
             parse_object.new_structure)
 
 
-def parse_lookup_expression(element):
+def parse_lookup_expression(element, subscript_dict):
     """ This syntax parses lookups that are defined with their own element """
 
     lookup_grammar = r"""
-    lookup = _ "(" range? _ ( "(" _ number _ "," _ number _ ")" _ ","? _ )+ ")"
+    lookup = _ "(" _ (regularLookup / excelLookup) _ ")"
+    regularLookup = range? _ ( "(" _ number _ "," _ number _ ")" _ ","? _ )+
+    excelLookup = ~"GET( |_)(XLS|DIRECT)( |_)LOOKUPS"I _ "(" _ args (_ "," _ args)* _ ")"
+    args = ~r"[^,()]*"
     number = ("+"/"-")? ~r"\d+\.?\d*(e[+-]\d+)?"
-    _ = ~r"[\s\\]*"  # whitespace character
-	range = _ "[" ~r"[^\]]*" "]" _ ","
+    _ =  ~r"[\s\\]*" #~r"[\ \t\n]*" #~r"[\s\\]*"  # whitespace character
+    range = _ "[" ~r"[^\]]*" "]" _ ","
     """
     parser = parsimonious.Grammar(lookup_grammar)
     tree = parser.parse(element['expr'])
@@ -826,7 +1092,8 @@ def parse_lookup_expression(element):
             # remove whitespace
             return ''
 
-        def visit_lookup(self, n, vc):
+        def visit_regularLookup(self, n, vc):
+
             pairs = max(vc, key=len)
             mixed_list = pairs.replace('(', '').replace(')', '').split(',')
             xs = mixed_list[::2]
@@ -837,22 +1104,34 @@ def parse_lookup_expression(element):
             }
             self.translation = string
 
+        def visit_excelLookup(self, n, vc):
+
+            source = vc[4]
+            _, name, col, cell = [i.strip() for i in vc[5].split(',')]
+            args = [source, name, col, cell]
+
+            trans, structure = builders["get xls lookups"](element, subscript_dict, args)
+
+            self.translation = trans
+            self.new_structure += structure
+
         def generic_visit(self, n, vc):
             return ''.join(filter(None, vc)) or n.text
 
     parse_object = LookupParser(tree)
-    return {'py_expr': parse_object.translation,
-            'arguments': 'x'}
+    return ({'py_expr': parse_object.translation,
+            'arguments': 'x'},
+            parse_object.new_structure)
 
 
-def translate_section(section, macro_list):
+def translate_section(section, macro_list, root_path):
     model_elements = get_model_elements(section['string'])
 
     # extract equation components
     model_docstring = ''
     for entry in model_elements:
         if entry['kind'] == 'entry':
-            entry.update(get_equation_components(entry['eqn']))
+            entry.update(get_equation_components(entry['eqn'], root_path))
         elif entry['kind'] == 'section':
             model_docstring += entry['doc']
 
@@ -864,36 +1143,47 @@ def translate_section(section, macro_list):
 
     # add macro functions to namespace
     for macro in macro_list:
-        if macro['name'] is not '_main_':
-            name, namespace = utils.make_python_identifier(macro['name'], namespace)
-
-    # add model elements
-    for element in model_elements:
-        if element['kind'] not in ['subdef', 'section']:
-            element['py_name'], namespace = utils.make_python_identifier(element['real_name'],
-                                                                         namespace)
+        if macro['name'] != '_main_':
+            name, namespace =\
+                utils.make_python_identifier(macro['name'], namespace)
 
     # Create a namespace for the subscripts
     # as these aren't used to create actual python functions, but are just labels on arrays,
     # they don't actually need to be python-safe
     subscript_dict = {e['real_name']: e['subs'] for e in model_elements if e['kind'] == 'subdef'}
 
+    elements_subs_dict = {}
+    # add model elements
+    for element in model_elements:
+        if element['kind'] not in ['subdef', 'section']:
+            element['py_name'], namespace =\
+                utils.make_python_identifier(element['real_name'], namespace)
+            # dictionary to save the subscripts of each element so we can avoid
+            # using utils.rearrange when calling them with the same dimensions
+            elements_subs_dict[element['py_name']] = [
+                utils.find_subscript_name(subscript_dict, sub)
+                for sub in element['subs']]
+
     # Parse components to python syntax.
     for element in model_elements:
-        if element['kind'] == 'component' and 'py_expr' not in element:
+        if (element['kind'] == 'component' and 'py_expr' not in element) or element['kind'] == 'data':
             # Todo: if there is new structure, it should be added to the namespace...
-            translation, new_structure = parse_general_expression(element,
-                                                                  namespace=namespace,
-                                                                  subscript_dict=subscript_dict,
-                                                                  macro_list=macro_list)
+            translation, new_structure = parse_general_expression(
+                element,
+                namespace=namespace,
+                subscript_dict=subscript_dict,
+                macro_list=macro_list,
+                elements_subs_dict=elements_subs_dict)
             element.update(translation)
             model_elements += new_structure
 
         elif element['kind'] == 'lookup':
-            element.update(parse_lookup_expression(element))
+            translation, new_structure = parse_lookup_expression(element, subscript_dict)
+            element.update(translation)
+            model_elements += new_structure
 
     # send the pieces to be built
-    build_elements = [e for e in model_elements if e['kind'] not in ['subdef', 'section']]
+    build_elements = [e for e in model_elements if e['kind'] not in ['subdef', 'test', 'section']]
     builder.build(build_elements,
                   subscript_dict,
                   namespace,
@@ -917,13 +1207,9 @@ def translate_vensim(mdl_file):
     --------
     >>> translate_vensim('../tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl')
 
-    #>>> translate_vensim('../../tests/test-models/tests/abs/test_abs.mdl')
-
-    #>>> translate_vensim('../../tests/test-models/tests/exponentiation/exponentiation.mdl')
-
-    #>>> translate_vensim('../../tests/test-models/tests/limits/test_limits.mdl')
-
     """
+
+    root_path = os.path.split(mdl_file)[0]
     with open(mdl_file, 'r', encoding='UTF-8') as in_file:
         text = in_file.read()
 
@@ -939,9 +1225,9 @@ def translate_vensim(mdl_file):
             section['py_name'] = utils.make_python_identifier(section['name'])[0]
             section['file_name'] = out_dir + '/' + section['py_name'] + '.py'
 
-    macro_list = [s for s in file_sections if s['name'] is not '_main_']
+    macro_list = [s for s in file_sections if s['name'] != '_main_']
 
     for section in file_sections:
-        translate_section(section, macro_list)
+        translate_section(section, macro_list, root_path)
 
     return outfile_name

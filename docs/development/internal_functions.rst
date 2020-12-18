@@ -5,15 +5,38 @@ This section documents the functions that are going on behaind the scenes, for t
 
 Special functions needed for model execution
 --------------------------------------------
-These functions have no direct analog in the standard python data analytics stack, or require information about the internal state of the system beyond what is present in the function call. We provide them in a structure that makes it easy for the model elements to call.
 
-.. automodule:: pysd.functions
+.. automodule:: py_backend.functions
+   :members:
+   :undoc-members:
+   :private-members:
 
-.. automodule:: pysd.utils
+.. automodule:: py_backend.utils
+   :members:
+   :undoc-members:
+   :private-members:
 
 Building the python model file
 ------------------------------
-These elements are used by the translator to construct the model from the interpreted results. It is technically possible to use these functions to build a model from scratch. But - it would be rather error prone.
+
+.. automodule:: py_backend.builder
+   :members:
+   :undoc-members:
+   :private-members:
 
 
-.. automodule:: pysd.builder
+External data reading
+---------------------
+
+.. automodule:: py_backend.external
+   :members:
+   :undoc-members:
+   :private-members:
+
+
+Decorators used in the model file
+---------------------------------
+.. automodule:: py_backend.decorators
+   :members:
+   :undoc-members:
+   :private-members:

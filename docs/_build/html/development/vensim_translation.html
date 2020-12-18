@@ -1,59 +1,72 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Vensim Translation &mdash; PySD 0.7.5 documentation</title>
+  <title>Vensim Translation &mdash; PySD 0.10.0 documentation</title>
   
 
   
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
   
 
   
-  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
-
-  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
 
-  
-
-  
-  
-    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="../genindex.html"/>
-        <link rel="search" title="Search" href="../search.html"/>
-    <link rel="top" title="PySD 0.7.5 documentation" href="../index.html"/>
-        <link rel="up" title="Structure of the PySD module" href="structure.html"/>
-        <link rel="next" title="XMILE Translation" href="xmile_translation.html"/>
-        <link rel="prev" title="Structure of the PySD module" href="structure.html"/> 
-
-  
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
-
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="XMILE Translation" href="xmile_translation.html" />
+    <link rel="prev" title="Structure of the PySD module" href="structure.html" /> 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
+   
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-nav-search">
-        
-          <a href="../index.html" class="fa fa-home"> PySD</a>
-        
-        
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> PySD
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.10
+              </div>
+            
+          
+
+          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -61,270 +74,113 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-      </div>
 
-      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+        </div>
+
         
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
-          
+            
+            
+              
+            
+            
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../installation.html#installing-via-pip">Installing via pip</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../installation.html#installing-from-source">Installing from source</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../installation.html#required-dependencies">Required Dependencies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../installation.html#optional-dependencies">Optional Dependencies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../installation.html#additional-resources">Additional Resources</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../basic_usage.html">Basic Usage</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../basic_usage.html#importing-a-model-and-getting-started">Importing a model and getting started</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../basic_usage.html#running-the-model">Running the Model</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../basic_usage.html#outputting-various-run-information">Outputting various run information</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../basic_usage.html#setting-parameter-values">Setting parameter values</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../basic_usage.html#setting-simulation-initial-conditions">Setting simulation initial conditions</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../basic_usage.html#querying-current-values">Querying current values</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../basic_usage.html#supported-functions">Supported functions</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="../advanced_usage.html">Advanced Usage</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="../advanced_usage.html#replacing-model-components-with-more-complex-objects">Replacing model components with more complex objects</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../advanced_usage.html#supplying-additional-arguments-to-the-integrator">Supplying additional arguments to the integrator</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic_usage.html">Basic Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../advanced_usage.html">Advanced Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../functions.html">User Functions Reference</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="development_index.html">Developer Documentation</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="about.html">About the Project</a></li>
 <li class="toctree-l2"><a class="reference internal" href="contributing.html">Contributing to PySD</a></li>
 <li class="toctree-l2"><a class="reference internal" href="pathway.html">PySD Development Pathway</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="structure.html">Structure of the PySD module</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="structure.html">Structure of the PySD module</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="structure.html#translation">Translation</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Vensim Translation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="xmile_translation.html">XMILE Translation</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="structure.html#the-model-class">The model class</a></li>
+<li class="toctree-l3"><a class="reference internal" href="structure.html#the-pysd-class">The PySD class</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="complement.html">Complementary Projects</a></li>
 </ul>
 </li>
 </ul>
 
+            
           
+        </div>
         
       </div>
-      &nbsp;
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="../index.html">PySD</a>
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">PySD</a>
+        
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
-          <div role="navigation" aria-label="breadcrumbs navigation">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="../index.html">Docs</a> &raquo;</li>
-      
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
           <li><a href="development_index.html">Developer Documentation</a> &raquo;</li>
-      
+        
           <li><a href="structure.html">Structure of the PySD module</a> &raquo;</li>
-      
-    <li>Vensim Translation</li>
+        
+      <li>Vensim Translation</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          <a href="../_sources/development/vensim_translation.txt" rel="nofollow"> View page source</a>
+            
+            <a href="../_sources/development/vensim_translation.rst.txt" rel="nofollow"> View page source</a>
+          
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
-          <div role="main" class="document">
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="vensim-translation">
 <h1>Vensim Translation<a class="headerlink" href="#vensim-translation" title="Permalink to this headline">¶</a></h1>
-<p>PySD parses a vensim &#8216;.mdl&#8217; file and translates the result into python, creating a new file in the
-same directory as the original. For example, the Vensim file <a class="reference download internal" href="../_downloads/Teacup.mdl" download=""><code class="xref download docutils literal"><span class="pre">Teacup.mdl</span></code></a>:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>{UTF-8}
-Characteristic Time=
-	10
-	~	Minutes
-	~		|
-
-Heat Loss to Room=
-	(Teacup Temperature - Room Temperature) / Characteristic Time
-	~	Degrees/Minute
-	~	This is the rate at which heat flows from the cup into the room. We can \
-		ignore it at this point.
-	|
-
-Room Temperature=
-	70
-	~	
-	~		|
-
-Teacup Temperature= INTEG (
-	-Heat Loss to Room,
-		180)
-	~	Degrees
-	~		|
-
-********************************************************
-	.Control
-********************************************************~
-		Simulation Control Parameters
-	|
-
-FINAL TIME  = 30
-	~	Minute
-	~	The final time for the simulation.
-	|
-
-INITIAL TIME  = 0
-	~	Minute
-	~	The initial time for the simulation.
-	|
-
-SAVEPER  = 
-        TIME STEP 
-	~	Minute [0,?]
-	~	The frequency with which output is stored.
-	|
-
-TIME STEP  = 0.125
-	~	Minute [0,?]
-	~	The time step for the simulation.
-	|
-
-</pre></div>
-</div>
-<p>becomes <a class="reference download internal" href="../_downloads/Teacup.py" download=""><code class="xref download docutils literal"><span class="pre">Teacup.py</span></code></a>:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">Python model test-models/samples/teacup/teacup.py</span>
-<span class="sd">Translated using PySD version 0.7.5</span>
-<span class="sd">&quot;&quot;&quot;</span>
-<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">division</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
-<span class="kn">from</span> <span class="nn">pysd</span> <span class="kn">import</span> <span class="n">utils</span>
-<span class="kn">import</span> <span class="nn">xarray</span> <span class="kn">as</span> <span class="nn">xr</span>
-
-<span class="kn">from</span> <span class="nn">pysd.functions</span> <span class="kn">import</span> <span class="n">cache</span>
-<span class="kn">from</span> <span class="nn">pysd</span> <span class="kn">import</span> <span class="n">functions</span>
-
-<span class="n">_subscript_dict</span> <span class="o">=</span> <span class="p">{}</span>
-
-<span class="n">_namespace</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s1">&#39;SAVEPER&#39;</span><span class="p">:</span> <span class="s1">&#39;saveper&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;Characteristic Time&#39;</span><span class="p">:</span> <span class="s1">&#39;characteristic_time&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;Teacup Temperature&#39;</span><span class="p">:</span> <span class="s1">&#39;teacup_temperature&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;FINAL TIME&#39;</span><span class="p">:</span> <span class="s1">&#39;final_time&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;INITIAL TIME&#39;</span><span class="p">:</span> <span class="s1">&#39;initial_time&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;Heat Loss to Room&#39;</span><span class="p">:</span> <span class="s1">&#39;heat_loss_to_room&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;Room Temperature&#39;</span><span class="p">:</span> <span class="s1">&#39;room_temperature&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;TIME STEP&#39;</span><span class="p">:</span> <span class="s1">&#39;time_step&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;Time&#39;</span><span class="p">:</span> <span class="s1">&#39;time&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;TIME&#39;</span><span class="p">:</span> <span class="s1">&#39;time&#39;</span>
-<span class="p">}</span>
-
-
-<span class="nd">@cache</span><span class="p">(</span><span class="s1">&#39;run&#39;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">final_time</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    FINAL TIME</span>
-<span class="sd">    ----------</span>
-<span class="sd">    (final_time)</span>
-<span class="sd">    Minute</span>
-<span class="sd">    The final time for the simulation.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="mi">30</span>
-
-
-<span class="n">integ_teacup_temperature</span> <span class="o">=</span> <span class="n">functions</span><span class="o">.</span><span class="n">Integ</span><span class="p">(</span><span class="k">lambda</span><span class="p">:</span> <span class="o">-</span><span class="n">heat_loss_to_room</span><span class="p">(),</span> <span class="k">lambda</span><span class="p">:</span> <span class="mi">180</span><span class="p">)</span>
-
-
-<span class="nd">@cache</span><span class="p">(</span><span class="s1">&#39;run&#39;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">time_step</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    TIME STEP</span>
-<span class="sd">    ---------</span>
-<span class="sd">    (time_step)</span>
-<span class="sd">    Minute [0,?]</span>
-<span class="sd">    The time step for the simulation.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="mf">0.125</span>
-
-
-<span class="nd">@cache</span><span class="p">(</span><span class="s1">&#39;step&#39;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">heat_loss_to_room</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Heat Loss to Room</span>
-<span class="sd">    -----------------</span>
-<span class="sd">    (heat_loss_to_room)</span>
-<span class="sd">    Degrees/Minute</span>
-<span class="sd">    This is the rate at which heat flows from the cup into the room. We can </span>
-<span class="sd">        ignore it at this point.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="p">(</span><span class="n">teacup_temperature</span><span class="p">()</span> <span class="o">-</span> <span class="n">room_temperature</span><span class="p">())</span> <span class="o">/</span> <span class="n">characteristic_time</span><span class="p">()</span>
-
-
-<span class="nd">@cache</span><span class="p">(</span><span class="s1">&#39;run&#39;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">initial_time</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    INITIAL TIME</span>
-<span class="sd">    ------------</span>
-<span class="sd">    (initial_time)</span>
-<span class="sd">    Minute</span>
-<span class="sd">    The initial time for the simulation.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="mi">0</span>
-
-
-<span class="nd">@cache</span><span class="p">(</span><span class="s1">&#39;step&#39;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">teacup_temperature</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Teacup Temperature</span>
-<span class="sd">    ------------------</span>
-<span class="sd">    (teacup_temperature)</span>
-<span class="sd">    Degrees</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">integ_teacup_temperature</span><span class="p">()</span>
-
-
-<span class="nd">@cache</span><span class="p">(</span><span class="s1">&#39;run&#39;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">characteristic_time</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Characteristic Time</span>
-<span class="sd">    -------------------</span>
-<span class="sd">    (characteristic_time)</span>
-<span class="sd">    Minutes</span>
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="mi">10</span>
-
-
-<span class="nd">@cache</span><span class="p">(</span><span class="s1">&#39;run&#39;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">room_temperature</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Room Temperature</span>
-<span class="sd">    ----------------</span>
-<span class="sd">    (room_temperature)</span>
-
-
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="mi">70</span>
-
-
-<span class="nd">@cache</span><span class="p">(</span><span class="s1">&#39;step&#39;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">saveper</span><span class="p">():</span>
-    <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    SAVEPER</span>
-<span class="sd">    -------</span>
-<span class="sd">    (saveper)</span>
-<span class="sd">    Minute [0,?]</span>
-<span class="sd">    The frequency with which output is stored.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">time_step</span><span class="p">()</span>
-</pre></div>
-</div>
+<p>PySD parses a vensim ‘.mdl’ file and translates the result into python, creating a new file in the
+same directory as the original. For example, the Vensim file <a class="reference external" href="https://github.com/JamesPHoughton/PySD-Cookbook/blob/master/source/models/Teacup/Teacup.mdl">Teacup.mdl</a> becomes <a class="reference external" href="https://github.com/JamesPHoughton/PySD-Cookbook/blob/master/source/models/Teacup/Teacup.py">Teacup.py</a> .</p>
 <p>This allows model execution independent of the Vensim environment, which can be handy for deploying
 models as backends to other products, or for performing massively parallel distributed computation.</p>
 <p>These translated model files are read by PySD, which provides methods for modifying or running the
@@ -333,166 +189,462 @@ model and conveniently accessing simulation results.</p>
 <h2>Translated Functions<a class="headerlink" href="#translated-functions" title="Permalink to this headline">¶</a></h2>
 <p>Ongoing development of the translator will support the full subset of Vensim functionality that
 has an equivalent in XMILE. The current release supports the following functionality:</p>
-<table border="1" class="docutils">
+<table class="docutils align-default">
 <colgroup>
-<col width="50%" />
-<col width="50%" />
+<col style="width: 50%" />
+<col style="width: 50%" />
 </colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Vensim</th>
-<th class="head">Python Translation</th>
+<thead>
+<tr class="row-odd"><th class="head"><p>Vensim</p></th>
+<th class="head"><p>Python Translation</p></th>
 </tr>
 </thead>
-<tbody valign="top">
-<tr class="row-even"><td>COS</td>
-<td>np.cos</td>
+<tbody>
+<tr class="row-even"><td><p>COS</p></td>
+<td><p>np.cos</p></td>
 </tr>
-<tr class="row-odd"><td>EXP</td>
-<td>np.exp</td>
+<tr class="row-odd"><td><p>EXP</p></td>
+<td><p>np.exp</p></td>
 </tr>
-<tr class="row-even"><td>MIN</td>
-<td>min</td>
+<tr class="row-even"><td><p>MIN</p></td>
+<td><p>min</p></td>
 </tr>
-<tr class="row-odd"><td>&lt;=</td>
-<td>&lt;=</td>
+<tr class="row-odd"><td><p>&lt;=</p></td>
+<td><p>&lt;=</p></td>
 </tr>
-<tr class="row-even"><td>STEP</td>
-<td>functions.step</td>
+<tr class="row-even"><td><p>STEP</p></td>
+<td><p>functions.step</p></td>
 </tr>
-<tr class="row-odd"><td>PULSE</td>
-<td>functions.pulse</td>
+<tr class="row-odd"><td><p>PULSE</p></td>
+<td><p>functions.pulse</p></td>
 </tr>
-<tr class="row-even"><td>POISSON</td>
-<td>np.random.poisson</td>
+<tr class="row-even"><td><p>POISSON</p></td>
+<td><p>np.random.poisson</p></td>
 </tr>
-<tr class="row-odd"><td>EXPRND</td>
-<td>np.random.exponential</td>
+<tr class="row-odd"><td><p>EXPRND</p></td>
+<td><p>np.random.exponential</p></td>
 </tr>
-<tr class="row-even"><td>SIN</td>
-<td>np.sin</td>
+<tr class="row-even"><td><p>SIN</p></td>
+<td><p>np.sin</p></td>
 </tr>
-<tr class="row-odd"><td>&gt;=</td>
-<td>&gt;=</td>
+<tr class="row-odd"><td><p>&gt;=</p></td>
+<td><p>&gt;=</p></td>
 </tr>
-<tr class="row-even"><td>IF THEN ELSE</td>
-<td>functions.if_then_else</td>
+<tr class="row-even"><td><p>IF THEN ELSE</p></td>
+<td><p>functions.if_then_else</p></td>
 </tr>
-<tr class="row-odd"><td>LN</td>
-<td>np.log</td>
+<tr class="row-odd"><td><p>LN</p></td>
+<td><p>np.log</p></td>
 </tr>
-<tr class="row-even"><td>PULSE TRAIN</td>
-<td>functions.pulse_train</td>
+<tr class="row-even"><td><p>PULSE TRAIN</p></td>
+<td><p>functions.pulse_train</p></td>
 </tr>
-<tr class="row-odd"><td>RAMP</td>
-<td>functions.ramp</td>
+<tr class="row-odd"><td><p>RAMP</p></td>
+<td><p>functions.ramp</p></td>
 </tr>
-<tr class="row-even"><td>INTEGER</td>
-<td>int</td>
+<tr class="row-even"><td><p>INTEGER</p></td>
+<td><p>int</p></td>
 </tr>
-<tr class="row-odd"><td>TAN</td>
-<td>np.tan</td>
+<tr class="row-odd"><td><p>TAN</p></td>
+<td><p>np.tan</p></td>
 </tr>
-<tr class="row-even"><td>PI</td>
-<td>np.pi</td>
+<tr class="row-even"><td><p>PI</p></td>
+<td><p>np.pi</p></td>
 </tr>
-<tr class="row-odd"><td>=</td>
-<td>==</td>
+<tr class="row-odd"><td><p>=</p></td>
+<td><p>==</p></td>
 </tr>
-<tr class="row-even"><td>&lt;</td>
-<td>&lt;</td>
+<tr class="row-even"><td><p>&lt;</p></td>
+<td><p>&lt;</p></td>
 </tr>
-<tr class="row-odd"><td>&gt;</td>
-<td>&gt;</td>
+<tr class="row-odd"><td><p>&gt;</p></td>
+<td><p>&gt;</p></td>
 </tr>
-<tr class="row-even"><td>MODULO</td>
-<td>np.mod</td>
+<tr class="row-even"><td><p>MODULO</p></td>
+<td><p>np.mod</p></td>
 </tr>
-<tr class="row-odd"><td>ARCSIN</td>
-<td>np.arcsin</td>
+<tr class="row-odd"><td><p>ARCSIN</p></td>
+<td><p>np.arcsin</p></td>
 </tr>
-<tr class="row-even"><td>ABS</td>
-<td>abs</td>
+<tr class="row-even"><td><p>ABS</p></td>
+<td><p>abs</p></td>
 </tr>
-<tr class="row-odd"><td>^</td>
-<td><a href="#id1"><span class="problematic" id="id2">**</span></a></td>
+<tr class="row-odd"><td><p>^</p></td>
+<td><p>**</p></td>
 </tr>
-<tr class="row-even"><td>LOGNORMAL</td>
-<td>np.random.lognormal</td>
+<tr class="row-even"><td><p>LOGNORMAL</p></td>
+<td><p>np.random.lognormal</p></td>
 </tr>
-<tr class="row-odd"><td>MAX</td>
-<td>max</td>
+<tr class="row-odd"><td><p>MAX</p></td>
+<td><p>max</p></td>
 </tr>
-<tr class="row-even"><td>SQRT</td>
-<td>np.sqrt</td>
+<tr class="row-even"><td><p>SQRT</p></td>
+<td><p>np.sqrt</p></td>
 </tr>
-<tr class="row-odd"><td>ARCTAN</td>
-<td>np.arctan</td>
+<tr class="row-odd"><td><p>ARCTAN</p></td>
+<td><p>np.arctan</p></td>
 </tr>
-<tr class="row-even"><td>ARCCOS</td>
-<td>np.arccos</td>
+<tr class="row-even"><td><p>ARCCOS</p></td>
+<td><p>np.arccos</p></td>
 </tr>
-<tr class="row-odd"><td>RANDOM NORMAL</td>
-<td>self.functions.bounded_normal</td>
+<tr class="row-odd"><td><p>RANDOM NORMAL</p></td>
+<td><p>self.functions.bounded_normal</p></td>
 </tr>
-<tr class="row-even"><td>RANDOM UNIFORM</td>
-<td>np.random.rand</td>
+<tr class="row-even"><td><p>RANDOM UNIFORM</p></td>
+<td><p>np.random.rand</p></td>
 </tr>
-<tr class="row-odd"><td>DELAY1</td>
-<td>functions.Delay</td>
+<tr class="row-odd"><td><p>DELAY1</p></td>
+<td><p>functions.Delay</p></td>
 </tr>
-<tr class="row-even"><td>DELAY3</td>
-<td>functions.Delay</td>
+<tr class="row-even"><td><p>DELAY3</p></td>
+<td><p>functions.Delay</p></td>
 </tr>
-<tr class="row-odd"><td>DELAY N</td>
-<td>functions.Delay</td>
+<tr class="row-odd"><td><p>DELAY N</p></td>
+<td><p>functions.Delay</p></td>
 </tr>
-<tr class="row-even"><td>SMOOTH3I</td>
-<td>functions.Smooth</td>
+<tr class="row-even"><td><p>SMOOTH3I</p></td>
+<td><p>functions.Smooth</p></td>
 </tr>
-<tr class="row-odd"><td>SMOOTH3</td>
-<td>functions.Smooth</td>
+<tr class="row-odd"><td><p>SMOOTH3</p></td>
+<td><p>functions.Smooth</p></td>
 </tr>
-<tr class="row-even"><td>SMOOTH N</td>
-<td>functions.Smooth</td>
+<tr class="row-even"><td><p>SMOOTH N</p></td>
+<td><p>functions.Smooth</p></td>
 </tr>
-<tr class="row-odd"><td>SMOOTH</td>
-<td>functions.Smooth</td>
+<tr class="row-odd"><td><p>SMOOTH</p></td>
+<td><p>functions.Smooth</p></td>
 </tr>
-<tr class="row-even"><td>INITIAL</td>
-<td>functions.Initial</td>
+<tr class="row-even"><td><p>INITIAL</p></td>
+<td><p>functions.Initial</p></td>
 </tr>
-<tr class="row-odd"><td>XIDZ</td>
-<td>functions.XIDZ</td>
+<tr class="row-odd"><td><p>XIDZ</p></td>
+<td><p>functions.XIDZ</p></td>
 </tr>
-<tr class="row-even"><td>ZIDZ</td>
-<td>functions.XIDZ</td>
+<tr class="row-even"><td><p>ZIDZ</p></td>
+<td><p>functions.XIDZ</p></td>
+</tr>
+<tr class="row-odd"><td><p>VMIN</p></td>
+<td><p>functions.vmin</p></td>
+</tr>
+<tr class="row-even"><td><p>VMAX</p></td>
+<td><p>functions.vmax</p></td>
+</tr>
+<tr class="row-odd"><td><p>SUM</p></td>
+<td><p>functions.sum</p></td>
+</tr>
+<tr class="row-even"><td><p>PROD</p></td>
+<td><p>functions.prod</p></td>
+</tr>
+<tr class="row-odd"><td><p>GET XLS DATA</p></td>
+<td><p>external.ExtData</p></td>
+</tr>
+<tr class="row-even"><td><p>GET DIRECT DATA</p></td>
+<td><p>external.ExtData</p></td>
+</tr>
+<tr class="row-odd"><td><p>GET XLS LOOKUPS</p></td>
+<td><p>external.ExtLookup</p></td>
+</tr>
+<tr class="row-even"><td><p>GET DIRECT LOOKUPS</p></td>
+<td><p>external.ExtLookup</p></td>
+</tr>
+<tr class="row-odd"><td><p>GET XLS CONSTANTS</p></td>
+<td><p>external.ExtConstant</p></td>
+</tr>
+<tr class="row-even"><td><p>GET DIRECT CONSTANTS</p></td>
+<td><p>external.ExtConstant</p></td>
+</tr>
+<tr class="row-odd"><td><p>GET XLS SUBSCRIPT</p></td>
+<td><p>external.ExtSubscript</p></td>
+</tr>
+<tr class="row-even"><td><p>GET DIRECT SUBSCRIPT</p></td>
+<td><p>external.ExtSubscript</p></td>
 </tr>
 </tbody>
 </table>
 <blockquote>
-<div><cite>np</cite> corresponds to the numpy package</div></blockquote>
+<div><p><cite>np</cite> corresponds to the numpy package</p>
+</div></blockquote>
 <p>Additionally, identifiers are currently limited to alphanumeric characters and the dollar sign $.</p>
 <p>Future releases will include support for:</p>
 <ul class="simple">
-<li>subscripts</li>
-<li>arrays</li>
-<li>arbitrary identifiers</li>
+<li><p>subscripts</p></li>
+<li><p>arrays</p></li>
+<li><p>arbitrary identifiers</p></li>
 </ul>
-<p>There are some constructs (such as tagging variables as &#8216;suplementary&#8217;) which are not currently
+<p>There are some constructs (such as tagging variables as ‘suplementary’) which are not currently
 parsed, and may throw an error. Future releases will handle this with more grace.</p>
 </div>
+<div class="section" id="module-py_backend.vensim.vensim2py">
+<span id="used-functions-for-translation"></span><h2>Used Functions for Translation<a class="headerlink" href="#module-py_backend.vensim.vensim2py" title="Permalink to this headline">¶</a></h2>
+<p>These functions translate vensim .mdl file to pieces needed by the builder
+module to write a python version of the model. Everything that requires
+knowledge of vensim syntax should be here.</p>
+<dl class="py function">
+<dt id="py_backend.vensim.vensim2py._include_common_grammar">
+<code class="sig-prename descclassname">py_backend.vensim.vensim2py.</code><code class="sig-name descname">_include_common_grammar</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">source_grammar</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/vensim/vensim2py.html#_include_common_grammar"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.vensim.vensim2py._include_common_grammar" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="py_backend.vensim.vensim2py.get_equation_components">
+<code class="sig-prename descclassname">py_backend.vensim.vensim2py.</code><code class="sig-name descname">get_equation_components</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">equation_str</span></em>, <em class="sig-param"><span class="n">root_path</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/vensim/vensim2py.html#get_equation_components"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.vensim.vensim2py.get_equation_components" title="Permalink to this definition">¶</a></dt>
+<dd><p>Breaks down a string representing only the equation part of a model element.
+Recognizes the various types of model elements that may exist, and identifies them.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>equation_str</strong> (<em>basestring</em>) – the first section in each model element - the full equation.</p></li>
+<li><p><strong>root_path</strong> (<em>basestring</em>) – the root path of the vensim file (necessary to resolve external data file paths)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>Returns a dictionary containing the following</em></p></li>
+<li><p><strong>real_name</strong> (<em>basestring</em>) – The name of the element as given in the original vensim file</p></li>
+<li><p><strong>subs</strong> (<em>list of strings</em>) – list of subscripts or subscript elements</p></li>
+<li><p><strong>expr</strong> (<em>basestring</em>)</p></li>
+<li><p><strong>kind</strong> (<em>basestring</em>) – What type of equation have we found?
+- <em>component</em> - normal model expression or constant
+- <em>lookup</em> - a lookup table
+- <em>subdef</em> - a subscript definition
+- <em>data</em> -  a data variable</p></li>
+<li><p><strong>keyword</strong> (<em>basestring or None</em>)</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">get_equation_components</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;constant = 25&#39;</span><span class="p">)</span>
+<span class="go">{&#39;expr&#39;: &#39;25&#39;, &#39;kind&#39;: &#39;component&#39;, &#39;subs&#39;: [], &#39;real_name&#39;: &#39;constant&#39;}</span>
+</pre></div>
+</div>
+<p class="rubric">Notes</p>
+<p>in this function we don’t create python identifiers, we use real names.
+This is so that when everything comes back together, we can manage
+any potential namespace conflicts properly</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="py_backend.vensim.vensim2py.get_external_data">
+<code class="sig-prename descclassname">py_backend.vensim.vensim2py.</code><code class="sig-name descname">get_external_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">func_str</span></em>, <em class="sig-param"><span class="n">args_str</span></em>, <em class="sig-param"><span class="n">root_path</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/vensim/vensim2py.html#get_external_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.vensim.vensim2py.get_external_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the subscripts from external files calling the class external.ExtSubscript</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="py_backend.vensim.vensim2py.get_file_sections">
+<code class="sig-prename descclassname">py_backend.vensim.vensim2py.</code><code class="sig-name descname">get_file_sections</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_str</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/vensim/vensim2py.html#get_file_sections"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.vensim.vensim2py.get_file_sections" title="Permalink to this definition">¶</a></dt>
+<dd><p>This is where we separate out the macros from the rest of the model file.
+Working based upon documentation at: <a class="reference external" href="https://www.vensim.com/documentation/index.html?macros.htm">https://www.vensim.com/documentation/index.html?macros.htm</a></p>
+<p>Macros will probably wind up in their own python modules eventually.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file_str</strong> – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><p><strong>entries</strong> – Each dictionary represents a different section of the model file, either a macro,
+or the main body of the model file. The dictionaries contain various elements:
+- returns: list of strings</p>
+<blockquote>
+<div><p>represents what is returned from a macro (for macros) or empty for main model</p>
+</div></blockquote>
+<ul class="simple">
+<li><dl class="simple">
+<dt>params: list of strings</dt><dd><p>represents what is passed into a macro (for macros) or empty for main model</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>name: string</dt><dd><p>the name of the macro, or ‘main’ for main body of model</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>string: string</dt><dd><p>string representing the model section</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list of dictionaries</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">get_file_sections</span><span class="p">(</span><span class="sa">r</span><span class="s1">&#39;a~b~c| d~e~f| g~h~i|&#39;</span><span class="p">)</span>
+<span class="go">[{&#39;returns&#39;: [], &#39;params&#39;: [], &#39;name&#39;: &#39;main&#39;, &#39;string&#39;: &#39;a~b~c| d~e~f| g~h~i|&#39;}]</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="py_backend.vensim.vensim2py.get_model_elements">
+<code class="sig-prename descclassname">py_backend.vensim.vensim2py.</code><code class="sig-name descname">get_model_elements</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">model_str</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/vensim/vensim2py.html#get_model_elements"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.vensim.vensim2py.get_model_elements" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes in a string representing model text and splits it into elements</p>
+<p>I think we’re making the assumption that all newline characters are removed…</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>model_str</strong> (<em>string</em>) – </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>entries</strong> – Each dictionary contains the components of a different model element, separated into the
+equation, units, and docstring.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>array of dictionaries</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p># Basic Parsing:
+&gt;&gt;&gt; get_model_elements(r’a~b~c| d~e~f| g~h~i|’)
+[{‘doc’: ‘c’, ‘unit’: ‘b’, ‘eqn’: ‘a’}, {‘doc’: ‘f’, ‘unit’: ‘e’, ‘eqn’: ‘d’}, {‘doc’: ‘i’, ‘unit’: ‘h’, ‘eqn’: ‘g’}]</p>
+<p># Special characters are escaped within double-quotes:
+&gt;&gt;&gt; get_model_elements(r’a~b~c| d~e”~”~f| g~h~i|’)
+[{‘doc’: ‘c’, ‘unit’: ‘b’, ‘eqn’: ‘a’}, {‘doc’: ‘f’, ‘unit’: ‘e”~”’, ‘eqn’: ‘d’}, {‘doc’: ‘i’, ‘unit’: ‘h’, ‘eqn’: ‘g’}]
+&gt;&gt;&gt; get_model_elements(r’a~b~c| d~e~”|”f| g~h~i|’)
+[{‘doc’: ‘c’, ‘unit’: ‘b’, ‘eqn’: ‘a’}, {‘doc’: ‘”|”f’, ‘unit’: ‘e’, ‘eqn’: ‘d’}, {‘doc’: ‘i’, ‘unit’: ‘h’, ‘eqn’: ‘g’}]</p>
+<p># Double-quotes within escape groups are themselves escaped with backslashes:
+&gt;&gt;&gt; get_model_elements(r’a~b~c| d~e”&quot;~”~f| g~h~i|’)
+[{‘doc’: ‘c’, ‘unit’: ‘b’, ‘eqn’: ‘a’}, {‘doc’: ‘f’, ‘unit’: ‘e”\”~”’, ‘eqn’: ‘d’}, {‘doc’: ‘i’, ‘unit’: ‘h’, ‘eqn’: ‘g’}]
+&gt;&gt;&gt; get_model_elements(r’a~b~c| d~e~”&quot;|”f| g~h~i|’)
+[{‘doc’: ‘c’, ‘unit’: ‘b’, ‘eqn’: ‘a’}, {‘doc’: ‘”\”|”f’, ‘unit’: ‘e’, ‘eqn’: ‘d’}, {‘doc’: ‘i’, ‘unit’: ‘h’, ‘eqn’: ‘g’}]
+&gt;&gt;&gt; get_model_elements(r’a~b~c| d~e”xnx”~f| g~h~|’)
+[{‘doc’: ‘c’, ‘unit’: ‘b’, ‘eqn’: ‘a’}, {‘doc’: ‘f’, ‘unit’: ‘e”x\nx”’, ‘eqn’: ‘d’}, {‘doc’: ‘’, ‘unit’: ‘h’, ‘eqn’: ‘g’}]</p>
+<p># Todo: Handle model-level or section-level documentation
+&gt;&gt;&gt; get_model_elements(r’<a href="#id1"><span class="problematic" id="id2">**</span></a>* .model doc <a href="#id3"><span class="problematic" id="id4">**</span></a><a href="#id5"><span class="problematic" id="id6">*</span></a>~ Docstring!| d~e~f| g~h~i|’)
+[{‘doc’: ‘Docstring!’, ‘unit’: ‘’, ‘eqn’: ‘’}, {‘doc’: ‘f’, ‘unit’: ‘e’, ‘eqn’: ‘d’}, {‘doc’: ‘i’, ‘unit’: ‘h’, ‘eqn’: ‘g’}]</p>
+<p># Handle control sections, returning appropriate docstring pieces
+&gt;&gt;&gt; get_model_elements(r’a~b~c| <a href="#id7"><span class="problematic" id="id8">**</span></a><a href="#id9"><span class="problematic" id="id10">**</span></a>.Control***~ Simulation Control Parameters | g~h~i|’)
+[{‘doc’: ‘c’, ‘unit’: ‘b’, ‘eqn’: ‘a’}, {‘doc’: ‘i’, ‘unit’: ‘h’, ‘eqn’: ‘g’}]</p>
+<p># Handle the model display elements (ignore them)
+&gt;&gt;&gt; get_model_elements(r’a~b~c| d~e~f| \—///junk|junk~junk’)
+[{‘doc’: ‘c’, ‘unit’: ‘b’, ‘eqn’: ‘a’}, {‘doc’: ‘f’, ‘unit’: ‘e’, ‘eqn’: ‘d’}]</p>
+<p class="rubric">Notes</p>
+<ul class="simple">
+<li><p>Tildes and pipes are not allowed in element docstrings, but we should still handle them there</p></li>
+</ul>
+</dd></dl>
+
+<dl class="py function">
+<dt id="py_backend.vensim.vensim2py.parse_general_expression">
+<code class="sig-prename descclassname">py_backend.vensim.vensim2py.</code><code class="sig-name descname">parse_general_expression</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">element</span></em>, <em class="sig-param"><span class="n">namespace</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">subscript_dict</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">macro_list</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">elements_subs_dict</span><span class="o">=</span><span class="default_value">None</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/vensim/vensim2py.html#parse_general_expression"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.vensim.vensim2py.parse_general_expression" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses a normal expression
+# its annoying that we have to construct and compile the grammar every time…</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>element</strong> (<em>dictionary</em>) – </p></li>
+<li><p><strong>namespace</strong> (<em>dictionary</em>) – </p></li>
+<li><p><strong>subscript_dict</strong> (<em>dictionary</em>) – </p></li>
+<li><p><strong>macro_list</strong> (<em>list of dictionaries</em>) – [{‘name’: ‘M’, ‘py_name’:’m’, ‘filename’:’path/to/file’, ‘args’:[‘arg1’, ‘arg2’]}]</p></li>
+<li><p><strong>elements_subs_dict</strong> (<em>dictionary</em>) – The dictionary with element python names as keys and their merged
+subscripts as values.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>translation</em></p></li>
+<li><p><strong>new_elements</strong> (<em>list of dictionaries</em>) – If the expression contains builder functions, those builders will
+create new elements to add to our running list (that will eventually
+be output to a file) such as stock initialization and derivative
+funcs, etc.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">parse_general_expression</span><span class="p">({</span><span class="s1">&#39;expr&#39;</span><span class="p">:</span> <span class="s1">&#39;INTEG (FlowA, -10)&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                          <span class="s1">&#39;py_name&#39;</span><span class="p">:</span><span class="s1">&#39;test_stock&#39;</span><span class="p">,</span>
+<span class="gp">... </span>                          <span class="s1">&#39;subs&#39;</span><span class="p">:</span><span class="kc">None</span><span class="p">},</span>
+<span class="gp">... </span>                         <span class="p">{</span><span class="s1">&#39;FlowA&#39;</span><span class="p">:</span> <span class="s1">&#39;flowa&#39;</span><span class="p">}),</span>
+<span class="go">({&#39;kind&#39;: &#39;component&#39;, &#39;py_expr&#39;: &quot;_state[&#39;test_stock&#39;]&quot;},</span>
+<span class="go"> [{&#39;kind&#39;: &#39;implicit&#39;,</span>
+<span class="go">   &#39;subs&#39;: None,</span>
+<span class="go">   &#39;doc&#39;: &#39;Provides initial conditions for test_stock function&#39;,</span>
+<span class="go">   &#39;py_name&#39;: &#39;init_test_stock&#39;,</span>
+<span class="go">   &#39;real_name&#39;: None,</span>
+<span class="go">   &#39;unit&#39;: &#39;See docs for test_stock&#39;,</span>
+<span class="go">   &#39;py_expr&#39;: &#39;-10&#39;},</span>
+<span class="go">  {&#39;py_name&#39;: &#39;dtest_stock_dt&#39;,</span>
+<span class="go">   &#39;kind&#39;: &#39;implicit&#39;,</span>
+<span class="go">   &#39;py_expr&#39;: &#39;flowa&#39;,</span>
+<span class="go">   &#39;real_name&#39;: None}])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="py_backend.vensim.vensim2py.parse_lookup_expression">
+<code class="sig-prename descclassname">py_backend.vensim.vensim2py.</code><code class="sig-name descname">parse_lookup_expression</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">element</span></em>, <em class="sig-param"><span class="n">subscript_dict</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/vensim/vensim2py.html#parse_lookup_expression"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.vensim.vensim2py.parse_lookup_expression" title="Permalink to this definition">¶</a></dt>
+<dd><p>This syntax parses lookups that are defined with their own element</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="py_backend.vensim.vensim2py.parse_units">
+<code class="sig-prename descclassname">py_backend.vensim.vensim2py.</code><code class="sig-name descname">parse_units</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">units_str</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/vensim/vensim2py.html#parse_units"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.vensim.vensim2py.parse_units" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extract and parse the units
+Extract the bounds over which the expression is assumed to apply.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>units_str</strong> – </p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">parse_units</span><span class="p">(</span><span class="s1">&#39;Widgets/Month [-10,10,1]&#39;</span><span class="p">)</span>
+<span class="go">(&#39;Widgets/Month&#39;, (-10,10,1))</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">parse_units</span><span class="p">(</span><span class="s1">&#39;Month [0,?]&#39;</span><span class="p">)</span>
+<span class="go">(&#39;Month&#39;, [-10, None])</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">parse_units</span><span class="p">(</span><span class="s1">&#39;Widgets [0,100]&#39;</span><span class="p">)</span>
+<span class="go">(&#39;Widgets&#39;, (0, 100))</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">parse_units</span><span class="p">(</span><span class="s1">&#39;Widgets&#39;</span><span class="p">)</span>
+<span class="go">(&#39;Widgets&#39;, (None, None))</span>
+</pre></div>
+</div>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">parse_units</span><span class="p">(</span><span class="s1">&#39;[0, 100]&#39;</span><span class="p">)</span>
+<span class="go">(&#39;&#39;, (0, 100))</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="py_backend.vensim.vensim2py.translate_section">
+<code class="sig-prename descclassname">py_backend.vensim.vensim2py.</code><code class="sig-name descname">translate_section</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">section</span></em>, <em class="sig-param"><span class="n">macro_list</span></em>, <em class="sig-param"><span class="n">root_path</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/vensim/vensim2py.html#translate_section"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.vensim.vensim2py.translate_section" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt id="py_backend.vensim.vensim2py.translate_vensim">
+<code class="sig-prename descclassname">py_backend.vensim.vensim2py.</code><code class="sig-name descname">translate_vensim</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">mdl_file</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/vensim/vensim2py.html#translate_vensim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.vensim.vensim2py.translate_vensim" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>mdl_file</strong> (<em>basestring</em>) – file path of a vensim model file to translate to python</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">translate_vensim</span><span class="p">(</span><span class="s1">&#39;../tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</div>
 </div>
 
 
+           </div>
+           
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="xmile_translation.html" class="btn btn-neutral float-right" title="XMILE Translation">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="xmile_translation.html" class="btn btn-neutral float-right" title="XMILE Translation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="structure.html" class="btn btn-neutral" title="Structure of the PySD module"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="structure.html" class="btn btn-neutral float-left" title="Structure of the PySD module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -501,13 +653,22 @@ parsed, and may throw an error. Future releases will handle this with more grace
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2016, James Houghton.
+        
+        &copy; Copyright 2016, James Houghton
+
     </p>
   </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
-  
 </footer>
+
         </div>
       </div>
 
@@ -516,37 +677,15 @@ parsed, and may throw an error. Future releases will handle this with more grace
   </div>
   
 
-
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'../',
-            VERSION:'0.7.5',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
-        };
-    </script>
-      <script type="text/javascript" src="../_static/jquery.js"></script>
-      <script type="text/javascript" src="../_static/underscore.js"></script>
-      <script type="text/javascript" src="../_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="../_static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>

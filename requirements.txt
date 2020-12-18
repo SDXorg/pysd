@@ -5,7 +5,7 @@ yapf
 lxml
 funcsigs
 pydoe
-xlrd
+xlrd==1.2.0
 xlwt
 regex
 chardet

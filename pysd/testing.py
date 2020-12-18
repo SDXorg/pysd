@@ -211,7 +211,7 @@ def bounds_test(result, bounds=None, errors='return'):
         bounds = bounds.set_index('Real Name')
     elif isinstance(bounds, str):
         if bounds.split('.')[-1] in ['xls', 'xlsx']:
-            bounds = _pd.read_excel(bounds, sheetname='Bounds', index_col='Real Name')
+            bounds = _pd.read_excel(bounds, sheet_name='Bounds', index_col='Real Name')
         elif bounds.split('.')[-1] == 'csv':
             bounds = _pd.read_csv(bounds, index_col='Real Name', encoding='UTF-8')
         elif bounds.split('.')[-1] == 'tab':
@@ -232,7 +232,8 @@ def bounds_test(result, bounds=None, errors='return'):
                     'condition': lower_bound,
                     'type': 'below support',
                     'beginning': below_bounds[below_bounds].index[0],
-                    'index': below_bounds[below_bounds].index.summary().split(':')[1],
+                    #'index': below_bounds[below_bounds].index.summary().split(':')[1],
+                    'index': list(below_bounds[below_bounds].index),
                     'test': 'b.%i.%i' % ((bounds.index == colname).argmax(), 0)
                 })
 
@@ -244,7 +245,8 @@ def bounds_test(result, bounds=None, errors='return'):
                     'condition': upper_bound,
                     'type': 'above support',
                     'beginning': above_bounds[above_bounds].index[0],
-                    'index': above_bounds[above_bounds].index.summary().split(':')[1],
+                    #'index': above_bounds[above_bounds].index.summary().split(':')[1],
+                    'index': list(above_bounds[above_bounds].index),
                     'test': 'b.%i.%i' % ((bounds.index == colname).argmax(), 1)
                 })
 
@@ -255,7 +257,8 @@ def bounds_test(result, bounds=None, errors='return'):
                     'condition': '',
                     'type': 'NaN',
                     'beginning': nans[nans].index[0],
-                    'index': nans[nans].index.summary().split(':')[1],
+                    #'index': nans[nans].index.summary().split(':')[1],
+                    'index': list(nans[nans].index),
                     'test': 'b.%i.nan' % (bounds.index == colname).argmax()
                 })
     if len(error_list) == 0:
@@ -266,7 +269,10 @@ def bounds_test(result, bounds=None, errors='return'):
         return df.sort_values(by='beginning').set_index('test')[
             ['column', 'type', 'condition', 'index']]
     elif errors == 'raise':
-        raise AssertionError(["'%(column)s' is %(type) %(bound) at %(index)s" % e
+        #raise AssertionError(["'%(column)s' is %(type) %(bound) at %(index)s" % e
+        #                      for e in error_list])
+        raise AssertionError(["'%(column)s' is '%(type)s' '%(condition)s'"
+                              "at '%(index)s'" % e
                               for e in error_list])
 
 
@@ -337,7 +343,7 @@ def sample_pspace(model, param_list=None, bounds=None, samples=100, seed=None):
         bounds = create_bounds_test_matrix(model).set_index('Real Name')
     elif isinstance(bounds, str):
         if bounds.split('.')[-1] in ['xls', 'xlsx']:
-            bounds = _pd.read_excel(bounds, sheetname='Bounds', index_col='Real Name')
+            bounds = _pd.read_excel(bounds, sheet_name='Bounds', index_col='Real Name')
         elif bounds.split('.')[-1] == 'csv':
             bounds = _pd.read_csv(bounds, index_col='Real Name', encoding='UTF-8')
         elif bounds.split('.')[-1] == 'tab':

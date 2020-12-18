@@ -1,58 +1,72 @@
 
 
 <!DOCTYPE html>
-<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<html class="writer-html5" lang="en" >
 <head>
   <meta charset="utf-8">
+  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Basic Usage &mdash; PySD 0.7.5 documentation</title>
+  <title>Basic Usage &mdash; PySD 0.10.0 documentation</title>
   
 
   
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+
+  
+  
+  
   
 
   
-  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
-
-  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
   
     
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
 
-  
-
-  
-  
-    <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
-  
-
-  
-
-  
-        <link rel="index" title="Index"
-              href="genindex.html"/>
-        <link rel="search" title="Search" href="search.html"/>
-    <link rel="top" title="PySD 0.7.5 documentation" href="index.html"/>
-        <link rel="next" title="Advanced Usage" href="advanced_usage.html"/>
-        <link rel="prev" title="Installation" href="installation.html"/> 
-
-  
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
-
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Advanced Usage" href="advanced_usage.html" />
+    <link rel="prev" title="Installation" href="installation.html" /> 
 </head>
 
-<body class="wy-body-for-nav" role="document">
+<body class="wy-body-for-nav">
 
+   
   <div class="wy-grid-for-nav">
-
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-nav-search">
-        
-          <a href="index.html" class="fa fa-home"> PySD</a>
-        
-        
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html" class="icon icon-home" alt="Documentation Home"> PySD
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.10
+              </div>
+            
+          
+
+          
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -60,21 +74,20 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
-      </div>
 
-      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+        </div>
+
         
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
-          
+            
+            
+              
+            
+            
               <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#installing-via-pip">Installing via pip</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#installing-from-source">Installing from source</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#required-dependencies">Required Dependencies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#optional-dependencies">Optional Dependencies</a></li>
-<li class="toctree-l2"><a class="reference internal" href="installation.html#additional-resources">Additional Resources</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Basic Usage</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#importing-a-model-and-getting-started">Importing a model and getting started</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#running-the-model">Running the Model</a></li>
@@ -85,75 +98,94 @@
 <li class="toctree-l2"><a class="reference internal" href="#supported-functions">Supported functions</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">Advanced Usage</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="advanced_usage.html#replacing-model-components-with-more-complex-objects">Replacing model components with more complex objects</a></li>
-<li class="toctree-l2"><a class="reference internal" href="advanced_usage.html#supplying-additional-arguments-to-the-integrator">Supplying additional arguments to the integrator</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_usage.html">Advanced Usage</a></li>
 <li class="toctree-l1"><a class="reference internal" href="functions.html">User Functions Reference</a></li>
-<li class="toctree-l1"><a class="reference internal" href="development/development_index.html">Developer Documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="development/about.html">About the Project</a></li>
-<li class="toctree-l2"><a class="reference internal" href="development/contributing.html">Contributing to PySD</a></li>
-<li class="toctree-l2"><a class="reference internal" href="development/pathway.html">PySD Development Pathway</a></li>
-<li class="toctree-l2"><a class="reference internal" href="development/structure.html">Structure of the PySD module</a></li>
-<li class="toctree-l2"><a class="reference internal" href="development/complement.html">Complementary Projects</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="development/development_index.html">Developer Documentation</a></li>
 </ul>
 
+            
           
+        </div>
         
       </div>
-      &nbsp;
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
 
       
-      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
-        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-        <a href="index.html">PySD</a>
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">PySD</a>
+        
       </nav>
 
 
-      
       <div class="wy-nav-content">
+        
         <div class="rst-content">
-          <div role="navigation" aria-label="breadcrumbs navigation">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
   <ul class="wy-breadcrumbs">
-    <li><a href="index.html">Docs</a> &raquo;</li>
-      
-    <li>Basic Usage</li>
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Basic Usage</li>
+    
+    
       <li class="wy-breadcrumbs-aside">
         
-          <a href="_sources/basic_usage.txt" rel="nofollow"> View page source</a>
+            
+            <a href="_sources/basic_usage.rst.txt" rel="nofollow"> View page source</a>
+          
         
       </li>
+    
   </ul>
+
+  
   <hr/>
 </div>
-          <div role="main" class="document">
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
             
   <div class="section" id="basic-usage">
 <h1>Basic Usage<a class="headerlink" href="#basic-usage" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="importing-a-model-and-getting-started">
 <h2>Importing a model and getting started<a class="headerlink" href="#importing-a-model-and-getting-started" title="Permalink to this headline">¶</a></h2>
 <p>To begin, we must first load the PySD module, and use it to import a supported model file:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pysd</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pysd</span>
 <span class="n">model</span> <span class="o">=</span> <span class="n">pysd</span><span class="o">.</span><span class="n">read_vensim</span><span class="p">(</span><span class="s1">&#39;Teacup.mdl&#39;</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>This code creates an instance of the PySD class loaded with an example model that we will use as the system dynamics equivalent of ‘Hello World’: a cup of tea cooling to room temperature.</p>
 <a class="reference internal image-reference" href="_images/Teacup.png"><img alt="_images/Teacup.png" class="align-center" src="_images/Teacup.png" style="width: 350px;" /></a>
-<p>To view a synopsis of the model equations and documentation, call the <code class="xref py py-func docutils literal"><span class="pre">doc()</span></code> method of the model class. This will generate a listing of all the model elements, their documentation, units, equations, and initial values, where appropriate. Here is a sample from the teacup model:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">model</span><span class="o">.</span><span class="n">doc</span><span class="p">()</span>
+<p>To view a synopsis of the model equations and documentation, call the <code class="xref py py-func docutils literal notranslate"><span class="pre">doc()</span></code> method of the model class. This will generate a listing of all the model elements, their documentation, units, equations, and initial values, where appropriate. Here is a sample from the teacup model:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">model</span><span class="o">.</span><span class="n">doc</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="running-the-model">
 <h2>Running the Model<a class="headerlink" href="#running-the-model" title="Permalink to this headline">¶</a></h2>
-<p>The simplest way to simulate the model is to use the <code class="xref py py-func docutils literal"><span class="pre">run()</span></code> command with no options. This runs the model with the default parameters supplied by the model file, and returns a Pandas dataframe of the values of the stocks at every timestamp:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stocks</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+<p>The simplest way to simulate the model is to use the <code class="xref py py-func docutils literal notranslate"><span class="pre">run()</span></code> command with no options. This runs the model with the default parameters supplied by the model file, and returns a Pandas dataframe of the values of the stocks at every timestamp:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">stocks</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
 
 <span class="go">t        teacup_temperature</span>
 <span class="go">0.000    180.000000</span>
@@ -164,7 +196,7 @@
 </pre></div>
 </div>
 <p>Pandas gives us simple plotting capability, so we can see how the cup of tea behaves:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">stocks</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">stocks</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="s1">&#39;Degrees F&#39;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s1">&#39;Minutes&#39;</span><span class="p">)</span>
 </pre></div>
@@ -173,8 +205,8 @@
 </div>
 <div class="section" id="outputting-various-run-information">
 <h2>Outputting various run information<a class="headerlink" href="#outputting-various-run-information" title="Permalink to this headline">¶</a></h2>
-<p>The <code class="xref py py-func docutils literal"><span class="pre">run()</span></code> command has a few options that make it more useful. In many situations we want to access components of the model other than merely the stocks – we can specify which components of the model should be included in the returned dataframe by including them in a list that we pass to the <code class="xref py py-func docutils literal"><span class="pre">run()</span></code> command, using the return_columns keyword argument:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">return_columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Teacup Temperature&#39;</span><span class="p">,</span> <span class="s1">&#39;Room Temperature&#39;</span><span class="p">])</span>
+<p>The <code class="xref py py-func docutils literal notranslate"><span class="pre">run()</span></code> command has a few options that make it more useful. In many situations we want to access components of the model other than merely the stocks – we can specify which components of the model should be included in the returned dataframe by including them in a list that we pass to the <code class="xref py py-func docutils literal notranslate"><span class="pre">run()</span></code> command, using the return_columns keyword argument:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">return_columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;Teacup Temperature&#39;</span><span class="p">,</span> <span class="s1">&#39;Room Temperature&#39;</span><span class="p">])</span>
 
 <span class="go">t         Teacup Temperature    Room Temperature</span>
 <span class="go">0.000     180.000000            75.0</span>
@@ -184,8 +216,8 @@
 <span class="go">…</span>
 </pre></div>
 </div>
-<p>If the measured data that we are comparing with our model comes in at irregular timestamps, we may want to sample the model at timestamps to match. The .run() function gives us this ability with the return_timestamps keyword argument:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">return_timestamps</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mf">9.5</span><span class="p">,</span><span class="mf">13.178</span><span class="p">,</span><span class="mi">21</span><span class="p">,</span><span class="mi">25</span><span class="p">,</span><span class="mi">30</span><span class="p">])</span>
+<p>If the measured data that we are comparing with our model comes in at irregular timestamps, we may want to sample the model at timestamps to match. The <code class="xref py py-func docutils literal notranslate"><span class="pre">run()</span></code> function gives us this ability with the return_timestamps keyword argument:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">return_timestamps</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">,</span><span class="mi">7</span><span class="p">,</span><span class="mf">9.5</span><span class="p">,</span><span class="mf">13.178</span><span class="p">,</span><span class="mi">21</span><span class="p">,</span><span class="mi">25</span><span class="p">,</span><span class="mi">30</span><span class="p">])</span>
 
 <span class="go">t       Teacup Temperature</span>
 <span class="go">0.0     180.000000</span>
@@ -199,194 +231,268 @@
 </div>
 <div class="section" id="setting-parameter-values">
 <h2>Setting parameter values<a class="headerlink" href="#setting-parameter-values" title="Permalink to this headline">¶</a></h2>
-<p>In many cases, we want to modify the parameters of the model to investigate its behavior under different assumptions. There are several ways to do this in PySD, but the .run() function gives us a convenient method in the params keyword argument.</p>
+<p>In many cases, we want to modify the parameters of the model to investigate its behavior under different assumptions. There are several ways to do this in PySD, but the <code class="xref py py-func docutils literal notranslate"><span class="pre">run()</span></code> function gives us a convenient method in the params keyword argument.</p>
 <p>This argument expects a dictionary whose keys correspond to the components of the model.  The associated values can either be a constant, or a Pandas series whose indices are timestamps and whose values are the values that the model component should take on at the corresponding time. For instance, in our model we can set the room temperature to a constant value:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Room Temperature&#39;</span><span class="p">:</span><span class="mi">20</span><span class="p">})</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Room Temperature&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">})</span>
 </pre></div>
 </div>
 <p>Alternately, if we believe the room temperature is changing over the course of the simulation, we can give the run function a set of time-series values in the form of a Pandas series, and PySD will linearly interpolate between the given values in the course of its integration:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
-<span class="n">temp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">),</span> <span class="n">data</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span><span class="mi">80</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="n">temp</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">Series</span><span class="p">(</span><span class="n">index</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">30</span><span class="p">),</span> <span class="n">data</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">20</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
 <span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Room Temperature&#39;</span><span class="p">:</span><span class="n">temp</span><span class="p">})</span>
 </pre></div>
 </div>
-<p>Note that once parameters are set by the run command, they are permanently changed within the model. We can also change model parameters without running the model, using PySD’s <code class="xref py py-func docutils literal"><span class="pre">set_components(params={})()</span></code> method, which takes the same params dictionary as the run function. We might choose to do this in situations where we’ll be running the model many times, and only want to spend time setting the parameters once.</p>
+<p>If the parameter value to change is a subscripted variable (vector, matrix…), there are three different options to set new value. Suposse we have ‘Subscripted var’ with dims <code class="xref py py-data docutils literal notranslate"><span class="pre">['dim1',</span> <span class="pre">'dim2']</span></code> and coordinates <code class="xref py py-data docutils literal notranslate"><span class="pre">{'dim1':</span> <span class="pre">[1,</span> <span class="pre">2],</span> <span class="pre">'dim2':</span> <span class="pre">[1,</span> <span class="pre">2]}</span></code>. A constant value can be used and all the values will be replaced:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Subscripted var&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>A partial <em>xarray.DataArray</em> can be used, for example a new variable with ‘dim2’ but not ‘dim2’, the result will be repeated in the remaining dimensions:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
+<span class="n">new_value</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">],</span> <span class="p">{</span><span class="s1">&#39;dim2&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]},</span> <span class="p">[</span><span class="s1">&#39;dim2&#39;</span><span class="p">])</span>
+<span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Subscripted var&#39;</span><span class="p">:</span> <span class="n">new_value</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>Same dimensions <em>xarray.DataArray</em> can be used (recommended):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">xarray</span> <span class="k">as</span> <span class="nn">xr</span>
+<span class="n">new_value</span> <span class="o">=</span> <span class="n">xr</span><span class="o">.</span><span class="n">DataArray</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span><span class="mi">5</span><span class="p">],[</span><span class="mi">3</span><span class="p">,</span><span class="mi">4</span><span class="p">]],</span> <span class="p">{</span><span class="s1">&#39;dim1&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="s1">&#39;dim2&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]},</span> <span class="p">[</span><span class="s1">&#39;dim1&#39;</span><span class="p">,</span> <span class="s1">&#39;dim2&#39;</span><span class="p">])</span>
+<span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;Subscripted var&#39;</span><span class="p">:</span> <span class="n">new_value</span><span class="p">})</span>
+</pre></div>
+</div>
+<p>In the same way, a Pandas series can be used with constan values, partially defined <em>xarray.DataArrays</em> or same dimensions <em>xarray.DataArrays</em>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>That once parameters are set by the run command, they are permanently changed within the model. We can also change model parameters without running the model, using PySD’s <code class="xref py py-data docutils literal notranslate"><span class="pre">set_components(params={})</span></code> method, which takes the same params dictionary as the run function. We might choose to do this in situations where we’ll be running the model many times, and only want to spend time setting the parameters once.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you need to know the dimensions of a variable, you can check them by using <code class="xref py py-data docutils literal notranslate"><span class="pre">get_coords(variable__name)</span></code> function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">get_coords</span><span class="p">(</span><span class="s1">&#39;Room Temperature&#39;</span><span class="p">)</span>
+
+<span class="go">None</span>
+
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span><span class="o">.</span><span class="n">get_coords</span><span class="p">(</span><span class="s1">&#39;Subscripted var&#39;</span><span class="p">)</span>
+
+<span class="go">({&#39;dim1&#39;: [1, 2], &#39;dim2&#39;: [1, 2]}, [&#39;dim1&#39;, &#39;dim2&#39;])</span>
+</pre></div>
+</div>
+<p>this will return the coords dictionary and the dimensions list if the variable is subscripted or ‘None’ if the variable is an scalar.</p>
+</div>
 </div>
 <div class="section" id="setting-simulation-initial-conditions">
 <h2>Setting simulation initial conditions<a class="headerlink" href="#setting-simulation-initial-conditions" title="Permalink to this headline">¶</a></h2>
 <p>Finally, we can set the initial conditions of our model in several ways. So far, we’ve been using the default value for the initial_condition keyword argument, which is ‘original’. This value runs the model from the initial conditions that were specified originally by the model file. We can alternately specify a tuple containing the start time and a dictionary of values for the system’s stocks. Here we start the model with the tea at just above freezing:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">initial_condition</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;Teacup Temperature&#39;</span><span class="p">:</span><span class="mi">33</span><span class="p">}))</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">initial_condition</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;Teacup Temperature&#39;</span><span class="p">:</span><span class="mi">33</span><span class="p">}))</span>
 </pre></div>
 </div>
+<p>The new value setted can be a <em>xarray.DataArray</em> as it is explained in the previous section.</p>
 <p>Additionally we can run the model forward from its current position, by passing the initial_condition argument the keyword ‘current’. After having run the model from time zero to thirty, we can ask the model to continue running forward for another chunk of time:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">initial_condition</span><span class="o">=</span><span class="s1">&#39;current&#39;</span><span class="p">,</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">run</span><span class="p">(</span><span class="n">initial_condition</span><span class="o">=</span><span class="s1">&#39;current&#39;</span><span class="p">,</span>
           <span class="n">return_timestamps</span><span class="o">=</span><span class="nb">range</span><span class="p">(</span><span class="mi">31</span><span class="p">,</span><span class="mi">45</span><span class="p">))</span>
 </pre></div>
 </div>
 <p>The integration picks up at the last value returned in the previous run condition, and returns values at the requested timestamps.</p>
-<p>There are times when we may choose to overwrite a stock with a constant value (ie, for testing). To do this, we just use the params value, as before. Be careful not to use &#8216;params&#8217; when you really mean to be setting the initial condition!</p>
+<p>There are times when we may choose to overwrite a stock with a constant value (ie, for testing). To do this, we just use the params value, as before. Be careful not to use ‘params’ when you really mean to be setting the initial condition!</p>
 </div>
 <div class="section" id="querying-current-values">
 <h2>Querying current values<a class="headerlink" href="#querying-current-values" title="Permalink to this headline">¶</a></h2>
 <p>We can easily access the current value of a model component by calling its associated method (using python safe names) in the components subclass. For instance, to find the temperature of the teacup, we simply call:</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">teacup_temperature</span><span class="p">()</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">model</span><span class="o">.</span><span class="n">components</span><span class="o">.</span><span class="n">teacup_temperature</span><span class="p">()</span>
 </pre></div>
 </div>
 </div>
 <div class="section" id="supported-functions">
 <h2>Supported functions<a class="headerlink" href="#supported-functions" title="Permalink to this headline">¶</a></h2>
 <p>Vensim functions include:</p>
-<table border="1" class="docutils">
+<table class="docutils align-default">
 <colgroup>
-<col width="50%" />
-<col width="50%" />
+<col style="width: 50%" />
+<col style="width: 50%" />
 </colgroup>
-<thead valign="bottom">
-<tr class="row-odd"><th class="head">Vensim</th>
-<th class="head">Python Translation</th>
+<thead>
+<tr class="row-odd"><th class="head"><p>Vensim</p></th>
+<th class="head"><p>Python Translation</p></th>
 </tr>
 </thead>
-<tbody valign="top">
-<tr class="row-even"><td>COS</td>
-<td>np.cos</td>
+<tbody>
+<tr class="row-even"><td><p>COS</p></td>
+<td><p>np.cos</p></td>
 </tr>
-<tr class="row-odd"><td>EXP</td>
-<td>np.exp</td>
+<tr class="row-odd"><td><p>EXP</p></td>
+<td><p>np.exp</p></td>
 </tr>
-<tr class="row-even"><td>MIN</td>
-<td>min</td>
+<tr class="row-even"><td><p>MIN</p></td>
+<td><p>min</p></td>
 </tr>
-<tr class="row-odd"><td>&lt;=</td>
-<td>&lt;=</td>
+<tr class="row-odd"><td><p>&lt;=</p></td>
+<td><p>&lt;=</p></td>
 </tr>
-<tr class="row-even"><td>STEP</td>
-<td>functions.step</td>
+<tr class="row-even"><td><p>STEP</p></td>
+<td><p>functions.step</p></td>
 </tr>
-<tr class="row-odd"><td>PULSE</td>
-<td>functions.pulse</td>
+<tr class="row-odd"><td><p>PULSE</p></td>
+<td><p>functions.pulse</p></td>
 </tr>
-<tr class="row-even"><td>POISSON</td>
-<td>np.random.poisson</td>
+<tr class="row-even"><td><p>POISSON</p></td>
+<td><p>np.random.poisson</p></td>
 </tr>
-<tr class="row-odd"><td>EXPRND</td>
-<td>np.random.exponential</td>
+<tr class="row-odd"><td><p>EXPRND</p></td>
+<td><p>np.random.exponential</p></td>
 </tr>
-<tr class="row-even"><td>SIN</td>
-<td>np.sin</td>
+<tr class="row-even"><td><p>SIN</p></td>
+<td><p>np.sin</p></td>
 </tr>
-<tr class="row-odd"><td>&gt;=</td>
-<td>&gt;=</td>
+<tr class="row-odd"><td><p>&gt;=</p></td>
+<td><p>&gt;=</p></td>
 </tr>
-<tr class="row-even"><td>IF THEN ELSE</td>
-<td>functions.if_then_else</td>
+<tr class="row-even"><td><p>IF THEN ELSE</p></td>
+<td><p>functions.if_then_else</p></td>
 </tr>
-<tr class="row-odd"><td>LN</td>
-<td>np.log</td>
+<tr class="row-odd"><td><p>LN</p></td>
+<td><p>np.log</p></td>
 </tr>
-<tr class="row-even"><td>PULSE TRAIN</td>
-<td>functions.pulse_train</td>
+<tr class="row-even"><td><p>PULSE TRAIN</p></td>
+<td><p>functions.pulse_train</p></td>
 </tr>
-<tr class="row-odd"><td>RAMP</td>
-<td>functions.ramp</td>
+<tr class="row-odd"><td><p>RAMP</p></td>
+<td><p>functions.ramp</p></td>
 </tr>
-<tr class="row-even"><td>INTEGER</td>
-<td>int</td>
+<tr class="row-even"><td><p>INTEGER</p></td>
+<td><p>int</p></td>
 </tr>
-<tr class="row-odd"><td>TAN</td>
-<td>np.tan</td>
+<tr class="row-odd"><td><p>TAN</p></td>
+<td><p>np.tan</p></td>
 </tr>
-<tr class="row-even"><td>PI</td>
-<td>np.pi</td>
+<tr class="row-even"><td><p>PI</p></td>
+<td><p>np.pi</p></td>
 </tr>
-<tr class="row-odd"><td>=</td>
-<td>==</td>
+<tr class="row-odd"><td><p>=</p></td>
+<td><p>==</p></td>
 </tr>
-<tr class="row-even"><td>&lt;</td>
-<td>&lt;</td>
+<tr class="row-even"><td><p>&lt;</p></td>
+<td><p>&lt;</p></td>
 </tr>
-<tr class="row-odd"><td>&gt;</td>
-<td>&gt;</td>
+<tr class="row-odd"><td><p>&gt;</p></td>
+<td><p>&gt;</p></td>
 </tr>
-<tr class="row-even"><td>MODULO</td>
-<td>np.mod</td>
+<tr class="row-even"><td><p>MODULO</p></td>
+<td><p>np.mod</p></td>
 </tr>
-<tr class="row-odd"><td>ARCSIN</td>
-<td>np.arcsin</td>
+<tr class="row-odd"><td><p>ARCSIN</p></td>
+<td><p>np.arcsin</p></td>
 </tr>
-<tr class="row-even"><td>ABS</td>
-<td>abs</td>
+<tr class="row-even"><td><p>ABS</p></td>
+<td><p>abs</p></td>
 </tr>
-<tr class="row-odd"><td>^</td>
-<td><a href="#id1"><span class="problematic" id="id2">**</span></a></td>
+<tr class="row-odd"><td><p>^</p></td>
+<td><p>**</p></td>
 </tr>
-<tr class="row-even"><td>LOGNORMAL</td>
-<td>np.random.lognormal</td>
+<tr class="row-even"><td><p>LOGNORMAL</p></td>
+<td><p>np.random.lognormal</p></td>
 </tr>
-<tr class="row-odd"><td>MAX</td>
-<td>max</td>
+<tr class="row-odd"><td><p>MAX</p></td>
+<td><p>max</p></td>
 </tr>
-<tr class="row-even"><td>SQRT</td>
-<td>np.sqrt</td>
+<tr class="row-even"><td><p>SQRT</p></td>
+<td><p>np.sqrt</p></td>
 </tr>
-<tr class="row-odd"><td>ARCTAN</td>
-<td>np.arctan</td>
+<tr class="row-odd"><td><p>ARCTAN</p></td>
+<td><p>np.arctan</p></td>
 </tr>
-<tr class="row-even"><td>ARCCOS</td>
-<td>np.arccos</td>
+<tr class="row-even"><td><p>ARCCOS</p></td>
+<td><p>np.arccos</p></td>
 </tr>
-<tr class="row-odd"><td>RANDOM NORMAL</td>
-<td>self.functions.bounded_normal</td>
+<tr class="row-odd"><td><p>RANDOM NORMAL</p></td>
+<td><p>self.functions.bounded_normal</p></td>
 </tr>
-<tr class="row-even"><td>RANDOM UNIFORM</td>
-<td>np.random.rand</td>
+<tr class="row-even"><td><p>RANDOM UNIFORM</p></td>
+<td><p>np.random.rand</p></td>
 </tr>
-<tr class="row-odd"><td>DELAY1</td>
-<td>functions.Delay</td>
+<tr class="row-odd"><td><p>DELAY1</p></td>
+<td><p>functions.Delay</p></td>
 </tr>
-<tr class="row-even"><td>DELAY3</td>
-<td>functions.Delay</td>
+<tr class="row-even"><td><p>DELAY3</p></td>
+<td><p>functions.Delay</p></td>
 </tr>
-<tr class="row-odd"><td>DELAY N</td>
-<td>functions.Delay</td>
+<tr class="row-odd"><td><p>DELAY N</p></td>
+<td><p>functions.Delay</p></td>
 </tr>
-<tr class="row-even"><td>SMOOTH3I</td>
-<td>functions.Smooth</td>
+<tr class="row-even"><td><p>SMOOTH3I</p></td>
+<td><p>functions.Smooth</p></td>
 </tr>
-<tr class="row-odd"><td>SMOOTH3</td>
-<td>functions.Smooth</td>
+<tr class="row-odd"><td><p>SMOOTH3</p></td>
+<td><p>functions.Smooth</p></td>
 </tr>
-<tr class="row-even"><td>SMOOTH N</td>
-<td>functions.Smooth</td>
+<tr class="row-even"><td><p>SMOOTH N</p></td>
+<td><p>functions.Smooth</p></td>
 </tr>
-<tr class="row-odd"><td>SMOOTH</td>
-<td>functions.Smooth</td>
+<tr class="row-odd"><td><p>SMOOTH</p></td>
+<td><p>functions.Smooth</p></td>
 </tr>
-<tr class="row-even"><td>INITIAL</td>
-<td>functions.Initial</td>
+<tr class="row-even"><td><p>INITIAL</p></td>
+<td><p>functions.Initial</p></td>
 </tr>
-<tr class="row-odd"><td>XIDZ</td>
-<td>functions.XIDZ</td>
+<tr class="row-odd"><td><p>XIDZ</p></td>
+<td><p>functions.XIDZ</p></td>
 </tr>
-<tr class="row-even"><td>ZIDZ</td>
-<td>functions.XIDZ</td>
+<tr class="row-even"><td><p>ZIDZ</p></td>
+<td><p>functions.XIDZ</p></td>
+</tr>
+<tr class="row-odd"><td><p>VMIN</p></td>
+<td><p>functions.vmin</p></td>
+</tr>
+<tr class="row-even"><td><p>VMAX</p></td>
+<td><p>functions.vmax</p></td>
+</tr>
+<tr class="row-odd"><td><p>SUM</p></td>
+<td><p>functions.sum</p></td>
+</tr>
+<tr class="row-even"><td><p>PROD</p></td>
+<td><p>functions.prod</p></td>
+</tr>
+<tr class="row-odd"><td><p>GET XLS DATA</p></td>
+<td><p>external.ExtData</p></td>
+</tr>
+<tr class="row-even"><td><p>GET DIRECT DATA</p></td>
+<td><p>external.ExtData</p></td>
+</tr>
+<tr class="row-odd"><td><p>GET XLS LOOKUPS</p></td>
+<td><p>external.ExtLookup</p></td>
+</tr>
+<tr class="row-even"><td><p>GET DIRECT LOOKUPS</p></td>
+<td><p>external.ExtLookup</p></td>
+</tr>
+<tr class="row-odd"><td><p>GET XLS CONSTANTS</p></td>
+<td><p>external.ExtConstant</p></td>
+</tr>
+<tr class="row-even"><td><p>GET DIRECT CONSTANTS</p></td>
+<td><p>external.ExtConstant</p></td>
+</tr>
+<tr class="row-odd"><td><p>GET XLS SUBSCRIPT</p></td>
+<td><p>external.ExtSubscript</p></td>
+</tr>
+<tr class="row-even"><td><p>GET DIRECT SUBSCRIPT</p></td>
+<td><p>external.ExtSubscript</p></td>
 </tr>
 </tbody>
 </table>
 <blockquote>
-<div><cite>np</cite> corresponds to the numpy package</div></blockquote>
+<div><p><cite>np</cite> corresponds to the numpy package</p>
+</div></blockquote>
 </div>
 </div>
 
 
+           </div>
+           
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="advanced_usage.html" class="btn btn-neutral float-right" title="Advanced Usage">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="advanced_usage.html" class="btn btn-neutral float-right" title="Advanced Usage" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="installation.html" class="btn btn-neutral" title="Installation"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="installation.html" class="btn btn-neutral float-left" title="Installation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -395,13 +501,22 @@
 
   <div role="contentinfo">
     <p>
-        &copy; Copyright 2016, James Houghton.
+        
+        &copy; Copyright 2016, James Houghton
+
     </p>
   </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
-  
 </footer>
+
         </div>
       </div>
 
@@ -410,37 +525,15 @@
   </div>
   
 
-
-  
-
-    <script type="text/javascript">
-        var DOCUMENTATION_OPTIONS = {
-            URL_ROOT:'./',
-            VERSION:'0.7.5',
-            COLLAPSE_INDEX:false,
-            FILE_SUFFIX:'.html',
-            HAS_SOURCE:  true
-        };
-    </script>
-      <script type="text/javascript" src="_static/jquery.js"></script>
-      <script type="text/javascript" src="_static/underscore.js"></script>
-      <script type="text/javascript" src="_static/doctools.js"></script>
-      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
-
-  
-
-  
-  
-    <script type="text/javascript" src="_static/js/theme.js"></script>
-  
-
-  
-  
   <script type="text/javascript">
       jQuery(function () {
-          SphinxRtdTheme.StickyNav.enable();
+          SphinxRtdTheme.Navigation.enable(true);
       });
   </script>
+
+  
+  
+    
    
 
 </body>

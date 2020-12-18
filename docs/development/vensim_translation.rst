@@ -29,3 +29,13 @@ Future releases will include support for:
 
 There are some constructs (such as tagging variables as 'suplementary') which are not currently
 parsed, and may throw an error. Future releases will handle this with more grace.
+
+
+Used Functions for Translation
+------------------------------
+
+.. automodule:: py_backend.vensim.vensim2py
+   :members:
+   :undoc-members:
+   :private-members:
+

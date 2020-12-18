@@ -1,30 +1,34 @@
 """
-functions.py
-
-These are supports for functions that are included in modeling software but have no
-straightforward equivalent in python.
-
+These functions have no direct analog in the standard python data analytics
+stack, or require information about the internal state of the system beyond
+what is present in the function call. We provide them in a structure that
+makes it easy for the model elements to call.
 """
 
 from __future__ import division, absolute_import
-from functools import wraps
 
-import pandas as pd
-
-import pandas as _pd
-import numpy as np
-from . import utils
 import imp
-import warnings
-import random
 import inspect
+import sys
+import os
+import re
+import random
+import warnings
+from ast import literal_eval
+
+import numpy as np
+import pandas as _pd
+import pandas as pd
 import xarray as xr
 from funcsigs import signature
-import os
+
+from . import utils
+from .external import External
+from .decorators import cache  # for backward compatibility
+
 
 try:
     import scipy.stats as stats
-
 
     def bounded_normal(minimum, maximum, mean, std, seed):
         """ Implements vensim's BOUNDED NORMAL function """
@@ -35,80 +39,18 @@ except ImportError:
     warnings.warn("Scipy required for functions:"
                   "- Bounded Normal (falling back to unbounded normal)")
 
-
     def bounded_normal(minimum, maximum, mean, std, seed):
         """ Warning: using unbounded normal due to no scipy """
         return np.random.normal(mean, std)
 
-
-def cache(horizon):
-    """
-    Put a wrapper around a model function
-
-    Decorators with parameters are tricky, you have to
-    essentially create a decorator that returns a decorator,
-    which itself then returns the function wrapper.
-
-    Parameters
-    ----------
-    horizon: string
-        - 'step' means cache just until the next timestep
-        - 'run' means cache until the next initialization of the model
-
-    Returns
-    -------
-    new_func: decorated function
-        function wrapping the original function, handling caching
-
-    """
-
-    def cache_step(func):
-        """ Decorator for caching at a step level"""
-
-        @wraps(func)
-        def cached(*args):
-            """Step wise cache function"""
-            try:  # fails if cache is out of date or not instantiated
-                data = func.__globals__['__data']
-                assert cached.cache_t == data['time']()
-                assert hasattr(cached, 'cache_val')
-                assert cached.cache_val is not None
-            except (AssertionError, AttributeError):
-                cached.cache_val = func(*args)
-                data = func.__globals__['__data']
-                cached.cache_t = data['time']()
-            return cached.cache_val
-
-        return cached
-
-    def cache_run(func):
-        """ Decorator for caching at  the run level"""
-
-        @wraps(func)
-        def cached(*args):
-            """Run wise cache function"""
-            try:  # fails if cache is not instantiated
-                return cached.cache_val
-            except AttributeError:
-                cached.cache_val = func(*args)
-                return cached.cache_val
-
-        return cached
-
-    if horizon == 'step':
-        return cache_step
-
-    elif horizon == 'run':
-        return cache_run
-
-    else:
-        raise (AttributeError('Bad horizon for cache decorator'))
+small_vensim = 1e-6  # What is considered zero according to Vensim Help
 
 
 class Stateful(object):
     # the integrator needs to be able to 'get' the current state of the object,
-    # and get the derivative. It calculates the new state, and updates it. The state
-    # can be any object which is subject to basic (element-wise) algebraic operations
+    # and get the derivative. It calculates the new state, and updates it.
+    # The state can be any object which is subject to basic (element-wise)
+    # algebraic operations
     def __init__(self):
         self._state = None
 
@@ -168,10 +110,10 @@ class Integ(Stateful):
 class Delay(Stateful):
     # note that we could have put the `delay_input` argument as a parameter to
     # the `__call__` function, and more closely mirrored the vensim syntax.
-    # However, people may get confused this way in thinking that they need only one
-    # delay object and can call it with various arguments to delay whatever is convenient.
-    # This method forces them to acknowledge that additional structure is being created
-    # in the delay object.
+    # However, people may get confused this way in thinking that they need
+    # only one delay object and can call it with various arguments to delay
+    # whatever is convenient. This method forces them to acknowledge that
+    # additional structure is being created in the delay object.
 
     def __init__(self, delay_input, delay_time, initial_value, order):
         """
@@ -182,6 +124,8 @@ class Delay(Stateful):
         delay_time: function
         initial_value: function
         order: function
+        coords: dictionary (optional)
+        dims: list (optional)
         """
         super(Delay, self).__init__()
         self.init_func = initial_value
@@ -189,22 +133,56 @@ class Delay(Stateful):
         self.input_func = delay_input
         self.order_func = order
         self.order = None
+        self.shape_info = None
 
     def initialize(self):
         order = self.order_func()
+        if isinstance(order, xr.DataArray):
+            order = order.values
+        while isinstance(order, np.ndarray):
+            order = order[0]
         if order != int(order):
-            warnings.warn('Casting delay order from %f to %i' % (order, int(order)))
+            warnings.warn('Casting delay order from %f to %i' % (
+                order, int(order)))
         self.order = int(order)  # The order can only be set once
-        init_state_value = self.init_func() * self.delay_time_func() / self.order
-        self.state = np.array([init_state_value] * self.order)
+
+        init_state_value = self.init_func() * self.delay_time_func()\
+                           / self.order
+
+        if isinstance(init_state_value, xr.DataArray):
+            # broadcast self.state
+            if sys.version_info[0]*10 + sys.version_info[1] >= 36:
+                self.state = init_state_value.expand_dims({
+                    'delay': np.arange(self.order)}, axis=0)
+            else:
+                # TODO remove when we stop supporting Python 2 and
+                # Python < 3.6 (rm also 'import sys' if not necessary)
+                dims = ['delay'] + list(init_state_value.dims)
+                coords = dict(init_state_value.coords.indexes)
+                coords['delay'] = np.arange(self.order)
+                init_state_value = np.tile(init_state_value,
+                    [self.order] + [1 for i in init_state_value.dims])
+                self.state = xr.DataArray(init_state_value, coords, dims)
+
+            self.shape_info = {'dims': self.state.dims,
+                               'coords': self.state.coords}
+        else:
+            self.state = np.array([init_state_value] * self.order)
 
     def __call__(self):
-        return self.state[-1] / (self.delay_time_func() / self.order)
+        if self.shape_info:
+            return self.state[-1].reset_coords('delay', drop=True)\
+                   / (self.delay_time_func() / self.order)
+        else:
+            return self.state[-1] / (self.delay_time_func() / self.order)
 
     def ddt(self):
         outflows = self.state / (self.delay_time_func() / self.order)
-        inflows = np.roll(outflows, 1)
-        inflows[0] = self.input_func()
+        inflows = np.roll(outflows, 1, axis=0)
+        if self.shape_info:
+            inflows[0] = self.input_func().values
+        else:
+            inflows[0] = self.input_func()
         return inflows - outflows
 
 
@@ -238,10 +216,12 @@ class Trend(Stateful):
         self.input_func = trend_input
 
     def initialize(self):
-        self.state = self.input_func() / (1 + self.init_func() * self.average_time_function())
+        self.state = self.input_func()\
+            / (1 + self.init_func() * self.average_time_function())
 
     def __call__(self):
-        return zidz(self.input_func() - self.state, self.average_time_function() * abs(self.state))
+        return zidz(self.input_func() - self.state,
+                    self.average_time_function() * abs(self.state))
 
     def ddt(self):
         return (self.input_func() - self.state) / self.average_time_function()
@@ -266,17 +246,19 @@ class Initial(Stateful):
 class Macro(Stateful):
     """
     The Model class implements a stateful representation of the system,
-    and contains the majority of methods for accessing and modifying model components.
+    and contains the majority of methods for accessing and modifying model
+    components.
 
-    When the instance in question also serves as the root model object (as opposed to a
-    macro or submodel within another model) it will have added methods to facilitate
-    execution.
+    When the instance in question also serves as the root model object
+    (as opposed to a macro or submodel within another model) it will have
+    added methods to facilitate execution.
     """
 
-    def __init__(self, py_model_file, params=None, return_func=None, time=None, time_initialization=None):
+    def __init__(self, py_model_file, params=None, return_func=None,
+                 time=None, time_initialization=None):
         """
-        The model object will be created with components drawn from a translated python
-        model file.
+        The model object will be created with components drawn from a
+        translated python model file.
 
         Parameters
         ----------
@@ -293,15 +275,24 @@ class Macro(Stateful):
         self.time_initialization = time_initialization
 
         # need a unique identifier for the imported module.
-        module_name = os.path.splitext(py_model_file)[0] + str(random.randint(0, 1000000))
+        module_name = os.path.splitext(py_model_file)[0]\
+                      + str(random.randint(0, 1000000))
         self.components = imp.load_source(module_name,
                                           py_model_file)
+
         if params is not None:
             self.set_components(params)
 
-        self._stateful_elements = [getattr(self.components, name) for name in dir(self.components)
-                                   if isinstance(getattr(self.components, name),
-                                                 Stateful)]
+        # Get the collections of stateful elements and external elements
+        self._stateful_elements = [
+            getattr(self.components, name) for name in dir(self.components)
+            if isinstance(getattr(self.components, name), Stateful)
+        ]
+        self._external_elements = [
+            getattr(self.components, name) for name in dir(self.components)
+            if isinstance(getattr(self.components, name), External)
+        ]
+
         if return_func is not None:
             self.return_func = getattr(self.components, return_func)
         else:
@@ -309,24 +300,27 @@ class Macro(Stateful):
 
         self.py_model_file = py_model_file
 
-
     def __call__(self):
         return self.return_func()
 
     def get_pysd_compiler_version(self):
-        """ Returns the version of pysd complier that used for generating this model """
+        """
+        Returns the version of pysd complier that used for generating
+        this model
+        """
         return self.components.__pysd_version__
-        
+
     def initialize(self, initialization_order=None):
         """
         This function tries to initialize the stateful objects.
 
         In the case where an initialization function for `Stock A` depends on
-        the value of `Stock B`, if we try to initialize `Stock A` before `Stock B`
-        then we will get an error, as the value will not yet exist.
+        the value of `Stock B`, if we try to initialize `Stock A` before
+        `Stock B` then we will get an error, as the value will not yet exist.
 
         In this case, just skip initializing `Stock A` for now, and
-        go on to the other state initializations. Then come back to it and try again.
+        go on to the other state initializations. Then come back to it and
+        try again.
         """
 
         # Initialize time
@@ -336,17 +330,22 @@ class Macro(Stateful):
             else:
                 self.time = self.time_initialization()
 
-        # if self.time is None:
-        #     self.time = time
-        # self.components.time = self.time
-        # self.components.functions.time = self.time  # rewrite functions so we don't need this
+        self.components.cache.clean()
+        self.components.cache.time = self.time()
+
         self.components._init_outer_references({
             'scope': self,
             'time': self.time
         })
 
-        remaining = set(self._stateful_elements)
+        # Initialize external elements
+        for element in self._external_elements:
+            element.initialize()
 
+        self.components.external.Excels.clean()
+
+        # Initialize stateful elements
+        remaining = set(self._stateful_elements)
         while remaining:
             progress = set()
             for element in remaining:
@@ -373,6 +372,27 @@ class Macro(Stateful):
     def state(self, new_value):
         [component.update(val) for component, val in zip(self._stateful_elements, new_value)]
 
+    def get_coords(self, param):
+        """
+        Returns the the coordinates and dims of model element if it has,
+        otherwise returns None
+        >>> model.set_components('birth_rate')
+        >>> model.set_components('Birth Rate')
+        """
+        func_name = utils.get_value_by_insensitive_key_or_value(param,
+            self.components._namespace) or param
+
+        try:
+            # TODO: make this less fragile, may crash if the component
+            # takes arguments and is a xarray
+            value = getattr(self.components, func_name)()
+            dims = list(value.dims)
+            coords = {coord: list(value.coords[coord].values)
+                      for coord in value.coords}
+            return coords, dims
+        except Exception:
+            return None
+
     def set_components(self, params):
         """ Set the value of exogenous model elements.
         Element values can be passed as keyword=value pairs in the function call.
@@ -396,32 +416,71 @@ class Macro(Stateful):
         # with a pandas series being passed in as a dictionary element.
 
         for key, value in params.items():
+
+            func_name = utils.get_value_by_insensitive_key_or_value(key,
+                self.components._namespace)
+            try:
+                # TODO: make this less fragile, may crash if the component
+                # takes arguments and is an xarray
+                # can use the __doc__ but will not be backward compatible:
+                # dims = literal_eval(re.findall("Subs: .+",
+                # getattr(self.components, func_name).__doc__)[0][6:])
+                dims = getattr(self.components, func_name)().dims
+            except Exception:
+                dims = None
+
+            if isinstance(value, np.ndarray):
+                # TODO: Remove when we have no backward compatible update
+                warnings.warn('using numpy.array for setting subscripted '
+                              + 'variables is deprecated, use a '
+                              + 'xarray.DataArray with the correct '
+                              + 'dimensions instead (https://pysd.readthedocs.io/en/master/basic_usage.html)',
+                              DeprecationWarning, stacklevel=2)
+                coords = {dim: self.components._subscript_dict[dim]
+                          for dim in dims}
+                value = xr.DataArray(value, coords, dims)
+
+            if func_name is None:
+                raise NameError('%s is not recognized as a model component'
+                                % key)
+
             if isinstance(value, pd.Series):
-                new_function = self._timeseries_component(value)
+                new_function = self._timeseries_component(value, dims)
             elif callable(value):
                 new_function = value
             else:
-                new_function = self._constant_component(value)
+                new_function = self._constant_component(value, dims)
 
-            func_name = utils.get_value_by_insensitive_key_or_value(key, self.components._namespace)
-
-            if func_name is None:
-                raise NameError('%s is not recognized as a model component' % key)
-
-            if '_integ_' + func_name in dir(self.components):  # this won't handle other statefuls...
-                warnings.warn("Replacing the equation of stock {} with params".format(key),
+            # this won't handle other statefuls...
+            if '_integ_' + func_name in dir(self.components):
+                warnings.warn("Replacing the equation of stock"
+                              + "{} with params".format(key),
                               stacklevel=2)
 
             setattr(self.components, func_name, new_function)
 
-    def _timeseries_component(self, series):
+    def _timeseries_component(self, series, dims):
         """ Internal function for creating a timeseries model element """
-        # this is only called if the set_component function recognizes a pandas series
-        # Todo: raise a warning if extrapolating from the end of the series.
-        return lambda: np.interp(self.time(), series.index, series.values)
+        # this is only called if the set_component function recognizes a
+        # pandas series
+        # TODO: raise a warning if extrapolating from the end of the series.
+        if isinstance(series.values[0], xr.DataArray):
+            return lambda: utils.rearrange(xr.concat(series.values,
+                series.index).interp(concat_dim=self.time()).reset_coords(
+                'concat_dim', drop=True),dims, self.components._subscript_dict)
 
-    def _constant_component(self, value):
+        else:
+            if dims:
+                return lambda: utils.rearrange(np.interp(self.time(),
+                    series.index, series.values),
+                    dims, self.components._subscript_dict)
+            return lambda: np.interp(self.time(), series.index, series.values)
+
+    def _constant_component(self, value, dims):
         """ Internal function for creating a constant model element """
+        if dims:
+            return lambda: utils.rearrange(value, dims,
+                                           self.components._subscript_dict)
         return lambda: value
 
     def set_state(self, t, state):
@@ -434,23 +493,55 @@ class Macro(Stateful):
 
         state : dict
             A (possibly partial) dictionary of the system state.
-            The keys to this dictionary may be either pysafe names or original model file names
+            The keys to this dictionary may be either pysafe names or
+            original model file names
         """
         self.time.update(t)
+        self.components.cache.reset(t)
 
         for key, value in state.items():
             # TODO Implement map with reference between component and stateful element?
-            component_name = utils.get_value_by_insensitive_key_or_value(key, self.components._namespace)
+            component_name = utils.get_value_by_insensitive_key_or_value(key,
+                self.components._namespace)
             if component_name is not None:
                 stateful_name = '_integ_%s' % component_name
             else:
                 component_name = key
                 stateful_name = key
 
+            try:
+                # TODO make this less fragile (avoid using the __doc__)
+                if component_name[:7] == '_integ_':
+                    # we need to check the original expression to retrieve
+                    # the dimensions
+                    dims = literal_eval(re.findall("Subs: .+",
+                        getattr(self.components,
+                                component_name[7:]).__doc__)[0][6:])
+                else:
+                    dims = literal_eval(re.findall("Subs: .+",
+                        getattr(self.components,
+                                component_name).__doc__)[0][6:])
+            except Exception:
+                dims = None
+
+            if isinstance(value, np.ndarray):
+                # TODO: Remove when we have no backward compatible update
+                warnings.warn('using numpy.array for setting subscripted '
+                              + 'variables is deprecated, use a '
+                              + 'xarray.DataArray with the correct '
+                              + 'dimensions instead (https://pysd.readthedocs.io/en/master/basic_usage.html)',
+                              DeprecationWarning, stacklevel=2)
+                coords = {dim: self.components._subscript_dict[dim]
+                          for dim in dims}
+                value = xr.DataArray(value, coords, dims)
+
             # Try to update stateful component
             if hasattr(self.components, stateful_name):
                 try:
                     element = getattr(self.components, stateful_name)
+                    if dims:
+                        value = utils.rearrange(value, dims,
+                            self.components._subscript_dict)
                     element.update(value)
                 except AttributeError:
                     print("'%s' has no state elements, assignment failed")
@@ -458,22 +549,17 @@ class Macro(Stateful):
             else:
                 # Try to override component
                 try:
-                    setattr(self.components, component_name, self._constant_component(value))
+                    setattr(self.components, component_name,
+                            self._constant_component(value, dims))
                 except AttributeError:
                     print("'%s' has no component, assignment failed")
                     raise
 
-    def clear_caches(self):
-        """ Clears the Caches for all model elements """
-        for element_name in dir(self.components):
-            element = getattr(self.components, element_name)
-            if hasattr(element, 'cache_val'):
-                delattr(element, 'cache_val')
-
     def doc(self):
         """
-        Formats a table of documentation strings to help users remember variable names, and
-        understand how they are translated into python safe names.
+        Formats a table of documentation strings to help users remember
+        variable names, and understand how they are translated into
+        python safe names.
 
         Returns
         -------
@@ -487,22 +573,37 @@ class Macro(Stateful):
         collector = []
         for name, varname in self.components._namespace.items():
             try:
+                # TODO correct this when Original Eqn is in several lines
                 docstring = getattr(self.components, varname).__doc__
                 lines = docstring.split('\n')
-                collector.append({'Real Name': name,
-                                  'Py Name': varname,
-                                  'Eqn': lines[2].replace("Original Eqn:", "").strip(),
-                                  'Unit': lines[3].replace("Units:", "").strip(),
-                                  'Lims': lines[4].replace("Limits:", "").strip(),
-                                  'Type': lines[5].replace("Type:", "").strip(),
-                                  'Comment': '\n'.join(lines[7:]).strip()})
-            except:
+
+                for unit_line in range(3, 9):
+                    # this loop detects where Units: starts as
+                    # sometimes eqn could be split in several lines
+                    if re.findall('Units: ', lines[unit_line]):
+                        break
+                if unit_line == 3:
+                    eqn = lines[2].replace("Original Eqn:", "").strip()
+                else:
+                    eqn = '; '.join([l.strip() for l in lines[3:unit_line]])
+
+                collector.append(
+                    {'Real Name': name,
+                     'Py Name': varname,
+                     'Eqn': eqn,
+                     'Unit': lines[unit_line].replace("Units:", "").strip(),
+                     'Lims': lines[unit_line+1].replace("Limits:", "").strip(),
+                     'Type': lines[unit_line+2].replace("Type:", "").strip(),
+                     'Subs': lines[unit_line+3].replace("Subs:", "").strip(),
+                     'Comment': '\n'.join(lines[(unit_line+4):]).strip()})
+            except Exception:
                 pass
 
         docs_df = _pd.DataFrame(collector)
         docs_df.fillna('None', inplace=True)
 
-        order = ['Real Name', 'Py Name', 'Unit', 'Lims', 'Type', 'Eqn', 'Comment']
+        order = ['Real Name', 'Py Name', 'Unit', 'Lims',
+                 'Type', 'Subs', 'Eqn', 'Comment']
         return docs_df[order].sort_values(by='Real Name').reset_index(drop=True)
 
     def __str__(self):
@@ -543,7 +644,7 @@ class Model(Macro):
         super(Model, self).__init__(py_model_file, None, None, Time())
         self.time.stage = 'Load'
         self.initialize()
-        
+
     def initialize(self):
         """ Initializes the simulation model """
         self.time.update(self.components.initial_time())
@@ -666,7 +767,6 @@ class Model(Macro):
 
         if params:
             self.set_components(params)
-
         self.set_initial_condition(initial_condition)
 
         return_timestamps = self._format_return_timestamps(return_timestamps)
@@ -677,7 +777,7 @@ class Model(Macro):
             return_columns = self._default_return_columns()
 
         self.time.stage = 'Run'
-        self.clear_caches()
+        self.components.cache.clean()
 
         capture_elements, return_addresses = utils.get_return_elements(
             return_columns, self.components._namespace, self.components._subscript_dict)
@@ -791,6 +891,7 @@ class Model(Macro):
                 outputs.append({key: getattr(self.components, key)() for key in capture_elements})
             self._euler_step(t2 - self.time())
             self.time.update(t2)  # this will clear the stepwise caches
+            self.components.cache.reset(t2)
 
         # need to add one more time step, because we run only the state updates in the previous
         # loop and thus may be one short.
@@ -883,19 +984,19 @@ def pulse_train(time, start, duration, repeat_time, end):
 
 def pulse_magnitude(time, magnitude, start, repeat_time=0):
     """ Implements xmile's PULSE function
-    
+
     PULSE:             Generate a one-DT wide pulse at the given time
        Parameters:     2 or 3:  (magnitude, first time[, interval])
                        Without interval or when interval = 0, the PULSE is generated only once
        Example:        PULSE(20, 12, 5) generates a pulse value of 20/DT at time 12, 17, 22, etc.
-    
+
     In rage [-inf, start) returns 0
     In range [start + n * repeat_time, start + n * repeat_time + dt) return magnitude/dt
     In rage [start + n * repeat_time + dt, start + (n + 1) * repeat_time) return 0
+
     """
     t = time()
-    small = 1e-6  # What is considered zero according to Vensim Help
-    if repeat_time <= small:
+    if repeat_time <= small_vensim:
         if abs(t - start) < time.step():
             return magnitude * time.step()
         else:
@@ -914,23 +1015,24 @@ def lookup(x, xs, ys):
     """
     return np.interp(x, xs, ys)
 
+
 def lookup_extrapolation(x, xs, ys):
     """
     Intermediate values are calculated with linear interpolation between the intermediate points.
     Out-of-range values are calculated with linear extrapolation from the last two values at either end.
     """
-    length = len(xs)
     if x < xs[0]:
         dx = xs[1] - xs[0]
         dy = ys[1] - ys[0]
         k = dy / dx
         return ys[0] + (x - xs[0]) * k
-    if x > xs[length - 1]:
-        dx = xs[length - 1] - xs[length - 2]
-        dy = ys[length - 1] - ys[length - 2]
+    if x > xs[-1]:
+        dx = xs[-1] - xs[-2]
+        dy = ys[-1] - ys[-2]
         k = dy / dx
-        return ys[length - 1] + (x - xs[length - 1]) * k
+        return ys[-1] + (x - xs[-1]) * k
     return np.interp(x, xs, ys)
+
 
 def lookup_discrete(x, xs, ys):
     """
@@ -940,11 +1042,30 @@ def lookup_discrete(x, xs, ys):
     for index in range(0, len(xs)):
         if x < xs[index]:
             return ys[index - 1] if index > 0 else ys[index]
-    return ys[len(ys) - 1]
+    return ys[-1]
 
 
 def if_then_else(condition, val_if_true, val_if_false):
-    return np.where(condition, val_if_true, val_if_false)
+    """
+    Implements Vensim's IF THEN ELSE function.
+
+    Parameters
+    ----------
+    condition: bool or xarray.DataArray of bools
+    val_if_true: float/bool or xarray.DataArray
+        Value to return when condition is true.
+    val_if_false: float/bool or xarray.DataArray
+        Value to return when condition is false.
+
+    Returns
+    -------
+    The value depending on the condition.
+    """
+    # TODO lazzy evaluation
+    if isinstance(condition, xr.DataArray):
+        return xr.where(condition, val_if_true, val_if_false)
+
+    return val_if_true if condition else val_if_false
 
 
 def xidz(numerator, denominator, value_if_denom_is_zero):
@@ -955,19 +1076,24 @@ def xidz(numerator, denominator, value_if_denom_is_zero):
 
     Parameters
     ----------
-    numerator: float
-    denominator: float
+    numerator: float or xarray.DataArray
+    denominator: float or xarray.DataArray
         Components of the division operation
-    value_if_denom_is_zero: float
+    value_if_denom_is_zero: float or xarray.DataArray
         The value to return if the denominator is zero
 
     Returns
     -------
     numerator / denominator if denominator > 1e-6
     otherwise, returns value_if_denom_is_zero
+
     """
-    small = 1e-6  # What is considered zero according to Vensim Help
-    if abs(denominator) < small:
+    if isinstance(denominator, xr.DataArray):
+        return xr.where(np.abs(denominator) < small_vensim,
+                        value_if_denom_is_zero,
+                        numerator * 1.0 / denominator)
+
+    if abs(denominator) < small_vensim:
         return value_if_denom_is_zero
     else:
         return numerator * 1.0 / denominator
@@ -980,19 +1106,23 @@ def zidz(numerator, denominator):
 
     Parameters
     ----------
-    numerator: float
+    numerator: float or xarray.DataArray
         value to be divided
-    denominator: float
+    denominator: float or xarray.DataArray
         value to devide by
 
     Returns
     -------
     result of division numerator/denominator if denominator is not zero,
     otherwise zero.
+
     """
-    # Todo: make this work for arrays
-    small = 1e-6  # What is considered zero according to Vensim Help
-    if abs(denominator) < small:
+    if isinstance(denominator, xr.DataArray):
+        return xr.where(np.abs(denominator) < small_vensim,
+                        0,
+                        numerator * 1.0 / denominator)
+
+    if abs(denominator) < small_vensim:
         return 0
     else:
         return numerator * 1.0 / denominator
@@ -1019,6 +1149,7 @@ def active_initial(time, expr, init_val):
 
 
 def random_uniform(m, x, s):
+    # TODO document
     return np.random.uniform(m, x)
 
 
@@ -1031,10 +1162,117 @@ def incomplete(*args):
 
 def log(x, base):
     """
-    Implements vensim's LOG function with change of base
+    Implements Vensim's LOG function with change of base
+
     Parameters
     ----------
     x: input value
     base: base of the logarithm
+
+    Returns
+    -------
+    float
+      the log of 'x' in base 'base'
     """
     return np.log(x) / np.log(base)
+
+
+def sum(x, dim=None):
+    """
+    Implements Vensim's SUM function
+
+    Parameters
+    ----------
+    x: xarray.DataArray
+      Input value
+    dim: list of strs (optional)
+      Dimensions to apply the function over.
+      If not given the function will be applied over all dimensions
+
+    Returns
+    -------
+    xarray.DataArray or float
+      The result of the sum operation in the given dimensions
+
+    """
+    # float returned if the function is applied over all the dimensions
+    if dim is None or set(x.dims) == set(dim):
+        return float(x.sum())
+
+    return x.sum(dim=dim)
+
+
+def prod(x, dim=None):
+    """
+    Implements Vensim's PROD function
+
+    Parameters
+    ----------
+    x: xarray.DataArray
+      Input value
+    dim: list of strs (optional)
+      Dimensions to apply the function over.
+      If not given the function will be applied over all dimensions
+
+    Returns
+    -------
+    xarray.DataArray or float
+      The result of the product operation in the given dimensions
+
+    """
+    # float returned if the function is applied over all the dimensions
+    if dim is None or set(x.dims) == set(dim):
+        return float(x.prod())
+
+    return x.prod(dim=dim)
+
+
+def vmin(x, dim=None):
+    """
+    Implements Vensim's Vmin function
+
+    Parameters
+    ----------
+    x: xarray.DataArray
+      Input value
+    dim: list of strs (optional)
+      Dimensions to apply the function over.
+      If not given the function will be applied over all dimensions
+
+    Returns
+    -------
+    xarray.DataArray or float
+      The result of the minimum value over the given dimensions
+
+    """
+    # float returned if the function is applied over all the dimensions
+    if dim is None or set(x.dims) == set(dim):
+        return float(x.min())
+
+    return x.min(dim=dim)
+
+
+def vmax(x, dim=None):
+    """
+    Implements Vensim's VMAX function
+
+    Parameters
+    ----------
+    x: xarray.DataArray
+      Input value
+    dim: list of strs (optional)
+      Dimensions to apply the function over.
+      If not given the function will be applied over all dimensions
+
+    Returns
+    -------
+    xarray.DataArray or float
+      The result of the maximum value over the dimensions
+
+    """
+    # float returned if the function is applied over all the dimensions
+    if dim is None or set(x.dims) == set(dim):
+        return float(x.max())
+
+    return x.max(dim=dim)
+

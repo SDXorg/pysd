@@ -1,0 +1,5 @@
+# reading subscript sum/special characters (requires python 3.6+)
+black
+
+# loading GET XLS/DATA using cellrange names (requires python 3.6+)
+openpyxl

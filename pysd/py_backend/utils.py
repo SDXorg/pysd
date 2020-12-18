@@ -1,37 +1,15 @@
+"""
+These are general utilities used by the builder.py, functions.py or the
+model file. Vensim's function equivalents should not go here but in
+functions.py
+"""
+
 import keyword
 import regex as re
 
 import numpy as np
 import pandas as pd
 import xarray as xr
-
-
-def dict_find(in_dict, value):
-    """ Helper function for looking up directory keys by their values.
-     This isn't robust to repeated values
-
-    Parameters
-    ----------
-    in_dict : dictionary
-        A dictionary containing `value`
-
-    value : any type
-        What we wish to find in the dictionary
-
-    Returns
-    -------
-    key: basestring
-        The key at which the value can be found
-
-    Examples
-    --------
-    >>> dict_find({'Key1': 'A', 'Key2': 'B'}, 'B')
-    'Key2'
-
-    """
-    # Todo: make this robust to repeated values
-    # Todo: make this robust to missing values
-    return list(in_dict.keys())[list(in_dict.values()).index(value)]
 
 
 def xrmerge(das, accept_new=True):
@@ -95,20 +73,21 @@ def find_subscript_name(subscript_dict, element):
 
 def make_coord_dict(subs, subscript_dict, terse=True):
     """
-    This is for assisting with the lookup of a particular element, such that the output
-    of this function would take the place of %s in this expression
+    This is for assisting with the lookup of a particular element, such that
+    the output of this function would take the place of %s in this expression
 
     `variable.loc[%s]`
 
     Parameters
     ----------
     subs: list of strings
-        coordinates, either as names of dimensions, or positions within a dimension
+        coordinates, either as names of dimensions, or positions within
+        a dimension
     subscript_dict: dict
         the full dictionary of subscript names and values
     terse: Binary Flag
-        - If true, includes only elements that do not cover the full range of values in their
-          respective dimension
+        - If true, includes only elements that do not cover the full range of
+          values in their respective dimension
         - If false, returns all dimensions
 
     Returns
@@ -261,22 +240,28 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
     s = re.sub('[\\s\\t\\n]+', '_', s)
 
     if convert == 'hex':
-        # Convert invalid characters to hex. Note: \p{l} designates all Unicode letter characters (any language),
-        # \p{m} designates all mark symbols (e.g., vowel marks in Indian scrips, such as the final)
-        # and \p{n} designates all numbers. We allow any of these to be present in the regex.
-        s = ''.join([c.encode("hex") if re.findall('[^\p{l}\p{m}\p{n}_]', c) else c for c in s])
+        # Convert invalid characters to hex. Note: \p{l} designates all
+        # Unicode letter characters (any language), \p{m} designates all
+        # mark symbols (e.g., vowel marks in Indian scrips, such as the final)
+        # and \p{n} designates all numbers. We allow any of these to be
+        # present in the regex.
+        s = ''.join([c.encode("hex") if re.findall('[^\p{l}\p{m}\p{n}_]', c)
+                     else c for c in s])
 
     elif convert == 'drop':
         # Remove invalid characters
         s = re.sub('[^\p{l}\p{m}\p{n}_]', '', s)
 
-    # Remove leading characters until we find a letter or underscore. Only letters can be leading characters.
+    # TODO: we should make all the identifiers start by a letter, and let
+    # the _ only for stateful and external elements (_integ_name...)
+    # Remove leading characters until we find a letter or underscore.
+    # Only letters can be leading characters.
     s = re.sub('^[^\p{l}_]+', '', s)
 
     # Check that the string is not a python identifier
     while (s in keyword.kwlist or
-                   s in namespace.values() or
-                   s in reserved_words):
+           s in namespace.values() or
+           s in reserved_words):
         if handle == 'throw':
             raise NameError(s + ' already exists in namespace or is a reserved word')
         if handle == 'force':
@@ -289,6 +274,43 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
     namespace[string] = s
 
     return s, namespace
+
+
+def make_add_identifier(identifier, build_names):
+    """
+    Takes an existing used Python identifier and attatch a unique
+    identifier with ADD_# ending.
+
+    Used for add new information to an existing external object.
+    build_names will be updated inside this functions as a set
+    is mutable.
+
+    Parameters
+    ----------
+    string : <basestring>
+      Existing python identifier
+    build_names : <set>
+      Set of the already used identifiers for external objects.
+
+    Returns
+    -------
+    identifier : <string>
+      A vaild python identifier based on the input indentifier
+      and the existing ones
+    """
+    identifier += 'ADD_'
+    number = 1
+    # iterate until finding a non-used identifier
+    while identifier + str(number) in build_names:
+        number += 1
+
+    # update identifier
+    identifier += str(number)
+
+    # update the build names
+    build_names.add(identifier)
+
+    return identifier
 
 
 def get_return_elements(return_columns, namespace, subscript_dict):
@@ -317,14 +339,16 @@ def get_return_elements(return_columns, namespace, subscript_dict):
     capture_elements = list()
     return_addresses = dict()
     for col in return_columns:
-        if '[' in col:
+        if col[0] == col[-1] and col[0] == '"':
+            name = col
+            address = None
+        elif '[' in col:
             name, location = col.strip(']').split('[')
-            subs = [l.strip() for l in location.split(',')]
-            address = make_coord_dict(subs, subscript_dict)
+            address = tuple([loc.strip() for loc in location.split(',')])
         else:
             name = col
-            address = {}
-        
+            address = None
+
         if name in namespace:
             py_name = namespace[name]
         else:
@@ -332,20 +356,20 @@ def get_return_elements(return_columns, namespace, subscript_dict):
                 py_name = name
             else:
                 raise KeyError(name + " not found as model element")
-        
+
         if py_name not in capture_elements:
             capture_elements += [py_name]
 
         return_addresses[col] = (py_name, address)
-            
+
     return list(capture_elements), return_addresses
 
 
 def make_flat_df(frames, return_addresses):
     """
     Takes a list of dictionaries, each representing what is returned from the
-    model at a particular time, and creates a dataframe whose columns correspond
-    to the keys of `return addresses`
+    model at a particular time, and creates a dataframe whose columns
+    correspond to the keys of `return addresses`
 
     Parameters
     ----------
@@ -354,8 +378,8 @@ def make_flat_df(frames, return_addresses):
     return_addresses: a dictionary,
         keys will be column names of the resulting dataframe, and are what the
         user passed in as 'return_columns'. Values are a tuple:
-        (py_name, {coords dictionary}) which tells us where to look for the value
-        to put in that specific column.
+        (py_name, {coords dictionary}) which tells us where to look for the
+        value to put in that specific column.
 
     Returns
     -------
@@ -379,8 +403,8 @@ def visit_addresses(frame, return_addresses):
     return_addresses: a dictionary,
         keys will be column names of the resulting dataframe, and are what the
         user passed in as 'return_columns'. Values are a tuple:
-        (py_name, {coords dictionary}) which tells us where to look for the value
-        to put in that specific column.
+        (py_name, {coords dictionary}) which tells us where to look for the
+        value to put in that specific column.
 
     Returns
     -------
@@ -401,6 +425,62 @@ def visit_addresses(frame, return_addresses):
     return outdict
 
 
+def compute_shape(coords, dims, reshape_len=None, py_name=''):
+    """
+    Computes the 'shape' of a coords dictionary.
+    Function used to rearange data in xarrays and
+    to compute the number of rows/columns to be read in a file.
+
+    Parameters
+    ----------
+    coords: dict
+      Dictionary of the dimension names as a keys with their values.
+    dims: list
+      Ordered list of the dimensions.
+    reshape_len: int (optional)
+      Number of dimensions of the output shape.
+      The shape will ony compute the corresponent table
+      dimensions to read from Excel, then, the dimensions
+      with length one will be ignored at first.
+      Lately, it will complete with 1 on the left of the shape
+      if the reshape_len value is bigger than the length of shape.
+      Will raise a ValueError if we try to reshape to a reshape_len
+      smaller than the initial shape.
+    py_name: str
+      Name to print if an error is raised.
+
+    Returns
+    -------
+    shape: list
+      Shape of the ordered dictionary or of the desired table or vector
+
+    Note
+    ----
+    Dictionaries in Python >= 3.7 are ordered, which means that
+    we could remove dims if there is a not backward compatible
+    version of the library which only works in Python 3.7+. For now,
+    the dimensions list is passed to make it work properly for all the users.
+
+    """
+    if not reshape_len:
+        return [len(coords[dim]) for dim in dims]
+
+    # get the shape of the coordinates bigger than 1
+    shape = [len(coords[dim]) for dim in dims if len(coords[dim]) > 1]
+
+    shape_len = len(shape)
+
+    # return an error when the current shape is bigger than the requested one
+    if shape_len > reshape_len:
+        raise ValueError(py_name + "\n"
+                         + "The shape of the coords to read in a "
+                         + " external file must be at most "
+                         + "{} dimensional".format(reshape_len))
+
+    # complete with 1s on the left
+    return [1]*(reshape_len-shape_len) + shape
+
+
 def get_value_by_insensitive_key_or_value(key, dict):
     lower_key = key.lower()
     for real_key, real_value in dict.items():
@@ -410,3 +490,78 @@ def get_value_by_insensitive_key_or_value(key, dict):
             return real_value
 
     return None
+
+
+def rearrange(data, dims, coords):
+    """
+    Returns a xarray.DataArray object with the given coords and dims
+
+    Parameters
+    ---------
+      data: float or xarray.DataArray
+        The input data to rearrange.
+      dims: list
+        Ordered list of the dimensions.
+      coords: dict
+        Dictionary of the dimension names as a keys with their values.
+      switch: bool
+        Flag to denote if the dimensions can be switched. Default True,
+        The False is used to rearrange general expressions
+
+    Returns
+    -------
+      xarray.DataArray
+
+    """
+    # subset used coords in general coords will be the subscript_dict
+    coords = {dim: coords[dim] for dim in dims}
+    if isinstance(data, xr.DataArray):
+        if data.shape == tuple(compute_shape(coords, dims)):
+            # Allows switching dimensions names and transpositions
+            return xr.DataArray(data=data.values, coords=coords, dims=dims)
+
+        # The coordinates are expanded or transposed
+        # TODO replace cleaner version for Python 3 (when deprecate Py2)
+        # return xr.DataArray(0, coords, dims)
+        return xr.DataArray(np.zeros(compute_shape(coords, dims)),
+                            coords, dims) + data
+
+    else:
+        # TODO replace cleaner version for Python 3 (when deprecate Py2)
+        # return xr.DataArray(float(data), coords, dims)
+        return xr.DataArray(np.full(compute_shape(coords, dims),
+                                    float(data)), coords, dims)
+
+
+def round_(x):
+    """
+    Redefinition of round function to make it work with floats and xarrays
+    """
+    if isinstance(x, xr.DataArray):
+        return x.round()
+
+    return round(x)
+
+
+def add_entries_underscore(*dictionaries):
+    """
+    Expands dictionaries adding new keys underscoring the white spaces
+    in the old ones. As the dictionaries are mutable objects this functions
+    will add the new entries to the already existing dictionaries with
+    no need to return a new one.
+
+    Parameters
+    ----------
+    *dictionaries: Dictionary or dictionaries
+        The dictionary or dictionaries to add the entries with underscore.
+
+    Return
+    ------
+    None
+
+    """
+    for dictionary in dictionaries:
+        keys = list(dictionary)
+        for name in keys:
+            dictionary[re.sub(' ', '_', name)] = dictionary[name]
+    return
