@@ -1008,20 +1008,25 @@ def if_then_else(condition, val_if_true, val_if_false):
     Parameters
     ----------
     condition: bool or xarray.DataArray of bools
-    val_if_true: float/bool or xarray.DataArray
-        Value to return when condition is true.
-    val_if_false: float/bool or xarray.DataArray
-        Value to return when condition is false.
+    val_if_true: function
+        Value to evaluate and return when condition is true.
+    val_if_false: function
+        Value to evaluate and return when condition is false.
 
     Returns
     -------
     The value depending on the condition.
-    """
-    # TODO lazzy evaluation
-    if isinstance(condition, xr.DataArray):
-        return xr.where(condition, val_if_true, val_if_false)
 
-    return val_if_true if condition else val_if_false
+    """
+    if isinstance(condition, xr.DataArray):
+        if condition.all():
+            return val_if_true()
+        elif not condition.any():
+            return val_if_false()
+
+        return xr.where(condition, val_if_true(), val_if_false())
+
+    return val_if_true() if condition else val_if_false()
 
 
 def xidz(numerator, denominator, value_if_denom_is_zero):

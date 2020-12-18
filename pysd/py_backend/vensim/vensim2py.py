@@ -420,7 +420,14 @@ functions = {
     "tanh": "np.tanh",
     "sinh": "np.sinh",
     "cosh": "np.cosh",
-    "if then else": "functions.if_then_else",
+    "if then else": {
+        "name": "functions.if_then_else",
+        "parameters": [
+            {"name": 'condition'},
+            {"name": 'val_if_true', "type": 'lambda'},
+            {"name": 'val_if_false', "type": 'lambda'}
+        ]
+    },
     "step": {
         "name": "functions.step",
         "parameters": [

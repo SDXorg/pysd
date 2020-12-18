@@ -999,7 +999,7 @@ def build_function_call(function_def, user_arguments):
 
             arguments.append({
                                  "expression": user_argument,
-                                 "lambda": "lambda: (" + user_argument + ")",
+                                 "lambda": "lambda: " + user_argument,
                                  "time": "__data['time']",
                                  "scope": "__data['scope']"
                              }[parameter_type])

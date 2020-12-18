@@ -128,26 +128,61 @@ class TestLogicFunctions(unittest.TestCase):
     def test_if_then_else_basic(self):
         """ If Then Else function"""
         import pysd
-        self.assertEqual(pysd.functions.if_then_else(True, 1, 0), 1)
-        self.assertEqual(pysd.functions.if_then_else(False, 1, 0), 0)
+        self.assertEqual(pysd.functions.if_then_else(True,
+            lambda: 1, lambda: 0), 1)
+        self.assertEqual(pysd.functions.if_then_else(False,
+            lambda: 1, lambda: 0), 0)
 
-    @unittest.skip('Not Yet Implemented')
-    def test_if_then_else_with_subscripted_output(self):
-        """ We may have a subscripted value passed as an output """
-        self.fail()
+        # Ensure lazzy evaluation
+        self.assertEqual(pysd.functions.if_then_else(True,
+            lambda: 1, lambda: 1/0), 1)
+        self.assertEqual(pysd.functions.if_then_else(False,
+            lambda: 1/0, lambda: 0), 0)
 
-    @unittest.skip('Not Yet Implemented')
-    def test_if_then_else_with_subscripted_input_basic_output(self):
-        """ What do we do if the expression yields a subscripted array of true and false values,
-         and the output options are singular?"""
-        self.fail()
+        with self.assertRaises(ZeroDivisionError):
+            pysd.functions.if_then_else(True, lambda: 1/0, lambda: 0)
+        with self.assertRaises(ZeroDivisionError):
+            pysd.functions.if_then_else(False, lambda: 1, lambda: 1/0)
 
-    @unittest.skip('Not Yet Implemented')
-    def test_if_then_else_with_subscripted_input_output(self):
-        """ What do we do if the expression yields a subscripted array of true and false values,
-        and the output values are subscripted? """
-        self.fail()
+    def test_if_then_else_with_subscripted(self):
+        # this test only test the lazzy evaluation and basics
+        # subscripted_if_then_else test all the possibilities
 
+        import pysd
+        import xarray as xr
+
+        coords = {'dim1': [0, 1], 'dim2': [0, 1]}
+        dims = list(coords)
+
+        xr_true = xr.DataArray([[True, True], [True, True]], coords, dims)
+        xr_false = xr.DataArray([[False, False], [False, False]], coords, dims)
+        xr_mixed = xr.DataArray([[True, False], [False, True]], coords, dims)
+
+        out_true = xr.DataArray([[1, 1], [1, 1]], coords, dims)
+        out_false = xr.DataArray([[0, 0], [0, 0]], coords, dims)
+        out_mixed = xr.DataArray([[1, 0], [0, 1]], coords, dims)
+
+        self.assertEqual(pysd.functions.if_then_else(xr_true,
+            lambda: 1, lambda: 0), 1)
+        self.assertEqual(pysd.functions.if_then_else(xr_false,
+            lambda: 1, lambda: 0), 0)
+        self.assertTrue(pysd.functions.if_then_else(xr_mixed,
+            lambda: 1, lambda: 0).equals(out_mixed))
+
+        # Ensure lazzy evaluation
+        self.assertEqual(pysd.functions.if_then_else(xr_true,
+            lambda: 1, lambda: 1/0), 1)
+        self.assertEqual(pysd.functions.if_then_else(xr_false,
+            lambda: 1/0, lambda: 0), 0)
+
+        with self.assertRaises(ZeroDivisionError):
+            pysd.functions.if_then_else(xr_true, lambda: 1/0, lambda: 0)
+        with self.assertRaises(ZeroDivisionError):
+            pysd.functions.if_then_else(xr_false,  lambda: 1, lambda: 1/0)
+        with self.assertRaises(ZeroDivisionError):
+            pysd.functions.if_then_else(xr_mixed,  lambda: 1/0, lambda: 0)
+        with self.assertRaises(ZeroDivisionError):
+            pysd.functions.if_then_else(xr_mixed,  lambda: 1, lambda: 1/0)
 
 class TestLookup(unittest.TestCase):
     def test_lookup(self):

@@ -94,7 +94,14 @@ functions = {
     # 3.5.6 Miscellaneous Functions
     # http://docs.oasis-open.org/xmile/xmile/v1.0/csprd01/xmile-v1.0-csprd01.html#_Toc398039985
     # ===
-    "if_then_else": "functions.if_then_else",
+   "if then else": {
+        "name": "functions.if_then_else",
+        "parameters": [
+            {"name": 'condition'},
+            {"name": 'val_if_true', "type": 'lambda'},
+            {"name": 'val_if_false', "type": 'lambda'}
+        ]
+    },
     # "previous" !TODO!
     # "self" !TODO!
 }
@@ -260,7 +267,7 @@ class SMILEParser(NodeVisitor):
 
     def visit_conditional_statement(self, n, vc):
         _IF, _1, condition_expr, _2, _THEN, _3, then_expr, _4, _ELSE, _5, else_expr = vc
-        return "functions.if_then_else(" + condition_expr + ", " + then_expr + ", " + else_expr + ")"
+        return "functions.if_then_else(" + condition_expr + ", lambda: " + then_expr + ", lambda: " + else_expr + ")"
         
     def visit_user_call_identifier(self, n, vc):
         return self.extended_model_namespace[n.text]
