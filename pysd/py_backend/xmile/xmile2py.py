@@ -6,7 +6,6 @@ James Houghton <james.p.houghton@gmail.com>
 Alexey Prey Mulyukin <alexprey@yandex.ru> from sdCloud.io development team.
 
 """
-from __future__ import absolute_import
 from .SMILE2Py import SMILEParser
 from lxml import etree
 from ...py_backend import builder, utils

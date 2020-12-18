@@ -3,7 +3,7 @@ import textwrap
 from unittest import TestCase
 
 import numpy as np
-from pysd.py_backend.functions import cache
+from pysd import cache
 from numbers import Number
 import xarray as xr
 
@@ -71,7 +71,7 @@ class TestBuild(TestCase):
                              'doc': '',
                              'py_name': 'stocka',
                              'real_name': 'StockA',
-                             'py_expr': ["_state['stocka']"],
+                             'py_expr': "_state['stocka']",
                              'eqn': '',
                              'lims': '',
                              'unit': '',
@@ -81,7 +81,7 @@ class TestBuild(TestCase):
                              'doc': 'Provides derivative for stocka function',
                              'py_name': '_dstocka_dt',
                              'real_name': 'Implicit',
-                             'py_expr': ['flowa()'],
+                             'py_expr': 'flowa()',
                              'unit': 'See docs for stocka',
                              'eqn': '',
                              'lims': '',
@@ -91,7 +91,7 @@ class TestBuild(TestCase):
                              'doc': 'Provides initial conditions for stocka function',
                              'py_name': 'init_stocka',
                              'real_name': 'Implicit',
-                             'py_expr': ['-10'],
+                             'py_expr': '-10',
                              'unit': 'See docs for stocka',
                              'eqn': '',
                              'lims': '',
@@ -100,8 +100,8 @@ class TestBuild(TestCase):
                   subscript_dict={'Dim1': ['A', 'B', 'C']},
                   outfile_name='return'))
 
-        self.assertIn("_subscript_dict = {'Dim1': ['A', 'B', 'C']}", actual)
-        self.assertIn("_namespace = {'StockA': 'stocka'}", actual)
+        self.assertIn('_subscript_dict = {"Dim1": ["A", "B", "C"]}', actual)
+        self.assertIn('_namespace = {"StockA": "stocka"}', actual)
 
 
 class TestMergePartialElements(TestCase):

@@ -9,16 +9,13 @@ There should be nothing here that has to know about either vensim or
 xmile specific syntax.
 """
 
-from __future__ import absolute_import
-
-import sys
 import os.path
 import textwrap
 import warnings
 from io import open
 
 import pkg_resources
-import yapf
+import black
 
 from . import utils
 
@@ -102,20 +99,9 @@ def build(elements, subscript_dict, namespace, outfile_name):
            'outfile': os.path.basename(outfile_name),
            'version': __version__}
 
-    style_file = pkg_resources.resource_filename("pysd", "py_backend/output_style.yapf")
     text = text.replace('\t', '    ')
-    try:
-        text, changed = yapf.yapf_api.FormatCode(textwrap.dedent(text),
-                                                 style_config=style_file)
-    except Exception:
-        # This is unfortunate but necessary because yapf is apparently not
-        # compliant with PEP 3131 (https://www.python.org/dev/peps/pep-3131/)
-        # Alternatively we could skip formatting altogether,
-        # or replace yapf with black for all cases?
-
-        import black
-        text = black.format_file_contents(textwrap.dedent(text), fast=True,
-                                          mode=black.FileMode())
+    text = black.format_file_contents(textwrap.dedent(text), fast=True,
+                                      mode=black.FileMode())
 
     # this is needed if more than one model are translated in the same session
     build_names.clear()
@@ -176,10 +162,9 @@ def build_element(element, subscript_dict):
           enumerate(zip(element['py_expr'], element['subs'])):
             if py_expr_no_ADD[i] and py_expr_no_ADD[i+1]:
                 # rearrange if the element doesn't come from external
-                dims = [utils.find_subscript_name(subscript_dict, sub)
-                        for sub in subs]
                 coords = utils.make_coord_dict(subs, subscript_dict,
                                                terse=False)
+                dims = list(coords)
                 py_expr_i.append('utils.rearrange(%s, %s, %s)' % (
                     py_expr, dims, coords))
             elif py_expr_no_ADD[i] and not py_expr_no_ADD[i+1]:
@@ -222,17 +207,6 @@ def build_element(element, subscript_dict):
                                                  # indent lines 2 onward
 
     element['doc'] = element['doc'].replace('\\', '\n    ')
-
-    if sys.version_info[0] == 2:
-        # TODO remove when we stop supporting Python2 (rm 'import sys' also)
-        # avoiding the encode prints well all the symbols in the documentation
-        element['doc'] = element['doc'].encode('unicode-escape')
-        if 'unit' in element:
-            element['unit'] = element['unit'].encode('unicode-escape')
-        if 'real_name' in element:
-            element['real_name'] = element['real_name'].encode('unicode-escape')
-        if 'eqn' in element:
-            element['eqn'] = [e.encode('unicode-escape') for e in element['eqn']]
 
     if element['kind'] in ['stateful', 'external']:
         func = '''
@@ -742,7 +716,6 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell,
 
     """
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
-    dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
     keyword = "'%s'" % keyword.strip(':').lower()\
               if isinstance(keyword, str) else keyword
     name = utils.make_python_identifier('_ext_data_%s' % identifier)[0]
@@ -755,13 +728,13 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell,
         # with add method.
         kind = 'external_add'
         name = utils.make_add_identifier(name, build_names)
-        py_expr = '.add(%s, %s, %s, %s, %s, %s, %s)'
+        py_expr = '.add(%s, %s, %s, %s, %s, %s)'
     else:
         # Regular name will be used and a new object will be created
         # in the model file.
         build_names.add(name)
         kind = 'external'
-        py_expr = 'external.ExtData(%s, %s, %s, %s, %s, %s, %s,'\
+        py_expr = 'external.ExtData(%s, %s, %s, %s, %s, %s,'\
                   '                 _root, \'{}\')'.format(name)
 
     external = {
@@ -769,7 +742,7 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell,
         'real_name': 'External data for %s' % identifier,
         'doc': 'Provides data for data variable %s' % identifier,
         'py_expr': py_expr % (file_name, tab, time_row_or_col,
-                              cell, keyword, coords, dims),
+                              cell, keyword, coords),
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',
@@ -813,7 +786,6 @@ def add_ext_constant(identifier, file_name, tab, cell,
 
     """
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
-    dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
     name = utils.make_python_identifier('_ext_constant_%s' % identifier)[0]
 
     # Check if the object already exists
@@ -824,12 +796,12 @@ def add_ext_constant(identifier, file_name, tab, cell,
         # with add method.
         kind = 'external_add'
         name = utils.make_add_identifier(name, build_names)
-        py_expr = '.add(%s, %s, %s, %s, %s)'
+        py_expr = '.add(%s, %s, %s, %s)'
     else:
         # Regular name will be used and a new object will be created
         # in the model file.
         kind = 'external'
-        py_expr = 'external.ExtConstant(%s, %s, %s, %s, %s,'\
+        py_expr = 'external.ExtConstant(%s, %s, %s, %s,'\
                   '                     _root, \'{}\')'.format(name)
     build_names.add(name)
 
@@ -837,7 +809,7 @@ def add_ext_constant(identifier, file_name, tab, cell,
         'py_name': name,
         'real_name': 'External constant for %s' % identifier,
         'doc': 'Provides data for constant data variable %s' % identifier,
-        'py_expr': py_expr % (file_name, tab, cell, coords, dims),
+        'py_expr': py_expr % (file_name, tab, cell, coords),
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',
@@ -883,7 +855,6 @@ def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell,
 
     """
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
-    dims = [utils.find_subscript_name(subscript_dict, sub) for sub in subs]
     name = utils.make_python_identifier('_ext_lookup_%s' % identifier)[0]
 
     # Check if the object already exists
@@ -894,12 +865,12 @@ def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell,
         # with add method.
         kind = 'external_add'
         name = utils.make_add_identifier(name, build_names)
-        py_expr = '.add(%s, %s, %s, %s, %s, %s)'
+        py_expr = '.add(%s, %s, %s, %s, %s)'
     else:
         # Regular name will be used and a new object will be created
         # in the model file.
         kind = 'external'
-        py_expr = 'external.ExtLookup(%s, %s, %s, %s, %s, %s,\n'\
+        py_expr = 'external.ExtLookup(%s, %s, %s, %s, %s,\n'\
                   '                   _root, \'{}\')'.format(name)
     build_names.add(name)
 
@@ -907,7 +878,7 @@ def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell,
         'py_name': name,
         'real_name': 'External lookup data for %s' % identifier,
         'doc': 'Provides data for external lookup variable %s' % identifier,
-        'py_expr': py_expr % (file_name, tab, x_row_or_col, cell, coords, dims),
+        'py_expr': py_expr % (file_name, tab, x_row_or_col, cell, coords),
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',

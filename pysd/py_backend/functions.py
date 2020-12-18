@@ -5,11 +5,8 @@ what is present in the function call. We provide them in a structure that
 makes it easy for the model elements to call.
 """
 
-from __future__ import division, absolute_import
-
 import imp
 import inspect
-import sys
 import os
 import re
 import random
@@ -24,7 +21,6 @@ from funcsigs import signature
 
 from . import utils
 from .external import External
-from .decorators import cache  # for backward compatibility
 
 
 try:
@@ -151,19 +147,8 @@ class Delay(Stateful):
 
         if isinstance(init_state_value, xr.DataArray):
             # broadcast self.state
-            if sys.version_info[0]*10 + sys.version_info[1] >= 36:
-                self.state = init_state_value.expand_dims({
-                    'delay': np.arange(self.order)}, axis=0)
-            else:
-                # TODO remove when we stop supporting Python 2 and
-                # Python < 3.6 (rm also 'import sys' if not necessary)
-                dims = ['delay'] + list(init_state_value.dims)
-                coords = dict(init_state_value.coords.indexes)
-                coords['delay'] = np.arange(self.order)
-                init_state_value = np.tile(init_state_value,
-                    [self.order] + [1 for i in init_state_value.dims])
-                self.state = xr.DataArray(init_state_value, coords, dims)
-
+            self.state = init_state_value.expand_dims({
+                'delay': np.arange(self.order)}, axis=0)
             self.shape_info = {'dims': self.state.dims,
                                'coords': self.state.coords}
         else:
@@ -580,7 +565,7 @@ class Macro(Stateful):
                 for unit_line in range(3, 9):
                     # this loop detects where Units: starts as
                     # sometimes eqn could be split in several lines
-                    if re.findall('Units: ', lines[unit_line]):
+                    if re.findall('Units:', lines[unit_line]):
                         break
                 if unit_line == 3:
                     eqn = lines[2].replace("Original Eqn:", "").strip()

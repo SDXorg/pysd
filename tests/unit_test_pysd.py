@@ -420,6 +420,8 @@ class TestPySD(unittest.TestCase):
                          'The initial time for the simulation.')
         self.assertEqual(doc[doc['Real Name'] == 'Characteristic Time']['Type'].values[0],
                          'constant')
+        self.assertEqual(doc[doc['Real Name'] == 'Teacup Temperature']['Lims'].values[0],
+                         '(32.0, 212.0)')
 
     def test_docs_multiline_eqn(self):
         """ Test that the model prints some documentation """
@@ -435,24 +437,23 @@ class TestPySD(unittest.TestCase):
                          'euros/kg')
         self.assertEqual(doc[doc['Real Name'] == 'price']['Py Name'].values[0],
                          'price')
-        self.assertTrue(doc[doc['Real Name'] == 'price']['Subs'].values[0] in
-                        ["['fruits']", "[u'fruits']"])
+        self.assertEqual(doc[doc['Real Name'] == 'price']['Subs'].values[0],
+                         "['fruits']")
         self.assertEqual(doc[doc['Real Name'] == 'price']['Eqn'].values[0],
                          '1.2; .; .; .; 1.4')
 
 
     def test_stepwise_cache(self):
-        # Checks backward compatibility, must be changed to @cache.step when deprecated
         run_history = []
         result_history = []
 
         global time
         time = lambda: 0  # for testing cache function
-        from pysd.py_backend.functions import cache
+        from pysd import cache
 
         cache.time = time()
 
-        @cache('step')
+        @cache.step
         def upstream(run_hist, res_hist):
             run_hist.append('U')
             return 'up'
@@ -504,11 +505,11 @@ class TestPySD(unittest.TestCase):
 
         global time
         time = lambda: 0  # for testing cache function
-        from pysd.py_backend.functions import cache
+        from pysd import cache
 
         cache.time = time()
 
-        @cache('run')
+        @cache.run
         def upstream(run_hist, res_hist):
             run_hist.append('U')
             return 'up'

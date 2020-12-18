@@ -4,8 +4,6 @@ module to write a python version of the model. Everything that requires
 knowledge of vensim syntax should be here.
 """
 
-from __future__ import absolute_import
-
 import os
 import re
 import textwrap

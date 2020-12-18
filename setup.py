@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from setuptools import setup, find_packages
 
 exec(open('pysd/_version.py').read())
@@ -29,7 +27,7 @@ setup(
         'pandas',
         'numpy',
         'parsimonious',
-        'yapf',
+        'black',
         'xarray',
         'lxml',
         'xlwt',        
@@ -37,7 +35,8 @@ setup(
         'pydoe',
         'xlrd',
         'regex',
-        'chardet'
+        'chardet',
+        'openpyxl'
     ],
     package_data={
         'py_backend': [
