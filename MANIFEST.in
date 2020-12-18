@@ -1,2 +1,1 @@
-include pysd/py_backend/output_style.yapf
 include pysd/py_backend/xmile/smile.grammar
