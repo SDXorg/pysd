@@ -5,12 +5,12 @@ what is present in the function call. We provide them in a structure that
 makes it easy for the model elements to call.
 """
 
-import imp
 import inspect
 import os
 import re
 import random
 import warnings
+from importlib.machinery import SourceFileLoader
 from ast import literal_eval
 
 import numpy as np
@@ -262,8 +262,8 @@ class Macro(Stateful):
         # need a unique identifier for the imported module.
         module_name = os.path.splitext(py_model_file)[0]\
                       + str(random.randint(0, 1000000))
-        self.components = imp.load_source(module_name,
-                                          py_model_file)
+        self.components = SourceFileLoader(module_name,
+                                          py_model_file).load_module()
 
         if params is not None:
             self.set_components(params)
