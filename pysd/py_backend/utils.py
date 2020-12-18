@@ -425,7 +425,7 @@ def visit_addresses(frame, return_addresses):
     return outdict
 
 
-def compute_shape(coords, dims, reshape_len=None, py_name=''):
+def compute_shape(coords, reshape_len=None, py_name=''):
     """
     Computes the 'shape' of a coords dictionary.
     Function used to rearange data in xarrays and
@@ -434,9 +434,7 @@ def compute_shape(coords, dims, reshape_len=None, py_name=''):
     Parameters
     ----------
     coords: dict
-      Dictionary of the dimension names as a keys with their values.
-    dims: list
-      Ordered list of the dimensions.
+      Ordered dictionary of the dimension names as a keys with their values.
     reshape_len: int (optional)
       Number of dimensions of the output shape.
       The shape will ony compute the corresponent table
@@ -463,10 +461,10 @@ def compute_shape(coords, dims, reshape_len=None, py_name=''):
 
     """
     if not reshape_len:
-        return [len(coords[dim]) for dim in dims]
+        return [len(coord) for coord in coords.values()]
 
     # get the shape of the coordinates bigger than 1
-    shape = [len(coords[dim]) for dim in dims if len(coords[dim]) > 1]
+    shape = [len(coord) for coord in coords.values() if len(coord) > 1]
 
     shape_len = len(shape)
 
@@ -516,7 +514,7 @@ def rearrange(data, dims, coords):
     # subset used coords in general coords will be the subscript_dict
     coords = {dim: coords[dim] for dim in dims}
     if isinstance(data, xr.DataArray):
-        if data.shape == tuple(compute_shape(coords, dims)):
+        if data.shape == tuple(compute_shape(coords)):
             # Allows switching dimensions names and transpositions
             return xr.DataArray(data=data.values, coords=coords, dims=dims)
 

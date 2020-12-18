@@ -437,8 +437,8 @@ class External(object):
         """
         self._resolve_file(root=self.root)
         series_across = self._series_selector(self.x_row_or_col, self.cell)
-        size = utils.compute_shape(self.coords, list(self.coords),
-                                   reshape_len=1, py_name=self.py_name)[0]
+        size = utils.compute_shape(self.coords, reshape_len=1,
+                                   py_name=self.py_name)[0]
 
         series, data = self._get_series_data(
             series_across=series_across,
@@ -455,8 +455,7 @@ class External(object):
                   + "\t{}:\t{}\n".format(series_across, self.x_row_or_col)
                   + " is not strictly monotonous")
 
-        reshape_dims = tuple([len(series)]
-                             + utils.compute_shape(self.coords, list(self.coords)))
+        reshape_dims = tuple([len(series)] + utils.compute_shape(self.coords))
 
         if len(reshape_dims) > 1:
             data = self._reshape(data, reshape_dims)
@@ -830,8 +829,8 @@ class ExtConstant(External):
             data_across = "name"
             cell = self.cell
 
-        shape = utils.compute_shape(self.coords, list(self.coords),
-                                    reshape_len=2, py_name=self.py_name)
+        shape = utils.compute_shape(self.coords, reshape_len=2,
+                                    py_name=self.py_name)
 
         if self.transpose:
             shape.reverse()
@@ -843,7 +842,7 @@ class ExtConstant(External):
 
         # Create only an xarray if the data is not 0 dimensional
         if len(self.coords) > 0:
-            reshape_dims = tuple(utils.compute_shape(self.coords, list(self.coords)))
+            reshape_dims = tuple(utils.compute_shape(self.coords))
 
             if len(reshape_dims) > 1:
                 data = self._reshape(data, reshape_dims)

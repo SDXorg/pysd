@@ -964,8 +964,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
         def visit_array(self, n, vc):
             if 'subs' in element and element['subs']:  # first test handles when subs is not defined
                 coords = utils.make_coord_dict(element['subs'], subscript_dict, terse=False)
-                dims = [utils.find_subscript_name(subscript_dict, sub) for sub in element['subs']]
-                shape = utils.compute_shape(coords, dims)
+                shape = utils.compute_shape(coords)
                 if ';' in n.text or ',' in n.text:
                     text = n.text.strip(';').replace(' ', '').replace(';', ',')
                     data = np.array([float(s) for s in text.split(',')])
@@ -979,7 +978,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
                                  dims=%(dims)s )""" % {
                     'datastr': datastr,
                     'coords': repr(coords),
-                    'dims': repr(dims)})
+                    'dims': repr(list(coords))})
 
             else:
                 return n.text.replace(' ', '')

@@ -3,7 +3,6 @@ These are the decorators used by the functions in the model file.
 functions.py
 """
 from functools import wraps
-from .utils import compute_shape
 import xarray as xr
 
 
