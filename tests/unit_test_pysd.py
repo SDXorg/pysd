@@ -8,6 +8,66 @@ test_model_subs = 'test-models/tests/subscript_2d_arrays/test_subscript_2d_array
 
 
 class TestPySD(unittest.TestCase):
+
+    def test_load_different_version_error(self):
+        import os
+        import pysd
+
+        model_main = """
+        from pysd import cache, external
+
+        __data = {'scope': None, 'time': lambda: 0}
+
+        def _init_outer_references(data):
+            for key in data:
+                __data[key] = data[key]
+
+        def initial_time():
+            return 0
+
+        """
+
+        model_main = model_main.replace("\n        ", "\n")
+
+        # old PySD major version
+        with open("old_version.py", "w") as f:
+            f.write(model_main)
+            f.write("__pysd_version__ = \"0.5.0\"")
+
+        with self.assertRaises(ImportError):
+            pysd.load("old_version.py")
+
+        # current PySD major version
+        with open("current_version.py", "w") as f:
+            f.write(model_main)
+            f.write("__pysd_version__ = \"1.99.3\"")
+        
+        pysd.load("current_version.py")
+
+        os.remove("old_version.py")
+        os.remove("current_version.py")
+
+    def test_load_type_error(self):
+        import os
+        import pysd
+
+        # external object old definition with dims ([])
+        ext = "_ext_data = external.ExtData('input.xlsx', "\
+              + "'Sheet1', '5', 'B6', None, {}, [], _root, "\
+              + "'_ext_data')"
+
+        with open("type_error.py", "w") as f:
+            f.write("from pysd import external")
+            f.write("\n")
+            f.write("_root = './'")
+            f.write("\n")
+            f.write(ext)
+
+        with self.assertRaises(ImportError):
+            pysd.load("type_error.py")
+        
+        os.remove("type_error.py")
+
     def test_run(self):
         import pysd
         model = pysd.read_vensim(test_model)

@@ -62,7 +62,6 @@ def build(elements, subscript_dict, namespace, outfile_name):
     Python model "%(outfile)s"
     Translated using PySD version %(version)s
     """
-    from __future__ import division
     import numpy as np
     import xarray as xr
     from pysd import utils, functions, external

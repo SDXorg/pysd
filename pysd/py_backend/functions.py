@@ -21,6 +21,8 @@ from funcsigs import signature
 
 from . import utils
 from .external import External
+from .._version import __version__
+
 
 
 small_vensim = 1e-6  # What is considered zero according to Vensim Help
@@ -246,8 +248,29 @@ class Macro(Stateful):
         # need a unique identifier for the imported module.
         module_name = os.path.splitext(py_model_file)[0]\
                       + str(random.randint(0, 1000000))
-        self.components = SourceFileLoader(module_name,
-                                          py_model_file).load_module()
+        try:
+            self.components = SourceFileLoader(module_name,
+                                               py_model_file).load_module()
+        except TypeError:
+            raise ImportError("\n\nNot able to import the model. "
+                + "This may be because the model was compiled with an "
+                + "earlier version of PySD, you can check on the top of "
+                + " the model file you are trying to load." 
+                + "\nThe current version of PySd is :"
+                + "\n\tPySD " + __version__ + "\n\n"
+                + "Please translate again the model with the function"
+                + " read_vensim or read_xmile.")
+
+        if __version__.split(".")[0] !=\
+          self.components.__pysd_version__.split(".")[0]:
+            raise ImportError("\n\nNot able to import the model. "
+                + "The model was compiled with a "
+                + "not compatible version of PySD:"
+                + "\n\tPySD " + self.components.__pysd_version__
+                + "\n\nThe current version of PySd is:"
+                + "\n\tPySD " + __version__ + "\n\n"
+                + "Please translate again the model with the function"
+                + " read_vensim or read_xmile.")
 
         if params is not None:
             self.set_components(params)
