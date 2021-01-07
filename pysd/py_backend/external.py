@@ -28,6 +28,7 @@ class Excels():
         if file_name in cls._Excels:
             return cls._Excels[file_name]
         else:
+            print("visited")
             excel = pd.ExcelFile(file_name)
             cls._Excels[file_name] = excel
             return excel

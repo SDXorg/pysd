@@ -11,6 +11,11 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
+# used to create python safe names
+from .decorators import __dir__ as ddir
+from .external import __dir__ as edir
+from .functions import __dir__ as fdir
+
 
 def xrmerge(das, accept_new=True):
     """
@@ -227,6 +232,9 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
     if reserved_words is None:
         reserved_words = list()
 
+    # reserved the names of PySD functions and methods
+    reserved_words += dir() + fdir() + edir() + ddir()
+
     if string in namespace:
         return namespace[string], namespace
 
@@ -252,11 +260,10 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
         # Remove invalid characters
         s = re.sub('[^\p{l}\p{m}\p{n}_]', '', s)
 
-    # TODO: we should make all the identifiers start by a letter, and let
-    # the _ only for stateful and external elements (_integ_name...)
-    # Remove leading characters until we find a letter or underscore.
+    # If leading characters are not a letter or underscore add nvs_.
     # Only letters can be leading characters.
-    s = re.sub('^[^\p{l}_]+', '', s)
+    if re.findall('^[^\p{l}_]+', s):
+        s = 'nvs_' + s
 
     # Check that the string is not a python identifier
     while (s in keyword.kwlist or

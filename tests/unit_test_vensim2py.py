@@ -189,11 +189,11 @@ class TestParse_general_expression(unittest.TestCase):
         self.assertEqual(res[0]['py_expr'], 'abs(stocka())')
 
         res = parse_general_expression({'expr': 'If Then Else(A>B, 1, 0)'}, {'A': 'a', 'B':'b'})
-        self.assertEqual(res[0]['py_expr'], 'functions.if_then_else(a()>b(), lambda: 1, lambda: 0)')
+        self.assertEqual(res[0]['py_expr'], 'if_then_else(a()>b(), lambda: 1, lambda: 0)')
 
         # test that function calls are handled properly in arguments
         res = parse_general_expression({'expr': 'If Then Else(A>B,1,A)'}, {'A': 'a', 'B': 'b'})
-        self.assertEqual(res[0]['py_expr'], 'functions.if_then_else(a()>b(), lambda: 1, lambda: a())')
+        self.assertEqual(res[0]['py_expr'], 'if_then_else(a()>b(), lambda: 1, lambda: a())')
 
     def test_id_parsing(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
@@ -368,5 +368,5 @@ class TestParse_general_expression(unittest.TestCase):
                                         'Var A': 'var_a',
                                         'Var B': 'var_b'})
         self.assertEqual(res[0]['py_expr'],
-                         "functions.incomplete(unspecified_eqn(), var_a(), var_b())"
+                         "incomplete(unspecified_eqn(), var_a(), var_b())"
                          )

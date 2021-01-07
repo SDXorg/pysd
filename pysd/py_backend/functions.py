@@ -20,7 +20,7 @@ import scipy.stats as stats
 from funcsigs import signature
 
 from . import utils
-from .external import External
+from .external import External, Excels
 from .._version import __version__
 
 
@@ -334,7 +334,7 @@ class Macro(Stateful):
         for element in self._external_elements:
             element.initialize()
 
-        self.components.external.Excels.clean()
+        Excels.clean()
 
         # Initialize stateful elements
         remaining = set(self._stateful_elements)
