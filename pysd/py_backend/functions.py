@@ -64,7 +64,7 @@ class Integ(Stateful):
             This will become an attribute of the object
         initial_value
         """
-        super(Integ, self).__init__()
+        super().__init__()
         self.init_func = initial_value
         self.ddt = ddt
         self.shape_info = None
@@ -107,7 +107,7 @@ class Delay(Stateful):
         coords: dictionary (optional)
         dims: list (optional)
         """
-        super(Delay, self).__init__()
+        super().__init__()
         self.init_func = initial_value
         self.delay_time_func = delay_time
         self.input_func = delay_input
@@ -157,7 +157,7 @@ class Delay(Stateful):
 
 class Smooth(Stateful):
     def __init__(self, smooth_input, smooth_time, initial_value, order):
-        super(Smooth, self).__init__()
+        super().__init__()
         self.init_func = initial_value
         self.smooth_time_func = smooth_time
         self.input_func = smooth_input
@@ -179,7 +179,7 @@ class Smooth(Stateful):
 
 class Trend(Stateful):
     def __init__(self, trend_input, average_time, initial_trend):
-        super(Trend, self).__init__()
+        super().__init__()
         self.init_func = initial_trend
         self.average_time_function = average_time
         self.input_func = trend_input
@@ -198,7 +198,7 @@ class Trend(Stateful):
 
 class Initial(Stateful):
     def __init__(self, func):
-        super(Initial, self).__init__()
+        super().__init__()
         self.func = func
 
     def initialize(self):
@@ -239,7 +239,7 @@ class Macro(Stateful):
         params
         return_func
         """
-        super(Macro, self).__init__()
+        super().__init__()
         self.time = time
         self.time_initialization = time_initialization
 
@@ -602,7 +602,7 @@ class Time(object):
 class Model(Macro):
     def __init__(self, py_model_file):
         """ Sets up the python objects """
-        super(Model, self).__init__(py_model_file, None, None, Time())
+        super().__init__(py_model_file, None, None, Time())
         self.time.stage = 'Load'
         self.initialize()
 
@@ -610,7 +610,7 @@ class Model(Macro):
         """ Initializes the simulation model """
         self.time.update(self.components.initial_time())
         self.time.stage = 'Initialization'
-        super(Model, self).initialize()
+        super().initialize()
 
     def _build_euler_timeseries(self, return_timestamps=None):
         """

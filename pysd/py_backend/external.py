@@ -634,7 +634,7 @@ class ExtData(External):
 
     def __init__(self, file_name, tab, time_row_or_col, cell,
                  interp, coords, root, py_name):
-        super(ExtData, self).__init__(py_name)
+        super().__init__(py_name)
         self.files = [file_name]
         self.tabs = [tab]
         self.time_row_or_cols = [time_row_or_col]
@@ -719,7 +719,7 @@ class ExtLookup(External):
 
     def __init__(self, file_name, tab, x_row_or_col, cell,
                  coords, root, py_name):
-        super(ExtLookup, self).__init__(py_name)
+        super().__init__(py_name)
         self.files = [file_name]
         self.tabs = [tab]
         self.x_row_or_cols = [x_row_or_col]
@@ -782,7 +782,7 @@ class ExtConstant(External):
     """
 
     def __init__(self, file_name, tab, cell, coords, root, py_name):
-        super(ExtConstant, self).__init__(py_name)
+        super().__init__(py_name)
         self.files = [file_name]
         self.tabs = [tab]
         self.transposes = [cell[-1] == '*']
@@ -929,7 +929,7 @@ class ExtSubscript(External):
     """
 
     def __init__(self, file_name, tab, firstcell, lastcell, prefix, root):
-        super(ExtSubscript, self).__init__("Hardcoded external subscript")
+        super().__init__("Hardcoded external subscript")
         self.file = file_name
         self.tab = tab
         self._resolve_file(root=root)
