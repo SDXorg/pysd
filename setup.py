@@ -8,6 +8,7 @@ long_description = """Project Documentation: http://pysd.readthedocs.org/"""
 setup(
     name='pysd',
     version=__version__,
+    python_requires='>3.7'
     author='James Houghton',
     author_email='james.p.houghton@gmail.com',
     packages=find_packages(exclude=['docs', 'tests', 'dist', 'build']),
