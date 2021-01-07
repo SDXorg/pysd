@@ -268,15 +268,10 @@ def merge_partial_elements(element_list):
     """
     outs = dict()  # output data structure
 
-    # needed to preserve the order python < 3.6 compatibility
-    # when using .add method for External
-    outs_names = []
-
     for element in element_list:
         if element['py_expr'] != "None":  # for
             name = element['py_name']
             if name not in outs:
-                outs_names.append(name)
 
                 # Use 'expr' for Vensim models, and 'eqn' for Xmile
                 # (This makes the Vensim equation prettier.)
@@ -307,7 +302,7 @@ def merge_partial_elements(element_list):
                 outs[name]['subs'] += [element['subs']]
                 outs[name]['arguments'] = element['arguments']
 
-    return [outs[name] for name in outs_names]
+    return list(outs.values())
 
 
 def add_stock(identifier, expression, initial_condition,
