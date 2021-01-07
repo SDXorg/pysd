@@ -21,9 +21,8 @@ from funcsigs import signature
 
 from . import utils
 from .external import External, Excels
+
 from .._version import __version__
-
-
 
 small_vensim = 1e-6  # What is considered zero according to Vensim Help
 
@@ -255,7 +254,7 @@ class Macro(Stateful):
             raise ImportError("\n\nNot able to import the model. "
                 + "This may be because the model was compiled with an "
                 + "earlier version of PySD, you can check on the top of "
-                + " the model file you are trying to load." 
+                + " the model file you are trying to load."
                 + "\nThe current version of PySd is :"
                 + "\n\tPySD " + __version__ + "\n\n"
                 + "Please translate again the model with the function"

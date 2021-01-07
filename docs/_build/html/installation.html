@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Installation &mdash; PySD 0.10.0 documentation</title>
+  <title>Installation &mdash; PySD 1.0.0-dev documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.10
+                1.0
               </div>
             
           
@@ -188,7 +188,7 @@ Python environment, use the pip command:</p>
 </div>
 <div class="section" id="required-dependencies">
 <h2>Required Dependencies<a class="headerlink" href="#required-dependencies" title="Permalink to this headline">¶</a></h2>
-<p>PySD was originally built on python 2.7, but will work with 3.x.</p>
+<p>PySD was originally built on python 2.7. Hoewever, the last version requires at least <strong>python 3.7</strong>.</p>
 <p>PySD calls on the core Python data analytics stack, and a third party parsing library:</p>
 <ul class="simple">
 <li><p>Numpy</p></li>
@@ -196,6 +196,8 @@ Python environment, use the pip command:</p>
 <li><p>Pandas</p></li>
 <li><p>Matplotlib</p></li>
 <li><p>Parsimonious</p></li>
+<li><p>black</p></li>
+<li><p>openpyxl</p></li>
 </ul>
 <p>These modules should build automatically if you are installing via <cite>pip</cite>. If you are building from
 the source code, or if pip fails to load them, they can be loaded with the same <cite>pip</cite> syntax as

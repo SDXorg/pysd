@@ -13,8 +13,6 @@ import os.path
 import textwrap
 import warnings
 from io import open
-
-import pkg_resources
 import black
 
 from . import utils
@@ -245,7 +243,7 @@ def build_element(element, subscript_dict):
     %(py_name)s = %(py_expr)s
             ''' % {'py_name': element['py_name'],
                    'py_expr': element['py_expr'][0]}
-   
+
     elif element['kind'] == 'external_add':
         # external expressions to be added with .add method
         # remove the ADD from the end

@@ -13,7 +13,6 @@ from io import open
 import numpy as np
 import parsimonious
 
-from .. import functions as funcs
 from .. import builder, utils, external
 
 

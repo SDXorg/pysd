@@ -8,9 +8,10 @@ Alexey Prey Mulyukin <alexprey@yandex.ru> from sdCloud.io development team.
 """
 from .SMILE2Py import SMILEParser
 from lxml import etree
-from ...py_backend import builder, utils
+from .. import builder, utils
 
 import numpy as np
+
 
 def translate_xmile(xmile_file):
     """ Translate an xmile model file into a python class.

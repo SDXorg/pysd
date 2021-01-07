@@ -7,7 +7,7 @@ the Stateful objects by functions.Model.initialize.
 import re
 import os
 import warnings
-import pandas as pd # TODO move to openpyxl
+import pandas as pd  # TODO move to openpyxl
 import numpy as np
 import xarray as xr
 from openpyxl import load_workbook
@@ -28,7 +28,6 @@ class Excels():
         if file_name in cls._Excels:
             return cls._Excels[file_name]
         else:
-            print("visited")
             excel = pd.ExcelFile(file_name)
             cls._Excels[file_name] = excel
             return excel
@@ -87,7 +86,6 @@ class External(object):
             depending on the shape of the requested data
         """
         # TODO move to openpyxl to avoid pandas dependency in this file.
-        # This must by a future implementation as openpyxl requires python 3.6+
         ext = os.path.splitext(self.file)[1].lower()
         if ext in ['.xls', '.xlsx']:
             # rows is an int of the first value

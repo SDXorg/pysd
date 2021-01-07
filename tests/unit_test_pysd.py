@@ -1,7 +1,6 @@
 import unittest
 import pandas as pd
 import numpy as np
-from pysd import utils
 
 test_model = 'test-models/samples/teacup/teacup.mdl'
 test_model_subs = 'test-models/tests/subscript_2d_arrays/test_subscript_2d_arrays.mdl'
@@ -41,7 +40,7 @@ class TestPySD(unittest.TestCase):
         with open("current_version.py", "w") as f:
             f.write(model_main)
             f.write("__pysd_version__ = \"1.99.3\"")
-        
+
         pysd.load("current_version.py")
 
         os.remove("old_version.py")
@@ -65,7 +64,7 @@ class TestPySD(unittest.TestCase):
 
         with self.assertRaises(ImportError):
             pysd.load("type_error.py")
-        
+
         os.remove("type_error.py")
 
     def test_run(self):
