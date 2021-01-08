@@ -191,33 +191,24 @@ class TestUtils(TestCase):
 
         coords = [
           {},
-          {'XY': ['X'],
-           'ABC': ['A', 'B', 'C'],
-           'val': [1, 2, 3, 4, 5, 6, 7, 8]},
-          {'XY': ['X'],
-           'ABC': ['A', 'B', 'C'],
-           'val': [1, 2, 3, 4, 5]},
-          {'XY': ['X', 'Y'],
-           'ABC': ['A', 'B', 'C'],
-           'val': [1, 2, 3, 4, 5, 6, 7, 8]},
           {'ABC': ['A', 'B', 'C'],
+           'XY': ['X'],
            'val': [1, 2, 3, 4, 5, 6, 7, 8]},
+          {'val': [1, 2, 3, 4, 5],
+           'ABC': ['A', 'B', 'C'],
+           'XY': ['X']},
+          {'ABC': ['A', 'B', 'C'],
+           'val': [1, 2, 3, 4, 5, 6, 7, 8],
+           'XY': ['X', 'Y']},
+          {'val': [1, 2, 3, 4, 5, 6, 7, 8],
+           'ABC': ['A', 'B', 'C']},
           {'val': [1, 2, 3, 4, 5, 6, 7, 8]}
          ]
 
-        dims = [
-          [],
-          ['ABC', 'XY', 'val'],
-          ['val', 'ABC', 'XY'],
-          ['ABC', 'val', 'XY'],
-          ['val', 'ABC'],
-          ['val']
-        ]
-
         shapes = [[], [3, 1, 8], [5, 3, 1], [3, 8, 2], [8, 3], [8]]
 
-        for c, d, s in zip(coords, dims, shapes):
-            self.assertEqual(compute_shape(c, d), s)
+        for c, s in zip(coords, shapes):
+            self.assertEqual(compute_shape(c), s)
 
     def test_compute_shape_reshape(self):
         """"
@@ -229,27 +220,19 @@ class TestUtils(TestCase):
         compute_shape =  pysd.utils.compute_shape
 
         coords = [
-          {'XY': ['X'],
-           'ABC': ['A', 'B', 'C'],
-           'val': [1, 2, 3, 4, 5, 6, 7, 8]},
-          {'XY': ['X'],
-           'ABC': ['A', 'B', 'C'],
-           'val': [1, 2, 3, 4, 5]},
-          {'XY': ['X', 'Y'],
-           'ABC': ['A', 'B', 'C'],
-           'val': [1, 2, 3, 4, 5, 6, 7, 8]},
           {'ABC': ['A', 'B', 'C'],
+           'XY': ['X'],
            'val': [1, 2, 3, 4, 5, 6, 7, 8]},
+          {'val': [1, 2, 3, 4, 5],
+           'ABC': ['A', 'B', 'C'],
+           'XY': ['X']},
+          {'ABC': ['A', 'B', 'C'],
+           'val': [1, 2, 3, 4, 5, 6, 7, 8],
+           'XY': ['X', 'Y']},
+          {'val': [1, 2, 3, 4, 5, 6, 7, 8],
+           'ABC': ['A', 'B', 'C']},
           {'val': [1, 2, 3, 4, 5, 6, 7, 8]}
-        ]
-
-        dims = [
-          ['ABC', 'XY', 'val'],
-          ['val', 'ABC', 'XY'],
-          ['ABC', 'val', 'XY'],
-          ['val', 'ABC'],
-          ['val']
-        ]
+         ]
 
         # reshapes list for 1, 2 and 3
         shapes123 = [
@@ -259,13 +242,12 @@ class TestUtils(TestCase):
         ]
 
         for i, shapes in enumerate(shapes123):
-            for c, d, s in zip(coords, dims, shapes):
-                print(s)
+            for c, s in zip(coords, shapes):
                 if s:
-                    self.assertEqual(compute_shape(c, d, i+1), s)
+                    self.assertEqual(compute_shape(c, i+1), s)
                 else:
                     with self.assertRaises(ValueError):
-                        compute_shape(c, d, i+1)
+                        compute_shape(c, i+1)
 
     def test_round_(self):
         import pysd

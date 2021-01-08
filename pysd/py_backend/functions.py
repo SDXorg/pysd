@@ -5,27 +5,23 @@ what is present in the function call. We provide them in a structure that
 makes it easy for the model elements to call.
 """
 
-from __future__ import division, absolute_import
-
-import imp
 import inspect
-import sys
 import os
 import re
 import random
 import warnings
+from importlib.machinery import SourceFileLoader
 from ast import literal_eval
 
 import numpy as np
-import pandas as _pd
 import pandas as pd
 import xarray as xr
 from funcsigs import signature
 
 from . import utils
-from .external import External
-from .decorators import cache  # for backward compatibility
+from .external import External, Excels
 
+from .._version import __version__
 
 try:
     import scipy.stats as stats
@@ -84,7 +80,7 @@ class Integ(Stateful):
             This will become an attribute of the object
         initial_value
         """
-        super(Integ, self).__init__()
+        super().__init__()
         self.init_func = initial_value
         self.ddt = ddt
         self.shape_info = None
@@ -127,7 +123,7 @@ class Delay(Stateful):
         coords: dictionary (optional)
         dims: list (optional)
         """
-        super(Delay, self).__init__()
+        super().__init__()
         self.init_func = initial_value
         self.delay_time_func = delay_time
         self.input_func = delay_input
@@ -151,19 +147,8 @@ class Delay(Stateful):
 
         if isinstance(init_state_value, xr.DataArray):
             # broadcast self.state
-            if sys.version_info[0]*10 + sys.version_info[1] >= 36:
-                self.state = init_state_value.expand_dims({
-                    'delay': np.arange(self.order)}, axis=0)
-            else:
-                # TODO remove when we stop supporting Python 2 and
-                # Python < 3.6 (rm also 'import sys' if not necessary)
-                dims = ['delay'] + list(init_state_value.dims)
-                coords = dict(init_state_value.coords.indexes)
-                coords['delay'] = np.arange(self.order)
-                init_state_value = np.tile(init_state_value,
-                    [self.order] + [1 for i in init_state_value.dims])
-                self.state = xr.DataArray(init_state_value, coords, dims)
-
+            self.state = init_state_value.expand_dims({
+                'delay': np.arange(self.order)}, axis=0)
             self.shape_info = {'dims': self.state.dims,
                                'coords': self.state.coords}
         else:
@@ -188,7 +173,7 @@ class Delay(Stateful):
 
 class Smooth(Stateful):
     def __init__(self, smooth_input, smooth_time, initial_value, order):
-        super(Smooth, self).__init__()
+        super().__init__()
         self.init_func = initial_value
         self.smooth_time_func = smooth_time
         self.input_func = smooth_input
@@ -210,7 +195,7 @@ class Smooth(Stateful):
 
 class Trend(Stateful):
     def __init__(self, trend_input, average_time, initial_trend):
-        super(Trend, self).__init__()
+        super().__init__()
         self.init_func = initial_trend
         self.average_time_function = average_time
         self.input_func = trend_input
@@ -229,7 +214,7 @@ class Trend(Stateful):
 
 class Initial(Stateful):
     def __init__(self, func):
-        super(Initial, self).__init__()
+        super().__init__()
         self.func = func
 
     def initialize(self):
@@ -270,15 +255,36 @@ class Macro(Stateful):
         params
         return_func
         """
-        super(Macro, self).__init__()
+        super().__init__()
         self.time = time
         self.time_initialization = time_initialization
 
         # need a unique identifier for the imported module.
         module_name = os.path.splitext(py_model_file)[0]\
                       + str(random.randint(0, 1000000))
-        self.components = imp.load_source(module_name,
-                                          py_model_file)
+        try:
+            self.components = SourceFileLoader(module_name,
+                                               py_model_file).load_module()
+        except TypeError:
+            raise ImportError("\n\nNot able to import the model. "
+                + "This may be because the model was compiled with an "
+                + "earlier version of PySD, you can check on the top of "
+                + " the model file you are trying to load."
+                + "\nThe current version of PySd is :"
+                + "\n\tPySD " + __version__ + "\n\n"
+                + "Please translate again the model with the function"
+                + " read_vensim or read_xmile.")
+
+        if __version__.split(".")[0] !=\
+          self.components.__pysd_version__.split(".")[0]:
+            raise ImportError("\n\nNot able to import the model. "
+                + "The model was compiled with a "
+                + "not compatible version of PySD:"
+                + "\n\tPySD " + self.components.__pysd_version__
+                + "\n\nThe current version of PySd is:"
+                + "\n\tPySD " + __version__ + "\n\n"
+                + "Please translate again the model with the function"
+                + " read_vensim or read_xmile.")
 
         if params is not None:
             self.set_components(params)
@@ -342,7 +348,7 @@ class Macro(Stateful):
         for element in self._external_elements:
             element.initialize()
 
-        self.components.external.Excels.clean()
+        Excels.clean()
 
         # Initialize stateful elements
         remaining = set(self._stateful_elements)
@@ -429,16 +435,12 @@ class Macro(Stateful):
             except Exception:
                 dims = None
 
-            if isinstance(value, np.ndarray):
-                # TODO: Remove when we have no backward compatible update
-                warnings.warn('using numpy.array for setting subscripted '
-                              + 'variables is deprecated, use a '
-                              + 'xarray.DataArray with the correct '
-                              + 'dimensions instead (https://pysd.readthedocs.io/en/master/basic_usage.html)',
-                              DeprecationWarning, stacklevel=2)
-                coords = {dim: self.components._subscript_dict[dim]
-                          for dim in dims}
-                value = xr.DataArray(value, coords, dims)
+            if isinstance(value, np.ndarray) or isinstance(value, list):
+                raise ValueError('When setting ' + key +'\n'
+                                 + 'Setting subscripted must be done'
+                                 + 'using a xarray.DataArray with the '
+                                 + 'correct dimensions or a constant value '
+                                 + '(https://pysd.readthedocs.io/en/master/basic_usage.html)')
 
             if func_name is None:
                 raise NameError('%s is not recognized as a model component'
@@ -524,16 +526,12 @@ class Macro(Stateful):
             except Exception:
                 dims = None
 
-            if isinstance(value, np.ndarray):
-                # TODO: Remove when we have no backward compatible update
-                warnings.warn('using numpy.array for setting subscripted '
-                              + 'variables is deprecated, use a '
-                              + 'xarray.DataArray with the correct '
-                              + 'dimensions instead (https://pysd.readthedocs.io/en/master/basic_usage.html)',
-                              DeprecationWarning, stacklevel=2)
-                coords = {dim: self.components._subscript_dict[dim]
-                          for dim in dims}
-                value = xr.DataArray(value, coords, dims)
+            if isinstance(value, np.ndarray) or isinstance(value, list):
+                raise ValueError('When setting ' + key +'\n'
+                                 + 'Setting subscripted must be done'
+                                 + 'using a xarray.DataArray with the '
+                                 + 'correct dimensions or a constant value '
+                                 + '(https://pysd.readthedocs.io/en/master/basic_usage.html)')
 
             # Try to update stateful component
             if hasattr(self.components, stateful_name):
@@ -580,7 +578,7 @@ class Macro(Stateful):
                 for unit_line in range(3, 9):
                     # this loop detects where Units: starts as
                     # sometimes eqn could be split in several lines
-                    if re.findall('Units: ', lines[unit_line]):
+                    if re.findall('Units:', lines[unit_line]):
                         break
                 if unit_line == 3:
                     eqn = lines[2].replace("Original Eqn:", "").strip()
@@ -599,7 +597,7 @@ class Macro(Stateful):
             except Exception:
                 pass
 
-        docs_df = _pd.DataFrame(collector)
+        docs_df = pd.DataFrame(collector)
         docs_df.fillna('None', inplace=True)
 
         order = ['Real Name', 'Py Name', 'Unit', 'Lims',
@@ -641,7 +639,7 @@ class Time(object):
 class Model(Macro):
     def __init__(self, py_model_file):
         """ Sets up the python objects """
-        super(Model, self).__init__(py_model_file, None, None, Time())
+        super().__init__(py_model_file, None, None, Time())
         self.time.stage = 'Load'
         self.initialize()
 
@@ -649,12 +647,7 @@ class Model(Macro):
         """ Initializes the simulation model """
         self.time.update(self.components.initial_time())
         self.time.stage = 'Initialization'
-        super(Model, self).initialize()
-
-    def reset_state(self):
-        warnings.warn('reset_state is deprecated. use `initialize` instead',
-                      DeprecationWarning, stacklevel=2)
-        self.initialize()
+        super().initialize()
 
     def _build_euler_timeseries(self, return_timestamps=None):
         """
@@ -706,7 +699,7 @@ class Model(Macro):
             return_timestamps_array = np.array(return_timestamps, ndmin=1)
         elif isinstance(return_timestamps, (list, int, float, np.ndarray)):
             return_timestamps_array = np.array(return_timestamps, ndmin=1)
-        elif isinstance(return_timestamps, _pd.Series):
+        elif isinstance(return_timestamps, pd.Series):
             return_timestamps_array = return_timestamps.as_matrix()
         else:
             raise TypeError('`return_timestamps` expects a list, array, pandas Series, '
@@ -1052,20 +1045,25 @@ def if_then_else(condition, val_if_true, val_if_false):
     Parameters
     ----------
     condition: bool or xarray.DataArray of bools
-    val_if_true: float/bool or xarray.DataArray
-        Value to return when condition is true.
-    val_if_false: float/bool or xarray.DataArray
-        Value to return when condition is false.
+    val_if_true: function
+        Value to evaluate and return when condition is true.
+    val_if_false: function
+        Value to evaluate and return when condition is false.
 
     Returns
     -------
     The value depending on the condition.
-    """
-    # TODO lazzy evaluation
-    if isinstance(condition, xr.DataArray):
-        return xr.where(condition, val_if_true, val_if_false)
 
-    return val_if_true if condition else val_if_false
+    """
+    if isinstance(condition, xr.DataArray):
+        if condition.all():
+            return val_if_true()
+        elif not condition.any():
+            return val_if_false()
+
+        return xr.where(condition, val_if_true(), val_if_false())
+
+    return val_if_true() if condition else val_if_false()
 
 
 def xidz(numerator, denominator, value_if_denom_is_zero):

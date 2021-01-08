@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Internal Functions &mdash; PySD 0.10.0 documentation</title>
+  <title>Internal Functions &mdash; PySD 1.0.0 documentation</title>
   
 
   
@@ -61,7 +61,7 @@
             
             
               <div class="version">
-                0.10
+                1.0
               </div>
             
           
@@ -446,11 +446,6 @@ parameters are back to their original value.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="py_backend.functions.Model.reset_state">
-<code class="sig-name descname">reset_state</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/functions.html#Model.reset_state"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.functions.Model.reset_state" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py method">
 <dt id="py_backend.functions.Model.run">
 <code class="sig-name descname">run</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">params</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_columns</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">return_timestamps</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">initial_condition</span><span class="o">=</span><span class="default_value">'original'</span></em>, <em class="sig-param"><span class="n">reload</span><span class="o">=</span><span class="default_value">False</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/functions.html#Model.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.functions.Model.run" title="Permalink to this definition">¶</a></dt>
 <dd><p>Simulate the model’s behavior over time.
@@ -619,8 +614,8 @@ initial condition must be paired with new return timestamps</p></li>
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>condition</strong> (<a class="reference external" href="https://docs.python.org/2.7/library/functions.html#bool" title="(in Python v2.7)"><em>bool</em></a><em> or </em><em>xarray.DataArray of bools</em>) – </p></li>
-<li><p><strong>val_if_true</strong> (<em>float/bool</em><em> or </em><em>xarray.DataArray</em>) – Value to return when condition is true.</p></li>
-<li><p><strong>val_if_false</strong> (<em>float/bool</em><em> or </em><em>xarray.DataArray</em>) – Value to return when condition is false.</p></li>
+<li><p><strong>val_if_true</strong> (<em>function</em>) – Value to evaluate and return when condition is true.</p></li>
+<li><p><strong>val_if_false</strong> (<em>function</em>) – Value to evaluate and return when condition is false.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -922,15 +917,14 @@ no need to return a new one.</p>
 
 <dl class="py function">
 <dt id="py_backend.utils.compute_shape">
-<code class="sig-prename descclassname">py_backend.utils.</code><code class="sig-name descname">compute_shape</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords</span></em>, <em class="sig-param"><span class="n">dims</span></em>, <em class="sig-param"><span class="n">reshape_len</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">py_name</span><span class="o">=</span><span class="default_value">''</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/utils.html#compute_shape"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.utils.compute_shape" title="Permalink to this definition">¶</a></dt>
+<code class="sig-prename descclassname">py_backend.utils.</code><code class="sig-name descname">compute_shape</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">coords</span></em>, <em class="sig-param"><span class="n">reshape_len</span><span class="o">=</span><span class="default_value">None</span></em>, <em class="sig-param"><span class="n">py_name</span><span class="o">=</span><span class="default_value">''</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/utils.html#compute_shape"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.utils.compute_shape" title="Permalink to this definition">¶</a></dt>
 <dd><p>Computes the ‘shape’ of a coords dictionary.
 Function used to rearange data in xarrays and
 to compute the number of rows/columns to be read in a file.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>coords</strong> (<a class="reference external" href="https://docs.python.org/2.7/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Dictionary of the dimension names as a keys with their values.</p></li>
-<li><p><strong>dims</strong> (<em>list</em>) – Ordered list of the dimensions.</p></li>
+<li><p><strong>coords</strong> (<a class="reference external" href="https://docs.python.org/2.7/library/stdtypes.html#dict" title="(in Python v2.7)"><em>dict</em></a>) – Ordered dictionary of the dimension names as a keys with their values.</p></li>
 <li><p><strong>reshape_len</strong> (<a class="reference external" href="https://docs.python.org/2.7/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> (</em><em>optional</em><em>)</em>) – Number of dimensions of the output shape.
 The shape will ony compute the corresponent table
 dimensions to read from Excel, then, the dimensions
@@ -956,6 +950,27 @@ we could remove dims if there is a not backward compatible
 version of the library which only works in Python 3.7+. For now,
 the dimensions list is passed to make it work properly for all the users.</p>
 </div>
+</dd></dl>
+
+<dl class="py function">
+<dt id="py_backend.utils.ddir">
+<code class="sig-prename descclassname">py_backend.utils.</code><code class="sig-name descname">ddir</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#py_backend.utils.ddir" title="Permalink to this definition">¶</a></dt>
+<dd><p>__dir__() -&gt; list
+specialized dir() implementation</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="py_backend.utils.edir">
+<code class="sig-prename descclassname">py_backend.utils.</code><code class="sig-name descname">edir</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#py_backend.utils.edir" title="Permalink to this definition">¶</a></dt>
+<dd><p>__dir__() -&gt; list
+specialized dir() implementation</p>
+</dd></dl>
+
+<dl class="py function">
+<dt id="py_backend.utils.fdir">
+<code class="sig-prename descclassname">py_backend.utils.</code><code class="sig-name descname">fdir</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#py_backend.utils.fdir" title="Permalink to this definition">¶</a></dt>
+<dd><p>__dir__() -&gt; list
+specialized dir() implementation</p>
 </dd></dl>
 
 <dl class="py function">
@@ -1714,7 +1729,7 @@ the Stateful objects by functions.Model.initialize.</p>
 
 <dl class="py class">
 <dt id="py_backend.external.ExtConstant">
-<em class="property">class </em><code class="sig-prename descclassname">py_backend.external.</code><code class="sig-name descname">ExtConstant</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">tab</span></em>, <em class="sig-param"><span class="n">cell</span></em>, <em class="sig-param"><span class="n">coords</span></em>, <em class="sig-param"><span class="n">dims</span></em>, <em class="sig-param"><span class="n">root</span></em>, <em class="sig-param"><span class="n">py_name</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#ExtConstant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.ExtConstant" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">py_backend.external.</code><code class="sig-name descname">ExtConstant</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">tab</span></em>, <em class="sig-param"><span class="n">cell</span></em>, <em class="sig-param"><span class="n">coords</span></em>, <em class="sig-param"><span class="n">root</span></em>, <em class="sig-param"><span class="n">py_name</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#ExtConstant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.ExtConstant" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class for Vensim GET XLS CONSTANTS/GET DIRECT CONSTANTS</p>
 <dl class="py method">
 <dt id="py_backend.external.ExtConstant._get_constant_data">
@@ -1747,7 +1762,7 @@ If data_across is “name” the cell range name where the data is.</p></li>
 
 <dl class="py method">
 <dt id="py_backend.external.ExtConstant.add">
-<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">tab</span></em>, <em class="sig-param"><span class="n">cell</span></em>, <em class="sig-param"><span class="n">coords</span></em>, <em class="sig-param"><span class="n">dims</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#ExtConstant.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.ExtConstant.add" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">tab</span></em>, <em class="sig-param"><span class="n">cell</span></em>, <em class="sig-param"><span class="n">coords</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#ExtConstant.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.ExtConstant.add" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add information to retrieve new dimension in an already declared object</p>
 </dd></dl>
 
@@ -1761,11 +1776,11 @@ If data_across is “name” the cell range name where the data is.</p></li>
 
 <dl class="py class">
 <dt id="py_backend.external.ExtData">
-<em class="property">class </em><code class="sig-prename descclassname">py_backend.external.</code><code class="sig-name descname">ExtData</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">tab</span></em>, <em class="sig-param"><span class="n">time_row_or_col</span></em>, <em class="sig-param"><span class="n">cell</span></em>, <em class="sig-param"><span class="n">interp</span></em>, <em class="sig-param"><span class="n">coords</span></em>, <em class="sig-param"><span class="n">dims</span></em>, <em class="sig-param"><span class="n">root</span></em>, <em class="sig-param"><span class="n">py_name</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#ExtData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.ExtData" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">py_backend.external.</code><code class="sig-name descname">ExtData</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">tab</span></em>, <em class="sig-param"><span class="n">time_row_or_col</span></em>, <em class="sig-param"><span class="n">cell</span></em>, <em class="sig-param"><span class="n">interp</span></em>, <em class="sig-param"><span class="n">coords</span></em>, <em class="sig-param"><span class="n">root</span></em>, <em class="sig-param"><span class="n">py_name</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#ExtData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.ExtData" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class for Vensim GET XLS DATA/GET DIRECT DATA</p>
 <dl class="py method">
 <dt id="py_backend.external.ExtData.add">
-<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">tab</span></em>, <em class="sig-param"><span class="n">time_row_or_col</span></em>, <em class="sig-param"><span class="n">cell</span></em>, <em class="sig-param"><span class="n">interp</span></em>, <em class="sig-param"><span class="n">coords</span></em>, <em class="sig-param"><span class="n">dims</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#ExtData.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.ExtData.add" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">tab</span></em>, <em class="sig-param"><span class="n">time_row_or_col</span></em>, <em class="sig-param"><span class="n">cell</span></em>, <em class="sig-param"><span class="n">interp</span></em>, <em class="sig-param"><span class="n">coords</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#ExtData.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.ExtData.add" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add information to retrieve new dimension in an already declared object</p>
 </dd></dl>
 
@@ -1779,11 +1794,11 @@ If data_across is “name” the cell range name where the data is.</p></li>
 
 <dl class="py class">
 <dt id="py_backend.external.ExtLookup">
-<em class="property">class </em><code class="sig-prename descclassname">py_backend.external.</code><code class="sig-name descname">ExtLookup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">tab</span></em>, <em class="sig-param"><span class="n">x_row_or_col</span></em>, <em class="sig-param"><span class="n">cell</span></em>, <em class="sig-param"><span class="n">coords</span></em>, <em class="sig-param"><span class="n">dims</span></em>, <em class="sig-param"><span class="n">root</span></em>, <em class="sig-param"><span class="n">py_name</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#ExtLookup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.ExtLookup" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">py_backend.external.</code><code class="sig-name descname">ExtLookup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">tab</span></em>, <em class="sig-param"><span class="n">x_row_or_col</span></em>, <em class="sig-param"><span class="n">cell</span></em>, <em class="sig-param"><span class="n">coords</span></em>, <em class="sig-param"><span class="n">root</span></em>, <em class="sig-param"><span class="n">py_name</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#ExtLookup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.ExtLookup" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class for Vensim GET XLS LOOKUPS/GET DIRECT LOOKUPS</p>
 <dl class="py method">
 <dt id="py_backend.external.ExtLookup.add">
-<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">tab</span></em>, <em class="sig-param"><span class="n">x_row_or_col</span></em>, <em class="sig-param"><span class="n">cell</span></em>, <em class="sig-param"><span class="n">coords</span></em>, <em class="sig-param"><span class="n">dims</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#ExtLookup.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.ExtLookup.add" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">tab</span></em>, <em class="sig-param"><span class="n">x_row_or_col</span></em>, <em class="sig-param"><span class="n">cell</span></em>, <em class="sig-param"><span class="n">coords</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#ExtLookup.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.ExtLookup.add" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add information to retrieve new dimension in an already declared object</p>
 </dd></dl>
 

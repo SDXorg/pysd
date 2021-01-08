@@ -3,6 +3,7 @@ import warnings
 from ...pysd import read_vensim
 from io import open
 
+
 def read_tabular(table_file, sheetname='Sheet1'):
     """
     Reads a vensim syntax model which has been formatted as a table.

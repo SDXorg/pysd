@@ -7,24 +7,11 @@ the Stateful objects by functions.Model.initialize.
 import re
 import os
 import warnings
-import pandas as pd
+import pandas as pd  # TODO move to openpyxl
 import numpy as np
 import xarray as xr
+from openpyxl import load_workbook
 from . import utils
-
-try:
-    # Optional dependency as openpyxl requires python 3.6 or greater
-    # Used for reading data giving cell range names
-    from openpyxl import load_workbook
-
-except Exception:
-    warnings.warn(
-      "Not able to import openpyxl.\n"
-      + "You will not be able to read Excel data by cell range names.\n"
-      + " You can read Excels in the usual way as long as the reading "
-      + "information is by cell name (such as 'A1') and by row number "
-      + "or column letter in the case of GET DATA or GET LOOKUPS.\n\n"
-      )
 
 
 class Excels():
@@ -99,7 +86,6 @@ class External(object):
             depending on the shape of the requested data
         """
         # TODO move to openpyxl to avoid pandas dependency in this file.
-        # This must by a future implementation as openpyxl requires python 3.6+
         ext = os.path.splitext(self.file)[1].lower()
         if ext in ['.xls', '.xlsx']:
             # rows is an int of the first value
@@ -450,8 +436,8 @@ class External(object):
         """
         self._resolve_file(root=self.root)
         series_across = self._series_selector(self.x_row_or_col, self.cell)
-        size = utils.compute_shape(self.coords, self.dims,
-                                   reshape_len=1, py_name=self.py_name)[0]
+        size = utils.compute_shape(self.coords, reshape_len=1,
+                                   py_name=self.py_name)[0]
 
         series, data = self._get_series_data(
             series_across=series_across,
@@ -468,19 +454,15 @@ class External(object):
                   + "\t{}:\t{}\n".format(series_across, self.x_row_or_col)
                   + " is not strictly monotonous")
 
-        reshape_dims = tuple([len(series)]
-                             + utils.compute_shape(self.coords, self.dims))
+        reshape_dims = tuple([len(series)] + utils.compute_shape(self.coords))
 
         if len(reshape_dims) > 1:
             data = self._reshape(data, reshape_dims)
 
-        coords = self.coords.copy()
-        coords[dim_name] = series
-
         data = xr.DataArray(
             data=data,
-            coords=coords,
-            dims=[dim_name] + self.dims
+            coords={dim_name: series, **self.coords},
+            dims=[dim_name] + list(self.coords)
         )
 
         return data
@@ -650,15 +632,14 @@ class ExtData(External):
     """
 
     def __init__(self, file_name, tab, time_row_or_col, cell,
-                 interp, coords, dims, root, py_name):
-        super(ExtData, self).__init__(py_name)
+                 interp, coords, root, py_name):
+        super().__init__(py_name)
         self.files = [file_name]
         self.tabs = [tab]
         self.time_row_or_cols = [time_row_or_col]
         self.cells = [cell]
         self.coordss = [coords]
         self.root = root
-        self.dims = dims
         self.interp = interp
 
         # check if the interpolation method is valid
@@ -671,7 +652,7 @@ class ExtData(External):
                              + "'look forward' or 'hold backward")
 
     def add(self, file_name, tab, time_row_or_col, cell,
-            interp, coords, dims):
+            interp, coords):
         """
         Add information to retrieve new dimension in an already declared object
         """
@@ -686,7 +667,7 @@ class ExtData(External):
                              + "Error matching interpolation method with "
                              + "previously defined one")
 
-        if dims != self.dims:
+        if list(coords) != list(self.coordss[0]):
             raise ValueError(self.py_name + "\n"
                              + "Error matching dimensions with previous data")
 
@@ -736,17 +717,16 @@ class ExtLookup(External):
     """
 
     def __init__(self, file_name, tab, x_row_or_col, cell,
-                 coords, dims, root, py_name):
-        super(ExtLookup, self).__init__(py_name)
+                 coords, root, py_name):
+        super().__init__(py_name)
         self.files = [file_name]
         self.tabs = [tab]
         self.x_row_or_cols = [x_row_or_col]
         self.cells = [cell]
         self.root = root
         self.coordss = [coords]
-        self.dims = dims
 
-    def add(self, file_name, tab, x_row_or_col, cell, coords, dims):
+    def add(self, file_name, tab, x_row_or_col, cell, coords):
         """
         Add information to retrieve new dimension in an already declared object
         """
@@ -756,7 +736,7 @@ class ExtLookup(External):
         self.cells.append(cell)
         self.coordss.append(coords)
 
-        if dims != self.dims:
+        if list(coords) != list(self.coordss[0]):
             raise ValueError(self.py_name + "\n"
                              + "Error matching dimensions with previous data")
 
@@ -800,17 +780,16 @@ class ExtConstant(External):
     Class for Vensim GET XLS CONSTANTS/GET DIRECT CONSTANTS
     """
 
-    def __init__(self, file_name, tab, cell, coords, dims, root, py_name):
-        super(ExtConstant, self).__init__(py_name)
+    def __init__(self, file_name, tab, cell, coords, root, py_name):
+        super().__init__(py_name)
         self.files = [file_name]
         self.tabs = [tab]
         self.transposes = [cell[-1] == '*']
         self.cells = [cell.strip('*')]
         self.root = root
         self.coordss = [coords]
-        self.dims = dims
 
-    def add(self, file_name, tab, cell, coords, dims):
+    def add(self, file_name, tab, cell, coords):
         """
         Add information to retrieve new dimension in an already declared object
         """
@@ -820,7 +799,7 @@ class ExtConstant(External):
         self.cells.append(cell.strip('*'))
         self.coordss.append(coords)
 
-        if dims != self.dims:
+        if list(coords) != list(self.coordss[0]):
             raise ValueError(self.py_name + "\n"
                              + "Error matching dimensions with previous data")
 
@@ -849,8 +828,8 @@ class ExtConstant(External):
             data_across = "name"
             cell = self.cell
 
-        shape = utils.compute_shape(self.coords, self.dims,
-                                    reshape_len=2, py_name=self.py_name)
+        shape = utils.compute_shape(self.coords, reshape_len=2,
+                                    py_name=self.py_name)
 
         if self.transpose:
             shape.reverse()
@@ -861,14 +840,14 @@ class ExtConstant(External):
             data = data.transpose()
 
         # Create only an xarray if the data is not 0 dimensional
-        if len(self.dims) > 0:
-            reshape_dims = tuple(utils.compute_shape(self.coords, self.dims))
+        if len(self.coords) > 0:
+            reshape_dims = tuple(utils.compute_shape(self.coords))
 
             if len(reshape_dims) > 1:
                 data = self._reshape(data, reshape_dims)
 
             data = xr.DataArray(
-                data=data, coords=self.coords, dims=self.dims
+                data=data, coords=self.coords, dims=list(self.coords)
             )
 
         return data
@@ -949,7 +928,7 @@ class ExtSubscript(External):
     """
 
     def __init__(self, file_name, tab, firstcell, lastcell, prefix, root):
-        super(ExtSubscript, self).__init__("Hardcoded external subscript")
+        super().__init__("Hardcoded external subscript")
         self.file = file_name
         self.tab = tab
         self._resolve_file(root=root)

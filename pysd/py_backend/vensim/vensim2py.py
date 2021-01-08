@@ -4,18 +4,14 @@ module to write a python version of the model. Everything that requires
 knowledge of vensim syntax should be here.
 """
 
-from __future__ import absolute_import
-
 import os
 import re
-import textwrap
 import warnings
 from io import open
 
 import numpy as np
 import parsimonious
 
-from .. import functions as funcs
 from .. import builder, utils, external
 
 
@@ -402,88 +398,118 @@ functions = {
     # element-wise functions
     "abs": "abs",
     "integer": "int",
-    "exp": "np.exp",
-    "sin": "np.sin",
-    "cos": "np.cos",
-    "sqrt": "np.sqrt",
-    "tan": "np.tan",
-    "lognormal": "np.random.lognormal",
-    "random normal":
-        "functions.bounded_normal",
-    "poisson": "np.random.poisson",
-    "ln": "np.log",
-    "log": "functions.log",
-    "exprnd": "np.random.exponential",
-    "random uniform": "functions.random_uniform",
-    "sum": "functions.sum",
-    "arccos": "np.arccos",
-    "arcsin": "np.arcsin",
-    "arctan": "np.arctan",
-    "tanh": "np.tanh",
-    "sinh": "np.sinh",
-    "cosh": "np.cosh",
-    "if then else": "functions.if_then_else",
+    "modulo": {"name": "np.mod", "module": "numpy"},
+    "min": {"name": "np.minimum", "module": "numpy"},
+    "max": {"name": "np.maximum", "module": "numpy"},
+    "exp": {"name": "np.exp", "module": "numpy"},
+    "sin": {"name": "np.sin", "module": "numpy"},
+    "cos": {"name": "np.cos", "module": "numpy"},
+    "tan": {"name": "np.tan", "module": "numpy"},
+    "arcsin": {"name": "np.arcsin", "module": "numpy"},
+    "arccos": {"name": "np.arccos", "module": "numpy"},
+    "arctan": {"name": "np.arctan", "module": "numpy"},
+    "sinh": {"name": "np.sinh", "module": "numpy"},
+    "cosh": {"name": "np.cosh", "module": "numpy"},
+    "tanh": {"name": "np.tanh", "module": "numpy"},
+    "sqrt": {"name": "np.sqrt", "module": "numpy"},
+    "xidz": {"name": "xidz", "module": "functions"},
+    "zidz": {"name": "zidz", "module": "functions"},
+    "ln": {"name": "np.log", "module": "numpy"},
+    "log": {"name": "log", "module": "functions"},
+    "lognormal": {"name": "np.random.lognormal", "module": "numpy"},
+    "random normal": {"name": "bounded_normal", "module": "functions"},
+    "poisson": {"name": "np.random.poisson", "module": "numpy"},
+    "exprnd": {"name": "np.random.exponential", "module": "numpy"},
+    "random uniform": {"name": "random_uniform", "module": "functions"},
+    "if then else": {
+        "name": "if_then_else",
+        "parameters": [
+            {"name": 'condition'},
+            {"name": 'val_if_true', "type": 'lambda'},
+            {"name": 'val_if_false', "type": 'lambda'}
+        ],
+        "module": "functions"
+    },
     "step": {
-        "name": "functions.step",
+        "name": "step",
         "parameters": [
             {"name": 'time', "type": 'time'},
             {"name": 'value'},
-            {"name": 'tstep'}
-        ]
+            {"name": 'tstep'},
+        ],
+        "module": "functions"
     },
-    "modulo": "np.mod",
     "pulse": {
-        "name": "functions.pulse",
+        "name": "pulse",
         "parameters": [
             {"name": 'time', "type": 'time'},
             {"name": 'start'},
             {"name": "duration"}
-        ]
+        ],
+        "module": "functions"
     },
     # time, start, duration, repeat_time, end
     "pulse train": {
-        "name": "functions.pulse_train",
+        "name": "pulse_train",
         "parameters": [
             {"name": 'time', "type": 'time'},
             {"name": 'start'},
             {"name": 'duration'},
             {"name": 'repeat_time'},
             {"name": 'end'}
-        ]
+        ],
+        "module": "functions"
     },
     "ramp": {
-        "name": "functions.ramp",
+        "name": "ramp",
         "parameters": [
             {"name": 'time', "type": 'time'},
             {"name": 'slope'},
             {"name": 'start'},
             {"name": 'finish', "optional": True}
-        ]
+        ],
+        "module": "functions"
     },
-    "min": "np.minimum",
-    "max": "np.maximum",
-    # time, expr, init_val
     "active initial": {
-        "name": "functions.active_initial",
+        "name": "active_initial",
         "parameters": [
             {"name": 'time', "type": 'time'},
             {"name": 'expr', "type": 'lambda'},
             {"name": 'init_val'}
-        ]
+        ],
+        "module": "functions"
     },
-    "xidz": "functions.xidz",
-    "zidz": "functions.zidz",
     "game": "",  # In the future, may have an actual `functions.game` pass through
 
     # vector functions
-    "vmin": "functions.vmin",
-    "vmax": "functions.vmax",
-    "prod": "functions.prod",
+    "sum": {"name": "sum", "module": "functions"},
+    "prod": {"name": "prod", "module": "functions"},
+    "vmin": {"name": "vmin", "module": "functions"},
+    "vmax": {"name": "vmax", "module": "functions"},
 
 }
 
 # list of fuctions that accept a dimension to apply over
 vectorial_funcs = ["sum", "prod", "vmax", "vmin"]
+
+# other functions
+functions_utils = {
+    "lookup": {
+        "name": "lookup",
+        "module": "functions"
+    },
+    "round": {
+        "name": "round_",
+        "module": "utils"
+    },
+    "rearrange": {
+        "name": "rearrange",
+        "module": "utils"
+    },
+    "DataArray": {
+        "name": "xr.DataArray",
+        "module": "xarray"}
+}
 
 data_ops = {
     'get data at time': '',
@@ -555,8 +581,10 @@ builders = {
         identifier=element['py_name'],
         delay_input=args[0],
         delay_time='time_step()' if args[1]=='time_step()'\
-                   else 'utils.round_(' + args[1]\
-                        + ' / time_step() ) * time_step()',
+                   else builder.build_function_call(
+                       functions_utils['round'],
+                       [args[1] + ' / time_step()'])\
+                       + '* time_step()',
         initial_value=args[2],
         order='1.' if args[1]=='time_step()'\
               else args[1] + ' / time_step()',
@@ -896,8 +924,9 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
                 dims = [utils.find_subscript_name(subscript_dict, sub)
                         for sub in self.subs]
                 self.subs = None
-                return "utils.rearrange(" + py_expr + ", "\
-                       + repr(dims) + ", _subscript_dict)"
+                return builder.build_function_call(
+                    functions_utils["rearrange"],
+                    [py_expr, repr(dims), "_subscript_dict"])
 
             return py_expr
 
@@ -928,8 +957,9 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
                                                terse=False)
                 dims = [utils.find_subscript_name(subscript_dict, sub)
                         for sub in lookup_subs]
-                return "utils.rearrange(" + py_expr + ", "\
-                       + repr(dims) + ", _subscript_dict)"
+                return builder.build_function_call(
+                    functions_utils["rearrange"],
+                    [py_expr, repr(dims), "_subscript_dict"])
 
             return py_expr
 
@@ -941,12 +971,14 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
             mixed_list = pairs.replace('(', '').replace(')', '').split(',')
             xs = mixed_list[::2]
             ys = mixed_list[1::2]
-            string = "functions.lookup(x, [%(xs)s], [%(ys)s])" % {
-                'xs': ','.join(xs),
-                'ys': ','.join(ys)
-            }
             self.arguments = 'x'
-            return string
+            arguments = [
+                'x',
+                '['+','.join(xs)+']',
+                '['+','.join(ys)+']'
+            ]
+            return builder.build_function_call(functions_utils['lookup'],
+                                               arguments)
 
         def visit_lookup_with_def(self, n, vc):
             """ This exists because vensim has multiple ways of doing lookups.
@@ -956,18 +988,18 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
             mixed_list = pairs.replace('(', '').replace(')', '').split(',')
             xs = mixed_list[::2]
             ys = mixed_list[1::2]
-            string = "functions.lookup(%(x)s, [%(xs)s], [%(ys)s])" % {
-                'x': x_val,
-                'xs': ','.join(xs),
-                'ys': ','.join(ys)
-            }
-            return string
+            arguments = [
+                x_val,
+                '['+','.join(xs)+']',
+                '['+','.join(ys)+']'
+            ]
+            return builder.build_function_call(functions_utils['lookup'],
+                                               arguments)
 
         def visit_array(self, n, vc):
             if 'subs' in element and element['subs']:  # first test handles when subs is not defined
                 coords = utils.make_coord_dict(element['subs'], subscript_dict, terse=False)
-                dims = [utils.find_subscript_name(subscript_dict, sub) for sub in element['subs']]
-                shape = utils.compute_shape(coords, dims)
+                shape = utils.compute_shape(coords)
                 if ';' in n.text or ',' in n.text:
                     text = n.text.strip(';').replace(' ', '').replace(';', ',')
                     data = np.array([float(s) for s in text.split(',')])
@@ -975,13 +1007,9 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
                 else:
                     data = np.tile(float(n.text), shape)
                 datastr = np.array2string(data, separator=',').replace('\n', '').replace(' ', '')
-                return textwrap.dedent("""\
-                    xr.DataArray(data=%(datastr)s,
-                                 coords=%(coords)s,
-                                 dims=%(dims)s )""" % {
-                    'datastr': datastr,
-                    'coords': repr(coords),
-                    'dims': repr(dims)})
+                return builder.build_function_call(
+                    functions_utils["DataArray"],
+                    [datastr, repr(coords), repr(list(coords))])
 
             else:
                 return n.text.replace(' ', '')
@@ -1098,11 +1126,13 @@ def parse_lookup_expression(element, subscript_dict):
             mixed_list = pairs.replace('(', '').replace(')', '').split(',')
             xs = mixed_list[::2]
             ys = mixed_list[1::2]
-            string = "functions.lookup(x, [%(xs)s], [%(ys)s])" % {
-                'xs': ','.join(xs),
-                'ys': ','.join(ys)
-            }
-            self.translation = string
+            arguments = [
+                'x',
+                '['+','.join(xs)+']',
+                '['+','.join(ys)+']'
+            ]
+            self.translation = builder.build_function_call(
+                functions_utils['lookup'], arguments)
 
         def visit_excelLookup(self, n, vc):
 

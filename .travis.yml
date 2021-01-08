@@ -1,8 +1,6 @@
 language: python
 python:
-  - "2.7"
-  - "3.5"
-  - "3.6"
+  - "3.7"
 # command to install dependencies
 cache: pip
 install:
@@ -12,7 +10,6 @@ install:
   - pip install .
   - pip install -r requirements.txt
   - pip install coveralls
-  - if [ "$TRAVIS_PYTHON_VERSION" == "3.6" ]; then pip install -r optional-requirements.txt; fi
 # command to run tests
 script:
     - cd tests

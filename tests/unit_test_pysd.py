@@ -1,13 +1,72 @@
 import unittest
 import pandas as pd
 import numpy as np
-from pysd import utils
 
 test_model = 'test-models/samples/teacup/teacup.mdl'
 test_model_subs = 'test-models/tests/subscript_2d_arrays/test_subscript_2d_arrays.mdl'
 
 
 class TestPySD(unittest.TestCase):
+
+    def test_load_different_version_error(self):
+        import os
+        import pysd
+
+        model_main = """
+        from pysd import cache, external
+
+        __data = {'scope': None, 'time': lambda: 0}
+
+        def _init_outer_references(data):
+            for key in data:
+                __data[key] = data[key]
+
+        def initial_time():
+            return 0
+
+        """
+
+        model_main = model_main.replace("\n        ", "\n")
+
+        # old PySD major version
+        with open("old_version.py", "w") as f:
+            f.write(model_main)
+            f.write("__pysd_version__ = \"0.5.0\"")
+
+        with self.assertRaises(ImportError):
+            pysd.load("old_version.py")
+
+        # current PySD major version
+        with open("current_version.py", "w") as f:
+            f.write(model_main)
+            f.write("__pysd_version__ = \"1.99.3\"")
+
+        pysd.load("current_version.py")
+
+        os.remove("old_version.py")
+        os.remove("current_version.py")
+
+    def test_load_type_error(self):
+        import os
+        import pysd
+
+        # external object old definition with dims ([])
+        ext = "_ext_data = external.ExtData('input.xlsx', "\
+              + "'Sheet1', '5', 'B6', None, {}, [], _root, "\
+              + "'_ext_data')"
+
+        with open("type_error.py", "w") as f:
+            f.write("from pysd import external")
+            f.write("\n")
+            f.write("_root = './'")
+            f.write("\n")
+            f.write(ext)
+
+        with self.assertRaises(ImportError):
+            pysd.load("type_error.py")
+
+        os.remove("type_error.py")
+
     def test_run(self):
         import pysd
         model = pysd.read_vensim(test_model)
@@ -183,29 +242,17 @@ class TestPySD(unittest.TestCase):
         self.assertTrue(output.equals(res['Initial Values'].iloc[0]))
         self.assertEqual(res.index[0], 5)
 
-    def test_initial_conditions_subscripted_value_with_numpy(self):
-        # test for backward compatibility to remove in the future
-        import warnings
+    def test_initial_conditions_subscripted_value_with_numpy_error(self):
         import xarray as xr
         import pysd
 
-        coords = {'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3'],
-                  'Second Dimension Subscript': ['Column 1', 'Column 2']}
-        dims = ['One Dimensional Subscript', 'Second Dimension Subscript']
-        output = xr.DataArray([[5, 3], [4, 8], [9, 3]], coords, dims)
         input_ = np.array([[5, 3], [4, 8], [9, 3]])
 
         model = pysd.read_vensim(test_model_subs)
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
+        with self.assertRaises(ValueError):
             res = model.run(initial_condition=(5, {'initial_values': input_}),
                             return_columns=['Initial Values'],
                             return_timestamps=list(range(5, 10)))
-        self.assertTrue(output.equals(res['Initial Values'].iloc[0]))
-        self.assertEqual(res.index[0], 5)
-        self.assertEqual(len(w), 1)
-        self.assertTrue(
-            'deprecated' in str(w[0].message))
 
     def test_set_constant_parameter(self):
         """ In response to: re: https://github.com/JamesPHoughton/pysd/issues/5"""
@@ -305,27 +352,16 @@ class TestPySD(unittest.TestCase):
         res = model.run(return_columns=['Initial Values'])
         self.assertTrue(output.equals(res['Initial Values'].iloc[0]))
 
-    def test_set_subscripted_value_with_numpy(self):
-        # test for backward compatibility to remove in the future
+    def test_set_subscripted_value_with_numpy_error(self):
         import warnings
         import xarray as xr
         import pysd
 
-        coords = {'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3'],
-                  'Second Dimension Subscript': ['Column 1', 'Column 2']}
-        dims = ['One Dimensional Subscript', 'Second Dimension Subscript']
-        output = xr.DataArray([[5, 3], [4, 8], [9, 3]], coords, dims)
         input_ = np.array([[5, 3], [4, 8], [9, 3]])
 
         model = pysd.read_vensim(test_model_subs)
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
+        with self.assertRaises(ValueError):
             model.set_components({'initial_values': input_, 'final_time': 10})
-        res = model.run(return_columns=['Initial Values'])
-        self.assertTrue(output.equals(res['Initial Values'].iloc[0]))
-        self.assertEqual(len(w), 1)
-        self.assertTrue(
-            'deprecated' in str(w[0].message))
 
     def test_set_subscripted_timeseries_parameter_with_constant(self):
         import xarray as xr
@@ -420,6 +456,8 @@ class TestPySD(unittest.TestCase):
                          'The initial time for the simulation.')
         self.assertEqual(doc[doc['Real Name'] == 'Characteristic Time']['Type'].values[0],
                          'constant')
+        self.assertEqual(doc[doc['Real Name'] == 'Teacup Temperature']['Lims'].values[0],
+                         '(32.0, 212.0)')
 
     def test_docs_multiline_eqn(self):
         """ Test that the model prints some documentation """
@@ -435,24 +473,23 @@ class TestPySD(unittest.TestCase):
                          'euros/kg')
         self.assertEqual(doc[doc['Real Name'] == 'price']['Py Name'].values[0],
                          'price')
-        self.assertTrue(doc[doc['Real Name'] == 'price']['Subs'].values[0] in
-                        ["['fruits']", "[u'fruits']"])
+        self.assertEqual(doc[doc['Real Name'] == 'price']['Subs'].values[0],
+                         "['fruits']")
         self.assertEqual(doc[doc['Real Name'] == 'price']['Eqn'].values[0],
                          '1.2; .; .; .; 1.4')
 
 
     def test_stepwise_cache(self):
-        # Checks backward compatibility, must be changed to @cache.step when deprecated
         run_history = []
         result_history = []
 
         global time
         time = lambda: 0  # for testing cache function
-        from pysd.py_backend.functions import cache
+        from pysd import cache
 
         cache.time = time()
 
-        @cache('step')
+        @cache.step
         def upstream(run_hist, res_hist):
             run_hist.append('U')
             return 'up'
@@ -504,11 +541,11 @@ class TestPySD(unittest.TestCase):
 
         global time
         time = lambda: 0  # for testing cache function
-        from pysd.py_backend.functions import cache
+        from pysd import cache
 
         cache.time = time()
 
-        @cache('run')
+        @cache.run
         def upstream(run_hist, res_hist):
             run_hist.append('U')
             return 'up'
@@ -563,15 +600,6 @@ class TestPySD(unittest.TestCase):
         reset_temp = model.components.teacup_temperature()
         self.assertNotEqual(initial_temp, final_temp)
         self.assertEqual(initial_temp, reset_temp)
-
-    def test_reset_state(self):
-        import pysd
-        import warnings
-        model = pysd.read_vensim(test_model)
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            model.reset_state()
-        self.assertEqual(len(w), 1)
 
     def test_set_state(self):
         import pysd
@@ -693,53 +721,29 @@ class TestPySD(unittest.TestCase):
         model.set_state(new_time + 2, {'_integ_stock_a': output3})
         self.assertTrue(model.components.stock_a().equals(output3))
 
-    def test_set_state_subscripted_value_with_numpy(self):
-            # test for backward compatibility to remove in the future
+    def test_set_state_subscripted_value_with_numpy_error(self):
         import warnings
         import xarray as xr
         import pysd
-        coords = {'One Dimensional Subscript': ['Entry 1', 'Entry 2', 'Entry 3'],
-                  'Second Dimension Subscript': ['Column 1', 'Column 2']}
-        dims = ['One Dimensional Subscript', 'Second Dimension Subscript']
-        output1 = xr.DataArray([[5, 3], [4, 8], [9, 3]], coords, dims)
         input1 = np.array([[5, 3], [4, 8], [9, 3]])
-        output2 = xr.DataArray([[53, 43], [84, 80], [29, 63]], coords, dims)
         input2 = np.array([[53, 43], [84, 80], [29, 63]])
-        output3 = xr.DataArray([[54, 32], [40, 87], [93, 93]], coords, dims)
         input3 = np.array([[54, 32], [40, 87], [93, 93]])
 
         new_time = np.random.rand()
 
         model = pysd.read_vensim(test_model_subs)
-        initial_stock = model.components.stock_a()
 
         # Test that we can set with real names
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
+        with self.assertRaises(ValueError):
             model.set_state(new_time, {'Stock A': input1})
-        self.assertFalse(initial_stock.equals(output1))
-        self.assertTrue(model.components.stock_a().equals(output1))
-        self.assertEqual(len(w), 1)
-        self.assertTrue(
-            'deprecated' in str(w[0].message))
 
         # Test setting with pysafe names
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
+        with self.assertRaises(ValueError):
             model.set_state(new_time + 1, {'stock_a': input2})
-        self.assertTrue(model.components.stock_a().equals(output2))
-        self.assertEqual(len(w), 1)
-        self.assertTrue(
-            'deprecated' in str(w[0].message))
 
         # Test setting with stateful object name
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
+        with self.assertRaises(ValueError):
             model.set_state(new_time + 2, {'_integ_stock_a': input3})
-        self.assertTrue(model.components.stock_a().equals(output3))
-        self.assertEqual(len(w), 1)
-        self.assertTrue(
-            'deprecated' in str(w[0].message))
 
     def test_replace_element(self):
         import pysd

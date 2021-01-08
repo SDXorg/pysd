@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from setuptools import setup, find_packages
 
 exec(open('pysd/_version.py').read())
@@ -10,6 +8,7 @@ long_description = """Project Documentation: http://pysd.readthedocs.org/"""
 setup(
     name='pysd',
     version=__version__,
+    python_requires='>3.7',
     author='James Houghton',
     author_email='james.p.houghton@gmail.com',
     packages=find_packages(exclude=['docs', 'tests', 'dist', 'build']),
@@ -29,7 +28,7 @@ setup(
         'pandas',
         'numpy',
         'parsimonious',
-        'yapf',
+        'black',
         'xarray',
         'lxml',
         'xlwt',        
@@ -37,7 +36,8 @@ setup(
         'pydoe',
         'xlrd',
         'regex',
-        'chardet'
+        'chardet',
+        'openpyxl'
     ],
     package_data={
         'py_backend': [

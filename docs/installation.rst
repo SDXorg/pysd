@@ -31,7 +31,7 @@ In the source directory use the command
 
 Required Dependencies
 ---------------------
-PySD was originally built on python 2.7, but will work with 3.x.
+PySD was originally built on python 2.7. Hoewever, the last version requires at least **python 3.7**.
 
 PySD calls on the core Python data analytics stack, and a third party parsing library:
 
@@ -40,6 +40,8 @@ PySD calls on the core Python data analytics stack, and a third party parsing li
 * Pandas
 * Matplotlib
 * Parsimonious
+* black
+* openpyxl
 
 These modules should build automatically if you are installing via `pip`. If you are building from
 the source code, or if pip fails to load them, they can be loaded with the same `pip` syntax as

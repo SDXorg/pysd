@@ -11,6 +11,11 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
+# used to create python safe names
+from .decorators import __dir__ as ddir
+from .external import __dir__ as edir
+from .functions import __dir__ as fdir
+
 
 def xrmerge(das, accept_new=True):
     """
@@ -227,6 +232,9 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
     if reserved_words is None:
         reserved_words = list()
 
+    # reserved the names of PySD functions and methods
+    reserved_words += dir() + fdir() + edir() + ddir()
+
     if string in namespace:
         return namespace[string], namespace
 
@@ -252,11 +260,10 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
         # Remove invalid characters
         s = re.sub('[^\p{l}\p{m}\p{n}_]', '', s)
 
-    # TODO: we should make all the identifiers start by a letter, and let
-    # the _ only for stateful and external elements (_integ_name...)
-    # Remove leading characters until we find a letter or underscore.
+    # If leading characters are not a letter or underscore add nvs_.
     # Only letters can be leading characters.
-    s = re.sub('^[^\p{l}_]+', '', s)
+    if re.findall('^[^\p{l}_]+', s):
+        s = 'nvs_' + s
 
     # Check that the string is not a python identifier
     while (s in keyword.kwlist or
@@ -425,7 +432,7 @@ def visit_addresses(frame, return_addresses):
     return outdict
 
 
-def compute_shape(coords, dims, reshape_len=None, py_name=''):
+def compute_shape(coords, reshape_len=None, py_name=''):
     """
     Computes the 'shape' of a coords dictionary.
     Function used to rearange data in xarrays and
@@ -434,9 +441,7 @@ def compute_shape(coords, dims, reshape_len=None, py_name=''):
     Parameters
     ----------
     coords: dict
-      Dictionary of the dimension names as a keys with their values.
-    dims: list
-      Ordered list of the dimensions.
+      Ordered dictionary of the dimension names as a keys with their values.
     reshape_len: int (optional)
       Number of dimensions of the output shape.
       The shape will ony compute the corresponent table
@@ -463,10 +468,10 @@ def compute_shape(coords, dims, reshape_len=None, py_name=''):
 
     """
     if not reshape_len:
-        return [len(coords[dim]) for dim in dims]
+        return [len(coord) for coord in coords.values()]
 
     # get the shape of the coordinates bigger than 1
-    shape = [len(coords[dim]) for dim in dims if len(coords[dim]) > 1]
+    shape = [len(coord) for coord in coords.values() if len(coord) > 1]
 
     shape_len = len(shape)
 
@@ -516,21 +521,15 @@ def rearrange(data, dims, coords):
     # subset used coords in general coords will be the subscript_dict
     coords = {dim: coords[dim] for dim in dims}
     if isinstance(data, xr.DataArray):
-        if data.shape == tuple(compute_shape(coords, dims)):
+        if data.shape == tuple(compute_shape(coords)):
             # Allows switching dimensions names and transpositions
             return xr.DataArray(data=data.values, coords=coords, dims=dims)
 
         # The coordinates are expanded or transposed
-        # TODO replace cleaner version for Python 3 (when deprecate Py2)
-        # return xr.DataArray(0, coords, dims)
-        return xr.DataArray(np.zeros(compute_shape(coords, dims)),
-                            coords, dims) + data
+        return xr.DataArray(0, coords, dims) + data
 
     else:
-        # TODO replace cleaner version for Python 3 (when deprecate Py2)
-        # return xr.DataArray(float(data), coords, dims)
-        return xr.DataArray(np.full(compute_shape(coords, dims),
-                                    float(data)), coords, dims)
+        return xr.DataArray(data, coords, dims)
 
 
 def round_(x):
