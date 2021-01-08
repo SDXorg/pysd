@@ -16,13 +16,28 @@ from ast import literal_eval
 import numpy as np
 import pandas as pd
 import xarray as xr
-import scipy.stats as stats
 from funcsigs import signature
 
 from . import utils
 from .external import External, Excels
 
 from .._version import __version__
+
+try:
+    import scipy.stats as stats
+
+    def bounded_normal(minimum, maximum, mean, std, seed):
+        """ Implements vensim's BOUNDED NORMAL function """
+        # np.random.seed(seed)  # we could bring this back later, but for now, ignore
+        return stats.truncnorm.rvs(minimum, maximum, loc=mean, scale=std)
+
+except ImportError:
+    warnings.warn("Scipy required for functions:"
+                  "- Bounded Normal (falling back to unbounded normal)")
+
+    def bounded_normal(minimum, maximum, mean, std, seed):
+        """ Warning: using unbounded normal due to no scipy """
+        return np.random.normal(mean, std)
 
 small_vensim = 1e-6  # What is considered zero according to Vensim Help
 
@@ -1258,10 +1273,4 @@ def vmax(x, dim=None):
         return float(x.max())
 
     return x.max(dim=dim)
-
-
-def bounded_normal(minimum, maximum, mean, std, seed):
-    """ Implements vensim's BOUNDED NORMAL function """
-    # np.random.seed(seed)  # we could bring this back later, but for now, ignore
-    return stats.truncnorm.rvs(minimum, maximum, loc=mean, scale=std)
 

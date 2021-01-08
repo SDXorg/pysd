@@ -27,7 +27,6 @@ setup(
     install_requires=[
         'pandas',
         'numpy',
-        'scipy',
         'parsimonious',
         'black',
         'xarray',
