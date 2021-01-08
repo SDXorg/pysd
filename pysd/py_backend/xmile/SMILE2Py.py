@@ -30,32 +30,31 @@ functions = {
     # ===
 
     "abs": "abs",
-    "arccos": "np.arccos",
-    "arcsin": "np.arcsin",
-    "arctan": "np.arctan",
-    "cos": "np.cos",
-    "sin": "np.sin",
-    "tan": "np.tan",
-    "exp": "np.exp",
-    "inf": "np.inf",
     "int": "int",
-    "ln": "np.log",
-    "log10": "np.log10",
+    "inf": {"name": "np.inf", "module": "numpy"},
+    "exp": {"name": "np.exp", "module": "numpy"},
+    "sin": {"name": "np.sin", "module": "numpy"},
+    "cos": {"name": "np.cos", "module": "numpy"},
+    "tan": {"name": "np.tan", "module": "numpy"},
+    "arcsin": {"name": "np.arcsin", "module": "numpy"},
+    "arccos": {"name": "np.arccos", "module": "numpy"},
+    "arctan": {"name": "np.arctan", "module": "numpy"},
+    "sqrt": {"name": "np.sqrt", "module": "numpy"},
+    "ln": {"name": "np.log", "module": "numpy"},
+    "log10": {"name": "np.log10", "module": "numpy"},
     "max": "max",
     "min": "min",
-    "pi": "np.pi",
-    "sqrt": "np.sqrt",
 
     # ===
     # 3.5.2 Statistical Functions
     # http://docs.oasis-open.org/xmile/xmile/v1.0/csprd01/xmile-v1.0-csprd01.html#_Toc398039981
     # ===
 
-    "exprnd": "np.random.exponential",
-    "lognormal": "np.random.lognormal",
-    "normal": "np.random.normal",
-    "poisson": "np.random.poisson",
-    "random": "np.random.rand",
+    "exprnd": {"name": "np.random.exponential", "module": "numpy"},
+    "lognormal": {"name": "np.random.lognormal", "module": "numpy"},
+    "normal": {"name": "np.random.normal", "module": "numpy"},
+    "poisson": {"name": "np.random.poisson", "module": "numpy"},
+    "random": {"name": "np.random.rand", "module": "numpy"},
 
     # ===
     # 3.5.4 Test Input Functions
@@ -63,31 +62,34 @@ functions = {
     # ===
 
     "pulse": {
-        "name": "functions.pulse_magnitude",
+        "name": "pulse_magnitude",
         "parameters": [
             {"name": 'time', "type": "time"},
             {"name": 'magnitude'},
             {"name": 'start'},
             {"name": "repeat_time", "optional": True}
-        ]
+        ],
+        "module": "functions"
     },
     "step": {
-        "name": "functions.step",
+        "name": "step",
         "parameters": [
             {"name": 'time', "type": 'time'},
             {"name": 'value'},
             {"name": 'tstep'}
-        ]
+        ],
+        "module": "functions"
     },
     # time, slope, start, finish=0
     "ramp": {
-        "name": "functions.ramp",
+        "name": "ramp",
         "parameters": [
             {"name": 'time', "type": 'time'},
             {"name": 'slope'},
             {"name": 'start'},
             {"name": 'finish', "optional": True}
-        ]
+        ],
+        "module": "functions"
     },
 
     # ===
@@ -95,12 +97,13 @@ functions = {
     # http://docs.oasis-open.org/xmile/xmile/v1.0/csprd01/xmile-v1.0-csprd01.html#_Toc398039985
     # ===
    "if then else": {
-        "name": "functions.if_then_else",
+        "name": "if_then_else",
         "parameters": [
             {"name": 'condition'},
             {"name": 'val_if_true', "type": 'lambda'},
             {"name": 'val_if_false', "type": 'lambda'}
-        ]
+        ],
+        "module": "functions"
     },
     # "previous" !TODO!
     # "self" !TODO!
@@ -267,7 +270,8 @@ class SMILEParser(NodeVisitor):
 
     def visit_conditional_statement(self, n, vc):
         _IF, _1, condition_expr, _2, _THEN, _3, then_expr, _4, _ELSE, _5, else_expr = vc
-        return "functions.if_then_else(" + condition_expr + ", lambda: " + then_expr + ", lambda: " + else_expr + ")"
+        return builder.build_function_call(functions["if then else"],
+            [condition_expr, then_expr, else_expr])
 
     def visit_user_call_identifier(self, n, vc):
         return self.extended_model_namespace[n.text]

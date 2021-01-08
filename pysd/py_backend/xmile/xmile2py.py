@@ -64,10 +64,20 @@ def translate_xmile(xmile_file):
             xs = np.fromstring(xs_node.text, dtype=np.float, sep=xs_node.attrib['sep'] if 'sep' in xs_node.attrib else ',')
 
         type = node.attrib['type'] if 'type' in node.attrib else 'continuous'
+
         functions_map = {
-            'continuous': 'functions.lookup',
-            'extrapolation': 'functions.lookup_extrapolation',
-            'discrete': 'functions.lookup_discrete'
+            "continuous": {
+                "name": "lookup",
+                "module": "functions"
+            },
+            'extrapolation': {
+                "name": "lookup_extrapolation",
+                "module": "functions"
+            },
+            'discrete': {
+                "name": "lookup_discrete",
+                "module": "functions"
+            }
         }
         lookup_function = functions_map[type] if type in functions_map else functions_map['continuous']
 
@@ -130,17 +140,19 @@ def translate_xmile(xmile_file):
         gf_node = node.xpath("ns:gf", namespaces={'ns': NS})
         if len(gf_node) > 0:
             gf_data = parse_lookup_xml_node(gf_node[0])
-
+            xs = '[' + ','.join("%10.3f" % x for x in gf_data['xs']) + ']'
+            ys = '[' + ','.join("%10.3f" % x for x in gf_data['ys']) + ']'
+            py_expr =\
+                builder.build_function_call(gf_data['function'],
+                                            [element['py_expr'], xs, ys])\
+                + ' if x is None else '\
+                + builder.build_function_call(gf_data['function'],
+                                              ['x', xs, ys])
             element.update({
                 'kind': 'lookup',
                 # This lookup declared as inline, so we should implement inline mode for flow and aux
                 'arguments': "x = None",
-                'py_expr': "%(function)s(%(x)s, [%(xs)s], [%(ys)s]) if x is None else %(function)s(x, [%(xs)s], [%(ys)s])" % {
-                    'function': gf_data['function'],
-                    'xs': ','.join("%10.3f" % x for x in gf_data['xs']),
-                    'ys': ','.join("%10.3f" % x for x in gf_data['ys']),
-                    'x': element['py_expr']
-                },
+                'py_expr': py_expr,
             })
 
         model_elements.append(element)
@@ -155,7 +167,10 @@ def translate_xmile(xmile_file):
         doc = get_xpath_text(node, 'ns:doc')
 
         gf_data = parse_lookup_xml_node(node)
-
+        xs = '[' + ','.join("%10.3f" % x for x in gf_data['xs']) + ']'
+        ys = '[' + ','.join("%10.3f" % x for x in gf_data['ys']) + ']'
+        py_expr = builder.build_function_call(gf_data['function'],
+                                              ['x', xs, ys])
         element = {
             'kind': 'lookup',
             'real_name': name,
@@ -164,11 +179,7 @@ def translate_xmile(xmile_file):
             'doc': doc,
             'eqn': '',
             'py_name': py_name,
-            'py_expr': "%(function)s(x, [%(xs)s], [%(ys)s])" % {
-                    'function': gf_data['function'],
-                    'xs': ','.join("%10.3f" % x for x in gf_data['xs']),
-                    'ys': ','.join("%10.3f" % x for x in gf_data['ys']),
-                },
+            'py_expr': py_expr,
             'arguments': 'x',
             'subs': [],  # Todo later
         }

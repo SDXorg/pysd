@@ -23,11 +23,14 @@ from .._version import __version__
 # Variable to save identifiers of external objects
 build_names = set()
 
-# set for intelligent imports in model file
-build_external = set()
-build_functions = set()
-build_utils = set()
-external_lib = set()
+# dictionary for intelligent imports in model file
+import_modules = {
+    'numpy': False,
+    'xarray': False,
+    'subs': False,
+    'functions': set(),
+    'external': set(),
+    'utils': set()}
 
 
 def build(elements, subscript_dict, namespace, outfile_name):
@@ -66,23 +69,25 @@ def build(elements, subscript_dict, namespace, outfile_name):
     Translated using PySD version %(version)s
     """
     from os import path\n'''
+
     # intelligent import of needed functions and packages
-    if "numpy" in external_lib:
+    if import_modules['numpy']:
         text += "    import numpy as np\n"
-    if "xarray" in external_lib:
+    if import_modules['xarray']:
         text += "    import xarray as xr\n"
     text += "\n"
-    if build_functions:
-        text += "    from pysd.py_backend.functions import %(methods)s\n"\
-                % {'methods': ", ".join(build_functions)}
-    if build_external:
-        text += "    from pysd.py_backend.external import %(methods)s\n"\
-                % {'methods': ", ".join(build_external)}
-    if build_utils:
-        text += "    from pysd.py_backend.utils import %(methods)s\n"\
-                % {'methods': ", ".join(build_utils)}
 
-    if "subs" in external_lib:
+    if import_modules['functions']:
+        text += "    from pysd.py_backend.functions import %(methods)s\n"\
+                % {'methods': ", ".join(import_modules['functions'])}
+    if import_modules['external']:
+        text += "    from pysd.py_backend.external import %(methods)s\n"\
+                % {'methods': ", ".join(import_modules['external'])}
+    if import_modules['utils']:
+        text += "    from pysd.py_backend.utils import %(methods)s\n"\
+                % {'methods': ", ".join(import_modules['utils'])}
+
+    if import_modules['subs']:
         text += "    from pysd import cache, subs\n"
     else:
         # we need to import always cache as it is called in the integration
@@ -123,10 +128,10 @@ def build(elements, subscript_dict, namespace, outfile_name):
 
     # this is needed if more than one model are translated in the same session
     build_names.clear()
-    build_external.clear()
-    build_functions.clear()
-    build_utils.clear()
-    external_lib.clear()
+    for module in ['numpy', 'xarray', 'subs']:
+        import_modules[module] =False
+    for module in ['functions', 'external', 'utils']:
+        import_modules[module].clear()
 
     # this is used for testing
     if outfile_name == 'return':
@@ -187,14 +192,14 @@ def build_element(element, subscript_dict):
                 coords = utils.make_coord_dict(subs, subscript_dict,
                                                terse=False)
                 dims = list(coords)
-                build_utils.add("rearrange")
+                import_modules['utils'].add("rearrange")
                 py_expr_i.append('rearrange(%s, %s, %s)' % (
                     py_expr, dims, coords))
             elif py_expr_no_ADD[i] and not py_expr_no_ADD[i+1]:
                 # if next element has ADD the current element comes from a
                 # external class, no need to rearrange
                 py_expr_i.append(py_expr)
-        build_utils.add("xrmerge")
+        import_modules['utils'].add("xrmerge")
         py_expr = 'xrmerge([%s,])' % (
             ',\n'.join(py_expr_i))
     else:
@@ -222,7 +227,7 @@ def build_element(element, subscript_dict):
             # maximum when we use it
             # re arrange the python object
             element['subs_dec'] = '@subs(%s, _subscript_dict)' % dims
-            external_lib.add("subs")
+            import_modules['subs'] = True
 
     indent = 8
     element.update({'cache': cache_type,
@@ -234,11 +239,6 @@ def build_element(element, subscript_dict):
     element['doc'] = element['doc'].replace('\\', '\n    ')
 
     if element['kind'] in ['stateful', 'external']:
-        if "utils.round_" in element['py_expr'][0]:
-            build_utils.add("round_")
-            element['py_expr'][0] =\
-                element['py_expr'][0].replace("utils.round_",
-                                              "round_")
         func = '''
     %(py_name)s = %(py_expr)s
             ''' % {'py_name': element['py_name'],
@@ -265,24 +265,6 @@ def build_element(element, subscript_dict):
             # From 2 to 5 equations in different lines
             element['eqn'] = sep + sep.join(element['eqn'])
 
-        if "xr." in element['contents']:
-            external_lib.add("xarray")
-
-        if "functions.if_then_else" in element['contents']:
-            build_functions.add("if_then_else")
-            element['contents'] =\
-                element['contents'].replace("functions.if_then_else",
-                                            "if_then_else")
-        if "functions.lookup" in element['contents']:
-            build_functions.add("lookup")
-            element['contents'] =\
-                element['contents'].replace("functions.lookup",
-                                            "lookup")
-        if "utils.rearrange" in element['contents']:
-            build_utils.add("rearrange")
-            element['contents'] =\
-                element['contents'].replace("utils.rearrange",
-                                            "rearrange")
         func = '''
     %(cache)s
     %(subs_dec)s
@@ -390,7 +372,7 @@ def add_stock(identifier, expression, initial_condition,
         that these can be appropriately aggregated
 
     """
-    build_functions.add("Integ")
+    import_modules['functions'].add("Integ")
 
     new_structure = []
 
@@ -498,7 +480,7 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
         list of element construction dictionaries for the builder to assemble
 
     """
-    build_functions.add("Delay")
+    import_modules['functions'].add("Delay")
 
     new_structure = []
 
@@ -620,7 +602,7 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order,
         list of element construction dictionaries for the builder to assemble
 
     """
-    build_functions.add("Smooth")
+    import_modules['functions'].add("Smooth")
 
     stateful = {
         'py_name': '_smooth_%s' % identifier,
@@ -675,7 +657,7 @@ def add_n_trend(identifier, trend_input, average_time, initial_trend,
 
     """
 
-    build_functions.add("Trend")
+    import_modules['functions'].add("Trend")
 
     stateful = {
         'py_name': '_trend_%s' % identifier,
@@ -716,7 +698,7 @@ def add_initial(initial_input):
 
     """
 
-    build_functions.add("Initial")
+    import_modules['functions'].add("Initial")
 
     stateful = {
         'py_name': utils.make_python_identifier('_initial_%s'
@@ -776,7 +758,7 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell,
               if isinstance(keyword, str) else keyword
     name = utils.make_python_identifier('_ext_data_%s' % identifier)[0]
 
-    build_external.add("ExtData")
+    import_modules['external'].add("ExtData")
 
     # Check if the object already exists
     if name in build_names:
@@ -843,7 +825,7 @@ def add_ext_constant(identifier, file_name, tab, cell,
         list of element construction dictionaries for the builder to assemble
 
     """
-    build_external.add("ExtConstant")
+    import_modules['external'].add("ExtConstant")
 
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
     name = utils.make_python_identifier('_ext_constant_%s' % identifier)[0]
@@ -914,7 +896,7 @@ def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell,
         list of element construction dictionaries for the builder to assemble
 
     """
-    build_external.add("ExtLookup")
+    import_modules['external'].add("ExtLookup")
 
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
     name = utils.make_python_identifier('_ext_lookup_%s' % identifier)[0]
@@ -975,7 +957,7 @@ def add_macro(macro_name, filename, arg_names, arg_vals):
         list of element construction dictionaries for the builder to assemble
 
     """
-    build_functions.add("Macro")
+    import_modules['functions'].add("Macro")
 
     func_args = '{ %s }' % ', '.join(["'%s': lambda: %s" % (key, val)
                                       for key, val in
@@ -1007,7 +989,7 @@ def add_incomplete(var_name, dependencies):
      in which we can raise a warning about the incomplete equation
      at translate time.
     """
-    build_functions.add("incomplete")
+    import_modules['functions'].add("incomplete")
 
     warnings.warn('%s has no equation specified' % var_name,
                   SyntaxWarning, stacklevel=2)
@@ -1043,27 +1025,15 @@ def build_function_call(function_def, user_arguments):
 
     """
     if isinstance(function_def, str):
-        if function_def[:10] == "functions.":
-            # update imported functions in model file
-            build_functions.add(function_def[10:])
-            return function_def[10:] + "(" + ",".join(user_arguments) + ")"
-
-        if function_def[:3] == "np.":
-            # update to import numpy
-            external_lib.add("numpy")
-
         return function_def + "(" + ",".join(user_arguments) + ")"
 
-    function_def_name = function_def['name']
-
-    if function_def_name[:10] == "functions.":
-        # update imported functions in model file
-        function_def_name = function_def_name[10:]
-        build_functions.add(function_def_name)
-
-    elif function_def_name[:3] == "np.":
-        # update to import numpy
-        external_lib.add("numpy")
+    if "module" in function_def:
+        if function_def["module"] in ["numpy", "xarray"]:
+            # import external modules
+            import_modules[function_def['module']] = True
+        else:
+            # import method from PySD module
+            import_modules[function_def['module']].add(function_def['name'])
 
     if "parameters" in function_def:
         parameters = function_def["parameters"]
@@ -1090,6 +1060,6 @@ def build_function_call(function_def, user_arguments):
                                  "scope": "__data['scope']"
                              }[parameter_type])
 
-        return function_def_name + "(" + ", ".join(arguments) + ")"
+        return function_def['name'] + "(" + ", ".join(arguments) + ")"
 
-    return function_def_name + "(" + ",".join(user_arguments) + ")"
+    return function_def['name'] + "(" + ",".join(user_arguments) + ")"
