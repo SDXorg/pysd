@@ -9,15 +9,17 @@ There should be nothing here that has to know about either vensim or
 xmile specific syntax.
 """
 
+import sys
 import os.path
 import textwrap
+import pathlib
 import warnings
 from io import open
 import black
 
 from . import utils
 
-from .._version import __version__
+from pysd._version import __version__
 
 
 # Variable to save identifiers of external objects
