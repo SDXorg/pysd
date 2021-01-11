@@ -7,9 +7,11 @@ makes it easy for the model elements to call.
 
 import inspect
 import os
+import sys
 import re
 import random
 import warnings
+import pathlib
 from importlib.machinery import SourceFileLoader
 from ast import literal_eval
 
@@ -21,7 +23,7 @@ from funcsigs import signature
 from . import utils
 from .external import External, Excels
 
-from .._version import __version__
+from pysd._version import __version__
 
 try:
     import scipy.stats as stats
