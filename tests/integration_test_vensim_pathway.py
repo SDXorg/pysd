@@ -388,7 +388,6 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscript_selection/subscript_selection.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('failing in py3')
     def test_subscript_subranges(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscript_subranges/test_subscript_subrange.mdl')
