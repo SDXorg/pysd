@@ -351,7 +351,6 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscript_docs/subscript_docs.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('working on it #216')
     def test_subscript_element_name(self):
         # issue https://github.com/JamesPHoughton/pysd/issues/216
         from.test_utils import runner, assert_frames_close
