@@ -643,8 +643,10 @@ class ExtData(External):
         self.interp = interp
 
         # check if the interpolation method is valid
-        if self.interp and\
-           self.interp not in ["interpolate", "raw",
+        if not interp:
+            self.interp = "interpolate"
+
+        if self.interp not in ["interpolate", "raw",
                                "look forward", "hold backward"]:
             raise ValueError(self.py_name + "\n"
                              + " The interpolation method (interp) must be "
@@ -662,6 +664,8 @@ class ExtData(External):
         self.cells.append(cell)
         self.coordss.append(coords)
 
+        if not interp:
+            interp = "interpolate"
         if interp != self.interp:
             raise ValueError(self.py_name + "\n"
                              + "Error matching interpolation method with "
