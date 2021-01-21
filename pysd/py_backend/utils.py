@@ -564,3 +564,48 @@ def add_entries_underscore(*dictionaries):
         for name in keys:
             dictionary[re.sub(' ', '_', name)] = dictionary[name]
     return
+
+
+class ProgressBar():
+    """
+    Progress bar for integration
+    """
+
+    def __init__(self, maxval=None):
+
+        self.maxval = maxval
+        if self.maxval is None:
+            return
+
+        self.counter = 0
+
+        # this way we made the package optional
+        import progressbar
+
+        self.bar = progressbar.ProgressBar(
+            maxval=self.maxval,
+            widgets=[
+            progressbar.ETA(), ' ',
+            progressbar.Bar('#', '[', ']','-'),
+            progressbar.Percentage()
+        ])
+
+        self.bar.start()
+
+    def update(self):
+        """Update progress bar"""
+        try:
+            self.counter += 1
+            self.bar.update(self.counter)
+        except AttributeError:
+            # Error if bar is not imported
+            return
+
+
+    def finish(self):
+        """Finish progress bar"""
+        try:
+            self.bar.finish()
+        except AttributeError:
+            # Error if bar is not imported
+            pass

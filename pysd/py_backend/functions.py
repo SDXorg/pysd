@@ -709,7 +709,7 @@ class Model(Macro):
         return return_timestamps_array
 
     def run(self, params=None, return_columns=None, return_timestamps=None,
-            initial_condition='original', reload=False):
+            initial_condition='original', reload=False, progress=False):
         """ Simulate the model's behavior over time.
         Return a pandas dataframe with timestamps as rows,
         model elements as columns.
@@ -742,6 +742,9 @@ class Model(Macro):
         reload : bool
             If true, reloads the model from the translated model file before making changes
 
+        progress : bool
+            If true, a progressbar will be shown during integration
+
         Examples
         --------
 
@@ -759,6 +762,8 @@ class Model(Macro):
         """
         if reload:
             self.reload()
+
+        self.progress = progress
 
         if params:
             self.set_components(params)
@@ -881,17 +886,27 @@ class Model(Macro):
         # Todo: consider adding the timestamp to the return elements, and using that as the index
         outputs = []
 
+        if self.progress:
+            # initialize progress bar
+            progressbar = utils.ProgressBar(len(time_steps)-1)
+        else:
+            # when None is used the update will do nothing
+            progressbar = utils.ProgressBar(None)
+
         for t2 in time_steps[1:]:
             if self.time() in return_timestamps:
                 outputs.append({key: getattr(self.components, key)() for key in capture_elements})
             self._euler_step(t2 - self.time())
             self.time.update(t2)  # this will clear the stepwise caches
             self.components.cache.reset(t2)
+            progressbar.update()
 
         # need to add one more time step, because we run only the state updates in the previous
         # loop and thus may be one short.
         if self.time() in return_timestamps:
             outputs.append({key: getattr(self.components, key)() for key in capture_elements})
+
+        progressbar.finish()
 
         return outputs
 
