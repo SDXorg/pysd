@@ -639,11 +639,12 @@ class Time(object):
 
 
 class Model(Macro):
-    def __init__(self, py_model_file):
+    def __init__(self, py_model_file, initialize=True):
         """ Sets up the python objects """
         super().__init__(py_model_file, None, None, Time())
         self.time.stage = 'Load'
-        self.initialize()
+        if initialize:
+            self.initialize()
 
     def initialize(self):
         """ Initializes the simulation model """

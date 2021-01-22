@@ -23,7 +23,7 @@ if sys.version_info[:2] < (3, 7):
         + " supported version:\n\t"
         + "https://github.com/JamesPHoughton/pysd/releases/tag/LastPy2")
 
-def read_xmile(xmile_file):
+def read_xmile(xmile_file, initialize=True):
     """
     Construct a model from `.xmile` file.
 
@@ -31,6 +31,9 @@ def read_xmile(xmile_file):
     ----------
     xmile_file : <string>
         The relative path filename for a raw `.xmile` file
+    initialize: bool (optional)
+        If False, the model will not be initialize when it is loaded.
+        Default is True
 
     Returns
     -------
@@ -45,12 +48,12 @@ def read_xmile(xmile_file):
     """
     from .py_backend.xmile.xmile2py import translate_xmile
     py_model_file = translate_xmile(xmile_file)
-    model = load(py_model_file)
+    model = load(py_model_file, initialize)
     model.xmile_file = xmile_file
     return model
 
 
-def read_vensim(mdl_file):
+def read_vensim(mdl_file, initialize=True):
     """
     Construct a model from Vensim `.mdl` file.
 
@@ -64,6 +67,9 @@ def read_vensim(mdl_file):
     model: a PySD class object
         Elements from the python model are loaded into the PySD class
         and ready to run
+    initialize: bool (optional)
+        If False, the model will not be initialize when it is loaded.
+        Default is True
 
     Examples
     --------
@@ -72,12 +78,12 @@ def read_vensim(mdl_file):
     """
     from .py_backend.vensim.vensim2py import translate_vensim
     py_model_file = translate_vensim(mdl_file)
-    model = load(py_model_file)
+    model = load(py_model_file, initialize)
     model.mdl_file = mdl_file
     return model
 
 
-def load(py_model_file):
+def load(py_model_file, initialize=True):
     """
     Load a python-converted model file.
 
@@ -86,6 +92,9 @@ def load(py_model_file):
     py_model_file : <string>
         Filename of a model which has already been converted into a
         python format.
+    initialize: bool (optional)
+        If False, the model will not be initialize when it is loaded.
+        Default is True
 
     Examples
     --------
@@ -93,4 +102,4 @@ def load(py_model_file):
 
     """
     from .py_backend import functions
-    return functions.Model(py_model_file)
+    return functions.Model(py_model_file, initialize)
