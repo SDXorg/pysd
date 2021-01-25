@@ -264,7 +264,8 @@ class External(object):
             data = self._get_data_from_file(
                 rows=[first_data_row, last_data_row],
                 cols=original_index)
-            data = data.transpose()
+            data = data.values.transpose()
+            series = series.values
 
         elif series_across == "column":
             # Vertical data (dimension values in a column)
@@ -310,7 +311,8 @@ class External(object):
             # read data
             data = self._get_data_from_file(
                 rows=first_row+original_index,
-                cols=[first_col, last_col])
+                cols=[first_col, last_col]).values
+            series = series.values
 
         else:
             # get series data
@@ -394,7 +396,11 @@ class External(object):
                   + "\tData name:\t{}\n".format(cell)
                   + " don't have the same length in the 1st dimension")
 
-        # TODO manage data NA and missing values
+        if np.any(np.isnan(data)):
+            # Fill missing values with the chosen interpolation method
+            # what Vensim does during running
+            self._fill_missing(series, data)
+
         return series, data
 
     def _resolve_file(self, root=None, possible_ext=None):
@@ -467,6 +473,70 @@ class External(object):
 
         return data
 
+    def _fill_missing(self, series, data):
+        """
+        Fills missing values in excel read data. Mutates the values in data.
+
+        Parameters
+        ----------
+        series:
+          the time series without missing values
+        data:
+          the data with missing values
+
+        Returns
+        -------
+        None
+        """
+        # if data is 2dims we need to interpolate
+        datanan = np.isnan(data)
+        if len(data.shape) == 1:
+            data[datanan] = self._interpolate_missing(
+                series[datanan],
+                series[~datanan],
+                data[~datanan])
+        else:
+            for i, nanlist in enumerate(list(datanan.transpose())):
+                data[nanlist, i] = self._interpolate_missing(
+                    series[nanlist],
+                    series[~nanlist],
+                    data[~nanlist][:, i])
+
+    def _interpolate_missing(self, x, xr, yr):
+        """
+        Interpolates a list of missing values from _fill_missing
+
+        Parameters
+        ----------
+        x:
+          list of missing values interpolate
+        xr:
+          non-missing x values
+        yr:
+          non-missing y values
+
+        Returns
+        -------
+        y:
+          Result after interpolating x with self.interp method
+
+        """
+        y = np.empty_like(x)
+        for i, value in enumerate(x):
+            if self.interp == "raw":
+                y[i] = np.nan
+            elif value >= xr[-1]:
+                y[i] = yr[-1]
+            elif value <= xr[0]:
+                y[i] = yr[0]
+            elif self.interp == 'look forward':
+                y[i] = yr[xr >= value][0]
+            elif self.interp == 'hold backward':
+                y[i] = yr[xr <= value][-1]
+            else:
+                y[i] = np.interp(value, xr, yr)
+        return y
+
     @property
     def _file_sheet(self):
         """
@@ -501,8 +571,8 @@ class External(object):
             center = ord(col[1].upper()) - ord('A') + 1
             right = ord(col[2].upper()) - ord('A')
             return left * ((ord('Z')-ord('A')+1)**2)\
-                   + center * (ord('Z')-ord('A')+1)\
-                   + right
+                + center * (ord('Z')-ord('A')+1)\
+                + right
 
     @staticmethod
     def _num_to_col(num):
@@ -643,8 +713,10 @@ class ExtData(External):
         self.interp = interp
 
         # check if the interpolation method is valid
-        if self.interp and\
-           self.interp not in ["interpolate", "raw",
+        if not interp:
+            self.interp = "interpolate"
+
+        if self.interp not in ["interpolate", "raw",
                                "look forward", "hold backward"]:
             raise ValueError(self.py_name + "\n"
                              + " The interpolation method (interp) must be "
@@ -662,6 +734,8 @@ class ExtData(External):
         self.cells.append(cell)
         self.coordss.append(coords)
 
+        if not interp:
+            interp = "interpolate"
         if interp != self.interp:
             raise ValueError(self.py_name + "\n"
                              + "Error matching interpolation method with "
@@ -690,9 +764,9 @@ class ExtData(External):
                 outdata = self.data.sel(time=time)
             except KeyError:
                 return np.nan
-        elif time > self.data['time'].values[-1]:
+        elif time >= self.data['time'].values[-1]:
             outdata = self.data[-1]
-        elif time < self.data['time'].values[0]:
+        elif time <= self.data['time'].values[0]:
             outdata = self.data[0]
         elif self.interp == 'look forward':
             next_t = self.data['time'][self.data['time'] >= time][0]
@@ -725,6 +799,7 @@ class ExtLookup(External):
         self.cells = [cell]
         self.root = root
         self.coordss = [coords]
+        self.interp = "interpolate"
 
     def add(self, file_name, tab, x_row_or_col, cell, coords):
         """
@@ -760,9 +835,9 @@ class ExtLookup(External):
                             + "the argument of the Lookup must be float"
                             + "or 0 dimensional array. ")
 
-        if x > self.data['lookup_dim'].values[-1]:
+        if x >= self.data['lookup_dim'].values[-1]:
             outdata = self.data[-1]
-        elif x < self.data['lookup_dim'].values[0]:
+        elif x <= self.data['lookup_dim'].values[0]:
             outdata = self.data[0]
         else:
             outdata = self.data.interp(lookup_dim=x)
