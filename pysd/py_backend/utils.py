@@ -528,7 +528,7 @@ def rearrange(data, dims, coords):
         elif shape < data.shape:
             # Allows subscripting a subrange
             return data.rename({
-                dim:new_dim for dim, new_dim in zip(data.dims, dims)
+                dim: new_dim for dim, new_dim in zip(data.dims, dims)
                 }).loc[coords]
 
         # The coordinates are expanded or transposed
