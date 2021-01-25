@@ -17,21 +17,22 @@ class TestExcels(unittest.TestCase):
         Test for reading files with pandas
         """
         import pysd
-        import pandas as pd
 
         file_name = "data/input.xlsx"
+        sheet_name = "Vertical"
+        sheet_name2 = "Horizontal"
 
         # reading a file
-        excel = pysd.external.Excels.read(file_name)
-        self.assertTrue(isinstance(excel, pd.ExcelFile))
+        excel = pysd.external.Excels.read(file_name, sheet_name)
+        self.assertTrue(isinstance(excel, np.ndarray))
 
         # check if it is in the dictionary
-        self.assertEqual(list(pysd.external.Excels._Excels),
-                         [file_name])
+        self.assertTrue(file_name+sheet_name in
+                        list(pysd.external.Excels._Excels))
 
-        pysd.external.Excels.read(file_name)
-        self.assertEqual(list(pysd.external.Excels._Excels),
-                         [file_name])
+        pysd.external.Excels.read(file_name, sheet_name2)
+        self.assertTrue(file_name+sheet_name2 in
+                        list(pysd.external.Excels._Excels))
 
         # clean
         pysd.external.Excels.clean()
@@ -70,13 +71,12 @@ class TestExternalMethods(unittest.TestCase):
     Test for simple methods of External
     """
 
-    def test_num_to_col_and_col_to_num(self):
+    def test_col_to_num(self):
         """
         External._num_to_col and External._col_to_num test
         """
         import pysd
 
-        num_to_col = pysd.external.External._num_to_col
         col_to_num = pysd.external.External._col_to_num
 
         # Check col_to_num
@@ -86,33 +86,26 @@ class TestExternalMethods(unittest.TestCase):
         self.assertEqual(col_to_num("Z"), col_to_num("aa")-1)
         self.assertEqual(col_to_num("Zz"), col_to_num("AaA")-1)
 
-        cols = ["A", "AA", "AAA", "Z", "ZZ", "ZZZ",
-                "N", "WB", "ASJ", "K", "HG", "BTF"]
-
-        # Check num_to_col inverts col_to_num
-        for col in cols:
-            self.assertEqual(num_to_col(col_to_num(col)), col)
-
     def test_split_excel_cell(self):
         """
         External._split_excel_cell test
         """
         import pysd
 
-        split_excel_cell = pysd.external.External._split_excel_cell
+        ext = pysd.external.External('external')
 
         # No cells, function must return nothing
         nocells = ["A2A", "H0", "0", "5A", "A_1", "ZZZZ1", "A"]
 
         for nocell in nocells:
-            self.assertFalse(split_excel_cell(nocell))
+            self.assertFalse(ext._split_excel_cell(nocell))
 
         # Cells
-        cells = [(2, "A", "A2"), (574, "h", "h574"),
-                 (2, "Va", "Va2"), (2, "ABA", "ABA2")]
+        cells = [(1, 0, "A2"), (573, 7, "h574"),
+                 (1, 572, "Va2"), (1, 728, "ABA2")]
 
         for row, col, cell in cells:
-            self.assertEqual((row, col), split_excel_cell(cell))
+            self.assertEqual((row, col), ext._split_excel_cell(cell))
 
     def test_reshape(self):
         """
@@ -148,22 +141,22 @@ class TestExternalMethods(unittest.TestCase):
         """
         import pysd
 
-        series_selector = pysd.external.External._series_selector
+        ext = pysd.external.External('external')
 
         # row selector
-        self.assertEqual(series_selector("12", "A5"), "row")
+        self.assertEqual(ext._series_selector("12", "A5"), "row")
 
         # column selector
-        self.assertEqual(series_selector("A", "a44"), "column")
-        self.assertEqual(series_selector("A", "AC44"), "column")
-        self.assertEqual(series_selector("A", "Bae2"), "column")
+        self.assertEqual(ext._series_selector("A", "a44"), "column")
+        self.assertEqual(ext._series_selector("A", "AC44"), "column")
+        self.assertEqual(ext._series_selector("A", "Bae2"), "column")
 
         # name selector
-        self.assertEqual(series_selector("Att", "a44b"), "name")
-        self.assertEqual(series_selector("Adfs", "a0"), "name")
-        self.assertEqual(series_selector("Ae_23", "aa_44"), "name")
-        self.assertEqual(series_selector("Aeee3", "3a"), "name")
-        self.assertEqual(series_selector("Aeee", "aajh2"), "name")
+        self.assertEqual(ext._series_selector("Att", "a44b"), "name")
+        self.assertEqual(ext._series_selector("Adfs", "a0"), "name")
+        self.assertEqual(ext._series_selector("Ae_23", "aa_44"), "name")
+        self.assertEqual(ext._series_selector("Aeee3", "3a"), "name")
+        self.assertEqual(ext._series_selector("Aeee", "aajh2"), "name")
 
 
 class TestData(unittest.TestCase):
@@ -1551,6 +1544,8 @@ class TestWarningsErrors(unittest.TestCase):
     # Following test are for ExtData class only
     # as the initialization of ExtLookup uses the same function
 
+    @unittest.skip("This warning has been removed in PR 1.1.0"
+                   + "as the of the warning message should be changed")
     def test_data_interp_h1dm(self):
         """
         Test for warning 1d horizontal series interpolation with missing data
@@ -1585,6 +1580,8 @@ class TestWarningsErrors(unittest.TestCase):
         for x, y in zip(_exp.xpts, _exp.interp_1d):
             self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
+    @unittest.skip("This warning has been removed in PR 1.1.0"
+                   + "as the of the warning message should be changed")
     def test_data_interp_v1dm(self):
         """
         Test for warning 1d vertical series interpolation with missing data

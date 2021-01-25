@@ -21,15 +21,19 @@ class Excels():
     _Excels, _Excels_opyxl = {}, {}
 
     @classmethod
-    def read(cls, file_name):
+    def read(cls, file_name, sheet_name):
         """
         Read the Excel file or return the previously read one
         """
-        if file_name in cls._Excels:
-            return cls._Excels[file_name]
+        if file_name + sheet_name in cls._Excels:
+            return cls._Excels[file_name + sheet_name]
         else:
-            excel = pd.ExcelFile(file_name)
-            cls._Excels[file_name] = excel
+            excel = np.array([
+                pd.to_numeric(ex, errors='coerce')
+                for ex in
+                pd.read_excel(file_name, sheet_name, header=None).values
+                ])
+            cls._Excels[file_name + sheet_name] = excel
             return excel
 
     @classmethod
@@ -69,16 +73,10 @@ class External(object):
 
         Parameters
         ----------
-        rows: int, list or array
-            if int, then will start reading the table for the given row number
-            if list, then will read between first and second row of the lis
-            if array, then will read the given row numbers
-        cols:  None, str, int, list or array
-            if None, then will continue reading until no more data is
-              available in the new column
-            if str, then will read only the given column by its name
-            if list, then will read between the given columns
-            if array, then will read the given columns names/numbers
+        rows: list of len 2
+            first row and last row+1 to be read, starting from 0
+        cols:  list of len 2
+            first col and last col+1 to be read, starting from 0
 
         Returns
         -------
@@ -88,49 +86,16 @@ class External(object):
         # TODO move to openpyxl to avoid pandas dependency in this file.
         ext = os.path.splitext(self.file)[1].lower()
         if ext in ['.xls', '.xlsx']:
-            # rows is an int of the first value
-            if isinstance(rows, int):
-                skip = rows
-                nrows = None
-            # rows my be a list of first and last value or a numpy.ndarray
-            # of valid values
-            else:
-                skip = rows[0] - 1
-                nrows = rows[-1] - skip if rows[-1] is not None else None
-            # cols is a list of first and last value
-            if isinstance(cols, list):
-                cols = [self._num_to_col(c) if isinstance(c, int)
-                        else c for c in cols]
-                usecols = cols[0] + ":" + cols[1]
-            # cols is a int/col_name or a np.ndarray of valid values
-            else:
-                usecols = cols
-
             # read data
-            excel = Excels.read(self.file)
+            data = Excels.read(self.file, self.tab)\
+                [rows[0]:rows[1], cols[0]:cols[1]].copy()
 
-            data = excel.parse(sheet_name=self.tab, header=None, skiprows=skip,
-                               nrows=nrows, usecols=usecols)
-
-            # avoid the rows not passed in rows numpy.ndarray
-            if isinstance(rows, np.ndarray):
-                data = data.iloc[(rows - rows[0])]
-
+            shape = data.shape
             # if it is a single row remove its dimension
-            if isinstance(rows, int) or\
-               (isinstance(rows, list) and rows[0] == rows[1]):
-                data = data.iloc[0]
-
-            # if it is a single col remove its dimension
-            if isinstance(cols, str) or\
-               (isinstance(cols, list) and cols[0].lower() == cols[1].lower()):
-                if len(data.shape) == 2:
-                    # if there are multile rows
-                    data = data.iloc[:, 0]
-                else:
-                    # if there are no rows
-                    data = data.iloc[0]
-
+            if shape[1] == 1:
+                data = data[:, 0]
+            if shape[0] == 1:
+                data = data[0]
             return data
 
         raise NotImplementedError(self.py_name + "\n"
@@ -217,22 +182,13 @@ class External(object):
             # Horizontal data (dimension values in a row)
 
             # get the dimension values
-            series = self._get_data_from_file(rows=int(series_row_or_col)-1,
-                                              cols=None)
-
-            first_data_row, first_col = self._split_excel_cell(cell)
-
-            first_col = first_col.upper()
-            first_col_float = self._col_to_num(first_col)
-
-            # get a vector of the series index
-            original_index = np.array(series.index)[first_col_float:]
-            series = series[first_col_float:]
+            first_row, first_col = self._split_excel_cell(cell)
+            series = self._get_data_from_file(
+                rows=[int(series_row_or_col)-1, int(series_row_or_col)],
+                cols=[first_col, None])
 
             # remove nan or missing values from dimension
-            series = pd.to_numeric(series, errors='coerce')
             valid_values = ~np.isnan(series)
-            original_index = original_index[valid_values]
             series = series[valid_values]
 
             # check if the series has no len 0
@@ -243,45 +199,26 @@ class External(object):
                     + "\tRow number:\t{}\n".format(series_row_or_col)
                     + " has length 0")
 
-            last_col = self._num_to_col(original_index[-1])
-            last_data_row = first_data_row + size - 1
-
-            # Warning if there is missing value in the dimension
-            if (np.diff(original_index) != 1).any():
-                missing_index = np.arange(original_index[0],
-                                          original_index[-1] + 1)
-                missing_index = np.setdiff1d(missing_index, original_index)
-                cols = self._num_to_col(missing_index)
-                cells = [col + series_row_or_col for col in cols]
-                warnings.warn(self.py_name + "\n"
-                    + "Dimension value missing or non-valid in:\n"
-                    + self._file_sheet
-                    + "\tCell(s):\t{}\n".format(cells)
-                    + " the corresponding column(s) to the "
-                    + "missing/non-valid value(s) will be ignored\n\n")
+            last_col = first_col + len(series) +1
+            last_row = first_row + size
 
             # read data
             data = self._get_data_from_file(
-                rows=[first_data_row, last_data_row],
-                cols=original_index)
-            data = data.values.transpose()
-            series = series.values
+                rows=[first_row, last_row],
+                cols=[first_col, None]).transpose()[valid_values]
 
         elif series_across == "column":
             # Vertical data (dimension values in a column)
 
             # get the dimension values
             first_row, first_col = self._split_excel_cell(cell)
-            series = self._get_data_from_file(rows=[first_row, None],
-                                              cols=series_row_or_col)
-
-            # get a vector of the series index
-            original_index = np.array(series.index)
-            series = pd.to_numeric(series, errors='coerce')
+            series_col = self._col_to_num(series_row_or_col)
+            series = self._get_data_from_file(
+                rows=[first_row, None],
+                cols=[series_col, series_col+1])
 
             # remove nan or missing values from dimension
             valid_values = ~np.isnan(series)
-            original_index = original_index[valid_values]
             series = series[valid_values]
 
             # check if the series has no len 0
@@ -292,27 +229,13 @@ class External(object):
                   + "\tColumn:\t{}\n".format(series_row_or_col)
                   + " has length 0")
 
-            last_col = self._num_to_col(self._col_to_num(first_col) + size - 1)
-
-            # Warning if there is missing value in the dimension
-            if (np.diff(original_index) != 1).any():
-                missing_index = np.arange(original_index[0],
-                                          original_index[-1] + 1)
-                missing_index = np.setdiff1d(missing_index, original_index)\
-                                + first_row
-                cells = [series_row_or_col + str(row) for row in missing_index]
-                warnings.warn(self.py_name + "\n"
-                  + "Dimension value missing or non-valid in:\n"
-                  + self._file_sheet
-                  + "\tCell(s):\t{}\n".format(cells)
-                  + " the corresponding column(s) to the "
-                  + "missing/non-valid value(s) will be ignored\n\n")
+            last_row = first_row + len(series) + 1
+            last_col = first_col + size
 
             # read data
             data = self._get_data_from_file(
-                rows=first_row+original_index,
-                cols=[first_col, last_col]).values
-            series = series.values
+                rows=[first_row, None],
+                cols=[first_col, last_col])[valid_values]
 
         else:
             # get series data
@@ -574,34 +497,7 @@ class External(object):
                 + center * (ord('Z')-ord('A')+1)\
                 + right
 
-    @staticmethod
-    def _num_to_col(num):
-        """
-        Transforms the column number to name. Also working with lists.
-
-        Parameters
-        ----------
-        col_v: int or list of ints
-          Column number(s)
-
-        Returns
-        -------
-        int/list
-          Column name(s)
-        """
-        def _to_ABC(x):
-            if x < 26:
-                return chr(ord('A')+x)
-            return _to_ABC(int(x / 26) - 1) + _to_ABC(int(x % 26))
-
-        try:
-            len(num)
-            return [_to_ABC(col) for col in num]
-        except TypeError:
-            return _to_ABC(num)
-
-    @staticmethod
-    def _split_excel_cell(cell):
+    def _split_excel_cell(self, cell):
         """
         Splits a cell value given in a string.
         Returns None for non-valid cell formats.
@@ -614,8 +510,8 @@ class External(object):
 
         Returns
         -------
-        row number, column name: int, str
-          If the cell input is valid.
+        row number, column number: int, int
+          If the cell input is valid. Both numbers are given in Python enumeration, i.e., first row and first column are 0.
 
         """
         split = re.findall('\d+|\D+', cell)
@@ -628,7 +524,7 @@ class External(object):
             assert int(split[1]) != 0
             # the column name has as maximum 3 letters
             assert len(split[0]) <= 3
-            return int(split[1]), split[0]
+            return int(split[1])-1, self._col_to_num(split[0])
         except AssertionError:
             return
 
@@ -657,8 +553,7 @@ class External(object):
 
         return data.reshape(dims)
 
-    @classmethod
-    def _series_selector(cls, x_row_or_col, cell):
+    def _series_selector(self, x_row_or_col, cell):
         """
         Selects if a series data (DATA/LOOKUPS), should be read by columns,
         rows or cellrange name.
@@ -688,7 +583,7 @@ class External(object):
             return "row"
 
         except ValueError:
-            if cls._split_excel_cell(cell):
+            if self._split_excel_cell(cell):
                 # if the cell can be splitted means that the format is
                 # "A1" like then the series must be a column
                 return "column"
@@ -951,12 +846,10 @@ class ExtConstant(External):
         if data_across == "cell":
             # read data from topleft cell name using pandas
             start_row, start_col = cell
-            end_row = start_row + shape[0] - 1
-            end_col = self._num_to_col(self._col_to_num(start_col)
-                                       + shape[1] - 1)
 
-            return self._get_data_from_file(rows=[start_row, end_row],
-                                            cols=[start_col, end_col])
+            return self._get_data_from_file(
+                rows=[start_row, start_row + shape[0]],
+                cols=[start_col, start_col + shape[1]])
 
         else:
             # read data from cell range name using OpenPyXL
@@ -1010,7 +903,9 @@ class ExtSubscript(External):
 
         row_first, col_first = self._split_excel_cell(firstcell)
         row_last, col_last = self._split_excel_cell(lastcell)
-        data = self._get_data_from_file(rows=[row_first, row_last],
-                                        cols=[col_first, col_last])
+        data = pd.read_excel(self.file, tab,
+            skiprows=row_first-1,
+            nrows=row_last-row_first+1,
+            usecols=np.arange(col_first, col_last+1))
 
         self.subscript = [prefix + str(d) for d in data.values.flatten()]
