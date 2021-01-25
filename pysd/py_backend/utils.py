@@ -521,9 +521,15 @@ def rearrange(data, dims, coords):
     # subset used coords in general coords will be the subscript_dict
     coords = {dim: coords[dim] for dim in dims}
     if isinstance(data, xr.DataArray):
-        if data.shape == tuple(compute_shape(coords)):
+        shape = tuple(compute_shape(coords))
+        if data.shape == shape:
             # Allows switching dimensions names and transpositions
             return xr.DataArray(data=data.values, coords=coords, dims=dims)
+        elif shape < data.shape:
+            # Allows subscripting a subrange
+            return data.rename({
+                dim:new_dim for dim, new_dim in zip(data.dims, dims)
+                }).loc[coords]
 
         # The coordinates are expanded or transposed
         return xr.DataArray(0, coords, dims) + data
