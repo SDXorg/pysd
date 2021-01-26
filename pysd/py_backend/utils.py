@@ -534,8 +534,10 @@ def rearrange(data, dims, coords):
         # The coordinates are expanded or transposed
         return xr.DataArray(0, coords, dims) + data
 
-    else:
+    elif data is not None:
         return xr.DataArray(data, coords, dims)
+
+    return None
 
 
 def round_(x):
