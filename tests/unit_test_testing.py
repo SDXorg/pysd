@@ -9,7 +9,7 @@ import pysd
 class TestBoundsChecker(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.file_name = 'test_range.xls'
+        cls.file_name = 'test_range.xlsx'
         model = pysd.read_vensim('test-models/tests/variable_ranges/test_variable_ranges.mdl')
         pysd.testing.create_bounds_test_matrix(model, cls.file_name)
         cls.bounds = pysd.testing.create_bounds_test_matrix(model, filename=None)
@@ -55,7 +55,7 @@ class TestBoundsChecker(unittest.TestCase):
 class TestExtremeConditions(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.file_name = 'test_extremes_empty.xls'
+        cls.file_name = 'test_extremes_empty.xlsx'
         cls.model_file = 'test-models/tests/variable_ranges/test_variable_ranges.mdl'
         cls.model = pysd.read_vensim('test-models/tests/variable_ranges/test_variable_ranges.mdl')
         pysd.testing.create_extreme_conditions_test_matrix(cls.model, cls.file_name)
