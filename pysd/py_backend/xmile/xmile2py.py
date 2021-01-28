@@ -118,6 +118,9 @@ def translate_xmile(xmile_file):
         doc = get_xpath_text(node, 'ns:doc')
         py_name = namespace[name]
         eqn = get_xpath_text(node, 'ns:eqn')
+
+        # Replace new lines with space, and replace 2 or more spaces with single space
+        # Then ensure there is no space at start or end of equation
         eqn = (re.sub("(\s{2,})", " ", eqn.replace("\n", ' '))
                  .lstrip()
                  .rstrip()
