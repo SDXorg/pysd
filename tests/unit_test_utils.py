@@ -1,3 +1,4 @@
+
 import doctest
 from unittest import TestCase
 
@@ -310,3 +311,19 @@ class TestUtils(TestCase):
         self.assertEqual(make_add_identifier(name, build_names), "valuesADD_4")
         self.assertEqual(make_add_identifier(name2, build_names), "bb_aADD_2")
 
+
+    def test_progressbar(self):
+        import pysd
+
+        pbar = pysd.py_backend.utils.ProgressBar(10)
+
+        for i in range(10):
+            self.assertEqual(pbar.counter, i)
+            pbar.update()
+
+        pbar.finish()
+
+        pbar = pysd.py_backend.utils.ProgressBar()
+        self.assertFalse(hasattr(pbar, 'counter'))
+        pbar.update()
+        pbar.finish()

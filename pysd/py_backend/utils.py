@@ -599,7 +599,7 @@ class ProgressBar():
             self.bar.update(self.counter)
         except AttributeError:
             # Error if bar is not imported
-            return
+            pass
 
 
     def finish(self):

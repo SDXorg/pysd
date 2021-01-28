@@ -50,6 +50,10 @@ above.
 
 Optional Dependencies
 ---------------------
+In order to be able to print the progress of a model integration process:
+
+* progressbar
+
 These Python libraries bring additional data analytics capabilities to the analysis of SD models:
 
 * PyMC: a library for performing Markov chain Monte Carlo analysis
