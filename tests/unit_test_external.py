@@ -112,7 +112,6 @@ class TestExternalMethods(unittest.TestCase):
         External._reshape test
         """
         import pysd
-        import numpy as np
         import pandas as pd
 
         reshape = pysd.external.External._reshape
@@ -157,6 +156,43 @@ class TestExternalMethods(unittest.TestCase):
         self.assertEqual(ext._series_selector("Ae_23", "aa_44"), "name")
         self.assertEqual(ext._series_selector("Aeee3", "3a"), "name")
         self.assertEqual(ext._series_selector("Aeee", "aajh2"), "name")
+
+    def test_fill_missing(self):
+        import pysd
+
+        # simple casses are tested with 1 dimensional data
+        # 1 and 2 dimensional data is tested with test-models
+        ext = pysd.external.External("external")
+        series = np.arange(12)
+        data = np.array([np.nan, np.nan, 1., 3., np.nan, 4.,
+                         np.nan, np.nan, 7., 8., np.nan, np.nan])
+        hold_back = np.array([1., 1., 1., 3., 3., 4.,
+                              4., 4., 7., 8., 8., 8.])
+        look_for = np.array([1., 1., 1., 3., 4., 4.,
+                             7., 7., 7., 8., 8., 8.])
+        interp = np.array([1., 1., 1., 3., 3.5, 4.,
+                           5., 6., 7., 8., 8., 8.])
+
+        ext.interp = "raw"
+        datac = data.copy()
+        ext._fill_missing(series, datac)
+        self.assertTrue(np.all(data[~np.isnan(data)] == datac[~np.isnan(datac)]))
+
+        ext.interp = "hold backward"
+        datac = data.copy()
+        ext._fill_missing(series, datac)
+        print(datac)
+        self.assertTrue(np.all(hold_back == datac))
+
+        ext.interp = "look forward"
+        datac = data.copy()
+        ext._fill_missing(series, datac)
+        self.assertTrue(np.all(look_for == datac))
+
+        ext.interp = "interpolate"
+        datac = data.copy()
+        ext._fill_missing(series, datac)
+        self.assertTrue(np.all(interp == datac))
 
 
 class TestData(unittest.TestCase):

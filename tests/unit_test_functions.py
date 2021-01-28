@@ -14,6 +14,8 @@ class TestInputFunctions(unittest.TestCase):
 
         self.assertEqual(functions.ramp(lambda: 24, .5, 10, 18), 4)
 
+        self.assertEqual(functions.ramp(lambda: 24, .5, 10, -1), 7)
+
     def test_step(self):
         from pysd import functions
 
@@ -502,3 +504,11 @@ class TestStateful(unittest.TestCase):
         self.assertEqual(pysd.functions.vmax(data, dim=['d1', 'd2']), 4)
         self.assertEqual(pysd.functions.vmax(data), 4)
 
+    def test_incomplete(self):
+        import pysd
+        from warnings import catch_warnings
+
+        with catch_warnings(record=True) as w:
+            pysd.functions.incomplete()
+            self.assertEqual(len(w), 1)
+            self.assertTrue('Call to undefined function' in str(w[-1].message))

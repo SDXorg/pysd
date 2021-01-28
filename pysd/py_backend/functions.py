@@ -135,13 +135,11 @@ class Delay(Stateful):
 
     def initialize(self):
         order = self.order_func()
-        if isinstance(order, xr.DataArray):
-            order = order.values
-        while isinstance(order, np.ndarray):
-            order = order[0]
+
         if order != int(order):
             warnings.warn('Casting delay order from %f to %i' % (
                 order, int(order)))
+
         self.order = int(order)  # The order can only be set once
 
         init_state_value = self.init_func() * self.delay_time_func()\
@@ -278,11 +276,11 @@ class Macro(Stateful):
                 + " read_vensim or read_xmile.")
 
         if __version__.split(".")[0] !=\
-          self.components.__pysd_version__.split(".")[0]:
+          self.get_pysd_compiler_version().split(".")[0]:
             raise ImportError("\n\nNot able to import the model. "
                 + "The model was compiled with a "
                 + "not compatible version of PySD:"
-                + "\n\tPySD " + self.components.__pysd_version__
+                + "\n\tPySD " + self.get_pysd_compiler_version()
                 + "\n\nThe current version of PySd is:"
                 + "\n\tPySD " + __version__ + "\n\n"
                 + "Please translate again the model with the function"

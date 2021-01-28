@@ -217,3 +217,10 @@ class TestMergePartialElements(TestCase):
 
         self.assertIn(actual[0], expected)
         self.assertIn(actual[1], expected)
+
+    def test_bad_value_kind(self):
+        from pysd.py_backend.builder import build_element
+
+        with self.assertRaises(AttributeError):
+            build_element({'kind': 'nonvalid'}, {})
+

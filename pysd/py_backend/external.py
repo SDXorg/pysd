@@ -444,7 +444,7 @@ class External(object):
           Result after interpolating x with self.interp method
 
         """
-        y = np.empty_like(x)
+        y = np.empty_like(x, dtype=float)
         for i, value in enumerate(x):
             if self.interp == "raw":
                 y[i] = np.nan
