@@ -6,6 +6,7 @@ James Houghton <james.p.houghton@gmail.com>
 Alexey Prey Mulyukin <alexprey@yandex.ru> from sdCloud.io development team.
 
 """
+import re
 from .SMILE2Py import SMILEParser
 from lxml import etree
 from .. import builder, utils
@@ -117,6 +118,10 @@ def translate_xmile(xmile_file):
         doc = get_xpath_text(node, 'ns:doc')
         py_name = namespace[name]
         eqn = get_xpath_text(node, 'ns:eqn')
+        eqn = (re.sub("(\s{2,})", " ", eqn.replace("\n", ' '))
+                 .lstrip()
+                 .rstrip()
+        )
 
         element = {
             'kind': 'component',
