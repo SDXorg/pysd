@@ -77,11 +77,6 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/euler_step_vs_saveper/test_euler_step_vs_saveper.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    def test_excel_bugs(self):
-        from.test_utils import runner, assert_frames_close
-        output, canon = runner('test-models/tests/excel_bugs/test_excel_bugs.mdl')
-        assert_frames_close(output, canon, rtol=rtol)
-
     def test_exp(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/exp/test_exp.mdl')
@@ -127,6 +122,14 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner(
           'test-models/tests/get_lookups_data_3d_xls/'
           + 'test_get_lookups_data_3d_xls.mdl'
+        )
+        assert_frames_close(output, canon, rtol=rtol)
+
+    def test_get_with_missing_values_xlsx(self):
+        from.test_utils import runner, assert_frames_close
+        output, canon = runner(
+            'test-models/tests/get_with_missing_values_xlsx/'
+            + 'test_get_with_missing_values_xlsx.mdl'
         )
         assert_frames_close(output, canon, rtol=rtol)
 
