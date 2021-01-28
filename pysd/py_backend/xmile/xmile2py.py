@@ -6,6 +6,9 @@ James Houghton <james.p.houghton@gmail.com>
 Alexey Prey Mulyukin <alexprey@yandex.ru> from sdCloud.io development team.
 
 """
+import re
+import os.path
+
 from .SMILE2Py import SMILEParser
 from lxml import etree
 from .. import builder, utils
@@ -338,7 +341,8 @@ def translate_xmile(xmile_file):
         'arguments': '',
     })
 
-    outfile_name = xmile_file.replace('.xmile', '.py')
+    file_name, file_extension = os.path.splitext(xmile_file)
+    outfile_name = file_name + '.py'
 
     builder.build(elements=model_elements,
                   subscript_dict={},
