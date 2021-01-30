@@ -9,7 +9,7 @@ from pysd.py_backend.xmile.xmile2py import translate_xmile
 
 class TestEquationStringParsing(unittest.TestCase):
 
-    def test_multiline_equation():
+    def test_multiline_equation(self):
         with open('tests/test-models/tests/game/test_game.stmx', 'r') as stmx:
             contents = stmx.read()
 
@@ -28,7 +28,8 @@ class TestEquationStringParsing(unittest.TestCase):
 
         idx = contents.find('stock() + constant()')
 
-        assert idx > 0, 'Correct, generated, equation not found'
-
-        os.remove(temp_file.name)
-        os.remove(generated_file+'.py')
+        try:
+            assert idx > 0, 'Correct, generated, equation not found'
+        finally:
+            os.remove(temp_file.name)
+            os.remove(generated_file)
