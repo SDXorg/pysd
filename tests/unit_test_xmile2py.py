@@ -6,11 +6,13 @@ from io import StringIO
 from pysd.py_backend.xmile.xmile2py import translate_xmile
 
 
+TARGET_STMX_FILE = 'test-models/tests/game/test_game.stmx'
+
 
 class TestXmileConversion(unittest.TestCase):
 
     def test_python_file_creation(self):
-        with open('tests/test-models/tests/game/test_game.stmx', 'r') as stmx:
+        with open(TARGET_STMX_FILE, 'r') as stmx:
             contents = stmx.read()
 
         # Write out contents to temporary file
@@ -35,7 +37,7 @@ class TestXmileConversion(unittest.TestCase):
                 pass
 
     def test_multiline_equation(self):
-        with open('tests/test-models/tests/game/test_game.stmx', 'r') as stmx:
+        with open(TARGET_STMX_FILE, 'r') as stmx:
             contents = stmx.read()
 
         # Insert line break in equation definition
