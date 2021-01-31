@@ -239,7 +239,8 @@ def build_element(element, subscript_dict):
                                                  '\n' + ' ' * indent)})
                                                  # indent lines 2 onward
 
-    element['doc'] = element['doc'].replace('\\', '\n    ')
+    # convert newline indicator and add expected level of indentation
+    element['doc'] = element['doc'].replace('\\', '\n').replace('\n', '\n    ')
 
     if element['kind'] in ['stateful', 'external']:
         func = '''
@@ -284,6 +285,8 @@ def build_element(element, subscript_dict):
         """
         %(contents)s
         ''' % element
+
+    func = textwrap.dedent(func)
 
     return func
 
