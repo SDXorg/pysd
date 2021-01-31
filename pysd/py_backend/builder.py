@@ -117,22 +117,25 @@ def build(elements, subscript_dict, namespace, outfile_name):
     def time():
         return __data['time']()
 
-    %(functions)s
-
     ''' % {'subscript_dict': repr(subscript_dict),
-           'functions': '\n'.join(functions),
            'namespace': repr(namespace),
            'outfile': os.path.basename(outfile_name),
            'version': __version__}
-
+    
     text = text.replace('\t', '    ')
-    text = black.format_file_contents(textwrap.dedent(text), fast=True,
+    text = textwrap.dedent(text)
+
+    funcs = "%(functions)s" % {'functions': '\n'.join(functions)}
+    funcs = funcs.replace('\t', '    ')
+    text += funcs
+
+    text = black.format_file_contents(text, fast=True,
                                       mode=black.FileMode())
 
     # this is needed if more than one model are translated in the same session
     build_names.clear()
     for module in ['numpy', 'xarray', 'subs']:
-        import_modules[module] =False
+        import_modules[module] = False
     for module in ['functions', 'external', 'utils']:
         import_modules[module].clear()
 
