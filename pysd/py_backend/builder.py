@@ -70,7 +70,8 @@ def build(elements, subscript_dict, namespace, outfile_name):
     Python model "%(outfile)s"
     Translated using PySD version %(version)s
     """
-    from os import path\n'''
+    from os import path\n''' % {'outfile': os.path.basename(outfile_name),
+                                'version': __version__}
 
     # intelligent import of needed functions and packages
     if import_modules['numpy']:
