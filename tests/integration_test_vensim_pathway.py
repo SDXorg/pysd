@@ -127,10 +127,15 @@ class TestIntegrationExamples(unittest.TestCase):
 
     def test_get_with_missing_values_xlsx(self):
         from.test_utils import runner, assert_frames_close
-        output, canon = runner(
-            'test-models/tests/get_with_missing_values_xlsx/'
-            + 'test_get_with_missing_values_xlsx.mdl'
-        )
+        import warnings
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            output, canon = runner(
+                'test-models/tests/get_with_missing_values_xlsx/'
+                + 'test_get_with_missing_values_xlsx.mdl'
+            )
+
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_get_mixed_definitions(self):

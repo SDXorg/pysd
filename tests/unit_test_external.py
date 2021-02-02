@@ -176,12 +176,12 @@ class TestExternalMethods(unittest.TestCase):
         ext.interp = "raw"
         datac = data.copy()
         ext._fill_missing(series, datac)
-        self.assertTrue(np.all(data[~np.isnan(data)] == datac[~np.isnan(datac)]))
+        self.assertTrue(np.all(data[~np.isnan(data)]
+                        == datac[~np.isnan(datac)]))
 
         ext.interp = "hold backward"
         datac = data.copy()
         ext._fill_missing(series, datac)
-        print(datac)
         self.assertTrue(np.all(hold_back == datac))
 
         ext.interp = "look forward"
@@ -275,6 +275,7 @@ class TestData(unittest.TestCase):
         ExtData test for 1d horizontal series interpolation
         """
         import pysd
+        import warnings
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -295,14 +296,17 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(_exp.xpts, _exp.interp_1d):
-            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for x, y in zip(_exp.xpts, _exp.interp_1d):
+                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
     def test_data_interp_v1d(self):
         """
         ExtData test for 1d vertical series interpolation
         """
         import pysd
+        import warnings
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -323,14 +327,17 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(_exp.xpts, _exp.interp_1d):
-            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for x, y in zip(_exp.xpts, _exp.interp_1d):
+                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
     def test_data_interp_hn1d(self):
         """
         ExtData test for 1d horizontal series interpolation by cellrange names
         """
         import pysd
+        import warnings
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -351,14 +358,17 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(_exp.xpts, _exp.interp_1d):
-            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for x, y in zip(_exp.xpts, _exp.interp_1d):
+                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
     def test_data_interp_vn1d(self):
         """
         ExtData test for 1d vertical series interpolation by cellrange names
         """
         import pysd
+        import warnings
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -379,14 +389,17 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(_exp.xpts, _exp.interp_1d):
-            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for x, y in zip(_exp.xpts, _exp.interp_1d):
+                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
     def test_data_forward_h1d(self):
         """
         ExtData test for 1d horizontal series look forward
         """
         import pysd
+        import warnings
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -407,14 +420,17 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(_exp.xpts, _exp.forward_1d):
-            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for x, y in zip(_exp.xpts, _exp.forward_1d):
+                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
     def test_data_forward_v1d(self):
         """
         ExtData test for 1d vertical series look forward
         """
         import pysd
+        import warnings
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -435,14 +451,17 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(_exp.xpts, _exp.forward_1d):
-            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for x, y in zip(_exp.xpts, _exp.forward_1d):
+                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
     def test_data_forward_hn1d(self):
         """
         ExtData test for 1d horizontal series look forward by cell range names
         """
         import pysd
+        import warnings
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -463,14 +482,17 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(_exp.xpts, _exp.forward_1d):
-            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for x, y in zip(_exp.xpts, _exp.forward_1d):
+                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
     def test_data_forward_vn1d(self):
         """
         ExtData test for 1d vertical series look forward by cell range names
         """
         import pysd
+        import warnings
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -491,14 +513,17 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(_exp.xpts, _exp.forward_1d):
-            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for x, y in zip(_exp.xpts, _exp.forward_1d):
+                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
     def test_data_backward_h1d(self):
         """
         ExtData test for 1d horizontal series hold backward
         """
         import pysd
+        import warnings
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -519,14 +544,17 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(_exp.xpts, _exp.backward_1d):
-            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for x, y in zip(_exp.xpts, _exp.backward_1d):
+                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
     def test_data_backward_v1d(self):
         """
         ExtData test for 1d vertical series hold backward by cell range names
         """
         import pysd
+        import warnings
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -547,14 +575,17 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(_exp.xpts, _exp.backward_1d):
-            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for x, y in zip(_exp.xpts, _exp.backward_1d):
+                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
     def test_data_backward_hn1d(self):
         """
         ExtData test for 1d horizontal series hold backward by cell range names
         """
         import pysd
+        import warnings
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -575,14 +606,17 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(_exp.xpts, _exp.backward_1d):
-            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for x, y in zip(_exp.xpts, _exp.backward_1d):
+                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
     def test_data_backward_vn1d(self):
         """
         ExtData test for 1d vertical series hold backward by cell range names
         """
         import pysd
+        import warnings
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -603,14 +637,17 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(_exp.xpts, _exp.backward_1d):
-            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for x, y in zip(_exp.xpts, _exp.backward_1d):
+                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
     def test_data_interp_vn2d(self):
         """
         ExtData test for 2d vertical series interpolation by cell range names
         """
         import pysd
+        import warnings
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -630,15 +667,17 @@ class TestData(unittest.TestCase):
                                      py_name=py_name)
 
         data.initialize()
-
-        for x, y in zip(_exp.xpts, _exp.interp_2d):
-            self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for x, y in zip(_exp.xpts, _exp.interp_2d):
+                self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
 
     def test_data_forward_hn2d(self):
         """
         ExtData test for 2d vertical series look forward by cell range names
         """
         import pysd
+        import warnings
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -658,15 +697,17 @@ class TestData(unittest.TestCase):
                                      py_name=py_name)
 
         data.initialize()
-
-        for x, y in zip(_exp.xpts, _exp.forward_2d):
-            self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for x, y in zip(_exp.xpts, _exp.forward_2d):
+                self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
 
     def test_data_backward_v2d(self):
         """
         ExtData test for 2d vertical series hold backward
         """
         import pysd
+        import warnings
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -687,14 +728,17 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(_exp.xpts, _exp.backward_2d):
-            self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for x, y in zip(_exp.xpts, _exp.backward_2d):
+                self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
 
     def test_data_interp_h3d(self):
         """
         ExtData test for 3d horizontal series interpolation
         """
         import pysd
+        import warnings
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -724,14 +768,17 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(_exp.xpts, _exp.interp_3d):
-            self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for x, y in zip(_exp.xpts, _exp.interp_3d):
+                self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
 
     def test_data_forward_v3d(self):
         """
         ExtData test for 3d vertical series look forward
         """
         import pysd
+        import warnings
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -761,14 +808,17 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(_exp.xpts, _exp.forward_3d):
-            self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for x, y in zip(_exp.xpts, _exp.forward_3d):
+                self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
 
     def test_data_backward_hn3d(self):
         """
         ExtData test for 3d horizontal series hold backward by cellrange names
         """
         import pysd
+        import warnings
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -798,8 +848,10 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(_exp.xpts, _exp.backward_3d):
-            self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for x, y in zip(_exp.xpts, _exp.backward_3d):
+                self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
 
     def test_data_raw_h1d(self):
         """
@@ -849,6 +901,7 @@ class TestLookup(unittest.TestCase):
         ExtLookup test for 1d horizontal series
         """
         import pysd
+        import warnings
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -867,14 +920,17 @@ class TestLookup(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(_exp.xpts, _exp.interp_1d):
-            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for x, y in zip(_exp.xpts, _exp.interp_1d):
+                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
     def test_lookup_v1d(self):
         """
         ExtLookup test for 1d vertical series
         """
         import pysd
+        import warnings
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -893,14 +949,17 @@ class TestLookup(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(_exp.xpts, _exp.interp_1d):
-            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for x, y in zip(_exp.xpts, _exp.interp_1d):
+                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
     def test_lookup_hn1d(self):
         """
         ExtLookup test for 1d horizontal series by cellrange names
         """
         import pysd
+        import warnings
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -919,14 +978,17 @@ class TestLookup(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(_exp.xpts, _exp.interp_1d):
-            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for x, y in zip(_exp.xpts, _exp.interp_1d):
+                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
     def test_lookup_vn1d(self):
         """
         ExtLookup test for 1d vertical series by cellrange names
         """
         import pysd
+        import warnings
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -945,14 +1007,17 @@ class TestLookup(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(_exp.xpts, _exp.interp_1d):
-            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for x, y in zip(_exp.xpts, _exp.interp_1d):
+                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
 
     def test_lookup_h2d(self):
         """
         ExtLookup test for 2d horizontal series
         """
         import pysd
+        import warnings
 
         file_name = "data/input.xlsx"
         tab = "Horizontal"
@@ -971,14 +1036,17 @@ class TestLookup(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(_exp.xpts, _exp.interp_2d):
-            self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for x, y in zip(_exp.xpts, _exp.interp_2d):
+                self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
 
     def test_lookup_vn3d(self):
         """
         ExtLookup test for 3d vertical series by cellrange names
         """
         import pysd
+        import warnings
 
         file_name = "data/input.xlsx"
         tab = "Vertical"
@@ -1005,8 +1073,10 @@ class TestLookup(unittest.TestCase):
 
         data.initialize()
 
-        for x, y in zip(_exp.xpts, _exp.interp_3d):
-            self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for x, y in zip(_exp.xpts, _exp.interp_3d):
+                self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
 
 
 class TestConstant(unittest.TestCase):
@@ -1267,7 +1337,7 @@ class TestConstant(unittest.TestCase):
         cell = "C5"
         cell2 = "C8"
         coords = {'ABC': ['A', 'B', 'C'],
-                   'XY': ['X'],
+                  'XY': ['X'],
                   'val': [0, 1, 2, 3, 5, 6, 7, 8]}
         coords2 = {'ABC': ['A', 'B', 'C'],
                    'XY': ['Y'],
@@ -1390,7 +1460,6 @@ class TestConstant(unittest.TestCase):
 
         data.initialize()
 
-        print(data())
         self.assertTrue(data().equals(_exp.constant_3d))
 
 
@@ -1579,12 +1648,10 @@ class TestWarningsErrors(unittest.TestCase):
 
     # Following test are for ExtData class only
     # as the initialization of ExtLookup uses the same function
-
-    @unittest.skip("This warning has been removed in PR 1.1.0"
-                   + "as the of the warning message should be changed")
     def test_data_interp_h1dm(self):
         """
-        Test for warning 1d horizontal series interpolation with missing data
+        Test for warning 1d horizontal series interpolation when series
+        has missing or NaN data
         """
         import pysd
         from warnings import catch_warnings
@@ -1612,15 +1679,19 @@ class TestWarningsErrors(unittest.TestCase):
             self.assertEqual(len(wu), 1)
             self.assertTrue("missing" in str(wu[-1].message))
 
-        print(data.data)
-        for x, y in zip(_exp.xpts, _exp.interp_1d):
-            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+        with catch_warnings(record=True) as w:
+            for x, y in zip(_exp.xpts, _exp.interp_1d):
+                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+            self.assertEqual(len(w), 2)
+            self.assertTrue("extrapolating data below the minimum value"
+                            + " of the time" in str(w[0].message))
+            self.assertTrue("extrapolating data above the maximum value"
+                            + " of the time" in str(w[1].message))
 
-    @unittest.skip("This warning has been removed in PR 1.1.0"
-                   + "as the of the warning message should be changed")
     def test_data_interp_v1dm(self):
         """
-        Test for warning 1d vertical series interpolation with missing data
+        Test for warning 1d vertical series interpolation when series has
+        missing or NaN data
         """
         import pysd
         from warnings import catch_warnings
@@ -1648,8 +1719,14 @@ class TestWarningsErrors(unittest.TestCase):
             self.assertTrue(issubclass(w[-1].category, UserWarning))
             self.assertTrue("missing" in str(w[-1].message))
 
-        for x, y in zip(_exp.xpts, _exp.interp_1d):
-            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+        with catch_warnings(record=True) as w:
+            for x, y in zip(_exp.xpts, _exp.interp_1d):
+                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+            self.assertEqual(len(w), 2)
+            self.assertTrue("extrapolating data below the minimum value"
+                            + " of the time" in str(w[0].message))
+            self.assertTrue("extrapolating data above the maximum value"
+                            + " of the time" in str(w[1].message))
 
     def test_data_interp_hn1dm(self):
         """
@@ -1682,8 +1759,103 @@ class TestWarningsErrors(unittest.TestCase):
             self.assertTrue(issubclass(w[-1].category, UserWarning))
             self.assertTrue("missing" in str(w[-1].message))
 
-        for x, y in zip(_exp.xpts, _exp.interp_1d):
-            self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+        with catch_warnings(record=True) as w:
+            for x, y in zip(_exp.xpts, _exp.interp_1d):
+                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+            self.assertEqual(len(w), 2)
+            self.assertTrue("extrapolating data below the minimum value"
+                            + " of the time" in str(w[0].message))
+            self.assertTrue("extrapolating data above the maximum value"
+                            + " of the time" in str(w[1].message))
+
+    def test_data_interp_hn3dmd(self):
+        """
+        Test for warning 3d horizontal series interpolation by cellrange names
+        with missing data values. More cases are tested with test-models
+        """
+        import pysd
+        from warnings import catch_warnings
+
+        file_name = "data/input.xlsx"
+        tab = "Horizontal missing"
+        time_row_or_col = "time"
+        cell_1 = "data_2d"
+        cell_2 = "data_2db"
+        coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C']}
+        coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C']}
+        interp = "interpolate"
+        py_name = "test_data_interp_hn3dmd"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     tab=tab,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell_1,
+                                     interp=interp,
+                                     coords=coords_1,
+                                     py_name=py_name)
+
+        data.add(file_name=file_name,
+                 tab=tab,
+                 time_row_or_col=time_row_or_col,
+                 cell=cell_2,
+                 interp=interp,
+                 coords=coords_2)
+
+        with catch_warnings(record=True) as ws:
+            data.initialize()
+            self.assertTrue(np.all(
+                [issubclass(w.category, UserWarning) for w in ws]
+                ))
+            self.assertTrue(np.all(
+                ["missing" in str(w.message) for w in ws]
+                ))
+
+        with catch_warnings(record=True) as w:
+            for x, y in zip(_exp.xpts, _exp.interp_3d):
+                self.assertTrue(y.equals(data(x)),
+                                "Wrong result at X=" + str(x))
+            self.assertEqual(len(w), 2)
+            self.assertTrue("extrapolating data below the minimum value"
+                            + " of the time" in str(w[0].message))
+            self.assertTrue("extrapolating data above the maximum value"
+                            + " of the time" in str(w[1].message))
+
+    def test_lookup_hn3dmd(self):
+        """
+        Test for error 3d horizontal series interpolation with missing data
+        values.
+        """
+        # TODO: this could be a warning in the future as Data
+        # for now it is an error as Vensim doesn't interpolate well
+        # missing values in external lookups
+        import pysd
+
+        file_name = "data/input.xlsx"
+        tab = "Horizontal missing"
+        x_row_or_col = "15"
+        cell_1 = "C16"
+        cell_2 = "C19"
+        coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C']}
+        coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C']}
+        py_name = "test_lookup_hn3dmd"
+
+        data = pysd.external.ExtLookup(file_name=file_name,
+                                       tab=tab,
+                                       x_row_or_col=x_row_or_col,
+                                       root=_root,
+                                       cell=cell_1,
+                                       coords=coords_1,
+                                       py_name=py_name)
+
+        data.add(file_name=file_name,
+                 tab=tab,
+                 x_row_or_col=x_row_or_col,
+                 cell=cell_2,
+                 coords=coords_2)
+
+        with self.assertRaises(ValueError):
+            data.initialize()
 
     def test_data_interp_h1d0(self):
         """
@@ -2078,4 +2250,3 @@ class TestWarningsErrors(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             data.initialize()
-
