@@ -525,7 +525,8 @@ def rearrange(data, dims, coords):
         if data.shape == shape:
             # Allows switching dimensions names and transpositions
             return xr.DataArray(data=data.values, coords=coords, dims=dims)
-        elif shape < data.shape:
+        elif len(shape) == len(data.shape) and\
+          all([shape[i] < data.shape[i] for i in range(len(shape))]):
             # Allows subscripting a subrange
             return data.rename({
                 dim: new_dim for dim, new_dim in zip(data.dims, dims)

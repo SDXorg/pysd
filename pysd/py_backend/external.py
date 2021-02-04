@@ -748,12 +748,12 @@ class ExtData(External):
             last_t = self.data['time'][self.data['time'] <= time][-1]
             outdata = self.data.sel(time=last_t)
 
-        # if output from the lookup is a float return as float and not xarray
-        try:
-            return float(outdata)
-        except TypeError:
+        if self.coordss[0]:
             # Remove time coord from the DataArray
             return outdata.reset_coords('time', drop=True)
+        else:
+            # if data has no-coords return a float
+            return float(outdata)
 
 
 class ExtLookup(External):
@@ -821,12 +821,12 @@ class ExtLookup(External):
         else:
             outdata = self.data.interp(lookup_dim=x)
 
-        # if output from the lookup is a float return as float and not xarray
-        try:
-            return float(outdata)
-        except TypeError:
+        if self.coordss[0]:
             # Remove lookup dimension coord from the DataArray
             return outdata.reset_coords('lookup_dim', drop=True)
+        else:
+            # if lookup has no-coords return a float
+            return float(outdata)
 
 
 class ExtConstant(External):
