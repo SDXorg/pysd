@@ -18,6 +18,19 @@ To view a synopsis of the model equations and documentation, call the :py:func:`
 
    >>> print model.doc()
 
+.. note::
+  You can also load an already translated model file, what will be faster as you will load a Python file::
+
+     import pysd
+     model = pysd.load('Teacup.py')
+
+.. note::
+  The functions :py:func:`read_vensim()`,  :py:func:`read_xmile()` and :py:func:`load()` have optional arguments for advanced usage, you can check the full description in :doc:`User Functions Reference <../functions>` or using :py:func:`help()` e.g.::
+
+     import pysd
+     help(pysd.load)
+
+
 Running the Model
 -----------------
 The simplest way to simulate the model is to use the :py:func:`.run()` command with no options. This runs the model with the default parameters supplied by the model file, and returns a Pandas dataframe of the values of the stocks at every timestamp::

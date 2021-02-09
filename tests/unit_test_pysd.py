@@ -76,6 +76,39 @@ class TestPySD(unittest.TestCase):
         self.assertGreater(len(stocks), 3)  # has multiple rows
         self.assertTrue(stocks.notnull().all().all())  # there are no null values in the set
 
+    def test_run_ignore_missing(self):
+        import pysd
+        from warnings import catch_warnings
+
+        model_mdl = 'test-models/tests/get_with_missing_values_xlsx/'\
+                    + 'test_get_with_missing_values_xlsx.mdl'
+        model_py = 'test-models/tests/get_with_missing_values_xlsx/'\
+                    + 'test_get_with_missing_values_xlsx.py'
+
+        with catch_warnings(record=True) as ws:
+            # warnings for missing values
+            model = pysd.read_vensim(model_mdl, missing_values="ignore")
+            self.assertTrue(all(["missing" not in str(w.message) for w in ws]))
+        
+        with catch_warnings(record=True) as ws:
+            # warnings for missing values
+            model.run()
+            self.assertTrue(all(["missing" not in str(w.message) for w in ws]))
+
+        with catch_warnings(record=True) as ws:
+            # ignore warnings for missing values
+            model = pysd.load(model_py)
+            self.assertTrue(any(["missing" in str(w.message) for w in ws]))
+
+        with catch_warnings(record=True) as ws:
+            # ignore warnings for missing values
+            model.run()
+            self.assertTrue(any(["missing" in str(w.message) for w in ws]))
+
+        with self.assertRaises(ValueError):
+            # errors for missing values
+            pysd.load(model_py, missing_values="raise")
+
     def test_run_includes_last_value(self):
         import pysd
         model = pysd.read_vensim(test_model)

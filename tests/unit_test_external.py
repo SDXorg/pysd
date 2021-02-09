@@ -215,7 +215,7 @@ class TestData(unittest.TestCase):
 
         # test as well no file extension
         file_name = "data/input"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         time_row_or_col = "16"
         cell = "B17"
         coords = {}
@@ -223,7 +223,7 @@ class TestData(unittest.TestCase):
         py_name = "test_data_interp_h1d_1"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -248,7 +248,7 @@ class TestData(unittest.TestCase):
         import xarray as xr
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         time_row_or_col = "time_1"
         cell = "data_1"
         coords = {}
@@ -256,7 +256,7 @@ class TestData(unittest.TestCase):
         py_name = "test_data_interp_h1d_1"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -278,7 +278,7 @@ class TestData(unittest.TestCase):
         import warnings
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         time_row_or_col = "4"
         cell = "C5"
         coords = {}
@@ -286,7 +286,7 @@ class TestData(unittest.TestCase):
         py_name = "test_data_interp_h1d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -309,7 +309,7 @@ class TestData(unittest.TestCase):
         import warnings
 
         file_name = "data/input.xlsx"
-        tab = "Vertical"
+        sheet = "Vertical"
         time_row_or_col = "B"
         cell = "C5"
         coords = {}
@@ -317,7 +317,7 @@ class TestData(unittest.TestCase):
         py_name = "test_data_interp_v1d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -340,7 +340,7 @@ class TestData(unittest.TestCase):
         import warnings
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         time_row_or_col = "time"
         cell = "data_1d"
         coords = {}
@@ -348,7 +348,7 @@ class TestData(unittest.TestCase):
         py_name = "test_data_interp_h1nd"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -371,7 +371,7 @@ class TestData(unittest.TestCase):
         import warnings
 
         file_name = "data/input.xlsx"
-        tab = "Vertical"
+        sheet = "Vertical"
         time_row_or_col = "time"
         cell = "data_1d"
         coords = {}
@@ -379,7 +379,7 @@ class TestData(unittest.TestCase):
         py_name = "test_data_interp_vn1d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -402,7 +402,7 @@ class TestData(unittest.TestCase):
         import warnings
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         time_row_or_col = "4"
         cell = "C5"
         coords = {}
@@ -410,7 +410,7 @@ class TestData(unittest.TestCase):
         py_name = "test_data_forward_h1d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -433,7 +433,7 @@ class TestData(unittest.TestCase):
         import warnings
 
         file_name = "data/input.xlsx"
-        tab = "Vertical"
+        sheet = "Vertical"
         time_row_or_col = "B"
         cell = "C5"
         coords = {}
@@ -441,7 +441,7 @@ class TestData(unittest.TestCase):
         py_name = "test_data_forward_v1d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -464,7 +464,7 @@ class TestData(unittest.TestCase):
         import warnings
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         time_row_or_col = "time"
         cell = "data_1d"
         coords = {}
@@ -472,7 +472,7 @@ class TestData(unittest.TestCase):
         py_name = "test_data_forward_hn1d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -495,7 +495,7 @@ class TestData(unittest.TestCase):
         import warnings
 
         file_name = "data/input.xlsx"
-        tab = "Vertical"
+        sheet = "Vertical"
         time_row_or_col = "time"
         cell = "data_1d"
         coords = {}
@@ -503,7 +503,7 @@ class TestData(unittest.TestCase):
         py_name = "test_data_forward_vn1d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -526,7 +526,7 @@ class TestData(unittest.TestCase):
         import warnings
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         time_row_or_col = "4"
         cell = "C5"
         coords = {}
@@ -534,7 +534,7 @@ class TestData(unittest.TestCase):
         py_name = "test_data_backward_h1d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -557,7 +557,7 @@ class TestData(unittest.TestCase):
         import warnings
 
         file_name = "data/input.xlsx"
-        tab = "Vertical"
+        sheet = "Vertical"
         time_row_or_col = "B"
         cell = "C5"
         coords = {}
@@ -565,7 +565,7 @@ class TestData(unittest.TestCase):
         py_name = "test_data_backward_v1d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -588,7 +588,7 @@ class TestData(unittest.TestCase):
         import warnings
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         time_row_or_col = "time"
         cell = "data_1d"
         coords = {}
@@ -596,7 +596,7 @@ class TestData(unittest.TestCase):
         py_name = "test_data_backward_hn1d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -619,7 +619,7 @@ class TestData(unittest.TestCase):
         import warnings
 
         file_name = "data/input.xlsx"
-        tab = "Vertical"
+        sheet = "Vertical"
         time_row_or_col = "time"
         cell = "data_1d"
         coords = {}
@@ -627,7 +627,7 @@ class TestData(unittest.TestCase):
         py_name = "test_data_backward_vn1d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -650,7 +650,7 @@ class TestData(unittest.TestCase):
         import warnings
 
         file_name = "data/input.xlsx"
-        tab = "Vertical"
+        sheet = "Vertical"
         time_row_or_col = "time"
         cell = "data_2d"
         coords = {'ABC': ['A', 'B', 'C']}
@@ -658,7 +658,7 @@ class TestData(unittest.TestCase):
         py_name = "test_data_interp_vn2d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -670,7 +670,8 @@ class TestData(unittest.TestCase):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             for x, y in zip(_exp.xpts, _exp.interp_2d):
-                self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
+                self.assertTrue(y.equals(data(x)),
+                                "Wrong result at X=" + str(x))
 
     def test_data_forward_hn2d(self):
         """
@@ -680,7 +681,7 @@ class TestData(unittest.TestCase):
         import warnings
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         time_row_or_col = "time"
         cell = "data_2d"
         coords = {'ABC': ['A', 'B', 'C']}
@@ -688,7 +689,7 @@ class TestData(unittest.TestCase):
         py_name = "test_data_forward_hn2d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -700,7 +701,8 @@ class TestData(unittest.TestCase):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             for x, y in zip(_exp.xpts, _exp.forward_2d):
-                self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
+                self.assertTrue(y.equals(data(x)),
+                                "Wrong result at X=" + str(x))
 
     def test_data_backward_v2d(self):
         """
@@ -710,7 +712,7 @@ class TestData(unittest.TestCase):
         import warnings
 
         file_name = "data/input.xlsx"
-        tab = "Vertical"
+        sheet = "Vertical"
         time_row_or_col = "B"
         cell = "C5"
         coords = {'ABC': ['A', 'B', 'C']}
@@ -718,7 +720,7 @@ class TestData(unittest.TestCase):
         py_name = "test_data_backward_v2d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -731,7 +733,8 @@ class TestData(unittest.TestCase):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             for x, y in zip(_exp.xpts, _exp.backward_2d):
-                self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
+                self.assertTrue(y.equals(data(x)),
+                                "Wrong result at X=" + str(x))
 
     def test_data_interp_h3d(self):
         """
@@ -741,7 +744,7 @@ class TestData(unittest.TestCase):
         import warnings
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         time_row_or_col = "4"
         cell_1 = "C5"
         cell_2 = "C8"
@@ -751,7 +754,7 @@ class TestData(unittest.TestCase):
         py_name = "test_data_interp_h3d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell_1,
@@ -760,7 +763,7 @@ class TestData(unittest.TestCase):
                                      py_name=py_name)
 
         data.add(file_name=file_name,
-                 tab=tab,
+                 sheet=sheet,
                  time_row_or_col=time_row_or_col,
                  cell=cell_2,
                  coords=coords_2,
@@ -771,7 +774,8 @@ class TestData(unittest.TestCase):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             for x, y in zip(_exp.xpts, _exp.interp_3d):
-                self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
+                self.assertTrue(y.equals(data(x)),
+                                "Wrong result at X=" + str(x))
 
     def test_data_forward_v3d(self):
         """
@@ -781,7 +785,7 @@ class TestData(unittest.TestCase):
         import warnings
 
         file_name = "data/input.xlsx"
-        tab = "Vertical"
+        sheet = "Vertical"
         time_row_or_col = "B"
         cell_1 = "C5"
         cell_2 = "F5"
@@ -791,7 +795,7 @@ class TestData(unittest.TestCase):
         py_name = "test_data_forward_v3d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell_1,
@@ -800,7 +804,7 @@ class TestData(unittest.TestCase):
                                      py_name=py_name)
 
         data.add(file_name=file_name,
-                 tab=tab,
+                 sheet=sheet,
                  time_row_or_col=time_row_or_col,
                  cell=cell_2,
                  coords=coords_2,
@@ -811,7 +815,8 @@ class TestData(unittest.TestCase):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             for x, y in zip(_exp.xpts, _exp.forward_3d):
-                self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
+                self.assertTrue(y.equals(data(x)),
+                                "Wrong result at X=" + str(x))
 
     def test_data_backward_hn3d(self):
         """
@@ -821,7 +826,7 @@ class TestData(unittest.TestCase):
         import warnings
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         time_row_or_col = "time"
         cell_1 = "data_2d"
         cell_2 = "data_2db"
@@ -831,7 +836,7 @@ class TestData(unittest.TestCase):
         py_name = "test_data_backward_hn3d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell_1,
@@ -840,7 +845,7 @@ class TestData(unittest.TestCase):
                                      py_name=py_name)
 
         data.add(file_name=file_name,
-                 tab=tab,
+                 sheet=sheet,
                  time_row_or_col=time_row_or_col,
                  cell=cell_2,
                  coords=coords_2,
@@ -851,7 +856,8 @@ class TestData(unittest.TestCase):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             for x, y in zip(_exp.xpts, _exp.backward_3d):
-                self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
+                self.assertTrue(y.equals(data(x)),
+                                "Wrong result at X=" + str(x))
 
     def test_data_raw_h1d(self):
         """
@@ -860,7 +866,7 @@ class TestData(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         time_row_or_col = "4"
         cell = "C5"
         coords = {}
@@ -868,7 +874,7 @@ class TestData(unittest.TestCase):
         py_name = "test_data_forward_h1d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -904,14 +910,14 @@ class TestLookup(unittest.TestCase):
         import warnings
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         x_row_or_col = "4"
         cell = "C5"
         coords = {}
         py_name = "test_lookup_h1d"
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                       tab=tab,
+                                       sheet=sheet,
                                        x_row_or_col=x_row_or_col,
                                        root=_root,
                                        cell=cell,
@@ -933,14 +939,14 @@ class TestLookup(unittest.TestCase):
         import warnings
 
         file_name = "data/input.xlsx"
-        tab = "Vertical"
+        sheet = "Vertical"
         x_row_or_col = "B"
         cell = "C5"
         coords = {}
         py_name = "test_lookup_v1d"
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                       tab=tab,
+                                       sheet=sheet,
                                        x_row_or_col=x_row_or_col,
                                        root=_root,
                                        cell=cell,
@@ -962,14 +968,14 @@ class TestLookup(unittest.TestCase):
         import warnings
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         x_row_or_col = "time"
         cell = "data_1d"
         coords = {}
         py_name = "test_lookup_h1nd"
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                       tab=tab,
+                                       sheet=sheet,
                                        x_row_or_col=x_row_or_col,
                                        root=_root,
                                        cell=cell,
@@ -991,14 +997,14 @@ class TestLookup(unittest.TestCase):
         import warnings
 
         file_name = "data/input.xlsx"
-        tab = "Vertical"
+        sheet = "Vertical"
         x_row_or_col = "time"
         cell = "data_1d"
         coords = {}
         py_name = "test_lookup_vn1d"
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                       tab=tab,
+                                       sheet=sheet,
                                        x_row_or_col=x_row_or_col,
                                        root=_root,
                                        cell=cell,
@@ -1020,14 +1026,14 @@ class TestLookup(unittest.TestCase):
         import warnings
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         x_row_or_col = "4"
         cell = "C5"
         coords = {'ABC': ['A', 'B', 'C']}
         py_name = "test_lookup_h2d"
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                       tab=tab,
+                                       sheet=sheet,
                                        x_row_or_col=x_row_or_col,
                                        root=_root,
                                        cell=cell,
@@ -1039,7 +1045,8 @@ class TestLookup(unittest.TestCase):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             for x, y in zip(_exp.xpts, _exp.interp_2d):
-                self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
+                self.assertTrue(y.equals(data(x)),
+                                "Wrong result at X=" + str(x))
 
     def test_lookup_vn3d(self):
         """
@@ -1049,7 +1056,7 @@ class TestLookup(unittest.TestCase):
         import warnings
 
         file_name = "data/input.xlsx"
-        tab = "Vertical"
+        sheet = "Vertical"
         x_row_or_col = "time"
         cell_1 = "data_2d"
         cell_2 = "data_2db"
@@ -1058,7 +1065,7 @@ class TestLookup(unittest.TestCase):
         py_name = "test_lookup_vn3d"
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                       tab=tab,
+                                       sheet=sheet,
                                        x_row_or_col=x_row_or_col,
                                        root=_root,
                                        cell=cell_1,
@@ -1066,7 +1073,7 @@ class TestLookup(unittest.TestCase):
                                        py_name=py_name)
 
         data.add(file_name=file_name,
-                 tab=tab,
+                 sheet=sheet,
                  x_row_or_col=x_row_or_col,
                  cell=cell_2,
                  coords=coords_2)
@@ -1076,7 +1083,8 @@ class TestLookup(unittest.TestCase):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             for x, y in zip(_exp.xpts, _exp.interp_3d):
-                self.assertTrue(y.equals(data(x)), "Wrong result at X=" + str(x))
+                self.assertTrue(y.equals(data(x)),
+                                "Wrong result at X=" + str(x))
 
 
 class TestConstant(unittest.TestCase):
@@ -1093,21 +1101,21 @@ class TestConstant(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         cell = "F7"
         cell2 = "C5"
         coords = {}
         py_name = "test_constant_0d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         tab=tab,
+                                         sheet=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
                                          py_name=py_name)
 
         data2 = pysd.external.ExtConstant(file_name=file_name,
-                                          tab=tab,
+                                          sheet=sheet,
                                           root=_root,
                                           cell=cell2,
                                           coords=coords,
@@ -1125,21 +1133,21 @@ class TestConstant(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         cell = "constant"
         cell2 = "constant2"
         coords = {}
         py_name = "test_constant_0d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         tab=tab,
+                                         sheet=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
                                          py_name=py_name)
 
         data2 = pysd.external.ExtConstant(file_name=file_name,
-                                          tab=tab,
+                                          sheet=sheet,
                                           root=_root,
                                           cell=cell2,
                                           coords=coords,
@@ -1157,13 +1165,13 @@ class TestConstant(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         cell = "C5"
         coords = {'val': [0, 1, 2, 3, 5, 6, 7, 8]}
         py_name = "test_constant_h1d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         tab=tab,
+                                         sheet=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
@@ -1179,13 +1187,13 @@ class TestConstant(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Vertical"
+        sheet = "Vertical"
         cell = "C5*"
         coords = {'val': [0, 1, 2, 3, 5, 6, 7, 8]}
         py_name = "test_constant_v1d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         tab=tab,
+                                         sheet=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
@@ -1201,13 +1209,13 @@ class TestConstant(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         cell = "data_1d"
         coords = {'val': [0, 1, 2, 3, 5, 6, 7, 8]}
         py_name = "test_constant_hn1d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         tab=tab,
+                                         sheet=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
@@ -1223,13 +1231,13 @@ class TestConstant(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Vertical"
+        sheet = "Vertical"
         cell = "data_1d*"
         coords = {'val': [0, 1, 2, 3, 5, 6, 7, 8]}
         py_name = "test_constant_vn1d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         tab=tab,
+                                         sheet=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
@@ -1245,13 +1253,13 @@ class TestConstant(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         cell = "C5"
         coords = {'ABC': ['A', 'B', 'C'], 'val': [0, 1, 2, 3, 5, 6, 7, 8]}
         py_name = "test_constant_h2d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         tab=tab,
+                                         sheet=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
@@ -1267,13 +1275,13 @@ class TestConstant(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Vertical"
+        sheet = "Vertical"
         cell = "C5*"
         coords = {'ABC': ['A', 'B', 'C'], 'val': [0, 1, 2, 3, 5, 6, 7, 8]}
         py_name = "test_constant_v2d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         tab=tab,
+                                         sheet=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
@@ -1289,13 +1297,13 @@ class TestConstant(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         cell = "data_2d"
         coords = {'ABC': ['A', 'B', 'C'], 'val': [0, 1, 2, 3, 5, 6, 7, 8]}
         py_name = "test_constant_hn2d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         tab=tab,
+                                         sheet=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
@@ -1311,13 +1319,13 @@ class TestConstant(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Vertical"
+        sheet = "Vertical"
         cell = "data_2d*"
         coords = {'ABC': ['A', 'B', 'C'], 'val': [0, 1, 2, 3, 5, 6, 7, 8]}
         py_name = "test_constant_vn2d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         tab=tab,
+                                         sheet=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
@@ -1333,7 +1341,7 @@ class TestConstant(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         cell = "C5"
         cell2 = "C8"
         coords = {'ABC': ['A', 'B', 'C'],
@@ -1345,14 +1353,14 @@ class TestConstant(unittest.TestCase):
         py_name = "test_constant_h3d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         tab=tab,
+                                         sheet=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
                                          py_name=py_name)
 
         data.add(file_name=file_name,
-                 tab=tab,
+                 sheet=sheet,
                  cell=cell2,
                  coords=coords2)
 
@@ -1367,7 +1375,7 @@ class TestConstant(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Vertical"
+        sheet = "Vertical"
         cell = "C5*"
         cell2 = "F5*"
         coords = {'ABC': ['A', 'B', 'C'],
@@ -1379,14 +1387,14 @@ class TestConstant(unittest.TestCase):
         py_name = "test_constant_v3d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         tab=tab,
+                                         sheet=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
                                          py_name=py_name)
 
         data.add(file_name=file_name,
-                 tab=tab,
+                 sheet=sheet,
                  cell=cell2,
                  coords=coords2)
 
@@ -1401,7 +1409,7 @@ class TestConstant(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         cell = "data_2d"
         cell2 = "data_2db"
         coords = {'ABC': ['A', 'B', 'C'],
@@ -1413,14 +1421,14 @@ class TestConstant(unittest.TestCase):
         py_name = "test_constant_hn3d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         tab=tab,
+                                         sheet=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
                                          py_name=py_name)
 
         data.add(file_name=file_name,
-                 tab=tab,
+                 sheet=sheet,
                  cell=cell2,
                  coords=coords2)
 
@@ -1435,7 +1443,7 @@ class TestConstant(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Vertical"
+        sheet = "Vertical"
         cell = "data_2d*"
         cell2 = "data_2db*"
         coords = {'ABC': ['A', 'B', 'C'],
@@ -1447,14 +1455,14 @@ class TestConstant(unittest.TestCase):
         py_name = "test_constant_vn2d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         tab=tab,
+                                         sheet=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
                                          py_name=py_name)
 
         data.add(file_name=file_name,
-                 tab=tab,
+                 sheet=sheet,
                  cell=cell2,
                  coords=coords2)
 
@@ -1476,7 +1484,7 @@ class TestSubscript(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         firstcell = "C4"
         lastcell = "J4"
         prefix = 'val'
@@ -1484,7 +1492,7 @@ class TestSubscript(unittest.TestCase):
                     'val5', 'val6', 'val7', 'val8']
 
         data = pysd.external.ExtSubscript(file_name=file_name,
-                                          tab=tab,
+                                          sheet=sheet,
                                           root=_root,
                                           firstcell=firstcell,
                                           lastcell=lastcell,
@@ -1499,14 +1507,14 @@ class TestSubscript(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         firstcell = "B5"
         lastcell = "B7"
         prefix = ''
         expected = ['A', 'B', 'C']
 
         data = pysd.external.ExtSubscript(file_name=file_name,
-                                          tab=tab,
+                                          sheet=sheet,
                                           root=_root,
                                           firstcell=firstcell,
                                           lastcell=lastcell,
@@ -1527,7 +1535,7 @@ class TestWarningsErrors(unittest.TestCase):
         import pysd
 
         file_name = "data/not_implemented_file.ods"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         time_row_or_col = "4"
         cell = "C5"
         coords = {}
@@ -1535,7 +1543,7 @@ class TestWarningsErrors(unittest.TestCase):
         py_name = "test_not_implemented_file"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -1553,7 +1561,7 @@ class TestWarningsErrors(unittest.TestCase):
         import pysd
 
         file_name = "data/non_existent.xls"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         time_row_or_col = "4"
         cell = "C5"
         coords = {}
@@ -1561,7 +1569,7 @@ class TestWarningsErrors(unittest.TestCase):
         py_name = "test_non_existent_file"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -1579,7 +1587,7 @@ class TestWarningsErrors(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Non-Existent"
+        sheet = "Non-Existent"
         time_row_or_col = "time"
         cell = "data_1d"
         coords = {}
@@ -1587,7 +1595,7 @@ class TestWarningsErrors(unittest.TestCase):
         py_name = "test_non_existent_sheet_pyxl"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -1605,7 +1613,7 @@ class TestWarningsErrors(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         time_row_or_col = "time"
         cell = "non_exixtent"
         coords = {}
@@ -1613,7 +1621,7 @@ class TestWarningsErrors(unittest.TestCase):
         py_name = "est_non_existent_cellrange_name_pyxl"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -1631,13 +1639,13 @@ class TestWarningsErrors(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal missing"
+        sheet = "Horizontal missing"
         cell = "constant"
         coords = {}
         py_name = "est_non_existent_cellrange_name_in_sheet_pyxl"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         tab=tab,
+                                         sheet=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
@@ -1657,15 +1665,17 @@ class TestWarningsErrors(unittest.TestCase):
         from warnings import catch_warnings
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal missing"
+        sheet = "Horizontal missing"
         time_row_or_col = "4"
         cell = "C5"
         coords = {}
         interp = None
         py_name = "test_data_interp_h1dm"
 
+        pysd.external.External.missing = "warning"
+
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -1688,6 +1698,75 @@ class TestWarningsErrors(unittest.TestCase):
             self.assertTrue("extrapolating data above the maximum value"
                             + " of the time" in str(w[1].message))
 
+    def test_data_interp_h1dm_ignore(self):
+        """
+        Test ignore warning 1d horizontal series interpolation when series
+        has missing or NaN data
+        """
+        import pysd
+        from warnings import catch_warnings
+
+        file_name = "data/input.xlsx"
+        sheet = "Horizontal missing"
+        time_row_or_col = "4"
+        cell = "C5"
+        coords = {}
+        interp = None
+        py_name = "test_data_interp_h1dm_ignore"
+
+        pysd.external.External.missing = "ignore"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     sheet=sheet,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     interp=interp,
+                                     py_name=py_name)
+
+        with catch_warnings(record=True) as w:
+            data.initialize()
+            self.assertEqual(len(w), 0)
+
+        with catch_warnings(record=True) as w:
+            for x, y in zip(_exp.xpts, _exp.interp_1d):
+                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+            self.assertEqual(len(w), 2)
+            self.assertTrue("extrapolating data below the minimum value"
+                            + " of the time" in str(w[0].message))
+            self.assertTrue("extrapolating data above the maximum value"
+                            + " of the time" in str(w[1].message))
+
+    def test_data_interp_h1dm_raise(self):
+        """
+        Test error 1d horizontal series interpolation when series
+        has missing or NaN data
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        sheet = "Horizontal missing"
+        time_row_or_col = "4"
+        cell = "C5"
+        coords = {}
+        interp = None
+        py_name = "test_data_interp_h1dm_ignore"
+
+        pysd.external.External.missing = "raise"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     sheet=sheet,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     interp=interp,
+                                     py_name=py_name)
+
+        with self.assertRaises(ValueError):
+            data.initialize()
+
     def test_data_interp_v1dm(self):
         """
         Test for warning 1d vertical series interpolation when series has
@@ -1697,15 +1776,17 @@ class TestWarningsErrors(unittest.TestCase):
         from warnings import catch_warnings
 
         file_name = "data/input.xlsx"
-        tab = "Vertical missing"
+        sheet = "Vertical missing"
         time_row_or_col = "B"
         cell = "C5"
         coords = {}
         interp = None
         py_name = "test_data_interp_v1dm"
 
+        pysd.external.External.missing = "warning"
+
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -1727,6 +1808,75 @@ class TestWarningsErrors(unittest.TestCase):
                             + " of the time" in str(w[0].message))
             self.assertTrue("extrapolating data above the maximum value"
                             + " of the time" in str(w[1].message))
+
+    def test_data_interp_v1dm_ignore(self):
+        """
+        Test ignore warning 1d vertical series interpolation when series has
+        missing or NaN data
+        """
+        import pysd
+        from warnings import catch_warnings
+
+        file_name = "data/input.xlsx"
+        sheet = "Vertical missing"
+        time_row_or_col = "B"
+        cell = "C5"
+        coords = {}
+        interp = None
+        py_name = "test_data_interp_v1dm_ignore"
+
+        pysd.external.External.missing = "ignore"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     sheet=sheet,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     interp=interp,
+                                     py_name=py_name)
+
+        with catch_warnings(record=True) as w:
+            data.initialize()
+            self.assertEqual(len(w), 0)
+
+        with catch_warnings(record=True) as w:
+            for x, y in zip(_exp.xpts, _exp.interp_1d):
+                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+            self.assertEqual(len(w), 2)
+            self.assertTrue("extrapolating data below the minimum value"
+                            + " of the time" in str(w[0].message))
+            self.assertTrue("extrapolating data above the maximum value"
+                            + " of the time" in str(w[1].message))
+
+    def test_data_interp_v1dm_raise(self):
+        """
+        Test error 1d vertical series interpolation when series has
+        missing or NaN data
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        sheet = "Vertical missing"
+        time_row_or_col = "B"
+        cell = "C5"
+        coords = {}
+        interp = None
+        py_name = "test_data_interp_v1dm_ignore"
+
+        pysd.external.External.missing = "raise"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     sheet=sheet,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     interp=interp,
+                                     py_name=py_name)
+
+        with self.assertRaises(ValueError):
+            data.initialize()
 
     def test_data_interp_hn1dm(self):
         """
@@ -1737,15 +1887,17 @@ class TestWarningsErrors(unittest.TestCase):
         from warnings import catch_warnings
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal missing"
+        sheet = "Horizontal missing"
         time_row_or_col = "time_missing"
         cell = "data_1d"
         coords = {}
         interp = None
         py_name = "test_data_interp_h1dm"
 
+        pysd.external.External.missing = "warning"
+
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -1768,6 +1920,75 @@ class TestWarningsErrors(unittest.TestCase):
             self.assertTrue("extrapolating data above the maximum value"
                             + " of the time" in str(w[1].message))
 
+    def test_data_interp_hn1dm_ignore(self):
+        """
+        Test ignore warning 1d horizontal series by cellrange names
+        when series has missing or NaN data
+        """
+        import pysd
+        from warnings import catch_warnings
+
+        file_name = "data/input.xlsx"
+        sheet = "Horizontal missing"
+        time_row_or_col = "time_missing"
+        cell = "data_1d"
+        coords = {}
+        interp = None
+        py_name = "test_data_interp_h1dm_ignore"
+
+        pysd.external.External.missing = "ignore"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     sheet=sheet,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     interp=interp,
+                                     py_name=py_name)
+
+        with catch_warnings(record=True) as w:
+            data.initialize()
+            self.assertEqual(len(w), 0)
+
+        with catch_warnings(record=True) as w:
+            for x, y in zip(_exp.xpts, _exp.interp_1d):
+                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+            self.assertEqual(len(w), 2)
+            self.assertTrue("extrapolating data below the minimum value"
+                            + " of the time" in str(w[0].message))
+            self.assertTrue("extrapolating data above the maximum value"
+                            + " of the time" in str(w[1].message))
+
+    def test_data_interp_hn1dm_raise(self):
+        """
+        Test for error 1d horizontal series by cellrange names
+        when series has missing or NaN data
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        sheet = "Horizontal missing"
+        time_row_or_col = "time_missing"
+        cell = "data_1d"
+        coords = {}
+        interp = None
+        py_name = "test_data_interp_h1dm_raise"
+
+        pysd.external.External.missing = "raise"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     sheet=sheet,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     interp=interp,
+                                     py_name=py_name)
+
+        with self.assertRaises(ValueError):
+            data.initialize()
+
     def test_data_interp_hn3dmd(self):
         """
         Test for warning 3d horizontal series interpolation by cellrange names
@@ -1777,7 +1998,7 @@ class TestWarningsErrors(unittest.TestCase):
         from warnings import catch_warnings
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal missing"
+        sheet = "Horizontal missing"
         time_row_or_col = "time"
         cell_1 = "data_2d"
         cell_2 = "data_2db"
@@ -1786,8 +2007,10 @@ class TestWarningsErrors(unittest.TestCase):
         interp = "interpolate"
         py_name = "test_data_interp_hn3dmd"
 
+        pysd.external.External.missing = "warning"
+
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell_1,
@@ -1796,7 +2019,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      py_name=py_name)
 
         data.add(file_name=file_name,
-                 tab=tab,
+                 sheet=sheet,
                  time_row_or_col=time_row_or_col,
                  cell=cell_2,
                  interp=interp,
@@ -1821,27 +2044,25 @@ class TestWarningsErrors(unittest.TestCase):
             self.assertTrue("extrapolating data above the maximum value"
                             + " of the time" in str(w[1].message))
 
-    def test_lookup_hn3dmd(self):
+    def test_lookup_hn3dmd_raise(self):
         """
         Test for error 3d horizontal series interpolation with missing data
         values.
         """
-        # TODO: this could be a warning in the future as Data
-        # for now it is an error as Vensim doesn't interpolate well
-        # missing values in external lookups
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal missing"
+        sheet = "Horizontal missing"
         x_row_or_col = "15"
         cell_1 = "C16"
         cell_2 = "C19"
         coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C']}
         coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C']}
         py_name = "test_lookup_hn3dmd"
+        pysd.external.External.missing = "raise"
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                       tab=tab,
+                                       sheet=sheet,
                                        x_row_or_col=x_row_or_col,
                                        root=_root,
                                        cell=cell_1,
@@ -1849,13 +2070,59 @@ class TestWarningsErrors(unittest.TestCase):
                                        py_name=py_name)
 
         data.add(file_name=file_name,
-                 tab=tab,
+                 sheet=sheet,
                  x_row_or_col=x_row_or_col,
                  cell=cell_2,
                  coords=coords_2)
 
         with self.assertRaises(ValueError):
             data.initialize()
+
+    def test_lookup_hn3dmd_ignore(self):
+        """
+        Test for ignore warnings 3d horizontal series interpolation with
+        missing data values.
+        """
+        import pysd
+        from warnings import catch_warnings
+
+        file_name = "data/input.xlsx"
+        sheet = "Horizontal missing"
+        x_row_or_col = "15"
+        cell_1 = "C16"
+        cell_2 = "C19"
+        coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C']}
+        coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C']}
+        py_name = "test_lookup_hn3dmd"
+        pysd.external.External.missing = "ignore"
+
+        data = pysd.external.ExtLookup(file_name=file_name,
+                                       sheet=sheet,
+                                       x_row_or_col=x_row_or_col,
+                                       root=_root,
+                                       cell=cell_1,
+                                       coords=coords_1,
+                                       py_name=py_name)
+
+        data.add(file_name=file_name,
+                 sheet=sheet,
+                 x_row_or_col=x_row_or_col,
+                 cell=cell_2,
+                 coords=coords_2)
+
+        with catch_warnings(record=True) as ws:
+            data.initialize()
+            self.assertEqual(len(ws), 0)
+
+        with catch_warnings(record=True) as w:
+            for x, y in zip(_exp.xpts, _exp.interp_3d):
+                self.assertTrue(y.equals(data(x)),
+                                "Wrong result at X=" + str(x))
+            self.assertEqual(len(w), 2)
+            self.assertTrue("extrapolating data below the minimum value"
+                            + " of the series" in str(w[0].message))
+            self.assertTrue("extrapolating data above the maximum value"
+                            + " of the series" in str(w[1].message))
 
     def test_data_interp_h1d0(self):
         """
@@ -1864,7 +2131,7 @@ class TestWarningsErrors(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal missing"
+        sheet = "Horizontal missing"
         time_row_or_col = "3"
         cell = "C5"
         coords = {}
@@ -1872,7 +2139,7 @@ class TestWarningsErrors(unittest.TestCase):
         py_name = "test_data_interp_h1d0"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -1890,7 +2157,7 @@ class TestWarningsErrors(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Vertical missing"
+        sheet = "Vertical missing"
         time_row_or_col = "A"
         cell = "C5"
         coords = {}
@@ -1898,7 +2165,7 @@ class TestWarningsErrors(unittest.TestCase):
         py_name = "test_data_interp_v1d0"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -1917,7 +2184,7 @@ class TestWarningsErrors(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal missing"
+        sheet = "Horizontal missing"
         time_row_or_col = "len_0"
         cell = "data_1d"
         coords = {}
@@ -1925,7 +2192,7 @@ class TestWarningsErrors(unittest.TestCase):
         py_name = "test_data_interp_h1d0"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -1939,12 +2206,12 @@ class TestWarningsErrors(unittest.TestCase):
     def test_data_interp_hn1dt(self):
         """
         Test for error in series by cellrange names
-        when series is a table
+        when series is a sheetle
         """
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         time_row_or_col = "data_2d"
         cell = "data_1d"
         coords = {}
@@ -1952,7 +2219,7 @@ class TestWarningsErrors(unittest.TestCase):
         py_name = "test_data_interp_h1dt"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -1971,7 +2238,7 @@ class TestWarningsErrors(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         time_row_or_col = "time"
         cell = "data_2d"
         coords = {'ABC': ['A', 'B']}
@@ -1979,7 +2246,7 @@ class TestWarningsErrors(unittest.TestCase):
         py_name = "test_data_interp_hns"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -1998,7 +2265,7 @@ class TestWarningsErrors(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Vertical missing"
+        sheet = "Vertical missing"
         time_row_or_col = "time_short"
         cell = "data_2d_short"
         coords = {'ABC': ['A', 'B', 'C']}
@@ -2006,7 +2273,7 @@ class TestWarningsErrors(unittest.TestCase):
         py_name = "test_data_interp_vnss"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -2026,7 +2293,7 @@ class TestWarningsErrors(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "No monotonous"
+        sheet = "No monotonous"
         time_row_or_col = "time"
         cell = "data_1d"
         coords = {}
@@ -2034,7 +2301,7 @@ class TestWarningsErrors(unittest.TestCase):
         py_name = "test_data_interp_hnnm"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -2052,7 +2319,7 @@ class TestWarningsErrors(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         time_row_or_col = "4"
         cell = "C5"
         coords = {'ABC': ['A', 'B', 'C'], 'XY': ['X']}
@@ -2061,7 +2328,7 @@ class TestWarningsErrors(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             pysd.external.ExtData(file_name=file_name,
-                                  tab=tab,
+                                  sheet=sheet,
                                   time_row_or_col=time_row_or_col,
                                   root=_root,
                                   cell=cell,
@@ -2076,7 +2343,7 @@ class TestWarningsErrors(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         time_row_or_col = "4"
         cell_1 = "C5"
         cell_2 = "C8"
@@ -2087,7 +2354,7 @@ class TestWarningsErrors(unittest.TestCase):
         py_name = "test_data_h3d_interp"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell_1,
@@ -2097,7 +2364,7 @@ class TestWarningsErrors(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             data.add(file_name=file_name,
-                     tab=tab,
+                     sheet=sheet,
                      time_row_or_col=time_row_or_col,
                      cell=cell_2,
                      coords=coords_2,
@@ -2110,7 +2377,7 @@ class TestWarningsErrors(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         time_row_or_col = "4"
         cell_1 = "C5"
         cell_2 = "C8"
@@ -2120,7 +2387,7 @@ class TestWarningsErrors(unittest.TestCase):
         py_name = "test_data_h3d_add"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     tab=tab,
+                                     sheet=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell_1,
@@ -2130,7 +2397,7 @@ class TestWarningsErrors(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             data.add(file_name=file_name,
-                     tab=tab,
+                     sheet=sheet,
                      time_row_or_col=time_row_or_col,
                      cell=cell_2,
                      coords=coords_2,
@@ -2143,7 +2410,7 @@ class TestWarningsErrors(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         x_row_or_col = "4"
         cell_1 = "C5"
         cell_2 = "C8"
@@ -2152,7 +2419,7 @@ class TestWarningsErrors(unittest.TestCase):
         py_name = "test_lookup_h3d_add"
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                       tab=tab,
+                                       sheet=sheet,
                                        x_row_or_col=x_row_or_col,
                                        root=_root,
                                        cell=cell_1,
@@ -2161,7 +2428,7 @@ class TestWarningsErrors(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             data.add(file_name=file_name,
-                     tab=tab,
+                     sheet=sheet,
                      x_row_or_col=x_row_or_col,
                      cell=cell_2,
                      coords=coords_2)
@@ -2173,7 +2440,7 @@ class TestWarningsErrors(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         cell = "C5"
         cell2 = "C8"
         coords = {'XY': ['X'],
@@ -2185,7 +2452,7 @@ class TestWarningsErrors(unittest.TestCase):
         py_name = "test_constant_h3d_add"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         tab=tab,
+                                         sheet=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
@@ -2193,7 +2460,7 @@ class TestWarningsErrors(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             data.add(file_name=file_name,
-                     tab=tab,
+                     sheet=sheet,
                      cell=cell2,
                      coords=coords2)
 
@@ -2205,14 +2472,14 @@ class TestWarningsErrors(unittest.TestCase):
         import xarray as xr
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         x_row_or_col = "4"
         cell = "C5"
         coords = {}
         py_name = "test_lookup_h1d"
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                       tab=tab,
+                                       sheet=sheet,
                                        x_row_or_col=x_row_or_col,
                                        root=_root,
                                        cell=cell,
@@ -2236,13 +2503,13 @@ class TestWarningsErrors(unittest.TestCase):
         import pysd
 
         file_name = "data/input.xlsx"
-        tab = "Horizontal"
+        sheet = "Horizontal"
         cell = "data_2d"
         coords = {'ABC': ['A', 'B']}
         py_name = "test_constant_hns"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         tab=tab,
+                                         sheet=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
