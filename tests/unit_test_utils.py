@@ -249,6 +249,49 @@ class TestUtils(TestCase):
                     with self.assertRaises(ValueError):
                         compute_shape(c, i+1)
 
+    def test_rearrange(self):
+        import pysd
+
+        rearrange = pysd.utils.rearrange
+        # simple cases are tested, complex cases are tested with test-models
+        _subscript_dict = {
+            'd1': ['a', 'b', 'c'],
+            'd2': ['b', 'c'],
+            'd3': ['b', 'c']
+        }
+
+        xr_input_subdim = xr.DataArray([1, 4, 2],
+            {'d1': ['a', 'b', 'c']}, ['d1'])
+        xr_input_updim = xr.DataArray([1, 4],
+            {'d2': ['b', 'c']}, ['d2'])
+        xr_input_switch = xr.DataArray([[1, 4],[8, 5]],
+            {'d2': ['b', 'c'], 'd3': ['b', 'c']}, ['d2', 'd3'])
+        xr_input_float = 3.
+
+        xr_out_subdim = xr.DataArray([4, 2],
+            {'d2': ['b', 'c']}, ['d2'])
+        xr_out_updim = xr.DataArray([[1, 1], [4, 4]],
+            {'d2': ['b', 'c'], 'd3': ['b', 'c']}, ['d2', 'd3'])
+        xr_out_switch = xr.DataArray([[1, 4],[8, 5]],
+            {'d2': ['b', 'c'], 'd3': ['b', 'c']}, ['d3', 'd2'])
+        xr_out_float = xr.DataArray(3.,
+            {'d2': ['b', 'c']}, ['d2'])
+
+        self.assertTrue(xr_out_subdim.equals(
+            rearrange(xr_input_subdim, ['d2'], _subscript_dict)))
+
+        self.assertTrue(xr_out_updim.equals(
+            rearrange(xr_input_updim, ['d2', 'd3'], _subscript_dict)))
+
+        self.assertTrue(xr_out_switch.equals(
+            rearrange(xr_input_switch, ['d3', 'd2'], _subscript_dict)))
+
+        self.assertTrue(xr_out_float.equals(
+            rearrange(xr_input_float, ['d2'], _subscript_dict)))
+
+        self.assertEqual(None,
+            rearrange(None, ['d2'], _subscript_dict))
+
     def test_round_(self):
         import pysd
         coords = {'d1': [9, 1], 'd2': [2, 4]}

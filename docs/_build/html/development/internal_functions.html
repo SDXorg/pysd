@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Internal Functions &mdash; PySD 1.0.0 documentation</title>
+  <title>Internal Functions &mdash; PySD 1.1.0 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                1.0
+                1.1
               </div>
             
           
@@ -618,7 +618,7 @@ the Stateful objects by functions.Model.initialize.</p>
 
 <dl class="py method">
 <dt id="py_backend.external.Excels.read">
-<em class="property">classmethod </em><code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#Excels.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.Excels.read" title="Permalink to this definition">¶</a></dt>
+<em class="property">classmethod </em><code class="sig-name descname">read</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">sheet_name</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#Excels.read"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.Excels.read" title="Permalink to this definition">¶</a></dt>
 <dd><p>Read the Excel file or return the previously read one</p>
 </dd></dl>
 
@@ -632,7 +632,7 @@ the Stateful objects by functions.Model.initialize.</p>
 
 <dl class="py class">
 <dt id="py_backend.external.ExtConstant">
-<em class="property">class </em><code class="sig-prename descclassname">py_backend.external.</code><code class="sig-name descname">ExtConstant</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">tab</span></em>, <em class="sig-param"><span class="n">cell</span></em>, <em class="sig-param"><span class="n">coords</span></em>, <em class="sig-param"><span class="n">root</span></em>, <em class="sig-param"><span class="n">py_name</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#ExtConstant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.ExtConstant" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">py_backend.external.</code><code class="sig-name descname">ExtConstant</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">sheet</span></em>, <em class="sig-param"><span class="n">cell</span></em>, <em class="sig-param"><span class="n">coords</span></em>, <em class="sig-param"><span class="n">root</span></em>, <em class="sig-param"><span class="n">py_name</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#ExtConstant"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.ExtConstant" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class for Vensim GET XLS CONSTANTS/GET DIRECT CONSTANTS</p>
 <dl class="py method">
 <dt id="py_backend.external.ExtConstant._get_constant_data">
@@ -665,7 +665,7 @@ If data_across is “name” the cell range name where the data is.</p></li>
 
 <dl class="py method">
 <dt id="py_backend.external.ExtConstant.add">
-<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">tab</span></em>, <em class="sig-param"><span class="n">cell</span></em>, <em class="sig-param"><span class="n">coords</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#ExtConstant.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.ExtConstant.add" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">sheet</span></em>, <em class="sig-param"><span class="n">cell</span></em>, <em class="sig-param"><span class="n">coords</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#ExtConstant.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.ExtConstant.add" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add information to retrieve new dimension in an already declared object</p>
 </dd></dl>
 
@@ -679,11 +679,11 @@ If data_across is “name” the cell range name where the data is.</p></li>
 
 <dl class="py class">
 <dt id="py_backend.external.ExtData">
-<em class="property">class </em><code class="sig-prename descclassname">py_backend.external.</code><code class="sig-name descname">ExtData</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">tab</span></em>, <em class="sig-param"><span class="n">time_row_or_col</span></em>, <em class="sig-param"><span class="n">cell</span></em>, <em class="sig-param"><span class="n">interp</span></em>, <em class="sig-param"><span class="n">coords</span></em>, <em class="sig-param"><span class="n">root</span></em>, <em class="sig-param"><span class="n">py_name</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#ExtData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.ExtData" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">py_backend.external.</code><code class="sig-name descname">ExtData</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">sheet</span></em>, <em class="sig-param"><span class="n">time_row_or_col</span></em>, <em class="sig-param"><span class="n">cell</span></em>, <em class="sig-param"><span class="n">interp</span></em>, <em class="sig-param"><span class="n">coords</span></em>, <em class="sig-param"><span class="n">root</span></em>, <em class="sig-param"><span class="n">py_name</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#ExtData"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.ExtData" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class for Vensim GET XLS DATA/GET DIRECT DATA</p>
 <dl class="py method">
 <dt id="py_backend.external.ExtData.add">
-<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">tab</span></em>, <em class="sig-param"><span class="n">time_row_or_col</span></em>, <em class="sig-param"><span class="n">cell</span></em>, <em class="sig-param"><span class="n">interp</span></em>, <em class="sig-param"><span class="n">coords</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#ExtData.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.ExtData.add" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">sheet</span></em>, <em class="sig-param"><span class="n">time_row_or_col</span></em>, <em class="sig-param"><span class="n">cell</span></em>, <em class="sig-param"><span class="n">interp</span></em>, <em class="sig-param"><span class="n">coords</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#ExtData.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.ExtData.add" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add information to retrieve new dimension in an already declared object</p>
 </dd></dl>
 
@@ -697,11 +697,11 @@ If data_across is “name” the cell range name where the data is.</p></li>
 
 <dl class="py class">
 <dt id="py_backend.external.ExtLookup">
-<em class="property">class </em><code class="sig-prename descclassname">py_backend.external.</code><code class="sig-name descname">ExtLookup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">tab</span></em>, <em class="sig-param"><span class="n">x_row_or_col</span></em>, <em class="sig-param"><span class="n">cell</span></em>, <em class="sig-param"><span class="n">coords</span></em>, <em class="sig-param"><span class="n">root</span></em>, <em class="sig-param"><span class="n">py_name</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#ExtLookup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.ExtLookup" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">py_backend.external.</code><code class="sig-name descname">ExtLookup</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">sheet</span></em>, <em class="sig-param"><span class="n">x_row_or_col</span></em>, <em class="sig-param"><span class="n">cell</span></em>, <em class="sig-param"><span class="n">coords</span></em>, <em class="sig-param"><span class="n">root</span></em>, <em class="sig-param"><span class="n">py_name</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#ExtLookup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.ExtLookup" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class for Vensim GET XLS LOOKUPS/GET DIRECT LOOKUPS</p>
 <dl class="py method">
 <dt id="py_backend.external.ExtLookup.add">
-<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">tab</span></em>, <em class="sig-param"><span class="n">x_row_or_col</span></em>, <em class="sig-param"><span class="n">cell</span></em>, <em class="sig-param"><span class="n">coords</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#ExtLookup.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.ExtLookup.add" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">sheet</span></em>, <em class="sig-param"><span class="n">x_row_or_col</span></em>, <em class="sig-param"><span class="n">cell</span></em>, <em class="sig-param"><span class="n">coords</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#ExtLookup.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.ExtLookup.add" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add information to retrieve new dimension in an already declared object</p>
 </dd></dl>
 
@@ -715,7 +715,7 @@ If data_across is “name” the cell range name where the data is.</p></li>
 
 <dl class="py class">
 <dt id="py_backend.external.ExtSubscript">
-<em class="property">class </em><code class="sig-prename descclassname">py_backend.external.</code><code class="sig-name descname">ExtSubscript</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">tab</span></em>, <em class="sig-param"><span class="n">firstcell</span></em>, <em class="sig-param"><span class="n">lastcell</span></em>, <em class="sig-param"><span class="n">prefix</span></em>, <em class="sig-param"><span class="n">root</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#ExtSubscript"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.ExtSubscript" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="sig-prename descclassname">py_backend.external.</code><code class="sig-name descname">ExtSubscript</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">file_name</span></em>, <em class="sig-param"><span class="n">sheet</span></em>, <em class="sig-param"><span class="n">firstcell</span></em>, <em class="sig-param"><span class="n">lastcell</span></em>, <em class="sig-param"><span class="n">prefix</span></em>, <em class="sig-param"><span class="n">root</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#ExtSubscript"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.ExtSubscript" title="Permalink to this definition">¶</a></dt>
 <dd><p>Class for Vensim GET XLS SUBSCRIPT/GET DIRECT SUBSCRIPT</p>
 </dd></dl>
 
@@ -723,6 +723,53 @@ If data_across is “name” the cell range name where the data is.</p></li>
 <dt id="py_backend.external.External">
 <em class="property">class </em><code class="sig-prename descclassname">py_backend.external.</code><code class="sig-name descname">External</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">py_name</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#External"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.External" title="Permalink to this definition">¶</a></dt>
 <dd><p>Main class of external objects</p>
+<dl class="py attribute">
+<dt id="py_backend.external.External.py_name">
+<code class="sig-name descname">py_name</code><a class="headerlink" href="#py_backend.external.External.py_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>The python name of the object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/2.7/library/functions.html#str" title="(in Python v2.7)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="py_backend.external.External.missing">
+<code class="sig-name descname">missing</code><a class="headerlink" href="#py_backend.external.External.missing" title="Permalink to this definition">¶</a></dt>
+<dd><p>What to do with missing values. If “warning” (default)
+shows a warning message and interpolates the values.
+If “raise” raises an error. If “ignore” interpolates
+the values without showing anything.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/2.7/library/functions.html#str" title="(in Python v2.7)">str</a> (“warning”, “error”, “ignore”)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="py_backend.external.External.file">
+<code class="sig-name descname">file</code><a class="headerlink" href="#py_backend.external.External.file" title="Permalink to this definition">¶</a></dt>
+<dd><p>File name from which the data is read.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/2.7/library/functions.html#str" title="(in Python v2.7)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt id="py_backend.external.External.sheet">
+<code class="sig-name descname">sheet</code><a class="headerlink" href="#py_backend.external.External.sheet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sheet name from which the data is read.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/2.7/library/functions.html#str" title="(in Python v2.7)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
 <dl class="py method">
 <dt id="py_backend.external.External._col_to_num">
 <em class="property">static </em><code class="sig-name descname">_col_to_num</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">col</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#External._col_to_num"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.External._col_to_num" title="Permalink to this definition">¶</a></dt>
@@ -747,23 +794,34 @@ If data_across is “name” the cell range name where the data is.</p></li>
 </dd></dl>
 
 <dl class="py method">
+<dt id="py_backend.external.External._fill_missing">
+<code class="sig-name descname">_fill_missing</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">series</span></em>, <em class="sig-param"><span class="n">data</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#External._fill_missing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.External._fill_missing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fills missing values in excel read data. Mutates the values in data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>series</strong> – the time series without missing values</p></li>
+<li><p><strong>data</strong> – the data with missing values</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/2.7/library/constants.html#None" title="(in Python v2.7)">None</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt id="py_backend.external.External._get_data_from_file">
 <code class="sig-name descname">_get_data_from_file</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">rows</span></em>, <em class="sig-param"><span class="n">cols</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#External._get_data_from_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.External._get_data_from_file" title="Permalink to this definition">¶</a></dt>
 <dd><p>Function to read data from excel file using rows and columns</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>rows</strong> (<a class="reference external" href="https://docs.python.org/2.7/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>, </em><em>list</em><em> or </em><em>array</em>) – if int, then will start reading the table for the given row number
-if list, then will read between first and second row of the lis
-if array, then will read the given row numbers</p></li>
-<li><p><strong>cols</strong> (<a class="reference external" href="https://docs.python.org/2.7/library/constants.html#None" title="(in Python v2.7)"><em>None</em></a><em>, </em><a class="reference external" href="https://docs.python.org/2.7/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a><em>, </em><a class="reference external" href="https://docs.python.org/2.7/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em>, </em><em>list</em><em> or </em><em>array</em>) – <dl class="simple">
-<dt>if None, then will continue reading until no more data is</dt><dd><p>available in the new column</p>
-</dd>
-</dl>
-<p>if str, then will read only the given column by its name
-if list, then will read between the given columns
-if array, then will read the given columns names/numbers</p>
-</p></li>
+<li><p><strong>rows</strong> (<em>list of len 2</em>) – first row and last row+1 to be read, starting from 0</p></li>
+<li><p><strong>cols</strong> (<em>list of len 2</em>) – first col and last col+1 to be read, starting from 0</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -831,12 +889,11 @@ If series_across is “column” the column name where</p>
 
 <dl class="py method">
 <dt id="py_backend.external.External._initialize_data">
-<code class="sig-name descname">_initialize_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">dim_name</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#External._initialize_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.External._initialize_data" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">_initialize_data</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">element_type</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#External._initialize_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.External._initialize_data" title="Permalink to this definition">¶</a></dt>
 <dd><p>Initialize one element of DATA or LOOKUPS</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>dim_name</strong> (<a class="reference external" href="https://docs.python.org/2.7/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – Dimension name.
-“lookup_dim” for LOOKUPS, “time” for DATA.</p>
+<dd class="field-odd"><p><strong>element_type</strong> (<a class="reference external" href="https://docs.python.org/2.7/library/functions.html#str" title="(in Python v2.7)"><em>str</em></a>) – “lookup” for LOOKUPS, “data” for data.</p>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p><strong>data</strong> – Dataarray with the time or interpolation dimension
@@ -849,18 +906,22 @@ as first dimension.</p>
 </dd></dl>
 
 <dl class="py method">
-<dt id="py_backend.external.External._num_to_col">
-<em class="property">static </em><code class="sig-name descname">_num_to_col</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">num</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#External._num_to_col"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.External._num_to_col" title="Permalink to this definition">¶</a></dt>
-<dd><p>Transforms the column number to name. Also working with lists.</p>
+<dt id="py_backend.external.External._interpolate_missing">
+<code class="sig-name descname">_interpolate_missing</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x</span></em>, <em class="sig-param"><span class="n">xr</span></em>, <em class="sig-param"><span class="n">yr</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#External._interpolate_missing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.External._interpolate_missing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Interpolates a list of missing values from _fill_missing</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>col_v</strong> (<a class="reference external" href="https://docs.python.org/2.7/library/functions.html#int" title="(in Python v2.7)"><em>int</em></a><em> or </em><em>list of ints</em>) – Column number(s)</p>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – list of missing values interpolate</p></li>
+<li><p><strong>xr</strong> – non-missing x values</p></li>
+<li><p><strong>yr</strong> – non-missing y values</p></li>
+</ul>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p>Column name(s)</p>
+<dd class="field-even"><p>Result after interpolating x with self.interp method</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>int/list</p>
+<dd class="field-odd"><p>y</p>
 </dd>
 </dl>
 </dd></dl>
@@ -893,7 +954,7 @@ or np.ndarray in the given dimensions.</p>
 
 <dl class="py method">
 <dt id="py_backend.external.External._series_selector">
-<em class="property">classmethod </em><code class="sig-name descname">_series_selector</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x_row_or_col</span></em>, <em class="sig-param"><span class="n">cell</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#External._series_selector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.External._series_selector" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">_series_selector</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">x_row_or_col</span></em>, <em class="sig-param"><span class="n">cell</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#External._series_selector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.External._series_selector" title="Permalink to this definition">¶</a></dt>
 <dd><p>Selects if a series data (DATA/LOOKUPS), should be read by columns,
 rows or cellrange name.
 Based on the input format of x_row_or_col and cell.
@@ -920,7 +981,7 @@ by cellrange name.</p></li>
 
 <dl class="py method">
 <dt id="py_backend.external.External._split_excel_cell">
-<em class="property">static </em><code class="sig-name descname">_split_excel_cell</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cell</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#External._split_excel_cell"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.External._split_excel_cell" title="Permalink to this definition">¶</a></dt>
+<code class="sig-name descname">_split_excel_cell</code><span class="sig-paren">(</span><em class="sig-param"><span class="n">cell</span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/py_backend/external.html#External._split_excel_cell"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#py_backend.external.External._split_excel_cell" title="Permalink to this definition">¶</a></dt>
 <dd><p>Splits a cell value given in a string.
 Returns None for non-valid cell formats.</p>
 <dl class="field-list simple">
@@ -929,13 +990,19 @@ Returns None for non-valid cell formats.</p>
 If it is not a cell like string will return None.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p><strong>row number, column name</strong> – If the cell input is valid.</p>
+<dd class="field-even"><p><strong>row number, column number</strong> – If the cell input is valid. Both numbers are given in Python
+enumeration, i.e., first row and first column are 0.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/2.7/library/functions.html#int" title="(in Python v2.7)">int</a>, <a class="reference external" href="https://docs.python.org/2.7/library/functions.html#str" title="(in Python v2.7)">str</a></p>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/2.7/library/functions.html#int" title="(in Python v2.7)">int</a>, <a class="reference external" href="https://docs.python.org/2.7/library/functions.html#int" title="(in Python v2.7)">int</a></p>
 </dd>
 </dl>
 </dd></dl>
+
+<dl class="py attribute">
+<dt id="id0">
+<code class="sig-name descname">missing</code><em class="property"> = 'warning'</em><a class="headerlink" href="#id0" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
 
 </dd></dl>
 

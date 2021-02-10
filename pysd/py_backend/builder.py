@@ -318,7 +318,7 @@ def merge_partial_elements(element_list):
                     'unit': element['unit'],
                     'subs': [element['subs']],
                     'lims': element['lims'],
-                    'eqn': [eqn],
+                    'eqn': [eqn.replace(r'\ ', '')],
                     'kind': element['kind'],
                     'arguments': element['arguments']
                 }
@@ -329,8 +329,7 @@ def merge_partial_elements(element_list):
                 outs[name]['doc'] = outs[name]['doc'] or element['doc']
                 outs[name]['unit'] = outs[name]['unit'] or element['unit']
                 outs[name]['lims'] = outs[name]['lims'] or element['lims']
-                outs[name]['eqn'] = outs[name]['eqn'] or element['eqn']
-                outs[name]['eqn'] += [eqn]
+                outs[name]['eqn'] += [eqn.replace(r'\ ', '')]
                 outs[name]['py_expr'] += [element['py_expr']]
                 outs[name]['subs'] += [element['subs']]
                 outs[name]['arguments'] = element['arguments']

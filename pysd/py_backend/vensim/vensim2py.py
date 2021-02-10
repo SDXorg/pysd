@@ -814,7 +814,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
     arguments = (expr _ ","? _)*
 
     reference = id _ subscript_list?
-    subscript_list = "[" _ ~"\""? _ ((sub_name / sub_element) _ ~"\""? _ "!"? _ ","? _)+ _ "]"
+    subscript_list = "[" _ ~"\""? _ (subs _ ~"\""? _ "!"? _ ","? _)+ _ "]"
 
 
     array = (number _ ("," / ";")? _)+ !~r"."  # negative lookahead for anything other than an array
@@ -822,8 +822,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
 
     id = ( basic_id / escape_group )
 
-    sub_name = ~r"(%(sub_names)s)"IU  # subscript names (if none, use non-printable character)
-    sub_element = ~r"(%(sub_elems)s)"IU  # subscript elements (if none, use non-printable character)
+    subs = ~r"(%(subs)s)"IU  # subscript names and elements (if none, use non-printable character)
 
     func = ~r"(%(funcs)s)"IU  # functions (case insensitive)
     in_oper = ~r"(%(in_ops)s)"IU  # infix operators (case insensitive)
@@ -835,8 +834,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
     """ % {
         # In the following, we have to sort keywords in decreasing order of length so that the
         # peg parser doesn't quit early when finding a partial keyword
-        'sub_names': '|'.join(reversed(sorted(sub_names_list, key=len))),
-        'sub_elems': '|'.join(reversed(sorted(sub_elems_list, key=len))),
+        'subs': '|'.join(reversed(sorted(sub_names_list + sub_elems_list, key=len))),
         'funcs': '|'.join(reversed(sorted(functions.keys(), key=len))),
         'in_ops': '|'.join(reversed(sorted(in_ops_list, key=len))),
         'pre_ops': '|'.join(reversed(sorted(pre_ops_list, key=len))),

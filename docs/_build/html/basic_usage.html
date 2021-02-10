@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   
-  <title>Basic Usage &mdash; PySD 1.0.0 documentation</title>
+  <title>Basic Usage &mdash; PySD 1.1.0 documentation</title>
   
 
   
@@ -63,7 +63,7 @@
             
             
               <div class="version">
-                1.0
+                1.1
               </div>
             
           
@@ -184,6 +184,22 @@
 <p>To view a synopsis of the model equations and documentation, call the <code class="xref py py-func docutils literal notranslate"><span class="pre">doc()</span></code> method of the model class. This will generate a listing of all the model elements, their documentation, units, equations, and initial values, where appropriate. Here is a sample from the teacup model:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">model</span><span class="o">.</span><span class="n">doc</span><span class="p">()</span>
 </pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You can also load an already translated model file, what will be faster as you will load a Python file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pysd</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">pysd</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;Teacup.py&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The functions <code class="xref py py-func docutils literal notranslate"><span class="pre">read_vensim()</span></code>,  <code class="xref py py-func docutils literal notranslate"><span class="pre">read_xmile()</span></code> and <code class="xref py py-func docutils literal notranslate"><span class="pre">load()</span></code> have optional arguments for advanced usage, you can check the full description in <a class="reference internal" href="functions.html"><span class="doc">User Functions Reference</span></a> or using <a class="reference external" href="https://docs.python.org/2.7/library/functions.html#help" title="(in Python v2.7)"><code class="xref py py-func docutils literal notranslate"><span class="pre">help()</span></code></a> e.g.:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">pysd</span>
+<span class="n">help</span><span class="p">(</span><span class="n">pysd</span><span class="o">.</span><span class="n">load</span><span class="p">)</span>
+</pre></div>
+</div>
 </div>
 </div>
 <div class="section" id="running-the-model">
