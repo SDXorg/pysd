@@ -135,13 +135,11 @@ class Delay(Stateful):
 
     def initialize(self):
         order = self.order_func()
-        if isinstance(order, xr.DataArray):
-            order = order.values
-        while isinstance(order, np.ndarray):
-            order = order[0]
+
         if order != int(order):
             warnings.warn('Casting delay order from %f to %i' % (
                 order, int(order)))
+
         self.order = int(order)  # The order can only be set once
 
         init_state_value = self.init_func() * self.delay_time_func()\
@@ -268,7 +266,8 @@ class Macro(Stateful):
             self.components = SourceFileLoader(module_name,
                                                py_model_file).load_module()
         except TypeError:
-            raise ImportError("\n\nNot able to import the model. "
+            raise ImportError(
+                "\n\nNot able to import the model. "
                 + "This may be because the model was compiled with an "
                 + "earlier version of PySD, you can check on the top of "
                 + " the model file you are trying to load."
@@ -277,12 +276,13 @@ class Macro(Stateful):
                 + "Please translate again the model with the function"
                 + " read_vensim or read_xmile.")
 
-        if __version__.split(".")[0] !=\
-          self.components.__pysd_version__.split(".")[0]:
-            raise ImportError("\n\nNot able to import the model. "
+        if __version__.split(".")[0]\
+           != self.get_pysd_compiler_version().split(".")[0]:
+            raise ImportError(
+                "\n\nNot able to import the model. "
                 + "The model was compiled with a "
                 + "not compatible version of PySD:"
-                + "\n\tPySD " + self.components.__pysd_version__
+                + "\n\tPySD " + self.get_pysd_compiler_version()
                 + "\n\nThe current version of PySd is:"
                 + "\n\tPySD " + __version__ + "\n\n"
                 + "Please translate again the model with the function"
@@ -639,10 +639,11 @@ class Time(object):
 
 
 class Model(Macro):
-    def __init__(self, py_model_file, initialize=True):
+    def __init__(self, py_model_file, initialize, missing_values):
         """ Sets up the python objects """
         super().__init__(py_model_file, None, None, Time())
         self.time.stage = 'Load'
+        self.missing_values = missing_values
         if initialize:
             self.initialize()
 
@@ -650,6 +651,7 @@ class Model(Macro):
         """ Initializes the simulation model """
         self.time.update(self.components.initial_time())
         self.time.stage = 'Initialization'
+        External.missing = self.missing_values
         super().initialize()
 
     def _build_euler_timeseries(self, return_timestamps=None):
@@ -794,7 +796,7 @@ class Model(Macro):
         """Reloads the model from the translated model file, so that all the
         parameters are back to their original value.
         """
-        self.__init__(self.py_model_file)
+        self.__init__(self.py_model_file, initialize=True, missing_values=self.missing_values)
 
     def _default_return_columns(self):
         """
@@ -810,7 +812,7 @@ class Model(Macro):
                 # The `*args` reference handles the py2.7 decorator.
                 if len(set(sig.parameters) - {'args'}) == 0:
                     expr = self.components._namespace[key]
-                    if not expr in parsed_expr:
+                    if expr not in parsed_expr:
                         return_columns.append(key)
                         parsed_expr.append(expr)
 
@@ -1021,16 +1023,18 @@ def pulse_magnitude(time, magnitude, start, repeat_time=0):
 
 def lookup(x, xs, ys):
     """
-    Intermediate values are calculated with linear interpolation between the intermediate points.
-    Out-of-range values are the same as the closest endpoint (i.e, no extrapolation is performed).
+    Intermediate values are calculated with linear interpolation between
+    the intermediate points. Out-of-range values are the same as the
+    closest endpoint (i.e, no extrapolation is performed).
     """
     return np.interp(x, xs, ys)
 
 
 def lookup_extrapolation(x, xs, ys):
     """
-    Intermediate values are calculated with linear interpolation between the intermediate points.
-    Out-of-range values are calculated with linear extrapolation from the last two values at either end.
+    Intermediate values are calculated with linear interpolation between
+    the intermediate points. Out-of-range values are calculated with linear
+    extrapolation from the last two values at either end.
     """
     if x < xs[0]:
         dx = xs[1] - xs[0]
@@ -1047,8 +1051,11 @@ def lookup_extrapolation(x, xs, ys):
 
 def lookup_discrete(x, xs, ys):
     """
-    Intermediate values take on the value associated with the next lower x-coordinate (also called a step-wise function). The last two points of a discrete graphical function must have the same y value.
-    Out-of-range values are the same as the closest endpoint (i.e, no extrapolation is performed).
+    Intermediate values take on the value associated with the next lower
+    x-coordinate (also called a step-wise function). The last two points
+    of a discrete graphical function must have the same y value.
+    Out-of-range values are the same as the closest endpoint
+    (i.e, no extrapolation is performed).
     """
     for index in range(0, len(xs)):
         if x < xs[index]:
@@ -1170,8 +1177,9 @@ def random_uniform(m, x, s):
 
 
 def incomplete(*args):
-    warnings.warn('Call to undefined function, calling dependencies and returning NaN',
-                  RuntimeWarning, stacklevel=2)
+    warnings.warn(
+        'Call to undefined function, calling dependencies and returning NaN',
+        RuntimeWarning, stacklevel=2)
 
     return np.nan
 

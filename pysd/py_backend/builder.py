@@ -70,7 +70,8 @@ def build(elements, subscript_dict, namespace, outfile_name):
     Python model "%(outfile)s"
     Translated using PySD version %(version)s
     """
-    from os import path\n'''
+    from os import path\n''' % {'outfile': os.path.basename(outfile_name),
+                                'version': __version__}
 
     # intelligent import of needed functions and packages
     if import_modules['numpy']:
@@ -116,22 +117,25 @@ def build(elements, subscript_dict, namespace, outfile_name):
     def time():
         return __data['time']()
 
-    %(functions)s
-
     ''' % {'subscript_dict': repr(subscript_dict),
-           'functions': '\n'.join(functions),
            'namespace': repr(namespace),
            'outfile': os.path.basename(outfile_name),
            'version': __version__}
-
+    
     text = text.replace('\t', '    ')
-    text = black.format_file_contents(textwrap.dedent(text), fast=True,
+    text = textwrap.dedent(text)
+
+    funcs = "%(functions)s" % {'functions': '\n'.join(functions)}
+    funcs = funcs.replace('\t', '    ')
+    text += funcs
+
+    text = black.format_file_contents(text, fast=True,
                                       mode=black.FileMode())
 
     # this is needed if more than one model are translated in the same session
     build_names.clear()
     for module in ['numpy', 'xarray', 'subs']:
-        import_modules[module] =False
+        import_modules[module] = False
     for module in ['functions', 'external', 'utils']:
         import_modules[module].clear()
 
@@ -238,7 +242,8 @@ def build_element(element, subscript_dict):
                                                  '\n' + ' ' * indent)})
                                                  # indent lines 2 onward
 
-    element['doc'] = element['doc'].replace('\\', '\n    ')
+    # convert newline indicator and add expected level of indentation
+    element['doc'] = element['doc'].replace('\\', '\n').replace('\n', '\n    ')
 
     if element['kind'] in ['stateful', 'external']:
         func = '''
@@ -284,6 +289,8 @@ def build_element(element, subscript_dict):
         %(contents)s
         ''' % element
 
+    func = textwrap.dedent(func)
+
     return func
 
 
@@ -318,7 +325,7 @@ def merge_partial_elements(element_list):
                     'unit': element['unit'],
                     'subs': [element['subs']],
                     'lims': element['lims'],
-                    'eqn': [eqn],
+                    'eqn': [eqn.replace(r'\ ', '')],
                     'kind': element['kind'],
                     'arguments': element['arguments']
                 }
@@ -329,8 +336,7 @@ def merge_partial_elements(element_list):
                 outs[name]['doc'] = outs[name]['doc'] or element['doc']
                 outs[name]['unit'] = outs[name]['unit'] or element['unit']
                 outs[name]['lims'] = outs[name]['lims'] or element['lims']
-                outs[name]['eqn'] = outs[name]['eqn'] or element['eqn']
-                outs[name]['eqn'] += [eqn]
+                outs[name]['eqn'] += [eqn.replace(r'\ ', '')]
                 outs[name]['py_expr'] += [element['py_expr']]
                 outs[name]['subs'] += [element['subs']]
                 outs[name]['arguments'] = element['arguments']

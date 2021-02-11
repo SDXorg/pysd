@@ -328,45 +328,67 @@ class TestParse_general_expression(unittest.TestCase):
         self.assertEqual(a.loc[{'Dim1': 'A', 'Dim2': 'D'}], 1)
         self.assertEqual(a.loc[{'Dim1': 'B', 'Dim2': 'E'}], 4)
 
-    @unittest.skip('in branch')
     def test_subscript_reference(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
         res = parse_general_expression({'expr': 'Var A[Dim1, Dim2]'},
                                      {'Var A': 'var_a'},
                                      {'Dim1': ['A', 'B'],
-                                      'Dim2': ['C', 'D', 'E']})
+                                      'Dim2': ['C', 'D', 'E']},
+                                     None,
+                                     {'var_a': ['Dim1', 'Dim2']})
 
         self.assertEqual(res[0]['py_expr'], 'var_a()')
 
         res = parse_general_expression({'expr': 'Var B[Dim1, C]'},
                                      {'Var B': 'var_b'},
                                      {'Dim1': ['A', 'B'],
-                                      'Dim2': ['C', 'D', 'E']})
-        self.assertEqual(res[0]['py_expr'], "var_b().loc[{'Dim2': ['C']}]")
+                                      'Dim2': ['C', 'D', 'E']},
+                                     None,
+                                     {'var_b': ['Dim1', 'Dim2']})
+
+        self.assertEqual(res[0]['py_expr'],
+            "var_b().loc[{'Dim2': ['C']}].squeeze()"
+            + ".reset_coords(['Dim2'], drop=True)")
 
         res = parse_general_expression({'expr': 'Var C[Dim1, C, H]'},
                                      {'Var C': 'var_c'},
                                      {'Dim1': ['A', 'B'],
                                       'Dim2': ['C', 'D', 'E'],
-                                      'Dim3': ['F', 'G', 'H', 'I']})
-        self.assertEqual(res[0]['py_expr'], "var_c().loc[{'Dim2': ['C'], 'Dim3': ['H']}]")
+                                      'Dim3': ['F', 'G', 'H', 'I']},
+                                     None,
+                                     {'var_c': ['Dim1', 'Dim2', 'Dim3']})
 
-    @unittest.skip('in branch')
+        self.assertEqual(res[0]['py_expr'],
+            "var_c().loc[{'Dim2': ['C'], 'Dim3': ['H']}].squeeze()"
+            + ".reset_coords(['Dim2', 'Dim3'], drop=True)")
+
     def test_subscript_ranges(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
         res = parse_general_expression({'expr': 'Var D[Range1]'},
                                      {'Var D': 'var_c'},
                                      {'Dim1': ['A', 'B', 'C', 'D', 'E', 'F'],
-                                      'Range1': ['C', 'D', 'E']})
-        self.assertEqual(res[0]['py_expr'], "var_c().loc[{'Dim1': ['C', 'D', 'E']}]")
+                                      'Range1': ['C', 'D', 'E']},
+                                     None,
+                                     {'var_c': ['Dim1']})
 
-    @unittest.skip('need to write this properly')
+        self.assertEqual(res[0]['py_expr'], "rearrange(var_c(),['Range1'],_subscript_dict)")
+
     def test_incomplete_expression(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
-        res = parse_general_expression({'expr': 'A FUNCTION OF(Unspecified Eqn,Var A,Var B)'},
-                                       {'Unspecified Eqn': 'unspecified_eqn',
-                                        'Var A': 'var_a',
-                                        'Var B': 'var_b'})
+        from warnings import catch_warnings
+
+        with catch_warnings(record=True) as w:
+            res = parse_general_expression({
+                'expr': 'A FUNCTION OF(Unspecified Eqn,Var A,Var B)',
+                'real_name': 'Incomplete Func'
+                },
+                {'Unspecified Eqn': 'unspecified_eqn',
+                 'Var A': 'var_a',
+                 'Var B': 'var_b'})
+            self.assertEqual(len(w), 1)
+            self.assertTrue('Incomplete Func has no equation specified'
+                            in str(w[-1].message))
+
         self.assertEqual(res[0]['py_expr'],
                          "incomplete(unspecified_eqn(), var_a(), var_b())"
                          )

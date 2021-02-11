@@ -76,6 +76,39 @@ class TestPySD(unittest.TestCase):
         self.assertGreater(len(stocks), 3)  # has multiple rows
         self.assertTrue(stocks.notnull().all().all())  # there are no null values in the set
 
+    def test_run_ignore_missing(self):
+        import pysd
+        from warnings import catch_warnings
+
+        model_mdl = 'test-models/tests/get_with_missing_values_xlsx/'\
+                    + 'test_get_with_missing_values_xlsx.mdl'
+        model_py = 'test-models/tests/get_with_missing_values_xlsx/'\
+                    + 'test_get_with_missing_values_xlsx.py'
+
+        with catch_warnings(record=True) as ws:
+            # warnings for missing values
+            model = pysd.read_vensim(model_mdl, missing_values="ignore")
+            self.assertTrue(all(["missing" not in str(w.message) for w in ws]))
+        
+        with catch_warnings(record=True) as ws:
+            # warnings for missing values
+            model.run()
+            self.assertTrue(all(["missing" not in str(w.message) for w in ws]))
+
+        with catch_warnings(record=True) as ws:
+            # ignore warnings for missing values
+            model = pysd.load(model_py)
+            self.assertTrue(any(["missing" in str(w.message) for w in ws]))
+
+        with catch_warnings(record=True) as ws:
+            # ignore warnings for missing values
+            model.run()
+            self.assertTrue(any(["missing" in str(w.message) for w in ws]))
+
+        with self.assertRaises(ValueError):
+            # errors for missing values
+            pysd.load(model_py, missing_values="raise")
+
     def test_run_includes_last_value(self):
         import pysd
         model = pysd.read_vensim(test_model)
@@ -885,6 +918,7 @@ class TestPySD(unittest.TestCase):
         import pysd
         # Todo: think through a stronger test here...
         model = pysd.read_vensim(test_model)
+        model.progress = False
         res = model._integrate(time_steps=list(range(5)),
                                capture_elements=['teacup_temperature'],
                                return_timestamps=list(range(0, 5, 2)))
@@ -1012,6 +1046,51 @@ class TestModelInteraction(unittest.TestCase):
         self.assertEqual(new, 345)
         self.assertNotEqual(old, new)
 
+    def test_circular_reference(self):
+        import os
+        import pysd
+
+        model_main = """
+        from pysd import cache, external
+        from pysd.py_backend.functions import Integ, Delay
+
+        _subscript_dict = {}
+        _namespace = {'integ': 'integ', 'delay': 'delay'}
+        __pysd_version__ = "1.1.1"
+
+        __data = {'scope': None, 'time': lambda: 0}
+
+        def _init_outer_references(data):
+            for key in data:
+                __data[key] = data[key]
+
+        def time():
+            return __data["time"]()
+
+        def initial_time():
+            return 0
+
+        def integ():
+            return _integ_integ()
+
+        def delay():
+            return _delay_delay()
+
+        _integ_integ = Integ(lambda: 2, lambda: delay())
+
+        _delay_delay = Delay(lambda: 2, lambda: 1, lambda: integ(), 1)
+        """
+
+        model_main = model_main.replace("\n        ", "\n")
+
+        with open("circular.py", "w") as f:
+            f.write(model_main)
+
+        with self.assertRaises(KeyError):
+            pysd.load("circular.py")
+
+        os.remove("circular.py")
+ 
 
 class TestMultiRun(unittest.TestCase):
     def test_delay_reinitializes(self):

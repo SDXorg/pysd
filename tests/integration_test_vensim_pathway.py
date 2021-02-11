@@ -125,6 +125,27 @@ class TestIntegrationExamples(unittest.TestCase):
         )
         assert_frames_close(output, canon, rtol=rtol)
 
+    def test_get_with_missing_values_xlsx(self):
+        from.test_utils import runner, assert_frames_close
+        import warnings
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            output, canon = runner(
+                'test-models/tests/get_with_missing_values_xlsx/'
+                + 'test_get_with_missing_values_xlsx.mdl'
+            )
+
+        assert_frames_close(output, canon, rtol=rtol)
+
+    def test_get_mixed_definitions(self):
+        from.test_utils import runner, assert_frames_close
+        output, canon = runner(
+          'test-models/tests/get_mixed_definitions/'
+          + 'test_get_mixed_definitions.mdl'
+        )
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_get_subscript_3d_arrays_xls(self):
         """
         Test for usage of GET DIRECT/XLS SUBSCRIPTS/CONSTANTS from a Excel file
@@ -351,7 +372,6 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscript_docs/subscript_docs.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('working on it #216')
     def test_subscript_element_name(self):
         # issue https://github.com/JamesPHoughton/pysd/issues/216
         from.test_utils import runner, assert_frames_close
@@ -388,7 +408,6 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscript_selection/subscript_selection.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('failing in py3')
     def test_subscript_subranges(self):
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscript_subranges/test_subscript_subrange.mdl')
