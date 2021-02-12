@@ -451,8 +451,7 @@ class External(object):
         )
 
         # Check if the lookup/time dimension is strictly monotonous
-        series_diff = np.diff(series)
-        if np.any(series_diff >= 0) and np.any(series_diff <= 0):
+        if np.any(np.diff(series) <= 0):
             raise ValueError(self.py_name + "\n"
                   + "Dimension given in:\n"
                   + self._file_sheet
