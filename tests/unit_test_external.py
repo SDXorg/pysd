@@ -1,11 +1,11 @@
 import os
-import imp
 import unittest
 
+from importlib.machinery import SourceFileLoader
 import numpy as np
 
 _root = os.path.dirname(__file__)
-_exp = imp.load_source('expected_data', 'data/expected_data.py')
+_exp = SourceFileLoader('expected_data', 'data/expected_data.py').load_module()
 
 
 class TestExcels(unittest.TestCase):
