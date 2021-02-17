@@ -207,46 +207,10 @@ class External(object):
                 rows=[int(series_row_or_col)-1, int(series_row_or_col)],
                 cols=[first_col, None])
 
-            # remove nan or missing values from dimension
-            valid_values = ~np.isnan(series)
-            index_valid = np.arange(len(series))[valid_values]
-            series = series[valid_values]
-
-            # check if the series has no len 0
-            if len(series) == 0:
-                raise ValueError(
-                  self.py_name + "\n"
-                  + "Dimension given in:\n"
-                  + self._file_sheet
-                  + "\tRow number:\t{}\n".format(series_row_or_col)
-                  + " has length 0"
-                  )
-
-            # warning/error if missing data in the series
-            if (np.diff(index_valid) != 1).any() or index_valid[0] != 0:
-                if self.missing == "warning":
-                    warnings.warn(
-                      self.py_name + "\n"
-                      + "Dimension value missing or non-valid in:\n"
-                      + self._file_sheet
-                      + "\tColumn:\t{}\n".format(series_row_or_col)
-                      + " the corresponding column(s) to the "
-                      + "missing/non-valid value(s) will be ignored\n\n"
-                      )
-                elif self.missing == "raise":
-                    raise ValueError(
-                      self.py_name + "\n"
-                      + "Dimension value missing or non-valid in:\n"
-                      + self._file_sheet
-                      + "\tColumn:\t{}\n".format(series_row_or_col)
-                      )
-
-            last_row = first_row + size
-
             # read data
             data = self._get_data_from_file(
-                rows=[first_row, last_row],
-                cols=[first_col, None]).transpose()[valid_values]
+                rows=[first_row, first_row + size],
+                cols=[first_col, None]).transpose()
 
         elif series_across == "column":
             # Vertical data (dimension values in a column)
@@ -258,46 +222,10 @@ class External(object):
                 rows=[first_row, None],
                 cols=[series_col, series_col+1])
 
-            # remove nan or missing values from dimension
-            valid_values = ~np.isnan(series)
-            index_valid = np.arange(len(series))[valid_values]
-            series = series[valid_values]
-
-            # check if the series has no len 0
-            if len(series) == 0:
-                raise ValueError(
-                  self.py_name + "\n"
-                  + "Dimension given in:\n"
-                  + self._file_sheet
-                  + "\tColumn:\t{}\n".format(series_row_or_col)
-                  + " has length 0"
-                  )
-
-            # warning/error if missing data in the series
-            if (np.diff(index_valid) != 1).any() or index_valid[0] != 0:
-                if self.missing == "warning":
-                    warnings.warn(
-                      self.py_name + "\n"
-                      + "Dimension value missing or non-valid in:\n"
-                      + self._file_sheet
-                      + "\tRow:\t{}\n".format(series_row_or_col)
-                      + " the corresponding column(s) to the "
-                      + "missing/non-valid value(s) will be ignored\n\n"
-                      )
-                elif self.missing == "raise":
-                    raise ValueError(
-                      self.py_name + "\n"
-                      + "Dimension value missing or non-valid in:\n"
-                      + self._file_sheet
-                      + "\tRow:\t{}\n".format(series_row_or_col)
-                      )
-
-            last_col = first_col + size
-
             # read data
             data = self._get_data_from_file(
                 rows=[first_row, None],
-                cols=[first_col, last_col])[valid_values]
+                cols=[first_col, first_col + size])
 
         else:
             # get series data
@@ -327,40 +255,6 @@ class External(object):
                   + "\t{}\n".format(series_row_or_col)
                   + " is a table and not a vector"
                   )
-            # Substract missing values in the series
-            nan_index = np.isnan(series)
-
-            if nan_index.all():
-                raise ValueError(
-                  self.py_name + "\n"
-                  + "Dimension given in:\n"
-                  + self._file_sheet
-                  + "\tDimension name:"
-                  + "\t{}\n".format(series_row_or_col)
-                  + " has length 0"
-                  )
-
-            if nan_index.any():
-                series = series[~nan_index]
-                if self.missing == "warning":
-                    warnings.warn(
-                      self.py_name + "\n"
-                      + "Dimension value missing or non-valid in:\n"
-                      + self._file_sheet
-                      + "\tDimension name:"
-                      + "\t{}\n".format(series_row_or_col)
-                      + " the corresponding data value(s) to the "
-                      + "missing/non-valid value(s) "
-                      + "will be ignored\n\n"
-                      )
-                elif self.missing == "raise":
-                    raise ValueError(
-                      self.py_name + "\n"
-                      + "Dimension value missing or non-valid in:\n"
-                      + self._file_sheet
-                      + "\tDimension name:"
-                      + "\t{}\n".format(series_row_or_col)
-                      )
 
             # get data
             data = self._get_data_from_file_opyxl(cell)
@@ -371,6 +265,16 @@ class External(object):
             if transpose:
                 # transpose for horizontal definition of dimension
                 data = data.transpose()
+
+            if data.shape[0] != len(series):
+                raise ValueError(
+                  self.py_name + "\n"
+                  + "Dimension and data given in:\n"
+                  + self._file_sheet
+                  + "\tDimension name:\t{}\n".format(series_row_or_col)
+                  + "\tData name:\t{}\n".format(cell)
+                  + " don't have the same length in the 1st dimension"
+                  )
 
             if data.shape[1] != size:
                 # Given coordinates length is different than
@@ -386,19 +290,6 @@ class External(object):
             if data.shape[1] == 1:
                 # remove second dimension of data if its shape is (N, 1)
                 data = data[:, 0]
-
-            try:
-                # substract missing values from series and check 1st dimension
-                data = data[~nan_index]
-            except IndexError:
-                raise ValueError(
-                  self.py_name + "\n"
-                  + "Dimension and data given in:\n"
-                  + self._file_sheet
-                  + "\tDimension name:\t{}\n".format(series_row_or_col)
-                  + "\tData name:\t{}\n".format(cell)
-                  + " don't have the same length in the 1st dimension"
-                  )
 
         return series, data
 
@@ -450,6 +341,41 @@ class External(object):
             cell=self.cell, size=size
         )
 
+        # remove nan or missing values from dimension
+        valid_values = ~np.isnan(series)
+        index_valid = np.arange(len(series))[valid_values]
+        series = series[valid_values]
+        data = data[valid_values]
+
+        # check if the series has no len 0
+        if len(series) == 0:
+            raise ValueError(
+              self.py_name + "\n"
+              + "Dimension given in:\n"
+              + self._file_sheet
+              + "\t{}:\t{}\n".format(series_across, self.x_row_or_col)
+              + " has length 0"
+              )
+
+        # warning/error if missing data in the series
+        if (np.diff(index_valid) != 1).any() or index_valid[0] != 0:
+            if self.missing == "warning":
+                warnings.warn(
+                  self.py_name + "\n"
+                  + "Dimension value missing or non-valid in:\n"
+                  + self._file_sheet
+                  + "\t{}:\t{}\n".format(series_across, self.x_row_or_col)
+                  + " the corresponding data value(s) to the "
+                  + "missing/non-valid value(s) will be ignored\n\n"
+                  )
+            elif self.missing == "raise":
+                raise ValueError(
+                  self.py_name + "\n"
+                  + "Dimension value missing or non-valid in:\n"
+                  + self._file_sheet
+                  + "\t{}:\t{}\n".format(series_across, self.x_row_or_col)
+                  )
+
         # Check if the lookup/time dimension is strictly monotonous
         if np.any(np.diff(series) <= 0):
             raise ValueError(self.py_name + "\n"
@@ -461,7 +387,7 @@ class External(object):
         # Check for missing values in data
         if np.any(np.isnan(data)):
             if series_across == "name":
-                cell_type = "Cellrange name"
+                cell_type = "Cellrange"
             else:
                 cell_type = "Reference cell"
 
