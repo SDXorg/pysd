@@ -857,6 +857,28 @@ class ExtConstant(External):
         if self.transpose:
             data = data.transpose()
 
+        if np.any(np.isnan(data)):
+            # nan values in data
+            if data_across == "name":
+                cell_type = "Cellrange"
+            else:
+                cell_type = "Reference cell"
+
+            if self.missing == "warning":
+                warnings.warn(
+                    self.py_name + "\n"
+                    + "Constant value missing or non-valid in:\n"
+                    + self._file_sheet
+                    + "\t{}:\t{}\n".format(cell_type, self.cell)
+                    )
+            elif self.missing == "raise":
+                raise ValueError(
+                    self.py_name + "\n"
+                    + "Constant value missing or non-valid in:\n"
+                    + self._file_sheet
+                    + "\t{}:\t{}\n".format(cell_type, self.cell)
+                    )
+
         # Create only an xarray if the data is not 0 dimensional
         if len(self.coords) > 0:
             reshape_dims = tuple(utils.compute_shape(self.coords))

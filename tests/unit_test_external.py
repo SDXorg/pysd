@@ -2058,7 +2058,7 @@ class TestWarningsErrors(unittest.TestCase):
         cell_2 = "C19"
         coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C']}
         coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C']}
-        py_name = "test_lookup_hn3dmd"
+        py_name = "test_lookup_hn3dmd_raise"
         pysd.external.External.missing = "raise"
 
         data = pysd.external.ExtLookup(file_name=file_name,
@@ -2093,7 +2093,7 @@ class TestWarningsErrors(unittest.TestCase):
         cell_2 = "C19"
         coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C']}
         coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C']}
-        py_name = "test_lookup_hn3dmd"
+        py_name = "test_lookup_hn3dmd_ignore"
         pysd.external.External.missing = "ignore"
 
         data = pysd.external.ExtLookup(file_name=file_name,
@@ -2123,6 +2123,146 @@ class TestWarningsErrors(unittest.TestCase):
                             + " of the series" in str(w[0].message))
             self.assertTrue("extrapolating data above the maximum value"
                             + " of the series" in str(w[1].message))
+
+    def test_constant_h3dm(self):
+        """
+        Test for warning in 3d horizontal series interpolation with missing
+        values.
+        """
+        import pysd
+        from warnings import catch_warnings
+
+        file_name = "data/input.xlsx"
+        sheet = "Horizontal missing"
+        cell_1 = "C16"
+        cell_2 = "C19"
+        coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C'],
+                    'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C'],
+                    'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        py_name = "test_constant_h3dm"
+        pysd.external.External.missing = "warning"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         sheet=sheet,
+                                         root=_root,
+                                         cell=cell_1,
+                                         coords=coords_1,
+                                         py_name=py_name)
+
+        data.add(file_name=file_name,
+                 sheet=sheet,
+                 cell=cell_2,
+                 coords=coords_2)
+
+        with catch_warnings(record=True) as ws:
+            data.initialize()
+            self.assertTrue(np.all(
+                [issubclass(w.category, UserWarning) for w in ws]
+                ))
+            self.assertTrue(np.all(
+                ["missing" in str(w.message) for w in ws]
+                ))
+
+    def test_constant_h3dm_ignore(self):
+        """
+        Test for ignore in 3d horizontal series interpolation with missing
+        values.
+        """
+        import pysd
+        from warnings import catch_warnings
+
+        file_name = "data/input.xlsx"
+        sheet = "Horizontal missing"
+        cell_1 = "C16"
+        cell_2 = "C19"
+        coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C'],
+                    'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C'],
+                    'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        py_name = "test_constant_h3dm_ignore"
+        pysd.external.External.missing = "ignore"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         sheet=sheet,
+                                         root=_root,
+                                         cell=cell_1,
+                                         coords=coords_1,
+                                         py_name=py_name)
+
+        data.add(file_name=file_name,
+                 sheet=sheet,
+                 cell=cell_2,
+                 coords=coords_2)
+
+        with catch_warnings(record=True) as ws:
+            data.initialize()
+            self.assertEqual(len(ws), 0)
+
+    def test_constant_h3dm_raise(self):
+        """
+        Test for error 3d horizontal constants with missing values.
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        sheet = "Horizontal missing"
+        cell_1 = "C16"
+        cell_2 = "C19"
+        coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C'],
+                    'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C'],
+                    'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        py_name = "test_constant_h3dm_raise"
+        pysd.external.External.missing = "raise"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         sheet=sheet,
+                                         root=_root,
+                                         cell=cell_1,
+                                         coords=coords_1,
+                                         py_name=py_name)
+
+        data.add(file_name=file_name,
+                 sheet=sheet,
+                 cell=cell_2,
+                 coords=coords_2)
+
+        with self.assertRaises(ValueError):
+            data.initialize()
+
+    def test_constant_hn3dm_raise(self):
+        """
+        Test for error 3d horizontal constants with missing values by cellrange
+        name.
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        sheet = "Horizontal missing"
+        cell_1 = "data_2d"
+        cell_2 = "data_2db"
+        coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C'],
+                    'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C'],
+                    'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        py_name = "test_constant_hn3dm_raise"
+        pysd.external.External.missing = "raise"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         sheet=sheet,
+                                         root=_root,
+                                         cell=cell_1,
+                                         coords=coords_1,
+                                         py_name=py_name)
+
+        data.add(file_name=file_name,
+                 sheet=sheet,
+                 cell=cell_2,
+                 coords=coords_2)
+
+        with self.assertRaises(ValueError):
+            data.initialize()
 
     def test_data_interp_h1d0(self):
         """
@@ -2232,7 +2372,7 @@ class TestWarningsErrors(unittest.TestCase):
 
     def test_data_interp_hns(self):
         """
-        Test for error in data when it doen't have the shame
+        Test for error in data when it doen't have the same
         shape as the given coordinates
         """
         import pysd
@@ -2259,7 +2399,7 @@ class TestWarningsErrors(unittest.TestCase):
 
     def test_data_interp_vnss(self):
         """
-        Test for error in data when it doen't have the shame
+        Test for error in data when it doen't have the same
         shape in the first dimension as the length of series
         """
         import pysd
