@@ -487,6 +487,10 @@ functions = {
     "vmin": {"name": "vmin", "module": "functions"},
     "vmax": {"name": "vmax", "module": "functions"},
 
+    # TODO functions/stateful objects to be added
+    # https://github.com/JamesPHoughton/pysd/issues/154
+    "forecast": {"name": "not_implemented_function", "module": "functions",
+                 "original_name": "FORECAST"}
 }
 
 # list of fuctions that accept a dimension to apply over

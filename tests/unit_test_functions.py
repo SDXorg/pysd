@@ -512,3 +512,9 @@ class TestStateful(unittest.TestCase):
             pysd.functions.incomplete()
             self.assertEqual(len(w), 1)
             self.assertTrue('Call to undefined function' in str(w[-1].message))
+
+    def test_not_implemented_function(self):
+        import pysd
+
+        with self.assertRaises(NotImplementedError):
+            pysd.functions.not_implemented_function("NIF")

@@ -121,7 +121,7 @@ def build(elements, subscript_dict, namespace, outfile_name):
            'namespace': repr(namespace),
            'outfile': os.path.basename(outfile_name),
            'version': __version__}
-    
+
     text = text.replace('\t', '    ')
     text = textwrap.dedent(text)
 
@@ -159,8 +159,9 @@ def build_element(element, subscript_dict):
         - py_expr: string
             An expression that has been converted already into python syntax
         - subs: list of lists
-            Each sublist contains coordinates for initialization of a particular
-            part of a subscripted function, the list of subscripts vensim attaches to an equation
+            Each sublist contains coordinates for initialization of a
+            particular part of a subscripted function, the list of
+            subscripts vensim attaches to an equation
 
     subscript_dict: dictionary
 
@@ -508,7 +509,7 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
         new_structure.append({
             'py_name': '_init_%s' % identifier,
             'real_name': 'Implicit',
-            'kind': 'setup', # not specified in the model file, but must exist
+            'kind': 'setup',  # not specified in the model file, but must exist
             'py_expr': initial_value,
             'subs': subs,
             'doc': 'Provides initial conditions for %s function' % identifier,
@@ -976,7 +977,7 @@ def add_macro(macro_name, filename, arg_names, arg_vals):
             [utils.make_python_identifier(f)[0] for f in arg_vals]),
         'real_name': 'Macro Instantiation of ' + macro_name,
         'doc': 'Instantiates the Macro',
-        'py_expr': "Macro('%s', %s, '%s',"\
+        'py_expr': "Macro('%s', %s, '%s',"
                    "time_initialization=lambda: __data['time'])" % (
                    filename, func_args, macro_name),
         'unit': 'None',
@@ -1034,6 +1035,14 @@ def build_function_call(function_def, user_arguments):
     """
     if isinstance(function_def, str):
         return function_def + "(" + ",".join(user_arguments) + ")"
+
+    if function_def["name"] == "not_implemented_function":
+        user_arguments = ["'" + function_def["original_name"] + "'"]\
+                         + user_arguments
+        warnings.warn(
+            "\n\nTrying to translate " + function_def["original_name"]
+            + " which it is not implemented on PySD. The translated "
+            + "model will crash... ")
 
     if "module" in function_def:
         if function_def["module"] in ["numpy", "xarray"]:

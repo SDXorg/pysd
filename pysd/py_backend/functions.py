@@ -1184,6 +1184,11 @@ def incomplete(*args):
     return np.nan
 
 
+def not_implemented_function(*args):
+    raise NotImplementedError(
+        'Not implemented function {}'.format(args[0]))
+
+
 def log(x, base):
     """
     Implements Vensim's LOG function with change of base
