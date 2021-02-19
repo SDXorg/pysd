@@ -8,7 +8,6 @@ from numbers import Number
 import xarray as xr
 
 
-
 def runner(string, ns=None):
     code = compile(string, '<string>', 'exec')
     if not ns:
@@ -62,7 +61,7 @@ class TestBuildElement(TestCase):
 
 
 class TestBuildFunctionCall(TestCase):
-     def test_build_functionnot_implemented(self):
+    def test_build_function_not_implemented(self):
         from warnings import catch_warnings
         from pysd.py_backend.builder import build_function_call
         args = ['a', 'b']

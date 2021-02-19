@@ -125,6 +125,14 @@ class TestIntegrationExamples(unittest.TestCase):
         )
         assert_frames_close(output, canon, rtol=rtol)
 
+    def test_get_lookups_subset(self):
+        from.test_utils import runner, assert_frames_close
+        output, canon = runner(
+          'test-models/tests/get_lookups_subset/'
+          + 'test_get_lookups_subset.mdl'
+        )
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_get_with_missing_values_xlsx(self):
         from.test_utils import runner, assert_frames_close
         import warnings
@@ -157,6 +165,14 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner(
           'test-models/tests/get_subscript_3d_arrays_xls/'
           + 'test_get_subscript_3d_arrays_xls.mdl'
+        )
+        assert_frames_close(output, canon, rtol=rtol)
+
+    def test_get_xls_cellrange(self):
+        from.test_utils import runner, assert_frames_close
+        output, canon = runner(
+          'test-models/tests/get_xls_cellrange/'
+          + 'test_get_xls_cellrange.mdl'
         )
         assert_frames_close(output, canon, rtol=rtol)
 

@@ -162,6 +162,19 @@ class TestEquationStringParsing(unittest.TestCase):
              'real_name': r'"pathological\\-string"', 'keyword': None}
         )
 
+    def test_get_equation_components_error(self):
+        from pysd.py_backend.vensim.vensim2py import get_equation_components
+
+        defi = "NIF: NF<x-x>NF"
+        try:
+            get_equation_components(defi)
+            self.assertFail()
+        except ValueError as err:
+            self.assertIn("\nError when parsing definition:\n\t %s\n\n"
+                          "probably used definition is not integrated..."
+                          "\nSee parsimonious output above." % defi,
+                          err.args[0])
+
 
 class TestParse_general_expression(unittest.TestCase):
 
@@ -180,8 +193,6 @@ class TestParse_general_expression(unittest.TestCase):
 
         res = parse_general_expression({'expr': 'aBS(-3)'})
         self.assertEqual(res[0]['py_expr'], 'abs(-3)')
-
-
 
     def test_function_calls(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
@@ -248,7 +259,6 @@ class TestParse_general_expression(unittest.TestCase):
 
         # check the reference to that variable
         self.assertEqual(res[0]['py_expr'], res[1][0]['py_name'] + '()')
-
 
     def test_smooth_construction_function_no_subscripts(self):
         """ Tests translation of 'smooth'
@@ -346,9 +356,10 @@ class TestParse_general_expression(unittest.TestCase):
                                      None,
                                      {'var_b': ['Dim1', 'Dim2']})
 
-        self.assertEqual(res[0]['py_expr'],
-            "var_b().loc[{'Dim2': ['C']}].squeeze()"
-            + ".reset_coords(['Dim2'], drop=True)")
+        self.assertEqual(
+            res[0]['py_expr'],
+            "rearrange(var_b().loc[:, 'C'].reset_coords(drop=True),"
+            "['Dim1'],_subscript_dict)")
 
         res = parse_general_expression({'expr': 'Var C[Dim1, C, H]'},
                                      {'Var C': 'var_c'},
@@ -358,9 +369,10 @@ class TestParse_general_expression(unittest.TestCase):
                                      None,
                                      {'var_c': ['Dim1', 'Dim2', 'Dim3']})
 
-        self.assertEqual(res[0]['py_expr'],
-            "var_c().loc[{'Dim2': ['C'], 'Dim3': ['H']}].squeeze()"
-            + ".reset_coords(['Dim2', 'Dim3'], drop=True)")
+        self.assertEqual(
+            res[0]['py_expr'],
+            "rearrange(var_c().loc[:, 'C', 'H'].reset_coords(drop=True),"
+            "['Dim1'],_subscript_dict)")
 
     def test_subscript_ranges(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
@@ -392,3 +404,19 @@ class TestParse_general_expression(unittest.TestCase):
         self.assertEqual(res[0]['py_expr'],
                          "incomplete(unspecified_eqn(), var_a(), var_b())"
                          )
+
+    def test_parse_general_expression_error(self):
+        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+
+        element = {'expr': 'NIF(1,3)',
+                   'real_name': 'not implemented function',
+                   'eqn': 'not implemented function=\tNIF(1,3)'}
+        try:
+            parse_general_expression(element)
+            self.assertFail()
+        except ValueError as err:
+            self.assertIn("\nError when parsing %s with equation\n\t %s\n\n"
+                          "probably a used function is not integrated..."
+                          "\nSee parsimonious output above." % (
+                              element['real_name'], element['eqn']),
+                          err.args[0])

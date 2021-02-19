@@ -1,4 +1,3 @@
-
 import doctest
 from unittest import TestCase
 
