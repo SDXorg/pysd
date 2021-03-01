@@ -22,7 +22,6 @@ if run:
 
         test_func_string = """
             def test_%(test_name)s(self):
-                from test_utils import runner, assert_frames_close
                 output, canon = runner('%(file_path)s')
                 assert_frames_close(output, canon, rtol=rtol)
             """ % {
@@ -38,6 +37,7 @@ if run:
         """
 
         import unittest
+        from .test_utils import runner, assert_frames_close
 
         rtol = .05
 

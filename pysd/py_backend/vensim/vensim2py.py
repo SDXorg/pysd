@@ -348,7 +348,8 @@ def get_equation_components(equation_str, root_path=None):
     except (IncompleteParseError, VisitationError, ParseError) as err:
         # this way we get the element name and equation and is easier
         # to detect the error in the model file
-        raise ValueError(err.args[0] + "\n\n"
+        raise ValueError(
+            err.args[0] + "\n\n"
             "\nError when parsing definition:\n\t %s\n\n"
             "probably used definition is not integrated..."
             "\nSee parsimonious output above." % (
@@ -595,8 +596,7 @@ builders = {
         delay_time='time_step()' if args[1] == 'time_step()'
                    else builder.build_function_call(
                        functions_utils['round'],
-                       [args[1] + ' / time_step()'])
-                       + '* time_step()',
+                       [args[1] + ' / time_step()']) + '* time_step()',
         initial_value=args[2],
         order='1.' if args[1] == 'time_step()'
               else args[1] + ' / time_step()',
@@ -842,7 +842,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
     """ % {
         # In the following, we have to sort keywords in decreasing order of length so that the
         # peg parser doesn't quit early when finding a partial keyword
-        'subs': '|'.join(reversed(sorted(sub_names_list + sub_elems_list, key=len))),
+        'subs': '|'.join(reversed(sorted(sub_names_list + sub_elems_list,
+                                         key=len))),
         'funcs': '|'.join(reversed(sorted(functions.keys(), key=len))),
         'in_ops': '|'.join(reversed(sorted(in_ops_list, key=len))),
         'pre_ops': '|'.join(reversed(sorted(pre_ops_list, key=len))),
@@ -975,17 +976,48 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
                 coords = utils.make_coord_dict(element['subs'],
                                                subscript_dict,
                                                terse=False)
-                shape = utils.compute_shape(coords)
                 if ';' in n.text or ',' in n.text:
                     text = n.text.strip(';').replace(' ', '').replace(';', ',')
                     data = np.array([float(s) for s in text.split(',')])
-                    data = data.reshape(shape)
+                    data = data.reshape(utils.compute_shape(coords))
+                    datastr = np.array2string(data, separator=',')\
+                        .replace('\n', '').replace(' ', '')
                 else:
-                    data = np.tile(float(n.text), shape)
-                datastr = np.array2string(data, separator=',').replace('\n', '').replace(' ', '')
+                    datastr = n.text
+
+                # Following implementation makes cleaner the model file
+                if list(coords) == element['subs']:
+                    if len(coords) == len(subscript_dict):
+                        # variable is defined with all subscrips
+                        return builder.build_function_call(
+                             functions_utils["DataArray"],
+                             [datastr, '_subscript_dict', repr(list(coords))])
+
+                from_dict, no_from_dict = [], {}
+                for coord, sub in zip(coords, element['subs']):
+                    # find dimensions can be retrieved from _subscript_dict
+                    if coord == sub:
+                        from_dict.append(coord)
+                    else:
+                        no_from_dict[coord] = coords[coord]
+
+                if from_dict and no_from_dict:
+                    # some dimensons can be retrieved from _subscript_dict
+                    coordsp =\
+                        '{**{dim: _subscript_dict[dim] for dim in %s}, '\
+                        % from_dict + repr(no_from_dict)[1:]
+                elif from_dict:
+                    # all dimensons can be retrieved from _subscript_dict
+                    coordsp =\
+                        '{dim: _subscript_dict[dim] for dim in %s}' % from_dict
+                else:
+                    # no dimensons can be retrieved from _subscript_dict
+                    coordsp = repr(no_from_dict)
+
                 return builder.build_function_call(
-                    functions_utils["DataArray"],
-                    [datastr, repr(coords), repr(list(coords))])
+                     functions_utils["DataArray"],
+                     [datastr, coordsp, repr(list(coords))]
+                     )
 
             else:
                 return n.text.replace(' ', '')
@@ -993,7 +1025,7 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
         def visit_subscript_list(self, n, vc):
             refs = vc[4]
             subs = [x.strip() for x in refs.split(',')]
-            coordinates = [sub if sub not in subscript_dict and sub[-1]!='!'
+            coordinates = [sub if sub not in subscript_dict and sub[-1] != '!'
                            else False for sub in subs]
 
             # Implements basic "!" subscript functionality in Vensim.
@@ -1083,7 +1115,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
     except (IncompleteParseError, VisitationError, ParseError) as err:
         # this way we get the element name and equation and is easier
         # to detect the error in the model file
-        raise ValueError(err.args[0] + "\n\n"
+        raise ValueError(
+            err.args[0] + "\n\n"
             "\nError when parsing %s with equation\n\t %s\n\n"
             "probably a used function is not integrated..."
             "\nSee parsimonious output above." % (

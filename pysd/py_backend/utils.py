@@ -119,6 +119,45 @@ def make_coord_dict(subs, subscript_dict, terse=True):
     return coordinates
 
 
+def make_merge_list(subs_list, subscript_dict):
+    """
+    This is for assisting when building xrmerge. From a list of subscript
+    lists returns the final subscript list after mergin. Necessary when
+    merging variables with subscripts comming from different definitions.
+
+    Parameters
+    ----------
+    subs_list: list of lists of strings
+        coordinates, either as names of dimensions, or positions within
+        a dimension
+    subscript_dict: dict
+        the full dictionary of subscript names and values
+
+    Returns
+    -------
+    dims: list
+        Final subscripts after merging.
+
+    Examples
+    --------
+    >>> make_coord_dict([['upper'], ['C']], {'all': ['A', 'B', 'C'], 'upper': ['A', 'B']})
+    ['all']
+
+    """
+    coords_set = [set() for i in range(len(subs_list[0]))]
+    for subs in subs_list:
+        coords = make_coord_dict(subs, subscript_dict, terse=False)
+        [coords_set[i].update(coords[dim]) for i, dim in enumerate(coords)]
+
+    dims = []
+    for coords in coords_set:
+        for name, elements in subscript_dict.items():
+            if coords == set(elements):
+                dims.append(name)
+
+    return dims
+
+
 def make_python_identifier(string, namespace=None, reserved_words=None,
                            convert='drop', handle='force'):
     """

@@ -3,6 +3,7 @@ import unittest
 
 from importlib.machinery import SourceFileLoader
 import numpy as np
+import xarray as xr
 
 _root = os.path.dirname(__file__)
 _exp = SourceFileLoader('expected_data', 'data/expected_data.py').load_module()
@@ -211,7 +212,6 @@ class TestData(unittest.TestCase):
         ExtData test for 1d horizontal series interpolation with len 1
         """
         import pysd
-        import xarray as xr
 
         # test as well no file extension
         file_name = "data/input"
@@ -245,7 +245,6 @@ class TestData(unittest.TestCase):
         ExtData test for 1d horizontal series interpolation with len 1
         """
         import pysd
-        import xarray as xr
 
         file_name = "data/input.xlsx"
         sheet = "Horizontal"
@@ -2609,7 +2608,6 @@ class TestWarningsErrors(unittest.TestCase):
         Error in ExtLookup when a non 0 dimensional array is passed
         """
         import pysd
-        import xarray as xr
 
         file_name = "data/input.xlsx"
         sheet = "Horizontal"

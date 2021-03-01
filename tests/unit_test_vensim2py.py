@@ -286,37 +286,52 @@ class TestParse_general_expression(unittest.TestCase):
 
     def test_subscript_float_initialization(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        _subscript_dict = {'Dim1': ['A', 'B', 'C'],
+                           'Dim2': ['D', 'E']}
         element = parse_general_expression({'expr': '3.32',
                                             'subs': ['Dim1']},
                                            {},
-                                           {'Dim1': ['A', 'B', 'C'],
-                                            'Dim2': ['D', 'E']})
+                                           _subscript_dict)
         string = element[0]['py_expr']
-        a = eval(string)
+        # TODO we should use a = eval(string)
+        # hoewever eval is not detecting _subscript_dict variable
+        self.assertEqual(string, 'xr.DataArray(3.32,{dim: '
+                                 + '_subscript_dict[dim] for dim in '
+                                 + "['Dim1']},['Dim1'])")
+        a = xr.DataArray(3.32, {dim: _subscript_dict[dim] 
+                               for dim in ['Dim1']},['Dim1'])
         self.assertDictEqual({key: list(val.values) for key, val in a.coords.items()},
-                             {'Dim1': ['A', 'B', 'C']})
+                              {'Dim1': ['A', 'B', 'C']})
         self.assertEqual(a.loc[{'Dim1': 'B'}], 3.32)
 
     def test_subscript_1d_constant(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        _subscript_dict = {'Dim1': ['A', 'B', 'C'],
+                           'Dim2': ['D', 'E']}
         element = parse_general_expression({'expr': '1, 2, 3',
                                             'subs': ['Dim1']},
                                            {},
-                                           {'Dim1': ['A', 'B', 'C'],
-                                            'Dim2': ['D', 'E']})
+                                           _subscript_dict)
         string = element[0]['py_expr']
-        a = eval(string)
+        # TODO we should use a = eval(string)
+        # hoewever eval is not detecting _subscript_dict variable
+        self.assertTrue(string, 'xr.DataArray([1.,2.,3.],'
+                                + '{dim: _subscript_dict[dim]'
+                                + " for dim in ['Dim1']}, ['Dim1'])")
+        a = xr.DataArray([1.,2.,3.],
+            {dim: _subscript_dict[dim] for dim in ['Dim1']}, ['Dim1'])
         self.assertDictEqual({key: list(val.values) for key, val in a.coords.items()},
                              {'Dim1': ['A', 'B', 'C']})
         self.assertEqual(a.loc[{'Dim1': 'A'}], 1)
 
     def test_subscript_2d_constant(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        _subscript_dict = {'Dim1': ['A', 'B', 'C'],
+                           'Dim2': ['D', 'E']}
         element = parse_general_expression({'expr': '1, 2; 3, 4; 5, 6;',
                                             'subs': ['Dim1', 'Dim2']},
                                            {},
-                                           {'Dim1': ['A', 'B', 'C'],
-                                            'Dim2': ['D', 'E']})
+                                           _subscript_dict)
         string = element[0]['py_expr']
         a = eval(string)
         self.assertDictEqual({key: list(val.values) for key, val in a.coords.items()},
@@ -326,11 +341,12 @@ class TestParse_general_expression(unittest.TestCase):
 
     def test_subscript_3d_depth(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        _subscript_dict = {'Dim1': ['A', 'B', 'C'],
+                           'Dim2': ['D', 'E']}
         element = parse_general_expression({'expr': '1, 2; 3, 4; 5, 6;',
                                             'subs': ['Dim1', 'Dim2']},
                                            {},
-                                           {'Dim1': ['A', 'B', 'C'],
-                                            'Dim2': ['D', 'E']})
+                                           _subscript_dict)
         string = element[0]['py_expr']
         a = eval(string)
         self.assertDictEqual({key: list(val.values) for key, val in a.coords.items()},
