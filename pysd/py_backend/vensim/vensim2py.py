@@ -1075,19 +1075,16 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
 
             self.new_structure += structure
 
-            if builder_name in ['get xls lookups', 'get direct lookups']:
+            if 'lookups' in builder_name:
                 self.arguments = 'x'
                 self.kind = 'lookup'
-
-            # External constants
-            if builder_name in ['get xls constants', 'get direct constants']:
+            elif 'constant' in builder_name:
+                # External constants
                 self.kind = 'constant'
-
-            # External data
-            if builder_name in ['get xls data', 'get direct data']:
+            elif 'data' in builder_name:
+                # External data
                 self.kind = 'component_ext_data'
-
-            if builder_name == 'delay fixed':
+            elif builder_name == 'delay fixed':
                 warnings.warn("Delay fixed only approximates solution,"
                               " may not give the same result as vensim")
 
