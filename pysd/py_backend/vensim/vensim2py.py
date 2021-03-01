@@ -504,7 +504,16 @@ functions = {
     # TODO functions/stateful objects to be added
     # https://github.com/JamesPHoughton/pysd/issues/154
     "forecast": {"name": "not_implemented_function", "module": "functions",
-                 "original_name": "FORECAST"}
+                 "original_name": "FORECAST"},
+    "invert matrix": {"name": "not_implemented_function",
+                      "module": "functions",
+                      "original_name": "INVERT MATRIX"},
+    "get time value": {"name": "not_implemented_function",
+                      "module": "functions",
+                      "original_name": "GET TIME VALUE"},
+    "sample if true": {"name": "not_implemented_function",
+                      "module": "functions",
+                      "original_name": "SAMPLE IF TRUE"}
 }
 
 # list of fuctions that accept a dimension to apply over
