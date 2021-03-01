@@ -149,6 +149,21 @@ class TestEquationStringParsing(unittest.TestCase):
              'real_name': 'table2', 'keyword': None}
         )
 
+    def test_get_lookup(self):
+        from pysd.py_backend.vensim.vensim2py import parse_lookup_expression
+
+        res = parse_lookup_expression({
+	'expr': r"(GET DIRECT LOOKUPS('path2excel.xlsx', "
+                + r"'SheetName', 'index'\ , 'values'))",
+                'py_name': 'get_lookup',
+                'subs': []}, {})[1][0]
+
+        self.assertEqual(
+            res['py_expr'],
+            "ExtLookup('path2excel.xlsx', 'SheetName', 'index', 'values', "
+            + "{},\n          _root, '_ext_lookup_get_lookup')"
+        )
+
     def test_pathological_names(self):
         from pysd.py_backend.vensim.vensim2py import get_equation_components
         self.assertEqual(

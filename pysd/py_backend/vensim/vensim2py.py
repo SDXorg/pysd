@@ -1179,8 +1179,8 @@ def parse_lookup_expression(element, subscript_dict):
                 functions_utils['lookup'], arguments)
 
         def visit_excelLookup(self, n, vc):
-
             arglist = vc[3].split(",")
+            arglist = [arg.replace("\\ ", "") for arg in arglist]
             trans, structure =\
                 builders["get xls lookups"](element, subscript_dict, arglist)
 
