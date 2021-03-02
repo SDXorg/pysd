@@ -4,6 +4,7 @@ model file. Vensim's function equivalents should not go here but in
 functions.py
 """
 
+import warnings
 import keyword
 import regex as re
 
@@ -140,7 +141,7 @@ def make_merge_list(subs_list, subscript_dict):
 
     Examples
     --------
-    >>> make_coord_dict([['upper'], ['C']], {'all': ['A', 'B', 'C'], 'upper': ['A', 'B']})
+    >>> make_merge_list([['upper'], ['C']], {'all': ['A', 'B', 'C'], 'upper': ['A', 'B']})
     ['all']
 
     """
@@ -149,11 +150,38 @@ def make_merge_list(subs_list, subscript_dict):
         coords = make_coord_dict(subs, subscript_dict, terse=False)
         [coords_set[i].update(coords[dim]) for i, dim in enumerate(coords)]
 
-    dims = []
-    for coords in coords_set:
-        for name, elements in subscript_dict.items():
-            if coords == set(elements):
-                dims.append(name)
+    dims = [None]*len(coords_set)
+    for i, (coord1, coord2) in enumerate(zip(coords, coords_set)):
+        if set(coords[coord1]) == coord2:
+            # if the given coordinate already matches return it
+            dims[i] = coord1
+        else:
+            # find a suitable coordinate 
+            for name, elements in subscript_dict.items():
+                if coord2 == set(elements):
+                    dims[i] = name
+                    break
+
+            if not dims[i]:
+                # the dimension is incomplete use the smaller
+                # dimension that completes it
+                for name, elements in subscript_dict.items():
+                    if coord2.issubset(set(elements)):
+                        dims[i] = name
+                        warnings.warn(
+                            "Dimension given by subscripts:"
+                            + "\n\t{}\nis incomplete ".format(coord2)
+                            + "using {} instead.".format(name)
+                            + "\nSubscript_dict:"
+                            + "\n\t{}".format(subscript_dict))
+                        break
+
+            if not dims[i]:
+                # not able to find the correct dimension
+                raise ValueError(
+                    "Impossible to find the dimension that contains:"
+                    + "\n\t{}\nFor subscript_dict:".format(coord2)
+                    + "\n\t{}".format(subscript_dict))
 
     return dims
 
