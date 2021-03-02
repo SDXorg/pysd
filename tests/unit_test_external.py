@@ -1682,20 +1682,23 @@ class TestWarningsErrors(unittest.TestCase):
                                      interp=interp,
                                      py_name=py_name)
 
-        with catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as ws:
             data.initialize()
-            wu = [wus for wus in w if issubclass(wus.category, UserWarning)]
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
             self.assertEqual(len(wu), 1)
-            self.assertTrue("missing" in str(wu[-1].message))
+            self.assertTrue("missing" in str(wu[0].message))
 
-        with catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as ws:
             for x, y in zip(_exp.xpts, _exp.interp_1d):
                 self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
-            self.assertEqual(len(w), 2)
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 2)
             self.assertTrue("extrapolating data below the minimum value"
-                            + " of the time" in str(w[0].message))
+                            + " of the time" in str(wu[0].message))
             self.assertTrue("extrapolating data above the maximum value"
-                            + " of the time" in str(w[1].message))
+                            + " of the time" in str(wu[1].message))
 
     def test_data_interp_h1dm_ignore(self):
         """
@@ -1724,18 +1727,22 @@ class TestWarningsErrors(unittest.TestCase):
                                      interp=interp,
                                      py_name=py_name)
 
-        with catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as ws:
             data.initialize()
-            self.assertEqual(len(w), 0)
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 0)
 
-        with catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as ws:
             for x, y in zip(_exp.xpts, _exp.interp_1d):
                 self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
-            self.assertEqual(len(w), 2)
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 2)
             self.assertTrue("extrapolating data below the minimum value"
-                            + " of the time" in str(w[0].message))
+                            + " of the time" in str(wu[0].message))
             self.assertTrue("extrapolating data above the maximum value"
-                            + " of the time" in str(w[1].message))
+                            + " of the time" in str(wu[1].message))
 
     def test_data_interp_h1dm_raise(self):
         """
@@ -1793,20 +1800,23 @@ class TestWarningsErrors(unittest.TestCase):
                                      interp=interp,
                                      py_name=py_name)
 
-        with catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as ws:
             data.initialize()
-            self.assertEqual(len(w), 1)
-            self.assertTrue(issubclass(w[-1].category, UserWarning))
-            self.assertTrue("missing" in str(w[-1].message))
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 1)
+            self.assertTrue("missing" in str(wu[0].message))
 
-        with catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as ws:
             for x, y in zip(_exp.xpts, _exp.interp_1d):
                 self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
-            self.assertEqual(len(w), 2)
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 2)
             self.assertTrue("extrapolating data below the minimum value"
-                            + " of the time" in str(w[0].message))
+                            + " of the time" in str(wu[0].message))
             self.assertTrue("extrapolating data above the maximum value"
-                            + " of the time" in str(w[1].message))
+                            + " of the time" in str(wu[1].message))
 
     def test_data_interp_v1dm_ignore(self):
         """
@@ -1835,18 +1845,22 @@ class TestWarningsErrors(unittest.TestCase):
                                      interp=interp,
                                      py_name=py_name)
 
-        with catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as ws:
             data.initialize()
-            self.assertEqual(len(w), 0)
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 0)
 
-        with catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as ws:
             for x, y in zip(_exp.xpts, _exp.interp_1d):
                 self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
-            self.assertEqual(len(w), 2)
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 2)
             self.assertTrue("extrapolating data below the minimum value"
-                            + " of the time" in str(w[0].message))
+                            + " of the time" in str(wu[0].message))
             self.assertTrue("extrapolating data above the maximum value"
-                            + " of the time" in str(w[1].message))
+                            + " of the time" in str(wu[1].message))
 
     def test_data_interp_v1dm_raise(self):
         """
@@ -1904,20 +1918,23 @@ class TestWarningsErrors(unittest.TestCase):
                                      interp=interp,
                                      py_name=py_name)
 
-        with catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as ws:
             data.initialize()
-            self.assertEqual(len(w), 1)
-            self.assertTrue(issubclass(w[-1].category, UserWarning))
-            self.assertTrue("missing" in str(w[-1].message))
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 1)
+            self.assertTrue("missing" in str(wu[0].message))
 
-        with catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as ws:
             for x, y in zip(_exp.xpts, _exp.interp_1d):
                 self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
-            self.assertEqual(len(w), 2)
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 2)
             self.assertTrue("extrapolating data below the minimum value"
-                            + " of the time" in str(w[0].message))
+                            + " of the time" in str(wu[0].message))
             self.assertTrue("extrapolating data above the maximum value"
-                            + " of the time" in str(w[1].message))
+                            + " of the time" in str(wu[1].message))
 
     def test_data_interp_hn1dm_ignore(self):
         """
@@ -1946,18 +1963,22 @@ class TestWarningsErrors(unittest.TestCase):
                                      interp=interp,
                                      py_name=py_name)
 
-        with catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as ws:
             data.initialize()
-            self.assertEqual(len(w), 0)
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 0)
 
-        with catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as ws:
             for x, y in zip(_exp.xpts, _exp.interp_1d):
                 self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
-            self.assertEqual(len(w), 2)
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 2)
             self.assertTrue("extrapolating data below the minimum value"
-                            + " of the time" in str(w[0].message))
+                            + " of the time" in str(wu[0].message))
             self.assertTrue("extrapolating data above the maximum value"
-                            + " of the time" in str(w[1].message))
+                            + " of the time" in str(wu[1].message))
 
     def test_data_interp_hn1dm_raise(self):
         """
@@ -2026,22 +2047,24 @@ class TestWarningsErrors(unittest.TestCase):
 
         with catch_warnings(record=True) as ws:
             data.initialize()
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 2)
             self.assertTrue(np.all(
-                [issubclass(w.category, UserWarning) for w in ws]
-                ))
-            self.assertTrue(np.all(
-                ["missing" in str(w.message) for w in ws]
+                ["missing" in str(w.message) for w in wu]
                 ))
 
-        with catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as ws:
             for x, y in zip(_exp.xpts, _exp.interp_3d):
                 self.assertTrue(y.equals(data(x)),
                                 "Wrong result at X=" + str(x))
-            self.assertEqual(len(w), 2)
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 2)
             self.assertTrue("extrapolating data below the minimum value"
-                            + " of the time" in str(w[0].message))
+                            + " of the time" in str(wu[0].message))
             self.assertTrue("extrapolating data above the maximum value"
-                            + " of the time" in str(w[1].message))
+                            + " of the time" in str(wu[1].message))
 
     def test_lookup_hn3dmd_raise(self):
         """
@@ -2111,17 +2134,21 @@ class TestWarningsErrors(unittest.TestCase):
 
         with catch_warnings(record=True) as ws:
             data.initialize()
-            self.assertEqual(len(ws), 0)
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 0)
 
-        with catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as ws:
             for x, y in zip(_exp.xpts, _exp.interp_3d):
                 self.assertTrue(y.equals(data(x)),
                                 "Wrong result at X=" + str(x))
-            self.assertEqual(len(w), 2)
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 2)
             self.assertTrue("extrapolating data below the minimum value"
-                            + " of the series" in str(w[0].message))
+                            + " of the series" in str(wu[0].message))
             self.assertTrue("extrapolating data above the maximum value"
-                            + " of the series" in str(w[1].message))
+                            + " of the series" in str(wu[1].message))
 
     def test_constant_h3dm(self):
         """
@@ -2156,11 +2183,11 @@ class TestWarningsErrors(unittest.TestCase):
 
         with catch_warnings(record=True) as ws:
             data.initialize()
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 2)
             self.assertTrue(np.all(
-                [issubclass(w.category, UserWarning) for w in ws]
-                ))
-            self.assertTrue(np.all(
-                ["missing" in str(w.message) for w in ws]
+                ["missing" in str(w.message) for w in wu]
                 ))
 
     def test_constant_h3dm_ignore(self):
@@ -2196,7 +2223,9 @@ class TestWarningsErrors(unittest.TestCase):
 
         with catch_warnings(record=True) as ws:
             data.initialize()
-            self.assertEqual(len(ws), 0)
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 0)
 
     def test_constant_h3dm_raise(self):
         """
