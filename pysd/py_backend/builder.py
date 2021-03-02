@@ -186,19 +186,24 @@ def build_element(element, subscript_dict):
     # external objecets via .add method
     py_expr_no_ADD = ["ADD" not in py_expr for py_expr in element['py_expr']]
 
-    if sum(py_expr_no_ADD) > 1:
+    if element['subs'][0]:
+        new_subs = utils.make_merge_list(element['subs'], subscript_dict)
+    else:
+        new_subs = None
+
+    if sum(py_expr_no_ADD) > 1\
+      and element['kind'] not in ['stateful', 'external', 'external_add']:
         py_expr_i = []
         # need to append true to the end as the next element is checked
         py_expr_no_ADD.append(True)
-        new_dims = utils.make_merge_list(element['subs'], subscript_dict)
-        for i, (py_expr, subs) in enumerate(zip(element['py_expr'],
+        for i, (py_expr, subs_i) in enumerate(zip(element['py_expr'],
                                                 element['subs'])):
             if not (py_expr[:3] == 'xr.' or py_expr[:5] == '_ext_'):
                 # rearrange if it doesn't come from external or xarray
-                coords = utils.make_coord_dict(subs, subscript_dict,
+                coords = utils.make_coord_dict(subs_i, subscript_dict,
                                                terse=False)
                 coords = {new_dim: coords[dim] for new_dim, dim
-                          in zip(new_dims, coords)}
+                          in zip(new_subs, coords)}
                 dims = list(coords)
                 import_modules['utils'].add("rearrange")
                 py_expr_i.append('rearrange(%s, %s, %s)' % (
@@ -209,29 +214,27 @@ def build_element(element, subscript_dict):
         import_modules['utils'].add("xrmerge")
         py_expr = 'xrmerge([%s,])' % (
             ',\n'.join(py_expr_i))
-        subs = new_dims
     else:
         py_expr = element['py_expr'][0]
-        subs = element['subs'][0]
 
     contents = 'return %s' % py_expr
 
     element['subs_dec'] = ''
     element['subs_doc'] = 'None'
 
-    if subs not in ['', [], None]:
+    if new_subs:
         # We add the list of the subs to the __doc__ of the function
         # this will give more information to the user and make possible
         # to rewrite subscripted values with model.run(params=X) or
         # model.run(initial_condition=(n,x))
-        element['subs_doc'] = '%s' % subs
-        if element['kind'] in ['component', 'setup']:
+        element['subs_doc'] = '%s' % new_subs
+        if element['kind'] in ['component', 'setup', 'constant']:
             # the decorator is not always necessary as the objects
             # defined as xarrays in the model will have the right
             # dimensions always, we should try to reduce to the
             # maximum when we use it
             # re arrange the python object
-            element['subs_dec'] = '@subs(%s, _subscript_dict)' % subs
+            element['subs_dec'] = '@subs(%s, _subscript_dict)' % new_subs
             import_modules['subs'] = True
 
     indent = 8
