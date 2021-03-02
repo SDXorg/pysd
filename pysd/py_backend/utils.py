@@ -46,6 +46,27 @@ def xrmerge(das, accept_new=True):
     return da
 
 
+def xrsplit(array):
+        """
+        Split an array to a list of all the components
+
+        Parameters
+        ----------
+        array: xarray.DataArray
+            Array to split.
+
+        Returns
+        -------
+        sp_list: list
+            List of shape 0 xarray.DataArrays with coordinates
+        """
+        sp_list = [sa for sa in array]
+        if sp_list[0].shape:
+            sp_list = [ssa for sa in sp_list
+                       for ssa in xrsplit(sa)]
+        return sp_list
+
+
 def find_subscript_name(subscript_dict, element):
     """
     Given a subscript dictionary, and a member of a subscript family,

@@ -108,6 +108,17 @@ class TestIntegrationExamples(unittest.TestCase):
         )
         assert_frames_close(output, canon, rtol=rtol)
 
+    def test_get_lookups_subscripted_args(self):
+        import warnings
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            output, canon = runner(
+              'test-models/tests/get_lookups_subscripted_args/'
+              + 'test_get_lookups_subscripted_args.mdl'
+            )
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_get_lookups_subset(self):
         output, canon = runner(
           'test-models/tests/get_lookups_subset/'

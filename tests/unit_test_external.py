@@ -1085,6 +1085,165 @@ class TestLookup(unittest.TestCase):
                 self.assertTrue(y.equals(data(x)),
                                 "Wrong result at X=" + str(x))
 
+    def test_lookup_vn3d_shape0(self):
+        """
+        ExtLookup test for 3d vertical series by cellrange names
+        passing shape 0 xarray as argument
+        """
+        import pysd
+        import warnings
+
+        file_name = "data/input.xlsx"
+        sheet = "Vertical"
+        x_row_or_col = "time"
+        cell_1 = "data_2d"
+        cell_2 = "data_2db"
+        coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C']}
+        coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C']}
+        py_name = "test_lookup_vn3d_shape0"
+
+        data = pysd.external.ExtLookup(file_name=file_name,
+                                       sheet=sheet,
+                                       x_row_or_col=x_row_or_col,
+                                       root=_root,
+                                       cell=cell_1,
+                                       coords=coords_1,
+                                       py_name=py_name)
+
+        data.add(file_name=file_name,
+                 sheet=sheet,
+                 x_row_or_col=x_row_or_col,
+                 cell=cell_2,
+                 coords=coords_2)
+
+        data.initialize()
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for x, y in zip(_exp.xpts, _exp.interp_3d):
+                self.assertTrue(y.equals(data(xr.DataArray(x))),
+                                "Wrong result at X=" + str(x))
+
+    def test_lookup_vn2d_xarray(self):
+        """
+        ExtLookup test for 2d vertical series by cellrange names
+        using xarray for interpolation
+        """
+        import pysd
+        import warnings
+
+        file_name = "data/input.xlsx"
+        sheet = "Vertical"
+        x_row_or_col = "time"
+        cell_1 = "data_2d"
+        coords_1 = {'ABC': ['A', 'B', 'C']}
+        py_name = "test_lookup_vn2d_xarray"
+
+        data = pysd.external.ExtLookup(file_name=file_name,
+                                       sheet=sheet,
+                                       x_row_or_col=x_row_or_col,
+                                       root=_root,
+                                       cell=cell_1,
+                                       coords=coords_1,
+                                       py_name=py_name)
+
+        data.initialize()
+
+        all_smaller = xr.DataArray([-1, -10], {'XY': ['X', 'Y']}, ['XY'])
+        all_bigger = xr.DataArray([9, 20, 30], {'ABC': ['A', 'B', 'C']}, ['ABC'])
+        all_inside = xr.DataArray([3.5, 5.5], {'XY': ['X', 'Y']}, ['XY'])
+        mixed = xr.DataArray([1.5, 20, -30], {'ABC': ['A', 'B', 'C']}, ['ABC'])
+        full = xr.DataArray([[1.5, -30], [-10, 2.5], [4., 5.]], 
+                            {'ABC': ['A', 'B', 'C'], 'XY': ['X', 'Y']}, 
+                            ['ABC', 'XY'])
+
+        all_smaller_out = data.data[0].reset_coords('lookup_dim', drop=True)\
+                          + 0*all_smaller
+        all_bigger_out = data.data[-1].reset_coords('lookup_dim', drop=True)
+        all_inside_out = xr.DataArray([[ 0.5 , -1.],
+                                       [ -1., -0.5],
+                                       [-0.75, 0.]],
+                                       {'ABC': ['A', 'B', 'C'], 'XY': ['X', 'Y']},
+                                       ['ABC', 'XY'])
+        mixed_out = xr.DataArray([ 0.5 , 0.  , 1.],
+                                 {'ABC': ['A', 'B', 'C']},
+                                 ['ABC'])
+        full_out = xr.DataArray([[ 0.5 , 0.],
+                                 [ 0., 0.],
+                                 [-0.5, 0.]],
+                                 {'ABC': ['A', 'B', 'C'], 'XY': ['X', 'Y']},
+                                 ['ABC', 'XY'])
+ 
+        self.assertTrue(data(all_smaller).equals(all_smaller_out))
+        self.assertTrue(data(all_bigger).equals(all_bigger_out))
+        self.assertTrue(data(all_inside).equals(all_inside_out))
+        self.assertTrue(data(mixed).equals(mixed_out))
+        self.assertTrue(data(full).equals(full_out))
+
+
+    def test_lookup_vn3d_xarray(self):
+        """
+        ExtLookup test for 3d vertical series by cellrange names
+        using xarray for interpolation
+        """
+        import pysd
+        import warnings
+
+        file_name = "data/input.xlsx"
+        sheet = "Vertical"
+        x_row_or_col = "time"
+        cell_1 = "data_2d"
+        cell_2 = "data_2db"
+        coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C']}
+        coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C']}
+        py_name = "test_lookup_vn3d_xarray"
+
+        data = pysd.external.ExtLookup(file_name=file_name,
+                                       sheet=sheet,
+                                       x_row_or_col=x_row_or_col,
+                                       root=_root,
+                                       cell=cell_1,
+                                       coords=coords_1,
+                                       py_name=py_name)
+
+        data.add(file_name=file_name,
+                 sheet=sheet,
+                 x_row_or_col=x_row_or_col,
+                 cell=cell_2,
+                 coords=coords_2)
+
+        data.initialize()
+
+        all_smaller = xr.DataArray([-1, -10], {'XY': ['X', 'Y']}, ['XY'])
+        all_bigger = xr.DataArray([9, 20, 30], {'ABC': ['A', 'B', 'C']}, ['ABC'])
+        all_inside = xr.DataArray([3.5, 7.5], {'XY': ['X', 'Y']}, ['XY'])
+        mixed = xr.DataArray([1.5, 20, -30], {'ABC': ['A', 'B', 'C']}, ['ABC'])
+        full = xr.DataArray([[1.5, -30], [-10, 2.5], [4., 5.]], 
+                            {'ABC': ['A', 'B', 'C'], 'XY': ['X', 'Y']}, 
+                            ['ABC', 'XY'])
+
+        all_smaller_out = data.data[0].reset_coords('lookup_dim', drop=True)
+        all_bigger_out = data.data[-1].reset_coords('lookup_dim', drop=True)
+        all_inside_out = xr.DataArray([[ 0.5 , -1.  , -0.75],
+                                       [ 0.5 ,  1.  ,  0.  ]],
+                                       {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']},
+                                       ['XY', 'ABC'])
+        mixed_out = xr.DataArray([[ 0.5 , 0.  , 1.],
+                                  [ -1. ,  1.  ,  -1.  ]],
+                                 {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']},
+                                 ['XY', 'ABC'])
+
+        full_out = xr.DataArray([[ 0.5 , 0.  , -0.5],
+                                [ 1. ,  0.  ,  0.  ]],
+                               {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']},
+                               ['XY', 'ABC'])
+
+        self.assertTrue(data(all_smaller).equals(all_smaller_out))
+        self.assertTrue(data(all_bigger).equals(all_bigger_out))
+        self.assertTrue(data(all_inside).equals(all_inside_out))
+        self.assertTrue(data(mixed).equals(mixed_out))
+        self.assertTrue(data(full).equals(full_out))
+
 
 class TestConstant(unittest.TestCase):
     """
@@ -2632,35 +2791,6 @@ class TestWarningsErrors(unittest.TestCase):
                      cell=cell2,
                      coords=coords2)
 
-    def test_lookup_h1d_nf(self):
-        """
-        Error in ExtLookup when a non 0 dimensional array is passed
-        """
-        import pysd
-
-        file_name = "data/input.xlsx"
-        sheet = "Horizontal"
-        x_row_or_col = "4"
-        cell = "C5"
-        coords = {}
-        py_name = "test_lookup_h1d"
-
-        data = pysd.external.ExtLookup(file_name=file_name,
-                                       sheet=sheet,
-                                       x_row_or_col=x_row_or_col,
-                                       root=_root,
-                                       cell=cell,
-                                       coords=coords,
-                                       py_name=py_name)
-
-        data.initialize()
-
-        data(np.array([1]))
-        data(xr.DataArray([1]))
-
-        with self.assertRaises(TypeError):
-            data(np.array([1, 2]))
-            data(xr.DataArray([1, 1]))
 
     def test_constant_hns(self):
         """

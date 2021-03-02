@@ -706,11 +706,9 @@ class ExtData(External):
         elif self.interp == "interpolate":
             outdata = self.data.interp(time=time)
         elif self.interp == 'look forward':
-            next_t = self.data['time'][self.data['time'] >= time][0]
-            outdata = self.data.sel(time=next_t)
+            outdata = self.data.sel(time=time, method="backfill")
         elif self.interp == 'hold backward':
-            last_t = self.data['time'][self.data['time'] <= time][-1]
-            outdata = self.data.sel(time=last_t)
+            outdata = self.data.sel(time=time, method="pad")
 
         if self.coordss[0]:
             # Remove time coord from the DataArray
@@ -761,36 +759,56 @@ class ExtLookup(External):
              self.cell, self.coords) in zipped:
             data.append(self._initialize_data("lookup"))
         self.data = utils.xrmerge(data)
-
     def __call__(self, x):
-        try:
-            x = float(x)
-        except TypeError:
-            raise TypeError(self.py_name + "\n"
-                            + "the argument of the Lookup must be float"
-                            + "or 0 dimensional array. ")
+        return self._call(self.data, x)
 
-        if x in self.data['lookup_dim'].values:
-            outdata = self.data.sel(lookup_dim=x)
-        elif x > self.data['lookup_dim'].values[-1]:
-            outdata = self.data[-1]
-            warnings.warn(
-              self.py_name + "\n"
-              + "extrapolating data above the maximum value of the series")
-        elif x < self.data['lookup_dim'].values[0]:
-            outdata = self.data[0]
-            warnings.warn(
-              self.py_name + "\n"
-              + "extrapolating data below the minimum value of the series")
-        else:
-            outdata = self.data.interp(lookup_dim=x)
-
-        if self.coordss[0]:
-            # Remove lookup dimension coord from the DataArray
+    def _call(self, data, x):
+        if isinstance(x, xr.DataArray):
+            if not x.dims:
+                # shape 0 xarrays
+                return self._call(data, float(x))
+            if np.all(x > data['lookup_dim'].values[-1]):
+                outdata, _ = xr.broadcast(data[-1], x)
+                warnings.warn(
+                  self.py_name + "\n"
+                  + "extrapolating data above the maximum value of the series")
+            elif np.all(x < data['lookup_dim'].values[0]):
+                outdata, _ = xr.broadcast(data[0], x)
+                warnings.warn(
+                  self.py_name + "\n"
+                  + "extrapolating data below the minimum value of the series")
+            else:
+                data, _ = xr.broadcast(data, x)
+                outdata = data[0].copy()
+                for a in utils.xrsplit(x):
+                    outdata.loc[a.coords] = self._call(data.loc[a.coords],
+                                                float(a))
+            # the output will be always an xarray
             return outdata.reset_coords('lookup_dim', drop=True)
+
         else:
-            # if lookup has no-coords return a float
-            return float(outdata)
+            if x in data['lookup_dim'].values:
+                outdata = data.sel(lookup_dim=x)
+            elif x > data['lookup_dim'].values[-1]:
+                outdata = data[-1]
+                warnings.warn(
+                  self.py_name + "\n"
+                  + "extrapolating data above the maximum value of the series")
+            elif x < data['lookup_dim'].values[0]:
+                outdata = data[0]
+                warnings.warn(
+                  self.py_name + "\n"
+                  + "extrapolating data below the minimum value of the series")
+            else:
+                outdata = data.interp(lookup_dim=x)
+
+            # the output could be a float or an xarray
+            if self.coordss[0]:
+                # Remove lookup dimension coord from the DataArray
+                return outdata.reset_coords('lookup_dim', drop=True)
+            else:
+                # if lookup has no-coords return a float
+                return float(outdata)
 
 
 class ExtConstant(External):

@@ -9,6 +9,56 @@ from . import test_utils
 
 class TestUtils(TestCase):
 
+    def test_xrsplit(self):
+        import pysd
+
+        array1d = xr.DataArray([0.5, 0., 1.],
+                               {'ABC': ['A', 'B', 'C']},
+                               ['ABC'])
+        array2d = xr.DataArray([[0.5, -1.5],
+                                [-1., -0.5],
+                                [-0.75, 0.]],
+                                {'ABC': ['A', 'B', 'C'],
+                                 'XY': ['X', 'Y']},
+                                ['ABC', 'XY'])
+        array3d = xr.DataArray([[[0.5, 4.] , [-1.5, 3.]],
+                                [[-1., 2.], [-0.5, 5.5]],
+                                [[-0.75, 0.75], [0., -1.]]],
+                                {'ABC': ['A', 'B', 'C'],
+                                 'XY': ['X', 'Y'],
+                                 'FG': ['F', 'G']},
+                                ['ABC', 'XY', 'FG'])
+        s1d = pysd.utils.xrsplit(array1d)
+        s2d = pysd.utils.xrsplit(array2d)
+        s3d = pysd.utils.xrsplit(array3d)
+
+        # check length
+        self.assertEqual(len(s1d), 3)
+        self.assertEqual(len(s2d), 6)
+        self.assertEqual(len(s3d), 12)
+
+        # check all values for 1d
+        self.assertIn(xr.DataArray(0.5, {'ABC': ['A']}, ['ABC']), s1d)
+        self.assertIn(xr.DataArray(0., {'ABC': ['B']}, ['ABC']), s1d)
+        self.assertIn(xr.DataArray(1., {'ABC': ['C']}, ['ABC']), s1d)
+        # check some values for 2d and 3d
+        self.assertIn(xr.DataArray(0.5,
+                                   {'ABC': ['A'],'XY': ['X']},
+                                   ['ABC', 'XY']),
+                      s2d)
+        self.assertIn(xr.DataArray(-0.5,
+                                   {'ABC': ['B'],'XY': ['Y']},
+                                   ['ABC', 'XY']),
+                      s2d)
+        self.assertIn(xr.DataArray(-0.5,
+                                   {'ABC': ['B'],'XY': ['Y'], 'FG': ['F']},
+                                   ['ABC', 'XY', 'FG']),
+                      s3d)
+        self.assertIn(xr.DataArray(0.75,
+                                   {'ABC': ['C'],'XY': ['X'], 'FG': ['G']},
+                                   ['ABC', 'XY', 'FG']),
+                      s3d)
+
     def test_get_return_elements_subscirpts(self):
         import pysd
 
