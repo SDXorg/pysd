@@ -1230,9 +1230,15 @@ def translate_section(section, macro_list, root_path):
                 utils.make_python_identifier(element['real_name'], namespace)
             # dictionary to save the subscripts of each element so we can avoid
             # using utils.rearrange when calling them with the same dimensions
-            elements_subs_dict[element['py_name']] = [
-                utils.find_subscript_name(subscript_dict, sub)
-                for sub in element['subs']]
+            if element['py_name'] in elements_subs_dict:
+                elements_subs_dict[element['py_name']].append(element['subs'])
+            else:
+                elements_subs_dict[element['py_name']] = [element['subs']]
+
+    elements_subs_dict = {
+        el: utils.make_merge_list(elements_subs_dict[el], subscript_dict)
+        for el in elements_subs_dict
+        }
 
     # Parse components to python syntax.
     for element in model_elements:
