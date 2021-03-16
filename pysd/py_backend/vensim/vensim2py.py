@@ -144,12 +144,14 @@ def get_model_elements(model_str):
 
     model_structure_grammar = _include_common_grammar(r"""
     model = (entry / section)+ sketch?
-    entry = element "~" element "~" element ("~" element)? "|"
+    entry = element "~" element "~" doc ("~" element)? "|"
     section = element "~" element "|"
     sketch = ~r".*"  #anything
 
     # Either an escape group, or a character that is not tilde or pipe
     element = ( escape_group / ~r"[^~|]")*
+    # Anything other that is not a tilde or pipe
+    doc = (~r"[^~|]")*
     """)
 
     parser = parsimonious.Grammar(model_structure_grammar)
