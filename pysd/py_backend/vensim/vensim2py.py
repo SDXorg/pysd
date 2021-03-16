@@ -420,6 +420,7 @@ functions = {
     "random normal": {"name": "bounded_normal", "module": "functions"},
     "poisson": {"name": "np.random.poisson", "module": "numpy"},
     "exprnd": {"name": "np.random.exponential", "module": "numpy"},
+    "random 0 1": {"name": "random_0_1", "module": "functions"},
     "random uniform": {"name": "random_uniform", "module": "functions"},
     "if then else": {
         "name": "if_then_else",
