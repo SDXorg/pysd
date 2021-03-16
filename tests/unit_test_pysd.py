@@ -4,7 +4,8 @@ import numpy as np
 
 test_model = 'test-models/samples/teacup/teacup.mdl'
 test_model_subs = 'test-models/tests/subscript_2d_arrays/test_subscript_2d_arrays.mdl'
-
+test_model_upper = 'test-models/samples/teacup/teacup-upper.MDL'
+test_not_vensim_model = 'test-models/samples/not-vensim-model/Population-Model.py'
 
 class TestPySD(unittest.TestCase):
 
@@ -66,7 +67,12 @@ class TestPySD(unittest.TestCase):
             pysd.load("type_error.py")
 
         os.remove("type_error.py")
-
+    
+    def test_read_not_model_vensim(self):
+        import pysd
+        with self.assertRaises(ValueError):
+            model = pysd.read_vensim(test_not_vensim_model)
+        
     def test_run(self):
         import pysd
         model = pysd.read_vensim(test_model)
@@ -76,6 +82,15 @@ class TestPySD(unittest.TestCase):
         self.assertGreater(len(stocks), 3)  # has multiple rows
         self.assertTrue(stocks.notnull().all().all())  # there are no null values in the set
 
+    def test_run_upper(self):
+        import pysd
+        model = pysd.read_vensim(test_model_upper)
+        stocks = model.run()
+        self.assertTrue(isinstance(stocks, pd.DataFrame))  # return a dataframe
+        self.assertTrue('Teacup Temperature' in stocks.columns.values)  # contains correct column
+        self.assertGreater(len(stocks), 3)  # has multiple rows
+        self.assertTrue(stocks.notnull().all().all())  # there are no null values in the set
+    
     def test_run_ignore_missing(self):
         import pysd
         from warnings import catch_warnings
