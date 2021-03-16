@@ -1242,7 +1242,10 @@ def translate_vensim(mdl_file):
     with open(mdl_file, 'r', encoding='UTF-8') as in_file:
         text = in_file.read()
 
-    outfile_name = mdl_file.replace('.mdl', '.py')
+    # check the extension of the model
+    if('.mdl' not in mdl_file and '.MDL' not in mdl_file):
+        raise ValueError('The file to translate, '+ mdl_file +' is not a vensim model. It must end with mdl or MDL extension.')
+    outfile_name = mdl_file.replace('.mdl', '.py').replace('.MDL', '.py')
     out_dir = os.path.dirname(outfile_name)
 
     # extract model elements
