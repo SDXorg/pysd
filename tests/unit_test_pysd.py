@@ -4,8 +4,9 @@ import numpy as np
 
 test_model = 'test-models/samples/teacup/teacup.mdl'
 test_model_subs = 'test-models/tests/subscript_2d_arrays/test_subscript_2d_arrays.mdl'
-test_model_upper = 'more-test/teacup-upper.MDL'
-test_not_vensim_model = 'more-test/Not-Vensim.txt'
+test_model_upper = 'more-tests/teacup-upper.MDL'
+test_not_vensim_model = 'more-tests/Not-Vensim.txt'
+test_model_3quotes = 'more-tests/teacup_3quotes.mdl'
 
 class TestPySD(unittest.TestCase):
 
@@ -85,6 +86,15 @@ class TestPySD(unittest.TestCase):
     def test_run_upper(self):
         import pysd
         model = pysd.read_vensim(test_model_upper)
+        stocks = model.run()
+        self.assertTrue(isinstance(stocks, pd.DataFrame))  # return a dataframe
+        self.assertTrue('Teacup Temperature' in stocks.columns.values)  # contains correct column
+        self.assertGreater(len(stocks), 3)  # has multiple rows
+        self.assertTrue(stocks.notnull().all().all())  # there are no null values in the set
+    
+    def test_run_3quotes(self):
+        import pysd
+        model = pysd.read_vensim(test_model_3quotes)
         stocks = model.run()
         self.assertTrue(isinstance(stocks, pd.DataFrame))  # return a dataframe
         self.assertTrue('Teacup Temperature' in stocks.columns.values)  # contains correct column

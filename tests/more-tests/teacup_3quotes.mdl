@@ -13,13 +13,13 @@ Heat Loss to Room =
 Room Temperature = 
 	 70 
 	~	 Degrees Fahrenheit [-459.67, inf] 
-	~	 The room temperature cannot go below absolute zero. 
+	~	 "The room" temperature" cannot go below absolute zero. 
 	|
 
 Teacup Temperature = 
 	 INTEG (-Heat Loss to Room, 180) 
 	~	 Degrees Fahrenheit [32.0, 212.0] 
-	~	 "The model" is only valid for "the liquid phase of tea. While the tea could theoretically freeze or boil off, we would want an error to be thrown in these cases so that the modeler can identify the issue and decide whether to expand the model. Of course, this refers to standard sea-level conditions... 
+	~	 The model "is only valid" for the liquid "phase of tea. While the tea could theoretically freeze or boil off, we would want an error to be thrown in these cases so that the modeler can identify the issue and decide whether to expand the model. Of course, this refers to standard sea-level conditions... 
 	|
 
 FINAL TIME = 
