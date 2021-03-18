@@ -4,8 +4,8 @@ import numpy as np
 
 test_model = 'test-models/samples/teacup/teacup.mdl'
 test_model_subs = 'test-models/tests/subscript_2d_arrays/test_subscript_2d_arrays.mdl'
-test_model_upper = 'test-models/samples/teacup/teacup-upper.MDL'
-test_not_vensim_model = 'test-models/samples/not-vensim-model/Population-Model.py'
+test_model_upper = 'more-test/teacup-upper.MDL'
+test_not_vensim_model = 'more-test/Not-Vensim.txt'
 
 class TestPySD(unittest.TestCase):
 
