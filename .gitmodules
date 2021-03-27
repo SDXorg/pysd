@@ -1,3 +1,3 @@
 [submodule "tests/test-models"]
 	path = tests/test-models
-	url = https://github.com/marrobl/test-models.git 
+	url = https://github.com/SDXorg/test-models.git 
