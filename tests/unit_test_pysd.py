@@ -4,7 +4,7 @@ import numpy as np
 
 test_model = 'test-models/samples/teacup/teacup.mdl'
 test_model_subs = 'test-models/tests/subscript_2d_arrays/test_subscript_2d_arrays.mdl'
-
+test_not_vensim_model = 'more-tests/Not-Vensim.txt'
 
 class TestPySD(unittest.TestCase):
 
@@ -66,7 +66,12 @@ class TestPySD(unittest.TestCase):
             pysd.load("type_error.py")
 
         os.remove("type_error.py")
-
+    
+    def test_read_not_model_vensim(self):
+        import pysd
+        with self.assertRaises(ValueError):
+            model = pysd.read_vensim(test_not_vensim_model)
+        
     def test_run(self):
         import pysd
         model = pysd.read_vensim(test_model)
