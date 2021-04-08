@@ -1181,6 +1181,9 @@ def random_uniform(m, x, s):
     -------
     A random number from the uniform distribution between m and x (exclusive of the endpoints).
     """
+    if(s!=0):
+        warnings.warn("Random uniform with a nonzero seed value, may not give the same result as vensim", RuntimeWarning)
+
     return np.random.uniform(m, x)
 
 
