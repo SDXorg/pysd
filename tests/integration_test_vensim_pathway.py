@@ -300,9 +300,7 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/rounding/test_rounding.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('working on it #217')
     def test_sample_if_true(self):
-        # issue https://github.com/JamesPHoughton/pysd/issues/217
         from.test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/sample_if_true/test_sample_if_true.mdl')
         assert_frames_close(output, canon, rtol=rtol)

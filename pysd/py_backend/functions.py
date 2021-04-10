@@ -1186,6 +1186,93 @@ def random_uniform(m, x, s):
 
     return np.random.uniform(m, x)
 
+# dictionary to store the values from SAMPLE IF TRUE function
+saved_value = {}
+
+def make_da(rows, cols, initial_value):
+    """
+    Returns a DataArray with the coordinates
+    of the rows and cols.
+    DataArray values are initialized with the initial_value.
+    It is used in SAMPLE IF TRUE function, to create the proper dimension saved value.
+    
+    Parameters
+    ----------
+    rows: float or xarray.DataArray    
+        Represents the row dimension of the new DataArray
+    cols: xarray.DataArray 
+        Represents the col dimension of the new DataArray
+    initial_value: float or xarray.DataArray 
+        Include the values to initialize the new DataArray
+
+    Returns
+    -------
+    A new DataArray with proper rows and cols coordinates,
+    initialized with initial_value
+    
+    """
+    if(isinstance(initial_value,xr.DataArray)):
+        array = np.array([[initial_value.data[e] for i in range(0, len(rows.values))] for e in range(0,len(cols.values))])
+    elif(isinstance(rows, xr.DataArray)):
+        array = np.array([[initial_value for i in range(0, len(rows.values))] for i in range(0,len(cols.values))])
+    else:
+        array = np.array([initial_value for i in range(0,len(cols.values))])
+        
+    coords = {dim: cols.coords[dim] for dim in cols.dims}
+    dims = cols.dims 
+    if(isinstance(rows, xr.DataArray)):
+        coords.update({dim: rows.coords[dim] for dim in rows.dims})
+        dims += rows.dims
+    return xr.DataArray(data=array, coords=coords, dims=dims)  
+    
+def sample_if_true(time, condition, actual_value, initial_value, var_name):
+    """
+    Implements Vensim's SAMPLE IF TRUE function.
+
+    Parameters
+    ----------
+    condition: bool or xarray.DataArray 
+    actual_value: float or xarray.DataArray 
+        Value to return when condition is true.
+    initial_value: float or xarray.DataArray 
+        Value to return when condition is false.
+    var_name: str
+        Represents the SAMPLE IF TRUE function in the whole model.
+
+    Returns
+    -------
+    float or xarray.DataArray
+        Actual_value when condition is true and saved this value
+        in saved_value dictionary.
+        Returns the last saved value when condicion is false.
+        Saved value is initialized with initial_value in the first step of simulation.
+    """
+    global saved_value
+    t = time()
+
+    if(t==0):
+        if(not(isinstance(condition,xr.DataArray))):
+            saved_value[var_name] = initial_value
+        else:
+            saved_value[var_name] = make_da(actual_value, condition, initial_value)
+
+    if isinstance(condition, xr.DataArray):     
+        if condition.all():
+            for i in range(0,len(saved_value[var_name].values)):
+                saved_value[var_name].values[i]=actual_value
+            return saved_value[var_name]
+        elif not condition.any():
+            return saved_value[var_name]
+
+        for i in range(0, len(condition)):
+            if condition.values[i]:
+                saved_value[var_name][i]=actual_value
+        return xr.where(condition, actual_value, saved_value[var_name])
+
+    if condition:
+        saved_value[var_name] = actual_value
+
+    return saved_value[var_name]
 
 def incomplete(*args):
     warnings.warn(

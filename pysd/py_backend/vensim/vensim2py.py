@@ -433,6 +433,17 @@ functions = {
         ],
         "module": "functions"
     },
+    "sample if true": {
+        "name": "sample_if_true",
+        "parameters": [
+            {"name": 'time', "type": 'time'},
+            {"name": 'condition'},
+            {"name": 'val_if_true'},
+            {"name": 'val_if_false'},
+            {"name": 'var_name'}
+        ],
+        "module": "functions"
+    },
     "step": {
         "name": "step",
         "parameters": [
@@ -892,6 +903,10 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
             if self.apply_dim and function_name in vectorial_funcs:
                 arguments += ["dim="+str(tuple(self.apply_dim))]
                 self.apply_dim = set()
+            
+            # add name of variable to sample if true function arguments
+            if(isinstance(functions[function_name],dict) and functions[function_name]['name'] == "sample_if_true"):
+                arguments.append(element['py_name'])
 
             return builder.build_function_call(functions[function_name],
                                                arguments)
