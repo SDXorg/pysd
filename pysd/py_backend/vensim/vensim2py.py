@@ -256,7 +256,7 @@ def get_equation_components(equation_str, root_path=None):
     component_structure_grammar = _include_common_grammar(r"""
     entry = component / data_definition / test_definition / subscript_definition / lookup_definition
     component = name _ subscriptlist? _ "=" "="? _ expression
-    subscript_definition = name _ ":" _ (imported_subscript / literal_subscript)
+    subscript_definition = name _ ":" _ (imported_subscript / literal_subscript / subscript_sequence)
     data_definition = name _ subscriptlist? _ keyword? _ ":=" _ expression
     lookup_definition = name _ subscriptlist? &"(" _ expression  # uses lookahead assertion to capture whole group
     test_definition = name _ subscriptlist? _ &keyword _ expression
@@ -264,10 +264,14 @@ def get_equation_components(equation_str, root_path=None):
     name = basic_id / escape_group
     literal_subscript = subscript _ ("," _ subscript _)*
     imported_subscript = func _ "(" _ (string _ ","? _)* ")"
+    subscript_sequence = "(" _ sequence_id _ "-" _ sequence_id _ ")"
     subscriptlist = '[' _ subscript _ ("," _ subscript _)* _ ']'
     expression = ~r".*"  # expression could be anything, at this point.
     keyword = ":" _ basic_id _ ":"
 
+    sequence_id = id_common+ numbers+
+    id_common = ~r"[A-Z]"i
+    numbers = ~r"[0-9]"
     subscript = basic_id / escape_group
     func = basic_id
     string = "\'" ( "\\\'" / ~r"[^\']"IU )* "\'"
@@ -313,6 +317,14 @@ def get_equation_components(equation_str, root_path=None):
             args_str = vc[4]  # todo: make this less fragile?
             self.subscripts += get_external_data(f_str, args_str, root_path)
 
+        def visit_subscript_sequence(self, n, vc):
+            subscript_start = vc[2].strip()
+            subscript_end = vc[6].strip()
+            substring, start, end = get_subscript_sequence(subscript_start, subscript_end)
+            for i in range(start, end+1):
+                s = substring + str(i)
+                self.subscripts.append(s.strip())
+
         def visit_name(self, n, vc):
             (name,) = vc
             self.real_name = name.strip()
@@ -350,6 +362,50 @@ def get_external_data(func_str, args_str, root_path):
 
     return f(*args, root=root_path).subscript
 
+def get_subscript_sequence(subs_start, subs_end):
+    """
+    With the first and the last subscript of a subscript sequence, 
+    gets the common string of both and the starting and ending
+    number of the subscript sequence
+
+    Parameters
+    ----------
+    subs_start: str
+        Represents the first subscript value in the subscript sequence
+    subs_end: str
+        Represents the last subscript value in the subscript sequence
+    
+    Returns
+    -------
+    common: str
+        Common string of both subscripts
+    num_start: int
+        Sequence start number 
+    num_end: int
+        Sequence end number
+    
+    Examples
+    --------
+    >>> get_subscript_sequence('Layer1', 'Layer5')
+    ('Layer', 1, 5)
+    >>> get_subscript_sequence('sub15', 'sub30')
+    ('sub', 15, 30)
+    """
+    subs_start_l = list(subs_start)
+    subs_end_l = list(subs_end)
+    common = ""
+    for i in range(len(subs_start)):
+        if(subs_start_l[i] == subs_end_l[i] and not(subs_start_l[i].isdigit())):
+            common = common + subs_start_l[i]
+        else: break
+    num_start = subs_start[i:]
+    num_end = subs_end[i:]
+    if(not(num_start.isdigit()) or not(num_end.isdigit()) ): raise ValueError("Format of subscript sequence is not correct\n")
+    num_start = int(num_start)
+    num_end = int(num_end)
+    if(num_start>num_end): raise ValueError("The number of the first subscript must be lower than the second subscript number in a subscript sequence\n")
+
+    return common, num_start, num_end
 
 def parse_units(units_str):
     """
