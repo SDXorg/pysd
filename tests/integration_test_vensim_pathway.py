@@ -446,4 +446,10 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/xidz_zidz/xidz_zidz.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    def test_run_uppercase(self):
+        output, canon = runner('test-models/tests/case_sensitive_extension/teacup-upper.MDL')
+        assert_frames_close(output, canon, rtol=rtol)
 
+    def test_odd_number_quotes(self):
+        output, canon = runner('test-models/tests/odd_number_quotes/teacup_3quotes.mdl')
+        assert_frames_close(output, canon, rtol=rtol)

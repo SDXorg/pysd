@@ -1170,9 +1170,36 @@ def active_initial(time, expr, init_val):
     else:
         return expr()
 
+def random_0_1():
+    """
+    Implements Vensim's RANDOM 0 1 function.
+
+    Returns
+    -------
+    A random number from the uniform distribution between 0 and 1.
+    """
+    return np.random.uniform(0,1)
 
 def random_uniform(m, x, s):
-    # TODO document
+    """
+    Implements Vensim's RANDOM UNIFORM function.
+
+    Parameters
+    ----------
+    m: int
+        Minimum value that the function will return.
+    x: int
+        Maximun value that the function will return.
+    s: int
+        A stream ID for the distribution to use. In most cases should be 0.
+    
+    Returns
+    -------
+    A random number from the uniform distribution between m and x (exclusive of the endpoints).
+    """
+    if(s!=0):
+        warnings.warn("Random uniform with a nonzero seed value, may not give the same result as vensim", RuntimeWarning)
+
     return np.random.uniform(m, x)
 
 

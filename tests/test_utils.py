@@ -14,7 +14,7 @@ def runner(model_file):
     directory = os.path.dirname(model_file)
 
     # load model
-    if model_file.endswith('.mdl'):
+    if model_file.endswith('.mdl') or model_file.endswith('.MDL'):
         model = pysd.read_vensim(model_file)
     elif model_file.endswith(".xmile"):
         model = pysd.read_xmile(model_file)

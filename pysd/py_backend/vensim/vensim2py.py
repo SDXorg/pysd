@@ -151,12 +151,14 @@ def get_model_elements(model_str):
 
     model_structure_grammar = _include_common_grammar(r"""
     model = (entry / section)+ sketch?
-    entry = element "~" element "~" element ("~" element)? "|"
+    entry = element "~" element "~" doc ("~" element)? "|"
     section = element "~" element "|"
     sketch = ~r".*"  #anything
 
     # Either an escape group, or a character that is not tilde or pipe
     element = ( escape_group / ~r"[^~|]")*
+    # Anything other that is not a tilde or pipe
+    doc = (~r"[^~|]")*
     """)
 
     parser = parsimonious.Grammar(model_structure_grammar)
@@ -434,6 +436,7 @@ functions = {
     "random normal": {"name": "bounded_normal", "module": "functions"},
     "poisson": {"name": "np.random.poisson", "module": "numpy"},
     "exprnd": {"name": "np.random.exponential", "module": "numpy"},
+    "random 0 1": {"name": "random_0_1", "module": "functions"},
     "random uniform": {"name": "random_uniform", "module": "functions"},
     "if then else": {
         "name": "if_then_else",
@@ -1293,7 +1296,10 @@ def translate_vensim(mdl_file):
     with open(mdl_file, 'r', encoding='UTF-8') as in_file:
         text = in_file.read()
 
-    outfile_name = mdl_file.replace('.mdl', '.py')
+    # check for model extension
+    if('.mdl' not in mdl_file and '.MDL' not in mdl_file):
+        raise ValueError('The file to translate, '+ mdl_file +' is not a vensim model. It must end with mdl or MDL extension.')
+    outfile_name = mdl_file.replace('.mdl', '.py').replace('.MDL', '.py')
     out_dir = os.path.dirname(outfile_name)
 
     # extract model elements
