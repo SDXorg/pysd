@@ -958,7 +958,10 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
             # remove dimensions info (produced by !)
 
             function_name = vc[0].lower()
-            arguments = [e.strip() for e in vc[4].split(",")]
+            arguments = []
+            while len(','.join(arguments)) < len(vc[4]):
+                arguments.append(self.args.pop())
+                arguments = [arguments[-1]] + arguments[:-1]
 
             # add dimensions as last argument
             if self.apply_dim and function_name in vectorial_funcs:
