@@ -407,7 +407,7 @@ class TestIntegrationExamples(unittest.TestCase):
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_numeric_range(self):
-        from test_utils import runner, assert_frames_close
+        from .test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscript_numeric_range/test_subscript_numeric_range.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
