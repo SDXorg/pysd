@@ -256,7 +256,7 @@ def get_equation_components(equation_str, root_path=None):
     component_structure_grammar = _include_common_grammar(r"""
     entry = component / data_definition / test_definition / subscript_definition / lookup_definition
     component = name _ subscriptlist? _ "=" "="? _ expression
-    subscript_definition = name _ ":" _ (imported_subscript / literal_subscript / subscript_sequence)
+    subscript_definition = name _ ":" _ (imported_subscript / literal_subscript / numeric_range)
     data_definition = name _ subscriptlist? _ keyword? _ ":=" _ expression
     lookup_definition = name _ subscriptlist? &"(" _ expression  # uses lookahead assertion to capture whole group
     test_definition = name _ subscriptlist? _ &keyword _ expression
@@ -264,7 +264,9 @@ def get_equation_components(equation_str, root_path=None):
     name = basic_id / escape_group
     literal_subscript = subscript _ ("," _ subscript _)*
     imported_subscript = func _ "(" _ (string _ ","? _)* ")"
-    subscript_sequence = "(" _ sequence_id _ "-" _ sequence_id _ ")"
+    numeric_range = _ (range / value) _ ("," _ (range / value) _)*
+    value = _ sequence_id _ 
+    range = "(" _ sequence_id _ "-" _ sequence_id _ ")"
     subscriptlist = '[' _ subscript _ ("," _ subscript _)* _ ']'
     expression = ~r".*"  # expression could be anything, at this point.
     keyword = ":" _ basic_id _ ":"
@@ -317,13 +319,16 @@ def get_equation_components(equation_str, root_path=None):
             args_str = vc[4]  # todo: make this less fragile?
             self.subscripts += get_external_data(f_str, args_str, root_path)
 
-        def visit_subscript_sequence(self, n, vc):
-            subscript_start = vc[2].strip()
-            subscript_end = vc[6].strip()
-            substring, start, end = get_subscript_sequence(subscript_start, subscript_end)
+        def visit_range(self, n, vc):
+            subs_start = vc[2].strip()
+            subs_end = vc[6].strip()
+            self.sequence, start, end = get_subscript_number_range(subs_start, subs_end)
             for i in range(start, end+1):
-                s = substring + str(i)
+                s = self.sequence + str(i)
                 self.subscripts.append(s.strip())
+
+        def visit_value(self, n, vc):
+            self.subscripts.append(vc[1])
 
         def visit_name(self, n, vc):
             (name,) = vc
@@ -362,18 +367,18 @@ def get_external_data(func_str, args_str, root_path):
 
     return f(*args, root=root_path).subscript
 
-def get_subscript_sequence(subs_start, subs_end):
+def get_subscript_number_range(subs_start, subs_end):
     """
-    With the first and the last subscript of a subscript sequence, 
-    gets the common string of both and the starting and ending
-    number of the subscript sequence
+    With the first and the last subscript values of a subscript
+    numeric range, gets the common string of both and the 
+    starting and ending number of the numeric range
 
     Parameters
     ----------
     subs_start: str
-        Represents the first subscript value in the subscript sequence
+        Represents the first subscript value in the numeric range
     subs_end: str
-        Represents the last subscript value in the subscript sequence
+        Represents the last subscript value in the numeric range
     
     Returns
     -------
@@ -386,9 +391,9 @@ def get_subscript_sequence(subs_start, subs_end):
     
     Examples
     --------
-    >>> get_subscript_sequence('Layer1', 'Layer5')
+    >>> get_subscript_number_range('Layer1', 'Layer5')
     ('Layer', 1, 5)
-    >>> get_subscript_sequence('sub15', 'sub30')
+    >>> get_subscript_number_range('sub15', 'sub30')
     ('sub', 15, 30)
     """
     subs_start_l = list(subs_start)
@@ -400,10 +405,10 @@ def get_subscript_sequence(subs_start, subs_end):
         else: break
     num_start = subs_start[i:]
     num_end = subs_end[i:]
-    if(not(num_start.isdigit()) or not(num_end.isdigit()) ): raise ValueError("Format of subscript sequence is not correct\n")
+    if(not(num_start.isdigit()) or not(num_end.isdigit()) ): raise ValueError("Format of subscript numeric range is not correct\n")
     num_start = int(num_start)
     num_end = int(num_end)
-    if(num_start>num_end): raise ValueError("The number of the first subscript must be lower than the second subscript number in a subscript sequence\n")
+    if(num_start>num_end): raise ValueError("The number of the first subscript value must be lower than the second subscript value in a subscript numeric range\n")
 
     return common, num_start, num_end
 
