@@ -40,6 +40,12 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/constant_expressions/test_constant_expressions.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    @unittest.skip('working on it #147')
+    def test_delay_fixed(self):
+        # issue https://github.com/JamesPHoughton/pysd/issues/147
+        output, canon = runner('test-models/tests/delay_fixed/test_delay_fixed.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
     @unittest.skip('to be fixed #225')
     def test_delay_numeric_error(self):
         # issue https://github.com/JamesPHoughton/pysd/issues/225
@@ -257,6 +263,10 @@ class TestIntegrationExamples(unittest.TestCase):
 
     def test_model_doc(self):
         output, canon = runner('test-models/tests/model_doc/model_doc.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
+    def test_nested_functions(self):
+        output, canon = runner('test-models/tests/nested_functions/test_nested_functions.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_number_handling(self):
