@@ -271,9 +271,7 @@ def get_equation_components(equation_str, root_path=None):
     expression = ~r".*"  # expression could be anything, at this point.
     keyword = ":" _ basic_id _ ":"
 
-    sequence_id = id_common+ numbers+
-    id_common = ~r"[A-Z]"i
-    numbers = ~r"[0-9]"
+    sequence_id = _ basic_id _
     subscript = basic_id / escape_group
     func = basic_id
     string = "\'" ( "\\\'" / ~r"[^\']"IU )* "\'"
@@ -322,13 +320,13 @@ def get_equation_components(equation_str, root_path=None):
         def visit_range(self, n, vc):
             subs_start = vc[2].strip()
             subs_end = vc[6].strip()
-            self.sequence, start, end = get_subscript_number_range(subs_start, subs_end)
+            self.sequence, start, end = get_subscript_numeric_range(subs_start, subs_end)
             for i in range(start, end+1):
                 s = self.sequence + str(i)
                 self.subscripts.append(s.strip())
 
         def visit_value(self, n, vc):
-            self.subscripts.append(vc[1])
+            self.subscripts.append(vc[1].strip())
 
         def visit_name(self, n, vc):
             (name,) = vc
@@ -367,10 +365,10 @@ def get_external_data(func_str, args_str, root_path):
 
     return f(*args, root=root_path).subscript
 
-def get_subscript_number_range(subs_start, subs_end):
+def get_subscript_numeric_range(subs_start, subs_end):
     """
     With the first and the last subscript values of a subscript
-    numeric range, gets the common string of both and the 
+    numeric range, gets the common prefix of both and the 
     starting and ending number of the numeric range
 
     Parameters
@@ -382,8 +380,8 @@ def get_subscript_number_range(subs_start, subs_end):
     
     Returns
     -------
-    common: str
-        Common string of both subscripts
+    prefix: str
+        Common prefix of both subscripts
     num_start: int
         Sequence start number 
     num_end: int
@@ -396,21 +394,21 @@ def get_subscript_number_range(subs_start, subs_end):
     >>> get_subscript_number_range('sub15', 'sub30')
     ('sub', 15, 30)
     """
-    subs_start_l = list(subs_start)
-    subs_end_l = list(subs_end)
-    common = ""
-    for i in range(len(subs_start)):
-        if(subs_start_l[i] == subs_end_l[i] and not(subs_start_l[i].isdigit())):
-            common = common + subs_start_l[i]
-        else: break
-    num_start = subs_start[i:]
-    num_end = subs_end[i:]
-    if(not(num_start.isdigit()) or not(num_end.isdigit()) ): raise ValueError("Format of subscript numeric range is not correct\n")
-    num_start = int(num_start)
-    num_end = int(num_end)
-    if(num_start>num_end): raise ValueError("The number of the first subscript value must be lower than the second subscript value in a subscript numeric range\n")
+    if(subs_start == subs_end): raise ValueError('Only different subscripts are valid in a numeric range')
 
-    return common, num_start, num_end
+    subs_start = re.findall('\d+|\D+', subs_start)
+    subs_end = re.findall('\d+|\D+', subs_end)
+    prefix_start = ''.join(subs_start[:-1])
+    prefix_end = ''.join(subs_start[:-1])
+    num_start = int(subs_start[-1])
+    num_end = int(subs_end[-1])
+
+    if(not(prefix_start) or not(prefix_end)): raise ValueError('A numeric range must contain at least one letter')
+    if(num_start>num_end): raise ValueError('The number of the first subscript value must be lower than the second subscript value in a subscript numeric range\n')
+    if(prefix_start != prefix_end or subs_start[0].isdigit() or subs_end[0].isdigit()): raise ValueError('Only matching names ending in numbers are valid')
+
+    return prefix_start, num_start, num_end
+
 
 def parse_units(units_str):
     """
