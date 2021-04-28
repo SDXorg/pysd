@@ -320,9 +320,9 @@ def get_equation_components(equation_str, root_path=None):
         def visit_range(self, n, vc):
             subs_start = vc[2].strip()
             subs_end = vc[6].strip()
-            self.sequence, start, end = get_subscript_numeric_range(subs_start, subs_end)
+            prefix, start, end = get_subscript_numeric_range(subs_start, subs_end)
             for i in range(start, end+1):
-                s = self.sequence + str(i)
+                s = prefix + str(i)
                 self.subscripts.append(s.strip())
 
         def visit_value(self, n, vc):
