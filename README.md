@@ -52,7 +52,9 @@ You can use PySD in [R](https://www.r-project.org/) via the [PySD2R](https://git
 ### Contributors
 
 Many people have contributed to developing this project - by
-[submitting code](https://github.com/JamesPHoughton/pysd/graphs/contributors), bug reports, and advice.
+[submitting code](https://github.com/JamesPHoughton/pysd/graphs/contributors), bug reports, and advice. 
 
 Special thanks to the [sdCloud.io](http://sdcloud.io) development team, who have
 made great contributions to XMILE support, and for integrating PySD into their cloud-based model simulation environment.
+
+Extra special thanks to [@enekomartinmartinez](https://github.com/enekomartinmartinez) for dramatically pushing forward subscript capabilities (and many other attributes).
