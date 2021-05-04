@@ -8,7 +8,6 @@ from numbers import Number
 import xarray as xr
 
 
-
 def runner(string, ns=None):
     code = compile(string, '<string>', 'exec')
     if not ns:
@@ -59,6 +58,23 @@ class TestBuildElement(TestCase):
         a = ns['my_first_variable']()
         self.assertIsInstance(a, Number)
         self.assertEqual(a, 3)
+
+
+class TestBuildFunctionCall(TestCase):
+    def test_build_function_not_implemented(self):
+        from warnings import catch_warnings
+        from pysd.py_backend.builder import build_function_call
+        args = ['a', 'b']
+        nif = {"name": "not_implemented_function",
+               "module": "functions",
+               "original_name": "NIF"}
+        with catch_warnings(record=True) as ws:
+            self.assertEqual(build_function_call(nif, args),
+                             "not_implemented_function('NIF',a,b)")
+            self.assertEqual(len(ws), 1)
+            self.assertTrue("Trying to translate NIF which it is "
+                            + "not implemented on PySD."
+                            in str(ws[0].message))
 
 
 class TestBuild(TestCase):

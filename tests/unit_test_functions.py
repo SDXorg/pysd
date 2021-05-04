@@ -1,6 +1,7 @@
 import unittest
 
 import numpy as np
+import xarray as xr
 
 
 class TestInputFunctions(unittest.TestCase):
@@ -151,7 +152,6 @@ class TestLogicFunctions(unittest.TestCase):
         # subscripted_if_then_else test all the possibilities
 
         import pysd
-        import xarray as xr
 
         coords = {'dim1': [0, 1], 'dim2': [0, 1]}
         dims = list(coords)
@@ -364,7 +364,6 @@ class TestStateful(unittest.TestCase):
         Test for subscripted delay
         """
         import pysd
-        import xarray as xr
 
         coords = {'d1': [9, 1], 'd2': [2, 4]}
         dims = ['d1', 'd2']
@@ -429,7 +428,6 @@ class TestStateful(unittest.TestCase):
         Test for sum function
         """
         import pysd
-        import xarray as xr
 
         coords = {'d1': [9, 1], 'd2': [2, 4]}
         coords_d1, coords_d2 = {'d1': [9, 1]}, {'d2': [2, 4]}
@@ -449,7 +447,6 @@ class TestStateful(unittest.TestCase):
         Test for sum function
         """
         import pysd
-        import xarray as xr
 
         coords = {'d1': [9, 1], 'd2': [2, 4]}
         coords_d1, coords_d2 = {'d1': [9, 1]}, {'d2': [2, 4]}
@@ -469,7 +466,6 @@ class TestStateful(unittest.TestCase):
         Test for vmin function
         """
         import pysd
-        import xarray as xr
 
         coords = {'d1': [9, 1], 'd2': [2, 4]}
         coords_d1, coords_d2 = {'d1': [9, 1]}, {'d2': [2, 4]}
@@ -489,7 +485,6 @@ class TestStateful(unittest.TestCase):
         Test for vmax function
         """
         import pysd
-        import xarray as xr
 
         coords = {'d1': [9, 1], 'd2': [2, 4]}
         coords_d1, coords_d2 = {'d1': [9, 1]}, {'d2': [2, 4]}
@@ -512,3 +507,9 @@ class TestStateful(unittest.TestCase):
             pysd.functions.incomplete()
             self.assertEqual(len(w), 1)
             self.assertTrue('Call to undefined function' in str(w[-1].message))
+
+    def test_not_implemented_function(self):
+        import pysd
+
+        with self.assertRaises(NotImplementedError):
+            pysd.functions.not_implemented_function("NIF")

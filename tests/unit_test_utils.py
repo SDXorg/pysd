@@ -9,6 +9,56 @@ from . import test_utils
 
 class TestUtils(TestCase):
 
+    def test_xrsplit(self):
+        import pysd
+
+        array1d = xr.DataArray([0.5, 0., 1.],
+                               {'ABC': ['A', 'B', 'C']},
+                               ['ABC'])
+        array2d = xr.DataArray([[0.5, -1.5],
+                                [-1., -0.5],
+                                [-0.75, 0.]],
+                                {'ABC': ['A', 'B', 'C'],
+                                 'XY': ['X', 'Y']},
+                                ['ABC', 'XY'])
+        array3d = xr.DataArray([[[0.5, 4.] , [-1.5, 3.]],
+                                [[-1., 2.], [-0.5, 5.5]],
+                                [[-0.75, 0.75], [0., -1.]]],
+                                {'ABC': ['A', 'B', 'C'],
+                                 'XY': ['X', 'Y'],
+                                 'FG': ['F', 'G']},
+                                ['ABC', 'XY', 'FG'])
+        s1d = pysd.utils.xrsplit(array1d)
+        s2d = pysd.utils.xrsplit(array2d)
+        s3d = pysd.utils.xrsplit(array3d)
+
+        # check length
+        self.assertEqual(len(s1d), 3)
+        self.assertEqual(len(s2d), 6)
+        self.assertEqual(len(s3d), 12)
+
+        # check all values for 1d
+        self.assertIn(xr.DataArray(0.5, {'ABC': ['A']}, ['ABC']), s1d)
+        self.assertIn(xr.DataArray(0., {'ABC': ['B']}, ['ABC']), s1d)
+        self.assertIn(xr.DataArray(1., {'ABC': ['C']}, ['ABC']), s1d)
+        # check some values for 2d and 3d
+        self.assertIn(xr.DataArray(0.5,
+                                   {'ABC': ['A'],'XY': ['X']},
+                                   ['ABC', 'XY']),
+                      s2d)
+        self.assertIn(xr.DataArray(-0.5,
+                                   {'ABC': ['B'],'XY': ['Y']},
+                                   ['ABC', 'XY']),
+                      s2d)
+        self.assertIn(xr.DataArray(-0.5,
+                                   {'ABC': ['B'],'XY': ['Y'], 'FG': ['F']},
+                                   ['ABC', 'XY', 'FG']),
+                      s3d)
+        self.assertIn(xr.DataArray(0.75,
+                                   {'ABC': ['C'],'XY': ['X'], 'FG': ['G']},
+                                   ['ABC', 'XY', 'FG']),
+                      s3d)
+
     def test_get_return_elements_subscirpts(self):
         import pysd
 
@@ -180,14 +230,72 @@ class TestUtils(TestCase):
         import pysd
         doctest.DocTestSuite(pysd.utils)
 
+    def test_make_merge_list(self):
+        from warnings import catch_warnings
+        from pysd.py_backend.utils import make_merge_list
+
+        subscript_dict = {
+            "layers": ["l1", "l2", "l3"],
+            "layers1": ["l1", "l2", "l3"],
+            "up": ["l2", "l3"],
+            "down": ["l1", "l2"],
+            "dim": ["A", "B", "C"],
+            "dim1": ["A", "B", "C"]
+        }
+        
+        self.assertEqual(
+            make_merge_list([["l1"],["up"]],
+                            subscript_dict),
+            ["layers"])
+
+        self.assertEqual(
+            make_merge_list([["l3", "dim1"],["down", "dim1"]],
+                            subscript_dict),
+            ["layers", "dim1"])
+
+        self.assertEqual(
+            make_merge_list([["l2", "dim1", "dim"],["l1", "dim1", "dim"]],
+                            subscript_dict),
+           ["down", "dim1", "dim"])
+
+        self.assertEqual(
+            make_merge_list([["layers1", "l2"],["layers1", "l3"]],
+                            subscript_dict),
+           ["layers1", "up"])
+
+        # incomplete dimension
+        with catch_warnings(record=True) as ws:
+            self.assertEqual(
+                make_merge_list([["A"],["B"]],
+                                subscript_dict),
+                ["dim"])
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertTrue(len(wu), 1)
+            self.assertIn("Dimension given by subscripts:"
+                          + "\n\t{}\nis incomplete ".format({"A", "B"})
+                          + "using {} instead.".format("dim")
+                          + "\nSubscript_dict:"
+                          + "\n\t{}".format(subscript_dict),
+                          str(wu[0].message))
+
+        # invalid dimension
+        try:
+            make_merge_list([["l1"],["B"]],
+                            subscript_dict)
+            self.assertFail()
+        except ValueError as err:
+            self.assertIn("Impossible to find the dimension that contains:"
+                          + "\n\t{}\nFor subscript_dict:".format({"l1","B"})
+                          + "\n\t{}".format(subscript_dict),
+                          err.args[0])
+
     def test_compute_shape(self):
         """"
         Test for computing the shape of an array giving coordinates dictionary
         and ordered dimensions.
         """
-        import pysd
-
-        compute_shape =  pysd.utils.compute_shape
+        from pysd.py_backend.utils import compute_shape
 
         coords = [
           {},
@@ -215,9 +323,7 @@ class TestUtils(TestCase):
         Test for computing the shape of an array giving coordinates dictionary
         and ordered dimensions with reshape.
         """
-        import pysd
-
-        compute_shape =  pysd.utils.compute_shape
+        from pysd.py_backend.utils import compute_shape
 
         coords = [
           {'ABC': ['A', 'B', 'C'],
@@ -250,9 +356,8 @@ class TestUtils(TestCase):
                         compute_shape(c, i+1)
 
     def test_rearrange(self):
-        import pysd
+        from pysd.py_backend.utils import rearrange
 
-        rearrange = pysd.utils.rearrange
         # simple cases are tested, complex cases are tested with test-models
         _subscript_dict = {
             'd1': ['a', 'b', 'c'],
@@ -307,14 +412,12 @@ class TestUtils(TestCase):
         """"
         Test for add_entries_undescore
         """
-        import pysd
+        from pysd.py_backend.utils import add_entries_underscore
 
         dict1 = {'CD': 10, 'L F': 5}
         dict2 = {'a b': 1, 'C': 2, 'L M H': 4}
 
         dict1b = dict1.copy()
-
-        add_entries_underscore =  pysd.utils.add_entries_underscore
 
         add_entries_underscore(dict1b)
 
@@ -334,9 +437,7 @@ class TestUtils(TestCase):
         """
         Test make_add_identifier for the .add methods py_name
         """
-        import pysd
-
-        make_add_identifier =  pysd.utils.make_add_identifier
+        from pysd.py_backend.utils import make_add_identifier
 
         build_names = set()
 
@@ -353,3 +454,19 @@ class TestUtils(TestCase):
         self.assertEqual(make_add_identifier(name, build_names), "valuesADD_4")
         self.assertEqual(make_add_identifier(name2, build_names), "bb_aADD_2")
 
+
+    def test_progressbar(self):
+        import pysd
+
+        pbar = pysd.py_backend.utils.ProgressBar(10)
+
+        for i in range(10):
+            self.assertEqual(pbar.counter, i)
+            pbar.update()
+
+        pbar.finish()
+
+        pbar = pysd.py_backend.utils.ProgressBar()
+        self.assertFalse(hasattr(pbar, 'counter'))
+        pbar.update()
+        pbar.finish()
