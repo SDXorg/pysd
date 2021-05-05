@@ -399,7 +399,7 @@ def get_subscript_numeric_range(subs_start, subs_end):
     subs_start = re.findall('\d+|\D+', subs_start)
     subs_end = re.findall('\d+|\D+', subs_end)
     prefix_start = ''.join(subs_start[:-1])
-    prefix_end = ''.join(subs_start[:-1])
+    prefix_end = ''.join(subs_end[:-1])
     num_start = int(subs_start[-1])
     num_end = int(subs_end[-1])
 
