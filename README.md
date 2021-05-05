@@ -1,8 +1,10 @@
 PySD
 ====
-[![Coverage Status](https://coveralls.io/repos/github/JamesPHoughton/pysd/badge.svg?branch=master)](https://coveralls.io/github/JamesPHoughton/pysd?branch=master)
-[![Code Health](https://landscape.io/github/JamesPHoughton/pysd/master/landscape.svg?style=flat)](https://landscape.io/github/JamesPHoughton/pysd/master)
 [![Build Status](https://travis-ci.com/JamesPHoughton/pysd.svg?branch=master)](https://travis-ci.com/JamesPHoughton/pysd)
+[![Coverage Status](https://coveralls.io/repos/github/JamesPHoughton/pysd/badge.svg?branch=master)](https://coveralls.io/github/JamesPHoughton/pysd?branch=master)
+[![PyPI version](https://badge.fury.io/py/pysd.svg)](https://badge.fury.io/py/pysd)
+[![Docs](https://readthedocs.org/projects/pysd/badge/?version=latest)](https://pysd.readthedocs.io/en/latest/?badge=latest)
+
 
 Simulating System Dynamics Models in Python
 
