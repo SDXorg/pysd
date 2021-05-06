@@ -276,7 +276,7 @@ def get_equation_components(equation_str, root_path=None):
     name = basic_id / escape_group
 
     literal_subscript = subscript _ ("," _ subscript _)*
-    imported_subscript = func _ "(" _ (string _ ","? _)* ")"
+    imported_subscript = imp_subs_func _ "(" _ (string _ ","? _)* ")"
     numeric_range = _ (range / value) _ ("," _ (range / value) _)*
     value = _ sequence_id _ 
     range = "(" _ sequence_id _ "-" _ sequence_id _ ")"
@@ -594,10 +594,7 @@ functions = {
                       "original_name": "INVERT MATRIX"},
     "get time value": {"name": "not_implemented_function",
                       "module": "functions",
-                      "original_name": "GET TIME VALUE"},
-    "sample if true": {"name": "not_implemented_function",
-                      "module": "functions",
-                      "original_name": "SAMPLE IF TRUE"}
+                      "original_name": "GET TIME VALUE"}
 }
 
 # list of fuctions that accept a dimension to apply over
