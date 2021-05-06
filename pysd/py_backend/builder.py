@@ -9,10 +9,8 @@ There should be nothing here that has to know about either vensim or
 xmile specific syntax.
 """
 
-import sys
 import os.path
 import textwrap
-import pathlib
 import warnings
 from io import open
 import black
@@ -42,18 +40,19 @@ def build(elements, subscript_dict, namespace, outfile_name):
     Parameters
     ----------
     elements: list
-        Each element is a dictionary, with the various components needed to assemble
-        a model component in python syntax. This will contain multiple entries for
-        elements that have multiple definitions in the original file, and which need
-        to be combined.
+        Each element is a dictionary, with the various components needed to
+        assemble a model component in python syntax. This will contain
+        multiple entries for elements that have multiple definitions in the
+        original file, and which need to be combined.
 
     subscript_dict: dictionary
-        A dictionary containing the names of subscript families (dimensions) as keys, and
-        a list of the possible positions within that dimension for each value
+        A dictionary containing the names of subscript families (dimensions)
+        as keys, and a list of the possible positions within that dimension
+        for each value.
 
     namespace: dictionary
         Translation from original model element names (keys) to python safe
-        function identifiers (values)
+        function identifiers (values).
 
     outfile_name: string
         The name of the file to write the model to.
@@ -119,9 +118,8 @@ def build(elements, subscript_dict, namespace, outfile_name):
 
     ''' % {'subscript_dict': repr(subscript_dict),
            'namespace': repr(namespace),
-           'outfile': os.path.basename(outfile_name),
            'version': __version__}
-    
+
     text = text.replace('\t', '    ')
     text = textwrap.dedent(text)
 
@@ -159,8 +157,9 @@ def build_element(element, subscript_dict):
         - py_expr: string
             An expression that has been converted already into python syntax
         - subs: list of lists
-            Each sublist contains coordinates for initialization of a particular
-            part of a subscripted function, the list of subscripts vensim attaches to an equation
+            Each sublist contains coordinates for initialization of a
+            particular part of a subscripted function, the list of
+            subscripts vensim attaches to an equation
 
     subscript_dict: dictionary
 
@@ -187,23 +186,30 @@ def build_element(element, subscript_dict):
     # external objecets via .add method
     py_expr_no_ADD = ["ADD" not in py_expr for py_expr in element['py_expr']]
 
-    if sum(py_expr_no_ADD) > 1:
+    if element['subs'][0]:
+        new_subs = utils.make_merge_list(element['subs'], subscript_dict)
+    else:
+        new_subs = None
+
+    if sum(py_expr_no_ADD) > 1\
+      and element['kind'] not in ['stateful', 'external', 'external_add']:
         py_expr_i = []
         # need to append true to the end as the next element is checked
         py_expr_no_ADD.append(True)
-        for i, (py_expr, subs) in\
-          enumerate(zip(element['py_expr'], element['subs'])):
-            if py_expr_no_ADD[i] and py_expr_no_ADD[i+1]:
-                # rearrange if the element doesn't come from external
-                coords = utils.make_coord_dict(subs, subscript_dict,
+        for i, (py_expr, subs_i) in enumerate(zip(element['py_expr'],
+                                                element['subs'])):
+            if not (py_expr[:3] == 'xr.' or py_expr[:5] == '_ext_'):
+                # rearrange if it doesn't come from external or xarray
+                coords = utils.make_coord_dict(subs_i, subscript_dict,
                                                terse=False)
+                coords = {new_dim: coords[dim] for new_dim, dim
+                          in zip(new_subs, coords)}
                 dims = list(coords)
                 import_modules['utils'].add("rearrange")
                 py_expr_i.append('rearrange(%s, %s, %s)' % (
                     py_expr, dims, coords))
-            elif py_expr_no_ADD[i] and not py_expr_no_ADD[i+1]:
-                # if next element has ADD the current element comes from a
-                # external class, no need to rearrange
+            elif py_expr_no_ADD[i]:
+                # element comes from external or xarray
                 py_expr_i.append(py_expr)
         import_modules['utils'].add("xrmerge")
         py_expr = 'xrmerge([%s,])' % (
@@ -216,23 +222,19 @@ def build_element(element, subscript_dict):
     element['subs_dec'] = ''
     element['subs_doc'] = 'None'
 
-    if 'subs' in element\
-       and element['subs'][0] not in ['', [], None]:
-        # for up-dimensioning and reordering
-        dims = [utils.find_subscript_name(subscript_dict, sub)
-                for sub in element['subs'][0]]
+    if new_subs:
         # We add the list of the subs to the __doc__ of the function
         # this will give more information to the user and make possible
         # to rewrite subscripted values with model.run(params=X) or
         # model.run(initial_condition=(n,x))
-        element['subs_doc'] = '%s' % dims
-        if element['kind'] in ['component', 'setup']:
+        element['subs_doc'] = '%s' % new_subs
+        if element['kind'] in ['component', 'setup', 'constant']:
             # the decorator is not always necessary as the objects
             # defined as xarrays in the model will have the right
             # dimensions always, we should try to reduce to the
             # maximum when we use it
             # re arrange the python object
-            element['subs_dec'] = '@subs(%s, _subscript_dict)' % dims
+            element['subs_dec'] = '@subs(%s, _subscript_dict)' % new_subs
             import_modules['subs'] = True
 
     indent = 8
@@ -508,7 +510,7 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
         new_structure.append({
             'py_name': '_init_%s' % identifier,
             'real_name': 'Implicit',
-            'kind': 'setup', # not specified in the model file, but must exist
+            'kind': 'setup',  # not specified in the model file, but must exist
             'py_expr': initial_value,
             'subs': subs,
             'doc': 'Provides initial conditions for %s function' % identifier,
@@ -976,7 +978,7 @@ def add_macro(macro_name, filename, arg_names, arg_vals):
             [utils.make_python_identifier(f)[0] for f in arg_vals]),
         'real_name': 'Macro Instantiation of ' + macro_name,
         'doc': 'Instantiates the Macro',
-        'py_expr': "Macro('%s', %s, '%s',"\
+        'py_expr': "Macro('%s', %s, '%s',"
                    "time_initialization=lambda: __data['time'])" % (
                    filename, func_args, macro_name),
         'unit': 'None',
@@ -1034,6 +1036,14 @@ def build_function_call(function_def, user_arguments):
     """
     if isinstance(function_def, str):
         return function_def + "(" + ",".join(user_arguments) + ")"
+
+    if function_def["name"] == "not_implemented_function":
+        user_arguments = ["'" + function_def["original_name"] + "'"]\
+                         + user_arguments
+        warnings.warn(
+            "\n\nTrying to translate " + function_def["original_name"]
+            + " which it is not implemented on PySD. The translated "
+            + "model will crash... ")
 
     if "module" in function_def:
         if function_def["module"] in ["numpy", "xarray"]:

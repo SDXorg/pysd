@@ -1,8 +1,9 @@
 PySD
 ====
+[![Build Status](https://travis-ci.com/JamesPHoughton/pysd.svg?branch=master)](https://travis-ci.com/JamesPHoughton/pysd)
 [![Coverage Status](https://coveralls.io/repos/github/JamesPHoughton/pysd/badge.svg?branch=master)](https://coveralls.io/github/JamesPHoughton/pysd?branch=master)
-[![Code Health](https://landscape.io/github/JamesPHoughton/pysd/master/landscape.svg?style=flat)](https://landscape.io/github/JamesPHoughton/pysd/master)
-[![Build Status](https://travis-ci.org/JamesPHoughton/pysd.svg?branch=master)](https://travis-ci.org/JamesPHoughton/pysd)
+[![PyPI version](https://badge.fury.io/py/pysd.svg)](https://badge.fury.io/py/pysd)
+[![Docs](https://readthedocs.org/projects/pysd/badge/?version=latest)](https://pysd.readthedocs.io/en/latest/?badge=latest)
 
 
 Simulating System Dynamics Models in Python
@@ -53,7 +54,9 @@ You can use PySD in [R](https://www.r-project.org/) via the [PySD2R](https://git
 ### Contributors
 
 Many people have contributed to developing this project - by
-[submitting code](https://github.com/JamesPHoughton/pysd/graphs/contributors), bug reports, and advice.
+[submitting code](https://github.com/JamesPHoughton/pysd/graphs/contributors), bug reports, and advice. 
 
 Special thanks to the [sdCloud.io](http://sdcloud.io) development team, who have
 made great contributions to XMILE support, and for integrating PySD into their cloud-based model simulation environment.
+
+Extra special thanks to [@enekomartinmartinez](https://github.com/enekomartinmartinez) for dramatically pushing forward subscript capabilities (and many other attributes).

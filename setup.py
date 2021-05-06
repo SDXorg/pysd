@@ -31,7 +31,7 @@ setup(
         'black',
         'xarray',
         'lxml',
-        'xlwt',        
+        'xlwt==1.2.0',        
         'funcsigs',
         'pydoe',
         'xlrd',

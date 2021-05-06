@@ -149,6 +149,21 @@ class TestEquationStringParsing(unittest.TestCase):
              'real_name': 'table2', 'keyword': None}
         )
 
+    def test_get_lookup(self):
+        from pysd.py_backend.vensim.vensim2py import parse_lookup_expression
+
+        res = parse_lookup_expression({
+	'expr': r"(GET DIRECT LOOKUPS('path2excel.xlsx', "
+                + r"'SheetName', 'index'\ , 'values'))",
+                'py_name': 'get_lookup',
+                'subs': []}, {})[1][0]
+
+        self.assertEqual(
+            res['py_expr'],
+            "ExtLookup('path2excel.xlsx', 'SheetName', 'index', 'values', "
+            + "{},\n          _root, '_ext_lookup_get_lookup')"
+        )
+
     def test_pathological_names(self):
         from pysd.py_backend.vensim.vensim2py import get_equation_components
         self.assertEqual(
@@ -161,6 +176,19 @@ class TestEquationStringParsing(unittest.TestCase):
             {'expr': '25', 'kind': 'component', 'subs': [],
              'real_name': r'"pathological\\-string"', 'keyword': None}
         )
+
+    def test_get_equation_components_error(self):
+        from pysd.py_backend.vensim.vensim2py import get_equation_components
+
+        defi = "NIF: NF<x-x>NF"
+        try:
+            get_equation_components(defi)
+            self.assertFail()
+        except ValueError as err:
+            self.assertIn("\nError when parsing definition:\n\t %s\n\n"
+                          "probably used definition is not integrated..."
+                          "\nSee parsimonious output above." % defi,
+                          err.args[0])
 
 
 class TestParse_general_expression(unittest.TestCase):
@@ -180,8 +208,6 @@ class TestParse_general_expression(unittest.TestCase):
 
         res = parse_general_expression({'expr': 'aBS(-3)'})
         self.assertEqual(res[0]['py_expr'], 'abs(-3)')
-
-
 
     def test_function_calls(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
@@ -249,7 +275,6 @@ class TestParse_general_expression(unittest.TestCase):
         # check the reference to that variable
         self.assertEqual(res[0]['py_expr'], res[1][0]['py_name'] + '()')
 
-
     def test_smooth_construction_function_no_subscripts(self):
         """ Tests translation of 'smooth'
 
@@ -276,37 +301,52 @@ class TestParse_general_expression(unittest.TestCase):
 
     def test_subscript_float_initialization(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        _subscript_dict = {'Dim1': ['A', 'B', 'C'],
+                           'Dim2': ['D', 'E']}
         element = parse_general_expression({'expr': '3.32',
                                             'subs': ['Dim1']},
                                            {},
-                                           {'Dim1': ['A', 'B', 'C'],
-                                            'Dim2': ['D', 'E']})
+                                           _subscript_dict)
         string = element[0]['py_expr']
-        a = eval(string)
+        # TODO we should use a = eval(string)
+        # hoewever eval is not detecting _subscript_dict variable
+        self.assertEqual(string, 'xr.DataArray(3.32,{dim: '
+                                 + '_subscript_dict[dim] for dim in '
+                                 + "['Dim1']},['Dim1'])")
+        a = xr.DataArray(3.32, {dim: _subscript_dict[dim] 
+                               for dim in ['Dim1']},['Dim1'])
         self.assertDictEqual({key: list(val.values) for key, val in a.coords.items()},
-                             {'Dim1': ['A', 'B', 'C']})
+                              {'Dim1': ['A', 'B', 'C']})
         self.assertEqual(a.loc[{'Dim1': 'B'}], 3.32)
 
     def test_subscript_1d_constant(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        _subscript_dict = {'Dim1': ['A', 'B', 'C'],
+                           'Dim2': ['D', 'E']}
         element = parse_general_expression({'expr': '1, 2, 3',
                                             'subs': ['Dim1']},
                                            {},
-                                           {'Dim1': ['A', 'B', 'C'],
-                                            'Dim2': ['D', 'E']})
+                                           _subscript_dict)
         string = element[0]['py_expr']
-        a = eval(string)
+        # TODO we should use a = eval(string)
+        # hoewever eval is not detecting _subscript_dict variable
+        self.assertTrue(string, 'xr.DataArray([1.,2.,3.],'
+                                + '{dim: _subscript_dict[dim]'
+                                + " for dim in ['Dim1']}, ['Dim1'])")
+        a = xr.DataArray([1.,2.,3.],
+            {dim: _subscript_dict[dim] for dim in ['Dim1']}, ['Dim1'])
         self.assertDictEqual({key: list(val.values) for key, val in a.coords.items()},
                              {'Dim1': ['A', 'B', 'C']})
         self.assertEqual(a.loc[{'Dim1': 'A'}], 1)
 
     def test_subscript_2d_constant(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        _subscript_dict = {'Dim1': ['A', 'B', 'C'],
+                           'Dim2': ['D', 'E']}
         element = parse_general_expression({'expr': '1, 2; 3, 4; 5, 6;',
                                             'subs': ['Dim1', 'Dim2']},
                                            {},
-                                           {'Dim1': ['A', 'B', 'C'],
-                                            'Dim2': ['D', 'E']})
+                                           _subscript_dict)
         string = element[0]['py_expr']
         a = eval(string)
         self.assertDictEqual({key: list(val.values) for key, val in a.coords.items()},
@@ -316,11 +356,12 @@ class TestParse_general_expression(unittest.TestCase):
 
     def test_subscript_3d_depth(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        _subscript_dict = {'Dim1': ['A', 'B', 'C'],
+                           'Dim2': ['D', 'E']}
         element = parse_general_expression({'expr': '1, 2; 3, 4; 5, 6;',
                                             'subs': ['Dim1', 'Dim2']},
                                            {},
-                                           {'Dim1': ['A', 'B', 'C'],
-                                            'Dim2': ['D', 'E']})
+                                           _subscript_dict)
         string = element[0]['py_expr']
         a = eval(string)
         self.assertDictEqual({key: list(val.values) for key, val in a.coords.items()},
@@ -346,9 +387,10 @@ class TestParse_general_expression(unittest.TestCase):
                                      None,
                                      {'var_b': ['Dim1', 'Dim2']})
 
-        self.assertEqual(res[0]['py_expr'],
-            "var_b().loc[{'Dim2': ['C']}].squeeze()"
-            + ".reset_coords(['Dim2'], drop=True)")
+        self.assertEqual(
+            res[0]['py_expr'],
+            "rearrange(var_b().loc[:, 'C'].reset_coords(drop=True),"
+            "['Dim1'],_subscript_dict)")
 
         res = parse_general_expression({'expr': 'Var C[Dim1, C, H]'},
                                      {'Var C': 'var_c'},
@@ -358,9 +400,10 @@ class TestParse_general_expression(unittest.TestCase):
                                      None,
                                      {'var_c': ['Dim1', 'Dim2', 'Dim3']})
 
-        self.assertEqual(res[0]['py_expr'],
-            "var_c().loc[{'Dim2': ['C'], 'Dim3': ['H']}].squeeze()"
-            + ".reset_coords(['Dim2', 'Dim3'], drop=True)")
+        self.assertEqual(
+            res[0]['py_expr'],
+            "rearrange(var_c().loc[:, 'C', 'H'].reset_coords(drop=True),"
+            "['Dim1'],_subscript_dict)")
 
     def test_subscript_ranges(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
@@ -392,3 +435,19 @@ class TestParse_general_expression(unittest.TestCase):
         self.assertEqual(res[0]['py_expr'],
                          "incomplete(unspecified_eqn(), var_a(), var_b())"
                          )
+
+    def test_parse_general_expression_error(self):
+        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+
+        element = {'expr': 'NIF(1,3)',
+                   'real_name': 'not implemented function',
+                   'eqn': 'not implemented function=\tNIF(1,3)'}
+        try:
+            parse_general_expression(element)
+            self.assertFail()
+        except ValueError as err:
+            self.assertIn("\nError when parsing %s with equation\n\t %s\n\n"
+                          "probably a used function is not integrated..."
+                          "\nSee parsimonious output above." % (
+                              element['real_name'], element['eqn']),
+                          err.args[0])

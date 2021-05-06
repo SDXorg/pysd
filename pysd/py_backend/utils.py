@@ -4,6 +4,7 @@ model file. Vensim's function equivalents should not go here but in
 functions.py
 """
 
+import warnings
 import keyword
 import regex as re
 
@@ -43,6 +44,27 @@ def xrmerge(das, accept_new=True):
         # Fill NaNs one way or the other re. accept_new
         da = new_da.fillna(da) if accept_new else da.fillna(new_da)
     return da
+
+
+def xrsplit(array):
+        """
+        Split an array to a list of all the components
+
+        Parameters
+        ----------
+        array: xarray.DataArray
+            Array to split.
+
+        Returns
+        -------
+        sp_list: list
+            List of shape 0 xarray.DataArrays with coordinates
+        """
+        sp_list = [sa for sa in array]
+        if sp_list[0].shape:
+            sp_list = [ssa for sa in sp_list
+                       for ssa in xrsplit(sa)]
+        return sp_list
 
 
 def find_subscript_name(subscript_dict, element):
@@ -117,6 +139,72 @@ def make_coord_dict(subs, subscript_dict, terse=True):
         elif not terse:
             coordinates[sub] = subscript_dict[sub]
     return coordinates
+
+
+def make_merge_list(subs_list, subscript_dict):
+    """
+    This is for assisting when building xrmerge. From a list of subscript
+    lists returns the final subscript list after mergin. Necessary when
+    merging variables with subscripts comming from different definitions.
+
+    Parameters
+    ----------
+    subs_list: list of lists of strings
+        coordinates, either as names of dimensions, or positions within
+        a dimension
+    subscript_dict: dict
+        the full dictionary of subscript names and values
+
+    Returns
+    -------
+    dims: list
+        Final subscripts after merging.
+
+    Examples
+    --------
+    >>> make_merge_list([['upper'], ['C']], {'all': ['A', 'B', 'C'], 'upper': ['A', 'B']})
+    ['all']
+
+    """
+    coords_set = [set() for i in range(len(subs_list[0]))]
+    for subs in subs_list:
+        coords = make_coord_dict(subs, subscript_dict, terse=False)
+        [coords_set[i].update(coords[dim]) for i, dim in enumerate(coords)]
+
+    dims = [None]*len(coords_set)
+    for i, (coord1, coord2) in enumerate(zip(coords, coords_set)):
+        if set(coords[coord1]) == coord2:
+            # if the given coordinate already matches return it
+            dims[i] = coord1
+        else:
+            # find a suitable coordinate 
+            for name, elements in subscript_dict.items():
+                if coord2 == set(elements):
+                    dims[i] = name
+                    break
+
+            if not dims[i]:
+                # the dimension is incomplete use the smaller
+                # dimension that completes it
+                for name, elements in subscript_dict.items():
+                    if coord2.issubset(set(elements)):
+                        dims[i] = name
+                        warnings.warn(
+                            "Dimension given by subscripts:"
+                            + "\n\t{}\nis incomplete ".format(coord2)
+                            + "using {} instead.".format(name)
+                            + "\nSubscript_dict:"
+                            + "\n\t{}".format(subscript_dict))
+                        break
+
+            if not dims[i]:
+                # not able to find the correct dimension
+                raise ValueError(
+                    "Impossible to find the dimension that contains:"
+                    + "\n\t{}\nFor subscript_dict:".format(coord2)
+                    + "\n\t{}".format(subscript_dict))
+
+    return dims
 
 
 def make_python_identifier(string, namespace=None, reserved_words=None,
@@ -573,3 +661,48 @@ def add_entries_underscore(*dictionaries):
         for name in keys:
             dictionary[re.sub(' ', '_', name)] = dictionary[name]
     return
+
+
+class ProgressBar():
+    """
+    Progress bar for integration
+    """
+
+    def __init__(self, maxval=None):
+
+        self.maxval = maxval
+        if self.maxval is None:
+            return
+
+        self.counter = 0
+
+        # this way we made the package optional
+        import progressbar
+
+        self.bar = progressbar.ProgressBar(
+            maxval=self.maxval,
+            widgets=[
+            progressbar.ETA(), ' ',
+            progressbar.Bar('#', '[', ']','-'),
+            progressbar.Percentage()
+        ])
+
+        self.bar.start()
+
+    def update(self):
+        """Update progress bar"""
+        try:
+            self.counter += 1
+            self.bar.update(self.counter)
+        except AttributeError:
+            # Error if bar is not imported
+            pass
+
+
+    def finish(self):
+        """Finish progress bar"""
+        try:
+            self.bar.finish()
+        except AttributeError:
+            # Error if bar is not imported
+            pass

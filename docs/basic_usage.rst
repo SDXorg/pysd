@@ -54,6 +54,10 @@ Pandas gives us simple plotting capability, so we can see how the cup of tea beh
    :width: 400 px
    :align: center
 
+To show a progressbar during the model integration the progress flag can be passed to the :py:func:`.run()` command, progressbar package is needed::
+
+   >>> stocks = model.run(progress=True)
+
 Outputting various run information
 ----------------------------------
 The :py:func:`.run()` command has a few options that make it more useful. In many situations we want to access components of the model other than merely the stocks – we can specify which components of the model should be included in the returned dataframe by including them in a list that we pass to the :py:func:`.run()` command, using the return_columns keyword argument::

@@ -3,8 +3,11 @@
 build/
 *.vdf
 *.2mdl
+*.swp
 pysd.egg*
 .vscode/
-
+tests/.coverage
+tests/cover/
+tests/htmlcov/
 .idea/*
 docs/_build/*

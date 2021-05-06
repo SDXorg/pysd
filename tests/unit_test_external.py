@@ -1,11 +1,12 @@
 import os
-import imp
 import unittest
 
+from importlib.machinery import SourceFileLoader
 import numpy as np
+import xarray as xr
 
 _root = os.path.dirname(__file__)
-_exp = imp.load_source('expected_data', 'data/expected_data.py')
+_exp = SourceFileLoader('expected_data', 'data/expected_data.py').load_module()
 
 
 class TestExcels(unittest.TestCase):
@@ -211,7 +212,6 @@ class TestData(unittest.TestCase):
         ExtData test for 1d horizontal series interpolation with len 1
         """
         import pysd
-        import xarray as xr
 
         # test as well no file extension
         file_name = "data/input"
@@ -245,7 +245,6 @@ class TestData(unittest.TestCase):
         ExtData test for 1d horizontal series interpolation with len 1
         """
         import pysd
-        import xarray as xr
 
         file_name = "data/input.xlsx"
         sheet = "Horizontal"
@@ -1086,6 +1085,165 @@ class TestLookup(unittest.TestCase):
                 self.assertTrue(y.equals(data(x)),
                                 "Wrong result at X=" + str(x))
 
+    def test_lookup_vn3d_shape0(self):
+        """
+        ExtLookup test for 3d vertical series by cellrange names
+        passing shape 0 xarray as argument
+        """
+        import pysd
+        import warnings
+
+        file_name = "data/input.xlsx"
+        sheet = "Vertical"
+        x_row_or_col = "time"
+        cell_1 = "data_2d"
+        cell_2 = "data_2db"
+        coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C']}
+        coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C']}
+        py_name = "test_lookup_vn3d_shape0"
+
+        data = pysd.external.ExtLookup(file_name=file_name,
+                                       sheet=sheet,
+                                       x_row_or_col=x_row_or_col,
+                                       root=_root,
+                                       cell=cell_1,
+                                       coords=coords_1,
+                                       py_name=py_name)
+
+        data.add(file_name=file_name,
+                 sheet=sheet,
+                 x_row_or_col=x_row_or_col,
+                 cell=cell_2,
+                 coords=coords_2)
+
+        data.initialize()
+
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for x, y in zip(_exp.xpts, _exp.interp_3d):
+                self.assertTrue(y.equals(data(xr.DataArray(x))),
+                                "Wrong result at X=" + str(x))
+
+    def test_lookup_vn2d_xarray(self):
+        """
+        ExtLookup test for 2d vertical series by cellrange names
+        using xarray for interpolation
+        """
+        import pysd
+        import warnings
+
+        file_name = "data/input.xlsx"
+        sheet = "Vertical"
+        x_row_or_col = "time"
+        cell_1 = "data_2d"
+        coords_1 = {'ABC': ['A', 'B', 'C']}
+        py_name = "test_lookup_vn2d_xarray"
+
+        data = pysd.external.ExtLookup(file_name=file_name,
+                                       sheet=sheet,
+                                       x_row_or_col=x_row_or_col,
+                                       root=_root,
+                                       cell=cell_1,
+                                       coords=coords_1,
+                                       py_name=py_name)
+
+        data.initialize()
+
+        all_smaller = xr.DataArray([-1, -10], {'XY': ['X', 'Y']}, ['XY'])
+        all_bigger = xr.DataArray([9, 20, 30], {'ABC': ['A', 'B', 'C']}, ['ABC'])
+        all_inside = xr.DataArray([3.5, 5.5], {'XY': ['X', 'Y']}, ['XY'])
+        mixed = xr.DataArray([1.5, 20, -30], {'ABC': ['A', 'B', 'C']}, ['ABC'])
+        full = xr.DataArray([[1.5, -30], [-10, 2.5], [4., 5.]], 
+                            {'ABC': ['A', 'B', 'C'], 'XY': ['X', 'Y']}, 
+                            ['ABC', 'XY'])
+
+        all_smaller_out = data.data[0].reset_coords('lookup_dim', drop=True)\
+                          + 0*all_smaller
+        all_bigger_out = data.data[-1].reset_coords('lookup_dim', drop=True)
+        all_inside_out = xr.DataArray([[ 0.5 , -1.],
+                                       [ -1., -0.5],
+                                       [-0.75, 0.]],
+                                       {'ABC': ['A', 'B', 'C'], 'XY': ['X', 'Y']},
+                                       ['ABC', 'XY'])
+        mixed_out = xr.DataArray([ 0.5 , 0.  , 1.],
+                                 {'ABC': ['A', 'B', 'C']},
+                                 ['ABC'])
+        full_out = xr.DataArray([[ 0.5 , 0.],
+                                 [ 0., 0.],
+                                 [-0.5, 0.]],
+                                 {'ABC': ['A', 'B', 'C'], 'XY': ['X', 'Y']},
+                                 ['ABC', 'XY'])
+ 
+        self.assertTrue(data(all_smaller).equals(all_smaller_out))
+        self.assertTrue(data(all_bigger).equals(all_bigger_out))
+        self.assertTrue(data(all_inside).equals(all_inside_out))
+        self.assertTrue(data(mixed).equals(mixed_out))
+        self.assertTrue(data(full).equals(full_out))
+
+
+    def test_lookup_vn3d_xarray(self):
+        """
+        ExtLookup test for 3d vertical series by cellrange names
+        using xarray for interpolation
+        """
+        import pysd
+        import warnings
+
+        file_name = "data/input.xlsx"
+        sheet = "Vertical"
+        x_row_or_col = "time"
+        cell_1 = "data_2d"
+        cell_2 = "data_2db"
+        coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C']}
+        coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C']}
+        py_name = "test_lookup_vn3d_xarray"
+
+        data = pysd.external.ExtLookup(file_name=file_name,
+                                       sheet=sheet,
+                                       x_row_or_col=x_row_or_col,
+                                       root=_root,
+                                       cell=cell_1,
+                                       coords=coords_1,
+                                       py_name=py_name)
+
+        data.add(file_name=file_name,
+                 sheet=sheet,
+                 x_row_or_col=x_row_or_col,
+                 cell=cell_2,
+                 coords=coords_2)
+
+        data.initialize()
+
+        all_smaller = xr.DataArray([-1, -10], {'XY': ['X', 'Y']}, ['XY'])
+        all_bigger = xr.DataArray([9, 20, 30], {'ABC': ['A', 'B', 'C']}, ['ABC'])
+        all_inside = xr.DataArray([3.5, 7.5], {'XY': ['X', 'Y']}, ['XY'])
+        mixed = xr.DataArray([1.5, 20, -30], {'ABC': ['A', 'B', 'C']}, ['ABC'])
+        full = xr.DataArray([[1.5, -30], [-10, 2.5], [4., 5.]], 
+                            {'ABC': ['A', 'B', 'C'], 'XY': ['X', 'Y']}, 
+                            ['ABC', 'XY'])
+
+        all_smaller_out = data.data[0].reset_coords('lookup_dim', drop=True)
+        all_bigger_out = data.data[-1].reset_coords('lookup_dim', drop=True)
+        all_inside_out = xr.DataArray([[ 0.5 , -1.  , -0.75],
+                                       [ 0.5 ,  1.  ,  0.  ]],
+                                       {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']},
+                                       ['XY', 'ABC'])
+        mixed_out = xr.DataArray([[ 0.5 , 0.  , 1.],
+                                  [ -1. ,  1.  ,  -1.  ]],
+                                 {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']},
+                                 ['XY', 'ABC'])
+
+        full_out = xr.DataArray([[ 0.5 , 0.  , -0.5],
+                                [ 1. ,  0.  ,  0.  ]],
+                               {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']},
+                               ['XY', 'ABC'])
+
+        self.assertTrue(data(all_smaller).equals(all_smaller_out))
+        self.assertTrue(data(all_bigger).equals(all_bigger_out))
+        self.assertTrue(data(all_inside).equals(all_inside_out))
+        self.assertTrue(data(mixed).equals(mixed_out))
+        self.assertTrue(data(full).equals(full_out))
+
 
 class TestConstant(unittest.TestCase):
     """
@@ -1683,20 +1841,23 @@ class TestWarningsErrors(unittest.TestCase):
                                      interp=interp,
                                      py_name=py_name)
 
-        with catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as ws:
             data.initialize()
-            wu = [wus for wus in w if issubclass(wus.category, UserWarning)]
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
             self.assertEqual(len(wu), 1)
-            self.assertTrue("missing" in str(wu[-1].message))
+            self.assertTrue("missing" in str(wu[0].message))
 
-        with catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as ws:
             for x, y in zip(_exp.xpts, _exp.interp_1d):
                 self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
-            self.assertEqual(len(w), 2)
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 2)
             self.assertTrue("extrapolating data below the minimum value"
-                            + " of the time" in str(w[0].message))
+                            + " of the time" in str(wu[0].message))
             self.assertTrue("extrapolating data above the maximum value"
-                            + " of the time" in str(w[1].message))
+                            + " of the time" in str(wu[1].message))
 
     def test_data_interp_h1dm_ignore(self):
         """
@@ -1725,18 +1886,22 @@ class TestWarningsErrors(unittest.TestCase):
                                      interp=interp,
                                      py_name=py_name)
 
-        with catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as ws:
             data.initialize()
-            self.assertEqual(len(w), 0)
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 0)
 
-        with catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as ws:
             for x, y in zip(_exp.xpts, _exp.interp_1d):
                 self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
-            self.assertEqual(len(w), 2)
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 2)
             self.assertTrue("extrapolating data below the minimum value"
-                            + " of the time" in str(w[0].message))
+                            + " of the time" in str(wu[0].message))
             self.assertTrue("extrapolating data above the maximum value"
-                            + " of the time" in str(w[1].message))
+                            + " of the time" in str(wu[1].message))
 
     def test_data_interp_h1dm_raise(self):
         """
@@ -1794,20 +1959,23 @@ class TestWarningsErrors(unittest.TestCase):
                                      interp=interp,
                                      py_name=py_name)
 
-        with catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as ws:
             data.initialize()
-            self.assertEqual(len(w), 1)
-            self.assertTrue(issubclass(w[-1].category, UserWarning))
-            self.assertTrue("missing" in str(w[-1].message))
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 1)
+            self.assertTrue("missing" in str(wu[0].message))
 
-        with catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as ws:
             for x, y in zip(_exp.xpts, _exp.interp_1d):
                 self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
-            self.assertEqual(len(w), 2)
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 2)
             self.assertTrue("extrapolating data below the minimum value"
-                            + " of the time" in str(w[0].message))
+                            + " of the time" in str(wu[0].message))
             self.assertTrue("extrapolating data above the maximum value"
-                            + " of the time" in str(w[1].message))
+                            + " of the time" in str(wu[1].message))
 
     def test_data_interp_v1dm_ignore(self):
         """
@@ -1836,18 +2004,22 @@ class TestWarningsErrors(unittest.TestCase):
                                      interp=interp,
                                      py_name=py_name)
 
-        with catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as ws:
             data.initialize()
-            self.assertEqual(len(w), 0)
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 0)
 
-        with catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as ws:
             for x, y in zip(_exp.xpts, _exp.interp_1d):
                 self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
-            self.assertEqual(len(w), 2)
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 2)
             self.assertTrue("extrapolating data below the minimum value"
-                            + " of the time" in str(w[0].message))
+                            + " of the time" in str(wu[0].message))
             self.assertTrue("extrapolating data above the maximum value"
-                            + " of the time" in str(w[1].message))
+                            + " of the time" in str(wu[1].message))
 
     def test_data_interp_v1dm_raise(self):
         """
@@ -1905,20 +2077,23 @@ class TestWarningsErrors(unittest.TestCase):
                                      interp=interp,
                                      py_name=py_name)
 
-        with catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as ws:
             data.initialize()
-            self.assertEqual(len(w), 1)
-            self.assertTrue(issubclass(w[-1].category, UserWarning))
-            self.assertTrue("missing" in str(w[-1].message))
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 1)
+            self.assertTrue("missing" in str(wu[0].message))
 
-        with catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as ws:
             for x, y in zip(_exp.xpts, _exp.interp_1d):
                 self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
-            self.assertEqual(len(w), 2)
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 2)
             self.assertTrue("extrapolating data below the minimum value"
-                            + " of the time" in str(w[0].message))
+                            + " of the time" in str(wu[0].message))
             self.assertTrue("extrapolating data above the maximum value"
-                            + " of the time" in str(w[1].message))
+                            + " of the time" in str(wu[1].message))
 
     def test_data_interp_hn1dm_ignore(self):
         """
@@ -1947,18 +2122,22 @@ class TestWarningsErrors(unittest.TestCase):
                                      interp=interp,
                                      py_name=py_name)
 
-        with catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as ws:
             data.initialize()
-            self.assertEqual(len(w), 0)
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 0)
 
-        with catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as ws:
             for x, y in zip(_exp.xpts, _exp.interp_1d):
                 self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
-            self.assertEqual(len(w), 2)
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 2)
             self.assertTrue("extrapolating data below the minimum value"
-                            + " of the time" in str(w[0].message))
+                            + " of the time" in str(wu[0].message))
             self.assertTrue("extrapolating data above the maximum value"
-                            + " of the time" in str(w[1].message))
+                            + " of the time" in str(wu[1].message))
 
     def test_data_interp_hn1dm_raise(self):
         """
@@ -2027,22 +2206,24 @@ class TestWarningsErrors(unittest.TestCase):
 
         with catch_warnings(record=True) as ws:
             data.initialize()
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 2)
             self.assertTrue(np.all(
-                [issubclass(w.category, UserWarning) for w in ws]
-                ))
-            self.assertTrue(np.all(
-                ["missing" in str(w.message) for w in ws]
+                ["missing" in str(w.message) for w in wu]
                 ))
 
-        with catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as ws:
             for x, y in zip(_exp.xpts, _exp.interp_3d):
                 self.assertTrue(y.equals(data(x)),
                                 "Wrong result at X=" + str(x))
-            self.assertEqual(len(w), 2)
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 2)
             self.assertTrue("extrapolating data below the minimum value"
-                            + " of the time" in str(w[0].message))
+                            + " of the time" in str(wu[0].message))
             self.assertTrue("extrapolating data above the maximum value"
-                            + " of the time" in str(w[1].message))
+                            + " of the time" in str(wu[1].message))
 
     def test_lookup_hn3dmd_raise(self):
         """
@@ -2058,7 +2239,7 @@ class TestWarningsErrors(unittest.TestCase):
         cell_2 = "C19"
         coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C']}
         coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C']}
-        py_name = "test_lookup_hn3dmd"
+        py_name = "test_lookup_hn3dmd_raise"
         pysd.external.External.missing = "raise"
 
         data = pysd.external.ExtLookup(file_name=file_name,
@@ -2093,7 +2274,7 @@ class TestWarningsErrors(unittest.TestCase):
         cell_2 = "C19"
         coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C']}
         coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C']}
-        py_name = "test_lookup_hn3dmd"
+        py_name = "test_lookup_hn3dmd_ignore"
         pysd.external.External.missing = "ignore"
 
         data = pysd.external.ExtLookup(file_name=file_name,
@@ -2112,17 +2293,163 @@ class TestWarningsErrors(unittest.TestCase):
 
         with catch_warnings(record=True) as ws:
             data.initialize()
-            self.assertEqual(len(ws), 0)
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 0)
 
-        with catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as ws:
             for x, y in zip(_exp.xpts, _exp.interp_3d):
                 self.assertTrue(y.equals(data(x)),
                                 "Wrong result at X=" + str(x))
-            self.assertEqual(len(w), 2)
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 2)
             self.assertTrue("extrapolating data below the minimum value"
-                            + " of the series" in str(w[0].message))
+                            + " of the series" in str(wu[0].message))
             self.assertTrue("extrapolating data above the maximum value"
-                            + " of the series" in str(w[1].message))
+                            + " of the series" in str(wu[1].message))
+
+    def test_constant_h3dm(self):
+        """
+        Test for warning in 3d horizontal series interpolation with missing
+        values.
+        """
+        import pysd
+        from warnings import catch_warnings
+
+        file_name = "data/input.xlsx"
+        sheet = "Horizontal missing"
+        cell_1 = "C16"
+        cell_2 = "C19"
+        coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C'],
+                    'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C'],
+                    'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        py_name = "test_constant_h3dm"
+        pysd.external.External.missing = "warning"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         sheet=sheet,
+                                         root=_root,
+                                         cell=cell_1,
+                                         coords=coords_1,
+                                         py_name=py_name)
+
+        data.add(file_name=file_name,
+                 sheet=sheet,
+                 cell=cell_2,
+                 coords=coords_2)
+
+        with catch_warnings(record=True) as ws:
+            data.initialize()
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 2)
+            self.assertTrue(np.all(
+                ["missing" in str(w.message) for w in wu]
+                ))
+
+    def test_constant_h3dm_ignore(self):
+        """
+        Test for ignore in 3d horizontal series interpolation with missing
+        values.
+        """
+        import pysd
+        from warnings import catch_warnings
+
+        file_name = "data/input.xlsx"
+        sheet = "Horizontal missing"
+        cell_1 = "C16"
+        cell_2 = "C19"
+        coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C'],
+                    'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C'],
+                    'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        py_name = "test_constant_h3dm_ignore"
+        pysd.external.External.missing = "ignore"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         sheet=sheet,
+                                         root=_root,
+                                         cell=cell_1,
+                                         coords=coords_1,
+                                         py_name=py_name)
+
+        data.add(file_name=file_name,
+                 sheet=sheet,
+                 cell=cell_2,
+                 coords=coords_2)
+
+        with catch_warnings(record=True) as ws:
+            data.initialize()
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 0)
+
+    def test_constant_h3dm_raise(self):
+        """
+        Test for error 3d horizontal constants with missing values.
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        sheet = "Horizontal missing"
+        cell_1 = "C16"
+        cell_2 = "C19"
+        coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C'],
+                    'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C'],
+                    'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        py_name = "test_constant_h3dm_raise"
+        pysd.external.External.missing = "raise"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         sheet=sheet,
+                                         root=_root,
+                                         cell=cell_1,
+                                         coords=coords_1,
+                                         py_name=py_name)
+
+        data.add(file_name=file_name,
+                 sheet=sheet,
+                 cell=cell_2,
+                 coords=coords_2)
+
+        with self.assertRaises(ValueError):
+            data.initialize()
+
+    def test_constant_hn3dm_raise(self):
+        """
+        Test for error 3d horizontal constants with missing values by cellrange
+        name.
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        sheet = "Horizontal missing"
+        cell_1 = "data_2d"
+        cell_2 = "data_2db"
+        coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C'],
+                    'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C'],
+                    'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        py_name = "test_constant_hn3dm_raise"
+        pysd.external.External.missing = "raise"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         sheet=sheet,
+                                         root=_root,
+                                         cell=cell_1,
+                                         coords=coords_1,
+                                         py_name=py_name)
+
+        data.add(file_name=file_name,
+                 sheet=sheet,
+                 cell=cell_2,
+                 coords=coords_2)
+
+        with self.assertRaises(ValueError):
+            data.initialize()
 
     def test_data_interp_h1d0(self):
         """
@@ -2232,7 +2559,7 @@ class TestWarningsErrors(unittest.TestCase):
 
     def test_data_interp_hns(self):
         """
-        Test for error in data when it doen't have the shame
+        Test for error in data when it doen't have the same
         shape as the given coordinates
         """
         import pysd
@@ -2259,7 +2586,7 @@ class TestWarningsErrors(unittest.TestCase):
 
     def test_data_interp_vnss(self):
         """
-        Test for error in data when it doen't have the shame
+        Test for error in data when it doen't have the same
         shape in the first dimension as the length of series
         """
         import pysd
@@ -2464,36 +2791,6 @@ class TestWarningsErrors(unittest.TestCase):
                      cell=cell2,
                      coords=coords2)
 
-    def test_lookup_h1d_nf(self):
-        """
-        Error in ExtLookup when a non 0 dimensional array is passed
-        """
-        import pysd
-        import xarray as xr
-
-        file_name = "data/input.xlsx"
-        sheet = "Horizontal"
-        x_row_or_col = "4"
-        cell = "C5"
-        coords = {}
-        py_name = "test_lookup_h1d"
-
-        data = pysd.external.ExtLookup(file_name=file_name,
-                                       sheet=sheet,
-                                       x_row_or_col=x_row_or_col,
-                                       root=_root,
-                                       cell=cell,
-                                       coords=coords,
-                                       py_name=py_name)
-
-        data.initialize()
-
-        data(np.array([1]))
-        data(xr.DataArray([1]))
-
-        with self.assertRaises(TypeError):
-            data(np.array([1, 2]))
-            data(xr.DataArray([1, 1]))
 
     def test_constant_hns(self):
         """

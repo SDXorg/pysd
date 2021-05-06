@@ -15,39 +15,31 @@ There are a number of tools that you might find helpful in development:
 Test Suite
 ^^^^^^^^^^
 PySD uses the common model test suite found `on github <https://github.com/SDXorg/test-models>`_
+which are run using `integration_test_vensim_pathway.py` and `integration_test_xmile_pathway.py`.
+PySD also has own tests for internal funtionality, `unit_test_*.py` files
+of the `/tests/` directory.
 
-You can run the test suite with the `test_pysd.py` module, which will execute each test and display
-some debugging info if there are issues.
-
-The test runner will download the test suite, if
-it is not already installed, into the `/tests/` directory. To update the test suite, you can
-run `get_tests.py` manually.
+In order to run all the tests :py:mod:`nose` or :py:mod:`pytest` can be used.
+A `Makefile` is given to run easier the tests with :py:mod:`pytest`, check
+`tests/README <https://github.com/JamesPHoughton/pysd/tree/master/tests/README.md>`_
+for more information.
 
 These tests run quickly and should be executed when any changes are made to ensure
-that current functionality remains intact.
+that current functionality remains intact. If any new functionality is added or a
+bug is corrected, the tests should be updated with new models in test suite or
+complementary tests in the corresponding `unit_test_*.py` file.
 
-The tes
 
 Speed Tests
 ^^^^^^^^^^^
-A set of speed tests are found in the `speed_test.py` module. These speed tests help understand how
-changes to the PySD module influence the speed of execution. These tests take a little longer to run
-than the basic test suite, but are not onerous. They should be run before any submission to the
-repository.
-
-The speed test results are appended to 'speedtest_results.json', along with version and date
-information, so that before and after comparisons can be made.
-
-The speed tests depend on the standard python :py:mod:`timeit` library.
+The speed tests may be developed in the future. Any contribution is welcome.
 
 
 Profiler
 ^^^^^^^^
 Profiling the code can help to identify bottlenecks in operation. To understand how changes to the
 code influence its speed, we should construct a profiling test that executes the PySD components in
-question. The file 'profile_pysd.py' gives an example for how this profiling can be conducted, and
-the file 'run_profiler.sh' executes the profiler and launches a view of the results that can be
-explored in the browser.
+question.
 
 The profiler depends on :py:mod:`cProfile` and `cprofilev <https://github.com/ymichael/cprofilev>`_
 

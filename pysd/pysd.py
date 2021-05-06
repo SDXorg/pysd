@@ -24,8 +24,7 @@ if sys.version_info[:2] < (3, 7):
         + " supported version:\n\t"
         + "https://github.com/JamesPHoughton/pysd/releases/tag/LastPy2")
 
-
-def read_xmile(xmile_file, missing_values="warning"):
+def read_xmile(xmile_file, initialize=True, missing_values="warning"):
     """
     Construct a model from `.xmile` file.
 
@@ -33,6 +32,9 @@ def read_xmile(xmile_file, missing_values="warning"):
     ----------
     xmile_file : <string>
         The relative path filename for a raw `.xmile` file
+    initialize: bool (optional)
+        If False, the model will not be initialize when it is loaded.
+        Default is True
     missing_values : <string> (optional)
         What to do with missing values in external objects.
         If "warning" (default) shows a warning message and
@@ -52,12 +54,12 @@ def read_xmile(xmile_file, missing_values="warning"):
     """
     from .py_backend.xmile.xmile2py import translate_xmile
     py_model_file = translate_xmile(xmile_file)
-    model = load(py_model_file, missing_values)
+    model = load(py_model_file, initialize, missing_values)
     model.xmile_file = xmile_file
     return model
 
 
-def read_vensim(mdl_file, missing_values="warning"):
+def read_vensim(mdl_file, initialize=True, missing_values="warning"):
     """
     Construct a model from Vensim `.mdl` file.
 
@@ -65,6 +67,9 @@ def read_vensim(mdl_file, missing_values="warning"):
     ----------
     mdl_file : <string>
         The relative path filename for a raw Vensim `.mdl` file
+    initialize: bool (optional)
+        If False, the model will not be initialize when it is loaded.
+        Default is True
     missing_values : <string> (optional)
         What to do with missing values in external objects.
         If "warning" (default) shows a warning message and
@@ -76,6 +81,9 @@ def read_vensim(mdl_file, missing_values="warning"):
     model: a PySD class object
         Elements from the python model are loaded into the PySD class
         and ready to run
+    initialize: bool (optional)
+        If False, the model will not be initialize when it is loaded.
+        Default is True
 
     Examples
     --------
@@ -84,12 +92,12 @@ def read_vensim(mdl_file, missing_values="warning"):
     """
     from .py_backend.vensim.vensim2py import translate_vensim
     py_model_file = translate_vensim(mdl_file)
-    model = load(py_model_file, missing_values)
+    model = load(py_model_file, initialize, missing_values)
     model.mdl_file = mdl_file
     return model
 
 
-def load(py_model_file, missing_values="warning"):
+def load(py_model_file, initialize=True, missing_values="warning"):
     """
     Load a python-converted model file.
 
@@ -98,6 +106,9 @@ def load(py_model_file, missing_values="warning"):
     py_model_file : <string>
         Filename of a model which has already been converted into a
         python format.
+    initialize: bool (optional)
+        If False, the model will not be initialize when it is loaded.
+        Default is True
     missing_values : <string> (optional)
         What to do with missing values in external objects.
         If "warning" (default) shows a warning message and
@@ -110,4 +121,4 @@ def load(py_model_file, missing_values="warning"):
 
     """
     from .py_backend import functions
-    return functions.Model(py_model_file, missing_values)
+    return functions.Model(py_model_file, initialize, missing_values)

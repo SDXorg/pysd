@@ -94,7 +94,7 @@ class TestPySD(unittest.TestCase):
             # warnings for missing values
             model = pysd.read_vensim(model_mdl, missing_values="ignore")
             self.assertTrue(all(["missing" not in str(w.message) for w in ws]))
-        
+
         with catch_warnings(record=True) as ws:
             # warnings for missing values
             model.run()
@@ -134,6 +134,16 @@ class TestPySD(unittest.TestCase):
         actual = list(res.index)
         expected = [3., 4., 5., 6., 7.]
         self.assertSequenceEqual(actual, expected)
+
+    def test_run_progress(self):
+        import pysd
+        # same as test_run but with progressbar
+        model = pysd.read_vensim(test_model)
+        stocks = model.run(progress=True)
+        self.assertTrue(isinstance(stocks, pd.DataFrame))
+        self.assertTrue('Teacup Temperature' in stocks.columns.values)
+        self.assertGreater(len(stocks), 3)
+        self.assertTrue(stocks.notnull().all().all())
 
     def test_run_return_timestamps(self):
         """Addresses https://github.com/JamesPHoughton/pysd/issues/17"""
@@ -923,6 +933,7 @@ class TestPySD(unittest.TestCase):
         import pysd
         # Todo: think through a stronger test here...
         model = pysd.read_vensim(test_model)
+        model.progress = False
         res = model._integrate(time_steps=list(range(5)),
                                capture_elements=['teacup_temperature'],
                                return_timestamps=list(range(0, 5, 2)))
@@ -1094,7 +1105,7 @@ class TestModelInteraction(unittest.TestCase):
             pysd.load("circular.py")
 
         os.remove("circular.py")
- 
+
 
 class TestMultiRun(unittest.TestCase):
     def test_delay_reinitializes(self):

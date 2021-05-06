@@ -105,8 +105,15 @@ functions = {
         ],
         "module": "functions"
     },
-    # "previous" !TODO!
-    # "self" !TODO!
+
+    # TODO functions/stateful objects to be added
+    # https://github.com/JamesPHoughton/pysd/issues/154
+    "forecast": {"name": "not_implemented_function", "module": "functions",
+                 "original_name": "forecast"},
+    "previous": {"name": "not_implemented_function", "module": "functions",
+                 "original_name": "previous"},
+    "self": {"name": "not_implemented_function", "module": "functions",
+             "original_name": "self"}
 }
 
 prefix_operators = {
