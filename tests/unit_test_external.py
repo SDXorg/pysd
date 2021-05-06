@@ -1150,36 +1150,39 @@ class TestLookup(unittest.TestCase):
         data.initialize()
 
         all_smaller = xr.DataArray([-1, -10], {'XY': ['X', 'Y']}, ['XY'])
-        all_bigger = xr.DataArray([9, 20, 30], {'ABC': ['A', 'B', 'C']}, ['ABC'])
+        all_bigger = xr.DataArray([9, 20, 30], {'ABC': ['A', 'B', 'C']},
+                                  ['ABC'])
         all_inside = xr.DataArray([3.5, 5.5], {'XY': ['X', 'Y']}, ['XY'])
         mixed = xr.DataArray([1.5, 20, -30], {'ABC': ['A', 'B', 'C']}, ['ABC'])
-        full = xr.DataArray([[1.5, -30], [-10, 2.5], [4., 5.]], 
-                            {'ABC': ['A', 'B', 'C'], 'XY': ['X', 'Y']}, 
+        full = xr.DataArray([[1.5, -30], [-10, 2.5], [4., 5.]],
+                            {'ABC': ['A', 'B', 'C'], 'XY': ['X', 'Y']},
                             ['ABC', 'XY'])
 
         all_smaller_out = data.data[0].reset_coords('lookup_dim', drop=True)\
-                          + 0*all_smaller
+            + 0*all_smaller
         all_bigger_out = data.data[-1].reset_coords('lookup_dim', drop=True)
-        all_inside_out = xr.DataArray([[ 0.5 , -1.],
-                                       [ -1., -0.5],
-                                       [-0.75, 0.]],
-                                       {'ABC': ['A', 'B', 'C'], 'XY': ['X', 'Y']},
-                                       ['ABC', 'XY'])
-        mixed_out = xr.DataArray([ 0.5 , 0.  , 1.],
+        all_inside_out = xr.DataArray([[0.5, -1],
+                                       [-1, -0.5],
+                                       [-0.75, 0]],
+                                      {'ABC': ['A', 'B', 'C'],
+                                       'XY': ['X', 'Y']},
+                                      ['ABC', 'XY'])
+        mixed_out = xr.DataArray([0.5, 0, 1],
                                  {'ABC': ['A', 'B', 'C']},
                                  ['ABC'])
-        full_out = xr.DataArray([[ 0.5 , 0.],
-                                 [ 0., 0.],
-                                 [-0.5, 0.]],
-                                 {'ABC': ['A', 'B', 'C'], 'XY': ['X', 'Y']},
-                                 ['ABC', 'XY'])
- 
-        self.assertTrue(data(all_smaller).equals(all_smaller_out))
-        self.assertTrue(data(all_bigger).equals(all_bigger_out))
-        self.assertTrue(data(all_inside).equals(all_inside_out))
-        self.assertTrue(data(mixed).equals(mixed_out))
-        self.assertTrue(data(full).equals(full_out))
+        full_out = xr.DataArray([[0.5, 0],
+                                 [0, 0],
+                                 [-0.5, 0]],
+                                {'ABC': ['A', 'B', 'C'], 'XY': ['X', 'Y']},
+                                ['ABC', 'XY'])
 
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.assertTrue(data(all_smaller).equals(all_smaller_out))
+            self.assertTrue(data(all_bigger).equals(all_bigger_out))
+            self.assertTrue(data(all_inside).equals(all_inside_out))
+            self.assertTrue(data(mixed).equals(mixed_out))
+            self.assertTrue(data(full).equals(full_out))
 
     def test_lookup_vn3d_xarray(self):
         """
@@ -1215,34 +1218,38 @@ class TestLookup(unittest.TestCase):
         data.initialize()
 
         all_smaller = xr.DataArray([-1, -10], {'XY': ['X', 'Y']}, ['XY'])
-        all_bigger = xr.DataArray([9, 20, 30], {'ABC': ['A', 'B', 'C']}, ['ABC'])
+        all_bigger = xr.DataArray([9, 20, 30], {'ABC': ['A', 'B', 'C']},
+                                  ['ABC'])
         all_inside = xr.DataArray([3.5, 7.5], {'XY': ['X', 'Y']}, ['XY'])
         mixed = xr.DataArray([1.5, 20, -30], {'ABC': ['A', 'B', 'C']}, ['ABC'])
-        full = xr.DataArray([[1.5, -30], [-10, 2.5], [4., 5.]], 
-                            {'ABC': ['A', 'B', 'C'], 'XY': ['X', 'Y']}, 
+        full = xr.DataArray([[1.5, -30], [-10, 2.5], [4., 5.]],
+                            {'ABC': ['A', 'B', 'C'], 'XY': ['X', 'Y']},
                             ['ABC', 'XY'])
 
         all_smaller_out = data.data[0].reset_coords('lookup_dim', drop=True)
         all_bigger_out = data.data[-1].reset_coords('lookup_dim', drop=True)
-        all_inside_out = xr.DataArray([[ 0.5 , -1.  , -0.75],
-                                       [ 0.5 ,  1.  ,  0.  ]],
-                                       {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']},
-                                       ['XY', 'ABC'])
-        mixed_out = xr.DataArray([[ 0.5 , 0.  , 1.],
-                                  [ -1. ,  1.  ,  -1.  ]],
+        all_inside_out = xr.DataArray([[0.5, -1, -0.75],
+                                       [0.5,  1,  0]],
+                                      {'XY': ['X', 'Y'],
+                                       'ABC': ['A', 'B', 'C']},
+                                      ['XY', 'ABC'])
+        mixed_out = xr.DataArray([[0.5, 0, 1],
+                                  [-1, 1,  -1]],
                                  {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']},
                                  ['XY', 'ABC'])
 
-        full_out = xr.DataArray([[ 0.5 , 0.  , -0.5],
-                                [ 1. ,  0.  ,  0.  ]],
-                               {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']},
-                               ['XY', 'ABC'])
+        full_out = xr.DataArray([[0.5, 0, -0.5],
+                                 [1, 0, 0]],
+                                {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']},
+                                ['XY', 'ABC'])
 
-        self.assertTrue(data(all_smaller).equals(all_smaller_out))
-        self.assertTrue(data(all_bigger).equals(all_bigger_out))
-        self.assertTrue(data(all_inside).equals(all_inside_out))
-        self.assertTrue(data(mixed).equals(mixed_out))
-        self.assertTrue(data(full).equals(full_out))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.assertTrue(data(all_smaller).equals(all_smaller_out))
+            self.assertTrue(data(all_bigger).equals(all_bigger_out))
+            self.assertTrue(data(all_inside).equals(all_inside_out))
+            self.assertTrue(data(mixed).equals(mixed_out))
+            self.assertTrue(data(full).equals(full_out))
 
 
 class TestConstant(unittest.TestCase):
@@ -2790,7 +2797,6 @@ class TestWarningsErrors(unittest.TestCase):
                      sheet=sheet,
                      cell=cell2,
                      coords=coords2)
-
 
     def test_constant_hns(self):
         """
