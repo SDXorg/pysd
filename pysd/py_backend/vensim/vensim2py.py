@@ -379,18 +379,6 @@ def get_equation_components(equation_str, root_path=None):
             'kind': parse_object.kind,
             'keyword': parse_object.keyword}
 
-
-def get_external_data(func_str, args_str, root_path):
-    """
-    Gets the subscripts from external files calling the class external.ExtSubscript
-    """
-    # The py model file must be recompiled if external file subscripts change. This could be avoided
-    # if we switch to function-defined subscript values instead of hard-coding them.
-    f = subscript_functions[func_str.lower()]
-    args = [x.strip().strip("\'") for x in args_str.split(',')]  # todo: make this less fragile?
-
-    return f(*args, root=root_path).subscript
-
 def get_subscript_numeric_range(subs_start, subs_end):
     """
     With the first and the last subscript values of a subscript
