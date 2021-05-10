@@ -335,9 +335,23 @@ def get_equation_components(equation_str, root_path=None):
         def visit_range(self, n, vc):
             subs_start = vc[2].strip()
             subs_end = vc[6].strip()
-            prefix, start, end = get_subscript_numeric_range(subs_start, subs_end)
-            for i in range(start, end+1):
-                s = prefix + str(i)
+            if(subs_start == subs_end): raise ValueError('Only different subscripts are valid in a numeric range, error in expression:\n\t %s\n' % (equation_str))
+            
+            # get the common prefix and the starting and 
+            # ending number of the numeric range
+            subs_start = re.findall('\d+|\D+', subs_start)
+            subs_end = re.findall('\d+|\D+', subs_end)
+            prefix_start = ''.join(subs_start[:-1])
+            prefix_end = ''.join(subs_end[:-1])
+            num_start = int(subs_start[-1])
+            num_end = int(subs_end[-1])
+
+            if(not(prefix_start) or not(prefix_end)): raise ValueError('A numeric range must contain at least one letter, error in expression:\n\t %s\n' % (equation_str))
+            if(num_start>num_end): raise ValueError('The number of the first subscript value must be lower than the second subscript value in a subscript numeric range, error in expression:\n\t %s\n'% (equation_str))
+            if(prefix_start != prefix_end or subs_start[0].isdigit() or subs_end[0].isdigit()): raise ValueError('Only matching names ending in numbers are valid, error in expression:\n\t %s\n'% (equation_str))
+
+            for i in range(num_start, num_end+1):
+                s = prefix_start + str(i)
                 self.subscripts.append(s.strip())
 
         def visit_value(self, n, vc):
@@ -379,49 +393,6 @@ def get_equation_components(equation_str, root_path=None):
             'kind': parse_object.kind,
             'keyword': parse_object.keyword}
 
-def get_subscript_numeric_range(subs_start, subs_end):
-    """
-    With the first and the last subscript values of a subscript
-    numeric range, gets the common prefix of both and the 
-    starting and ending number of the numeric range
-
-    Parameters
-    ----------
-    subs_start: str
-        Represents the first subscript value in the numeric range
-    subs_end: str
-        Represents the last subscript value in the numeric range
-    
-    Returns
-    -------
-    prefix: str
-        Common prefix of both subscripts
-    num_start: int
-        Sequence start number 
-    num_end: int
-        Sequence end number
-    
-    Examples
-    --------
-    >>> get_subscript_number_range('Layer1', 'Layer5')
-    ('Layer', 1, 5)
-    >>> get_subscript_number_range('sub15', 'sub30')
-    ('sub', 15, 30)
-    """
-    if(subs_start == subs_end): raise ValueError('Only different subscripts are valid in a numeric range')
-
-    subs_start = re.findall('\d+|\D+', subs_start)
-    subs_end = re.findall('\d+|\D+', subs_end)
-    prefix_start = ''.join(subs_start[:-1])
-    prefix_end = ''.join(subs_end[:-1])
-    num_start = int(subs_start[-1])
-    num_end = int(subs_end[-1])
-
-    if(not(prefix_start) or not(prefix_end)): raise ValueError('A numeric range must contain at least one letter')
-    if(num_start>num_end): raise ValueError('The number of the first subscript value must be lower than the second subscript value in a subscript numeric range\n')
-    if(prefix_start != prefix_end or subs_start[0].isdigit() or subs_end[0].isdigit()): raise ValueError('Only matching names ending in numbers are valid')
-
-    return prefix_start, num_start, num_end
 
 def parse_units(units_str):
     """
