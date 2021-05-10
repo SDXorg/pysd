@@ -192,7 +192,7 @@ class SampleIfTrue(Stateful):
                                'coords': self.state.coords}
     
     def __call__(self):
-        self.state = sample_if_true(self.condition(), self.actual_value(), self.state)
+        self.state = if_then_else(self.condition(), self.actual_value, lambda: self.state)
         return self.state
     
     def ddt(self):
@@ -1116,34 +1116,6 @@ def if_then_else(condition, val_if_true, val_if_false):
         return xr.where(condition, val_if_true(), val_if_false())
 
     return val_if_true() if condition else val_if_false()
-
-
-def sample_if_true(condition, actual_value, saved_value):
-    """
-    Implements Vensim's SAMPLE IF TRUE function.
-
-    Parameters
-    ----------
-    condition: bool or xarray.DataArray of bools
-    actual_value: int, float or xarray.DataArray
-        Value to return when condition is true.
-    saved_value: int, float or xarray.DataArray
-        Value to return when condition is false.
-
-    Returns
-    -------
-    The value depending on the condition.
-
-    """
-    if isinstance(condition, xr.DataArray):
-        if condition.all():
-            return actual_value
-        elif not condition.any():
-            return saved_value
-
-        return xr.where(condition, actual_value, saved_value)
-
-    return actual_value if condition else saved_value
 
 
 def xidz(numerator, denominator, value_if_denom_is_zero):
