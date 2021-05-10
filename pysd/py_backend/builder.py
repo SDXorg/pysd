@@ -565,6 +565,117 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
     return "%s()" % stateful['py_name'], new_structure
 
 
+def add_sample_if_true(identifier, condition, actual_value, initial_value,
+                subs, subscript_dict):
+    """
+    Creates code to instantiate a stateful 'SampleIfTrue' object,
+    and provides reference to that object's output.
+
+    Parameters
+    ----------
+    identifier: basestring
+        the python-safe name of the stock
+
+    condition: <string>
+        Reference to another model element that is the condition to the 
+        'sample if true' function
+
+    actual_value: <string>
+        Can be a number (in string format) or a reference to another model
+        element which is calculated throughout the simulation at runtime.
+
+    initial_value: <string>
+        This is used to initialize the state of the sample if true function.
+
+    subs: list of strings
+        List of strings of subscript indices that correspond to the
+        list of expressions, and collectively define the shape of the output
+
+    subscript_dict: dictionary
+        Dictionary describing the possible dimensions of the stock's subscripts
+
+    Returns
+    -------
+    reference: basestring
+        reference to the sample if true object `__call__` method, 
+        which will return the output of the sample if true process
+
+    new_structure: list
+        list of element construction dictionaries for the builder to assemble
+
+    """
+    import_modules['functions'].add("SampleIfTrue")
+
+    new_structure = []
+
+    if len(subs) == 0:
+        stateful_py_expr = 'SampleIfTrue(lambda: %s, lambda: %s,'\
+                           'lambda: %s)' % (condition, actual_value, initial_value)
+    
+    else:
+        stateful_py_expr = 'SampleIfTrue(lambda: _condition_%s(),'\
+                           'lambda: _input_%s(), lambda: _init_%s(),)' % (
+                               identifier, identifier, identifier)
+        # following elements not specified in the model file, but must exist
+        # create the sample if true initialization element
+        new_structure.append({
+            'py_name': '_init_%s' % identifier,
+            'real_name': 'Implicit',
+            'kind': 'setup',  # not specified in the model file, but must exist
+            'py_expr': initial_value,
+            'subs': subs,
+            'doc': 'Provides initial value for %s function' % identifier,
+            'unit': 'See docs for %s' % identifier,
+            'lims': 'None',
+            'eqn': 'None',
+            'arguments': ''
+        })
+
+        new_structure.append({
+            'py_name': '_condition_%s' % identifier,
+            'real_name': 'Implicit',
+            'kind': 'component',
+            'doc': 'Provides condition for %s function' % identifier,
+            'subs': subs,
+            'unit': 'See docs for %s' % identifier,
+            'lims': 'None',
+            'eqn': 'None',
+            'py_expr': condition,
+            'arguments': ''
+        })
+
+        new_structure.append({
+            'py_name': '_input_%s' % identifier,
+            'real_name': 'Implicit',
+            'kind': 'component',
+            'doc': 'Provides input for %s function' % identifier,
+            'subs': subs,
+            'unit': 'See docs for %s' % identifier,
+            'lims': 'None',
+            'eqn': 'None',
+            'py_expr': actual_value,
+            'arguments': ''
+        })
+
+    # describe the stateful object
+    stateful = {
+        'py_name': '_sample_if_true_%s' % identifier,
+        'real_name': 'Sample if true of %s' % identifier,
+        'doc': 'Initial value: %s \n  Input: %s \n Condition: %s' % (
+            initial_value, actual_value, condition),
+        'py_expr': stateful_py_expr,
+        'unit': 'None',
+        'lims': 'None',
+        'eqn': 'None',
+        'subs': '',
+        'kind': 'stateful',
+        'arguments': ''
+    }
+    new_structure.append(stateful)
+
+    return "%s()" % stateful['py_name'], new_structure
+
+
 def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order,
                  subs, subscript_dict):
     """
