@@ -198,6 +198,10 @@ class SampleIfTrue(Stateful):
     def ddt(self):
         return 0
 
+    def update(self, state):
+        # this doesn't change once it's set up.
+        pass
+
 class Smooth(Stateful):
     def __init__(self, smooth_input, smooth_time, initial_value, order):
         super().__init__()
