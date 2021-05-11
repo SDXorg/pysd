@@ -170,6 +170,37 @@ class Delay(Stateful):
             inflows[0] = self.input_func()
         return inflows - outflows
 
+class SampleIfTrue(Stateful):
+    def __init__(self, condition, actual_value, initial_value):
+        """
+
+        Parameters
+        ----------
+        condition: function
+        actual_value: function
+        initial_value: function
+        """
+        super().__init__()
+        self.condition = condition
+        self.actual_value = actual_value
+        self.initial_value = initial_value
+    
+    def initialize(self):
+        self.state = self.initial_value()
+        if isinstance(self.state, xr.DataArray):
+            self.shape_info = {'dims': self.state.dims,
+                               'coords': self.state.coords}
+    
+    def __call__(self):
+        self.state = if_then_else(self.condition(), self.actual_value, lambda: self.state)
+        return self.state
+    
+    def ddt(self):
+        return 0
+
+    def update(self, state):
+        # this doesn't change once it's set up.
+        pass
 
 class Smooth(Stateful):
     def __init__(self, smooth_input, smooth_time, initial_value, order):
