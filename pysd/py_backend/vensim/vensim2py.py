@@ -512,11 +512,8 @@ functions = {
                       "module": "functions",
                       "original_name": "INVERT MATRIX"},
     "get time value": {"name": "not_implemented_function",
-                      "module": "functions",
-                      "original_name": "GET TIME VALUE"},
-    "sample if true": {"name": "not_implemented_function",
-                      "module": "functions",
-                      "original_name": "SAMPLE IF TRUE"}
+                       "module": "functions",
+                       "original_name": "GET TIME VALUE"}
 }
 
 # list of fuctions that accept a dimension to apply over

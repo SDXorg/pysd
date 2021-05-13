@@ -64,11 +64,14 @@ class External(object):
     ----------
     py_name: str
         The python name of the object
-    missing: str ("warning", "error", "ignore")
+    missing: str ("warning", "error", "ignore", "keep")
         What to do with missing values. If "warning" (default)
         shows a warning message and interpolates the values.
         If "raise" raises an error. If "ignore" interpolates
-        the values without showing anything.
+        the values without showing anything. If "keep" it will keep
+        the missing values, this option may cause the integration to
+        fail, but it may be used to check the quality of the data.
+
     file: str
         File name from which the data is read.
     sheet: str
@@ -342,23 +345,31 @@ class External(object):
         )
 
         # remove nan or missing values from dimension
-        valid_values = ~np.isnan(series)
-        index_valid = np.arange(len(series))[valid_values]
-        series = series[valid_values]
-        data = data[valid_values]
+        if series_across != "name":
+            # Remove last nans only if the method is to read by row or col
+            i = 0
+            try:
+                while np.isnan(series[i-1]):
+                     i -= 1
+            except IndexError:
+                # series has len 0
+                raise ValueError(
+                    self.py_name + "\n"
+                    + "Dimension given in:\n"
+                    + self._file_sheet
+                    + "\t{}:\t{}\n".format(series_across, self.x_row_or_col)
+                    + " has length 0"
+                    )
 
-        # check if the series has no len 0
-        if len(series) == 0:
-            raise ValueError(
-              self.py_name + "\n"
-              + "Dimension given in:\n"
-              + self._file_sheet
-              + "\t{}:\t{}\n".format(series_across, self.x_row_or_col)
-              + " has length 0"
-              )
+            if i != 0:
+                series = series[:i]
+                data = data[:i]
 
         # warning/error if missing data in the series
-        if (np.diff(index_valid) != 1).any() or index_valid[0] != 0:
+        if any(np.isnan(series)) and self.missing != "keep":
+            valid_values = ~np.isnan(series)
+            series = series[valid_values]
+            data = data[valid_values]
             if self.missing == "warning":
                 warnings.warn(
                   self.py_name + "\n"
@@ -377,7 +388,7 @@ class External(object):
                   )
 
         # Check if the lookup/time dimension is strictly monotonous
-        if np.any(np.diff(series) <= 0):
+        if np.any(np.diff(series) <= 0) and self.missing != "keep":
             raise ValueError(self.py_name + "\n"
                   + "Dimension given in:\n"
                   + self._file_sheet
@@ -385,7 +396,7 @@ class External(object):
                   + " is not strictly monotonous")
 
         # Check for missing values in data
-        if np.any(np.isnan(data)):
+        if np.any(np.isnan(data)) and self.missing != "keep":
             if series_across == "name":
                 cell_type = "Cellrange"
             else:
