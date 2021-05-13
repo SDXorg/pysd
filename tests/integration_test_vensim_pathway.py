@@ -288,9 +288,7 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/rounding/test_rounding.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('working on it #217')
     def test_sample_if_true(self):
-        # issue https://github.com/JamesPHoughton/pysd/issues/217
         output, canon = runner('test-models/tests/sample_if_true/test_sample_if_true.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
@@ -377,6 +375,11 @@ class TestIntegrationExamples(unittest.TestCase):
 
     def test_subscript_selection(self):
         output, canon = runner('test-models/tests/subscript_selection/subscript_selection.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
+    def test_subscript_numeric_range(self):
+        from .test_utils import runner, assert_frames_close
+        output, canon = runner('test-models/tests/subscript_numeric_range/test_subscript_numeric_range.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_subranges(self):

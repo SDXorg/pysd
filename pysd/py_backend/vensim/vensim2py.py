@@ -268,7 +268,7 @@ def get_equation_components(equation_str, root_path=None):
     component_structure_grammar = _include_common_grammar(r"""
     entry = component / data_definition / test_definition / subscript_definition / lookup_definition
     component = name _ subscriptlist? _ "=" "="? _ expression
-    subscript_definition = name _ ":" _ (imported_subscript / literal_subscript)
+    subscript_definition = name _ ":" _ (imported_subscript / literal_subscript / numeric_range)
     data_definition = name _ subscriptlist? _ keyword? _ ":=" _ expression
     lookup_definition = name _ subscriptlist? &"(" _ expression  # uses lookahead assertion to capture whole group
     test_definition = name _ subscriptlist? _ &keyword _ expression
@@ -277,11 +277,15 @@ def get_equation_components(equation_str, root_path=None):
 
     literal_subscript = subscript _ ("," _ subscript _)*
     imported_subscript = imp_subs_func _ "(" _ (string _ ","? _)* ")"
+    numeric_range = _ (range / value) _ ("," _ (range / value) _)*
+    value = _ sequence_id _
+    range = "(" _ sequence_id _ "-" _ sequence_id _ ")"
     subscriptlist = '[' _ subscript _ ("," _ subscript _)* _ ']'
 
     expression = ~r".*"  # expression could be anything, at this point.
     keyword = ":" _ basic_id _ ":"
 
+    sequence_id = _ basic_id _
     subscript = basic_id / escape_group
     imp_subs_func = ~r"(%(imp_subs)s)"IU
     string = "\'" ( "\\\'" / ~r"[^\']"IU )* "\'"
@@ -327,6 +331,31 @@ def get_equation_components(equation_str, root_path=None):
             args = [x.strip().strip("\'") for x in vc[4].split(',')]
             self.subscripts +=\
                 external.ExtSubscript(*args, root=root_path).subscript
+
+        def visit_range(self, n, vc):
+            subs_start = vc[2].strip()
+            subs_end = vc[6].strip()
+            if(subs_start == subs_end): raise ValueError('Only different subscripts are valid in a numeric range, error in expression:\n\t %s\n' % (equation_str))
+
+            # get the common prefix and the starting and
+            # ending number of the numeric range
+            subs_start = re.findall(r'\d+|\D+', subs_start)
+            subs_end = re.findall(r'\d+|\D+', subs_end)
+            prefix_start = ''.join(subs_start[:-1])
+            prefix_end = ''.join(subs_end[:-1])
+            num_start = int(subs_start[-1])
+            num_end = int(subs_end[-1])
+
+            if(not(prefix_start) or not(prefix_end)): raise ValueError('A numeric range must contain at least one letter, error in expression:\n\t %s\n' % (equation_str))
+            if(num_start>num_end): raise ValueError('The number of the first subscript value must be lower than the second subscript value in a subscript numeric range, error in expression:\n\t %s\n'% (equation_str))
+            if(prefix_start != prefix_end or subs_start[0].isdigit() or subs_end[0].isdigit()): raise ValueError('Only matching names ending in numbers are valid, error in expression:\n\t %s\n'% (equation_str))
+
+            for i in range(num_start, num_end+1):
+                s = prefix_start + str(i)
+                self.subscripts.append(s.strip())
+
+        def visit_value(self, n, vc):
+            self.subscripts.append(vc[1].strip())
 
         def visit_name(self, n, vc):
             (name,) = vc
@@ -619,6 +648,15 @@ builders = {
         delay_time=args[1],
         initial_value=args[2],
         order=args[3],
+        subs=element['subs'],
+        subscript_dict=subscript_dict
+    ),
+
+    "sample if true": lambda element, subscript_dict, args: builder.add_sample_if_true(
+        identifier=element['py_name'],
+        condition=args[0],
+        actual_value=args[1],
+        initial_value=args[2],
         subs=element['subs'],
         subscript_dict=subscript_dict
     ),
