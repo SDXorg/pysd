@@ -56,7 +56,7 @@ def translate_xmile(xmile_file):
 
     def parse_lookup_xml_node(node):
         ys_node = node.xpath('ns:ypts', namespaces={'ns': NS})[0]
-        ys = np.fromstring(ys_node.text, dtype=np.float, sep=ys_node.attrib['sep'] if 'sep' in ys_node.attrib else ',')
+        ys = np.fromstring(ys_node.text, dtype=float, sep=ys_node.attrib['sep'] if 'sep' in ys_node.attrib else ',')
         xscale_node = node.xpath('ns:xscale', namespaces={'ns': NS})
         if len(xscale_node) > 0:
             xmin = xscale_node[0].attrib['min']
@@ -64,7 +64,7 @@ def translate_xmile(xmile_file):
             xs = np.linspace(float(xmin), float(xmax), len(ys))
         else:
             xs_node = node.xpath('ns:xpts', namespaces={'ns': NS})[0]
-            xs = np.fromstring(xs_node.text, dtype=np.float, sep=xs_node.attrib['sep'] if 'sep' in xs_node.attrib else ',')
+            xs = np.fromstring(xs_node.text, dtype=float, sep=xs_node.attrib['sep'] if 'sep' in xs_node.attrib else ',')
 
         type = node.attrib['type'] if 'type' in node.attrib else 'continuous'
 
@@ -123,7 +123,7 @@ def translate_xmile(xmile_file):
 
         # Replace new lines with space, and replace 2 or more spaces with single space
         # Then ensure there is no space at start or end of equation
-        eqn = (re.sub("(\s{2,})", " ", eqn.replace("\n", ' '))
+        eqn = (re.sub(r"(\s{2,})", " ", eqn.replace("\n", ' '))
                  .strip()
         )
 

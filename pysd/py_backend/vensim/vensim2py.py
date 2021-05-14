@@ -278,7 +278,7 @@ def get_equation_components(equation_str, root_path=None):
     literal_subscript = subscript _ ("," _ subscript _)*
     imported_subscript = imp_subs_func _ "(" _ (string _ ","? _)* ")"
     numeric_range = _ (range / value) _ ("," _ (range / value) _)*
-    value = _ sequence_id _ 
+    value = _ sequence_id _
     range = "(" _ sequence_id _ "-" _ sequence_id _ ")"
     subscriptlist = '[' _ subscript _ ("," _ subscript _)* _ ']'
 
@@ -336,11 +336,11 @@ def get_equation_components(equation_str, root_path=None):
             subs_start = vc[2].strip()
             subs_end = vc[6].strip()
             if(subs_start == subs_end): raise ValueError('Only different subscripts are valid in a numeric range, error in expression:\n\t %s\n' % (equation_str))
-            
-            # get the common prefix and the starting and 
+
+            # get the common prefix and the starting and
             # ending number of the numeric range
-            subs_start = re.findall('\d+|\D+', subs_start)
-            subs_end = re.findall('\d+|\D+', subs_end)
+            subs_start = re.findall(r'\d+|\D+', subs_start)
+            subs_end = re.findall(r'\d+|\D+', subs_end)
             prefix_start = ''.join(subs_start[:-1])
             prefix_end = ''.join(subs_end[:-1])
             num_start = int(subs_start[-1])
@@ -541,8 +541,8 @@ functions = {
                       "module": "functions",
                       "original_name": "INVERT MATRIX"},
     "get time value": {"name": "not_implemented_function",
-                      "module": "functions",
-                      "original_name": "GET TIME VALUE"}
+                       "module": "functions",
+                       "original_name": "GET TIME VALUE"}
 }
 
 # list of fuctions that accept a dimension to apply over
@@ -651,7 +651,7 @@ builders = {
         subs=element['subs'],
         subscript_dict=subscript_dict
     ),
-    
+
     "sample if true": lambda element, subscript_dict, args: builder.add_sample_if_true(
         identifier=element['py_name'],
         condition=args[0],
@@ -660,7 +660,7 @@ builders = {
         subs=element['subs'],
         subscript_dict=subscript_dict
     ),
-    
+
     "smooth": lambda element, subscript_dict, args: builder.add_n_smooth(
         identifier=element['py_name'],
         smooth_input=args[0],

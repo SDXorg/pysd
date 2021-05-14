@@ -1150,36 +1150,39 @@ class TestLookup(unittest.TestCase):
         data.initialize()
 
         all_smaller = xr.DataArray([-1, -10], {'XY': ['X', 'Y']}, ['XY'])
-        all_bigger = xr.DataArray([9, 20, 30], {'ABC': ['A', 'B', 'C']}, ['ABC'])
+        all_bigger = xr.DataArray([9, 20, 30], {'ABC': ['A', 'B', 'C']},
+                                  ['ABC'])
         all_inside = xr.DataArray([3.5, 5.5], {'XY': ['X', 'Y']}, ['XY'])
         mixed = xr.DataArray([1.5, 20, -30], {'ABC': ['A', 'B', 'C']}, ['ABC'])
-        full = xr.DataArray([[1.5, -30], [-10, 2.5], [4., 5.]], 
-                            {'ABC': ['A', 'B', 'C'], 'XY': ['X', 'Y']}, 
+        full = xr.DataArray([[1.5, -30], [-10, 2.5], [4., 5.]],
+                            {'ABC': ['A', 'B', 'C'], 'XY': ['X', 'Y']},
                             ['ABC', 'XY'])
 
         all_smaller_out = data.data[0].reset_coords('lookup_dim', drop=True)\
-                          + 0*all_smaller
+            + 0*all_smaller
         all_bigger_out = data.data[-1].reset_coords('lookup_dim', drop=True)
-        all_inside_out = xr.DataArray([[ 0.5 , -1.],
-                                       [ -1., -0.5],
-                                       [-0.75, 0.]],
-                                       {'ABC': ['A', 'B', 'C'], 'XY': ['X', 'Y']},
-                                       ['ABC', 'XY'])
-        mixed_out = xr.DataArray([ 0.5 , 0.  , 1.],
+        all_inside_out = xr.DataArray([[0.5, -1],
+                                       [-1, -0.5],
+                                       [-0.75, 0]],
+                                      {'ABC': ['A', 'B', 'C'],
+                                       'XY': ['X', 'Y']},
+                                      ['ABC', 'XY'])
+        mixed_out = xr.DataArray([0.5, 0, 1],
                                  {'ABC': ['A', 'B', 'C']},
                                  ['ABC'])
-        full_out = xr.DataArray([[ 0.5 , 0.],
-                                 [ 0., 0.],
-                                 [-0.5, 0.]],
-                                 {'ABC': ['A', 'B', 'C'], 'XY': ['X', 'Y']},
-                                 ['ABC', 'XY'])
- 
-        self.assertTrue(data(all_smaller).equals(all_smaller_out))
-        self.assertTrue(data(all_bigger).equals(all_bigger_out))
-        self.assertTrue(data(all_inside).equals(all_inside_out))
-        self.assertTrue(data(mixed).equals(mixed_out))
-        self.assertTrue(data(full).equals(full_out))
+        full_out = xr.DataArray([[0.5, 0],
+                                 [0, 0],
+                                 [-0.5, 0]],
+                                {'ABC': ['A', 'B', 'C'], 'XY': ['X', 'Y']},
+                                ['ABC', 'XY'])
 
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.assertTrue(data(all_smaller).equals(all_smaller_out))
+            self.assertTrue(data(all_bigger).equals(all_bigger_out))
+            self.assertTrue(data(all_inside).equals(all_inside_out))
+            self.assertTrue(data(mixed).equals(mixed_out))
+            self.assertTrue(data(full).equals(full_out))
 
     def test_lookup_vn3d_xarray(self):
         """
@@ -1215,34 +1218,38 @@ class TestLookup(unittest.TestCase):
         data.initialize()
 
         all_smaller = xr.DataArray([-1, -10], {'XY': ['X', 'Y']}, ['XY'])
-        all_bigger = xr.DataArray([9, 20, 30], {'ABC': ['A', 'B', 'C']}, ['ABC'])
+        all_bigger = xr.DataArray([9, 20, 30], {'ABC': ['A', 'B', 'C']},
+                                  ['ABC'])
         all_inside = xr.DataArray([3.5, 7.5], {'XY': ['X', 'Y']}, ['XY'])
         mixed = xr.DataArray([1.5, 20, -30], {'ABC': ['A', 'B', 'C']}, ['ABC'])
-        full = xr.DataArray([[1.5, -30], [-10, 2.5], [4., 5.]], 
-                            {'ABC': ['A', 'B', 'C'], 'XY': ['X', 'Y']}, 
+        full = xr.DataArray([[1.5, -30], [-10, 2.5], [4., 5.]],
+                            {'ABC': ['A', 'B', 'C'], 'XY': ['X', 'Y']},
                             ['ABC', 'XY'])
 
         all_smaller_out = data.data[0].reset_coords('lookup_dim', drop=True)
         all_bigger_out = data.data[-1].reset_coords('lookup_dim', drop=True)
-        all_inside_out = xr.DataArray([[ 0.5 , -1.  , -0.75],
-                                       [ 0.5 ,  1.  ,  0.  ]],
-                                       {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']},
-                                       ['XY', 'ABC'])
-        mixed_out = xr.DataArray([[ 0.5 , 0.  , 1.],
-                                  [ -1. ,  1.  ,  -1.  ]],
+        all_inside_out = xr.DataArray([[0.5, -1, -0.75],
+                                       [0.5,  1,  0]],
+                                      {'XY': ['X', 'Y'],
+                                       'ABC': ['A', 'B', 'C']},
+                                      ['XY', 'ABC'])
+        mixed_out = xr.DataArray([[0.5, 0, 1],
+                                  [-1, 1,  -1]],
                                  {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']},
                                  ['XY', 'ABC'])
 
-        full_out = xr.DataArray([[ 0.5 , 0.  , -0.5],
-                                [ 1. ,  0.  ,  0.  ]],
-                               {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']},
-                               ['XY', 'ABC'])
+        full_out = xr.DataArray([[0.5, 0, -0.5],
+                                 [1, 0, 0]],
+                                {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']},
+                                ['XY', 'ABC'])
 
-        self.assertTrue(data(all_smaller).equals(all_smaller_out))
-        self.assertTrue(data(all_bigger).equals(all_bigger_out))
-        self.assertTrue(data(all_inside).equals(all_inside_out))
-        self.assertTrue(data(mixed).equals(mixed_out))
-        self.assertTrue(data(full).equals(full_out))
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            self.assertTrue(data(all_smaller).equals(all_smaller_out))
+            self.assertTrue(data(all_bigger).equals(all_bigger_out))
+            self.assertTrue(data(all_inside).equals(all_inside_out))
+            self.assertTrue(data(mixed).equals(mixed_out))
+            self.assertTrue(data(full).equals(full_out))
 
 
 class TestConstant(unittest.TestCase):
@@ -2791,10 +2798,9 @@ class TestWarningsErrors(unittest.TestCase):
                      cell=cell2,
                      coords=coords2)
 
-
     def test_constant_hns(self):
         """
-        Test for error in data when it doen't have the shame
+        Test for error in data when it doen't have the same
         shape as the given coordinates
         """
         import pysd
@@ -2814,3 +2820,265 @@ class TestWarningsErrors(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             data.initialize()
+
+    def text_openpyxl_str(self):
+        """
+        Test for reading data with strings with openpyxl
+        """
+        import pysd
+
+        pysd.external.External.missing = "keep"
+
+        file_name = "data/input.xlsx"
+        sheet = "CASE AND NON V"  # test case insensitivity
+        cell = "series"
+        x_row_or_col = "unit"
+        coords = {}
+        py_name = "test_openpyxl_str"
+
+        data = pysd.external.ExtLookup(file_name=file_name,
+                                       sheet=sheet,
+                                       x_row_or_col=x_row_or_col,
+                                       root=_root,
+                                       cell=cell,
+                                       coords=coords,
+                                       py_name=py_name)
+
+        expected = xr.DataArray(
+            [np.nan, 1, 2, 3, 4, 5],
+            {'lookup_dim': [10., 11., 12., 13., 14., 15.]},
+            ['lookup_dim'])
+
+        data.initialize()
+
+        self.assertTrue(data.data.equals(expected))
+
+        cell = "no_constant"
+        sheet = "caSE anD NON V"  # test case insensitivity
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         sheet=sheet,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         py_name=py_name)
+
+        data.initialize()
+
+        self.assertTrue(np.isnan(data.data))
+
+
+class DownwardCompatibility(unittest.TestCase):
+    """
+    These tests are defined to make the external objects compatible
+    with SDQC library. If any change in PySD breaks these tests it
+    should be checked with SDQC library and correct it.
+    """
+    def test_constant_hn3dm_keep(self):
+        """
+        Test for keep 3d horizontal constants with missing values by cellrange
+        name.
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        sheet = "Horizontal missing"
+        cell_1 = "data_2d"
+        cell_2 = "data_2db"
+        coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C'],
+                    'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C'],
+                    'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        py_name = "test_constant_hn3dm_raise"
+        pysd.external.External.missing = "keep"
+
+        expected = xr.DataArray(
+            [[[0, 0, 1, 1, -1, -1, 0, np.nan],
+              [0, 1, 1, -1, -1, 0, np.nan, np.nan],
+              [np.nan, 1, -1, -1, 0, np.nan, np.nan, 0]],
+             [[1, -1, -1, 0, 0, 0, 0, 1],
+              [-1, -1., 0, np.nan, 0, 0, 1, np.nan],
+              [-1, 0, np.nan, np.nan, 0, 1, 1, -1]]],
+            {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C'],
+             'val': [0, 1, 2, 3, 5, 6, 7, 8]},
+            ['XY', 'ABC', 'val'])
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         sheet=sheet,
+                                         root=_root,
+                                         cell=cell_1,
+                                         coords=coords_1,
+                                         py_name=py_name)
+
+        data.add(file_name=file_name,
+                 sheet=sheet,
+                 cell=cell_2,
+                 coords=coords_2)
+
+        data.initialize()
+
+        self.assertTrue(data().equals(expected))
+
+    def test_lookup_hn3dmd_keep(self):
+        """
+        Test for keep 3d horizontal series interpolation with
+        missing data values.
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        sheet = "Horizontal missing"
+        x_row_or_col = "15"
+        cell_1 = "C16"
+        cell_2 = "C19"
+        coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C']}
+        coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C']}
+        py_name = "test_lookup_hn3dmd_ignore"
+        pysd.external.External.missing = "keep"
+
+        expected = xr.DataArray(
+            [[[0, 0, np.nan],
+              [1, -1, -1]],
+             [[0, 1, 1],
+              [-1, -1, 0]],
+             [[1, 1, -1],
+              [-1, 0, np.nan]],
+             [[1, -1, -1],
+              [0., np.nan, np.nan]],
+             [[-1, -1, 0],
+              [0, 0, 0]],
+             [[-1, 0, np.nan],
+              [0, 0, 1]],
+             [[0, np.nan, np.nan],
+              [0, 1, 1]],
+             [[np.nan, np.nan, 0],
+              [1, np.nan, -1]]],
+            {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C'],
+             'lookup_dim': [0., 1., 2., 3., 5., 6., 7., 8.]},
+            ['lookup_dim', 'XY', 'ABC'])
+
+        data = pysd.external.ExtLookup(file_name=file_name,
+                                       sheet=sheet,
+                                       x_row_or_col=x_row_or_col,
+                                       root=_root,
+                                       cell=cell_1,
+                                       coords=coords_1,
+                                       py_name=py_name)
+
+        data.add(file_name=file_name,
+                 sheet=sheet,
+                 x_row_or_col=x_row_or_col,
+                 cell=cell_2,
+                 coords=coords_2)
+
+        data.initialize()
+
+        self.assertTrue(data.data.equals(expected))
+
+    def test_data_interp_v1dm_keep(self):
+        """
+        Test keep 1d vertical series interpolation when series has
+        missing or NaN data
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        sheet = "Vertical missing"
+        time_row_or_col = "B"
+        cell = "C5"
+        coords = {}
+        interp = None
+        py_name = "test_data_interp_v1dm_ignore"
+
+        pysd.external.External.missing = "keep"
+
+        expected = xr.DataArray(
+            [0, 0, 1, 1, 3, -1, -1, 0, 0],
+            {'time': [0., 1., 2., 3., np.nan, 5., 6., 7., 8.]},
+            ['time'])
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     sheet=sheet,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     interp=interp,
+                                     py_name=py_name)
+
+        data.initialize()
+
+        self.assertTrue(data.data.equals(expected))
+
+    def test_data_interp_hnnm_keep(self):
+        """
+        Test for keep in series when the series is not
+        strictly monotonous
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        sheet = "No monotonous"
+        time_row_or_col = "time"
+        cell = "data_1d"
+        coords = {}
+        interp = None
+        py_name = "test_data_interp_hnnm"
+
+        pysd.external.External.missing = "keep"
+
+        expected = xr.DataArray(
+            [0, 0, 1, 1, -1, -1, 0, 0],
+            {'time': [0., 1., 2., 7., 5., 6., 7., 8.]},
+            ['time'])
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     sheet=sheet,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     interp=interp,
+                                     py_name=py_name)
+
+        data.initialize()
+
+        self.assertTrue(data.data.equals(expected))
+
+
+    def test_lookup_data_attr(self):
+        """
+        Test for keep in series when the series is not
+        strictly monotonous
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        sheet = "No monotonous"
+        time_row_or_col = "time"
+        cell = "data_1d"
+        coords = {}
+        interp = None
+        py_name = "test_data_interp_hnnm"
+
+        datD = pysd.external.ExtData(file_name=file_name,
+                                     sheet=sheet,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     interp=interp,
+                                     py_name=py_name)
+
+        datL = pysd.external.ExtLookup(file_name=file_name,
+                                       sheet=sheet,
+                                       x_row_or_col=time_row_or_col,
+                                       root=_root,
+                                       cell=cell,
+                                       coords=coords,
+                                       py_name=py_name)
+        datD.initialize()
+        datL.initialize()
+
+        self.assertTrue(hasattr(datD, 'time_row_or_cols'))
+        self.assertTrue(hasattr(datL, 'x_row_or_cols'))
