@@ -44,7 +44,7 @@ class Excels():
         if file_name in cls._Excels_opyxl:
             return cls._Excels_opyxl[file_name]
         else:
-            excel = load_workbook(file_name, read_only=True)
+            excel = load_workbook(file_name, read_only=True, data_only=True)
             cls._Excels_opyxl[file_name] = excel
             return excel
 
@@ -143,7 +143,9 @@ class External(object):
         try:
             # Get the local id of the sheet
             # needed for searching in locals names
-            sheetId = excel.sheetnames.index(self.sheet)
+            # need to lower the sheetnames as Vensim has no case sensitivity
+            sheetId = [sheetname_wb.lower() for sheetname_wb
+                       in excel.sheetnames].index(self.sheet.lower())
         except ValueError:
             # Error if it is not able to get the localSheetId
             raise ValueError(self.py_name + "\n"
@@ -156,13 +158,16 @@ class External(object):
                         or excel.defined_names.get(cellname)
             coordinates = cellrange.destinations
             for sheet, cells in coordinates:
-                if sheet == self.sheet:
+                if sheet.lower() == self.sheet.lower():
                     values = excel[sheet][cells]
                     try:
-                        return np.array([[i.value for i in j] for j in values],
-                                        dtype=float)
+                        return np.array(
+                            [[i.value if not isinstance(i.value, str)
+                              else np.nan for i in j] for j in values],
+                            dtype=float)
                     except TypeError:
                         return float(values.value)
+
             raise AttributeError
 
         except (KeyError, AttributeError):

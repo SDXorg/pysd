@@ -2821,6 +2821,52 @@ class TestWarningsErrors(unittest.TestCase):
         with self.assertRaises(ValueError):
             data.initialize()
 
+    def text_openpyxl_str(self):
+        """
+        Test for reading data with strings with openpyxl
+        """
+        import pysd
+
+        pysd.external.External.missing = "keep"
+
+        file_name = "data/input.xlsx"
+        sheet = "CASE AND NON V"  # test case insensitivity
+        cell = "series"
+        x_row_or_col = "unit"
+        coords = {}
+        py_name = "test_openpyxl_str"
+
+        data = pysd.external.ExtLookup(file_name=file_name,
+                                       sheet=sheet,
+                                       x_row_or_col=x_row_or_col,
+                                       root=_root,
+                                       cell=cell,
+                                       coords=coords,
+                                       py_name=py_name)
+
+        expected = xr.DataArray(
+            [np.nan, 1, 2, 3, 4, 5],
+            {'lookup_dim': [10., 11., 12., 13., 14., 15.]},
+            ['lookup_dim'])
+
+        data.initialize()
+
+        self.assertTrue(data.data.equals(expected))
+
+        cell = "no_constant"
+        sheet = "caSE anD NON V"  # test case insensitivity
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         sheet=sheet,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         py_name=py_name)
+
+        data.initialize()
+
+        self.assertTrue(np.isnan(data.data))
+
 
 class DownwardCompatibility(unittest.TestCase):
     """
