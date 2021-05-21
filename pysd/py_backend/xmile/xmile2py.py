@@ -249,8 +249,7 @@ def translate_xmile(xmile_file):
         py_expr, new_structure = builder.add_stock(identifier=py_name,
                                                    subs=[],  # Todo later
                                                    expression=py_ddt,
-                                                   initial_condition=py_initial_value,
-                                                   subscript_dict={},  # Todo later
+                                                   initial_condition=py_initial_value
                                                    )
         element['py_expr'] = py_expr
         model_elements.append(element)

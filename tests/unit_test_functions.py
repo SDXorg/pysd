@@ -1,4 +1,5 @@
 import unittest
+import warnings
 
 import numpy as np
 import xarray as xr
@@ -351,13 +352,15 @@ class TestStateful(unittest.TestCase):
         delay_a = pysd.functions.Delay(delay_input=lambda: 5,
                                        delay_time=lambda: 3,
                                        initial_value=lambda: 4.234,
-                                       order=lambda: 3)
+                                       order=lambda: 3,
+                                       tstep=lambda: 0.5,
+                                       py_name='delay')
 
         delay_a.initialize()
 
         self.assertEqual(delay_a(), 4.234)
 
-        self.assertEqual(delay_a.ddt()[0], 5-4.234)
+        self.assertEqual(float(delay_a.ddt()[0]), (5-4.234)*3)
 
     def test_delay_subscript(self):
         """
@@ -372,16 +375,97 @@ class TestStateful(unittest.TestCase):
         xr_delay_time = xr.DataArray([[3, 2], [3, 2]], coords, dims)
 
         delay = pysd.functions.Delay(delay_input=lambda: xr_input,
-                                       delay_time=lambda: xr_delay_time,
-                                       initial_value=lambda: xr_initial,
-                                       order=lambda: 2)
+                                     delay_time=lambda: xr_delay_time,
+                                     initial_value=lambda: xr_initial,
+                                     order=lambda: 2,
+                                     tstep=lambda: 0.5,
+                                     py_name='delay')
 
         delay.initialize()
 
         self.assertTrue(delay().equals(xr_initial))
-        delay_ddt = delay.ddt()[0].reset_coords('delay', drop=True)
+        delay_ddt = delay.ddt()[0].reset_coords('_delay', drop=True)
+        print(delay_ddt)
 
-        self.assertTrue(delay_ddt.equals(xr_input-xr_initial))
+        self.assertTrue(delay_ddt.equals((xr_input-xr_initial)*2))
+
+    def test_delay_order(self):
+        import pysd
+
+        # order 3 to 2
+        delay1 = pysd.functions.Delay(delay_input=lambda: 10,
+                                      delay_time=lambda: 1,
+                                      initial_value=lambda: 0,
+                                      order=lambda: 3,
+                                      tstep=lambda: 0.4,
+                                      py_name='delay1')
+
+        # order 3 to 2
+        delay2 = pysd.functions.DelayN(delay_input=lambda: 10,
+                                       delay_time=lambda: 1,
+                                       initial_value=lambda: 0,
+                                       order=lambda: 3,
+                                       tstep=lambda: 0.4,
+                                       py_name='delay2')
+
+        # 1.5 to 1
+        delay3 = pysd.functions.Delay(delay_input=lambda: 10,
+                                      delay_time=lambda: 1,
+                                      initial_value=lambda: 0,
+                                      order=lambda: 1.5,
+                                      tstep=lambda: 0.4,
+                                      py_name='delay3')
+
+        # 1.5  to 1
+        delay4 = pysd.functions.DelayN(delay_input=lambda: 10,
+                                       delay_time=lambda: 1,
+                                       initial_value=lambda: 0,
+                                       order=lambda: 1.5,
+                                       tstep=lambda: 0.4,
+                                       py_name='delay4')
+        # 1.5 rounded to 2
+        delay5 = pysd.functions.DelayFixed(delay_input=lambda: 10,
+                                           delay_time=lambda: 0.75,
+                                           initial_value=lambda: 0,
+                                           tstep=lambda: 0.5,
+                                           py_name='delay5')
+
+        with warnings.catch_warnings(record=True) as ws:
+            delay1.initialize()
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 1)
+            self.assertIn('Delay time very small, casting delay order '
+                          + 'from 3 to 2',
+                          str(wu[0].message))
+
+        with warnings.catch_warnings(record=True) as ws:
+            delay2.initialize()
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 1)
+            self.assertIn('Delay time very small, casting delay order '
+                          + 'from 3 to 2',
+                          str(wu[0].message))
+
+        with warnings.catch_warnings(record=True) as ws:
+            delay3.initialize()
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 1)
+            self.assertIn("Casting delay order from 1.5 to 1",
+                          str(wu[0].message))
+
+        with warnings.catch_warnings(record=True) as ws:
+            delay4.initialize()
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 1)
+            self.assertIn("Casting delay order from 1.5 to 1",
+                          str(wu[0].message))
+
+        with warnings.catch_warnings(record=True) as ws:
+            delay5.initialize()
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 1)
+            self.assertIn("Casting delay order from 1.500000 to 2",
+                          str(wu[0].message))
 
     def test_initial(self):
         import pysd

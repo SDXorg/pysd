@@ -347,7 +347,7 @@ def merge_partial_elements(element_list):
 
 
 def add_stock(identifier, expression, initial_condition,
-              subs, subscript_dict):
+              subs):
     """
     Creates new model element dictionaries for the model elements associated
     with a stock.
@@ -367,9 +367,6 @@ def add_stock(identifier, expression, initial_condition,
         List of strings of subscript indices that correspond to the
         list of expressions, and collectively define the shape of the output
 
-    subscript_dict: dictionary
-        Dictionary describing the possible dimensions of the stock's subscripts
-
     Returns
     -------
     reference: string
@@ -385,18 +382,19 @@ def add_stock(identifier, expression, initial_condition,
     import_modules['functions'].add("Integ")
 
     new_structure = []
+    py_name = '_integ_%s' % identifier
 
     if len(subs) == 0:
-        stateful_py_expr = 'Integ(lambda: %s, lambda: %s)' % (
-            expression, initial_condition)
+        stateful_py_expr = "Integ(lambda: %s, lambda: %s, '%s')" % (
+            expression, initial_condition, py_name)
     else:
-        stateful_py_expr = 'Integ(lambda: _d%s_dt(), lambda: '\
-                           '_init_%s())' % (identifier, identifier)
+        stateful_py_expr = "Integ(_integ_input_%s, _integ_init_%s, '%s')" % (
+            identifier, identifier, py_name)
 
         # following elements not specified in the model file, but must exist
         # create the stock initialization element
         new_structure.append({
-            'py_name': '_init_%s' % identifier,
+            'py_name': '_integ_init_%s' % identifier,
             'real_name': 'Implicit',
             'kind': 'setup',
             'py_expr': initial_condition,
@@ -409,7 +407,7 @@ def add_stock(identifier, expression, initial_condition,
         })
 
         new_structure.append({
-            'py_name': '_d%s_dt' % identifier,
+            'py_name': '_integ_input_%s' % identifier,
             'real_name': 'Implicit',
             'kind': 'component',
             'doc': 'Provides derivative for %s function' % identifier,
@@ -422,8 +420,8 @@ def add_stock(identifier, expression, initial_condition,
         })
 
     # describe the stateful object
-    stateful = {
-        'py_name': '_integ_%s' % identifier,
+    new_structure.append({
+        'py_name': py_name,
         'real_name': 'Representation of  %s' % identifier,
         'doc': 'Integrates Expression %s' % expression,
         'py_expr': stateful_py_expr,
@@ -433,14 +431,13 @@ def add_stock(identifier, expression, initial_condition,
         'subs': '',
         'kind': 'stateful',
         'arguments': ''
-    }
+    })
 
-    new_structure.append(stateful)
-    return "%s()" % stateful['py_name'], new_structure
+    return "%s()" % py_name, new_structure
 
 
-def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
-                subs, subscript_dict):
+def add_delay(identifier, delay_input, delay_time, initial_value, order,
+              subs):
     """
     Creates code to instantiate a stateful 'Delay' object,
     and provides reference to that object's output.
@@ -477,9 +474,6 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
         List of strings of subscript indices that correspond to the
         list of expressions, and collectively define the shape of the output
 
-    subscript_dict: dictionary
-        Dictionary describing the possible dimensions of the stock's subscripts
-
     Returns
     -------
     reference: basestring
@@ -493,22 +487,24 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
     import_modules['functions'].add("Delay")
 
     new_structure = []
+    py_name = '_delay_%s' % identifier
 
     if len(subs) == 0:
-        stateful_py_expr = 'Delay(lambda: %s, lambda: %s,'\
-                           'lambda: %s, lambda: %s)' % (
-                               delay_input, delay_time, initial_value, order)
+        stateful_py_expr = "Delay(lambda: %s, lambda: %s,"\
+                           "lambda: %s, lambda: %s, time_step, '%s')" % (
+                               delay_input, delay_time,
+                               initial_value, order, py_name)
 
     else:
-        stateful_py_expr = 'Delay(lambda: _delinput_%s(),'\
-                           'lambda: _deltime_%s(), lambda: _init_%s(),'\
-                           'lambda: %s)' % (
-                               identifier, identifier, identifier, order)
+        stateful_py_expr = "Delay(_delay_input_%s, lambda: %s, _delay_init_%s,"\
+                           "lambda: %s, time_step, '%s')" % (
+                               identifier, delay_time, identifier,
+                               order, py_name)
 
         # following elements not specified in the model file, but must exist
         # create the delay initialization element
         new_structure.append({
-            'py_name': '_init_%s' % identifier,
+            'py_name': '_delay_init_%s' % identifier,
             'real_name': 'Implicit',
             'kind': 'setup',  # not specified in the model file, but must exist
             'py_expr': initial_value,
@@ -521,20 +517,7 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
         })
 
         new_structure.append({
-            'py_name': '_deltime_%s' % identifier,
-            'real_name': 'Implicit',
-            'kind': 'component',
-            'doc': 'Provides delay time for %s function' % identifier,
-            'subs': subs,
-            'unit': 'See docs for %s' % identifier,
-            'lims': 'None',
-            'eqn': 'None',
-            'py_expr': delay_time,
-            'arguments': ''
-        })
-
-        new_structure.append({
-            'py_name': '_delinput_%s' % identifier,
+            'py_name': '_delay_input_%s' % identifier,
             'real_name': 'Implicit',
             'kind': 'component',
             'doc': 'Provides input for %s function' % identifier,
@@ -547,8 +530,8 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
         })
 
     # describe the stateful object
-    stateful = {
-        'py_name': '_delay_%s' % identifier,
+    new_structure.append({
+        'py_name': py_name,
         'real_name': 'Delay of %s' % delay_input,
         'doc': 'Delay time: %s \n Delay initial value %s \n Delay order %s' % (
             delay_time, initial_value, order),
@@ -559,14 +542,188 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
         'subs': '',
         'kind': 'stateful',
         'arguments': ''
+    })
+
+    return "%s()" % py_name, new_structure
+
+
+def add_delay_f(identifier, delay_input, delay_time, initial_value):
+    """
+    Creates code to instantiate a stateful 'DelayFixed' object,
+    and provides reference to that object's output.
+
+    The name of the stateful object is based upon the passed in parameters,
+    so if there are multiple places where identical delay functions are
+    referenced, the translated python file will only maintain one stateful
+    object, and reference it multiple times.
+
+    Parameters
+    ----------
+    identifier: basestring
+        the python-safe name of the stock
+
+    delay_input: <string>
+        Reference to the model component that is the input to the delay
+
+    delay_time: <string>
+        Can be a number (in string format) or a reference to another model
+        element which will calculate the delay. This is calculated throughout
+        the simulation at runtime.
+
+    initial_value: <string>
+        This is used to initialize the stocks that are present in the delay.
+        We initialize the stocks with equal values so that the outflow in
+        the first timestep is equal to this value.
+
+    Returns
+    -------
+    reference: basestring
+        reference to the delay object `__call__` method, which will return
+        the output of the delay process
+
+    new_structure: list
+        list of element construction dictionaries for the builder to assemble
+
+    """
+    import_modules['functions'].add("DelayFixed")
+
+    py_name = '_delayfixed_%s' % identifier
+
+    stateful_py_expr = "DelayFixed(lambda: %s, lambda: %s,"\
+                       "lambda: %s, time_step, '%s')" % (
+                           delay_input, delay_time,
+                           initial_value, py_name)
+
+    # describe the stateful object
+    stateful = {
+        'py_name': py_name,
+        'real_name': 'Delay fixed  of %s' % delay_input,
+        'doc': 'DelayFixed time: %s \n Delay initial value %s' % (
+            delay_time, initial_value),
+        'py_expr': stateful_py_expr,
+        'unit': 'None',
+        'lims': 'None',
+        'eqn': 'None',
+        'subs': '',
+        'kind': 'stateful',
+        'arguments': ''
     }
-    new_structure.append(stateful)
 
-    return "%s()" % stateful['py_name'], new_structure
+    return "%s()" % py_name, [stateful]
 
 
-def add_sample_if_true(identifier, condition, actual_value, initial_value,
-                subs, subscript_dict):
+def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
+                subs):
+    """
+    Creates code to instantiate a stateful 'DelayN' object,
+    and provides reference to that object's output.
+
+    The name of the stateful object is based upon the passed in parameters,
+    so if there are multiple places where identical delay functions are
+    referenced, the translated python file will only maintain one stateful
+    object, and reference it multiple times.
+
+    Parameters
+    ----------
+    identifier: basestring
+        the python-safe name of the stock
+
+    delay_input: <string>
+        Reference to the model component that is the input to the delay
+
+    delay_time: <string>
+        Can be a number (in string format) or a reference to another model
+        element which will calculate the delay. This is calculated throughout
+        the simulation at runtime.
+
+    initial_value: <string>
+        This is used to initialize the stocks that are present in the delay.
+        We initialize the stocks with equal values so that the outflow in
+        the first timestep is equal to this value.
+
+    order: string
+        The number of stocks in the delay pipeline. As we construct the
+        delays at build time, this must be an integer and cannot be calculated
+        from other model components. Anything else will yield a ValueError.
+
+    subs: list of strings
+        List of strings of subscript indices that correspond to the
+        list of expressions, and collectively define the shape of the output
+
+    Returns
+    -------
+    reference: basestring
+        reference to the delay object `__call__` method, which will return
+        the output of the delay process
+
+    new_structure: list
+        list of element construction dictionaries for the builder to assemble
+
+    """
+    import_modules['functions'].add("DelayN")
+
+    new_structure = []
+    py_name = '_delayn_%s' % identifier
+
+    if len(subs) == 0:
+        stateful_py_expr = "DelayN(lambda: %s, lambda: %s,"\
+                           "lambda: %s, lambda: %s, time_step, '%s')" % (
+                               delay_input, delay_time,
+                               initial_value, order, py_name)
+
+    else:
+        stateful_py_expr = "DelayN(_delayn_input_%s, lambda: %s,"\
+                           " _delayn_init_%s, lambda: %s, time_step, '%s')" % (
+                               identifier, delay_time, identifier,
+                               order, py_name)
+
+        # following elements not specified in the model file, but must exist
+        # create the delay initialization element
+        new_structure.append({
+            'py_name': '_delayn_init_%s' % identifier,
+            'real_name': 'Implicit',
+            'kind': 'setup',  # not specified in the model file, but must exist
+            'py_expr': initial_value,
+            'subs': subs,
+            'doc': 'Provides initial conditions for %s function' % identifier,
+            'unit': 'See docs for %s' % identifier,
+            'lims': 'None',
+            'eqn': 'None',
+            'arguments': ''
+        })
+
+        new_structure.append({
+            'py_name': '_delayn_input_%s' % identifier,
+            'real_name': 'Implicit',
+            'kind': 'component',
+            'doc': 'Provides input for %s function' % identifier,
+            'subs': subs,
+            'unit': 'See docs for %s' % identifier,
+            'lims': 'None',
+            'eqn': 'None',
+            'py_expr': delay_input,
+            'arguments': ''
+        })
+
+    # describe the stateful object
+    new_structure.append({
+        'py_name': py_name,
+        'real_name': 'DelayN of %s' % delay_input,
+        'doc': 'DelayN time: %s \n DelayN initial value %s \n DelayN order %s' % (
+            delay_time, initial_value, order),
+        'py_expr': stateful_py_expr,
+        'unit': 'None',
+        'lims': 'None',
+        'eqn': 'None',
+        'subs': '',
+        'kind': 'stateful',
+        'arguments': ''
+    })
+
+    return "%s()" % py_name, new_structure
+
+
+def add_sample_if_true(identifier, condition, actual_value, initial_value):
     """
     Creates code to instantiate a stateful 'SampleIfTrue' object,
     and provides reference to that object's output.
@@ -577,7 +734,7 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value,
         the python-safe name of the stock
 
     condition: <string>
-        Reference to another model element that is the condition to the 
+        Reference to another model element that is the condition to the
         'sample if true' function
 
     actual_value: <string>
@@ -587,17 +744,10 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value,
     initial_value: <string>
         This is used to initialize the state of the sample if true function.
 
-    subs: list of strings
-        List of strings of subscript indices that correspond to the
-        list of expressions, and collectively define the shape of the output
-
-    subscript_dict: dictionary
-        Dictionary describing the possible dimensions of the stock's subscripts
-
     Returns
     -------
     reference: basestring
-        reference to the sample if true object `__call__` method, 
+        reference to the sample if true object `__call__` method,
         which will return the output of the sample if true process
 
     new_structure: list
@@ -606,64 +756,16 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value,
     """
     import_modules['functions'].add("SampleIfTrue")
 
-    new_structure = []
-
-    if len(subs) == 0:
-        stateful_py_expr = 'SampleIfTrue(lambda: %s, lambda: %s,'\
-                           'lambda: %s)' % (condition, actual_value, initial_value)
-    
-    else:
-        stateful_py_expr = 'SampleIfTrue(lambda: _condition_%s(),'\
-                           'lambda: _input_%s(), lambda: _init_%s(),)' % (
-                               identifier, identifier, identifier)
-        # following elements not specified in the model file, but must exist
-        # create the sample if true initialization element
-        new_structure.append({
-            'py_name': '_init_%s' % identifier,
-            'real_name': 'Implicit',
-            'kind': 'setup',  # not specified in the model file, but must exist
-            'py_expr': initial_value,
-            'subs': subs,
-            'doc': 'Provides initial value for %s function' % identifier,
-            'unit': 'See docs for %s' % identifier,
-            'lims': 'None',
-            'eqn': 'None',
-            'arguments': ''
-        })
-
-        new_structure.append({
-            'py_name': '_condition_%s' % identifier,
-            'real_name': 'Implicit',
-            'kind': 'component',
-            'doc': 'Provides condition for %s function' % identifier,
-            'subs': subs,
-            'unit': 'See docs for %s' % identifier,
-            'lims': 'None',
-            'eqn': 'None',
-            'py_expr': condition,
-            'arguments': ''
-        })
-
-        new_structure.append({
-            'py_name': '_input_%s' % identifier,
-            'real_name': 'Implicit',
-            'kind': 'component',
-            'doc': 'Provides input for %s function' % identifier,
-            'subs': subs,
-            'unit': 'See docs for %s' % identifier,
-            'lims': 'None',
-            'eqn': 'None',
-            'py_expr': actual_value,
-            'arguments': ''
-        })
+    py_name = '_sample_if_true_%s' % identifier
 
     # describe the stateful object
     stateful = {
-        'py_name': '_sample_if_true_%s' % identifier,
+        'py_name': py_name,
         'real_name': 'Sample if true of %s' % identifier,
         'doc': 'Initial value: %s \n  Input: %s \n Condition: %s' % (
             initial_value, actual_value, condition),
-        'py_expr': stateful_py_expr,
+        'py_expr': "SampleIfTrue(lambda: %s, lambda: %s, lambda: %s, '%s')" % (
+                    condition, actual_value, initial_value, py_name),
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',
@@ -671,13 +773,12 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value,
         'kind': 'stateful',
         'arguments': ''
     }
-    new_structure.append(stateful)
 
-    return "%s()" % stateful['py_name'], new_structure
+    return "%s()" % stateful['py_name'], [stateful]
 
 
 def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order,
-                 subs, subscript_dict):
+                 subs):
     """
     Constructs stock and flow chains that implement the calculation of
     a smoothing function.
@@ -710,9 +811,6 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order,
         List of strings of subscript indices that correspond to the
         list of expressions, and collectively define the shape of the output
 
-    subscript_dict: dictionary
-        Dictionary describing the possible dimensions of the stock's subscripts
-
     Returns
     -------
     reference: basestring
@@ -725,26 +823,69 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order,
     """
     import_modules['functions'].add("Smooth")
 
-    stateful = {
-        'py_name': '_smooth_%s' % identifier,
+    new_structure = []
+    py_name = '_smooth_%s' % identifier
+
+    if len(subs) == 0:
+        stateful_py_expr = "Smooth(lambda: %s, lambda: %s,"\
+                           "lambda: %s, lambda: %s, '%s')" % (
+                               smooth_input, smooth_time, initial_value,
+                               order, py_name)
+
+    else:
+        # only need to re-dimension init and input as xarray will take care of other
+        stateful_py_expr = "Smooth(_smooth_input_%s, lambda: %s,"\
+                           " _smooth_init_%s, lambda: %s, '%s')" % (
+                               identifier, smooth_time, identifier,
+                               order, py_name)
+
+        # following elements not specified in the model file, but must exist
+        # create the delay initialization element
+        new_structure.append({
+            'py_name': '_smooth_init_%s' % identifier,
+            'real_name': 'Implicit',
+            'kind': 'setup',  # not specified in the model file, but must exist
+            'py_expr': initial_value,
+            'subs': subs,
+            'doc': 'Provides initial conditions for %s function' % identifier,
+            'unit': 'See docs for %s' % identifier,
+            'lims': 'None',
+            'eqn': 'None',
+            'arguments': ''
+        })
+
+        new_structure.append({
+            'py_name': '_smooth_input_%s' % identifier,
+            'real_name': 'Implicit',
+            'kind': 'component',
+            'doc': 'Provides input for %s function' % identifier,
+            'subs': subs,
+            'unit': 'See docs for %s' % identifier,
+            'lims': 'None',
+            'eqn': 'None',
+            'py_expr': smooth_input,
+            'arguments': ''
+        })
+
+    new_structure.append({
+        'py_name': py_name,
         'real_name': 'Smooth of %s' % smooth_input,
         'doc': 'Smooth time: %s \n Smooth initial value %s \n Smooth order %s' % (
             smooth_time, initial_value, order),
-        'py_expr': 'Smooth(lambda: %s, lambda: %s, lambda: %s, lambda: %s)' % (
-            smooth_input, smooth_time, initial_value, order),
+        'py_expr': stateful_py_expr,
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',
         'subs': '',
         'kind': 'stateful',
         'arguments': ''
-    }
+    })
 
-    return "%s()" % stateful['py_name'], [stateful]
+    return "%s()" % py_name, new_structure
 
 
 def add_n_trend(identifier, trend_input, average_time, initial_trend,
-                subs, subscript_dict):
+                subs):
     """
     Trend.
 
@@ -764,9 +905,6 @@ def add_n_trend(identifier, trend_input, average_time, initial_trend,
         List of strings of subscript indices that correspond to the
         list of expressions, and collectively define the shape of the output
 
-    subscript_dict: dictionary
-        Dictionary describing the possible dimensions of the stock's subscripts
-
     Returns
     -------
     reference: basestring
@@ -780,22 +918,51 @@ def add_n_trend(identifier, trend_input, average_time, initial_trend,
 
     import_modules['functions'].add("Trend")
 
-    stateful = {
-        'py_name': '_trend_%s' % identifier,
+    new_structure = []
+    py_name = '_trend_%s' % identifier
+
+    if len(subs) == 0:
+        stateful_py_expr = "Trend(lambda: %s, lambda: %s,"\
+                           " lambda: %s, '%s')" % (
+                               trend_input, average_time, initial_trend,
+                               py_name)
+
+    else:
+        # only need to re-dimension init as xarray will take care of other
+        stateful_py_expr = "Trend(lambda: %s, lambda: %s,"\
+                           " _trend_init_%s, '%s')" % (
+                               trend_input, average_time, identifier, py_name)
+
+        # following elements not specified in the model file, but must exist
+        # create the delay initialization element
+        new_structure.append({
+            'py_name': '_trend_init_%s' % identifier,
+            'real_name': 'Implicit',
+            'kind': 'setup',  # not specified in the model file, but must exist
+            'py_expr': initial_trend,
+            'subs': subs,
+            'doc': 'Provides initial conditions for %s function' % identifier,
+            'unit': 'See docs for %s' % identifier,
+            'lims': 'None',
+            'eqn': 'None',
+            'arguments': ''
+        })
+
+    new_structure.append({
+        'py_name': py_name,
         'real_name': 'trend of %s' % trend_input,
         'doc': 'Trend average time: %s \n Trend initial value %s' % (
             average_time, initial_trend),
-        'py_expr': 'Trend(lambda: %s, lambda: %s, lambda: %s)' % (
-            trend_input, average_time, initial_trend),
+        'py_expr': stateful_py_expr,
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',
         'subs': '',
         'kind': 'stateful',
         'arguments': ''
-    }
+    })
 
-    return "%s()" % stateful['py_name'], [stateful]
+    return "%s()" % py_name, new_structure
 
 
 def add_initial(initial_input):
@@ -820,14 +987,15 @@ def add_initial(initial_input):
     """
 
     import_modules['functions'].add("Initial")
+    py_name = utils.make_python_identifier('_initial_%s'
+                                           % initial_input)[0]
 
     stateful = {
-        'py_name': utils.make_python_identifier('_initial_%s'
-                                                % initial_input)[0],
-        'real_name': 'Smooth of %s' % initial_input,
+        'py_name': py_name,
+        'real_name': 'Initial %s' % initial_input,
         'doc': 'Returns the value taken on during the initialization phase',
-        'py_expr': 'Initial(lambda: %s)' % (
-            initial_input),
+        'py_expr': "Initial(lambda: %s, '%s')" % (
+            initial_input, py_name),
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',
@@ -1080,18 +1248,20 @@ def add_macro(macro_name, filename, arg_names, arg_vals):
     """
     import_modules['functions'].add("Macro")
 
+    py_name = '_macro_' + macro_name + '_' + '_'.join(
+        [utils.make_python_identifier(f)[0] for f in arg_vals])
     func_args = '{ %s }' % ', '.join(["'%s': lambda: %s" % (key, val)
                                       for key, val in
                                       zip(arg_names, arg_vals)])
 
     stateful = {
-        'py_name': '_macro_' + macro_name + '_' + '_'.join(
-            [utils.make_python_identifier(f)[0] for f in arg_vals]),
+        'py_name': py_name,
         'real_name': 'Macro Instantiation of ' + macro_name,
         'doc': 'Instantiates the Macro',
         'py_expr': "Macro('%s', %s, '%s',"
-                   "time_initialization=lambda: __data['time'])" % (
-                   filename, func_args, macro_name),
+                   " time_initialization=lambda: __data['time'],"
+                   " py_name='%s')" % (
+                   filename, func_args, macro_name, py_name),
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',

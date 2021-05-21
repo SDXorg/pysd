@@ -265,8 +265,12 @@ class TestParse_general_expression(unittest.TestCase):
                                         'py_name': 'test_delay',
                                         'subs': []},
                                        {'Variable': 'variable',
-                                        'DelayTime': 'delaytime'},
+                                        'DelayTime': 'delaytime',
+                                        'TIME STEP': 'time_step'},
                                        )
+
+        def time_step():
+            return 0.5
 
         self.assertEqual(res[1][0]['kind'], 'stateful')
         a = eval(res[1][0]['py_expr'])
@@ -313,7 +317,7 @@ class TestParse_general_expression(unittest.TestCase):
         self.assertEqual(string, 'xr.DataArray(3.32,{dim: '
                                  + '_subscript_dict[dim] for dim in '
                                  + "['Dim1']},['Dim1'])")
-        a = xr.DataArray(3.32, {dim: _subscript_dict[dim] 
+        a = xr.DataArray(3.32, {dim: _subscript_dict[dim]
                                for dim in ['Dim1']},['Dim1'])
         self.assertDictEqual({key: list(val.values) for key, val in a.coords.items()},
                               {'Dim1': ['A', 'B', 'C']})

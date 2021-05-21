@@ -584,62 +584,50 @@ builders = {
         identifier=element['py_name'],
         expression=args[0],
         initial_condition=args[1],
-        subs=element['subs'],
-        subscript_dict=subscript_dict
+        subs=element['subs']
     ),
 
-    "delay1": lambda element, subscript_dict, args: builder.add_n_delay(
+    "delay1": lambda element, subscript_dict, args: builder.add_delay(
         identifier=element['py_name'],
         delay_input=args[0],
         delay_time=args[1],
         initial_value=args[0],
         order='1',
-        subs=element['subs'],
-        subscript_dict=subscript_dict
+        subs=element['subs']
     ),
 
-    "delay1i": lambda element, subscript_dict, args: builder.add_n_delay(
+    "delay1i": lambda element, subscript_dict, args: builder.add_delay(
         identifier=element['py_name'],
         delay_input=args[0],
         delay_time=args[1],
         initial_value=args[2],
         order='1',
-        subs=element['subs'],
-        subscript_dict=subscript_dict
+        subs=element['subs']
     ),
 
-    "delay3": lambda element, subscript_dict, args: builder.add_n_delay(
+    "delay3": lambda element, subscript_dict, args: builder.add_delay(
         identifier=element['py_name'],
         delay_input=args[0],
         delay_time=args[1],
         initial_value=args[0],
         order='3',
-        subs=element['subs'],
-        subscript_dict=subscript_dict
+        subs=element['subs']
     ),
 
-    "delay3i": lambda element, subscript_dict, args: builder.add_n_delay(
+    "delay3i": lambda element, subscript_dict, args: builder.add_delay(
         identifier=element['py_name'],
         delay_input=args[0],
         delay_time=args[1],
         initial_value=args[2],
         order='3',
-        subs=element['subs'],
-        subscript_dict=subscript_dict
+        subs=element['subs']
     ),
 
-    "delay fixed": lambda element, subscript_dict, args: builder.add_n_delay(
+    "delay fixed": lambda element, subscript_dict, args: builder.add_delay_f(
         identifier=element['py_name'],
         delay_input=args[0],
-        delay_time='time_step()' if args[1] == 'time_step()'
-                   else builder.build_function_call(
-                       functions_utils['round'],
-                       [args[1] + ' / time_step()']) + '* time_step()',
-        initial_value=args[2],
-        order='1.' if args[1] == 'time_step()'
-              else args[1] + ' / time_step()',
-        subs=element['subs'],
-        subscript_dict=subscript_dict
+        delay_time=args[1],
+        initial_value=args[2]
     ),
 
     "delay n": lambda element, subscript_dict, args: builder.add_n_delay(
@@ -648,17 +636,14 @@ builders = {
         delay_time=args[1],
         initial_value=args[2],
         order=args[3],
-        subs=element['subs'],
-        subscript_dict=subscript_dict
+        subs=element['subs']
     ),
 
     "sample if true": lambda element, subscript_dict, args: builder.add_sample_if_true(
         identifier=element['py_name'],
         condition=args[0],
         actual_value=args[1],
-        initial_value=args[2],
-        subs=element['subs'],
-        subscript_dict=subscript_dict
+        initial_value=args[2]
     ),
 
     "smooth": lambda element, subscript_dict, args: builder.add_n_smooth(
@@ -667,8 +652,7 @@ builders = {
         smooth_time=args[1],
         initial_value=args[0],
         order='1',
-        subs=element['subs'],
-        subscript_dict=subscript_dict
+        subs=element['subs']
     ),
 
     "smoothi": lambda element, subscript_dict, args: builder.add_n_smooth(
@@ -677,8 +661,7 @@ builders = {
         smooth_time=args[1],
         initial_value=args[2],
         order='1',
-        subs=element['subs'],
-        subscript_dict=subscript_dict
+        subs=element['subs']
     ),
 
     "smooth3": lambda element, subscript_dict, args: builder.add_n_smooth(
@@ -687,8 +670,7 @@ builders = {
         smooth_time=args[1],
         initial_value=args[0],
         order='3',
-        subs=element['subs'],
-        subscript_dict=subscript_dict
+        subs=element['subs']
     ),
 
     "smooth3i": lambda element, subscript_dict, args: builder.add_n_smooth(
@@ -697,8 +679,7 @@ builders = {
         smooth_time=args[1],
         initial_value=args[2],
         order='3',
-        subs=element['subs'],
-        subscript_dict=subscript_dict
+        subs=element['subs']
     ),
 
     "smooth n": lambda element, subscript_dict, args: builder.add_n_smooth(
@@ -707,8 +688,7 @@ builders = {
         smooth_time=args[1],
         initial_value=args[2],
         order=args[3],
-        subs=element['subs'],
-        subscript_dict=subscript_dict
+        subs=element['subs']
     ),
 
     "trend": lambda element, subscript_dict, args: builder.add_n_trend(
@@ -716,8 +696,8 @@ builders = {
         trend_input=args[0],
         average_time=args[1],
         initial_trend=args[2],
-        subs=element['subs'],
-        subscript_dict=subscript_dict),
+        subs=element['subs']
+    ),
 
     "get xls data": lambda element, subscript_dict, args: builder.add_ext_data(
         identifier=element['py_name'],
@@ -853,7 +833,9 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
 
     expression_grammar = _include_common_grammar(r"""
     expr_type = array / expr / empty
-    expr = _ pre_oper? _ (lookup_with_def / build_call / macro_call / call / lookup_call / parens / number / string / reference) _ (in_oper _ expr)?
+    expr = _ pre_oper? _ (lookup_with_def / build_call / macro_call /
+                          call / lookup_call / parens / number / string / reference)
+           _ (in_oper _ expr)?
 
     lookup_with_def = ~r"(WITH\ LOOKUP)"I _ "(" _ expr _ "," _ "(" _  ("[" ~r"[^\]]*" "]" _ ",")?  ( "(" _ expr _ "," _ expr _ ")" _ ","? _ )+ _ ")" _ ")"
 
@@ -1122,9 +1104,6 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
             elif 'data' in builder_name:
                 # External data
                 self.kind = 'component_ext_data'
-            elif builder_name == 'delay fixed':
-                warnings.warn("Delay fixed only approximates solution,"
-                              " may not give the same result as vensim")
 
             return name
 

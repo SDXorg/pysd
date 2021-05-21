@@ -152,8 +152,7 @@ builders = {
             delay_time = args[1],
             initial_value = args[2] if len(args) > 2 else args[0],
             order = "1",
-            subs = element['subs'],
-            subscript_dict = subscript_dict
+            subs = element['subs']
         ),
 
     "delay3": lambda element, subscript_dict, args: builder.add_n_delay(
@@ -161,8 +160,7 @@ builders = {
             delay_time = args[1],
             initial_value = args[2] if len(args) > 2 else args[0],
             order = "3",
-            subs = element['subs'],
-            subscript_dict = subscript_dict
+            subs = element['subs']
         ),
 
     "delayn": lambda element, subscript_dict, args: builder.add_n_delay(
@@ -170,8 +168,7 @@ builders = {
             delay_time = args[1],
             initial_value = args[2] if len(args) > 3 else args[0],
             order = args[2],
-            subs = element['subs'],
-            subscript_dict = subscript_dict
+            subs = element['subs']
         ),
 
     "smth1": lambda element, subscript_dict, args: builder.add_n_smooth(
@@ -179,8 +176,7 @@ builders = {
             smooth_time = args[1],
             initial_value = args[2] if len(args) > 2 else args[0],
             order = "1",
-            subs = element['subs'],
-            subscript_dict = subscript_dict
+            subs = element['subs']
         ),
 
     "smth3": lambda element, subscript_dict, args: builder.add_n_smooth(
@@ -188,8 +184,7 @@ builders = {
             smooth_time = args[1],
             initial_value = args[2] if len(args) > 2 else args[0],
             order = "3",
-            subs = element['subs'],
-            subscript_dict = subscript_dict
+            subs = element['subs']
         ),
 
     "smthn": lambda element, subscript_dict, args: builder.add_n_smooth(
@@ -197,8 +192,7 @@ builders = {
             smooth_time = args[1],
             initial_value = args[2] if len(args) > 3 else args[0],
             order = args[2],
-            subs = element['subs'],
-            subscript_dict = subscript_dict
+            subs = element['subs']
         ),
 
     # "forcst" !TODO!
@@ -207,8 +201,7 @@ builders = {
             trend_input = args[0],
             average_time = args[1],
             initial_trend = args[2] if len(args) > 2 else 0,
-            subs = element['subs'],
-            subscript_dict = subscript_dict
+            subs = element['subs']
         ),
 
     "init": lambda element, subscript_dict, args: builder.add_initial(args[0]),

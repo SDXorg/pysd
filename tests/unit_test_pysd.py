@@ -6,6 +6,7 @@ test_model = 'test-models/samples/teacup/teacup.mdl'
 test_model_subs = 'test-models/tests/subscript_2d_arrays/test_subscript_2d_arrays.mdl'
 test_not_vensim_model = 'more-tests/Not-Vensim.txt'
 
+
 class TestPySD(unittest.TestCase):
 
     def test_load_different_version_error(self):
@@ -66,12 +67,12 @@ class TestPySD(unittest.TestCase):
             pysd.load("type_error.py")
 
         os.remove("type_error.py")
-    
+
     def test_read_not_model_vensim(self):
         import pysd
         with self.assertRaises(ValueError):
             model = pysd.read_vensim(test_not_vensim_model)
-        
+
     def test_run(self):
         import pysd
         model = pysd.read_vensim(test_model)
@@ -1082,6 +1083,9 @@ class TestModelInteraction(unittest.TestCase):
         def time():
             return __data["time"]()
 
+        def time_step():
+            return 0.5
+
         def initial_time():
             return 0
 
@@ -1091,9 +1095,10 @@ class TestModelInteraction(unittest.TestCase):
         def delay():
             return _delay_delay()
 
-        _integ_integ = Integ(lambda: 2, lambda: delay())
+        _integ_integ = Integ(lambda: 2, lambda: delay(), '_integ_integ')
 
-        _delay_delay = Delay(lambda: 2, lambda: 1, lambda: integ(), 1)
+        _delay_delay = Delay(lambda: 2, lambda: 1,
+                             lambda: integ(), 1, time_step, '_delay_delay')
         """
 
         model_main = model_main.replace("\n        ", "\n")
@@ -1101,10 +1106,18 @@ class TestModelInteraction(unittest.TestCase):
         with open("circular.py", "w") as f:
             f.write(model_main)
 
-        with self.assertRaises(KeyError):
+        with self.assertRaises(ValueError) as err:
             pysd.load("circular.py")
 
         os.remove("circular.py")
+
+        self.assertIn('_integ_integ', str(err.exception))
+        self.assertIn('_delay_delay', str(err.exception))
+        self.assertIn('Unresolvable Reference: '
+                      + 'Probable circular initialization...\n'
+                      + 'Not able to initialize the '
+                      + 'following objects:',
+                      str(err.exception))
 
 
 class TestMultiRun(unittest.TestCase):
