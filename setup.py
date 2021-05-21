@@ -3,8 +3,6 @@ from setuptools import setup, find_packages
 exec(open('pysd/_version.py').read())
 print(__version__)
 
-long_description = """Project Documentation: http://pysd.readthedocs.org/"""
-
 setup(
     name='pysd',
     version=__version__,
@@ -15,7 +13,8 @@ setup(
     url='https://github.com/JamesPHoughton/pysd',
     license='LICENSE.txt',
     description='System Dynamics Modeling in Python',
-    long_description=long_description,
+    long_description=open('README.md').read(),
+    long_description_content_type='text/markdown',
     keywords=['System Dynamics', 'Vensim', 'XMILE'],
     classifiers=[
         'Development Status :: 3 - Alpha',
@@ -23,6 +22,10 @@ setup(
         'Topic :: Scientific/Engineering :: Mathematics',
         'Topic :: Scientific/Engineering :: Information Analysis',
         'Intended Audience :: Science/Research',
+
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
     ],
     install_requires=[
         'pandas',
@@ -31,7 +34,7 @@ setup(
         'black',
         'xarray',
         'lxml',
-        'xlwt==1.2.0',        
+        'xlwt==1.2.0',
         'funcsigs',
         'pydoe',
         'xlrd',

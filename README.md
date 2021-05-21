@@ -3,12 +3,14 @@ PySD
 [![Build Status](https://travis-ci.com/JamesPHoughton/pysd.svg?branch=master)](https://travis-ci.com/JamesPHoughton/pysd)
 [![Coverage Status](https://coveralls.io/repos/github/JamesPHoughton/pysd/badge.svg?branch=master)](https://coveralls.io/github/JamesPHoughton/pysd?branch=master)
 [![PyPI version](https://badge.fury.io/py/pysd.svg)](https://badge.fury.io/py/pysd)
+[![PyPI status](https://img.shields.io/pypi/status/pysd.svg)](https://pypi.python.org/pypi/pysd/)
+[![Py version](https://img.shields.io/pypi/pyversions/pysd.svg)](https://pypi.python.org/pypi/pysd/)
 [![Docs](https://readthedocs.org/projects/pysd/badge/?version=latest)](https://pysd.readthedocs.io/en/latest/?badge=latest)
 
 
 Simulating System Dynamics Models in Python
 
-This project is a simple library for running [System Dynamics](http://en.wikipedia.org/wiki/System_dynamics) models in python, with the purpose of improving integration of *Big Data* and *Machine Learning* into the SD workflow. 
+This project is a simple library for running [System Dynamics](http://en.wikipedia.org/wiki/System_dynamics) models in python, with the purpose of improving integration of *Big Data* and *Machine Learning* into the SD workflow.
 
 **The current version needs to run at least Python 3.7. If you need support for Python 2, please use the release here: https://github.com/JamesPHoughton/pysd/releases/tag/LastPy2**
 
@@ -32,9 +34,9 @@ If you use PySD in any published work, consider citing the [PySD Introductory Pa
 
 ### Why create a new SD simulation engine?
 
-There are a number of great SD programs out there ([Vensim](http://vensim.com/), [iThink](http://www.iseesystems.com/Softwares/Business/ithinkSoftware.aspx), [AnyLogic](http://www.anylogic.com/system-dynamics), [Insight Maker](http://insightmaker.com/), and [others](http://en.wikipedia.org/wiki/List_of_system_dynamics_software)). In order not to waste our effort, or fall victim to the [Not-Invented-Here](http://en.wikipedia.org/wiki/Not_invented_here) fallacy, we should have a very good reason for starting a new project. 
+There are a number of great SD programs out there ([Vensim](http://vensim.com/), [iThink](http://www.iseesystems.com/Softwares/Business/ithinkSoftware.aspx), [AnyLogic](http://www.anylogic.com/system-dynamics), [Insight Maker](http://insightmaker.com/), and [others](http://en.wikipedia.org/wiki/List_of_system_dynamics_software)). In order not to waste our effort, or fall victim to the [Not-Invented-Here](http://en.wikipedia.org/wiki/Not_invented_here) fallacy, we should have a very good reason for starting a new project.
 
-That reason is this: There is a whole world of computational tools being developed in the larger data science community. **System dynamicists should directly use the tools that other people are building, instead of replicating their functionality in SD specific software.** The best way to do this is to bring specific SD functionality to the domain where those other tools are being developed. 
+That reason is this: There is a whole world of computational tools being developed in the larger data science community. **System dynamicists should directly use the tools that other people are building, instead of replicating their functionality in SD specific software.** The best way to do this is to bring specific SD functionality to the domain where those other tools are being developed.
 
 This approach allows SD modelers to take advantage of the most recent developments in data science, and focus our efforts on improving the part of the stack that is unique to System Dynamics modeling.
 
@@ -54,7 +56,7 @@ You can use PySD in [R](https://www.r-project.org/) via the [PySD2R](https://git
 ### Contributors
 
 Many people have contributed to developing this project - by
-[submitting code](https://github.com/JamesPHoughton/pysd/graphs/contributors), bug reports, and advice. 
+[submitting code](https://github.com/JamesPHoughton/pysd/graphs/contributors), bug reports, and advice.
 
 Special thanks to the [sdCloud.io](http://sdcloud.io) development team, who have
 made great contributions to XMILE support, and for integrating PySD into their cloud-based model simulation environment.
