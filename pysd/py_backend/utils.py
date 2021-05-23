@@ -460,7 +460,7 @@ def get_return_elements(return_columns, namespace, subscript_dict):
     return list(capture_elements), return_addresses
 
 
-def make_flat_df(frames, return_addresses):
+def make_flat_df(frames, return_addresses, subscript_dict, subs_compatibility):
     """
     Takes a list of dictionaries, each representing what is returned from the
     model at a particular time, and creates a dataframe whose columns
@@ -475,6 +475,12 @@ def make_flat_df(frames, return_addresses):
         user passed in as 'return_columns'. Values are a tuple:
         (py_name, {coords dictionary}) which tells us where to look for the
         value to put in that specific column.
+    subscript_dict: dictionary,
+        A dictionary containing the names of subscript families (dimensions)
+        as keys, and a list of the possible positions within that dimension
+        for each value.
+    subs_compatibility: dictionary,
+        A dictionary containing all pairs of subscripts that are mapping.
 
     Returns
     -------
@@ -482,11 +488,11 @@ def make_flat_df(frames, return_addresses):
     """
 
     # Todo: could also try a list comprehension here, or parallel apply
-    visited = list(map(lambda x: visit_addresses(x, return_addresses), frames))
+    visited = list(map(lambda x: visit_addresses(x, return_addresses, subscript_dict, subs_compatibility), frames))
     return pd.DataFrame(visited)
 
 
-def visit_addresses(frame, return_addresses):
+def visit_addresses(frame, return_addresses, subscript_dict, subs_compatibility):
     """
     Visits all of the addresses, returns a new dict
     which contains just the addressed elements
@@ -500,6 +506,12 @@ def visit_addresses(frame, return_addresses):
         user passed in as 'return_columns'. Values are a tuple:
         (py_name, {coords dictionary}) which tells us where to look for the
         value to put in that specific column.
+    subscript_dict: dictionary,
+        A dictionary containing the names of subscript families (dimensions)
+        as keys, and a list of the possible positions within that dimension
+        for each value.
+    subs_compatibility: dictionary,
+        A dictionary containing all pairs of subscripts that are mapping.
 
     Returns
     -------
@@ -509,6 +521,18 @@ def visit_addresses(frame, return_addresses):
     outdict = dict()
     for real_name, (pyname, address) in return_addresses.items():
         if address:
+            # to return the equivalent coordinates of the mapped subscripts
+            if subs_compatibility:
+                address= list(address)
+                for coord in address:
+                    name = find_subscript_name(subscript_dict,coord)
+                    for key, values in subs_compatibility.items():
+                        if name in values:
+                            address.remove(coord)
+                            new_value = same_coordinates(key, coord, subscript_dict)
+                            address.append(new_value)
+                address=tuple(address)
+
             xrval = frame[pyname].loc[address]
             if xrval.size > 1:
                 outdict[real_name] = xrval
@@ -518,6 +542,37 @@ def visit_addresses(frame, return_addresses):
             outdict[real_name] = frame[pyname]
 
     return outdict
+
+
+def same_coordinates(sub_name, sub_value, subscript_dict):
+    """
+    Takes a coordinate from one subscript and returns
+    the coordinate that is in the same position but in 
+    another subscript whose name is entered as a parameter.
+
+    Parameters
+    ----------
+    sub_name: str
+        Name of the subscript containing the coordinate
+        searched for
+    sub_value: str
+        Subscript value which determining the position
+    subscript_dict: dictionary
+        Stores all names and values of the model's 
+        subscripts
+
+    Returns
+    -------
+    sub: str
+        The subscript value of the 'sub_name' subscript that
+        is in the same position as 'sub_value'
+
+    """
+    subs_list = subscript_dict[find_subscript_name(subscript_dict, sub_value)]
+    for i in range(0, len(subs_list)):
+        if(subs_list[i] == sub_value):
+            sub = subscript_dict[sub_name][i]
+    return sub
 
 
 def compute_shape(coords, reshape_len=None, py_name=''):
