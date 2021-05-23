@@ -1288,6 +1288,33 @@ def translate_section(section, macro_list, root_path):
     subscript_dict = {e['real_name']: e['subs'] for e in model_elements
                       if e['kind'] == 'subdef'}
 
+    # Create a dictionary to store all pairs of subscripts that
+    # are mapping
+    subs_compatibility = {}
+    # Only one entry is stored in the dictionary for each pair of 
+    # mapped subscripts. This may need to be changed later when
+    # the mapping of subscript ranges functionality is fully implemented
+    for element in model_elements:
+        if 'subs_compatibility' in element and element['subs_compatibility']:
+            for key, values in element['subs_compatibility'].items(): 
+                for value in values:
+                    if (not (value, [key]) in subs_compatibility.items()):
+                        subs_compatibility[key] = [value if key not in subs_compatibility
+                           else subs_compatibility[key].append(value)]
+
+    # The mapped subscript names are unified by the key that
+    # is stored in the compatibility dict
+    for element in model_elements:
+        if 'subs' in element:
+            for sub in element['subs'] :
+                for key, values in subs_compatibility.items():
+                    if sub in values:
+                        element['subs'].remove(sub)
+                        # If the key is already part of element['subs'],
+                        # it is not duplicated
+                        if key not in element['subs']:
+                            element['subs'].append(key)
+
     elements_subs_dict = {}
     # add model elements
     for element in model_elements:
