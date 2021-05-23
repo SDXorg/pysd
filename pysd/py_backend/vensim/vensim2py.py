@@ -802,7 +802,8 @@ utils.add_entries_underscore(
 
 
 def parse_general_expression(element, namespace=None, subscript_dict=None,
-                             macro_list=None, elements_subs_dict=None):
+                             macro_list=None, elements_subs_dict=None,
+                             subs_compatibility=None):
     """
     Parses a normal expression
     # its annoying that we have to construct and compile the grammar every time...
@@ -821,6 +822,9 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
     elements_subs_dict : dictionary
         The dictionary with element python names as keys and their merged
         subscripts as values.
+
+    subs_compatibility : dictionary
+        The dictionary storing the mapped subscripts
 
     Returns
     -------
@@ -857,6 +861,8 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
         namespace = {}
     if subscript_dict is None:
         subscript_dict = {}
+    if subs_compatibility is None:
+        subs_compatibility = {}
 
     # spaces important for word-based operators
     in_ops = {
@@ -1128,6 +1134,10 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
                 self.append = ".loc[%s].reset_coords(drop=True)" % (
                     ', '.join(coords))
 
+            # change by the key in subscript compatibility dict
+            elif (bool(subs_compatibility) and (sub in subs_compatibility.values() for sub in subs)):
+                self.subs = [key for key, values in subs_compatibility.items() for sub in subs if sub in values]
+
             else:
                 self.subs = ["%s" % s.strip('!') for s in subs]
 
@@ -1346,7 +1356,8 @@ def translate_section(section, macro_list, root_path):
                 namespace=namespace,
                 subscript_dict=subscript_dict,
                 macro_list=macro_list,
-                elements_subs_dict=elements_subs_dict)
+                elements_subs_dict=elements_subs_dict,
+                subs_compatibility=subs_compatibility)
             element.update(translation)
             model_elements += new_structure
 
