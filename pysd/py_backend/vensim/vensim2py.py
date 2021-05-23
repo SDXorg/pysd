@@ -266,25 +266,29 @@ def get_equation_components(equation_str, root_path=None):
                           'get_xls_subscript', 'get_direct_subscript']
 
     component_structure_grammar = _include_common_grammar(r"""
-    entry = component / data_definition / test_definition / subscript_definition / lookup_definition
+    entry = component / data_definition / test_definition / subscript_definition / lookup_definition / subscript_copy
     component = name _ subscriptlist? _ "=" "="? _ expression
-    subscript_definition = name _ ":" _ (imported_subscript / literal_subscript / numeric_range)
+    subscript_definition = name _ ":" _ (imported_subscript / literal_subscript / numeric_range) _ subscript_mapping_list?
     data_definition = name _ subscriptlist? _ keyword? _ ":=" _ expression
     lookup_definition = name _ subscriptlist? &"(" _ expression  # uses lookahead assertion to capture whole group
     test_definition = name _ subscriptlist? _ &keyword _ expression
+    subscript_copy = name _ "<->" _ name_mapping
 
     name = basic_id / escape_group
 
-    literal_subscript = subscript _ ("," _ subscript _)*
+    literal_subscript = index_list
     imported_subscript = imp_subs_func _ "(" _ (string _ ","? _)* ")"
     numeric_range = _ (range / value) _ ("," _ (range / value) _)*
     value = _ sequence_id _
     range = "(" _ sequence_id _ "-" _ sequence_id _ ")"
-    subscriptlist = '[' _ subscript _ ("," _ subscript _)* _ ']'
+    subscriptlist = '[' _ index_list _ ']'
+    subscript_mapping_list = "->" _ subscript_mapping _ ("," _ subscript_mapping _)*
+    subscript_mapping = (_ name_mapping _) / (_ "(" _ name_mapping _ ":" _ index_list _")"  )
 
     expression = ~r".*"  # expression could be anything, at this point.
     keyword = ":" _ basic_id _ ":"
-
+    index_list = subscript _ ("," _ subscript _)*
+    name_mapping = basic_id / escape_group
     sequence_id = _ basic_id _
     subscript = basic_id / escape_group
     imp_subs_func = ~r"(%(imp_subs)s)"IU
