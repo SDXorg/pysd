@@ -306,6 +306,7 @@ def get_equation_components(equation_str, root_path=None):
     class ComponentParser(parsimonious.NodeVisitor):
         def __init__(self, ast):
             self.subscripts = []
+            self.subscripts_compatibility = {}
             self.real_name = None
             self.expression = None
             self.kind = None
@@ -335,6 +336,28 @@ def get_equation_components(equation_str, root_path=None):
             args = [x.strip().strip("\'") for x in vc[4].split(',')]
             self.subscripts +=\
                 external.ExtSubscript(*args, root=root_path).subscript
+
+        def visit_subscript_copy(self, n, vc):
+            self.kind = 'subdef'
+            subs_copy1 = vc[4].strip()
+            subs_copy2 = vc[0].strip()
+            if not(subs_copy1 in self.subscripts_compatibility):
+                self.subscripts_compatibility[subs_copy1]=[]
+            if not(subs_copy2 in self.subscripts_compatibility):
+                self.subscripts_compatibility[subs_copy2]=[]
+            self.subscripts_compatibility[subs_copy1].append(subs_copy2)
+            self.subscripts_compatibility[subs_copy2].append(subs_copy1)
+
+        def visit_subscript_mapping(self, n, vc):
+            name_mapped=''
+            if(':' in str(vc)): 
+                # Obtain subscript name and split by : and (
+                name_mapped = str(vc).split(':')[0].split('(')[1]
+            else:
+                (name_mapped,) = vc
+            if not(self.real_name in self.subscripts_compatibility):
+                self.subscripts_compatibility[self.real_name]=[]
+            self.subscripts_compatibility[self.real_name].append(name_mapped.strip())
 
         def visit_range(self, n, vc):
             subs_start = vc[2].strip()
@@ -393,6 +416,7 @@ def get_equation_components(equation_str, root_path=None):
 
     return {'real_name': parse_object.real_name,
             'subs': parse_object.subscripts,
+            'subs_compatibility': parse_object.subscripts_compatibility,
             'expr': parse_object.expression,
             'kind': parse_object.kind,
             'keyword': parse_object.keyword}
