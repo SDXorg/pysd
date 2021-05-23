@@ -353,6 +353,7 @@ def translate_xmile(xmile_file):
     builder.build(elements=model_elements,
                   subscript_dict={},
                   namespace=namespace,
+                  subs_compatibility={},
                   outfile_name=outfile_name)
 
     return outfile_name
