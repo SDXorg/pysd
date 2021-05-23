@@ -387,10 +387,12 @@ def get_equation_components(equation_str, root_path=None):
         def visit_name(self, n, vc):
             (name,) = vc
             self.real_name = name.strip()
+            return self.real_name
 
         def visit_subscript(self, n, vc):
             (subscript,) = vc
             self.subscripts.append(subscript.strip())
+            return subscript.strip()
 
         def visit_expression(self, n, vc):
             self.expression = n.text.strip()
