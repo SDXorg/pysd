@@ -818,7 +818,7 @@ class Model(Macro):
 
         res = self._integrate(t_series, capture_elements, return_timestamps)
 
-        return_df = utils.make_flat_df(res, return_addresses)
+        return_df = utils.make_flat_df(res, return_addresses, self.components._subscript_dict, self.components._subs_compatibility)
         return_df.index = return_timestamps
 
         return return_df
