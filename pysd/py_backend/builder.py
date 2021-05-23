@@ -33,7 +33,7 @@ import_modules = {
     'utils': set()}
 
 
-def build(elements, subscript_dict, namespace, outfile_name):
+def build(elements, subscript_dict, namespace, subs_compatibility, outfile_name):
     """
     Actually constructs and writes the python representation of the model
 
@@ -53,6 +53,9 @@ def build(elements, subscript_dict, namespace, outfile_name):
     namespace: dictionary
         Translation from original model element names (keys) to python safe
         function identifiers (values).
+
+    subs_compatibility: dictionary
+        A dictionary containing all pairs of subscripts that are mapping.
 
     outfile_name: string
         The name of the file to write the model to.
@@ -98,6 +101,8 @@ def build(elements, subscript_dict, namespace, outfile_name):
     text += '''
     _subscript_dict = %(subscript_dict)s
 
+    _subs_compatibility = %(subs_compatibility)s
+
     _namespace = %(namespace)s
 
     __pysd_version__ = "%(version)s"
@@ -117,6 +122,7 @@ def build(elements, subscript_dict, namespace, outfile_name):
         return __data['time']()
 
     ''' % {'subscript_dict': repr(subscript_dict),
+           'subs_compatibility': repr(subs_compatibility),
            'namespace': repr(namespace),
            'version': __version__}
 

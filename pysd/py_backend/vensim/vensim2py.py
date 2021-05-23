@@ -1373,6 +1373,7 @@ def translate_section(section, macro_list, root_path):
     builder.build(build_elements,
                   subscript_dict,
                   namespace,
+                  subs_compatibility,
                   section['file_name'])
 
     return section['file_name']
