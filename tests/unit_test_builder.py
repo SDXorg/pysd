@@ -114,9 +114,11 @@ class TestBuild(TestCase):
                              'arguments': ''}],
                   namespace={'StockA': 'stocka'},
                   subscript_dict={'Dim1': ['A', 'B', 'C']},
+                  subs_compatibility={'DimA':['DimB']},
                   outfile_name='return'))
 
         self.assertIn('_subscript_dict = {"Dim1": ["A", "B", "C"]}', actual)
+        self.assertIn('_subs_compatibility = {"DimA": ["DimB"]}', actual)
         self.assertIn('_namespace = {"StockA": "stocka"}', actual)
 
 
