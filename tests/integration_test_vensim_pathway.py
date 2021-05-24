@@ -345,7 +345,6 @@ class TestIntegrationExamples(unittest.TestCase):
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_copy(self):
-        from .test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscript_copy/Subscript_copy_model.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
@@ -374,8 +373,7 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscript_individually_defined_stocks/test_subscript_individually_defined_stocks.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    def test_mapping_simple(self):
-        from .test_utils import runner, assert_frames_close
+    def test_subscript_mapping_simple(self):
         output, canon = runner('test-models/tests/subscript_mapping/Subscript_mapping_simple.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 

@@ -34,7 +34,7 @@ In [PySD relationships between modules] the relationships between the main modul
 
 As mentioned above, users interact with **pysd** module. In turn, **pysd**  is responsible for translating the *Vensim* model into the *Python* model by interacting with **vensim2py**, which creates the correct *Python* translation. In this process, **vensim2py** interacts with and uses the functions of the modules: **external**, **utils** and **builder**. To carry out the execution process, **pysd** uses the **functions** module.
 
-## The logical view of PySD
+### The logical view of PySD
 
 The purpose of each PySD module is detailed below, as well as the most important functions of each module.
 It should be noted that in diagrams it has been necessary, input parameters have been detailed with *in* notation, output parameters with *out* notation and parameters that are modified in a function with *inout* notation. In addition, the different types of parameters that could be, are described by notes in convenient diagrams, which is due to Python's dynamic typing.
@@ -132,7 +132,7 @@ In [Decorators module] figure the decorators module is detailed where the functi
 
 The Cache class allows to define the functionality of these decorators. The run and step functions define the functionality of the two-level cache used in PySD. The reset function resets the time entered as a parameter and clears the cache of values tagged as step. The clean function clears the cache whose name is passed as a parameter.
 
-## The process view of PySD
+### The process view of PySD
 
 Activity diagrams are used to represent the PySD process view. The [Main process view] is the main activity diagram of PySD, the other diagrams presented in the next figures are a breakdown of this.
 
@@ -172,11 +172,11 @@ The lookup\_grammar grammar and its associated class, LookupParser, are defined 
 
 Once this sequence has been completed and returning to the figure [Organize each section], the PySD translation process ends with the builder. The builder module is in charge of creating the Python file containing the translation of the Vensim model, using the build function of this module. To do this, it used the namespaces created in the process and the different elements of the model previously translated and tagged with the relevant information, which will became part of the final Python file.
 
-## The physical view of PySD
+### The physical view of PySD
 
 *PySD* system is deployed on a single workstation and everything that is needed is in the same component. Therefore, capturing the physical view of PySD in a deployment diagram would not add more information about the system.
 
-## Scenarios
+### Scenarios of PySD
 
 Two main scenarios can be distinguished throughout the
 *PySD* library project. The process of **translating** a model from Vensim to Python is the first scenario. The second scenario found is the **execution** of that translated model before, which allows the simulation to be carried out and allows the user to obtain the results of the Vensim model.
