@@ -1314,8 +1314,8 @@ def translate_section(section, macro_list, root_path):
                         subs_compatibility[key] = [value if key not in subs_compatibility
                            else subs_compatibility[key].append(value)]
 
-    # The mapped subscript names are unified by the key that
-    # is stored in the compatibility dict
+    # The mapped subscript names are unified in the model
+    # by the key that is stored in the compatibility dict
     for element in model_elements:
         if 'subs' in element:
             for sub in element['subs'] :
