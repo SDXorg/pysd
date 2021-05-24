@@ -57,10 +57,10 @@ Due to the complexity of vensim2py, as it has the five functions in which PySD g
 
 ![Simplified vensim2py module]
 
-In [Classes of pysd grammars] and [Classes of pysd grammars2] are represented the classes associated to the grammars.
+In [Classes of pysd grammars (Part 1)] and [Classes of pysd grammars (Part 2)] are represented the classes associated to the grammars.
 
-![Classes of pysd grammars]
-![Classes of pysd grammars2]
+![Classes of pysd grammars (Part 1)]
+![Classes of pysd grammars (Part 2)]
 
 The methods of each class are the visitor methods associated with the different grammar rules. There is no visitor method for each rule, but there is a visitor method associated with a rule that serves to store certain information about the parsed model. Within the visitor method, that relevant information is stored in the attributes of each class, which are then returned as a result of the grammar.
 
@@ -180,29 +180,33 @@ Once this sequence has been completed and returning to the figure [Organize each
 
 Two main scenarios can be distinguished throughout the
 *PySD* library project. The process of **translating** a model from Vensim to Python is the first scenario. The second scenario found is the **execution** of that translated model before, which allows the simulation to be carried out and allows the user to obtain the results of the Vensim model.
+<!-- Images -->
+<!-- Development view -->
+[PySD development view]:images/development-view/packages.png "PySD development view"
+[PySD relationships between modules]:images/development-view/relationship-modules.png "PySD relationships between modules"
 
 <!-- Logical view -->
-[Main modules of PySD]:/images/logical-view/main-modules.png "Main modules of PySD"
-[Simplified vensim2py module]:/images/logical-view/vensim2py-simply.png "Simplified vensim2py module"
-[Classes of pysd grammars]:/images/logical-view/grammar1.png "Classes of pysd grammars"
-[Classes of pysd grammars2]:/images/logical-view/grammar2.png "Classes of pysd grammars"
-[Simplified functions module]:/images/logical-view/functions-simply.png "Simplified functions module"
-[Functions module (Part 1)]:/images/logical-view/functions1.png "Functions module"
-[Functions module (Part 2)]:/images/logical-view/functions2.png "Functions module"
-[Builder module]:/images/logical-view/builder-module.png "Builder module"
-[Utils module]:/images/logical-view/utils-module.png "Utils module"
-[Simplified external module]:/images/logical-view/external-simply.png "Simplified external module"
-[External module (Part 1)]:/images/logical-view/external1.png "External module"
-[External module (Part 2)]:/images/logical-view/external2.png "External module"
-[Decorators module]:/images/logical-view/decorators-module.png "Decorators module"
+[Main modules of PySD]:images/logical-view/main-modules.png "Main modules of PySD"
+[Simplified vensim2py module]:images/logical-view/vensim2py-simply.png "Simplified vensim2py module"
+[Classes of pysd grammars (Part 1)]:images/logical-view/grammar1.png "Classes of pysd grammars (Part 1)"
+[Classes of pysd grammars (Part 2)]:images/logical-view/grammar2.png "Classes of pysd grammars (Part 2)"
+[Simplified functions module]:images/logical-view/functions-simply.png "Simplified functions module"
+[Functions module (Part 1)]:images/logical-view/functions1.png "Functions module"
+[Functions module (Part 2)]:images/logical-view/functions2.png "Functions module"
+[Builder module]:images/logical-view/builder-module.png "Builder module"
+[Utils module]:images/logical-view/utils-module.png "Utils module"
+[Simplified external module]:images/logical-view/external-simply.png "Simplified external module"
+[External module (Part 1)]:images/logical-view/external1.png "External module"
+[External module (Part 2)]:images/logical-view/external2.png "External module"
+[Decorators module]:images/logical-view/decorators-module.png "Decorators module"
 
 <!-- Process view -->
-[Main process view]:/images/process-view/main1.png "Main process view"
+[Main process view]:images/process-view/main1.png "Main process view"
 [Divide into sections]:images/process-view/divide-sentences2.png "Divide into sections"
-[Create macro list]:/images/process-view/macro-list3.png "Create macro list"
-[Organize each section]:/images/process-view/translate-section4.png "Organize each section"
-[Create Python namespace]:/images/process-view/namespace5.png "Create Python namespace"
-[Parse each component]:/images/process-view/parse-components6.png "Parse each component"
+[Create macro list]:images/process-view/macro-list3.png "Create macro list"
+[Organize each section]:images/process-view/translate-section4.png "Organize each section"
+[Create Python namespace]:images/process-view/namespace5.png "Create Python namespace"
+[Parse each component]:images/process-view/parse-components6.png "Parse each component"
 
 <!-- References -->
 [4+1 model view]: https://www.cs.ubc.ca/~gregor/teaching/papers/4+1view-architecture.pdf
