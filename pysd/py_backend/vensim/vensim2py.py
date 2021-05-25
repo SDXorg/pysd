@@ -1318,7 +1318,6 @@ def translate_section(section, macro_list, root_path):
     for e in model_elements:
         if e['kind'] == 'subdef':
             subscript_dict[e['real_name']] = e['subs']
-            print(subscript_dict)
             for compatible in e['subs_compatibility']:
                 if compatible in subs_compatibility_dict:
                     subs_compatibility_dict[compatible].update(
