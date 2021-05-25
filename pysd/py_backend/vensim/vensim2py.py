@@ -1311,6 +1311,7 @@ def translate_section(section, macro_list, root_path):
     # Create a namespace for the subscripts as these aren't used to
     # create actual python functions, but are just labels on arrays,
     # they don't actually need to be python-safe
+    # Also creates a dictionary with all the subscript that are mapped
 
     subscript_dict = {}
     subs_compatibility_dict = {}
@@ -1331,10 +1332,7 @@ def translate_section(section, macro_list, root_path):
                     subscript_dict[compatible] =\
                         subscript_dict[e['subs_compatibility'][compatible][0]]
 
-    print(subscript_dict)
-    print(subs_compatibility_dict)
-    # Create a dictionary to store all pairs of subscripts that
-    # are mapping
+
 
     elements_subs_dict = {}
     # add model elements
