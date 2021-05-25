@@ -341,23 +341,32 @@ def get_equation_components(equation_str, root_path=None):
             self.kind = 'subdef'
             subs_copy1 = vc[4].strip()
             subs_copy2 = vc[0].strip()
-            if not(subs_copy1 in self.subscripts_compatibility):
-                self.subscripts_compatibility[subs_copy1]=[]
-            if not(subs_copy2 in self.subscripts_compatibility):
-                self.subscripts_compatibility[subs_copy2]=[]
+
+            if subs_copy1 not in self.subscripts_compatibility:
+                self.subscripts_compatibility[subs_copy1] = []
+
+            if subs_copy2 not in self.subscripts_compatibility:
+                self.subscripts_compatibility[subs_copy2] = []
+
             self.subscripts_compatibility[subs_copy1].append(subs_copy2)
             self.subscripts_compatibility[subs_copy2].append(subs_copy1)
 
         def visit_subscript_mapping(self, n, vc):
-            name_mapped=''
-            if(':' in str(vc)): 
+
+            warnings.warn(
+                "\n Subscript mapping detected."
+                + "This feature works only in some simple cases.")
+
+            if ':' in str(vc):
                 # Obtain subscript name and split by : and (
                 name_mapped = str(vc).split(':')[0].split('(')[1]
             else:
                 (name_mapped,) = vc
-            if not(self.real_name in self.subscripts_compatibility):
-                self.subscripts_compatibility[self.real_name]=[]
-            self.subscripts_compatibility[self.real_name].append(name_mapped.strip())
+
+            if self.real_name not in self.subscripts_compatibility:
+                self.subscripts_compatibility[self.real_name] = []
+            self.subscripts_compatibility[self.real_name].append(
+                name_mapped.strip())
 
         def visit_range(self, n, vc):
             subs_start = vc[2].strip()
@@ -992,15 +1001,24 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
             self.append = ""
 
             if self.subs:
-                if elements_subs_dict[vc[0]] == self.subs:
-                    self.subs = None
-                    return py_expr
-                dims = [utils.find_subscript_name(subscript_dict, sub)
-                        for sub in self.subs]
+                if elements_subs_dict[vc[0]] != self.subs:
+                    py_expr = builder.build_function_call(
+                        functions_utils["rearrange"],
+                        [py_expr, repr(self.subs), "_subscript_dict"])
+
+                mapping = self.subs.copy()
+                for i, sub in enumerate(self.subs):
+                    if sub in subs_compatibility:
+                        for compatible in subs_compatibility[sub]:
+                            if compatible in element['subs']:
+                                mapping[i] = compatible
+
+                if self.subs != mapping:
+                    py_expr = builder.build_function_call(
+                        functions_utils["rearrange"],
+                        [py_expr, repr(mapping), "_subscript_dict"])
+
                 self.subs = None
-                return builder.build_function_call(
-                    functions_utils["rearrange"],
-                    [py_expr, repr(dims), "_subscript_dict"])
 
             return py_expr
 
@@ -1133,10 +1151,6 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
 
                 self.append = ".loc[%s].reset_coords(drop=True)" % (
                     ', '.join(coords))
-
-            # change by the key in subscript compatibility dict
-            elif (bool(subs_compatibility) and (sub in subs_compatibility.values() for sub in subs)):
-                self.subs = [key for key, values in subs_compatibility.items() for sub in subs if sub in values]
 
             else:
                 self.subs = ["%s" % s.strip('!') for s in subs]
@@ -1297,35 +1311,30 @@ def translate_section(section, macro_list, root_path):
     # Create a namespace for the subscripts as these aren't used to
     # create actual python functions, but are just labels on arrays,
     # they don't actually need to be python-safe
-    subscript_dict = {e['real_name']: e['subs'] for e in model_elements
-                      if e['kind'] == 'subdef'}
 
+    subscript_dict = {}
+    subs_compatibility_dict = {}
+    for e in model_elements:
+        if e['kind'] == 'subdef':
+            subscript_dict[e['real_name']] = e['subs']
+            print(subscript_dict)
+            for compatible in e['subs_compatibility']:
+                if compatible in subs_compatibility_dict:
+                    subs_compatibility_dict[compatible].update(
+                        e['subs_compatibility'][compatible])
+                else:
+                    subs_compatibility_dict[compatible] = set(
+                        e['subs_compatibility'][compatible])
+                # check if copy
+                if not subscript_dict[compatible]:
+                    # copy subscript to subscript_dict
+                    subscript_dict[compatible] =\
+                        subscript_dict[e['subs_compatibility'][compatible][0]]
+
+    print(subscript_dict)
+    print(subs_compatibility_dict)
     # Create a dictionary to store all pairs of subscripts that
     # are mapping
-    subs_compatibility = {}
-    # Only one entry is stored in the dictionary for each pair of 
-    # mapped subscripts. This may need to be changed later when
-    # the mapping of subscript ranges functionality is fully implemented
-    for element in model_elements:
-        if 'subs_compatibility' in element and element['subs_compatibility']:
-            for key, values in element['subs_compatibility'].items(): 
-                for value in values:
-                    if (not (value, [key]) in subs_compatibility.items()):
-                        subs_compatibility[key] = [value if key not in subs_compatibility
-                           else subs_compatibility[key].append(value)]
-
-    # The mapped subscript names are unified in the model
-    # by the key that is stored in the compatibility dict
-    for element in model_elements:
-        if 'subs' in element:
-            for sub in element['subs'] :
-                for key, values in subs_compatibility.items():
-                    if sub in values:
-                        element['subs'].remove(sub)
-                        # If the key is already part of element['subs'],
-                        # it is not duplicated
-                        if key not in element['subs']:
-                            element['subs'].append(key)
 
     elements_subs_dict = {}
     # add model elements
@@ -1357,7 +1366,7 @@ def translate_section(section, macro_list, root_path):
                 subscript_dict=subscript_dict,
                 macro_list=macro_list,
                 elements_subs_dict=elements_subs_dict,
-                subs_compatibility=subs_compatibility)
+                subs_compatibility=subs_compatibility_dict)
             element.update(translation)
             model_elements += new_structure
 
@@ -1373,7 +1382,6 @@ def translate_section(section, macro_list, root_path):
     builder.build(build_elements,
                   subscript_dict,
                   namespace,
-                  subs_compatibility,
                   section['file_name'])
 
     return section['file_name']
