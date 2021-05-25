@@ -11,7 +11,6 @@ import re
 import random
 import warnings
 from importlib.machinery import SourceFileLoader
-from ast import literal_eval
 
 import numpy as np
 import pandas as pd
@@ -39,9 +38,6 @@ class Stateful(object):
 
     def __call__(self, *args, **kwargs):
         return self.state
-
-    def initialize(self):
-        raise NotImplementedError
 
     @property
     def state(self):
@@ -609,10 +605,10 @@ class Macro(DynamicStateful):
                 remaining.difference_update(progress)
             else:
                 raise ValueError('Unresolvable Reference: '
-                               + 'Probable circular initialization...\n'
-                               + 'Not able to initialize the '
-                               + 'following objects:\n\t'
-                               + '\n\t'.join([e.py_name for e in remaining]))
+                                 + 'Probable circular initialization...\n'
+                                 + 'Not able to initialize the '
+                                 + 'following objects:\n\t'
+                                 + '\n\t'.join([e.py_name for e in remaining]))
 
     def ddt(self):
         return np.array([component.ddt() for component
@@ -635,18 +631,21 @@ class Macro(DynamicStateful):
         >>> model.set_components('birth_rate')
         >>> model.set_components('Birth Rate')
         """
-        func_name = utils.get_value_by_insensitive_key_or_value(param,
+        func_name = utils.get_value_by_insensitive_key_or_value(
+            param,
             self.components._namespace) or param
 
-        try:
-            # TODO: make this less fragile, may crash if the component
-            # takes arguments and is a xarray
+        if not inspect.getfullargspec(getattr(self.components, func_name))[0]:
             value = getattr(self.components, func_name)()
+        else:
+            value = getattr(self.components, func_name)(0)
+
+        if isinstance(value, xr.DataArray):
             dims = list(value.dims)
             coords = {coord: list(value.coords[coord].values)
                       for coord in value.coords}
             return coords, dims
-        except Exception:
+        else:
             return None
 
     def set_components(self, params):
@@ -675,15 +674,6 @@ class Macro(DynamicStateful):
 
             func_name = utils.get_value_by_insensitive_key_or_value(key,
                 self.components._namespace)
-            try:
-                # TODO: make this less fragile, may crash if the component
-                # takes arguments and is an xarray
-                # can use the __doc__ but will not be backward compatible:
-                # dims = literal_eval(re.findall("Subs: .+",
-                # getattr(self.components, func_name).__doc__)[0][6:])
-                dims = getattr(self.components, func_name)().dims
-            except Exception:
-                dims = None
 
             if isinstance(value, np.ndarray) or isinstance(value, list):
                 raise ValueError('When setting ' + key +'\n'
@@ -696,12 +686,23 @@ class Macro(DynamicStateful):
                 raise NameError('%s is not recognized as a model component'
                                 % key)
 
+            try:
+                _, dims = self.get_coords(key)
+            except (AttributeError, TypeError):
+                dims = None
+
+            try:
+                args = inspect.getfullargspec(
+                    getattr(self.components, func_name))[0]
+            except (AttributeError, TypeError):
+                args = None
+
             if isinstance(value, pd.Series):
-                new_function = self._timeseries_component(value, dims)
+                new_function = self._timeseries_component(value, dims, args)
             elif callable(value):
                 new_function = value
             else:
-                new_function = self._constant_component(value, dims)
+                new_function = self._constant_component(value, dims, args)
 
             # this won't handle other statefuls...
             if '_integ_' + func_name in dir(self.components):
@@ -710,30 +711,71 @@ class Macro(DynamicStateful):
                               stacklevel=2)
 
             setattr(self.components, func_name, new_function)
+            self.components.cache.clean()
 
-    def _timeseries_component(self, series, dims):
+    def _timeseries_component(self, series, dims, args=[]):
         """ Internal function for creating a timeseries model element """
         # this is only called if the set_component function recognizes a
         # pandas series
         # TODO: raise a warning if extrapolating from the end of the series.
-        if isinstance(series.values[0], xr.DataArray):
-            return lambda: utils.rearrange(xr.concat(series.values,
+        if isinstance(series.values[0], xr.DataArray) and args:
+            # the argument is already given in the model when the model
+            # is called
+            return lambda x: utils.rearrange(xr.concat(
+                series.values,
+                series.index).interp(concat_dim=x).reset_coords(
+                'concat_dim', drop=True),
+                dims, self.components._subscript_dict)
+
+        elif isinstance(series.values[0], xr.DataArray):
+            # the interpolation will be time dependent
+            return lambda: utils.rearrange(xr.concat(
+                series.values,
                 series.index).interp(concat_dim=self.time()).reset_coords(
-                'concat_dim', drop=True),dims, self.components._subscript_dict)
+                'concat_dim', drop=True),
+                dims, self.components._subscript_dict)
+
+        elif args and dims:
+            # the argument is already given in the model when the model
+            # is called
+            return lambda x: utils.rearrange(
+                np.interp(x, series.index, series.values),
+                dims, self.components._subscript_dict)
+
+        elif args:
+            # the argument is already given in the model when the model
+            # is called
+            return lambda x: np.interp(x, series.index, series.values)
+
+        elif dims:
+            # the interpolation will be time dependent
+            return lambda: utils.rearrange(
+                np.interp(self.time(), series.index, series.values),
+                dims, self.components._subscript_dict)
 
         else:
-            if dims:
-                return lambda: utils.rearrange(np.interp(self.time(),
-                    series.index, series.values),
-                    dims, self.components._subscript_dict)
+            # the interpolation will be time dependent
             return lambda: np.interp(self.time(), series.index, series.values)
 
-    def _constant_component(self, value, dims):
+    def _constant_component(self, value, dims, args=[]):
         """ Internal function for creating a constant model element """
-        if dims:
-            return lambda: utils.rearrange(value, dims,
-                                           self.components._subscript_dict)
-        return lambda: value
+        if args and dims:
+            # need to pass an argument to keep consistency with the calls
+            # to the function
+            return lambda x: utils.rearrange(
+                value, dims, self.components._subscript_dict)
+
+        elif args:
+            # need to pass an argument to keep consistency with the calls
+            # to the function
+            return lambda x: value
+
+        elif dims:
+            return lambda: utils.rearrange(
+                value, dims, self.components._subscript_dict)
+
+        else:
+            return lambda: value
 
     def set_state(self, t, state):
         """ Set the system state.
@@ -753,8 +795,8 @@ class Macro(DynamicStateful):
 
         for key, value in state.items():
             # TODO Implement map with reference between component and stateful element?
-            component_name = utils.get_value_by_insensitive_key_or_value(key,
-                self.components._namespace)
+            component_name = utils.get_value_by_insensitive_key_or_value(
+                key, self.components._namespace)
             if component_name is not None:
                 stateful_name = '_integ_%s' % component_name
             else:
@@ -762,35 +804,37 @@ class Macro(DynamicStateful):
                 stateful_name = key
 
             try:
-                # TODO make this less fragile (avoid using the __doc__)
                 if component_name[:7] == '_integ_':
                     # we need to check the original expression to retrieve
                     # the dimensions
-                    dims = literal_eval(re.findall("Subs: .+",
-                        getattr(self.components,
-                                component_name[7:]).__doc__)[0][6:])
+                    _, dims = self.get_coords(component_name[7:])
                 else:
-                    dims = literal_eval(re.findall("Subs: .+",
-                        getattr(self.components,
-                                component_name).__doc__)[0][6:])
-            except Exception:
+                    _, dims = self.get_coords(component_name)
+            except (AttributeError, TypeError):
                 dims = None
 
             if isinstance(value, np.ndarray) or isinstance(value, list):
-                raise ValueError('When setting ' + key +'\n'
+                raise ValueError('When setting ' + key + '\n'
                                  + 'Setting subscripted must be done'
                                  + 'using a xarray.DataArray with the '
                                  + 'correct dimensions or a constant value '
                                  + '(https://pysd.readthedocs.io/en/master/basic_usage.html)')
+
+            # get the arguments of the function to know if it is a regular
+            # variable or lookup
+            args = inspect.getfullargspec(
+                getattr(self.components, component_name))[0]
 
             # Try to update stateful component
             if hasattr(self.components, stateful_name):
                 try:
                     element = getattr(self.components, stateful_name)
                     if dims:
-                        value = utils.rearrange(value, dims,
+                        value = utils.rearrange(
+                            value, dims,
                             self.components._subscript_dict)
                     element.update(value)
+                    self.components.cache.clean()
                 except AttributeError:
                     print("'%s' has no state elements, assignment failed")
                     raise
@@ -798,7 +842,8 @@ class Macro(DynamicStateful):
                 # Try to override component
                 try:
                     setattr(self.components, component_name,
-                            self._constant_component(value, dims))
+                            self._constant_component(value, dims, args))
+                    self.components.cache.clean()
                 except AttributeError:
                     print("'%s' has no component, assignment failed")
                     raise

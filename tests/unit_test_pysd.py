@@ -1,10 +1,14 @@
 import unittest
+import warnings
 import pandas as pd
 import numpy as np
+from xarray.coding.cftime_offsets import YearEnd
 
 test_model = 'test-models/samples/teacup/teacup.mdl'
-test_model_subs = 'test-models/tests/subscript_2d_arrays/test_subscript_2d_arrays.mdl'
-test_not_vensim_model = 'more-tests/Not-Vensim.txt'
+test_model_subs = 'test-models/tests/subscript_2d_arrays/'\
+                  + 'test_subscript_2d_arrays.mdl'
+test_model_look = 'test-models/tests/get_lookups_subscripted_args/'\
+                  + 'test_get_lookups_subscripted_args.mdl'
 
 
 class TestPySD(unittest.TestCase):
@@ -71,7 +75,7 @@ class TestPySD(unittest.TestCase):
     def test_read_not_model_vensim(self):
         import pysd
         with self.assertRaises(ValueError):
-            model = pysd.read_vensim(test_not_vensim_model)
+            pysd.read_vensim('more-tests/Not-Vensim.txt')
 
     def test_run(self):
         import pysd
@@ -401,9 +405,108 @@ class TestPySD(unittest.TestCase):
         res = model.run(return_columns=['Initial Values'])
         self.assertTrue(output.equals(res['Initial Values'].iloc[0]))
 
-    def test_set_subscripted_value_with_numpy_error(self):
-        import warnings
+    # TODO
+    def test_set_constant_parameter_lookup(self):
         import xarray as xr
+        import pysd
+        model = pysd.read_vensim(test_model_look)
+
+        with warnings.catch_warnings():
+            # avoid warnings related to extrapolation
+            warnings.simplefilter("ignore")
+            model.set_components({'lookup_1d': 20})
+            for i in range(100):
+                self.assertEqual(model.components.lookup_1d(i), 20)
+
+            model.run(params={'lookup_1d': 70})
+            for i in range(100):
+                self.assertEqual(model.components.lookup_1d(i), 70)
+
+            model.set_components({'lookup_2d': 20})
+            for i in range(100):
+                self.assertTrue(
+                    model.components.lookup_2d(i).equals(
+                        xr.DataArray(
+                            20,
+                            {'Rows': ['Row1', 'Row2']},
+                            ['Rows'])))
+
+            model.run(params={'lookup_2d': 70})
+            for i in range(100):
+                self.assertTrue(
+                    model.components.lookup_2d(i).equals(
+                        xr.DataArray(
+                            70,
+                            {'Rows': ['Row1', 'Row2']},
+                            ['Rows'])))
+
+            xr1 = xr.DataArray(
+                [-10, 50],
+                {'Rows': ['Row1', 'Row2']},
+                ['Rows'])
+            model.set_components({'lookup_2d': xr1})
+            for i in range(100):
+                self.assertTrue(
+                    model.components.lookup_2d(i).equals(xr1))
+
+            xr2 = xr.DataArray(
+                [-100, 500],
+                {'Rows': ['Row1', 'Row2']},
+                ['Rows'])
+            model.run(params={'lookup_2d': xr2})
+            for i in range(100):
+                self.assertTrue(
+                    model.components.lookup_2d(i).equals(xr2))
+
+    def test_set_timeseries_parameter_lookup(self):
+        import xarray as xr
+        import pysd
+        model = pysd.read_vensim(test_model_look)
+        timeseries = list(range(30))
+
+        with warnings.catch_warnings():
+            # avoid warnings related to extrapolation
+            warnings.simplefilter("ignore")
+            temp_timeseries = pd.Series(
+                index=timeseries,
+                data=(50 + np.random.rand(len(timeseries)).cumsum()))
+
+            res = model.run(params={'lookup_1d': temp_timeseries},
+                            return_columns=['lookup_1d_time'],
+                            return_timestamps=timeseries)
+
+            self.assertTrue((res['lookup_1d_time'] == temp_timeseries).all())
+
+            res = model.run(params={'lookup_2d': temp_timeseries},
+                            return_columns=['lookup_2d_time'],
+                            return_timestamps=timeseries)
+
+            self.assertTrue(all([
+                a.equals(xr.DataArray(b, {'Rows': ['Row1', 'Row2']}, ['Rows']))
+                for a, b in zip(res['lookup_2d_time'].values, temp_timeseries)
+                ]))
+
+            temp_timeseries2 = pd.Series(
+                index=timeseries,
+                data=[
+                    xr.DataArray(
+                        [50 + x, 20 - y],
+                        {'Rows': ['Row1', 'Row2']}, ['Rows'])
+                        for x, y in
+                        zip(np.random.rand(len(timeseries)).cumsum(),
+                            np.random.rand(len(timeseries)).cumsum())
+                ])
+
+            res = model.run(params={'lookup_2d': temp_timeseries2},
+                            return_columns=['lookup_2d_time'],
+                            return_timestamps=timeseries)
+
+            self.assertTrue(all([
+                a.equals(b)
+                for a, b in zip(res['lookup_2d_time'].values, temp_timeseries2)
+                ]))
+
+    def test_set_subscripted_value_with_numpy_error(self):
         import pysd
 
         input_ = np.array([[5, 3], [4, 8], [9, 3]])
@@ -424,7 +527,7 @@ class TestPySD(unittest.TestCase):
         timeseries = list(range(10))
         val_series = [50 + rd for rd in
                       np.random.rand(len(timeseries)).cumsum()]
-        xr_series = [xr.DataArray([[val,val],[val,val],[val,val]], coords, dims)
+        xr_series = [xr.DataArray(val, coords, dims)
                      for val in val_series]
 
         temp_timeseries = pd.Series(index=timeseries,
@@ -433,7 +536,8 @@ class TestPySD(unittest.TestCase):
                         return_columns=['initial_values'],
                         return_timestamps=timeseries)
 
-        self.assertTrue(np.all([r.equals(t) for r,t in
+        self.assertTrue(np.all([
+            r.equals(t) for r, t in
             zip(res['initial_values'].values, xr_series)]))
 
     def test_set_subscripted_timeseries_parameter_with_partial_xarray(self):
@@ -455,12 +559,12 @@ class TestPySD(unittest.TestCase):
         temp_timeseries = pd.Series(index=timeseries,
                                     data=val_series)
         out_series = [out_b + val
-                     for val in val_series]
+                      for val in val_series]
         model.set_components({'initial_values': temp_timeseries, 'final_time': 10})
         res = model.run(return_columns=['initial_values'])
-        self.assertTrue(np.all([r.equals(t) for r,t in
+        self.assertTrue(np.all([
+            r.equals(t) for r, t in
             zip(res['initial_values'].values, out_series)]))
-
 
     def test_set_subscripted_timeseries_parameter_with_xarray(self):
         import xarray as xr
@@ -481,7 +585,8 @@ class TestPySD(unittest.TestCase):
                         return_columns=['initial_values'],
                         return_timestamps=timeseries)
 
-        self.assertTrue(np.all([r.equals(t) for r,t in
+        self.assertTrue(np.all([
+            r.equals(t) for r, t in
             zip(res['initial_values'].values, temp_timeseries.values)]))
 
     def test_docs(self):
@@ -672,6 +777,28 @@ class TestPySD(unittest.TestCase):
         model.set_state(new_time + 2, {'_integ_teacup_temperature': 302})
         self.assertEqual(model.components.teacup_temperature(), 302)
 
+    def test_set_state_lookup(self):
+        import xarray as xr
+        import pysd
+        model = pysd.read_vensim(test_model_look)
+
+        new_time = np.random.rand()
+
+        # Test that we can set with real names
+        model.set_state(new_time, {'lookup 1d': 500})
+        self.assertEqual(model.components.lookup_1d(0), 500)
+        self.assertEqual(model.components.lookup_1d(100), 500)
+        model.set_state(new_time, {'lookup 2d': 520})
+
+        expected = xr.DataArray(520, {'Rows': ['Row1', 'Row2']}, ['Rows'])
+        self.assertTrue(model.components.lookup_2d(0).equals(expected) )
+        self.assertTrue(model.components.lookup_2d(100).equals(expected))
+
+        with warnings.catch_warnings():
+            # avoid warnings related to extrapolation
+            warnings.simplefilter("ignore")
+            model.run()
+
     def test_set_state_subscripted_value_with_constant(self):
         import xarray as xr
         import pysd
@@ -685,7 +812,6 @@ class TestPySD(unittest.TestCase):
 
         model = pysd.read_vensim(test_model_subs)
         initial_stock = model.components.stock_a()
-        initial_time = model.components.time()
 
         # Test that we can set with real names
         model.set_state(new_time, {'Stock A': 500})
@@ -699,7 +825,6 @@ class TestPySD(unittest.TestCase):
         # Test setting with stateful object name
         model.set_state(new_time + 2, {'_integ_stock_a': 302})
         self.assertTrue(model.components.stock_a().equals(output_b + 302))
-
 
     def test_set_state_subscripted_value_with_partial_xarray(self):
         import xarray as xr
@@ -771,8 +896,6 @@ class TestPySD(unittest.TestCase):
         self.assertTrue(model.components.stock_a().equals(output3))
 
     def test_set_state_subscripted_value_with_numpy_error(self):
-        import warnings
-        import xarray as xr
         import pysd
         input1 = np.array([[5, 3], [4, 8], [9, 3]])
         input2 = np.array([[53, 43], [84, 80], [29, 63]])
@@ -893,7 +1016,6 @@ class TestPySD(unittest.TestCase):
         self.assertNotEqual(initial_time, 10, "Test definition is wrong, please change configuration")
         self.assertEqual(set_time, 10)
 
-    #TODO
     def test_get_coords(self):
         import pysd
 
@@ -916,7 +1038,6 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(model2.get_coords('Stock A'), coords_dims)
         self.assertEqual(model2.get_coords('stock_a'), coords_dims)
         self.assertEqual(model2.get_coords('_integ_stock_a'), coords_dims)
-
 
     def test__build_euler_timeseries(self):
         import pysd
@@ -1118,6 +1239,24 @@ class TestModelInteraction(unittest.TestCase):
                       + 'Not able to initialize the '
                       + 'following objects:',
                       str(err.exception))
+
+    def test_not_able_to_update_stateful_object(self):
+        import xarray as xr
+        import pysd
+
+        integ = pysd.functions.Integ(
+            lambda: xr.DataArray([1, 2], {'Dim': ['A', 'B']}, ['Dim']),
+            lambda: xr.DataArray(0, {'Dim': ['A', 'B']}, ['Dim']),
+            'my_integ_object')
+
+        integ.initialize()
+
+        with self.assertRaises(ValueError) as err:
+            integ.update(np.array([[1, 2], [3, 4]]))
+
+        self.assertIn(
+            'Could not update the value of my_integ_object',
+            str(err.exception))
 
 
 class TestMultiRun(unittest.TestCase):
