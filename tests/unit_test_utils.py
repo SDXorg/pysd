@@ -111,13 +111,13 @@ class TestUtils(TestCase):
         import pysd
 
         with self.assertRaises(KeyError):
-            pysd.utils.get_return_elements(["inflow_a",
-                                 "inflow_b", "inflow_c"],
-                                subscript_dict={'Dim1': ['Entry 1', 'Entry 2'],
-                                                'Dim2': ['Column 1', 'Column 2']},
-                                namespace={'Inflow A': 'inflow_a',
-                                           'Inflow B': 'inflow_b'})
-
+            pysd.utils.get_return_elements([
+                "inflow_a",
+                "inflow_b", "inflow_c"],
+                subscript_dict={'Dim1': ['Entry 1', 'Entry 2'],
+                                'Dim2': ['Column 1', 'Column 2']},
+                namespace={'Inflow A': 'inflow_a',
+                           'Inflow B': 'inflow_b'})
 
     def test_make_flat_df(self):
         import pysd
@@ -141,8 +141,7 @@ class TestUtils(TestCase):
 
         return_addresses = {'Elem1[B,F]': ('elem1', {'Dim1': ['B'], 'Dim2': ['F']})}
         df = pd.DataFrame([{'Elem1[B,F]': 6}, {'Elem1[B,F]': 12}])
-        subscript_dict = {'Dim1': ['A', 'B', 'C'], 'Dim2': ['D', 'E', 'F']}
-        resultdf = pysd.utils.make_flat_df(frames, return_addresses, subscript_dict, subs_compatibility={})
+        resultdf = pysd.utils.make_flat_df(frames, return_addresses)
 
         test_utils.assert_frames_close(resultdf, df, rtol=.01)
 
@@ -159,8 +158,7 @@ class TestUtils(TestCase):
                                        dims=['Dim1', 'Dim2'])}
 
         return_addresses = {'Elem1[B,F]': ('elem1', {'Dim1': ['B'], 'Dim2': ['F']})}
-        subscript_dict = {'Dim1': ['A', 'B', 'C'], 'Dim2': ['D', 'E', 'F']}
-        self.assertEqual(pysd.utils.visit_addresses(frame, return_addresses, subscript_dict, subs_compatibility={}),
+        self.assertEqual(pysd.utils.visit_addresses(frame, return_addresses),
                          {'Elem1[B,F]': 6})
 
     def test_visit_addresses_nosubs(self):
@@ -170,7 +168,7 @@ class TestUtils(TestCase):
         return_addresses = {'Elem1': ('elem1', {}),
                             'Elem2': ('elem2', {})}
 
-        self.assertEqual(pysd.utils.visit_addresses(frame, return_addresses, subscript_dict={}, subs_compatibility={}),
+        self.assertEqual(pysd.utils.visit_addresses(frame, return_addresses),
                          {'Elem1': 25, 'Elem2': 13})
 
     def test_visit_addresses_return_array(self):
@@ -188,10 +186,8 @@ class TestUtils(TestCase):
                                         'Dim2': ['D', 'E', 'F']},
                                         dims=['Dim1', 'Dim2'])}
         return_addresses = {'Elem1[A, Dim2]': ('elem1', {'Dim1': ['A'], 'Dim2': ['D', 'E', 'F']})}
-        subscript_dict = {'Dim1': ['A', 'B', 'C'], 'Dim2': ['D', 'E', 'F']}
 
-
-        actual = pysd.utils.visit_addresses(frame, return_addresses, subscript_dict, subs_compatibility={})
+        actual = pysd.utils.visit_addresses(frame, return_addresses)
         expected = {'Elem1[A, Dim2]':
                         xr.DataArray([[1, 2, 3]],
                                      {'Dim1': ['A'],
@@ -246,7 +242,7 @@ class TestUtils(TestCase):
             "dim": ["A", "B", "C"],
             "dim1": ["A", "B", "C"]
         }
-        
+
         self.assertEqual(
             make_merge_list([["l1"],["up"]],
                             subscript_dict),

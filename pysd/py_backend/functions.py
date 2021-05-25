@@ -184,17 +184,17 @@ class SampleIfTrue(Stateful):
         self.condition = condition
         self.actual_value = actual_value
         self.initial_value = initial_value
-    
+
     def initialize(self):
         self.state = self.initial_value()
         if isinstance(self.state, xr.DataArray):
             self.shape_info = {'dims': self.state.dims,
                                'coords': self.state.coords}
-    
+
     def __call__(self):
         self.state = if_then_else(self.condition(), self.actual_value, lambda: self.state)
         return self.state
-    
+
     def ddt(self):
         return 0
 
@@ -818,7 +818,7 @@ class Model(Macro):
 
         res = self._integrate(t_series, capture_elements, return_timestamps)
 
-        return_df = utils.make_flat_df(res, return_addresses, self.components._subscript_dict, self.components._subs_compatibility)
+        return_df = utils.make_flat_df(res, return_addresses)
         return_df.index = return_timestamps
 
         return return_df
@@ -1223,7 +1223,7 @@ def random_uniform(m, x, s):
         Maximun value that the function will return.
     s: int
         A stream ID for the distribution to use. In most cases should be 0.
-    
+
     Returns
     -------
     A random number from the uniform distribution between m and x (exclusive of the endpoints).
