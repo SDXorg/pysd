@@ -751,8 +751,8 @@ utils.add_entries_underscore(
 )
 
 
-def parse_general_expression(element, namespace=None, subscript_dict=None,
-                             macro_list=None, elements_subs_dict=None):
+def parse_general_expression(element, namespace={}, subscript_dict={},
+                             macro_list=None, elements_subs_dict={}):
     """
     Parses a normal expression
     # its annoying that we have to construct and compile the grammar every time...
@@ -803,10 +803,6 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
        'real_name': None}])
 
     """
-    if namespace is None:
-        namespace = {}
-    if subscript_dict is None:
-        subscript_dict = {}
 
     # spaces important for word-based operators
     in_ops = {
@@ -1086,12 +1082,15 @@ def parse_general_expression(element, namespace=None, subscript_dict=None,
             return ""
 
         def visit_build_call(self, n, vc):
-            call = vc[0]
-            arglist = vc[4]
+            # use only the dict with the final subscripts
+            # needed for the good working of externals
+
+            subs = {k: subscript_dict[k]
+                    for k in elements_subs_dict[element['py_name']]}
             self.kind = 'component'
-            builder_name = call.strip().lower()
-            name, structure = builders[builder_name](element, subscript_dict,
-                                                     arglist)
+            builder_name = vc[0].strip().lower()
+            name, structure = builders[builder_name](element, subs,
+                                                     vc[4])
 
             self.new_structure += structure
 

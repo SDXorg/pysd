@@ -6,6 +6,7 @@ class TestGetFileSections(unittest.TestCase):
     def test_normal_load(self):
         """normal model file with no macros"""
         from pysd.py_backend.vensim.vensim2py import get_file_sections
+
         actual = get_file_sections(r'a~b~c| d~e~f| g~h~i|')
         expected = [{'returns': [], 'params': [], 'name': '_main_', 'string': 'a~b~c| d~e~f| g~h~i|'}]
         self.assertEqual(actual, expected)
@@ -13,6 +14,7 @@ class TestGetFileSections(unittest.TestCase):
     def test_macro_only(self):
         """ Macro Only """
         from pysd.py_backend.vensim.vensim2py import get_file_sections
+
         actual = get_file_sections(':MACRO: MAC(z) a~b~c| :END OF MACRO:')
         expected = [{'returns': [], 'params': ['z'], 'name': 'MAC', 'string': 'a~b~c|'}]
         self.assertEqual(actual, expected)
@@ -20,6 +22,7 @@ class TestGetFileSections(unittest.TestCase):
     def test_macro_and_model(self):
         """ basic macro and model """
         from pysd.py_backend.vensim.vensim2py import get_file_sections
+
         actual = get_file_sections(':MACRO: MAC(z) a~b~c| :END OF MACRO: d~e~f| g~h~i|')
         expected = [{'returns': [], 'params': ['z'], 'name': 'MAC', 'string': 'a~b~c|'},
                     {'returns': [], 'params': [], 'name': '_main_', 'string': 'd~e~f| g~h~i|'}]
@@ -28,6 +31,7 @@ class TestGetFileSections(unittest.TestCase):
     def test_macro_multiple_inputs(self):
         """ macro with multiple input parameters """
         from pysd.py_backend.vensim.vensim2py import get_file_sections
+
         actual = get_file_sections(':MACRO: MAC(z, y) a~b~c| :END OF MACRO: d~e~f| g~h~i|')
         expected = [{'returns': [], 'params': ['z', 'y'], 'name': 'MAC', 'string': 'a~b~c|'},
                     {'returns': [], 'params': [], 'name': '_main_', 'string': 'd~e~f| g~h~i|'}]
@@ -36,6 +40,7 @@ class TestGetFileSections(unittest.TestCase):
     def test_macro_with_returns(self):
         """ macro with return values """
         from pysd.py_backend.vensim.vensim2py import get_file_sections
+
         actual = get_file_sections(':MACRO: MAC(z, y :x, w) a~b~c| :END OF MACRO: d~e~f| g~h~i|')
         expected = [{'returns': ['x', 'w'],
                      'params': ['z', 'y'],
@@ -50,6 +55,7 @@ class TestGetFileSections(unittest.TestCase):
     def test_handle_encoding(self):
         """ Handle encoding """
         from pysd.py_backend.vensim.vensim2py import get_file_sections
+
         actual = get_file_sections(r'{UTF-8} a~b~c| d~e~f| g~h~i|')
         expected = [{'returns': [], 'params': [], 'name': '_main_', 'string': 'a~b~c| d~e~f| g~h~i|'}]
         self.assertEqual(actual, expected)
@@ -57,6 +63,7 @@ class TestGetFileSections(unittest.TestCase):
     def test_handle_encoding_like_strings(self):
         """ Handle encoding-like strings in other places in the file """
         from pysd.py_backend.vensim.vensim2py import get_file_sections
+
         actual = get_file_sections(r'a~b~c| d~e~f{special}| g~h~i|')
         expected = [{'returns': [],
                      'params': [],
@@ -67,8 +74,10 @@ class TestGetFileSections(unittest.TestCase):
 
 class TestEquationStringParsing(unittest.TestCase):
     """ Tests the 'get_equation_components function """
+
     def test_basics(self):
         from pysd.py_backend.vensim.vensim2py import get_equation_components
+
         self.assertEqual(
             get_equation_components(r'constant = 25'),
             {'expr': '25', 'kind': 'component', 'subs': [], 'real_name': 'constant', 'keyword': None}
@@ -77,6 +86,7 @@ class TestEquationStringParsing(unittest.TestCase):
     def test_equals_handling(self):
         """ Parse cases with equal signs within the expression """
         from pysd.py_backend.vensim.vensim2py import get_equation_components
+
         self.assertEqual(
             get_equation_components(r'Boolean = IF THEN ELSE(1 = 1, 1, 0)'),
             {'expr': 'IF THEN ELSE(1 = 1, 1, 0)', 'kind': 'component', 'subs': [],
@@ -103,6 +113,7 @@ class TestEquationStringParsing(unittest.TestCase):
 
     def test_subscript_definition_parsing(self):
         from pysd.py_backend.vensim.vensim2py import get_equation_components
+
         self.assertEqual(
             get_equation_components(r'''Sub1: Entry 1, Entry 2, Entry 3 '''),
             {'expr': None, 'kind': 'subdef', 'subs': ['Entry 1', 'Entry 2', 'Entry 3'],
@@ -111,6 +122,7 @@ class TestEquationStringParsing(unittest.TestCase):
 
     def test_subscript_references(self):
         from pysd.py_backend.vensim.vensim2py import get_equation_components
+
         self.assertEqual(
             get_equation_components(r'constant [Sub1, Sub2] = 10, 12; 14, 16;'),
             {'expr': '10, 12; 14, 16;', 'kind': 'component', 'subs': ['Sub1', 'Sub2'],
@@ -137,6 +149,7 @@ class TestEquationStringParsing(unittest.TestCase):
 
     def test_lookup_definitions(self):
         from pysd.py_backend.vensim.vensim2py import get_equation_components
+
         self.assertEqual(
             get_equation_components(r'table([(0,-1)-(45,1)],(0,0),(5,0))'),
             {'expr': '([(0,-1)-(45,1)],(0,0),(5,0))', 'kind': 'lookup', 'subs': [],
@@ -153,10 +166,10 @@ class TestEquationStringParsing(unittest.TestCase):
         from pysd.py_backend.vensim.vensim2py import parse_lookup_expression
 
         res = parse_lookup_expression({
-	'expr': r"(GET DIRECT LOOKUPS('path2excel.xlsx', "
-                + r"'SheetName', 'index'\ , 'values'))",
-                'py_name': 'get_lookup',
-                'subs': []}, {})[1][0]
+            'expr': r"(GET DIRECT LOOKUPS('path2excel.xlsx', "
+                    + r"'SheetName', 'index'\ , 'values'))",
+            'py_name': 'get_lookup',
+            'subs': []}, {})[1][0]
 
         self.assertEqual(
             res['py_expr'],
@@ -166,6 +179,7 @@ class TestEquationStringParsing(unittest.TestCase):
 
     def test_pathological_names(self):
         from pysd.py_backend.vensim.vensim2py import get_equation_components
+
         self.assertEqual(
             get_equation_components(r'"silly-string" = 25'),
             {'expr': '25', 'kind': 'component', 'subs': [], 'real_name': '"silly-string"', 'keyword': None}
@@ -195,11 +209,13 @@ class TestParse_general_expression(unittest.TestCase):
 
     def test_arithmetic(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
+
         res = parse_general_expression({'expr': '-10^3+4'})
         self.assertEqual(res[0]['py_expr'], '-10**3+4')
 
     def test_caps_handling(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
+
         res = parse_general_expression({'expr': 'Abs(-3)'})
         self.assertEqual(res[0]['py_expr'], 'abs(-3)')
 
@@ -211,6 +227,7 @@ class TestParse_general_expression(unittest.TestCase):
 
     def test_function_calls(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
+
         res = parse_general_expression({'expr': 'ABS(StockA)'}, {'StockA': 'stocka'})
         self.assertEqual(res[0]['py_expr'], 'abs(stocka())')
 
@@ -223,11 +240,13 @@ class TestParse_general_expression(unittest.TestCase):
 
     def test_id_parsing(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
+
         res = parse_general_expression({'expr': 'StockA'}, {'StockA': 'stocka'})
         self.assertEqual(res[0]['py_expr'], 'stocka()')
 
     def test_number_parsing(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
+
         res = parse_general_expression({'expr': '20'})
         self.assertEqual(res[0]['py_expr'], '20')
 
@@ -244,11 +263,13 @@ class TestParse_general_expression(unittest.TestCase):
         """ stock construction should create a stateful variable and reference it """
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
         from pysd.py_backend.functions import Integ
-        from pysd import functions
+
         res = parse_general_expression({'expr': 'INTEG (FlowA, -10)',
-                                      'py_name': 'test_stock',
-                                      'subs': []},
-                                     {'FlowA': 'flowa'})
+                                        'py_name': 'test_stock',
+                                        'subs': []},
+                                       {'FlowA': 'flowa'},
+                                       elements_subs_dict={'test_stock': []}
+                                       )
 
         self.assertEqual(res[1][0]['kind'], 'stateful')
         a = eval(res[1][0]['py_expr'])
@@ -260,13 +281,14 @@ class TestParse_general_expression(unittest.TestCase):
     def test_delay_construction_function_no_subscripts(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
         from pysd.py_backend.functions import Delay
-        from pysd import functions
+
         res = parse_general_expression({'expr': 'DELAY1(Variable, DelayTime)',
                                         'py_name': 'test_delay',
                                         'subs': []},
                                        {'Variable': 'variable',
                                         'DelayTime': 'delaytime',
                                         'TIME STEP': 'time_step'},
+                                       elements_subs_dict={'test_delay': {}}
                                        )
 
         def time_step():
@@ -282,17 +304,18 @@ class TestParse_general_expression(unittest.TestCase):
     def test_smooth_construction_function_no_subscripts(self):
         """ Tests translation of 'smooth'
 
-        This translation should create a new stateful object to hold the delay elements,
-        and then pass back a reference to that value
+        This translation should create a new stateful object to hold the delay
+        elements, and then pass back a reference to that value
         """
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
         from pysd.py_backend.functions import Smooth
-        import pysd.py_backend.functions as functions  # for eval statement
+
         res = parse_general_expression({'expr': 'SMOOTH(Variable, DelayTime)',
                                         'py_name': 'test_smooth',
                                         'subs': []},
                                        {'Variable': 'variable',
                                         'DelayTime': 'delaytime'},
+                                       elements_subs_dict={'test_smooth': []}
                                        )
 
         # check stateful object creation
@@ -305,6 +328,7 @@ class TestParse_general_expression(unittest.TestCase):
 
     def test_subscript_float_initialization(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
+
         _subscript_dict = {'Dim1': ['A', 'B', 'C'],
                            'Dim2': ['D', 'E']}
         element = parse_general_expression({'expr': '3.32',
@@ -325,6 +349,7 @@ class TestParse_general_expression(unittest.TestCase):
 
     def test_subscript_1d_constant(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
+
         _subscript_dict = {'Dim1': ['A', 'B', 'C'],
                            'Dim2': ['D', 'E']}
         element = parse_general_expression({'expr': '1, 2, 3',
@@ -345,6 +370,7 @@ class TestParse_general_expression(unittest.TestCase):
 
     def test_subscript_2d_constant(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
+
         _subscript_dict = {'Dim1': ['A', 'B', 'C'],
                            'Dim2': ['D', 'E']}
         element = parse_general_expression({'expr': '1, 2; 3, 4; 5, 6;',
@@ -360,6 +386,7 @@ class TestParse_general_expression(unittest.TestCase):
 
     def test_subscript_3d_depth(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
+
         _subscript_dict = {'Dim1': ['A', 'B', 'C'],
                            'Dim2': ['D', 'E']}
         element = parse_general_expression({'expr': '1, 2; 3, 4; 5, 6;',
@@ -375,6 +402,7 @@ class TestParse_general_expression(unittest.TestCase):
 
     def test_subscript_reference(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
+
         res = parse_general_expression({'expr': 'Var A[Dim1, Dim2]'},
                                      {'Var A': 'var_a'},
                                      {'Dim1': ['A', 'B'],
@@ -411,6 +439,7 @@ class TestParse_general_expression(unittest.TestCase):
 
     def test_subscript_ranges(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
+
         res = parse_general_expression({'expr': 'Var D[Range1]'},
                                      {'Var D': 'var_c'},
                                      {'Dim1': ['A', 'B', 'C', 'D', 'E', 'F'],
@@ -427,11 +456,14 @@ class TestParse_general_expression(unittest.TestCase):
         with catch_warnings(record=True) as w:
             res = parse_general_expression({
                 'expr': 'A FUNCTION OF(Unspecified Eqn,Var A,Var B)',
-                'real_name': 'Incomplete Func'
+                'real_name': 'Incomplete Func',
+                'py_name': 'incomplete_func'
                 },
                 {'Unspecified Eqn': 'unspecified_eqn',
                  'Var A': 'var_a',
-                 'Var B': 'var_b'})
+                 'Var B': 'var_b'},
+                elements_subs_dict={'incomplete_func': []}
+                )
             self.assertEqual(len(w), 1)
             self.assertTrue('Incomplete Func has no equation specified'
                             in str(w[-1].message))
