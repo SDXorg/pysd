@@ -111,13 +111,13 @@ class TestUtils(TestCase):
         import pysd
 
         with self.assertRaises(KeyError):
-            pysd.utils.get_return_elements(["inflow_a",
-                                 "inflow_b", "inflow_c"],
-                                subscript_dict={'Dim1': ['Entry 1', 'Entry 2'],
-                                                'Dim2': ['Column 1', 'Column 2']},
-                                namespace={'Inflow A': 'inflow_a',
-                                           'Inflow B': 'inflow_b'})
-
+            pysd.utils.get_return_elements([
+                "inflow_a",
+                "inflow_b", "inflow_c"],
+                subscript_dict={'Dim1': ['Entry 1', 'Entry 2'],
+                                'Dim2': ['Column 1', 'Column 2']},
+                namespace={'Inflow A': 'inflow_a',
+                           'Inflow B': 'inflow_b'})
 
     def test_make_flat_df(self):
         import pysd
@@ -242,7 +242,7 @@ class TestUtils(TestCase):
             "dim": ["A", "B", "C"],
             "dim1": ["A", "B", "C"]
         }
-        
+
         self.assertEqual(
             make_merge_list([["l1"],["up"]],
                             subscript_dict),

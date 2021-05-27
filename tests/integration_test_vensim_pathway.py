@@ -344,6 +344,10 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscript_constant_call/test_subscript_constant_call.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    def test_subscript_copy(self):
+        output, canon = runner('test-models/tests/subscript_copy/test_subscript_copy.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_subscript_docs(self):
         output, canon = runner('test-models/tests/subscript_docs/subscript_docs.mdl')
         assert_frames_close(output, canon, rtol=rtol)
@@ -367,6 +371,14 @@ class TestIntegrationExamples(unittest.TestCase):
 
     def test_subscript_individually_defined_stocks(self):
         output, canon = runner('test-models/tests/subscript_individually_defined_stocks/test_subscript_individually_defined_stocks.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
+    def test_subscript_mapping_simple(self):
+        output, canon = runner('test-models/tests/subscript_mapping_simple/test_subscript_mapping_simple.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
+    def test_subscript_mapping_vensim(self):
+        output, canon = runner('test-models/tests/subscript_mapping_vensim/test_subscript_mapping_vensim.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_mixed_assembly(self):

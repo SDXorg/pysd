@@ -71,7 +71,8 @@ class TestEquationStringParsing(unittest.TestCase):
         from pysd.py_backend.vensim.vensim2py import get_equation_components
         self.assertEqual(
             get_equation_components(r'constant = 25'),
-            {'expr': '25', 'kind': 'component', 'subs': [], 'real_name': 'constant', 'keyword': None}
+            {'expr': '25', 'kind': 'component', 'subs': [], 
+             'subs_compatibility': {}, 'real_name': 'constant', 'keyword': None}
         )
 
     def test_equals_handling(self):
@@ -80,7 +81,7 @@ class TestEquationStringParsing(unittest.TestCase):
         self.assertEqual(
             get_equation_components(r'Boolean = IF THEN ELSE(1 = 1, 1, 0)'),
             {'expr': 'IF THEN ELSE(1 = 1, 1, 0)', 'kind': 'component', 'subs': [],
-             'real_name': 'Boolean', 'keyword': None}
+             'subs_compatibility': {}, 'real_name': 'Boolean', 'keyword': None}
         )
 
     def test_whitespace_handling(self):
@@ -90,7 +91,8 @@ class TestEquationStringParsing(unittest.TestCase):
         self.assertEqual(
             get_equation_components(r'''constant\t =
                                                         \t25\t '''),
-            {'expr': '25', 'kind': 'component', 'subs': [], 'real_name': 'constant', 'keyword': None}
+            {'expr': '25', 'kind': 'component', 'subs': [], 
+             'subs_compatibility': {}, 'real_name': 'constant', 'keyword': None}
         )
 
         # test eliminating vensim's line continuation character
@@ -98,7 +100,7 @@ class TestEquationStringParsing(unittest.TestCase):
             get_equation_components(r"""constant [Sub1, \\
                                      Sub2] = 10, 12; 14, 16;"""),
             {'expr': '10, 12; 14, 16;', 'kind': 'component', 'subs': ['Sub1', 'Sub2'],
-             'real_name': 'constant', 'keyword': None}
+             'subs_compatibility': {}, 'real_name': 'constant', 'keyword': None}
         )
 
     def test_subscript_definition_parsing(self):
@@ -106,7 +108,7 @@ class TestEquationStringParsing(unittest.TestCase):
         self.assertEqual(
             get_equation_components(r'''Sub1: Entry 1, Entry 2, Entry 3 '''),
             {'expr': None, 'kind': 'subdef', 'subs': ['Entry 1', 'Entry 2', 'Entry 3'],
-             'real_name': 'Sub1', 'keyword': None}
+             'subs_compatibility': {}, 'real_name': 'Sub1', 'keyword': None}
         )
 
     def test_subscript_references(self):
@@ -114,25 +116,25 @@ class TestEquationStringParsing(unittest.TestCase):
         self.assertEqual(
             get_equation_components(r'constant [Sub1, Sub2] = 10, 12; 14, 16;'),
             {'expr': '10, 12; 14, 16;', 'kind': 'component', 'subs': ['Sub1', 'Sub2'],
-             'real_name': 'constant', 'keyword': None}
+             'subs_compatibility': {}, 'real_name': 'constant', 'keyword': None}
         )
 
         self.assertEqual(
             get_equation_components(r'function [Sub1] = other function[Sub1]'),
             {'expr': 'other function[Sub1]', 'kind': 'component', 'subs': ['Sub1'],
-             'real_name': 'function', 'keyword': None}
+             'subs_compatibility': {}, 'real_name': 'function', 'keyword': None}
         )
 
         self.assertEqual(
             get_equation_components(r'constant ["S1,b", "S1,c"] = 1, 2; 3, 4;'),
             {'expr': '1, 2; 3, 4;', 'kind': 'component', 'subs': ['"S1,b"', '"S1,c"'],
-             'real_name': 'constant', 'keyword': None}
+             'subs_compatibility': {}, 'real_name': 'constant', 'keyword': None}
         )
 
         self.assertEqual(
             get_equation_components(r'constant ["S1=b", "S1=c"] = 1, 2; 3, 4;'),
             {'expr': '1, 2; 3, 4;', 'kind': 'component', 'subs': ['"S1=b"', '"S1=c"'],
-             'real_name': 'constant', 'keyword': None}
+             'subs_compatibility': {}, 'real_name': 'constant', 'keyword': None}
         )
 
     def test_lookup_definitions(self):
@@ -140,13 +142,13 @@ class TestEquationStringParsing(unittest.TestCase):
         self.assertEqual(
             get_equation_components(r'table([(0,-1)-(45,1)],(0,0),(5,0))'),
             {'expr': '([(0,-1)-(45,1)],(0,0),(5,0))', 'kind': 'lookup', 'subs': [],
-             'real_name': 'table', 'keyword': None}
+             'subs_compatibility': {}, 'real_name': 'table', 'keyword': None}
         )
 
         self.assertEqual(
             get_equation_components(r'table2 ([(0,-1)-(45,1)],(0,0),(5,0))'),
             {'expr': '([(0,-1)-(45,1)],(0,0),(5,0))', 'kind': 'lookup', 'subs': [],
-             'real_name': 'table2', 'keyword': None}
+             'subs_compatibility': {}, 'real_name': 'table2', 'keyword': None}
         )
 
     def test_get_lookup(self):
@@ -168,13 +170,14 @@ class TestEquationStringParsing(unittest.TestCase):
         from pysd.py_backend.vensim.vensim2py import get_equation_components
         self.assertEqual(
             get_equation_components(r'"silly-string" = 25'),
-            {'expr': '25', 'kind': 'component', 'subs': [], 'real_name': '"silly-string"', 'keyword': None}
+            {'expr': '25', 'kind': 'component', 'subs': [], 
+             'subs_compatibility': {}, 'real_name': '"silly-string"', 'keyword': None}
         )
 
         self.assertEqual(
             get_equation_components(r'"pathological\\-string" = 25'),
             {'expr': '25', 'kind': 'component', 'subs': [],
-             'real_name': r'"pathological\\-string"', 'keyword': None}
+             'subs_compatibility': {}, 'real_name': r'"pathological\\-string"', 'keyword': None}
         )
 
     def test_get_equation_components_error(self):

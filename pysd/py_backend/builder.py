@@ -577,7 +577,7 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value,
         the python-safe name of the stock
 
     condition: <string>
-        Reference to another model element that is the condition to the 
+        Reference to another model element that is the condition to the
         'sample if true' function
 
     actual_value: <string>
@@ -597,7 +597,7 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value,
     Returns
     -------
     reference: basestring
-        reference to the sample if true object `__call__` method, 
+        reference to the sample if true object `__call__` method,
         which will return the output of the sample if true process
 
     new_structure: list
@@ -611,7 +611,7 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value,
     if len(subs) == 0:
         stateful_py_expr = 'SampleIfTrue(lambda: %s, lambda: %s,'\
                            'lambda: %s)' % (condition, actual_value, initial_value)
-    
+
     else:
         stateful_py_expr = 'SampleIfTrue(lambda: _condition_%s(),'\
                            'lambda: _input_%s(), lambda: _init_%s(),)' % (
