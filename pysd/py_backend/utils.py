@@ -177,7 +177,7 @@ def make_merge_list(subs_list, subscript_dict):
             # if the given coordinate already matches return it
             dims[i] = coord1
         else:
-            # find a suitable coordinate 
+            # find a suitable coordinate
             for name, elements in subscript_dict.items():
                 if coord2 == set(elements):
                     dims[i] = name

@@ -266,25 +266,29 @@ def get_equation_components(equation_str, root_path=None):
                           'get_xls_subscript', 'get_direct_subscript']
 
     component_structure_grammar = _include_common_grammar(r"""
-    entry = component / data_definition / test_definition / subscript_definition / lookup_definition
+    entry = component / data_definition / test_definition / subscript_definition / lookup_definition / subscript_copy
     component = name _ subscriptlist? _ "=" "="? _ expression
-    subscript_definition = name _ ":" _ (imported_subscript / literal_subscript / numeric_range)
+    subscript_definition = name _ ":" _ (imported_subscript / literal_subscript / numeric_range) _ subscript_mapping_list?
     data_definition = name _ subscriptlist? _ keyword? _ ":=" _ expression
     lookup_definition = name _ subscriptlist? &"(" _ expression  # uses lookahead assertion to capture whole group
     test_definition = name _ subscriptlist? _ &keyword _ expression
+    subscript_copy = name _ "<->" _ name_mapping
 
     name = basic_id / escape_group
 
-    literal_subscript = subscript _ ("," _ subscript _)*
+    literal_subscript = index_list
     imported_subscript = imp_subs_func _ "(" _ (string _ ","? _)* ")"
     numeric_range = _ (range / value) _ ("," _ (range / value) _)*
     value = _ sequence_id _
     range = "(" _ sequence_id _ "-" _ sequence_id _ ")"
-    subscriptlist = '[' _ subscript _ ("," _ subscript _)* _ ']'
+    subscriptlist = '[' _ index_list _ ']'
+    subscript_mapping_list = "->" _ subscript_mapping _ ("," _ subscript_mapping _)*
+    subscript_mapping = (_ name_mapping _) / (_ "(" _ name_mapping _ ":" _ index_list _")"  )
 
     expression = ~r".*"  # expression could be anything, at this point.
     keyword = ":" _ basic_id _ ":"
-
+    index_list = subscript _ ("," _ subscript _)*
+    name_mapping = basic_id / escape_group
     sequence_id = _ basic_id _
     subscript = basic_id / escape_group
     imp_subs_func = ~r"(%(imp_subs)s)"IU
@@ -302,6 +306,7 @@ def get_equation_components(equation_str, root_path=None):
     class ComponentParser(parsimonious.NodeVisitor):
         def __init__(self, ast):
             self.subscripts = []
+            self.subscripts_compatibility = {}
             self.real_name = None
             self.expression = None
             self.kind = None
@@ -332,6 +337,37 @@ def get_equation_components(equation_str, root_path=None):
             self.subscripts +=\
                 external.ExtSubscript(*args, root=root_path).subscript
 
+        def visit_subscript_copy(self, n, vc):
+            self.kind = 'subdef'
+            subs_copy1 = vc[4].strip()
+            subs_copy2 = vc[0].strip()
+
+            if subs_copy1 not in self.subscripts_compatibility:
+                self.subscripts_compatibility[subs_copy1] = []
+
+            if subs_copy2 not in self.subscripts_compatibility:
+                self.subscripts_compatibility[subs_copy2] = []
+
+            self.subscripts_compatibility[subs_copy1].append(subs_copy2)
+            self.subscripts_compatibility[subs_copy2].append(subs_copy1)
+
+        def visit_subscript_mapping(self, n, vc):
+
+            warnings.warn(
+                "\n Subscript mapping detected."
+                + "This feature works only in some simple cases.")
+
+            if ':' in str(vc):
+                # Obtain subscript name and split by : and (
+                name_mapped = str(vc).split(':')[0].split('(')[1]
+            else:
+                (name_mapped,) = vc
+
+            if self.real_name not in self.subscripts_compatibility:
+                self.subscripts_compatibility[self.real_name] = []
+            self.subscripts_compatibility[self.real_name].append(
+                name_mapped.strip())
+
         def visit_range(self, n, vc):
             subs_start = vc[2].strip()
             subs_end = vc[6].strip()
@@ -360,10 +396,12 @@ def get_equation_components(equation_str, root_path=None):
         def visit_name(self, n, vc):
             (name,) = vc
             self.real_name = name.strip()
+            return self.real_name
 
         def visit_subscript(self, n, vc):
             (subscript,) = vc
             self.subscripts.append(subscript.strip())
+            return subscript.strip()
 
         def visit_expression(self, n, vc):
             self.expression = n.text.strip()
@@ -389,6 +427,7 @@ def get_equation_components(equation_str, root_path=None):
 
     return {'real_name': parse_object.real_name,
             'subs': parse_object.subscripts,
+            'subs_compatibility': parse_object.subscripts_compatibility,
             'expr': parse_object.expression,
             'kind': parse_object.kind,
             'keyword': parse_object.keyword}
@@ -752,7 +791,8 @@ utils.add_entries_underscore(
 
 
 def parse_general_expression(element, namespace={}, subscript_dict={},
-                             macro_list=None, elements_subs_dict={}):
+                             macro_list=None, elements_subs_dict={},
+                             subs_compatibility={}):
     """
     Parses a normal expression
     # its annoying that we have to construct and compile the grammar every time...
@@ -771,6 +811,9 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
     elements_subs_dict : dictionary
         The dictionary with element python names as keys and their merged
         subscripts as values.
+
+    subs_compatibility : dictionary
+        The dictionary storing the mapped subscripts
 
     Returns
     -------
@@ -934,15 +977,24 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
             self.append = ""
 
             if self.subs:
-                if elements_subs_dict[vc[0]] == self.subs:
-                    self.subs = None
-                    return py_expr
-                dims = [utils.find_subscript_name(subscript_dict, sub)
-                        for sub in self.subs]
+                if elements_subs_dict[vc[0]] != self.subs:
+                    py_expr = builder.build_function_call(
+                        functions_utils["rearrange"],
+                        [py_expr, repr(self.subs), "_subscript_dict"])
+
+                mapping = self.subs.copy()
+                for i, sub in enumerate(self.subs):
+                    if sub in subs_compatibility:
+                        for compatible in subs_compatibility[sub]:
+                            if compatible in element['subs']:
+                                mapping[i] = compatible
+
+                if self.subs != mapping:
+                    py_expr = builder.build_function_call(
+                        functions_utils["rearrange"],
+                        [py_expr, repr(mapping), "_subscript_dict"])
+
                 self.subs = None
-                return builder.build_function_call(
-                    functions_utils["rearrange"],
-                    [py_expr, repr(dims), "_subscript_dict"])
 
             return py_expr
 
@@ -1235,8 +1287,25 @@ def translate_section(section, macro_list, root_path):
     # Create a namespace for the subscripts as these aren't used to
     # create actual python functions, but are just labels on arrays,
     # they don't actually need to be python-safe
-    subscript_dict = {e['real_name']: e['subs'] for e in model_elements
-                      if e['kind'] == 'subdef'}
+    # Also creates a dictionary with all the subscript that are mapped
+
+    subscript_dict = {}
+    subs_compatibility_dict = {}
+    for e in model_elements:
+        if e['kind'] == 'subdef':
+            subscript_dict[e['real_name']] = e['subs']
+            for compatible in e['subs_compatibility']:
+                if compatible in subs_compatibility_dict:
+                    subs_compatibility_dict[compatible].update(
+                        e['subs_compatibility'][compatible])
+                else:
+                    subs_compatibility_dict[compatible] = set(
+                        e['subs_compatibility'][compatible])
+                # check if copy
+                if not subscript_dict[compatible]:
+                    # copy subscript to subscript_dict
+                    subscript_dict[compatible] =\
+                        subscript_dict[e['subs_compatibility'][compatible][0]]
 
     elements_subs_dict = {}
     # add model elements
@@ -1267,7 +1336,8 @@ def translate_section(section, macro_list, root_path):
                 namespace=namespace,
                 subscript_dict=subscript_dict,
                 macro_list=macro_list,
-                elements_subs_dict=elements_subs_dict)
+                elements_subs_dict=elements_subs_dict,
+                subs_compatibility=subs_compatibility_dict)
             element.update(translation)
             model_elements += new_structure
 
