@@ -7,17 +7,15 @@ makes it easy for the model elements to call.
 
 import inspect
 import os
-import sys
 import re
 import random
 import warnings
-import pathlib
 from importlib.machinery import SourceFileLoader
-from ast import literal_eval
 
 import numpy as np
 import pandas as pd
 import xarray as xr
+import scipy.stats as stats
 from funcsigs import signature
 
 from . import utils
@@ -25,21 +23,6 @@ from .external import External, Excels
 
 from pysd._version import __version__
 
-try:
-    import scipy.stats as stats
-
-    def bounded_normal(minimum, maximum, mean, std, seed):
-        """ Implements vensim's BOUNDED NORMAL function """
-        # np.random.seed(seed)  # we could bring this back later, but for now, ignore
-        return stats.truncnorm.rvs(minimum, maximum, loc=mean, scale=std)
-
-except ImportError:
-    warnings.warn("Scipy required for functions:"
-                  "- Bounded Normal (falling back to unbounded normal)")
-
-    def bounded_normal(minimum, maximum, mean, std, seed):
-        """ Warning: using unbounded normal due to no scipy """
-        return np.random.normal(mean, std)
 
 small_vensim = 1e-6  # What is considered zero according to Vensim Help
 
@@ -51,41 +34,61 @@ class Stateful(object):
     # algebraic operations
     def __init__(self):
         self._state = None
+        self.shape_info = None
 
     def __call__(self, *args, **kwargs):
         return self.state
 
-    def initialize(self):
-        raise NotImplementedError
-
     @property
     def state(self):
         if self._state is None:
-            raise AttributeError('Attempt to call stateful element before it is initialized.')
+            raise AttributeError('Attempt to call stateful element'
+                                 + ' before it is initialized.')
         return self._state
 
     @state.setter
     def state(self, new_value):
-        self._state = new_value
+        if self.shape_info:
+            self._state = xr.DataArray(data=new_value, **self.shape_info)
+        else:
+            self._state = new_value
+
+
+class DynamicStateful(Stateful):
+
+    def __init__(self):
+        super().__init__()
 
     def update(self, state):
-        self.state = state
+        try:
+            self.state = state
+        except Exception as err:
+            raise ValueError(err.args[0] + "\n\n"
+                             + "Could not update the value of "
+                             + self.py_name)
 
 
-class Integ(Stateful):
-    def __init__(self, ddt, initial_value):
+class Integ(DynamicStateful):
+    """
+    Implements INTEG function
+    """
+    def __init__(self, ddt, initial_value, py_name="Integ object"):
         """
 
         Parameters
         ----------
         ddt: function
-            This will become an attribute of the object
-        initial_value
+          This will become an attribute of the object
+        initial_value: function
+          Initial value
+        py_name: str
+          Python name to identify the object
         """
         super().__init__()
         self.init_func = initial_value
         self.ddt = ddt
         self.shape_info = None
+        self.py_name = py_name
 
     def initialize(self):
         self.state = self.init_func()
@@ -93,19 +96,11 @@ class Integ(Stateful):
             self.shape_info = {'dims': self.state.dims,
                                'coords': self.state.coords}
 
-    @property
-    def state(self):
-        return self._state
 
-    @state.setter
-    def state(self, new_value):
-        if self.shape_info is not None:
-            self._state = xr.DataArray(data=new_value, **self.shape_info)
-        else:
-            self._state = new_value
-
-
-class Delay(Stateful):
+class Delay(DynamicStateful):
+    """
+    Implements DELAY function
+    """
     # note that we could have put the `delay_input` argument as a parameter to
     # the `__call__` function, and more closely mirrored the vensim syntax.
     # However, people may get confused this way in thinking that they need
@@ -113,7 +108,8 @@ class Delay(Stateful):
     # whatever is convenient. This method forces them to acknowledge that
     # additional structure is being created in the delay object.
 
-    def __init__(self, delay_input, delay_time, initial_value, order):
+    def __init__(self, delay_input, delay_time, initial_value, order,
+                 tstep=lambda: 0, py_name="Delay object"):
         """
 
         Parameters
@@ -122,8 +118,8 @@ class Delay(Stateful):
         delay_time: function
         initial_value: function
         order: function
-        coords: dictionary (optional)
-        dims: list (optional)
+        py_name: str
+          Python name to identify the object
         """
         super().__init__()
         self.init_func = initial_value
@@ -131,47 +127,293 @@ class Delay(Stateful):
         self.input_func = delay_input
         self.order_func = order
         self.order = None
+        self.tstep = tstep
         self.shape_info = None
+        self.py_name = py_name
 
     def initialize(self):
         order = self.order_func()
 
         if order != int(order):
-            warnings.warn('Casting delay order from %f to %i' % (
-                order, int(order)))
+            warnings.warn(self.py_name + '\n' +
+                          'Casting delay order '
+                          + f'from {order} to {int(order)}')
 
         self.order = int(order)  # The order can only be set once
+        if self.order*self.tstep() > np.min(self.delay_time_func()):
+            while self.order*self.tstep() > np.min(self.delay_time_func()):
+                self.order -= 1
+            warnings.warn(self.py_name + '\n' +
+                          'Delay time very small, casting delay order '
+                          + f'from {int(order)} to {self.order}')
 
-        init_state_value = self.init_func() * self.delay_time_func()\
-                           / self.order
+        init_state_value = self.init_func() * self.delay_time_func()
 
         if isinstance(init_state_value, xr.DataArray):
             # broadcast self.state
             self.state = init_state_value.expand_dims({
-                'delay': np.arange(self.order)}, axis=0)
-            self.shape_info = {'dims': self.state.dims,
-                               'coords': self.state.coords}
+                '_delay': np.arange(self.order)}, axis=0)
         else:
-            self.state = np.array([init_state_value] * self.order)
+            self.state = xr.DataArray(
+                init_state_value,
+                {'_delay': np.arange(self.order)},
+                ['_delay'])
+        self.shape_info = {'dims': self.state.dims,
+                           'coords': self.state.coords}
 
     def __call__(self):
-        if self.shape_info:
-            return self.state[-1].reset_coords('delay', drop=True)\
-                   / (self.delay_time_func() / self.order)
+        if self.shape_info['dims'] == ('_delay',):
+            return float(self.state[-1] / self.delay_time_func())
         else:
-            return self.state[-1] / (self.delay_time_func() / self.order)
+            return self.state[-1].reset_coords('_delay', drop=True)\
+                / self.delay_time_func()
 
     def ddt(self):
-        outflows = self.state / (self.delay_time_func() / self.order)
-        inflows = np.roll(outflows, 1, axis=0)
-        if self.shape_info:
-            inflows[0] = self.input_func().values
+        outflows = self.state / self.delay_time_func()
+        inflows = outflows.roll({'_delay': 1}, False)
+        inflows[0] = self.input_func()
+        return (inflows - outflows)*self.order
+
+
+class DelayN(DynamicStateful):
+    """
+    Implements DELAY N function
+    """
+    # note that we could have put the `delay_input` argument as a parameter to
+    # the `__call__` function, and more closely mirrored the vensim syntax.
+    # However, people may get confused this way in thinking that they need
+    # only one delay object and can call it with various arguments to delay
+    # whatever is convenient. This method forces them to acknowledge that
+    # additional structure is being created in the delay object.
+
+    def __init__(self, delay_input, delay_time, initial_value, order,
+                 tstep, py_name):
+        """
+
+        Parameters
+        ----------
+        delay_input: function
+        delay_time: function
+        initial_value: function
+        order: function
+        py_name: str
+          Python name to identify the object
+        """
+        super().__init__()
+        self.init_func = initial_value
+        self.delay_time_func = delay_time
+        self.input_func = delay_input
+        self.order_func = order
+        self.order = None
+        self.times = None
+        self.tstep = tstep
+        self.shape_info = None
+        self.py_name = py_name
+
+    def initialize(self):
+        order = self.order_func()
+
+        if order != int(order):
+            warnings.warn(self.py_name + '\n' +
+                          'Casting delay order '
+                          + f'from {order} to {int(order)}')
+
+        self.order = int(order)  # The order can only be set once
+        if self.order*self.tstep() > np.min(self.delay_time_func()):
+            while self.order*self.tstep() > np.min(self.delay_time_func()):
+                self.order -= 1
+            warnings.warn(self.py_name + '\n' +
+                          'Delay time very small, casting delay order '
+                          + f'from {int(order)} to {self.order}')
+
+        init_state_value = self.init_func() * self.delay_time_func()
+
+        if isinstance(init_state_value, xr.DataArray):
+            # broadcast self.state
+            self.state = init_state_value.expand_dims({
+                '_delay': np.arange(self.order)}, axis=0)
+            self.times = self.delay_time_func().expand_dims({
+                '_delay': np.arange(self.order)}, axis=0)
         else:
-            inflows[0] = self.input_func()
-        return inflows - outflows
+            self.state = xr.DataArray(
+                init_state_value,
+                {'_delay': np.arange(self.order)},
+                ['_delay'])
+            self.times = xr.DataArray(
+                self.delay_time_func(),
+                {'_delay': np.arange(self.order)},
+                ['_delay'])
+        self.shape_info = {'dims': self.state.dims,
+                           'coords': self.state.coords}
+
+    def __call__(self):
+        if self.shape_info['dims'] == ('_delay',):
+            return float((self.state[-1]/self.times[0].values))
+        else:
+            return self.state[-1].reset_coords('_delay', drop=True)\
+                / self.times[0].reset_coords('_delay', drop=True)
+
+    def ddt(self):
+        self.times = self.times.roll({'_delay': 1}, False)
+        self.times[0] = self.delay_time_func()
+        outflows = self.state / self.times
+        inflows = outflows.roll({'_delay': 1}, False)
+        inflows[0] = self.input_func()
+        return (inflows - outflows)*self.order
+
+
+class DelayFixed(DynamicStateful):
+    """
+    Implements DELAY FIXED function
+    """
+
+    def __init__(self, delay_input, delay_time, initial_value, tstep,
+                 py_name):
+        """
+
+        Parameters
+        ----------
+        delay_input: function
+        delay_time: function
+        initial_value: function
+        order: function
+        py_name: str
+          Python name to identify the object
+        """
+        super().__init__()
+        self.init_func = initial_value
+        self.delay_time_func = delay_time
+        self.input_func = delay_input
+        self.tstep = tstep
+        self.order = None
+        self.pointer = 0
+        self.py_name = py_name
+
+    def initialize(self):
+        order = max(self.delay_time_func()/self.tstep(), 1)
+
+        if order != int(order):
+            warnings.warn(
+                self.py_name + '\n'
+                + 'Casting delay order from %f to %i' % (
+                    order, round(order + small_vensim)))
+
+        # need to add a small decimal to ensure that 0.5 is rounded to 1
+        self.order = round(order + small_vensim)  # The order can only be set once
+
+        init_state_value = self.init_func()
+
+        self.state = init_state_value
+        self.pipe = [init_state_value] * self.order
+
+    def __call__(self):
+        return self.state
+
+    def ddt(self):
+        return np.nan
+
+    def update(self, state):
+        self.pipe[self.pointer] = self.input_func()
+        self.pointer = (self.pointer + 1) % self.order
+        self.state = self.pipe[self.pointer]
+
+
+class Smooth(DynamicStateful):
+    """
+    Implements SMOOTH function
+    """
+    def __init__(self, smooth_input, smooth_time, initial_value, order,
+                 py_name="Smooth object"):
+        """
+
+        Parameters
+        ----------
+        smooth_input: function
+        smooth_time: function
+        initial_value: function
+        order: function
+        py_name: str
+          Python name to identify the object
+        """
+        super().__init__()
+        self.init_func = initial_value
+        self.smooth_time_func = smooth_time
+        self.input_func = smooth_input
+        self.order_func = order
+        self.order = None
+        self.shape_info = None
+        self.py_name = py_name
+
+    def initialize(self):
+        self.order = self.order_func()  # The order can only be set once
+        init_state_value = self.init_func()
+        if isinstance(init_state_value, xr.DataArray):
+            # broadcast self.state
+            self.state = init_state_value.expand_dims({
+                '_smooth': np.arange(self.order)}, axis=0)
+        else:
+            self.state = xr.DataArray(
+                init_state_value,
+                {'_smooth': np.arange(self.order)},
+                ['_smooth'])
+
+        self.shape_info = {'dims': self.state.dims,
+                           'coords': self.state.coords}
+
+    def __call__(self):
+        if self.shape_info['dims'] == ('_smooth',):
+            return float(self.state[-1])
+        else:
+            return self.state[-1].reset_coords('_smooth', drop=True)
+
+    def ddt(self):
+        targets = self.state.roll({'_smooth': 1}, False)
+        targets[0] = self.input_func()
+        return (targets - self.state) * self.order / self.smooth_time_func()
+
+
+class Trend(DynamicStateful):
+    """
+    Implements TREND function
+    """
+    def __init__(self, trend_input, average_time, initial_trend,
+                 py_name="Trend object"):
+        """
+
+        Parameters
+        ----------
+        trend_input: function
+        average_time: function
+        initial_trend: function
+        py_name: str
+          Python name to identify the object
+        """
+
+        super().__init__()
+        self.init_func = initial_trend
+        self.average_time_function = average_time
+        self.input_func = trend_input
+        self.py_name = py_name
+
+    def initialize(self):
+        self.state = self.input_func()\
+            / (1 + self.init_func() * self.average_time_function())
+
+        if isinstance(self.state, xr.DataArray):
+            self.shape_info = {'dims': self.state.dims,
+                               'coords': self.state.coords}
+
+    def __call__(self):
+        return zidz(self.input_func() - self.state,
+                    self.average_time_function() * np.abs(self.state))
+
+    def ddt(self):
+        return (self.input_func() - self.state) / self.average_time_function()
+
 
 class SampleIfTrue(Stateful):
-    def __init__(self, condition, actual_value, initial_value):
+    def __init__(self, condition, actual_value, initial_value,
+                 py_name="SampleIfTrue object"):
         """
 
         Parameters
@@ -179,87 +421,47 @@ class SampleIfTrue(Stateful):
         condition: function
         actual_value: function
         initial_value: function
+        py_name: str
+          Python name to identify the object
         """
         super().__init__()
         self.condition = condition
         self.actual_value = actual_value
         self.initial_value = initial_value
+        self.py_name = py_name
 
     def initialize(self):
         self.state = self.initial_value()
-        if isinstance(self.state, xr.DataArray):
-            self.shape_info = {'dims': self.state.dims,
-                               'coords': self.state.coords}
 
     def __call__(self):
-        self.state = if_then_else(self.condition(), self.actual_value, lambda: self.state)
+        self.state = if_then_else(self.condition(),
+                                  self.actual_value,
+                                  lambda: self.state)
         return self.state
-
-    def ddt(self):
-        return 0
-
-    def update(self, state):
-        # this doesn't change once it's set up.
-        pass
-
-class Smooth(Stateful):
-    def __init__(self, smooth_input, smooth_time, initial_value, order):
-        super().__init__()
-        self.init_func = initial_value
-        self.smooth_time_func = smooth_time
-        self.input_func = smooth_input
-        self.order_func = order
-        self.order = None
-
-    def initialize(self):
-        self.order = self.order_func()  # The order can only be set once
-        self.state = np.array([self.init_func()] * self.order)
-
-    def __call__(self):
-        return self.state[-1]
-
-    def ddt(self):
-        targets = np.roll(self.state, 1)
-        targets[0] = self.input_func()
-        return (targets - self.state) * self.order / self.smooth_time_func()
-
-
-class Trend(Stateful):
-    def __init__(self, trend_input, average_time, initial_trend):
-        super().__init__()
-        self.init_func = initial_trend
-        self.average_time_function = average_time
-        self.input_func = trend_input
-
-    def initialize(self):
-        self.state = self.input_func()\
-            / (1 + self.init_func() * self.average_time_function())
-
-    def __call__(self):
-        return zidz(self.input_func() - self.state,
-                    self.average_time_function() * abs(self.state))
-
-    def ddt(self):
-        return (self.input_func() - self.state) / self.average_time_function()
 
 
 class Initial(Stateful):
-    def __init__(self, func):
+    """
+    Implements INITIAL function
+    """
+    def __init__(self, func, py_name="Initial object"):
+        """
+
+        Parameters
+        ----------
+        func: function
+        py_name: str
+          Python name to identify the object
+        """
         super().__init__()
         self.func = func
+        self.py_name = py_name
 
     def initialize(self):
         self.state = self.func()
 
-    def ddt(self):
-        return 0
 
-    def update(self, state):
-        # this doesn't change once it's set up.
-        pass
-
-
-class Macro(Stateful):
+class Macro(DynamicStateful):
     """
     The Model class implements a stateful representation of the system,
     and contains the majority of methods for accessing and modifying model
@@ -271,7 +473,7 @@ class Macro(Stateful):
     """
 
     def __init__(self, py_model_file, params=None, return_func=None,
-                 time=None, time_initialization=None):
+                 time=None, time_initialization=None, py_name=None):
         """
         The model object will be created with components drawn from a
         translated python model file.
@@ -289,10 +491,11 @@ class Macro(Stateful):
         super().__init__()
         self.time = time
         self.time_initialization = time_initialization
+        self.py_name = py_name
 
         # need a unique identifier for the imported module.
         module_name = os.path.splitext(py_model_file)[0]\
-                      + str(random.randint(0, 1000000))
+            + str(random.randint(0, 1000000))
         try:
             self.components = SourceFileLoader(module_name,
                                                py_model_file).load_module()
@@ -326,6 +529,10 @@ class Macro(Stateful):
         self._stateful_elements = [
             getattr(self.components, name) for name in dir(self.components)
             if isinstance(getattr(self.components, name), Stateful)
+        ]
+        self._dynamicstateful_elements = [
+            getattr(self.components, name) for name in dir(self.components)
+            if isinstance(getattr(self.components, name), DynamicStateful)
         ]
         self._external_elements = [
             getattr(self.components, name) for name in dir(self.components)
@@ -397,19 +604,25 @@ class Macro(Stateful):
             if progress:
                 remaining.difference_update(progress)
             else:
-                raise KeyError('Unresolvable Reference: Probable circular initialization' +
-                               '\n'.join([repr(e) for e in remaining]))
+                raise ValueError('Unresolvable Reference: '
+                                 + 'Probable circular initialization...\n'
+                                 + 'Not able to initialize the '
+                                 + 'following objects:\n\t'
+                                 + '\n\t'.join([e.py_name for e in remaining]))
 
     def ddt(self):
-        return np.array([component.ddt() for component in self._stateful_elements], dtype=object)
+        return np.array([component.ddt() for component
+                         in self._dynamicstateful_elements], dtype=object)
 
     @property
     def state(self):
-        return np.array([component.state for component in self._stateful_elements], dtype=object)
+        return np.array([component.state for component
+                         in self._dynamicstateful_elements], dtype=object)
 
     @state.setter
     def state(self, new_value):
-        [component.update(val) for component, val in zip(self._stateful_elements, new_value)]
+        [component.update(val) for component, val
+         in zip(self._dynamicstateful_elements, new_value)]
 
     def get_coords(self, param):
         """
@@ -418,18 +631,21 @@ class Macro(Stateful):
         >>> model.set_components('birth_rate')
         >>> model.set_components('Birth Rate')
         """
-        func_name = utils.get_value_by_insensitive_key_or_value(param,
+        func_name = utils.get_value_by_insensitive_key_or_value(
+            param,
             self.components._namespace) or param
 
-        try:
-            # TODO: make this less fragile, may crash if the component
-            # takes arguments and is a xarray
+        if not inspect.getfullargspec(getattr(self.components, func_name))[0]:
             value = getattr(self.components, func_name)()
+        else:
+            value = getattr(self.components, func_name)(0)
+
+        if isinstance(value, xr.DataArray):
             dims = list(value.dims)
             coords = {coord: list(value.coords[coord].values)
                       for coord in value.coords}
             return coords, dims
-        except Exception:
+        else:
             return None
 
     def set_components(self, params):
@@ -458,15 +674,6 @@ class Macro(Stateful):
 
             func_name = utils.get_value_by_insensitive_key_or_value(key,
                 self.components._namespace)
-            try:
-                # TODO: make this less fragile, may crash if the component
-                # takes arguments and is an xarray
-                # can use the __doc__ but will not be backward compatible:
-                # dims = literal_eval(re.findall("Subs: .+",
-                # getattr(self.components, func_name).__doc__)[0][6:])
-                dims = getattr(self.components, func_name)().dims
-            except Exception:
-                dims = None
 
             if isinstance(value, np.ndarray) or isinstance(value, list):
                 raise ValueError('When setting ' + key +'\n'
@@ -479,12 +686,23 @@ class Macro(Stateful):
                 raise NameError('%s is not recognized as a model component'
                                 % key)
 
+            try:
+                _, dims = self.get_coords(key)
+            except (AttributeError, TypeError):
+                dims = None
+
+            try:
+                args = inspect.getfullargspec(
+                    getattr(self.components, func_name))[0]
+            except (AttributeError, TypeError):
+                args = None
+
             if isinstance(value, pd.Series):
-                new_function = self._timeseries_component(value, dims)
+                new_function = self._timeseries_component(value, dims, args)
             elif callable(value):
                 new_function = value
             else:
-                new_function = self._constant_component(value, dims)
+                new_function = self._constant_component(value, dims, args)
 
             # this won't handle other statefuls...
             if '_integ_' + func_name in dir(self.components):
@@ -493,30 +711,71 @@ class Macro(Stateful):
                               stacklevel=2)
 
             setattr(self.components, func_name, new_function)
+            self.components.cache.clean()
 
-    def _timeseries_component(self, series, dims):
+    def _timeseries_component(self, series, dims, args=[]):
         """ Internal function for creating a timeseries model element """
         # this is only called if the set_component function recognizes a
         # pandas series
         # TODO: raise a warning if extrapolating from the end of the series.
-        if isinstance(series.values[0], xr.DataArray):
-            return lambda: utils.rearrange(xr.concat(series.values,
+        if isinstance(series.values[0], xr.DataArray) and args:
+            # the argument is already given in the model when the model
+            # is called
+            return lambda x: utils.rearrange(xr.concat(
+                series.values,
+                series.index).interp(concat_dim=x).reset_coords(
+                'concat_dim', drop=True),
+                dims, self.components._subscript_dict)
+
+        elif isinstance(series.values[0], xr.DataArray):
+            # the interpolation will be time dependent
+            return lambda: utils.rearrange(xr.concat(
+                series.values,
                 series.index).interp(concat_dim=self.time()).reset_coords(
-                'concat_dim', drop=True),dims, self.components._subscript_dict)
+                'concat_dim', drop=True),
+                dims, self.components._subscript_dict)
+
+        elif args and dims:
+            # the argument is already given in the model when the model
+            # is called
+            return lambda x: utils.rearrange(
+                np.interp(x, series.index, series.values),
+                dims, self.components._subscript_dict)
+
+        elif args:
+            # the argument is already given in the model when the model
+            # is called
+            return lambda x: np.interp(x, series.index, series.values)
+
+        elif dims:
+            # the interpolation will be time dependent
+            return lambda: utils.rearrange(
+                np.interp(self.time(), series.index, series.values),
+                dims, self.components._subscript_dict)
 
         else:
-            if dims:
-                return lambda: utils.rearrange(np.interp(self.time(),
-                    series.index, series.values),
-                    dims, self.components._subscript_dict)
+            # the interpolation will be time dependent
             return lambda: np.interp(self.time(), series.index, series.values)
 
-    def _constant_component(self, value, dims):
+    def _constant_component(self, value, dims, args=[]):
         """ Internal function for creating a constant model element """
-        if dims:
-            return lambda: utils.rearrange(value, dims,
-                                           self.components._subscript_dict)
-        return lambda: value
+        if args and dims:
+            # need to pass an argument to keep consistency with the calls
+            # to the function
+            return lambda x: utils.rearrange(
+                value, dims, self.components._subscript_dict)
+
+        elif args:
+            # need to pass an argument to keep consistency with the calls
+            # to the function
+            return lambda x: value
+
+        elif dims:
+            return lambda: utils.rearrange(
+                value, dims, self.components._subscript_dict)
+
+        else:
+            return lambda: value
 
     def set_state(self, t, state):
         """ Set the system state.
@@ -536,8 +795,8 @@ class Macro(Stateful):
 
         for key, value in state.items():
             # TODO Implement map with reference between component and stateful element?
-            component_name = utils.get_value_by_insensitive_key_or_value(key,
-                self.components._namespace)
+            component_name = utils.get_value_by_insensitive_key_or_value(
+                key, self.components._namespace)
             if component_name is not None:
                 stateful_name = '_integ_%s' % component_name
             else:
@@ -545,35 +804,37 @@ class Macro(Stateful):
                 stateful_name = key
 
             try:
-                # TODO make this less fragile (avoid using the __doc__)
                 if component_name[:7] == '_integ_':
                     # we need to check the original expression to retrieve
                     # the dimensions
-                    dims = literal_eval(re.findall("Subs: .+",
-                        getattr(self.components,
-                                component_name[7:]).__doc__)[0][6:])
+                    _, dims = self.get_coords(component_name[7:])
                 else:
-                    dims = literal_eval(re.findall("Subs: .+",
-                        getattr(self.components,
-                                component_name).__doc__)[0][6:])
-            except Exception:
+                    _, dims = self.get_coords(component_name)
+            except (AttributeError, TypeError):
                 dims = None
 
             if isinstance(value, np.ndarray) or isinstance(value, list):
-                raise ValueError('When setting ' + key +'\n'
+                raise ValueError('When setting ' + key + '\n'
                                  + 'Setting subscripted must be done'
                                  + 'using a xarray.DataArray with the '
                                  + 'correct dimensions or a constant value '
                                  + '(https://pysd.readthedocs.io/en/master/basic_usage.html)')
+
+            # get the arguments of the function to know if it is a regular
+            # variable or lookup
+            args = inspect.getfullargspec(
+                getattr(self.components, component_name))[0]
 
             # Try to update stateful component
             if hasattr(self.components, stateful_name):
                 try:
                     element = getattr(self.components, stateful_name)
                     if dims:
-                        value = utils.rearrange(value, dims,
+                        value = utils.rearrange(
+                            value, dims,
                             self.components._subscript_dict)
                     element.update(value)
+                    self.components.cache.clean()
                 except AttributeError:
                     print("'%s' has no state elements, assignment failed")
                     raise
@@ -581,7 +842,8 @@ class Macro(Stateful):
                 # Try to override component
                 try:
                     setattr(self.components, component_name,
-                            self._constant_component(value, dims))
+                            self._constant_component(value, dims, args))
+                    self.components.cache.clean()
                 except AttributeError:
                     print("'%s' has no component, assignment failed")
                     raise
@@ -1097,6 +1359,7 @@ def lookup_discrete(x, xs, ys):
 def if_then_else(condition, val_if_true, val_if_false):
     """
     Implements Vensim's IF THEN ELSE function.
+    https://www.vensim.com/documentation/20475.htm
 
     Parameters
     ----------
@@ -1125,6 +1388,8 @@ def if_then_else(condition, val_if_true, val_if_false):
 def xidz(numerator, denominator, value_if_denom_is_zero):
     """
     Implements Vensim's XIDZ function.
+    https://www.vensim.com/documentation/fn_xidz.htm
+
     This function executes a division, robust to denominator being zero.
     In the case of zero denominator, the final argument is returned.
 
@@ -1157,6 +1422,7 @@ def zidz(numerator, denominator):
     """
     This function bypasses divide-by-zero errors,
     implementing Vensim's ZIDZ function
+    https://www.vensim.com/documentation/fn_zidz.htm
 
     Parameters
     ----------
@@ -1201,6 +1467,15 @@ def active_initial(time, expr, init_val):
     else:
         return expr()
 
+def bounded_normal(minimum, maximum, mean, std, seed):
+    """
+    Implements vensim's BOUNDED NORMAL function
+    """
+    # np.random.seed(seed)
+    # we could bring this back later, but for now, ignore
+    return stats.truncnorm.rvs(minimum, maximum, loc=mean, scale=std)
+
+
 def random_0_1():
     """
     Implements Vensim's RANDOM 0 1 function.
@@ -1210,6 +1485,7 @@ def random_0_1():
     A random number from the uniform distribution between 0 and 1.
     """
     return np.random.uniform(0,1)
+
 
 def random_uniform(m, x, s):
     """
