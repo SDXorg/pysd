@@ -153,26 +153,26 @@ class Delay(DynamicStateful):
             # broadcast self.state
             self.state = init_state_value.expand_dims({
                 '_delay': np.arange(self.order)}, axis=0)
+            self.shape_info = {'dims': self.state.dims,
+                               'coords': self.state.coords}
         else:
-            self.state = xr.DataArray(
-                init_state_value,
-                {'_delay': np.arange(self.order)},
-                ['_delay'])
-        self.shape_info = {'dims': self.state.dims,
-                           'coords': self.state.coords}
+            self.state = np.array([init_state_value] * self.order)
 
     def __call__(self):
-        if self.shape_info['dims'] == ('_delay',):
-            return float(self.state[-1] / self.delay_time_func())
-        else:
+        if self.shape_info:
             return self.state[-1].reset_coords('_delay', drop=True)\
-                / self.delay_time_func()
+                   / self.delay_time_func()
+        else:
+            return self.state[-1] / self.delay_time_func()
 
     def ddt(self):
         outflows = self.state / self.delay_time_func()
-        inflows = outflows.roll({'_delay': 1}, False)
-        inflows[0] = self.input_func()
-        return (inflows - outflows)*self.order
+        inflows = np.roll(outflows, 1, axis=0)
+        if self.shape_info:
+            inflows[0] = self.input_func().values
+        else:
+            inflows[0] = self.input_func()
+        return (inflows - outflows) * self.order
 
 
 class DelayN(DynamicStateful):
@@ -234,30 +234,33 @@ class DelayN(DynamicStateful):
                 '_delay': np.arange(self.order)}, axis=0)
             self.times = self.delay_time_func().expand_dims({
                 '_delay': np.arange(self.order)}, axis=0)
+            self.shape_info = {'dims': self.state.dims,
+                               'coords': self.state.coords}
         else:
-            self.state = xr.DataArray(
-                init_state_value,
-                {'_delay': np.arange(self.order)},
-                ['_delay'])
-            self.times = xr.DataArray(
-                self.delay_time_func(),
-                {'_delay': np.arange(self.order)},
-                ['_delay'])
-        self.shape_info = {'dims': self.state.dims,
-                           'coords': self.state.coords}
+            self.state = np.array([init_state_value] * self.order)
+            self.times = np.array([self.delay_time_func()] * self.order)
 
     def __call__(self):
-        if self.shape_info['dims'] == ('_delay',):
-            return float((self.state[-1]/self.times[0].values))
-        else:
+        if self.shape_info:
             return self.state[-1].reset_coords('_delay', drop=True)\
-                / self.times[0].reset_coords('_delay', drop=True)
+                   / self.times[0].reset_coords('_delay', drop=True)
+        else:
+            return self.state[-1] / self.times[0]
 
     def ddt(self):
-        self.times = self.times.roll({'_delay': 1}, False)
-        self.times[0] = self.delay_time_func()
-        outflows = self.state / self.times
-        inflows = outflows.roll({'_delay': 1}, False)
+        if self.shape_info:
+            # if is xarray need to preserve coords
+            self.times = self.times.roll({'_delay': 1}, False)
+            self.times[0] = self.delay_time_func()
+            outflows = self.state / self.times
+            inflows = outflows.roll({'_delay': 1}, False)
+        else:
+            # if is float use numpy.roll
+            self.times = np.roll(self.times, 1, axis=0)
+            self.times[0] = self.delay_time_func()
+            outflows = self.state / self.times
+            inflows = np.roll(outflows, 1, axis=0)
+
         inflows[0] = self.input_func()
         return (inflows - outflows)*self.order
 
@@ -351,24 +354,23 @@ class Smooth(DynamicStateful):
             # broadcast self.state
             self.state = init_state_value.expand_dims({
                 '_smooth': np.arange(self.order)}, axis=0)
+            self.shape_info = {'dims': self.state.dims,
+                               'coords': self.state.coords}
         else:
-            self.state = xr.DataArray(
-                init_state_value,
-                {'_smooth': np.arange(self.order)},
-                ['_smooth'])
-
-        self.shape_info = {'dims': self.state.dims,
-                           'coords': self.state.coords}
+            self.state = np.array([self.init_func()] * self.order)
 
     def __call__(self):
-        if self.shape_info['dims'] == ('_smooth',):
-            return float(self.state[-1])
-        else:
+        if self.shape_info:
             return self.state[-1].reset_coords('_smooth', drop=True)
+        else:
+            return self.state[-1]
 
     def ddt(self):
-        targets = self.state.roll({'_smooth': 1}, False)
-        targets[0] = self.input_func()
+        targets = np.roll(self.state, 1, axis=0)
+        if self.shape_info:
+            targets[0] = self.input_func().values
+        else:
+            targets[0] = self.input_func()
         return (targets - self.state) * self.order / self.smooth_time_func()
 
 
