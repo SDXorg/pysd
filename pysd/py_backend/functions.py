@@ -626,21 +626,72 @@ class Macro(DynamicStateful):
         [component.update(val) for component, val
          in zip(self._dynamicstateful_elements, new_value)]
 
+    def get_args(self, param):
+        """
+        Returns the arguments of a model element.
+
+        Parameters
+        ----------
+        param: str or func
+            The model element name or function.
+
+        Returns
+        -------
+        args: list
+            List of arguments of the function.
+
+        >>> model.get_args('birth_rate')
+        >>> model.get_args('Birth Rate')
+
+        """
+        if isinstance(param, str):
+            func_name = utils.get_value_by_insensitive_key_or_value(
+                param,
+                self.components._namespace) or param
+
+            func = getattr(self.components, func_name)
+        else:
+            func = param
+
+        if hasattr(func, 'args'):
+            # cached functions
+            return func.args
+        else:
+            # regular functions
+            return inspect.getfullargspec(func)[0]
+
     def get_coords(self, param):
         """
-        Returns the the coordinates and dims of model element if it has,
-        otherwise returns None
-        >>> model.set_components('birth_rate')
-        >>> model.set_components('Birth Rate')
-        """
-        func_name = utils.get_value_by_insensitive_key_or_value(
-            param,
-            self.components._namespace) or param
+        Returns the coordinates and dims of a model element.
 
-        if not inspect.getfullargspec(getattr(self.components, func_name))[0]:
-            value = getattr(self.components, func_name)()
+        Parameters
+        ----------
+        param: str or func
+            The model element name or function.
+
+        Returns
+        -------
+        (coords, dims) or None: (dict, list) or None
+            The coords and the dimensions of the element if it has.
+            Otherwise, returns None.
+
+        >>> model.get_coords('birth_rate')
+        >>> model.get_coords('Birth Rate')
+
+        """
+        if isinstance(param, str):
+            func_name = utils.get_value_by_insensitive_key_or_value(
+                param,
+                self.components._namespace) or param
+
+            func = getattr(self.components, func_name)
         else:
-            value = getattr(self.components, func_name)(0)
+            func = param
+
+        if not self.get_args(func):
+            value = func()
+        else:
+            value = func(0)
 
         if isinstance(value, xr.DataArray):
             dims = list(value.dims)
@@ -673,8 +724,8 @@ class Macro(DynamicStateful):
         # with a pandas series being passed in as a dictionary element.
 
         for key, value in params.items():
-
-            func_name = utils.get_value_by_insensitive_key_or_value(key,
+            func_name = utils.get_value_by_insensitive_key_or_value(
+                key,
                 self.components._namespace)
 
             if isinstance(value, np.ndarray) or isinstance(value, list):
@@ -689,28 +740,34 @@ class Macro(DynamicStateful):
                                 % key)
 
             try:
-                _, dims = self.get_coords(key)
+                func = getattr(self.components, func_name)
+                _, dims = self.get_coords(func) or (None, None)
+                args = self.get_args(func)
             except (AttributeError, TypeError):
-                dims = None
-
-            try:
-                args = inspect.getfullargspec(
-                    getattr(self.components, func_name))[0]
-            except (AttributeError, TypeError):
-                args = None
+                dims, args = None, None
 
             if isinstance(value, pd.Series):
-                new_function = self._timeseries_component(value, dims, args)
+                new_function, cache = self._timeseries_component(
+                    value, dims, args)
             elif callable(value):
                 new_function = value
+                cache = None
             else:
                 new_function = self._constant_component(value, dims, args)
+                cache = 'run'
 
             # this won't handle other statefuls...
             if '_integ_' + func_name in dir(self.components):
                 warnings.warn("Replacing the equation of stock"
                               + "{} with params".format(key),
                               stacklevel=2)
+
+            # add cache
+            new_function.__name__ = func_name
+            if cache == 'run':
+                new_function = self.components.cache.run(new_function)
+            elif cache == 'step':
+                new_function = self.components.cache.step(new_function)
 
             setattr(self.components, func_name, new_function)
             self.components.cache.clean()
@@ -727,7 +784,7 @@ class Macro(DynamicStateful):
                 series.values,
                 series.index).interp(concat_dim=x).reset_coords(
                 'concat_dim', drop=True),
-                dims, self.components._subscript_dict)
+                dims, self.components._subscript_dict), 'lookup'
 
         elif isinstance(series.values[0], xr.DataArray):
             # the interpolation will be time dependent
@@ -735,29 +792,31 @@ class Macro(DynamicStateful):
                 series.values,
                 series.index).interp(concat_dim=self.time()).reset_coords(
                 'concat_dim', drop=True),
-                dims, self.components._subscript_dict)
+                dims, self.components._subscript_dict), 'step'
 
         elif args and dims:
             # the argument is already given in the model when the model
             # is called
             return lambda x: utils.rearrange(
                 np.interp(x, series.index, series.values),
-                dims, self.components._subscript_dict)
+                dims, self.components._subscript_dict), 'lookup'
 
         elif args:
             # the argument is already given in the model when the model
             # is called
-            return lambda x: np.interp(x, series.index, series.values)
+            return lambda x:\
+                np.interp(x, series.index, series.values), 'lookup'
 
         elif dims:
             # the interpolation will be time dependent
             return lambda: utils.rearrange(
                 np.interp(self.time(), series.index, series.values),
-                dims, self.components._subscript_dict)
+                dims, self.components._subscript_dict), 'step'
 
         else:
             # the interpolation will be time dependent
-            return lambda: np.interp(self.time(), series.index, series.values)
+            return lambda:\
+                np.interp(self.time(), series.index, series.values), 'step'
 
     def _constant_component(self, value, dims, args=[]):
         """ Internal function for creating a constant model element """
@@ -806,7 +865,7 @@ class Macro(DynamicStateful):
                 stateful_name = key
 
             try:
-                if component_name[:7] == '_integ_':
+                if component_name.startswith('_integ_'):
                     # we need to check the original expression to retrieve
                     # the dimensions
                     _, dims = self.get_coords(component_name[7:])
@@ -821,11 +880,6 @@ class Macro(DynamicStateful):
                                  + 'using a xarray.DataArray with the '
                                  + 'correct dimensions or a constant value '
                                  + '(https://pysd.readthedocs.io/en/master/basic_usage.html)')
-
-            # get the arguments of the function to know if it is a regular
-            # variable or lookup
-            args = inspect.getfullargspec(
-                getattr(self.components, component_name))[0]
 
             # Try to update stateful component
             if hasattr(self.components, stateful_name):
@@ -844,7 +898,9 @@ class Macro(DynamicStateful):
                 # Try to override component
                 try:
                     setattr(self.components, component_name,
-                            self._constant_component(value, dims, args))
+                            self._constant_component(
+                                value, dims,
+                                self.get_args(component_name)))
                     self.components.cache.clean()
                 except AttributeError:
                     print("'%s' has no component, assignment failed")
@@ -1002,13 +1058,15 @@ class Model(Macro):
         elif isinstance(return_timestamps, pd.Series):
             return_timestamps_array = return_timestamps.as_matrix()
         else:
-            raise TypeError('`return_timestamps` expects a list, array, pandas Series, '
-                            'or numeric value')
+            raise TypeError('`return_timestamps` expects a list, array,'
+                            'pandas Series, or numeric value')
         return return_timestamps_array
 
     def run(self, params=None, return_columns=None, return_timestamps=None,
-            initial_condition='original', reload=False, progress=False):
-        """ Simulate the model's behavior over time.
+            initial_condition='original', reload=False, progress=False,
+            flatten_output=False):
+        """
+        Simulate the model's behavior over time.
         Return a pandas dataframe with timestamps as rows,
         model elements as columns.
 
@@ -1037,11 +1095,18 @@ class Model(Macro):
             * (t, {state}) lets the user specify a starting time and (possibly partial)
               list of stock values.
 
-        reload : bool
-            If true, reloads the model from the translated model file before making changes
+        reload : bool (optional)
+            If True, reloads the model from the translated model file
+            before making changes. Default is False.
 
-        progress : bool
-            If true, a progressbar will be shown during integration
+        progress : bool (optional)
+            If True, a progressbar will be shown during integration.
+            Default is False.
+
+        flatten_output: bool (optional)
+            If True, once the output dataframe has been formatted will
+            split the xarrays in new columns following vensim's naming
+            to make a totally flat output. Default is False.
 
         Examples
         --------
@@ -1078,25 +1143,34 @@ class Model(Macro):
         self.components.cache.clean()
 
         capture_elements, return_addresses = utils.get_return_elements(
-            return_columns, self.components._namespace, self.components._subscript_dict)
+            return_columns, self.components._namespace,
+            self.components._subscript_dict)
 
-        res = self._integrate(t_series, capture_elements, return_timestamps)
+        # create a dictionary splitting run cached and others
+        capture_elements = self._split_capture_elements(capture_elements)
 
-        return_df = utils.make_flat_df(res, return_addresses)
+        res = self._integrate(t_series, capture_elements['step'],
+                              return_timestamps)
+
+        self._add_run_elements(res, capture_elements['run'])
+
+        return_df = utils.make_flat_df(res, return_addresses, flatten_output)
         return_df.index = return_timestamps
 
         return return_df
 
     def reload(self):
-        """Reloads the model from the translated model file, so that all the
+        """
+        Reloads the model from the translated model file, so that all the
         parameters are back to their original value.
         """
-        self.__init__(self.py_model_file, initialize=True, missing_values=self.missing_values)
+        self.__init__(self.py_model_file, initialize=True,
+                      missing_values=self.missing_values)
 
     def _default_return_columns(self):
         """
-        Return a list of the model elements that does not include lookup functions
-        or other functions that take parameters.
+        Return a list of the model elements that does not include lookup
+        functions or other functions that take parameters.
         """
         return_columns = []
         parsed_expr = []
@@ -1109,9 +1183,37 @@ class Model(Macro):
                     expr = self.components._namespace[key]
                     if expr not in parsed_expr:
                         return_columns.append(key)
-                        parsed_expr.append(expr)
+                        parsed_expr.append(value)
 
         return return_columns
+
+    def _split_capture_elements(self, capture_elements):
+        """
+        Splits the capture elements list between those with run cache
+        and others.
+
+        Parameters
+        ----------
+        capture_elements: list
+            Captured elements list
+
+        Returns
+        -------
+        capture_dict: dict
+            Dictionary of sets with keywords step and run.
+
+        """
+        capture_dict = {'step': set(), 'run': set()}
+        for element in capture_elements:
+            func = getattr(self.components, element)
+            if hasattr(func, 'type') and getattr(func, 'type') == 'run':
+                capture_dict['run'].add(element)
+            else:
+                # those with a cache different to run or non-identified
+                # will be saved each step
+                capture_dict['step'].add(element)
+
+        return capture_dict
 
     def set_initial_condition(self, initial_condition):
         """ Set the initial conditions of the integration.
@@ -1153,13 +1255,15 @@ class Model(Macro):
             raise TypeError('Check documentation for valid entries')
 
     def _euler_step(self, dt):
-        """ Performs a single step in the euler integration,
+        """
+        Performs a single step in the euler integration,
         updating stateful components
 
         Parameters
         ----------
         dt : float
             This is the amount to increase time by this step
+
         """
         self.state = self.state + self.ddt() * dt
 
@@ -1181,8 +1285,8 @@ class Model(Macro):
         outputs: list of dictionaries
 
         """
-        # Todo: consider adding the timestamp to the return elements, and using that as the index
-        outputs = []
+        outputs = pd.DataFrame(index=return_timestamps,
+                               columns=capture_elements)
 
         if self.progress:
             # initialize progress bar
@@ -1193,20 +1297,43 @@ class Model(Macro):
 
         for t2 in time_steps[1:]:
             if self.time() in return_timestamps:
-                outputs.append({key: getattr(self.components, key)() for key in capture_elements})
+                outputs.at[self.time()] = [getattr(self.components, key)()
+                                           for key in capture_elements]
             self._euler_step(t2 - self.time())
             self.time.update(t2)  # this will clear the stepwise caches
             self.components.cache.reset(t2)
             progressbar.update()
 
-        # need to add one more time step, because we run only the state updates in the previous
-        # loop and thus may be one short.
+        # need to add one more time step, because we run only the state
+        # updates in the previous loop and thus may be one short.
         if self.time() in return_timestamps:
-            outputs.append({key: getattr(self.components, key)() for key in capture_elements})
+            outputs.at[self.time()] = [getattr(self.components, key)()
+                                       for key in capture_elements]
 
         progressbar.finish()
 
         return outputs
+
+    def _add_run_elements(self, df, capture_elements):
+        """
+        Adds constant elements to a dataframe.
+
+        Parameters
+        ----------
+        df: pandas.DataFrame
+            Dataframe to add elements.
+
+        capture_elements: list
+            List of constant elements
+
+        Returns
+        -------
+        None
+
+        """
+        nt = len(df.index.values)
+        for element in capture_elements:
+            df[element] = [getattr(self.components, element)()] * nt
 
 
 def ramp(time, slope, start, finish=0):

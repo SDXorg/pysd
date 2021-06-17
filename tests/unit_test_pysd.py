@@ -2,7 +2,6 @@ import unittest
 import warnings
 import pandas as pd
 import numpy as np
-from xarray.coding.cftime_offsets import YearEnd
 
 test_model = 'test-models/samples/teacup/teacup.mdl'
 test_model_subs = 'test-models/tests/subscript_2d_arrays/'\
@@ -14,68 +13,26 @@ test_model_look = 'test-models/tests/get_lookups_subscripted_args/'\
 class TestPySD(unittest.TestCase):
 
     def test_load_different_version_error(self):
-        import os
         import pysd
-
-        model_main = """
-        from pysd import cache, external
-
-        __data = {'scope': None, 'time': lambda: 0}
-
-        def _init_outer_references(data):
-            for key in data:
-                __data[key] = data[key]
-
-        def initial_time():
-            return 0
-
-        """
-
-        model_main = model_main.replace("\n        ", "\n")
 
         # old PySD major version
-        with open("old_version.py", "w") as f:
-            f.write(model_main)
-            f.write("__pysd_version__ = \"0.5.0\"")
-
         with self.assertRaises(ImportError):
-            pysd.load("old_version.py")
+            pysd.load("more-tests/version/test_old_version.py")
 
         # current PySD major version
-        with open("current_version.py", "w") as f:
-            f.write(model_main)
-            f.write("__pysd_version__ = \"1.99.3\"")
-
-        pysd.load("current_version.py")
-
-        os.remove("old_version.py")
-        os.remove("current_version.py")
+        pysd.load("more-tests/version/test_current_version.py")
 
     def test_load_type_error(self):
-        import os
         import pysd
 
-        # external object old definition with dims ([])
-        ext = "_ext_data = external.ExtData('input.xlsx', "\
-              + "'Sheet1', '5', 'B6', None, {}, [], _root, "\
-              + "'_ext_data')"
-
-        with open("type_error.py", "w") as f:
-            f.write("from pysd import external")
-            f.write("\n")
-            f.write("_root = './'")
-            f.write("\n")
-            f.write(ext)
-
         with self.assertRaises(ImportError):
-            pysd.load("type_error.py")
-
-        os.remove("type_error.py")
+            pysd.load("more-tests/type_error/test_type_error.py")
 
     def test_read_not_model_vensim(self):
         import pysd
+
         with self.assertRaises(ValueError):
-            pysd.read_vensim('more-tests/Not-Vensim.txt')
+            pysd.read_vensim('more-tests/not_vensim/test_not_vensim.txt')
 
     def test_run(self):
         import pysd
@@ -93,7 +50,7 @@ class TestPySD(unittest.TestCase):
         model_mdl = 'test-models/tests/get_with_missing_values_xlsx/'\
                     + 'test_get_with_missing_values_xlsx.mdl'
         model_py = 'test-models/tests/get_with_missing_values_xlsx/'\
-                    + 'test_get_with_missing_values_xlsx.py'
+                   + 'test_get_with_missing_values_xlsx.py'
 
         with catch_warnings(record=True) as ws:
             # warnings for missing values
@@ -405,7 +362,6 @@ class TestPySD(unittest.TestCase):
         res = model.run(return_columns=['Initial Values'])
         self.assertTrue(output.equals(res['Initial Values'].iloc[0]))
 
-    # TODO
     def test_set_constant_parameter_lookup(self):
         import xarray as xr
         import pysd
@@ -1059,8 +1015,9 @@ class TestPySD(unittest.TestCase):
         res = model._integrate(time_steps=list(range(5)),
                                capture_elements=['teacup_temperature'],
                                return_timestamps=list(range(0, 5, 2)))
-        self.assertIsInstance(res, list)
-        self.assertIsInstance(res[0], dict)
+        self.assertIsInstance(res, pd.DataFrame)
+        self.assertIn('teacup_temperature', res)
+        self.assertTrue(all(res.index.values == list(range(0, 5, 2))))
 
     def test_default_returns_with_construction_functions(self):
         """
@@ -1184,53 +1141,11 @@ class TestModelInteraction(unittest.TestCase):
         self.assertNotEqual(old, new)
 
     def test_circular_reference(self):
-        import os
         import pysd
 
-        model_main = """
-        from pysd import cache, external
-        from pysd.py_backend.functions import Integ, Delay
-
-        _subscript_dict = {}
-        _namespace = {'integ': 'integ', 'delay': 'delay'}
-        __pysd_version__ = "1.1.1"
-
-        __data = {'scope': None, 'time': lambda: 0}
-
-        def _init_outer_references(data):
-            for key in data:
-                __data[key] = data[key]
-
-        def time():
-            return __data["time"]()
-
-        def time_step():
-            return 0.5
-
-        def initial_time():
-            return 0
-
-        def integ():
-            return _integ_integ()
-
-        def delay():
-            return _delay_delay()
-
-        _integ_integ = Integ(lambda: 2, lambda: delay(), '_integ_integ')
-
-        _delay_delay = Delay(lambda: 2, lambda: 1,
-                             lambda: integ(), 1, time_step, '_delay_delay')
-        """
-
-        model_main = model_main.replace("\n        ", "\n")
-
-        with open("circular.py", "w") as f:
-            f.write(model_main)
-
         with self.assertRaises(ValueError) as err:
-            pysd.load("circular.py")
-
-        os.remove("circular.py")
+            pysd.load(
+                "more-tests/circular_reference/test_circular_reference.py")
 
         self.assertIn('_integ_integ', str(err.exception))
         self.assertIn('_delay_delay', str(err.exception))
