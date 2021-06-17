@@ -195,6 +195,44 @@ class TestExternalMethods(unittest.TestCase):
         ext._fill_missing(series, datac)
         self.assertTrue(np.all(interp == datac))
 
+    def test_resolve_file(self):
+        """
+        External._resolve_file
+        """
+        import pysd
+
+        root = os.path.dirname(__file__)
+        ext = pysd.external.External('external')
+        ext.file = 'data/input.xlsx'
+        ext._resolve_file(root=root)
+
+        self.assertEqual(ext.file, os.path.join(root, 'data/input.xlsx'))
+
+        root = os.path.join(root, 'data')
+        ext.file = 'input.xlsx'
+        ext._resolve_file(root=root)
+
+        self.assertEqual(ext.file, os.path.join(root, 'input.xlsx'))
+
+        ext.file = 'input2.xlsx'
+
+        with self.assertRaises(FileNotFoundError) as err:
+            ext._resolve_file(root=root)
+
+        self.assertIn(
+            f"File '{os.path.join(root, 'input2.xlsx')}' not found.",
+            str(err.exception))
+
+        # TODO in the future we may add an option to include indirect
+        # references with ?. By the moment an error is raised
+        ext.file = '?input.xlsx'
+        with self.assertRaises(ValueError) as err:
+            ext._resolve_file(root=root)
+
+        self.assertIn(
+            "Indirect reference to file: ?input.xlsx",
+            str(err.exception))
+
 
 class TestData(unittest.TestCase):
     """
@@ -214,7 +252,7 @@ class TestData(unittest.TestCase):
         import pysd
 
         # test as well no file extension
-        file_name = "data/input"
+        file_name = "data/input.xlsx"
         sheet = "Horizontal"
         time_row_or_col = "16"
         cell = "B17"
@@ -1742,7 +1780,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      interp=interp,
                                      py_name=py_name)
 
-        with self.assertRaises(IOError):
+        with self.assertRaises(FileNotFoundError):
             data.initialize()
 
     def test_non_existent_sheet_pyxl(self):
