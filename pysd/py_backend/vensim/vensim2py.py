@@ -16,7 +16,7 @@ from parsimonious.exceptions import IncompleteParseError, VisitationError, Parse
 from .. import builder, utils, external
 
 
-def get_file_sections(file_str):
+def get_file_sections(file_str, parse_sketch=False):
     """
     This is where we separate out the macros from the rest of the model file.
     Working based upon documentation at:
@@ -27,6 +27,7 @@ def get_file_sections(file_str):
     Parameters
     ----------
     file_str
+    parse_sketch
 
     Returns
     -------
@@ -44,12 +45,39 @@ def get_file_sections(file_str):
             the name of the macro, or 'main' for main body of model
         - string: string
             string representing the model section
+    sketch: sting
+        If the parse_sketch is True, then the sketch is spit into a separate string.
+        The resulting string preserves all new line characters (\n) to allow further
+        parsing line by line
     Examples
     --------
     >>> get_file_sections(r'a~b~c| d~e~f| g~h~i|')
-    [{'returns': [], 'params': [], 'name': 'main', 'string': 'a~b~c| d~e~f| g~h~i|'}]
+    [{'returns': [], 'params': [], 'name': 'main', 'string': 'a~b~c| d~e~f| g~h~i|'}], None
+
+    >>> get_file_sections(r'a~b~c| d~e~f| g~h~i|', True)
+    [{'returns': [], 'params': [], 'name': 'main', 'string': 'a~b~c| d~e~f| g~h~i|'}], "sketch\nstring"
+
 
     """
+
+    if parse_sketch:
+
+        split_model = file_str.split("\\\\\\---///", 1)
+
+        # make sure the sketch exists
+        sketch = split_model[1]
+
+        if sketch:
+            # if the sketch is to be parsed, we remove it from the other sections already in this step
+            file_str = split_model[0]
+            # remove plots section, if it exists
+            sketch = sketch.split("///---\\\\\\")[0]
+        else:
+            raise ("Your model does not have a sketch.")
+    else:
+        sketch = None
+
+    file_str = file_str.replace("\n", "")
 
     # the leading 'r' for 'raw' in this string is important for handling backslashes properly
     file_structure_grammar = _include_common_grammar(
@@ -98,14 +126,14 @@ def get_file_sections(file_str):
         def generic_visit(self, n, vc):
             return "".join(filter(None, vc)) or n.text or ""
 
-    return FileParser(tree).entries
+    return FileParser(tree).entries, sketch
 
 
 def get_model_elements(model_str):
     """
     Takes in a string representing model text and splits it into elements
 
-    I think we're making the assumption that all newline characters are removed...
+    All newline characters were alreeady removed in a previous step.
 
     Parameters
     ----------
@@ -178,7 +206,6 @@ def get_model_elements(model_str):
     class ModelParser(parsimonious.NodeVisitor):
         def __init__(self, ast):
             self.entries = []
-            self.sketch = ""
             self.visit(ast)
 
         def visit_entry(self, n, vc):
@@ -205,13 +232,10 @@ def get_model_elements(model_str):
                     }
                 )
 
-        def visit_sketch(self, n, vc):
-            self.sketch + n.text
-
         def generic_visit(self, n, vc):
             return "".join(filter(None, vc)) or n.text or ""
 
-    return ModelParser(tree)
+    return ModelParser(tree).entries
 
 
 def _include_common_grammar(source_grammar):
@@ -484,115 +508,176 @@ def get_equation_components(equation_str, root_path=None):
     }
 
 
-def collect_module_elements(module, model_elements):
+def parse_sketch_line(module, model_elements, fonts):
 
-    font_names = ["Times New Roman", "Century Gothic"]
-
-    # TODO this was just for testing, it can be put in a single loop
-    if isinstance(model_elements[0], dict):
-        model_elements = list(set([eval(element["real_name"]) for element in model_elements if element.get("real_name")]))
-    else:
-        model_elements = list(set(model_elements))
     """
     elements_list = [
-        re.escape(x).replace('"', "") for x in list(set(model_elements))
+    re.escape(x).replace('"', "") for x in list(set(model_elements))
     ] # or ["\\a"]
     """
+
     sketch_grammar = _include_common_grammar(
         r"""
-            module =  ~r"[^\*]+" "*" module_name module_sketch
-            module_name = ~r"(?<=\*)[^\$]+(?=\$)" 
-            module_sketch = "$" before_font font_properties ventana_title_def ~r"[^a-zA-Z\"]+" ((plot / title / element / id ) gibberish_after )+ # everything after the module name
+            line = module_intro / module_name / module_definition / var_definition / line_of_symbols
+            
+            
+            module_intro = ~r"\s*Sketch.*?names$" / ~r"^V300.*?ignored$"
+            module_name = "*" ~r"(?<=\*)[^\n]+$"
+            module_definition = "$" color "," ~r"\d" "," font_properties "|" ((color / weird_stuff) "|")* module_code
+            var_definition = var_code "," var_number "," var_name "," position "," var_box_type "," hide_level "," var_face "," var_word_position "," var_thickness "," var_rest_conf ","? ((weird_stuff / color) ",")* font_properties?
+            line_of_symbols = ~r"^[^\w]+$"
+            
+            
+            module_code = "96,96" "," ~r"\d{1,3}" "," "0"
+            
+            
+            
             plot = e_l_e_m_e_n_t "10" # ,0hello_world10
             # ghost_element = ~r"(?<=,0)" (element / id) "12"?
             id = ( basic_id / escape_group )
             #id = basic_id
+            
+            
             element = ("\"" element_clean "\"") / element_clean
             e_l_e_m_e_n_t = ("\"" e_l_e_m_e_n_t_clean "\"") / e_l_e_m_e_n_t_clean
 
             element_clean = ~r"(%(elements)s)"IU
             e_l_e_m_e_n_t_clean = ~r"(%(elements_)s)"IU
+            
+            
             ventana_title_def = ~r"[\|1\-]+"
-            before_font = "192-192-192,0," #this appears always before the $ after the title of the module
-            title =  font_properties ~r"[^(10|12),]+?" _? "."? ("10" / "12") #(?=,\d|[\\]{3,})"
+            before_font = color ",0," #this appears always before the $ after the title of the module
+            comment =  font_properties ~r"[^(10|12),]+?" _? "."? ("10" / "12") #(?=,\d|[\\]{3,})"
             
-            font_properties = font_name? "|" font_size "|" font_style "|" ( "|"? font_color "|"? )+
             
-            font_color = ~r"\d{1,3}-\d{1,3}-\d{1,3}" 
-            font_style = ( "B" / "I" / "U" / "S" / "V" )* # italics, bold, underline, etc
+            
+            var_code = ~r"^10"
+            var_number = ~r"\d+"
+            var_name = ~r"(?<=,)[^,]+(?=,)"
+            
+            position = ~r"(?<=,)\d+,\d+(?=,)"
+            var_box_type = ~r"(?<=,)\d+,\d+,\d+,\d+(?=,)" # improve this regex
+            
+            hide_level = ~r"(?<=,)\d+(?=,)"
+            var_face = ~r"(?<=,)\d+(?=,)"
+            var_word_position = ~r"(?<=,)\d+(?=,)"         
+            var_thickness = ~r"(?<=,)\d+(?=,)"
+            var_rest_conf = ~r"(?<=,)\d+,\d+"
+
+            font_properties = font_name? "|" font_size "|" font_style? "|" color  # if the B from an RGB is either 1 or 2 (very unlikely), the parser may not be able to tell the begining of the next line
+            font_style =  "B" / "I" / "U" / "S" / "V"  # italics, bold, underline, etc
             font_size =  ~r"\d+"  # this needs to be made a regex to match any font
             font_name = ~r"(%(fonts)s)"IU
+
+            color = ~r"((?<!\d|\.)([0-9]?[0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(?!\d|\.) *[-] *){2}(?<!\d|\.)([0-9]?[0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(?!\d|\.)" # rgb as in 255-255-255
             
-            gibberish_after = (~r",[^a-zA-Z]+(?=[a-zA-Z])" /
-                               ~r",\d[[a-zA-Z][^,]+" /
-                               ~r",[^a-zA-Z]+$") # everything that goes before or after an element
+            weird_stuff = ~r"\-1\-\-1\-\-1"
+            
+            
             
             """
     ) % {
         # In the following, we have to sort keywords in decreasing order of length so that the
         # peg parser doesn't quit early when finding a partial keyword
         "elements": "|".join(reversed(sorted(model_elements, key=len))),
-        "elements_": "|".join(reversed(sorted(list(map(lambda x: x.replace(" ", "_"), model_elements)), key=len))),
-        "fonts": "|".join(reversed(sorted(font_names), key=len)),
+        "elements_": "|".join(
+            reversed(
+                sorted(
+                    list(map(lambda x: x.replace(" ", "_"), model_elements)), key=len
+                )
+            )
+        ),
+        "fonts": "|".join(reversed(sorted(fonts, key=len))),
     }
+
+    """
+    gibberish_after = (~r",[^a-zA-Z]+(?=[a-zA-Z])" /
+                               ~r",\d[[a-zA-Z][^,]+" /
+                               ~r",[^a-zA-Z]+$") # everything that goes before or after an element
+    """
 
     parser = parsimonious.Grammar(sketch_grammar)
 
     class SketchParser(parsimonious.NodeVisitor):
         def __init__(self, ast):
-            self.module_name = None
-            self.elements_list = []
             self.visit(ast)
 
-        def visit_module(self,n,vc):
-            print(n.text)
+        def visit_line(self, n, vc):
+            return vc[0]
 
         def visit_module_name(self, n, vc):
-            self.module_name = n.text
-            #print(n.text)
-        
-        def visit_before_font(self, n, vc):
-            print(n.text)
+            return {
+                "new_module": True,
+                "module_name": n.text,
+                "variable": False,
+                "variable_name": "",
+            }
 
-        def visit_ventana_title_def(self, n, vc):
-            print(n.text)
-
-        def visit_id(self, n, vc):
-            if n.text.endswith(("10", "12")): # it's a plot
-                print(n.text, "is a plot")
-            else: # it's not a plot
-                self.elements_list.append(n.text)
-        
-        def visit_title(self, n, vc):
-            print(n.text)
-
-        def visit_plot(self,n,vc):
-            print(n.text)
+        def visit_var_definition(self, n, vc):
+            return {
+                "new_module": False,
+                "module_name": "",
+                "variable": True,
+                "variable_name": vc[4],
+            }
 
         def visit_font_properties(self, n, vc):
+            print("font properties ==========>", n.text)
+
+        def visit_module_sketch(self, n, vc):
             print(n.text)
-        #
-        #def visit_font_color(self, n, vc):
-        #    print(n.text)
-        #
+
+        def visit_weird_stuff(self, n, vc):
+            print("weird stuff ==========>", n.text)
+
+        def visit_module_definition(self, n, vc):
+            print("module definition ==========>", n.text)
+
+        def visit_before_font(self, n, vc):
+            print("title definition ==========>", n.text)
+
+        def visit_ventana_title_def(self, n, vc):
+            print("ventana title definition ==========>", n.text)
+
+        def visit_id(self, n, vc):
+            if n.text.endswith(("10", "12")):  # it's a plot
+                print(n.text, "is a plot")
+            else:  # it's not a plot
+                self.elements_list.append(n.text)
+
+        def visit_title(self, n, vc):
+            print("title definition ==========>", n.text)
+
+        def visit_plot(self, n, vc):
+            print("plot definition ==========>", n.text)
+
+        def visit_color(self, n, vc):
+            print("color ==========>", n.text)
+
         def visit_gibberish_after(self, n, vc):
-            print(n.text)
-
-        def visit_e_l_e_m_e_n_t(self, n, vc):
-            print(n.text)
-
-        def visit_element(self, n, vc):
-            print(n.text)
+            print("gibberish after ==========>", n.text)
 
         def generic_visit(self, n, vc):
-            return "".join(filter(None, vc)) or n.text or ""
+            return {
+                "new_module": False,
+                "module_name": "",
+                "variable": False,
+                "variable_name": "",
+            }
 
     try:
         tree = parser.parse(module)
-        return SketchParser(tree)
+        SketchParser(tree)
     except (IncompleteParseError, ParseError) as err:
-        #print(err.args[0][err.pos - 50 : err.pos + 50])
-        pass
+        print("error ====================>", err.args[0][err.pos - 10 : err.pos + 10])
+
+    return {
+        "new_module": False,
+        "module_name": "",
+        "variable": False,
+        "variable_name": "",
+    }
+
 
 def parse_units(units_str):
     """
@@ -1418,11 +1503,9 @@ def parse_lookup_expression(element, subscript_dict):
     )
 
 
-def translate_section(section, macro_list, root_path):
-    elements_obj = get_model_elements(section["string"])
+def translate_section(section, macro_list, sketch, root_path):
 
-    sketch = elements_obj.sketch
-    model_elements = elements_obj.entries
+    model_elements = get_model_elements(section["string"])
 
     # extract equation components
     model_docstring = ""
@@ -1488,25 +1571,39 @@ def translate_section(section, macro_list, root_path):
         for el in elements_subs_dict
     }
 
-    skip_start = 3  ################## this should be a parameter of translate_section function with 0 as default
-    skip_end = None ################## this should be a parameter of translate_section function with None as default
-    # remove plots section, if it exists
-    sketch = sketch.split("///---\\\\\\")[0]
-    # split sketch and skipping first elements (usually introduction, presentation), if need be
-    if skip_end: skip_end = - skip_end
-    clean_sketch = sketch.split("\\\\\\---/// ")[skip_start + 1: skip_end]
-    
-    # classify elements by module
+    if sketch:
+        # TODO generate a list of Vensim font names
+        font_names = ["Times New Roman", "Century Gothic", "@Malgun Gothic"]
 
-    module_elements = {}
-    for module in clean_sketch:
-        parse_module_object = collect_module_elements(module, model_elements)
-        if not parse_module_object==None:
-            module_elements[
-                parse_module_object.module_name
-            ] = parse_module_object.elements_list
+        # TODO I think I should only use element["kind"] = "components" and element["kind"] = "lookups"
+        unique_elements = list(
+            set(
+                [
+                    element["real_name"]
+                    for element in model_elements
+                    if element.get("real_name")
+                ]
+            )
+        )
 
-    
+        module_elements = {}
+        sketch = sketch.split("\\\\\\---/// ")
+        for module in sketch:
+            for sketch_line in module.split("\n"):
+                line = parse_sketch_line(
+                    sketch_line.strip(), unique_elements, font_names
+                )
+                # When a module name is found, the "new_module" becomes True.
+                # When a variable name is found, the "new_module" is set back to False
+                if line["new_module"]:
+                    module_name = line["module_name"]
+                else:
+                    # TODO both the module and variable name should be made python-safe
+                    if line["variable_name"]:
+                        module_elements[line["variable_name"]] = module_name
+
+        # TODO here I should change the section["file_name"] to point to that of the module each section belongs
+
     # Parse components to python syntax.
     for element in model_elements:
         if (element["kind"] == "component" and "py_expr" not in element) or element[
@@ -1572,8 +1669,11 @@ def translate_vensim(mdl_file):
     outfile_name = mdl_file.replace(".mdl", ".py").replace(".MDL", ".py")
     out_dir = os.path.dirname(outfile_name)
 
-    # extract model elements
-    file_sections = get_file_sections(text.replace("\n", ""))
+    # TODO make it a flag
+    parse_sketch = True
+
+    file_sections, sketch = get_file_sections(text, parse_sketch=parse_sketch)
+
     for section in file_sections:
         if section["name"] == "_main_":
             section["file_name"] = outfile_name
@@ -1584,6 +1684,6 @@ def translate_vensim(mdl_file):
     macro_list = [s for s in file_sections if s["name"] != "_main_"]
 
     for section in file_sections:
-        translate_section(section, macro_list, root_path)
+        translate_section(section, macro_list, sketch, root_path)
 
     return outfile_name
