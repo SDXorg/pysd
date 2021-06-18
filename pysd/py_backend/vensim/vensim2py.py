@@ -939,6 +939,7 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
             self.arguments = None
             self.in_oper = None
             self.args = []
+            self.to_float = False # convert subseted reference to float
             self.visit(ast)
 
         def visit_expr_type(self, n, vc):
@@ -976,7 +977,11 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
             py_expr = vc[0] + "()" + self.append
             self.append = ""
 
-            if self.subs:
+            if self.to_float:
+                # convert element to float after subscript subsetting
+                self.to_float = False
+                return "float(" + py_expr.replace(".reset_coords(drop=True","")
+            elif self.subs:
                 if elements_subs_dict[vc[0]] != self.subs:
                     py_expr = builder.build_function_call(
                         functions_utils["rearrange"],
@@ -1002,6 +1007,7 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
             # necessary if a lookup dimension is subselected but we have
             # other reference objects as arguments
             self.lookup_append.append(self.append)
+            self.to_float = False  # argument may have dims, cannot convert
             self.append = ""
 
             # recover subs for lookup to avoid using them for arguments
@@ -1124,6 +1130,9 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
 
                 if subs2:
                     self.subs = subs2
+                else:
+                    # convert subseted element to float (avoid using 0D xarray)
+                    self.to_float = True
 
                 self.append = ".loc[%s].reset_coords(drop=True)" % (
                     ', '.join(coords))
