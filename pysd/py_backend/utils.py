@@ -436,7 +436,7 @@ def make_add_identifier(identifier, build_names):
     return identifier
 
 
-def get_return_elements(return_columns, namespace, subscript_dict):
+def get_return_elements(return_columns, namespace):
     """
     Takes a list of return elements formatted in vensim's format
     Varname[Sub1, SUb2]
@@ -448,7 +448,6 @@ def get_return_elements(return_columns, namespace, subscript_dict):
     ----------
     return_columns: list of strings
     namespace
-    subscript_dict
 
     Returns
     -------

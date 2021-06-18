@@ -1145,8 +1145,7 @@ class Model(Macro):
         self.components.cache.clean()
 
         capture_elements, return_addresses = utils.get_return_elements(
-            return_columns, self.components._namespace,
-            self.components._subscript_dict)
+            return_columns, self.components._namespace)
 
         # create a dictionary splitting run cached and others
         capture_elements = self._split_capture_elements(capture_elements)
