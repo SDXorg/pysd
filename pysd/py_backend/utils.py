@@ -361,7 +361,7 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
     s = s.strip()
 
     # Make spaces into underscores
-    s = re.sub('[\\s\\t\\n]+', '_', s)
+    s = re.sub(r'[\s\t\n]+', '_', s)
 
     if convert == 'hex':
         # Convert invalid characters to hex. Note: \p{l} designates all
@@ -369,16 +369,16 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
         # mark symbols (e.g., vowel marks in Indian scrips, such as the final)
         # and \p{n} designates all numbers. We allow any of these to be
         # present in the regex.
-        s = ''.join([c.encode("hex") if re.findall('[^\p{l}\p{m}\p{n}_]', c)
+        s = ''.join([c.encode("hex") if re.findall(r'[^\p{l}\p{m}\p{n}_]', c)
                      else c for c in s])
 
     elif convert == 'drop':
         # Remove invalid characters
-        s = re.sub('[^\p{l}\p{m}\p{n}_]', '', s)
+        s = re.sub(r'[^\p{l}\p{m}\p{n}_]', '', s)
 
     # If leading characters are not a letter or underscore add nvs_.
     # Only letters can be leading characters.
-    if re.findall('^[^\p{l}_]+', s):
+    if re.findall(r'^[^\p{l}_]+', s):
         s = 'nvs_' + s
 
     # Check that the string is not a python identifier
@@ -388,8 +388,8 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
         if handle == 'throw':
             raise NameError(s + ' already exists in namespace or is a reserved word')
         if handle == 'force':
-            if re.match(".*?_\d+$", s):
-                i = re.match(".*?_(\d+)$", s).groups()[0]
+            if re.match(r".*?_\d+$", s):
+                i = re.match(r".*?_(\d+)$", s).groups()[0]
                 s = s.strip('_' + i) + '_' + str(int(i) + 1)
             else:
                 s += '_1'
