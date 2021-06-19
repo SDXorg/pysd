@@ -490,11 +490,12 @@ def parse_sketch_line(module, model_elements, fonts):
 
     sketch_grammar = _include_common_grammar(
         r"""
-            line = module_intro / module_name / module_definition / var_definition / line_of_symbols
+            line = module_intro / module_title / module_definition / var_definition / line_of_symbols
             
             
             module_intro = ~r"\s*Sketch.*?names$" / ~r"^V300.*?ignored$"
-            module_name = "*" ~r"(?<=\*)[^\n]+$"
+            module_title = "*" module_name
+            module_name = ~r"(?<=\*)[^\n]+$"
             module_definition = "$" color "," ~r"\d" "," font_properties "|" ((color / weird_stuff) "|")* module_code
             var_definition = var_code "," var_number "," var_name "," position "," var_box_type "," hide_level "," var_face "," var_word_position "," var_thickness "," var_rest_conf ","? ((weird_stuff / color) ",")* font_properties?
             line_of_symbols = ~r"^[^\w]+$"
@@ -572,26 +573,33 @@ def parse_sketch_line(module, model_elements, fonts):
 
     class SketchParser(parsimonious.NodeVisitor):
         def __init__(self, ast):
+            self.entry = {}
             self.visit(ast)
 
+        """
         def visit_line(self, n, vc):
             return vc[0]
+        """
 
         def visit_module_name(self, n, vc):
-            return {
-                "new_module": True,
-                "module_name": n.text,
-                "variable": False,
-                "variable_name": "",
-            }
+            self.entry.update(
+                {
+                    "new_module": True,
+                    "module_name": n.text,
+                    "variable": False,
+                    "variable_name": "",
+                }
+            )
 
-        def visit_var_definition(self, n, vc):
-            return {
-                "new_module": False,
-                "module_name": "",
-                "variable": True,
-                "variable_name": vc[4],
-            }
+        def visit_var_name(self, n, vc):
+            self.entry.update(
+                {
+                    "new_module": False,
+                    "module_name": "",
+                    "variable": True,
+                    "variable_name": n.text,
+                }
+            )
 
         def visit_font_properties(self, n, vc):
             print("font properties ==========>", n.text)
@@ -630,16 +638,19 @@ def parse_sketch_line(module, model_elements, fonts):
             print("gibberish after ==========>", n.text)
 
         def generic_visit(self, n, vc):
-            return {
-                "new_module": False,
-                "module_name": "",
-                "variable": False,
-                "variable_name": "",
-            }
+            if not self.entry:
+                self.entry.update(
+                    {
+                        "new_module": False,
+                        "module_name": "",
+                        "variable": False,
+                        "variable_name": "",
+                    }
+                )
 
     try:
         tree = parser.parse(module)
-        SketchParser(tree)
+        return SketchParser(tree).entry
     except (IncompleteParseError, ParseError) as err:
         print("error ====================>", err.args[0][err.pos - 10 : err.pos + 10])
 
@@ -1547,16 +1558,12 @@ def translate_section(section, macro_list, sketch, root_path):
         # TODO generate a list of Vensim font names
         font_names = ["Times New Roman", "Century Gothic", "@Malgun Gothic"]
 
-        # TODO I think I should only use element["kind"] = "components" and element["kind"] = "lookups"
-        unique_elements = list(
-            set(
-                [
-                    element["real_name"]
-                    for element in model_elements
-                    if element.get("real_name")
-                ]
-            )
-        )
+        # TODO how about macros??? are they also put in the sketch?
+        unique_elements = []
+        for element in model_elements:
+            if element["kind"] not in ["subdef", "section"]:
+                if element["real_name"] not in unique_elements:
+                    unique_elements.append(element["real_name"])
 
         module_elements = {}
         sketch = sketch.split("\\\\\\---/// ")
@@ -1573,9 +1580,8 @@ def translate_section(section, macro_list, sketch, root_path):
                     # TODO both the module and variable name should be made python-safe
                     if line["variable_name"]:
                         module_elements[line["variable_name"]] = module_name
-
-        # TODO here I should change the section["file_name"] to point to that of the module each section belongs
-
+        print("yeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaah")
+        print(module_elements)
     # Parse components to python syntax.
     for element in model_elements:
         if (element["kind"] == "component" and "py_expr" not in element) or element[
@@ -1608,7 +1614,7 @@ def translate_section(section, macro_list, sketch, root_path):
     builder.build(build_elements, subscript_dict, namespace, section["file_name"])
 
     return section["file_name"]
-    
+
 
 def split_sketch(text):
     """
@@ -1622,7 +1628,7 @@ def split_sketch(text):
     -------
     text: string
         Model file without sketch
-    
+
     sketch: string
         Model sketch
 
@@ -1640,7 +1646,7 @@ def split_sketch(text):
     return text, sketch
 
 
-def translate_vensim(mdl_file):
+def translate_vensim(mdl_file, parse_sketch):
     """
 
     Parameters
@@ -1671,11 +1677,10 @@ def translate_vensim(mdl_file):
     outfile_name = mdl_file.replace(".mdl", ".py").replace(".MDL", ".py")
     out_dir = os.path.dirname(outfile_name)
 
-    # TODO make it a flag
-    parse_sketch = True
-
     if parse_sketch:
         text, sketch = split_sketch(text)
+    else:
+        sketch = ""
 
     file_sections = get_file_sections(text.replace("\n", ""))
 

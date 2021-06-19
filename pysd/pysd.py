@@ -59,7 +59,7 @@ def read_xmile(xmile_file, initialize=True, missing_values="warning"):
     return model
 
 
-def read_vensim(mdl_file, initialize=True, missing_values="warning"):
+def read_vensim(mdl_file, initialize=True, missing_values="warning", parse_sketch=False):
     """
     Construct a model from Vensim `.mdl` file.
 
@@ -91,7 +91,7 @@ def read_vensim(mdl_file, initialize=True, missing_values="warning"):
 
     """
     from .py_backend.vensim.vensim2py import translate_vensim
-    py_model_file = translate_vensim(mdl_file)
+    py_model_file = translate_vensim(mdl_file, parse_sketch)
     model = load(py_model_file, initialize, missing_values)
     model.mdl_file = mdl_file
     return model
