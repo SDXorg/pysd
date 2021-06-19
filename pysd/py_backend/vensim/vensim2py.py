@@ -16,7 +16,7 @@ from parsimonious.exceptions import IncompleteParseError, VisitationError, Parse
 from .. import builder, utils, external
 
 
-def get_file_sections(file_str, parse_sketch=False):
+def get_file_sections(file_str):
     """
     This is where we separate out the macros from the rest of the model file.
     Working based upon documentation at:
@@ -27,7 +27,6 @@ def get_file_sections(file_str, parse_sketch=False):
     Parameters
     ----------
     file_str
-    parse_sketch
 
     Returns
     -------
@@ -45,39 +44,12 @@ def get_file_sections(file_str, parse_sketch=False):
             the name of the macro, or 'main' for main body of model
         - string: string
             string representing the model section
-    sketch: sting
-        If the parse_sketch is True, then the sketch is spit into a separate string.
-        The resulting string preserves all new line characters (\n) to allow further
-        parsing line by line
     Examples
     --------
     >>> get_file_sections(r'a~b~c| d~e~f| g~h~i|')
-    [{'returns': [], 'params': [], 'name': 'main', 'string': 'a~b~c| d~e~f| g~h~i|'}], None
-
-    >>> get_file_sections(r'a~b~c| d~e~f| g~h~i|', True)
-    [{'returns': [], 'params': [], 'name': 'main', 'string': 'a~b~c| d~e~f| g~h~i|'}], "sketch\nstring"
-
+    [{'returns': [], 'params': [], 'name': 'main', 'string': 'a~b~c| d~e~f| g~h~i|'}]
 
     """
-
-    if parse_sketch:
-
-        split_model = file_str.split("\\\\\\---///", 1)
-
-        # make sure the sketch exists
-        sketch = split_model[1]
-
-        if sketch:
-            # if the sketch is to be parsed, we remove it from the other sections already in this step
-            file_str = split_model[0]
-            # remove plots section, if it exists
-            sketch = sketch.split("///---\\\\\\")[0]
-        else:
-            raise ("Your model does not have a sketch.")
-    else:
-        sketch = None
-
-    file_str = file_str.replace("\n", "")
 
     # the leading 'r' for 'raw' in this string is important for handling backslashes properly
     file_structure_grammar = _include_common_grammar(
@@ -126,7 +98,7 @@ def get_file_sections(file_str, parse_sketch=False):
         def generic_visit(self, n, vc):
             return "".join(filter(None, vc)) or n.text or ""
 
-    return FileParser(tree).entries, sketch
+    return FileParser(tree).entries
 
 
 def get_model_elements(model_str):
@@ -1636,6 +1608,36 @@ def translate_section(section, macro_list, sketch, root_path):
     builder.build(build_elements, subscript_dict, namespace, section["file_name"])
 
     return section["file_name"]
+    
+
+def split_sketch(text):
+    """
+
+    Parameters
+    ----------
+    text : basestring
+        Full model as a string
+
+    Returns
+    -------
+    text: string
+        Model file without sketch
+    
+    sketch: string
+        Model sketch
+
+    """
+    split_model = text.split("\\\\\\---///", 1)
+
+    try:
+        text = split_model[0]
+        sketch = split_model[1]
+        # remove plots section, if it exists
+        sketch = sketch.split("///---\\\\\\")[0]
+    except:
+        raise ("Your model does not have a sketch.")
+
+    return text, sketch
 
 
 def translate_vensim(mdl_file):
@@ -1672,7 +1674,10 @@ def translate_vensim(mdl_file):
     # TODO make it a flag
     parse_sketch = True
 
-    file_sections, sketch = get_file_sections(text, parse_sketch=parse_sketch)
+    if parse_sketch:
+        text, sketch = split_sketch(text)
+
+    file_sections = get_file_sections(text.replace("\n", ""))
 
     for section in file_sections:
         if section["name"] == "_main_":
