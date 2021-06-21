@@ -1512,12 +1512,6 @@ def translate_section(section, macro_list, sketch, root_path):
 
     if sketch:
         # TODO how about macros??? are they also put in the sketch?
-        unique_elements = []
-        for element in model_elements:
-            if element["kind"] not in ["subdef", "section"]:
-                if element["real_name"] not in unique_elements:
-                    unique_elements.append(element["real_name"])
-
         modules_list = []  # list of all modules
         module_elements = {}
         # from the sketch it is not apparent what distinguishes a normal variable from a ghost variable (apart from the color, which is not a reliable)
