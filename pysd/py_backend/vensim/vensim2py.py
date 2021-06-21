@@ -484,9 +484,8 @@ def get_equation_components(equation_str, root_path=None):
 def parse_sketch_line(module, namespace):
 
     # not all possibilities can be tested, so this should be considered experimental for now
-    sketch_grammar = (
-        _include_common_grammar(
-            r"""
+    sketch_grammar = _include_common_grammar(
+        r"""
             line = var_definition / module_intro / module_title / module_definition / arrow / flow / plot_var / anything
             
             module_intro = ~r"\s*Sketch.*?names$" / ~r"^V300.*?ignored$"
@@ -551,7 +550,7 @@ def parse_sketch_line(module, namespace):
             weird_stuff = ~r"\-1\-\-1\-\-1"
             anything = ~r".*" # this one is dangerous, if something is not parsed before, it will fall here, with the risk of missing it
             """
-        ))
+    )
 
     parser = parsimonious.Grammar(sketch_grammar)
 
@@ -587,7 +586,9 @@ def parse_sketch_line(module, namespace):
                     }
                 )
             else:
-                message = "\n{} is in the sketch but not in the namespace.\n".format(n.text)
+                message = "\n{} is in the sketch but not in the namespace.\n".format(
+                    n.text
+                )
                 warnings.warn(message)
 
         def generic_visit(self, n, vc):
@@ -1611,7 +1612,7 @@ def split_sketch(text):
     return text, sketch
 
 
-def translate_vensim(mdl_file, parse_sketch):
+def translate_vensim(mdl_file, split_modules):
     """
 
     Parameters
@@ -1642,7 +1643,7 @@ def translate_vensim(mdl_file, parse_sketch):
     outfile_name = mdl_file.replace(".mdl", ".py").replace(".MDL", ".py")
     out_dir = os.path.dirname(outfile_name)
 
-    if parse_sketch:
+    if split_modules:
         text, sketch = split_sketch(text)
     else:
         sketch = ""
