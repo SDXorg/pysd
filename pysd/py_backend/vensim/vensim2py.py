@@ -6,6 +6,7 @@ knowledge of vensim syntax should be here.
 
 import os
 import re
+from tkinter.font import names
 import warnings
 from io import open
 
@@ -480,99 +481,84 @@ def get_equation_components(equation_str, root_path=None):
     }
 
 
-def parse_sketch_line(module, model_elements, fonts):
+def parse_sketch_line(module, namespace, fonts):
 
-    """
-    elements_list = [
-    re.escape(x).replace('"', "") for x in list(set(model_elements))
-    ] # or ["\\a"]
-    """
-
-    sketch_grammar = _include_common_grammar(
-        r"""
-            line = module_intro / module_title / module_definition / var_definition / line_of_symbols
-            
+    # not all possibilities can be tested, so this should be considered experimental for now
+    sketch_grammar = (
+        _include_common_grammar(
+            r"""
+            line = var_definition / module_intro / module_title / module_definition / arrow / flow / plot_var / anything
             
             module_intro = ~r"\s*Sketch.*?names$" / ~r"^V300.*?ignored$"
             module_title = "*" module_name
             module_name = ~r"(?<=\*)[^\n]+$"
             module_definition = "$" color "," ~r"\d" "," font_properties "|" ((color / weird_stuff) "|")* module_code
             var_definition = var_code "," var_number "," var_name "," position "," var_box_type "," hide_level "," var_face "," var_word_position "," var_thickness "," var_rest_conf ","? ((weird_stuff / color) ",")* font_properties?
-            line_of_symbols = ~r"^[^\w]+$"
+            #line_of_symbols = ~r"^[^\w]+$"
             
-            
-            module_code = "96,96" "," ~r"\d{1,3}" "," "0"
-            
-            
-            
-            plot = e_l_e_m_e_n_t "10" # ,0hello_world10
-            # ghost_element = ~r"(?<=,0)" (element / id) "12"?
-            id = ( basic_id / escape_group )
-            #id = basic_id
-            
-            
-            element = ("\"" element_clean "\"") / element_clean
-            e_l_e_m_e_n_t = ("\"" e_l_e_m_e_n_t_clean "\"") / e_l_e_m_e_n_t_clean
-
-            element_clean = ~r"(%(elements)s)"IU
-            e_l_e_m_e_n_t_clean = ~r"(%(elements_)s)"IU
-            
-            
-            ventana_title_def = ~r"[\|1\-]+"
-            before_font = color ",0," #this appears always before the $ after the title of the module
-            comment =  font_properties ~r"[^(10|12),]+?" _? "."? ("10" / "12") #(?=,\d|[\\]{3,})"
-            
-            
-            
-            var_code = ~r"^10"
-            var_number = ~r"\d+"
+            # elements used in a line defining the properties of a variable or stock (most are digits, but identifying them now may be useful for further parsing)
+            var_name = element #( basic_id / escape_group )
             var_name = ~r"(?<=,)[^,]+(?=,)"
-            
-            position = ~r"(?<=,)\d+,\d+(?=,)"
+            var_number = digit               
             var_box_type = ~r"(?<=,)\d+,\d+,\d+,\d+(?=,)" # improve this regex
+            hide_level = digit
+            var_face = digit
+            var_word_position = ~r"(?<=,)\-*\d+(?=,)"         
+            var_thickness = digit
+            var_rest_conf = digit "," ~r"\d+"
             
-            hide_level = ~r"(?<=,)\d+(?=,)"
-            var_face = ~r"(?<=,)\d+(?=,)"
-            var_word_position = ~r"(?<=,)\d+(?=,)"         
-            var_thickness = ~r"(?<=,)\d+(?=,)"
-            var_rest_conf = ~r"(?<=,)\d+,\d+"
+            arrow = arrow_code "," digit "," origin_var "," destination_var "," (digit ",")+ (weird_stuff ",")?  ((color ",") / ("," ~r"\d+") / (font_properties "," ~"\d+"))* "|(" position ")|"
+            
+            # arrow origin and destination (this may be useful if further parsing is required)
+            origin_var = digit
+            destination_var = digit
 
+            # flow arrows
+            flow = source_or_sink_or_plot / flow_arrow
+            
+            # if you want to extend the parsing, these two would be a good starting point (they are followed by "anything")
+            source_or_sink_or_plot = multipurpose_code "," anything
+            flow_arrow =  flow_arrow_code "," anything
+            
+            # Variable names after a line with a plot definition, comments, anything really
+            plot_var = anything # ~r"^[^,]+$" # if the comment contains commas, it's going to be problematic
+            
+            # fonts
             font_properties = font_name? "|" font_size "|" font_style? "|" color  # if the B from an RGB is either 1 or 2 (very unlikely), the parser may not be able to tell the begining of the next line
             font_style =  "B" / "I" / "U" / "S" / "V"  # italics, bold, underline, etc
             font_size =  ~r"\d+"  # this needs to be made a regex to match any font
             font_name = ~r"(%(fonts)s)"IU
 
+            # this may be useful if further parsing is required
+            position = ~r"-*\d+,-*\d+" # x and y
+            
+            # comma separated value/s
+            digit = ~r"(?<=,)\d+(?=,)"
+            
+            # rgb color
             color = ~r"((?<!\d|\.)([0-9]?[0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(?!\d|\.) *[-] *){2}(?<!\d|\.)([0-9]?[0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(?!\d|\.)" # rgb as in 255-255-255
             
+            # lines that start with specific numbers (1:arrows, 11:flow_arrow, 12:)
+            arrow_code = ~r"^1(?=,)"
+            flow_arrow_code = ~r"^11(?=,)"
+            var_code = ~r"^10(?=,)"
+            multipurpose_code = ~r"^12(?=,)" # source, sink, plot, comment
+            
+            # code at the end of module definitions
+            module_code = "96,96" "," ~r"\d{1,3}" "," "0"
+            
             weird_stuff = ~r"\-1\-\-1\-\-1"
-            
-            
-            
+            anything = ~r".*" # this one is dangerous, if something is not parsed before, it will fall here, with the risk of missing it
             """
-    ) % {
-        # In the following, we have to sort keywords in decreasing order of length so that the
-        # peg parser doesn't quit early when finding a partial keyword
-        "elements": "|".join(reversed(sorted(model_elements, key=len))),
-        "elements_": "|".join(
-            reversed(
-                sorted(
-                    list(map(lambda x: x.replace(" ", "_"), model_elements)), key=len
-                )
-            )
-        ),
-        "fonts": "|".join(reversed(sorted(fonts, key=len))),
-    }
-
-    """
-    gibberish_after = (~r",[^a-zA-Z]+(?=[a-zA-Z])" /
-                               ~r",\d[[a-zA-Z][^,]+" /
-                               ~r",[^a-zA-Z]+$") # everything that goes before or after an element
-    """
+        )
+        % {"fonts": "|".join(reversed(sorted(fonts, key=len)))}
+    )
 
     parser = parsimonious.Grammar(sketch_grammar)
 
     class SketchParser(parsimonious.NodeVisitor):
-        def __init__(self, ast):
+        def __init__(self, ast, namespace):
+            self.namespace = namespace
             self.entry = {}
             self.visit(ast)
 
@@ -592,50 +578,18 @@ def parse_sketch_line(module, model_elements, fonts):
             )
 
         def visit_var_name(self, n, vc):
-            self.entry.update(
-                {
-                    "new_module": False,
-                    "module_name": "",
-                    "variable": True,
-                    "variable_name": n.text,
-                }
-            )
-
-        def visit_font_properties(self, n, vc):
-            print("font properties ==========>", n.text)
-
-        def visit_module_sketch(self, n, vc):
-            print(n.text)
-
-        def visit_weird_stuff(self, n, vc):
-            print("weird stuff ==========>", n.text)
-
-        def visit_module_definition(self, n, vc):
-            print("module definition ==========>", n.text)
-
-        def visit_before_font(self, n, vc):
-            print("title definition ==========>", n.text)
-
-        def visit_ventana_title_def(self, n, vc):
-            print("ventana title definition ==========>", n.text)
-
-        def visit_id(self, n, vc):
-            if n.text.endswith(("10", "12")):  # it's a plot
-                print(n.text, "is a plot")
-            else:  # it's not a plot
-                self.elements_list.append(n.text)
-
-        def visit_title(self, n, vc):
-            print("title definition ==========>", n.text)
-
-        def visit_plot(self, n, vc):
-            print("plot definition ==========>", n.text)
-
-        def visit_color(self, n, vc):
-            print("color ==========>", n.text)
-
-        def visit_gibberish_after(self, n, vc):
-            print("gibberish after ==========>", n.text)
+            if n.text in self.namespace.keys():
+                self.entry.update(
+                    {
+                        "new_module": False,
+                        "module_name": "",
+                        "variable": True,
+                        "variable_name": self.namespace[n.text],
+                    }
+                )
+            else:
+                message = "\n{} in sketch but not in the namespace.\n".format(n.text)
+                warnings.warn(message)
 
         def generic_visit(self, n, vc):
             if not self.entry:
@@ -650,16 +604,19 @@ def parse_sketch_line(module, model_elements, fonts):
 
     try:
         tree = parser.parse(module)
-        return SketchParser(tree).entry
-    except (IncompleteParseError, ParseError) as err:
-        print("error ====================>", err.args[0][err.pos - 10 : err.pos + 10])
-
-    return {
-        "new_module": False,
-        "module_name": "",
-        "variable": False,
-        "variable_name": "",
-    }
+        return SketchParser(tree, namespace=namespace).entry
+    except (IncompleteParseError, VisitationError, ParseError) as err:
+        if isinstance(err, VisitationError):
+            raise ("Something went wrong while traversing a parse tree", err)
+        else:
+            raise ValueError(
+                (
+                    err.args[0] + "\n\n"
+                    "\nError when parsing definition:\n\t %s\n\n"
+                    "probably used definition is not integrated..."
+                    "\nSee parsimonious output above." % (module)
+                )
+            )
 
 
 def parse_units(units_str):
@@ -1565,23 +1522,41 @@ def translate_section(section, macro_list, sketch, root_path):
                 if element["real_name"] not in unique_elements:
                     unique_elements.append(element["real_name"])
 
+        modules_list = []  # list of all modules
         module_elements = {}
-        sketch = sketch.split("\\\\\\---/// ")
+        # from the sketch it is not apparent what distinguishes a normal variable from a ghost variable (apart from the color, which is not a reliable)
+        ghost_variables = {}
+        sketch = list(map(lambda x: x.strip(), sketch.split("\\\\\\---/// ")))
         for module in sketch:
-            for sketch_line in module.split("\n"):
-                line = parse_sketch_line(
-                    sketch_line.strip(), unique_elements, font_names
-                )
-                # When a module name is found, the "new_module" becomes True.
-                # When a variable name is found, the "new_module" is set back to False
-                if line["new_module"]:
-                    module_name = line["module_name"]
-                else:
-                    # TODO both the module and variable name should be made python-safe
-                    if line["variable_name"]:
-                        module_elements[line["variable_name"]] = module_name
-        print("yeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaah")
-        print(module_elements)
+            if module:
+                for sketch_line in module.split("\n"):
+                    line = parse_sketch_line(sketch_line.strip(), namespace, font_names)
+                    # When a module name is found, the "new_module" becomes True.
+                    # When a variable name is found, the "new_module" is set back to False
+                    if line["new_module"]:
+                        # remove characters that are not [a-zA-Z0-9_] from the module name
+                        module_name = re.sub(
+                            r"[\W]+", "", line["module_name"].replace(" ", "_")
+                        ).lstrip(
+                            "0123456789"
+                        )  # there's probably a more elegant way to do it with regex
+                        if module_name not in modules_list:
+                            modules_list.append(module_name)
+                    else:
+                        if line["variable_name"]:
+                            if line["variable_name"] not in module_elements.keys():
+                                module_elements[line["variable_name"]] = module_name
+                            else:
+                                if line["variable_name"] not in ghost_variables.keys():
+                                    ghost_variables[line["variable_name"]] = [
+                                        module_elements[line["variable_name"]],
+                                        module_name,
+                                    ]
+                                else:
+                                    ghost_variables[line["variable_name"]].append(
+                                        module_name
+                                    )
+
     # Parse components to python syntax.
     for element in model_elements:
         if (element["kind"] == "component" and "py_expr" not in element) or element[
