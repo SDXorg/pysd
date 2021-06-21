@@ -481,7 +481,7 @@ def get_equation_components(equation_str, root_path=None):
     }
 
 
-def parse_sketch_line(module, namespace, fonts):
+def parse_sketch_line(module, namespace):
 
     # not all possibilities can be tested, so this should be considered experimental for now
     sketch_grammar = (
@@ -527,7 +527,8 @@ def parse_sketch_line(module, namespace, fonts):
             font_properties = font_name? "|" font_size "|" font_style? "|" color  # if the B from an RGB is either 1 or 2 (very unlikely), the parser may not be able to tell the begining of the next line
             font_style =  "B" / "I" / "U" / "S" / "V"  # italics, bold, underline, etc
             font_size =  ~r"\d+"  # this needs to be made a regex to match any font
-            font_name = ~r"(%(fonts)s)"IU
+            #font_name = ~r"(%(fonts)s)"IU
+            font_name = ~r"(?<=,)[^\|\d]+(?=\|)"
 
             # this may be useful if further parsing is required
             position = ~r"-*\d+,-*\d+" # x and y
@@ -550,9 +551,7 @@ def parse_sketch_line(module, namespace, fonts):
             weird_stuff = ~r"\-1\-\-1\-\-1"
             anything = ~r".*" # this one is dangerous, if something is not parsed before, it will fall here, with the risk of missing it
             """
-        )
-        % {"fonts": "|".join(reversed(sorted(fonts, key=len)))}
-    )
+        ))
 
     parser = parsimonious.Grammar(sketch_grammar)
 
@@ -588,7 +587,7 @@ def parse_sketch_line(module, namespace, fonts):
                     }
                 )
             else:
-                message = "\n{} in sketch but not in the namespace.\n".format(n.text)
+                message = "\n{} is in the sketch but not in the namespace.\n".format(n.text)
                 warnings.warn(message)
 
         def generic_visit(self, n, vc):
@@ -1512,9 +1511,6 @@ def translate_section(section, macro_list, sketch, root_path):
     }
 
     if sketch:
-        # TODO generate a list of Vensim font names
-        font_names = ["Times New Roman", "Century Gothic", "@Malgun Gothic"]
-
         # TODO how about macros??? are they also put in the sketch?
         unique_elements = []
         for element in model_elements:
@@ -1530,7 +1526,7 @@ def translate_section(section, macro_list, sketch, root_path):
         for module in sketch:
             if module:
                 for sketch_line in module.split("\n"):
-                    line = parse_sketch_line(sketch_line.strip(), namespace, font_names)
+                    line = parse_sketch_line(sketch_line.strip(), namespace)
                     # When a module name is found, the "new_module" becomes True.
                     # When a variable name is found, the "new_module" is set back to False
                     if line["new_module"]:
