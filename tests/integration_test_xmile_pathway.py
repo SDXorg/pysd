@@ -1,7 +1,7 @@
 
 
 import unittest
-from .test_utils import runner, assert_frames_close
+from pysd.tools.benchmarking import runner, assert_frames_close
 
 rtol = .05
 

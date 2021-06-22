@@ -17,9 +17,12 @@ import sys
 
 import mock
 
-MOCK_MODULES = ['numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot', 'scipy.stats',
-                'scipy.integrate', 'pandas', 'parsimonious', 'parsimonious.nodes',
-                'lxml', 'xarray', 'autopep8']
+MOCK_MODULES = [
+    'numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot', 'scipy.stats',
+    'scipy.integrate', 'pandas', 'parsimonious', 'parsimonious.nodes',
+    'lxml', 'xarray', 'autopep8', 'scipy.linalg', 'parsimonious.exceptions',
+    'scipy.stats.distributions']
+
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.Mock()
 
@@ -35,8 +38,6 @@ html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 print(os.path.abspath('../'))
 sys.path.insert(0, os.path.abspath('../')) #this *should* be adding to the beginning...
-sys.path.insert(0, os.path.abspath('../pysd/'))
-sys.path.insert(0, os.path.abspath('../pysd/py_backend/'))
 
 # Build the translated functions file
 #from pysd import vensim2py

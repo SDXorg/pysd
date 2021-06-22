@@ -3,6 +3,7 @@ These are the decorators used by the functions in the model file.
 functions.py
 """
 from functools import wraps
+import inspect
 import xarray as xr
 
 
@@ -50,6 +51,9 @@ class Cache(object):
 
     def run(self, func, *args):
         """ Decorator for caching at a run level"""
+        func.type = "run"
+        func.args = inspect.getfullargspec(func)[0]
+
         @wraps(func)
         def cached_func(*args):
             """Run wise cache function"""
@@ -63,6 +67,9 @@ class Cache(object):
 
     def step(self, func, *args):
         """ Decorator for caching at a step level"""
+        func.type = "step"
+        func.args = inspect.getfullargspec(func)[0]
+
         @wraps(func)
         def cached_func(*args):
             """Step wise cache function"""
