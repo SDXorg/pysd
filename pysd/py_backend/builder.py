@@ -42,15 +42,19 @@ def build_modular_model(
     root_dir = os.path.split(main_filename)[0]
     modules_list = elements_per_module.keys()
     # creating the rest of files per module (this needs to be run before the main module, as it updates the import_modules)
+    used_elements = []
     for module in modules_list:
         module_elems = []
         for element in elements:
             if element["py_name"] in elements_per_module[module]:
                 module_elems.append(element)
+                used_elements.append(element["py_name"])   
+                
         build_separate_module(module_elems, subscript_dict, module, root_dir)
 
+    remaining_elements = [element for element in elements if element["py_name"] not in used_elements]
     # building main file using the build function
-    build_main_module(modules_list, main_filename)
+    build_main_module(remaining_elements, subscript_dict, modules_list, main_filename)
 
     # create single namespace in a separate json file
     with open(os.path.join(root_dir, "namespace.json"), "w") as outfile:
@@ -61,7 +65,7 @@ def build_modular_model(
         json.dump(subscript_dict, outfile, indent="", sort_keys=True)
 
 
-def build_main_module(modules_list, file_name):
+def build_main_module(elements, subscript_dict, modules_list, file_name):
 
     text = '''
     """
@@ -112,9 +116,11 @@ def build_main_module(modules_list, file_name):
     
     _root = path.dirname(__file__)
     
-    _subscript_dict = json.load(os.path.join(_root, 'subscripts.json'))
-
-    _namespace = json.load(os.path.join(_root, 'namespace.json'))
+    with open(os.path.join(_root, 'subscripts.json')) as subs:
+        _subscript_dict = json.load(subs)
+    
+    with open(os.path.join(_root, 'namespace.json')) as names:
+        _namespace = json.load(names)
 
     __data = {
         'scope': None,
@@ -143,6 +149,16 @@ def build_main_module(modules_list, file_name):
         "modules": ", ".join('"{0}"'.format(w) for w in list(modules_list))
     }
 
+    elements = merge_partial_elements(elements)
+    functions = [build_element(element, subscript_dict) for element in elements]
+
+    # TODO this could be refractored into a separate function (also in build_model function)
+    text = text.replace("\t", "    ")
+    text = textwrap.dedent(text)
+
+    funcs = "%(functions)s" % {"functions": "\n".join(functions)}
+    funcs = funcs.replace("\t", "    ")
+    text += funcs
     text = text.replace("\t", "    ")
     text = textwrap.dedent(text)
 
