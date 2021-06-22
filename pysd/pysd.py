@@ -24,6 +24,7 @@ if sys.version_info[:2] < (3, 7):
         + " supported version:\n\t"
         + "https://github.com/JamesPHoughton/pysd/releases/tag/LastPy2")
 
+
 def read_xmile(xmile_file, initialize=True, missing_values="warning"):
     """
     Construct a model from `.xmile` file.
