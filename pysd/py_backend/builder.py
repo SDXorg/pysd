@@ -35,26 +35,37 @@ import_modules = {
     "utils": set(),
 }
 
+def prepend(list, str):
+      
+    str += '{0}'
+    list = [str.format(i) for i in list]
+    return list
+
 
 def build_modular_model(
     elements, subscript_dict, namespace, main_filename, elements_per_module
 ):
     root_dir = os.path.split(main_filename)[0]
+    
+    prefixes = ["_integ_", "_ext_constant_", "_ext_data_", "_ext_lookup_"]
+
     modules_list = elements_per_module.keys()
     # creating the rest of files per module (this needs to be run before the main module, as it updates the import_modules)
-    used_elements = []
+    processed_elements = []
     for module in modules_list:
         module_elems = []
         for element in elements:
-            if element["py_name"] in elements_per_module[module]:
+            if element["py_name"] in elements_per_module[module] + sum([prepend(elements_per_module[module], x) for x in prefixes], []):
                 module_elems.append(element)
-                used_elements.append(element["py_name"])   
-                
+        
         build_separate_module(module_elems, subscript_dict, module, root_dir)
 
-    remaining_elements = [element for element in elements if element["py_name"] not in used_elements]
+        processed_elements += module_elems
+    
+    # the unprocessed will go in the main file
+    unprocessed_elements = [element for element in elements if element not in processed_elements]
     # building main file using the build function
-    build_main_module(remaining_elements, subscript_dict, modules_list, main_filename)
+    build_main_module(unprocessed_elements, subscript_dict, modules_list, main_filename)
 
     # create single namespace in a separate json file
     with open(os.path.join(root_dir, "namespace.json"), "w") as outfile:
