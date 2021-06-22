@@ -1,0 +1,387 @@
+import sys
+import os
+import unittest
+import subprocess
+
+import pandas as pd
+import numpy as np
+
+from pysd.tools.benchmarking import load_outputs, assert_frames_close
+from pysd import __version__
+
+test_model = 'test-models/samples/teacup/teacup.mdl'
+test_model_xmile = 'test-models/samples/teacup/teacup.xmile'
+test_model_subs = 'test-models/tests/subscript_2d_arrays/'\
+                  + 'test_subscript_2d_arrays.mdl'
+test_model_look = 'test-models/tests/get_lookups_subscripted_args/'\
+                  + 'test_get_lookups_subscripted_args.mdl'
+
+out_tab_file = 'cli_output.tab'
+out_csv_file = 'cli_output.csv'
+
+encoding_stdout = sys.stdout.encoding or 'utf-8'
+encoding_stderr = sys.stderr.encoding or 'utf-8'
+
+call = "python -m pysd"
+
+
+def split_bash(string):
+    """
+    Function to split the bash command as bash does
+
+    "ABC '1, 2, 3' CBD" -> ["ABC", "1, 2, 3", "CBD"]
+    """
+    open = False
+    s = ""
+    spl = []
+    for c in string:
+        if c in ["'", '"']:
+            # open or close ''
+            open = not open
+        elif c == ' ' and not open:
+            s and spl.append(s)
+            s = ""
+        else:
+            s += c
+    s and spl.append(s)
+    return spl
+
+
+class TestPySD(unittest.TestCase):
+    """ These tests are similar to unit_test_pysd but adapted for cli """
+    def test_read_not_model(self):
+
+        model = 'more-tests/not_vensim/test_not_vensim.txt'
+        command = f'{call} {model}'
+        out = subprocess.run(split_bash(command), capture_output=True)
+        stderr = out.stderr.decode(encoding_stderr)
+        self.assertNotEqual(out.returncode, 0)
+        self.assertIn(
+            f'PySD: error: when parsing {model}', stderr)
+        self.assertIn(
+            'The model file name must be Vensim (.mdl), Xmile (.xmile) '
+            'or PySD (.py) model file...', stderr)
+
+    def test_read_model_not_exists(self):
+
+        model = 'more-tests/not_vensim/test_not_vensim.mdl'
+        command = f'{call} {model}'
+        out = subprocess.run(split_bash(command), capture_output=True)
+        stderr = out.stderr.decode(encoding_stderr)
+        self.assertNotEqual(out.returncode, 0)
+        self.assertIn(
+            f'PySD: error: when parsing {model}', stderr)
+        self.assertIn(
+            'The model file does not exist...', stderr)
+
+    def test_read_not_valid_output(self):
+
+        out_xls_file = 'cli_output.xls'
+        command = f'{call} -o {out_xls_file} {test_model}'
+        out = subprocess.run(split_bash(command), capture_output=True)
+        stderr = out.stderr.decode(encoding_stderr)
+        self.assertNotEqual(out.returncode, 0)
+        self.assertIn(
+            f'PySD: error: when parsing {out_xls_file}', stderr)
+        self.assertIn(
+            'The output file name must be .tab or .csv...', stderr)
+
+    def test_read_not_valid_time_stamps(self):
+
+        time_stamps = "1, 3, 4, a"
+        command = f'{call} -R \'{time_stamps}\' {test_model}'
+        out = subprocess.run(split_bash(command), capture_output=True)
+        stderr = out.stderr.decode(encoding_stderr)
+        self.assertNotEqual(out.returncode, 0)
+        self.assertIn(
+            f'PySD: error: when parsing {time_stamps}', stderr)
+        self.assertIn(
+            'The return time stamps much be separated by commas...\n', stderr)
+
+        time_stamps = "1 3 4"
+        command = f'{call} --return-timestamps=\'{time_stamps}\' {test_model}'
+        out = subprocess.run(split_bash(command), capture_output=True)
+        stderr = out.stderr.decode(encoding_stderr)
+        self.assertNotEqual(out.returncode, 0)
+        self.assertIn(
+            f'PySD: error: when parsing {time_stamps}', stderr)
+        self.assertIn(
+            'The return time stamps much be separated by commas...\n', stderr)
+
+    def test_read_not_valid_new_value(self):
+
+        new_value = "foo=[1,2,3]"
+        command = f'{call} {test_model} {new_value}'
+        out = subprocess.run(split_bash(command), capture_output=True)
+        stderr = out.stderr.decode(encoding_stderr)
+        self.assertNotEqual(out.returncode, 0)
+        self.assertIn(
+            f'PySD: error: when parsing {new_value}', stderr)
+        self.assertIn(
+            'You must use variable=new_value to redefine values', stderr)
+
+        new_value = "[1,2,3]"
+        command = f'{call} {test_model} {new_value}'
+        out = subprocess.run(split_bash(command), capture_output=True)
+        stderr = out.stderr.decode(encoding_stderr)
+        self.assertNotEqual(out.returncode, 0)
+        self.assertIn(
+            f'PySD: error: when parsing {new_value}', stderr)
+        self.assertIn(
+            'You must use variable=new_value to redefine values', stderr)
+
+        new_value = "foo:[[1,2,3],[4,5,6]]"
+        command = f'{call} {test_model} {new_value}'
+        out = subprocess.run(split_bash(command), capture_output=True)
+        stderr = out.stderr.decode(encoding_stderr)
+        self.assertNotEqual(out.returncode, 0)
+        self.assertIn(
+            f'PySD: error: when parsing {new_value}', stderr)
+        self.assertIn(
+            'You must use variable=new_value to redefine values', stderr)
+
+    def test_print_version(self):
+
+        command = f'{call} -v'
+        out = subprocess.run(split_bash(command), capture_output=True)
+        stdout = out.stdout.decode(encoding_stdout)
+        self.assertEqual(out.returncode, 0)
+        self.assertIn(
+            f'PySD {__version__}', stdout)
+
+        command = f'{call} --version'
+        out = subprocess.run(split_bash(command), capture_output=True)
+        stdout = out.stdout.decode(encoding_stdout)
+        self.assertEqual(out.returncode, 0)
+        self.assertIn(
+            f'PySD {__version__}', stdout)
+
+    def test_print_help(self):
+
+        command = f'{call}'
+        out = subprocess.run(split_bash(command), capture_output=True)
+        stdout = out.stdout.decode(encoding_stdout)
+        self.assertEqual(out.returncode, 0)
+        self.assertIn(
+            'usage: python -m pysd [', stdout)
+
+        command = f'{call} -h'
+        out = subprocess.run(split_bash(command), capture_output=True)
+        stdout = out.stdout.decode(encoding_stdout)
+        self.assertEqual(out.returncode, 0)
+        self.assertIn(
+            'usage: python -m pysd [', stdout)
+
+        command = f'{call} --help'
+        out = subprocess.run(split_bash(command), capture_output=True)
+        stdout = out.stdout.decode(encoding_stdout)
+        self.assertEqual(out.returncode, 0)
+        self.assertIn(
+            'usage: python -m pysd [', stdout)
+
+    def test_translate_file(self):
+
+        model_py = test_model.replace('.mdl', '.py')
+
+        if os.path.isfile(model_py):
+            os.remove(model_py)
+        if os.path.isfile(out_tab_file):
+            os.remove(out_tab_file)
+
+        command = f'{call} --translate {test_model}'
+        out = subprocess.run(split_bash(command), capture_output=True)
+        self.assertEqual(out.returncode, 0)
+        self.assertFalse(os.path.isfile(out_tab_file))
+        self.assertTrue(os.path.isfile(model_py))
+        os.remove(model_py)
+
+        command = f'{call} -t {test_model_xmile}'
+        out = subprocess.run(split_bash(command), capture_output=True)
+        self.assertEqual(out.returncode, 0)
+        self.assertFalse(os.path.isfile(out_tab_file))
+        self.assertTrue(os.path.isfile(model_py))
+        os.remove(model_py)
+
+    def test_run_return_timestamps(self):
+
+        timestamps = np.round(np.random.rand(5).cumsum(), 4).astype(str)
+        command = f'{call} -o {out_csv_file} -R {",".join(timestamps)} '\
+                  f' {test_model}'
+        out = subprocess.run(split_bash(command), capture_output=True)
+        self.assertEqual(out.returncode, 0)
+        stocks = load_outputs(out_csv_file)
+        self.assertTrue((stocks.index.values.astype(str) == timestamps).all())
+        os.remove(out_csv_file)
+
+        command = f'{call} -o {out_csv_file} -R 5 {test_model}'
+        out = subprocess.run(split_bash(command), capture_output=True)
+        self.assertEqual(out.returncode, 0)
+        stocks = load_outputs(out_csv_file)
+        self.assertTrue((stocks.index.values == [5]))
+        os.remove(out_csv_file)
+
+    def test_run_return_columns(self):
+        return_columns = ['Room Temperature', 'Teacup Temperature']
+        command = f'{call} -o {out_csv_file} -r '\
+                  f'\'{", ".join(return_columns)}\' '\
+                  f' {test_model}'
+
+        out = subprocess.run(split_bash(command), capture_output=True)
+        self.assertEqual(out.returncode, 0)
+        stocks = load_outputs(out_csv_file)
+        self.assertEqual(set(stocks.columns), set(return_columns))
+        os.remove(out_csv_file)
+
+        # from txt
+        txt_file = 'return_columns.txt'
+        return_columns = ['Room Temperature', 'Teacup Temperature']
+        with open(txt_file, 'w') as file:
+            file.write("\n".join(return_columns))
+
+        command = f'{call} -o {out_csv_file} -r {txt_file} '\
+                  f' {test_model}'
+
+        out = subprocess.run(split_bash(command), capture_output=True)
+        self.assertEqual(out.returncode, 0)
+        stocks = load_outputs(out_csv_file)
+        self.assertEqual(set(stocks.columns), set(return_columns))
+
+        os.remove(txt_file)
+        os.remove(out_csv_file)
+
+        return_columns = ['room_temperature', 'teacup_temperature']
+        command = f'{call} -o {out_csv_file} -r '\
+                  f'\'{", ".join(return_columns)}\' '\
+                  f' {test_model}'
+
+        out = subprocess.run(split_bash(command), capture_output=True)
+        self.assertEqual(out.returncode, 0)
+        stocks = load_outputs(out_csv_file)
+        self.assertEqual(set(stocks.columns), set(return_columns))
+        os.remove(out_csv_file)
+
+    def test_model_arguments(self):
+        # check initial time
+        initial_time = 10
+        command = f'{call} -o {out_tab_file} -I {initial_time} '\
+                  f' {test_model}'
+        out = subprocess.run(split_bash(command), capture_output=True)
+        self.assertEqual(out.returncode, 0)
+        stocks = load_outputs(out_tab_file)
+        self.assertTrue(stocks.index.values[0] == initial_time)
+        os.remove(out_tab_file)
+
+        # check final time
+        final_time = 20
+        command = f'{call} -o {out_tab_file} -F {final_time} '\
+                  f' {test_model}'
+        out = subprocess.run(split_bash(command), capture_output=True)
+        self.assertEqual(out.returncode, 0)
+        stocks = load_outputs(out_tab_file)
+        self.assertTrue(stocks.index.values[-1] == final_time)
+        os.remove(out_tab_file)
+
+        # check time step
+        time_step = 10
+        command = f'{call} -o {out_tab_file} -T {time_step} '\
+                  f' {test_model}'
+        out = subprocess.run(split_bash(command), capture_output=True)
+        self.assertEqual(out.returncode, 0)
+        stocks = load_outputs(out_tab_file)
+        self.assertTrue((np.diff(stocks.index.values) == time_step).all())
+        os.remove(out_tab_file)
+
+        # check saveper
+        time_step = 5
+        saveper = 10
+        command = f'{call} -o {out_tab_file} -T {time_step} '\
+                  f'-S {saveper} {test_model}'
+        out = subprocess.run(split_bash(command), capture_output=True)
+        self.assertEqual(out.returncode, 0)
+        stocks = load_outputs(out_tab_file)
+        self.assertTrue((np.diff(stocks.index.values) == saveper).all())
+        os.remove(out_tab_file)
+
+        # check all
+        initial_time = 15
+        time_step = 5
+        saveper = 10
+        final_time = 45
+        command = f'{call} -o {out_tab_file} --time-step={time_step} '\
+                  f'--saveper={saveper} --initial-time={initial_time} '\
+                  f'--final-time={final_time} {test_model}'
+        out = subprocess.run(split_bash(command), capture_output=True)
+        self.assertEqual(out.returncode, 0)
+        stocks = load_outputs(out_tab_file)
+        self.assertTrue((np.diff(stocks.index.values) == saveper).all())
+        self.assertTrue(stocks.index.values[0] == initial_time)
+        self.assertTrue(stocks.index.values[-1] == final_time)
+        os.remove(out_tab_file)
+
+    def test_initial_conditions_tuple_pysafe_names(self):
+        import pysd
+        model = pysd.read_vensim(test_model)
+        initial_time = 3000
+        return_timestamps = np.arange(initial_time, initial_time+10)
+        stocks = model.run(
+            initial_condition=(initial_time, {'teacup_temperature': 33}),
+            return_timestamps=return_timestamps)
+
+        command = f'{call} -o {out_tab_file} -I {initial_time} -R '\
+                  f'\'{", ".join(return_timestamps.astype(str))}\''\
+                  f' {test_model.replace(".mdl", ".py")}'\
+                  f' teacup_temperature:33'
+
+        out = subprocess.run(split_bash(command), capture_output=True)
+        self.assertEqual(out.returncode, 0)
+        stocks2 = load_outputs(out_tab_file)
+        assert_frames_close(stocks2, stocks)
+        os.remove(out_tab_file)
+
+    def test_set_constant_parameter(self):
+
+        value = 20
+        command = f'{call} -o {out_tab_file} -r room_temperature '\
+                  f' {test_model_xmile}'\
+                  f' room_temperature={value}'
+
+        out = subprocess.run(split_bash(command), capture_output=True)
+        self.assertEqual(out.returncode, 0)
+        stocks = load_outputs(out_tab_file)
+        self.assertTrue((stocks['room_temperature'] == value).all())
+        os.remove(out_tab_file)
+
+    def test_set_timeseries_parameter_lookup(self):
+
+        timeseries = np.arange(30)
+        data = np.round(50 + np.random.rand(len(timeseries)).cumsum(), 4)
+
+        temp_timeseries = pd.Series(
+            index=timeseries,
+            data=data)
+
+        timeseries_bash = '[[' + ','.join(timeseries.astype(str)) + '],['\
+                          + ','.join(data.astype(str)) + ']]'
+
+        command = f'{call} -o {out_tab_file} -r lookup_1d_time '\
+                  f'-R {",".join(timeseries.astype(str))} '\
+                  f' {test_model_look}'\
+                  f' lookup_1d_time={timeseries_bash}'
+        out = subprocess.run(split_bash(command), capture_output=True)
+        self.assertEqual(out.returncode, 0)
+        stocks = load_outputs(out_tab_file)
+        self.assertTrue((stocks['lookup_1d_time'] == temp_timeseries).all())
+        os.remove(out_tab_file)
+
+        command = f'{call} -o {out_tab_file} -r lookup_2d_time '\
+                  f'-R {",".join(timeseries.astype(str))}'\
+                  f' {test_model_look}'\
+                  f' lookup_2d_time={timeseries_bash}'
+        out = subprocess.run(split_bash(command), capture_output=True)
+        self.assertEqual(out.returncode, 0)
+        stocks = load_outputs(out_tab_file)
+        self.assertTrue(
+            (stocks['lookup_2d_time[Row1]'] == temp_timeseries).all())
+        self.assertTrue(
+            (stocks['lookup_2d_time[Row2]'] == temp_timeseries).all())
+        os.remove(out_tab_file)

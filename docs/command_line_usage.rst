@@ -54,6 +54,7 @@ Outputting various run information
 The output number of variables can be modified bu passing them as arguments separated by commas, using *-r/return_columns* argument:
 
 .. code-block:: text
+
     python -m pysd -r 'Teacup Temperature, Room Temperature' Teacup.mdl
 
 Note that the argument passed after *-r/return_columns* should be inside '' to be properly read. Moreover each variable name must be split with commas.
@@ -105,9 +106,9 @@ In order to modify the values of model variables they can be passed after the mo
 
 .. code-block:: text
 
-    python -m pysd Teacup.mdl foo=5
+    python -m pysd Teacup.mdl 'Room Temperature'=5
 
-this will set *foo* variable to the constant value 5. A series can be also passed
+this will set *Room Temperature* variable to the constant value 5. A series can be also passed
 to change a value of a value to a time dependent series or the interpolation values
 of a lookup variable two lists of the same length must be given:
 
@@ -126,7 +127,17 @@ Several variables can be changed at the same time, e.g.:
 
 .. code-block:: text
 
-    python -m pysd Teacup.mdl foo=5 temperature_lookup='[[1, 2, 3, 4], [10, 15, 17, 18]]' 'Initial Temperature'=5
+    python -m pysd Teacup.mdl 'Room Temperature'=5 temperature_lookup='[[1, 2, 3, 4], [10, 15, 17, 18]]' 'Initial Temperature'=5
+
+Modify initial conditions of model variables
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Sometimes we do not want to change a variable value to a constant but change its initial value, for example change initial value of a stock object, this can be similarly done to the previos case but using ':' instead of '=':
+
+.. code-block:: text
+
+    python -m pysd Teacup.mdl 'Teacup Temperature':30
+
+this will set initial *Teacup Temperature* to 30.
 
 Putting It All Together
 -----------------------
@@ -134,6 +145,6 @@ Several commands can be used together, first need to add optional arguments, tho
 
 .. code-block:: text
 
-    python -m pysd -o my_output_file.csv --progress --final-time=2010 --time-step=1 Teacup.mdl foo=5 temperature_lookup='[[1, 2, 3, 4], [10, 15, 17, 18]]'
+    python -m pysd -o my_output_file.csv --progress --final-time=2010 --time-step=1 Teacup.mdl 'Room Temperature'=5 temperature_lookup='[[1, 2, 3, 4], [10, 15, 17, 18]]' 'Teacup Temperature':30
 
-will save step 1 outputs until 2010 in *my_output_file.csv*, showing a progressbar during integration and settung foo to *5* and *temperature_lookup* to ((1, 10), (2, 15), (3, 17), (4, 18)).
+will save step 1 outputs until 2010 in *my_output_file.csv*, showing a progressbar during integration and settung foo to *5* and *temperature_lookup* to ((1, 10), (2, 15), (3, 17), (4, 18)) and  initial *Teacup Temperature* to 30.

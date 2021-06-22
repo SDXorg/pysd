@@ -1,6 +1,7 @@
 """
 cmdline parser
 """
+import os
 from ast import literal_eval
 import numpy as np
 import pandas as pd
@@ -19,10 +20,45 @@ parser = ArgumentParser(
 # functions and actions #
 #########################
 
+def check_output(string):
+    """
+    Checks that out put file ends with .tab or .csv
+
+    """
+    if not string.endswith('.tab') and not string.endswith('.csv'):
+        parser.error(
+            f'when parsing {string}'
+            '\nThe output file name must be .tab or .csv...')
+
+    return string
+
+
+def check_model(string):
+    """
+    Checks that model file ends with .py .mdl or .xmile and that exists.
+
+    """
+    if not string.lower().endswith('.mdl')\
+       and not string.lower().endswith('.xmile')\
+       and not string.endswith('.py'):
+        parser.error(
+            f'when parsing {string}'
+            '\nThe model file name must be Vensim (.mdl), Xmile (.xmile)'
+            ' or PySD (.py) model file...')
+
+    if not os.path.isfile(string):
+        parser.error(
+            f'when parsing {string}'
+            '\nThe model file does not exist...')
+
+    return string
+
+
 def split_columns(string):
     """
-    Splits the return-columns argument
-    --return-columns 'temperature change, "heat$"' -> ['temperature change', '"heat$"']
+    Splits the return-columns argument or reads it from .txt
+    --return-columns 'temperature c, "heat$"' -> ['temperature c', '"heat$"']
+    --return-columns my_vars.txt -> ['temperature c', '"heat$"']
 
     """
     if string.endswith('.txt'):
@@ -35,7 +71,7 @@ def split_columns(string):
 def split_timestamps(string):
     """
     Splits the return-timestamps argument
-    --return-timestamps '1 5 15' -> array([1., 5., 15.])
+    --return-timestamps '1, 5, 15' -> array([1., 5., 15.])
 
     """
     try:
@@ -44,37 +80,50 @@ def split_timestamps(string):
         # error
         raise parser.error(
             f'when parsing {string}'
-            '\nThe return time stamps much be given between \'\' and split by'
-            ' whitespaces...\n'
+            '\nThe return time stamps much be separated by commas...\n'
             f'See {docs} for examples.')
 
 
 def split_vars(string):
     """
     Splits the arguments from new_values.
-    'a=5' -> {'a': 5.}
-    'b=[[1,2],[1,10]]' -> {'b': pd.Series(index=[1, 2], data=[1, 10])}
+    'a=5' -> {'a': ('param', 5.)}
+    'b=[[1,2],[1,10]]' -> {'b': ('param', pd.Series(index=[1,2], data=[1,10]))}
+    'a:5' -> {'a': ('initial', 5.)}
 
     """
-    var, value = string.split('=')
-    if value.strip().isnumeric():
-        # value is float
-        return {var.strip(): float(value)}
-
     try:
+        if '=' in string:
+            # new variable value
+            var, value = string.split('=')
+            type = 'param'
+
+        if ':' in string:
+            # initial time value
+            var, value = string.split(':')
+            type = 'initial'
+
+        if value.strip().isnumeric():
+            # value is float
+            return {var.strip(): (type, float(value))}
+
         # value is series
+        assert type == 'param'
         value = literal_eval(value)
         assert len(value) == 2
         assert len(value[0]) == len(value[1])
-        return {var.strip(): pd.Series(index=value[0], data=value[1])}
+        return {var.strip(): (type,
+                              pd.Series(index=value[0], data=value[1]))}
 
     except Exception:
         # error
         raise parser.error(
             f'when parsing {string}'
-            '\nYou must use variable=new_value to redefine values.'
+            '\nYou must use variable=new_value to redefine values or '
+            'variable:initial_value to define initial value.'
             'variable must be a model component, new_value can be a '
-            'float or a a list of two list...\n'
+            'float or a list of two list, initial_value must be a float'
+            '...\n'
             f'See {docs} for examples.')
 
 
@@ -88,9 +137,10 @@ class SplitVarsAction(Action):
         super().__init__(option_strings, dest, **kwargs)
 
     def __call__(self, parser, namespace, values, option_string=None):
-        main_dict = {}
-        for val in values:
-            main_dict.update(val)
+        main_dict = {'param': {}, 'initial': {}}
+        for var in values:
+            for var_name, (type, val) in var.items():
+                main_dict[type][var_name] = val
         setattr(namespace, self.dest, main_dict)
 
 
@@ -100,7 +150,7 @@ class SplitVarsAction(Action):
 
 parser.add_argument(
     '-v', '--version',
-    action='version', version=f'%prog {__version__}')
+    action='version', version=f'PySD {__version__}')
 
 parser.add_argument(
     '-t', '--translate', dest='run',
@@ -110,8 +160,8 @@ parser.add_argument(
 
 parser.add_argument(
     '-o', '--output-file', dest='output_file',
-    action='store', type=str, metavar='FILE',
-    help='output file to save run outputs')
+    type=check_output, metavar='FILE',
+    help='output file to save run outputs (.tab or .csv)')
 
 parser.add_argument(
     '-p', '--progress', dest='progress',
@@ -121,7 +171,7 @@ parser.add_argument(
 parser.add_argument(
     '-r', '--return-columns', dest='return_columns',
     action='store', type=split_columns,
-    metavar='\'var1, var2, .. varN\' or FILE (.txt)',
+    metavar='\'var1, var2, .., varN\' or FILE (.txt)',
     help='provide the return columns separated by commas or a .txt file'
          ' where each row is a variable')
 
@@ -165,8 +215,35 @@ model_arguments.add_argument(
 ########################
 # Positional arguments #
 ########################
+model_arguments.add_argument(
+    '-i', '--initial-condition', dest='return_timestamps',
+    action='store', type=split_timestamps,
+    metavar='variable=new_value',
+    help='provide the return time stamps separated by commas, if given '
+         '--final-time and --saveper will be ignored')
 
-parser.add_argument('model_file', metavar='model_file', type=str,
+#######################
+# Warnings and errors #
+#######################
+
+warn_err_arguments = parser.add_argument_group(
+    'warning and errors arguments',
+    'Modify warning and errors management.')
+
+warn_err_arguments.add_argument(
+    '-m', '--missing-values', dest='missing_values', default="warning",
+    action='store', type=str, choices=['warning', 'raise', 'ignore', 'keep'],
+    help='exception with missing values, \'warning\' (default) shows a '
+         'warning message and interpolates the values, \'raise\' raises '
+         'an error, \'ignore\' interpolates the values without showing '
+         'anything, \'keep\' keeps the missing values')
+
+
+########################
+# Positional arguments #
+########################
+
+parser.add_argument('model_file', metavar='model_file', type=check_model,
                     help='Vensim, Xmile or PySD model file')
 
 parser.add_argument('new_values',
@@ -175,3 +252,20 @@ parser.add_argument('new_values',
                     help='redefine the value of variable with new value.'
                     'variable must be a model component, new_value can be a '
                     'float or a a list of two list')
+
+# The destionation new_values2 will never used as the previous argument
+# is given also with nargs='*'. Nevertheless, the following variable
+# is declared for documentation
+parser.add_argument('new_values2',
+                    metavar='variable:initial_value', type=split_vars,
+                    nargs='*', action=SplitVarsAction,
+                    help='redefine the initial value of variable.'
+                    'variable must be a model stateful element, initial_value'
+                    ' must be a float')
+
+
+#########
+# Usage #
+#########
+
+parser.usage = parser.format_usage().replace("usage: PySD", "python -m pysd")

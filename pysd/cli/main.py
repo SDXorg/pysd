@@ -26,7 +26,7 @@ def main(args):
     """
     options = parser.parse_args(args)
 
-    model = load(options.model_file)
+    model = load(options.model_file, options.missing_values)
 
     if not options.run:
         print("\nFinished!")
@@ -41,7 +41,7 @@ def main(args):
     sys.exit()
 
 
-def load(model_file):
+def load(model_file, missing_values):
     """
     Translate and load model file.
 
@@ -57,12 +57,15 @@ def load(model_file):
     """
     if model_file.lower().endswith('.mdl'):
         print("\nTranslating model file...\n")
-        return pysd.read_vensim(model_file, initialize=False)
+        return pysd.read_vensim(model_file, initialize=False,
+                                missing_values=missing_values)
     elif model_file.lower().endswith('.xmile'):
         print("\nTranslating model file...\n")
-        return pysd.read_xmile(model_file, initialize=False)
+        return pysd.read_xmile(model_file, initialize=False,
+                               missing_values=missing_values)
     else:
-        return pysd.load(model_file, initialize=False)
+        return pysd.load(model_file, initialize=False,
+                         missing_values=missing_values)
 
 
 def initialize(model, options):
@@ -110,8 +113,10 @@ def create_configuration(model, options):
     """
     conf_dict = {
         "progress": options.progress,
-        "params": options.new_values,
-        "return_columns": options.return_columns
+        "params": options.new_values['param'],
+        "initial_condition": (model.time(), options.new_values['initial']),
+        "return_columns": options.return_columns,
+        "flatten_output": True  # need to return totally flat DF
     }
 
     # compute return time stamps
@@ -156,6 +161,6 @@ def save(output, options):
     else:
         sep = ','
 
-    output.to_csv(output_file, sep)
+    output.to_csv(output_file, sep, index_label='Time')
 
     print(f'Data saved in {output_file}')
