@@ -486,20 +486,21 @@ def parse_sketch_line(module, namespace):
     # not all possibilities can be tested, so this should be considered experimental for now
     sketch_grammar = _include_common_grammar(
         r"""
-            line = var_definition / module_intro / module_title / module_definition / arrow / flow / plot_var / anything
+            line = var_definition / module_intro / module_title / module_definition / arrow / flow / plot_var / other_objects / anything
             
             module_intro = ~r"\s*Sketch.*?names$" / ~r"^V300.*?ignored$"
             module_title = "*" module_name
             module_name = ~r"(?<=\*)[^\n]+$"
             module_definition = "$" color "," ~r"\d" "," font_properties "|" ((color / weird_stuff) "|")* module_code
-            var_definition = var_code "," var_number "," var_name "," position "," var_box_type "," hide_level "," var_face "," var_word_position "," var_thickness "," var_rest_conf ","? ((weird_stuff / color) ",")* font_properties?
+            var_definition = var_code "," var_number "," var_name "," position "," var_box_type "," arrows_in_allowed "," hide_level "," var_face "," var_word_position "," var_thickness "," var_rest_conf ","? ((weird_stuff / color) ",")* font_properties?
             #line_of_symbols = ~r"^[^\w]+$"
             
             # elements used in a line defining the properties of a variable or stock (most are digits, but identifying them now may be useful for further parsing)
             var_name = element #( basic_id / escape_group )
             var_name = ~r"(?<=,)[^,]+(?=,)"
             var_number = digit               
-            var_box_type = ~r"(?<=,)\d+,\d+,\d+,\d+(?=,)" # improve this regex
+            var_box_type = ~r"(?<=,)\d+,\d+,\d+(?=,)" # improve this regex
+            arrows_in_allowed = ~r"(?<=,)\d+(?=,)" # if this is an even umber, it's a shadow variable
             hide_level = digit
             var_face = digit
             var_word_position = ~r"(?<=,)\-*\d+(?=,)"         
@@ -515,9 +516,10 @@ def parse_sketch_line(module, namespace):
             # flow arrows
             flow = source_or_sink_or_plot / flow_arrow
             
-            # if you want to extend the parsing, these two would be a good starting point (they are followed by "anything")
+            # if you want to extend the parsing, these three would be a good starting point (they are followed by "anything")
             source_or_sink_or_plot = multipurpose_code "," anything
             flow_arrow =  flow_arrow_code "," anything
+            other_objects = other_objects_code "," anything
             
             # Variable names after a line with a plot definition, comments, anything really
             plot_var = anything # ~r"^[^,]+$" # if the comment contains commas, it's going to be problematic
@@ -534,7 +536,7 @@ def parse_sketch_line(module, namespace):
             
             # comma separated value/s
             digit = ~r"(?<=,)\d+(?=,)"
-            
+            odd_number = ~r"(?<=,)\d*[02468](?<=,)"
             # rgb color
             color = ~r"((?<!\d|\.)([0-9]?[0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(?!\d|\.) *[-] *){2}(?<!\d|\.)([0-9]?[0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(?!\d|\.)" # rgb as in 255-255-255
             
@@ -543,7 +545,7 @@ def parse_sketch_line(module, namespace):
             flow_arrow_code = ~r"^11(?=,)"
             var_code = ~r"^10(?=,)"
             multipurpose_code = ~r"^12(?=,)" # source, sink, plot, comment
-            
+            other_objects_code = ~r"^(30|31)(?=,)"
             # code at the end of module definitions
             module_code = "96,96" "," ~r"\d{1,3}" "," "0"
             
@@ -575,8 +577,22 @@ def parse_sketch_line(module, namespace):
                 }
             )
 
+        def visit_var_definition(self, n, vc):
+            if int(n.children[10].text) % 2 != 0:
+                if n.children[4].text in self.namespace.keys():
+                    self.entry.update(
+                        {
+                            "new_module": False,
+                            "module_name": "",
+                            "variable": True,
+                            "variable_name": self.namespace[n.children[4].text],
+                        }
+                    )
+
+        """
         def visit_var_name(self, n, vc):
             if n.text in self.namespace.keys():
+                
                 self.entry.update(
                     {
                         "new_module": False,
@@ -590,6 +606,7 @@ def parse_sketch_line(module, namespace):
                     n.text
                 )
                 warnings.warn(message)
+        """
 
         def generic_visit(self, n, vc):
             if not self.entry:
@@ -1511,43 +1528,6 @@ def translate_section(section, macro_list, sketch, root_path):
         for el in elements_subs_dict
     }
 
-    if sketch:
-        # TODO how about macros??? are they also put in the sketch?
-        modules_list = []  # list of all modules
-        module_elements = {}
-        # from the sketch it is not apparent what distinguishes a normal variable from a ghost variable (apart from the color, which is not a reliable)
-        ghost_variables = {}
-        sketch = list(map(lambda x: x.strip(), sketch.split("\\\\\\---/// ")))
-        for module in sketch:
-            if module:
-                for sketch_line in module.split("\n"):
-                    line = parse_sketch_line(sketch_line.strip(), namespace)
-                    # When a module name is found, the "new_module" becomes True.
-                    # When a variable name is found, the "new_module" is set back to False
-                    if line["new_module"]:
-                        # remove characters that are not [a-zA-Z0-9_] from the module name
-                        module_name = re.sub(
-                            r"[\W]+", "", line["module_name"].replace(" ", "_")
-                        ).lstrip(
-                            "0123456789"
-                        )  # there's probably a more elegant way to do it with regex
-                        if module_name not in modules_list:
-                            modules_list.append(module_name)
-                    else:
-                        if line["variable_name"]:
-                            if line["variable_name"] not in module_elements.keys():
-                                module_elements[line["variable_name"]] = module_name
-                            else:
-                                if line["variable_name"] not in ghost_variables.keys():
-                                    ghost_variables[line["variable_name"]] = [
-                                        module_elements[line["variable_name"]],
-                                        module_name,
-                                    ]
-                                else:
-                                    ghost_variables[line["variable_name"]].append(
-                                        module_name
-                                    )
-
     # Parse components to python syntax.
     for element in model_elements:
         if (element["kind"] == "component" and "py_expr" not in element) or element[
@@ -1577,7 +1557,58 @@ def translate_section(section, macro_list, sketch, root_path):
     build_elements = [
         e for e in model_elements if e["kind"] not in ["subdef", "test", "section"]
     ]
-    builder.build(build_elements, subscript_dict, namespace, section["file_name"])
+
+    if sketch:
+        # TODO how about macros??? are they also put in the sketch?
+        modules_list = []  # list of all modules
+        module_elements = {}
+        sketch = list(map(lambda x: x.strip(), sketch.split("\\\\\\---/// ")))
+        for module in sketch:
+            if module:
+                for sketch_line in module.split("\n"):
+                    line = parse_sketch_line(sketch_line.strip(), namespace)
+                    # When a module name is found, the "new_module" becomes True.
+                    # When a variable name is found, the "new_module" is set back to False
+                    if line["new_module"]:
+                        # remove characters that are not [a-zA-Z0-9_] from the module name
+                        module_name = re.sub(
+                            r"[\W]+", "", line["module_name"].replace(" ", "_")
+                        ).lstrip(
+                            "0123456789"
+                        )  # there's probably a more elegant way to do it with regex
+
+                        module_elements[module_name] = []
+
+                        if module_name not in modules_list:
+                            modules_list.append(module_name)
+                    else:
+                        if line["variable_name"]:
+                            if (
+                                line["variable_name"]
+                                not in module_elements[module_name]
+                            ):
+                                module_elements[module_name].append(
+                                    line["variable_name"]
+                                )
+
+        # remove module names that do not have variables
+        clean_module_elements = {
+            key.lower(): value for key, value in module_elements.items() if value
+        }
+
+        builder.build_modular_model(
+            build_elements,
+            subscript_dict,
+            namespace,
+            section["file_name"],
+            clean_module_elements,
+        )
+
+    else:
+
+        builder.build_model(
+            build_elements, subscript_dict, namespace, section["file_name"]
+        )
 
     return section["file_name"]
 
