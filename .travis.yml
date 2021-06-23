@@ -10,8 +10,9 @@ install:
   - pip install .
   - pip install progressbar
   - pip install coveralls
+  - pip install pytest pytest-cov
 # command to run tests
 script:
     - cd tests
-    - nosetests --with-coverage --cover-package=pysd
+    - pytest --cov=pysd  *.py
     - coveralls
