@@ -35,12 +35,6 @@ import_modules = {
     "utils": set(),
 }
 
-def prepend(list, str):
-      
-    str += '{0}'
-    list = [str.format(i) for i in list]
-    return list
-
 
 def build_modular_model(
     elements, subscript_dict, namespace, main_filename, elements_per_module
@@ -288,10 +282,14 @@ def build_separate_module(elements, subscript_dict, module_name, module_dir):
     text = '''
     """
     Module %(module_name)s
+    Translated using PySD version %(version)s\n
     """
     ''' % {
-        "module_name": module_name
+        "module_name": module_name,
+        "version": __version__,
     }
+
+
 
     elements = merge_partial_elements(elements)
     functions = [build_element(element, subscript_dict) for element in elements]
