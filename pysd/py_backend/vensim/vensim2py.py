@@ -484,9 +484,9 @@ def get_equation_components(equation_str, root_path=None):
 def parse_sketch_line(sketch_line, namespace):
     """
     This syntax parses a single line of the Vensim sketch at a time.
-    
+
     Not all possibilities can be tested, so this gammar may be considered experimental for now
-    
+
     """
 
     sketch_grammar = _include_common_grammar(
@@ -1520,8 +1520,6 @@ def translate_section(section, macro_list, sketch, root_path):
     if sketch:
         module_elements = classify_elements_by_module(sketch, namespace)
 
-
-
         builder.build_modular_model(
             build_elements,
             subscript_dict,
@@ -1532,18 +1530,16 @@ def translate_section(section, macro_list, sketch, root_path):
 
     else:
 
-        builder.build(
-            build_elements, subscript_dict, namespace, section["file_name"]
-        )
+        builder.build(build_elements, subscript_dict, namespace, section["file_name"])
 
     return section["file_name"]
 
 
 def classify_elements_by_module(sketch, namespace):
-    
+
     """
     Takes the Vensim sketch as a string, parses it (line by line) and returns a
-    list of the model elements that belong to each vensim view (here we call 
+    list of the model elements that belong to each vensim view (here we call
     the modules).
 
     Parameters
@@ -1563,41 +1559,37 @@ def classify_elements_by_module(sketch, namespace):
     """
 
     # TODO how about macros??? are they also put in the sketch?
+
+    # splitting the sketch in different modules
+    sketch = list(map(lambda x: x.strip(), sketch.split("\\\\\\---/// ")))
+
     modules_list = []  # list of all modules
     module_elements = {}
-    sketch = list(map(lambda x: x.strip(), sketch.split("\\\\\\---/// ")))
+
     for module in sketch:
-        if module:
-            for sketch_line in module.split("\n"):
-                line = parse_sketch_line(sketch_line.strip(), namespace)
-                # When a module name is found, the "new_module" becomes True.
-                # When a variable name is found, the "new_module" is set back to False
-                if line["module_name"]:
-                    # remove characters that are not [a-zA-Z0-9_] from the module name
-                    module_name = re.sub(
-                        r"[\W]+", "", line["module_name"].replace(" ", "_")
-                    ).lstrip(
-                        "0123456789"
-                    )  # there's probably a more elegant way to do it with regex
+        for sketch_line in module.split("\n"):
+            line = parse_sketch_line(sketch_line.strip(), namespace)
+            # When a module name is found, the "new_module" becomes True.
+            # When a variable name is found, the "new_module" is set back to False
+            if line["module_name"]:
+                # remove characters that are not [a-zA-Z0-9_] from the module name
+                module_name = re.sub(
+                    r"[\W]+", "", line["module_name"].replace(" ", "_")
+                ).lstrip(
+                    "0123456789"
+                )  # there's probably a more elegant way to do it with regex
+                module_elements[module_name] = []
+                if module_name not in modules_list:
+                    modules_list.append(module_name)
 
-                    module_elements[module_name] = []
-
-                    if module_name not in modules_list:
-                        modules_list.append(module_name)
-                else:
-                    if line["variable_name"]:
-                        if (
-                            line["variable_name"]
-                            not in module_elements[module_name]
-                        ):
-                            module_elements[module_name].append(
-                                line["variable_name"]
-                            )
+            if line["variable_name"]:
+                if line["variable_name"] not in module_elements[module_name]:
+                    module_elements[module_name].append(line["variable_name"])
     # removes modules that do not include any variable in them
-    module_elements_= {
-            key.lower(): value for key, value in module_elements.items() if value
-        }
-    
+    module_elements_ = {
+        key.lower(): value for key, value in module_elements.items() if value
+    }
+
     return module_elements_
 
 
