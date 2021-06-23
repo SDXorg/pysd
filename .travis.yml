@@ -7,10 +7,10 @@ cache: pip
 install:
   - pip install cython
   - pip install --upgrade pip setuptools wheel
-  - pip install .
+  - pip install -e .
   - pip install progressbar
+  - pip install pytest pytest-cov coverage
   - pip install coveralls
-  - pip install pytest pytest-cov
 # command to run tests
 script:
     - cd tests
