@@ -45,10 +45,11 @@ def prepend(list, str):
 def build_modular_model(
     elements, subscript_dict, namespace, main_filename, elements_per_module
 ):
-    root_dir = os.path.split(main_filename)[0]
-    
-    # TODO this is a hell to maintain
-    prefixes = ["_integ_", "_ext_constant_", "_ext_data_", "_ext_lookup_", "_initial_", "_sample_if_true_", "_delayfixed_"]
+    root_dir = os.path.dirname(main_filename)
+    model_name = os.path.basename(main_filename).split(".")[0]
+    modules_dir = os.path.join(root_dir, "modules_" + model_name)
+    # create modules directory if it does not exist
+    os.makedirs(modules_dir, exist_ok=True)
 
     modules_list = elements_per_module.keys()
     # creating the rest of files per module (this needs to be run before the main module, as it updates the import_modules)
@@ -56,10 +57,10 @@ def build_modular_model(
     for module in modules_list:
         module_elems = []
         for element in elements:
-            if element["py_name"] in elements_per_module[module] + sum([prepend(elements_per_module[module], x) for x in prefixes], []):
+            if (element.get("py_name", None) in elements_per_module[module]) or (element.get("parent_name", None) in elements_per_module[module]):
                 module_elems.append(element)
         
-        build_separate_module(module_elems, subscript_dict, module, root_dir)
+        build_separate_module(module_elems, subscript_dict, module, modules_dir)
 
         processed_elements += module_elems
     
@@ -68,13 +69,17 @@ def build_modular_model(
     # building main file using the build function
     build_main_module(unprocessed_elements, subscript_dict, modules_list, main_filename)
 
+    # create json file for the modules and corresponding model elements
+    with open(os.path.join(modules_dir, "_modules.json"), "w") as outfile:
+        json.dump(elements_per_module, outfile, indent=4, sort_keys=True)
+
     # create single namespace in a separate json file
-    with open(os.path.join(root_dir, "namespace.json"), "w") as outfile:
-        json.dump(namespace, outfile, indent="", sort_keys=True)
+    with open(os.path.join(root_dir, "_namespace_" + model_name + ".json"), "w") as outfile:
+        json.dump(namespace, outfile, indent=4, sort_keys=True)
 
     # create single subscript_dict in a separate json file
-    with open(os.path.join(root_dir, "subscripts.json"), "w") as outfile:
-        json.dump(subscript_dict, outfile, indent="", sort_keys=True)
+    with open(os.path.join(root_dir, "_subscripts_" + model_name + ".json"), "w") as outfile:
+        json.dump(subscript_dict, outfile, indent=4, sort_keys=True)
 
 
 def build_main_module(elements, subscript_dict, modules_list, file_name):
@@ -128,18 +133,24 @@ def build_main_module(elements, subscript_dict, modules_list, file_name):
     
     _root = path.dirname(__file__)
     
-    with open(os.path.join(_root, 'subscripts.json')) as subs:
+    with open(os.path.join(_root, '_subscripts_%(outfile)s.json')) as subs:
         _subscript_dict = json.load(subs)
     
-    with open(os.path.join(_root, 'namespace.json')) as names:
+    with open(os.path.join(_root, '_namespace_%(outfile)s.json')) as names:
         _namespace = json.load(names)
+
+    # the _modules.json in the %(outfile)s folder shows to which module each variable belongs
+    with open(os.path.join(_root, 'modules_%(outfile)s', '_modules.json')) as mods:
+        _modules = json.load(mods)
+
+    for module in _modules.keys(): 
+        exec(open(os.path.join(_root, 'modules_%(outfile)s', module + '.py')).read())
 
     __data = {
         'scope': None,
         'time': lambda: 0
     }
 
-    
 
     def _init_outer_references(data):
         for key in data:
@@ -148,18 +159,8 @@ def build_main_module(elements, subscript_dict, modules_list, file_name):
     def time():
         return __data['time']()
 
-    """
+    """ % {"outfile": os.path.basename(file_name).split(".")[0]}
 
-    # here we should execute the modules
-    text += """
-    modules = [%(modules)s]
-
-    for module in modules: 
-        exec(open(os.path.join(_root, module + ".py")).read())
-
-    """ % {
-        "modules": ", ".join('"{0}"'.format(w) for w in list(modules_list))
-    }
 
     elements = merge_partial_elements(elements)
     functions = [build_element(element, subscript_dict) for element in elements]
@@ -612,6 +613,7 @@ def add_stock(identifier, expression, initial_condition, subs):
         new_structure.append(
             {
                 "py_name": "_integ_init_%s" % identifier,
+                "parent_name": identifier,
                 "real_name": "Implicit",
                 "kind": "setup",
                 "py_expr": initial_condition,
@@ -627,6 +629,7 @@ def add_stock(identifier, expression, initial_condition, subs):
         new_structure.append(
             {
                 "py_name": "_integ_input_%s" % identifier,
+                "parent_name": identifier,
                 "real_name": "Implicit",
                 "kind": "component",
                 "doc": "Provides derivative for %s function" % identifier,
@@ -643,6 +646,7 @@ def add_stock(identifier, expression, initial_condition, subs):
     new_structure.append(
         {
             "py_name": py_name,
+            "parent_name": identifier,
             "real_name": "Representation of  %s" % identifier,
             "doc": "Integrates Expression %s" % expression,
             "py_expr": stateful_py_expr,
@@ -729,6 +733,7 @@ def add_delay(identifier, delay_input, delay_time, initial_value, order, subs):
         new_structure.append(
             {
                 "py_name": "_delay_init_%s" % identifier,
+                "parent_name": identifier,
                 "real_name": "Implicit",
                 "kind": "setup",  # not specified in the model file, but must exist
                 "py_expr": initial_value,
@@ -744,6 +749,7 @@ def add_delay(identifier, delay_input, delay_time, initial_value, order, subs):
         new_structure.append(
             {
                 "py_name": "_delay_input_%s" % identifier,
+                "parent_name": identifier,
                 "real_name": "Implicit",
                 "kind": "component",
                 "doc": "Provides input for %s function" % identifier,
@@ -760,6 +766,7 @@ def add_delay(identifier, delay_input, delay_time, initial_value, order, subs):
     new_structure.append(
         {
             "py_name": py_name,
+            "parent_name": identifier,
             "real_name": "Delay of %s" % delay_input,
             "doc": "Delay time: %s \n Delay initial value %s \n Delay order %s"
             % (delay_time, initial_value, order),
@@ -827,6 +834,7 @@ def add_delay_f(identifier, delay_input, delay_time, initial_value):
     # describe the stateful object
     stateful = {
         "py_name": py_name,
+        "parent_name": identifier,
         "real_name": "Delay fixed  of %s" % delay_input,
         "doc": "DelayFixed time: %s \n Delay initial value %s"
         % (delay_time, initial_value),
@@ -913,6 +921,7 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order, subs)
         new_structure.append(
             {
                 "py_name": "_delayn_init_%s" % identifier,
+                "parent_name": identifier,
                 "real_name": "Implicit",
                 "kind": "setup",  # not specified in the model file, but must exist
                 "py_expr": initial_value,
@@ -928,6 +937,7 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order, subs)
         new_structure.append(
             {
                 "py_name": "_delayn_input_%s" % identifier,
+                "parent_name": identifier,
                 "real_name": "Implicit",
                 "kind": "component",
                 "doc": "Provides input for %s function" % identifier,
@@ -944,6 +954,7 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order, subs)
     new_structure.append(
         {
             "py_name": py_name,
+            "parent_name": identifier,
             "real_name": "DelayN of %s" % delay_input,
             "doc": "DelayN time: %s \n DelayN initial value %s \n DelayN order %s"
             % (delay_time, initial_value, order),
@@ -998,6 +1009,7 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value):
     # describe the stateful object
     stateful = {
         "py_name": py_name,
+        "parent_name": identifier,
         "real_name": "Sample if true of %s" % identifier,
         "doc": "Initial value: %s \n  Input: %s \n Condition: %s"
         % (initial_value, actual_value, condition),
@@ -1082,6 +1094,7 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order, su
         new_structure.append(
             {
                 "py_name": "_smooth_init_%s" % identifier,
+                "parent_name": identifier,
                 "real_name": "Implicit",
                 "kind": "setup",  # not specified in the model file, but must exist
                 "py_expr": initial_value,
@@ -1097,6 +1110,7 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order, su
         new_structure.append(
             {
                 "py_name": "_smooth_input_%s" % identifier,
+                "parent_name": identifier,
                 "real_name": "Implicit",
                 "kind": "component",
                 "doc": "Provides input for %s function" % identifier,
@@ -1112,6 +1126,7 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order, su
     new_structure.append(
         {
             "py_name": py_name,
+            "parent_name": identifier,
             "real_name": "Smooth of %s" % smooth_input,
             "doc": "Smooth time: %s \n Smooth initial value %s \n Smooth order %s"
             % (smooth_time, initial_value, order),
@@ -1186,6 +1201,7 @@ def add_n_trend(identifier, trend_input, average_time, initial_trend, subs):
         new_structure.append(
             {
                 "py_name": "_trend_init_%s" % identifier,
+                "parent_name": identifier,
                 "real_name": "Implicit",
                 "kind": "setup",  # not specified in the model file, but must exist
                 "py_expr": initial_trend,
@@ -1201,6 +1217,7 @@ def add_n_trend(identifier, trend_input, average_time, initial_trend, subs):
     new_structure.append(
         {
             "py_name": py_name,
+            "parent_name": identifier,
             "real_name": "trend of %s" % trend_input,
             "doc": "Trend average time: %s \n Trend initial value %s"
             % (average_time, initial_trend),
@@ -1217,7 +1234,7 @@ def add_n_trend(identifier, trend_input, average_time, initial_trend, subs):
     return "%s()" % py_name, new_structure
 
 
-def add_initial(initial_input):
+def add_initial(identifier):
     """
     Constructs a stateful object for handling vensim's 'Initial' functionality
 
@@ -1231,7 +1248,7 @@ def add_initial(initial_input):
     -------
     reference: basestring
         reference to the Initial object `__call__` method,
-        which will return the first calculated value of `initial_input`
+        which will return the first calculated value of `identifier`
 
     new_structure: list
         list of element construction dictionaries for the builder to assemble
@@ -1239,13 +1256,14 @@ def add_initial(initial_input):
     """
 
     import_modules["functions"].add("Initial")
-    py_name = utils.make_python_identifier("_initial_%s" % initial_input)[0]
+    py_name = utils.make_python_identifier("_initial_%s" % identifier)[0]
 
     stateful = {
         "py_name": py_name,
-        "real_name": "Initial %s" % initial_input,
+        "parent_name": identifier,
+        "real_name": "Initial %s" % identifier,
         "doc": "Returns the value taken on during the initialization phase",
-        "py_expr": "Initial(lambda: %s, '%s')" % (initial_input, py_name),
+        "py_expr": "Initial(lambda: %s, '%s')" % (identifier, py_name),
         "unit": "None",
         "lims": "None",
         "eqn": "None",
@@ -1319,6 +1337,7 @@ def add_ext_data(
 
     external = {
         "py_name": name,
+        "parent_name": identifier,
         "real_name": "External data for %s" % identifier,
         "doc": "Provides data for data variable %s" % identifier,
         "py_expr": py_expr % (file_name, tab, time_row_or_col, cell, keyword, coords),
@@ -1386,6 +1405,7 @@ def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
 
     external = {
         "py_name": name,
+        "parent_name": identifier,
         "real_name": "External constant for %s" % identifier,
         "doc": "Provides data for constant data variable %s" % identifier,
         "py_expr": py_expr % (file_name, tab, cell, coords),
@@ -1459,6 +1479,7 @@ def add_ext_lookup(
 
     external = {
         "py_name": name,
+        "parent_name": identifier,
         "real_name": "External lookup data for %s" % identifier,
         "doc": "Provides data for external lookup variable %s" % identifier,
         "py_expr": py_expr % (file_name, tab, x_row_or_col, cell, coords),
@@ -1510,6 +1531,7 @@ def add_macro(macro_name, filename, arg_names, arg_vals):
 
     stateful = {
         "py_name": py_name,
+        "parent_name": macro_name,
         "real_name": "Macro Instantiation of " + macro_name,
         "doc": "Instantiates the Macro",
         "py_expr": "Macro('%s', %s, '%s',"

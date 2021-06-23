@@ -13,6 +13,7 @@ Sept 2016: Major refactor, putting most internal code into the Model and Macro o
 """
 
 import sys
+import warnings
 
 if sys.version_info[:2] < (3, 7):
     raise RuntimeError(
@@ -101,6 +102,7 @@ def read_vensim(
 
     """
     from .py_backend.vensim.vensim2py import translate_vensim
+
 
     py_model_file = translate_vensim(mdl_file, split_modules)
     model = load(py_model_file, initialize, missing_values)

@@ -559,70 +559,23 @@ def parse_sketch_line(module, namespace):
     class SketchParser(parsimonious.NodeVisitor):
         def __init__(self, ast, namespace):
             self.namespace = namespace
-            self.entry = {}
+            self.module_or_var = {"variable_name": "", "module_name": ""}
             self.visit(ast)
 
-        """
-        def visit_line(self, n, vc):
-            return vc[0]
-        """
-
         def visit_module_name(self, n, vc):
-            self.entry.update(
-                {
-                    "new_module": True,
-                    "module_name": n.text,
-                    "variable": False,
-                    "variable_name": "",
-                }
-            )
+            self.module_or_var["module_name"] = n.text
 
         def visit_var_definition(self, n, vc):
-            if int(vc[10].text) % 2 != 0:
-                if vc[4].text in self.namespace.keys():
-                    self.entry.update(
-                        {
-                            "new_module": False,
-                            "module_name": "",
-                            "variable": True,
-                            "variable_name": self.namespace[n.children[4].text],
-                        }
-                    )
-
-        """
-        def visit_var_name(self, n, vc):
-            if n.text in self.namespace.keys():
-                
-                self.entry.update(
-                    {
-                        "new_module": False,
-                        "module_name": "",
-                        "variable": True,
-                        "variable_name": self.namespace[n.text],
-                    }
-                )
-            else:
-                message = "\n{} is in the sketch but not in the namespace.\n".format(
-                    n.text
-                )
-                warnings.warn(message)
-        """
+            if int(vc[10]) % 2 != 0:  # not a shadow variable
+                if vc[4] in self.namespace.keys():
+                    self.module_or_var["variable_name"] = self.namespace[vc[4]]
 
         def generic_visit(self, n, vc):
-            if not self.entry:
-                self.entry.update(
-                    {
-                        "new_module": False,
-                        "module_name": "",
-                        "variable": False,
-                        "variable_name": "",
-                    }
-                )
-            return ''.join(filter(None, vc)) or n.text or ''
+            return "".join(filter(None, vc)) or n.text or ""
 
     try:
         tree = parser.parse(module)
-        return SketchParser(tree, namespace=namespace).entry
+        return SketchParser(tree, namespace=namespace).module_or_var
     except (IncompleteParseError, VisitationError, ParseError) as err:
         if isinstance(err, VisitationError):
             raise ("Something went wrong while traversing a parse tree", err)
@@ -1570,7 +1523,7 @@ def translate_section(section, macro_list, sketch, root_path):
                     line = parse_sketch_line(sketch_line.strip(), namespace)
                     # When a module name is found, the "new_module" becomes True.
                     # When a variable name is found, the "new_module" is set back to False
-                    if line["new_module"]:
+                    if line["module_name"]:
                         # remove characters that are not [a-zA-Z0-9_] from the module name
                         module_name = re.sub(
                             r"[\W]+", "", line["module_name"].replace(" ", "_")
@@ -1690,6 +1643,11 @@ def translate_vensim(mdl_file, split_modules):
             section["file_name"] = out_dir + "/" + section["py_name"] + ".py"
 
     macro_list = [s for s in file_sections if s["name"] != "_main_"]
+
+    if macro_list and split_modules:
+        warnings.warn(
+            "The creation of one file per Vensim view has not been tested with macros."
+        )
 
     for section in file_sections:
         translate_section(section, macro_list, sketch, root_path)
