@@ -247,9 +247,59 @@ class TestParse_general_expression(unittest.TestCase):
         res = parse_general_expression({'expr': 'StockA'}, {'StockA': 'stocka'})
         self.assertEqual(res[0]['py_expr'], 'stocka()')
 
-    def test_number_parsing(self):
+    def test_logicals(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
 
+        res = parse_general_expression(
+            {'expr': 'IF THEN ELSE(1 :AND: 0,0,1)'})
+        self.assertEqual(
+             res[0]['py_expr'],
+            'if_then_else(logical_and(1,0), lambda: 0, lambda: 1)'
+        )
+
+        res = parse_general_expression(
+            {'expr': 'IF THEN ELSE(1 :OR: 0,0,1)'})
+        self.assertEqual(
+             res[0]['py_expr'],
+            'if_then_else(logical_or(1,0), lambda: 0, lambda: 1)'
+        )
+
+        res = parse_general_expression(
+            {'expr': 'IF THEN ELSE(1 :AND: 0 :and: 1,0,1)'})
+        self.assertEqual(
+             res[0]['py_expr'],
+            'if_then_else(logical_and(1,0,1), lambda: 0, lambda: 1)'
+        )
+
+        res = parse_general_expression(
+            {'expr': 'IF THEN ELSE(1 :or: 0 :OR: 1 :oR: 0,0,1)'})
+        self.assertEqual(
+             res[0]['py_expr'],
+            'if_then_else(logical_or(1,0,1,0), lambda: 0, lambda: 1)'
+        )
+
+        res = parse_general_expression(
+            {'expr': 'IF THEN ELSE(1 :AND: (0 :OR: 1),0,1)'})
+        self.assertEqual(
+             res[0]['py_expr'],
+            'if_then_else(logical_and(1,logical_or(0,1)), lambda: 0, lambda: 1)'
+        )
+
+        res = parse_general_expression(
+            {'expr': 'IF THEN ELSE((1 :AND: 0) :OR: 1,0,1)'})
+        self.assertEqual(
+             res[0]['py_expr'],
+            'if_then_else(logical_or(logical_and(1,0),1), lambda: 0, lambda: 1)'
+        )
+
+        with self.assertRaises(ValueError):
+            res = parse_general_expression(
+                {'expr': 'IF THEN ELSE(1 :AND: 0 :OR: 1,0,1)',
+                 'real_name': 'logical',
+                 'eqn': 'logical = IF THEN ELSE(1 :AND: 0 :OR: 1,0,1)'})
+
+    def test_number_parsing(self):
+        from pysd.py_backend.vensim.vensim2py import parse_general_expression
         res = parse_general_expression({'expr': '20'})
         self.assertEqual(res[0]['py_expr'], '20')
 

@@ -1532,6 +1532,48 @@ def if_then_else(condition, val_if_true, val_if_false):
     return val_if_true() if condition else val_if_false()
 
 
+def logical_and(*args):
+    """
+    Implements Vensim's :AND: method for two or several arguments.
+
+    Parameters
+    ----------
+    *args: arguments
+        The values to compare with and operator
+
+    Returns
+    -------
+    result: bool or xarray.DataArray
+        The result of the comparison.
+
+    """
+    current = args[0]
+    for arg in args[1:]:
+        current = np.logical_and(arg, current)
+    return current
+
+
+def logical_or(*args):
+    """
+    Implements Vensim's :OR: method for two or several arguments.
+
+    Parameters
+    ----------
+    *args: arguments
+        The values to compare with and operator
+
+    Returns
+    -------
+    result: bool or xarray.DataArray
+        The result of the comparison.
+
+    """
+    current = args[0]
+    for arg in args[1:]:
+        current = np.logical_or(arg, current)
+    return current
+
+
 def xidz(numerator, denominator, value_if_denom_is_zero):
     """
     Implements Vensim's XIDZ function.
