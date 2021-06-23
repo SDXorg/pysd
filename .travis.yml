@@ -9,7 +9,7 @@ install:
   - pip install --upgrade pip setuptools wheel
   - pip install -e .
   - pip install progressbar
-  - pip install pytest pytest-cov coverage
+  - pip install pytest pytest-cov
   - pip install coveralls
 # command to run tests
 script:
