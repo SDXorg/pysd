@@ -47,7 +47,8 @@ def build_modular_model(
 ):
     root_dir = os.path.split(main_filename)[0]
     
-    prefixes = ["_integ_", "_ext_constant_", "_ext_data_", "_ext_lookup_"]
+    # TODO this is a hell to maintain
+    prefixes = ["_integ_", "_ext_constant_", "_ext_data_", "_ext_lookup_", "_initial_", "_sample_if_true_", "_delayfixed_"]
 
     modules_list = elements_per_module.keys()
     # creating the rest of files per module (this needs to be run before the main module, as it updates the import_modules)

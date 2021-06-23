@@ -578,8 +578,8 @@ def parse_sketch_line(module, namespace):
             )
 
         def visit_var_definition(self, n, vc):
-            if int(n.children[10].text) % 2 != 0:
-                if n.children[4].text in self.namespace.keys():
+            if int(vc[10].text) % 2 != 0:
+                if vc[4].text in self.namespace.keys():
                     self.entry.update(
                         {
                             "new_module": False,
@@ -618,6 +618,7 @@ def parse_sketch_line(module, namespace):
                         "variable_name": "",
                     }
                 )
+            return ''.join(filter(None, vc)) or n.text or ''
 
     try:
         tree = parser.parse(module)
