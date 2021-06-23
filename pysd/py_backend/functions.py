@@ -90,8 +90,11 @@ class Integ(DynamicStateful):
         self.shape_info = None
         self.py_name = py_name
 
-    def initialize(self):
-        self.state = self.init_func()
+    def initialize(self, init_val=None):
+        if init_val is None:
+            self.state = self.init_func()
+        else:
+            self.state = init_val
         if isinstance(self.state, xr.DataArray):
             self.shape_info = {'dims': self.state.dims,
                                'coords': self.state.coords}
@@ -131,7 +134,7 @@ class Delay(DynamicStateful):
         self.shape_info = None
         self.py_name = py_name
 
-    def initialize(self):
+    def initialize(self, init_val=None):
         order = self.order_func()
 
         if order != int(order):
@@ -147,7 +150,10 @@ class Delay(DynamicStateful):
                           'Delay time very small, casting delay order '
                           + f'from {int(order)} to {self.order}')
 
-        init_state_value = self.init_func() * self.delay_time_func()
+        if init_val is None:
+            init_state_value = self.init_func() * self.delay_time_func()
+        else:
+            init_state_value = init_val * self.delay_time_func()
 
         if isinstance(init_state_value, xr.DataArray):
             # broadcast self.state
@@ -210,7 +216,7 @@ class DelayN(DynamicStateful):
         self.shape_info = None
         self.py_name = py_name
 
-    def initialize(self):
+    def initialize(self, init_val=None):
         order = self.order_func()
 
         if order != int(order):
@@ -226,7 +232,10 @@ class DelayN(DynamicStateful):
                           'Delay time very small, casting delay order '
                           + f'from {int(order)} to {self.order}')
 
-        init_state_value = self.init_func() * self.delay_time_func()
+        if init_val is None:
+            init_state_value = self.init_func() * self.delay_time_func()
+        else:
+            init_state_value = init_val * self.delay_time_func()
 
         if isinstance(init_state_value, xr.DataArray):
             # broadcast self.state
@@ -292,7 +301,7 @@ class DelayFixed(DynamicStateful):
         self.pointer = 0
         self.py_name = py_name
 
-    def initialize(self):
+    def initialize(self, init_val=None):
         order = max(self.delay_time_func()/self.tstep(), 1)
 
         if order != int(order):
@@ -304,7 +313,10 @@ class DelayFixed(DynamicStateful):
         # need to add a small decimal to ensure that 0.5 is rounded to 1
         self.order = round(order + small_vensim)  # The order can only be set once
 
-        init_state_value = self.init_func()
+        if init_val is None:
+            init_state_value = self.init_func()
+        else:
+            init_state_value = init_val
 
         self.state = init_state_value
         self.pipe = [init_state_value] * self.order
@@ -347,9 +359,14 @@ class Smooth(DynamicStateful):
         self.shape_info = None
         self.py_name = py_name
 
-    def initialize(self):
+    def initialize(self, init_val=None):
         self.order = self.order_func()  # The order can only be set once
-        init_state_value = self.init_func()
+
+        if init_val is None:
+            init_state_value = self.init_func()
+        else:
+            init_state_value = init_val
+
         if isinstance(init_state_value, xr.DataArray):
             # broadcast self.state
             self.state = init_state_value.expand_dims({
@@ -397,9 +414,13 @@ class Trend(DynamicStateful):
         self.input_func = trend_input
         self.py_name = py_name
 
-    def initialize(self):
-        self.state = self.input_func()\
-            / (1 + self.init_func() * self.average_time_function())
+    def initialize(self, init_val=None):
+        if init_val is None:
+            self.state = self.input_func()\
+                / (1 + self.init_func()*self.average_time_function())
+        else:
+            self.state = self.input_func()\
+                / (1 + init_val*self.average_time_function())
 
         if isinstance(self.state, xr.DataArray):
             self.shape_info = {'dims': self.state.dims,
@@ -429,11 +450,14 @@ class SampleIfTrue(Stateful):
         super().__init__()
         self.condition = condition
         self.actual_value = actual_value
-        self.initial_value = initial_value
+        self.init_func = initial_value
         self.py_name = py_name
 
-    def initialize(self):
-        self.state = self.initial_value()
+    def initialize(self, init_val=None):
+        if init_val is None:
+            self.state = self.init_func()
+        else:
+            self.state = init_val
 
     def __call__(self):
         self.state = if_then_else(self.condition(),
@@ -446,21 +470,24 @@ class Initial(Stateful):
     """
     Implements INITIAL function
     """
-    def __init__(self, func, py_name="Initial object"):
+    def __init__(self, initial_value, py_name="Initial object"):
         """
 
         Parameters
         ----------
-        func: function
+        initial_value: function
         py_name: str
           Python name to identify the object
         """
         super().__init__()
-        self.func = func
+        self.init_func = initial_value
         self.py_name = py_name
 
-    def initialize(self):
-        self.state = self.func()
+    def initialize(self, init_val=None):
+        if init_val is None:
+            self.state = self.init_func()
+        else:
+            self.state = init_val
 
 
 class Macro(DynamicStateful):
@@ -838,29 +865,41 @@ class Macro(DynamicStateful):
         else:
             return lambda: value
 
-    def set_state(self, t, state):
-        """ Set the system state.
+    def set_state(self, t, initial_value):
+        """ Old set_state method use set_initial_value"""
+        warnings.warn(
+            "\nset_state will be deprecated, use set_initial_value instead.",
+            FutureWarning)
+        self.set_initial_value(t, initial_value)
+
+    def set_initial_value(self, t, initial_value):
+        """ Set the system initial value.
 
         Parameters
         ----------
         t : numeric
             The system time
 
-        state : dict
-            A (possibly partial) dictionary of the system state.
+        initial_value : dict
+            A (possibly partial) dictionary of the system initial values.
             The keys to this dictionary may be either pysafe names or
             original model file names
+
         """
         self.time.update(t)
         self.components.cache.reset(t)
+        stateful_name = "_NONE"
 
-        for key, value in state.items():
+        for key, value in initial_value.items():
             # TODO Implement map with reference between component and stateful element?
             component_name = utils.get_value_by_insensitive_key_or_value(
                 key, self.components._namespace)
             if component_name is not None:
-                stateful_name = '_integ_%s' % component_name
+                for element in self._stateful_elements:
+                    if element.py_name.endswith(f'_{component_name}'):
+                        stateful_name = element.py_name
             else:
+                # TODO remove _integ
                 component_name = key
                 stateful_name = key
 
@@ -889,13 +928,18 @@ class Macro(DynamicStateful):
                         value = utils.rearrange(
                             value, dims,
                             self.components._subscript_dict)
-                    element.update(value)
+                    element.initialize(value)
                     self.components.cache.clean()
                 except AttributeError:
                     print("'%s' has no state elements, assignment failed")
                     raise
             else:
                 # Try to override component
+                warnings.warn(
+                    f"\nSetting {component_name} to a constant value with "
+                    "initial_conditions will be deprecated. Use params={"
+                    f"'{component_name}': {value}"+"} instead.",
+                    FutureWarning)
                 try:
                     setattr(self.components, component_name,
                             self._constant_component(
@@ -1253,13 +1297,13 @@ class Model(Macro):
 
         See Also
         --------
-        PySD.set_state()
+        PySD.set_initial_value()
 
         """
 
         if isinstance(initial_condition, tuple):
             # Todo: check the values more than just seeing if they are a tuple.
-            self.set_state(*initial_condition)
+            self.set_initial_value(*initial_condition)
         elif isinstance(initial_condition, str):
             if initial_condition.lower() in ['original', 'o']:
                 self.initialize()
@@ -1655,6 +1699,7 @@ def active_initial(time, expr, init_val):
         return init_val
     else:
         return expr()
+
 
 def bounded_normal(minimum, maximum, mean, std, seed):
     """

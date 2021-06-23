@@ -134,7 +134,7 @@ def build(elements, subscript_dict, namespace, outfile_name):
     text, root = Imports.get_header(os.path.basename(outfile_name))
 
     text += textwrap.dedent('''
-    __pysd_version__ = "%(version)s"
+    __pysd_version__ = '%(version)s'
 
     _subscript_dict = %(subscript_dict)s
 

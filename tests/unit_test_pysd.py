@@ -223,9 +223,18 @@ class TestPySD(unittest.TestCase):
         output = xr.DataArray([[5, 5], [5, 5], [5, 5]], coords, dims)
 
         model = pysd.read_vensim(test_model_subs)
-        res = model.run(initial_condition=(5, {'initial_values': 5}),
-                        return_columns=['Initial Values'],
-                        return_timestamps=list(range(5, 10)))
+
+        with warnings.catch_warnings(record=True) as ws:
+            res = model.run(initial_condition=(5, {'initial_values': 5}),
+                            return_columns=['Initial Values'],
+                            return_timestamps=list(range(5, 10)))
+            # use only future warnings
+            wf = [w for w in ws if issubclass(w.category, FutureWarning)]
+            self.assertEqual(len(wf), 1)
+            self.assertIn(
+                "a constant value with initial_conditions will be deprecated",
+                str(wf[0].message))
+
         self.assertTrue(output.equals(res['Initial Values'].iloc[0]))
         self.assertEqual(res.index[0], 5)
 
@@ -237,14 +246,23 @@ class TestPySD(unittest.TestCase):
                   'Second Dimension Subscript': ['Column 1', 'Column 2']}
         dims = ['One Dimensional Subscript', 'Second Dimension Subscript']
         output = xr.DataArray([[5, 3], [5, 3], [5, 3]], coords, dims)
-        input_val = xr.DataArray([5, 3],
+        input_val = xr.DataArray(
+            [5, 3],
             {'Second Dimension Subscript': ['Column 1', 'Column 2']},
             ['Second Dimension Subscript'])
 
         model = pysd.read_vensim(test_model_subs)
-        res = model.run(initial_condition=(5, {'Initial Values': input_val}),
-                        return_columns=['Initial Values'],
-                        return_timestamps=list(range(5, 10)))
+        with warnings.catch_warnings(record=True) as ws:
+            res = model.run(initial_condition=(5, {'Initial Values': input_val}),
+                            return_columns=['Initial Values'],
+                            return_timestamps=list(range(5, 10)))
+            # use only future warnings
+            wf = [w for w in ws if issubclass(w.category, FutureWarning)]
+            self.assertEqual(len(wf), 1)
+            self.assertIn(
+                "a constant value with initial_conditions will be deprecated",
+                str(wf[0].message))
+
         self.assertTrue(output.equals(res['Initial Values'].iloc[0]))
         self.assertEqual(res.index[0], 5)
 
@@ -258,9 +276,17 @@ class TestPySD(unittest.TestCase):
         output = xr.DataArray([[5, 3], [4, 8], [9, 3]], coords, dims)
 
         model = pysd.read_vensim(test_model_subs)
-        res = model.run(initial_condition=(5, {'initial_values': output}),
-                        return_columns=['Initial Values'],
-                        return_timestamps=list(range(5, 10)))
+        with warnings.catch_warnings(record=True) as ws:
+            res = model.run(initial_condition=(5, {'initial_values': output}),
+                            return_columns=['Initial Values'],
+                            return_timestamps=list(range(5, 10)))
+            # use only future warnings
+            wf = [w for w in ws if issubclass(w.category, FutureWarning)]
+            self.assertEqual(len(wf), 1)
+            self.assertIn(
+                "a constant value with initial_conditions will be deprecated",
+                str(wf[0].message))
+
         self.assertTrue(output.equals(res['Initial Values'].iloc[0]))
         self.assertEqual(res.index[0], 5)
 
@@ -728,24 +754,71 @@ class TestPySD(unittest.TestCase):
         model = pysd.read_vensim(test_model)
 
         initial_temp = model.components.teacup_temperature()
-        initial_time = model.components.time()
+
+        new_time = np.random.rand()
+
+        with warnings.catch_warnings(record=True) as ws:
+            # Test that we can set with real names
+            model.set_state(new_time, {'Teacup Temperature': 500})
+            self.assertNotEqual(initial_temp, 500)
+            self.assertEqual(model.components.teacup_temperature(), 500)
+            self.assertEqual(model.components.time(), new_time)
+            # use only future warnings
+            wf = [w for w in ws if issubclass(w.category, FutureWarning)]
+            self.assertEqual(len(wf), 1)
+            self.assertIn(
+                "set_state will be deprecated, use set_initial_value instead.",
+                str(wf[0].message))
+
+        with warnings.catch_warnings(record=True) as ws:
+            # Test setting with pysafe names
+            model.set_state(new_time + 1, {'teacup_temperature': 202})
+            self.assertEqual(model.components.teacup_temperature(), 202)
+            self.assertEqual(model.components.time(), new_time + 1)
+            # use only future warnings
+            wf = [w for w in ws if issubclass(w.category, FutureWarning)]
+            self.assertEqual(len(wf), 1)
+            self.assertIn(
+                "set_state will be deprecated, use set_initial_value instead.",
+                str(wf[0].message))
+
+        with warnings.catch_warnings(record=True) as ws:
+            # Test setting with stateful object name
+            model.set_state(new_time + 2, {'_integ_teacup_temperature': 302})
+            self.assertEqual(model.components.teacup_temperature(), 302)
+            self.assertEqual(model.components.time(), new_time + 2)
+            # use only future warnings
+            wf = [w for w in ws if issubclass(w.category, FutureWarning)]
+            self.assertEqual(len(wf), 1)
+            self.assertIn(
+                "set_state will be deprecated, use set_initial_value instead.",
+                str(wf[0].message))
+
+    def test_set_initial_value(self):
+        import pysd
+        model = pysd.read_vensim(test_model)
+
+        initial_temp = model.components.teacup_temperature()
 
         new_time = np.random.rand()
 
         # Test that we can set with real names
-        model.set_state(new_time, {'Teacup Temperature': 500})
+        model.set_initial_value(new_time, {'Teacup Temperature': 500})
         self.assertNotEqual(initial_temp, 500)
         self.assertEqual(model.components.teacup_temperature(), 500)
+        self.assertEqual(model.components.time(), new_time)
 
         # Test setting with pysafe names
-        model.set_state(new_time + 1, {'teacup_temperature': 202})
+        model.set_initial_value(new_time + 1, {'teacup_temperature': 202})
         self.assertEqual(model.components.teacup_temperature(), 202)
+        self.assertEqual(model.components.time(), new_time + 1)
 
         # Test setting with stateful object name
-        model.set_state(new_time + 2, {'_integ_teacup_temperature': 302})
+        model.set_initial_value(new_time + 2, {'_integ_teacup_temperature': 302})
         self.assertEqual(model.components.teacup_temperature(), 302)
+        self.assertEqual(model.components.time(), new_time + 2)
 
-    def test_set_state_lookup(self):
+    def test_set_initial_value_lookup(self):
         import xarray as xr
         import pysd
         model = pysd.read_vensim(test_model_look)
@@ -753,10 +826,26 @@ class TestPySD(unittest.TestCase):
         new_time = np.random.rand()
 
         # Test that we can set with real names
-        model.set_state(new_time, {'lookup 1d': 500})
+        with warnings.catch_warnings(record=True) as ws:
+            model.set_initial_value(new_time, {'lookup 1d': 500})
+            # use only future warnings
+            wf = [w for w in ws if issubclass(w.category, FutureWarning)]
+            self.assertEqual(len(wf), 1)
+            self.assertIn(
+                "a constant value with initial_conditions will be deprecated",
+                str(wf[0].message))
+
         self.assertEqual(model.components.lookup_1d(0), 500)
         self.assertEqual(model.components.lookup_1d(100), 500)
-        model.set_state(new_time, {'lookup 2d': 520})
+
+        with warnings.catch_warnings(record=True) as ws:
+            model.set_initial_value(new_time, {'lookup 2d': 520})
+            # use only future warnings
+            wf = [w for w in ws if issubclass(w.category, FutureWarning)]
+            self.assertEqual(len(wf), 1)
+            self.assertIn(
+                "a constant value with initial_conditions will be deprecated",
+                str(wf[0].message))
 
         expected = xr.DataArray(520, {'Rows': ['Row1', 'Row2']}, ['Rows'])
         self.assertTrue(model.components.lookup_2d(0).equals(expected) )
@@ -767,7 +856,7 @@ class TestPySD(unittest.TestCase):
             warnings.simplefilter("ignore")
             model.run()
 
-    def test_set_state_subscripted_value_with_constant(self):
+    def test_set_initial_value_subscripted_value_with_constant(self):
         import xarray as xr
         import pysd
 
@@ -782,19 +871,19 @@ class TestPySD(unittest.TestCase):
         initial_stock = model.components.stock_a()
 
         # Test that we can set with real names
-        model.set_state(new_time, {'Stock A': 500})
+        model.set_initial_value(new_time, {'Stock A': 500})
         self.assertFalse(initial_stock.equals(output_b + 500))
         self.assertTrue(model.components.stock_a().equals(output_b + 500))
 
         # Test setting with pysafe names
-        model.set_state(new_time + 1, {'stock_a': 202})
+        model.set_initial_value(new_time + 1, {'stock_a': 202})
         self.assertTrue(model.components.stock_a().equals(output_b + 202))
 
         # Test setting with stateful object name
-        model.set_state(new_time + 2, {'_integ_stock_a': 302})
+        model.set_initial_value(new_time + 2, {'_integ_stock_a': 302})
         self.assertTrue(model.components.stock_a().equals(output_b + 302))
 
-    def test_set_state_subscripted_value_with_partial_xarray(self):
+    def test_set_initial_value_subscripted_value_with_partial_xarray(self):
         import xarray as xr
         import pysd
 
@@ -822,19 +911,19 @@ class TestPySD(unittest.TestCase):
         initial_stock = model.components.stock_a()
 
         # Test that we can set with real names
-        model.set_state(new_time, {'Stock A': input_val1})
+        model.set_initial_value(new_time, {'Stock A': input_val1})
         self.assertFalse(initial_stock.equals(output1))
         self.assertTrue(model.components.stock_a().equals(output1))
 
         # Test setting with pysafe names
-        model.set_state(new_time + 1, {'stock_a': input_val2})
+        model.set_initial_value(new_time + 1, {'stock_a': input_val2})
         self.assertTrue(model.components.stock_a().equals(output2))
 
         # Test setting with stateful object name
-        model.set_state(new_time + 2, {'_integ_stock_a': input_val3})
+        model.set_initial_value(new_time + 2, {'_integ_stock_a': input_val3})
         self.assertTrue(model.components.stock_a().equals(output3))
 
-    def test_set_state_subscripted_value_with_xarray(self):
+    def test_set_initial_value_subscripted_value_with_xarray(self):
         import xarray as xr
         import pysd
 
@@ -851,19 +940,19 @@ class TestPySD(unittest.TestCase):
         initial_stock = model.components.stock_a()
 
         # Test that we can set with real names
-        model.set_state(new_time, {'Stock A': output1})
+        model.set_initial_value(new_time, {'Stock A': output1})
         self.assertFalse(initial_stock.equals(output1))
         self.assertTrue(model.components.stock_a().equals(output1))
 
         # Test setting with pysafe names
-        model.set_state(new_time + 1, {'stock_a': output2})
+        model.set_initial_value(new_time + 1, {'stock_a': output2})
         self.assertTrue(model.components.stock_a().equals(output2))
 
         # Test setting with stateful object name
-        model.set_state(new_time + 2, {'_integ_stock_a': output3})
+        model.set_initial_value(new_time + 2, {'_integ_stock_a': output3})
         self.assertTrue(model.components.stock_a().equals(output3))
 
-    def test_set_state_subscripted_value_with_numpy_error(self):
+    def test_set_initial_value_subscripted_value_with_numpy_error(self):
         import pysd
         input1 = np.array([[5, 3], [4, 8], [9, 3]])
         input2 = np.array([[53, 43], [84, 80], [29, 63]])
@@ -875,15 +964,15 @@ class TestPySD(unittest.TestCase):
 
         # Test that we can set with real names
         with self.assertRaises(ValueError):
-            model.set_state(new_time, {'Stock A': input1})
+            model.set_initial_value(new_time, {'Stock A': input1})
 
         # Test setting with pysafe names
         with self.assertRaises(ValueError):
-            model.set_state(new_time + 1, {'stock_a': input2})
+            model.set_initial_value(new_time + 1, {'stock_a': input2})
 
         # Test setting with stateful object name
         with self.assertRaises(ValueError):
-            model.set_state(new_time + 2, {'_integ_stock_a': input3})
+            model.set_initial_value(new_time + 2, {'_integ_stock_a': input3})
 
     def test_replace_element(self):
         import pysd
@@ -974,7 +1063,15 @@ class TestPySD(unittest.TestCase):
         new_state = {'Room Temperature': 100}
         new_time = 10
 
-        model.set_initial_condition((new_time, new_state))
+        with warnings.catch_warnings(record=True) as ws:
+            model.set_initial_condition((new_time, new_state))
+            # use only future warnings
+            wf = [w for w in ws if issubclass(w.category, FutureWarning)]
+            self.assertEqual(len(wf), 1)
+            self.assertIn(
+                "a constant value with initial_conditions will be deprecated",
+                str(wf[0].message))
+
         set_temp = model.components.room_temperature()
         set_time = model.components.time()
 
