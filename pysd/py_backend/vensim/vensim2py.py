@@ -481,9 +481,14 @@ def get_equation_components(equation_str, root_path=None):
     }
 
 
-def parse_sketch_line(module, namespace):
+def parse_sketch_line(sketch_line, namespace):
+    """
+    This syntax parses a single line of the Vensim sketch at a time.
+    
+    Not all possibilities can be tested, so this gammar may be considered experimental for now
+    
+    """
 
-    # not all possibilities can be tested, so this should be considered experimental for now
     sketch_grammar = _include_common_grammar(
         r"""
             line = var_definition / module_intro / module_title / module_definition / arrow / flow / plot_var / other_objects / anything
@@ -574,7 +579,7 @@ def parse_sketch_line(module, namespace):
             return "".join(filter(None, vc)) or n.text or ""
 
     try:
-        tree = parser.parse(module)
+        tree = parser.parse(sketch_line)
         return SketchParser(tree, namespace=namespace).module_or_var
     except (IncompleteParseError, VisitationError, ParseError) as err:
         if isinstance(err, VisitationError):
@@ -585,7 +590,7 @@ def parse_sketch_line(module, namespace):
                     err.args[0] + "\n\n"
                     "\nError when parsing definition:\n\t %s\n\n"
                     "probably used definition is not integrated..."
-                    "\nSee parsimonious output above." % (module)
+                    "\nSee parsimonious output above." % (sketch_line)
                 )
             )
 
@@ -1513,49 +1518,16 @@ def translate_section(section, macro_list, sketch, root_path):
     ]
 
     if sketch:
-        # TODO how about macros??? are they also put in the sketch?
-        modules_list = []  # list of all modules
-        module_elements = {}
-        sketch = list(map(lambda x: x.strip(), sketch.split("\\\\\\---/// ")))
-        for module in sketch:
-            if module:
-                for sketch_line in module.split("\n"):
-                    line = parse_sketch_line(sketch_line.strip(), namespace)
-                    # When a module name is found, the "new_module" becomes True.
-                    # When a variable name is found, the "new_module" is set back to False
-                    if line["module_name"]:
-                        # remove characters that are not [a-zA-Z0-9_] from the module name
-                        module_name = re.sub(
-                            r"[\W]+", "", line["module_name"].replace(" ", "_")
-                        ).lstrip(
-                            "0123456789"
-                        )  # there's probably a more elegant way to do it with regex
+        module_elements = classify_elements_by_module(sketch, namespace)
 
-                        module_elements[module_name] = []
 
-                        if module_name not in modules_list:
-                            modules_list.append(module_name)
-                    else:
-                        if line["variable_name"]:
-                            if (
-                                line["variable_name"]
-                                not in module_elements[module_name]
-                            ):
-                                module_elements[module_name].append(
-                                    line["variable_name"]
-                                )
-
-        # remove module names that do not have variables
-        clean_module_elements = {
-            key.lower(): value for key, value in module_elements.items() if value
-        }
 
         builder.build_modular_model(
             build_elements,
             subscript_dict,
             namespace,
             section["file_name"],
-            clean_module_elements,
+            module_elements,
         )
 
     else:
@@ -1567,21 +1539,83 @@ def translate_section(section, macro_list, sketch, root_path):
     return section["file_name"]
 
 
-def split_sketch(text):
+def classify_elements_by_module(sketch, namespace):
+    
     """
+    Takes the Vensim sketch as a string, parses it (line by line) and returns a
+    list of the model elements that belong to each vensim view (here we call 
+    the modules).
 
     Parameters
     ----------
-    text : basestring
-        Full model as a string
+    sketch: string
+        Representation of the Vensim Sketch as a string.
+
+    namespace: dict
+        Translation from original model element names (keys) to python safe
+        function identifiers (values).
+
+    Returns
+    -------
+    module_elements_: dict
+        Dictionary containing view (module) names as keys and a list of the
+        corresponding variables as values.
+    """
+
+    # TODO how about macros??? are they also put in the sketch?
+    modules_list = []  # list of all modules
+    module_elements = {}
+    sketch = list(map(lambda x: x.strip(), sketch.split("\\\\\\---/// ")))
+    for module in sketch:
+        if module:
+            for sketch_line in module.split("\n"):
+                line = parse_sketch_line(sketch_line.strip(), namespace)
+                # When a module name is found, the "new_module" becomes True.
+                # When a variable name is found, the "new_module" is set back to False
+                if line["module_name"]:
+                    # remove characters that are not [a-zA-Z0-9_] from the module name
+                    module_name = re.sub(
+                        r"[\W]+", "", line["module_name"].replace(" ", "_")
+                    ).lstrip(
+                        "0123456789"
+                    )  # there's probably a more elegant way to do it with regex
+
+                    module_elements[module_name] = []
+
+                    if module_name not in modules_list:
+                        modules_list.append(module_name)
+                else:
+                    if line["variable_name"]:
+                        if (
+                            line["variable_name"]
+                            not in module_elements[module_name]
+                        ):
+                            module_elements[module_name].append(
+                                line["variable_name"]
+                            )
+    # removes modules that do not include any variable in them
+    module_elements_= {
+            key.lower(): value for key, value in module_elements.items() if value
+        }
+    
+    return module_elements_
+
+
+def split_sketch(text):
+    """
+    Splits the model file between the main section and the sketch
+    Parameters
+    ----------
+    text : string
+        Full model as a string.
 
     Returns
     -------
     text: string
-        Model file without sketch
+        Model file without sketch.
 
     sketch: string
-        Model sketch
+        Model sketch.
 
     """
     split_model = text.split("\\\\\\---///", 1)

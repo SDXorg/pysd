@@ -45,6 +45,44 @@ def prepend(list, str):
 def build_modular_model(
     elements, subscript_dict, namespace, main_filename, elements_per_module
 ):
+    
+    """
+    This is equivalent to the build function, but is used when the 
+    split_modules parameter is set to True in the read_vensim function. 
+    The main python model file will be named as the original model file,
+    and stored in the same folder. The modules will be stored in a separate
+    folder named modules + original_model_name. Three extra json files will
+    be generated, containing the namespace, subscripts_dict and the module
+    names plus the variables included in each module, respectively.
+    
+    Setting split_modules=True is recommended for large models with many
+    different views.
+
+    Parameters
+    ----------
+    elements: list
+        Each element is a dictionary, with the various components needed 
+        to assemble a model component in python syntax. This will contain
+        multiple entries for elements that have multiple definitions in 
+        the original file, and which need to be combined.
+
+    subscript_dict: dict
+        A dictionary containing the names of subscript families (dimensions)
+        as keys, and a list of the possible positions within that dimension
+        for each value.
+
+    namespace: dict
+        Translation from original model element names (keys) to python safe
+        function identifiers (values).
+
+    main_filename: string
+        The name of the file to write the main module of the model to.
+
+    elements_per_module: dict
+        Contains the names of the modules as keys and the variables in
+        each specific module inside a list as values.
+    """
+
     root_dir = os.path.dirname(main_filename)
     model_name = os.path.basename(main_filename).split(".")[0]
     modules_dir = os.path.join(root_dir, "modules_" + model_name)
@@ -67,7 +105,7 @@ def build_modular_model(
     # the unprocessed will go in the main file
     unprocessed_elements = [element for element in elements if element not in processed_elements]
     # building main file using the build function
-    build_main_module(unprocessed_elements, subscript_dict, modules_list, main_filename)
+    build_main_module(unprocessed_elements, subscript_dict, main_filename)
 
     # create json file for the modules and corresponding model elements
     with open(os.path.join(modules_dir, "_modules.json"), "w") as outfile:
@@ -81,8 +119,34 @@ def build_modular_model(
     with open(os.path.join(root_dir, "_subscripts_" + model_name + ".json"), "w") as outfile:
         json.dump(subscript_dict, outfile, indent=4, sort_keys=True)
 
+    return None
 
-def build_main_module(elements, subscript_dict, modules_list, file_name):
+
+def build_main_module(elements, subscript_dict, file_name):
+    
+    """
+    Constructs and writes the python representation of the main model
+    module, when the split_modules=True in the read_vensim function.
+
+    Parameters
+    ----------
+    elements: list
+        Elements belonging to the main module. Ideally, there should only be 
+        the initial_time, final_time, saveper and time_step, functions, though
+        there might be others in some situations. Each element is a 
+        dictionary, with the various components needed to assemble a model
+        component in python syntax. This will contain multiple entries for
+        elements that have multiple definitions in the original file, and 
+        which need to be combined.
+
+    subscript_dict: dict
+        A dictionary containing the names of subscript families (dimensions)
+        as keys, and a list of the possible positions within that dimension
+        for each value.
+
+    file_name: string
+        Path of the file where the main module will be stored.
+    """
 
     text = '''
     """
@@ -194,11 +258,32 @@ def build_main_module(elements, subscript_dict, modules_list, file_name):
     return None
 
 
-def build_separate_module(elements, subscript_dict, module_name, root_dir):
+def build_separate_module(elements, subscript_dict, module_name, module_dir):
 
-    # TODO right now ghosts are put in the first place they were the
-    # variable was spotted by the parser, regardless of whether it was
-    # a ghost or the actual definition
+    """
+    Constructs and writes the python representation of a specific model
+    module, when the split_modules=True in the read_vensim function
+
+    Parameters
+    ----------
+    elements: list
+        Elements belonging to the module module_name. Each element is a 
+        dictionary, with the various components needed to assemble a model
+        component in python syntax. This will contain multiple entries for
+        elements that have multiple definitions in the original file, and 
+        which need to be combined.
+
+    subscript_dict: dict
+        A dictionary containing the names of subscript families (dimensions)
+        as keys, and a list of the possible positions within that dimension
+        for each value.
+
+    module_name: string
+        Name of the module
+
+    module_dir: string
+        Path of the directory where module files will be stored.
+    """
 
     text = '''
     """
@@ -221,7 +306,7 @@ def build_separate_module(elements, subscript_dict, module_name, root_dir):
 
     text = black.format_file_contents(text, fast=True, mode=black.FileMode())
 
-    outfile_name = os.path.join(root_dir, module_name + ".py")
+    outfile_name = os.path.join(module_dir, module_name + ".py")
 
     with open(outfile_name, "w", encoding="UTF-8") as out:
         out.write(text)
@@ -231,7 +316,9 @@ def build_separate_module(elements, subscript_dict, module_name, root_dir):
 
 def build(elements, subscript_dict, namespace, outfile_name):
     """
-    Actually constructs and writes the python representation of the model
+    Constructs and writes the python representation of the model, when the 
+    the split_modules is set to False in the read_vensim function. The entire
+    model is put in a single python file.
 
     Parameters
     ----------

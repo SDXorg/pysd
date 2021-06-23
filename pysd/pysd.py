@@ -85,7 +85,9 @@ def read_vensim(
         If "ignore" interpolates the values without showing anything.
     split_modules: bool
         If True, the sketch is parsed to detect model elements in each
-        model view, and then translate each view in a separate file.
+        model view, and then translate each view in a separate python 
+        file. Setting this argument to True is recommended for large 
+        models split in many different views.
 
     Returns
     -------
