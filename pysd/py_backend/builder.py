@@ -229,7 +229,7 @@ def build_separate_module(elements, subscript_dict, module_name, root_dir):
     return None
 
 
-def build_model(elements, subscript_dict, namespace, outfile_name):
+def build(elements, subscript_dict, namespace, outfile_name):
     """
     Actually constructs and writes the python representation of the model
 

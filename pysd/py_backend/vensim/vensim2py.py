@@ -1560,7 +1560,7 @@ def translate_section(section, macro_list, sketch, root_path):
 
     else:
 
-        builder.build_model(
+        builder.build(
             build_elements, subscript_dict, namespace, section["file_name"]
         )
 
