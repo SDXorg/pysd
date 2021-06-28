@@ -753,7 +753,8 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
     return "%s()" % py_name, new_structure
 
 
-def add_sample_if_true(identifier, condition, actual_value, initial_value):
+def add_sample_if_true(identifier, condition, actual_value, initial_value,
+                       subs):
     """
     Creates code to instantiate a stateful 'SampleIfTrue' object,
     and provides reference to that object's output.
@@ -774,6 +775,10 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value):
     initial_value: <string>
         This is used to initialize the state of the sample if true function.
 
+    subs: list of strings
+        List of strings of subscript indices that correspond to the
+        list of expressions, and collectively define the shape of the output
+
     Returns
     -------
     reference: basestring
@@ -786,25 +791,49 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value):
     """
     Imports.add('functions', 'SampleIfTrue')
 
+    new_structure = []
     py_name = '_sample_if_true_%s' % identifier
 
+    if len(subs) == 0:
+        stateful_py_expr = "SampleIfTrue(lambda: %s, lambda: %s,"\
+                           "lambda: %s, '%s')" % (
+                               condition, actual_value, initial_value, py_name)
+
+    else:
+        stateful_py_expr = "SampleIfTrue(lambda: %s, lambda: %s,"\
+                           "_sample_if_true_init_%s, '%s')" % (
+                               condition, actual_value, identifier, py_name)
+
+        # following elements not specified in the model file, but must exist
+        # create the delay initialization element
+        new_structure.append({
+            'py_name': '_sample_if_true_init_%s' % identifier,
+            'real_name': 'Implicit',
+            'kind': 'setup',  # not specified in the model file, but must exist
+            'py_expr': initial_value,
+            'subs': subs,
+            'doc': 'Provides initial conditions for %s function' % identifier,
+            'unit': 'See docs for %s' % identifier,
+            'lims': 'None',
+            'eqn': 'None',
+            'arguments': ''
+        })
     # describe the stateful object
-    stateful = {
+    new_structure.append({
         'py_name': py_name,
         'real_name': 'Sample if true of %s' % identifier,
         'doc': 'Initial value: %s \n  Input: %s \n Condition: %s' % (
             initial_value, actual_value, condition),
-        'py_expr': "SampleIfTrue(lambda: %s, lambda: %s, lambda: %s, '%s')" % (
-                    condition, actual_value, initial_value, py_name),
+        'py_expr': stateful_py_expr,
         'unit': 'None',
         'lims': 'None',
         'eqn': 'None',
         'subs': '',
         'kind': 'stateful',
         'arguments': ''
-    }
+    })
 
-    return "%s()" % stateful['py_name'], [stateful]
+    return "%s()" % py_name, new_structure
 
 
 def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order,

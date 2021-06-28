@@ -701,7 +701,8 @@ builders = {
         identifier=element['py_name'],
         condition=args[0],
         actual_value=args[1],
-        initial_value=args[2]
+        initial_value=args[2],
+        subs=element['subs']
     ),
 
     "smooth": lambda element, subscript_dict, args: builder.add_n_smooth(

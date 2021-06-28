@@ -466,7 +466,7 @@ class Trend(DynamicStateful):
             'shape_info': self.shape_info}}
 
 
-class SampleIfTrue(Stateful):
+class SampleIfTrue(DynamicStateful):
     def __init__(self, condition, actual_value, initial_value,
                  py_name="SampleIfTrue object"):
         """
@@ -490,16 +490,27 @@ class SampleIfTrue(Stateful):
             self.state = self.init_func()
         else:
             self.state = init_val
+        if isinstance(self.state, xr.DataArray):
+            self.shape_info = {'dims': self.state.dims,
+                               'coords': self.state.coords}
 
     def __call__(self):
-        self.state = if_then_else(self.condition(),
-                                  self.actual_value,
-                                  lambda: self.state)
-        return self.state
+        return if_then_else(self.condition(),
+                            self.actual_value,
+                            lambda: self.state)
+
+    def ddt(self):
+        return np.nan
+
+    def update(self, state):
+        self.state = self.state*0 + if_then_else(self.condition(),
+                                                 self.actual_value,
+                                                 lambda: self.state)
 
     def export(self):
         return {self.py_name: {
-            'state': self.state}}
+            'state': self.state,
+            'shape_info': self.shape_info}}
 
 
 class Initial(Stateful):

@@ -201,8 +201,8 @@ class TestPySD(unittest.TestCase):
                             return_timestamps=[20, 30])
         os.remove('teacup10.pic')
 
-        self.assertTrue((stocks.loc[[0, 10]] == stocks1).all().all())
-        self.assertTrue((stocks.loc[[20, 30]] == stocks2).all().all())
+        assert_frames_close(stocks1, stocks.loc[[0, 10]])
+        assert_frames_close(stocks2, stocks.loc[[20, 30]])
 
         # delays
         test_delays = 'test-models/tests/delays/test_delays.mdl'
@@ -215,7 +215,7 @@ class TestPySD(unittest.TestCase):
                             return_timestamps=20)
         os.remove('delays7.pic')
 
-        assert_frames_close(stocks, stocks2)
+        assert_frames_close(stocks2, stocks)
 
         # delay fixed
         test_delayf = 'test-models/tests/delay_fixed/test_delay_fixed.mdl'
@@ -228,33 +228,35 @@ class TestPySD(unittest.TestCase):
                             return_timestamps=20)
         os.remove('delayf7.pic')
 
-        assert_frames_close(stocks, stocks2)
+        assert_frames_close(stocks2, stocks)
 
         # smooth
         test_smooth = 'test-models/tests/subscripted_smooth/test_subscripted_smooth.mdl'
         model = pysd.read_vensim(test_smooth)
-        stocks = model.run(return_timestamps=20)
+        stocks = model.run(return_timestamps=20, flatten_output=True)
         model.initialize()
         model.run(return_timestamps=7)
         model.export('smooth7.pic')
         stocks2 = model.run(initial_condition='smooth7.pic',
-                            return_timestamps=20)
+                            return_timestamps=20,
+                            flatten_output=True)
         os.remove('smooth7.pic')
 
-        assert_frames_close(stocks, stocks2)
+        assert_frames_close(stocks2, stocks)
 
         # trend
         test_trend = 'test-models/tests/subscripted_trend/test_subscripted_trend.mdl'
         model = pysd.read_vensim(test_trend)
-        stocks = model.run(return_timestamps=20)
+        stocks = model.run(return_timestamps=20, flatten_output=True)
         model.initialize()
         model.run(return_timestamps=7)
         model.export('trend7.pic')
         stocks2 = model.run(initial_condition='trend7.pic',
-                            return_timestamps=20)
+                            return_timestamps=20,
+                            flatten_output=True)
         os.remove('trend7.pic')
 
-        assert_frames_close(stocks, stocks2)
+        assert_frames_close(stocks2, stocks)
 
         # initial
         test_initial = 'test-models/tests/initial_function/test_initial.mdl'
@@ -267,20 +269,23 @@ class TestPySD(unittest.TestCase):
                             return_timestamps=20)
         os.remove('initial7.pic')
 
-        assert_frames_close(stocks, stocks2)
+        assert_frames_close(stocks2, stocks)
 
         # sample if true
         test_sample_if_true = 'test-models/tests/sample_if_true/test_sample_if_true.mdl'
         model = pysd.read_vensim(test_sample_if_true)
-        stocks = model.run(return_timestamps=20)
+        stocks = model.run(return_timestamps=20, flatten_output=True)
+        print(stocks['sample var'])
         model.initialize()
         model.run(return_timestamps=7)
+        print(stocks['sample var'])
         model.export('sample_if_true7.pic')
         stocks2 = model.run(initial_condition='sample_if_true7.pic',
-                            return_timestamps=20)
+                            return_timestamps=20,
+                            flatten_output=True)
         os.remove('sample_if_true7.pic')
 
-        assert_frames_close(stocks, stocks2)
+        assert_frames_close(stocks2, stocks)
 
     def test_initial_conditions_tuple_pysafe_names(self):
         import pysd
