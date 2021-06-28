@@ -711,12 +711,21 @@ class Macro(DynamicStateful):
           Name of the file to export the values.
 
         """
+        warnings.warn(
+            "\nCompatibility of exported states could be broken between"
+            " different versions of PySD or xarray, current versions:\n"
+            f"\tPySD {__version__}\n\txarray {xr.__version__}\n"
+        )
         stateful_elements = {}
         [stateful_elements.update(component.export()) for component
          in self._stateful_elements]
 
         with open(file_name, 'wb') as file:
-            pickle.dump((self.time(), stateful_elements), file)
+            pickle.dump(
+                (self.time(),
+                 stateful_elements,
+                 {'pysd': __version__, 'xarray': xr.__version__}
+                 ), file)
 
     def import_pickle(self, file_name):
         """
@@ -729,8 +738,15 @@ class Macro(DynamicStateful):
 
         """
         with open(file_name, 'rb') as file:
-            time, stateful_dict = pickle.load(file)
+            time, stateful_dict, metadata = pickle.load(file)
 
+        warnings.warn(
+            "\nCompatibility of exported states could be broken between"
+            " different versions of PySD or xarray. Current versions:\n"
+            f"\tPySD {__version__}\n\txarray {xr.__version__}\n"
+            "Loaded versions:\n"
+            f"\tPySD {metadata['pysd']}\n\txarray {metadata['xarray']}\n"
+            )
         self.set_stateful(stateful_dict)
 
         self.time.update(time)
