@@ -337,6 +337,9 @@ class TestStateful(unittest.TestCase):
         stock.initialize()
         self.assertEqual(stock(), 11)
 
+        stock.initialize(30)
+        self.assertEqual(stock(), 30)
+
     def test_stateful_identification(self):
         import pysd
 
@@ -354,13 +357,47 @@ class TestStateful(unittest.TestCase):
                                        initial_value=lambda: 4.234,
                                        order=lambda: 3,
                                        tstep=lambda: 0.5,
-                                       py_name='delay')
+                                       py_name='delay_a')
 
         delay_a.initialize()
 
         self.assertEqual(delay_a(), 4.234)
 
         self.assertEqual(float(delay_a.ddt()[0]), (5-4.234)*3)
+
+        delay_a.initialize(6)
+        self.assertEqual(delay_a(), 6)
+        self.assertEqual(float(delay_a.ddt()[0]), (5-6)*3)
+
+        delay_b = pysd.functions.DelayN(delay_input=lambda: 5,
+                                        delay_time=lambda: 3,
+                                        initial_value=lambda: 4.234,
+                                        order=lambda: 3,
+                                        tstep=lambda: 0.5,
+                                        py_name='delay_b')
+
+        delay_b.initialize()
+
+        self.assertEqual(delay_b(), 4.234)
+
+        self.assertEqual(float(delay_b.ddt()[0]), (5-4.234)*3)
+
+        delay_b.initialize(6)
+        self.assertEqual(delay_b(), 6)
+        self.assertEqual(float(delay_b.ddt()[0]), (5-6)*3)
+
+        delay_c = pysd.functions.DelayFixed(delay_input=lambda: 5,
+                                            delay_time=lambda: 3,
+                                            initial_value=lambda: 4.234,
+                                            tstep=lambda: 0.5,
+                                            py_name='delay_c')
+
+        delay_c.initialize()
+
+        self.assertEqual(delay_c(), 4.234)
+
+        delay_c.initialize(6)
+        self.assertEqual(delay_c(), 6)
 
     def test_delay_subscript(self):
         """
@@ -506,6 +543,62 @@ class TestStateful(unittest.TestCase):
         f2_i1 = initial_f20()
         self.assertNotEqual(f2_1, f2_i1)
         self.assertEqual(f2_i1, f2_0)
+
+        # test change initial condition
+        initial_f20.initialize(123)
+        self.assertEqual(initial_f20(), 123)
+
+    def test_smooth(self):
+        import pysd
+        smooth = pysd.functions.Smooth(smooth_input=lambda: 5,
+                                       smooth_time=lambda: 3,
+                                       initial_value=lambda: 4.234,
+                                       order=lambda: 3,
+                                       py_name='smooth')
+
+        smooth.initialize()
+        self.assertEqual(smooth(), 4.234)
+
+        smooth.initialize(6)
+        self.assertEqual(smooth(), 6)
+
+    def test_trend(self):
+        import pysd
+        trend = pysd.functions.Trend(trend_input=lambda: 5,
+                                     average_time=lambda: 3,
+                                     initial_trend=lambda: 4.234,
+                                     py_name='trend')
+
+        trend.initialize()
+        self.assertEqual(trend(), 4.234)
+
+        trend.initialize(6)
+        self.assertEqual(round(trend(), 8), 6)
+
+    def test_sampleiftrue(self):
+        import pysd
+
+        bool_v = False
+
+        def condition():
+            return bool_v
+
+        sif = pysd.functions.SampleIfTrue(condition=condition,
+                                          actual_value=lambda: 3,
+                                          initial_value=lambda: 4.234,
+                                          py_name='sampleiftrue')
+
+        sif.initialize()
+        self.assertEqual(sif(), 4.234)
+
+        sif.initialize(6)
+        self.assertEqual(sif(), 6)
+
+        bool_v = True
+        self.assertEqual(sif(), 3)
+
+
+class TestFunctions(unittest.TestCase):
 
     def test_sum(self):
         """

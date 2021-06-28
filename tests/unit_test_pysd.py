@@ -1,4 +1,5 @@
 import unittest
+import os
 import warnings
 import pandas as pd
 import numpy as np
@@ -118,6 +119,10 @@ class TestPySD(unittest.TestCase):
         stocks = model.run(return_timestamps=5)
         self.assertEqual(stocks.index[0], 5)
 
+        timestamps = ['A', 'B']
+        with self.assertRaises(TypeError):
+            model.run(return_timestamps=timestamps)
+
     def test_run_return_timestamps_past_final_time(self):
         """ If the user enters a timestamp that is longer than the euler
         timeseries that is defined by the normal model file, should
@@ -181,6 +186,102 @@ class TestPySD(unittest.TestCase):
         result = model.run(return_columns=return_columns)
         self.assertEqual(set(result.columns), set(return_columns))
 
+    def test_run_export_import(self):
+        import pysd
+        from pysd.tools.benchmarking import assert_frames_close
+
+        model = pysd.read_vensim(test_model)
+        stocks = model.run(return_timestamps=[0, 10, 20, 30])
+
+        model.initialize()
+        stocks1 = model.run(return_timestamps=[0, 10])
+        model.export('teacup10.pic')
+        model.initialize()
+        stocks2 = model.run(initial_condition='teacup10.pic',
+                            return_timestamps=[20, 30])
+        os.remove('teacup10.pic')
+
+        self.assertTrue((stocks.loc[[0, 10]] == stocks1).all().all())
+        self.assertTrue((stocks.loc[[20, 30]] == stocks2).all().all())
+
+        # delays
+        test_delays = 'test-models/tests/delays/test_delays.mdl'
+        model = pysd.read_vensim(test_delays)
+        stocks = model.run(return_timestamps=20)
+        model.initialize()
+        model.run(return_timestamps=7)
+        model.export('delays7.pic')
+        stocks2 = model.run(initial_condition='delays7.pic',
+                            return_timestamps=20)
+        os.remove('delays7.pic')
+
+        assert_frames_close(stocks, stocks2)
+
+        # delay fixed
+        test_delayf = 'test-models/tests/delay_fixed/test_delay_fixed.mdl'
+        model = pysd.read_vensim(test_delayf)
+        stocks = model.run(return_timestamps=20)
+        model.initialize()
+        model.run(return_timestamps=7)
+        model.export('delayf7.pic')
+        stocks2 = model.run(initial_condition='delayf7.pic',
+                            return_timestamps=20)
+        os.remove('delayf7.pic')
+
+        assert_frames_close(stocks, stocks2)
+
+        # smooth
+        test_smooth = 'test-models/tests/subscripted_smooth/test_subscripted_smooth.mdl'
+        model = pysd.read_vensim(test_smooth)
+        stocks = model.run(return_timestamps=20)
+        model.initialize()
+        model.run(return_timestamps=7)
+        model.export('smooth7.pic')
+        stocks2 = model.run(initial_condition='smooth7.pic',
+                            return_timestamps=20)
+        os.remove('smooth7.pic')
+
+        assert_frames_close(stocks, stocks2)
+
+        # trend
+        test_trend = 'test-models/tests/subscripted_trend/test_subscripted_trend.mdl'
+        model = pysd.read_vensim(test_trend)
+        stocks = model.run(return_timestamps=20)
+        model.initialize()
+        model.run(return_timestamps=7)
+        model.export('trend7.pic')
+        stocks2 = model.run(initial_condition='trend7.pic',
+                            return_timestamps=20)
+        os.remove('trend7.pic')
+
+        assert_frames_close(stocks, stocks2)
+
+        # initial
+        test_initial = 'test-models/tests/initial_function/test_initial.mdl'
+        model = pysd.read_vensim(test_initial)
+        stocks = model.run(return_timestamps=20)
+        model.initialize()
+        model.run(return_timestamps=7)
+        model.export('initial7.pic')
+        stocks2 = model.run(initial_condition='initial7.pic',
+                            return_timestamps=20)
+        os.remove('initial7.pic')
+
+        assert_frames_close(stocks, stocks2)
+
+        # sample if true
+        test_sample_if_true = 'test-models/tests/sample_if_true/test_sample_if_true.mdl'
+        model = pysd.read_vensim(test_sample_if_true)
+        stocks = model.run(return_timestamps=20)
+        model.initialize()
+        model.run(return_timestamps=7)
+        model.export('sample_if_true7.pic')
+        stocks2 = model.run(initial_condition='sample_if_true7.pic',
+                            return_timestamps=20)
+        os.remove('sample_if_true7.pic')
+
+        assert_frames_close(stocks, stocks2)
+
     def test_initial_conditions_tuple_pysafe_names(self):
         import pysd
         model = pysd.read_vensim(test_model)
@@ -210,7 +311,7 @@ class TestPySD(unittest.TestCase):
     def test_initial_condition_bad_value(self):
         import pysd
         model = pysd.read_vensim(test_model)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(FileNotFoundError):
             model.run(initial_condition='bad value')
 
     def test_initial_conditions_subscripted_value_with_constant(self):
@@ -291,16 +392,15 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(res.index[0], 5)
 
     def test_initial_conditions_subscripted_value_with_numpy_error(self):
-        import xarray as xr
         import pysd
 
         input_ = np.array([[5, 3], [4, 8], [9, 3]])
 
         model = pysd.read_vensim(test_model_subs)
-        with self.assertRaises(ValueError):
-            res = model.run(initial_condition=(5, {'initial_values': input_}),
-                            return_columns=['Initial Values'],
-                            return_timestamps=list(range(5, 10)))
+        with self.assertRaises(TypeError):
+            model.run(initial_condition=(5, {'initial_values': input_}),
+                      return_columns=['Initial Values'],
+                      return_timestamps=list(range(5, 10)))
 
     def test_set_constant_parameter(self):
         """ In response to: re: https://github.com/JamesPHoughton/pysd/issues/5"""
@@ -311,6 +411,9 @@ class TestPySD(unittest.TestCase):
 
         model.run(params={'room_temperature': 70})
         self.assertEqual(model.components.room_temperature(), 70)
+
+        with self.assertRaises(NameError):
+            model.set_components({'not_a_var': 20})
 
     def test_set_timeseries_parameter(self):
         import pysd
@@ -506,7 +609,7 @@ class TestPySD(unittest.TestCase):
         input_ = np.array([[5, 3], [4, 8], [9, 3]])
 
         model = pysd.read_vensim(test_model_subs)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             model.set_components({'initial_values': input_, 'final_time': 10})
 
     def test_set_subscripted_timeseries_parameter_with_constant(self):
@@ -818,6 +921,9 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(model.components.teacup_temperature(), 302)
         self.assertEqual(model.components.time(), new_time + 2)
 
+        with self.assertRaises(NameError):
+            model.set_initial_value(new_time, {'not_a_var': 500})
+
     def test_set_initial_value_lookup(self):
         import xarray as xr
         import pysd
@@ -882,6 +988,13 @@ class TestPySD(unittest.TestCase):
         # Test setting with stateful object name
         model.set_initial_value(new_time + 2, {'_integ_stock_a': 302})
         self.assertTrue(model.components.stock_a().equals(output_b + 302))
+
+        # Test error when coords are not a subset
+        with self.assertRaises(ValueError):
+            model.set_initial_value(
+                new_time + 2,
+                {'_integ_stock_a': xr.DataArray(302, {'D': ['A', 'B']}, ['D'])}
+            )
 
     def test_set_initial_value_subscripted_value_with_partial_xarray(self):
         import xarray as xr
@@ -963,15 +1076,15 @@ class TestPySD(unittest.TestCase):
         model = pysd.read_vensim(test_model_subs)
 
         # Test that we can set with real names
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             model.set_initial_value(new_time, {'Stock A': input1})
 
         # Test setting with pysafe names
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             model.set_initial_value(new_time + 1, {'stock_a': input2})
 
         # Test setting with stateful object name
-        with self.assertRaises(ValueError):
+        with self.assertRaises(TypeError):
             model.set_initial_value(new_time + 2, {'_integ_stock_a': input3})
 
     def test_replace_element(self):
@@ -1081,6 +1194,25 @@ class TestPySD(unittest.TestCase):
         self.assertNotEqual(initial_time, 10, "Test definition is wrong, please change configuration")
         self.assertEqual(set_time, 10)
 
+    def test_get_args(self):
+        import pysd
+
+        model = pysd.read_vensim(test_model)
+        model2 = pysd.read_vensim(test_model_look)
+
+        self.assertEqual(model.get_args('Room Temperature'), [])
+        self.assertEqual(model.get_args('room_temperature'), [])
+        self.assertEqual(model.get_args('teacup_temperature'), [])
+        self.assertEqual(model.get_args('_integ_teacup_temperature'), [])
+
+        self.assertEqual(model2.get_args('lookup 1d'), ['x'])
+        self.assertEqual(model2.get_args('lookup_1d'), ['x'])
+        self.assertEqual(model2.get_args('lookup 2d'), ['x'])
+        self.assertEqual(model2.get_args('lookup_2d'), ['x'])
+
+        with self.assertRaises(NameError):
+            model.get_args('not_a_var')
+
     def test_get_coords(self):
         import pysd
 
@@ -1103,6 +1235,9 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(model2.get_coords('Stock A'), coords_dims)
         self.assertEqual(model2.get_coords('stock_a'), coords_dims)
         self.assertEqual(model2.get_coords('_integ_stock_a'), coords_dims)
+
+        with self.assertRaises(NameError):
+            model.get_coords('not_a_var')
 
     def test__build_euler_timeseries(self):
         import pysd
