@@ -1,10 +1,11 @@
 import doctest
 from unittest import TestCase
+from numpy import column_stack
 
 import pandas as pd
 import xarray as xr
 
-from . import test_utils
+from pysd.tools.benchmarking import assert_frames_close
 
 
 class TestUtils(TestCase):
@@ -21,7 +22,7 @@ class TestUtils(TestCase):
                                 {'ABC': ['A', 'B', 'C'],
                                  'XY': ['X', 'Y']},
                                 ['ABC', 'XY'])
-        array3d = xr.DataArray([[[0.5, 4.] , [-1.5, 3.]],
+        array3d = xr.DataArray([[[0.5, 4.], [-1.5, 3.]],
                                 [[-1., 2.], [-0.5, 5.5]],
                                 [[-0.75, 0.75], [0., -1.]]],
                                 {'ABC': ['A', 'B', 'C'],
@@ -122,82 +123,152 @@ class TestUtils(TestCase):
     def test_make_flat_df(self):
         import pysd
 
-        frames = [{'elem1': xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                                       {'Dim1': ['A', 'B', 'C'],
-                                        'Dim2': ['D', 'E', 'F']},
-                                       dims=['Dim1', 'Dim2']),
-                   'elem2': xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                                       {'Dim1': ['A', 'B', 'C'],
-                                        'Dim2': ['D', 'E', 'F']},
-                                       dims=['Dim1', 'Dim2'])},
-                  {'elem1': xr.DataArray([[2, 4, 6], [8, 10, 12], [14, 16, 19]],
-                                         {'Dim1': ['A', 'B', 'C'],
-                                          'Dim2': ['D', 'E', 'F']},
-                                       dims=['Dim1', 'Dim2']),
-                   'elem2': xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                                         {'Dim1': ['A', 'B', 'C'],
-                                          'Dim2': ['D', 'E', 'F']},
-                                       dims=['Dim1', 'Dim2'])}]
+        df = pd.DataFrame(index=[1], columns=['elem1'])
+        df.at[1] = [ xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                                  {'Dim1': ['A', 'B', 'C'],
+                                   'Dim2': ['D', 'E', 'F']},
+                                  dims=['Dim1', 'Dim2'])]
 
-        return_addresses = {'Elem1[B,F]': ('elem1', {'Dim1': ['B'], 'Dim2': ['F']})}
-        df = pd.DataFrame([{'Elem1[B,F]': 6}, {'Elem1[B,F]': 12}])
-        resultdf = pysd.utils.make_flat_df(frames, return_addresses)
+        expected = pd.DataFrame(index=[1], columns=['Elem1[B,F]'])
+        expected.at[1] = [6]
 
-        test_utils.assert_frames_close(resultdf, df, rtol=.01)
+        return_addresses = {
+            'Elem1[B,F]': ('elem1', {'Dim1': ['B'], 'Dim2': ['F']})}
 
-    def test_visit_addresses(self):
+        actual = pysd.utils.make_flat_df(df, return_addresses)
+
+        # check all columns are in the DataFrame
+        self.assertEqual(set(actual.columns), set(expected.columns))
+        assert_frames_close(actual, df, rtol=1e-8, atol=1e-8)
+
+    def test_make_flat_df_nosubs(self):
         import pysd
 
-        frame = {'elem1': xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                                       {'Dim1': ['A', 'B', 'C'],
-                                        'Dim2': ['D', 'E', 'F']},
-                                       dims=['Dim1', 'Dim2']),
-                 'elem2': xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                                       {'Dim1': ['A', 'B', 'C'],
-                                        'Dim2': ['D', 'E', 'F']},
-                                       dims=['Dim1', 'Dim2'])}
+        df = pd.DataFrame(index=[1], columns=['elem1', 'elem2'])
+        df.at[1] = [25, 13]
 
-        return_addresses = {'Elem1[B,F]': ('elem1', {'Dim1': ['B'], 'Dim2': ['F']})}
-        self.assertEqual(pysd.utils.visit_addresses(frame, return_addresses),
-                         {'Elem1[B,F]': 6})
+        expected = pd.DataFrame(index=[1], columns=['Elem1', 'Elem2'])
+        expected.at[1] = [25, 13]
 
-    def test_visit_addresses_nosubs(self):
-        import pysd
-
-        frame = {'elem1': 25, 'elem2': 13}
         return_addresses = {'Elem1': ('elem1', {}),
                             'Elem2': ('elem2', {})}
 
-        self.assertEqual(pysd.utils.visit_addresses(frame, return_addresses),
-                         {'Elem1': 25, 'Elem2': 13})
+        actual = pysd.utils.make_flat_df(df, return_addresses)
 
-    def test_visit_addresses_return_array(self):
+        # check all columns are in the DataFrame
+        self.assertEqual(set(actual.columns), set(expected.columns))
+        self.assertTrue(all(actual['Elem1'] == df['Elem1']))
+        self.assertTrue(all(actual['Elem2'] == df['Elem2']))
+
+    def test_make_flat_df_return_array(self):
         """ There could be cases where we want to
         return a whole section of an array - ie, by passing in only part of
         the simulation dictionary. in this case, we can't force to float..."""
         import pysd
 
-        frame = {'elem1': xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                                       {'Dim1': ['A', 'B', 'C'],
+        df = pd.DataFrame(index=[1], columns=['elem1', 'elem2'])
+        df.at[1] = [xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                                 {'Dim1': ['A', 'B', 'C'],
+                                  'Dim2': ['D', 'E', 'F']},
+                                 dims=['Dim1', 'Dim2']),
+                    xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                                 {'Dim1': ['A', 'B', 'C'],
+                                  'Dim2': ['D', 'E', 'F']},
+                                 dims=['Dim1', 'Dim2'])]
+
+        expected = pd.DataFrame(index=[1], columns=['Elem1[A, Dim2]', 'Elem2'])
+        expected.at[1] = [xr.DataArray([[1, 2, 3]],
+                                       {'Dim1': ['A'],
                                         'Dim2': ['D', 'E', 'F']},
                                        dims=['Dim1', 'Dim2']),
-                 'elem2': xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                          xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
                                        {'Dim1': ['A', 'B', 'C'],
                                         'Dim2': ['D', 'E', 'F']},
-                                        dims=['Dim1', 'Dim2'])}
-        return_addresses = {'Elem1[A, Dim2]': ('elem1', {'Dim1': ['A'], 'Dim2': ['D', 'E', 'F']})}
+                                       dims=['Dim1', 'Dim2'])]
 
-        actual = pysd.utils.visit_addresses(frame, return_addresses)
-        expected = {'Elem1[A, Dim2]':
-                        xr.DataArray([[1, 2, 3]],
-                                     {'Dim1': ['A'],
-                                      'Dim2': ['D', 'E', 'F']},
-                                     dims=['Dim1', 'Dim2']),
-                    }
-        self.assertIsInstance(list(actual.values())[0], xr.DataArray)
-        self.assertEqual(actual['Elem1[A, Dim2]'].shape,
-                         expected['Elem1[A, Dim2]'].shape)
-        # Todo: test that the values are equal
+        return_addresses = {
+            'Elem1[A, Dim2]': ('elem1', {'Dim1': ['A'],
+                                         'Dim2': ['D', 'E', 'F']}),
+            'Elem2': ('elem2', {})}
+
+        actual = pysd.utils.make_flat_df(df, return_addresses)
+
+        # check all columns are in the DataFrame
+        self.assertEqual(set(actual.columns), set(expected.columns))
+        # need to assert one by one as they are xarrays
+        self.assertTrue(
+            actual.loc[1, 'Elem1[A, Dim2]'].equals(
+                df.loc[1, 'Elem1[A, Dim2]']))
+        self.assertTrue(
+            actual.loc[1, 'Elem2'].equals(df.loc[1, 'Elem2']))
+
+    def test_make_flat_df_flatten(self):
+        import pysd
+
+        df = pd.DataFrame(index=[1], columns=['elem1', 'elem2'])
+        df.at[1] = [xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                                 {'Dim1': ['A', 'B', 'C'],
+                                  'Dim2': ['D', 'E', 'F']},
+                                 dims=['Dim1', 'Dim2']),
+                    xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                                 {'Dim1': ['A', 'B', 'C'],
+                                  'Dim2': ['D', 'E', 'F']},
+                                 dims=['Dim1', 'Dim2'])]
+
+        expected = pd.DataFrame(index=[1], columns=[
+            'Elem1[A,D]',
+            'Elem1[A,E]',
+            'Elem1[A,F]',
+            'Elem2[A,D]',
+            'Elem2[A,E]',
+            'Elem2[A,F]',
+            'Elem2[B,D]',
+            'Elem2[B,E]',
+            'Elem2[B,F]',
+            'Elem2[C,D]',
+            'Elem2[C,E]',
+            'Elem2[C,F]'])
+
+        expected.at[1] = [1, 2, 3, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+        return_addresses = {
+            'Elem1[A,Dim2]': ('elem1', {'Dim1': ['A'],
+                                         'Dim2': ['D', 'E', 'F']}),
+            'Elem2': ('elem2', {})}
+
+        actual = pysd.utils.make_flat_df(df, return_addresses, flatten=True)
+
+        # check all columns are in the DataFrame
+        self.assertEqual(set(actual.columns), set(expected.columns))
+        # need to assert one by one as they are xarrays
+        for col in set(expected.columns):
+            self.assertEqual(
+                actual.loc[:, col].values,
+                df.loc[:, col].values)
+
+    def test_make_flat_df_times(self):
+        import pysd
+
+        df = pd.DataFrame(index=[1, 2], columns=['elem1'])
+        df['elem1'] = [xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                                    {'Dim1': ['A', 'B', 'C'],
+                                    'Dim2': ['D', 'E', 'F']},
+                                    dims=['Dim1', 'Dim2']),
+                       xr.DataArray([[2, 4, 6], [8, 10, 12], [14, 16, 19]],
+                                    {'Dim1': ['A', 'B', 'C'],
+                                     'Dim2': ['D', 'E', 'F']},
+                                    dims=['Dim1', 'Dim2'])]
+
+        expected = pd.DataFrame([{'Elem1[B,F]': 6}, {'Elem1[B,F]': 12}])
+        expected.index = [1, 2]
+
+        return_addresses = {'Elem1[B,F]': ('elem1', {'Dim1': ['B'], 'Dim2': ['F']})}
+        actual = pysd.utils.make_flat_df(df, return_addresses)
+
+        # check all columns are in the DataFrame
+        self.assertEqual(set(actual.columns), set(expected.columns))
+        self.assertEqual(set(actual.index), set(expected.index))
+        self.assertTrue(all(actual['Elem1[B,F]'] == df['Elem1[B,F]']))
 
     def test_make_coord_dict(self):
         import pysd
@@ -244,29 +315,29 @@ class TestUtils(TestCase):
         }
 
         self.assertEqual(
-            make_merge_list([["l1"],["up"]],
+            make_merge_list([["l1"], ["up"]],
                             subscript_dict),
             ["layers"])
 
         self.assertEqual(
-            make_merge_list([["l3", "dim1"],["down", "dim1"]],
+            make_merge_list([["l3", "dim1"], ["down", "dim1"]],
                             subscript_dict),
             ["layers", "dim1"])
 
         self.assertEqual(
-            make_merge_list([["l2", "dim1", "dim"],["l1", "dim1", "dim"]],
+            make_merge_list([["l2", "dim1", "dim"], ["l1", "dim1", "dim"]],
                             subscript_dict),
-           ["down", "dim1", "dim"])
+            ["down", "dim1", "dim"])
 
         self.assertEqual(
-            make_merge_list([["layers1", "l2"],["layers1", "l3"]],
+            make_merge_list([["layers1", "l2"], ["layers1", "l3"]],
                             subscript_dict),
-           ["layers1", "up"])
+            ["layers1", "up"])
 
         # incomplete dimension
         with catch_warnings(record=True) as ws:
             self.assertEqual(
-                make_merge_list([["A"],["B"]],
+                make_merge_list([["A"], ["B"]],
                                 subscript_dict),
                 ["dim"])
             # use only user warnings
@@ -281,14 +352,27 @@ class TestUtils(TestCase):
 
         # invalid dimension
         try:
-            make_merge_list([["l1"],["B"]],
+            make_merge_list([["l1"], ["B"]],
                             subscript_dict)
             self.assertFail()
         except ValueError as err:
             self.assertIn("Impossible to find the dimension that contains:"
-                          + "\n\t{}\nFor subscript_dict:".format({"l1","B"})
+                          + "\n\t{}\nFor subscript_dict:".format({"l1", "B"})
                           + "\n\t{}".format(subscript_dict),
                           err.args[0])
+
+        # repeated subscript
+        with catch_warnings(record=True) as ws:
+            make_merge_list([["dim1", "A", "dim"],
+                            ["dim1", "B", "dim"],
+                            ["dim1", "C", "dim"]],
+                            subscript_dict),
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertTrue(len(wu), 1)
+            self.assertIn(
+                "Adding new subscript range to subscript_dict:\ndim2: A, B, C",
+                str(wu[0].message))
 
     def test_compute_shape(self):
         """"

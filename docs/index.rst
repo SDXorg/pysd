@@ -19,6 +19,7 @@ Contents:
    installation
    basic_usage
    advanced_usage
+   tools
    functions
    development/development_index
 

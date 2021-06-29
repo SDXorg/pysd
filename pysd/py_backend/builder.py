@@ -228,7 +228,7 @@ def build_element(element, subscript_dict):
         # to rewrite subscripted values with model.run(params=X) or
         # model.run(initial_condition=(n,x))
         element['subs_doc'] = '%s' % new_subs
-        if element['kind'] in ['component', 'setup', 'constant']:
+        if element['kind'] in ['component', 'setup', 'constant', 'component_ext_data']:
             # the decorator is not always necessary as the objects
             # defined as xarrays in the model will have the right
             # dimensions always, we should try to reduce to the
