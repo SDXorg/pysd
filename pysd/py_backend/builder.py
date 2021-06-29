@@ -39,7 +39,7 @@ import_modules = {
 def build_modular_model(
     elements, subscript_dict, namespace, main_filename, elements_per_module
 ):
-    
+
     """
     This is equivalent to the build function, but is used when the 
     split_modules parameter is set to True in the read_vensim function. 
@@ -89,15 +89,19 @@ def build_modular_model(
     for module in modules_list:
         module_elems = []
         for element in elements:
-            if (element.get("py_name", None) in elements_per_module[module]) or (element.get("parent_name", None) in elements_per_module[module]):
+            if (element.get("py_name", None) in elements_per_module[module]) or (
+                element.get("parent_name", None) in elements_per_module[module]
+            ):
                 module_elems.append(element)
-        
+
         build_separate_module(module_elems, subscript_dict, module, modules_dir)
 
         processed_elements += module_elems
-    
+
     # the unprocessed will go in the main file
-    unprocessed_elements = [element for element in elements if element not in processed_elements]
+    unprocessed_elements = [
+        element for element in elements if element not in processed_elements
+    ]
     # building main file using the build function
     build_main_module(unprocessed_elements, subscript_dict, main_filename)
 
@@ -106,18 +110,22 @@ def build_modular_model(
         json.dump(elements_per_module, outfile, indent=4, sort_keys=True)
 
     # create single namespace in a separate json file
-    with open(os.path.join(root_dir, "_namespace_" + model_name + ".json"), "w") as outfile:
+    with open(
+        os.path.join(root_dir, "_namespace_" + model_name + ".json"), "w"
+    ) as outfile:
         json.dump(namespace, outfile, indent=4, sort_keys=True)
 
     # create single subscript_dict in a separate json file
-    with open(os.path.join(root_dir, "_subscripts_" + model_name + ".json"), "w") as outfile:
+    with open(
+        os.path.join(root_dir, "_subscripts_" + model_name + ".json"), "w"
+    ) as outfile:
         json.dump(subscript_dict, outfile, indent=4, sort_keys=True)
 
     return None
 
 
 def build_main_module(elements, subscript_dict, file_name):
-    
+
     """
     Constructs and writes the python representation of the main model
     module, when the split_modules=True in the read_vensim function.
@@ -154,37 +162,21 @@ def build_main_module(elements, subscript_dict, file_name):
         "version": __version__,
     }
 
-    # TODO this needs to be fixed, because we are importnig them all in the main module
-    # intelligent import of needed functions and packages
+    elements = merge_partial_elements(elements)
+    funcs = _generate_functions(elements, subscript_dict)
+
     if import_modules["numpy"]:
         text += "    import numpy as np\n"
     if import_modules["xarray"]:
         text += "    import xarray as xr\n"
 
     text += "    import json\n"
-
     text += "    import os\n"
 
     text += "\n"
 
-    if import_modules["functions"]:
-        text += "    from pysd.py_backend.functions import %(methods)s\n" % {
-            "methods": ", ".join(import_modules["functions"])
-        }
-    if import_modules["external"]:
-        text += "    from pysd.py_backend.external import %(methods)s\n" % {
-            "methods": ", ".join(import_modules["external"])
-        }
-    if import_modules["utils"]:
-        text += "    from pysd.py_backend.utils import %(methods)s\n" % {
-            "methods": ", ".join(import_modules["utils"])
-        }
-
-    if import_modules["subs"]:
-        text += "    from pysd import cache, subs\n"
-    else:
-        # we need to import always cache as it is called in the integration
-        text += "    from pysd import cache\n"
+    # import of needed functions and packages
+    text += _generate_automatic_imports()
 
     # import namespace from json file
     text += """
@@ -217,25 +209,16 @@ def build_main_module(elements, subscript_dict, file_name):
     def time():
         return __data['time']()
 
-    """ % {"outfile": os.path.basename(file_name).split(".")[0]}
+    """ % {
+        "outfile": os.path.basename(file_name).split(".")[0]
+    }
 
-
-    elements = merge_partial_elements(elements)
-    functions = [build_element(element, subscript_dict) for element in elements]
-
-    # TODO this could be refractored into a separate function (also in build_model function)
     text = text.replace("\t", "    ")
     text = textwrap.dedent(text)
-
-    funcs = "%(functions)s" % {"functions": "\n".join(functions)}
-    funcs = funcs.replace("\t", "    ")
     text += funcs
-    text = text.replace("\t", "    ")
-    text = textwrap.dedent(text)
-
     text = black.format_file_contents(text, fast=True, mode=black.FileMode())
 
-    # this is needed if more than one model are translated in the same session
+    # TODO this will need to be updated when the import_modules is made into a class
     build_names.clear()
     for module in ["numpy", "xarray", "subs"]:
         import_modules[module] = False
@@ -289,19 +272,12 @@ def build_separate_module(elements, subscript_dict, module_name, module_dir):
         "version": __version__,
     }
 
-
-
     elements = merge_partial_elements(elements)
-    functions = [build_element(element, subscript_dict) for element in elements]
+    funcs = _generate_functions(elements, subscript_dict)
 
-    # TODO this could be refractored into a separate function (also in build_model function)
     text = text.replace("\t", "    ")
     text = textwrap.dedent(text)
-
-    funcs = "%(functions)s" % {"functions": "\n".join(functions)}
-    funcs = funcs.replace("\t", "    ")
     text += funcs
-
     text = black.format_file_contents(text, fast=True, mode=black.FileMode())
 
     outfile_name = os.path.join(module_dir, module_name + ".py")
@@ -342,8 +318,8 @@ def build(elements, subscript_dict, namespace, outfile_name):
     # Todo: Make presence of subscript_dict instantiation conditional on usage
     # Todo: Sort elements (alphabetically? group stock funcs?)
     elements = merge_partial_elements(elements)
-    functions = [build_element(element, subscript_dict) for element in elements]
-
+    funcs = _generate_functions(elements, subscript_dict)
+    
     text = '''
     """
     Python model "%(outfile)s"
@@ -354,31 +330,8 @@ def build(elements, subscript_dict, namespace, outfile_name):
         "version": __version__,
     }
 
-    # intelligent import of needed functions and packages
-    if import_modules["numpy"]:
-        text += "    import numpy as np\n"
-    if import_modules["xarray"]:
-        text += "    import xarray as xr\n"
-    text += "\n"
-
-    if import_modules["functions"]:
-        text += "    from pysd.py_backend.functions import %(methods)s\n" % {
-            "methods": ", ".join(import_modules["functions"])
-        }
-    if import_modules["external"]:
-        text += "    from pysd.py_backend.external import %(methods)s\n" % {
-            "methods": ", ".join(import_modules["external"])
-        }
-    if import_modules["utils"]:
-        text += "    from pysd.py_backend.utils import %(methods)s\n" % {
-            "methods": ", ".join(import_modules["utils"])
-        }
-
-    if import_modules["subs"]:
-        text += "    from pysd import cache, subs\n"
-    else:
-        # we need to import always cache as it is called in the integration
-        text += "    from pysd import cache\n"
+    # import of needed functions and packages
+    text += _generate_automatic_imports()
 
     text += """
     _subscript_dict = %(subscript_dict)s
@@ -409,14 +362,10 @@ def build(elements, subscript_dict, namespace, outfile_name):
 
     text = text.replace("\t", "    ")
     text = textwrap.dedent(text)
-
-    funcs = "%(functions)s" % {"functions": "\n".join(functions)}
-    funcs = funcs.replace("\t", "    ")
     text += funcs
-
     text = black.format_file_contents(text, fast=True, mode=black.FileMode())
 
-    # this is needed if more than one model are translated in the same session
+    # TODO this will need to be updated when the import_modules is made into a class
     build_names.clear()
     for module in ["numpy", "xarray", "subs"]:
         import_modules[module] = False
@@ -429,6 +378,87 @@ def build(elements, subscript_dict, namespace, outfile_name):
 
     with open(outfile_name, "w", encoding="UTF-8") as out:
         out.write(text)
+
+
+def _generate_functions(elements, subscript_dict):
+
+    """
+    Builds all model elements as functions in string format.
+    NOTE: this function calls the build_element function, which updates the import_modules.
+    Therefore, it needs to be executed before the _generate_automatic_imports function.
+    
+    Parameters
+    ----------
+    elements: dict
+        Each element is a dictionary, with the various components needed to
+        assemble a model component in python syntax. This will contain
+        multiple entries for elements that have multiple definitions in the
+        original file, and which need to be combined.
+    
+    subscript_dict: dict
+        A dictionary containing the names of subscript families (dimensions)
+        as keys, and a list of the possible positions within that dimension
+        for each value.
+
+    Returns
+    -------
+    funcs: str
+        String containing all formated model functions
+    """
+    
+    functions = [build_element(element, subscript_dict) for element in elements]
+    
+    funcs = "%(functions)s" % {"functions": "\n".join(functions)}
+    funcs = funcs.replace("\t", "    ")
+    
+    return funcs
+
+
+def _generate_automatic_imports(import_modules=import_modules):
+
+    """
+    Writes a sting containing the modules and functions to add in the imports
+    list of the final model, based on the values of the import_modules.
+
+    Parameters
+    ----------
+    import_modules: dict
+        Modules to import to the model file as keys and Booleans as values
+    
+    Returns
+    -------
+    text: str
+        String with a formatted list of modules to import in the translated model
+    
+    """
+    
+    # intelligent import of needed functions and packages
+    text = ""
+    if import_modules["numpy"]:
+        text += "    import numpy as np\n"
+    if import_modules["xarray"]:
+        text += "    import xarray as xr\n"
+    text += "\n"
+
+    if import_modules["functions"]:
+        text += "    from pysd.py_backend.functions import %(methods)s\n" % {
+            "methods": ", ".join(import_modules["functions"])
+        }
+    if import_modules["external"]:
+        text += "    from pysd.py_backend.external import %(methods)s\n" % {
+            "methods": ", ".join(import_modules["external"])
+        }
+    if import_modules["utils"]:
+        text += "    from pysd.py_backend.utils import %(methods)s\n" % {
+            "methods": ", ".join(import_modules["utils"])
+        }
+
+    if import_modules["subs"]:
+        text += "    from pysd import cache, subs\n"
+    else:
+        # we need to import always cache as it is called in the integration
+        text += "    from pysd import cache\n"
+    return text
 
 
 def build_element(element, subscript_dict):
