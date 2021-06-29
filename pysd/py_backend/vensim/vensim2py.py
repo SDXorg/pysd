@@ -1517,24 +1517,25 @@ def translate_section(section, macro_list, sketch, root_path):
         e for e in model_elements if e["kind"] not in ["subdef", "test", "section"]
     ]
 
-    if sketch:
+    if sketch and (section["name"] == "_main_"): # macros are built in their own separate files, and their inputs and outputs are put in modules
+
         module_elements = classify_elements_by_module(sketch, namespace)
 
-        if len(module_elements.keys()) <= 1:
-            warnings.warn("Only one module was detected. The model will be built in a single file.")
-            builder.build(build_elements, subscript_dict, namespace, section["file_name"])
+        if len(module_elements.keys()) == 1:
+            warnings.warn(
+                "Only one module was detected. The model will be built in a single file."
+            )
         else:
             builder.build_modular_model(
-            build_elements,
-            subscript_dict,
-            namespace,
-            section["file_name"],
-            module_elements,
-        )
+                build_elements,
+                subscript_dict,
+                namespace,
+                section["file_name"],
+                module_elements,
+            )
+            return section["file_name"]
 
-    else:
-
-        builder.build(build_elements, subscript_dict, namespace, section["file_name"])
+    builder.build(build_elements, subscript_dict, namespace, section["file_name"])
 
     return section["file_name"]
 
@@ -1673,11 +1674,6 @@ def translate_vensim(mdl_file, split_modules):
             section["file_name"] = out_dir + "/" + section["py_name"] + ".py"
 
     macro_list = [s for s in file_sections if s["name"] != "_main_"]
-
-    if macro_list and split_modules:
-        warnings.warn(
-            "The creation of one file per Vensim view has not been tested with macros."
-        )
 
     for section in file_sections:
         translate_section(section, macro_list, sketch, root_path)

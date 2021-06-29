@@ -139,9 +139,11 @@ class TestPySD(unittest.TestCase):
         import shutil
         from pandas.util.testing import assert_frame_equal
 
+        root_dir = "./more-tests/split_model/"
+
         model_name = "test_split_model"
         model_split = pysd.read_vensim(
-            "more-tests/split_model/" + model_name + ".mdl", split_modules=True
+            root_dir + model_name + ".mdl", split_modules=True
         )
 
         namespace_filename = "_namespace_" + model_name + ".json"
@@ -149,7 +151,6 @@ class TestPySD(unittest.TestCase):
         modules_filename = "_modules.json"
         modules_dirname = "modules_" + model_name
 
-        root_dir = os.path.join("./more-tests/split_model/")
         # check that _namespace and _subscript_dict json files where created
         self.assertTrue(os.path.isfile(root_dir + namespace_filename))
         self.assertTrue(os.path.isfile(root_dir + subscript_dict_filename))
@@ -159,8 +160,10 @@ class TestPySD(unittest.TestCase):
 
         # check that the modules folder was created
         self.assertTrue(os.path.isdir(root_dir + modules_dirname))
-        self.assertTrue(os.path.isfile(root_dir + modules_dirname + "/" + modules_filename))
-        
+        self.assertTrue(
+            os.path.isfile(root_dir + modules_dirname + "/" + modules_filename)
+        )
+
         # check creation of module files
         self.assertTrue(os.path.isfile(root_dir + modules_dirname + "/" + "view_1.py"))
         self.assertTrue(os.path.isfile(root_dir + modules_dirname + "/" + "view2.py"))
@@ -168,14 +171,16 @@ class TestPySD(unittest.TestCase):
 
         # check that the results of the split model are the same than those without splitting
         model_non_split = pysd.read_vensim(
-            "more-tests/split_model/" + model_name + ".mdl", split_modules=False
+            root_dir + model_name + ".mdl", split_modules=False
         )
-        
+
         result_split = model_split.run()
         result_non_split = model_non_split.run()
 
         result_split = result_split.reindex(sorted(result_split.columns), axis=1)
-        result_non_split = result_split.reindex(sorted(result_non_split.columns), axis=1)
+        result_non_split = result_split.reindex(
+            sorted(result_non_split.columns), axis=1
+        )
 
         # results of a split model are the same that those of the regular model (un-split)
         assert_frame_equal(result_split, result_non_split)
@@ -187,7 +192,48 @@ class TestPySD(unittest.TestCase):
 
         # remove newly created modules folder
         shutil.rmtree(root_dir + modules_dirname)
-        self.assertEqual(os.getcwd(), os.path.dirname(__file__))
+
+    def test_read_vensim_split_model_with_macro(self):
+        import pysd
+        import os
+        import shutil
+        from pandas.util.testing import assert_frame_equal
+
+        root_dir = "./more-tests/split_model_with_macro/"
+
+        model_name = "test_split_model_with_macro"
+        model_split = pysd.read_vensim(
+            root_dir + model_name + ".mdl", split_modules=True
+        )
+
+        namespace_filename = "_namespace_" + model_name + ".json"
+        subscript_dict_filename = "_subscripts_" + model_name + ".json"
+        modules_dirname = "modules_" + model_name
+
+        # check that the results of the split model are the same than those without splitting
+        model_non_split = pysd.read_vensim(
+            root_dir + model_name + ".mdl", split_modules=False
+        )
+
+        result_split = model_split.run()
+        result_non_split = model_non_split.run()
+
+        result_split = result_split.reindex(sorted(result_split.columns), axis=1)
+        result_non_split = result_split.reindex(
+            sorted(result_non_split.columns), axis=1
+        )
+
+        # results of a split model are the same that those of the regular model (un-split)
+        assert_frame_equal(result_split, result_non_split)
+
+        # remove newly created files
+        os.remove(root_dir + model_name + ".py")
+        os.remove(root_dir + "expression_macro.py")
+        os.remove(root_dir + namespace_filename)
+        os.remove(root_dir + subscript_dict_filename)
+
+        # remove newly created modules folder
+        shutil.rmtree(root_dir + modules_dirname)
 
     def test_read_vensim_split_model_warning(self):
         import pysd
@@ -202,8 +248,8 @@ class TestPySD(unittest.TestCase):
 
         self.assertEqual(len(w), 1)
         self.assertTrue(
-            str(w[0].message).startswith("Only one module was detected"))  # check that warning references the stock
-
+            str(w[0].message).startswith("Only one module was detected")
+        )  # check that warning references the stock
 
     def test_run_includes_last_value(self):
         import pysd
