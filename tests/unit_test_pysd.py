@@ -275,10 +275,8 @@ class TestPySD(unittest.TestCase):
         test_sample_if_true = 'test-models/tests/sample_if_true/test_sample_if_true.mdl'
         model = pysd.read_vensim(test_sample_if_true)
         stocks = model.run(return_timestamps=20, flatten_output=True)
-        print(stocks['sample var'])
         model.initialize()
         model.run(return_timestamps=7)
-        print(stocks['sample var'])
         model.export('sample_if_true7.pic')
         stocks2 = model.run(initial_condition='sample_if_true7.pic',
                             return_timestamps=20,

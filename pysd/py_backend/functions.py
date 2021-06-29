@@ -740,13 +740,15 @@ class Macro(DynamicStateful):
         with open(file_name, 'rb') as file:
             time, stateful_dict, metadata = pickle.load(file)
 
-        warnings.warn(
-            "\nCompatibility of exported states could be broken between"
-            " different versions of PySD or xarray. Current versions:\n"
-            f"\tPySD {__version__}\n\txarray {xr.__version__}\n"
-            "Loaded versions:\n"
-            f"\tPySD {metadata['pysd']}\n\txarray {metadata['xarray']}\n"
-            )
+        if __version__ != metadata['pysd']\
+           or xr.__version__ != metadata['xarray']:
+            warnings.warn(
+                "\nCompatibility of exported states could be broken between"
+                " different versions of PySD or xarray. Current versions:\n"
+                f"\tPySD {__version__}\n\txarray {xr.__version__}\n"
+                "Loaded versions:\n"
+                f"\tPySD {metadata['pysd']}\n\txarray {metadata['xarray']}\n"
+                )
         self.set_stateful(stateful_dict)
 
         self.time.update(time)
@@ -1302,6 +1304,7 @@ class Model(Macro):
 
         if params:
             self.set_components(params)
+
         self.set_initial_condition(initial_condition)
 
         return_timestamps = self._format_return_timestamps(return_timestamps)
@@ -1430,7 +1433,7 @@ class Model(Macro):
         """
 
         if isinstance(initial_condition, tuple):
-            # Todo: check the values more than just seeing if they are a tuple.
+            self.initialize()
             self.set_initial_value(*initial_condition)
         elif isinstance(initial_condition, str):
             if initial_condition.lower() in ['original', 'o']:
