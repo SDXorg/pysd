@@ -94,7 +94,7 @@ def build_modular_model(
             ):
                 module_elems.append(element)
 
-        build_separate_module(module_elems, subscript_dict, module, modules_dir)
+        _build_separate_module(module_elems, subscript_dict, module, modules_dir)
 
         processed_elements += module_elems
 
@@ -103,7 +103,7 @@ def build_modular_model(
         element for element in elements if element not in processed_elements
     ]
     # building main file using the build function
-    build_main_module(unprocessed_elements, subscript_dict, main_filename)
+    _build_main_module(unprocessed_elements, subscript_dict, main_filename)
 
     # create json file for the modules and corresponding model elements
     with open(os.path.join(modules_dir, "_modules.json"), "w") as outfile:
@@ -124,7 +124,7 @@ def build_modular_model(
     return None
 
 
-def build_main_module(elements, subscript_dict, file_name):
+def _build_main_module(elements, subscript_dict, file_name):
 
     """
     Constructs and writes the python representation of the main model
@@ -235,7 +235,7 @@ def build_main_module(elements, subscript_dict, file_name):
     return None
 
 
-def build_separate_module(elements, subscript_dict, module_name, module_dir):
+def _build_separate_module(elements, subscript_dict, module_name, module_dir):
 
     """
     Constructs and writes the python representation of a specific model
