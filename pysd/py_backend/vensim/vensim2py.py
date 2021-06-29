@@ -512,7 +512,7 @@ def parse_sketch_line(sketch_line, namespace):
             var_thickness = digit
             var_rest_conf = digit "," ~r"\d+"
             
-            arrow = arrow_code "," digit "," origin_var "," destination_var "," (digit ",")+ (weird_stuff ",")?  ((color ",") / ("," ~r"\d+") / (font_properties "," ~"\d+"))* "|(" position ")|"
+            arrow = arrow_code "," digit "," origin_var "," destination_var "," (digit ",")+ (weird_stuff ",")?  ((color ",") / ("," ~r"\d+") / (font_properties "," ~r"\d+"))* "|(" position ")|"
             
             # arrow origin and destination (this may be useful if further parsing is required)
             origin_var = digit
@@ -1520,7 +1520,11 @@ def translate_section(section, macro_list, sketch, root_path):
     if sketch:
         module_elements = classify_elements_by_module(sketch, namespace)
 
-        builder.build_modular_model(
+        if len(module_elements.keys()) <= 1:
+            warnings.warn("Only one module was detected. The model will be built in a single file.")
+            builder.build(build_elements, subscript_dict, namespace, section["file_name"])
+        else:
+            builder.build_modular_model(
             build_elements,
             subscript_dict,
             namespace,
