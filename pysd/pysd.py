@@ -82,7 +82,7 @@ def read_vensim(
         If "warning" (default) shows a warning message and
         interpolates the values. If "raise" raises an error.
         If "ignore" interpolates the values without showing anything.
-    split_modules: bool
+    split_modules: bool (optional)
         If True, the sketch is parsed to detect model elements in each
         model view, and then translate each view in a separate python 
         file. Setting this argument to True is recommended for large 
@@ -93,9 +93,6 @@ def read_vensim(
     model: a PySD class object
         Elements from the python model are loaded into the PySD class
         and ready to run
-    initialize: bool (optional)
-        If False, the model will not be initialize when it is loaded.
-        Default is True
 
     Examples
     --------

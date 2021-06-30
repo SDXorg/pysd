@@ -240,15 +240,16 @@ class TestPySD(unittest.TestCase):
         import warnings
 
         # setting the split_modules=True when the model has a single view should generate a warning
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
+        with warnings.catch_warnings(record=True) as ws:
             pysd.read_vensim(
                 test_model, split_modules=True
             )  # set stock value using params
 
-        self.assertEqual(len(w), 1)
-        self.assertTrue(
-            str(w[0].message).startswith("Only one module was detected")
+        wu = [w for w in ws if issubclass(w.category, UserWarning)]
+
+        self.assertEqual(len(wu), 1)
+        self.assertIn(
+            "Only one module was detected", str(wu[0].message)
         )  # check that warning references the stock
 
     def test_run_includes_last_value(self):
