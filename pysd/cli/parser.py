@@ -212,16 +212,6 @@ model_arguments.add_argument(
          '--final-time and --saveper will be ignored')
 
 
-########################
-# Positional arguments #
-########################
-model_arguments.add_argument(
-    '-i', '--initial-condition', dest='return_timestamps',
-    action='store', type=split_timestamps,
-    metavar='variable=new_value',
-    help='provide the return time stamps separated by commas, if given '
-         '--final-time and --saveper will be ignored')
-
 #######################
 # Warnings and errors #
 #######################
