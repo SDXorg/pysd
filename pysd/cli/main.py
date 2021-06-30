@@ -70,7 +70,7 @@ def load(model_file, missing_values):
 
 def initialize(model, options):
     """
-    Update initial time and time step and initialize the model.
+    Update model control variables and initialize the model.
 
     Parameters
     ----------
@@ -83,16 +83,10 @@ def initialize(model, options):
     None
 
     """
-    if options.initial_time:
-        # update initial time
-        model.components.initial_time = lambda: options.initial_time
+    for func_name in ['initial_time', 'time_step', 'final_time', 'saveper']:
+        if getattr(options, func_name):
+            model.set_components({func_name: getattr(options, func_name)})
 
-    if options.time_step:
-        # update time step
-        model.components.time_step = lambda: options.time_step
-
-    # initialize model
-    print("\nInitilizing the model...\n")
     model.initialize()
 
 
@@ -116,20 +110,10 @@ def create_configuration(model, options):
         "params": options.new_values['param'],
         "initial_condition": (model.time(), options.new_values['initial']),
         "return_columns": options.return_columns,
-        "flatten_output": True  # need to return totally flat DF
+        "flatten_output": True,  # need to return totally flat DF
+        "return_timestamps": options.return_timestamps  # given or None
     }
 
-    # compute return time stamps
-    if options.return_timestamps is not None:
-        # return time stamps given
-        conf_dict['return_timestamps'] = options.return_timestamps
-    else:
-        # computed from saveper
-        final_time = options.final_time or model.components.final_time()
-        saveper = options.saveper or model.components.saveper()
-        conf_dict['return_timestamps'] = np.arange(model.time(),
-                                                   final_time+saveper/2,
-                                                   saveper)
     return conf_dict
 
 

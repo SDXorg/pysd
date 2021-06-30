@@ -16,7 +16,6 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 import scipy.stats as stats
-from funcsigs import signature
 
 from . import utils
 from .external import External, Excels

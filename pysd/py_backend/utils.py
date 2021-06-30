@@ -8,8 +8,6 @@ import warnings
 import keyword
 import regex as re
 
-import numpy as np
-import pandas as pd
 import xarray as xr
 
 # used to create python safe names

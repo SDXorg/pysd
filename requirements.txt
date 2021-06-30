@@ -2,7 +2,6 @@ pandas
 parsimonious
 xarray
 lxml
-funcsigs
 xlrd==1.2.0
 xlwt
 regex
