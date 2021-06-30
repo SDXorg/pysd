@@ -192,13 +192,20 @@ class TestPySD(unittest.TestCase):
 
         model = pysd.read_vensim(test_model)
         stocks = model.run(return_timestamps=[0, 10, 20, 30])
+        self.assertTrue((stocks['INITIAL TIME'] == 0).all().all())
 
         model.initialize()
         stocks1 = model.run(return_timestamps=[0, 10])
+        self.assertTrue((stocks1['INITIAL TIME'] == 0).all().all())
         model.export('teacup10.pic')
         model.initialize()
         stocks2 = model.run(initial_condition='teacup10.pic',
                             return_timestamps=[20, 30])
+        self.assertTrue((stocks2['INITIAL TIME'] == 10).all().all())
+        print(stocks.columns)
+        stocks.drop('INITIAL TIME', axis=1, inplace=True)
+        stocks1.drop('INITIAL TIME', axis=1, inplace=True)
+        stocks2.drop('INITIAL TIME', axis=1, inplace=True)
         os.remove('teacup10.pic')
 
         assert_frames_close(stocks1, stocks.loc[[0, 10]])
@@ -213,6 +220,10 @@ class TestPySD(unittest.TestCase):
         model.export('delays7.pic')
         stocks2 = model.run(initial_condition='delays7.pic',
                             return_timestamps=20)
+        self.assertTrue((stocks['INITIAL TIME'] == 0).all().all())
+        self.assertTrue((stocks2['INITIAL TIME'] == 7).all().all())
+        stocks.drop('INITIAL TIME', axis=1, inplace=True)
+        stocks2.drop('INITIAL TIME', axis=1, inplace=True)
         os.remove('delays7.pic')
 
         assert_frames_close(stocks2, stocks)
@@ -226,6 +237,10 @@ class TestPySD(unittest.TestCase):
         model.export('delayf7.pic')
         stocks2 = model.run(initial_condition='delayf7.pic',
                             return_timestamps=20)
+        self.assertTrue((stocks['INITIAL TIME'] == 0).all().all())
+        self.assertTrue((stocks2['INITIAL TIME'] == 7).all().all())
+        stocks.drop('INITIAL TIME', axis=1, inplace=True)
+        stocks2.drop('INITIAL TIME', axis=1, inplace=True)
         os.remove('delayf7.pic')
 
         assert_frames_close(stocks2, stocks)
@@ -240,6 +255,10 @@ class TestPySD(unittest.TestCase):
         stocks2 = model.run(initial_condition='smooth7.pic',
                             return_timestamps=20,
                             flatten_output=True)
+        self.assertTrue((stocks['INITIAL TIME'] == 0).all().all())
+        self.assertTrue((stocks2['INITIAL TIME'] == 7).all().all())
+        stocks.drop('INITIAL TIME', axis=1, inplace=True)
+        stocks2.drop('INITIAL TIME', axis=1, inplace=True)
         os.remove('smooth7.pic')
 
         assert_frames_close(stocks2, stocks)
@@ -254,6 +273,10 @@ class TestPySD(unittest.TestCase):
         stocks2 = model.run(initial_condition='trend7.pic',
                             return_timestamps=20,
                             flatten_output=True)
+        self.assertTrue((stocks['INITIAL TIME'] == 0).all().all())
+        self.assertTrue((stocks2['INITIAL TIME'] == 7).all().all())
+        stocks.drop('INITIAL TIME', axis=1, inplace=True)
+        stocks2.drop('INITIAL TIME', axis=1, inplace=True)
         os.remove('trend7.pic')
 
         assert_frames_close(stocks2, stocks)
@@ -267,6 +290,10 @@ class TestPySD(unittest.TestCase):
         model.export('initial7.pic')
         stocks2 = model.run(initial_condition='initial7.pic',
                             return_timestamps=20)
+        self.assertTrue((stocks['INITIAL TIME'] == 0).all().all())
+        self.assertTrue((stocks2['INITIAL TIME'] == 7).all().all())
+        stocks.drop('INITIAL TIME', axis=1, inplace=True)
+        stocks2.drop('INITIAL TIME', axis=1, inplace=True)
         os.remove('initial7.pic')
 
         assert_frames_close(stocks2, stocks)
@@ -281,6 +308,10 @@ class TestPySD(unittest.TestCase):
         stocks2 = model.run(initial_condition='sample_if_true7.pic',
                             return_timestamps=20,
                             flatten_output=True)
+        self.assertTrue((stocks['INITIAL TIME'] == 0).all().all())
+        self.assertTrue((stocks2['INITIAL TIME'] == 7).all().all())
+        stocks.drop('INITIAL TIME', axis=1, inplace=True)
+        stocks2.drop('INITIAL TIME', axis=1, inplace=True)
         os.remove('sample_if_true7.pic')
 
         assert_frames_close(stocks2, stocks)

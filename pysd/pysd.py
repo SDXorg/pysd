@@ -24,22 +24,25 @@ if sys.version_info[:2] < (3, 7):
         + " supported version:\n\t"
         + "https://github.com/JamesPHoughton/pysd/releases/tag/LastPy2")
 
+
 def read_xmile(xmile_file, initialize=True, missing_values="warning"):
     """
     Construct a model from `.xmile` file.
 
     Parameters
     ----------
-    xmile_file : <string>
+    xmile_file : str
         The relative path filename for a raw `.xmile` file
     initialize: bool (optional)
         If False, the model will not be initialize when it is loaded.
         Default is True
-    missing_values : <string> (optional)
-        What to do with missing values in external objects.
-        If "warning" (default) shows a warning message and
-        interpolates the values. If "raise" raises an error.
-        If "ignore" interpolates the values without showing anything.
+    missing_values : str ("warning", "error", "ignore", "keep") (optional)
+        What to do with missing values. If "warning" (default)
+        shows a warning message and interpolates the values.
+        If "raise" raises an error. If "ignore" interpolates
+        the values without showing anything. If "keep" it will keep
+        the missing values, this option may cause the integration to
+        fail, but it may be used to check the quality of the data.
 
     Returns
     -------
@@ -65,16 +68,18 @@ def read_vensim(mdl_file, initialize=True, missing_values="warning"):
 
     Parameters
     ----------
-    mdl_file : <string>
+    mdl_file : str
         The relative path filename for a raw Vensim `.mdl` file
     initialize: bool (optional)
         If False, the model will not be initialize when it is loaded.
         Default is True
-    missing_values : <string> (optional)
-        What to do with missing values in external objects.
-        If "warning" (default) shows a warning message and
-        interpolates the values. If "raise" raises an error.
-        If "ignore" interpolates the values without showing anything.
+    missing_values : str ("warning", "error", "ignore", "keep") (optional)
+        What to do with missing values. If "warning" (default)
+        shows a warning message and interpolates the values.
+        If "raise" raises an error. If "ignore" interpolates
+        the values without showing anything. If "keep" it will keep
+        the missing values, this option may cause the integration to
+        fail, but it may be used to check the quality of the data.
 
     Returns
     -------
@@ -103,17 +108,19 @@ def load(py_model_file, initialize=True, missing_values="warning"):
 
     Parameters
     ----------
-    py_model_file : <string>
+    py_model_file : str
         Filename of a model which has already been converted into a
         python format.
     initialize: bool (optional)
         If False, the model will not be initialize when it is loaded.
         Default is True
-    missing_values : <string> (optional)
-        What to do with missing values in external objects.
-        If "warning" (default) shows a warning message and
-        interpolates the values. If "raise" raises an error.
-        If "ignore" interpolates the values without showing anything.
+    missing_values : str ("warning", "error", "ignore", "keep") (optional)
+        What to do with missing values. If "warning" (default)
+        shows a warning message and interpolates the values.
+        If "raise" raises an error. If "ignore" interpolates
+        the values without showing anything. If "keep" it will keep
+        the missing values, this option may cause the integration to
+        fail, but it may be used to check the quality of the data.
 
     Examples
     --------

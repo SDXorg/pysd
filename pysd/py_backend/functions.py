@@ -1195,9 +1195,10 @@ class Model(Macro):
         dt = self.components.time_step()
         ts = np.arange(t_0, t_f, dt, dtype=np.float64)
 
-        # Add the returned time series into the integration array. Best we can do for now.
-        # This does change the integration ever so slightly, but for well-specified
-        # models there shouldn't be sensitivity to a finer integration time step.
+        # Add the returned time series into the integration array.
+        # Best we can do for now. This does change the integration ever
+        # so slightly, but for well-specified models there shouldn't be
+        # sensitivity to a finer integration time step.
         return np.sort(np.unique(np.append(ts, return_timestamps)))
 
     def _format_return_timestamps(self, return_timestamps=None):
@@ -1221,9 +1222,10 @@ class Model(Macro):
             # Vensim's standard is to expect that the data set includes the `final time`,
             # so we have to add an extra period to make sure we get that value in what
             # numpy's `arange` gives us.
-            return np.arange(
-                self.components.initial_time(),
-                self.components.final_time() + self.components.saveper(),
+
+            return  np.arange(
+                self.time(),
+                self.components.final_time() + self.components.saveper()/2,
                 self.components.saveper(), dtype=float
             )
 
@@ -1307,6 +1309,9 @@ class Model(Macro):
 
         self.set_initial_condition(initial_condition)
 
+        # save initial time for the output
+        self.initial_time = self.time()
+
         return_timestamps = self._format_return_timestamps(return_timestamps)
 
         t_series = self._build_euler_timeseries(return_timestamps)
@@ -1366,7 +1371,7 @@ class Model(Macro):
             types = ['step', 'run']
 
         return_columns = []
-        parsed_expr = []
+        parsed_expr = ['time']  # time is alredy returned as index
 
         for key, value in self.components._namespace.items():
             if hasattr(self.components, value):
@@ -1525,6 +1530,12 @@ class Model(Macro):
         nt = len(df.index.values)
         for element in capture_elements:
             df[element] = [getattr(self.components, element)()] * nt
+
+        # update initial time values in df (necessary if initial_conditions)
+        for it in ['INITIAL TIME', 'INITIAL_TIME',
+                   'initial time', 'initial_time']:
+            if it in df:
+                df[it] = self.initial_time
 
 
 def ramp(time, slope, start, finish=0):
@@ -1865,10 +1876,14 @@ def random_uniform(m, x, s):
 
     Returns
     -------
-    A random number from the uniform distribution between m and x (exclusive of the endpoints).
+    A random number from the uniform distribution between m and x
+    (exclusive of the endpoints).
+
     """
-    if(s!=0):
-        warnings.warn("Random uniform with a nonzero seed value, may not give the same result as vensim", RuntimeWarning)
+    if s != 0:
+        warnings.warn(
+            "Random uniform with a nonzero seed value, may not give the "
+            "same result as vensim", RuntimeWarning)
 
     return np.random.uniform(m, x)
 
@@ -2001,4 +2016,3 @@ def vmax(x, dim=None):
         return float(x.max())
 
     return x.max(dim=dim)
-
