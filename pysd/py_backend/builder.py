@@ -20,17 +20,84 @@ from . import utils
 from pysd._version import __version__
 
 
+class Imports():
+    """
+    Class to save the imported modules information for intelligent import
+    """
+    _numpy, _xarray, _subs = False, False, False
+    _functions, _external, _utils = set(), set(), set()
+
+    @classmethod
+    def add(cls, module, function=None):
+        """
+        Add a function from module.
+
+        Parameters
+        ----------
+        module: str
+          module name.
+
+        function: str or None
+          function name. If None module will be set to true.
+
+        """
+        if function:
+            getattr(cls, f"_{module}").add(function)
+        else:
+            setattr(cls, f"_{module}", True)
+
+    @classmethod
+    def get_header(cls, outfile):
+        """
+        Returns the importing information to print in the model file
+        """
+
+        text =\
+            f'"""\nPython model \'{outfile}\'\nTranslated using PySD\n"""\n\n'
+
+        root = ""
+
+        if cls._external:
+            # define root only if needed
+            text += "from os import path\n"
+            root = "\n    _root = path.dirname(__file__)\n"
+        if cls._numpy:
+            text += "import numpy as np\n"
+        if cls._xarray:
+            text += "import xarray as xr\n"
+        text += "\n"
+
+        if cls._functions:
+            text += "from pysd.py_backend.functions import %(methods)s\n"\
+                    % {'methods': ", ".join(cls._functions)}
+        if cls._external:
+            text += "from pysd.py_backend.external import %(methods)s\n"\
+                    % {'methods': ", ".join(cls._external)}
+        if cls._utils:
+            text += "from pysd.py_backend.utils import %(methods)s\n"\
+                    % {'methods': ", ".join(cls._utils)}
+
+        if cls._subs:
+            text += "from pysd import cache, subs\n"
+        else:
+            # we need to import always cache as it is called in the integration
+            text += "from pysd import cache\n"
+
+        cls.reset()
+
+        return text, root
+
+    @classmethod
+    def reset(cls):
+        """
+        Reset the imported modules
+        """
+        cls._numpy, cls._xarray, cls._subs = False, False, False
+        cls._functions, cls._external, cls._utils = set(), set(), set()
+
+
 # Variable to save identifiers of external objects
 build_names = set()
-
-# dictionary for intelligent imports in model file
-import_modules = {
-    'numpy': False,
-    'xarray': False,
-    'subs': False,
-    'functions': set(),
-    'external': set(),
-    'utils': set()}
 
 
 def build(elements, subscript_dict, namespace, outfile_name):
@@ -64,50 +131,19 @@ def build(elements, subscript_dict, namespace, outfile_name):
     functions = [build_element(element, subscript_dict)
                  for element in elements]
 
-    text = '''
-    """
-    Python model "%(outfile)s"
-    Translated using PySD version %(version)s
-    """
-    from os import path\n''' % {'outfile': os.path.basename(outfile_name),
-                                'version': __version__}
+    text, root = Imports.get_header(os.path.basename(outfile_name))
 
-    # intelligent import of needed functions and packages
-    if import_modules['numpy']:
-        text += "    import numpy as np\n"
-    if import_modules['xarray']:
-        text += "    import xarray as xr\n"
-    text += "\n"
+    text += textwrap.dedent('''
+    __pysd_version__ = "%(version)s"
 
-    if import_modules['functions']:
-        text += "    from pysd.py_backend.functions import %(methods)s\n"\
-                % {'methods': ", ".join(import_modules['functions'])}
-    if import_modules['external']:
-        text += "    from pysd.py_backend.external import %(methods)s\n"\
-                % {'methods': ", ".join(import_modules['external'])}
-    if import_modules['utils']:
-        text += "    from pysd.py_backend.utils import %(methods)s\n"\
-                % {'methods': ", ".join(import_modules['utils'])}
-
-    if import_modules['subs']:
-        text += "    from pysd import cache, subs\n"
-    else:
-        # we need to import always cache as it is called in the integration
-        text += "    from pysd import cache\n"
-
-    text += '''
     _subscript_dict = %(subscript_dict)s
 
     _namespace = %(namespace)s
-
-    __pysd_version__ = "%(version)s"
-
+    %(root)s
     __data = {
         'scope': None,
         'time': lambda: 0
     }
-
-    _root = path.dirname(__file__)
 
     def _init_outer_references(data):
         for key in data:
@@ -118,10 +154,8 @@ def build(elements, subscript_dict, namespace, outfile_name):
 
     ''' % {'subscript_dict': repr(subscript_dict),
            'namespace': repr(namespace),
-           'version': __version__}
-
-    text = text.replace('\t', '    ')
-    text = textwrap.dedent(text)
+           'root': root,
+           'version': __version__})
 
     funcs = "%(functions)s" % {'functions': '\n'.join(functions)}
     funcs = funcs.replace('\t', '    ')
@@ -132,10 +166,6 @@ def build(elements, subscript_dict, namespace, outfile_name):
 
     # this is needed if more than one model are translated in the same session
     build_names.clear()
-    for module in ['numpy', 'xarray', 'subs']:
-        import_modules[module] = False
-    for module in ['functions', 'external', 'utils']:
-        import_modules[module].clear()
 
     # this is used for testing
     if outfile_name == 'return':
@@ -197,7 +227,7 @@ def build_element(element, subscript_dict):
         # need to append true to the end as the next element is checked
         py_expr_no_ADD.append(True)
         for i, (py_expr, subs_i) in enumerate(zip(element['py_expr'],
-                                                element['subs'])):
+                                                  element['subs'])):
             if not (py_expr[:3] == 'xr.' or py_expr[:5] == '_ext_'):
                 # rearrange if it doesn't come from external or xarray
                 coords = utils.make_coord_dict(subs_i, subscript_dict,
@@ -205,13 +235,13 @@ def build_element(element, subscript_dict):
                 coords = {new_dim: coords[dim] for new_dim, dim
                           in zip(new_subs, coords)}
                 dims = list(coords)
-                import_modules['utils'].add("rearrange")
+                Imports.add('utils', 'rearrange')
                 py_expr_i.append('rearrange(%s, %s, %s)' % (
                     py_expr, dims, coords))
             elif py_expr_no_ADD[i]:
                 # element comes from external or xarray
                 py_expr_i.append(py_expr)
-        import_modules['utils'].add("xrmerge")
+        Imports.add('utils', 'xrmerge')
         py_expr = 'xrmerge([%s,])' % (
             ',\n'.join(py_expr_i))
     else:
@@ -235,7 +265,7 @@ def build_element(element, subscript_dict):
             # maximum when we use it
             # re arrange the python object
             element['subs_dec'] = '@subs(%s, _subscript_dict)' % new_subs
-            import_modules['subs'] = True
+            Imports.add('subs')
 
     indent = 8
     element.update({'cache': cache_type,
@@ -379,7 +409,7 @@ def add_stock(identifier, expression, initial_condition,
         that these can be appropriately aggregated
 
     """
-    import_modules['functions'].add("Integ")
+    Imports.add('functions', 'Integ')
 
     new_structure = []
     py_name = '_integ_%s' % identifier
@@ -484,7 +514,7 @@ def add_delay(identifier, delay_input, delay_time, initial_value, order,
         list of element construction dictionaries for the builder to assemble
 
     """
-    import_modules['functions'].add("Delay")
+    Imports.add('functions', 'Delay')
 
     new_structure = []
     py_name = '_delay_%s' % identifier
@@ -585,7 +615,7 @@ def add_delay_f(identifier, delay_input, delay_time, initial_value):
         list of element construction dictionaries for the builder to assemble
 
     """
-    import_modules['functions'].add("DelayFixed")
+    Imports.add('functions', 'DelayFixed')
 
     py_name = '_delayfixed_%s' % identifier
 
@@ -660,7 +690,7 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
         list of element construction dictionaries for the builder to assemble
 
     """
-    import_modules['functions'].add("DelayN")
+    Imports.add('functions', 'DelayN')
 
     new_structure = []
     py_name = '_delayn_%s' % identifier
@@ -754,7 +784,7 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value):
         list of element construction dictionaries for the builder to assemble
 
     """
-    import_modules['functions'].add("SampleIfTrue")
+    Imports.add('functions', 'SampleIfTrue')
 
     py_name = '_sample_if_true_%s' % identifier
 
@@ -821,7 +851,7 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order,
         list of element construction dictionaries for the builder to assemble
 
     """
-    import_modules['functions'].add("Smooth")
+    Imports.add('functions', 'Smooth')
 
     new_structure = []
     py_name = '_smooth_%s' % identifier
@@ -916,7 +946,7 @@ def add_n_trend(identifier, trend_input, average_time, initial_trend,
 
     """
 
-    import_modules['functions'].add("Trend")
+    Imports.add('functions', 'Trend')
 
     new_structure = []
     py_name = '_trend_%s' % identifier
@@ -986,7 +1016,7 @@ def add_initial(initial_input):
 
     """
 
-    import_modules['functions'].add("Initial")
+    Imports.add('functions', 'Initial')
     py_name = utils.make_python_identifier('_initial_%s'
                                            % initial_input)[0]
 
@@ -1047,7 +1077,7 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell,
               if isinstance(keyword, str) else keyword
     name = utils.make_python_identifier('_ext_data_%s' % identifier)[0]
 
-    import_modules['external'].add("ExtData")
+    Imports.add('external', 'ExtData')
 
     # Check if the object already exists
     if name in build_names:
@@ -1114,7 +1144,7 @@ def add_ext_constant(identifier, file_name, tab, cell,
         list of element construction dictionaries for the builder to assemble
 
     """
-    import_modules['external'].add("ExtConstant")
+    Imports.add('external', 'ExtConstant')
 
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
     name = utils.make_python_identifier('_ext_constant_%s' % identifier)[0]
@@ -1185,7 +1215,7 @@ def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell,
         list of element construction dictionaries for the builder to assemble
 
     """
-    import_modules['external'].add("ExtLookup")
+    Imports.add('external', 'ExtLookup')
 
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
     name = utils.make_python_identifier('_ext_lookup_%s' % identifier)[0]
@@ -1246,7 +1276,7 @@ def add_macro(macro_name, filename, arg_names, arg_vals):
         list of element construction dictionaries for the builder to assemble
 
     """
-    import_modules['functions'].add("Macro")
+    Imports.add('functions', 'Macro')
 
     py_name = '_macro_' + macro_name + '_' + '_'.join(
         [utils.make_python_identifier(f)[0] for f in arg_vals])
@@ -1280,7 +1310,7 @@ def add_incomplete(var_name, dependencies):
      in which we can raise a warning about the incomplete equation
      at translate time.
     """
-    import_modules['functions'].add("incomplete")
+    Imports.add('functions', 'incomplete')
 
     warnings.warn('%s has no equation specified' % var_name,
                   SyntaxWarning, stacklevel=2)
@@ -1329,10 +1359,10 @@ def build_function_call(function_def, user_arguments):
     if "module" in function_def:
         if function_def["module"] in ["numpy", "xarray"]:
             # import external modules
-            import_modules[function_def['module']] = True
+            Imports.add(function_def['module'])
         else:
             # import method from PySD module
-            import_modules[function_def['module']].add(function_def['name'])
+            Imports.add(function_def['module'], function_def['name'])
 
     if "parameters" in function_def:
         parameters = function_def["parameters"]
