@@ -686,3 +686,22 @@ class TestParse_sketch_line(unittest.TestCase):
                     "probably used definition is not integrated..."
                     "\nSee parsimonious output above." % (line), err.args[0]
                 )
+
+class TestParse_private_functions(unittest.TestCase):
+    def test__split_sketch_warning(self):
+        import warnings
+        from pysd.py_backend.vensim.vensim2py import _split_sketch
+        
+        model_str = "this is my model"
+
+        with warnings.catch_warnings(record=True) as ws:
+            text, sketch = _split_sketch(model_str)
+            
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 1)
+            self.assertTrue("Your model does not have a sketch." in str(wu[0].message))
+
+            self.assertEqual(text, model_str)
+            self.assertEqual(sketch, "")
+
