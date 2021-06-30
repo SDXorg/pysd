@@ -8,4 +8,5 @@ regex
 chardet
 black
 openpyxl
+scipy
 

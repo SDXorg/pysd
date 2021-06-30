@@ -6,4 +6,3 @@ if __name__ == "__main__":
         main(["--help"])
     else:
         main(sys.argv[1:])
-
