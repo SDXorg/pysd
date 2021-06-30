@@ -491,7 +491,7 @@ def parse_sketch_line(sketch_line, namespace):
 
     sketch_grammar = _include_common_grammar(
         r"""
-            line = var_definition / module_intro / module_title / module_definition / arrow / flow / plot_var / other_objects / anything
+            line = var_definition / module_intro / module_title / module_definition / arrow / flow / other_objects
             
             module_intro = ~r"\s*Sketch.*?names$" / ~r"^V300.*?ignored$"
             module_title = "*" module_name
@@ -525,9 +525,6 @@ def parse_sketch_line(sketch_line, namespace):
             source_or_sink_or_plot = multipurpose_code "," anything
             flow_arrow =  flow_arrow_code "," anything
             other_objects = other_objects_code "," anything
-            
-            # Variable names after a line with a plot definition, comments, anything really
-            plot_var = anything # ~r"^[^,]+$" # if the comment contains commas, it's going to be problematic
             
             # fonts
             font_properties = font_name? "|" font_size "|" font_style? "|" color  # if the B from an RGB is either 1 or 2 (very unlikely), the parser may not be able to tell the begining of the next line
@@ -1616,14 +1613,15 @@ def split_sketch(text):
 
     """
     split_model = text.split("\\\\\\---///", 1)
+    text = split_model[0]
 
     try:
-        text = split_model[0]
         sketch = split_model[1]
         # remove plots section, if it exists
         sketch = sketch.split("///---\\\\\\")[0]
-    except:
-        raise ("Your model does not have a sketch.")
+    except LookupError:
+        sketch = ""
+        warnings.warn("Your model does not have a sketch.")
 
     return text, sketch
 

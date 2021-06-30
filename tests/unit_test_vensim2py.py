@@ -644,7 +644,7 @@ class TestParse_general_expression(unittest.TestCase):
 
 
 class TestParse_sketch_line(unittest.TestCase):
-    def test_parse_variable_name(self):
+    def test_parse_sketch_line(self):
         from pysd.py_backend.vensim.vensim2py import parse_sketch_line
 
         namespace = {'"var-n"': "varn", "Stock": "stock", '"rate-1"': "rate1"}
@@ -672,3 +672,17 @@ class TestParse_sketch_line(unittest.TestCase):
             self.assertEqual(res["variable_name"], expected_var[num])
             self.assertEqual(res["module_name"], expected_mod[num])
 
+    def test_parse_sketch_line_error(self):
+        from pysd.py_backend.vensim.vensim2py import parse_sketch_line
+        
+        namespace = {'"var_1"': "var_1"}
+        line = "10,2,whatever"
+        try:
+            parse_sketch_line(line, namespace)
+            self.assertFail()
+        except ValueError as err:
+            self.assertIn(
+                    "\nError when parsing definition:\n\t %s\n\n"
+                    "probably used definition is not integrated..."
+                    "\nSee parsimonious output above." % (line), err.args[0]
+                )
