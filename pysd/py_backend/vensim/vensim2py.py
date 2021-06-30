@@ -496,12 +496,10 @@ def parse_sketch_line(sketch_line, namespace):
             module_intro = ~r"\s*Sketch.*?names$" / ~r"^V300.*?ignored$"
             module_title = "*" module_name
             module_name = ~r"(?<=\*)[^\n]+$"
-            module_definition = "$" color "," digit "," font_properties "|" ((color / weird_stuff) "|")* module_code
-            var_definition = var_code "," var_number "," var_name "," position "," var_box_type "," arrows_in_allowed "," hide_level "," var_face "," var_word_position "," var_thickness "," var_rest_conf ","? ((weird_stuff / color) ",")* font_properties?
-            #line_of_symbols = ~r"^[^\w]+$"
             
-            id = ( basic_id / escape_group )
-
+            module_definition = "$" color "," digit "," font_properties "|" ( ( color / ones_and_dashes ) "|")* module_code
+            var_definition = var_code "," var_number "," var_name "," position "," var_box_type "," arrows_in_allowed "," hide_level "," var_face "," var_word_position "," var_thickness "," var_rest_conf ","? ( ( ones_and_dashes / color) ",")* font_properties?
+            
             # elements used in a line defining the properties of a variable or stock (most are digits, but identifying them now may be useful for further parsing)
             var_name = element
             var_name = ~r"(?<=,)[^,]+(?=,)"
@@ -514,7 +512,7 @@ def parse_sketch_line(sketch_line, namespace):
             var_thickness = digit
             var_rest_conf = digit "," ~r"\d+"
             
-            arrow = arrow_code "," digit "," origin_var "," destination_var "," (digit ",")+ (weird_stuff ",")?  ((color ",") / ("," ~r"\d+") / (font_properties "," ~r"\d+"))* "|(" position ")|"
+            arrow = arrow_code "," digit "," origin_var "," destination_var "," (digit ",")+ (ones_and_dashes ",")?  ((color ",") / ("," ~r"\d+") / (font_properties "," ~r"\d+"))* "|(" position ")|"
             
             # arrow origin and destination (this may be useful if further parsing is required)
             origin_var = digit
@@ -535,10 +533,9 @@ def parse_sketch_line(sketch_line, namespace):
             #font_name = ~r"(%(fonts)s)"IU
             font_name = ~r"(?<=,)[^\|\d]+(?=\|)"
 
-            # this may be useful if further parsing is required
-            position = ~r"-*\d+,-*\d+" # x and y
-            
-            odd_number = ~r"(?<=,)\d*[02468](?<=,)"
+            # x and y within the view layout. This may be useful if further parsing is required
+            position = ~r"-*\d+,-*\d+"
+                      
             # rgb color
             color = ~r"((?<!\d|\.)([0-9]?[0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(?!\d|\.) *[-] *){2}(?<!\d|\.)([0-9]?[0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(?!\d|\.)" # rgb as in 255-255-255
             
@@ -548,12 +545,14 @@ def parse_sketch_line(sketch_line, namespace):
             var_code = ~r"^10(?=,)"
             multipurpose_code = ~r"^12(?=,)" # source, sink, plot, comment
             other_objects_code = ~r"^(30|31)(?=,)"
-            # code at the end of module definitions
-            module_code = ~r"\d+" "," digit "," digit "," ~r"\d+"
+            module_code = ~r"\d+" "," digit "," digit "," ~r"\d+" # code at the end of module definitions
+            
+            id = ( basic_id / escape_group )
+
             # comma separated value/s
             digit = ~r"(?<=,)\d+(?=,)"
 
-            weird_stuff = ~r"\-1\-\-1\-\-1"
+            ones_and_dashes = ~r"\-1\-\-1\-\-1"
             anything = ~r".*" # this one is dangerous, if something is not parsed before, it will fall here, with the risk of missing it
             """
     )
