@@ -491,17 +491,19 @@ def parse_sketch_line(sketch_line, namespace):
 
     sketch_grammar = _include_common_grammar(
         r"""
-            line = var_definition / module_intro / module_title / module_definition / arrow / flow / other_objects
+            line = var_definition / module_intro / module_title / module_definition / arrow / flow / other_objects / id
             
             module_intro = ~r"\s*Sketch.*?names$" / ~r"^V300.*?ignored$"
             module_title = "*" module_name
             module_name = ~r"(?<=\*)[^\n]+$"
-            module_definition = "$" color "," ~r"\d" "," font_properties "|" ((color / weird_stuff) "|")* module_code
+            module_definition = "$" color "," digit "," font_properties "|" ((color / weird_stuff) "|")* module_code
             var_definition = var_code "," var_number "," var_name "," position "," var_box_type "," arrows_in_allowed "," hide_level "," var_face "," var_word_position "," var_thickness "," var_rest_conf ","? ((weird_stuff / color) ",")* font_properties?
             #line_of_symbols = ~r"^[^\w]+$"
             
+            id = ( basic_id / escape_group )
+
             # elements used in a line defining the properties of a variable or stock (most are digits, but identifying them now may be useful for further parsing)
-            var_name = element #( basic_id / escape_group )
+            var_name = element
             var_name = ~r"(?<=,)[^,]+(?=,)"
             var_number = digit               
             var_box_type = ~r"(?<=,)\d+,\d+,\d+(?=,)" # improve this regex
@@ -536,8 +538,6 @@ def parse_sketch_line(sketch_line, namespace):
             # this may be useful if further parsing is required
             position = ~r"-*\d+,-*\d+" # x and y
             
-            # comma separated value/s
-            digit = ~r"(?<=,)\d+(?=,)"
             odd_number = ~r"(?<=,)\d*[02468](?<=,)"
             # rgb color
             color = ~r"((?<!\d|\.)([0-9]?[0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(?!\d|\.) *[-] *){2}(?<!\d|\.)([0-9]?[0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(?!\d|\.)" # rgb as in 255-255-255
@@ -549,8 +549,10 @@ def parse_sketch_line(sketch_line, namespace):
             multipurpose_code = ~r"^12(?=,)" # source, sink, plot, comment
             other_objects_code = ~r"^(30|31)(?=,)"
             # code at the end of module definitions
-            module_code = "96,96" "," ~r"\d{1,3}" "," "0"
-            
+            module_code = ~r"\d+" "," digit "," digit "," ~r"\d+"
+            # comma separated value/s
+            digit = ~r"(?<=,)\d+(?=,)"
+
             weird_stuff = ~r"\-1\-\-1\-\-1"
             anything = ~r".*" # this one is dangerous, if something is not parsed before, it will fall here, with the risk of missing it
             """
@@ -1514,7 +1516,9 @@ def translate_section(section, macro_list, sketch, root_path):
         e for e in model_elements if e["kind"] not in ["subdef", "test", "section"]
     ]
 
-    if sketch and (section["name"] == "_main_"): # macros are built in their own separate files, and their inputs and outputs are put in modules
+    if sketch and (
+        section["name"] == "_main_"
+    ):  # macros are built in their own separate files, and their inputs and outputs are put in modules
 
         module_elements = classify_elements_by_module(sketch, namespace)
 

@@ -248,8 +248,8 @@ class TestPySD(unittest.TestCase):
         wu = [w for w in ws if issubclass(w.category, UserWarning)]
 
         self.assertEqual(len(wu), 1)
-        self.assertIn(
-            "Only one module was detected", str(wu[0].message)
+        self.assertTrue(
+            "Only one module was detected" in str(wu[0].message)
         )  # check that warning references the stock
 
     def test_run_includes_last_value(self):
