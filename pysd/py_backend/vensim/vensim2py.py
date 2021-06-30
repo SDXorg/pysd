@@ -1520,7 +1520,7 @@ def translate_section(section, macro_list, sketch, root_path):
         section["name"] == "_main_"
     ):  # macros are built in their own separate files, and their inputs and outputs are put in modules
 
-        module_elements = classify_elements_by_module(sketch, namespace)
+        module_elements = _classify_elements_by_module(sketch, namespace)
 
         if len(module_elements.keys()) == 1:
             warnings.warn(
@@ -1541,7 +1541,7 @@ def translate_section(section, macro_list, sketch, root_path):
     return section["file_name"]
 
 
-def classify_elements_by_module(sketch, namespace):
+def _classify_elements_by_module(sketch, namespace):
 
     """
     Takes the Vensim sketch as a string, parses it (line by line) and returns a
@@ -1599,7 +1599,7 @@ def classify_elements_by_module(sketch, namespace):
     return module_elements_
 
 
-def split_sketch(text):
+def _split_sketch(text):
     """
     Splits the model file between the main section and the sketch
     Parameters
@@ -1662,7 +1662,7 @@ def translate_vensim(mdl_file, split_modules):
     out_dir = os.path.dirname(outfile_name)
 
     if split_modules:
-        text, sketch = split_sketch(text)
+        text, sketch = _split_sketch(text)
     else:
         sketch = ""
 
