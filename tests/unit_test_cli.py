@@ -385,3 +385,44 @@ class TestPySD(unittest.TestCase):
         self.assertTrue(
             (stocks['lookup_2d_time[Row2]'] == temp_timeseries).all())
         os.remove(out_tab_file)
+
+    def test_export_import(self):
+        import pysd
+        from pysd.tools.benchmarking import assert_frames_close
+
+        exp_file = 'teacup15.pic'
+        model = pysd.read_vensim(test_model)
+        stocks = model.run(return_timestamps=[0, 10, 20, 30])
+        self.assertTrue((stocks['INITIAL TIME'] == 0).all().all())
+
+        command = f'{call} -o {out_tab_file} -e {exp_file} -F 15 -R 0,10'\
+                  f' {test_model}'
+
+        command2 = f'{call} -o {out_tab_file} -i {exp_file} -R 20,30'\
+                   f' {test_model}'
+
+        out = subprocess.run(split_bash(command), capture_output=True)
+        stderr = out.stderr.decode(encoding_stderr)
+        print(stderr)
+        self.assertEqual(out.returncode, 0)
+        stocks1 = load_outputs(out_tab_file)
+
+        out = subprocess.run(split_bash(command2), capture_output=True)
+        self.assertEqual(out.returncode, 0)
+        stocks2 = load_outputs(out_tab_file)
+
+        os.remove(exp_file)
+        os.remove(out_tab_file)
+
+        self.assertTrue((stocks1['INITIAL TIME'] == 0).all().all())
+        self.assertTrue((stocks1['FINAL TIME'] == 15).all().all())
+        self.assertTrue((stocks2['INITIAL TIME'] == 15).all().all())
+        stocks.drop('INITIAL TIME', axis=1, inplace=True)
+        stocks1.drop('INITIAL TIME', axis=1, inplace=True)
+        stocks2.drop('INITIAL TIME', axis=1, inplace=True)
+        stocks.drop('FINAL TIME', axis=1, inplace=True)
+        stocks1.drop('FINAL TIME', axis=1, inplace=True)
+        stocks2.drop('FINAL TIME', axis=1, inplace=True)
+
+        assert_frames_close(stocks1, stocks.loc[[0, 10]])
+        assert_frames_close(stocks2, stocks.loc[[20, 30]])

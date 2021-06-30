@@ -160,7 +160,6 @@ class TestPySD(unittest.TestCase):
         import pysd
         model = pysd.read_vensim(test_model)
         result = model.run(return_columns='step')
-        print(result.columns)
         self.assertEqual(
             set(result.columns),
             {'Teacup Temperature', 'SAVEPER', 'Heat Loss to Room'})
@@ -202,7 +201,6 @@ class TestPySD(unittest.TestCase):
         stocks2 = model.run(initial_condition='teacup10.pic',
                             return_timestamps=[20, 30])
         self.assertTrue((stocks2['INITIAL TIME'] == 10).all().all())
-        print(stocks.columns)
         stocks.drop('INITIAL TIME', axis=1, inplace=True)
         stocks1.drop('INITIAL TIME', axis=1, inplace=True)
         stocks2.drop('INITIAL TIME', axis=1, inplace=True)

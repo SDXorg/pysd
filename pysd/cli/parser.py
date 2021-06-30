@@ -175,6 +175,17 @@ parser.add_argument(
     help='provide the return columns separated by commas or a .txt file'
          ' where each row is a variable')
 
+parser.add_argument(
+    '-e', '--export', dest='export_file',
+    type=str, metavar='FILE',
+    help='export to a pickle stateful objects states at the end of the '
+         'simulation')
+
+parser.add_argument(
+    '-i', '--import-initial', dest='import_file',
+    type=str, metavar='FILE',
+    help='import stateful objects states from a pickle file,'
+         'if given initial conditions from var:value will be ignored')
 
 ###################
 # Model arguments #

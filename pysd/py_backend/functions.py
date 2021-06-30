@@ -1191,9 +1191,9 @@ class Model(Macro):
             The times that the integrator will use to compute time history
         """
         t_0 = self.time()
-        t_f = return_timestamps[-1]
+        t_f = max(self.components.final_time(), return_timestamps[-1])
         dt = self.components.time_step()
-        ts = np.arange(t_0, t_f, dt, dtype=np.float64)
+        ts = np.arange(t_0, t_f+dt/2, dt, dtype=np.float64)
 
         # Add the returned time series into the integration array.
         # Best we can do for now. This does change the integration ever

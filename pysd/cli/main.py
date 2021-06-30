@@ -35,6 +35,9 @@ def main(args):
 
     output = model.run(**create_configuration(model, options))
 
+    if options.export_file:
+        model.export(options.export_file)
+
     save(output, options)
     print("\nFinished!")
     sys.exit()
@@ -112,6 +115,9 @@ def create_configuration(model, options):
         "flatten_output": True,  # need to return totally flat DF
         "return_timestamps": options.return_timestamps  # given or None
     }
+
+    if options.import_file:
+        conf_dict["initial_condition"] = options.import_file
 
     return conf_dict
 
