@@ -13,7 +13,6 @@ Sept 2016: Major refactor, putting most internal code into the Model and Macro o
 """
 
 import sys
-import warnings
 
 if sys.version_info[:2] < (3, 7):
     raise RuntimeError(
