@@ -148,6 +148,18 @@ class TestPySD(unittest.TestCase):
         result = model.run(return_columns=return_columns)
         self.assertEqual(set(result.columns), set(return_columns))
 
+    def test_run_return_columns_step(self):
+        """
+        Return only cache 'step' variables
+        """
+        import pysd
+        model = pysd.read_vensim(test_model)
+        result = model.run(return_columns='step')
+        print(result.columns)
+        self.assertEqual(
+            set(result.columns),
+            {'Teacup Temperature', 'SAVEPER', 'Heat Loss to Room'})
+
     def test_run_reload(self):
         """ Addresses https://github.com/JamesPHoughton/pysd/issues/99"""
         import pysd

@@ -606,6 +606,25 @@ functions_utils = {
         "module": "xarray"}
 }
 
+# logical operators (bool? operator bool)
+in_logical_ops = {
+    ":and:": {
+        "name": "logical_and",
+        "module": "functions"
+    },
+    ":or:": {
+        "name": "logical_or",
+        "module": "functions"
+    }
+}
+
+pre_logical_ops = {
+    ":not:": {
+        "name": "np.logical_not",
+        "module": "numpy"
+    }
+}
+
 data_ops = {
     'get data at time': '',
     'get data between times': '',
@@ -850,11 +869,11 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
     # spaces important for word-based operators
     in_ops = {
         "+": "+", "-": "-", "*": "*", "/": "/", "^": "**", "=": "==",
-        "<=": "<=", "<>": "!=", "<": "<", ">=": ">=", ">": ">",
-        ":and:": " and ", ":or:": " or "}
+        "<=": "<=", "<>": "!=", "<": "<", ">=": ">=", ">": ">"}
 
     pre_ops = {
-        "-": "-", "+": " ", ":not:": " not "
+        "-": "-",
+        "+": " "  # space is important, so that and empty string doesn't slip through generic
     }
 
     # in the following, if lists are empty use non-printable character
@@ -872,9 +891,11 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
 
     expression_grammar = _include_common_grammar(r"""
     expr_type = array / expr / empty
-    expr = _ pre_oper? _ (lookup_with_def / build_call / macro_call /
-                          call / lookup_call / parens / number / string / reference)
-           _ (in_oper _ expr)?
+    expr = _ pre_oper? _ (lookup_with_def / build_call / macro_call / call / lookup_call / parens / number / string / reference) _ (in_oper _ expr)?
+
+    logical_expr = logical_in_expr / logical_pre_expr / logical_parens
+    logical_in_expr = (logical_pre_expr / logical_parens / expr) (_ in_logical_oper _ (logical_pre_expr / logical_parens / expr))+
+    logical_pre_expr = pre_logical_oper _ (logical_parens / expr)
 
     lookup_with_def = ~r"(WITH\ LOOKUP)"I _ "(" _ expr _ "," _ "(" _  ("[" ~r"[^\]]*" "]" _ ",")?  ( "(" _ expr _ "," _ expr _ ")" _ ","? _ )+ _ ")" _ ")"
 
@@ -884,8 +905,9 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
     number = ("+"/"-")? ~r"\d+\.?\d*(e[+-]\d+)?"
     range = _ "[" ~r"[^\]]*" "]" _ ","
 
-    arguments = (expr _ ","? _)*
+    arguments = ((logical_expr / expr) _ ","? _)*
     parens   = "(" _ expr _ ")"
+    logical_parens   = "(" _ logical_expr _ ")"
 
     call = func _ "(" _ arguments _ ")"
     build_call = builder _ "(" _ arguments _ ")"
@@ -903,6 +925,8 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
     func = ~r"(%(funcs)s)"IU  # functions (case insensitive)
     in_oper = ~r"(%(in_ops)s)"IU  # infix operators (case insensitive)
     pre_oper = ~r"(%(pre_ops)s)"IU  # prefix operators (case insensitive)
+    in_logical_oper = ~r"(%(in_logical_ops)s)"IU  # infix operators (case insensitive)
+    pre_logical_oper = ~r"(%(pre_logical_ops)s)"IU  # prefix operators (case insensitive)
     builder = ~r"(%(builders)s)"IU  # builder functions (case insensitive)
     macro = ~r"(%(macros)s)"IU  # macros from model file (if none, use non-printable character)
 
@@ -915,6 +939,8 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
         'funcs': '|'.join(reversed(sorted(functions.keys(), key=len))),
         'in_ops': '|'.join(reversed(sorted(in_ops_list, key=len))),
         'pre_ops': '|'.join(reversed(sorted(pre_ops_list, key=len))),
+        'in_logical_ops': '|'.join(reversed(sorted(in_logical_ops.keys(), key=len))),
+        'pre_logical_ops': '|'.join(reversed(sorted(pre_logical_ops.keys(), key=len))),
         'builders': '|'.join(reversed(sorted(builders.keys(), key=len))),
         'macros': '|'.join(reversed(sorted(macro_names_list, key=len)))
     })
@@ -939,6 +965,8 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
             self.arguments = None
             self.in_oper = None
             self.args = []
+            self.logical_op = None
+            self.to_float = False # convert subseted reference to float
             self.visit(ast)
 
         def visit_expr_type(self, n, vc):
@@ -970,13 +998,49 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
         def visit_pre_oper(self, n, vc):
             return pre_ops[n.text.lower()]
 
+        def visit_logical_in_expr(self, n, vc):
+            # build logical in expression (or, and)
+            expr = "".join(vc)
+            expr_low = expr.lower()
+
+            if ":and:" in expr_low and ":or:" in expr_low:
+                raise ValueError(
+                   "\nError when parsing %s with equation\n\t %s\n\n"
+                   "mixed definition of logical operators :OR: and :AND:"
+                   "\n Use parethesis to avoid confusions." % (
+                       element['real_name'], element['eqn'])
+                   )
+            elif ":and:" in expr_low:
+                expr = re.split(":and:", expr, flags=re.IGNORECASE)
+                op = ':and:'
+            elif ":or:" in expr_low:
+                expr = re.split(":or:", expr, flags=re.IGNORECASE)
+                op = ':or:'
+
+            return builder.build_function_call(in_logical_ops[op], expr)
+
+        def visit_logical_pre_expr(self, n, vc):
+            # build logical pre expression (not)
+            return builder.build_function_call(pre_logical_ops[vc[0].lower()],
+                                               [vc[-1]])
+
+        def visit_logical_parens(self, n, vc):
+            # we can forget about the parenthesis in logical expressions
+            # as we pass them as arguments to other functions:
+            #    (A or B) and C -> logical_and(logical_or(A, B), C)
+            return vc[2]
+
         def visit_reference(self, n, vc):
             self.kind = 'component'
 
             py_expr = vc[0] + "()" + self.append
             self.append = ""
 
-            if self.subs:
+            if self.to_float:
+                # convert element to float after subscript subsetting
+                self.to_float = False
+                return "float(" + py_expr.replace(".reset_coords(drop=True","")
+            elif self.subs:
                 if elements_subs_dict[vc[0]] != self.subs:
                     py_expr = builder.build_function_call(
                         functions_utils["rearrange"],
@@ -1002,6 +1066,7 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
             # necessary if a lookup dimension is subselected but we have
             # other reference objects as arguments
             self.lookup_append.append(self.append)
+            self.to_float = False  # argument may have dims, cannot convert
             self.append = ""
 
             # recover subs for lookup to avoid using them for arguments
@@ -1124,6 +1189,9 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
 
                 if subs2:
                     self.subs = subs2
+                else:
+                    # convert subseted element to float (avoid using 0D xarray)
+                    self.to_float = True
 
                 self.append = ".loc[%s].reset_coords(drop=True)" % (
                     ', '.join(coords))

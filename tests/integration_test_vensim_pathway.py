@@ -435,6 +435,10 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subscripted_if_then_else/test_subscripted_if_then_else.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    def test_subscripted_logicals(self):
+        output, canon = runner('test-models/tests/subscripted_logicals/test_subscripted_logicals.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_subscripted_smooth(self):
         # issue https://github.com/JamesPHoughton/pysd/issues/226
         output, canon = runner('test-models/tests/subscripted_smooth/test_subscripted_smooth.mdl')

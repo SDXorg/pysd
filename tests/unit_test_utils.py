@@ -1,6 +1,5 @@
 import doctest
 from unittest import TestCase
-from numpy import column_stack
 
 import pandas as pd
 import xarray as xr
@@ -44,19 +43,19 @@ class TestUtils(TestCase):
         self.assertIn(xr.DataArray(1., {'ABC': ['C']}, ['ABC']), s1d)
         # check some values for 2d and 3d
         self.assertIn(xr.DataArray(0.5,
-                                   {'ABC': ['A'],'XY': ['X']},
+                                   {'ABC': ['A'], 'XY': ['X']},
                                    ['ABC', 'XY']),
                       s2d)
         self.assertIn(xr.DataArray(-0.5,
-                                   {'ABC': ['B'],'XY': ['Y']},
+                                   {'ABC': ['B'], 'XY': ['Y']},
                                    ['ABC', 'XY']),
                       s2d)
         self.assertIn(xr.DataArray(-0.5,
-                                   {'ABC': ['B'],'XY': ['Y'], 'FG': ['F']},
+                                   {'ABC': ['B'], 'XY': ['Y'], 'FG': ['F']},
                                    ['ABC', 'XY', 'FG']),
                       s3d)
         self.assertIn(xr.DataArray(0.75,
-                                   {'ABC': ['C'],'XY': ['X'], 'FG': ['G']},
+                                   {'ABC': ['C'], 'XY': ['X'], 'FG': ['G']},
                                    ['ABC', 'XY', 'FG']),
                       s3d)
 
@@ -64,11 +63,10 @@ class TestUtils(TestCase):
         import pysd
 
         self.assertEqual(
-            pysd.utils.get_return_elements(["Inflow A[Entry 1,Column 1]",
-                                 "Inflow A[Entry 1,Column 2]"],
-                                {'Inflow A': 'inflow_a'},
-                                {'Dim1': ['Entry 1', 'Entry 2'],
-                                 'Dim2': ['Column 1', 'Column 2']}),
+            pysd.utils.get_return_elements(
+                ["Inflow A[Entry 1,Column 1]",
+                 "Inflow A[Entry 1,Column 2]"],
+                {'Inflow A': 'inflow_a'}),
             (['inflow_a'],
              {'Inflow A[Entry 1,Column 1]': ('inflow_a', ('Entry 1', 'Column 1')),
               'Inflow A[Entry 1,Column 2]': ('inflow_a', ('Entry 1', 'Column 2'))}
@@ -78,12 +76,9 @@ class TestUtils(TestCase):
     def test_get_return_elements_realnames(self):
         import pysd
         self.assertEqual(
-            pysd.utils.get_return_elements(["Inflow A",
-                                 "Inflow B"],
-                                subscript_dict={'Dim1': ['Entry 1', 'Entry 2'],
-                                                'Dim2': ['Column 1', 'Column 2']},
-                                namespace={'Inflow A': 'inflow_a',
-                                           'Inflow B': 'inflow_b'}),
+            pysd.utils.get_return_elements(
+                ["Inflow A", "Inflow B"],
+                {'Inflow A': 'inflow_a', 'Inflow B': 'inflow_b'}),
             (['inflow_a', 'inflow_b'],
              {'Inflow A': ('inflow_a', None),
               'Inflow B': ('inflow_b', None)}
@@ -93,12 +88,9 @@ class TestUtils(TestCase):
     def test_get_return_elements_pysafe_names(self):
         import pysd
         self.assertEqual(
-            pysd.utils.get_return_elements(["inflow_a",
-                                 "inflow_b"],
-                                subscript_dict={'Dim1': ['Entry 1', 'Entry 2'],
-                                                'Dim2': ['Column 1', 'Column 2']},
-                                namespace={'Inflow A': 'inflow_a',
-                                           'Inflow B': 'inflow_b'}),
+            pysd.utils.get_return_elements(
+                ["inflow_a", "inflow_b"],
+                {'Inflow A': 'inflow_a', 'Inflow B': 'inflow_b'}),
             (['inflow_a', 'inflow_b'],
              {'inflow_a': ('inflow_a', None),
               'inflow_b': ('inflow_b', None)}
@@ -112,22 +104,18 @@ class TestUtils(TestCase):
         import pysd
 
         with self.assertRaises(KeyError):
-            pysd.utils.get_return_elements([
-                "inflow_a",
-                "inflow_b", "inflow_c"],
-                subscript_dict={'Dim1': ['Entry 1', 'Entry 2'],
-                                'Dim2': ['Column 1', 'Column 2']},
-                namespace={'Inflow A': 'inflow_a',
-                           'Inflow B': 'inflow_b'})
+            pysd.utils.get_return_elements(
+                ["inflow_a", "inflow_b", "inflow_c"],
+                {'Inflow A': 'inflow_a', 'Inflow B': 'inflow_b'})
 
     def test_make_flat_df(self):
         import pysd
 
         df = pd.DataFrame(index=[1], columns=['elem1'])
-        df.at[1] = [ xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                                  {'Dim1': ['A', 'B', 'C'],
-                                   'Dim2': ['D', 'E', 'F']},
-                                  dims=['Dim1', 'Dim2'])]
+        df.at[1] = [xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                                 {'Dim1': ['A', 'B', 'C'],
+                                  'Dim2': ['D', 'E', 'F']},
+                                 dims=['Dim1', 'Dim2'])]
 
         expected = pd.DataFrame(index=[1], columns=['Elem1[B,F]'])
         expected.at[1] = [6]
@@ -233,7 +221,7 @@ class TestUtils(TestCase):
 
         return_addresses = {
             'Elem1[A,Dim2]': ('elem1', {'Dim1': ['A'],
-                                         'Dim2': ['D', 'E', 'F']}),
+                                        'Dim2': ['D', 'E', 'F']}),
             'Elem2': ('elem2', {})}
 
         actual = pysd.utils.make_flat_df(df, return_addresses, flatten=True)

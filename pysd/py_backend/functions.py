@@ -1072,21 +1072,23 @@ class Model(Macro):
 
         Parameters
         ----------
-        params : dictionary
+        params : dictionary (optional)
             Keys are strings of model component names.
             Values are numeric or pandas Series.
             Numeric values represent constants over the model integration.
             Timeseries will be interpolated to give time-varying input.
 
-        return_timestamps : list, numeric, numpy array(1-D)
+        return_timestamps : list, numeric, ndarray (1D) (optional)
             Timestamps in model execution at which to return state information.
             Defaults to model-file specified timesteps.
 
-        return_columns : list of string model component names
-            Returned dataframe will have corresponding columns.
-            Defaults to model stock values.
+        return_columns : list, 'step' or None (optional)
+            List of string model component names, returned dataframe
+            will have corresponding columns. If 'step' only variables with
+            cache step will be returned. If None, variables with cache step
+            and run will be returned. Default is None.
 
-        initial_condition : 'original'/'o', 'current'/'c', (t, {state})
+        initial_condition : 'original'/'o', 'current'/'c' or (t, {state}) (optional)
             The starting time, and the state of the system (the values of all the stocks)
             at that starting time.
 
@@ -1136,15 +1138,14 @@ class Model(Macro):
 
         t_series = self._build_euler_timeseries(return_timestamps)
 
-        if return_columns is None:
-            return_columns = self._default_return_columns()
+        if return_columns is None or isinstance(return_columns, str):
+            return_columns = self._default_return_columns(return_columns)
 
         self.time.stage = 'Run'
         self.components.cache.clean()
 
         capture_elements, return_addresses = utils.get_return_elements(
-            return_columns, self.components._namespace,
-            self.components._subscript_dict)
+            return_columns, self.components._namespace)
 
         # create a dictionary splitting run cached and others
         capture_elements = self._split_capture_elements(capture_elements)
@@ -1167,23 +1168,40 @@ class Model(Macro):
         self.__init__(self.py_model_file, initialize=True,
                       missing_values=self.missing_values)
 
-    def _default_return_columns(self):
+    def _default_return_columns(self, which):
         """
-        Return a list of the model elements that does not include lookup
-        functions or other functions that take parameters.
+        Return a list of the model elements tha change on time that
+        does not include lookup other functions that take parameters
+        or run-cached functions.
+
+        Parameters
+        ----------
+        which: str or None
+            If it is 'step' only cache step elements will be returned.
+            Else cache 'step' and 'run' elements will be returned.
+            Default is None.
+
+        Returns
+        -------
+        return_columns: list
+            List of columns to return
+
         """
+        if which == 'step':
+            types = ['step']
+        else:
+            types = ['step', 'run']
+
         return_columns = []
         parsed_expr = []
 
         for key, value in self.components._namespace.items():
             if hasattr(self.components, value):
-                sig = signature(getattr(self.components, value))
-                # The `*args` reference handles the py2.7 decorator.
-                if len(set(sig.parameters) - {'args'}) == 0:
-                    expr = self.components._namespace[key]
-                    if expr not in parsed_expr:
-                        return_columns.append(key)
-                        parsed_expr.append(value)
+                func = getattr(self.components, value)
+                if value not in parsed_expr and\
+                   hasattr(func, 'type') and getattr(func, 'type') in types:
+                    return_columns.append(key)
+                    parsed_expr.append(value)
 
         return return_columns
 
@@ -1512,6 +1530,48 @@ def if_then_else(condition, val_if_true, val_if_false):
         return xr.where(condition, val_if_true(), val_if_false())
 
     return val_if_true() if condition else val_if_false()
+
+
+def logical_and(*args):
+    """
+    Implements Vensim's :AND: method for two or several arguments.
+
+    Parameters
+    ----------
+    *args: arguments
+        The values to compare with and operator
+
+    Returns
+    -------
+    result: bool or xarray.DataArray
+        The result of the comparison.
+
+    """
+    current = args[0]
+    for arg in args[1:]:
+        current = np.logical_and(arg, current)
+    return current
+
+
+def logical_or(*args):
+    """
+    Implements Vensim's :OR: method for two or several arguments.
+
+    Parameters
+    ----------
+    *args: arguments
+        The values to compare with and operator
+
+    Returns
+    -------
+    result: bool or xarray.DataArray
+        The result of the comparison.
+
+    """
+    current = args[0]
+    for arg in args[1:]:
+        current = np.logical_or(arg, current)
+    return current
 
 
 def xidz(numerator, denominator, value_if_denom_is_zero):
