@@ -44,3 +44,29 @@ If you want to replace a subscripted variable, you need to ensure that the outpu
 Supplying additional arguments to the integrator
 ------------------------------------------------
 the :py:func:`run` function's argument `intg_kwargs` is a pass-through for keyword arguments to scipy's odeint function, and as such can take on any of the keywords that odeint recognizes.
+
+
+Splitting Vensim views in different files
+-----------------------------------------
+In order to replicate the Vensim views in translated models, the user can set the `split_modules` argument to True in the :py:func:`read_vensim` function::
+
+   read_vensim("many_views_model.mdl", initialize=True, missing_values="warning", split_modules=True)
+
+
+The option to split the model in views is particularly interesting for large models with tens of views. Translating those models into a single file may make the resulting Python model difficult to read and maintain.
+
+In a Vensim model with three separate views (e.g. `view_1`, `view_2` and `view_3`), setting `split_modules` to True would creates the following tree inside the directory where the `.mdl` model is located:
+
+| main-folder
+| ├── modules_many_views_model
+| │   ├── _modules.json
+| │   ├── view_1.py
+| │   ├── view_2.py
+| │   └── view_3.py
+| ├── _namespace_many_views_model.json
+| ├── _subscripts_dict_many_views_model.json
+| ├── many_views_model.py
+| 
+|
+If macros are present, they will be self-contained in files named as the macro itself. The macro inner variables will be placed inside the module that corresponds with the view in which they were defined.
+ 
