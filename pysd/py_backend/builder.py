@@ -155,6 +155,7 @@ def _build_main_module(elements, subscript_dict, file_name):
     Python model "%(outfile)s"
     Translated using PySD
     """
+
     __pysd_version__ = "%(version)s"\n
 
     from os import path\n''' % {
@@ -165,15 +166,7 @@ def _build_main_module(elements, subscript_dict, file_name):
     elements = merge_partial_elements(elements)
     funcs = _generate_functions(elements, subscript_dict)
 
-    if import_modules["numpy"]:
-        text += "    import numpy as np\n"
-    if import_modules["xarray"]:
-        text += "    import xarray as xr\n"
-
-    text += "    import json\n"
-    text += "    import os\n"
-
-    text += "\n"
+    text += "    from pysd.py_backend.utils import load_model_data, open_module\n"
 
     # import of needed functions and packages
     text += _generate_automatic_imports()
@@ -182,25 +175,17 @@ def _build_main_module(elements, subscript_dict, file_name):
     text += """
     
     _root = path.dirname(__file__)
-    
-    with open(os.path.join(_root, '_subscripts_%(outfile)s.json')) as subs:
-        _subscript_dict = json.load(subs)
-    
-    with open(os.path.join(_root, '_namespace_%(outfile)s.json')) as names:
-        _namespace = json.load(names)
-
-    # the _modules.json in the %(outfile)s folder shows to which module each variable belongs
-    with open(os.path.join(_root, 'modules_%(outfile)s', '_modules.json')) as mods:
-        _modules = json.load(mods)
-
-    for module in _modules.keys(): 
-        exec(open(os.path.join(_root, 'modules_%(outfile)s', module + '.py')).read())
 
     __data = {
         'scope': None,
         'time': lambda: 0
     }
+    
+    _namespace, _subscript_dict, _modules = load_model_data(_root, "%(outfile)s")
 
+    # loading modules from the modules_%(outfile)s directory
+    for module in _modules:
+        exec(open_module(_root, "%(outfile)s", module))
 
     def _init_outer_references(data):
         for key in data:
@@ -319,7 +304,7 @@ def build(elements, subscript_dict, namespace, outfile_name):
     # Todo: Sort elements (alphabetically? group stock funcs?)
     elements = merge_partial_elements(elements)
     funcs = _generate_functions(elements, subscript_dict)
-    
+
     text = '''
     """
     Python model "%(outfile)s"
@@ -405,12 +390,12 @@ def _generate_functions(elements, subscript_dict):
     funcs: str
         String containing all formated model functions
     """
-    
+
     functions = [build_element(element, subscript_dict) for element in elements]
-    
+
     funcs = "%(functions)s" % {"functions": "\n".join(functions)}
     funcs = funcs.replace("\t", "    ")
-    
+
     return funcs
 
 
@@ -431,7 +416,7 @@ def _generate_automatic_imports(import_modules=import_modules):
         String with a formatted list of modules to import in the translated model
     
     """
-    
+
     # intelligent import of needed functions and packages
     text = ""
     if import_modules["numpy"]:

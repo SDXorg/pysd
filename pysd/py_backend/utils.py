@@ -7,6 +7,8 @@ functions.py
 import warnings
 import keyword
 import regex as re
+import os
+import json
 
 import numpy as np
 import pandas as pd
@@ -40,14 +42,14 @@ def xrmerge(das, accept_new=True):
     da = das[0]
     for new_da in das[1:]:
         # Expand both to have same dimensions, padding with NaN
-        da, new_da = xr.align(da, new_da, join='outer')
+        da, new_da = xr.align(da, new_da, join="outer")
         # Fill NaNs one way or the other re. accept_new
         da = new_da.fillna(da) if accept_new else da.fillna(new_da)
     return da
 
 
 def xrsplit(array):
-        """
+    """
         Split an array to a list of all the components
 
         Parameters
@@ -60,11 +62,10 @@ def xrsplit(array):
         sp_list: list
             List of shape 0 xarray.DataArrays with coordinates
         """
-        sp_list = [sa for sa in array]
-        if sp_list[0].shape:
-            sp_list = [ssa for sa in sp_list
-                       for ssa in xrsplit(sa)]
-        return sp_list
+    sp_list = [sa for sa in array]
+    if sp_list[0].shape:
+        sp_list = [ssa for sa in sp_list for ssa in xrsplit(sa)]
+    return sp_list
 
 
 def find_subscript_name(subscript_dict, element):
@@ -171,7 +172,7 @@ def make_merge_list(subs_list, subscript_dict):
         coords = make_coord_dict(subs, subscript_dict, terse=False)
         [coords_set[i].update(coords[dim]) for i, dim in enumerate(coords)]
 
-    dims = [None]*len(coords_set)
+    dims = [None] * len(coords_set)
     for i, (coord1, coord2) in enumerate(zip(coords, coords_set)):
         if set(coords[coord1]) == coord2:
             # if the given coordinate already matches return it
@@ -194,7 +195,8 @@ def make_merge_list(subs_list, subscript_dict):
                             + "\n\t{}\nis incomplete ".format(coord2)
                             + "using {} instead.".format(name)
                             + "\nSubscript_dict:"
-                            + "\n\t{}".format(subscript_dict))
+                            + "\n\t{}".format(subscript_dict)
+                        )
                         break
 
             if not dims[i]:
@@ -202,13 +204,15 @@ def make_merge_list(subs_list, subscript_dict):
                 raise ValueError(
                     "Impossible to find the dimension that contains:"
                     + "\n\t{}\nFor subscript_dict:".format(coord2)
-                    + "\n\t{}".format(subscript_dict))
+                    + "\n\t{}".format(subscript_dict)
+                )
 
     return dims
 
 
-def make_python_identifier(string, namespace=None, reserved_words=None,
-                           convert='drop', handle='force'):
+def make_python_identifier(
+    string, namespace=None, reserved_words=None, convert="drop", handle="force"
+):
     """
     Takes an arbitrary string and creates a valid Python identifier.
 
@@ -333,38 +337,37 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
     s = s.strip()
 
     # Make spaces into underscores
-    s = re.sub('[\\s\\t\\n]+', '_', s)
+    s = re.sub("[\\s\\t\\n]+", "_", s)
 
-    if convert == 'hex':
+    if convert == "hex":
         # Convert invalid characters to hex. Note: \p{l} designates all
         # Unicode letter characters (any language), \p{m} designates all
         # mark symbols (e.g., vowel marks in Indian scrips, such as the final)
         # and \p{n} designates all numbers. We allow any of these to be
         # present in the regex.
-        s = ''.join([c.encode("hex") if re.findall('[^\p{l}\p{m}\p{n}_]', c)
-                     else c for c in s])
+        s = "".join(
+            [c.encode("hex") if re.findall("[^\p{l}\p{m}\p{n}_]", c) else c for c in s]
+        )
 
-    elif convert == 'drop':
+    elif convert == "drop":
         # Remove invalid characters
-        s = re.sub('[^\p{l}\p{m}\p{n}_]', '', s)
+        s = re.sub("[^\p{l}\p{m}\p{n}_]", "", s)
 
     # If leading characters are not a letter or underscore add nvs_.
     # Only letters can be leading characters.
-    if re.findall('^[^\p{l}_]+', s):
-        s = 'nvs_' + s
+    if re.findall("^[^\p{l}_]+", s):
+        s = "nvs_" + s
 
     # Check that the string is not a python identifier
-    while (s in keyword.kwlist or
-           s in namespace.values() or
-           s in reserved_words):
-        if handle == 'throw':
-            raise NameError(s + ' already exists in namespace or is a reserved word')
-        if handle == 'force':
+    while s in keyword.kwlist or s in namespace.values() or s in reserved_words:
+        if handle == "throw":
+            raise NameError(s + " already exists in namespace or is a reserved word")
+        if handle == "force":
             if re.match(".*?_\d+$", s):
                 i = re.match(".*?_(\d+)$", s).groups()[0]
-                s = s.strip('_' + i) + '_' + str(int(i) + 1)
+                s = s.strip("_" + i) + "_" + str(int(i) + 1)
             else:
-                s += '_1'
+                s += "_1"
 
     namespace[string] = s
 
@@ -393,7 +396,7 @@ def make_add_identifier(identifier, build_names):
       A vaild python identifier based on the input indentifier
       and the existing ones
     """
-    identifier += 'ADD_'
+    identifier += "ADD_"
     number = 1
     # iterate until finding a non-used identifier
     while identifier + str(number) in build_names:
@@ -437,9 +440,9 @@ def get_return_elements(return_columns, namespace, subscript_dict):
         if col[0] == col[-1] and col[0] == '"':
             name = col
             address = None
-        elif '[' in col:
-            name, location = col.strip(']').split('[')
-            address = tuple([loc.strip() for loc in location.split(',')])
+        elif "[" in col:
+            name, location = col.strip("]").split("[")
+            address = tuple([loc.strip() for loc in location.split(",")])
         else:
             name = col
             address = None
@@ -520,7 +523,7 @@ def visit_addresses(frame, return_addresses):
     return outdict
 
 
-def compute_shape(coords, reshape_len=None, py_name=''):
+def compute_shape(coords, reshape_len=None, py_name=""):
     """
     Computes the 'shape' of a coords dictionary.
     Function used to rearange data in xarrays and
@@ -565,13 +568,16 @@ def compute_shape(coords, reshape_len=None, py_name=''):
 
     # return an error when the current shape is bigger than the requested one
     if shape_len > reshape_len:
-        raise ValueError(py_name + "\n"
-                         + "The shape of the coords to read in a "
-                         + " external file must be at most "
-                         + "{} dimensional".format(reshape_len))
+        raise ValueError(
+            py_name
+            + "\n"
+            + "The shape of the coords to read in a "
+            + " external file must be at most "
+            + "{} dimensional".format(reshape_len)
+        )
 
     # complete with 1s on the left
-    return [1]*(reshape_len-shape_len) + shape
+    return [1] * (reshape_len - shape_len) + shape
 
 
 def get_value_by_insensitive_key_or_value(key, dict):
@@ -613,12 +619,13 @@ def rearrange(data, dims, coords):
         if data.shape == shape:
             # Allows switching dimensions names and transpositions
             return xr.DataArray(data=data.values, coords=coords, dims=dims)
-        elif len(shape) == len(data.shape) and\
-          all([shape[i] < data.shape[i] for i in range(len(shape))]):
+        elif len(shape) == len(data.shape) and all(
+            [shape[i] < data.shape[i] for i in range(len(shape))]
+        ):
             # Allows subscripting a subrange
-            return data.rename({
-                dim: new_dim for dim, new_dim in zip(data.dims, dims)
-                }).loc[coords]
+            return data.rename(
+                {dim: new_dim for dim, new_dim in zip(data.dims, dims)}
+            ).loc[coords]
 
         # The coordinates are expanded or transposed
         return xr.DataArray(0, coords, dims) + data
@@ -659,11 +666,39 @@ def add_entries_underscore(*dictionaries):
     for dictionary in dictionaries:
         keys = list(dictionary)
         for name in keys:
-            dictionary[re.sub(' ', '_', name)] = dictionary[name]
+            dictionary[re.sub(" ", "_", name)] = dictionary[name]
     return
 
 
-class ProgressBar():
+def load_model_data(root_dir, model_name):
+
+    """
+    Used for models split in several files.
+    Loads subscripts_dic, namespace and modules dictionaries
+    """
+    
+    with open(os.path.join(root_dir, "_subscripts_" + model_name + ".json")) as subs:
+        subscripts = json.load(subs)
+
+    with open(os.path.join(root_dir, "_namespace_" + model_name + ".json")) as names:
+        namespace = json.load(names)
+
+    # the _modules.json in the sketch_var folder shows to which module each variable belongs
+    with open(os.path.join(root_dir, "modules_" + model_name, "_modules.json")) as mods:
+        modules = json.load(mods)
+
+    return namespace, subscripts, modules
+
+
+def open_module(root_dir, model_name, module):
+    """
+    Used to load model modules from the main model file, when split_modules=True in
+    the read_vensim function
+    """
+    return open(os.path.join(root_dir, "modules_" + model_name, module + ".py")).read()
+
+
+class ProgressBar:
     """
     Progress bar for integration
     """
@@ -682,10 +717,12 @@ class ProgressBar():
         self.bar = progressbar.ProgressBar(
             maxval=self.maxval,
             widgets=[
-            progressbar.ETA(), ' ',
-            progressbar.Bar('#', '[', ']','-'),
-            progressbar.Percentage()
-        ])
+                progressbar.ETA(),
+                " ",
+                progressbar.Bar("#", "[", "]", "-"),
+                progressbar.Percentage(),
+            ],
+        )
 
         self.bar.start()
 
@@ -697,7 +734,6 @@ class ProgressBar():
         except AttributeError:
             # Error if bar is not imported
             pass
-
 
     def finish(self):
         """Finish progress bar"""
