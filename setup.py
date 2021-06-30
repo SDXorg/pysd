@@ -36,7 +36,6 @@ setup(
         'lxml',
         'xlwt==1.2.0',
         'funcsigs',
-        'pydoe',
         'xlrd',
         'regex',
         'chardet',
