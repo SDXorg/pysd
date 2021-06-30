@@ -675,8 +675,28 @@ def load_model_data(root_dir, model_name):
     """
     Used for models split in several files.
     Loads subscripts_dic, namespace and modules dictionaries
+
+    Parameters
+    ----------
+    root_dir: str
+        Path to the model file
+    model_name: str
+        Name of the model without file type extension (e.g. "my_model")
+
+    Returns
+    -------
+    namespace: dict
+        Translation from original model element names (keys) to python safe
+        function identifiers (values).
+
+    subscripts: dict
+        Dictionary describing the possible dimensions of the stock's subscripts
+
+    modules: dict
+        Dictionary containing view (module) names as keys and a list of the
+        corresponding variables as values.
     """
-    
+
     with open(os.path.join(root_dir, "_subscripts_" + model_name + ".json")) as subs:
         subscripts = json.load(subs)
 
@@ -694,6 +714,19 @@ def open_module(root_dir, model_name, module):
     """
     Used to load model modules from the main model file, when split_modules=True in
     the read_vensim function
+
+    Parameters
+    ----------
+    root_dir: str
+        Path to the model file
+    model_name: str
+        Name of the model without file type extension (e.g. "my_model")
+    module: str
+        Name of the module to open
+
+    Returns
+    -------
+    str
     """
     return open(os.path.join(root_dir, "modules_" + model_name, module + ".py")).read()
 
