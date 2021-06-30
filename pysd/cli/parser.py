@@ -220,7 +220,7 @@ model_arguments.add_argument(
     action='store', type=split_timestamps,
     metavar='\'value1, value2, .., valueN\'',
     help='provide the return time stamps separated by commas, if given '
-         '--final-time and --saveper will be ignored')
+         '--saveper will be ignored')
 
 
 #######################

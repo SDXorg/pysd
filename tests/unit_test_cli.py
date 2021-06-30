@@ -289,6 +289,8 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(out.returncode, 0)
         stocks = load_outputs(out_tab_file)
         self.assertTrue((np.diff(stocks.index.values) == time_step).all())
+        self.assertTrue((stocks['SAVEPER'] == time_step).all().all())
+        self.assertTrue((stocks['TIME STEP'] == time_step).all().all())
         os.remove(out_tab_file)
 
         # check saveper
@@ -300,6 +302,8 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(out.returncode, 0)
         stocks = load_outputs(out_tab_file)
         self.assertTrue((np.diff(stocks.index.values) == saveper).all())
+        self.assertTrue((stocks['SAVEPER'] == saveper).all().all())
+        self.assertTrue((stocks['TIME STEP'] == time_step).all().all())
         os.remove(out_tab_file)
 
         # check all
@@ -402,8 +406,6 @@ class TestPySD(unittest.TestCase):
                    f' {test_model}'
 
         out = subprocess.run(split_bash(command), capture_output=True)
-        stderr = out.stderr.decode(encoding_stderr)
-        print(stderr)
         self.assertEqual(out.returncode, 0)
         stocks1 = load_outputs(out_tab_file)
 
@@ -414,6 +416,7 @@ class TestPySD(unittest.TestCase):
         os.remove(exp_file)
         os.remove(out_tab_file)
 
+        print(stocks1['FINAL TIME'])
         self.assertTrue((stocks1['INITIAL TIME'] == 0).all().all())
         self.assertTrue((stocks1['FINAL TIME'] == 15).all().all())
         self.assertTrue((stocks2['INITIAL TIME'] == 15).all().all())

@@ -1003,15 +1003,21 @@ class Macro(DynamicStateful):
         self.time.update(t)
         self.components.cache.reset(t)
         stateful_name = "_NONE"
+        # TODO make this more solid, link with builder or next TODO?
+        stateful_init = [
+            "_integ_", "_delay_", "_delayfixed_", "_delayn_",
+            "_sample_if_true_", "_smooth_", "_trend_", "_initial_"]
 
         for key, value in initial_value.items():
             component_name = utils.get_value_by_insensitive_key_or_value(
                 key, self.components._namespace)
             if component_name is not None:
                 for element in self._stateful_elements:
-                    # TODO make this more solid
-                    if element.py_name.endswith(f'_{component_name}'):
-                        stateful_name = element.py_name
+                    # TODO make this more solid, add link between stateful
+                    # objects and model vars
+                    for init in stateful_init:
+                        if init + component_name == element.py_name:
+                            stateful_name = element.py_name
             else:
                 component_name = key
                 stateful_name = key
@@ -1171,29 +1177,47 @@ class Model(Macro):
         External.missing = self.missing_values
         super().initialize()
 
-    def _build_euler_timeseries(self, return_timestamps=None):
+    def _build_euler_timeseries(self, return_timestamps=None, final_time=None):
         """
         - The integration steps need to include the return values.
         - There is no point running the model past the last return value.
         - The last timestep will be the last in that requested for return
-        - Spacing should be at maximum what is specified by the integration time step.
-        - The initial time should be the one specified by the model file, OR
-          it should be the initial condition.
-        - This function needs to be called AFTER the model is set in its initial state
+        - Spacing should be at maximum what is specified by the integration
+          time step.
+        - The initial time should be the one specified by the model file,
+          OR it should be the initial condition.
+        - This function needs to be called AFTER the model is set in its
+          initial state
         Parameters
         ----------
         return_timestamps: numpy array
-          Must be specified by user or built from model file before this function is called.
+            Must be specified by user or built from model file before this
+            function is called.
+
+        final_time: float or None
+            Final time of the simulation. If float, the given final time
+            will be used. If None, the last return_timestamps will be used.
+            Default is None.
 
         Returns
         -------
         ts: numpy array
             The times that the integrator will use to compute time history
+
         """
         t_0 = self.time()
-        t_f = max(self.components.final_time(), return_timestamps[-1])
-        dt = self.components.time_step()
-        ts = np.arange(t_0, t_f+dt/2, dt, dtype=np.float64)
+        try:
+            t_f = return_timestamps[-1]
+        except IndexError:
+            # return_timestamps is an empty list
+            # model default final time or passed argument value
+            t_f = self.final_time
+
+        if final_time is not None:
+            t_f = max(final_time, t_f)
+
+        ts = np.arange(
+            t_0, t_f+self.time_step/2, self.time_step, dtype=np.float64)
 
         # Add the returned time series into the integration array.
         # Best we can do for now. This does change the integration ever
@@ -1219,14 +1243,14 @@ class Model(Macro):
         """
         if return_timestamps is None:
             # Build based upon model file Start, Stop times and Saveper
-            # Vensim's standard is to expect that the data set includes the `final time`,
-            # so we have to add an extra period to make sure we get that value in what
-            # numpy's `arange` gives us.
+            # Vensim's standard is to expect that the data set includes
+            # the `final time`, so we have to add an extra period to
+            # make sure we get that value in what numpy's `arange` gives us.
 
-            return  np.arange(
+            return np.arange(
                 self.time(),
-                self.components.final_time() + self.components.saveper()/2,
-                self.components.saveper(), dtype=float
+                self.final_time + self.saveper/2,
+                self.saveper, dtype=float
             )
 
         try:
@@ -1237,8 +1261,8 @@ class Model(Macro):
                 ' or a single numeric value')
 
     def run(self, params=None, return_columns=None, return_timestamps=None,
-            initial_condition='original', reload=False, progress=False,
-            flatten_output=False):
+            initial_condition='original', final_time=None, time_step=None,
+            saveper=None, reload=False, progress=False, flatten_output=False):
         """
         Simulate the model's behavior over time.
         Return a pandas dataframe with timestamps as rows,
@@ -1246,30 +1270,48 @@ class Model(Macro):
 
         Parameters
         ----------
-        params : dictionary (optional)
+        params: dict (optional)
             Keys are strings of model component names.
             Values are numeric or pandas Series.
             Numeric values represent constants over the model integration.
             Timeseries will be interpolated to give time-varying input.
 
-        return_timestamps : list, numeric, ndarray (1D) (optional)
+        return_timestamps: list, numeric, ndarray (1D) (optional)
             Timestamps in model execution at which to return state information.
             Defaults to model-file specified timesteps.
 
-        return_columns : list, 'step' or None (optional)
+        return_columns: list, 'step' or None (optional)
             List of string model component names, returned dataframe
             will have corresponding columns. If 'step' only variables with
             cache step will be returned. If None, variables with cache step
             and run will be returned. Default is None.
 
-        initial_condition : 'original'/'o', 'current'/'c' or (t, {state}) (optional)
-            The starting time, and the state of the system (the values of all the stocks)
-            at that starting time.
+        initial_condition: str or (float, dict) (optional)
+            The starting time, and the state of the system (the values of
+            all the stocks) at that starting time. 'original' or 'o'uses
+            model-file specified initial condition. 'current' or 'c' uses
+            the state of the model after the previous execution. Other str
+            objects, loads initial conditions from the pickle file with the
+            given name.(float, dict) tuple lets the user specify a starting
+            time (float) and (possibly partial) dictionary of initial values
+            for stock (stateful) objects. Default is 'original'.
 
-            * 'original' (default) uses model-file specified initial condition
-            * 'current' uses the state of the model after the previous execution
-            * (t, {state}) lets the user specify a starting time and (possibly partial)
-              list of stock values.
+        final_time: float or None
+            Final time of the simulation. If float, the given value will be
+            used to compute the return_timestamps (if not given) and as a
+            final time. If None the last value of return_timestamps will be
+            used as a final time. Default is None.
+
+        time_step: float or None
+            Time step of the simulation. If float, the given value will be
+            used to compute the return_timestamps (if not given) and
+            euler time series. If None the default value from components
+            will be used. Default is None.
+
+        saveper: float or None
+            Saving step of the simulation. If float, the given value will be
+            used to compute the return_timestamps (if not given). If None
+            the default value from components will be used. Default is None.
 
         reload : bool (optional)
             If True, reloads the model from the translated model file
@@ -1309,12 +1351,18 @@ class Model(Macro):
 
         self.set_initial_condition(initial_condition)
 
-        # save initial time for the output
+        # save control variables
         self.initial_time = self.time()
+        self.final_time = final_time or self.components.final_time()
+        self.time_step = time_step or self.components.time_step()
+        self.saveper = saveper or max(self.time_step,
+                                      self.components.saveper())
+        # need to take bigger saveper if time_step is > saveper
 
         return_timestamps = self._format_return_timestamps(return_timestamps)
 
-        t_series = self._build_euler_timeseries(return_timestamps)
+        t_series = self._build_euler_timeseries(return_timestamps, final_time)
+        self.final_time = t_series[-1]
 
         if return_columns is None or isinstance(return_columns, str):
             return_columns = self._default_return_columns(return_columns)
@@ -1416,19 +1464,19 @@ class Model(Macro):
 
         Parameters
         ----------
-        initial_condition : str or tuple
-            Takes on one of the following sets of values:
-
-            * 'original'/'o' : Reset to the model-file specified initial condition.
-            * 'current'/'c' : Use the current state of the system to start
-              the next simulation. This includes the simulation time, so this
-              initial condition must be paired with new return timestamps
-            * 'exported_pickle.p': load initial conditions from exported pickle
-            * (t, {state}) : Lets the user specify a starting time and list of stock values.
+        initial_condition : str or (float, dict)
+            The starting time, and the state of the system (the values of
+            all the stocks) at that starting time. 'original' or 'o'uses
+            model-file specified initial condition. 'current' or 'c' uses
+            the state of the model after the previous execution. Other str
+            objects, loads initial conditions from the pickle file with the
+            given name.(float, dict) tuple lets the user specify a starting
+            time (float) and (possibly partial) dictionary of initial values
+            for stock (stateful) objects.
 
         >>> model.set_initial_condition('original')
         >>> model.set_initial_condition('current')
-        >>> model.set_initial_condition('exported_pickle.p')
+        >>> model.set_initial_condition('exported_pickle.pic')
         >>> model.set_initial_condition((10, {'teacup_temperature': 50}))
 
         See Also
@@ -1532,10 +1580,15 @@ class Model(Macro):
             df[element] = [getattr(self.components, element)()] * nt
 
         # update initial time values in df (necessary if initial_conditions)
-        for it in ['INITIAL TIME', 'INITIAL_TIME',
-                   'initial time', 'initial_time']:
+        for it in ['initial_time', 'final_time', 'saveper', 'time_step']:
             if it in df:
-                df[it] = self.initial_time
+                df[it] = getattr(self, it)
+            elif it.upper() in df:
+                df[it.upper()] = getattr(self, it)
+            elif it.replace('_', ' ') in df:
+                df[it.replace('_', ' ')] = getattr(self, it)
+            elif it.replace('_', ' ').upper() in df:
+                df[it.replace('_', ' ').upper()] = getattr(self, it)
 
 
 def ramp(time, slope, start, finish=0):
