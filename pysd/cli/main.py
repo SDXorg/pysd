@@ -1,7 +1,6 @@
 import sys
 import os
 
-import numpy as np
 from datetime import datetime
 
 from .parser import parser
