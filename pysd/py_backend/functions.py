@@ -16,7 +16,6 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 import scipy.stats as stats
-from funcsigs import signature
 
 from . import utils
 from .external import External, Excels
@@ -1047,9 +1046,9 @@ class Model(Macro):
             # so we have to add an extra period to make sure we get that value in what
             # numpy's `arange` gives us.
             return_timestamps_array = np.arange(
-                self.components.initial_time(),
-                self.components.final_time() + self.components.saveper(),
-                self.components.saveper(), dtype=np.float64
+                self.time(),
+                self.components.final_time() + self.components.saveper()/2,
+                self.components.saveper(), dtype=float
             )
         elif inspect.isclass(range) and isinstance(return_timestamps, range):
             return_timestamps_array = np.array(return_timestamps, ndmin=1)
@@ -1134,6 +1133,9 @@ class Model(Macro):
             self.set_components(params)
         self.set_initial_condition(initial_condition)
 
+        # save initial time for the output
+        self.initial_time = self.time()
+
         return_timestamps = self._format_return_timestamps(return_timestamps)
 
         t_series = self._build_euler_timeseries(return_timestamps)
@@ -1193,7 +1195,7 @@ class Model(Macro):
             types = ['step', 'run']
 
         return_columns = []
-        parsed_expr = []
+        parsed_expr = ['time']  # time is alredy returned as index
 
         for key, value in self.components._namespace.items():
             if hasattr(self.components, value):
@@ -1352,6 +1354,12 @@ class Model(Macro):
         nt = len(df.index.values)
         for element in capture_elements:
             df[element] = [getattr(self.components, element)()] * nt
+
+        # update initial time values in df (necessary if initial_conditions)
+        for it in ['INITIAL TIME', 'INITIAL_TIME',
+                   'initial time', 'initial_time']:
+            if it in df:
+                df[it] = self.initial_time
 
 
 def ramp(time, slope, start, finish=0):

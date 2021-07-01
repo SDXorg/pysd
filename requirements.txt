@@ -2,12 +2,11 @@ pandas
 parsimonious
 xarray
 lxml
-funcsigs
-pydoe
 xlrd==1.2.0
 xlwt
 regex
 chardet
 black
 openpyxl
+scipy
 

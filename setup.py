@@ -27,24 +27,9 @@ setup(
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
     ],
-    install_requires=[
-        'pandas',
-        'numpy',
-        'parsimonious',
-        'black',
-        'xarray',
-        'lxml',
-        'xlwt==1.2.0',
-        'funcsigs',
-        'pydoe',
-        'xlrd',
-        'regex',
-        'chardet',
-        'openpyxl'
-    ],
+    install_requires=open('requirements.txt').read().strip().split('\n'),
     package_data={
         'py_backend': [
-            'output_style.yapf',
             'xmile/smile.grammar'
         ]
     },
