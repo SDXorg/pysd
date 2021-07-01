@@ -570,8 +570,7 @@ def parse_sketch_line(sketch_line, namespace):
 
         def visit_var_definition(self, n, vc):
             if int(vc[10]) % 2 != 0:  # not a shadow variable
-                if vc[4] in self.namespace.keys():
-                    self.module_or_var["variable_name"] = self.namespace[vc[4]]
+                self.module_or_var["variable_name"] = self.namespace.get(vc[4], "")
 
         def generic_visit(self, n, vc):
             return "".join(filter(None, vc)) or n.text or ""
@@ -580,9 +579,6 @@ def parse_sketch_line(sketch_line, namespace):
         tree = parser.parse(sketch_line)
         return SketchParser(tree, namespace=namespace).module_or_var
     except (IncompleteParseError, VisitationError, ParseError) as err:
-        if isinstance(err, VisitationError):
-            raise ("Something went wrong while traversing a parse tree", err)
-        else:
             raise ValueError(
                 (
                     err.args[0] + "\n\n"
