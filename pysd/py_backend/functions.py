@@ -572,6 +572,7 @@ class Macro(DynamicStateful):
         self.time = time
         self.time_initialization = time_initialization
         self.py_name = py_name
+        self.initialize_order = None
 
         # need a unique identifier for the imported module.
         module_name = os.path.splitext(py_model_file)[0]\
@@ -667,6 +668,33 @@ class Macro(DynamicStateful):
 
         Excels.clean()
 
+        remaining = set(self._stateful_elements)
+        if len(set([element.py_name for element in self._stateful_elements]))\
+           == len(set(self._stateful_elements)) and self.initialize_order:
+            # use elements names to initialize them, this is available
+            # after the model is initialized one time
+            # solves issue #247 until we have a dependency dictionary
+            try:
+                for element_name in self.initialize_order:
+                    for element in remaining:
+                        if element.py_name == element_name:
+                            element.initialize()
+                            break
+                    remaining.remove(element)
+                assert len(remaining) == 0
+                return
+            except Exception as err:
+                # if user includes new stateful objects or some other
+                # dependencies the previous initialization order may
+                # not be keept
+                warnings.warn(
+                    err.args[0] +
+                    "\n\nNot able to initialize statefull elements "
+                    "with the same order as before..."
+                    "Trying to find a new order.")
+                # initialize as always
+
+        self.initialize_order = []
         # Initialize stateful elements
         remaining = set(self._stateful_elements)
         while remaining:
@@ -675,6 +703,7 @@ class Macro(DynamicStateful):
                 try:
                     element.initialize()
                     progress.add(element)
+                    self.initialize_order.append(element.py_name)
                 except (KeyError, TypeError, AttributeError):
                     pass
 

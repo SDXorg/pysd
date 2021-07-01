@@ -909,6 +909,22 @@ class TestPySD(unittest.TestCase):
         self.assertNotEqual(initial_temp, final_temp)
         self.assertEqual(initial_temp, reset_temp)
 
+    def test_initialize_order(self):
+        import pysd
+        model = pysd.load('more-tests/initialization_order/'
+                          'test_initialization_order.py')
+
+        if model._stateful_elements[0].py_name.endswith('stock_a'):
+            # we want to have stock b first always
+            model._stateful_elements.reverse()
+
+        self.assertEqual(model.components.stock_b(), 42)
+        self.assertEqual(model.components.stock_a(), 42)
+        model.components.initial_parameter = lambda: 1
+        model.initialize()
+        self.assertEqual(model.components.stock_b(), 1)
+        self.assertEqual(model.components.stock_a(), 1)
+
     def test_set_state(self):
         import pysd
         model = pysd.read_vensim(test_model)
