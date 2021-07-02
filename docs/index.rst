@@ -19,6 +19,8 @@ Contents:
    installation
    basic_usage
    advanced_usage
+   command_line_usage
+   tools
    functions
    development/development_index
 

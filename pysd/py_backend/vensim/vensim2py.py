@@ -492,40 +492,40 @@ def parse_sketch_line(sketch_line, namespace):
     sketch_grammar = _include_common_grammar(
         r"""
             line = var_definition / module_intro / module_title / module_definition / arrow / flow / other_objects / id
-            
+
             module_intro = ~r"\s*Sketch.*?names$" / ~r"^V300.*?ignored$"
             module_title = "*" module_name
             module_name = ~r"(?<=\*)[^\n]+$"
-            
+
             module_definition = "$" color "," digit "," font_properties "|" ( ( color / ones_and_dashes ) "|")* module_code
             var_definition = var_code "," var_number "," var_name "," position "," var_box_type "," arrows_in_allowed "," hide_level "," var_face "," var_word_position "," var_thickness "," var_rest_conf ","? ( ( ones_and_dashes / color) ",")* font_properties?
-            
+
             # elements used in a line defining the properties of a variable or stock (most are digits, but identifying them now may be useful for further parsing)
             var_name = element
             var_name = ~r"(?<=,)[^,]+(?=,)"
-            var_number = digit               
+            var_number = digit
             var_box_type = ~r"(?<=,)\d+,\d+,\d+(?=,)" # improve this regex
             arrows_in_allowed = ~r"(?<=,)\d+(?=,)" # if this is an even umber, it's a shadow variable
             hide_level = digit
             var_face = digit
-            var_word_position = ~r"(?<=,)\-*\d+(?=,)"         
+            var_word_position = ~r"(?<=,)\-*\d+(?=,)"
             var_thickness = digit
             var_rest_conf = digit "," ~r"\d+"
-            
+
             arrow = arrow_code "," digit "," origin_var "," destination_var "," (digit ",")+ (ones_and_dashes ",")?  ((color ",") / ("," ~r"\d+") / (font_properties "," ~r"\d+"))* "|(" position ")|"
-            
+
             # arrow origin and destination (this may be useful if further parsing is required)
             origin_var = digit
             destination_var = digit
 
             # flow arrows
             flow = source_or_sink_or_plot / flow_arrow
-            
+
             # if you want to extend the parsing, these three would be a good starting point (they are followed by "anything")
             source_or_sink_or_plot = multipurpose_code "," anything
             flow_arrow =  flow_arrow_code "," anything
             other_objects = other_objects_code "," anything
-            
+
             # fonts
             font_properties = font_name? "|" font_size "|" font_style? "|" color  # if the B from an RGB is either 1 or 2 (very unlikely), the parser may not be able to tell the begining of the next line
             font_style =  "B" / "I" / "U" / "S" / "V"  # italics, bold, underline, etc
@@ -535,10 +535,10 @@ def parse_sketch_line(sketch_line, namespace):
 
             # x and y within the view layout. This may be useful if further parsing is required
             position = ~r"-*\d+,-*\d+"
-                      
+
             # rgb color
             color = ~r"((?<!\d|\.)([0-9]?[0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(?!\d|\.) *[-] *){2}(?<!\d|\.)([0-9]?[0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(?!\d|\.)" # rgb as in 255-255-255
-            
+
             # lines that start with specific numbers (1:arrows, 11:flow_arrow, 12:)
             arrow_code = ~r"^1(?=,)"
             flow_arrow_code = ~r"^11(?=,)"
@@ -546,7 +546,7 @@ def parse_sketch_line(sketch_line, namespace):
             multipurpose_code = ~r"^12(?=,)" # source, sink, plot, comment
             other_objects_code = ~r"^(30|31)(?=,)"
             module_code = ~r"\d+" "," digit "," digit "," ~r"\d+" # code at the end of module definitions
-            
+
             id = ( basic_id / escape_group )
 
             # comma separated value/s
@@ -757,6 +757,25 @@ functions_utils = {
     "DataArray": {"name": "xr.DataArray", "module": "xarray"},
 }
 
+# logical operators (bool? operator bool)
+in_logical_ops = {
+    ":and:": {
+        "name": "logical_and",
+        "module": "functions"
+    },
+    ":or:": {
+        "name": "logical_or",
+        "module": "functions"
+    }
+}
+
+pre_logical_ops = {
+    ":not:": {
+        "name": "np.logical_not",
+        "module": "numpy"
+    }
+}
+
 data_ops = {
     "get data at time": "",
     "get data between times": "",
@@ -827,6 +846,7 @@ builders = {
         condition=args[0],
         actual_value=args[1],
         initial_value=args[2],
+        subs=element["subs"]
     ),
     "smooth": lambda element, subscript_dict, args: builder.add_n_smooth(
         identifier=element["py_name"],
@@ -981,19 +1001,12 @@ def parse_general_expression(
 
     # spaces important for word-based operators
     in_ops = {
-        "+": "+",
+        "+": "+", "-": "-", "*": "*", "/": "/", "^": "**", "=": "==",
+        "<=": "<=", "<>": "!=", "<": "<", ">=": ">=", ">": ">"}
+
+    pre_ops = {
         "-": "-",
-        "*": "*",
-        "/": "/",
-        "^": "**",
-        "=": "==",
-        "<=": "<=",
-        "<>": "!=",
-        "<": "<",
-        ">=": ">=",
-        ">": ">",
-        ":and:": " and ",
-        ":or:": " or ",
+        "+": " "  # space is important, so that and empty string doesn't slip through generic
     }
 
     pre_ops = {"-": "-", "+": " ", ":not:": " not "}
@@ -1015,9 +1028,11 @@ def parse_general_expression(
     expression_grammar = _include_common_grammar(
         r"""
     expr_type = array / expr / empty
-    expr = _ pre_oper? _ (lookup_with_def / build_call / macro_call /
-                          call / lookup_call / parens / number / string / reference)
-           _ (in_oper _ expr)?
+    expr = _ pre_oper? _ (lookup_with_def / build_call / macro_call / call / lookup_call / parens / number / string / reference) _ (in_oper _ expr)?
+
+    logical_expr = logical_in_expr / logical_pre_expr / logical_parens
+    logical_in_expr = (logical_pre_expr / logical_parens / expr) (_ in_logical_oper _ (logical_pre_expr / logical_parens / expr))+
+    logical_pre_expr = pre_logical_oper _ (logical_parens / expr)
 
     lookup_with_def = ~r"(WITH\ LOOKUP)"I _ "(" _ expr _ "," _ "(" _  ("[" ~r"[^\]]*" "]" _ ",")?  ( "(" _ expr _ "," _ expr _ ")" _ ","? _ )+ _ ")" _ ")"
 
@@ -1027,8 +1042,9 @@ def parse_general_expression(
     number = ("+"/"-")? ~r"\d+\.?\d*(e[+-]\d+)?"
     range = _ "[" ~r"[^\]]*" "]" _ ","
 
-    arguments = (expr _ ","? _)*
+    arguments = ((logical_expr / expr) _ ","? _)*
     parens   = "(" _ expr _ ")"
+    logical_parens   = "(" _ logical_expr _ ")"
 
     call = func _ "(" _ arguments _ ")"
     build_call = builder _ "(" _ arguments _ ")"
@@ -1046,24 +1062,26 @@ def parse_general_expression(
     func = ~r"(%(funcs)s)"IU  # functions (case insensitive)
     in_oper = ~r"(%(in_ops)s)"IU  # infix operators (case insensitive)
     pre_oper = ~r"(%(pre_ops)s)"IU  # prefix operators (case insensitive)
+    in_logical_oper = ~r"(%(in_logical_ops)s)"IU  # infix operators (case insensitive)
+    pre_logical_oper = ~r"(%(pre_logical_ops)s)"IU  # prefix operators (case insensitive)
     builder = ~r"(%(builders)s)"IU  # builder functions (case insensitive)
     macro = ~r"(%(macros)s)"IU  # macros from model file (if none, use non-printable character)
 
     empty = "" # empty string
-    """
-        % {
-            # In the following, we have to sort keywords in decreasing order of length so that the
-            # peg parser doesn't quit early when finding a partial keyword
-            "subs": "|".join(
-                reversed(sorted(sub_names_list + sub_elems_list, key=len))
-            ),
-            "funcs": "|".join(reversed(sorted(functions.keys(), key=len))),
-            "in_ops": "|".join(reversed(sorted(in_ops_list, key=len))),
-            "pre_ops": "|".join(reversed(sorted(pre_ops_list, key=len))),
-            "builders": "|".join(reversed(sorted(builders.keys(), key=len))),
-            "macros": "|".join(reversed(sorted(macro_names_list, key=len))),
-        }
-    )
+    """ % {
+        # In the following, we have to sort keywords in decreasing order
+        # of length so that the peg parser doesn't quit early when
+        # finding a partial keyword
+        'subs': '|'.join(reversed(sorted(sub_names_list + sub_elems_list,
+                                         key=len))),
+        'funcs': '|'.join(reversed(sorted(functions.keys(), key=len))),
+        'in_ops': '|'.join(reversed(sorted(in_ops_list, key=len))),
+        'pre_ops': '|'.join(reversed(sorted(pre_ops_list, key=len))),
+        'in_logical_ops': '|'.join(reversed(sorted(in_logical_ops.keys(), key=len))),
+        'pre_logical_ops': '|'.join(reversed(sorted(pre_logical_ops.keys(), key=len))),
+        'builders': '|'.join(reversed(sorted(builders.keys(), key=len))),
+        'macros': '|'.join(reversed(sorted(macro_names_list, key=len)))
+    })
 
     parser = parsimonious.Grammar(expression_grammar)
 
@@ -1085,6 +1103,8 @@ def parse_general_expression(
             self.arguments = None
             self.in_oper = None
             self.args = []
+            self.logical_op = None
+            self.to_float = False  # convert subseted reference to float
             self.visit(ast)
 
         def visit_expr_type(self, n, vc):
@@ -1115,13 +1135,49 @@ def parse_general_expression(
         def visit_pre_oper(self, n, vc):
             return pre_ops[n.text.lower()]
 
+        def visit_logical_in_expr(self, n, vc):
+            # build logical in expression (or, and)
+            expr = "".join(vc)
+            expr_low = expr.lower()
+
+            if ":and:" in expr_low and ":or:" in expr_low:
+                raise ValueError(
+                   "\nError when parsing %s with equation\n\t %s\n\n"
+                   "mixed definition of logical operators :OR: and :AND:"
+                   "\n Use parethesis to avoid confusions." % (
+                       element['real_name'], element['eqn'])
+                   )
+            elif ":and:" in expr_low:
+                expr = re.split(":and:", expr, flags=re.IGNORECASE)
+                op = ':and:'
+            elif ":or:" in expr_low:
+                expr = re.split(":or:", expr, flags=re.IGNORECASE)
+                op = ':or:'
+
+            return builder.build_function_call(in_logical_ops[op], expr)
+
+        def visit_logical_pre_expr(self, n, vc):
+            # build logical pre expression (not)
+            return builder.build_function_call(pre_logical_ops[vc[0].lower()],
+                                               [vc[-1]])
+
+        def visit_logical_parens(self, n, vc):
+            # we can forget about the parenthesis in logical expressions
+            # as we pass them as arguments to other functions:
+            #    (A or B) and C -> logical_and(logical_or(A, B), C)
+            return vc[2]
+
         def visit_reference(self, n, vc):
             self.kind = "component"
 
             py_expr = vc[0] + "()" + self.append
             self.append = ""
 
-            if self.subs:
+            if self.to_float:
+                # convert element to float after subscript subsetting
+                self.to_float = False
+                return "float(" + py_expr.replace(".reset_coords(drop=True","")
+            elif self.subs:
                 if elements_subs_dict[vc[0]] != self.subs:
                     py_expr = builder.build_function_call(
                         functions_utils["rearrange"],
@@ -1149,6 +1205,7 @@ def parse_general_expression(
             # necessary if a lookup dimension is subselected but we have
             # other reference objects as arguments
             self.lookup_append.append(self.append)
+            self.to_float = False  # argument may have dims, cannot convert
             self.append = ""
 
             # recover subs for lookup to avoid using them for arguments
@@ -1273,6 +1330,9 @@ def parse_general_expression(
 
                 if subs2:
                     self.subs = subs2
+                else:
+                    # convert subseted element to float (avoid using 0D xarray)
+                    self.to_float = True
 
                 self.append = ".loc[%s].reset_coords(drop=True)" % (", ".join(coords))
 
@@ -1647,13 +1707,14 @@ def translate_vensim(mdl_file, split_modules):
         text = in_file.read()
 
     # check for model extension
-    if ".mdl" not in mdl_file and ".MDL" not in mdl_file:
+    if not mdl_file.lower().endswith(".mdl"):
         raise ValueError(
             "The file to translate, "
             + mdl_file
-            + " is not a vensim model. It must end with mdl or MDL extension."
+            + " is not a vensim model. It must end with mdl extension."
         )
-    outfile_name = mdl_file.replace(".mdl", ".py").replace(".MDL", ".py")
+    mdl_insensitive = re.compile(re.escape('.mdl'), re.IGNORECASE)
+    outfile_name = mdl_insensitive.sub(".py", mdl_file)
     out_dir = os.path.dirname(outfile_name)
 
     if split_modules:

@@ -34,7 +34,7 @@ parsed, and may throw an error. Future releases will handle this with more grace
 Used Functions for Translation
 ------------------------------
 
-.. automodule:: py_backend.vensim.vensim2py
+.. automodule:: pysd.py_backend.vensim.vensim2py
    :members:
    :undoc-members:
    :private-members:

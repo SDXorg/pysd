@@ -106,15 +106,15 @@ class TestEquationStringParsing(unittest.TestCase):
         from pysd.py_backend.vensim.vensim2py import get_equation_components
 
         self.assertEqual(
-            get_equation_components(r"constant = 25"),
+            get_equation_components(r'constant = 25'),
             {
-                "expr": "25",
-                "kind": "component",
-                "subs": [],
-                "subs_compatibility": {},
-                "real_name": "constant",
-                "keyword": None,
-            },
+                'expr': '25',
+                'kind': 'component',
+                'subs': [],
+                'subs_compatibility': {},
+                'real_name': 'constant',
+                'keyword': None
+            }
         )
 
     def test_equals_handling(self):
@@ -369,11 +369,61 @@ class TestParse_general_expression(unittest.TestCase):
         res = parse_general_expression({"expr": "StockA"}, {"StockA": "stocka"})
         self.assertEqual(res[0]["py_expr"], "stocka()")
 
-    def test_number_parsing(self):
+    def test_logicals(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
 
-        res = parse_general_expression({"expr": "20"})
-        self.assertEqual(res[0]["py_expr"], "20")
+        res = parse_general_expression(
+            {'expr': 'IF THEN ELSE(1 :AND: 0,0,1)'})
+        self.assertEqual(
+             res[0]['py_expr'],
+            'if_then_else(logical_and(1,0), lambda: 0, lambda: 1)'
+        )
+
+        res = parse_general_expression(
+            {'expr': 'IF THEN ELSE(1 :OR: 0,0,1)'})
+        self.assertEqual(
+             res[0]['py_expr'],
+            'if_then_else(logical_or(1,0), lambda: 0, lambda: 1)'
+        )
+
+        res = parse_general_expression(
+            {'expr': 'IF THEN ELSE(1 :AND: 0 :and: 1,0,1)'})
+        self.assertEqual(
+             res[0]['py_expr'],
+            'if_then_else(logical_and(1,0,1), lambda: 0, lambda: 1)'
+        )
+
+        res = parse_general_expression(
+            {'expr': 'IF THEN ELSE(1 :or: 0 :OR: 1 :oR: 0,0,1)'})
+        self.assertEqual(
+             res[0]['py_expr'],
+            'if_then_else(logical_or(1,0,1,0), lambda: 0, lambda: 1)'
+        )
+
+        res = parse_general_expression(
+            {'expr': 'IF THEN ELSE(1 :AND: (0 :OR: 1),0,1)'})
+        self.assertEqual(
+             res[0]['py_expr'],
+            'if_then_else(logical_and(1,logical_or(0,1)), lambda: 0, lambda: 1)'
+        )
+
+        res = parse_general_expression(
+            {'expr': 'IF THEN ELSE((1 :AND: 0) :OR: 1,0,1)'})
+        self.assertEqual(
+             res[0]['py_expr'],
+            'if_then_else(logical_or(logical_and(1,0),1), lambda: 0, lambda: 1)'
+        )
+
+        with self.assertRaises(ValueError):
+            res = parse_general_expression(
+                {'expr': 'IF THEN ELSE(1 :AND: 0 :OR: 1,0,1)',
+                 'real_name': 'logical',
+                 'eqn': 'logical = IF THEN ELSE(1 :AND: 0 :OR: 1,0,1)'})
+
+    def test_number_parsing(self):
+        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        res = parse_general_expression({'expr': '20'})
+        self.assertEqual(res[0]['py_expr'], '20')
 
         res = parse_general_expression({"expr": "3.14159"})
         self.assertEqual(res[0]["py_expr"], "3.14159")
@@ -390,7 +440,11 @@ class TestParse_general_expression(unittest.TestCase):
         from pysd.py_backend.functions import Integ
 
         res = parse_general_expression(
-            {"expr": "INTEG (FlowA, -10)", "py_name": "test_stock", "subs": []},
+            {
+                "expr": "INTEG (FlowA, -10)",
+                "py_name": "test_stock",
+                "subs": []
+            },
             {"FlowA": "flowa"},
             elements_subs_dict={"test_stock": []},
         )
@@ -566,19 +620,41 @@ class TestParse_general_expression(unittest.TestCase):
             "['Dim1'],_subscript_dict)",
         )
 
-        res = parse_general_expression(
-            {"expr": "Var C[Dim1, C, H]"},
-            {"Var C": "var_c"},
-            {"Dim1": ["A", "B"], "Dim2": ["C", "D", "E"], "Dim3": ["F", "G", "H", "I"]},
-            None,
-            {"var_c": ["Dim1", "Dim2", "Dim3"]},
-        )
+        res = parse_general_expression({'expr': 'Var B[A, C]'},
+                                     {'Var B': 'var_b'},
+                                     {'Dim1': ['A', 'B'],
+                                      'Dim2': ['C', 'D', 'E']},
+                                     None,
+                                     {'var_b': ['Dim1', 'Dim2']})
 
+        self.assertEqual(
+            res[0]['py_expr'],
+            "float(var_b().loc['A', 'C'])")
+
+        res = parse_general_expression({'expr': 'Var C[Dim1, C, H]'},
+                                       {'Var C': 'var_c'},
+                                       {'Dim1': ['A', 'B'],
+                                        'Dim2': ['C', 'D', 'E'],
+                                        'Dim3': ['F', 'G', 'H', 'I']},
+                                       None,
+                                       {'var_c': ['Dim1', 'Dim2', 'Dim3']})
         self.assertEqual(
             res[0]["py_expr"],
             "rearrange(var_c().loc[:, 'C', 'H'].reset_coords(drop=True),"
             "['Dim1'],_subscript_dict)",
         )
+
+        res = parse_general_expression({'expr': 'Var C[B, C, H]'},
+                                     {'Var C': 'var_c'},
+                                     {'Dim1': ['A', 'B'],
+                                      'Dim2': ['C', 'D', 'E'],
+                                      'Dim3': ['F', 'G', 'H', 'I']},
+                                     None,
+                                     {'var_c': ['Dim1', 'Dim2', 'Dim3']})
+
+        self.assertEqual(
+            res[0]['py_expr'],
+            "float(var_c().loc['B', 'C', 'H'])")
 
     def test_subscript_ranges(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
@@ -674,7 +750,7 @@ class TestParse_sketch_line(unittest.TestCase):
 
     def test_parse_sketch_line_error(self):
         from pysd.py_backend.vensim.vensim2py import parse_sketch_line
-        
+
         namespace = {'"var_1"': "var_1"}
         line = "10,2,whatever"
         try:
@@ -691,12 +767,12 @@ class TestParse_private_functions(unittest.TestCase):
     def test__split_sketch_warning(self):
         import warnings
         from pysd.py_backend.vensim.vensim2py import _split_sketch
-        
+
         model_str = "this is my model"
 
         with warnings.catch_warnings(record=True) as ws:
             text, sketch = _split_sketch(model_str)
-            
+
             # use only user warnings
             wu = [w for w in ws if issubclass(w.category, UserWarning)]
             self.assertEqual(len(wu), 1)

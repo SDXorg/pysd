@@ -10,8 +10,6 @@ import regex as re
 import os
 import json
 
-import numpy as np
-import pandas as pd
 import xarray as xr
 
 # used to create python safe names
@@ -68,7 +66,7 @@ def xrsplit(array):
     return sp_list
 
 
-def find_subscript_name(subscript_dict, element):
+def find_subscript_name(subscript_dict, element, avoid=[]):
     """
     Given a subscript dictionary, and a member of a subscript family,
     return the first key of which the member is within the value list.
@@ -81,6 +79,9 @@ def find_subscript_name(subscript_dict, element):
 
     element: string
 
+    avoid: list (optional)
+        List of subscripts to avoid. Default is an empty list.
+
     Returns
     -------
 
@@ -90,12 +91,23 @@ def find_subscript_name(subscript_dict, element):
     ...                      'Dim3': ['F', 'G', 'H', 'I']},
     ...                      'D')
     'Dim2'
+    >>> find_subscript_name({'Dim1': ['A', 'B'],
+    ...                      'Dim2': ['A', 'B'],
+    ...                      'Dim3': ['A', 'B']},
+    ...                      'B')
+    'Dim1'
+    >>> find_subscript_name({'Dim1': ['A', 'B'],
+    ...                      'Dim2': ['A', 'B'],
+    ...                      'Dim3': ['A', 'B']},
+    ...                      'B',
+    ...                      avoid=['Dim1'])
+    'Dim2'
     """
     if element in subscript_dict.keys():
         return element
 
     for name, elements in subscript_dict.items():
-        if element in elements:
+        if element in elements and name not in avoid:
             return name
 
 
@@ -135,7 +147,7 @@ def make_coord_dict(subs, subscript_dict, terse=True):
     coordinates = {}
     for sub in subs:
         if sub in sub_elems_list:
-            name = find_subscript_name(subscript_dict, sub)
+            name = find_subscript_name(subscript_dict, sub, avoid=subs)
             coordinates[name] = [sub]
         elif not terse:
             coordinates[sub] = subscript_dict[sub]
@@ -180,7 +192,7 @@ def make_merge_list(subs_list, subscript_dict):
         else:
             # find a suitable coordinate
             for name, elements in subscript_dict.items():
-                if coord2 == set(elements):
+                if coord2 == set(elements) and name not in subs_list[0]:
                     dims[i] = name
                     break
 
@@ -188,10 +200,11 @@ def make_merge_list(subs_list, subscript_dict):
                 # the dimension is incomplete use the smaller
                 # dimension that completes it
                 for name, elements in subscript_dict.items():
-                    if coord2.issubset(set(elements)):
+                    if coord2.issubset(set(elements))\
+                      and name not in subs_list[0]:
                         dims[i] = name
                         warnings.warn(
-                            "Dimension given by subscripts:"
+                            "\nDimension given by subscripts:"
                             + "\n\t{}\nis incomplete ".format(coord2)
                             + "using {} instead.".format(name)
                             + "\nSubscript_dict:"
@@ -200,9 +213,22 @@ def make_merge_list(subs_list, subscript_dict):
                         break
 
             if not dims[i]:
+                for name, elements in subscript_dict.items():
+                    if coord2 == set(elements):
+                        j = 1
+                        while name + str(j) in subscript_dict.keys():
+                            j += 1
+                        subscript_dict[name + str(j)] = elements
+                        dims[i] = name + str(j)
+                        warnings.warn(
+                            "\nAdding new subscript range to subscript_dict:\n"
+                            + name + str(j) + ": " + ', '.join(elements))
+                        break
+
+            if not dims[i]:
                 # not able to find the correct dimension
                 raise ValueError(
-                    "Impossible to find the dimension that contains:"
+                    "\nImpossible to find the dimension that contains:"
                     + "\n\t{}\nFor subscript_dict:".format(coord2)
                     + "\n\t{}".format(subscript_dict)
                 )
@@ -337,7 +363,7 @@ def make_python_identifier(
     s = s.strip()
 
     # Make spaces into underscores
-    s = re.sub("[\\s\\t\\n]+", "_", s)
+    s = re.sub(r"[\s\t\n]+", "_", s)
 
     if convert == "hex":
         # Convert invalid characters to hex. Note: \p{l} designates all
@@ -346,25 +372,29 @@ def make_python_identifier(
         # and \p{n} designates all numbers. We allow any of these to be
         # present in the regex.
         s = "".join(
-            [c.encode("hex") if re.findall("[^\p{l}\p{m}\p{n}_]", c) else c for c in s]
+            [c.encode("hex") if re.findall(r"[^\p{l}\p{m}\p{n}_]", c)
+             else c for c in s]
         )
 
     elif convert == "drop":
         # Remove invalid characters
-        s = re.sub("[^\p{l}\p{m}\p{n}_]", "", s)
+        s = re.sub(r"[^\p{l}\p{m}\p{n}_]", "", s)
 
     # If leading characters are not a letter or underscore add nvs_.
     # Only letters can be leading characters.
-    if re.findall("^[^\p{l}_]+", s):
+    if re.findall(r"^[^\p{l}_]+", s):
         s = "nvs_" + s
 
     # Check that the string is not a python identifier
-    while s in keyword.kwlist or s in namespace.values() or s in reserved_words:
+    while (s in keyword.kwlist or
+           s in namespace.values() or
+           s in reserved_words):
         if handle == "throw":
-            raise NameError(s + " already exists in namespace or is a reserved word")
+            raise NameError(
+                s + " already exists in namespace or is a reserved word")
         if handle == "force":
-            if re.match(".*?_\d+$", s):
-                i = re.match(".*?_(\d+)$", s).groups()[0]
+            if re.match(r".*?_\d+$", s):
+                i = re.match(r".*?_(\d+)$", s).groups()[0]
                 s = s.strip("_" + i) + "_" + str(int(i) + 1)
             else:
                 s += "_1"
@@ -411,7 +441,7 @@ def make_add_identifier(identifier, build_names):
     return identifier
 
 
-def get_return_elements(return_columns, namespace, subscript_dict):
+def get_return_elements(return_columns, namespace):
     """
     Takes a list of return elements formatted in vensim's format
     Varname[Sub1, SUb2]
@@ -423,7 +453,6 @@ def get_return_elements(return_columns, namespace, subscript_dict):
     ----------
     return_columns: list of strings
     namespace
-    subscript_dict
 
     Returns
     -------
@@ -463,64 +492,80 @@ def get_return_elements(return_columns, namespace, subscript_dict):
     return list(capture_elements), return_addresses
 
 
-def make_flat_df(frames, return_addresses):
+def make_flat_df(df, return_addresses, flatten=False):
     """
-    Takes a list of dictionaries, each representing what is returned from the
-    model at a particular time, and creates a dataframe whose columns
-    correspond to the keys of `return addresses`
+    Takes a dataframe from the outputs of the integration processes,
+    renames the columns as the given return_adresses and splits xarrays
+    if needed.
 
     Parameters
     ----------
-    frames: list of dictionaries
-        each dictionary represents the result of a prticular time in the model
-    return_addresses: a dictionary,
-        keys will be column names of the resulting dataframe, and are what the
+    df: Pandas.DataFrame
+        Output from the integration.
+    return_addresses: dict
+        Keys will be column names of the resulting dataframe, and are what the
         user passed in as 'return_columns'. Values are a tuple:
         (py_name, {coords dictionary}) which tells us where to look for the
         value to put in that specific column.
+    flatten: bool (optional)
+            If True, once the output dataframe has been formatted will
+            split the xarrays in new columns following vensim's naming
+            to make a totally flat output. Default is False.
 
     Returns
     -------
+    df: pandas.DataFrame
+        Formatted dataframe.
 
     """
-
-    # Todo: could also try a list comprehension here, or parallel apply
-    visited = list(map(lambda x: visit_addresses(x, return_addresses), frames))
-    return pd.DataFrame(visited)
-
-
-def visit_addresses(frame, return_addresses):
-    """
-    Visits all of the addresses, returns a new dict
-    which contains just the addressed elements
-
-
-    Parameters
-    ----------
-    frame
-    return_addresses: a dictionary,
-        keys will be column names of the resulting dataframe, and are what the
-        user passed in as 'return_columns'. Values are a tuple:
-        (py_name, {coords dictionary}) which tells us where to look for the
-        value to put in that specific column.
-
-    Returns
-    -------
-    outdict: dictionary
-
-    """
-    outdict = dict()
+    cols_to_remove = set()
+    rename_cols = {}
     for real_name, (pyname, address) in return_addresses.items():
         if address:
-            xrval = frame[pyname].loc[address]
-            if xrval.size > 1:
-                outdict[real_name] = xrval
+            cols_to_remove.add(pyname)
+            # subset the value and add it to a new column
+            xrval = [x.loc[address] for x in df[pyname].values]
+            if xrval[0].size > 1:
+                df[real_name] = xrval
             else:
-                outdict[real_name] = float(np.squeeze(xrval.values))
+                df[real_name] = [float(x) for x in xrval]
         else:
-            outdict[real_name] = frame[pyname]
+            # save the name to change it in the dataframe
+            try:
+                # some elements are returned as 0-d arrays, convert
+                # them to float
+                df[pyname] = [float(x) for x in df[pyname].values]
+            except TypeError:
+                pass
+            rename_cols[pyname] = real_name
 
-    return outdict
+    df.rename(columns=rename_cols, inplace=True)
+
+    if cols_to_remove:
+        # remove the columns of the subset values
+        df.drop(cols_to_remove, axis='columns', inplace=True)
+
+    if flatten:
+        # create a totally flat df (no xarray.DataArray)
+        cols_to_remove.clear()
+        for col in df.columns:
+            if isinstance(df[col].values[0], xr.DataArray):
+                # remove subscripts from name if given
+                name = re.sub(r'\[.*\]', '', col)
+                # split values in xarray.DataArray
+                lval = [xrsplit(val) for val in df[col].values]
+                for i, ar in enumerate(lval[0]):
+                    vals = [float(v[i]) for v in lval]
+                    subs = '[' + ','.join([str(ar.coords[dim].values)
+                                           for dim in list(ar.coords)]) + ']'
+                    df[name+subs] = vals
+                    cols_to_remove.add(col)
+
+        if cols_to_remove:
+            # remove the columns of the subset values
+            df.drop(cols_to_remove, axis='columns', inplace=True)
+
+    return df
 
 
 def compute_shape(coords, reshape_len=None, py_name=""):
@@ -695,6 +740,7 @@ def load_model_data(root_dir, model_name):
     modules: dict
         Dictionary containing view (module) names as keys and a list of the
         corresponding variables as values.
+
     """
 
     with open(os.path.join(root_dir, "_subscripts_" + model_name + ".json")) as subs:
@@ -712,8 +758,8 @@ def load_model_data(root_dir, model_name):
 
 def open_module(root_dir, model_name, module):
     """
-    Used to load model modules from the main model file, when split_modules=True in
-    the read_vensim function
+    Used to load model modules from the main model file, when
+    split_modules=True in the read_vensim function.
 
     Parameters
     ----------
@@ -726,9 +772,13 @@ def open_module(root_dir, model_name, module):
 
     Returns
     -------
-    str
+    str:
+        Model file content.
+
     """
-    return open(os.path.join(root_dir, "modules_" + model_name, module + ".py")).read()
+    return open(
+        os.path.join(root_dir, "modules_" + model_name, module + ".py")
+        ).read()
 
 
 class ProgressBar:

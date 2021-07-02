@@ -21,19 +21,84 @@ from . import utils
 from pysd._version import __version__
 
 
+class Imports():
+    """
+    Class to save the imported modules information for intelligent import
+    """
+    _numpy, _xarray, _subs = False, False, False
+    _functions, _external, _utils = set(), set(), set()
+
+    @classmethod
+    def add(cls, module, function=None):
+        """
+        Add a function from module.
+
+        Parameters
+        ----------
+        module: str
+          module name.
+
+        function: str or None
+          function name. If None module will be set to true.
+
+        """
+        if function:
+            getattr(cls, f"_{module}").add(function)
+        else:
+            setattr(cls, f"_{module}", True)
+
+    @classmethod
+    def get_header(cls, outfile, root=False):
+        """
+        Returns the importing information to print in the model file
+        """
+
+        text =\
+            f'"""\nPython model \'{outfile}\'\nTranslated using PySD\n"""\n\n'
+
+        _root = ""
+
+        if cls._external or root:
+            # define root only if needed
+            text += "from os import path\n"
+            _root = "\n    _root = path.dirname(__file__)\n"
+        if cls._numpy:
+            text += "import numpy as np\n"
+        if cls._xarray:
+            text += "import xarray as xr\n"
+        text += "\n"
+
+        if cls._functions:
+            text += "from pysd.py_backend.functions import %(methods)s\n"\
+                    % {'methods': ", ".join(cls._functions)}
+        if cls._external:
+            text += "from pysd.py_backend.external import %(methods)s\n"\
+                    % {'methods': ", ".join(cls._external)}
+        if cls._utils:
+            text += "from pysd.py_backend.utils import %(methods)s\n"\
+                    % {'methods': ", ".join(cls._utils)}
+
+        if cls._subs:
+            text += "from pysd import cache, subs\n"
+        else:
+            # we need to import always cache as it is called in the integration
+            text += "from pysd import cache\n"
+
+        cls.reset()
+
+        return text, _root
+
+    @classmethod
+    def reset(cls):
+        """
+        Reset the imported modules
+        """
+        cls._numpy, cls._xarray, cls._subs = False, False, False
+        cls._functions, cls._external, cls._utils = set(), set(), set()
+
+
 # Variable to save identifiers of external objects
 build_names = set()
-
-# dictionary for intelligent imports in model file
-# TODO this should be made a proper class
-import_modules = {
-    "numpy": False,
-    "xarray": False,
-    "subs": False,
-    "functions": set(),
-    "external": set(),
-    "utils": set(),
-}
 
 
 def build_modular_model(
@@ -41,23 +106,23 @@ def build_modular_model(
 ):
 
     """
-    This is equivalent to the build function, but is used when the 
-    split_modules parameter is set to True in the read_vensim function. 
+    This is equivalent to the build function, but is used when the
+    split_modules parameter is set to True in the read_vensim function.
     The main python model file will be named as the original model file,
     and stored in the same folder. The modules will be stored in a separate
     folder named modules + original_model_name. Three extra json files will
     be generated, containing the namespace, subscripts_dict and the module
     names plus the variables included in each module, respectively.
-    
+
     Setting split_modules=True is recommended for large models with many
     different views.
 
     Parameters
     ----------
     elements: list
-        Each element is a dictionary, with the various components needed 
+        Each element is a dictionary, with the various components needed
         to assemble a model component in python syntax. This will contain
-        multiple entries for elements that have multiple definitions in 
+        multiple entries for elements that have multiple definitions in
         the original file, and which need to be combined.
 
     subscript_dict: dict
@@ -84,17 +149,18 @@ def build_modular_model(
     os.makedirs(modules_dir, exist_ok=True)
 
     modules_list = elements_per_module.keys()
-    # creating the rest of files per module (this needs to be run before the main module, as it updates the import_modules)
+    # creating the rest of files per module (this needs to be run before the
+    # main module, as it updates the import_modules)
     processed_elements = []
     for module in modules_list:
         module_elems = []
         for element in elements:
-            if (element.get("py_name", None) in elements_per_module[module]) or (
-                element.get("parent_name", None) in elements_per_module[module]
-            ):
+            if element.get("py_name", None) in elements_per_module[module] or\
+               element.get("parent_name", None) in elements_per_module[module]:
                 module_elems.append(element)
 
-        _build_separate_module(module_elems, subscript_dict, module, modules_dir)
+        _build_separate_module(module_elems, subscript_dict,
+                               module, modules_dir)
 
         processed_elements += module_elems
 
@@ -133,12 +199,12 @@ def _build_main_module(elements, subscript_dict, file_name):
     Parameters
     ----------
     elements: list
-        Elements belonging to the main module. Ideally, there should only be 
+        Elements belonging to the main module. Ideally, there should only be
         the initial_time, final_time, saveper and time_step, functions, though
-        there might be others in some situations. Each element is a 
+        there might be others in some situations. Each element is a
         dictionary, with the various components needed to assemble a model
         component in python syntax. This will contain multiple entries for
-        elements that have multiple definitions in the original file, and 
+        elements that have multiple definitions in the original file, and
         which need to be combined.
 
     subscript_dict: dict
@@ -148,39 +214,26 @@ def _build_main_module(elements, subscript_dict, file_name):
 
     file_name: string
         Path of the file where the main module will be stored.
+
     """
-
-    text = '''
-    """
-    Python model "%(outfile)s"
-    Translated using PySD
-    """
-
-    __pysd_version__ = "%(version)s"\n
-
-    from os import path\n''' % {
-        "outfile": os.path.basename(file_name),
-        "version": __version__,
-    }
-
     elements = merge_partial_elements(elements)
     funcs = _generate_functions(elements, subscript_dict)
 
-    text += "    from pysd.py_backend.utils import load_model_data, open_module\n"
+    Imports.add("utils", "load_model_data")
+    Imports.add("utils", "open_module")
 
     # import of needed functions and packages
-    text += _generate_automatic_imports()
+    text, root = Imports.get_header(os.path.basename(file_name), root=True)
 
     # import namespace from json file
-    text += """
-    
-    _root = path.dirname(__file__)
-
+    text += textwrap.dedent("""
+    __pysd_version__ = '%(version)s'
+    %(root)s
     __data = {
         'scope': None,
         'time': lambda: 0
     }
-    
+
     _namespace, _subscript_dict, _modules = load_model_data(_root, "%(outfile)s")
 
     # loading modules from the modules_%(outfile)s directory
@@ -195,20 +248,16 @@ def _build_main_module(elements, subscript_dict, file_name):
         return __data['time']()
 
     """ % {
-        "outfile": os.path.basename(file_name).split(".")[0]
-    }
+        "outfile": os.path.basename(file_name).split(".")[0],
+        "root": root,
+        "version": __version__
+    })
 
-    text = text.replace("\t", "    ")
-    text = textwrap.dedent(text)
     text += funcs
     text = black.format_file_contents(text, fast=True, mode=black.FileMode())
 
-    # TODO this will need to be updated when the import_modules is made into a class
+    # Needed for various sessions
     build_names.clear()
-    for module in ["numpy", "xarray", "subs"]:
-        import_modules[module] = False
-    for module in ["functions", "external", "utils"]:
-        import_modules[module].clear()
 
     # this is used for testing
     if file_name == "return":
@@ -229,10 +278,10 @@ def _build_separate_module(elements, subscript_dict, module_name, module_dir):
     Parameters
     ----------
     elements: list
-        Elements belonging to the module module_name. Each element is a 
+        Elements belonging to the module module_name. Each element is a
         dictionary, with the various components needed to assemble a model
         component in python syntax. This will contain multiple entries for
-        elements that have multiple definitions in the original file, and 
+        elements that have multiple definitions in the original file, and
         which need to be combined.
 
     subscript_dict: dict
@@ -245,9 +294,9 @@ def _build_separate_module(elements, subscript_dict, module_name, module_dir):
 
     module_dir: string
         Path of the directory where module files will be stored.
-    """
 
-    text = '''
+    """
+    text = textwrap.dedent('''
     """
     Module %(module_name)s
     Translated using PySD version %(version)s\n
@@ -255,13 +304,9 @@ def _build_separate_module(elements, subscript_dict, module_name, module_dir):
     ''' % {
         "module_name": module_name,
         "version": __version__,
-    }
-
+    })
     elements = merge_partial_elements(elements)
     funcs = _generate_functions(elements, subscript_dict)
-
-    text = text.replace("\t", "    ")
-    text = textwrap.dedent(text)
     text += funcs
     text = black.format_file_contents(text, fast=True, mode=black.FileMode())
 
@@ -275,7 +320,7 @@ def _build_separate_module(elements, subscript_dict, module_name, module_dir):
 
 def build(elements, subscript_dict, namespace, outfile_name):
     """
-    Constructs and writes the python representation of the model, when the 
+    Constructs and writes the python representation of the model, when the
     the split_modules is set to False in the read_vensim function. The entire
     model is put in a single python file.
 
@@ -305,32 +350,19 @@ def build(elements, subscript_dict, namespace, outfile_name):
     elements = merge_partial_elements(elements)
     funcs = _generate_functions(elements, subscript_dict)
 
-    text = '''
-    """
-    Python model "%(outfile)s"
-    Translated using PySD version %(version)s
-    """
-    from os import path\n''' % {
-        "outfile": os.path.basename(outfile_name),
-        "version": __version__,
-    }
+    text, root = Imports.get_header(os.path.basename(outfile_name))
 
-    # import of needed functions and packages
-    text += _generate_automatic_imports()
+    text += textwrap.dedent("""
+    __pysd_version__ = '%(version)s'
 
-    text += """
     _subscript_dict = %(subscript_dict)s
 
     _namespace = %(namespace)s
-
-    __pysd_version__ = "%(version)s"
-
+    %(root)s
     __data = {
         'scope': None,
         'time': lambda: 0
     }
-
-    _root = path.dirname(__file__)
 
     def _init_outer_references(data):
         for key in data:
@@ -342,20 +374,15 @@ def build(elements, subscript_dict, namespace, outfile_name):
     """ % {
         "subscript_dict": repr(subscript_dict),
         "namespace": repr(namespace),
+        "root": root,
         "version": __version__,
-    }
+    })
 
-    text = text.replace("\t", "    ")
-    text = textwrap.dedent(text)
     text += funcs
     text = black.format_file_contents(text, fast=True, mode=black.FileMode())
 
-    # TODO this will need to be updated when the import_modules is made into a class
+    # Needed for various sessions
     build_names.clear()
-    for module in ["numpy", "xarray", "subs"]:
-        import_modules[module] = False
-    for module in ["functions", "external", "utils"]:
-        import_modules[module].clear()
 
     # this is used for testing
     if outfile_name == "return":
@@ -371,7 +398,7 @@ def _generate_functions(elements, subscript_dict):
     Builds all model elements as functions in string format.
     NOTE: this function calls the build_element function, which updates the import_modules.
     Therefore, it needs to be executed before the _generate_automatic_imports function.
-    
+
     Parameters
     ----------
     elements: dict
@@ -379,7 +406,7 @@ def _generate_functions(elements, subscript_dict):
         assemble a model component in python syntax. This will contain
         multiple entries for elements that have multiple definitions in the
         original file, and which need to be combined.
-    
+
     subscript_dict: dict
         A dictionary containing the names of subscript families (dimensions)
         as keys, and a list of the possible positions within that dimension
@@ -397,53 +424,6 @@ def _generate_functions(elements, subscript_dict):
     funcs = funcs.replace("\t", "    ")
 
     return funcs
-
-
-def _generate_automatic_imports(import_modules=import_modules):
-
-    """
-    Writes a sting containing the modules and functions to add in the imports
-    list of the final model, based on the values of the import_modules.
-
-    Parameters
-    ----------
-    import_modules: dict
-        Modules to import to the model file as keys and Booleans as values
-    
-    Returns
-    -------
-    text: str
-        String with a formatted list of modules to import in the translated model
-    
-    """
-
-    # intelligent import of needed functions and packages
-    text = ""
-    if import_modules["numpy"]:
-        text += "    import numpy as np\n"
-    if import_modules["xarray"]:
-        text += "    import xarray as xr\n"
-    text += "\n"
-
-    if import_modules["functions"]:
-        text += "    from pysd.py_backend.functions import %(methods)s\n" % {
-            "methods": ", ".join(import_modules["functions"])
-        }
-    if import_modules["external"]:
-        text += "    from pysd.py_backend.external import %(methods)s\n" % {
-            "methods": ", ".join(import_modules["external"])
-        }
-    if import_modules["utils"]:
-        text += "    from pysd.py_backend.utils import %(methods)s\n" % {
-            "methods": ", ".join(import_modules["utils"])
-        }
-
-    if import_modules["subs"]:
-        text += "    from pysd import cache, subs\n"
-    else:
-        # we need to import always cache as it is called in the integration
-        text += "    from pysd import cache\n"
-    return text
 
 
 def build_element(element, subscript_dict):
@@ -499,21 +479,28 @@ def build_element(element, subscript_dict):
         py_expr_i = []
         # need to append true to the end as the next element is checked
         py_expr_no_ADD.append(True)
-        for i, (py_expr, subs_i) in enumerate(zip(element["py_expr"], element["subs"])):
-            if not (py_expr[:3] == "xr." or py_expr[:5] == "_ext_"):
+        for i, (py_expr, subs_i) in enumerate(zip(element["py_expr"],
+                                                  element["subs"])):
+            if not (py_expr.startswith("xr.") or py_expr.startswith("_ext_")):
                 # rearrange if it doesn't come from external or xarray
-                coords = utils.make_coord_dict(subs_i, subscript_dict, terse=False)
+                coords = utils.make_coord_dict(
+                    subs_i,
+                    subscript_dict,
+                    terse=False)
                 coords = {
-                    new_dim: coords[dim] for new_dim, dim in zip(new_subs, coords)
+                    new_dim: coords[dim]
+                    for new_dim, dim in zip(new_subs, coords)
                 }
                 dims = list(coords)
-                import_modules["utils"].add("rearrange")
-                py_expr_i.append("rearrange(%s, %s, %s)" % (py_expr, dims, coords))
+                Imports.add('utils', 'rearrange')
+                py_expr_i.append('rearrange(%s, %s, %s)' % (
+                    py_expr, dims, coords))
             elif py_expr_no_ADD[i]:
                 # element comes from external or xarray
                 py_expr_i.append(py_expr)
-        import_modules["utils"].add("xrmerge")
-        py_expr = "xrmerge([%s,])" % (",\n".join(py_expr_i))
+        Imports.add('utils', 'xrmerge')
+        py_expr = 'xrmerge([%s,])' % (
+            ',\n'.join(py_expr_i))
     else:
         py_expr = element["py_expr"][0]
 
@@ -528,14 +515,15 @@ def build_element(element, subscript_dict):
         # to rewrite subscripted values with model.run(params=X) or
         # model.run(initial_condition=(n,x))
         element["subs_doc"] = "%s" % new_subs
-        if element["kind"] in ["component", "setup", "constant"]:
+        if element["kind"] in ["component", "setup",
+                               "constant", "component_ext_data"]:
             # the decorator is not always necessary as the objects
             # defined as xarrays in the model will have the right
             # dimensions always, we should try to reduce to the
             # maximum when we use it
             # re arrange the python object
             element["subs_dec"] = "@subs(%s, _subscript_dict)" % new_subs
-            import_modules["subs"] = True
+            Imports.add("subs")
 
     indent = 8
     element.update(
@@ -690,7 +678,7 @@ def add_stock(identifier, expression, initial_condition, subs):
         that these can be appropriately aggregated
 
     """
-    import_modules["functions"].add("Integ")
+    Imports.add("functions", 'Integ')
 
     new_structure = []
     py_name = "_integ_%s" % identifier
@@ -809,7 +797,7 @@ def add_delay(identifier, delay_input, delay_time, initial_value, order, subs):
         list of element construction dictionaries for the builder to assemble
 
     """
-    import_modules["functions"].add("Delay")
+    Imports.add("functions", 'Delay')
 
     new_structure = []
     py_name = "_delay_%s" % identifier
@@ -921,7 +909,7 @@ def add_delay_f(identifier, delay_input, delay_time, initial_value):
         list of element construction dictionaries for the builder to assemble
 
     """
-    import_modules["functions"].add("DelayFixed")
+    Imports.add("functions", 'DelayFixed')
 
     py_name = "_delayfixed_%s" % identifier
 
@@ -997,7 +985,7 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order, subs)
         list of element construction dictionaries for the builder to assemble
 
     """
-    import_modules["functions"].add("DelayN")
+    Imports.add("functions", 'DelayN')
 
     new_structure = []
     py_name = "_delayn_%s" % identifier
@@ -1071,7 +1059,8 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order, subs)
     return "%s()" % py_name, new_structure
 
 
-def add_sample_if_true(identifier, condition, actual_value, initial_value):
+def add_sample_if_true(identifier, condition, actual_value, initial_value,
+                       subs):
     """
     Creates code to instantiate a stateful 'SampleIfTrue' object,
     and provides reference to that object's output.
@@ -1092,6 +1081,10 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value):
     initial_value: <string>
         This is used to initialize the state of the sample if true function.
 
+    subs: list of strings
+        List of strings of subscript indices that correspond to the
+        list of expressions, and collectively define the shape of the output
+
     Returns
     -------
     reference: basestring
@@ -1102,28 +1095,51 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value):
         list of element construction dictionaries for the builder to assemble
 
     """
-    import_modules["functions"].add("SampleIfTrue")
+    Imports.add("functions", 'SampleIfTrue')
 
-    py_name = "_sample_if_true_%s" % identifier
+    new_structure = []
+    py_name = '_sample_if_true_%s' % identifier
 
+    if len(subs) == 0:
+        stateful_py_expr = "SampleIfTrue(lambda: %s, lambda: %s,"\
+                           "lambda: %s, '%s')" % (
+                               condition, actual_value, initial_value, py_name)
+
+    else:
+        stateful_py_expr = "SampleIfTrue(lambda: %s, lambda: %s,"\
+                           "_sample_if_true_init_%s, '%s')" % (
+                               condition, actual_value, identifier, py_name)
+
+        # following elements not specified in the model file, but must exist
+        # create the delay initialization element
+        new_structure.append({
+            'py_name': '_sample_if_true_init_%s' % identifier,
+            'real_name': 'Implicit',
+            'kind': 'setup',  # not specified in the model file, but must exist
+            'py_expr': initial_value,
+            'subs': subs,
+            'doc': 'Provides initial conditions for %s function' % identifier,
+            'unit': 'See docs for %s' % identifier,
+            'lims': 'None',
+            'eqn': 'None',
+            'arguments': ''
+        })
     # describe the stateful object
-    stateful = {
-        "py_name": py_name,
-        "parent_name": identifier,
-        "real_name": "Sample if true of %s" % identifier,
-        "doc": "Initial value: %s \n  Input: %s \n Condition: %s"
-        % (initial_value, actual_value, condition),
-        "py_expr": "SampleIfTrue(lambda: %s, lambda: %s, lambda: %s, '%s')"
-        % (condition, actual_value, initial_value, py_name),
-        "unit": "None",
-        "lims": "None",
-        "eqn": "None",
-        "subs": "",
-        "kind": "stateful",
-        "arguments": "",
-    }
+    new_structure.append({
+        'py_name': py_name,
+        'real_name': 'Sample if true of %s' % identifier,
+        'doc': 'Initial value: %s \n  Input: %s \n Condition: %s' % (
+            initial_value, actual_value, condition),
+        'py_expr': stateful_py_expr,
+        'unit': 'None',
+        'lims': 'None',
+        'eqn': 'None',
+        'subs': '',
+        'kind': 'stateful',
+        'arguments': ''
+    })
 
-    return "%s()" % stateful["py_name"], [stateful]
+    return "%s()" % py_name, new_structure
 
 
 def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order, subs):
@@ -1169,7 +1185,7 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order, su
         list of element construction dictionaries for the builder to assemble
 
     """
-    import_modules["functions"].add("Smooth")
+    Imports.add("functions", 'Smooth')
 
     new_structure = []
     py_name = "_smooth_%s" % identifier
@@ -1273,28 +1289,23 @@ def add_n_trend(identifier, trend_input, average_time, initial_trend, subs):
         list of element construction dictionaries for the builder to assemble
 
     """
-
-    import_modules["functions"].add("Trend")
+    Imports.add("functions", 'Trend')
 
     new_structure = []
     py_name = "_trend_%s" % identifier
 
     if len(subs) == 0:
-        stateful_py_expr = "Trend(lambda: %s, lambda: %s," " lambda: %s, '%s')" % (
-            trend_input,
-            average_time,
-            initial_trend,
-            py_name,
-        )
+        stateful_py_expr = "Trend(lambda: %s, lambda: %s,"\
+                           " lambda: %s, '%s')" % (
+                               trend_input, average_time,
+                               initial_trend, py_name)
 
     else:
         # only need to re-dimension init as xarray will take care of other
-        stateful_py_expr = "Trend(lambda: %s, lambda: %s," " _trend_init_%s, '%s')" % (
-            trend_input,
-            average_time,
-            identifier,
-            py_name,
-        )
+        stateful_py_expr = "Trend(lambda: %s, lambda: %s,"\
+                           " _trend_init_%s, '%s')" % (
+                               trend_input, average_time,
+                               identifier, py_name)
 
         # following elements not specified in the model file, but must exist
         # create the delay initialization element
@@ -1354,9 +1365,9 @@ def add_initial(identifier):
         list of element construction dictionaries for the builder to assemble
 
     """
-
-    import_modules["functions"].add("Initial")
-    py_name = utils.make_python_identifier("_initial_%s" % identifier)[0]
+    Imports.add("functions", 'Initial')
+    py_name = utils.make_python_identifier('_initial_%s'
+                                           % identifier)[0]
 
     stateful = {
         "py_name": py_name,
@@ -1417,7 +1428,7 @@ def add_ext_data(
     )
     name = utils.make_python_identifier("_ext_data_%s" % identifier)[0]
 
-    import_modules["external"].add("ExtData")
+    Imports.add('external', 'ExtData')
 
     # Check if the object already exists
     if name in build_names:
@@ -1433,7 +1444,8 @@ def add_ext_data(
         # in the model file.
         build_names.add(name)
         kind = "external"
-        py_expr = "ExtData(%s, %s, %s, %s, %s, %s," "        _root, '{}')".format(name)
+        py_expr = "ExtData(%s, %s, %s, %s, %s, %s,\n"\
+                  "        _root, '{}')".format(name)
 
     external = {
         "py_name": name,
@@ -1482,7 +1494,7 @@ def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
         list of element construction dictionaries for the builder to assemble
 
     """
-    import_modules["external"].add("ExtConstant")
+    Imports.add('external', 'ExtConstant')
 
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
     name = utils.make_python_identifier("_ext_constant_%s" % identifier)[0]
@@ -1500,7 +1512,8 @@ def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
         # Regular name will be used and a new object will be created
         # in the model file.
         kind = "external"
-        py_expr = "ExtConstant(%s, %s, %s, %s," "            _root, '{}')".format(name)
+        py_expr = "ExtConstant(%s, %s, %s, %s,\n"\
+                  "            _root, '{}')".format(name)
     build_names.add(name)
 
     external = {
@@ -1554,7 +1567,7 @@ def add_ext_lookup(
         list of element construction dictionaries for the builder to assemble
 
     """
-    import_modules["external"].add("ExtLookup")
+    Imports.add('external', 'ExtLookup')
 
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
     name = utils.make_python_identifier("_ext_lookup_%s" % identifier)[0]
@@ -1572,9 +1585,8 @@ def add_ext_lookup(
         # Regular name will be used and a new object will be created
         # in the model file.
         kind = "external"
-        py_expr = "ExtLookup(%s, %s, %s, %s, %s,\n" "          _root, '{}')".format(
-            name
-        )
+        py_expr = "ExtLookup(%s, %s, %s, %s, %s,\n"\
+                  "          _root, '{}')".format(name)
     build_names.add(name)
 
     external = {
@@ -1617,14 +1629,11 @@ def add_macro(macro_name, filename, arg_names, arg_vals):
         list of element construction dictionaries for the builder to assemble
 
     """
-    import_modules["functions"].add("Macro")
+    Imports.add("functions", 'Macro')
 
-    py_name = (
-        "_macro_"
-        + macro_name
-        + "_"
-        + "_".join([utils.make_python_identifier(f)[0] for f in arg_vals])
-    )
+    py_name = "_macro_" + macro_name + "_" + "_".join(
+        [utils.make_python_identifier(f)[0] for f in arg_vals])
+
     func_args = "{ %s }" % ", ".join(
         ["'%s': lambda: %s" % (key, val) for key, val in zip(arg_names, arg_vals)]
     )
@@ -1655,7 +1664,7 @@ def add_incomplete(var_name, dependencies):
      in which we can raise a warning about the incomplete equation
      at translate time.
     """
-    import_modules["functions"].add("incomplete")
+    Imports.add("functions", 'incomplete')
 
     warnings.warn(
         "%s has no equation specified" % var_name, SyntaxWarning, stacklevel=2
@@ -1706,10 +1715,10 @@ def build_function_call(function_def, user_arguments):
     if "module" in function_def:
         if function_def["module"] in ["numpy", "xarray"]:
             # import external modules
-            import_modules[function_def["module"]] = True
+            Imports.add(function_def["module"])
         else:
             # import method from PySD module
-            import_modules[function_def["module"]].add(function_def["name"])
+            Imports.add(function_def["module"], function_def["name"])
 
     if "parameters" in function_def:
         parameters = function_def["parameters"]

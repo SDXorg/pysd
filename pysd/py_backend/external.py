@@ -76,8 +76,8 @@ class External(object):
         File name from which the data is read.
     sheet: str
         Sheet name from which the data is read.
-    """
 
+    """
     missing = "warning"
 
     def __init__(self, py_name):
@@ -103,6 +103,7 @@ class External(object):
         -------
         data: pandas.DataFrame, pandas.Series or float
             depending on the shape of the requested data
+
         """
         # TODO move to openpyxl to avoid pandas dependency in this file.
         ext = os.path.splitext(self.file)[1].lower()
@@ -137,6 +138,7 @@ class External(object):
         -------
         data: numpy.ndarray or float
             depending on the shape of the requested data
+
         """
         # read data
         excel = Excels.read_opyxl(self.file)
@@ -301,26 +303,33 @@ class External(object):
 
         return series, data
 
-    def _resolve_file(self, root=None, possible_ext=None):
+    def _resolve_file(self, root):
+        """
+        Resolve input file path. Joining the file with the root and
+        checking if it exists.
 
-        possible_ext = possible_ext or\
-                       ['', '.xls', '.xlsx', '.odt', '.txt', '.tab']
+        Parameters
+        ----------
+        root: str
+            The root path to the model file.
 
+        Returns
+        -------
+        None
+
+        """
         if self.file[0] == '?':
-            self.file = os.path.join(root, self.file[1:])
+            # TODO add an option to include indirect references
+            raise ValueError(
+                self.py_name + "\n"
+                + f"Indirect reference to file: {self.file}")
+
+        self.file = os.path.join(root, self.file)
 
         if not os.path.isfile(self.file):
-            for ext in possible_ext:
-                if os.path.isfile(self.file + ext):
-                    self.file = self.file + ext
-                    return
-
-            # raise FileNotFoundError(self.file)
-            # python2 compatibility
-            raise IOError("File Not Found: " + self.file)
-
-        else:
-            return
+            raise FileNotFoundError(
+                self.py_name + "\n"
+                + f"File '{self.file}' not found.")
 
     def _initialize_data(self, element_type):
         """
@@ -355,7 +364,7 @@ class External(object):
             i = 0
             try:
                 while np.isnan(series[i-1]):
-                     i -= 1
+                    i -= 1
             except IndexError:
                 # series has len 0
                 raise ValueError(
@@ -775,6 +784,7 @@ class ExtLookup(External):
              self.cell, self.coords) in zipped:
             data.append(self._initialize_data("lookup"))
         self.data = utils.xrmerge(data)
+
     def __call__(self, x):
         return self._call(self.data, x)
 
@@ -797,8 +807,9 @@ class ExtLookup(External):
                 data, _ = xr.broadcast(data, x)
                 outdata = data[0].copy()
                 for a in utils.xrsplit(x):
-                    outdata.loc[a.coords] = self._call(data.loc[a.coords],
-                                                float(a))
+                    outdata.loc[a.coords] = self._call(
+                        data.loc[a.coords],
+                        float(a))
             # the output will be always an xarray
             return outdata.reset_coords('lookup_dim', drop=True)
 

@@ -6,7 +6,7 @@ and changes are likely to be overwritten.
 
 import warnings
 import unittest
-from .test_utils import runner, assert_frames_close
+from pysd.tools.benchmarking import runner, assert_frames_close
 
 rtol = .05
 
@@ -283,6 +283,12 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/reference_capitalization/test_reference_capitalization.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    def test_repeated_subscript(self):
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            output, canon = runner('test-models/tests/repeated_subscript/test_repeated_subscript.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
     @unittest.skip('in branch')
     def test_rounding(self):
         output, canon = runner('test-models/tests/rounding/test_rounding.mdl')
@@ -374,11 +380,15 @@ class TestIntegrationExamples(unittest.TestCase):
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_mapping_simple(self):
-        output, canon = runner('test-models/tests/subscript_mapping_simple/test_subscript_mapping_simple.mdl')
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            output, canon = runner('test-models/tests/subscript_mapping_simple/test_subscript_mapping_simple.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_mapping_vensim(self):
-        output, canon = runner('test-models/tests/subscript_mapping_vensim/test_subscript_mapping_vensim.mdl')
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            output, canon = runner('test-models/tests/subscript_mapping_vensim/test_subscript_mapping_vensim.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_mixed_assembly(self):
@@ -390,7 +400,6 @@ class TestIntegrationExamples(unittest.TestCase):
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_numeric_range(self):
-        from .test_utils import runner, assert_frames_close
         output, canon = runner('test-models/tests/subscript_numeric_range/test_subscript_numeric_range.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
@@ -424,6 +433,10 @@ class TestIntegrationExamples(unittest.TestCase):
 
     def test_subscripted_if_then_else(self):
         output, canon = runner('test-models/tests/subscripted_if_then_else/test_subscripted_if_then_else.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
+    def test_subscripted_logicals(self):
+        output, canon = runner('test-models/tests/subscripted_logicals/test_subscripted_logicals.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscripted_smooth(self):

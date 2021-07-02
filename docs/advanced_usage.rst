@@ -41,6 +41,7 @@ We can substitute this function directly for the heat_loss_to_room model compone
 
 If you want to replace a subscripted variable, you need to ensure that the output from the new function is the same as the previous one. You can check the current coordinates and dimensions of a component by using :py:data:`.get_coords(variable_name)` as it is explained in :doc:`basic usage <../basic_usage>`.
 
+<<<<<<< HEAD
 Supplying additional arguments to the integrator
 ------------------------------------------------
 the :py:func:`run` function's argument `intg_kwargs` is a pass-through for keyword arguments to scipy's odeint function, and as such can take on any of the keywords that odeint recognizes.
@@ -70,3 +71,30 @@ In a Vensim model with three separate views (e.g. `view_1`, `view_2` and `view_3
 |
 If macros are present, they will be self-contained in files named as the macro itself. The macro inner variables will be placed inside the module that corresponds with the view in which they were defined.
  
+=======
+Starting simulations from an end-state of another simulation
+------------------------------------------------------------
+The current state of a model can be save in a pickle file using the :py:data:`.export()`method::
+
+   model.run(final_time=50)
+   model.export("final_state.pic")
+
+Then the exported data can be used in another session::
+
+   model.run(initial_condition="final_state.pic", return_timestamps=[55, 60])
+
+the new simulation will have initial time equal to 50 with the saved valuesfrom the previous one.
+
+.. note::
+   You can set the exact final time of the simulation using the *final_time* argument.
+   If you want to avoid returning the dataframe of the stocks you can use *return_timestamps=[]*::
+
+     model.run(final_time=50, return_timestamps=[])
+
+.. note::
+   The changes done with *params* arguments are not saved. If you want to keep them you need to call the new run with the same *params* values.
+
+.. warning::
+  Exported data is saved and loaded using `pickle <https://docs.python.org/3/library/pickle.html>`_, this data can be not compatible with future versions of
+  *PySD* or *xarray*. In order to prevent data losses save always the source code.
+>>>>>>> initialize_stateful_objects

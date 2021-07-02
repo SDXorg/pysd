@@ -83,6 +83,12 @@ If the measured data that we are comparing with our model comes in at irregular 
    9.5     112.541515
    …
 
+Retrieving totally flat dataframe
+---------------------------------
+The subscripted variables, in general, will be returned as *xarray.DataArray*s in the output *pandas.DataFrame*. To get a totally flat dataframe, like Vensim outuput the `flatten=True` when calling the run function::
+
+   >>> model.run(flatten=True)
+
 Setting parameter values
 ------------------------
 In many cases, we want to modify the parameters of the model to investigate its behavior under different assumptions. There are several ways to do this in PySD, but the :py:func:`.run()` function gives us a convenient method in the params keyword argument.
@@ -131,6 +137,21 @@ In the same way, a Pandas series can be used with constan values, partially defi
 
   this will return the coords dictionary and the dimensions list if the variable is subscripted or ‘None’ if the variable is an scalar.
 
+.. note::
+  If you change the value of a lookup function by a constant, the constant value will be used always. If a *pandas.Series* is given the index and values will be used for interpolation when the function is called in the model, keeping the arguments that are included in the model file.
+
+  If you change the value of any other variable type by a constant, the constant value will be used always. If a *pandas.Series* is given the index and values will be used for interpolation when the function is called in the model, using the time as argument.
+
+  If you need to know if a variable takes arguments, i.e., if it is a lookup variable, you can check it by using :py:data:`.get_args(variable__name)` function::
+
+     >>> model.get_args('Room Temperature')
+
+     []
+
+     >>> model.get_args('Growth lookup')
+
+     ['x']
+
 Setting simulation initial conditions
 -------------------------------------
 Finally, we can set the initial conditions of our model in several ways. So far, we’ve been using the default value for the initial_condition keyword argument, which is ‘original’. This value runs the model from the initial conditions that were specified originally by the model file. We can alternately specify a tuple containing the start time and a dictionary of values for the system’s stocks. Here we start the model with the tea at just above freezing::
@@ -147,6 +168,7 @@ Additionally we can run the model forward from its current position, by passing 
 The integration picks up at the last value returned in the previous run condition, and returns values at the requested timestamps.
 
 There are times when we may choose to overwrite a stock with a constant value (ie, for testing). To do this, we just use the params value, as before. Be careful not to use 'params' when you really mean to be setting the initial condition!
+
 
 Querying current values
 -----------------------
