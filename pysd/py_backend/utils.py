@@ -7,6 +7,7 @@ functions.py
 import warnings
 import keyword
 import regex as re
+import progressbar
 
 import xarray as xr
 
@@ -716,9 +717,6 @@ class ProgressBar():
             return
 
         self.counter = 0
-
-        # this way we made the package optional
-        import progressbar
 
         self.bar = progressbar.ProgressBar(
             maxval=self.maxval,

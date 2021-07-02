@@ -1,12 +1,12 @@
 pandas
 parsimonious
 xarray
+xlrd
 lxml
-xlrd==1.2.0
-xlwt
 regex
 chardet
 black
 openpyxl
 scipy
+progressbar
 
