@@ -31,9 +31,12 @@ def main(args):
         print("\nFinished!")
         sys.exit()
 
-    initialize(model, options)
+    model.initialize()
 
     output = model.run(**create_configuration(model, options))
+
+    if options.export_file:
+        model.export(options.export_file)
 
     save(output, options)
     print("\nFinished!")
@@ -67,28 +70,6 @@ def load(model_file, missing_values):
                          missing_values=missing_values)
 
 
-def initialize(model, options):
-    """
-    Update model control variables and initialize the model.
-
-    Parameters
-    ----------
-    model: pysd.model object
-
-    options: argparse.Namespace
-
-    Returns
-    -------
-    None
-
-    """
-    for func_name in ['initial_time', 'time_step', 'final_time', 'saveper']:
-        if getattr(options, func_name):
-            model.set_components({func_name: getattr(options, func_name)})
-
-    model.initialize()
-
-
 def create_configuration(model, options):
     """
     create configuration dict to pass to the run method.
@@ -107,11 +88,18 @@ def create_configuration(model, options):
     conf_dict = {
         "progress": options.progress,
         "params": options.new_values['param'],
-        "initial_condition": (model.time(), options.new_values['initial']),
+        "initial_condition": (options.initial_time or model.time(),
+                              options.new_values['initial']),
         "return_columns": options.return_columns,
+        "final_time": options.final_time,
+        "time_step": options.time_step,
+        "saveper": options.saveper,
         "flatten_output": True,  # need to return totally flat DF
         "return_timestamps": options.return_timestamps  # given or None
     }
+
+    if options.import_file:
+        conf_dict["initial_condition"] = options.import_file
 
     return conf_dict
 

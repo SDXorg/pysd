@@ -8,6 +8,7 @@ makes it easy for the model elements to call.
 import inspect
 import os
 import re
+import pickle
 import random
 import warnings
 from importlib.machinery import SourceFileLoader
@@ -89,11 +90,19 @@ class Integ(DynamicStateful):
         self.shape_info = None
         self.py_name = py_name
 
-    def initialize(self):
-        self.state = self.init_func()
+    def initialize(self, init_val=None):
+        if init_val is None:
+            self.state = self.init_func()
+        else:
+            self.state = init_val
         if isinstance(self.state, xr.DataArray):
             self.shape_info = {'dims': self.state.dims,
                                'coords': self.state.coords}
+
+    def export(self):
+        return {self.py_name: {
+            'state': self.state,
+            'shape_info': self.shape_info}}
 
 
 class Delay(DynamicStateful):
@@ -130,7 +139,7 @@ class Delay(DynamicStateful):
         self.shape_info = None
         self.py_name = py_name
 
-    def initialize(self):
+    def initialize(self, init_val=None):
         order = self.order_func()
 
         if order != int(order):
@@ -146,7 +155,10 @@ class Delay(DynamicStateful):
                           'Delay time very small, casting delay order '
                           + f'from {int(order)} to {self.order}')
 
-        init_state_value = self.init_func() * self.delay_time_func()
+        if init_val is None:
+            init_state_value = self.init_func() * self.delay_time_func()
+        else:
+            init_state_value = init_val * self.delay_time_func()
 
         if isinstance(init_state_value, xr.DataArray):
             # broadcast self.state
@@ -172,6 +184,11 @@ class Delay(DynamicStateful):
         else:
             inflows[0] = self.input_func()
         return (inflows - outflows) * self.order
+
+    def export(self):
+        return {self.py_name: {
+            'state': self.state,
+            'shape_info': self.shape_info}}
 
 
 class DelayN(DynamicStateful):
@@ -209,7 +226,7 @@ class DelayN(DynamicStateful):
         self.shape_info = None
         self.py_name = py_name
 
-    def initialize(self):
+    def initialize(self, init_val=None):
         order = self.order_func()
 
         if order != int(order):
@@ -225,7 +242,10 @@ class DelayN(DynamicStateful):
                           'Delay time very small, casting delay order '
                           + f'from {int(order)} to {self.order}')
 
-        init_state_value = self.init_func() * self.delay_time_func()
+        if init_val is None:
+            init_state_value = self.init_func() * self.delay_time_func()
+        else:
+            init_state_value = init_val * self.delay_time_func()
 
         if isinstance(init_state_value, xr.DataArray):
             # broadcast self.state
@@ -263,6 +283,12 @@ class DelayN(DynamicStateful):
         inflows[0] = self.input_func()
         return (inflows - outflows)*self.order
 
+    def export(self):
+        return {self.py_name: {
+            'state': self.state,
+            'times': self.times,
+            'shape_info': self.shape_info}}
+
 
 class DelayFixed(DynamicStateful):
     """
@@ -291,7 +317,7 @@ class DelayFixed(DynamicStateful):
         self.pointer = 0
         self.py_name = py_name
 
-    def initialize(self):
+    def initialize(self, init_val=None):
         order = max(self.delay_time_func()/self.tstep(), 1)
 
         if order != int(order):
@@ -303,7 +329,10 @@ class DelayFixed(DynamicStateful):
         # need to add a small decimal to ensure that 0.5 is rounded to 1
         self.order = round(order + small_vensim)  # The order can only be set once
 
-        init_state_value = self.init_func()
+        if init_val is None:
+            init_state_value = self.init_func()
+        else:
+            init_state_value = init_val
 
         self.state = init_state_value
         self.pipe = [init_state_value] * self.order
@@ -318,6 +347,12 @@ class DelayFixed(DynamicStateful):
         self.pipe[self.pointer] = self.input_func()
         self.pointer = (self.pointer + 1) % self.order
         self.state = self.pipe[self.pointer]
+
+    def export(self):
+        return {self.py_name: {
+            'state': self.state,
+            'pointer': self.pointer,
+            'pipe': self.pipe}}
 
 
 class Smooth(DynamicStateful):
@@ -346,9 +381,14 @@ class Smooth(DynamicStateful):
         self.shape_info = None
         self.py_name = py_name
 
-    def initialize(self):
+    def initialize(self, init_val=None):
         self.order = self.order_func()  # The order can only be set once
-        init_state_value = self.init_func()
+
+        if init_val is None:
+            init_state_value = self.init_func()
+        else:
+            init_state_value = init_val
+
         if isinstance(init_state_value, xr.DataArray):
             # broadcast self.state
             self.state = init_state_value.expand_dims({
@@ -356,7 +396,7 @@ class Smooth(DynamicStateful):
             self.shape_info = {'dims': self.state.dims,
                                'coords': self.state.coords}
         else:
-            self.state = np.array([self.init_func()] * self.order)
+            self.state = np.array([init_state_value] * self.order)
 
     def __call__(self):
         if self.shape_info:
@@ -371,6 +411,11 @@ class Smooth(DynamicStateful):
         else:
             targets[0] = self.input_func()
         return (targets - self.state) * self.order / self.smooth_time_func()
+
+    def export(self):
+        return {self.py_name: {
+            'state': self.state,
+            'shape_info': self.shape_info}}
 
 
 class Trend(DynamicStateful):
@@ -396,9 +441,13 @@ class Trend(DynamicStateful):
         self.input_func = trend_input
         self.py_name = py_name
 
-    def initialize(self):
-        self.state = self.input_func()\
-            / (1 + self.init_func() * self.average_time_function())
+    def initialize(self, init_val=None):
+        if init_val is None:
+            self.state = self.input_func()\
+                / (1 + self.init_func()*self.average_time_function())
+        else:
+            self.state = self.input_func()\
+                / (1 + init_val*self.average_time_function())
 
         if isinstance(self.state, xr.DataArray):
             self.shape_info = {'dims': self.state.dims,
@@ -411,8 +460,13 @@ class Trend(DynamicStateful):
     def ddt(self):
         return (self.input_func() - self.state) / self.average_time_function()
 
+    def export(self):
+        return {self.py_name: {
+            'state': self.state,
+            'shape_info': self.shape_info}}
 
-class SampleIfTrue(Stateful):
+
+class SampleIfTrue(DynamicStateful):
     def __init__(self, condition, actual_value, initial_value,
                  py_name="SampleIfTrue object"):
         """
@@ -428,38 +482,63 @@ class SampleIfTrue(Stateful):
         super().__init__()
         self.condition = condition
         self.actual_value = actual_value
-        self.initial_value = initial_value
+        self.init_func = initial_value
         self.py_name = py_name
 
-    def initialize(self):
-        self.state = self.initial_value()
+    def initialize(self, init_val=None):
+        if init_val is None:
+            self.state = self.init_func()
+        else:
+            self.state = init_val
+        if isinstance(self.state, xr.DataArray):
+            self.shape_info = {'dims': self.state.dims,
+                               'coords': self.state.coords}
 
     def __call__(self):
-        self.state = if_then_else(self.condition(),
-                                  self.actual_value,
-                                  lambda: self.state)
-        return self.state
+        return if_then_else(self.condition(),
+                            self.actual_value,
+                            lambda: self.state)
+
+    def ddt(self):
+        return np.nan
+
+    def update(self, state):
+        self.state = self.state*0 + if_then_else(self.condition(),
+                                                 self.actual_value,
+                                                 lambda: self.state)
+
+    def export(self):
+        return {self.py_name: {
+            'state': self.state,
+            'shape_info': self.shape_info}}
 
 
 class Initial(Stateful):
     """
     Implements INITIAL function
     """
-    def __init__(self, func, py_name="Initial object"):
+    def __init__(self, initial_value, py_name="Initial object"):
         """
 
         Parameters
         ----------
-        func: function
+        initial_value: function
         py_name: str
           Python name to identify the object
         """
         super().__init__()
-        self.func = func
+        self.init_func = initial_value
         self.py_name = py_name
 
-    def initialize(self):
-        self.state = self.func()
+    def initialize(self, init_val=None):
+        if init_val is None:
+            self.state = self.init_func()
+        else:
+            self.state = init_val
+
+    def export(self):
+        return {self.py_name: {
+            'state': self.state}}
 
 
 class Macro(DynamicStateful):
@@ -493,6 +572,7 @@ class Macro(DynamicStateful):
         self.time = time
         self.time_initialization = time_initialization
         self.py_name = py_name
+        self.initialize_order = None
 
         # need a unique identifier for the imported module.
         module_name = os.path.splitext(py_model_file)[0]\
@@ -572,10 +652,7 @@ class Macro(DynamicStateful):
 
         # Initialize time
         if self.time is None:
-            if self.time_initialization is None:
-                self.time = Time()
-            else:
-                self.time = self.time_initialization()
+            self.time = self.time_initialization()
 
         self.components.cache.clean()
         self.components.cache.time = self.time()
@@ -591,6 +668,33 @@ class Macro(DynamicStateful):
 
         Excels.clean()
 
+        remaining = set(self._stateful_elements)
+        if len(set([element.py_name for element in self._stateful_elements]))\
+           == len(set(self._stateful_elements)) and self.initialize_order:
+            # use elements names to initialize them, this is available
+            # after the model is initialized one time
+            # solves issue #247 until we have a dependency dictionary
+            try:
+                for element_name in self.initialize_order:
+                    for element in remaining:
+                        if element.py_name == element_name:
+                            element.initialize()
+                            break
+                    remaining.remove(element)
+                assert len(remaining) == 0
+                return
+            except Exception as err:
+                # if user includes new stateful objects or some other
+                # dependencies the previous initialization order may
+                # not be keept
+                warnings.warn(
+                    err.args[0] +
+                    "\n\nNot able to initialize statefull elements "
+                    "with the same order as before..."
+                    "Trying to find a new order.")
+                # initialize as always
+
+        self.initialize_order = []
         # Initialize stateful elements
         remaining = set(self._stateful_elements)
         while remaining:
@@ -599,6 +703,7 @@ class Macro(DynamicStateful):
                 try:
                     element.initialize()
                     progress.add(element)
+                    self.initialize_order.append(element.py_name)
                 except (KeyError, TypeError, AttributeError):
                     pass
 
@@ -625,6 +730,59 @@ class Macro(DynamicStateful):
         [component.update(val) for component, val
          in zip(self._dynamicstateful_elements, new_value)]
 
+    def export(self, file_name):
+        """
+        Export stateful values to pickle file.
+
+        Parameters
+        ----------
+        file_name: str
+          Name of the file to export the values.
+
+        """
+        warnings.warn(
+            "\nCompatibility of exported states could be broken between"
+            " different versions of PySD or xarray, current versions:\n"
+            f"\tPySD {__version__}\n\txarray {xr.__version__}\n"
+        )
+        stateful_elements = {}
+        [stateful_elements.update(component.export()) for component
+         in self._stateful_elements]
+
+        with open(file_name, 'wb') as file:
+            pickle.dump(
+                (self.time(),
+                 stateful_elements,
+                 {'pysd': __version__, 'xarray': xr.__version__}
+                 ), file)
+
+    def import_pickle(self, file_name):
+        """
+        Import stateful values from pickle file.
+
+        Parameters
+        ----------
+        file_name: str
+          Name of the file to import the values from.
+
+        """
+        with open(file_name, 'rb') as file:
+            time, stateful_dict, metadata = pickle.load(file)
+
+        if __version__ != metadata['pysd']\
+           or xr.__version__ != metadata['xarray']:
+            warnings.warn(
+                "\nCompatibility of exported states could be broken between"
+                " different versions of PySD or xarray. Current versions:\n"
+                f"\tPySD {__version__}\n\txarray {xr.__version__}\n"
+                "Loaded versions:\n"
+                f"\tPySD {metadata['pysd']}\n\txarray {metadata['xarray']}\n"
+                )
+        self.set_stateful(stateful_dict)
+
+        self.time.update(time)
+        self.components.cache.reset(time)
+
     def get_args(self, param):
         """
         Returns the arguments of a model element.
@@ -648,7 +806,12 @@ class Macro(DynamicStateful):
                 param,
                 self.components._namespace) or param
 
-            func = getattr(self.components, func_name)
+            if hasattr(self.components, func_name):
+                func = getattr(self.components, func_name)
+            else:
+                NameError(
+                    "\n'%s' is not recognized as a model component."
+                    % param)
         else:
             func = param
 
@@ -657,7 +820,10 @@ class Macro(DynamicStateful):
             return func.args
         else:
             # regular functions
-            return inspect.getfullargspec(func)[0]
+            args = inspect.getfullargspec(func)[0]
+            if 'self' in args:
+                args.remove('self')
+            return args
 
     def get_coords(self, param):
         """
@@ -683,7 +849,12 @@ class Macro(DynamicStateful):
                 param,
                 self.components._namespace) or param
 
-            func = getattr(self.components, func_name)
+            if hasattr(self.components, func_name):
+                func = getattr(self.components, func_name)
+            else:
+                NameError(
+                    "\n'%s' is not recognized as a model component."
+                    % param)
         else:
             func = param
 
@@ -717,10 +888,9 @@ class Macro(DynamicStateful):
 
 
         """
-        # It might make sense to allow the params argument to take a pandas series, where
-        # the indices of the series are variable names. This would make it easier to
-        # do a Pandas apply on a DataFrame of parameter values. However, this may conflict
-        # with a pandas series being passed in as a dictionary element.
+        # TODO: allow the params argument to take a pandas dataframe, where
+        # column names are variable names. However some variables may be
+        # constant or have no values for some index. This should be processed.
 
         for key, value in params.items():
             func_name = utils.get_value_by_insensitive_key_or_value(
@@ -728,15 +898,16 @@ class Macro(DynamicStateful):
                 self.components._namespace)
 
             if isinstance(value, np.ndarray) or isinstance(value, list):
-                raise ValueError('When setting ' + key +'\n'
-                                 + 'Setting subscripted must be done'
-                                 + 'using a xarray.DataArray with the '
-                                 + 'correct dimensions or a constant value '
-                                 + '(https://pysd.readthedocs.io/en/master/basic_usage.html)')
+                raise TypeError(
+                    'When setting ' + key + '\n'
+                    'Setting subscripted must be done using a xarray.DataArray'
+                    ' with the correct dimensions or a constant value '
+                    '(https://pysd.readthedocs.io/en/master/basic_usage.html)')
 
             if func_name is None:
-                raise NameError('%s is not recognized as a model component'
-                                % key)
+                raise NameError(
+                    "\n'%s' is not recognized as a model component."
+                    % key)
 
             try:
                 func = getattr(self.components, func_name)
@@ -837,73 +1008,104 @@ class Macro(DynamicStateful):
         else:
             return lambda: value
 
-    def set_state(self, t, state):
-        """ Set the system state.
+    def set_state(self, t, initial_value):
+        """ Old set_state method use set_initial_value"""
+        warnings.warn(
+            "\nset_state will be deprecated, use set_initial_value instead.",
+            FutureWarning)
+        self.set_initial_value(t, initial_value)
+
+    def set_initial_value(self, t, initial_value):
+        """ Set the system initial value.
 
         Parameters
         ----------
         t : numeric
             The system time
 
-        state : dict
-            A (possibly partial) dictionary of the system state.
+        initial_value : dict
+            A (possibly partial) dictionary of the system initial values.
             The keys to this dictionary may be either pysafe names or
             original model file names
+
         """
         self.time.update(t)
         self.components.cache.reset(t)
+        stateful_name = "_NONE"
+        # TODO make this more solid, link with builder or next TODO?
+        stateful_init = [
+            "_integ_", "_delay_", "_delayfixed_", "_delayn_",
+            "_sample_if_true_", "_smooth_", "_trend_", "_initial_"]
 
-        for key, value in state.items():
-            # TODO Implement map with reference between component and stateful element?
+        for key, value in initial_value.items():
             component_name = utils.get_value_by_insensitive_key_or_value(
                 key, self.components._namespace)
             if component_name is not None:
-                stateful_name = '_integ_%s' % component_name
+                for element in self._stateful_elements:
+                    # TODO make this more solid, add link between stateful
+                    # objects and model vars
+                    for init in stateful_init:
+                        if init + component_name == element.py_name:
+                            stateful_name = element.py_name
             else:
                 component_name = key
                 stateful_name = key
 
             try:
-                if component_name.startswith('_integ_'):
-                    # we need to check the original expression to retrieve
-                    # the dimensions
-                    _, dims = self.get_coords(component_name[7:])
-                else:
-                    _, dims = self.get_coords(component_name)
-            except (AttributeError, TypeError):
+                _, dims = self.get_coords(component_name)
+            except TypeError:
                 dims = None
 
+            if isinstance(value, xr.DataArray)\
+               and not set(value.dims).issubset(set(dims)):
+                raise ValueError(
+                    f"\nInvalid dimensions for {component_name}."
+                    f"It should be a subset of {dims}, "
+                    f"but passed value has {list(value.dims)}")
+
             if isinstance(value, np.ndarray) or isinstance(value, list):
-                raise ValueError('When setting ' + key + '\n'
-                                 + 'Setting subscripted must be done'
-                                 + 'using a xarray.DataArray with the '
-                                 + 'correct dimensions or a constant value '
-                                 + '(https://pysd.readthedocs.io/en/master/basic_usage.html)')
+                raise TypeError(
+                    'When setting ' + key + '\n'
+                    'Setting subscripted must be done using a xarray.DataArray'
+                    ' with the correct dimensions or a constant value '
+                    '(https://pysd.readthedocs.io/en/master/basic_usage.html)')
 
             # Try to update stateful component
             if hasattr(self.components, stateful_name):
-                try:
-                    element = getattr(self.components, stateful_name)
-                    if dims:
-                        value = utils.rearrange(
-                            value, dims,
-                            self.components._subscript_dict)
-                    element.update(value)
-                    self.components.cache.clean()
-                except AttributeError:
-                    print("'%s' has no state elements, assignment failed")
-                    raise
+                element = getattr(self.components, stateful_name)
+                if dims:
+                    value = utils.rearrange(
+                        value, dims,
+                        self.components._subscript_dict)
+                element.initialize(value)
+                self.components.cache.clean()
             else:
                 # Try to override component
-                try:
-                    setattr(self.components, component_name,
-                            self._constant_component(
-                                value, dims,
-                                self.get_args(component_name)))
-                    self.components.cache.clean()
-                except AttributeError:
-                    print("'%s' has no component, assignment failed")
-                    raise
+                warnings.warn(
+                    f"\nSetting {component_name} to a constant value with "
+                    "initial_conditions will be deprecated. Use params={"
+                    f"'{component_name}': {value}"+"} instead.",
+                    FutureWarning)
+
+                setattr(self.components, component_name,
+                        self._constant_component(
+                            value, dims,
+                            self.get_args(component_name)))
+                self.components.cache.clean()
+
+    def set_stateful(self, stateful_dict):
+        """
+        Set stateful values.
+
+        Parameters
+        ----------
+        stateful_dict: dict
+          Dictionary of the stateful elements and the attributes to change.
+
+        """
+        for element, attrs in stateful_dict.items():
+            for attr, value in attrs.items():
+                setattr(getattr(self.components, element), attr, value)
 
     def doc(self):
         """
@@ -1004,66 +1206,92 @@ class Model(Macro):
         External.missing = self.missing_values
         super().initialize()
 
-    def _build_euler_timeseries(self, return_timestamps=None):
+    def _build_euler_timeseries(self, return_timestamps=None, final_time=None):
         """
         - The integration steps need to include the return values.
         - There is no point running the model past the last return value.
         - The last timestep will be the last in that requested for return
-        - Spacing should be at maximum what is specified by the integration time step.
-        - The initial time should be the one specified by the model file, OR
-          it should be the initial condition.
-        - This function needs to be called AFTER the model is set in its initial state
+        - Spacing should be at maximum what is specified by the integration
+          time step.
+        - The initial time should be the one specified by the model file,
+          OR it should be the initial condition.
+        - This function needs to be called AFTER the model is set in its
+          initial state
         Parameters
         ----------
         return_timestamps: numpy array
-          Must be specified by user or built from model file before this function is called.
+            Must be specified by user or built from model file before this
+            function is called.
+
+        final_time: float or None
+            Final time of the simulation. If float, the given final time
+            will be used. If None, the last return_timestamps will be used.
+            Default is None.
 
         Returns
         -------
         ts: numpy array
             The times that the integrator will use to compute time history
+
         """
         t_0 = self.time()
-        t_f = return_timestamps[-1]
-        dt = self.components.time_step()
-        ts = np.arange(t_0, t_f, dt, dtype=np.float64)
+        try:
+            t_f = return_timestamps[-1]
+        except IndexError:
+            # return_timestamps is an empty list
+            # model default final time or passed argument value
+            t_f = self.final_time
 
-        # Add the returned time series into the integration array. Best we can do for now.
-        # This does change the integration ever so slightly, but for well-specified
-        # models there shouldn't be sensitivity to a finer integration time step.
-        ts = np.sort(np.unique(np.append(ts, return_timestamps)))
-        return ts
+        if final_time is not None:
+            t_f = max(final_time, t_f)
+
+        ts = np.arange(
+            t_0, t_f+self.time_step/2, self.time_step, dtype=np.float64)
+
+        # Add the returned time series into the integration array.
+        # Best we can do for now. This does change the integration ever
+        # so slightly, but for well-specified models there shouldn't be
+        # sensitivity to a finer integration time step.
+        return np.sort(np.unique(np.append(ts, return_timestamps)))
 
     def _format_return_timestamps(self, return_timestamps=None):
         """
         Format the passed in return timestamps value as a numpy array.
         If no value is passed, build up array of timestamps based upon
         model start and end times, and the 'saveper' value.
+
+        Parameters
+        ----------
+        return_timestamps: float, iterable of floats or None (optional)
+          Iterable of timestamps to return or None. Default is None.
+
+        Returns
+        -------
+        ndarray (float)
+
         """
         if return_timestamps is None:
             # Build based upon model file Start, Stop times and Saveper
-            # Vensim's standard is to expect that the data set includes the `final time`,
-            # so we have to add an extra period to make sure we get that value in what
-            # numpy's `arange` gives us.
-            return_timestamps_array = np.arange(
+            # Vensim's standard is to expect that the data set includes
+            # the `final time`, so we have to add an extra period to
+            # make sure we get that value in what numpy's `arange` gives us.
+
+            return np.arange(
                 self.time(),
-                self.components.final_time() + self.components.saveper()/2,
-                self.components.saveper(), dtype=float
+                self.final_time + self.saveper/2,
+                self.saveper, dtype=float
             )
-        elif inspect.isclass(range) and isinstance(return_timestamps, range):
-            return_timestamps_array = np.array(return_timestamps, ndmin=1)
-        elif isinstance(return_timestamps, (list, int, float, np.ndarray)):
-            return_timestamps_array = np.array(return_timestamps, ndmin=1)
-        elif isinstance(return_timestamps, pd.Series):
-            return_timestamps_array = return_timestamps.as_matrix()
-        else:
-            raise TypeError('`return_timestamps` expects a list, array,'
-                            'pandas Series, or numeric value')
-        return return_timestamps_array
+
+        try:
+            return np.array(return_timestamps, ndmin=1, dtype=float)
+        except Exception:
+            raise TypeError(
+                '`return_timestamps` expects an iterable of numeric values'
+                ' or a single numeric value')
 
     def run(self, params=None, return_columns=None, return_timestamps=None,
-            initial_condition='original', reload=False, progress=False,
-            flatten_output=False):
+            initial_condition='original', final_time=None, time_step=None,
+            saveper=None, reload=False, progress=False, flatten_output=False):
         """
         Simulate the model's behavior over time.
         Return a pandas dataframe with timestamps as rows,
@@ -1071,30 +1299,48 @@ class Model(Macro):
 
         Parameters
         ----------
-        params : dictionary (optional)
+        params: dict (optional)
             Keys are strings of model component names.
             Values are numeric or pandas Series.
             Numeric values represent constants over the model integration.
             Timeseries will be interpolated to give time-varying input.
 
-        return_timestamps : list, numeric, ndarray (1D) (optional)
+        return_timestamps: list, numeric, ndarray (1D) (optional)
             Timestamps in model execution at which to return state information.
             Defaults to model-file specified timesteps.
 
-        return_columns : list, 'step' or None (optional)
+        return_columns: list, 'step' or None (optional)
             List of string model component names, returned dataframe
             will have corresponding columns. If 'step' only variables with
             cache step will be returned. If None, variables with cache step
             and run will be returned. Default is None.
 
-        initial_condition : 'original'/'o', 'current'/'c' or (t, {state}) (optional)
-            The starting time, and the state of the system (the values of all the stocks)
-            at that starting time.
+        initial_condition: str or (float, dict) (optional)
+            The starting time, and the state of the system (the values of
+            all the stocks) at that starting time. 'original' or 'o'uses
+            model-file specified initial condition. 'current' or 'c' uses
+            the state of the model after the previous execution. Other str
+            objects, loads initial conditions from the pickle file with the
+            given name.(float, dict) tuple lets the user specify a starting
+            time (float) and (possibly partial) dictionary of initial values
+            for stock (stateful) objects. Default is 'original'.
 
-            * 'original' (default) uses model-file specified initial condition
-            * 'current' uses the state of the model after the previous execution
-            * (t, {state}) lets the user specify a starting time and (possibly partial)
-              list of stock values.
+        final_time: float or None
+            Final time of the simulation. If float, the given value will be
+            used to compute the return_timestamps (if not given) and as a
+            final time. If None the last value of return_timestamps will be
+            used as a final time. Default is None.
+
+        time_step: float or None
+            Time step of the simulation. If float, the given value will be
+            used to compute the return_timestamps (if not given) and
+            euler time series. If None the default value from components
+            will be used. Default is None.
+
+        saveper: float or None
+            Saving step of the simulation. If float, the given value will be
+            used to compute the return_timestamps (if not given). If None
+            the default value from components will be used. Default is None.
 
         reload : bool (optional)
             If True, reloads the model from the translated model file
@@ -1131,14 +1377,21 @@ class Model(Macro):
 
         if params:
             self.set_components(params)
+
         self.set_initial_condition(initial_condition)
 
-        # save initial time for the output
+        # save control variables
         self.initial_time = self.time()
+        self.final_time = final_time or self.components.final_time()
+        self.time_step = time_step or self.components.time_step()
+        self.saveper = saveper or max(self.time_step,
+                                      self.components.saveper())
+        # need to take bigger saveper if time_step is > saveper
 
         return_timestamps = self._format_return_timestamps(return_timestamps)
 
-        t_series = self._build_euler_timeseries(return_timestamps)
+        t_series = self._build_euler_timeseries(return_timestamps, final_time)
+        self.final_time = t_series[-1]
 
         if return_columns is None or isinstance(return_columns, str):
             return_columns = self._default_return_columns(return_columns)
@@ -1240,37 +1493,37 @@ class Model(Macro):
 
         Parameters
         ----------
-        initial_condition : <string> or <tuple>
-            Takes on one of the following sets of values:
-
-            * 'original'/'o' : Reset to the model-file specified initial condition.
-            * 'current'/'c' : Use the current state of the system to start
-              the next simulation. This includes the simulation time, so this
-              initial condition must be paired with new return timestamps
-            * (t, {state}) : Lets the user specify a starting time and list of stock values.
+        initial_condition : str or (float, dict)
+            The starting time, and the state of the system (the values of
+            all the stocks) at that starting time. 'original' or 'o'uses
+            model-file specified initial condition. 'current' or 'c' uses
+            the state of the model after the previous execution. Other str
+            objects, loads initial conditions from the pickle file with the
+            given name.(float, dict) tuple lets the user specify a starting
+            time (float) and (possibly partial) dictionary of initial values
+            for stock (stateful) objects.
 
         >>> model.set_initial_condition('original')
         >>> model.set_initial_condition('current')
+        >>> model.set_initial_condition('exported_pickle.pic')
         >>> model.set_initial_condition((10, {'teacup_temperature': 50}))
 
         See Also
         --------
-        PySD.set_state()
+        PySD.set_initial_value()
 
         """
 
         if isinstance(initial_condition, tuple):
-            # Todo: check the values more than just seeing if they are a tuple.
-            self.set_state(*initial_condition)
+            self.initialize()
+            self.set_initial_value(*initial_condition)
         elif isinstance(initial_condition, str):
             if initial_condition.lower() in ['original', 'o']:
                 self.initialize()
             elif initial_condition.lower() in ['current', 'c']:
                 pass
             else:
-                raise ValueError('Valid initial condition strings include:  \n' +
-                                 '    "original"/"o",                       \n' +
-                                 '    "current"/"c"')
+                self.import_pickle(initial_condition)
         else:
             raise TypeError('Check documentation for valid entries')
 
@@ -1356,10 +1609,15 @@ class Model(Macro):
             df[element] = [getattr(self.components, element)()] * nt
 
         # update initial time values in df (necessary if initial_conditions)
-        for it in ['INITIAL TIME', 'INITIAL_TIME',
-                   'initial time', 'initial_time']:
+        for it in ['initial_time', 'final_time', 'saveper', 'time_step']:
             if it in df:
-                df[it] = self.initial_time
+                df[it] = getattr(self, it)
+            elif it.upper() in df:
+                df[it.upper()] = getattr(self, it)
+            elif it.replace('_', ' ') in df:
+                df[it.replace('_', ' ')] = getattr(self, it)
+            elif it.replace('_', ' ').upper() in df:
+                df[it.replace('_', ' ').upper()] = getattr(self, it)
 
 
 def ramp(time, slope, start, finish=0):
@@ -1664,6 +1922,7 @@ def active_initial(time, expr, init_val):
     else:
         return expr()
 
+
 def bounded_normal(minimum, maximum, mean, std, seed):
     """
     Implements vensim's BOUNDED NORMAL function
@@ -1699,10 +1958,14 @@ def random_uniform(m, x, s):
 
     Returns
     -------
-    A random number from the uniform distribution between m and x (exclusive of the endpoints).
+    A random number from the uniform distribution between m and x
+    (exclusive of the endpoints).
+
     """
-    if(s!=0):
-        warnings.warn("Random uniform with a nonzero seed value, may not give the same result as vensim", RuntimeWarning)
+    if s != 0:
+        warnings.warn(
+            "Random uniform with a nonzero seed value, may not give the "
+            "same result as vensim", RuntimeWarning)
 
     return np.random.uniform(m, x)
 
@@ -1835,4 +2098,3 @@ def vmax(x, dim=None):
         return float(x.max())
 
     return x.max(dim=dim)
-
