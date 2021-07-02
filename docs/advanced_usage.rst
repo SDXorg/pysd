@@ -43,25 +43,29 @@ If you want to replace a subscripted variable, you need to ensure that the outpu
 
 Starting simulations from an end-state of another simulation
 ------------------------------------------------------------
-The current state of a model can be save in a pickle file using the :py:data:`.export()`method::
+The current state of a model can be saved in a pickle file using the :py:data:`.export()`method::
 
-   model.run(final_time=50)
-   model.export("final_state.pic")
+   import pysd
+   model1 = pysd.read_vensim("my_model.mdl")
+   model1.run(final_time=50)
+   model1.export("final_state.pic")
 
 Then the exported data can be used in another session::
 
-   model.run(initial_condition="final_state.pic", return_timestamps=[55, 60])
+   import pysd
+   model2 = pysd.load("my_model.py")
+   model2 = run(initial_condition="final_state.pic", return_timestamps=[55, 60])
 
-the new simulation will have initial time equal to 50 with the saved valuesfrom the previous one.
+the new simulation will have initial time equal to 50 with the saved values from the previous one.
 
 .. note::
    You can set the exact final time of the simulation using the *final_time* argument.
    If you want to avoid returning the dataframe of the stocks you can use *return_timestamps=[]*::
 
-     model.run(final_time=50, return_timestamps=[])
+     model1.run(final_time=50, return_timestamps=[])
 
 .. note::
-   The changes done with *params* arguments are not saved. If you want to keep them you need to call the new run with the same *params* values.
+   The changes done with *params* arguments are not ported to the new model (*model2*) object that you initialize with *final_state.pic*. If you want to keep them, you need to call run with the same *params* values as in the original model (*model1*).
 
 .. warning::
   Exported data is saved and loaded using `pickle <https://docs.python.org/3/library/pickle.html>`_, this data can be not compatible with future versions of
