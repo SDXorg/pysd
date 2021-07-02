@@ -1,1 +1,2 @@
+include requirements.txt
 include pysd/py_backend/xmile/smile.grammar
