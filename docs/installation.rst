@@ -38,10 +38,15 @@ PySD calls on the core Python data analytics stack, and a third party parsing li
 * Numpy
 * Scipy
 * Pandas
-* Matplotlib
 * Parsimonious
+* xarray
+* xlrd
+* lxml
+* regex
+* chardet
 * black
 * openpyxl
+* progressbar
 
 These modules should build automatically if you are installing via `pip`. If you are building from
 the source code, or if pip fails to load them, they can be loaded with the same `pip` syntax as
@@ -50,9 +55,10 @@ above.
 
 Optional Dependencies
 ---------------------
-In order to be able to print the progress of a model integration process:
+In order to plot results from the model as shown in :doc:`basic usage <../basic_usage>`:
 
-* progressbar
+* Matplotlib
+
 
 These Python libraries bring additional data analytics capabilities to the analysis of SD models:
 
