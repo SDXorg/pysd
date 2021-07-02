@@ -43,7 +43,7 @@ If you want to replace a subscripted variable, you need to ensure that the outpu
 
 Starting simulations from an end-state of another simulation
 ------------------------------------------------------------
-The current state of a model can be save in a pickle file using the :py:data:`.export()`method::
+The current state of a model can be saved in a pickle file using the :py:data:`.export()`method::
 
    model.run(final_time=50)
    model.export("final_state.pic")
@@ -52,7 +52,7 @@ Then the exported data can be used in another session::
 
    model.run(initial_condition="final_state.pic", return_timestamps=[55, 60])
 
-the new simulation will have initial time equal to 50 with the saved valuesfrom the previous one.
+the new simulation will have initial time equal to 50 with the saved values from the previous one.
 
 .. note::
    You can set the exact final time of the simulation using the *final_time* argument.
@@ -61,7 +61,7 @@ the new simulation will have initial time equal to 50 with the saved valuesfrom 
      model.run(final_time=50, return_timestamps=[])
 
 .. note::
-   The changes done with *params* arguments are not saved. If you want to keep them you need to call the new run with the same *params* values.
+   The changes done with *params* arguments are not saved. If you want to keep them, you need to call run with the same *params* values as in the original simulation.
 
 .. warning::
   Exported data is saved and loaded using `pickle <https://docs.python.org/3/library/pickle.html>`_, this data can be not compatible with future versions of
