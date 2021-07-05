@@ -51,7 +51,7 @@ In order to replicate the Vensim views in translated models, the user can set th
 
 The option to split the model in views is particularly interesting for large models with tens of views. Translating those models into a single file may make the resulting Python model difficult to read and maintain.
 
-In a Vensim model with three separate views (e.g. `view_1`, `view_2` and `view_3`), setting `split_modules` to True would creates the following tree inside the directory where the `.mdl` model is located:
+In a Vensim model with three separate views (e.g. `view_1`, `view_2` and `view_3`), setting `split_modules` to True would create the following tree inside the directory where the `.mdl` model is located:
 
 | main-folder
 | ├── modules_many_views_model
