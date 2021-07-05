@@ -94,5 +94,5 @@ the new simulation will have initial time equal to 50 with the saved values from
    The changes done with *params* arguments are not ported to the new model (*model2*) object that you initialize with *final_state.pic*. If you want to keep them, you need to call run with the same *params* values as in the original model (*model1*).
 
 .. warning::
-  Exported data is saved and loaded using `pickle <https://docs.python.org/3/library/pickle.html>`_, this data can be not compatible with future versions of
+  Exported data is saved and loaded using `pickle <https://docs.python.org/3/library/pickle.html>`_, this data can be incompatible with future versions of
   *PySD* or *xarray*. In order to prevent data losses save always the source code.
