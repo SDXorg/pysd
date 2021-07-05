@@ -326,7 +326,8 @@ def get_equation_components(equation_str, root_path=None):
     value = _ sequence_id _
     range = "(" _ sequence_id _ "-" _ sequence_id _ ")"
     subscriptlist = '[' _ index_list _ ']'
-    subscript_mapping_list = "->" _ subscript_mapping _ ("," _ subscript_mapping _)* subscript_mapping = (_ name_mapping _) / (_ "(" _ name_mapping _ ":" _ index_list _")"  )
+    subscript_mapping_list = "->" _ subscript_mapping _ ("," _ subscript_mapping _)*
+    subscript_mapping = (_ name_mapping _) / (_ "(" _ name_mapping _ ":" _ index_list _")"  )
 
     expression = ~r".*"  # expression could be anything, at this point.
     keyword = ":" _ basic_id _ ":"
