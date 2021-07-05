@@ -41,6 +41,9 @@ The progress bar can be activated using *-p/--progress* command:
 
     python -m pysd --progress Teacup.mdl
 
+Translation options
+-------------------
+
 Only translate model file
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 To only translate the model file, it does not run the model, *-t/--trasnlate* command is provided:
@@ -48,6 +51,14 @@ To only translate the model file, it does not run the model, *-t/--trasnlate* co
 .. code-block:: text
 
     python -m pysd --translate Teacup.mdl
+
+Splitting Vensim views in different files
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+In order to split the Vensim model views in different files as explained in :doc:`advanced usage <../advanced_usage>`:
+
+.. code-block:: text
+
+    python -m pysd --split-modules many_views_model.mdl
 
 Outputting various run information
 ----------------------------------

@@ -46,7 +46,7 @@ Splitting Vensim views in different files
 -----------------------------------------
 In order to replicate the Vensim views in translated models, the user can set the `split_modules` argument to True in the :py:func:`read_vensim` function::
 
-   read_vensim("many_views_model.mdl", initialize=True, missing_values="warning", split_modules=True)
+   read_vensim("many_views_model.mdl", split_modules=True)
 
 
 The option to split the model in views is particularly interesting for large models with tens of views. Translating those models into a single file may make the resulting Python model difficult to read and maintain.

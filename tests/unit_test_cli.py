@@ -1,5 +1,6 @@
 import sys
 import os
+import shutil
 import unittest
 import subprocess
 
@@ -195,12 +196,49 @@ class TestPySD(unittest.TestCase):
         self.assertTrue(os.path.isfile(model_py))
         os.remove(model_py)
 
-        command = f'{call} -t {test_model_xmile}'
+    def test_read_vensim_split_model(self):
+
+        root_dir = "more-tests/split_model/"
+
+        model_name = "test_split_model"
+        namespace_filename = "_namespace_" + model_name + ".json"
+        subscript_dict_filename = "_subscripts_" + model_name + ".json"
+        modules_filename = "_modules.json"
+        modules_dirname = "modules_" + model_name
+        model_name_mdl = root_dir + model_name + ".mdl"
+
+        command = f'{call} --translate --split-modules {model_name_mdl}'
         out = subprocess.run(split_bash(command), capture_output=True)
         self.assertEqual(out.returncode, 0)
-        self.assertFalse(os.path.isfile(out_tab_file))
-        self.assertTrue(os.path.isfile(model_py))
-        os.remove(model_py)
+
+        # check that _namespace and _subscript_dict json files where created
+        self.assertTrue(os.path.isfile(root_dir + namespace_filename))
+        self.assertTrue(os.path.isfile(root_dir + subscript_dict_filename))
+
+        # check that the main model file was created
+        self.assertTrue(os.path.isfile(root_dir + model_name + ".py"))
+
+        # check that the modules folder was created
+        self.assertTrue(os.path.isdir(root_dir + modules_dirname))
+        self.assertTrue(
+            os.path.isfile(root_dir + modules_dirname + "/" + modules_filename)
+        )
+
+        # check creation of module files
+        self.assertTrue(
+            os.path.isfile(root_dir + modules_dirname + "/" + "view_1.py"))
+        self.assertTrue(
+            os.path.isfile(root_dir + modules_dirname + "/" + "view2.py"))
+        self.assertTrue(
+            os.path.isfile(root_dir + modules_dirname + "/" + "view_3.py"))
+
+        # remove newly created files
+        os.remove(root_dir + model_name + ".py")
+        os.remove(root_dir + namespace_filename)
+        os.remove(root_dir + subscript_dict_filename)
+
+        # remove newly created modules folder
+        shutil.rmtree(root_dir + modules_dirname)
 
     def test_run_return_timestamps(self):
 

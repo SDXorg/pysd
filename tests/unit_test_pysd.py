@@ -1,8 +1,10 @@
 import unittest
 import os
-import warnings
+import shutil
+from warnings import simplefilter, catch_warnings
 import pandas as pd
 import numpy as np
+import xarray as xr
 
 test_model = "test-models/samples/teacup/teacup.mdl"
 test_model_subs = (
@@ -53,7 +55,6 @@ class TestPySD(unittest.TestCase):
 
     def test_run_ignore_missing(self):
         import pysd
-        from warnings import catch_warnings
 
         model_mdl = 'test-models/tests/get_with_missing_values_xlsx/'\
                     + 'test_get_with_missing_values_xlsx.mdl'
@@ -86,11 +87,9 @@ class TestPySD(unittest.TestCase):
 
     def test_read_vensim_split_model(self):
         import pysd
-        import os
-        import shutil
-        from pandas.util.testing import assert_frame_equal
+        from pysd.tools.benchmarking import assert_frames_close
 
-        root_dir = "./more-tests/split_model/"
+        root_dir = "more-tests/split_model/"
 
         model_name = "test_split_model"
         model_split = pysd.read_vensim(
@@ -132,14 +131,9 @@ class TestPySD(unittest.TestCase):
         result_split = model_split.run()
         result_non_split = model_non_split.run()
 
-        result_split = result_split.reindex(sorted(result_split.columns), axis=1)
-        result_non_split = result_split.reindex(
-            sorted(result_non_split.columns), axis=1
-        )
-
         # results of a split model are the same that those of the regular
         # model (un-split)
-        assert_frame_equal(result_split, result_non_split)
+        assert_frames_close(result_split, result_non_split, atol=0, rtol=0)
 
         # remove newly created files
         os.remove(root_dir + model_name + ".py")
@@ -151,11 +145,9 @@ class TestPySD(unittest.TestCase):
 
     def test_read_vensim_split_model_with_macro(self):
         import pysd
-        import os
-        import shutil
-        from pandas.util.testing import assert_frame_equal
+        from pysd.tools.benchmarking import assert_frames_close
 
-        root_dir = "./more-tests/split_model_with_macro/"
+        root_dir = "more-tests/split_model_with_macro/"
 
         model_name = "test_split_model_with_macro"
         model_split = pysd.read_vensim(
@@ -175,13 +167,8 @@ class TestPySD(unittest.TestCase):
         result_split = model_split.run()
         result_non_split = model_non_split.run()
 
-        result_split = result_split.reindex(sorted(result_split.columns), axis=1)
-        result_non_split = result_split.reindex(
-            sorted(result_non_split.columns), axis=1
-        )
-
-        # results of a split model are the same that those of the regular model (un-split)
-        assert_frame_equal(result_split, result_non_split)
+        # results of a split model are the same that those of the regular model
+        assert_frames_close(result_split, result_non_split, atol=0, rtol=0)
 
         # remove newly created files
         os.remove(root_dir + model_name + ".py")
@@ -194,10 +181,9 @@ class TestPySD(unittest.TestCase):
 
     def test_read_vensim_split_model_warning(self):
         import pysd
-        import warnings
-
-        # setting the split_modules=True when the model has a single view should generate a warning
-        with warnings.catch_warnings(record=True) as ws:
+        # setting the split_modules=True when the model has a single
+        # view should generate a warning
+        with catch_warnings(record=True) as ws:
             pysd.read_vensim(
                 test_model, split_modules=True
             )  # set stock value using params
@@ -330,8 +316,8 @@ class TestPySD(unittest.TestCase):
         import pysd
         from pysd.tools.benchmarking import assert_frames_close
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with catch_warnings():
+            simplefilter("ignore")
             model = pysd.read_vensim(test_model)
             stocks = model.run(return_timestamps=[0, 10, 20, 30])
             self.assertTrue((stocks['INITIAL TIME'] == 0).all().all())
@@ -524,7 +510,6 @@ class TestPySD(unittest.TestCase):
             model.run(initial_condition="bad value")
 
     def test_initial_conditions_subscripted_value_with_constant(self):
-        import xarray as xr
         import pysd
 
         coords = {
@@ -536,7 +521,7 @@ class TestPySD(unittest.TestCase):
 
         model = pysd.read_vensim(test_model_subs)
 
-        with warnings.catch_warnings(record=True) as ws:
+        with catch_warnings(record=True) as ws:
             res = model.run(initial_condition=(5, {'initial_values': 5}),
                             return_columns=['Initial Values'],
                             return_timestamps=list(range(5, 10)))
@@ -551,7 +536,6 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(res.index[0], 5)
 
     def test_initial_conditions_subscripted_value_with_partial_xarray(self):
-        import xarray as xr
         import pysd
 
         coords = {
@@ -566,7 +550,7 @@ class TestPySD(unittest.TestCase):
             ['Second Dimension Subscript'])
 
         model = pysd.read_vensim(test_model_subs)
-        with warnings.catch_warnings(record=True) as ws:
+        with catch_warnings(record=True) as ws:
             res = model.run(initial_condition=(5, {'Initial Values': input_val}),
                             return_columns=['Initial Values'],
                             return_timestamps=list(range(5, 10)))
@@ -581,7 +565,6 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(res.index[0], 5)
 
     def test_initial_conditions_subscripted_value_with_xarray(self):
-        import xarray as xr
         import pysd
 
         coords = {
@@ -593,7 +576,7 @@ class TestPySD(unittest.TestCase):
 
         model = pysd.read_vensim(test_model_subs)
 
-        with warnings.catch_warnings(record=True) as ws:
+        with catch_warnings(record=True) as ws:
             res = model.run(initial_condition=(5, {'initial_values': output}),
                             return_columns=['Initial Values'],
                             return_timestamps=list(range(5, 10)))
@@ -661,11 +644,10 @@ class TestPySD(unittest.TestCase):
     def test_set_components_warnings(self):
         """Addresses https://github.com/JamesPHoughton/pysd/issues/80"""
         import pysd
-        import warnings
 
         model = pysd.read_vensim(test_model)
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
+        with catch_warnings(record=True) as w:
+            simplefilter("always")
             model.set_components(
                 {"Teacup Temperature": 20, "Characteristic Time": 15}
             )  # set stock value using params
@@ -686,7 +668,6 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(test_func(), res["Room Temperature"].iloc[0])
 
     def test_set_subscripted_value_with_constant(self):
-        import xarray as xr
         import pysd
 
         coords = {
@@ -702,7 +683,6 @@ class TestPySD(unittest.TestCase):
         self.assertTrue(output.equals(res["Initial Values"].iloc[0]))
 
     def test_set_subscripted_value_with_partial_xarray(self):
-        import xarray as xr
         import pysd
 
         coords = {
@@ -723,7 +703,6 @@ class TestPySD(unittest.TestCase):
         self.assertTrue(output.equals(res["Initial Values"].iloc[0]))
 
     def test_set_subscripted_value_with_xarray(self):
-        import xarray as xr
         import pysd
 
         coords = {
@@ -739,14 +718,13 @@ class TestPySD(unittest.TestCase):
         self.assertTrue(output.equals(res["Initial Values"].iloc[0]))
 
     def test_set_constant_parameter_lookup(self):
-        import xarray as xr
         import pysd
 
         model = pysd.read_vensim(test_model_look)
 
-        with warnings.catch_warnings():
+        with catch_warnings():
             # avoid warnings related to extrapolation
-            warnings.simplefilter("ignore")
+            simplefilter("ignore")
             model.set_components({"lookup_1d": 20})
             for i in range(100):
                 self.assertEqual(model.components.lookup_1d(i), 20)
@@ -782,15 +760,14 @@ class TestPySD(unittest.TestCase):
                 self.assertTrue(model.components.lookup_2d(i).equals(xr2))
 
     def test_set_timeseries_parameter_lookup(self):
-        import xarray as xr
         import pysd
 
         model = pysd.read_vensim(test_model_look)
         timeseries = list(range(30))
 
-        with warnings.catch_warnings():
+        with catch_warnings():
             # avoid warnings related to extrapolation
-            warnings.simplefilter("ignore")
+            simplefilter("ignore")
             temp_timeseries = pd.Series(
                 index=timeseries, data=(50 + np.random.rand(len(timeseries)).cumsum())
             )
@@ -854,7 +831,6 @@ class TestPySD(unittest.TestCase):
             model.set_components({"initial_values": input_, "final_time": 10})
 
     def test_set_subscripted_timeseries_parameter_with_constant(self):
-        import xarray as xr
         import pysd
 
         coords = {
@@ -882,7 +858,6 @@ class TestPySD(unittest.TestCase):
         )
 
     def test_set_subscripted_timeseries_parameter_with_partial_xarray(self):
-        import xarray as xr
         import pysd
 
         coords = {
@@ -911,7 +886,6 @@ class TestPySD(unittest.TestCase):
         )
 
     def test_set_subscripted_timeseries_parameter_with_xarray(self):
-        import xarray as xr
         import pysd
 
         coords = {
@@ -1154,7 +1128,7 @@ class TestPySD(unittest.TestCase):
 
         new_time = np.random.rand()
 
-        with warnings.catch_warnings(record=True) as ws:
+        with catch_warnings(record=True) as ws:
             # Test that we can set with real names
             model.set_state(new_time, {'Teacup Temperature': 500})
             self.assertNotEqual(initial_temp, 500)
@@ -1167,7 +1141,7 @@ class TestPySD(unittest.TestCase):
                 "set_state will be deprecated, use set_initial_value instead.",
                 str(wf[0].message))
 
-        with warnings.catch_warnings(record=True) as ws:
+        with catch_warnings(record=True) as ws:
             # Test setting with pysafe names
             model.set_state(new_time + 1, {'teacup_temperature': 202})
             self.assertEqual(model.components.teacup_temperature(), 202)
@@ -1179,7 +1153,7 @@ class TestPySD(unittest.TestCase):
                 "set_state will be deprecated, use set_initial_value instead.",
                 str(wf[0].message))
 
-        with warnings.catch_warnings(record=True) as ws:
+        with catch_warnings(record=True) as ws:
             # Test setting with stateful object name
             model.set_state(new_time + 2, {'_integ_teacup_temperature': 302})
             self.assertEqual(model.components.teacup_temperature(), 302)
@@ -1219,7 +1193,6 @@ class TestPySD(unittest.TestCase):
             model.set_initial_value(new_time, {'not_a_var': 500})
 
     def test_set_initial_value_lookup(self):
-        import xarray as xr
         import pysd
 
         model = pysd.read_vensim(test_model_look)
@@ -1227,7 +1200,7 @@ class TestPySD(unittest.TestCase):
         new_time = np.random.rand()
 
         # Test that we can set with real names
-        with warnings.catch_warnings(record=True) as ws:
+        with catch_warnings(record=True) as ws:
             model.set_initial_value(new_time, {'lookup 1d': 500})
             # use only future warnings
             wf = [w for w in ws if issubclass(w.category, FutureWarning)]
@@ -1239,7 +1212,7 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(model.components.lookup_1d(0), 500)
         self.assertEqual(model.components.lookup_1d(100), 500)
 
-        with warnings.catch_warnings(record=True) as ws:
+        with catch_warnings(record=True) as ws:
             model.set_initial_value(new_time, {'lookup 2d': 520})
             # use only future warnings
             wf = [w for w in ws if issubclass(w.category, FutureWarning)]
@@ -1252,13 +1225,12 @@ class TestPySD(unittest.TestCase):
         self.assertTrue(model.components.lookup_2d(0).equals(expected))
         self.assertTrue(model.components.lookup_2d(100).equals(expected))
 
-        with warnings.catch_warnings():
+        with catch_warnings():
             # avoid warnings related to extrapolation
-            warnings.simplefilter("ignore")
+            simplefilter("ignore")
             model.run()
 
     def test_set_initial_value_subscripted_value_with_constant(self):
-        import xarray as xr
         import pysd
 
         coords = {
@@ -1294,7 +1266,6 @@ class TestPySD(unittest.TestCase):
             )
 
     def test_set_initial_value_subscripted_value_with_partial_xarray(self):
-        import xarray as xr
         import pysd
 
         coords = {
@@ -1342,7 +1313,6 @@ class TestPySD(unittest.TestCase):
         self.assertTrue(model.components.stock_a().equals(output3))
 
     def test_set_initial_value_subscripted_value_with_xarray(self):
-        import xarray as xr
         import pysd
 
         coords = {
@@ -1512,7 +1482,7 @@ class TestPySD(unittest.TestCase):
         new_state = {"Room Temperature": 100}
         new_time = 10
 
-        with warnings.catch_warnings(record=True) as ws:
+        with catch_warnings(record=True) as ws:
             model.set_initial_condition((new_time, new_state))
             # use only future warnings
             wf = [w for w in ws if issubclass(w.category, FutureWarning)]
@@ -1667,16 +1637,15 @@ class TestPySD(unittest.TestCase):
     @unittest.skip("infinite loop")
     def test_incomplete_model(self):
         import pysd
-        import warnings
 
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
+        with catch_warnings(record=True) as w:
+            simplefilter("always")
             model = pysd.read_vensim(
                 "test-models/tests/incomplete_equations/test_incomplete_model.mdl"
             )
         self.assertTrue(any([warn.category == SyntaxWarning for warn in w]))
 
-        with warnings.catch_warnings(record=True) as w:
+        with catch_warnings(record=True) as w:
             model.run()
         self.assertEqual(len(w), 1)
 
@@ -1763,7 +1732,6 @@ class TestModelInteraction(unittest.TestCase):
         )
 
     def test_not_able_to_update_stateful_object(self):
-        import xarray as xr
         import pysd
 
         integ = pysd.functions.Integ(

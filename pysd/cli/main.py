@@ -25,7 +25,8 @@ def main(args):
     """
     options = parser.parse_args(args)
 
-    model = load(options.model_file, options.missing_values)
+    model = load(options.model_file, options.missing_values,
+                 options.split_modules)
 
     if not options.run:
         print("\nFinished!")
@@ -43,7 +44,7 @@ def main(args):
     sys.exit()
 
 
-def load(model_file, missing_values):
+def load(model_file, missing_values, split_modules):
     """
     Translate and load model file.
 
@@ -60,7 +61,8 @@ def load(model_file, missing_values):
     if model_file.lower().endswith('.mdl'):
         print("\nTranslating model file...\n")
         return pysd.read_vensim(model_file, initialize=False,
-                                missing_values=missing_values)
+                                missing_values=missing_values,
+                                split_modules=split_modules)
     elif model_file.lower().endswith('.xmile'):
         print("\nTranslating model file...\n")
         return pysd.read_xmile(model_file, initialize=False,
