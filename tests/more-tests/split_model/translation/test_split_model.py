@@ -17,7 +17,8 @@ _root = path.dirname(__file__)
 
 __data = {"scope": None, "time": lambda: 0}
 
-_namespace, _subscript_dict, _modules = load_model_data(_root, "test_split_model")
+_namespace, _subscript_dict, _modules = load_model_data(_root,
+                                                        "test_split_model")
 
 # loading modules from the modules_test_split_model directory
 for module in _modules:

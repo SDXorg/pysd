@@ -49,7 +49,8 @@ def get_file_sections(file_str):
     Examples
     --------
     >>> get_file_sections(r'a~b~c| d~e~f| g~h~i|')
-    [{'returns': [], 'params': [], 'name': 'main', 'string': 'a~b~c| d~e~f| g~h~i|'}]
+    [{'returns': [], 'params': [], 'name': 'main', 'string': 'a~b~c| d~e~f|
+    g~h~i|'}]
 
     """
 
@@ -90,8 +91,8 @@ def get_file_sections(file_str):
             self.entries.append(
                 {
                     "name": name,
-                    "params": [x.strip() for x in params.split(",")]
-                               if params else [],
+                    "params": [x.strip() for x in params.split(",")
+                               ] if params else [],
                     "returns": [x.strip() for x in returns.split(",")]
                     if returns
                     else [],
@@ -127,38 +128,50 @@ def get_model_elements(model_str):
 
     # Basic Parsing:
     >>> get_model_elements(r'a~b~c| d~e~f| g~h~i|')
-    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'f', 'unit': 'e', 'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
+    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'f', 'unit': 'e',
+    'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
 
     # Special characters are escaped within double-quotes:
     >>> get_model_elements(r'a~b~c| d~e"~"~f| g~h~i|')
-    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'f', 'unit': 'e"~"', 'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
+    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'f', 'unit': 'e"~"',
+    'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
     >>> get_model_elements(r'a~b~c| d~e~"|"f| g~h~i|')
-    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': '"|"f', 'unit': 'e', 'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
+    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': '"|"f', 'unit': 'e',
+    'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
 
-    # Double-quotes within escape groups are themselves escaped with backslashes:
+    # Double-quotes within escape groups are themselves escaped with
+    # backslashes:
     >>> get_model_elements(r'a~b~c| d~e"\\\"~"~f| g~h~i|')
-    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'f', 'unit': 'e"\\\\"~"', 'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
+    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'f', 'unit': 'e"\\\\"~"',
+    'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
     >>> get_model_elements(r'a~b~c| d~e~"\\\"|"f| g~h~i|')
-    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': '"\\\\"|"f', 'unit': 'e', 'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
+    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': '"\\\\"|"f', 'unit': 'e',
+    'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
     >>> get_model_elements(r'a~b~c| d~e"x\\nx"~f| g~h~|')
-    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'f', 'unit': 'e"x\\\\nx"', 'eqn': 'd'}, {'doc': '', 'unit': 'h', 'eqn': 'g'}]
+    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'f', 'unit': 'e"x\\\\nx"',
+    'eqn': 'd'}, {'doc': '', 'unit': 'h', 'eqn': 'g'}]
 
     # Todo: Handle model-level or section-level documentation
     >>> get_model_elements(r'*** .model doc ***~ Docstring!| d~e~f| g~h~i|')
-    [{'doc': 'Docstring!', 'unit': '', 'eqn': ''}, {'doc': 'f', 'unit': 'e', 'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
+    [{'doc': 'Docstring!', 'unit': '', 'eqn': ''}, {'doc': 'f', 'unit': 'e',
+    'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
 
     # Handle control sections, returning appropriate docstring pieces
-    >>> get_model_elements(r'a~b~c| ****.Control***~ Simulation Control Parameters | g~h~i|')
-    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
+    >>> get_model_elements(r'a~b~c| ****.Control***~ Simulation Control
+    Parameters | g~h~i|')
+    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'i', 'unit': 'h',
+    'eqn': 'g'}]
 
     # Handle the model display elements (ignore them)
     >>> get_model_elements(r'a~b~c| d~e~f| \\\---///junk|junk~junk')
-    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'f', 'unit': 'e', 'eqn': 'd'}]
+    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'f', 'unit': 'e',
+    'eqn': 'd'}]
 
 
     Notes
     -----
-    - Tildes and pipes are not allowed in element docstrings, but we should still handle them there
+    - Tildes and pipes are not allowed in element docstrings, but we should
+    still handle them there
 
     """
 
@@ -300,7 +313,8 @@ def get_equation_components(equation_str, root_path=None):
     component = name _ subscriptlist? _ "=" "="? _ expression
     subscript_definition = name _ ":" _ (imported_subscript / literal_subscript / numeric_range) _ subscript_mapping_list?
     data_definition = name _ subscriptlist? _ keyword? _ ":=" _ expression
-    lookup_definition = name _ subscriptlist? &"(" _ expression  # uses lookahead assertion to capture whole group
+    lookup_definition = name _ subscriptlist? &"(" _ expression  # uses
+    # lookahead assertion to capture whole group
     test_definition = name _ subscriptlist? _ &keyword _ expression
     subscript_copy = name _ "<->" _ name_mapping
 
@@ -312,8 +326,7 @@ def get_equation_components(equation_str, root_path=None):
     value = _ sequence_id _
     range = "(" _ sequence_id _ "-" _ sequence_id _ ")"
     subscriptlist = '[' _ index_list _ ']'
-    subscript_mapping_list = "->" _ subscript_mapping _ ("," _ subscript_mapping _)*
-    subscript_mapping = (_ name_mapping _) / (_ "(" _ name_mapping _ ":" _ index_list _")"  )
+    subscript_mapping_list = "->" _ subscript_mapping _ ("," _ subscript_mapping _)* subscript_mapping = (_ name_mapping _) / (_ "(" _ name_mapping _ ":" _ index_list _")"  )
 
     expression = ~r".*"  # expression could be anything, at this point.
     keyword = ":" _ basic_id _ ":"
@@ -364,7 +377,8 @@ def get_equation_components(equation_str, root_path=None):
         def visit_imported_subscript(self, n, vc):
             # TODO: make this less fragile
             args = [x.strip().strip("'") for x in vc[4].split(",")]
-            self.subscripts += external.ExtSubscript(*args, root=root_path).subscript
+            self.subscripts += external.ExtSubscript(*args, root=root_path
+                                                     ).subscript
 
         def visit_subscript_copy(self, n, vc):
             self.kind = "subdef"
@@ -478,7 +492,8 @@ def parse_sketch_line(sketch_line, namespace):
     """
     This syntax parses a single line of the Vensim sketch at a time.
 
-    Not all possibilities can be tested, so this gammar may be considered experimental for now
+    Not all possibilities can be tested, so this gammar may be considered
+    experimental for now
 
     """
 
@@ -493,12 +508,15 @@ def parse_sketch_line(sketch_line, namespace):
             module_definition = "$" color "," digit "," font_properties "|" ( ( color / ones_and_dashes ) "|")* module_code
             var_definition = var_code "," var_number "," var_name "," position "," var_box_type "," arrows_in_allowed "," hide_level "," var_face "," var_word_position "," var_thickness "," var_rest_conf ","? ( ( ones_and_dashes / color) ",")* font_properties?
 
-            # elements used in a line defining the properties of a variable or stock (most are digits, but identifying them now may be useful for further parsing)
+            # elements used in a line defining the properties of a variable or
+            # stock (most are digits, but identifying them now may be useful
+            # for further parsing)
             var_name = element
             var_name = ~r"(?<=,)[^,]+(?=,)"
             var_number = digit
             var_box_type = ~r"(?<=,)\d+,\d+,\d+(?=,)" # improve this regex
-            arrows_in_allowed = ~r"(?<=,)\d+(?=,)" # if this is an even umber, it's a shadow variable
+            arrows_in_allowed = ~r"(?<=,)\d+(?=,)" # if this is an even umber,
+            # it's a shadow variable
             hide_level = digit
             var_face = digit
             var_word_position = ~r"(?<=,)\-*\d+(?=,)"
@@ -507,38 +525,45 @@ def parse_sketch_line(sketch_line, namespace):
 
             arrow = arrow_code "," digit "," origin_var "," destination_var "," (digit ",")+ (ones_and_dashes ",")?  ((color ",") / ("," ~r"\d+") / (font_properties "," ~r"\d+"))* "|(" position ")|"
 
-            # arrow origin and destination (this may be useful if further parsing is required)
+            # arrow origin and destination (this may be useful if further
+            # parsing is required)
             origin_var = digit
             destination_var = digit
 
             # flow arrows
             flow = source_or_sink_or_plot / flow_arrow
 
-            # if you want to extend the parsing, these three would be a good starting point (they are followed by "anything")
+            # if you want to extend the parsing, these three would be a good
+            # starting point (they are followed by "anything")
             source_or_sink_or_plot = multipurpose_code "," anything
             flow_arrow =  flow_arrow_code "," anything
             other_objects = other_objects_code "," anything
 
             # fonts
-            font_properties = font_name? "|" font_size "|" font_style? "|" color  # if the B from an RGB is either 1 or 2 (very unlikely), the parser may not be able to tell the begining of the next line
-            font_style =  "B" / "I" / "U" / "S" / "V"  # italics, bold, underline, etc
-            font_size =  ~r"\d+"  # this needs to be made a regex to match any font
-            #font_name = ~r"(%(fonts)s)"IU
+            font_properties = font_name? "|" font_size "|" font_style? "|" color
+            # the parser may not be able to tell the begining of the next line
+            font_style =  "B" / "I" / "U" / "S" / "V"  # italics, bold,
+            # underline, etc
+            font_size =  ~r"\d+"  # this needs to be made a regex to match any
+            # font
             font_name = ~r"(?<=,)[^\|\d]+(?=\|)"
 
-            # x and y within the view layout. This may be useful if further parsing is required
+            # x and y within the view layout. This may be useful if further
+            # parsing is required
             position = ~r"-*\d+,-*\d+"
 
             # rgb color
             color = ~r"((?<!\d|\.)([0-9]?[0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(?!\d|\.) *[-] *){2}(?<!\d|\.)([0-9]?[0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(?!\d|\.)" # rgb as in 255-255-255
 
-            # lines that start with specific numbers (1:arrows, 11:flow_arrow, 12:)
+            # lines that start with specific numbers (1:arrows, 11:flow_arrow,
+            # 12:)
             arrow_code = ~r"^1(?=,)"
             flow_arrow_code = ~r"^11(?=,)"
             var_code = ~r"^10(?=,)"
             multipurpose_code = ~r"^12(?=,)" # source, sink, plot, comment
             other_objects_code = ~r"^(30|31)(?=,)"
-            module_code = ~r"\d+" "," digit "," digit "," ~r"\d+" # code at the end of module definitions
+            module_code = ~r"\d+" "," digit "," digit "," ~r"\d+" # code at
+            # the end of module definitions
 
             id = ( basic_id / escape_group )
 
@@ -546,7 +571,8 @@ def parse_sketch_line(sketch_line, namespace):
             digit = ~r"(?<=,)\d+(?=,)"
 
             ones_and_dashes = ~r"\-1\-\-1\-\-1"
-            anything = ~r".*" # this one is dangerous, if something is not parsed before, it will fall here, with the risk of missing it
+            anything = ~r".*" # this one is dangerous, if something is not
+            # parsed before, it will fall here, with the risk of missing it
             """
     )
 
@@ -563,7 +589,8 @@ def parse_sketch_line(sketch_line, namespace):
 
         def visit_var_definition(self, n, vc):
             if int(vc[10]) % 2 != 0:  # not a shadow variable
-                self.module_or_var["variable_name"] = self.namespace.get(vc[4], "")
+                self.module_or_var["variable_name"] = self.namespace.get(vc[4],
+                                                                         "")
 
         def generic_visit(self, n, vc):
             return "".join(filter(None, vc)) or n.text or ""
@@ -572,7 +599,7 @@ def parse_sketch_line(sketch_line, namespace):
         tree = parser.parse(sketch_line)
         return SketchParser(tree, namespace=namespace).module_or_var
     except (IncompleteParseError, VisitationError, ParseError) as err:
-            raise ValueError(
+        raise ValueError(
                 (
                     err.args[0] + "\n\n"
                     "\nError when parsing definition:\n\t %s\n\n"
@@ -616,13 +643,14 @@ def parse_units(units_str):
         return units_str, (None, None)
 
     if units_str[-1] == "]":
-        units, lims = units_str.rsplit("[")  # type: str, str
+        units, lims = units_str.rsplit("[")  # types: str, str
     else:
         units = units_str
         lims = "?, ?]"
 
     lims = tuple(
-        [float(x) if x.strip() != "?" else None for x in lims.strip("]").split(",")]
+        [float(x) if x.strip() != "?" else None for x in lims.strip("]").split(
+            ",")]
     )
 
     return units.strip(), lims
@@ -834,7 +862,8 @@ builders = {
         order=args[3],
         subs=element["subs"],
     ),
-    "sample if true": lambda element, subscript_dict, args: builder.add_sample_if_true(
+    "sample if true": lambda element, subscript_dict, args:
+    builder.add_sample_if_true(
         identifier=element["py_name"],
         condition=args[0],
         actual_value=args[1],
@@ -898,7 +927,8 @@ builders = {
         subscript_dict=subscript_dict,
         keyword=element["keyword"],
     ),
-    "get xls constants": lambda element, subscript_dict, args: builder.add_ext_constant(
+    "get xls constants": lambda element, subscript_dict, args:
+    builder.add_ext_constant(
         identifier=element["py_name"],
         file_name=args[0],
         tab=args[1],
@@ -906,7 +936,8 @@ builders = {
         subs=element["subs"],
         subscript_dict=subscript_dict,
     ),
-    "get xls lookups": lambda element, subscript_dict, args: builder.add_ext_lookup(
+    "get xls lookups": lambda element, subscript_dict, args:
+    builder.add_ext_lookup(
         identifier=element["py_name"],
         file_name=args[0],
         tab=args[1],
@@ -915,8 +946,10 @@ builders = {
         subs=element["subs"],
         subscript_dict=subscript_dict,
     ),
-    "initial": lambda element, subscript_dict, args: builder.add_initial(args[0]),
-    "a function of": lambda element, subscript_dict, args: builder.add_incomplete(
+    "initial": lambda element, subscript_dict, args:
+    builder.add_initial(args[0]),
+    "a function of": lambda element, subscript_dict, args:
+    builder.add_incomplete(
         element["real_name"], args
     ),
 }
@@ -940,7 +973,8 @@ def parse_general_expression(
 ):
     """
     Parses a normal expression
-    # its annoying that we have to construct and compile the grammar every time...
+    # its annoying that we have to construct and compile the grammar every
+    # time...
 
     Parameters
     ----------
@@ -951,7 +985,8 @@ def parse_general_expression(
     subscript_dict : dictionary
 
     macro_list: list of dictionaries
-        [{'name': 'M', 'py_name':'m', 'filename':'path/to/file', 'args':['arg1', 'arg2']}]
+        [{'name': 'M', 'py_name':'m', 'filename':'path/to/file', 'args':
+        ['arg1', 'arg2']}]
 
     elements_subs_dict : dictionary
         The dictionary with element python names as keys and their merged
@@ -999,7 +1034,8 @@ def parse_general_expression(
 
     pre_ops = {
         "-": "-",
-        "+": " "  # space is important, so that and empty string doesn't slip through generic
+        "+": " "  # space is important, so that and empty string doesn't
+        # slip through generic
     }
 
     pre_ops = {"-": "-", "+": " ", ":not:": " not "}
@@ -1009,8 +1045,8 @@ def parse_general_expression(
     # in case it includes quotes
     sub_names_list = [re.escape(x) for x in subscript_dict.keys()] or ["\\a"]
     sub_elems_list = [
-        re.escape(y).replace('"', "") for x in subscript_dict.values() for y in x
-    ] or ["\\a"]
+        re.escape(y).replace('"', "") for x in subscript_dict.values() for y
+        in x] or ["\\a"]
     in_ops_list = [re.escape(x) for x in in_ops.keys()]
     pre_ops_list = [re.escape(x) for x in pre_ops.keys()]
     if macro_list is not None and len(macro_list) > 0:
@@ -1046,35 +1082,42 @@ def parse_general_expression(
     reference = (id _ subscript_list) / id  # check first for subscript
     subscript_list = "[" _ ~"\""? _ (subs _ ~"\""? _ "!"? _ ","? _)+ _ "]"
 
-    array = (number _ ("," / ";")? _)+ !~r"."  # negative lookahead for anything other than an array
+    array = (number _ ("," / ";")? _)+ !~r"."  # negative lookahead for
+    # anything other than an array
     string = "\'" ( "\\\'" / ~r"[^\']"IU )* "\'"
 
     id = ( basic_id / escape_group )
 
-    subs = ~r"(%(subs)s)"IU  # subscript names and elements (if none, use non-printable character)
+    subs = ~r"(%(subs)s)"IU  # subscript names and elements (if none, use
+    # non-printable character)
     func = ~r"(%(funcs)s)"IU  # functions (case insensitive)
     in_oper = ~r"(%(in_ops)s)"IU  # infix operators (case insensitive)
     pre_oper = ~r"(%(pre_ops)s)"IU  # prefix operators (case insensitive)
-    in_logical_oper = ~r"(%(in_logical_ops)s)"IU  # infix operators (case insensitive)
-    pre_logical_oper = ~r"(%(pre_logical_ops)s)"IU  # prefix operators (case insensitive)
+    in_logical_oper = ~r"(%(in_logical_ops)s)"IU  # infix operators (case
+    # insensitive)
+    pre_logical_oper = ~r"(%(pre_logical_ops)s)"IU  # prefix operators (case
+    # insensitive)
     builder = ~r"(%(builders)s)"IU  # builder functions (case insensitive)
-    macro = ~r"(%(macros)s)"IU  # macros from model file (if none, use non-printable character)
+    macro = ~r"(%(macros)s)"IU  # macros from model file (if none, use
+    # non-printable character)
 
     empty = "" # empty string
     """ % {
-        # In the following, we have to sort keywords in decreasing order
-        # of length so that the peg parser doesn't quit early when
-        # finding a partial keyword
-        'subs': '|'.join(reversed(sorted(sub_names_list + sub_elems_list,
-                                         key=len))),
-        'funcs': '|'.join(reversed(sorted(functions.keys(), key=len))),
-        'in_ops': '|'.join(reversed(sorted(in_ops_list, key=len))),
-        'pre_ops': '|'.join(reversed(sorted(pre_ops_list, key=len))),
-        'in_logical_ops': '|'.join(reversed(sorted(in_logical_ops.keys(), key=len))),
-        'pre_logical_ops': '|'.join(reversed(sorted(pre_logical_ops.keys(), key=len))),
-        'builders': '|'.join(reversed(sorted(builders.keys(), key=len))),
-        'macros': '|'.join(reversed(sorted(macro_names_list, key=len)))
-    })
+           # In the following, we have to sort keywords in decreasing order
+           # of length so that the peg parser doesn't quit early when
+           # finding a partial keyword
+           'subs': '|'.join(reversed(sorted(sub_names_list + sub_elems_list,
+                                            key=len))),
+           'funcs': '|'.join(reversed(sorted(functions.keys(), key=len))),
+           'in_ops': '|'.join(reversed(sorted(in_ops_list, key=len))),
+           'pre_ops': '|'.join(reversed(sorted(pre_ops_list, key=len))),
+           'in_logical_ops': '|'.join(reversed(sorted(in_logical_ops.keys(),
+                                                      key=len))),
+           'pre_logical_ops': '|'.join(reversed(sorted(pre_logical_ops.keys(),
+                                                       key=len))),
+           'builders': '|'.join(reversed(sorted(builders.keys(), key=len))),
+           'macros': '|'.join(reversed(sorted(macro_names_list, key=len)))
+         })
 
     parser = parsimonious.Grammar(expression_grammar)
 
@@ -1120,7 +1163,8 @@ def parse_general_expression(
                 arguments += ["dim=" + str(tuple(self.apply_dim))]
                 self.apply_dim = set()
 
-            return builder.build_function_call(functions[function_name], arguments)
+            return builder.build_function_call(functions[function_name],
+                                               arguments)
 
         def visit_in_oper(self, n, vc):
             return in_ops[n.text.lower()]
@@ -1169,7 +1213,8 @@ def parse_general_expression(
             if self.to_float:
                 # convert element to float after subscript subsetting
                 self.to_float = False
-                return "float(" + py_expr.replace(".reset_coords(drop=True","")
+                return "float(" + py_expr.replace(".reset_coords(drop=True",
+                                                  "")
             elif self.subs:
                 if elements_subs_dict[vc[0]] != self.subs:
                     py_expr = builder.build_function_call(
@@ -1239,8 +1284,10 @@ def parse_general_expression(
             mixed_list = pairs.replace("(", "").replace(")", "").split(",")
             xs = mixed_list[::2]
             ys = mixed_list[1::2]
-            arguments = [x_val, "[" + ",".join(xs) + "]", "[" + ",".join(ys) + "]"]
-            return builder.build_function_call(functions_utils["lookup"], arguments)
+            arguments = [x_val, "[" + ",".join(xs) + "]", "[" + ",".join(ys) +
+                         "]"]
+            return builder.build_function_call(functions_utils["lookup"],
+                                               arguments)
 
         def visit_array(self, n, vc):
             # first test handles when subs is not defined
@@ -1280,18 +1327,21 @@ def parse_general_expression(
                 if from_dict and no_from_dict:
                     # some dimensons can be retrieved from _subscript_dict
                     coordsp = (
-                        "{**{dim: _subscript_dict[dim] for dim in %s}, " % from_dict
+                        "{**{dim: _subscript_dict[dim] for dim in %s}, "
+                        % from_dict
                         + repr(no_from_dict)[1:]
                     )
                 elif from_dict:
                     # all dimensons can be retrieved from _subscript_dict
-                    coordsp = "{dim: _subscript_dict[dim] for dim in %s}" % from_dict
+                    coordsp = "{dim: _subscript_dict[dim] for dim in %s}" \
+                               % from_dict
                 else:
                     # no dimensons can be retrieved from _subscript_dict
                     coordsp = repr(no_from_dict)
 
                 return builder.build_function_call(
-                    functions_utils["DataArray"], [datastr, coordsp, repr(list(coords))]
+                    functions_utils["DataArray"], [datastr, coordsp, repr(list(
+                        coords))]
                 )
 
             else:
@@ -1308,7 +1358,8 @@ def parse_general_expression(
             # Implements basic "!" subscript functionality in Vensim.
             # Does NOT work for matrix diagonals in
             # FUNC(variable[sub1!,sub1!]) functions
-            self.apply_dim.update(["%s" % s.strip("!") for s in subs if s[-1] == "!"])
+            self.apply_dim.update(["%s" % s.strip("!") for s in subs if s[-1]
+                                   == "!"])
 
             if any(coordinates):
                 coords, subs2 = [], []
@@ -1327,7 +1378,8 @@ def parse_general_expression(
                     # convert subseted element to float (avoid using 0D xarray)
                     self.to_float = True
 
-                self.append = ".loc[%s].reset_coords(drop=True)" % (", ".join(coords))
+                self.append = ".loc[%s].reset_coords(drop=True)" % (", ".join(
+                    coords))
 
             else:
                 self.subs = ["%s" % s.strip("!") for s in subs]
@@ -1339,7 +1391,8 @@ def parse_general_expression(
             # needed for the good working of externals
 
             subs = {
-                k: subscript_dict[k] for k in elements_subs_dict[element["py_name"]]
+                k: subscript_dict[k] for k in
+                elements_subs_dict[element["py_name"]]
             }
             self.kind = "component"
             builder_name = vc[0].strip().lower()
@@ -1397,7 +1450,8 @@ def parse_general_expression(
             err.args[0] + "\n\n"
             "\nError when parsing %s with equation\n\t %s\n\n"
             "probably a used function is not integrated..."
-            "\nSee parsimonious output above." % (element["real_name"], element["eqn"])
+            "\nSee parsimonious output above." % (element["real_name"],
+                                                  element["eqn"])
         )
 
     return (
@@ -1441,7 +1495,8 @@ def parse_lookup_expression(element, subscript_dict):
             mixed_list = pairs.replace("(", "").replace(")", "").split(",")
             xs = mixed_list[::2]
             ys = mixed_list[1::2]
-            arguments = ["x", "[" + ",".join(xs) + "]", "[" + ",".join(ys) + "]"]
+            arguments = ["x", "[" + ",".join(xs) + "]", "[" + ",".join(ys) +
+                         "]"]
             self.translation = builder.build_function_call(
                 functions_utils["lookup"], arguments
             )
@@ -1487,7 +1542,8 @@ def translate_section(section, macro_list, sketch, root_path):
     # add macro functions to namespace
     for macro in macro_list:
         if macro["name"] != "_main_":
-            name, namespace = utils.make_python_identifier(macro["name"], namespace)
+            name, namespace = utils.make_python_identifier(macro["name"],
+                                                           namespace)
 
     # Create a namespace for the subscripts as these aren't used to
     # create actual python functions, but are just labels on arrays,
@@ -1536,9 +1592,8 @@ def translate_section(section, macro_list, sketch, root_path):
 
     # Parse components to python syntax.
     for element in model_elements:
-        if (element["kind"] == "component" and "py_expr" not in element) or element[
-            "kind"
-        ] == "data":
+        if (element["kind"] == "component" and "py_expr" not in element) or \
+           (element["kind"] == "data"):
             # TODO: if there is new structure,
             # it should be added to the namespace...
             translation, new_structure = parse_general_expression(
@@ -1561,18 +1616,20 @@ def translate_section(section, macro_list, sketch, root_path):
 
     # send the pieces to be built
     build_elements = [
-        e for e in model_elements if e["kind"] not in ["subdef", "test", "section"]
+        e for e in model_elements if e["kind"] not in ["subdef", "test",
+                                                       "section"]
     ]
 
-    if sketch and (
-        section["name"] == "_main_"
-    ):  # macros are built in their own separate files, and their inputs and outputs are put in modules
+    # macros are built in their own separate files, and their inputs and
+    # outputs are put in modules
+    if sketch and (section["name"] == "_main_"):
 
         module_elements = _classify_elements_by_module(sketch, namespace)
 
         if len(module_elements.keys()) == 1:
             warnings.warn(
-                "Only one module was detected. The model will be built in a single file."
+                "Only one module was detected. The model will be built in a" +
+                "single file."
             )
         else:
             builder.build_modular_model(
@@ -1584,7 +1641,8 @@ def translate_section(section, macro_list, sketch, root_path):
             )
             return section["file_name"]
 
-    builder.build(build_elements, subscript_dict, namespace, section["file_name"])
+    builder.build(build_elements, subscript_dict, namespace,
+                  section["file_name"])
 
     return section["file_name"]
 
@@ -1624,9 +1682,11 @@ def _classify_elements_by_module(sketch, namespace):
         for sketch_line in module.split("\n"):
             line = parse_sketch_line(sketch_line.strip(), namespace)
             # When a module name is found, the "new_module" becomes True.
-            # When a variable name is found, the "new_module" is set back to False
+            # When a variable name is found, the "new_module" is set back to
+            # False
             if line["module_name"]:
-                # remove characters that are not [a-zA-Z0-9_] from the module name
+                # remove characters that are not [a-zA-Z0-9_] from the module
+                # name
                 module_name = re.sub(
                     r"[\W]+", "", line["module_name"].replace(" ", "_")
                 ).lstrip(
@@ -1691,7 +1751,8 @@ def translate_vensim(mdl_file, split_modules):
 
     Examples
     --------
-    >>> translate_vensim('../tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl')
+    >>> translate_vensim('../tests/test-models/tests/subscript_3d_arrays/
+    test_subscript_3d_arrays.mdl')
 
     """
 
@@ -1721,7 +1782,8 @@ def translate_vensim(mdl_file, split_modules):
         if section["name"] == "_main_":
             section["file_name"] = outfile_name
         else:  # separate macro elements into their own files
-            section["py_name"] = utils.make_python_identifier(section["name"])[0]
+            section["py_name"] = utils.make_python_identifier(
+                section["name"])[0]
             section["file_name"] = out_dir + "/" + section["py_name"] + ".py"
 
     macro_list = [s for s in file_sections if s["name"] != "_main_"]

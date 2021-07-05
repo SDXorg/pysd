@@ -551,7 +551,8 @@ class TestPySD(unittest.TestCase):
 
         model = pysd.read_vensim(test_model_subs)
         with catch_warnings(record=True) as ws:
-            res = model.run(initial_condition=(5, {'Initial Values': input_val}),
+            res = model.run(initial_condition=(5,
+                                               {'Initial Values': input_val}),
                             return_columns=['Initial Values'],
                             return_timestamps=list(range(5, 10)))
             # use only future warnings
@@ -603,7 +604,8 @@ class TestPySD(unittest.TestCase):
                       return_timestamps=list(range(5, 10)))
 
     def test_set_constant_parameter(self):
-        """ In response to: re: https://github.com/JamesPHoughton/pysd/issues/5"""
+        """ In response to:
+        re: https://github.com/JamesPHoughton/pysd/issues/5"""
         import pysd
 
         model = pysd.read_vensim(test_model)
@@ -622,7 +624,8 @@ class TestPySD(unittest.TestCase):
         model = pysd.read_vensim(test_model)
         timeseries = list(range(30))
         temp_timeseries = pd.Series(
-            index=timeseries, data=(50 + np.random.rand(len(timeseries)).cumsum())
+            index=timeseries,
+            data=(50 + np.random.rand(len(timeseries)).cumsum())
         )
         res = model.run(
             params={"room_temperature": temp_timeseries},
@@ -754,7 +757,8 @@ class TestPySD(unittest.TestCase):
             for i in range(100):
                 self.assertTrue(model.components.lookup_2d(i).equals(xr1))
 
-            xr2 = xr.DataArray([-100, 500], {"Rows": ["Row1", "Row2"]}, ["Rows"])
+            xr2 = xr.DataArray([-100, 500], {"Rows": ["Row1", "Row2"]},
+                               ["Rows"])
             model.run(params={"lookup_2d": xr2})
             for i in range(100):
                 self.assertTrue(model.components.lookup_2d(i).equals(xr2))
@@ -769,7 +773,9 @@ class TestPySD(unittest.TestCase):
             # avoid warnings related to extrapolation
             simplefilter("ignore")
             temp_timeseries = pd.Series(
-                index=timeseries, data=(50 + np.random.rand(len(timeseries)).cumsum())
+                index=timeseries, data=(50 +
+                                        np.random.rand(len(timeseries)
+                                                       ).cumsum())
             )
 
             res = model.run(
@@ -789,8 +795,10 @@ class TestPySD(unittest.TestCase):
             self.assertTrue(
                 all(
                     [
-                        a.equals(xr.DataArray(b, {"Rows": ["Row1", "Row2"]}, ["Rows"]))
-                        for a, b in zip(res["lookup_2d_time"].values, temp_timeseries)
+                        a.equals(xr.DataArray(b, {"Rows": ["Row1", "Row2"]},
+                                              ["Rows"]))
+                        for a, b in zip(res["lookup_2d_time"].values,
+                                        temp_timeseries)
                     ]
                 )
             )
@@ -798,7 +806,8 @@ class TestPySD(unittest.TestCase):
             temp_timeseries2 = pd.Series(
                 index=timeseries,
                 data=[
-                    xr.DataArray([50 + x, 20 - y], {"Rows": ["Row1", "Row2"]}, ["Rows"])
+                    xr.DataArray([50 + x, 20 - y], {"Rows": ["Row1", "Row2"]},
+                                 ["Rows"])
                     for x, y in zip(
                         np.random.rand(len(timeseries)).cumsum(),
                         np.random.rand(len(timeseries)).cumsum(),
@@ -816,7 +825,8 @@ class TestPySD(unittest.TestCase):
                 all(
                     [
                         a.equals(b)
-                        for a, b in zip(res["lookup_2d_time"].values, temp_timeseries2)
+                        for a, b in zip(res["lookup_2d_time"].values,
+                                        temp_timeseries2)
                     ]
                 )
             )
@@ -841,7 +851,8 @@ class TestPySD(unittest.TestCase):
 
         model = pysd.read_vensim(test_model_subs)
         timeseries = list(range(10))
-        val_series = [50 + rd for rd in np.random.rand(len(timeseries)).cumsum()]
+        val_series = [50 + rd for rd in np.random.rand(len(timeseries)
+                                                       ).cumsum()]
         xr_series = [xr.DataArray(val, coords, dims) for val in val_series]
 
         temp_timeseries = pd.Series(index=timeseries, data=val_series)
@@ -853,7 +864,8 @@ class TestPySD(unittest.TestCase):
 
         self.assertTrue(
             np.all(
-                [r.equals(t) for r, t in zip(res["initial_values"].values, xr_series)]
+                [r.equals(t) for r, t in zip(res["initial_values"].values,
+                                             xr_series)]
             )
         )
 
@@ -874,14 +886,17 @@ class TestPySD(unittest.TestCase):
 
         model = pysd.read_vensim(test_model_subs)
         timeseries = list(range(10))
-        val_series = [input_val + rd for rd in np.random.rand(len(timeseries)).cumsum()]
+        val_series = [input_val + rd for rd in np.random.rand(len(timeseries)
+                                                              ).cumsum()]
         temp_timeseries = pd.Series(index=timeseries, data=val_series)
         out_series = [out_b + val for val in val_series]
-        model.set_components({"initial_values": temp_timeseries, "final_time": 10})
+        model.set_components({"initial_values": temp_timeseries,
+                              "final_time": 10})
         res = model.run(return_columns=["initial_values"])
         self.assertTrue(
             np.all(
-                [r.equals(t) for r, t in zip(res["initial_values"].values, out_series)]
+                [r.equals(t) for r, t in zip(res["initial_values"].values,
+                                             out_series)]
             )
         )
 
@@ -900,7 +915,8 @@ class TestPySD(unittest.TestCase):
         timeseries = list(range(10))
         temp_timeseries = pd.Series(
             index=timeseries,
-            data=[init_val + rd for rd in np.random.rand(len(timeseries)).cumsum()],
+            data=[init_val + rd for rd in np.random.rand(len(timeseries)
+                                                         ).cumsum()],
         )
         res = model.run(
             params={"initial_values": temp_timeseries, "final_time": 10},
@@ -924,7 +940,8 @@ class TestPySD(unittest.TestCase):
         import pysd
 
         model = pysd.read_vensim(test_model)
-        self.assertIsInstance(str(model), str)  # tests string conversion of model
+        self.assertIsInstance(str(model), str)  # tests string conversion of
+        # model
 
         doc = model.doc()
         self.assertIsInstance(doc, pd.DataFrame)
@@ -955,7 +972,8 @@ class TestPySD(unittest.TestCase):
             "The initial time for the simulation.",
         )
         self.assertEqual(
-            doc[doc["Real Name"] == "Characteristic Time"]["Type"].values[0], "constant"
+            doc[doc["Real Name"] == "Characteristic Time"]["Type"].values[0],
+            "constant"
         )
         self.assertEqual(
             doc[doc["Real Name"] == "Teacup Temperature"]["Lims"].values[0],
@@ -967,20 +985,22 @@ class TestPySD(unittest.TestCase):
         import pysd
 
         path2model = (
-            "test-models/tests/multiple_lines_def/" + "test_multiple_lines_def.mdl"
+            "test-models/tests/multiple_lines_def/" +
+            "test_multiple_lines_def.mdl"
         )
         model = pysd.read_vensim(path2model)
 
         doc = model.doc()
 
-        self.assertEqual(doc[doc["Real Name"] == "price"]["Unit"].values[0], "euros/kg")
-        self.assertEqual(doc[doc["Real Name"] == "price"]["Py Name"].values[0], "price")
+        self.assertEqual(doc[doc["Real Name"] == "price"]["Unit"].values[0],
+                         "euros/kg")
+        self.assertEqual(doc[doc["Real Name"] == "price"]["Py Name"].values[0],
+                         "price")
         self.assertEqual(
             doc[doc["Real Name"] == "price"]["Subs"].values[0], "['fruits']"
         )
-        self.assertEqual(
-            doc[doc["Real Name"] == "price"]["Eqn"].values[0], "1.2; .; .; .; 1.4"
-        )
+        self.assertEqual(doc[doc["Real Name"] == "price"]["Eqn"].values[0],
+                         "1.2; .; .; .; 1.4")
 
     def test_stepwise_cache(self):
         run_history = []
@@ -1034,10 +1054,12 @@ class TestPySD(unittest.TestCase):
         result_history.append(downstream(run_history, result_history))
         self.assertEqual(cache.time, 2)
         self.assertListEqual(run_history, ["D", "U", "D", "D", "U"])
-        self.assertListEqual(result_history, ["up", "down", "up", "down", "up", "down"])
+        self.assertListEqual(result_history, ["up", "down", "up", "down",
+                                              "up", "down"])
 
     def test_runwise_cache(self):
-        # Checks backward compatibility, must be changed to @cache.run when deprecated
+        # Checks backward compatibility, must be changed to @cache.run when
+        # deprecated
         run_history = []
         result_history = []
 
@@ -1089,7 +1111,8 @@ class TestPySD(unittest.TestCase):
         result_history.append(downstream(run_history, result_history))
         self.assertEqual(cache.time, 2)
         self.assertListEqual(run_history, ["D", "U", "D", "D"])
-        self.assertListEqual(result_history, ["up", "down", "up", "down", "up", "down"])
+        self.assertListEqual(result_history, ["up", "down", "up", "down",
+                                              "up", "down"])
 
     def test_initialize(self):
         import pysd
@@ -1185,7 +1208,8 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(model.components.time(), new_time + 1)
 
         # Test setting with stateful object name
-        model.set_initial_value(new_time + 2, {'_integ_teacup_temperature': 302})
+        model.set_initial_value(new_time + 2,
+                                {'_integ_teacup_temperature': 302})
         self.assertEqual(model.components.teacup_temperature(), 302)
         self.assertEqual(model.components.time(), new_time + 2)
 
@@ -1373,7 +1397,8 @@ class TestPySD(unittest.TestCase):
         model.components.characteristic_time = lambda: 3
         stocks2 = model.run()
         self.assertGreater(
-            stocks1["Teacup Temperature"].loc[10], stocks2["Teacup Temperature"].loc[10]
+            stocks1["Teacup Temperature"].loc[10],
+            stocks2["Teacup Temperature"].loc[10]
         )
 
     def test_set_initial_condition_origin_full(self):
@@ -1468,7 +1493,8 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(set_temp, 500)
 
         self.assertNotEqual(
-            initial_time, 10, "Test definition is wrong, please change configuration"
+            initial_time, 10, "Test definition is wrong, please change" +
+            " configuration"
         )
         self.assertEqual(set_time, 10)
 
@@ -1502,7 +1528,8 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(set_temp, 100)
 
         self.assertNotEqual(
-            initial_time, 10, "Test definition is wrong, please change configuration"
+            initial_time, 10, "Test definition is wrong, please change " +
+            "configuration"
         )
         self.assertEqual(set_time, 10)
 
@@ -1617,7 +1644,8 @@ class TestPySD(unittest.TestCase):
         model = pysd.read_vensim("test-models/tests/lookups/test_lookups.mdl")
         ret = model.run()
         self.assertTrue(
-            {"accumulation", "rate", "lookup function call"} <= set(ret.columns.values)
+            {"accumulation", "rate", "lookup function call"} <=
+            set(ret.columns.values)
         )
 
     def test_py_model_file(self):
@@ -1625,7 +1653,8 @@ class TestPySD(unittest.TestCase):
         import pysd
 
         model = pysd.read_vensim(test_model)
-        self.assertEqual(model.py_model_file, test_model.replace(".mdl", ".py"))
+        self.assertEqual(model.py_model_file, 
+                         test_model.replace(".mdl", ".py"))
 
     def test_mdl_file(self):
         """Relates to https://github.com/JamesPHoughton/pysd/issues/86"""
@@ -1641,7 +1670,7 @@ class TestPySD(unittest.TestCase):
         with catch_warnings(record=True) as w:
             simplefilter("always")
             model = pysd.read_vensim(
-                "test-models/tests/incomplete_equations/test_incomplete_model.mdl"
+             "test-models/tests/incomplete_equations/test_incomplete_model.mdl"
             )
         self.assertTrue(any([warn.category == SyntaxWarning for warn in w]))
 
@@ -1658,7 +1687,8 @@ class TestModelInteraction(unittest.TestCase):
         """
         Test that we can load and run multiple models at the same time,
         and that the models don't interact with each other. This can
-        happen if we arent careful about class attributes vs instance attributes
+        happen if we arent careful about class attributes vs instance
+        attributes
 
         This test responds to issue:
         https://github.com/JamesPHoughton/pysd/issues/23
@@ -1754,7 +1784,8 @@ class TestMultiRun(unittest.TestCase):
     def test_delay_reinitializes(self):
         import pysd
 
-        model = pysd.read_vensim("../tests/test-models/tests/delays/test_delays.mdl")
+        model = pysd.read_vensim(
+            "../tests/test-models/tests/delays/test_delays.mdl")
         res1 = model.run()
         res2 = model.run()
         self.assertTrue(all(res1 == res2))

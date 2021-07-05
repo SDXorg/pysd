@@ -34,7 +34,8 @@ def xrmerge(das, accept_new=True):
 
     References
     ----------
-    Thanks to @jcmgray https://github.com/pydata/xarray/issues/742#issue-130753818
+    Thanks to @jcmgray
+    https://github.com/pydata/xarray/issues/742#issue-130753818
 
     In the future, we may not need this as xarray may provide the merge for us.
     """
@@ -76,7 +77,8 @@ def find_subscript_name(subscript_dict, element, avoid=[]):
     Parameters
     ----------
     subscript_dict: dictionary
-        Follows the {'subscript name':['list','of','subscript','elements']} format
+        Follows the {'subscript name':['list','of','subscript','elements']}
+        format
 
     element: string
 
@@ -138,10 +140,11 @@ def make_coord_dict(subs, subscript_dict, terse=True):
 
     Examples
     --------
-    >>> make_coord_dict(['Dim1', 'D'], {'Dim1': ['A', 'B', 'C'], 'Dim2': ['D', 'E', 'F']})
+    >>> make_coord_dict(['Dim1', 'D'], {'Dim1': ['A', 'B', 'C'],
+                                        'Dim2': ['D', 'E', 'F']})
     {'Dim2': ['D']}
-    >>> make_coord_dict(['Dim1', 'D'], {'Dim1': ['A', 'B', 'C'], 'Dim2':['D', 'E', 'F']},
-    >>>                 terse=False)
+    >>> make_coord_dict(['Dim1', 'D'], {'Dim1': ['A', 'B', 'C'],
+                                        'Dim2':['D', 'E', 'F']}, terse=False)
     {'Dim2': ['D'], 'Dim1': ['A', 'B', 'C']}
     """
     sub_elems_list = [y for x in subscript_dict.values() for y in x]
@@ -176,7 +179,8 @@ def make_merge_list(subs_list, subscript_dict):
 
     Examples
     --------
-    >>> make_merge_list([['upper'], ['C']], {'all': ['A', 'B', 'C'], 'upper': ['A', 'B']})
+    >>> make_merge_list([['upper'], ['C']], {'all': ['A', 'B', 'C'],
+                                             'upper': ['A', 'B']})
     ['all']
 
     """
@@ -321,19 +325,24 @@ def make_python_identifier(
     ('abc', {'123abc': 'abc'})
 
     already in namespace
-    >>> make_python_identifier('Variable$', namespace={'Variable$': 'variable'})
+    >>> make_python_identifier('Variable$', namespace={'Variable$':
+                                                       'variable'})
     ('variable', {'Variable$': 'variable'})
 
     namespace conflicts
-    >>> make_python_identifier('Variable$', namespace={'Variable@': 'variable'})
+    >>> make_python_identifier('Variable$', namespace={
+                               'Variable@': 'variable'})
     ('variable_1', {'Variable@': 'variable', 'Variable$': 'variable_1'})
 
     >>> make_python_identifier('Variable$', namespace={'Variable@': 'variable',
-    >>>                                                'Variable%': 'variable_1'})
-    ('variable_2', {'Variable@': 'variable', 'Variable%': 'variable_1', 'Variable$': 'variable_2'})
+                                                       'Variable%':'variable_1'
+                                                       })
+    ('variable_2', {'Variable@': 'variable', 'Variable%': 'variable_1',
+    'Variable$': 'variable_2'})
 
     throw exception instead
-    >>> make_python_identifier('Variable$', namespace={'Variable@': 'variable'}, handle='throw')
+    >>> make_python_identifier('Variable$', namespace={'Variable@': 'variable'
+    }, handle='throw')
     Traceback (most recent call last):
      ...
     NameError: variable already exists in namespace or is a reserved word
@@ -744,14 +753,18 @@ def load_model_data(root_dir, model_name):
 
     """
 
-    with open(os.path.join(root_dir, "_subscripts_" + model_name + ".json")) as subs:
+    with open(os.path.join(root_dir, "_subscripts_" + model_name + ".json")
+              ) as subs:
         subscripts = json.load(subs)
 
-    with open(os.path.join(root_dir, "_namespace_" + model_name + ".json")) as names:
+    with open(os.path.join(root_dir, "_namespace_" + model_name + ".json")
+              ) as names:
         namespace = json.load(names)
 
-    # the _modules.json in the sketch_var folder shows to which module each variable belongs
-    with open(os.path.join(root_dir, "modules_" + model_name, "_modules.json")) as mods:
+    # the _modules.json in the sketch_var folder shows to which module each
+    # variable belongs
+    with open(os.path.join(root_dir, "modules_" + model_name, "_modules.json")
+              ) as mods:
         modules = json.load(mods)
 
     return namespace, subscripts, modules

@@ -234,7 +234,8 @@ def _build_main_module(elements, subscript_dict, file_name):
         'time': lambda: 0
     }
 
-    _namespace, _subscript_dict, _modules = load_model_data(_root, "%(outfile)s")
+    _namespace, _subscript_dict, _modules = load_model_data(_root,
+    "%(outfile)s")
 
     # loading modules from the modules_%(outfile)s directory
     for module in _modules:
@@ -396,8 +397,10 @@ def _generate_functions(elements, subscript_dict):
 
     """
     Builds all model elements as functions in string format.
-    NOTE: this function calls the build_element function, which updates the import_modules.
-    Therefore, it needs to be executed before the _generate_automatic_imports function.
+    NOTE: this function calls the build_element function, which updates the
+    import_modules.
+    Therefore, it needs to be executed before the_generate_automatic_imports
+    function.
 
     Parameters
     ----------
@@ -418,7 +421,8 @@ def _generate_functions(elements, subscript_dict):
         String containing all formated model functions
     """
 
-    functions = [build_element(element, subscript_dict) for element in elements]
+    functions = [build_element(element, subscript_dict) for element in
+                 elements]
 
     funcs = "%(functions)s" % {"functions": "\n".join(functions)}
     funcs = funcs.replace("\t", "    ")
@@ -565,7 +569,8 @@ def build_element(element, subscript_dict):
         elif len(element["eqn"]) > 5:
             # First and last original equations separated by vertical dots
             element["eqn"] = (
-                sep + element["eqn"][0] + (sep + "  .") * 3 + sep + element["eqn"][-1]
+                sep + element["eqn"][0] + (sep + "  .") * 3 + sep
+                    + element["eqn"][-1]
             )
         else:
             # From 2 to 5 equations in different lines
@@ -706,7 +711,8 @@ def add_stock(identifier, expression, initial_condition, subs):
                 "kind": "setup",
                 "py_expr": initial_condition,
                 "subs": subs,
-                "doc": "Provides initial conditions for %s function" % identifier,
+                "doc": "Provides initial conditions for %s function"
+                        % identifier,
                 "unit": "See docs for %s" % identifier,
                 "lims": "None",
                 "eqn": "None",
@@ -823,10 +829,12 @@ def add_delay(identifier, delay_input, delay_time, initial_value, order, subs):
                 "py_name": "_delay_init_%s" % identifier,
                 "parent_name": identifier,
                 "real_name": "Implicit",
-                "kind": "setup",  # not specified in the model file, but must exist
+                "kind": "setup",  # not specified in the model file, but must
+                # exist
                 "py_expr": initial_value,
                 "subs": subs,
-                "doc": "Provides initial conditions for %s function" % identifier,
+                "doc": "Provides initial conditions for %s function" \
+                        % identifier,
                 "unit": "See docs for %s" % identifier,
                 "lims": "None",
                 "eqn": "None",
@@ -938,7 +946,8 @@ def add_delay_f(identifier, delay_input, delay_time, initial_value):
     return "%s()" % py_name, [stateful]
 
 
-def add_n_delay(identifier, delay_input, delay_time, initial_value, order, subs):
+def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
+                subs):
     """
     Creates code to instantiate a stateful 'DelayN' object,
     and provides reference to that object's output.
@@ -1011,10 +1020,12 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order, subs)
                 "py_name": "_delayn_init_%s" % identifier,
                 "parent_name": identifier,
                 "real_name": "Implicit",
-                "kind": "setup",  # not specified in the model file, but must exist
+                "kind": "setup",  # not specified in the model file, but must
+                # exist
                 "py_expr": initial_value,
                 "subs": subs,
-                "doc": "Provides initial conditions for %s function" % identifier,
+                "doc": "Provides initial conditions for %s function" \
+                        % identifier,
                 "unit": "See docs for %s" % identifier,
                 "lims": "None",
                 "eqn": "None",
@@ -1044,7 +1055,8 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order, subs)
             "py_name": py_name,
             "parent_name": identifier,
             "real_name": "DelayN of %s" % delay_input,
-            "doc": "DelayN time: %s \n DelayN initial value %s \n DelayN order %s"
+            "doc": "DelayN time: %s \n DelayN initial value %s \n DelayN order\
+                    %s"
             % (delay_time, initial_value, order),
             "py_expr": stateful_py_expr,
             "unit": "None",
@@ -1142,7 +1154,8 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value,
     return "%s()" % py_name, new_structure
 
 
-def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order, subs):
+def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order,
+                 subs):
     """
     Constructs stock and flow chains that implement the calculation of
     a smoothing function.
@@ -1198,7 +1211,8 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order, su
         )
 
     else:
-        # only need to re-dimension init and input as xarray will take care of other
+        # only need to re-dimension init and input as xarray will take care of
+        # other
         stateful_py_expr = (
             "Smooth(_smooth_input_%s, lambda: %s,"
             " _smooth_init_%s, lambda: %s, '%s')"
@@ -1212,10 +1226,12 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order, su
                 "py_name": "_smooth_init_%s" % identifier,
                 "parent_name": identifier,
                 "real_name": "Implicit",
-                "kind": "setup",  # not specified in the model file, but must exist
+                "kind": "setup",  # not specified in the model file, but must
+                # exist
                 "py_expr": initial_value,
                 "subs": subs,
-                "doc": "Provides initial conditions for %s function" % identifier,
+                "doc": "Provides initial conditions for %s function" % \
+                       identifier,
                 "unit": "See docs for %s" % identifier,
                 "lims": "None",
                 "eqn": "None",
@@ -1244,8 +1260,9 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order, su
             "py_name": py_name,
             "parent_name": identifier,
             "real_name": "Smooth of %s" % smooth_input,
-            "doc": "Smooth time: %s \n Smooth initial value %s \n Smooth order %s"
-            % (smooth_time, initial_value, order),
+            "doc": "Smooth time:" +
+                   "%s \n Smooth initial value %s \n Smooth order %s"
+                   % (smooth_time, initial_value, order),
             "py_expr": stateful_py_expr,
             "unit": "None",
             "lims": "None",
@@ -1314,10 +1331,12 @@ def add_n_trend(identifier, trend_input, average_time, initial_trend, subs):
                 "py_name": "_trend_init_%s" % identifier,
                 "parent_name": identifier,
                 "real_name": "Implicit",
-                "kind": "setup",  # not specified in the model file, but must exist
+                "kind": "setup",  # not specified in the model file, but must
+                # exist
                 "py_expr": initial_trend,
                 "subs": subs,
-                "doc": "Provides initial conditions for %s function" % identifier,
+                "doc": "Provides initial conditions for %s function"
+                        % identifier,
                 "unit": "See docs for %s" % identifier,
                 "lims": "None",
                 "eqn": "None",
@@ -1386,9 +1405,8 @@ def add_initial(identifier):
     return "%s()" % stateful["py_name"], [stateful]
 
 
-def add_ext_data(
-    identifier, file_name, tab, time_row_or_col, cell, subs, subscript_dict, keyword
-):
+def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs,
+                 subscript_dict, keyword):
     """
     Constructs a external object for handling Vensim's GET XLS DATA and
     GET DIRECT DATA functionality
@@ -1424,8 +1442,8 @@ def add_ext_data(
     """
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
     keyword = (
-        "'%s'" % keyword.strip(":").lower() if isinstance(keyword, str) else keyword
-    )
+        "'%s'" % keyword.strip(":").lower() if isinstance(keyword, str) else
+        keyword)
     name = utils.make_python_identifier("_ext_data_%s" % identifier)[0]
 
     Imports.add('external', 'ExtData')
@@ -1452,7 +1470,8 @@ def add_ext_data(
         "parent_name": identifier,
         "real_name": "External data for %s" % identifier,
         "doc": "Provides data for data variable %s" % identifier,
-        "py_expr": py_expr % (file_name, tab, time_row_or_col, cell, keyword, coords),
+        "py_expr": py_expr % (file_name, tab, time_row_or_col, cell, keyword,
+                              coords),
         "unit": "None",
         "lims": "None",
         "eqn": "None",
@@ -1635,8 +1654,8 @@ def add_macro(macro_name, filename, arg_names, arg_vals):
         [utils.make_python_identifier(f)[0] for f in arg_vals])
 
     func_args = "{ %s }" % ", ".join(
-        ["'%s': lambda: %s" % (key, val) for key, val in zip(arg_names, arg_vals)]
-    )
+        ["'%s': lambda: %s" % (key, val) for key, val in zip(arg_names,
+                                                             arg_vals)])
 
     stateful = {
         "py_name": py_name,
@@ -1704,7 +1723,8 @@ def build_function_call(function_def, user_arguments):
         return function_def + "(" + ",".join(user_arguments) + ")"
 
     if function_def["name"] == "not_implemented_function":
-        user_arguments = ["'" + function_def["original_name"] + "'"] + user_arguments
+        user_arguments = ["'" + function_def["original_name"] + "'"] + \
+            user_arguments
         warnings.warn(
             "\n\nTrying to translate "
             + function_def["original_name"]
@@ -1727,14 +1747,15 @@ def build_function_call(function_def, user_arguments):
         for parameter_idx in range(len(parameters)):
             parameter_def = parameters[parameter_idx]
             is_optional = (
-                parameter_def["optional"] if "optional" in parameter_def else False
+                parameter_def["optional"] if "optional" in parameter_def else
+                False
             )
             if argument_idx >= len(user_arguments) and is_optional:
                 break
 
             parameter_type = (
-                parameter_def["type"] if "type" in parameter_def else "expression"
-            )
+                parameter_def["type"] if "type" in parameter_def else
+                "expression")
 
             user_argument = user_arguments[argument_idx]
             if parameter_type in ["expression", "lambda"]:
