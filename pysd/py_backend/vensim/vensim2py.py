@@ -506,7 +506,7 @@ def parse_sketch_line(sketch_line, namespace):
     module_name = ~r"(?<=\*)[^\n]+$"
     module_definition = "$" color "," digit "," font_properties "|" ( ( color / ones_and_dashes ) "|")* module_code
     var_definition = var_code "," var_number "," var_name "," position "," var_box_type "," arrows_in_allowed "," hide_level "," var_face "," var_word_position "," var_thickness "," var_rest_conf ","? ( ( ones_and_dashes / color) ",")* font_properties?
-    # elements used in a line defining the properties of a variable or stock 
+    # elements used in a line defining the properties of a variable or stock
     var_name = element
     var_name = ~r"(?<=,)[^,]+(?=,)"
     var_number = digit
