@@ -183,6 +183,29 @@ class TestEquationStringParsing(unittest.TestCase):
             },
         )
 
+        with self.assertRaises(ValueError) as err:
+            get_equation_components(r"""Sub2: (1-3) """)
+
+        self.assertIn(
+            "A numeric range must contain at least one letter.",
+            str(err.exception))
+
+        with self.assertRaises(ValueError) as err:
+            get_equation_components(r"""Sub2: (a1-a1) """)
+
+        self.assertIn(
+            "The number of the first subscript value must be "
+            "lower than the second subscript value in a "
+            "subscript numeric range.",
+            str(err.exception))
+
+        with self.assertRaises(ValueError) as err:
+            get_equation_components(r"""Sub2: (a1-b3) """)
+
+        self.assertIn(
+            "Only matching names ending in numbers are valid.",
+            str(err.exception))
+
     def test_subscript_references(self):
         from pysd.py_backend.vensim.vensim2py import get_equation_components
 
@@ -317,7 +340,7 @@ class TestEquationStringParsing(unittest.TestCase):
         except ValueError as err:
             self.assertIn(
                 "\nError when parsing definition:\n\t %s\n\n"
-                "probably used definition is not integrated..."
+                "probably used definition is invalid or not integrated..."
                 "\nSee parsimonious output above." % defi,
                 err.args[0],
             )

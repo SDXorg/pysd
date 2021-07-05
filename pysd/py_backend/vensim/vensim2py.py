@@ -6,13 +6,14 @@ knowledge of vensim syntax should be here.
 
 import os
 import re
-from tkinter.font import names
 import warnings
 from io import open
 
 import numpy as np
 import parsimonious
-from parsimonious.exceptions import IncompleteParseError, VisitationError, ParseError
+from parsimonious.exceptions import IncompleteParseError,\
+                                    VisitationError,\
+                                    ParseError
 
 from .. import builder, utils, external
 
@@ -52,7 +53,8 @@ def get_file_sections(file_str):
 
     """
 
-    # the leading 'r' for 'raw' in this string is important for handling backslashes properly
+    # the leading 'r' for 'raw' in this string is important for
+    # handling backslashes properly
     file_structure_grammar = _include_common_grammar(
         r"""
     file = encoding? (macro / main)+
@@ -88,7 +90,8 @@ def get_file_sections(file_str):
             self.entries.append(
                 {
                     "name": name,
-                    "params": [x.strip() for x in params.split(",")] if params else [],
+                    "params": [x.strip() for x in params.split(",")]
+                               if params else [],
                     "returns": [x.strip() for x in returns.split(",")]
                     if returns
                     else [],
@@ -392,16 +395,12 @@ def get_equation_components(equation_str, root_path=None):
 
             if self.real_name not in self.subscripts_compatibility:
                 self.subscripts_compatibility[self.real_name] = []
-            self.subscripts_compatibility[self.real_name].append(name_mapped.strip())
+            self.subscripts_compatibility[self.real_name].append(
+                name_mapped.strip())
 
         def visit_range(self, n, vc):
             subs_start = vc[2].strip()
             subs_end = vc[6].strip()
-            if subs_start == subs_end:
-                raise ValueError(
-                    "Only different subscripts are valid in a numeric range, error in expression:\n\t %s\n"
-                    % (equation_str)
-                )
 
             # get the common prefix and the starting and
             # ending number of the numeric range
@@ -412,25 +411,19 @@ def get_equation_components(equation_str, root_path=None):
             num_start = int(subs_start[-1])
             num_end = int(subs_end[-1])
 
-            if not (prefix_start) or not (prefix_end):
+            if not prefix_start or not prefix_end:
                 raise ValueError(
-                    "A numeric range must contain at least one letter, error in expression:\n\t %s\n"
-                    % (equation_str)
-                )
-            if num_start > num_end:
+                    "\nA numeric range must contain at least one letter.")
+            elif num_start >= num_end:
                 raise ValueError(
-                    "The number of the first subscript value must be lower than the second subscript value in a subscript numeric range, error in expression:\n\t %s\n"
-                    % (equation_str)
-                )
-            if (
-                prefix_start != prefix_end
-                or subs_start[0].isdigit()
-                or subs_end[0].isdigit()
-            ):
+                    "\nThe number of the first subscript value must be "
+                    "lower than the second subscript value in a "
+                    "subscript numeric range.")
+            elif (prefix_start != prefix_end
+                  or subs_start[0].isdigit()
+                  or subs_end[0].isdigit()):
                 raise ValueError(
-                    "Only matching names ending in numbers are valid, error in expression:\n\t %s\n"
-                    % (equation_str)
-                )
+                    "\nOnly matching names ending in numbers are valid.")
 
             for i in range(num_start, num_end + 1):
                 s = prefix_start + str(i)
@@ -467,7 +460,7 @@ def get_equation_components(equation_str, root_path=None):
         raise ValueError(
             err.args[0] + "\n\n"
             "\nError when parsing definition:\n\t %s\n\n"
-            "probably used definition is not integrated..."
+            "probably used definition is invalid or not integrated..."
             "\nSee parsimonious output above." % (equation_str)
         )
 
