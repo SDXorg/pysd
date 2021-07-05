@@ -500,81 +500,60 @@ def parse_sketch_line(sketch_line, namespace):
 
     sketch_grammar = _include_common_grammar(
         r"""
-            line = var_definition / module_intro / module_title / module_definition / arrow / flow / other_objects / id
-
-            module_intro = ~r"\s*Sketch.*?names$" / ~r"^V300.*?ignored$"
-            module_title = "*" module_name
-            module_name = ~r"(?<=\*)[^\n]+$"
-
-            module_definition = "$" color "," digit "," font_properties "|" ( ( color / ones_and_dashes ) "|")* module_code
-            var_definition = var_code "," var_number "," var_name "," position "," var_box_type "," arrows_in_allowed "," hide_level "," var_face "," var_word_position "," var_thickness "," var_rest_conf ","? ( ( ones_and_dashes / color) ",")* font_properties?
-
-            # elements used in a line defining the properties of a variable or
-            # stock (most are digits, but identifying them now may be useful
-            # for further parsing)
-            var_name = element
-            var_name = ~r"(?<=,)[^,]+(?=,)"
-            var_number = digit
-            var_box_type = ~r"(?<=,)\d+,\d+,\d+(?=,)" # improve this regex
-            arrows_in_allowed = ~r"(?<=,)\d+(?=,)" # if this is an even umber,
-            # it's a shadow variable
-            hide_level = digit
-            var_face = digit
-            var_word_position = ~r"(?<=,)\-*\d+(?=,)"
-            var_thickness = digit
-            var_rest_conf = digit "," ~r"\d+"
-
-            arrow = arrow_code "," digit "," origin_var "," destination_var "," (digit ",")+ (ones_and_dashes ",")?  ((color ",") / ("," ~r"\d+") / (font_properties "," ~r"\d+"))* "|(" position ")|"
-
-            # arrow origin and destination (this may be useful if further
-            # parsing is required)
-            origin_var = digit
-            destination_var = digit
-
-            # flow arrows
-            flow = source_or_sink_or_plot / flow_arrow
-
-            # if you want to extend the parsing, these three would be a good
-            # starting point (they are followed by "anything")
-            source_or_sink_or_plot = multipurpose_code "," anything
-            flow_arrow =  flow_arrow_code "," anything
-            other_objects = other_objects_code "," anything
-
-            # fonts
-            font_properties = font_name? "|" font_size "|" font_style? "|" color
-            # the parser may not be able to tell the begining of the next line
-            font_style =  "B" / "I" / "U" / "S" / "V"  # italics, bold,
-            # underline, etc
-            font_size =  ~r"\d+"  # this needs to be made a regex to match any
-            # font
-            font_name = ~r"(?<=,)[^\|\d]+(?=\|)"
-
-            # x and y within the view layout. This may be useful if further
-            # parsing is required
-            position = ~r"-*\d+,-*\d+"
-
-            # rgb color
-            color = ~r"((?<!\d|\.)([0-9]?[0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(?!\d|\.) *[-] *){2}(?<!\d|\.)([0-9]?[0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(?!\d|\.)" # rgb as in 255-255-255
-
-            # lines that start with specific numbers (1:arrows, 11:flow_arrow,
-            # 12:)
-            arrow_code = ~r"^1(?=,)"
-            flow_arrow_code = ~r"^11(?=,)"
-            var_code = ~r"^10(?=,)"
-            multipurpose_code = ~r"^12(?=,)" # source, sink, plot, comment
-            other_objects_code = ~r"^(30|31)(?=,)"
-            module_code = ~r"\d+" "," digit "," digit "," ~r"\d+" # code at
-            # the end of module definitions
-
-            id = ( basic_id / escape_group )
-
-            # comma separated value/s
-            digit = ~r"(?<=,)\d+(?=,)"
-
-            ones_and_dashes = ~r"\-1\-\-1\-\-1"
-            anything = ~r".*" # this one is dangerous, if something is not
-            # parsed before, it will fall here, with the risk of missing it
-            """
+    line = var_definition / module_intro / module_title / module_definition / arrow / flow / other_objects / id
+    module_intro = ~r"\s*Sketch.*?names$" / ~r"^V300.*?ignored$"
+    module_title = "*" module_name
+    module_name = ~r"(?<=\*)[^\n]+$"
+    module_definition = "$" color "," digit "," font_properties "|" ( ( color / ones_and_dashes ) "|")* module_code
+    var_definition = var_code "," var_number "," var_name "," position "," var_box_type "," arrows_in_allowed "," hide_level "," var_face "," var_word_position "," var_thickness "," var_rest_conf ","? ( ( ones_and_dashes / color) ",")* font_properties?
+    # elements used in a line defining the properties of a variable or stock 
+    var_name = element
+    var_name = ~r"(?<=,)[^,]+(?=,)"
+    var_number = digit
+    var_box_type = ~r"(?<=,)\d+,\d+,\d+(?=,)" # improve this regex
+    arrows_in_allowed = ~r"(?<=,)\d+(?=,)" # if this is an even number,
+    # it's a shadow variable
+    hide_level = digit
+    var_face = digit
+    var_word_position = ~r"(?<=,)\-*\d+(?=,)"
+    var_thickness = digit
+    var_rest_conf = digit "," ~r"\d+"
+    arrow = arrow_code "," digit "," origin_var "," destination_var "," (digit ",")+ (ones_and_dashes ",")?  ((color ",") / ("," ~r"\d+") / (font_properties "," ~r"\d+"))* "|(" position ")|"
+    # arrow origin and destination (this may be useful if further
+    # parsing is required)
+    origin_var = digit
+    destination_var = digit
+    # flow arrows
+    flow = source_or_sink_or_plot / flow_arrow
+    # if you want to extend the parsing, these three would be a good
+    # starting point (they are followed by "anything")
+    source_or_sink_or_plot = multipurpose_code "," anything
+    flow_arrow =  flow_arrow_code "," anything
+    other_objects = other_objects_code "," anything
+    # fonts
+    font_properties = font_name? "|" font_size "|" font_style? "|" color
+    font_style =  "B" / "I" / "U" / "S" / "V"  # italics, bold, underline, etc
+    font_size =  ~r"\d+"  # this needs to be made a regex to match any font
+    font_name = ~r"(?<=,)[^\|\d]+(?=\|)"
+    # x and y within the view layout. This may be useful if further
+    # parsing is required
+    position = ~r"-*\d+,-*\d+"
+    # rgb color (e.g. 255-255-255)
+    color = ~r"((?<!\d|\.)([0-9]?[0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(?!\d|\.) *[-] *){2}(?<!\d|\.)([0-9]?[0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])(?!\d|\.)"
+    # lines that start with specific numbers (1:arrows, 11:flow_arrow, etc.)
+    arrow_code = ~r"^1(?=,)"
+    flow_arrow_code = ~r"^11(?=,)"
+    var_code = ~r"^10(?=,)"
+    multipurpose_code = ~r"^12(?=,)" # source, sink, plot, comment
+    other_objects_code = ~r"^(30|31)(?=,)"
+    module_code = ~r"\d+" "," digit "," digit "," ~r"\d+" # code at
+    # the end of module definitions
+    id = ( basic_id / escape_group )
+    # comma separated value/s
+    digit = ~r"(?<=,)\d+(?=,)"
+    ones_and_dashes = ~r"\-1\-\-1\-\-1"
+    anything = ~r".*"
+    """
     )
 
     parser = parsimonious.Grammar(sketch_grammar)
