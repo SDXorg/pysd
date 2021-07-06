@@ -500,7 +500,7 @@ def parse_sketch_line(sketch_line, namespace):
 
     sketch_grammar = _include_common_grammar(
         r"""
-    line = var_definition / module_intro / module_title / module_definition / arrow / flow / other_objects / id
+    line = var_definition / module_intro / module_title / module_definition / arrow / flow / other_objects / anything
     module_intro = ~r"\s*Sketch.*?names$" / ~r"^V300.*?ignored$"
     module_title = "*" module_name
     module_name = ~r"(?<=\*)[^\n]+$"
@@ -547,10 +547,8 @@ def parse_sketch_line(sketch_line, namespace):
     multipurpose_code = ~r"^12(?=,)" # source, sink, plot, comment
     other_objects_code = ~r"^(30|31)(?=,)"
     module_code = ~r"\d+" "," digit "," digit "," ~r"\d+" # code at
-    # the end of module definitions
-    id = ( basic_id / escape_group )
-    # comma separated value/s
-    digit = ~r"(?<=,)\d+(?=,)"
+
+    digit = ~r"(?<=,)\d+(?=,)" # comma separated value/s
     ones_and_dashes = ~r"\-1\-\-1\-\-1"
     anything = ~r".*"
     """
@@ -575,18 +573,8 @@ def parse_sketch_line(sketch_line, namespace):
         def generic_visit(self, n, vc):
             return "".join(filter(None, vc)) or n.text or ""
 
-    try:
-        tree = parser.parse(sketch_line)
-        return SketchParser(tree, namespace=namespace).module_or_var
-    except (IncompleteParseError, VisitationError, ParseError) as err:
-        raise ValueError(
-                (
-                    err.args[0] + "\n\n"
-                    "\nError when parsing definition:\n\t %s\n\n"
-                    "probably used definition is not integrated..."
-                    "\nSee parsimonious output above." % (sketch_line)
-                )
-            )
+    tree = parser.parse(sketch_line)
+    return SketchParser(tree, namespace=namespace).module_or_var
 
 
 def parse_units(units_str):
