@@ -216,7 +216,17 @@ def _build_main_module(elements, subscript_dict, file_name):
         Path of the file where the main module will be stored.
 
     """
-    elements = merge_partial_elements(elements)
+    all_elements = merge_partial_elements(elements)
+    # separating between control variables and rest of variables
+    control_vars_ = [element for element in all_elements if
+                     element["py_name"] in ["final_time",
+                                            "initial_time",
+                                            "saveper",
+                                            "time_step"]]
+    elements = [element for element in all_elements if element not in
+                control_vars_]
+
+    control_vars = _generate_functions(control_vars_, subscript_dict)
     funcs = _generate_functions(elements, subscript_dict)
 
     Imports.add("utils", "load_model_data")
@@ -228,19 +238,19 @@ def _build_main_module(elements, subscript_dict, file_name):
     # import namespace from json file
     text += textwrap.dedent("""
     __pysd_version__ = '%(version)s'
-    %(root)s
+
     __data = {
         'scope': None,
         'time': lambda: 0
     }
-
+    %(root)s
     _namespace, _subscript_dict, _modules = load_model_data(_root,
     "%(outfile)s")
 
-    # loading modules from the modules_%(outfile)s directory
-    for module in _modules:
-        exec(open_module(_root, "%(outfile)s", module))
 
+    ########################## CONTROL VARIABLES ###########################
+    ########################################################################
+    
     def _init_outer_references(data):
         for key in data:
             __data[key] = data[key]
@@ -254,7 +264,25 @@ def _build_main_module(elements, subscript_dict, file_name):
         "version": __version__
     })
 
-    text += funcs
+    text += control_vars.lstrip()
+
+    text += textwrap.dedent("""
+    # loading modules from the modules_%(outfile)s directory
+    for module in _modules:
+        exec(open_module(_root, "%(outfile)s", module))
+
+    """ % {
+        "outfile": os.path.basename(file_name).split(".")[0],
+
+    })
+
+    if funcs:
+        text += textwrap.dedent("""
+    ########################### MODEL VARIABLES ############################
+    ########################################################################
+    """)
+        text += funcs
+
     text = black.format_file_contents(text, fast=True, mode=black.FileMode())
 
     # Needed for various sessions
@@ -300,7 +328,7 @@ def _build_separate_module(elements, subscript_dict, module_name, module_dir):
     text = textwrap.dedent('''
     """
     Module %(module_name)s
-    Translated using PySD version %(version)s\n
+    Translated using PySD version %(version)s
     """
     ''' % {
         "module_name": module_name,
@@ -348,22 +376,35 @@ def build(elements, subscript_dict, namespace, outfile_name):
     # Todo: deal with model level documentation
     # Todo: Make presence of subscript_dict instantiation conditional on usage
     # Todo: Sort elements (alphabetically? group stock funcs?)
-    elements = merge_partial_elements(elements)
+    all_elements = merge_partial_elements(elements)
+    # separating between control variables and rest of variables
+    control_vars_ = [element for element in all_elements if
+                     element["py_name"] in ["final_time",
+                                            "initial_time",
+                                            "saveper",
+                                            "time_step"]]
+    elements = [element for element in all_elements if element not in
+                control_vars_]
+
+    control_vars = _generate_functions(control_vars_, subscript_dict)
     funcs = _generate_functions(elements, subscript_dict)
 
     text, root = Imports.get_header(os.path.basename(outfile_name))
 
     text += textwrap.dedent("""
     __pysd_version__ = '%(version)s'
-
-    _subscript_dict = %(subscript_dict)s
-
-    _namespace = %(namespace)s
-    %(root)s
+    
     __data = {
         'scope': None,
         'time': lambda: 0
     }
+    %(root)s
+    _subscript_dict = %(subscript_dict)s
+
+    _namespace = %(namespace)s
+
+    ########################## CONTROL VARIABLES ###########################
+    ########################################################################
 
     def _init_outer_references(data):
         for key in data:
@@ -378,6 +419,13 @@ def build(elements, subscript_dict, namespace, outfile_name):
         "root": root,
         "version": __version__,
     })
+
+    text += control_vars
+
+    text += textwrap.dedent("""
+    ########################### MODEL VARIABLES ############################
+    ########################################################################
+    """)
 
     text += funcs
     text = black.format_file_contents(text, fast=True, mode=black.FileMode())
