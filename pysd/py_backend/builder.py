@@ -267,22 +267,19 @@ def _build_main_module(elements, subscript_dict, file_name):
     text += control_vars.lstrip()
 
     text += textwrap.dedent("""
-    # loading modules from the modules_%(outfile)s directory
+    ########################### MODEL VARIABLES ############################
+    ########################################################################
+    
+    # load modules from the modules_%(outfile)s directory
     for module in _modules:
         exec(open_module(_root, "%(outfile)s", module))
-
+    
     """ % {
         "outfile": os.path.basename(file_name).split(".")[0],
 
     })
-
-    if funcs:
-        text += textwrap.dedent("""
-    ########################### MODEL VARIABLES ############################
-    ########################################################################
-    """)
-        text += funcs
-
+    
+    text += funcs
     text = black.format_file_contents(text, fast=True, mode=black.FileMode())
 
     # Needed for various sessions
