@@ -70,13 +70,13 @@ class Imports():
 
         if cls._functions:
             text += "from pysd.py_backend.functions import %(methods)s\n"\
-                    % {'methods': ", ".join(cls._functions)}
+                    % {"methods": ", ".join(cls._functions)}
         if cls._external:
             text += "from pysd.py_backend.external import %(methods)s\n"\
-                    % {'methods': ", ".join(cls._external)}
+                    % {"methods": ", ".join(cls._external)}
         if cls._utils:
             text += "from pysd.py_backend.utils import %(methods)s\n"\
-                    % {'methods': ", ".join(cls._utils)}
+                    % {"methods": ", ".join(cls._utils)}
 
         if cls._subs:
             text += "from pysd import cache, subs\n"
@@ -87,6 +87,36 @@ class Imports():
         cls.reset()
 
         return text, _root
+
+    @staticmethod
+    def get_control_vars(control_vars):
+        """
+        Create the section of control variables
+        """
+        section = textwrap.dedent("""
+        #######################################################################
+        #                          CONTROL VARIABLES                          #
+        #######################################################################
+
+        def _init_outer_references(data):
+            for key in data:
+                __data[key] = data[key]
+
+
+        def time():
+            return __data['time']()
+
+        """)
+
+        section += control_vars
+
+        section += textwrap.dedent("""
+        #######################################################################
+        #                           MODEL VARIABLES                           #
+        #######################################################################
+        """)
+
+        return section
 
     @classmethod
     def reset(cls):
@@ -219,10 +249,10 @@ def _build_main_module(elements, subscript_dict, file_name):
     all_elements = merge_partial_elements(elements)
     # separating between control variables and rest of variables
     control_vars_ = [element for element in all_elements if
-                     element["py_name"] in ["final_time",
-                                            "initial_time",
-                                            "saveper",
-                                            "time_step"]]
+                     element["py_name"] in ["initial_time",
+                                            "final_time",
+                                            "time_step",
+                                            "saveper"]]
     elements = [element for element in all_elements if element not in
                 control_vars_]
 
@@ -246,39 +276,24 @@ def _build_main_module(elements, subscript_dict, file_name):
     %(root)s
     _namespace, _subscript_dict, _modules = load_model_data(_root,
     "%(outfile)s")
-
-
-    ########################## CONTROL VARIABLES ###########################
-    ########################################################################
-    
-    def _init_outer_references(data):
-        for key in data:
-            __data[key] = data[key]
-
-    def time():
-        return __data['time']()
-
     """ % {
         "outfile": os.path.basename(file_name).split(".")[0],
         "root": root,
         "version": __version__
     })
 
-    text += control_vars.lstrip()
+    text += Imports.get_control_vars(control_vars)
 
     text += textwrap.dedent("""
-    ########################### MODEL VARIABLES ############################
-    ########################################################################
-    
     # load modules from the modules_%(outfile)s directory
     for module in _modules:
         exec(open_module(_root, "%(outfile)s", module))
-    
+
     """ % {
         "outfile": os.path.basename(file_name).split(".")[0],
 
     })
-    
+
     text += funcs
     text = black.format_file_contents(text, fast=True, mode=black.FileMode())
 
@@ -390,7 +405,7 @@ def build(elements, subscript_dict, namespace, outfile_name):
 
     text += textwrap.dedent("""
     __pysd_version__ = '%(version)s'
-    
+
     __data = {
         'scope': None,
         'time': lambda: 0
@@ -399,17 +414,6 @@ def build(elements, subscript_dict, namespace, outfile_name):
     _subscript_dict = %(subscript_dict)s
 
     _namespace = %(namespace)s
-
-    ########################## CONTROL VARIABLES ###########################
-    ########################################################################
-
-    def _init_outer_references(data):
-        for key in data:
-            __data[key] = data[key]
-
-    def time():
-        return __data['time']()
-
     """ % {
         "subscript_dict": repr(subscript_dict),
         "namespace": repr(namespace),
@@ -417,14 +421,7 @@ def build(elements, subscript_dict, namespace, outfile_name):
         "version": __version__,
     })
 
-    text += control_vars
-
-    text += textwrap.dedent("""
-    ########################### MODEL VARIABLES ############################
-    ########################################################################
-    """)
-
-    text += funcs
+    text += Imports.get_control_vars(control_vars) + funcs
     text = black.format_file_contents(text, fast=True, mode=black.FileMode())
 
     # Needed for various sessions
@@ -541,15 +538,15 @@ def build_element(element, subscript_dict):
                     for new_dim, dim in zip(new_subs, coords)
                 }
                 dims = list(coords)
-                Imports.add('utils', 'rearrange')
-                py_expr_i.append('rearrange(%s, %s, %s)' % (
+                Imports.add("utils", "rearrange")
+                py_expr_i.append("rearrange(%s, %s, %s)" % (
                     py_expr, dims, coords))
             elif py_expr_no_ADD[i]:
                 # element comes from external or xarray
                 py_expr_i.append(py_expr)
-        Imports.add('utils', 'xrmerge')
-        py_expr = 'xrmerge([%s,])' % (
-            ',\n'.join(py_expr_i))
+        Imports.add("utils", "xrmerge")
+        py_expr = "xrmerge([%s,])" % (
+            ",\n".join(py_expr_i))
     else:
         py_expr = element["py_expr"][0]
 
@@ -728,7 +725,7 @@ def add_stock(identifier, expression, initial_condition, subs):
         that these can be appropriately aggregated
 
     """
-    Imports.add("functions", 'Integ')
+    Imports.add("functions", "Integ")
 
     new_structure = []
     py_name = "_integ_%s" % identifier
@@ -848,7 +845,7 @@ def add_delay(identifier, delay_input, delay_time, initial_value, order, subs):
         list of element construction dictionaries for the builder to assemble
 
     """
-    Imports.add("functions", 'Delay')
+    Imports.add("functions", "Delay")
 
     new_structure = []
     py_name = "_delay_%s" % identifier
@@ -962,7 +959,7 @@ def add_delay_f(identifier, delay_input, delay_time, initial_value):
         list of element construction dictionaries for the builder to assemble
 
     """
-    Imports.add("functions", 'DelayFixed')
+    Imports.add("functions", "DelayFixed")
 
     py_name = "_delayfixed_%s" % identifier
 
@@ -1039,7 +1036,7 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
         list of element construction dictionaries for the builder to assemble
 
     """
-    Imports.add("functions", 'DelayN')
+    Imports.add("functions", "DelayN")
 
     new_structure = []
     py_name = "_delayn_%s" % identifier
@@ -1152,10 +1149,10 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value,
         list of element construction dictionaries for the builder to assemble
 
     """
-    Imports.add("functions", 'SampleIfTrue')
+    Imports.add("functions", "SampleIfTrue")
 
     new_structure = []
-    py_name = '_sample_if_true_%s' % identifier
+    py_name = "_sample_if_true_%s" % identifier
 
     if len(subs) == 0:
         stateful_py_expr = "SampleIfTrue(lambda: %s, lambda: %s,"\
@@ -1170,30 +1167,32 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value,
         # following elements not specified in the model file, but must exist
         # create the delay initialization element
         new_structure.append({
-            'py_name': '_sample_if_true_init_%s' % identifier,
-            'real_name': 'Implicit',
-            'kind': 'setup',  # not specified in the model file, but must exist
-            'py_expr': initial_value,
-            'subs': subs,
-            'doc': 'Provides initial conditions for %s function' % identifier,
-            'unit': 'See docs for %s' % identifier,
-            'lims': 'None',
-            'eqn': 'None',
-            'arguments': ''
+            "py_name": "_sample_if_true_init_%s" % identifier,
+            "parent_name": identifier,
+            "real_name": "Implicit",
+            "kind": "setup",  # not specified in the model file, but must exist
+            "py_expr": initial_value,
+            "subs": subs,
+            "doc": "Provides initial conditions for %s function" % identifier,
+            "unit": "See docs for %s" % identifier,
+            "lims": "None",
+            "eqn": "None",
+            "arguments": ""
         })
     # describe the stateful object
     new_structure.append({
-        'py_name': py_name,
-        'real_name': 'Sample if true of %s' % identifier,
-        'doc': 'Initial value: %s \n  Input: %s \n Condition: %s' % (
+        "py_name": py_name,
+        "parent_name": identifier,
+        "real_name": "Sample if true of %s" % identifier,
+        "doc": "Initial value: %s \n  Input: %s \n Condition: %s" % (
             initial_value, actual_value, condition),
-        'py_expr': stateful_py_expr,
-        'unit': 'None',
-        'lims': 'None',
-        'eqn': 'None',
-        'subs': '',
-        'kind': 'stateful',
-        'arguments': ''
+        "py_expr": stateful_py_expr,
+        "unit": "None",
+        "lims": "None",
+        "eqn": "None",
+        "subs": "",
+        "kind": "stateful",
+        "arguments": ""
     })
 
     return "%s()" % py_name, new_structure
@@ -1243,7 +1242,7 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order,
         list of element construction dictionaries for the builder to assemble
 
     """
-    Imports.add("functions", 'Smooth')
+    Imports.add("functions", "Smooth")
 
     new_structure = []
     py_name = "_smooth_%s" % identifier
@@ -1351,7 +1350,7 @@ def add_n_trend(identifier, trend_input, average_time, initial_trend, subs):
         list of element construction dictionaries for the builder to assemble
 
     """
-    Imports.add("functions", 'Trend')
+    Imports.add("functions", "Trend")
 
     new_structure = []
     py_name = "_trend_%s" % identifier
@@ -1409,7 +1408,7 @@ def add_n_trend(identifier, trend_input, average_time, initial_trend, subs):
     return "%s()" % py_name, new_structure
 
 
-def add_initial(identifier):
+def add_initial(identifier, value):
     """
     Constructs a stateful object for handling vensim's 'Initial' functionality
 
@@ -1429,8 +1428,8 @@ def add_initial(identifier):
         list of element construction dictionaries for the builder to assemble
 
     """
-    Imports.add("functions", 'Initial')
-    py_name = utils.make_python_identifier('_initial_%s'
+    Imports.add("functions", "Initial")
+    py_name = utils.make_python_identifier("_initial_%s"
                                            % identifier)[0]
 
     stateful = {
@@ -1438,7 +1437,7 @@ def add_initial(identifier):
         "parent_name": identifier,
         "real_name": "Initial %s" % identifier,
         "doc": "Returns the value taken on during the initialization phase",
-        "py_expr": "Initial(lambda: %s, '%s')" % (identifier, py_name),
+        "py_expr": "Initial(lambda: %s, '%s')" % (value, py_name),
         "unit": "None",
         "lims": "None",
         "eqn": "None",
@@ -1491,7 +1490,7 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs,
         keyword)
     name = utils.make_python_identifier("_ext_data_%s" % identifier)[0]
 
-    Imports.add('external', 'ExtData')
+    Imports.add("external", "ExtData")
 
     # Check if the object already exists
     if name in build_names:
@@ -1558,7 +1557,7 @@ def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
         list of element construction dictionaries for the builder to assemble
 
     """
-    Imports.add('external', 'ExtConstant')
+    Imports.add("external", "ExtConstant")
 
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
     name = utils.make_python_identifier("_ext_constant_%s" % identifier)[0]
@@ -1631,7 +1630,7 @@ def add_ext_lookup(
         list of element construction dictionaries for the builder to assemble
 
     """
-    Imports.add('external', 'ExtLookup')
+    Imports.add("external", "ExtLookup")
 
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
     name = utils.make_python_identifier("_ext_lookup_%s" % identifier)[0]
@@ -1693,7 +1692,7 @@ def add_macro(macro_name, filename, arg_names, arg_vals):
         list of element construction dictionaries for the builder to assemble
 
     """
-    Imports.add("functions", 'Macro')
+    Imports.add("functions", "Macro")
 
     py_name = "_macro_" + macro_name + "_" + "_".join(
         [utils.make_python_identifier(f)[0] for f in arg_vals])
@@ -1728,7 +1727,7 @@ def add_incomplete(var_name, dependencies):
      in which we can raise a warning about the incomplete equation
      at translate time.
     """
-    Imports.add("functions", 'incomplete')
+    Imports.add("functions", "incomplete")
 
     warnings.warn(
         "%s has no equation specified" % var_name, SyntaxWarning, stacklevel=2

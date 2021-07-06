@@ -915,7 +915,9 @@ builders = {
         subscript_dict=subscript_dict,
     ),
     "initial": lambda element, subscript_dict, args:
-    builder.add_initial(args[0]),
+    builder.add_initial(
+        identifier=element["py_name"],
+        value=args[0]),
     "a function of": lambda element, subscript_dict, args:
     builder.add_incomplete(
         element["real_name"], args
