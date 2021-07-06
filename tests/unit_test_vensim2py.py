@@ -23,17 +23,21 @@ class TestGetFileSections(unittest.TestCase):
         from pysd.py_backend.vensim.vensim2py import get_file_sections
 
         actual = get_file_sections(":MACRO: MAC(z) a~b~c| :END OF MACRO:")
-        expected = [{"returns": [], "params": ["z"], "name": "MAC", "string": "a~b~c|"}]
+        expected = [{"returns": [], "params": ["z"], "name": "MAC",
+                     "string": "a~b~c|"}]
         self.assertEqual(actual, expected)
 
     def test_macro_and_model(self):
         """ basic macro and model """
         from pysd.py_backend.vensim.vensim2py import get_file_sections
 
-        actual = get_file_sections(":MACRO: MAC(z) a~b~c| :END OF MACRO: d~e~f| g~h~i|")
+        actual = get_file_sections(
+            ":MACRO: MAC(z) a~b~c| :END OF MACRO: d~e~f| g~h~i|")
         expected = [
-            {"returns": [], "params": ["z"], "name": "MAC", "string": "a~b~c|"},
-            {"returns": [], "params": [], "name": "_main_", "string": "d~e~f| g~h~i|"},
+            {"returns": [], "params": ["z"], "name": "MAC",
+             "string": "a~b~c|"},
+            {"returns": [], "params": [], "name": "_main_",
+             "string": "d~e~f| g~h~i|"},
         ]
         self.assertEqual(actual, expected)
 
@@ -45,8 +49,10 @@ class TestGetFileSections(unittest.TestCase):
             ":MACRO: MAC(z, y) a~b~c| :END OF MACRO: d~e~f| g~h~i|"
         )
         expected = [
-            {"returns": [], "params": ["z", "y"], "name": "MAC", "string": "a~b~c|"},
-            {"returns": [], "params": [], "name": "_main_", "string": "d~e~f| g~h~i|"},
+            {"returns": [], "params": ["z", "y"], "name": "MAC",
+             "string": "a~b~c|"},
+            {"returns": [], "params": [], "name": "_main_",
+             "string": "d~e~f| g~h~i|"},
         ]
         self.assertEqual(actual, expected)
 
@@ -64,7 +70,8 @@ class TestGetFileSections(unittest.TestCase):
                 "name": "MAC",
                 "string": "a~b~c|",
             },
-            {"returns": [], "params": [], "name": "_main_", "string": "d~e~f| g~h~i|"},
+            {"returns": [], "params": [], "name": "_main_",
+             "string": "d~e~f| g~h~i|"},
         ]
         self.assertEqual(actual, expected)
 
@@ -210,7 +217,8 @@ class TestEquationStringParsing(unittest.TestCase):
         from pysd.py_backend.vensim.vensim2py import get_equation_components
 
         self.assertEqual(
-            get_equation_components(r"constant [Sub1, Sub2] = 10, 12; 14, 16;"),
+            get_equation_components(
+                r"constant [Sub1, Sub2] = 10, 12; 14, 16;"),
             {
                 "expr": "10, 12; 14, 16;",
                 "kind": "component",
@@ -222,7 +230,8 @@ class TestEquationStringParsing(unittest.TestCase):
         )
 
         self.assertEqual(
-            get_equation_components(r"function [Sub1] = other function[Sub1]"),
+            get_equation_components(
+                r"function [Sub1] = other function[Sub1]"),
             {
                 "expr": "other function[Sub1]",
                 "kind": "component",
@@ -234,7 +243,8 @@ class TestEquationStringParsing(unittest.TestCase):
         )
 
         self.assertEqual(
-            get_equation_components(r'constant ["S1,b", "S1,c"] = 1, 2; 3, 4;'),
+            get_equation_components(
+                r'constant ["S1,b", "S1,c"] = 1, 2; 3, 4;'),
             {
                 "expr": "1, 2; 3, 4;",
                 "kind": "component",
@@ -246,7 +256,8 @@ class TestEquationStringParsing(unittest.TestCase):
         )
 
         self.assertEqual(
-            get_equation_components(r'constant ["S1=b", "S1=c"] = 1, 2; 3, 4;'),
+            get_equation_components(
+                r'constant ["S1=b", "S1=c"] = 1, 2; 3, 4;'),
             {
                 "expr": "1, 2; 3, 4;",
                 "kind": "component",
@@ -368,7 +379,8 @@ class TestParse_general_expression(unittest.TestCase):
     def test_function_calls(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
 
-        res = parse_general_expression({"expr": "ABS(StockA)"}, {"StockA": "stocka"})
+        res = parse_general_expression({"expr": "ABS(StockA)"},
+                                       {"StockA": "stocka"})
         self.assertEqual(res[0]["py_expr"], "abs(stocka())")
 
         res = parse_general_expression(
@@ -389,7 +401,8 @@ class TestParse_general_expression(unittest.TestCase):
     def test_id_parsing(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
 
-        res = parse_general_expression({"expr": "StockA"}, {"StockA": "stocka"})
+        res = parse_general_expression({"expr": "StockA"},
+                                       {"StockA": "stocka"})
         self.assertEqual(res[0]["py_expr"], "stocka()")
 
     def test_logicals(self):
@@ -397,45 +410,42 @@ class TestParse_general_expression(unittest.TestCase):
 
         res = parse_general_expression(
             {'expr': 'IF THEN ELSE(1 :AND: 0,0,1)'})
-        self.assertEqual(
-             res[0]['py_expr'],
-            'if_then_else(logical_and(1,0), lambda: 0, lambda: 1)'
-        )
+        self.assertEqual(res[0]['py_expr'],
+                         'if_then_else(logical_and(1,0), lambda: 0, lambda: 1)'
+                         )
 
         res = parse_general_expression(
             {'expr': 'IF THEN ELSE(1 :OR: 0,0,1)'})
         self.assertEqual(
              res[0]['py_expr'],
-            'if_then_else(logical_or(1,0), lambda: 0, lambda: 1)'
+             'if_then_else(logical_or(1,0), lambda: 0, lambda: 1)'
         )
 
         res = parse_general_expression(
             {'expr': 'IF THEN ELSE(1 :AND: 0 :and: 1,0,1)'})
         self.assertEqual(
              res[0]['py_expr'],
-            'if_then_else(logical_and(1,0,1), lambda: 0, lambda: 1)'
+             'if_then_else(logical_and(1,0,1), lambda: 0, lambda: 1)'
         )
 
         res = parse_general_expression(
             {'expr': 'IF THEN ELSE(1 :or: 0 :OR: 1 :oR: 0,0,1)'})
         self.assertEqual(
              res[0]['py_expr'],
-            'if_then_else(logical_or(1,0,1,0), lambda: 0, lambda: 1)'
+             'if_then_else(logical_or(1,0,1,0), lambda: 0, lambda: 1)'
         )
 
         res = parse_general_expression(
             {'expr': 'IF THEN ELSE(1 :AND: (0 :OR: 1),0,1)'})
-        self.assertEqual(
-             res[0]['py_expr'],
-            'if_then_else(logical_and(1,logical_or(0,1)), lambda: 0, lambda: 1)'
-        )
+        self.assertEqual(res[0]['py_expr'],
+                         'if_then_else(logical_and(1,logical_or(0,1)),' +
+                         ' lambda: 0, lambda: 1)')
 
         res = parse_general_expression(
             {'expr': 'IF THEN ELSE((1 :AND: 0) :OR: 1,0,1)'})
-        self.assertEqual(
-             res[0]['py_expr'],
-            'if_then_else(logical_or(logical_and(1,0),1), lambda: 0, lambda: 1)'
-        )
+        self.assertEqual(res[0]['py_expr'],
+                         'if_then_else(logical_or(logical_and(1,0),1),' +
+                         ' lambda: 0, lambda: 1)')
 
         with self.assertRaises(ValueError):
             res = parse_general_expression(
@@ -458,7 +468,8 @@ class TestParse_general_expression(unittest.TestCase):
         self.assertEqual(res[0]["py_expr"], "-1.3e-10")
 
     def test_stock_construction_function_no_subscripts(self):
-        """ stock construction should create a stateful variable and reference it """
+        """ stock construction should create a stateful variable and
+        reference it """
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
         from pysd.py_backend.functions import Integ
 
@@ -575,9 +586,9 @@ class TestParse_general_expression(unittest.TestCase):
             + "{dim: _subscript_dict[dim]"
             + " for dim in ['Dim1']}, ['Dim1'])",
         )
-        a = xr.DataArray(
-            [1.0, 2.0, 3.0], {dim: _subscript_dict[dim] for dim in ["Dim1"]}, ["Dim1"]
-        )
+        a = xr.DataArray([1.0, 2.0, 3.0],
+                         {dim: _subscript_dict[dim] for dim in ["Dim1"]},
+                         ["Dim1"])
         self.assertDictEqual(
             {key: list(val.values) for key, val in a.coords.items()},
             {"Dim1": ["A", "B", "C"]},
@@ -589,7 +600,8 @@ class TestParse_general_expression(unittest.TestCase):
 
         _subscript_dict = {"Dim1": ["A", "B", "C"], "Dim2": ["D", "E"]}
         element = parse_general_expression(
-            {"expr": "1, 2; 3, 4; 5, 6;", "subs": ["Dim1", "Dim2"]}, {}, _subscript_dict
+            {"expr": "1, 2; 3, 4; 5, 6;", "subs": ["Dim1", "Dim2"]}, {},
+            _subscript_dict
         )
         string = element[0]["py_expr"]
         a = eval(string)
@@ -605,7 +617,8 @@ class TestParse_general_expression(unittest.TestCase):
 
         _subscript_dict = {"Dim1": ["A", "B", "C"], "Dim2": ["D", "E"]}
         element = parse_general_expression(
-            {"expr": "1, 2; 3, 4; 5, 6;", "subs": ["Dim1", "Dim2"]}, {}, _subscript_dict
+            {"expr": "1, 2; 3, 4; 5, 6;", "subs": ["Dim1", "Dim2"]}, {},
+            _subscript_dict
         )
         string = element[0]["py_expr"]
         a = eval(string)
@@ -644,11 +657,11 @@ class TestParse_general_expression(unittest.TestCase):
         )
 
         res = parse_general_expression({'expr': 'Var B[A, C]'},
-                                     {'Var B': 'var_b'},
-                                     {'Dim1': ['A', 'B'],
-                                      'Dim2': ['C', 'D', 'E']},
-                                     None,
-                                     {'var_b': ['Dim1', 'Dim2']})
+                                       {'Var B': 'var_b'},
+                                       {'Dim1': ['A', 'B'],
+                                        'Dim2': ['C', 'D', 'E']},
+                                       None,
+                                       {'var_b': ['Dim1', 'Dim2']})
 
         self.assertEqual(
             res[0]['py_expr'],
@@ -668,12 +681,12 @@ class TestParse_general_expression(unittest.TestCase):
         )
 
         res = parse_general_expression({'expr': 'Var C[B, C, H]'},
-                                     {'Var C': 'var_c'},
-                                     {'Dim1': ['A', 'B'],
-                                      'Dim2': ['C', 'D', 'E'],
-                                      'Dim3': ['F', 'G', 'H', 'I']},
-                                     None,
-                                     {'var_c': ['Dim1', 'Dim2', 'Dim3']})
+                                       {'Var C': 'var_c'},
+                                       {'Dim1': ['A', 'B'],
+                                        'Dim2': ['C', 'D', 'E'],
+                                        'Dim3': ['F', 'G', 'H', 'I']},
+                                       None,
+                                       {'var_c': ['Dim1', 'Dim2', 'Dim3']})
 
         self.assertEqual(
             res[0]['py_expr'],
@@ -685,7 +698,8 @@ class TestParse_general_expression(unittest.TestCase):
         res = parse_general_expression(
             {"expr": "Var D[Range1]"},
             {"Var D": "var_c"},
-            {"Dim1": ["A", "B", "C", "D", "E", "F"], "Range1": ["C", "D", "E"]},
+            {"Dim1": ["A", "B", "C", "D", "E", "F"],
+             "Range1": ["C", "D", "E"]},
             None,
             {"var_c": ["Dim1"]},
         )
@@ -714,12 +728,12 @@ class TestParse_general_expression(unittest.TestCase):
             )
             self.assertEqual(len(w), 1)
             self.assertTrue(
-                "Incomplete Func has no equation specified" in str(w[-1].message)
+                "Incomplete Func has no equation specified" in
+                str(w[-1].message)
             )
 
-        self.assertEqual(
-            res[0]["py_expr"], "incomplete(unspecified_eqn(), var_a(), var_b())"
-        )
+        self.assertEqual(res[0]["py_expr"],
+                         "incomplete(unspecified_eqn(), var_a(), var_b())")
 
     def test_parse_general_expression_error(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
@@ -748,10 +762,12 @@ class TestParse_sketch_line(unittest.TestCase):
 
         namespace = {'"var-n"': "varn", "Stock": "stock", '"rate-1"': "rate1"}
         lines = [
-            '10,1,"var-n",332,344,21,12,0,3,0,32,1,0,0,0,-1--1--1,0-0-0,@Malgun Gothic|12||0-0-0',  # normal variable with colors
+            '10,1,"var-n",332,344,21,12,0,3,0,32,1,0,0,0,-1--1--1,0-0-0' +
+            ',@Malgun Gothic|12||0-0-0',  # normal variable with colors
             "10,2,Stock,497,237,40,20,3,3,0,0,0,0,0,0",  # stock
             '10,7,"rate-1",382,262,21,11,40,3,0,0,-1,0,0,0',  # normal variable
-            '10,2,"var-n",235,332,27,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|0||128-128-128',  # shadow variable
+            '10,2,"var-n",235,332,27,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,' +
+            '|0||128-128-128',  # shadow variable
             "*Just another view",  # module definition
             "1,5,6,3,100,0,0,22,0,0,0,-1--1--1,,1|(341,243)|",  # arrow
         ]
@@ -786,6 +802,7 @@ class TestParse_sketch_line(unittest.TestCase):
                     "\nSee parsimonious output above." % (line), err.args[0]
                 )
 
+
 class TestParse_private_functions(unittest.TestCase):
     def test__split_sketch_warning(self):
         import warnings
@@ -799,8 +816,8 @@ class TestParse_private_functions(unittest.TestCase):
             # use only user warnings
             wu = [w for w in ws if issubclass(w.category, UserWarning)]
             self.assertEqual(len(wu), 1)
-            self.assertTrue("Your model does not have a sketch." in str(wu[0].message))
+            self.assertTrue(
+                "Your model does not have a sketch." in str(wu[0].message))
 
             self.assertEqual(text, model_str)
             self.assertEqual(sketch, "")
-
