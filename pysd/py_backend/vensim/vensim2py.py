@@ -46,11 +46,11 @@ def get_file_sections(file_str):
             the name of the macro, or 'main' for main body of model
         - string: string
             string representing the model section
+
     Examples
     --------
     >>> get_file_sections(r'a~b~c| d~e~f| g~h~i|')
-    [{'returns': [], 'params': [], 'name': 'main', 'string': 'a~b~c| d~e~f|
-    g~h~i|'}]
+    [{'returns': [], 'params': [], 'name': 'main', 'string': 'a~b~c| d~e~f| g~h~i|'}]
 
     """
 
@@ -128,44 +128,35 @@ def get_model_elements(model_str):
 
     # Basic Parsing:
     >>> get_model_elements(r'a~b~c| d~e~f| g~h~i|')
-    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'f', 'unit': 'e',
-    'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
+    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'f', 'unit': 'e', 'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
 
     # Special characters are escaped within double-quotes:
     >>> get_model_elements(r'a~b~c| d~e"~"~f| g~h~i|')
-    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'f', 'unit': 'e"~"',
-    'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
+    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'f', 'unit': 'e"~"', 'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
     >>> get_model_elements(r'a~b~c| d~e~"|"f| g~h~i|')
-    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': '"|"f', 'unit': 'e',
-    'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
+    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': '"|"f', 'unit': 'e', 'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
 
     # Double-quotes within escape groups are themselves escaped with
     # backslashes:
     >>> get_model_elements(r'a~b~c| d~e"\\\"~"~f| g~h~i|')
-    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'f', 'unit': 'e"\\\\"~"',
-    'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
+    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'f', 'unit': 'e"\\\\"~"', 'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
     >>> get_model_elements(r'a~b~c| d~e~"\\\"|"f| g~h~i|')
-    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': '"\\\\"|"f', 'unit': 'e',
-    'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
+    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': '"\\\\"|"f', 'unit': 'e', 'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
     >>> get_model_elements(r'a~b~c| d~e"x\\nx"~f| g~h~|')
-    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'f', 'unit': 'e"x\\\\nx"',
-    'eqn': 'd'}, {'doc': '', 'unit': 'h', 'eqn': 'g'}]
+    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'f', 'unit': 'e"x\\\\nx"', 'eqn': 'd'}, {'doc': '', 'unit': 'h', 'eqn': 'g'}]
 
     # Todo: Handle model-level or section-level documentation
     >>> get_model_elements(r'*** .model doc ***~ Docstring!| d~e~f| g~h~i|')
-    [{'doc': 'Docstring!', 'unit': '', 'eqn': ''}, {'doc': 'f', 'unit': 'e',
-    'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
+    [{'doc': 'Docstring!', 'unit': '', 'eqn': ''}, {'doc': 'f', 'unit': 'e', 'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
 
     # Handle control sections, returning appropriate docstring pieces
     >>> get_model_elements(r'a~b~c| ****.Control***~ Simulation Control
     Parameters | g~h~i|')
-    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'i', 'unit': 'h',
-    'eqn': 'g'}]
+    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
 
     # Handle the model display elements (ignore them)
     >>> get_model_elements(r'a~b~c| d~e~f| \\\---///junk|junk~junk')
-    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'f', 'unit': 'e',
-    'eqn': 'd'}]
+    [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'f', 'unit': 'e', 'eqn': 'd'}]
 
 
     Notes
@@ -500,7 +491,7 @@ def parse_sketch_line(sketch_line, namespace):
 
     sketch_grammar = _include_common_grammar(
         r"""
-    line = var_definition / module_intro / module_title / module_definition / arrow / flow / other_objects / id
+    line = var_definition / module_intro / module_title / module_definition / arrow / flow / other_objects / anything
     module_intro = ~r"\s*Sketch.*?names$" / ~r"^V300.*?ignored$"
     module_title = "*" module_name
     module_name = ~r"(?<=\*)[^\n]+$"
@@ -547,10 +538,8 @@ def parse_sketch_line(sketch_line, namespace):
     multipurpose_code = ~r"^12(?=,)" # source, sink, plot, comment
     other_objects_code = ~r"^(30|31)(?=,)"
     module_code = ~r"\d+" "," digit "," digit "," ~r"\d+" # code at
-    # the end of module definitions
-    id = ( basic_id / escape_group )
-    # comma separated value/s
-    digit = ~r"(?<=,)\d+(?=,)"
+
+    digit = ~r"(?<=,)\d+(?=,)" # comma separated value/s
     ones_and_dashes = ~r"\-1\-\-1\-\-1"
     anything = ~r".*"
     """
@@ -575,18 +564,8 @@ def parse_sketch_line(sketch_line, namespace):
         def generic_visit(self, n, vc):
             return "".join(filter(None, vc)) or n.text or ""
 
-    try:
-        tree = parser.parse(sketch_line)
-        return SketchParser(tree, namespace=namespace).module_or_var
-    except (IncompleteParseError, VisitationError, ParseError) as err:
-        raise ValueError(
-                (
-                    err.args[0] + "\n\n"
-                    "\nError when parsing definition:\n\t %s\n\n"
-                    "probably used definition is not integrated..."
-                    "\nSee parsimonious output above." % (sketch_line)
-                )
-            )
+    tree = parser.parse(sketch_line)
+    return SketchParser(tree, namespace=namespace).module_or_var
 
 
 def parse_units(units_str):
@@ -927,7 +906,9 @@ builders = {
         subscript_dict=subscript_dict,
     ),
     "initial": lambda element, subscript_dict, args:
-    builder.add_initial(args[0]),
+    builder.add_initial(
+        identifier=element["py_name"],
+        value=args[0]),
     "a function of": lambda element, subscript_dict, args:
     builder.add_incomplete(
         element["real_name"], args
@@ -943,14 +924,9 @@ builders["get direct constants"] = builders["get xls constants"]
 utils.add_entries_underscore(functions, data_ops, builders)
 
 
-def parse_general_expression(
-    element,
-    namespace={},
-    subscript_dict={},
-    macro_list=None,
-    elements_subs_dict={},
-    subs_compatibility={},
-):
+def parse_general_expression(element, namespace={}, subscript_dict={},
+                             macro_list=None, elements_subs_dict={},
+                             subs_compatibility={}):
     """
     Parses a normal expression
     # its annoying that we have to construct and compile the grammar every
@@ -1608,8 +1584,8 @@ def translate_section(section, macro_list, sketch, root_path):
 
         if len(module_elements.keys()) == 1:
             warnings.warn(
-                "Only one module was detected. The model will be built in a" +
-                "single file."
+                "Only one module was detected. The model will be built "
+                "in a single file."
             )
         else:
             builder.build_modular_model(
@@ -1628,11 +1604,10 @@ def translate_section(section, macro_list, sketch, root_path):
 
 
 def _classify_elements_by_module(sketch, namespace):
-
     """
-    Takes the Vensim sketch as a string, parses it (line by line) and returns a
-    list of the model elements that belong to each vensim view (here we call
-    the modules).
+    Takes the Vensim sketch as a string, parses it (line by line) and
+    returns a list of the model elements that belong to each vensim view
+    (here we call the modules).
 
     Parameters
     ----------
@@ -1640,16 +1615,16 @@ def _classify_elements_by_module(sketch, namespace):
         Representation of the Vensim Sketch as a string.
 
     namespace: dict
-        Translation from original model element names (keys) to python safe
-        function identifiers (values).
+        Translation from original model element names (keys) to python
+        safe function identifiers (values).
 
     Returns
     -------
     module_elements_: dict
-        Dictionary containing view (module) names as keys and a list of the
-        corresponding variables as values.
-    """
+        Dictionary containing view (module) names as keys and a list of
+        the corresponding variables as values.
 
+    """
     # TODO how about macros??? are they also put in the sketch?
 
     # splitting the sketch in different modules
@@ -1690,6 +1665,7 @@ def _classify_elements_by_module(sketch, namespace):
 def _split_sketch(text):
     """
     Splits the model file between the main section and the sketch
+
     Parameters
     ----------
     text : string
@@ -1720,22 +1696,29 @@ def _split_sketch(text):
 
 def translate_vensim(mdl_file, split_modules):
     """
+    Translate a vensim file.
 
     Parameters
     ----------
-    mdl_file : basestring
-        file path of a vensim model file to translate to python
+    mdl_file: str
+        File path of a vensim model file to translate to python.
+
+    split_modules: bool
+        If True, the sketch is parsed to detect model elements in each
+        model view, and then translate each view in a separate python
+        file. Setting this argument to True is recommended for large
+        models split in many different views.
 
     Returns
     -------
+    outfile_name: str
+        Name of the output file.
 
     Examples
     --------
-    >>> translate_vensim('../tests/test-models/tests/subscript_3d_arrays/
-    test_subscript_3d_arrays.mdl')
+    >>> translate_vensim('../tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl')
 
     """
-
     root_path = os.path.split(mdl_file)[0]
     with open(mdl_file, "r", encoding="UTF-8") as in_file:
         text = in_file.read()

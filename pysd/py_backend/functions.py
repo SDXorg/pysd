@@ -797,6 +797,8 @@ class Macro(DynamicStateful):
         args: list
             List of arguments of the function.
 
+        Examples
+        --------
         >>> model.get_args('birth_rate')
         >>> model.get_args('Birth Rate')
 
@@ -840,6 +842,8 @@ class Macro(DynamicStateful):
             The coords and the dimensions of the element if it has.
             Otherwise, returns None.
 
+        Examples
+        --------
         >>> model.get_coords('birth_rate')
         >>> model.get_coords('Birth Rate')
 
@@ -879,7 +883,6 @@ class Macro(DynamicStateful):
 
         Examples
         --------
-
         >>> model.set_components({'birth_rate': 10})
         >>> model.set_components({'Birth Rate': 10})
 
@@ -1357,7 +1360,6 @@ class Model(Macro):
 
         Examples
         --------
-
         >>> model.run(params={'exogenous_constant': 42})
         >>> model.run(params={'exogenous_variable': timeseries_input})
         >>> model.run(return_timestamps=[1, 2, 3.1415, 4, 10])
@@ -1503,6 +1505,8 @@ class Model(Macro):
             time (float) and (possibly partial) dictionary of initial values
             for stock (stateful) objects.
 
+        Examples
+        --------
         >>> model.set_initial_condition('original')
         >>> model.set_initial_condition('current')
         >>> model.set_initial_condition('exported_pickle.pic')

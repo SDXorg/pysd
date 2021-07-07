@@ -28,10 +28,12 @@ def read_xmile(xmile_file, initialize=True, missing_values="warning"):
     Parameters
     ----------
     xmile_file : str
-        The relative path filename for a raw `.xmile` file
+        The relative path filename for a raw `.xmile` file.
+
     initialize: bool (optional)
         If False, the model will not be initialize when it is loaded.
-        Default is True
+        Default is True.
+
     missing_values : str ("warning", "error", "ignore", "keep") (optional)
         What to do with missing values. If "warning" (default)
         shows a warning message and interpolates the values.
@@ -68,10 +70,12 @@ def read_vensim(
     Parameters
     ----------
     mdl_file : str
-        The relative path filename for a raw Vensim `.mdl` file
+        The relative path filename for a raw Vensim `.mdl` file.
+
     initialize: bool (optional)
         If False, the model will not be initialize when it is loaded.
-        Default is True
+        Default is True.
+
     missing_values : str ("warning", "error", "ignore", "keep") (optional)
         What to do with missing values. If "warning" (default)
         shows a warning message and interpolates the values.
@@ -79,11 +83,12 @@ def read_vensim(
         the values without showing anything. If "keep" it will keep
         the missing values, this option may cause the integration to
         fail, but it may be used to check the quality of the data.
+
     split_modules: bool (optional)
         If True, the sketch is parsed to detect model elements in each
         model view, and then translate each view in a separate python
         file. Setting this argument to True is recommended for large
-        models split in many different views.
+        models split in many different views. Default is False.
 
     Returns
     -------
@@ -113,9 +118,11 @@ def load(py_model_file, initialize=True, missing_values="warning"):
     py_model_file : str
         Filename of a model which has already been converted into a
         python format.
+
     initialize: bool (optional)
         If False, the model will not be initialize when it is loaded.
-        Default is True
+        Default is True.
+
     missing_values : str ("warning", "error", "ignore", "keep") (optional)
         What to do with missing values. If "warning" (default)
         shows a warning message and interpolates the values.

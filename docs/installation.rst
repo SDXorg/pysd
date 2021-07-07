@@ -12,7 +12,7 @@ Python environment, use the pip command:
 
 Installing with conda
 ---------------------
-To install PySD with conda into a conda environment, use the following command:
+To install PySD with conda, using the conda-forge channel, into a conda environment, use the following command:
 
 .. code-block:: bash
 

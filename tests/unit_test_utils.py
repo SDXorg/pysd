@@ -548,24 +548,3 @@ class TestUtils(TestCase):
         self.assertFalse(hasattr(pbar, 'counter'))
         pbar.update()
         pbar.finish()
-
-    def test_load_model_data(self):
-        import pysd
-
-        model_file = "./more-tests/split_model/translation/test_split_model.py"
-        model = pysd.load(model_file)
-
-        self.assertIn("Stock", model.components._namespace.keys())
-        self.assertIn("view2", model.components._modules.keys())
-        self.assertIsInstance(model.components._subscript_dict, dict)
-
-    def test_open_module(self):
-        from pysd.py_backend.utils import open_module
-
-        root_dir = "./more-tests/split_model/translation/"
-        model_name = "test_split_model"
-        module = "view_3"
-        file = open_module(root_dir, model_name, module)
-        self.assertIsInstance(file, str)
-        self.assertNotEqual(len(file), 0)
-        return True

@@ -122,6 +122,11 @@ class TestPySD(unittest.TestCase):
         self.assertTrue(
             os.path.isfile(root_dir + modules_dirname + "/" + "view_3.py"))
 
+        # check dictionaries
+        self.assertIn("Stock", model_split.components._namespace.keys())
+        self.assertIn("view2", model_split.components._modules.keys())
+        self.assertIsInstance(model_split.components._subscript_dict, dict)
+
         # check that the results of the split model are the same than those
         # without splitting
         model_non_split = pysd.read_vensim(

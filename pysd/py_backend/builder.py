@@ -48,17 +48,33 @@ class Imports():
             setattr(cls, f"_{module}", True)
 
     @classmethod
-    def get_header(cls, outfile, root=False):
+    def get_header(cls, outfile, force_root=False):
         """
         Returns the importing information to print in the model file
-        """
 
+        Parameters
+        ----------
+        outfile: str
+            Name of the outfile to print in the header.
+
+        force_root: bool (optional)
+            If True, the _root variable will be returned to include in the
+            model file and os.path will be imported. If False, the _root
+            variable will only be included if the model has External
+            objects.
+
+        Returns
+        -------
+        text: str
+            Header of the translated model file.
+
+        """
         text =\
             f'"""\nPython model \'{outfile}\'\nTranslated using PySD\n"""\n\n'
 
         _root = ""
 
-        if cls._external or root:
+        if cls._external or force_root:
             # define root only if needed
             text += "from os import path\n"
             _root = "\n    _root = path.dirname(__file__)\n"
@@ -70,13 +86,13 @@ class Imports():
 
         if cls._functions:
             text += "from pysd.py_backend.functions import %(methods)s\n"\
-                    % {'methods': ", ".join(cls._functions)}
+                    % {"methods": ", ".join(cls._functions)}
         if cls._external:
             text += "from pysd.py_backend.external import %(methods)s\n"\
-                    % {'methods': ", ".join(cls._external)}
+                    % {"methods": ", ".join(cls._external)}
         if cls._utils:
             text += "from pysd.py_backend.utils import %(methods)s\n"\
-                    % {'methods': ", ".join(cls._utils)}
+                    % {"methods": ", ".join(cls._utils)}
 
         if cls._subs:
             text += "from pysd import cache, subs\n"
@@ -87,6 +103,47 @@ class Imports():
         cls.reset()
 
         return text, _root
+
+    @staticmethod
+    def get_control_vars(control_vars):
+        """
+        Create the section of control variables
+
+        Parameters
+        ----------
+        control_vars: str
+            Functions to define control variables.
+
+        Returns
+        -------
+        text: str
+            Control variables section and header of model variables section.
+
+        """
+        text = textwrap.dedent("""
+        #######################################################################
+        #                          CONTROL VARIABLES                          #
+        #######################################################################
+
+        def _init_outer_references(data):
+            for key in data:
+                __data[key] = data[key]
+
+
+        def time():
+            return __data['time']()
+
+        """)
+
+        text += control_vars
+
+        text += textwrap.dedent("""
+        #######################################################################
+        #                           MODEL VARIABLES                           #
+        #######################################################################
+        """)
+
+        return text
 
     @classmethod
     def reset(cls):
@@ -134,14 +191,14 @@ def build_modular_model(
         Translation from original model element names (keys) to python safe
         function identifiers (values).
 
-    main_filename: string
+    main_filename: str
         The name of the file to write the main module of the model to.
 
     elements_per_module: dict
         Contains the names of the modules as keys and the variables in
         each specific module inside a list as values.
-    """
 
+    """
     root_dir = os.path.dirname(main_filename)
     model_name = os.path.basename(main_filename).split(".")[0]
     modules_dir = os.path.join(root_dir, "modules_" + model_name)
@@ -191,7 +248,6 @@ def build_modular_model(
 
 
 def _build_main_module(elements, subscript_dict, file_name):
-
     """
     Constructs and writes the python representation of the main model
     module, when the split_modules=True in the read_vensim function.
@@ -212,46 +268,63 @@ def _build_main_module(elements, subscript_dict, file_name):
         as keys, and a list of the possible positions within that dimension
         for each value.
 
-    file_name: string
+    file_name: str
         Path of the file where the main module will be stored.
 
+    Returns
+    -------
+    None or text: None or str
+        If file_name="return" it will return the content of the output file
+        instead of saving it. It is used for testing.
+
     """
-    elements = merge_partial_elements(elements)
+    all_elements = merge_partial_elements(elements)
+    # separating between control variables and rest of variables
+    control_vars_ = [element for element in all_elements if
+                     element["py_name"] in ["initial_time",
+                                            "final_time",
+                                            "time_step",
+                                            "saveper"]]
+    elements = [element for element in all_elements if element not in
+                control_vars_]
+
+    control_vars = _generate_functions(control_vars_, subscript_dict)
     funcs = _generate_functions(elements, subscript_dict)
 
     Imports.add("utils", "load_model_data")
     Imports.add("utils", "open_module")
 
     # import of needed functions and packages
-    text, root = Imports.get_header(os.path.basename(file_name), root=True)
+    text, root = Imports.get_header(os.path.basename(file_name),
+                                    force_root=True)
 
     # import namespace from json file
     text += textwrap.dedent("""
     __pysd_version__ = '%(version)s'
-    %(root)s
+
     __data = {
         'scope': None,
         'time': lambda: 0
     }
-
+    %(root)s
     _namespace, _subscript_dict, _modules = load_model_data(_root,
     "%(outfile)s")
-
-    # loading modules from the modules_%(outfile)s directory
-    for module in _modules:
-        exec(open_module(_root, "%(outfile)s", module))
-
-    def _init_outer_references(data):
-        for key in data:
-            __data[key] = data[key]
-
-    def time():
-        return __data['time']()
-
     """ % {
         "outfile": os.path.basename(file_name).split(".")[0],
         "root": root,
         "version": __version__
+    })
+
+    text += Imports.get_control_vars(control_vars)
+
+    text += textwrap.dedent("""
+    # load modules from the modules_%(outfile)s directory
+    for module in _modules:
+        exec(open_module(_root, "%(outfile)s", module))
+
+    """ % {
+        "outfile": os.path.basename(file_name).split(".")[0],
+
     })
 
     text += funcs
@@ -267,11 +340,8 @@ def _build_main_module(elements, subscript_dict, file_name):
     with open(file_name, "w", encoding="UTF-8") as out:
         out.write(text)
 
-    return None
-
 
 def _build_separate_module(elements, subscript_dict, module_name, module_dir):
-
     """
     Constructs and writes the python representation of a specific model
     module, when the split_modules=True in the read_vensim function
@@ -290,17 +360,21 @@ def _build_separate_module(elements, subscript_dict, module_name, module_dir):
         as keys, and a list of the possible positions within that dimension
         for each value.
 
-    module_name: string
+    module_name: str
         Name of the module
 
-    module_dir: string
+    module_dir: str
         Path of the directory where module files will be stored.
+
+    Returns
+    -------
+    None
 
     """
     text = textwrap.dedent('''
     """
     Module %(module_name)s
-    Translated using PySD version %(version)s\n
+    Translated using PySD version %(version)s
     """
     ''' % {
         "module_name": module_name,
@@ -315,8 +389,6 @@ def _build_separate_module(elements, subscript_dict, module_name, module_dir):
 
     with open(outfile_name, "w", encoding="UTF-8") as out:
         out.write(text)
-
-    return None
 
 
 def build(elements, subscript_dict, namespace, outfile_name):
@@ -333,22 +405,39 @@ def build(elements, subscript_dict, namespace, outfile_name):
         multiple entries for elements that have multiple definitions in the
         original file, and which need to be combined.
 
-    subscript_dict: dictionary
+    subscript_dict: dict
         A dictionary containing the names of subscript families (dimensions)
         as keys, and a list of the possible positions within that dimension
         for each value.
 
-    namespace: dictionary
+    namespace: dict
         Translation from original model element names (keys) to python safe
         function identifiers (values).
 
-    outfile_name: string
+    outfile_name: str
         The name of the file to write the model to.
+
+    Returns
+    -------
+    None or text: None or str
+        If outfile_name="return" it will return the content of the output file
+        instead of saving it. It is used for testing.
+
     """
     # Todo: deal with model level documentation
     # Todo: Make presence of subscript_dict instantiation conditional on usage
     # Todo: Sort elements (alphabetically? group stock funcs?)
-    elements = merge_partial_elements(elements)
+    all_elements = merge_partial_elements(elements)
+    # separating between control variables and rest of variables
+    control_vars_ = [element for element in all_elements if
+                     element["py_name"] in ["final_time",
+                                            "initial_time",
+                                            "saveper",
+                                            "time_step"]]
+    elements = [element for element in all_elements if element not in
+                control_vars_]
+
+    control_vars = _generate_functions(control_vars_, subscript_dict)
     funcs = _generate_functions(elements, subscript_dict)
 
     text, root = Imports.get_header(os.path.basename(outfile_name))
@@ -356,22 +445,14 @@ def build(elements, subscript_dict, namespace, outfile_name):
     text += textwrap.dedent("""
     __pysd_version__ = '%(version)s'
 
-    _subscript_dict = %(subscript_dict)s
-
-    _namespace = %(namespace)s
-    %(root)s
     __data = {
         'scope': None,
         'time': lambda: 0
     }
+    %(root)s
+    _subscript_dict = %(subscript_dict)s
 
-    def _init_outer_references(data):
-        for key in data:
-            __data[key] = data[key]
-
-    def time():
-        return __data['time']()
-
+    _namespace = %(namespace)s
     """ % {
         "subscript_dict": repr(subscript_dict),
         "namespace": repr(namespace),
@@ -379,7 +460,7 @@ def build(elements, subscript_dict, namespace, outfile_name):
         "version": __version__,
     })
 
-    text += funcs
+    text += Imports.get_control_vars(control_vars) + funcs
     text = black.format_file_contents(text, fast=True, mode=black.FileMode())
 
     # Needed for various sessions
@@ -419,8 +500,8 @@ def _generate_functions(elements, subscript_dict):
     -------
     funcs: str
         String containing all formated model functions
-    """
 
+    """
     functions = [build_element(element, subscript_dict) for element in
                  elements]
 
@@ -432,24 +513,30 @@ def _generate_functions(elements, subscript_dict):
 
 def build_element(element, subscript_dict):
     """
-    Returns a string that has processed a single element dictionary
+    Returns a string that has processed a single element dictionary.
+
     Parameters
     ----------
-    element: dictionary
-        dictionary containing at least the elements:
+    element: dict
+        A dictionary containing at least the elements:
         - kind: ['constant', 'setup', 'component', 'lookup']
             Different types of elements will be built differently
-        - py_expr: string
+        - py_expr: str
             An expression that has been converted already into python syntax
         - subs: list of lists
             Each sublist contains coordinates for initialization of a
             particular part of a subscripted function, the list of
             subscripts vensim attaches to an equation
 
-    subscript_dict: dictionary
+    subscript_dict: dict
+        A dictionary containing the names of subscript families (dimensions)
+        as keys, and a list of the possible positions within that dimension
+        for each value.
 
     Returns
     -------
+    func: str
+        The function to write in the model file.
 
     """
     if element["kind"] == "constant":
@@ -496,15 +583,15 @@ def build_element(element, subscript_dict):
                     for new_dim, dim in zip(new_subs, coords)
                 }
                 dims = list(coords)
-                Imports.add('utils', 'rearrange')
-                py_expr_i.append('rearrange(%s, %s, %s)' % (
+                Imports.add("utils", "rearrange")
+                py_expr_i.append("rearrange(%s, %s, %s)" % (
                     py_expr, dims, coords))
             elif py_expr_no_ADD[i]:
                 # element comes from external or xarray
                 py_expr_i.append(py_expr)
-        Imports.add('utils', 'xrmerge')
-        py_expr = 'xrmerge([%s,])' % (
-            ',\n'.join(py_expr_i))
+        Imports.add("utils", "xrmerge")
+        py_expr = "xrmerge([%s,])" % (
+            ",\n".join(py_expr_i))
     else:
         py_expr = element["py_expr"][0]
 
@@ -596,22 +683,24 @@ def build_element(element, subscript_dict):
             % element
         )
 
-    func = textwrap.dedent(func)
-
-    return func
+    return textwrap.dedent(func)
 
 
 def merge_partial_elements(element_list):
     """
-    merges model elements which collectively all define the model component,
+    Merges model elements which collectively all define the model component,
     mostly for multidimensional subscripts
 
     Parameters
     ----------
-    element_list
+    element_list: list
+        List of all the elements.
 
     Returns
     -------
+    list:
+        List of merged elements.
+
     """
     outs = dict()  # output data structure
 
@@ -658,32 +747,32 @@ def add_stock(identifier, expression, initial_condition, subs):
 
     Parameters
     ----------
-    identifier: basestring
-        the python-safe name of the stock
+    identifier: str
+        The python-safe name of the stock.
 
-    expression: basestring
-        The formula which forms the derivative of the stock
+    expression: str
+        The formula which forms the derivative of the stock.
 
-    initial_condition: basestring
-        Formula which forms the initial condition for the stock
+    initial_condition: str
+        Formula which forms the initial condition for the stock.
 
     subs: list of strings
         List of strings of subscript indices that correspond to the
-        list of expressions, and collectively define the shape of the output
+        list of expressions, and collectively define the shape of the output.
 
     Returns
     -------
-    reference: string
+    reference: str
         a string to use in place of the 'INTEG...' pieces in the element
-        expression string, a reference to the stateful object
-    new_structure: list
+        expression string, a reference to the stateful object.
 
-        list of additional model element dictionaries. When there are
+    new_structure: list
+        List of additional model element dictionaries. When there are
         subscripts, constructs an external 'init' and 'ddt' function so
-        that these can be appropriately aggregated
+        that these can be appropriately aggregated.
 
     """
-    Imports.add("functions", 'Integ')
+    Imports.add("functions", "Integ")
 
     new_structure = []
     py_name = "_integ_%s" % identifier
@@ -768,42 +857,42 @@ def add_delay(identifier, delay_input, delay_time, initial_value, order, subs):
 
     Parameters
     ----------
-    identifier: basestring
-        the python-safe name of the stock
+    identifier: str
+        The python-safe name of the delay.
 
-    delay_input: <string>
-        Reference to the model component that is the input to the delay
+    delay_input: str
+        Reference to the model component that is the input to the delay.
 
-    delay_time: <string>
+    delay_time: str
         Can be a number (in string format) or a reference to another model
         element which will calculate the delay. This is calculated throughout
         the simulation at runtime.
 
-    initial_value: <string>
+    initial_value: str
         This is used to initialize the stocks that are present in the delay.
         We initialize the stocks with equal values so that the outflow in
         the first timestep is equal to this value.
 
-    order: string
+    order: str
         The number of stocks in the delay pipeline. As we construct the
         delays at build time, this must be an integer and cannot be calculated
         from other model components. Anything else will yield a ValueError.
 
     subs: list of strings
         List of strings of subscript indices that correspond to the
-        list of expressions, and collectively define the shape of the output
+        list of expressions, and collectively define the shape of the output.
 
     Returns
     -------
-    reference: basestring
-        reference to the delay object `__call__` method, which will return
-        the output of the delay process
+    reference: str
+        Reference to the delay object `__call__` method, which will return
+        the output of the delay process.
 
     new_structure: list
-        list of element construction dictionaries for the builder to assemble
+        List of element construction dictionaries for the builder to assemble.
 
     """
-    Imports.add("functions", 'Delay')
+    Imports.add("functions", "Delay")
 
     new_structure = []
     py_name = "_delay_%s" % identifier
@@ -891,33 +980,33 @@ def add_delay_f(identifier, delay_input, delay_time, initial_value):
 
     Parameters
     ----------
-    identifier: basestring
-        the python-safe name of the stock
+    identifier: str
+        The python-safe name of the delay.
 
-    delay_input: <string>
-        Reference to the model component that is the input to the delay
+    delay_input: str
+        Reference to the model component that is the input to the delay.
 
-    delay_time: <string>
+    delay_time: str
         Can be a number (in string format) or a reference to another model
         element which will calculate the delay. This is calculated throughout
         the simulation at runtime.
 
-    initial_value: <string>
+    initial_value: str
         This is used to initialize the stocks that are present in the delay.
         We initialize the stocks with equal values so that the outflow in
         the first timestep is equal to this value.
 
     Returns
     -------
-    reference: basestring
-        reference to the delay object `__call__` method, which will return
-        the output of the delay process
+    reference: str
+        Reference to the delay object `__call__` method, which will return
+        the output of the delay process.
 
     new_structure: list
-        list of element construction dictionaries for the builder to assemble
+        List of element construction dictionaries for the builder to assemble.
 
     """
-    Imports.add("functions", 'DelayFixed')
+    Imports.add("functions", "DelayFixed")
 
     py_name = "_delayfixed_%s" % identifier
 
@@ -959,42 +1048,42 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
 
     Parameters
     ----------
-    identifier: basestring
-        the python-safe name of the stock
+    identifier: str
+        The python-safe name of the delay.
 
-    delay_input: <string>
-        Reference to the model component that is the input to the delay
+    delay_input: str
+        Reference to the model component that is the input to the delay.
 
-    delay_time: <string>
+    delay_time: str
         Can be a number (in string format) or a reference to another model
         element which will calculate the delay. This is calculated throughout
         the simulation at runtime.
 
-    initial_value: <string>
+    initial_value: str
         This is used to initialize the stocks that are present in the delay.
         We initialize the stocks with equal values so that the outflow in
         the first timestep is equal to this value.
 
-    order: string
+    order: str
         The number of stocks in the delay pipeline. As we construct the
         delays at build time, this must be an integer and cannot be calculated
         from other model components. Anything else will yield a ValueError.
 
     subs: list of strings
         List of strings of subscript indices that correspond to the
-        list of expressions, and collectively define the shape of the output
+        list of expressions, and collectively define the shape of the output.
 
     Returns
     -------
-    reference: basestring
-        reference to the delay object `__call__` method, which will return
-        the output of the delay process
+    reference: str
+        Reference to the delay object `__call__` method, which will return
+        the output of the delay process.
 
     new_structure: list
-        list of element construction dictionaries for the builder to assemble
+        List of element construction dictionaries for the builder to assemble.
 
     """
-    Imports.add("functions", 'DelayN')
+    Imports.add("functions", "DelayN")
 
     new_structure = []
     py_name = "_delayn_%s" % identifier
@@ -1079,38 +1168,38 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value,
 
     Parameters
     ----------
-    identifier: basestring
-        the python-safe name of the stock
+    identifier: str
+        The python-safe name of the sample if true.
 
-    condition: <string>
+    condition: str
         Reference to another model element that is the condition to the
-        'sample if true' function
+        'sample if true' function.
 
-    actual_value: <string>
+    actual_value: str
         Can be a number (in string format) or a reference to another model
         element which is calculated throughout the simulation at runtime.
 
-    initial_value: <string>
+    initial_value: str
         This is used to initialize the state of the sample if true function.
 
     subs: list of strings
         List of strings of subscript indices that correspond to the
-        list of expressions, and collectively define the shape of the output
+        list of expressions, and collectively define the shape of the output.
 
     Returns
     -------
-    reference: basestring
-        reference to the sample if true object `__call__` method,
-        which will return the output of the sample if true process
+    reference: str
+        Reference to the sample if true object `__call__` method,
+        which will return the output of the sample if true process.
 
     new_structure: list
-        list of element construction dictionaries for the builder to assemble
+        List of element construction dictionaries for the builder to assemble.
 
     """
-    Imports.add("functions", 'SampleIfTrue')
+    Imports.add("functions", "SampleIfTrue")
 
     new_structure = []
-    py_name = '_sample_if_true_%s' % identifier
+    py_name = "_sample_if_true_%s" % identifier
 
     if len(subs) == 0:
         stateful_py_expr = "SampleIfTrue(lambda: %s, lambda: %s,"\
@@ -1125,30 +1214,32 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value,
         # following elements not specified in the model file, but must exist
         # create the delay initialization element
         new_structure.append({
-            'py_name': '_sample_if_true_init_%s' % identifier,
-            'real_name': 'Implicit',
-            'kind': 'setup',  # not specified in the model file, but must exist
-            'py_expr': initial_value,
-            'subs': subs,
-            'doc': 'Provides initial conditions for %s function' % identifier,
-            'unit': 'See docs for %s' % identifier,
-            'lims': 'None',
-            'eqn': 'None',
-            'arguments': ''
+            "py_name": "_sample_if_true_init_%s" % identifier,
+            "parent_name": identifier,
+            "real_name": "Implicit",
+            "kind": "setup",  # not specified in the model file, but must exist
+            "py_expr": initial_value,
+            "subs": subs,
+            "doc": "Provides initial conditions for %s function" % identifier,
+            "unit": "See docs for %s" % identifier,
+            "lims": "None",
+            "eqn": "None",
+            "arguments": ""
         })
     # describe the stateful object
     new_structure.append({
-        'py_name': py_name,
-        'real_name': 'Sample if true of %s' % identifier,
-        'doc': 'Initial value: %s \n  Input: %s \n Condition: %s' % (
+        "py_name": py_name,
+        "parent_name": identifier,
+        "real_name": "Sample if true of %s" % identifier,
+        "doc": "Initial value: %s \n  Input: %s \n Condition: %s" % (
             initial_value, actual_value, condition),
-        'py_expr': stateful_py_expr,
-        'unit': 'None',
-        'lims': 'None',
-        'eqn': 'None',
-        'subs': '',
-        'kind': 'stateful',
-        'arguments': ''
+        "py_expr": stateful_py_expr,
+        "unit": "None",
+        "lims": "None",
+        "eqn": "None",
+        "subs": "",
+        "kind": "stateful",
+        "arguments": ""
     })
 
     return "%s()" % py_name, new_structure
@@ -1162,24 +1253,24 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order,
 
     Parameters
     ----------
-    identifier: basestring
-        the python-safe name of the stock
+    identifier: str
+        The python-safe name of the smooth.
 
-    smooth_input: <string>
+    smooth_input: str
         Reference to the model component that is the input to the
-        smoothing function
+        smoothing function.
 
-    smooth_time: <string>
+    smooth_time: str
         Can be a number (in string format) or a reference to another model
         element which will calculate the delay. This is calculated throughout
         the simulation at runtime.
 
-    initial_value: <string>
+    initial_value: str
         This is used to initialize the stocks that are present in the delay.
         We initialize the stocks with equal values so that the outflow in
         the first timestep is equal to this value.
 
-    order: string
+    order: str
         The number of stocks in the delay pipeline. As we construct the delays
         at build time, this must be an integer and cannot be calculated from
         other model components. Anything else will yield a ValueError.
@@ -1190,15 +1281,15 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order,
 
     Returns
     -------
-    reference: basestring
-        reference to the smooth object `__call__` method, which will return
-        the output of the smooth process
+    reference: str
+        Reference to the smooth object `__call__` method, which will return
+        the output of the smooth process.
 
     new_structure: list
-        list of element construction dictionaries for the builder to assemble
+        List of element construction dictionaries for the builder to assemble.
 
     """
-    Imports.add("functions", 'Smooth')
+    Imports.add("functions", "Smooth")
 
     new_structure = []
     py_name = "_smooth_%s" % identifier
@@ -1278,35 +1369,37 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order,
 
 def add_n_trend(identifier, trend_input, average_time, initial_trend, subs):
     """
-    Trend.
+    Constructs Trend object.
 
     Parameters
     ----------
-    identifier: basestring
-        the python-safe name of the stock
+    identifier: str
+        The python-safe name of the trend.
 
-    trend_input: <string>
+    trend_input: str
+        Input of the trend.
 
-    average_time: <string>
+    average_time: str
+        Average time of the trend.
 
-
-    trend_initial: <string>
+    trend_initial: str
+        This is used to initialize the trend .
 
     subs: list of strings
         List of strings of subscript indices that correspond to the
-        list of expressions, and collectively define the shape of the output
+        list of expressions, and collectively define the shape of the output.
 
     Returns
     -------
-    reference: basestring
-        reference to the trend object `__call__` method, which will return the
-        output of the trend process
+    reference: str
+        Reference to the trend object `__call__` method, which will return the
+        output of the trend process.
 
     new_structure: list
-        list of element construction dictionaries for the builder to assemble
+        List of element construction dictionaries for the builder to assemble.
 
     """
-    Imports.add("functions", 'Trend')
+    Imports.add("functions", "Trend")
 
     new_structure = []
     py_name = "_trend_%s" % identifier
@@ -1364,28 +1457,31 @@ def add_n_trend(identifier, trend_input, average_time, initial_trend, subs):
     return "%s()" % py_name, new_structure
 
 
-def add_initial(identifier):
+def add_initial(identifier, value):
     """
-    Constructs a stateful object for handling vensim's 'Initial' functionality
+    Constructs a stateful object for handling vensim's 'Initial' functionality.
 
     Parameters
     ----------
-    initial_input: basestring
+    identifier: str
+        The python-safe name of the initial.
+
+    value: str
         The expression which will be evaluated, and the first value of
-        which returned
+        which returned.
 
     Returns
     -------
-    reference: basestring
-        reference to the Initial object `__call__` method,
-        which will return the first calculated value of `identifier`
+    reference: str
+        Reference to the Initial object `__call__` method,
+        which will return the first calculated value of `identifier`.
 
     new_structure: list
-        list of element construction dictionaries for the builder to assemble
+        List of element construction dictionaries for the builder to assemble.
 
     """
-    Imports.add("functions", 'Initial')
-    py_name = utils.make_python_identifier('_initial_%s'
+    Imports.add("functions", "Initial")
+    py_name = utils.make_python_identifier("_initial_%s"
                                            % identifier)[0]
 
     stateful = {
@@ -1393,7 +1489,7 @@ def add_initial(identifier):
         "parent_name": identifier,
         "real_name": "Initial %s" % identifier,
         "doc": "Returns the value taken on during the initialization phase",
-        "py_expr": "Initial(lambda: %s, '%s')" % (identifier, py_name),
+        "py_expr": "Initial(lambda: %s, '%s')" % (value, py_name),
         "unit": "None",
         "lims": "None",
         "eqn": "None",
@@ -1409,35 +1505,44 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs,
                  subscript_dict, keyword):
     """
     Constructs a external object for handling Vensim's GET XLS DATA and
-    GET DIRECT DATA functionality
+    GET DIRECT DATA functionality.
 
     Parameters
     ----------
-    identifier: basestring
-        the python-safe name of the external values
+    identifier: str
+        The python-safe name of the external values.
+
     file_name: str
-        filepath to the data
+        Filepath to the data.
+
     tab: str
-        tab where the data is
+        Tab where the data is.
+
     time_row_or_col: str
-        identifier to the starting point of the time dimension
+        Identifier to the starting point of the time dimension.
+
     cell: str
-        cell identifier where the data starts
+        Cell identifier where the data starts.
+
     subs: list of strings
         List of strings of subscript indices that correspond to the
-        list of expressions, and collectively define the shape of the output
-    subscript_dict: dictionary
-        Dictionary describing the possible dimensions of the stock's subscripts
+        list of expressions, and collectively define the shape of the output.
+
+    subscript_dict: dict
+        Dictionary describing the possible dimensions of the stock's
+        subscripts.
+
     keyword: str
-        Data retrieval method ('interpolate', 'look forward', 'hold backward')
+        Data retrieval method ('interpolate', 'look forward', 'hold backward').
 
     Returns
     -------
-    reference: basestring
-        reference to the ExtData object `__call__` method,
-        which will return the retrieved value of data for the current time step
+    reference: str
+        Reference to the ExtData object `__call__` method, which will
+        return the retrieved value of data for the current time step.
+
     new_structure: list
-        list of element construction dictionaries for the builder to assemble
+        List of element construction dictionaries for the builder to assemble.
 
     """
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
@@ -1446,7 +1551,7 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs,
         keyword)
     name = utils.make_python_identifier("_ext_data_%s" % identifier)[0]
 
-    Imports.add('external', 'ExtData')
+    Imports.add("external", "ExtData")
 
     # Check if the object already exists
     if name in build_names:
@@ -1486,34 +1591,41 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs,
 def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
     """
     Constructs a external object for handling Vensim's GET XLS CONSTANT and
-    GET DIRECT CONSTANT functionality
+    GET DIRECT CONSTANT functionality.
 
     Parameters
     ----------
-    identifier: basestring
-        the python-safe name of the external values
+    identifier: str
+        The python-safe name of the external values.
+
     file_name: str
-        filepath to the data
+        Filepath to the data.
+
     tab: str
-        tab where the data is
+        Tab where the data is.
+
     cell: str
-        cell identifier where the data starts
+        Cell identifier where the data starts.
+
     subs: list of strings
         List of strings of subscript indices that correspond to the
-        list of expressions, and collectively define the shape of the output
-    subscript_dict: dictionary
-        Dictionary describing the possible dimensions of the stock's subscripts
+        list of expressions, and collectively define the shape of the output.
+
+    subscript_dict: dict
+        Dictionary describing the possible dimensions of the stock's
+        subscripts.
 
     Returns
     -------
-    reference: basestring
-        reference to the ExtConstant object `__call__` method,
-        which will return the read value of the data
+    reference: str
+        Reference to the ExtConstant object `__call__` method,
+        which will return the read value of the data.
+
     new_structure: list
-        list of element construction dictionaries for the builder to assemble
+        List of element construction dictionaries for the builder to assemble.
 
     """
-    Imports.add('external', 'ExtConstant')
+    Imports.add("external", "ExtConstant")
 
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
     name = utils.make_python_identifier("_ext_constant_%s" % identifier)[0]
@@ -1557,36 +1669,44 @@ def add_ext_lookup(
 ):
     """
     Constructs a external object for handling Vensim's GET XLS LOOKUPS and
-    GET DIRECT LOOKUPS functionality
+    GET DIRECT LOOKUPS functionality.
 
     Parameters
     ----------
-    identifier: basestring
-        the python-safe name of the external values
+    identifier: str
+        The python-safe name of the external values.
+
     file_name: str
-        filepath to the data
+        Filepath to the data.
+
     tab: str
-        tab where the data is
+        Tab where the data is.
+
     x_row_or_col: str
-        identifier to the starting point of the lookup dimension
+        Identifier to the starting point of the lookup dimension.
+
     cell: str
-        cell identifier where the data starts
+        Cell identifier where the data starts.
+
     subs: list of strings
         List of strings of subscript indices that correspond to the
-        list of expressions, and collectively define the shape of the output
-    subscript_dict: dictionary
-        Dictionary describing the possible dimensions of the stock's subscripts
+        list of expressions, and collectively define the shape of the output.
+
+    subscript_dict: dict
+        Dictionary describing the possible dimensions of the stock's
+        subscripts.
 
     Returns
     -------
-    reference: basestring
-        reference to the ExtLookup object `__call__` method,
-        which will return the retrieved value of data after interpolating it
+    reference: str
+        Reference to the ExtLookup object `__call__` method,
+        which will return the retrieved value of data after interpolating it.
+
     new_structure: list
-        list of element construction dictionaries for the builder to assemble
+        List of element construction dictionaries for the builder to assemble.
 
     """
-    Imports.add('external', 'ExtLookup')
+    Imports.add("external", "ExtLookup")
 
     coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
     name = utils.make_python_identifier("_ext_lookup_%s" % identifier)[0]
@@ -1631,24 +1751,25 @@ def add_macro(macro_name, filename, arg_names, arg_vals):
 
     Parameters
     ----------
-    macro_name: basestring
-        python safe name for macro
-    filename: basestring
-        filepath to macro definition
+    macro_name: str
+        Python safe name for macro.
+
+    filename: str
+        Filepath to macro definition.
+
     func_args: dict
-        dictionary of values to be passed to macro
-        {key: function}
+        Dictionary of values to be passed to macro, {key: function}.
 
     Returns
     -------
-    reference: basestring
+    reference: str
         reference to the Initial object `__call__` method,
         which will return the first calculated value of `initial_input`
     new_structure: list
         list of element construction dictionaries for the builder to assemble
 
     """
-    Imports.add("functions", 'Macro')
+    Imports.add("functions", "Macro")
 
     py_name = "_macro_" + macro_name + "_" + "_".join(
         [utils.make_python_identifier(f)[0] for f in arg_vals])
@@ -1679,11 +1800,25 @@ def add_macro(macro_name, filename, arg_names, arg_vals):
 def add_incomplete(var_name, dependencies):
     """
     Incomplete functions don't really need to be 'builders' as they
-     add no new real structure, but it's helpful to have a function
-     in which we can raise a warning about the incomplete equation
-     at translate time.
+    add no new real structure, but it's helpful to have a function
+    in which we can raise a warning about the incomplete equation
+    at translate time.
+
+    parameters
+    ----------
+    var_name: str
+        The python-safe name of the incomplete variable.
+
+    dependencies: list
+        The list of the dependencies in the variable.
+
+    Returns
+    -------
+    str:
+        Inclompete funcion call.
+
     """
-    Imports.add("functions", 'incomplete')
+    Imports.add("functions", "incomplete")
 
     warnings.warn(
         "%s has no equation specified" % var_name, SyntaxWarning, stacklevel=2
@@ -1698,8 +1833,9 @@ def build_function_call(function_def, user_arguments):
 
     Parameters
     ----------
-    function_def: function definition map with following keys
-        - name: name of the function
+    function_def: dict
+        Function definition map with following keys:
+        - name: name of the function.
         - parameters: list with description of all parameters of this function
             - name
             - optional?
@@ -1713,10 +1849,13 @@ def build_function_call(function_def, user_arguments):
                 "scope"       - provide access to current instance of
                                 scope object (instance of Macro object)
             ]
-    user_arguments: list of arguments provided from model
+
+    user_arguments: list of arguments provided from model.
 
     Returns
     -------
+    str:
+        Function call.
 
     """
     if isinstance(function_def, str):

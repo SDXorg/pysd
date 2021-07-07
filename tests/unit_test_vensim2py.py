@@ -770,6 +770,7 @@ class TestParse_sketch_line(unittest.TestCase):
             '|0||128-128-128',  # shadow variable
             "*Just another view",  # module definition
             "1,5,6,3,100,0,0,22,0,0,0,-1--1--1,,1|(341,243)|",  # arrow
+            "This is a random comment."
         ]
 
         expected_var = [
@@ -779,28 +780,14 @@ class TestParse_sketch_line(unittest.TestCase):
             "",
             "",
             "",
+            ""
         ]
-        expected_mod = ["", "", "", "", "Just another view", ""]
+        expected_mod = ["", "", "", "", "Just another view", "", ""]
 
         for num, line in enumerate(lines):
             res = parse_sketch_line(line.strip(), namespace)
             self.assertEqual(res["variable_name"], expected_var[num])
             self.assertEqual(res["module_name"], expected_mod[num])
-
-    def test_parse_sketch_line_error(self):
-        from pysd.py_backend.vensim.vensim2py import parse_sketch_line
-
-        namespace = {'"var_1"': "var_1"}
-        line = "10,2,whatever"
-        try:
-            parse_sketch_line(line, namespace)
-            self.assertFail()
-        except ValueError as err:
-            self.assertIn(
-                    "\nError when parsing definition:\n\t %s\n\n"
-                    "probably used definition is not integrated..."
-                    "\nSee parsimonious output above." % (line), err.args[0]
-                )
 
 
 class TestParse_private_functions(unittest.TestCase):

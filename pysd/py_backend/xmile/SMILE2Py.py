@@ -148,63 +148,72 @@ builders = {
     # "delay" !TODO! How to add the infinity delay?
 
     "delay1": lambda element, subscript_dict, args: builder.add_n_delay(
-            delay_input = args[0],
-            delay_time = args[1],
-            initial_value = args[2] if len(args) > 2 else args[0],
-            order = "1",
-            subs = element['subs']
+        identifier=element["py_name"],
+        delay_input=args[0],
+        delay_time=args[1],
+        initial_value=args[2] if len(args) > 2 else args[0],
+        order="1",
+        subs=element["subs"]
         ),
 
     "delay3": lambda element, subscript_dict, args: builder.add_n_delay(
-            delay_input = args[0],
-            delay_time = args[1],
-            initial_value = args[2] if len(args) > 2 else args[0],
-            order = "3",
-            subs = element['subs']
+        identifier=element["py_name"],
+        delay_input=args[0],
+        delay_time=args[1],
+        initial_value=args[2] if len(args) > 2 else args[0],
+        order="3",
+        subs=element["subs"]
         ),
 
     "delayn": lambda element, subscript_dict, args: builder.add_n_delay(
-            delay_input = args[0],
-            delay_time = args[1],
-            initial_value = args[2] if len(args) > 3 else args[0],
-            order = args[2],
-            subs = element['subs']
+        identifier=element["py_name"],
+        delay_input=args[0],
+        delay_time=args[1],
+        initial_value=args[2] if len(args) > 3 else args[0],
+        order=args[2],
+        subs=element["subs"]
         ),
 
     "smth1": lambda element, subscript_dict, args: builder.add_n_smooth(
-            smooth_input = args[0],
-            smooth_time = args[1],
-            initial_value = args[2] if len(args) > 2 else args[0],
-            order = "1",
-            subs = element['subs']
+        identifier=element["py_name"],
+        smooth_input=args[0],
+        smooth_time=args[1],
+        initial_value=args[2] if len(args) > 2 else args[0],
+        order="1",
+        subs=element["subs"]
         ),
 
     "smth3": lambda element, subscript_dict, args: builder.add_n_smooth(
-            smooth_input = args[0],
-            smooth_time = args[1],
-            initial_value = args[2] if len(args) > 2 else args[0],
-            order = "3",
-            subs = element['subs']
+        identifier=element["py_name"],
+        smooth_input=args[0],
+        smooth_time=args[1],
+        initial_value=args[2] if len(args) > 2 else args[0],
+        order="3",
+        subs=element["subs"]
         ),
 
     "smthn": lambda element, subscript_dict, args: builder.add_n_smooth(
-            smooth_input = args[0],
-            smooth_time = args[1],
-            initial_value = args[2] if len(args) > 3 else args[0],
-            order = args[2],
-            subs = element['subs']
+        identifier=element["py_name"],
+        smooth_input=args[0],
+        smooth_time=args[1],
+        initial_value=args[2] if len(args) > 3 else args[0],
+        order=args[2],
+        subs=element["subs"]
         ),
 
     # "forcst" !TODO!
 
     "trend": lambda element, subscript_dict, args: builder.add_n_trend(
-            trend_input = args[0],
-            average_time = args[1],
-            initial_trend = args[2] if len(args) > 2 else 0,
-            subs = element['subs']
+        identifier=element["py_name"],
+        trend_input=args[0],
+        average_time=args[1],
+        initial_trend=args[2] if len(args) > 2 else 0,
+        subs=element["subs"]
         ),
 
-    "init": lambda element, subscript_dict, args: builder.add_initial(args[0]),
+    "init": lambda element, subscript_dict, args: builder.add_initial(
+        identifier=element["py_name"],
+        value=args[0]),
 }
 
 
@@ -224,7 +233,8 @@ class SMILEParser(NodeVisitor):
         self.model_namespace = model_namespace
         self.subscript_dict = subscript_dict
         self.extended_model_namespace = {
-            key.replace(' ', '_'): value for key, value in self.model_namespace.items()}
+            key.replace(' ', '_'): value
+            for key, value in self.model_namespace.items()}
         self.extended_model_namespace.update(self.model_namespace)
 
         # ===
