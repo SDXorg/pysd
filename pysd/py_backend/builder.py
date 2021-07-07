@@ -104,47 +104,6 @@ class Imports():
 
         return text, _root
 
-    @staticmethod
-    def get_control_vars(control_vars):
-        """
-        Create the section of control variables
-
-        Parameters
-        ----------
-        control_vars: str
-            Functions to define control variables.
-
-        Returns
-        -------
-        text: str
-            Control variables section and header of model variables section.
-
-        """
-        text = textwrap.dedent("""
-        #######################################################################
-        #                          CONTROL VARIABLES                          #
-        #######################################################################
-
-        def _init_outer_references(data):
-            for key in data:
-                __data[key] = data[key]
-
-
-        def time():
-            return __data['time']()
-
-        """)
-
-        text += control_vars
-
-        text += textwrap.dedent("""
-        #######################################################################
-        #                           MODEL VARIABLES                           #
-        #######################################################################
-        """)
-
-        return text
-
     @classmethod
     def reset(cls):
         """
@@ -315,7 +274,7 @@ def _build_main_module(elements, subscript_dict, file_name):
         "version": __version__
     })
 
-    text += Imports.get_control_vars(control_vars)
+    text += _get_control_vars(control_vars)
 
     text += textwrap.dedent("""
     # load modules from the modules_%(outfile)s directory
@@ -460,7 +419,7 @@ def build(elements, subscript_dict, namespace, outfile_name):
         "version": __version__,
     })
 
-    text += Imports.get_control_vars(control_vars) + funcs
+    text += _get_control_vars(control_vars) + funcs
     text = black.format_file_contents(text, fast=True, mode=black.FileMode())
 
     # Needed for various sessions
@@ -475,7 +434,6 @@ def build(elements, subscript_dict, namespace, outfile_name):
 
 
 def _generate_functions(elements, subscript_dict):
-
     """
     Builds all model elements as functions in string format.
     NOTE: this function calls the build_element function, which updates the
@@ -509,6 +467,47 @@ def _generate_functions(elements, subscript_dict):
     funcs = funcs.replace("\t", "    ")
 
     return funcs
+
+
+def _get_control_vars(control_vars):
+    """
+    Create the section of control variables
+
+    Parameters
+    ----------
+    control_vars: str
+        Functions to define control variables.
+
+    Returns
+    -------
+    text: str
+        Control variables section and header of model variables section.
+
+    """
+    text = textwrap.dedent("""
+    ##########################################################################
+    #                            CONTROL VARIABLES                           #
+    ##########################################################################
+
+    def _init_outer_references(data):
+        for key in data:
+            __data[key] = data[key]
+
+
+    def time():
+        return __data['time']()
+
+    """)
+
+    text += control_vars
+
+    text += textwrap.dedent("""
+    ##########################################################################
+    #                             MODEL VARIABLES                            #
+    ##########################################################################
+    """)
+
+    return text
 
 
 def build_element(element, subscript_dict):
