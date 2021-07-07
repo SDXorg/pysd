@@ -4,11 +4,13 @@ model file. Vensim's function equivalents should not go here but in
 functions.py
 """
 
+import os
 import warnings
 import keyword
+import json
+
 import regex as re
 import progressbar
-
 import xarray as xr
 
 # used to create python safe names
@@ -19,65 +21,71 @@ from .functions import __dir__ as fdir
 
 def xrmerge(das, accept_new=True):
     """
-    Merges xarrays with different dimension sets
+    Merges xarrays with different dimension sets.
+
     Parameters
     ----------
-    das : list of data_arrays
+    das: list of xarray.DataArrays
+        The list of the data arrays to merge.
 
-    accept_new
+    accept_new: bool (optional)
+        Default is True.
 
     Returns
     -------
-    da : an xarray that is the merge of das
+    da: xarray.DataArray
+        Merged data array.
 
     References
     ----------
-    Thanks to @jcmgray https://github.com/pydata/xarray/issues/742#issue-130753818
+    Thanks to @jcmgray
+    https://github.com/pydata/xarray/issues/742#issue-130753818
 
     In the future, we may not need this as xarray may provide the merge for us.
     """
     da = das[0]
     for new_da in das[1:]:
         # Expand both to have same dimensions, padding with NaN
-        da, new_da = xr.align(da, new_da, join='outer')
+        da, new_da = xr.align(da, new_da, join="outer")
         # Fill NaNs one way or the other re. accept_new
         da = new_da.fillna(da) if accept_new else da.fillna(new_da)
     return da
 
 
 def xrsplit(array):
-        """
-        Split an array to a list of all the components
+    """
+    Split an array to a list of all the components.
 
-        Parameters
-        ----------
-        array: xarray.DataArray
-            Array to split.
+    Parameters
+    ----------
+    array: xarray.DataArray
+        Array to split.
 
-        Returns
-        -------
-        sp_list: list
-            List of shape 0 xarray.DataArrays with coordinates
-        """
-        sp_list = [sa for sa in array]
-        if sp_list[0].shape:
-            sp_list = [ssa for sa in sp_list
-                       for ssa in xrsplit(sa)]
-        return sp_list
+    Returns
+    -------
+    sp_list: list of xarray.DataArrays
+        List of shape 0 xarray.DataArrays with coordinates.
+
+    """
+    sp_list = [sa for sa in array]
+    if sp_list[0].shape:
+        sp_list = [ssa for sa in sp_list for ssa in xrsplit(sa)]
+    return sp_list
 
 
 def find_subscript_name(subscript_dict, element, avoid=[]):
     """
     Given a subscript dictionary, and a member of a subscript family,
     return the first key of which the member is within the value list.
-    If element is already a subscript name, return that
+    If element is already a subscript name, return that.
 
     Parameters
     ----------
-    subscript_dict: dictionary
-        Follows the {'subscript name':['list','of','subscript','elements']} format
+    subscript_dict: dict
+        Follows the {'subscript name':['list','of','subscript','elements']}
+        format.
 
-    element: string
+    element: str
 
     avoid: list (optional)
         List of subscripts to avoid. Default is an empty list.
@@ -85,7 +93,8 @@ def find_subscript_name(subscript_dict, element, avoid=[]):
     Returns
     -------
 
-    Examples:
+    Examples
+    --------
     >>> find_subscript_name({'Dim1': ['A', 'B'],
     ...                      'Dim2': ['C', 'D', 'E'],
     ...                      'Dim3': ['F', 'G', 'H', 'I']},
@@ -114,7 +123,7 @@ def find_subscript_name(subscript_dict, element, avoid=[]):
 def make_coord_dict(subs, subscript_dict, terse=True):
     """
     This is for assisting with the lookup of a particular element, such that
-    the output of this function would take the place of %s in this expression
+    the output of this function would take the place of %s in this expression.
 
     `variable.loc[%s]`
 
@@ -122,26 +131,30 @@ def make_coord_dict(subs, subscript_dict, terse=True):
     ----------
     subs: list of strings
         coordinates, either as names of dimensions, or positions within
-        a dimension
+        a dimension.
+
     subscript_dict: dict
-        the full dictionary of subscript names and values
-    terse: Binary Flag
-        - If true, includes only elements that do not cover the full range of
-          values in their respective dimension
-        - If false, returns all dimensions
+        the full dictionary of subscript names and values.
+
+    terse: bool (optional)
+        If True, includes only elements that do not cover the full range of
+        values in their respective dimension.If False, returns all dimensions.
+        Default is True.
 
     Returns
     -------
-    coordinates: dictionary
+    coordinates: dict
         Coordinates needed to access the xarray quantities we're interested in.
 
     Examples
     --------
-    >>> make_coord_dict(['Dim1', 'D'], {'Dim1': ['A', 'B', 'C'], 'Dim2': ['D', 'E', 'F']})
+    >>> make_coord_dict(['Dim1', 'D'], {'Dim1': ['A', 'B', 'C'],
+    ...                                 'Dim2': ['D', 'E', 'F']})
     {'Dim2': ['D']}
-    >>> make_coord_dict(['Dim1', 'D'], {'Dim1': ['A', 'B', 'C'], 'Dim2':['D', 'E', 'F']},
-    >>>                 terse=False)
+    >>> make_coord_dict(['Dim1', 'D'], {'Dim1': ['A', 'B', 'C'],
+    ...                                 'Dim2':['D', 'E', 'F']}, terse=False)
     {'Dim2': ['D'], 'Dim1': ['A', 'B', 'C']}
+
     """
     sub_elems_list = [y for x in subscript_dict.values() for y in x]
     coordinates = {}
@@ -163,10 +176,11 @@ def make_merge_list(subs_list, subscript_dict):
     Parameters
     ----------
     subs_list: list of lists of strings
-        coordinates, either as names of dimensions, or positions within
-        a dimension
+        Coordinates, either as names of dimensions, or positions within
+        a dimension.
+
     subscript_dict: dict
-        the full dictionary of subscript names and values
+        The full dictionary of subscript names and values.
 
     Returns
     -------
@@ -175,7 +189,8 @@ def make_merge_list(subs_list, subscript_dict):
 
     Examples
     --------
-    >>> make_merge_list([['upper'], ['C']], {'all': ['A', 'B', 'C'], 'upper': ['A', 'B']})
+    >>> make_merge_list([['upper'], ['C']], {'all': ['A', 'B', 'C'],
+    ...                                      'upper': ['A', 'B']})
     ['all']
 
     """
@@ -184,7 +199,7 @@ def make_merge_list(subs_list, subscript_dict):
         coords = make_coord_dict(subs, subscript_dict, terse=False)
         [coords_set[i].update(coords[dim]) for i, dim in enumerate(coords)]
 
-    dims = [None]*len(coords_set)
+    dims = [None] * len(coords_set)
     for i, (coord1, coord2) in enumerate(zip(coords, coords_set)):
         if set(coords[coord1]) == coord2:
             # if the given coordinate already matches return it
@@ -208,7 +223,8 @@ def make_merge_list(subs_list, subscript_dict):
                             + "\n\t{}\nis incomplete ".format(coord2)
                             + "using {} instead.".format(name)
                             + "\nSubscript_dict:"
-                            + "\n\t{}".format(subscript_dict))
+                            + "\n\t{}".format(subscript_dict)
+                        )
                         break
 
             if not dims[i]:
@@ -221,7 +237,7 @@ def make_merge_list(subs_list, subscript_dict):
                         dims[i] = name + str(j)
                         warnings.warn(
                             "\nAdding new subscript range to subscript_dict:\n"
-                            + name + str(j) + ": "+ ', '.join(elements))
+                            + name + str(j) + ": " + ', '.join(elements))
                         break
 
             if not dims[i]:
@@ -229,13 +245,15 @@ def make_merge_list(subs_list, subscript_dict):
                 raise ValueError(
                     "\nImpossible to find the dimension that contains:"
                     + "\n\t{}\nFor subscript_dict:".format(coord2)
-                    + "\n\t{}".format(subscript_dict))
+                    + "\n\t{}".format(subscript_dict)
+                )
 
     return dims
 
 
-def make_python_identifier(string, namespace=None, reserved_words=None,
-                           convert='drop', handle='force'):
+def make_python_identifier(
+    string, namespace=None, reserved_words=None, convert="drop", handle="force"
+):
     """
     Takes an arbitrary string and creates a valid Python identifier.
 
@@ -251,26 +269,30 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
 
     Parameters
     ----------
-    string : <basestring>
-        The text to be converted into a valid python identifier
-    namespace : <dictionary>
+    string: str
+        The text to be converted into a valid python identifier.
+
+    namespace: dict
         Map of existing translations into python safe identifiers.
         This is to ensure that two strings are not translated into
-        the same python identifier
-    reserved_words : <list of strings>
+        the same python identifier.
+
+    reserved_words: list of strings (optional)
         List of words that are reserved (because they have other meanings
         in this particular program, such as also being the names of
         libraries, etc.
-    convert : <string>
+
+    convert: str (optional)
         Tells the function what to do with characters that are not
-        valid in python identifiers
+        valid in python identifiers.
         - 'hex' implies that they will be converted to their hexidecimal
                 representation. This is handy if you have variables that
                 have a lot of reserved characters, or you don't want the
                 name to be dependent on when things were added to the
-                namespace
-        - 'drop' implies that they will just be dropped altogether
-    handle : <string>
+                namespace.
+        - 'drop' implies that they will just be dropped altogether.
+
+    handle: str (optional)
         Tells the function how to deal with namespace conflicts
         - 'force' will create a representation which is not in conflict
                   by appending _n to the resulting variable where n is
@@ -279,9 +301,10 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
 
     Returns
     -------
-    identifier : <string>
+    identifier: str
         A vaild python identifier based on the input string
-    namespace : <dictionary>
+
+    namespace: dict
         An updated map of the translations of words to python identifiers,
         including the passed in 'string'.
 
@@ -317,19 +340,20 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
     ('abc', {'123abc': 'abc'})
 
     already in namespace
-    >>> make_python_identifier('Variable$', namespace={'Variable$': 'variable'})
-    ('variable', {'Variable$': 'variable'})
+    >>> make_python_identifier('Var$', namespace={'Var$': 'var'})
+    ('var', {'Var$': 'var'})
 
     namespace conflicts
-    >>> make_python_identifier('Variable$', namespace={'Variable@': 'variable'})
-    ('variable_1', {'Variable@': 'variable', 'Variable$': 'variable_1'})
+    >>> make_python_identifier('Var@', namespace={'Var$': 'var'})
+    ('var_1', {'Var$': 'var', 'Var@': 'var_1'})
 
-    >>> make_python_identifier('Variable$', namespace={'Variable@': 'variable',
-    >>>                                                'Variable%': 'variable_1'})
-    ('variable_2', {'Variable@': 'variable', 'Variable%': 'variable_1', 'Variable$': 'variable_2'})
+    >>> make_python_identifier('Var$', namespace={'Var@': 'var',
+    ...                                           'Var%':'var_1'})
+    ('var_2', {'Var@': 'var', 'Var%': 'var_1', 'Var$': 'var_2'})
 
     throw exception instead
-    >>> make_python_identifier('Variable$', namespace={'Variable@': 'variable'}, handle='throw')
+    >>> make_python_identifier('Var$', namespace={'Var@': 'var'},
+    ...                        handle='throw')
     Traceback (most recent call last):
      ...
     NameError: variable already exists in namespace or is a reserved word
@@ -339,8 +363,8 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
     ----------
     Identifiers must follow the convention outlined here:
         https://docs.python.org/2/reference/lexical_analysis.html#identifiers
-    """
 
+    """
     if namespace is None:
         namespace = dict()
 
@@ -360,38 +384,41 @@ def make_python_identifier(string, namespace=None, reserved_words=None,
     s = s.strip()
 
     # Make spaces into underscores
-    s = re.sub(r'[\s\t\n]+', '_', s)
+    s = re.sub(r"[\s\t\n]+", "_", s)
 
-    if convert == 'hex':
+    if convert == "hex":
         # Convert invalid characters to hex. Note: \p{l} designates all
         # Unicode letter characters (any language), \p{m} designates all
         # mark symbols (e.g., vowel marks in Indian scrips, such as the final)
         # and \p{n} designates all numbers. We allow any of these to be
         # present in the regex.
-        s = ''.join([c.encode("hex") if re.findall(r'[^\p{l}\p{m}\p{n}_]', c)
-                     else c for c in s])
+        s = "".join(
+            [c.encode("hex") if re.findall(r"[^\p{l}\p{m}\p{n}_]", c)
+             else c for c in s]
+        )
 
-    elif convert == 'drop':
+    elif convert == "drop":
         # Remove invalid characters
-        s = re.sub(r'[^\p{l}\p{m}\p{n}_]', '', s)
+        s = re.sub(r"[^\p{l}\p{m}\p{n}_]", "", s)
 
     # If leading characters are not a letter or underscore add nvs_.
     # Only letters can be leading characters.
-    if re.findall(r'^[^\p{l}_]+', s):
-        s = 'nvs_' + s
+    if re.findall(r"^[^\p{l}_]+", s):
+        s = "nvs_" + s
 
     # Check that the string is not a python identifier
     while (s in keyword.kwlist or
            s in namespace.values() or
            s in reserved_words):
-        if handle == 'throw':
-            raise NameError(s + ' already exists in namespace or is a reserved word')
-        if handle == 'force':
+        if handle == "throw":
+            raise NameError(
+                s + " already exists in namespace or is a reserved word")
+        if handle == "force":
             if re.match(r".*?_\d+$", s):
                 i = re.match(r".*?_(\d+)$", s).groups()[0]
-                s = s.strip('_' + i) + '_' + str(int(i) + 1)
+                s = s.strip("_" + i) + "_" + str(int(i) + 1)
             else:
-                s += '_1'
+                s += "_1"
 
     namespace[string] = s
 
@@ -409,18 +436,20 @@ def make_add_identifier(identifier, build_names):
 
     Parameters
     ----------
-    string : <basestring>
-      Existing python identifier
-    build_names : <set>
+    identifier: str
+      Existing python identifier.
+
+    build_names: set
       Set of the already used identifiers for external objects.
 
     Returns
     -------
-    identifier : <string>
+    identifier: str
       A vaild python identifier based on the input indentifier
-      and the existing ones
+      and the existing ones.
+
     """
-    identifier += 'ADD_'
+    identifier += "ADD_"
     number = 1
     # iterate until finding a non-used identifier
     while identifier + str(number) in build_names:
@@ -446,15 +475,13 @@ def get_return_elements(return_columns, namespace):
     Parameters
     ----------
     return_columns: list of strings
-    namespace
+
+    namespace: dict
 
     Returns
     -------
     capture_elements
     return_addresses
-
-    Examples
-    --------
 
     """
     capture_elements = list()
@@ -463,9 +490,9 @@ def get_return_elements(return_columns, namespace):
         if col[0] == col[-1] and col[0] == '"':
             name = col
             address = None
-        elif '[' in col:
-            name, location = col.strip(']').split('[')
-            address = tuple([loc.strip() for loc in location.split(',')])
+        elif "[" in col:
+            name, location = col.strip("]").split("[")
+            address = tuple([loc.strip() for loc in location.split(",")])
         else:
             name = col
             address = None
@@ -496,11 +523,13 @@ def make_flat_df(df, return_addresses, flatten=False):
     ----------
     df: Pandas.DataFrame
         Output from the integration.
+
     return_addresses: dict
         Keys will be column names of the resulting dataframe, and are what the
         user passed in as 'return_columns'. Values are a tuple:
         (py_name, {coords dictionary}) which tells us where to look for the
         value to put in that specific column.
+
     flatten: bool (optional)
             If True, once the output dataframe has been formatted will
             split the xarrays in new columns following vensim's naming
@@ -562,7 +591,7 @@ def make_flat_df(df, return_addresses, flatten=False):
     return df
 
 
-def compute_shape(coords, reshape_len=None, py_name=''):
+def compute_shape(coords, reshape_len=None, py_name=""):
     """
     Computes the 'shape' of a coords dictionary.
     Function used to rearange data in xarrays and
@@ -572,6 +601,7 @@ def compute_shape(coords, reshape_len=None, py_name=''):
     ----------
     coords: dict
       Ordered dictionary of the dimension names as a keys with their values.
+
     reshape_len: int (optional)
       Number of dimensions of the output shape.
       The shape will ony compute the corresponent table
@@ -581,13 +611,14 @@ def compute_shape(coords, reshape_len=None, py_name=''):
       if the reshape_len value is bigger than the length of shape.
       Will raise a ValueError if we try to reshape to a reshape_len
       smaller than the initial shape.
+
     py_name: str
       Name to print if an error is raised.
 
     Returns
     -------
     shape: list
-      Shape of the ordered dictionary or of the desired table or vector
+      Shape of the ordered dictionary or of the desired table or vector.
 
     Note
     ----
@@ -607,13 +638,16 @@ def compute_shape(coords, reshape_len=None, py_name=''):
 
     # return an error when the current shape is bigger than the requested one
     if shape_len > reshape_len:
-        raise ValueError(py_name + "\n"
-                         + "The shape of the coords to read in a "
-                         + " external file must be at most "
-                         + "{} dimensional".format(reshape_len))
+        raise ValueError(
+            py_name
+            + "\n"
+            + "The shape of the coords to read in a "
+            + " external file must be at most "
+            + "{} dimensional".format(reshape_len)
+        )
 
     # complete with 1s on the left
-    return [1]*(reshape_len-shape_len) + shape
+    return [1] * (reshape_len - shape_len) + shape
 
 
 def get_value_by_insensitive_key_or_value(key, dict):
@@ -633,19 +667,18 @@ def rearrange(data, dims, coords):
 
     Parameters
     ---------
-      data: float or xarray.DataArray
+    data: float or xarray.DataArray
         The input data to rearrange.
-      dims: list
+
+    dims: list
         Ordered list of the dimensions.
-      coords: dict
+
+    coords: dict
         Dictionary of the dimension names as a keys with their values.
-      switch: bool
-        Flag to denote if the dimensions can be switched. Default True,
-        The False is used to rearrange general expressions
 
     Returns
     -------
-      xarray.DataArray
+    xarray.DataArray
 
     """
     # subset used coords in general coords will be the subscript_dict
@@ -655,12 +688,13 @@ def rearrange(data, dims, coords):
         if data.shape == shape:
             # Allows switching dimensions names and transpositions
             return xr.DataArray(data=data.values, coords=coords, dims=dims)
-        elif len(shape) == len(data.shape) and\
-          all([shape[i] < data.shape[i] for i in range(len(shape))]):
+        elif len(shape) == len(data.shape) and all(
+            [shape[i] < data.shape[i] for i in range(len(shape))]
+        ):
             # Allows subscripting a subrange
-            return data.rename({
-                dim: new_dim for dim, new_dim in zip(data.dims, dims)
-                }).loc[coords]
+            return data.rename(
+                {dim: new_dim for dim, new_dim in zip(data.dims, dims)}
+            ).loc[coords]
 
         # The coordinates are expanded or transposed
         return xr.DataArray(0, coords, dims) + data
@@ -690,7 +724,7 @@ def add_entries_underscore(*dictionaries):
 
     Parameters
     ----------
-    *dictionaries: Dictionary or dictionaries
+    *dictionaries: dict(s)
         The dictionary or dictionaries to add the entries with underscore.
 
     Return
@@ -701,11 +735,85 @@ def add_entries_underscore(*dictionaries):
     for dictionary in dictionaries:
         keys = list(dictionary)
         for name in keys:
-            dictionary[re.sub(' ', '_', name)] = dictionary[name]
+            dictionary[re.sub(" ", "_", name)] = dictionary[name]
     return
 
 
-class ProgressBar():
+def load_model_data(root_dir, model_name):
+
+    """
+    Used for models split in several files.
+    Loads subscripts_dic, namespace and modules dictionaries
+
+    Parameters
+    ----------
+    root_dir: str
+        Path to the model file.
+
+    model_name: str
+        Name of the model without file type extension (e.g. "my_model").
+
+    Returns
+    -------
+    namespace: dict
+        Translation from original model element names (keys) to python safe
+        function identifiers (values).
+
+    subscripts: dict
+        Dictionary describing the possible dimensions of the stock's
+        subscripts.
+
+    modules: dict
+        Dictionary containing view (module) names as keys and a list of the
+        corresponding variables as values.
+
+    """
+
+    with open(os.path.join(root_dir, "_subscripts_" + model_name + ".json")
+              ) as subs:
+        subscripts = json.load(subs)
+
+    with open(os.path.join(root_dir, "_namespace_" + model_name + ".json")
+              ) as names:
+        namespace = json.load(names)
+
+    # the _modules.json in the sketch_var folder shows to which module each
+    # variable belongs
+    with open(os.path.join(root_dir, "modules_" + model_name, "_modules.json")
+              ) as mods:
+        modules = json.load(mods)
+
+    return namespace, subscripts, modules
+
+
+def open_module(root_dir, model_name, module):
+    """
+    Used to load model modules from the main model file, when
+    split_modules=True in the read_vensim function.
+
+    Parameters
+    ----------
+    root_dir: str
+        Path to the model file.
+
+    model_name: str
+        Name of the model without file type extension (e.g. "my_model").
+
+    module: str
+        Name of the module to open.
+
+    Returns
+    -------
+    str:
+        Model file content.
+
+    """
+    return open(
+        os.path.join(root_dir, "modules_" + model_name, module + ".py")
+        ).read()
+
+
+class ProgressBar:
     """
     Progress bar for integration
     """
@@ -721,10 +829,12 @@ class ProgressBar():
         self.bar = progressbar.ProgressBar(
             maxval=self.maxval,
             widgets=[
-            progressbar.ETA(), ' ',
-            progressbar.Bar('#', '[', ']','-'),
-            progressbar.Percentage()
-        ])
+                progressbar.ETA(),
+                " ",
+                progressbar.Bar("#", "[", "]", "-"),
+                progressbar.Percentage(),
+            ],
+        )
 
         self.bar.start()
 
@@ -736,7 +846,6 @@ class ProgressBar():
         except AttributeError:
             # Error if bar is not imported
             pass
-
 
     def finish(self):
         """Finish progress bar"""

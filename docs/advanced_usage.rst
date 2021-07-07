@@ -41,6 +41,32 @@ We can substitute this function directly for the heat_loss_to_room model compone
 
 If you want to replace a subscripted variable, you need to ensure that the output from the new function is the same as the previous one. You can check the current coordinates and dimensions of a component by using :py:data:`.get_coords(variable_name)` as it is explained in :doc:`basic usage <../basic_usage>`.
 
+
+Splitting Vensim views in different files
+-----------------------------------------
+In order to replicate the Vensim views in translated models, the user can set the `split_modules` argument to True in the :py:func:`read_vensim` function::
+
+   read_vensim("many_views_model.mdl", split_modules=True)
+
+
+The option to split the model in views is particularly interesting for large models with tens of views. Translating those models into a single file may make the resulting Python model difficult to read and maintain.
+
+In a Vensim model with three separate views (e.g. `view_1`, `view_2` and `view_3`), setting `split_modules` to True would create the following tree inside the directory where the `.mdl` model is located:
+
+| main-folder
+| ├── modules_many_views_model
+| │   ├── _modules.json
+| │   ├── view_1.py
+| │   ├── view_2.py
+| │   └── view_3.py
+| ├── _namespace_many_views_model.json
+| ├── _subscripts_dict_many_views_model.json
+| ├── many_views_model.py
+|
+|
+If macros are present, they will be self-contained in files named as the macro itself. The macro inner variables will be placed inside the module that corresponds with the view in which they were defined.
+
+
 Starting simulations from an end-state of another simulation
 ------------------------------------------------------------
 The current state of a model can be saved in a pickle file using the :py:data:`.export()`method::
@@ -68,5 +94,5 @@ the new simulation will have initial time equal to 50 with the saved values from
    The changes done with *params* arguments are not ported to the new model (*model2*) object that you initialize with *final_state.pic*. If you want to keep them, you need to call run with the same *params* values as in the original model (*model1*).
 
 .. warning::
-  Exported data is saved and loaded using `pickle <https://docs.python.org/3/library/pickle.html>`_, this data can be not compatible with future versions of
+  Exported data is saved and loaded using `pickle <https://docs.python.org/3/library/pickle.html>`_, this data can be incompatible with future versions of
   *PySD* or *xarray*. In order to prevent data losses save always the source code.

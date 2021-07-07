@@ -18,16 +18,16 @@ class TestUtils(TestCase):
         array2d = xr.DataArray([[0.5, -1.5],
                                 [-1., -0.5],
                                 [-0.75, 0.]],
-                                {'ABC': ['A', 'B', 'C'],
-                                 'XY': ['X', 'Y']},
-                                ['ABC', 'XY'])
+                               {'ABC': ['A', 'B', 'C'],
+                                'XY': ['X', 'Y']},
+                               ['ABC', 'XY'])
         array3d = xr.DataArray([[[0.5, 4.], [-1.5, 3.]],
                                 [[-1., 2.], [-0.5, 5.5]],
                                 [[-0.75, 0.75], [0., -1.]]],
-                                {'ABC': ['A', 'B', 'C'],
-                                 'XY': ['X', 'Y'],
-                                 'FG': ['F', 'G']},
-                                ['ABC', 'XY', 'FG'])
+                               {'ABC': ['A', 'B', 'C'],
+                                'XY': ['X', 'Y'],
+                                'FG': ['F', 'G']},
+                               ['ABC', 'XY', 'FG'])
         s1d = pysd.utils.xrsplit(array1d)
         s2d = pysd.utils.xrsplit(array2d)
         s3d = pysd.utils.xrsplit(array3d)
@@ -68,8 +68,10 @@ class TestUtils(TestCase):
                  "Inflow A[Entry 1,Column 2]"],
                 {'Inflow A': 'inflow_a'}),
             (['inflow_a'],
-             {'Inflow A[Entry 1,Column 1]': ('inflow_a', ('Entry 1', 'Column 1')),
-              'Inflow A[Entry 1,Column 2]': ('inflow_a', ('Entry 1', 'Column 2'))}
+             {'Inflow A[Entry 1,Column 1]': ('inflow_a',
+                                             ('Entry 1', 'Column 1')),
+              'Inflow A[Entry 1,Column 2]': ('inflow_a',
+                                             ('Entry 1', 'Column 2'))}
              )
         )
 
@@ -250,7 +252,8 @@ class TestUtils(TestCase):
         expected = pd.DataFrame([{'Elem1[B,F]': 6}, {'Elem1[B,F]': 12}])
         expected.index = [1, 2]
 
-        return_addresses = {'Elem1[B,F]': ('elem1', {'Dim1': ['B'], 'Dim2': ['F']})}
+        return_addresses = {'Elem1[B,F]': ('elem1', {'Dim1': ['B'],
+                                                     'Dim2': ['F']})}
         actual = pysd.utils.make_flat_df(df, return_addresses)
 
         # check all columns are in the DataFrame
@@ -260,30 +263,31 @@ class TestUtils(TestCase):
 
     def test_make_coord_dict(self):
         import pysd
-        self.assertEqual(pysd.utils.make_coord_dict(['Dim1', 'D'],
-                                         {'Dim1': ['A', 'B', 'C'],
-                                          'Dim2': ['D', 'E', 'F']},
-                                         terse=True),
-                         {'Dim2': ['D']})
-        self.assertEqual(pysd.utils.make_coord_dict(['Dim1', 'D'],
-                                         {'Dim1': ['A', 'B', 'C'],
-                                          'Dim2': ['D', 'E', 'F']},
-                                         terse=False),
-                         {'Dim1': ['A', 'B', 'C'], 'Dim2': ['D']})
+        self.assertEqual(
+            pysd.utils.make_coord_dict(['Dim1', 'D'],
+                                       {'Dim1': ['A', 'B', 'C'],
+                                        'Dim2': ['D', 'E', 'F']},
+                                       terse=True), {'Dim2': ['D']})
+        self.assertEqual(
+            pysd.utils.make_coord_dict(['Dim1', 'D'],
+                                       {'Dim1': ['A', 'B', 'C'],
+                                        'Dim2': ['D', 'E', 'F']},
+                                       terse=False), {'Dim1': ['A', 'B', 'C'],
+                                                      'Dim2': ['D']})
 
     def test_find_subscript_name(self):
         import pysd
-        self.assertEqual(pysd.utils.find_subscript_name({'Dim1': ['A', 'B'],
-                                              'Dim2': ['C', 'D', 'E'],
-                                              'Dim3': ['F', 'G', 'H', 'I']},
-                                             'D'),
-                         'Dim2')
+        self.assertEqual(
+            pysd.utils.find_subscript_name({'Dim1': ['A', 'B'],
+                                            'Dim2': ['C', 'D', 'E'],
+                                            'Dim3': ['F', 'G', 'H', 'I']},
+                                           'D'), 'Dim2')
 
-        self.assertEqual(pysd.utils.find_subscript_name({'Dim1': ['A', 'B'],
-                                              'Dim2': ['C', 'D', 'E'],
-                                              'Dim3': ['F', 'G', 'H', 'I']},
-                                             'Dim3'),
-                         'Dim3')
+        self.assertEqual(
+            pysd.utils.find_subscript_name({'Dim1': ['A', 'B'],
+                                            'Dim2': ['C', 'D', 'E'],
+                                            'Dim3': ['F', 'G', 'H', 'I']},
+                                           'Dim3'), 'Dim3')
 
     def test_doctests(self):
         import pysd
@@ -438,21 +442,24 @@ class TestUtils(TestCase):
         }
 
         xr_input_subdim = xr.DataArray([1, 4, 2],
-            {'d1': ['a', 'b', 'c']}, ['d1'])
+                                       {'d1': ['a', 'b', 'c']}, ['d1'])
         xr_input_updim = xr.DataArray([1, 4],
-            {'d2': ['b', 'c']}, ['d2'])
-        xr_input_switch = xr.DataArray([[1, 4],[8, 5]],
-            {'d2': ['b', 'c'], 'd3': ['b', 'c']}, ['d2', 'd3'])
+                                      {'d2': ['b', 'c']}, ['d2'])
+        xr_input_switch = xr.DataArray([[1, 4], [8, 5]],
+                                       {'d2': ['b', 'c'], 'd3': ['b', 'c']},
+                                       ['d2', 'd3'])
         xr_input_float = 3.
 
         xr_out_subdim = xr.DataArray([4, 2],
-            {'d2': ['b', 'c']}, ['d2'])
+                                     {'d2': ['b', 'c']}, ['d2'])
         xr_out_updim = xr.DataArray([[1, 1], [4, 4]],
-            {'d2': ['b', 'c'], 'd3': ['b', 'c']}, ['d2', 'd3'])
-        xr_out_switch = xr.DataArray([[1, 4],[8, 5]],
-            {'d2': ['b', 'c'], 'd3': ['b', 'c']}, ['d3', 'd2'])
+                                    {'d2': ['b', 'c'], 'd3': ['b', 'c']},
+                                    ['d2', 'd3'])
+        xr_out_switch = xr.DataArray([[1, 4], [8, 5]],
+                                     {'d2': ['b', 'c'], 'd3': ['b', 'c']},
+                                     ['d3', 'd2'])
         xr_out_float = xr.DataArray(3.,
-            {'d2': ['b', 'c']}, ['d2'])
+                                    {'d2': ['b', 'c']}, ['d2'])
 
         self.assertTrue(xr_out_subdim.equals(
             rearrange(xr_input_subdim, ['d2'], _subscript_dict)))
@@ -467,7 +474,7 @@ class TestUtils(TestCase):
             rearrange(xr_input_float, ['d2'], _subscript_dict)))
 
         self.assertEqual(None,
-            rearrange(None, ['d2'], _subscript_dict))
+                         rearrange(None, ['d2'], _subscript_dict))
 
     def test_round_(self):
         import pysd
@@ -525,7 +532,6 @@ class TestUtils(TestCase):
         self.assertEqual(make_add_identifier(name2, build_names), "bb_aADD_1")
         self.assertEqual(make_add_identifier(name, build_names), "valuesADD_4")
         self.assertEqual(make_add_identifier(name2, build_names), "bb_aADD_2")
-
 
     def test_progressbar(self):
         import pysd

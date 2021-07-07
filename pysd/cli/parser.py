@@ -153,12 +153,6 @@ parser.add_argument(
     action='version', version=f'PySD {__version__}')
 
 parser.add_argument(
-    '-t', '--translate', dest='run',
-    action='store_false', default=True,
-    help='only translate the model_file, '
-         'it does not run it after translation')
-
-parser.add_argument(
     '-o', '--output-file', dest='output_file',
     type=check_output, metavar='FILE',
     help='output file to save run outputs (.tab or .csv)')
@@ -186,6 +180,7 @@ parser.add_argument(
     type=str, metavar='FILE',
     help='import stateful objects states from a pickle file,'
          'if given initial conditions from var:value will be ignored')
+
 
 ###################
 # Model arguments #
@@ -223,6 +218,26 @@ model_arguments.add_argument(
          '--saveper will be ignored')
 
 
+###################
+# Model arguments #
+###################
+
+trans_arguments = parser.add_argument_group(
+    'translation arguments',
+    'Configure the translation of the original model.')
+
+trans_arguments.add_argument(
+    '--translate', dest='run',
+    action='store_false', default=True,
+    help='only translate the model_file, '
+         'it does not run it after translation')
+
+trans_arguments.add_argument(
+    '--split-modules', dest='split_modules',
+    action='store_true', default=False,
+    help='parse the sketch to detect model elements in each model view,'
+         ' and then translate each view in a separate python file')
+
 #######################
 # Warnings and errors #
 #######################
@@ -232,7 +247,7 @@ warn_err_arguments = parser.add_argument_group(
     'Modify warning and errors management.')
 
 warn_err_arguments.add_argument(
-    '-m', '--missing-values', dest='missing_values', default="warning",
+    '--missing-values', dest='missing_values', default="warning",
     action='store', type=str, choices=['warning', 'raise', 'ignore', 'keep'],
     help='exception with missing values, \'warning\' (default) shows a '
          'warning message and interpolates the values, \'raise\' raises '
