@@ -80,9 +80,10 @@ def load_outputs(file_name, transpose=False, columns=None, encoding=None):
 
     columns: list or None (optional)
         List of the column names to load. If None loads all the columns.
-        Default is None. Note, if transpose=False, the loading will be
-        faster as only selected columns will be loaded. If transpose=True
-        the whole file must be read and it will be subselected later.
+        Default is None.
+        NOTE: if transpose=False, the loading will be faster as only
+        selected columns will be loaded. If transpose=True the whole
+        file must be read and it will be subselected later.
 
     encoding: str or None (optional)
         Encoding type to read output file. Needed if the file has special
@@ -240,6 +241,8 @@ def assert_frames_close(actual, expected, assertion="raise",
         # if for Vensim outputs where constant values are only in the first row
         if np.isnan(expected[col].values[1:]).all():
             expected[col] = expected[col].values[0]
+        if np.isnan(actual[col].values[1:]).all():
+            actual[col] = actual[col].values[0]
         try:
             assert_allclose(expected[col].values,
                             actual[col].values,
