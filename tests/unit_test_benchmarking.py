@@ -45,6 +45,32 @@ class TestErrors(TestCase):
                 load_outputs('data/out_teacup_modified.csv'))
 
         self.assertIn(
+            "Following columns are not close:\n\tTeacup Temperature",
+            str(err.exception))
+
+        self.assertNotIn(
+            "Column 'Teacup Temperature' is not close.",
+            str(err.exception))
+
+        self.assertNotIn(
+            "Actual values:\n\t",
+            str(err.exception))
+
+        self.assertNotIn(
+            "Expected values:\n\t",
+            str(err.exception))
+
+        with self.assertRaises(AssertionError) as err:
+            assert_frames_close(
+                load_outputs('data/out_teacup.csv'),
+                load_outputs('data/out_teacup_modified.csv'),
+                verbose=True)
+
+        self.assertIn(
+            "Following columns are not close:\n\tTeacup Temperature",
+            str(err.exception))
+
+        self.assertIn(
             "Column 'Teacup Temperature' is not close.",
             str(err.exception))
 
@@ -69,6 +95,36 @@ class TestErrors(TestCase):
             # use only user warnings
             wu = [w for w in ws if issubclass(w.category, UserWarning)]
             self.assertEqual(len(wu), 1)
+
+            self.assertIn(
+                "Following columns are not close:\n\tTeacup Temperature",
+                str(wu[0].message))
+
+            self.assertNotIn(
+                "Column 'Teacup Temperature' is not close.",
+                str(wu[0].message))
+
+            self.assertNotIn(
+                "Actual values:\n\t",
+                str(wu[0].message))
+
+            self.assertNotIn(
+                "Expected values:\n\t",
+                str(wu[0].message))
+
+        with catch_warnings(record=True) as ws:
+            assert_frames_close(
+                load_outputs('data/out_teacup.csv'),
+                load_outputs('data/out_teacup_modified.csv'),
+                assertion="warn", verbose=True)
+
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 1)
+
+            self.assertIn(
+                "Following columns are not close:\n\tTeacup Temperature",
+                str(wu[0].message))
 
             self.assertIn(
                 "Column 'Teacup Temperature' is not close.",

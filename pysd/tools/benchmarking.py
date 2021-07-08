@@ -126,7 +126,7 @@ def load_outputs(file_name, transpose=False, columns=None, encoding=None):
 
 
 def assert_frames_close(actual, expected, assertion="raise",
-                        precision=2, **kwargs):
+                        verbose=False, precision=2, **kwargs):
     """
     Compare DataFrame items by column and
     raise AssertionError if any column is not equal.
@@ -147,8 +147,13 @@ def assert_frames_close(actual, expected, assertion="raise",
         that two frames are close. Otherwise, it will show a warning
         message. Default is "raise".
 
+    verbose: bool (optional)
+        If True, if any column is not close the actual and expected values
+        will be printed in the error/warning message with the difference.
+        Default is False.
+
     precision: int (optional)
-        Precision to print the numerical values of assertion message.
+        Precision to print the numerical values of assertion verbosed message.
         Default is 2.
 
     kwargs:
@@ -172,6 +177,18 @@ def assert_frames_close(actual, expected, assertion="raise",
     Traceback (most recent call last):
     ...
     AssertionError:
+    Following columns are not close:
+    \t'0'
+
+    >>> assert_frames_close(
+    ...     pd.DataFrame(100, index=range(5), columns=range(3)),
+    ...     pd.DataFrame(150, index=range(5), columns=range(3)),
+    ...     verbose=True, rtol=.2)  # doctest: +IGNORE_EXCEPTION_DETAIL
+    Traceback (most recent call last):
+    ...
+    AssertionError:
+    Following columns are not close:
+    \t'0'
     Column '0' is not close.
     Expected values:
     \t[150, 150, 150, 150, 150]
@@ -186,13 +203,8 @@ def assert_frames_close(actual, expected, assertion="raise",
     ...     rtol=.2, assertion="warn")
     ...
     UserWarning:
-    Column '0' is not close.
-    Expected values:
-    \t[150, 150, 150, 150, 150]
-    Actual values:
-    \t[100, 100, 100, 100, 100]
-    Difference:
-    \t[50, 50, 50, 50, 50]
+    Following columns are not close:
+    \t'0'
 
     References
     ----------
@@ -231,25 +243,31 @@ def assert_frames_close(actual, expected, assertion="raise",
         else:
             warnings.warn(message)
 
-    columns = actual_cols.intersection(expected_cols)
+    columns = list(actual_cols.intersection(expected_cols))
 
+    # TODO let compare dataframes with different timestamps if "warn"
     assert np.all(np.equal(expected.index.values, actual.index.values)), \
         'test set and actual set must share a common index' \
         'instead found' + expected.index.values + 'vs' + actual.index.values
 
-    for col in columns:
-        # if for Vensim outputs where constant values are only in the first row
-        if np.isnan(expected[col].values[1:]).all():
-            expected[col] = expected[col].values[0]
-        if np.isnan(actual[col].values[1:]).all():
-            actual[col] = actual[col].values[0]
-        try:
-            assert_allclose(expected[col].values,
-                            actual[col].values,
-                            **kwargs)
+    # if for Vensim outputs where constant values are only in the first row
+    _remove_constant_nan(expected)
+    _remove_constant_nan(actual)
 
-        except AssertionError:
-            assertion_details = '\n\n'\
+    c = assert_allclose(expected[columns],
+                        actual[columns],
+                        **kwargs)
+
+    if c.all():
+        return
+
+    columns = np.array(columns, dtype=str)[~c.values]
+
+    assertion_details = "\nFollowing columns are not close:\n\t"\
+                        + ", ".join(columns)
+    if verbose:
+        for col in columns:
+            assertion_details += '\n\n'\
                 + f"Column '{col}' is not close."\
                 + '\n\nExpected values:\n\t'\
                 + np.array2string(expected[col].values,
@@ -264,12 +282,12 @@ def assert_frames_close(actual, expected, assertion="raise",
                 + np.array2string(expected[col].values-actual[col].values,
                                   precision=precision,
                                   separator=', ',
-                                  suppress_small=True)\
+                                  suppress_small=True)
 
-            if assertion == "raise":
-                raise AssertionError(assertion_details)
-            else:
-                warnings.warn(assertion_details)
+    if assertion == "raise":
+        raise AssertionError(assertion_details)
+    else:
+        warnings.warn(assertion_details)
 
 
 def assert_allclose(x, y, rtol=1.e-5, atol=1.e-5):
@@ -292,7 +310,15 @@ def assert_allclose(x, y, rtol=1.e-5, atol=1.e-5):
     None
 
     """
-    assert np.all(np.less_equal(abs(x - y), atol + rtol * abs(y)))
+    return (abs(x - y) <= atol + rtol * abs(y)).all()
+
+
+def _remove_constant_nan(df):
+    """
+    Removes nana values in constant value columns produced by Vensim
+    """
+    nan_cols = np.isnan(df.iloc[1:, :]).all()
+    df.loc[:, nan_cols] = df.loc[:, nan_cols].iloc[0].values
 
 
 def detect_encoding(filename):
