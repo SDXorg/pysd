@@ -786,7 +786,7 @@ def load_model_data(root_dir, model_name):
     return namespace, subscripts, modules
 
 
-def open_module(root_dir, model_name, module):
+def open_module(root_dir, model_name, module, sub_module=None):
     """
     Used to load model modules from the main model file, when
     split_modules=True in the read_vensim function.
@@ -800,7 +800,10 @@ def open_module(root_dir, model_name, module):
         Name of the model without file type extension (e.g. "my_model").
 
     module: str
-        Name of the module to open.
+        Name of the module folder or file to open.
+    
+    sub_module: str (optional)
+        Name of the submodule to open.
 
     Returns
     -------
@@ -808,9 +811,15 @@ def open_module(root_dir, model_name, module):
         Model file content.
 
     """
-    return open(
-        os.path.join(root_dir, "modules_" + model_name, module + ".py")
-        ).read()
+    if not sub_module:
+        return open(
+                    os.path.join(root_dir, "modules_" +
+                                 model_name, module + ".py")).read()
+    else:
+        return open(
+                    os.path.join(root_dir, "modules_" +
+                                 model_name, module, sub_module + ".py")
+                                 ).read()
 
 
 class ProgressBar:

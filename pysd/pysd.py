@@ -62,7 +62,8 @@ def read_xmile(xmile_file, initialize=True, missing_values="warning"):
 
 
 def read_vensim(
-    mdl_file, initialize=True, missing_values="warning", split_modules=False
+                mdl_file, initialize=True, missing_values="warning",
+                split_modules=False, **kwargs
 ):
     """
     Construct a model from Vensim `.mdl` file.
@@ -90,6 +91,14 @@ def read_vensim(
         file. Setting this argument to True is recommended for large
         models split in many different views. Default is False.
 
+    **kwargs: (optional)
+        Additional keyword arguments.
+        submodule_sep:(str)
+            Character used to separate modules and submodules. If provided,
+            and split_modules=True, each submodule will be placed inside the
+            folder of the parent module.
+
+
     Returns
     -------
     model: a PySD class object
@@ -103,7 +112,7 @@ def read_vensim(
     """
     from .py_backend.vensim.vensim2py import translate_vensim
 
-    py_model_file = translate_vensim(mdl_file, split_modules)
+    py_model_file = translate_vensim(mdl_file, split_modules, **kwargs)
     model = load(py_model_file, initialize, missing_values)
     model.mdl_file = mdl_file
     return model

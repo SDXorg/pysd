@@ -148,6 +148,58 @@ class TestPySD(unittest.TestCase):
         # remove newly created modules folder
         shutil.rmtree(root_dir + modules_dirname)
 
+    def test_read_vensim_split_model_submodules(self):
+        import pysd
+        from pysd.tools.benchmarking import assert_frames_close
+
+        root_dir = "more-tests/split_model/"
+
+        model_name = "test_split_model_subviews"
+        model_split = pysd.read_vensim(
+            root_dir + model_name + ".mdl", split_modules=True,
+            submodule_sep="."
+        )
+
+        namespace_filename = "_namespace_" + model_name + ".json"
+        subscript_dict_filename = "_subscripts_" + model_name + ".json"
+        modules_dirname = "modules_" + model_name
+
+        # check that the modules folders were created
+        self.assertTrue(os.path.isdir(root_dir + modules_dirname + "/VIEW_1"))
+        self.assertTrue(os.path.isdir(root_dir + modules_dirname + "/VIEW_2"))
+
+        # check creation of module files
+        self.assertTrue(
+            os.path.isfile(root_dir + modules_dirname + "/VIEW_1/" +
+                           "submodule_1.py"))
+        self.assertTrue(
+            os.path.isfile(root_dir + modules_dirname + "/VIEW_1/" +
+                           "submodule_2.py"))
+        self.assertTrue(
+            os.path.isfile(root_dir + modules_dirname + "/VIEW_2/" +
+                           "view_2.py"))
+
+        # check that the results of the split model are the same than those
+        # without splitting
+        model_non_split = pysd.read_vensim(
+            root_dir + model_name + ".mdl", split_modules=False
+        )
+
+        result_split = model_split.run()
+        result_non_split = model_non_split.run()
+
+        # results of a split model are the same that those of the regular
+        # model (un-split)
+        assert_frames_close(result_split, result_non_split, atol=0, rtol=0)
+
+        # remove newly created files
+        os.remove(root_dir + model_name + ".py")
+        os.remove(root_dir + namespace_filename)
+        os.remove(root_dir + subscript_dict_filename)
+
+        # remove newly created modules folder
+        shutil.rmtree(root_dir + modules_dirname)
+
     def test_read_vensim_split_model_with_macro(self):
         import pysd
         from pysd.tools.benchmarking import assert_frames_close
@@ -197,7 +249,8 @@ class TestPySD(unittest.TestCase):
 
         self.assertEqual(len(wu), 1)
         self.assertTrue(
-            "Only one module was detected" in str(wu[0].message)
+            "Only a single view with no subviews was detected" in str(
+                wu[0].message)
         )  # check that warning references the stock
 
     def test_run_includes_last_value(self):

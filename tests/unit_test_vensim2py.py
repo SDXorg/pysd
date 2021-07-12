@@ -787,7 +787,7 @@ class TestParse_sketch_line(unittest.TestCase):
         for num, line in enumerate(lines):
             res = parse_sketch_line(line.strip(), namespace)
             self.assertEqual(res["variable_name"], expected_var[num])
-            self.assertEqual(res["module_name"], expected_mod[num])
+            self.assertEqual(res["view_name"], expected_mod[num])
 
 
 class TestParse_private_functions(unittest.TestCase):

@@ -4,6 +4,7 @@ module to write a python version of the model. Everything that requires
 knowledge of vensim syntax should be here.
 """
 
+from inspect import cleandoc
 import os
 import re
 import warnings
@@ -491,11 +492,11 @@ def parse_sketch_line(sketch_line, namespace):
 
     sketch_grammar = _include_common_grammar(
         r"""
-    line = var_definition / module_intro / module_title / module_definition / arrow / flow / other_objects / anything
-    module_intro = ~r"\s*Sketch.*?names$" / ~r"^V300.*?ignored$"
-    module_title = "*" module_name
-    module_name = ~r"(?<=\*)[^\n]+$"
-    module_definition = "$" color "," digit "," font_properties "|" ( ( color / ones_and_dashes ) "|")* module_code
+    line = var_definition / view_intro / view_title / view_definition / arrow / flow / other_objects / anything
+    view_intro = ~r"\s*Sketch.*?names$" / ~r"^V300.*?ignored$"
+    view_title = "*" view_name
+    view_name = ~r"(?<=\*)[^\n]+$"
+    view_definition = "$" color "," digit "," font_properties "|" ( ( color / ones_and_dashes ) "|")* view_code
     var_definition = var_code "," var_number "," var_name "," position "," var_box_type "," arrows_in_allowed "," hide_level "," var_face "," var_word_position "," var_thickness "," var_rest_conf ","? ( ( ones_and_dashes / color) ",")* font_properties?
     # elements used in a line defining the properties of a variable or stock
     var_name = element
@@ -537,7 +538,7 @@ def parse_sketch_line(sketch_line, namespace):
     var_code = ~r"^10(?=,)"
     multipurpose_code = ~r"^12(?=,)" # source, sink, plot, comment
     other_objects_code = ~r"^(30|31)(?=,)"
-    module_code = ~r"\d+" "," digit "," digit "," ~r"\d+" # code at
+    view_code = ~r"\d+" "," digit "," digit "," ~r"\d+" # code at
 
     digit = ~r"(?<=,)\d+(?=,)" # comma separated value/s
     ones_and_dashes = ~r"\-1\-\-1\-\-1"
@@ -550,22 +551,22 @@ def parse_sketch_line(sketch_line, namespace):
     class SketchParser(parsimonious.NodeVisitor):
         def __init__(self, ast, namespace):
             self.namespace = namespace
-            self.module_or_var = {"variable_name": "", "module_name": ""}
+            self.view_or_var = {"variable_name": "", "view_name": ""}
             self.visit(ast)
 
-        def visit_module_name(self, n, vc):
-            self.module_or_var["module_name"] = n.text
+        def visit_view_name(self, n, vc):
+            self.view_or_var["view_name"] = n.text
 
         def visit_var_definition(self, n, vc):
             if int(vc[10]) % 2 != 0:  # not a shadow variable
-                self.module_or_var["variable_name"] = self.namespace.get(vc[4],
-                                                                         "")
+                self.view_or_var["variable_name"] = self.namespace.get(vc[4],
+                                                                       "")
 
         def generic_visit(self, n, vc):
             return "".join(filter(None, vc)) or n.text or ""
 
     tree = parser.parse(sketch_line)
-    return SketchParser(tree, namespace=namespace).module_or_var
+    return SketchParser(tree, namespace=namespace).view_or_var
 
 
 def parse_units(units_str):
@@ -1477,7 +1478,7 @@ def parse_lookup_expression(element, subscript_dict):
     )
 
 
-def translate_section(section, macro_list, sketch, root_path):
+def translate_section(section, macro_list, sketch, root_path, subview_sep):
 
     model_elements = get_model_elements(section["string"])
 
@@ -1577,15 +1578,17 @@ def translate_section(section, macro_list, sketch, root_path):
     ]
 
     # macros are built in their own separate files, and their inputs and
-    # outputs are put in modules
+    # outputs are put in views/subviews
     if sketch and (section["name"] == "_main_"):
 
-        module_elements = _classify_elements_by_module(sketch, namespace)
+        module_elements = _classify_elements_by_module(sketch, namespace,
+                                                       subview_sep)
 
-        if len(module_elements.keys()) == 1:
+        if (len(module_elements.keys()) == 1) \
+           and (isinstance(module_elements[list(module_elements)[0]], list)):
             warnings.warn(
-                "Only one module was detected. The model will be built "
-                "in a single file."
+                "Only a single view with no subviews was detected. The model"
+                " will be built in a single file."
             )
         else:
             builder.build_modular_model(
@@ -1603,7 +1606,7 @@ def translate_section(section, macro_list, sketch, root_path):
     return section["file_name"]
 
 
-def _classify_elements_by_module(sketch, namespace):
+def _classify_elements_by_module(sketch, namespace, subview_sep):
     """
     Takes the Vensim sketch as a string, parses it (line by line) and
     returns a list of the model elements that belong to each vensim view
@@ -1618,6 +1621,11 @@ def _classify_elements_by_module(sketch, namespace):
         Translation from original model element names (keys) to python
         safe function identifiers (values).
 
+    submodule_sep: str
+        Character used to split view names into module + submodule
+        (e.g. if a view is named ENERGY.Demand and submodule_sep is set to ".",
+        then the Demand submodule would be placed inside the ENERGY module)
+    
     Returns
     -------
     module_elements_: dict
@@ -1625,41 +1633,76 @@ def _classify_elements_by_module(sketch, namespace):
         the corresponding variables as values.
 
     """
-    # TODO how about macros??? are they also put in the sketch?
+    def _clean_file_names(*args):
+        """
+        Removes special characters and makes cleanner file names
+        
+        Parameters
+        ----------
+        *args: tuple
+            Any number of strings to strings to clean
+        
+        Returns
+        -------
+        clean: list
+            List containing the clean strings
 
-    # splitting the sketch in different modules
+        """
+        clean = []
+        for name in args:
+            clean.append(re.sub(
+                                r"[\W]+", "", name.replace(" ", "_")
+                                ).lstrip("0123456789")
+                         )
+        return clean
+    
+    # split the sketch in different modules
     sketch = list(map(lambda x: x.strip(), sketch.split("\\\\\\---/// ")))
 
-    modules_list = []  # list of all modules
-    module_elements = {}
+    view_elements = {}
 
     for module in sketch:
         for sketch_line in module.split("\n"):
+            # line is a dict with keys "variable_name" and "view_name"
             line = parse_sketch_line(sketch_line.strip(), namespace)
-            # When a module name is found, the "new_module" becomes True.
-            # When a variable name is found, the "new_module" is set back to
-            # False
-            if line["module_name"]:
-                # remove characters that are not [a-zA-Z0-9_] from the module
-                # name
-                module_name = re.sub(
-                    r"[\W]+", "", line["module_name"].replace(" ", "_")
-                ).lstrip(
-                    "0123456789"
-                )  # there's probably a more elegant way to do it with regex
-                module_elements[module_name] = []
-                if module_name not in modules_list:
-                    modules_list.append(module_name)
+
+            if line["view_name"]:
+                view_name = line["view_name"]
+                view_elements[view_name] = []
 
             if line["variable_name"]:
-                if line["variable_name"] not in module_elements[module_name]:
-                    module_elements[module_name].append(line["variable_name"])
+                if line["variable_name"] not in view_elements[view_name]:
+                    view_elements[view_name].append(line["variable_name"])
+ 
     # removes modules that do not include any variable in them
-    module_elements_ = {
-        key.lower(): value for key, value in module_elements.items() if value
+    non_empty_views = {
+        key.lower(): value for key, value in view_elements.items() if value
     }
 
-    return module_elements_
+    views_dict = {}
+    # split into subviews, if suview_sep is provided:
+    if subview_sep:
+        for name, elements in non_empty_views.items():
+            # split and clean view/subview names as they are not yet safe
+            view_subview = _clean_file_names(*name.split(subview_sep))
+            view = view_subview[0]
+            if len(view_subview) == 2:
+                subview = view_subview[1]
+            else:
+                subview = ""
+
+            if view.upper() not in views_dict.keys():
+                views_dict[view.upper()] = {}
+            if subview:
+                views_dict[view.upper()][subview.lower()] = elements
+            else:
+                views_dict[view.upper()][view.lower()] = elements
+    else:
+        # clean file names
+        for view_name, elements in non_empty_views.items():
+            views_dict[_clean_file_names(view_name)[0]] = elements
+
+    return views_dict
 
 
 def _split_sketch(text):
@@ -1694,7 +1737,7 @@ def _split_sketch(text):
     return text, sketch
 
 
-def translate_vensim(mdl_file, split_modules):
+def translate_vensim(mdl_file, split_modules, **kwargs):
     """
     Translate a vensim file.
 
@@ -1708,6 +1751,9 @@ def translate_vensim(mdl_file, split_modules):
         model view, and then translate each view in a separate python
         file. Setting this argument to True is recommended for large
         models split in many different views.
+    
+    **kwargs: (optional)
+        Additional parameters passed to the translate_vensim function
 
     Returns
     -------
@@ -1739,6 +1785,9 @@ def translate_vensim(mdl_file, split_modules):
     else:
         sketch = ""
 
+    # character used to place submodules in the parent module folders
+    submodule_sep = kwargs.get("submodule_sep", "")
+
     file_sections = get_file_sections(text.replace("\n", ""))
 
     for section in file_sections:
@@ -1752,6 +1801,7 @@ def translate_vensim(mdl_file, split_modules):
     macro_list = [s for s in file_sections if s["name"] != "_main_"]
 
     for section in file_sections:
-        translate_section(section, macro_list, sketch, root_path)
+        translate_section(section, macro_list, sketch, root_path,
+                          submodule_sep)
 
     return outfile_name
