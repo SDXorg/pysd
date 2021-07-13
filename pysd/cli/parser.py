@@ -218,9 +218,9 @@ model_arguments.add_argument(
          '--saveper will be ignored')
 
 
-###################
-# Model arguments #
-###################
+#########################
+# Translation arguments #
+#########################
 
 trans_arguments = parser.add_argument_group(
     'translation arguments',
@@ -241,9 +241,9 @@ trans_arguments.add_argument(
 trans_arguments.add_argument(
     '--subview-sep', dest='subview_sep',
     action='store', type=str, default="", metavar='STRING',
-    help='If the model is split in views during translation, this parameter'
-         'allows a further division in subviews, by identifying the'
-         'separator characther in the view name')
+    help='further division of views split in subviews, by identifying the'
+         'separator string in the view name, only availabe if --split-views'
+         ' is used')
 
 
 #######################

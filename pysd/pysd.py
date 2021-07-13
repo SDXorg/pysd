@@ -7,7 +7,7 @@ normal operation.
 
 import sys
 
-if sys.version_info[:2] < (3, 7):
+if sys.version_info[:2] < (3, 7):  # pragma: no cover
     raise RuntimeError(
         "\n\n"
         + "Your Python version is not longer supported by PySD.\n"
@@ -61,10 +61,8 @@ def read_xmile(xmile_file, initialize=True, missing_values="warning"):
     return model
 
 
-def read_vensim(
-                mdl_file, initialize=True, missing_values="warning",
-                split_views=False, **kwargs
-):
+def read_vensim(mdl_file, initialize=True, missing_values="warning",
+                split_views=False, **kwargs):
     """
     Construct a model from Vensim `.mdl` file.
 

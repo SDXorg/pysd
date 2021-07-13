@@ -117,9 +117,8 @@ class Imports():
 build_names = set()
 
 
-def build_modular_model(
-    elements, subscript_dict, namespace, main_filename, elements_per_view
-):
+def build_modular_model(elements, subscript_dict, namespace, main_filename,
+                        elements_per_view):
 
     """
     This is equivalent to the build function, but is used when the
@@ -1702,9 +1701,8 @@ def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
     return "%s()" % external["py_name"], [external]
 
 
-def add_ext_lookup(
-    identifier, file_name, tab, x_row_or_col, cell, subs, subscript_dict
-):
+def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell,
+                   subs, subscript_dict):
     """
     Constructs a external object for handling Vensim's GET XLS LOOKUPS and
     GET DIRECT LOOKUPS functionality.
