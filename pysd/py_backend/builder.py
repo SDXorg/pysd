@@ -201,7 +201,7 @@ def build_modular_model(elements, subscript_dict, namespace, main_filename,
                                        subview_name, view_dir)
                 view_elems += subview_elems
 
-    processed_elements += view_elems
+        processed_elements += view_elems
 
     # the unprocessed will go in the main file
     unprocessed_elements = [
@@ -226,8 +226,6 @@ def build_modular_model(elements, subscript_dict, namespace, main_filename,
         os.path.join(root_dir, "_subscripts_" + model_name + ".json"), "w"
     ) as outfile:
         json.dump(subscript_dict, outfile, indent=4, sort_keys=True)
-
-    return None
 
 
 def _build_main_module(elements, subscript_dict, file_name, subviews):
@@ -329,10 +327,6 @@ def _build_main_module(elements, subscript_dict, file_name, subviews):
 
     # Needed for various sessions
     build_names.clear()
-
-    # this is used for testing
-    if file_name == "return":
-        return text
 
     with open(file_name, "w", encoding="UTF-8") as out:
         out.write(text)

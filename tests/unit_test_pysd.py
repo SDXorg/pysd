@@ -127,6 +127,16 @@ class TestPySD(unittest.TestCase):
         self.assertIn("view2", model_split.components._modules.keys())
         self.assertIsInstance(model_split.components._subscript_dict, dict)
 
+        with open(root_dir + model_name + ".py", 'r') as file:
+            file_content = file.read()
+
+        # assert that the functions are not defined in the main file
+        self.assertNotIn("def another_var()", file_content)
+        self.assertNotIn("def rate1()", file_content)
+        self.assertNotIn("def varn()", file_content)
+        self.assertNotIn("def variablex()", file_content)
+        self.assertNotIn("def stock()", file_content)
+
         # check that the results of the split model are the same than those
         # without splitting
         model_non_split = pysd.read_vensim(
@@ -139,6 +149,16 @@ class TestPySD(unittest.TestCase):
         # results of a split model are the same that those of the regular
         # model (un-split)
         assert_frames_close(result_split, result_non_split, atol=0, rtol=0)
+
+        with open(root_dir + model_name + ".py", 'r') as file:
+            file_content = file.read()
+
+        # assert that the functions are in the main file for regular trans
+        self.assertIn("def another_var()", file_content)
+        self.assertIn("def rate1()", file_content)
+        self.assertIn("def varn()", file_content)
+        self.assertIn("def variablex()", file_content)
+        self.assertIn("def stock()", file_content)
 
         # remove newly created files
         os.remove(root_dir + model_name + ".py")
@@ -179,6 +199,16 @@ class TestPySD(unittest.TestCase):
             os.path.isfile(root_dir + modules_dirname + "/VIEW_2/" +
                            "view_2.py"))
 
+        with open(root_dir + model_name + ".py", 'r') as file:
+            file_content = file.read()
+
+        # assert that the functions are not defined in the main file
+        self.assertNotIn("def another_var()", file_content)
+        self.assertNotIn("def rate1()", file_content)
+        self.assertNotIn("def varn()", file_content)
+        self.assertNotIn("def variablex()", file_content)
+        self.assertNotIn("def stock()", file_content)
+
         # check that the results of the split model are the same than those
         # without splitting
         model_non_split = pysd.read_vensim(
@@ -191,6 +221,16 @@ class TestPySD(unittest.TestCase):
         # results of a split model are the same that those of the regular
         # model (un-split)
         assert_frames_close(result_split, result_non_split, atol=0, rtol=0)
+
+        with open(root_dir + model_name + ".py", 'r') as file:
+            file_content = file.read()
+
+        # assert that the functions are in the main file for regular trans
+        self.assertIn("def another_var()", file_content)
+        self.assertIn("def rate1()", file_content)
+        self.assertIn("def varn()", file_content)
+        self.assertIn("def variablex()", file_content)
+        self.assertIn("def stock()", file_content)
 
         # remove newly created files
         os.remove(root_dir + model_name + ".py")
