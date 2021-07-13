@@ -1576,13 +1576,15 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs,
         List of element construction dictionaries for the builder to assemble.
 
     """
-    coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
+    Imports.add("external", "ExtData")
+
+    coords = utils.simplify_subscript_input(
+        utils.make_coord_dict(subs, subscript_dict, terse=False),
+        subscript_dict, return_full=False)
     keyword = (
         "'%s'" % keyword.strip(":").lower() if isinstance(keyword, str) else
         keyword)
     name = utils.make_python_identifier("_ext_data_%s" % identifier)[0]
-
-    Imports.add("external", "ExtData")
 
     # Check if the object already exists
     if name in build_names:
@@ -1658,7 +1660,9 @@ def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
     """
     Imports.add("external", "ExtConstant")
 
-    coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
+    coords = utils.simplify_subscript_input(
+        utils.make_coord_dict(subs, subscript_dict, terse=False),
+        subscript_dict, return_full=False)
     name = utils.make_python_identifier("_ext_constant_%s" % identifier)[0]
 
     # Check if the object already exists
@@ -1738,7 +1742,9 @@ def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell,
     """
     Imports.add("external", "ExtLookup")
 
-    coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
+    coords = utils.simplify_subscript_input(
+        utils.make_coord_dict(subs, subscript_dict, terse=False),
+        subscript_dict, return_full=False)
     name = utils.make_python_identifier("_ext_lookup_%s" % identifier)[0]
 
     # Check if the object already exists

@@ -1264,43 +1264,17 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
                 else:
                     datastr = n.text
 
-                # Following implementation makes cleaner the model file
-                if list(coords) == element["subs"]:
-                    if len(coords) == len(subscript_dict):
-                        # variable is defined with all subscrips
-                        return builder.build_function_call(
-                            functions_utils["DataArray"],
-                            [datastr, "_subscript_dict", repr(list(coords))],
-                        )
-
-                from_dict, no_from_dict = [], {}
-                for coord, sub in zip(coords, element["subs"]):
-                    # find dimensions can be retrieved from _subscript_dict
-                    if coord == sub:
-                        from_dict.append(coord)
-                    else:
-                        no_from_dict[coord] = coords[coord]
-
-                if from_dict and no_from_dict:
-                    # some dimensons can be retrieved from _subscript_dict
-                    coordsp = (
-                        "{**{dim: _subscript_dict[dim] for dim in %s}, "
-                        % from_dict
-                        + repr(no_from_dict)[1:]
-                    )
-                elif from_dict:
-                    # all dimensons can be retrieved from _subscript_dict
-                    coordsp = "{dim: _subscript_dict[dim] for dim in %s}" \
-                               % from_dict
-                else:
-                    # no dimensons can be retrieved from _subscript_dict
-                    coordsp = repr(no_from_dict)
+                # Create a cleaner dictionary of coords using _subscript_dict
+                # when possible
+                utils.simplify_subscript_input(coords, subscript_dict,
+                                               return_full=True)
 
                 return builder.build_function_call(
-                    functions_utils["DataArray"], [datastr, coordsp, repr(list(
-                        coords))]
-                )
-
+                    functions_utils["DataArray"],
+                    [datastr,
+                     utils.simplify_subscript_input(coords, subscript_dict),
+                     repr(list(coords))]
+                    )
             else:
                 return n.text.replace(" ", "")
 

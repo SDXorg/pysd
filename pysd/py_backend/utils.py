@@ -714,6 +714,49 @@ def round_(x):
     return round(x)
 
 
+def simplify_subscript_input(coords, subscript_dict,
+                             return_full=True):
+    """
+    Parameters
+    ----------
+    coords: dict
+        Coordinates to write in the model file.
+
+    subscript_dict: dict
+        The subscript dictionary of the model file.
+
+    return_full: bool (optional)
+        If True the when coords == subscript_dict, '_subscript_dict'
+        will be returned. Default is True
+
+    partial: bool (optional)
+        If True "_subscript_dict" will not be returned as possible dict.
+        Used when subscript_dict is not the full dictionary. Default is False.
+
+    Returns
+    -------
+    coords: str
+        The equations to generate the coord dicttionary in the model file.
+
+    """
+
+    if coords == subscript_dict and return_full:
+        # variable defined with all the subscripts
+        return "_subscript_dict"
+
+    coordsp = []
+    for dim, coord in coords.items():
+        # find dimensions can be retrieved from _subscript_dict
+        if coord == subscript_dict[dim]:
+            # use _subscript_dict
+            coordsp.append(f"'{dim}': _subscript_dict['{dim}']")
+        else:
+            # write whole dict
+            coordsp.append(f"'{dim}': {coord}")
+
+    return "{" + ", ".join(coordsp) + "}"
+
+
 def add_entries_underscore(*dictionaries):
     """
     Expands dictionaries adding new keys underscoring the white spaces

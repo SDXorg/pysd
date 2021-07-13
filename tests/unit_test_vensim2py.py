@@ -557,9 +557,7 @@ class TestParse_general_expression(unittest.TestCase):
         # hoewever eval is not detecting _subscript_dict variable
         self.assertEqual(
             string,
-            "xr.DataArray(3.32,{dim: "
-            + "_subscript_dict[dim] for dim in "
-            + "['Dim1']},['Dim1'])",
+            "xr.DataArray(3.32,{'Dim1': _subscript_dict['Dim1']},['Dim1'])",
         )
         a = xr.DataArray(
             3.32, {dim: _subscript_dict[dim] for dim in ["Dim1"]}, ["Dim1"]
@@ -580,11 +578,10 @@ class TestParse_general_expression(unittest.TestCase):
         string = element[0]["py_expr"]
         # TODO we should use a = eval(string)
         # hoewever eval is not detecting _subscript_dict variable
-        self.assertTrue(
+        self.assertEqual(
             string,
-            "xr.DataArray([1.,2.,3.],"
-            + "{dim: _subscript_dict[dim]"
-            + " for dim in ['Dim1']}, ['Dim1'])",
+            "xr.DataArray([1.,2.,3.],{'Dim1': _subscript_dict['Dim1']},"
+            "['Dim1'])",
         )
         a = xr.DataArray([1.0, 2.0, 3.0],
                          {dim: _subscript_dict[dim] for dim in ["Dim1"]},
