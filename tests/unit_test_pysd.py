@@ -93,7 +93,7 @@ class TestPySD(unittest.TestCase):
 
         model_name = "test_split_model"
         model_split = pysd.read_vensim(
-            root_dir + model_name + ".mdl", split_modules=True
+            root_dir + model_name + ".mdl", split_views=True
         )
 
         namespace_filename = "_namespace_" + model_name + ".json"
@@ -130,7 +130,7 @@ class TestPySD(unittest.TestCase):
         # check that the results of the split model are the same than those
         # without splitting
         model_non_split = pysd.read_vensim(
-            root_dir + model_name + ".mdl", split_modules=False
+            root_dir + model_name + ".mdl", split_views=False
         )
 
         result_split = model_split.run()
@@ -148,7 +148,7 @@ class TestPySD(unittest.TestCase):
         # remove newly created modules folder
         shutil.rmtree(root_dir + modules_dirname)
 
-    def test_read_vensim_split_model_submodules(self):
+    def test_read_vensim_split_model_subviews(self):
         import pysd
         from pysd.tools.benchmarking import assert_frames_close
 
@@ -156,8 +156,8 @@ class TestPySD(unittest.TestCase):
 
         model_name = "test_split_model_subviews"
         model_split = pysd.read_vensim(
-            root_dir + model_name + ".mdl", split_modules=True,
-            submodule_sep="."
+            root_dir + model_name + ".mdl", split_views=True,
+            subview_sep="."
         )
 
         namespace_filename = "_namespace_" + model_name + ".json"
@@ -182,7 +182,7 @@ class TestPySD(unittest.TestCase):
         # check that the results of the split model are the same than those
         # without splitting
         model_non_split = pysd.read_vensim(
-            root_dir + model_name + ".mdl", split_modules=False
+            root_dir + model_name + ".mdl", split_views=False
         )
 
         result_split = model_split.run()
@@ -208,7 +208,7 @@ class TestPySD(unittest.TestCase):
 
         model_name = "test_split_model_with_macro"
         model_split = pysd.read_vensim(
-            root_dir + model_name + ".mdl", split_modules=True
+            root_dir + model_name + ".mdl", split_views=True
         )
 
         namespace_filename = "_namespace_" + model_name + ".json"
@@ -218,7 +218,7 @@ class TestPySD(unittest.TestCase):
         # check that the results of the split model are the same
         # than those without splitting
         model_non_split = pysd.read_vensim(
-            root_dir + model_name + ".mdl", split_modules=False
+            root_dir + model_name + ".mdl", split_views=False
         )
 
         result_split = model_split.run()
@@ -238,11 +238,11 @@ class TestPySD(unittest.TestCase):
 
     def test_read_vensim_split_model_warning(self):
         import pysd
-        # setting the split_modules=True when the model has a single
+        # setting the split_views=True when the model has a single
         # view should generate a warning
         with catch_warnings(record=True) as ws:
             pysd.read_vensim(
-                test_model, split_modules=True
+                test_model, split_views=True
             )  # set stock value using params
 
         wu = [w for w in ws if issubclass(w.category, UserWarning)]

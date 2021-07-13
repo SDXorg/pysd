@@ -42,16 +42,16 @@ We can substitute this function directly for the heat_loss_to_room model compone
 If you want to replace a subscripted variable, you need to ensure that the output from the new function is the same as the previous one. You can check the current coordinates and dimensions of a component by using :py:data:`.get_coords(variable_name)` as it is explained in :doc:`basic usage <../basic_usage>`.
 
 
-Splitting Vensim views in different files
------------------------------------------
-In order to replicate the Vensim views in translated models, the user can set the `split_modules` argument to True in the :py:func:`read_vensim` function::
+Splitting Vensim views in separate Python files (modules)
+---------------------------------------------------------
+In order to replicate the Vensim views in translated models, the user can set the `split_views` argument to True in the :py:func:`read_vensim` function::
 
-   read_vensim("many_views_model.mdl", split_modules=True)
+   read_vensim("many_views_model.mdl", split_views=True)
 
 
 The option to split the model in views is particularly interesting for large models with tens of views. Translating those models into a single file may make the resulting Python model difficult to read and maintain.
 
-In a Vensim model with three separate views (e.g. `view_1`, `view_2` and `view_3`), setting `split_modules` to True would create the following tree inside the directory where the `.mdl` model is located:
+In a Vensim model with three separate views (e.g. `view_1`, `view_2` and `view_3`), setting `split_views` to True would create the following tree inside the directory where the `.mdl` model is located:
 
 | main-folder
 | ├── modules_many_views_model
@@ -64,6 +64,13 @@ In a Vensim model with three separate views (e.g. `view_1`, `view_2` and `view_3
 | ├── many_views_model.py
 |
 |
+
+.. note ::
+    Often, modelers wish to organise views further. To that end, a common practice is to include a particular character in the View name to indicate that what comes after it is the name of the subview. For instance, we could name one view as `ENERGY.Supply` and another one as `ENERGY.Demand`.
+    In that particular case, setting the `subviews_sep` kwarg equal to `"."`, as in the code below, would name the translated views as `demand.py` and `supply.py` and place them inside the `ENERGY` folder::
+    
+      read_vensim("many_views_model.mdl", split_views=True, subviews_sep=".")
+
 If macros are present, they will be self-contained in files named as the macro itself. The macro inner variables will be placed inside the module that corresponds with the view in which they were defined.
 
 

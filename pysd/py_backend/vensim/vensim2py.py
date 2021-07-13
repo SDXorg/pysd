@@ -1478,7 +1478,7 @@ def parse_lookup_expression(element, subscript_dict):
     )
 
 
-def translate_section(section, macro_list, sketch, root_path, subview_sep):
+def translate_section(section, macro_list, sketch, root_path, subview_sep=""):
 
     model_elements = get_model_elements(section["string"])
 
@@ -1580,16 +1580,13 @@ def translate_section(section, macro_list, sketch, root_path, subview_sep):
     # macros are built in their own separate files, and their inputs and
     # outputs are put in views/subviews
     if sketch and (section["name"] == "_main_"):
-
         module_elements = _classify_elements_by_module(sketch, namespace,
                                                        subview_sep)
-
         if (len(module_elements.keys()) == 1) \
            and (isinstance(module_elements[list(module_elements)[0]], list)):
             warnings.warn(
                 "Only a single view with no subviews was detected. The model"
-                " will be built in a single file."
-            )
+                " will be built in a single file.")
         else:
             builder.build_modular_model(
                 build_elements,
@@ -1609,8 +1606,8 @@ def translate_section(section, macro_list, sketch, root_path, subview_sep):
 def _classify_elements_by_module(sketch, namespace, subview_sep):
     """
     Takes the Vensim sketch as a string, parses it (line by line) and
-    returns a list of the model elements that belong to each vensim view
-    (here we call the modules).
+    returns a dictionary containing the views/subviews as keys and the model
+    elements that belong to each view/subview inside a list as values.
 
     Parameters
     ----------
@@ -1621,46 +1618,23 @@ def _classify_elements_by_module(sketch, namespace, subview_sep):
         Translation from original model element names (keys) to python
         safe function identifiers (values).
 
-    submodule_sep: str
-        Character used to split view names into module + submodule
-        (e.g. if a view is named ENERGY.Demand and submodule_sep is set to ".",
-        then the Demand submodule would be placed inside the ENERGY module)
+    subview_sep: str
+        Character used to split view names into view + subview
+        (e.g. if a view is named ENERGY.Demand and suview_sep is set to ".",
+        then the Demand subview would be placed inside the ENERGY directory)
     
     Returns
     -------
-    module_elements_: dict
-        Dictionary containing view (module) names as keys and a list of
-        the corresponding variables as values.
+    views_dict: dict
+        Dictionary containing view names as keys and a list of the
+        corresponding variables as values. If the subview_sep is defined,
+        then the dictionary will have a nested dict containing the subviews.
 
     """
-    def _clean_file_names(*args):
-        """
-        Removes special characters and makes cleanner file names
-        
-        Parameters
-        ----------
-        *args: tuple
-            Any number of strings to strings to clean
-        
-        Returns
-        -------
-        clean: list
-            List containing the clean strings
-
-        """
-        clean = []
-        for name in args:
-            clean.append(re.sub(
-                                r"[\W]+", "", name.replace(" ", "_")
-                                ).lstrip("0123456789")
-                         )
-        return clean
-    
-    # split the sketch in different modules
+    # split the sketch in different views
     sketch = list(map(lambda x: x.strip(), sketch.split("\\\\\\---/// ")))
 
     view_elements = {}
-
     for module in sketch:
         for sketch_line in module.split("\n"):
             # line is a dict with keys "variable_name" and "view_name"
@@ -1673,35 +1647,36 @@ def _classify_elements_by_module(sketch, namespace, subview_sep):
             if line["variable_name"]:
                 if line["variable_name"] not in view_elements[view_name]:
                     view_elements[view_name].append(line["variable_name"])
- 
-    # removes modules that do not include any variable in them
+
+    # removes views that do not include any variable in them
     non_empty_views = {
         key.lower(): value for key, value in view_elements.items() if value
     }
 
+    # split into subviews, if subview_sep is provided
     views_dict = {}
-    # split into subviews, if suview_sep is provided:
-    if subview_sep:
+    if not subview_sep:
+        # clean file names
+        for view_name, elements in non_empty_views.items():
+            views_dict[utils.clean_file_names(view_name)[0]] = elements
+    else:
         for name, elements in non_empty_views.items():
             # split and clean view/subview names as they are not yet safe
-            view_subview = _clean_file_names(*name.split(subview_sep))
-            view = view_subview[0]
+            view_subview = name.split(subview_sep)
+            
             if len(view_subview) == 2:
-                subview = view_subview[1]
+                view, subview = utils.clean_file_names(*view_subview)
             else:
+                view = utils.clean_file_names(*view_subview)[0]
                 subview = ""
 
             if view.upper() not in views_dict.keys():
                 views_dict[view.upper()] = {}
-            if subview:
-                views_dict[view.upper()][subview.lower()] = elements
-            else:
+            if not subview:
                 views_dict[view.upper()][view.lower()] = elements
-    else:
-        # clean file names
-        for view_name, elements in non_empty_views.items():
-            views_dict[_clean_file_names(view_name)[0]] = elements
-
+            else:
+                views_dict[view.upper()][subview.lower()] = elements
+        
     return views_dict
 
 
@@ -1737,7 +1712,7 @@ def _split_sketch(text):
     return text, sketch
 
 
-def translate_vensim(mdl_file, split_modules, **kwargs):
+def translate_vensim(mdl_file, split_views, **kwargs):
     """
     Translate a vensim file.
 
@@ -1746,11 +1721,11 @@ def translate_vensim(mdl_file, split_modules, **kwargs):
     mdl_file: str
         File path of a vensim model file to translate to python.
 
-    split_modules: bool
+    split_views: bool
         If True, the sketch is parsed to detect model elements in each
         model view, and then translate each view in a separate python
         file. Setting this argument to True is recommended for large
-        models split in many different views.
+        models that are split in many different views.
     
     **kwargs: (optional)
         Additional parameters passed to the translate_vensim function
@@ -1765,6 +1740,9 @@ def translate_vensim(mdl_file, split_modules, **kwargs):
     >>> translate_vensim('../tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl')
 
     """
+    # character used to place subviews in the parent view folder
+    subview_sep = kwargs.get("subview_sep", "")
+
     root_path = os.path.split(mdl_file)[0]
     with open(mdl_file, "r", encoding="UTF-8") as in_file:
         text = in_file.read()
@@ -1780,13 +1758,10 @@ def translate_vensim(mdl_file, split_modules, **kwargs):
     outfile_name = mdl_insensitive.sub(".py", mdl_file)
     out_dir = os.path.dirname(outfile_name)
 
-    if split_modules:
+    if split_views:
         text, sketch = _split_sketch(text)
     else:
         sketch = ""
-
-    # character used to place submodules in the parent module folders
-    submodule_sep = kwargs.get("submodule_sep", "")
 
     file_sections = get_file_sections(text.replace("\n", ""))
 
@@ -1801,7 +1776,6 @@ def translate_vensim(mdl_file, split_modules, **kwargs):
     macro_list = [s for s in file_sections if s["name"] != "_main_"]
 
     for section in file_sections:
-        translate_section(section, macro_list, sketch, root_path,
-                          submodule_sep)
+        translate_section(section, macro_list, sketch, root_path, subview_sep)
 
     return outfile_name

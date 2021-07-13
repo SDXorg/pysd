@@ -63,7 +63,7 @@ def read_xmile(xmile_file, initialize=True, missing_values="warning"):
 
 def read_vensim(
                 mdl_file, initialize=True, missing_values="warning",
-                split_modules=False, **kwargs
+                split_views=False, **kwargs
 ):
     """
     Construct a model from Vensim `.mdl` file.
@@ -85,7 +85,7 @@ def read_vensim(
         the missing values, this option may cause the integration to
         fail, but it may be used to check the quality of the data.
 
-    split_modules: bool (optional)
+    split_views: bool (optional)
         If True, the sketch is parsed to detect model elements in each
         model view, and then translate each view in a separate python
         file. Setting this argument to True is recommended for large
@@ -93,10 +93,10 @@ def read_vensim(
 
     **kwargs: (optional)
         Additional keyword arguments.
-        submodule_sep:(str)
-            Character used to separate modules and submodules. If provided,
-            and split_modules=True, each submodule will be placed inside the
-            folder of the parent module.
+        subview_sep:(str)
+            Character used to separate views and subviews. If provided,
+            and split_views=True, each submodule will be placed inside the
+            folder of the parent view.
 
 
     Returns
@@ -112,7 +112,7 @@ def read_vensim(
     """
     from .py_backend.vensim.vensim2py import translate_vensim
 
-    py_model_file = translate_vensim(mdl_file, split_modules, **kwargs)
+    py_model_file = translate_vensim(mdl_file, split_views, **kwargs)
     model = load(py_model_file, initialize, missing_values)
     model.mdl_file = mdl_file
     return model

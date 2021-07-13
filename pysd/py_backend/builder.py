@@ -124,14 +124,14 @@ def build_modular_model(
 
     """
     This is equivalent to the build function, but is used when the
-    split_modules parameter is set to True in the read_vensim function.
+    split_views parameter is set to True in the read_vensim function.
     The main python model file will be named as the original model file,
     and stored in the same folder. The modules will be stored in a separate
     folder named modules + original_model_name. Three extra json files will
     be generated, containing the namespace, subscripts_dict and the module
     names plus the variables included in each module, respectively.
 
-    Setting split_modules=True is recommended for large models with many
+    Setting split_views=True is recommended for large models with many
     different views.
 
     Parameters
@@ -236,7 +236,7 @@ def build_modular_model(
 def _build_main_module(elements, subscript_dict, file_name, subviews):
     """
     Constructs and writes the python representation of the main model
-    module, when the split_modules=True in the read_vensim function.
+    module, when the split_views=True in the read_vensim function.
 
     Parameters
     ----------
@@ -344,7 +344,7 @@ def _build_main_module(elements, subscript_dict, file_name, subviews):
 def _build_separate_module(elements, subscript_dict, module_name, module_dir):
     """
     Constructs and writes the python representation of a specific model
-    module, when the split_modules=True in the read_vensim function
+    module, when the split_views=True in the read_vensim function
 
     Parameters
     ----------

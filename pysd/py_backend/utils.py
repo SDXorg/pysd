@@ -786,10 +786,10 @@ def load_model_data(root_dir, model_name):
     return namespace, subscripts, modules
 
 
-def open_module(root_dir, model_name, module, sub_module=None):
+def open_module(root_dir, model_name, module, submodule=None):
     """
     Used to load model modules from the main model file, when
-    split_modules=True in the read_vensim function.
+    split_views=True in the read_vensim function.
 
     Parameters
     ----------
@@ -809,17 +809,37 @@ def open_module(root_dir, model_name, module, sub_module=None):
     -------
     str:
         Model file content.
-
     """
-    if not sub_module:
-        return open(
-                    os.path.join(root_dir, "modules_" +
-                                 model_name, module + ".py")).read()
+    if not submodule:
+        rel_file_path = module + ".py"
     else:
-        return open(
-                    os.path.join(root_dir, "modules_" +
-                                 model_name, module, sub_module + ".py")
-                                 ).read()
+        rel_file_path = os.path.join(module, submodule + ".py")
+        
+    return open(
+        os.path.join(root_dir, "modules_" + model_name, rel_file_path)).read()
+
+    
+def clean_file_names(*args):
+    """
+    Removes special characters and makes clean file names
+    
+    Parameters
+    ----------
+    *args: tuple
+        Any number of strings to to clean
+    
+    Returns
+    -------
+    clean: list
+        List containing the clean strings
+    """
+    clean = []
+    for name in args:
+        clean.append(re.sub(
+                            r"[\W]+", "", name.replace(" ", "_")
+                            ).lstrip("0123456789")
+                     )
+    return clean
 
 
 class ProgressBar:

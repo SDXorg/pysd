@@ -207,7 +207,7 @@ class TestPySD(unittest.TestCase):
         modules_dirname = "modules_" + model_name
         model_name_mdl = root_dir + model_name + ".mdl"
 
-        command = f'{call} --translate --split-modules {model_name_mdl}'
+        command = f'{call} --translate --split-views {model_name_mdl}'
         out = subprocess.run(split_bash(command), capture_output=True)
         self.assertEqual(out.returncode, 0)
 
@@ -231,6 +231,66 @@ class TestPySD(unittest.TestCase):
             os.path.isfile(root_dir + modules_dirname + "/" + "view2.py"))
         self.assertTrue(
             os.path.isfile(root_dir + modules_dirname + "/" + "view_3.py"))
+
+        # remove newly created files
+        os.remove(root_dir + model_name + ".py")
+        os.remove(root_dir + namespace_filename)
+        os.remove(root_dir + subscript_dict_filename)
+
+        # remove newly created modules folder
+        shutil.rmtree(root_dir + modules_dirname)
+
+    def test_read_vensim_split_model_subviews(self):
+        import pysd
+        from pysd.tools.benchmarking import assert_frames_close
+
+        root_dir = "more-tests/split_model/"
+
+        model_name = "test_split_model_subviews"
+        model_name_mdl = root_dir + model_name + ".mdl"
+
+        model_split = pysd.read_vensim(
+            root_dir + model_name + ".mdl", split_views=True,
+            subview_sep="."
+        )
+
+        namespace_filename = "_namespace_" + model_name + ".json"
+        subscript_dict_filename = "_subscripts_" + model_name + ".json"
+        modules_dirname = "modules_" + model_name
+
+        separator = "."
+        command = f'{call} --translate --split-views '\
+                  f'--subview-sep={separator} {model_name_mdl}'
+        out = subprocess.run(split_bash(command), capture_output=True)
+        self.assertEqual(out.returncode, 0)
+
+        # check that the modules folders were created
+        self.assertTrue(os.path.isdir(root_dir + modules_dirname + "/VIEW_1"))
+        self.assertTrue(os.path.isdir(root_dir + modules_dirname + "/VIEW_2"))
+
+        # check creation of module files
+        self.assertTrue(
+            os.path.isfile(root_dir + modules_dirname + "/VIEW_1/" +
+                           "submodule_1.py"))
+        self.assertTrue(
+            os.path.isfile(root_dir + modules_dirname + "/VIEW_1/" +
+                           "submodule_2.py"))
+        self.assertTrue(
+            os.path.isfile(root_dir + modules_dirname + "/VIEW_2/" +
+                           "view_2.py"))
+
+        # check that the results of the split model are the same than those
+        # without splitting
+        model_non_split = pysd.read_vensim(
+            root_dir + model_name + ".mdl", split_views=False
+        )
+
+        result_split = model_split.run()
+        result_non_split = model_non_split.run()
+
+        # results of a split model are the same that those of the regular
+        # model (un-split)
+        assert_frames_close(result_split, result_non_split, atol=0, rtol=0)
 
         # remove newly created files
         os.remove(root_dir + model_name + ".py")
