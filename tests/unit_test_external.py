@@ -66,6 +66,33 @@ class TestExcels(unittest.TestCase):
         self.assertEqual(list(pysd.external.Excels._Excels_opyxl),
                          [])
 
+    def test_close_file(self):
+        """
+        Test for checking if excel files were closed
+        """
+        import pysd
+        import psutil
+
+        p = psutil.Process()
+
+        # number of files already open
+        n_files = len(p.open_files())
+
+        file_name = "data/input.xlsx"
+        sheet_name = "Vertical"
+        sheet_name2 = "Horizontal"
+
+        # reading files
+        pysd.external.Excels.read(file_name, sheet_name)
+        pysd.external.Excels.read(file_name, sheet_name2)
+        pysd.external.Excels.read_opyxl(file_name)
+
+        self.assertGreater(len(p.open_files()), n_files)
+
+        # clean
+        pysd.external.Excels.clean()
+        self.assertEqual(len(p.open_files()), n_files)
+
 
 class TestExternalMethods(unittest.TestCase):
     """
@@ -3082,7 +3109,6 @@ class DownwardCompatibility(unittest.TestCase):
         data.initialize()
 
         self.assertTrue(data.data.equals(expected))
-
 
     def test_lookup_data_attr(self):
         """
