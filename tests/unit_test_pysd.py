@@ -1683,8 +1683,8 @@ class TestPySD(unittest.TestCase):
 
         model = pysd.read_vensim(test_model)
         model.components.initial_time = lambda: 3
-        model.final_time = 50
-        model.time_step = 1
+        model.components.final_time = lambda: 50
+        model.components.time_step = lambda: 1
         model.initialize()
 
         actual = list(model._build_euler_timeseries(return_timestamps=[10]))

@@ -1243,13 +1243,17 @@ class Model(Macro):
         except IndexError:
             # return_timestamps is an empty list
             # model default final time or passed argument value
-            t_f = self.final_time
+            t_f = self.components.final_time()
 
         if final_time is not None:
             t_f = max(final_time, t_f)
 
         ts = np.arange(
-            t_0, t_f+self.time_step/2, self.time_step, dtype=np.float64)
+            t_0,
+            t_f+self.components.time_step()/2,
+            self.components.time_step(),
+            dtype=np.float64
+        )
 
         # Add the returned time series into the integration array.
         # Best we can do for now. This does change the integration ever
@@ -1278,11 +1282,10 @@ class Model(Macro):
             # Vensim's standard is to expect that the data set includes
             # the `final time`, so we have to add an extra period to
             # make sure we get that value in what numpy's `arange` gives us.
-
             return np.arange(
                 self.time(),
-                self.final_time + self.saveper/2,
-                self.saveper, dtype=float
+                self.components.final_time() + self.components.saveper()/2,
+                self.components.saveper(), dtype=float
             )
 
         try:
@@ -1377,23 +1380,35 @@ class Model(Macro):
 
         self.progress = progress
 
+        # TODO move control variables to a class
+        if params is None:
+            params = {}
+        if final_time:
+            params['final_time'] = final_time
+        elif return_timestamps is not None:
+            params['final_time'] =\
+                self._format_return_timestamps(return_timestamps)[-1]
+        if time_step:
+            params['time_step'] = time_step
+        if saveper:
+            params['saveper'] = saveper
+        # END TODO
+
         if params:
             self.set_components(params)
 
         self.set_initial_condition(initial_condition)
 
+        # TODO move control variables to a class
         # save control variables
-        self.initial_time = self.time()
-        self.final_time = final_time or self.components.final_time()
-        self.time_step = time_step or self.components.time_step()
-        self.saveper = saveper or max(self.time_step,
-                                      self.components.saveper())
-        # need to take bigger saveper if time_step is > saveper
+        replace = {
+            'initial_time': self.time()
+        }
+        # END TODO
 
         return_timestamps = self._format_return_timestamps(return_timestamps)
 
         t_series = self._build_euler_timeseries(return_timestamps, final_time)
-        self.final_time = t_series[-1]
 
         if return_columns is None or isinstance(return_columns, str):
             return_columns = self._default_return_columns(return_columns)
@@ -1410,10 +1425,9 @@ class Model(Macro):
         res = self._integrate(t_series, capture_elements['step'],
                               return_timestamps)
 
-        self._add_run_elements(res, capture_elements['run'])
+        self._add_run_elements(res, capture_elements['run'], replace=replace)
 
         return_df = utils.make_flat_df(res, return_addresses, flatten_output)
-        return_df.index = return_timestamps
 
         return return_df
 
@@ -1562,8 +1576,7 @@ class Model(Macro):
         outputs: list of dictionaries
 
         """
-        outputs = pd.DataFrame(index=return_timestamps,
-                               columns=capture_elements)
+        outputs = pd.DataFrame(columns=capture_elements)
 
         if self.progress:
             # initialize progress bar
@@ -1580,6 +1593,10 @@ class Model(Macro):
             self.time.update(t2)  # this will clear the stepwise caches
             self.components.cache.reset(t2)
             progressbar.update()
+            # TODO move control variables to a class and automatically stop
+            # when updating time
+            if self.time() >= self.components.final_time():
+                break
 
         # need to add one more time step, because we run only the state
         # updates in the previous loop and thus may be one short.
@@ -1591,7 +1608,7 @@ class Model(Macro):
 
         return outputs
 
-    def _add_run_elements(self, df, capture_elements):
+    def _add_run_elements(self, df, capture_elements, replace={}):
         """
         Adds constant elements to a dataframe.
 
@@ -1603,6 +1620,10 @@ class Model(Macro):
         capture_elements: list
             List of constant elements
 
+        replace: dict
+            Ouputs values to replace.
+            TODO: move control variables to a class and avoid this.
+
         Returns
         -------
         None
@@ -1612,16 +1633,17 @@ class Model(Macro):
         for element in capture_elements:
             df[element] = [getattr(self.components, element)()] * nt
 
+        # TODO: move control variables to a class and avoid this.
         # update initial time values in df (necessary if initial_conditions)
-        for it in ['initial_time', 'final_time', 'saveper', 'time_step']:
+        for it, value in replace.items():
             if it in df:
-                df[it] = getattr(self, it)
+                df[it] = value
             elif it.upper() in df:
-                df[it.upper()] = getattr(self, it)
+                df[it.upper()] = value
             elif it.replace('_', ' ') in df:
-                df[it.replace('_', ' ')] = getattr(self, it)
+                df[it.replace('_', ' ')] = value
             elif it.replace('_', ' ').upper() in df:
-                df[it.replace('_', ' ').upper()] = getattr(self, it)
+                df[it.replace('_', ' ').upper()] = value
 
 
 def ramp(time, slope, start, finish=0):

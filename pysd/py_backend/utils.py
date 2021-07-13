@@ -11,6 +11,7 @@ import json
 
 import regex as re
 import progressbar
+import numpy as np
 import xarray as xr
 
 # used to create python safe names
@@ -688,9 +689,7 @@ def rearrange(data, dims, coords):
         if data.shape == shape:
             # Allows switching dimensions names and transpositions
             return xr.DataArray(data=data.values, coords=coords, dims=dims)
-        elif len(shape) == len(data.shape) and all(
-            [shape[i] < data.shape[i] for i in range(len(shape))]
-        ):
+        elif np.prod(shape) < np.prod(data.shape):
             # Allows subscripting a subrange
             return data.rename(
                 {dim: new_dim for dim, new_dim in zip(data.dims, dims)}
