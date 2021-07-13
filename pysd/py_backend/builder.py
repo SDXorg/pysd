@@ -10,7 +10,6 @@ xmile specific syntax.
 """
 
 import os.path
-from sys import modules
 import textwrap
 import warnings
 from io import open
@@ -176,35 +175,33 @@ def build_modular_model(
         view_elems = []
         if not subviews:  # only main views
             for element in elements:
-                if (element.get("py_name", None) in
-                    elements_per_view[view_name]
-                    or
-                    element.get("parent_name", None) in
-                    elements_per_view[view_name]):
+                if element.get("py_name", None) in \
+                   elements_per_view[view_name] or \
+                   element.get("parent_name", None) in \
+                   elements_per_view[view_name]:
                     view_elems.append(element)
-        
+
             _build_separate_module(view_elems, subscript_dict, view_name,
                                    modules_dir)
-        
+
         else:
             # create subdirectory
             view_dir = os.path.join(modules_dir, view_name)
             os.makedirs(view_dir, exist_ok=True)
-            
+
             for subview_name in elements_per_view[view_name].keys():
                 subview_elems = []
                 for element in elements:
-                    if (element.get("py_name", None) in
-                        elements_per_view[view_name][subview_name]
-                        or
-                        element.get("parent_name", None) in
-                        elements_per_view[view_name][subview_name]):
+                    if element.get("py_name", None) in \
+                       elements_per_view[view_name][subview_name] or \
+                       element.get("parent_name", None) in \
+                       elements_per_view[view_name][subview_name]:
                         subview_elems.append(element)
-        
+
                 _build_separate_module(subview_elems, subscript_dict,
                                        subview_name, view_dir)
                 view_elems += subview_elems
-        
+
     processed_elements += view_elems
 
     # the unprocessed will go in the main file
@@ -212,7 +209,8 @@ def build_modular_model(
         element for element in elements if element not in processed_elements
     ]
     # building main file using the build function
-    _build_main_module(unprocessed_elements, subscript_dict, main_filename, subviews)
+    _build_main_module(unprocessed_elements, subscript_dict,
+                       main_filename, subviews)
 
     # create json file for the modules and corresponding model elements
     with open(os.path.join(modules_dir, "_modules.json"), "w") as outfile:

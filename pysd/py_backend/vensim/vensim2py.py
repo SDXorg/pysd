@@ -1622,7 +1622,7 @@ def _classify_elements_by_module(sketch, namespace, subview_sep):
         Character used to split view names into view + subview
         (e.g. if a view is named ENERGY.Demand and suview_sep is set to ".",
         then the Demand subview would be placed inside the ENERGY directory)
-    
+
     Returns
     -------
     views_dict: dict
@@ -1663,7 +1663,7 @@ def _classify_elements_by_module(sketch, namespace, subview_sep):
         for name, elements in non_empty_views.items():
             # split and clean view/subview names as they are not yet safe
             view_subview = name.split(subview_sep)
-            
+
             if len(view_subview) == 2:
                 view, subview = utils.clean_file_names(*view_subview)
             else:
@@ -1676,7 +1676,7 @@ def _classify_elements_by_module(sketch, namespace, subview_sep):
                 views_dict[view.upper()][view.lower()] = elements
             else:
                 views_dict[view.upper()][subview.lower()] = elements
-        
+
     return views_dict
 
 
@@ -1726,7 +1726,7 @@ def translate_vensim(mdl_file, split_views, **kwargs):
         model view, and then translate each view in a separate python
         file. Setting this argument to True is recommended for large
         models that are split in many different views.
-    
+
     **kwargs: (optional)
         Additional parameters passed to the translate_vensim function
 

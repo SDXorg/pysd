@@ -52,7 +52,7 @@ def load(model_file, missing_values, split_views, **kwargs):
     ---------
     model_file: str
         Vensim, Xmile or PySD model file.
-    
+
     split_views: bool (optional)
         If True, the sketch is parsed to detect model elements in each
         model view, and then translate each view in a separate python

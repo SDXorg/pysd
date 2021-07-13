@@ -801,7 +801,7 @@ def open_module(root_dir, model_name, module, submodule=None):
 
     module: str
         Name of the module folder or file to open.
-    
+
     sub_module: str (optional)
         Name of the submodule to open.
 
@@ -814,20 +814,20 @@ def open_module(root_dir, model_name, module, submodule=None):
         rel_file_path = module + ".py"
     else:
         rel_file_path = os.path.join(module, submodule + ".py")
-        
+
     return open(
         os.path.join(root_dir, "modules_" + model_name, rel_file_path)).read()
 
-    
+
 def clean_file_names(*args):
     """
     Removes special characters and makes clean file names
-    
+
     Parameters
     ----------
     *args: tuple
         Any number of strings to to clean
-    
+
     Returns
     -------
     clean: list
