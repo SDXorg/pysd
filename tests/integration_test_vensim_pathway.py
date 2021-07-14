@@ -50,7 +50,6 @@ class TestIntegrationExamples(unittest.TestCase):
             output, canon = runner('test-models/tests/delay_fixed/test_delay_fixed.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('to be fixed #225')
     def test_delay_numeric_error(self):
         # issue https://github.com/JamesPHoughton/pysd/issues/225
         output, canon = runner('test-models/tests/delay_numeric_error/test_delay_numeric_error.mdl')
@@ -70,6 +69,11 @@ class TestIntegrationExamples(unittest.TestCase):
     def test_delays(self):
         # issue https://github.com/JamesPHoughton/pysd/issues/147
         output, canon = runner('test-models/tests/delays/test_delays.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
+    def test_dynamic_final_time(self):
+        # issue https://github.com/JamesPHoughton/pysd/issues/278
+        output, canon = runner('test-models/tests/dynamic_final_time/test_dynamic_final_time.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_euler_step_vs_saveper(self):

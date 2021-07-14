@@ -53,6 +53,10 @@ class Excels():
         """
         Clean the dictionary of read files
         """
+        for file in cls._Excels_opyxl.values():
+            # close files open directly with openpyxls
+            file.close()
+            # files open with pandas are automatically closed
         cls._Excels, cls._Excels_opyxl = {}, {}
 
 

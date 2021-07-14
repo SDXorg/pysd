@@ -438,11 +438,16 @@ class TestUtils(TestCase):
         _subscript_dict = {
             'd1': ['a', 'b', 'c'],
             'd2': ['b', 'c'],
-            'd3': ['b', 'c']
+            'd3': ['b', 'c'],
+            'd4': ['e', 'f']
         }
 
         xr_input_subdim = xr.DataArray([1, 4, 2],
                                        {'d1': ['a', 'b', 'c']}, ['d1'])
+        xr_input_subdim2 = xr.DataArray([[1, 4, 2], [3, 4, 5]],
+                                        {'d1': ['a', 'b', 'c'],
+                                         'd4': ['e', 'f']},
+                                        ['d4', 'd1'])
         xr_input_updim = xr.DataArray([1, 4],
                                       {'d2': ['b', 'c']}, ['d2'])
         xr_input_switch = xr.DataArray([[1, 4], [8, 5]],
@@ -452,6 +457,10 @@ class TestUtils(TestCase):
 
         xr_out_subdim = xr.DataArray([4, 2],
                                      {'d2': ['b', 'c']}, ['d2'])
+        xr_out_subdim2 = xr.DataArray([[4, 2], [4, 5]],
+                                      {'d2': ['b', 'c'],
+                                       'd4': ['e', 'f']},
+                                      ['d4', 'd2'])
         xr_out_updim = xr.DataArray([[1, 1], [4, 4]],
                                     {'d2': ['b', 'c'], 'd3': ['b', 'c']},
                                     ['d2', 'd3'])
@@ -463,6 +472,9 @@ class TestUtils(TestCase):
 
         self.assertTrue(xr_out_subdim.equals(
             rearrange(xr_input_subdim, ['d2'], _subscript_dict)))
+
+        self.assertTrue(xr_out_subdim2.equals(
+            rearrange(xr_input_subdim2, ['d4', 'd2'], _subscript_dict)))
 
         self.assertTrue(xr_out_updim.equals(
             rearrange(xr_input_updim, ['d2', 'd3'], _subscript_dict)))
