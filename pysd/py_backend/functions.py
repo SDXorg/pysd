@@ -1944,7 +1944,7 @@ def random_0_1():
     -------
     A random number from the uniform distribution between 0 and 1.
     """
-    return np.random.uniform(0,1)
+    return np.random.uniform(0, 1)
 
 
 def random_uniform(m, x, s):
@@ -1989,7 +1989,7 @@ def not_implemented_function(*args):
 
 def log(x, base):
     """
-    Implements Vensim's LOG function with change of base
+    Implements Vensim's LOG function with change of base.
 
     Parameters
     ----------
@@ -2006,7 +2006,7 @@ def log(x, base):
 
 def sum(x, dim=None):
     """
-    Implements Vensim's SUM function
+    Implements Vensim's SUM function.
 
     Parameters
     ----------
@@ -2031,7 +2031,7 @@ def sum(x, dim=None):
 
 def prod(x, dim=None):
     """
-    Implements Vensim's PROD function
+    Implements Vensim's PROD function.
 
     Parameters
     ----------
@@ -2056,7 +2056,7 @@ def prod(x, dim=None):
 
 def vmin(x, dim=None):
     """
-    Implements Vensim's Vmin function
+    Implements Vensim's Vmin function.
 
     Parameters
     ----------
@@ -2081,7 +2081,7 @@ def vmin(x, dim=None):
 
 def vmax(x, dim=None):
     """
-    Implements Vensim's VMAX function
+    Implements Vensim's VMAX function.
 
     Parameters
     ----------
@@ -2102,3 +2102,23 @@ def vmax(x, dim=None):
         return float(x.max())
 
     return x.max(dim=dim)
+
+
+def invert_matrix(mat):
+    """
+    Implements Vensim's INVERT MATRIX function.
+
+    Invert the matrix defined by the last two dimensions of xarray.DataArray.
+
+    Paramteters
+    -----------
+    mat: xarray.DataArray
+        The matrix to invert.
+
+    Returns
+    -------
+    mat1: xarray.DataArray
+        Inverted matrix.
+
+    """
+    return xr.DataArray(np.linalg.inv(mat.values), mat.coords, mat.dims)

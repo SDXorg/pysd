@@ -676,6 +676,55 @@ class TestFunctions(unittest.TestCase):
         self.assertEqual(pysd.functions.vmax(data, dim=['d1', 'd2']), 4)
         self.assertEqual(pysd.functions.vmax(data), 4)
 
+    def test_invert_matrix(self):
+        """
+        Test for invert_matrix function
+        """
+        import pysd
+
+        coords1 = {'d1': ['a', 'b'], 'd2': ['a', 'b']}
+        coords2 = {'d0': ['1', '2'], 'd1': ['a', 'b'], 'd2': ['a', 'b']}
+        coords3 = {'d0': ['1', '2'],
+                   'd1': ['a', 'b', 'c'],
+                   'd2': ['a', 'b', 'c']}
+
+        data1 = xr.DataArray([[1, 2], [3, 4]], coords1, ['d1', 'd2'])
+        data2 = xr.DataArray([[[1, 2], [3, 4]], [[-1, 2], [5, 4]]],
+                             coords2,
+                             ['d0', 'd1', 'd2'])
+        data3 = xr.DataArray([[[1, 2, 3], [3, 7, 2], [3, 4, 6]],
+                              [[-1, 2, 3], [4, 7, 3], [5, 4, 6]]],
+                             coords3,
+                             ['d0', 'd1', 'd2'])
+
+        for data in [data1, data2, data3]:
+            datai = pysd.functions.invert_matrix(data)
+            self.assertEqual(data.dims, datai.dims)
+
+            if len(data.shape) == 2:
+                # two dimensions xarrays
+                self.assertTrue((
+                    abs(np.dot(data, datai) - np.dot(datai, data))
+                    < 1e-14
+                    ).all())
+                self.assertTrue((
+                    abs(np.dot(data, datai) - np.identity(data.shape[-1]))
+                    < 1e-14
+                    ).all())
+            else:
+                # three dimensions xarrays
+                for i in range(data.shape[0]):
+                    self.assertTrue((
+                        abs(np.dot(data[i], datai[i])
+                            - np.dot(datai[i], data[i]))
+                        < 1e-14
+                        ).all())
+                    self.assertTrue((
+                        abs(np.dot(data[i], datai[i])
+                            - np.identity(data.shape[-1]))
+                        < 1e-14
+                        ).all())
+
     def test_incomplete(self):
         import pysd
         from warnings import catch_warnings

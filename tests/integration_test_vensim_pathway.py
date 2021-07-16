@@ -183,6 +183,10 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/input_functions/test_inputs.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    def test_invert_matrix(self):
+        output, canon = runner('test-models/tests/invert_matrix/test_invert_matrix.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_limits(self):
         output, canon = runner('test-models/tests/limits/test_limits.mdl')
         assert_frames_close(output, canon, rtol=rtol)

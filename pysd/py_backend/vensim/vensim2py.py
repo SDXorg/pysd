@@ -707,17 +707,20 @@ functions = {
     "prod": {"name": "prod", "module": "functions"},
     "vmin": {"name": "vmin", "module": "functions"},
     "vmax": {"name": "vmax", "module": "functions"},
+    # matricial functions
+    "invert matrix": {
+        "name": "invert_matrix",
+        "parameters": [
+            {"name": "mat"}
+            # we can safely ignore VENSIM's n parameter
+        ],
+        "module": "functions"},
     # TODO functions/stateful objects to be added
     # https://github.com/JamesPHoughton/pysd/issues/154
     "forecast": {
         "name": "not_implemented_function",
         "module": "functions",
         "original_name": "FORECAST",
-    },
-    "invert matrix": {
-        "name": "not_implemented_function",
-        "module": "functions",
-        "original_name": "INVERT MATRIX",
     },
     "get time value": {
         "name": "not_implemented_function",

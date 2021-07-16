@@ -708,6 +708,30 @@ class TestParse_general_expression(unittest.TestCase):
             res[0]["py_expr"], "rearrange(var_c(),['Range1'],_subscript_dict)"
         )
 
+    def test_invert_matrix(self):
+        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+
+        res = parse_general_expression(
+            {
+                "expr": "INVERT MATRIX(A, 3)",
+                "real_name": "A1",
+                "py_name": "a",
+            },
+            {
+                "A": "a",
+                "A1": "a1",
+            },
+            subscript_dict={
+                "dim1": ["a", "b", "c"], "dim2": ["a", "b", "c"]
+            },
+            elements_subs_dict={
+                "a1": ["dim1", "dim2"],
+                "a": ["dim1", "dim2"]
+            }
+        )
+
+        self.assertEqual(res["py_expr"], "invert_matrix(a())")
+
     def test_incomplete_expression(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
         from warnings import catch_warnings
