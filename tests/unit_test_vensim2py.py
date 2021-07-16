@@ -730,7 +730,34 @@ class TestParse_general_expression(unittest.TestCase):
             }
         )
 
-        self.assertEqual(res["py_expr"], "invert_matrix(a())")
+        self.assertEqual(res[0]["py_expr"], "invert_matrix(a())")
+
+    def test_subscript_logicals(self):
+        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+
+        res = parse_general_expression(
+            {
+                "expr": "IF THEN ELSE(dim1=dim2, 5, 0)",
+                "real_name": "A",
+                "py_name": "a",
+            },
+            {
+                "A": "a",
+            },
+            subscript_dict={
+                "dim1": ["a", "b", "c"], "dim2": ["a", "b", "c"]
+            },
+            elements_subs_dict={
+                "a": ["dim1", "dim2"]
+            }
+        )
+
+        self.assertIn(
+            "xr.DataArray(_subscript_dict['dim1'],"
+            "{'dim1': _subscript_dict['dim1']},'dim1')"
+            "==xr.DataArray(_subscript_dict['dim2'],"
+            "{'dim2': _subscript_dict['dim2']},'dim2')",
+            res[0]["py_expr"], )
 
     def test_incomplete_expression(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression

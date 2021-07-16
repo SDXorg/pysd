@@ -326,6 +326,10 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner('test-models/tests/subrange_merge/test_subrange_merge.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    def test_subscript_logicals(self):
+        output, canon = runner('test-models/tests/subscript_logicals/test_subscript_logicals.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_subscript_multiples(self):
         output, canon = runner('test-models/tests/subscript_multiples/test_multiple_subscripts.mdl')
         assert_frames_close(output, canon, rtol=rtol)
