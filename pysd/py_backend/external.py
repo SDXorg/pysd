@@ -406,12 +406,15 @@ class External(object):
                   )
 
         # Check if the lookup/time dimension is strictly monotonous
-        if np.any(np.diff(series) <= 0) and self.missing != "keep":
+        if not (np.all(np.diff(series) <= 0) or
+                np.all(np.diff(series) >= 0)) and \
+                self.missing != "keep":
             raise ValueError(self.py_name + "\n"
-                  + "Dimension given in:\n"
-                  + self._file_sheet
-                  + "\t{}:\t{}\n".format(series_across, self.x_row_or_col)
-                  + " is not strictly monotonous")
+                             + "Dimension given in:\n"
+                             + self._file_sheet
+                             + "\t{}:\t{}\n".format(
+                                 series_across, self.x_row_or_col)
+                             + " is not strictly monotonous")
 
         # Check for missing values in data
         if np.any(np.isnan(data)) and self.missing != "keep":
