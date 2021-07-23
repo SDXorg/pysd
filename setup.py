@@ -3,6 +3,9 @@ from setuptools import setup, find_packages
 exec(open('pysd/_version.py').read())
 print(__version__)
 
+test_pckgs = open('dev-requirements.txt').read().strip().split('\n')
+extras = {"test": test_pckgs}
+
 setup(
     name='pysd',
     version=__version__,
@@ -28,6 +31,8 @@ setup(
         'Programming Language :: Python :: 3.9',
     ],
     install_requires=open('requirements.txt').read().strip().split('\n'),
+    tests_require=test_pckgs,
+    extras_require=extras,
     package_data={
         'py_backend': [
             'xmile/smile.grammar'
