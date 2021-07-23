@@ -405,16 +405,20 @@ class External(object):
                   + "\t{}:\t{}\n".format(series_across, self.x_row_or_col)
                   )
 
-        # Check if the lookup/time dimension is strictly monotonous
-        if not (np.all(np.diff(series) <= 0) or
-                np.all(np.diff(series) >= 0)) and \
-                self.missing != "keep":
-            raise ValueError(self.py_name + "\n"
-                             + "Dimension given in:\n"
-                             + self._file_sheet
-                             + "\t{}:\t{}\n".format(
-                                 series_across, self.x_row_or_col)
-                             + " is not strictly monotonous")
+        # reorder data with increasing series
+        if not np.all(np.diff(series) > 0) and self.missing != "keep":
+            order = np.argsort(series)
+            series = series[order]
+            data = data[order]
+            # Check if the lookup/time dimension is well defined
+            if np.any(np.diff(series) == 0):
+                raise ValueError(self.py_name + "\n"
+                                 + "Dimension given in:\n"
+                                 + self._file_sheet
+                                 + "\t{}:\t{}\n".format(
+                                    series_across, self.x_row_or_col)
+                                 + " has repeated values")
+
 
         # Check for missing values in data
         if np.any(np.isnan(data)) and self.missing != "keep":
