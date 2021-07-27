@@ -497,7 +497,7 @@ def parse_sketch_line(sketch_line, namespace):
     view_title = "*" view_name
     view_name = ~r"(?<=\*)[^\n]+$"
     view_definition = "$" color "," digit "," font_properties "|" ( ( color / ones_and_dashes ) "|")* view_code
-    var_definition = var_code "," var_number "," var_name "," position "," var_box_type "," arrows_in_allowed "," hide_level "," var_face "," var_word_position "," var_thickness "," var_rest_conf ","? ( ( ones_and_dashes / color) ",")* font_properties?
+    var_definition = var_code "," var_number "," var_name "," position "," var_box_type "," arrows_in_allowed "," hide_level "," var_face "," var_word_position "," var_thickness "," var_rest_conf ","? ( ( ones_and_dashes / color) ",")* font_properties? ","? extra_bytes?
     # elements used in a line defining the properties of a variable or stock
     var_name = element
     var_name = ~r"(?<=,)[^,]+(?=,)"
@@ -510,6 +510,7 @@ def parse_sketch_line(sketch_line, namespace):
     var_word_position = ~r"(?<=,)\-*\d+(?=,)"
     var_thickness = digit
     var_rest_conf = digit "," ~r"\d+"
+    extra_bytes = ~r"\d+,\d+,\d+,\d+,\d+,\d+" # required since Vensim 8.2.1
     arrow = arrow_code "," digit "," origin_var "," destination_var "," (digit ",")+ (ones_and_dashes ",")?  ((color ",") / ("," ~r"\d+") / (font_properties "," ~r"\d+"))* "|(" position ")|"
     # arrow origin and destination (this may be useful if further
     # parsing is required)
@@ -564,7 +565,7 @@ def parse_sketch_line(sketch_line, namespace):
 
         def generic_visit(self, n, vc):
             return "".join(filter(None, vc)) or n.text or ""
-
+        
     tree = parser.parse(sketch_line)
     return SketchParser(tree, namespace=namespace).view_or_var
 
@@ -1629,11 +1630,9 @@ def _classify_elements_by_module(sketch, namespace, subview_sep):
 
     # split into subviews, if subview_sep is provided
     views_dict = {}
-    if not subview_sep:
-        # clean file names
-        for view_name, elements in non_empty_views.items():
-            views_dict[utils.clean_file_names(view_name)[0]] = elements
-    else:
+
+    if subview_sep and any(filter(lambda x: subview_sep in x,
+                           non_empty_views.keys())):
         for name, elements in non_empty_views.items():
             # split and clean view/subview names as they are not yet safe
             view_subview = name.split(subview_sep)
@@ -1650,6 +1649,10 @@ def _classify_elements_by_module(sketch, namespace, subview_sep):
                 views_dict[view.upper()][view.lower()] = elements
             else:
                 views_dict[view.upper()][subview.lower()] = elements
+    else:
+        # clean file names
+        for view_name, elements in non_empty_views.items():
+            views_dict[utils.clean_file_names(view_name)[0]] = elements
 
     return views_dict
 

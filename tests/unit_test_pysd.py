@@ -168,6 +168,82 @@ class TestPySD(unittest.TestCase):
         # remove newly created modules folder
         shutil.rmtree(root_dir + modules_dirname)
 
+    def test_read_vensim_split_model_vensim_8_2_1(self):
+        import pysd
+        from pysd.tools.benchmarking import assert_frames_close
+
+        root_dir = "more-tests/split_model_vensim_8_2_1/"
+
+        model_name = "test_split_model_vensim_8_2_1"
+        model_split = pysd.read_vensim(
+            root_dir + model_name + ".mdl", split_views=True, subview_sep="."
+        )
+
+        namespace_filename = "_namespace_" + model_name + ".json"
+        subscript_dict_filename = "_subscripts_" + model_name + ".json"
+        modules_filename = "_modules.json"
+        modules_dirname = "modules_" + model_name
+
+        # check that _namespace and _subscript_dict json files where created
+        self.assertTrue(os.path.isfile(root_dir + namespace_filename))
+        self.assertTrue(os.path.isfile(root_dir + subscript_dict_filename))
+
+        # check that the main model file was created
+        self.assertTrue(os.path.isfile(root_dir + model_name + ".py"))
+
+        # check that the modules folder was created
+        self.assertTrue(os.path.isdir(root_dir + modules_dirname))
+        self.assertTrue(
+            os.path.isfile(root_dir + modules_dirname + "/" + modules_filename)
+        )
+
+        # check creation of module files
+        self.assertTrue(
+            os.path.isfile(root_dir + modules_dirname + "/" + "teacup.py"))
+        self.assertTrue(
+            os.path.isfile(root_dir + modules_dirname + "/" + "cream.py"))
+
+        # check dictionaries
+        self.assertIn("Cream Temperature",
+                      model_split.components._namespace.keys())
+        self.assertIn("cream", model_split.components._modules.keys())
+        self.assertIsInstance(model_split.components._subscript_dict, dict)
+
+        with open(root_dir + model_name + ".py", 'r') as file:
+            file_content = file.read()
+
+        # assert that the functions are not defined in the main file
+        self.assertNotIn("def teacup_temperature()", file_content)
+        self.assertNotIn("def cream_temperature()", file_content)
+
+        # check that the results of the split model are the same than those
+        # without splitting
+        model_non_split = pysd.read_vensim(
+            root_dir + model_name + ".mdl", split_views=False
+        )
+
+        result_split = model_split.run()
+        result_non_split = model_non_split.run()
+
+        # results of a split model are the same that those of the regular
+        # model (un-split)
+        assert_frames_close(result_split, result_non_split, atol=0, rtol=0)
+
+        with open(root_dir + model_name + ".py", 'r') as file:
+            file_content = file.read()
+
+        # assert that the functions are in the main file for regular trans
+        self.assertIn("def teacup_temperature()", file_content)
+        self.assertIn("def cream_temperature()", file_content)
+
+        # remove newly created files
+        os.remove(root_dir + model_name + ".py")
+        os.remove(root_dir + namespace_filename)
+        os.remove(root_dir + subscript_dict_filename)
+
+        # remove newly created modules folder
+        shutil.rmtree(root_dir + modules_dirname)
+
     def test_read_vensim_split_model_subviews(self):
         import pysd
         from pysd.tools.benchmarking import assert_frames_close
