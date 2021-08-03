@@ -4,7 +4,6 @@ exec(open('pysd/_version.py').read())
 print(__version__)
 
 test_pckgs = open('dev-requirements.txt').read().strip().split('\n')
-extras = {"test": test_pckgs}
 
 setup(
     name='pysd',
@@ -32,7 +31,7 @@ setup(
     ],
     install_requires=open('requirements.txt').read().strip().split('\n'),
     tests_require=test_pckgs,
-    extras_require=extras,
+    extras_require={"test": test_pckgs},
     package_data={
         'py_backend': [
             'xmile/smile.grammar'
