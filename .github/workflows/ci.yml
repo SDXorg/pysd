@@ -26,7 +26,7 @@ jobs:
       - name: Test and coverage
         run: |
           cd tests
-          coverage run --source=../pysd -m pytest
+          coverage run --source=pysd -m pytest
       - name: Coveralls
         if: matrix.python-version == 3.7
         env:
