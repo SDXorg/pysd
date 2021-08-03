@@ -1,5 +1,5 @@
 pytest
 pytest-cov
-coverage<5.0
-coveralls==2.2.0
+coverage
+coveralls
 psutil

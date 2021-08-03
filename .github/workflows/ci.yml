@@ -22,14 +22,17 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
-        run: |
-          pip install -e .[test]
+        run: pip install -e .[test]
       - name: Test with pytest and Coveralls
-        run: |
-          cd tests
-          pytest --cov=pysd
-      - name: Coveralls
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_COVERALLS_DEBUG: 1
         run: |
-          coveralls
+          cd tests
+          coverage run --source=pysd -m pytest
+          coveralls -v --service=github
+      #- name: Test with pytest and Coveralls
+      #  if: matrix.python-version == 3.9
+      #  env:
+      #    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #  run: coveralls --service=github
