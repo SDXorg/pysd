@@ -6,7 +6,10 @@ import numpy as np
 import xarray as xr
 
 _root = os.path.dirname(__file__)
-_exp = SourceFileLoader('expected_data', 'data/expected_data.py').load_module()
+_exp = SourceFileLoader(
+    'expected_data',
+    os.path.join(_root, 'data/expected_data.py')
+    ).load_module()
 
 
 class TestExcels(unittest.TestCase):
@@ -19,7 +22,7 @@ class TestExcels(unittest.TestCase):
         """
         import pysd
 
-        file_name = "data/input.xlsx"
+        file_name = os.path.join(_root, "data/input.xlsx")
         sheet_name = "Vertical"
         sheet_name2 = "Horizontal"
 
@@ -47,7 +50,7 @@ class TestExcels(unittest.TestCase):
         import pysd
         from openpyxl import Workbook
 
-        file_name = "data/input.xlsx"
+        file_name = os.path.join(_root, "data/input.xlsx")
 
         # reading a file
         excel = pysd.external.Excels.read_opyxl(file_name)
@@ -78,7 +81,7 @@ class TestExcels(unittest.TestCase):
         # number of files already open
         n_files = len(p.open_files())
 
-        file_name = "data/input.xlsx"
+        file_name = os.path.join(_root, "data/input.xlsx")
         sheet_name = "Vertical"
         sheet_name2 = "Horizontal"
 

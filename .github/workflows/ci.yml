@@ -24,9 +24,7 @@ jobs:
       - name: Install dependencies
         run: pip install -e .[test]
       - name: Test and coverage
-        run: |
-          cd tests
-          coverage run --source=pysd -m pytest
+        run: coverage run --source=pysd/ -m pytest tests/
       - name: Coveralls
         if: matrix.python-version == 3.7
         env:
