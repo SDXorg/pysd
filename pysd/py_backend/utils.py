@@ -714,6 +714,49 @@ def round_(x):
     return round(x)
 
 
+def simplify_subscript_input(coords, subscript_dict,
+                             return_full=True):
+    """
+    Parameters
+    ----------
+    coords: dict
+        Coordinates to write in the model file.
+
+    subscript_dict: dict
+        The subscript dictionary of the model file.
+
+    return_full: bool (optional)
+        If True the when coords == subscript_dict, '_subscript_dict'
+        will be returned. Default is True
+
+    partial: bool (optional)
+        If True "_subscript_dict" will not be returned as possible dict.
+        Used when subscript_dict is not the full dictionary. Default is False.
+
+    Returns
+    -------
+    coords: str
+        The equations to generate the coord dicttionary in the model file.
+
+    """
+
+    if coords == subscript_dict and return_full:
+        # variable defined with all the subscripts
+        return "_subscript_dict"
+
+    coordsp = []
+    for dim, coord in coords.items():
+        # find dimensions can be retrieved from _subscript_dict
+        if coord == subscript_dict[dim]:
+            # use _subscript_dict
+            coordsp.append(f"'{dim}': _subscript_dict['{dim}']")
+        else:
+            # write whole dict
+            coordsp.append(f"'{dim}': {coord}")
+
+    return "{" + ", ".join(coordsp) + "}"
+
+
 def add_entries_underscore(*dictionaries):
     """
     Expands dictionaries adding new keys underscoring the white spaces
@@ -785,10 +828,10 @@ def load_model_data(root_dir, model_name):
     return namespace, subscripts, modules
 
 
-def open_module(root_dir, model_name, module):
+def open_module(root_dir, model_name, module, submodule=None):
     """
     Used to load model modules from the main model file, when
-    split_modules=True in the read_vensim function.
+    split_views=True in the read_vensim function.
 
     Parameters
     ----------
@@ -799,17 +842,46 @@ def open_module(root_dir, model_name, module):
         Name of the model without file type extension (e.g. "my_model").
 
     module: str
-        Name of the module to open.
+        Name of the module folder or file to open.
+
+    sub_module: str (optional)
+        Name of the submodule to open.
 
     Returns
     -------
     str:
         Model file content.
-
     """
+    if not submodule:
+        rel_file_path = module + ".py"
+    else:
+        rel_file_path = os.path.join(module, submodule + ".py")
+
     return open(
-        os.path.join(root_dir, "modules_" + model_name, module + ".py")
-        ).read()
+        os.path.join(root_dir, "modules_" + model_name, rel_file_path)).read()
+
+
+def clean_file_names(*args):
+    """
+    Removes special characters and makes clean file names
+
+    Parameters
+    ----------
+    *args: tuple
+        Any number of strings to to clean
+
+    Returns
+    -------
+    clean: list
+        List containing the clean strings
+    """
+    clean = []
+    for name in args:
+        clean.append(re.sub(
+                            r"[\W]+", "", name.replace(" ", "_")
+                            ).lstrip("0123456789")
+                     )
+    return clean
 
 
 class ProgressBar:
