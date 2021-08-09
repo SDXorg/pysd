@@ -218,9 +218,9 @@ model_arguments.add_argument(
          '--saveper will be ignored')
 
 
-###################
-# Model arguments #
-###################
+#########################
+# Translation arguments #
+#########################
 
 trans_arguments = parser.add_argument_group(
     'translation arguments',
@@ -233,10 +233,18 @@ trans_arguments.add_argument(
          'it does not run it after translation')
 
 trans_arguments.add_argument(
-    '--split-modules', dest='split_modules',
+    '--split-views', dest='split_views',
     action='store_true', default=False,
     help='parse the sketch to detect model elements in each model view,'
-         ' and then translate each view in a separate python file')
+         ' and then translate each view in a separate Python file')
+
+trans_arguments.add_argument(
+    '--subview-sep', dest='subview_sep',
+    action='store', type=str, default="", metavar='STRING',
+    help='further division of views split in subviews, by identifying the'
+         'separator string in the view name, only availabe if --split-views'
+         ' is used')
+
 
 #######################
 # Warnings and errors #

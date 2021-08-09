@@ -5,8 +5,8 @@ from io import StringIO
 
 from pysd.py_backend.xmile.xmile2py import translate_xmile
 
-
-TARGET_STMX_FILE = 'test-models/tests/game/test_game.stmx'
+_root = os.path.dirname(__file__)
+TARGET_STMX_FILE = os.path.join(_root, "test-models/tests/game/test_game.stmx")
 
 
 class TestXmileConversion(unittest.TestCase):

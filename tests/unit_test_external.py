@@ -6,7 +6,10 @@ import numpy as np
 import xarray as xr
 
 _root = os.path.dirname(__file__)
-_exp = SourceFileLoader('expected_data', 'data/expected_data.py').load_module()
+_exp = SourceFileLoader(
+    'expected_data',
+    os.path.join(_root, 'data/expected_data.py')
+    ).load_module()
 
 
 class TestExcels(unittest.TestCase):
@@ -19,7 +22,7 @@ class TestExcels(unittest.TestCase):
         """
         import pysd
 
-        file_name = "data/input.xlsx"
+        file_name = os.path.join(_root, "data/input.xlsx")
         sheet_name = "Vertical"
         sheet_name2 = "Horizontal"
 
@@ -47,7 +50,7 @@ class TestExcels(unittest.TestCase):
         import pysd
         from openpyxl import Workbook
 
-        file_name = "data/input.xlsx"
+        file_name = os.path.join(_root, "data/input.xlsx")
 
         # reading a file
         excel = pysd.external.Excels.read_opyxl(file_name)
@@ -78,7 +81,7 @@ class TestExcels(unittest.TestCase):
         # number of files already open
         n_files = len(p.open_files())
 
-        file_name = "data/input.xlsx"
+        file_name = os.path.join(_root, "data/input.xlsx")
         sheet_name = "Vertical"
         sheet_name2 = "Horizontal"
 
@@ -2684,10 +2687,10 @@ class TestWarningsErrors(unittest.TestCase):
             data.initialize()
 
     # Following test are independent of the reading option
-    def test_data_interp_hnnm(self):
+    def test_data_interp_hnnwd(self):
         """
         Test for error in series when the series is not
-        strictly monotonous
+        well defined
         """
         import pysd
 
@@ -2697,7 +2700,7 @@ class TestWarningsErrors(unittest.TestCase):
         cell = "data_1d"
         coords = {}
         interp = None
-        py_name = "test_data_interp_hnnm"
+        py_name = "test_data_interp_hnnwd"
 
         data = pysd.external.ExtData(file_name=file_name,
                                      sheet=sheet,
@@ -2708,8 +2711,63 @@ class TestWarningsErrors(unittest.TestCase):
                                      interp=interp,
                                      py_name=py_name)
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(ValueError) as err:
             data.initialize()
+
+        self.assertIn("has repeated values", str(err.exception))
+
+    def test_data_raw_hnnm(self):
+        """
+        Test for error in series when the series is not monotonous
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        sheet = "No monotonous"
+        time_row_or_col = "10"
+        cell = "C12"
+        coords = {}
+        interp = None
+        py_name = "test_data_interp_hnnnm"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     sheet=sheet,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     interp=interp,
+                                     py_name=py_name)
+
+        data.initialize()
+
+        expected = {-1: 2, 0: 2, 1: 2, 2: 3,
+                    3: -1, 4: -1, 5: 1, 6: 1,
+                    7: 0, 8: 0, 9: 0}
+
+        for i in range(-1, 9):
+            self.assertEqual(data(i), expected[i])
+
+        time_row_or_col = "11"
+        py_name = "test_data_interp_hnnnm2"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     sheet=sheet,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     interp=interp,
+                                     py_name=py_name)
+
+        data.initialize()
+
+        expected = {-1: 0, 0: 0, 1: 0, 2: 1,
+                    3: 2, 4: 3, 5: -1, 6: -1,
+                    7: 1, 8: 2, 9: 2}
+
+        for i in range(-1, 9):
+            self.assertEqual(data(i), expected[i])
 
     def test_data_h3d_interpnv(self):
         """
