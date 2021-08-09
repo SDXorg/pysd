@@ -15,22 +15,22 @@ clean:
 
 tests: clean
         ifeq ($(NUM_PROC), 1)
-		pytest *.py
+		pytest
         else
-		pytest *.py -n $(NUM_PROC)
+		pytest -n $(NUM_PROC)
 endif
 
 cover: clean
         ifeq ($(NUM_PROC), 1)
-	pytest --cov=pysd --cov-report term *.py
+	pytest --cov=pysd --cov-report term
         else
-	pytest --cov=pysd --cov-report term *.py -n $(NUM_PROC)
+	pytest --cov=pysd --cov-report term -n $(NUM_PROC)
 endif
 
 coverhtml: clean
         ifeq ($(NUM_PROC), 1)
-	pytest --cov=pysd --cov-report html --cov-report term *.py
+	pytest --cov=pysd --cov-report html --cov-report term
         else
-	pytest --cov=pysd --cov-report html --cov-report term *.py -n $(NUM_PROC)
+	pytest --cov=pysd --cov-report html --cov-report term -n $(NUM_PROC)
 endif
 

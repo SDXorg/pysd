@@ -6,14 +6,18 @@ import pandas as pd
 import numpy as np
 import xarray as xr
 
-test_model = "test-models/samples/teacup/teacup.mdl"
-test_model_subs = (
-    "test-models/tests/subscript_2d_arrays/" + "test_subscript_2d_arrays.mdl"
-)
-test_model_look = (
+_root = os.path.dirname(__file__)
+
+test_model = os.path.join(_root, "test-models/samples/teacup/teacup.mdl")
+test_model_subs = os.path.join(
+    _root,
+    "test-models/tests/subscript_2d_arrays/test_subscript_2d_arrays.mdl")
+test_model_look = os.path.join(
+    _root,
     "test-models/tests/get_lookups_subscripted_args/"
-    + "test_get_lookups_subscripted_args.mdl"
-)
+    + "test_get_lookups_subscripted_args.mdl")
+
+more_tests = os.path.join(_root, "more-tests")
 
 
 class TestPySD(unittest.TestCase):
@@ -22,22 +26,22 @@ class TestPySD(unittest.TestCase):
 
         # old PySD major version
         with self.assertRaises(ImportError):
-            pysd.load("more-tests/version/test_old_version.py")
+            pysd.load(more_tests + "/version/test_old_version.py")
 
         # current PySD major version
-        pysd.load("more-tests/version/test_current_version.py")
+        pysd.load(more_tests + "/version/test_current_version.py")
 
     def test_load_type_error(self):
         import pysd
 
         with self.assertRaises(ImportError):
-            pysd.load("more-tests/type_error/test_type_error.py")
+            pysd.load(more_tests + "/type_error/test_type_error.py")
 
     def test_read_not_model_vensim(self):
         import pysd
 
         with self.assertRaises(ValueError):
-            pysd.read_vensim('more-tests/not_vensim/test_not_vensim.txt')
+            pysd.read_vensim(more_tests + "/not_vensim/test_not_vensim.txt")
 
     def test_run(self):
         import pysd
@@ -56,10 +60,14 @@ class TestPySD(unittest.TestCase):
     def test_run_ignore_missing(self):
         import pysd
 
-        model_mdl = 'test-models/tests/get_with_missing_values_xlsx/'\
-                    + 'test_get_with_missing_values_xlsx.mdl'
-        model_py = 'test-models/tests/get_with_missing_values_xlsx/'\
-                   + 'test_get_with_missing_values_xlsx.py'
+        model_mdl = os.path.join(
+            _root,
+            'test-models/tests/get_with_missing_values_xlsx/'
+            + 'test_get_with_missing_values_xlsx.mdl')
+        model_py = os.path.join(
+            _root,
+            'test-models/tests/get_with_missing_values_xlsx/'
+            + 'test_get_with_missing_values_xlsx.py')
 
         with catch_warnings(record=True) as ws:
             # warnings for missing values
@@ -89,11 +97,11 @@ class TestPySD(unittest.TestCase):
         import pysd
         from pysd.tools.benchmarking import assert_frames_close
 
-        root_dir = "more-tests/split_model/"
+        root_dir = more_tests + "/split_model/"
 
         model_name = "test_split_model"
         model_split = pysd.read_vensim(
-            root_dir + model_name + ".mdl", split_modules=True
+            root_dir + model_name + ".mdl", split_views=True
         )
 
         namespace_filename = "_namespace_" + model_name + ".json"
@@ -127,10 +135,20 @@ class TestPySD(unittest.TestCase):
         self.assertIn("view2", model_split.components._modules.keys())
         self.assertIsInstance(model_split.components._subscript_dict, dict)
 
+        with open(root_dir + model_name + ".py", 'r') as file:
+            file_content = file.read()
+
+        # assert that the functions are not defined in the main file
+        self.assertNotIn("def another_var()", file_content)
+        self.assertNotIn("def rate1()", file_content)
+        self.assertNotIn("def varn()", file_content)
+        self.assertNotIn("def variablex()", file_content)
+        self.assertNotIn("def stock()", file_content)
+
         # check that the results of the split model are the same than those
         # without splitting
         model_non_split = pysd.read_vensim(
-            root_dir + model_name + ".mdl", split_modules=False
+            root_dir + model_name + ".mdl", split_views=False
         )
 
         result_split = model_split.run()
@@ -139,6 +157,164 @@ class TestPySD(unittest.TestCase):
         # results of a split model are the same that those of the regular
         # model (un-split)
         assert_frames_close(result_split, result_non_split, atol=0, rtol=0)
+
+        with open(root_dir + model_name + ".py", 'r') as file:
+            file_content = file.read()
+
+        # assert that the functions are in the main file for regular trans
+        self.assertIn("def another_var()", file_content)
+        self.assertIn("def rate1()", file_content)
+        self.assertIn("def varn()", file_content)
+        self.assertIn("def variablex()", file_content)
+        self.assertIn("def stock()", file_content)
+
+        # remove newly created files
+        os.remove(root_dir + model_name + ".py")
+        os.remove(root_dir + namespace_filename)
+        os.remove(root_dir + subscript_dict_filename)
+
+        # remove newly created modules folder
+        shutil.rmtree(root_dir + modules_dirname)
+
+    def test_read_vensim_split_model_vensim_8_2_1(self):
+        import pysd
+        from pysd.tools.benchmarking import assert_frames_close
+
+        root_dir = os.path.join(_root, "more-tests/split_model_vensim_8_2_1/")
+
+        model_name = "test_split_model_vensim_8_2_1"
+        model_split = pysd.read_vensim(
+            root_dir + model_name + ".mdl", split_views=True, subview_sep="."
+        )
+
+        namespace_filename = "_namespace_" + model_name + ".json"
+        subscript_dict_filename = "_subscripts_" + model_name + ".json"
+        modules_filename = "_modules.json"
+        modules_dirname = "modules_" + model_name
+
+        # check that _namespace and _subscript_dict json files where created
+        self.assertTrue(os.path.isfile(root_dir + namespace_filename))
+        self.assertTrue(os.path.isfile(root_dir + subscript_dict_filename))
+
+        # check that the main model file was created
+        self.assertTrue(os.path.isfile(root_dir + model_name + ".py"))
+
+        # check that the modules folder was created
+        self.assertTrue(os.path.isdir(root_dir + modules_dirname))
+        self.assertTrue(
+            os.path.isfile(root_dir + modules_dirname + "/" + modules_filename)
+        )
+
+        # check creation of module files
+        self.assertTrue(
+            os.path.isfile(root_dir + modules_dirname + "/" + "teacup.py"))
+        self.assertTrue(
+            os.path.isfile(root_dir + modules_dirname + "/" + "cream.py"))
+
+        # check dictionaries
+        self.assertIn("Cream Temperature",
+                      model_split.components._namespace.keys())
+        self.assertIn("cream", model_split.components._modules.keys())
+        self.assertIsInstance(model_split.components._subscript_dict, dict)
+
+        with open(root_dir + model_name + ".py", 'r') as file:
+            file_content = file.read()
+
+        # assert that the functions are not defined in the main file
+        self.assertNotIn("def teacup_temperature()", file_content)
+        self.assertNotIn("def cream_temperature()", file_content)
+
+        # check that the results of the split model are the same than those
+        # without splitting
+        model_non_split = pysd.read_vensim(
+            root_dir + model_name + ".mdl", split_views=False
+        )
+
+        result_split = model_split.run()
+        result_non_split = model_non_split.run()
+
+        # results of a split model are the same that those of the regular
+        # model (un-split)
+        assert_frames_close(result_split, result_non_split, atol=0, rtol=0)
+
+        with open(root_dir + model_name + ".py", 'r') as file:
+            file_content = file.read()
+
+        # assert that the functions are in the main file for regular trans
+        self.assertIn("def teacup_temperature()", file_content)
+        self.assertIn("def cream_temperature()", file_content)
+
+        # remove newly created files
+        os.remove(root_dir + model_name + ".py")
+        os.remove(root_dir + namespace_filename)
+        os.remove(root_dir + subscript_dict_filename)
+
+        # remove newly created modules folder
+        shutil.rmtree(root_dir + modules_dirname)
+
+    def test_read_vensim_split_model_subviews(self):
+        import pysd
+        from pysd.tools.benchmarking import assert_frames_close
+
+        root_dir = os.path.join(_root, "more-tests/split_model/")
+
+        model_name = "test_split_model_subviews"
+        model_split = pysd.read_vensim(
+            root_dir + model_name + ".mdl", split_views=True,
+            subview_sep="."
+        )
+
+        namespace_filename = "_namespace_" + model_name + ".json"
+        subscript_dict_filename = "_subscripts_" + model_name + ".json"
+        modules_dirname = "modules_" + model_name
+
+        # check that the modules folders were created
+        self.assertTrue(os.path.isdir(root_dir + modules_dirname + "/VIEW_1"))
+        self.assertTrue(os.path.isdir(root_dir + modules_dirname + "/VIEW_2"))
+
+        # check creation of module files
+        self.assertTrue(
+            os.path.isfile(root_dir + modules_dirname + "/VIEW_1/" +
+                           "submodule_1.py"))
+        self.assertTrue(
+            os.path.isfile(root_dir + modules_dirname + "/VIEW_1/" +
+                           "submodule_2.py"))
+        self.assertTrue(
+            os.path.isfile(root_dir + modules_dirname + "/VIEW_2/" +
+                           "view_2.py"))
+
+        with open(root_dir + model_name + ".py", 'r') as file:
+            file_content = file.read()
+
+        # assert that the functions are not defined in the main file
+        self.assertNotIn("def another_var()", file_content)
+        self.assertNotIn("def rate1()", file_content)
+        self.assertNotIn("def varn()", file_content)
+        self.assertNotIn("def variablex()", file_content)
+        self.assertNotIn("def stock()", file_content)
+
+        # check that the results of the split model are the same than those
+        # without splitting
+        model_non_split = pysd.read_vensim(
+            root_dir + model_name + ".mdl", split_views=False
+        )
+
+        result_split = model_split.run()
+        result_non_split = model_non_split.run()
+
+        # results of a split model are the same that those of the regular
+        # model (un-split)
+        assert_frames_close(result_split, result_non_split, atol=0, rtol=0)
+
+        with open(root_dir + model_name + ".py", 'r') as file:
+            file_content = file.read()
+
+        # assert that the functions are in the main file for regular trans
+        self.assertIn("def another_var()", file_content)
+        self.assertIn("def rate1()", file_content)
+        self.assertIn("def varn()", file_content)
+        self.assertIn("def variablex()", file_content)
+        self.assertIn("def stock()", file_content)
 
         # remove newly created files
         os.remove(root_dir + model_name + ".py")
@@ -152,11 +328,11 @@ class TestPySD(unittest.TestCase):
         import pysd
         from pysd.tools.benchmarking import assert_frames_close
 
-        root_dir = "more-tests/split_model_with_macro/"
+        root_dir = more_tests + "/split_model_with_macro/"
 
         model_name = "test_split_model_with_macro"
         model_split = pysd.read_vensim(
-            root_dir + model_name + ".mdl", split_modules=True
+            root_dir + model_name + ".mdl", split_views=True
         )
 
         namespace_filename = "_namespace_" + model_name + ".json"
@@ -166,7 +342,7 @@ class TestPySD(unittest.TestCase):
         # check that the results of the split model are the same
         # than those without splitting
         model_non_split = pysd.read_vensim(
-            root_dir + model_name + ".mdl", split_modules=False
+            root_dir + model_name + ".mdl", split_views=False
         )
 
         result_split = model_split.run()
@@ -186,18 +362,19 @@ class TestPySD(unittest.TestCase):
 
     def test_read_vensim_split_model_warning(self):
         import pysd
-        # setting the split_modules=True when the model has a single
+        # setting the split_views=True when the model has a single
         # view should generate a warning
         with catch_warnings(record=True) as ws:
             pysd.read_vensim(
-                test_model, split_modules=True
+                test_model, split_views=True
             )  # set stock value using params
 
         wu = [w for w in ws if issubclass(w.category, UserWarning)]
 
         self.assertEqual(len(wu), 1)
         self.assertTrue(
-            "Only one module was detected" in str(wu[0].message)
+            "Only a single view with no subviews was detected" in str(
+                wu[0].message)
         )  # check that warning references the stock
 
     def test_run_includes_last_value(self):
@@ -350,7 +527,9 @@ class TestPySD(unittest.TestCase):
             assert_frames_close(stocks2, stocks.loc[[20, 30]])
 
             # delays
-            test_delays = 'test-models/tests/delays/test_delays.mdl'
+            test_delays = os.path.join(
+                _root,
+                'test-models/tests/delays/test_delays.mdl')
             model = pysd.read_vensim(test_delays)
             stocks = model.run(return_timestamps=20)
             model.initialize()
@@ -369,7 +548,9 @@ class TestPySD(unittest.TestCase):
             assert_frames_close(stocks2, stocks)
 
             # delay fixed
-            test_delayf = 'test-models/tests/delay_fixed/test_delay_fixed.mdl'
+            test_delayf = os.path.join(
+                _root,
+                'test-models/tests/delay_fixed/test_delay_fixed.mdl')
             model = pysd.read_vensim(test_delayf)
             stocks = model.run(return_timestamps=20)
             model.initialize()
@@ -388,8 +569,10 @@ class TestPySD(unittest.TestCase):
             assert_frames_close(stocks2, stocks)
 
             # smooth
-            test_smooth = 'test-models/tests/subscripted_smooth/'\
-                          'test_subscripted_smooth.mdl'
+            test_smooth = os.path.join(
+                _root,
+                'test-models/tests/subscripted_smooth/'
+                + 'test_subscripted_smooth.mdl')
             model = pysd.read_vensim(test_smooth)
             stocks = model.run(return_timestamps=20, flatten_output=True)
             model.initialize()
@@ -409,8 +592,10 @@ class TestPySD(unittest.TestCase):
             assert_frames_close(stocks2, stocks)
 
             # trend
-            test_trend = 'test-models/tests/subscripted_trend/'\
-                         'test_subscripted_trend.mdl'
+            test_trend = os.path.join(
+                _root,
+                'test-models/tests/subscripted_trend/'
+                + 'test_subscripted_trend.mdl')
             model = pysd.read_vensim(test_trend)
             stocks = model.run(return_timestamps=20, flatten_output=True)
             model.initialize()
@@ -430,8 +615,8 @@ class TestPySD(unittest.TestCase):
             assert_frames_close(stocks2, stocks)
 
             # initial
-            test_initial = 'test-models/tests/initial_function/'\
-                           'test_initial.mdl'
+            test_initial = os.path.join(
+                _root, 'test-models/tests/initial_function/test_initial.mdl')
             model = pysd.read_vensim(test_initial)
             stocks = model.run(return_timestamps=20)
             model.initialize()
@@ -450,8 +635,9 @@ class TestPySD(unittest.TestCase):
             assert_frames_close(stocks2, stocks)
 
             # sample if true
-            test_sample_if_true = 'test-models/tests/sample_if_true/'\
-                                  'test_sample_if_true.mdl'
+            test_sample_if_true = os.path.join(
+                _root,
+                'test-models/tests/sample_if_true/test_sample_if_true.mdl')
             model = pysd.read_vensim(test_sample_if_true)
             stocks = model.run(return_timestamps=20, flatten_output=True)
             model.initialize()
@@ -989,10 +1175,10 @@ class TestPySD(unittest.TestCase):
         """ Test that the model prints some documentation """
         import pysd
 
-        path2model = (
+        path2model = os.path.join(
+            _root,
             "test-models/tests/multiple_lines_def/" +
-            "test_multiple_lines_def.mdl"
-        )
+            "test_multiple_lines_def.mdl")
         model = pysd.read_vensim(path2model)
 
         doc = model.doc()
@@ -1133,8 +1319,8 @@ class TestPySD(unittest.TestCase):
 
     def test_initialize_order(self):
         import pysd
-        model = pysd.load('more-tests/initialization_order/'
-                          'test_initialization_order.py')
+        model = pysd.load(more_tests + "/initialization_order/"
+                          "test_initialization_order.py")
 
         if model._stateful_elements[0].py_name.endswith('stock_a'):
             # we want to have stock b first always
@@ -1624,7 +1810,8 @@ class TestPySD(unittest.TestCase):
         """
         import pysd
 
-        model = pysd.read_vensim("test-models/tests/delays/test_delays.mdl")
+        model = pysd.read_vensim(os.path.join(
+            _root, "test-models/tests/delays/test_delays.mdl"))
         ret = model.run()
         self.assertTrue(
             {
@@ -1646,7 +1833,8 @@ class TestPySD(unittest.TestCase):
         """
         import pysd
 
-        model = pysd.read_vensim("test-models/tests/lookups/test_lookups.mdl")
+        model = pysd.read_vensim(os.path.join(
+                _root, "test-models/tests/lookups/test_lookups.mdl"))
         ret = model.run()
         self.assertTrue(
             {"accumulation", "rate", "lookup function call"} <=
@@ -1674,9 +1862,11 @@ class TestPySD(unittest.TestCase):
 
         with catch_warnings(record=True) as w:
             simplefilter("always")
-            model = pysd.read_vensim(
-             "test-models/tests/incomplete_equations/test_incomplete_model.mdl"
-            )
+            model = pysd.read_vensim(os.path.join(
+                _root,
+                "test-models/tests/incomplete_equations/"
+                + "test_incomplete_model.mdl"
+            ))
         self.assertTrue(any([warn.category == SyntaxWarning for warn in w]))
 
         with catch_warnings(record=True) as w:
@@ -1701,8 +1891,10 @@ class TestModelInteraction(unittest.TestCase):
         """
         import pysd
 
-        model_1 = pysd.read_vensim("test-models/samples/teacup/teacup.mdl")
-        model_2 = pysd.read_vensim("test-models/samples/SIR/SIR.mdl")
+        model_1 = pysd.read_vensim(os.path.join(
+                _root, "test-models/samples/teacup/teacup.mdl"))
+        model_2 = pysd.read_vensim(os.path.join(
+                _root, "test-models/samples/SIR/SIR.mdl"))
 
         self.assertNotIn("teacup_temperature", dir(model_2.components))
         self.assertIn("susceptible", dir(model_2.components))
@@ -1722,8 +1914,10 @@ class TestModelInteraction(unittest.TestCase):
         # Todo: this test could be made more comprehensive
         import pysd
 
-        model_1 = pysd.read_vensim("test-models/samples/teacup/teacup.mdl")
-        model_2 = pysd.read_vensim("test-models/samples/SIR/SIR.mdl")
+        model_1 = pysd.read_vensim(os.path.join(
+                _root, "test-models/samples/teacup/teacup.mdl"))
+        model_2 = pysd.read_vensim(os.path.join(
+                _root, "test-models/samples/SIR/SIR.mdl"))
 
         model_1.components.initial_time = lambda: 10
         self.assertNotEqual(model_2.components.initial_time, 10)
@@ -1754,7 +1948,8 @@ class TestModelInteraction(unittest.TestCase):
 
         with self.assertRaises(ValueError) as err:
             pysd.load(
-                "more-tests/circular_reference/test_circular_reference.py")
+                more_tests
+                + "/circular_reference/test_circular_reference.py")
 
         self.assertIn("_integ_integ", str(err.exception))
         self.assertIn("_delay_delay", str(err.exception))
@@ -1789,8 +1984,9 @@ class TestMultiRun(unittest.TestCase):
     def test_delay_reinitializes(self):
         import pysd
 
-        model = pysd.read_vensim(
-            "../tests/test-models/tests/delays/test_delays.mdl")
+        model = pysd.read_vensim(os.path.join(
+            _root,
+            "test-models/tests/delays/test_delays.mdl"))
         res1 = model.run()
         res2 = model.run()
         self.assertTrue(all(res1 == res2))

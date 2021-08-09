@@ -117,20 +117,19 @@ class Imports():
 build_names = set()
 
 
-def build_modular_model(
-    elements, subscript_dict, namespace, main_filename, elements_per_module
-):
+def build_modular_model(elements, subscript_dict, namespace, main_filename,
+                        elements_per_view):
 
     """
     This is equivalent to the build function, but is used when the
-    split_modules parameter is set to True in the read_vensim function.
+    split_views parameter is set to True in the read_vensim function.
     The main python model file will be named as the original model file,
     and stored in the same folder. The modules will be stored in a separate
     folder named modules + original_model_name. Three extra json files will
     be generated, containing the namespace, subscripts_dict and the module
     names plus the variables included in each module, respectively.
 
-    Setting split_modules=True is recommended for large models with many
+    Setting split_views=True is recommended for large models with many
     different views.
 
     Parameters
@@ -164,32 +163,57 @@ def build_modular_model(
     # create modules directory if it does not exist
     os.makedirs(modules_dir, exist_ok=True)
 
-    modules_list = elements_per_module.keys()
+    # check if there are subviews or only main views
+    subviews = all(isinstance(n, dict) for n in elements_per_view.values())
+
+    all_views = elements_per_view.keys()
     # creating the rest of files per module (this needs to be run before the
     # main module, as it updates the import_modules)
     processed_elements = []
-    for module in modules_list:
-        module_elems = []
-        for element in elements:
-            if element.get("py_name", None) in elements_per_module[module] or\
-               element.get("parent_name", None) in elements_per_module[module]:
-                module_elems.append(element)
+    for view_name in all_views:
+        view_elems = []
+        if not subviews:  # only main views
+            for element in elements:
+                if element.get("py_name", None) in \
+                   elements_per_view[view_name] or \
+                   element.get("parent_name", None) in \
+                   elements_per_view[view_name]:
+                    view_elems.append(element)
 
-        _build_separate_module(module_elems, subscript_dict,
-                               module, modules_dir)
+            _build_separate_module(view_elems, subscript_dict, view_name,
+                                   modules_dir)
 
-        processed_elements += module_elems
+        else:
+            # create subdirectory
+            view_dir = os.path.join(modules_dir, view_name)
+            os.makedirs(view_dir, exist_ok=True)
+
+            for subview_name in elements_per_view[view_name].keys():
+                subview_elems = []
+                for element in elements:
+                    if element.get("py_name", None) in \
+                       elements_per_view[view_name][subview_name] or \
+                       element.get("parent_name", None) in \
+                       elements_per_view[view_name][subview_name]:
+                        subview_elems.append(element)
+
+                _build_separate_module(subview_elems, subscript_dict,
+                                       subview_name, view_dir)
+                view_elems += subview_elems
+
+        processed_elements += view_elems
 
     # the unprocessed will go in the main file
     unprocessed_elements = [
         element for element in elements if element not in processed_elements
     ]
     # building main file using the build function
-    _build_main_module(unprocessed_elements, subscript_dict, main_filename)
+    _build_main_module(unprocessed_elements, subscript_dict,
+                       main_filename, subviews)
 
     # create json file for the modules and corresponding model elements
     with open(os.path.join(modules_dir, "_modules.json"), "w") as outfile:
-        json.dump(elements_per_module, outfile, indent=4, sort_keys=True)
+        json.dump(elements_per_view, outfile, indent=4, sort_keys=True)
 
     # create single namespace in a separate json file
     with open(
@@ -203,13 +227,11 @@ def build_modular_model(
     ) as outfile:
         json.dump(subscript_dict, outfile, indent=4, sort_keys=True)
 
-    return None
 
-
-def _build_main_module(elements, subscript_dict, file_name):
+def _build_main_module(elements, subscript_dict, file_name, subviews):
     """
     Constructs and writes the python representation of the main model
-    module, when the split_modules=True in the read_vensim function.
+    module, when the split_views=True in the read_vensim function.
 
     Parameters
     ----------
@@ -229,6 +251,10 @@ def _build_main_module(elements, subscript_dict, file_name):
 
     file_name: str
         Path of the file where the main module will be stored.
+
+    subviews: bool
+        True or false depending on whether the views are split in subviews or
+        not.
 
     Returns
     -------
@@ -276,25 +302,31 @@ def _build_main_module(elements, subscript_dict, file_name):
 
     text += _get_control_vars(control_vars)
 
-    text += textwrap.dedent("""
-    # load modules from the modules_%(outfile)s directory
-    for module in _modules:
-        exec(open_module(_root, "%(outfile)s", module))
+    if not subviews:
+        text += textwrap.dedent("""
+        # load modules from the modules_%(outfile)s directory
+        for module in _modules:
+            exec(open_module(_root, "%(outfile)s", module))
 
-    """ % {
-        "outfile": os.path.basename(file_name).split(".")[0],
+        """ % {
+            "outfile": os.path.basename(file_name).split(".")[0],
+        })
+    else:
+        text += textwrap.dedent("""
+        # load submodules from subdirs in modules_%(outfile)s directory
+        for mod_name, mod_submods in _modules.items():
+            for submod_name in mod_submods.keys():
+                exec(open_module(_root, "%(outfile)s", mod_name, submod_name))
 
-    })
+        """ % {
+            "outfile": os.path.basename(file_name).split(".")[0],
+        })
 
     text += funcs
     text = black.format_file_contents(text, fast=True, mode=black.FileMode())
 
     # Needed for various sessions
     build_names.clear()
-
-    # this is used for testing
-    if file_name == "return":
-        return text
 
     with open(file_name, "w", encoding="UTF-8") as out:
         out.write(text)
@@ -303,7 +335,7 @@ def _build_main_module(elements, subscript_dict, file_name):
 def _build_separate_module(elements, subscript_dict, module_name, module_dir):
     """
     Constructs and writes the python representation of a specific model
-    module, when the split_modules=True in the read_vensim function
+    module, when the split_views=True in the read_vensim function
 
     Parameters
     ----------
@@ -1544,13 +1576,15 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs,
         List of element construction dictionaries for the builder to assemble.
 
     """
-    coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
+    Imports.add("external", "ExtData")
+
+    coords = utils.simplify_subscript_input(
+        utils.make_coord_dict(subs, subscript_dict, terse=False),
+        subscript_dict, return_full=False)
     keyword = (
         "'%s'" % keyword.strip(":").lower() if isinstance(keyword, str) else
         keyword)
     name = utils.make_python_identifier("_ext_data_%s" % identifier)[0]
-
-    Imports.add("external", "ExtData")
 
     # Check if the object already exists
     if name in build_names:
@@ -1626,7 +1660,9 @@ def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
     """
     Imports.add("external", "ExtConstant")
 
-    coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
+    coords = utils.simplify_subscript_input(
+        utils.make_coord_dict(subs, subscript_dict, terse=False),
+        subscript_dict, return_full=False)
     name = utils.make_python_identifier("_ext_constant_%s" % identifier)[0]
 
     # Check if the object already exists
@@ -1663,9 +1699,8 @@ def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
     return "%s()" % external["py_name"], [external]
 
 
-def add_ext_lookup(
-    identifier, file_name, tab, x_row_or_col, cell, subs, subscript_dict
-):
+def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell,
+                   subs, subscript_dict):
     """
     Constructs a external object for handling Vensim's GET XLS LOOKUPS and
     GET DIRECT LOOKUPS functionality.
@@ -1707,7 +1742,9 @@ def add_ext_lookup(
     """
     Imports.add("external", "ExtLookup")
 
-    coords = utils.make_coord_dict(subs, subscript_dict, terse=False)
+    coords = utils.simplify_subscript_input(
+        utils.make_coord_dict(subs, subscript_dict, terse=False),
+        subscript_dict, return_full=False)
     name = utils.make_python_identifier("_ext_lookup_%s" % identifier)[0]
 
     # Check if the object already exists

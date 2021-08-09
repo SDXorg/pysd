@@ -7,7 +7,7 @@ normal operation.
 
 import sys
 
-if sys.version_info[:2] < (3, 7):
+if sys.version_info[:2] < (3, 7):  # pragma: no cover
     raise RuntimeError(
         "\n\n"
         + "Your Python version is not longer supported by PySD.\n"
@@ -61,9 +61,8 @@ def read_xmile(xmile_file, initialize=True, missing_values="warning"):
     return model
 
 
-def read_vensim(
-    mdl_file, initialize=True, missing_values="warning", split_modules=False
-):
+def read_vensim(mdl_file, initialize=True, missing_values="warning",
+                split_views=False, **kwargs):
     """
     Construct a model from Vensim `.mdl` file.
 
@@ -84,11 +83,19 @@ def read_vensim(
         the missing values, this option may cause the integration to
         fail, but it may be used to check the quality of the data.
 
-    split_modules: bool (optional)
+    split_views: bool (optional)
         If True, the sketch is parsed to detect model elements in each
         model view, and then translate each view in a separate python
         file. Setting this argument to True is recommended for large
         models split in many different views. Default is False.
+
+    **kwargs: (optional)
+        Additional keyword arguments.
+        subview_sep:(str)
+            Character used to separate views and subviews. If provided,
+            and split_views=True, each submodule will be placed inside the
+            folder of the parent view.
+
 
     Returns
     -------
@@ -103,7 +110,7 @@ def read_vensim(
     """
     from .py_backend.vensim.vensim2py import translate_vensim
 
-    py_model_file = translate_vensim(mdl_file, split_modules)
+    py_model_file = translate_vensim(mdl_file, split_views, **kwargs)
     model = load(py_model_file, initialize, missing_values)
     model.mdl_file = mdl_file
     return model

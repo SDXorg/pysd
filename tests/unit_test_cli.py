@@ -10,15 +10,21 @@ import numpy as np
 from pysd.tools.benchmarking import load_outputs, assert_frames_close
 from pysd import __version__
 
-test_model = 'test-models/samples/teacup/teacup.mdl'
-test_model_xmile = 'test-models/samples/teacup/teacup.xmile'
-test_model_subs = 'test-models/tests/subscript_2d_arrays/'\
-                  + 'test_subscript_2d_arrays.mdl'
-test_model_look = 'test-models/tests/get_lookups_subscripted_args/'\
-                  + 'test_get_lookups_subscripted_args.mdl'
+_root = os.path.dirname(__file__)
 
-out_tab_file = 'cli_output.tab'
-out_csv_file = 'cli_output.csv'
+test_model = os.path.join(_root, 'test-models/samples/teacup/teacup.mdl')
+test_model_xmile = os.path.join(
+    _root, 'test-models/samples/teacup/teacup.xmile')
+test_model_subs = os.path.join(
+    _root,
+    'test-models/tests/subscript_2d_arrays/test_subscript_2d_arrays.mdl')
+test_model_look = os.path.join(
+    _root,
+    'test-models/tests/get_lookups_subscripted_args/'
+    + 'test_get_lookups_subscripted_args.mdl')
+
+out_tab_file = os.path.join(_root, 'cli_output.tab')
+out_csv_file = os.path.join(_root, 'cli_output.csv')
 
 encoding_stdout = sys.stdout.encoding or 'utf-8'
 encoding_stderr = sys.stderr.encoding or 'utf-8'
@@ -52,7 +58,8 @@ class TestPySD(unittest.TestCase):
     """ These tests are similar to unit_test_pysd but adapted for cli """
     def test_read_not_model(self):
 
-        model = 'more-tests/not_vensim/test_not_vensim.txt'
+        model = os.path.join(
+            _root, 'more-tests/not_vensim/test_not_vensim.txt')
         command = f'{call} {model}'
         out = subprocess.run(split_bash(command), capture_output=True)
         stderr = out.stderr.decode(encoding_stderr)
@@ -65,7 +72,8 @@ class TestPySD(unittest.TestCase):
 
     def test_read_model_not_exists(self):
 
-        model = 'more-tests/not_vensim/test_not_vensim.mdl'
+        model = os.path.join(
+            _root, 'more-tests/not_vensim/test_not_vensim.mdl')
         command = f'{call} {model}'
         out = subprocess.run(split_bash(command), capture_output=True)
         stderr = out.stderr.decode(encoding_stderr)
@@ -77,7 +85,7 @@ class TestPySD(unittest.TestCase):
 
     def test_read_not_valid_output(self):
 
-        out_xls_file = 'cli_output.xls'
+        out_xls_file = os.path.join(_root, 'cli_output.xls')
         command = f'{call} -o {out_xls_file} {test_model}'
         out = subprocess.run(split_bash(command), capture_output=True)
         stderr = out.stderr.decode(encoding_stderr)
@@ -198,7 +206,7 @@ class TestPySD(unittest.TestCase):
 
     def test_read_vensim_split_model(self):
 
-        root_dir = "more-tests/split_model/"
+        root_dir = os.path.join(_root, "more-tests/split_model") + "/"
 
         model_name = "test_split_model"
         namespace_filename = "_namespace_" + model_name + ".json"
@@ -207,7 +215,7 @@ class TestPySD(unittest.TestCase):
         modules_dirname = "modules_" + model_name
         model_name_mdl = root_dir + model_name + ".mdl"
 
-        command = f'{call} --translate --split-modules {model_name_mdl}'
+        command = f'{call} --translate --split-views {model_name_mdl}'
         out = subprocess.run(split_bash(command), capture_output=True)
         self.assertEqual(out.returncode, 0)
 
@@ -231,6 +239,66 @@ class TestPySD(unittest.TestCase):
             os.path.isfile(root_dir + modules_dirname + "/" + "view2.py"))
         self.assertTrue(
             os.path.isfile(root_dir + modules_dirname + "/" + "view_3.py"))
+
+        # remove newly created files
+        os.remove(root_dir + model_name + ".py")
+        os.remove(root_dir + namespace_filename)
+        os.remove(root_dir + subscript_dict_filename)
+
+        # remove newly created modules folder
+        shutil.rmtree(root_dir + modules_dirname)
+
+    def test_read_vensim_split_model_subviews(self):
+        import pysd
+        from pysd.tools.benchmarking import assert_frames_close
+
+        root_dir = os.path.join(_root, "more-tests/split_model/")
+
+        model_name = "test_split_model_subviews"
+        model_name_mdl = root_dir + model_name + ".mdl"
+
+        model_split = pysd.read_vensim(
+            root_dir + model_name + ".mdl", split_views=True,
+            subview_sep="."
+        )
+
+        namespace_filename = "_namespace_" + model_name + ".json"
+        subscript_dict_filename = "_subscripts_" + model_name + ".json"
+        modules_dirname = "modules_" + model_name
+
+        separator = "."
+        command = f'{call} --translate --split-views '\
+                  f'--subview-sep={separator} {model_name_mdl}'
+        out = subprocess.run(split_bash(command), capture_output=True)
+        self.assertEqual(out.returncode, 0)
+
+        # check that the modules folders were created
+        self.assertTrue(os.path.isdir(root_dir + modules_dirname + "/VIEW_1"))
+        self.assertTrue(os.path.isdir(root_dir + modules_dirname + "/VIEW_2"))
+
+        # check creation of module files
+        self.assertTrue(
+            os.path.isfile(root_dir + modules_dirname + "/VIEW_1/" +
+                           "submodule_1.py"))
+        self.assertTrue(
+            os.path.isfile(root_dir + modules_dirname + "/VIEW_1/" +
+                           "submodule_2.py"))
+        self.assertTrue(
+            os.path.isfile(root_dir + modules_dirname + "/VIEW_2/" +
+                           "view_2.py"))
+
+        # check that the results of the split model are the same than those
+        # without splitting
+        model_non_split = pysd.read_vensim(
+            root_dir + model_name + ".mdl", split_views=False
+        )
+
+        result_split = model_split.run()
+        result_non_split = model_non_split.run()
+
+        # results of a split model are the same that those of the regular
+        # model (un-split)
+        assert_frames_close(result_split, result_non_split, atol=0, rtol=0)
 
         # remove newly created files
         os.remove(root_dir + model_name + ".py")
@@ -271,7 +339,7 @@ class TestPySD(unittest.TestCase):
         os.remove(out_csv_file)
 
         # from txt
-        txt_file = 'return_columns.txt'
+        txt_file = os.path.join(_root, 'return_columns.txt')
         return_columns = ['Room Temperature', 'Teacup Temperature']
         with open(txt_file, 'w') as file:
             file.write("\n".join(return_columns))
