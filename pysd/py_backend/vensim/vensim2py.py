@@ -709,17 +709,20 @@ functions = {
     "prod": {"name": "prod", "module": "functions"},
     "vmin": {"name": "vmin", "module": "functions"},
     "vmax": {"name": "vmax", "module": "functions"},
+    # matricial functions
+    "invert matrix": {
+        "name": "invert_matrix",
+        "parameters": [
+            {"name": "mat"}
+            # we can safely ignore VENSIM's n parameter
+        ],
+        "module": "functions"},
     # TODO functions/stateful objects to be added
     # https://github.com/JamesPHoughton/pysd/issues/154
     "forecast": {
         "name": "not_implemented_function",
         "module": "functions",
         "original_name": "FORECAST",
-    },
-    "invert matrix": {
-        "name": "not_implemented_function",
-        "module": "functions",
-        "original_name": "INVERT MATRIX",
     },
     "get time value": {
         "name": "not_implemented_function",
@@ -1016,10 +1019,11 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
         r"""
     expr_type = array / expr / empty
     expr = _ pre_oper? _ (lookup_with_def / build_call / macro_call / call / lookup_call / parens / number / string / reference) _ (in_oper _ expr)?
+    subs_expr = subs _ in_oper _ subs
 
-    logical_expr = logical_in_expr / logical_pre_expr / logical_parens
-    logical_in_expr = (logical_pre_expr / logical_parens / expr) (_ in_logical_oper _ (logical_pre_expr / logical_parens / expr))+
-    logical_pre_expr = pre_logical_oper _ (logical_parens / expr)
+    logical_expr = logical_in_expr / logical_pre_expr / logical_parens / subs_expr
+    logical_in_expr = (logical_pre_expr / logical_parens / subs_expr / expr) (_ in_logical_oper _ (logical_pre_expr / logical_parens / subs_expr / expr))+
+    logical_pre_expr = pre_logical_oper _ (logical_parens / subs_expr / expr)
 
     lookup_with_def = ~r"(WITH\ LOOKUP)"I _ "(" _ expr _ "," _ "(" _  ("[" ~r"[^\]]*" "]" _ ",")?  ( "(" _ expr _ "," _ expr _ ")" _ ","? _ )+ _ ")" _ ")"
 
@@ -1278,6 +1282,20 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
                     )
             else:
                 return n.text.replace(" ", "")
+
+        def visit_subs_expr(self, n, vc):
+            # visit a logical comparation between subscripts
+            return builder.build_function_call(
+                    functions_utils["DataArray"], [
+                        f"_subscript_dict['{vc[0]}']",
+                        "{"+f"'{vc[0]}': _subscript_dict['{vc[0]}']"+"}",
+                        f"'{vc[0]}'"]
+                ) + vc[2] + builder.build_function_call(
+                    functions_utils["DataArray"], [
+                        f"_subscript_dict['{vc[4]}']",
+                        "{"+f"'{vc[4]}': _subscript_dict['{vc[4]}']"+"}",
+                        f"'{vc[4]}'"]
+                )
 
         def visit_subscript_list(self, n, vc):
             refs = vc[4]

@@ -129,7 +129,8 @@ class TestErrors(TestCase):
         with catch_warnings(record=True) as ws:
             assert_frames_close(
                 load_outputs(os.path.join(_root, "data/out_teacup.csv")),
-                load_outputs(os.path.join(_root, "data/out_teacup_modified.csv")),
+                load_outputs(
+                    os.path.join(_root, "data/out_teacup_modified.csv")),
                 assertion="warn", verbose=True)
 
             # use only user warnings

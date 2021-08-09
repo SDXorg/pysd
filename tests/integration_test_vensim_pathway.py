@@ -190,6 +190,10 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner(test_models + '/input_functions/test_inputs.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    def test_invert_matrix(self):
+        output, canon = runner(test_models + '/invert_matrix/test_invert_matrix.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_limits(self):
         output, canon = runner(test_models + '/limits/test_limits.mdl')
         assert_frames_close(output, canon, rtol=rtol)
@@ -323,6 +327,10 @@ class TestIntegrationExamples(unittest.TestCase):
 
     def test_subrange_merge(self):
         output, canon = runner(test_models + '/subrange_merge/test_subrange_merge.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
+    def test_subscript_logicals(self):
+        output, canon = runner(test_models + '/subscript_logicals/test_subscript_logicals.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_multiples(self):
