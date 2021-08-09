@@ -180,7 +180,7 @@ class TestPySD(unittest.TestCase):
         import pysd
         from pysd.tools.benchmarking import assert_frames_close
 
-        root_dir = "more-tests/split_model_vensim_8_2_1/"
+        root_dir = os.path.join(_root, "more-tests/split_model_vensim_8_2_1/")
 
         model_name = "test_split_model_vensim_8_2_1"
         model_split = pysd.read_vensim(
@@ -256,7 +256,7 @@ class TestPySD(unittest.TestCase):
         import pysd
         from pysd.tools.benchmarking import assert_frames_close
 
-        root_dir = "more-tests/split_model/"
+        root_dir = os.path.join(_root, "more-tests/split_model/")
 
         model_name = "test_split_model_subviews"
         model_split = pysd.read_vensim(

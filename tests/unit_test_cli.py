@@ -252,7 +252,7 @@ class TestPySD(unittest.TestCase):
         import pysd
         from pysd.tools.benchmarking import assert_frames_close
 
-        root_dir = "more-tests/split_model/"
+        root_dir = os.path.join(_root, "more-tests/split_model/")
 
         model_name = "test_split_model_subviews"
         model_name_mdl = root_dir + model_name + ".mdl"
