@@ -191,7 +191,7 @@ class TestIntegrationExamples(unittest.TestCase):
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_invert_matrix(self):
-        output, canon = runner('test-models/tests/invert_matrix/test_invert_matrix.mdl')
+        output, canon = runner(test_models + '/invert_matrix/test_invert_matrix.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_limits(self):
@@ -330,7 +330,7 @@ class TestIntegrationExamples(unittest.TestCase):
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_logicals(self):
-        output, canon = runner('test-models/tests/subscript_logicals/test_subscript_logicals.mdl')
+        output, canon = runner(test_models + '/subscript_logicals/test_subscript_logicals.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_multiples(self):
