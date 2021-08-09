@@ -10,15 +10,21 @@ import numpy as np
 from pysd.tools.benchmarking import load_outputs, assert_frames_close
 from pysd import __version__
 
-test_model = 'test-models/samples/teacup/teacup.mdl'
-test_model_xmile = 'test-models/samples/teacup/teacup.xmile'
-test_model_subs = 'test-models/tests/subscript_2d_arrays/'\
-                  + 'test_subscript_2d_arrays.mdl'
-test_model_look = 'test-models/tests/get_lookups_subscripted_args/'\
-                  + 'test_get_lookups_subscripted_args.mdl'
+_root = os.path.dirname(__file__)
 
-out_tab_file = 'cli_output.tab'
-out_csv_file = 'cli_output.csv'
+test_model = os.path.join(_root, 'test-models/samples/teacup/teacup.mdl')
+test_model_xmile = os.path.join(
+    _root, 'test-models/samples/teacup/teacup.xmile')
+test_model_subs = os.path.join(
+    _root,
+    'test-models/tests/subscript_2d_arrays/test_subscript_2d_arrays.mdl')
+test_model_look = os.path.join(
+    _root,
+    'test-models/tests/get_lookups_subscripted_args/'
+    + 'test_get_lookups_subscripted_args.mdl')
+
+out_tab_file = os.path.join(_root, 'cli_output.tab')
+out_csv_file = os.path.join(_root, 'cli_output.csv')
 
 encoding_stdout = sys.stdout.encoding or 'utf-8'
 encoding_stderr = sys.stderr.encoding or 'utf-8'
@@ -52,7 +58,8 @@ class TestPySD(unittest.TestCase):
     """ These tests are similar to unit_test_pysd but adapted for cli """
     def test_read_not_model(self):
 
-        model = 'more-tests/not_vensim/test_not_vensim.txt'
+        model = os.path.join(
+            _root, 'more-tests/not_vensim/test_not_vensim.txt')
         command = f'{call} {model}'
         out = subprocess.run(split_bash(command), capture_output=True)
         stderr = out.stderr.decode(encoding_stderr)
@@ -65,7 +72,8 @@ class TestPySD(unittest.TestCase):
 
     def test_read_model_not_exists(self):
 
-        model = 'more-tests/not_vensim/test_not_vensim.mdl'
+        model = os.path.join(
+            _root, 'more-tests/not_vensim/test_not_vensim.mdl')
         command = f'{call} {model}'
         out = subprocess.run(split_bash(command), capture_output=True)
         stderr = out.stderr.decode(encoding_stderr)
@@ -77,7 +85,7 @@ class TestPySD(unittest.TestCase):
 
     def test_read_not_valid_output(self):
 
-        out_xls_file = 'cli_output.xls'
+        out_xls_file = os.path.join(_root, 'cli_output.xls')
         command = f'{call} -o {out_xls_file} {test_model}'
         out = subprocess.run(split_bash(command), capture_output=True)
         stderr = out.stderr.decode(encoding_stderr)
@@ -198,7 +206,7 @@ class TestPySD(unittest.TestCase):
 
     def test_read_vensim_split_model(self):
 
-        root_dir = "more-tests/split_model/"
+        root_dir = os.path.join(_root, "more-tests/split_model") + "/"
 
         model_name = "test_split_model"
         namespace_filename = "_namespace_" + model_name + ".json"
@@ -271,7 +279,7 @@ class TestPySD(unittest.TestCase):
         os.remove(out_csv_file)
 
         # from txt
-        txt_file = 'return_columns.txt'
+        txt_file = os.path.join(_root, 'return_columns.txt')
         return_columns = ['Room Temperature', 'Teacup Temperature']
         with open(txt_file, 'w') as file:
             file.write("\n".join(return_columns))

@@ -1,7 +1,10 @@
+import os
 from unittest import TestCase
 
 # most of the features of this script are already tested indirectly when
 # running vensim and xmile integration tests
+
+_root = os.path.dirname(__file__)
 
 
 class TestErrors(TestCase):
@@ -10,7 +13,7 @@ class TestErrors(TestCase):
         from pysd.tools.benchmarking import runner
 
         with self.assertRaises(FileNotFoundError) as err:
-            runner('more-tests/not_existent.mdl')
+            runner(os.path.join(_root, "more-tests/not_existent.mdl"))
 
         self.assertIn(
             'Canonical output file not found.',
@@ -20,7 +23,9 @@ class TestErrors(TestCase):
         from pysd.tools.benchmarking import runner
 
         with self.assertRaises(ValueError) as err:
-            runner('more-tests/not_vensim/test_not_vensim.txt')
+            runner(os.path.join(
+                _root,
+                "more-tests/not_vensim/test_not_vensim.txt"))
 
         self.assertIn(
             'Modelfile should be *.mdl or *.xmile',
@@ -30,10 +35,16 @@ class TestErrors(TestCase):
         from pysd.tools.benchmarking import load_outputs
 
         with self.assertRaises(ValueError) as err:
-            load_outputs('more-tests/not_vensim/test_not_vensim.txt')
+            load_outputs(
+                os.path.join(
+                    _root,
+                    "more-tests/not_vensim/test_not_vensim.txt"))
 
         self.assertIn(
-            "Not able to read 'more-tests/not_vensim/test_not_vensim.txt'.",
+            "Not able to read '",
+            str(err.exception))
+        self.assertIn(
+            "more-tests/not_vensim/test_not_vensim.txt'.",
             str(err.exception))
 
     def test_different_frames_error(self):
@@ -41,8 +52,9 @@ class TestErrors(TestCase):
 
         with self.assertRaises(AssertionError) as err:
             assert_frames_close(
-                load_outputs('data/out_teacup.csv'),
-                load_outputs('data/out_teacup_modified.csv'))
+                load_outputs(os.path.join(_root, "data/out_teacup.csv")),
+                load_outputs(
+                    os.path.join(_root, "data/out_teacup_modified.csv")))
 
         self.assertIn(
             "Column 'Teacup Temperature' is not close.",
@@ -62,8 +74,9 @@ class TestErrors(TestCase):
 
         with catch_warnings(record=True) as ws:
             assert_frames_close(
-                load_outputs('data/out_teacup.csv'),
-                load_outputs('data/out_teacup_modified.csv'),
+                load_outputs(os.path.join(_root, "data/out_teacup.csv")),
+                load_outputs(
+                    os.path.join(_root, "data/out_teacup_modified.csv")),
                 assertion="warn")
 
             # use only user warnings
@@ -86,5 +99,6 @@ class TestErrors(TestCase):
         from pysd.tools.benchmarking import load_outputs, assert_frames_close
 
         assert_frames_close(
-            load_outputs('data/out_teacup.csv'),
-            load_outputs('data/out_teacup_transposed.csv', transpose=True))
+            load_outputs(os.path.join(_root, "data/out_teacup.csv")),
+            load_outputs(os.path.join(_root, "data/out_teacup_transposed.csv"),
+                         transpose=True))
