@@ -57,6 +57,33 @@ class TestErrors(TestCase):
                     os.path.join(_root, "data/out_teacup_modified.csv")))
 
         self.assertIn(
+            "Following columns are not close:\n\tTeacup Temperature",
+            str(err.exception))
+
+        self.assertNotIn(
+            "Column 'Teacup Temperature' is not close.",
+            str(err.exception))
+
+        self.assertNotIn(
+            "Actual values:\n\t",
+            str(err.exception))
+
+        self.assertNotIn(
+            "Expected values:\n\t",
+            str(err.exception))
+
+        with self.assertRaises(AssertionError) as err:
+            assert_frames_close(
+                load_outputs(os.path.join(_root, "data/out_teacup.csv")),
+                load_outputs(
+                    os.path.join(_root, "data/out_teacup_modified.csv")),
+                verbose=True)
+
+        self.assertIn(
+            "Following columns are not close:\n\tTeacup Temperature",
+            str(err.exception))
+
+        self.assertIn(
             "Column 'Teacup Temperature' is not close.",
             str(err.exception))
 
@@ -84,6 +111,37 @@ class TestErrors(TestCase):
             self.assertEqual(len(wu), 1)
 
             self.assertIn(
+                "Following columns are not close:\n\tTeacup Temperature",
+                str(wu[0].message))
+
+            self.assertNotIn(
+                "Column 'Teacup Temperature' is not close.",
+                str(wu[0].message))
+
+            self.assertNotIn(
+                "Actual values:\n\t",
+                str(wu[0].message))
+
+            self.assertNotIn(
+                "Expected values:\n\t",
+                str(wu[0].message))
+
+        with catch_warnings(record=True) as ws:
+            assert_frames_close(
+                load_outputs(os.path.join(_root, "data/out_teacup.csv")),
+                load_outputs(
+                    os.path.join(_root, "data/out_teacup_modified.csv")),
+                assertion="warn", verbose=True)
+
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 1)
+
+            self.assertIn(
+                "Following columns are not close:\n\tTeacup Temperature",
+                str(wu[0].message))
+
+            self.assertIn(
                 "Column 'Teacup Temperature' is not close.",
                 str(wu[0].message))
 
@@ -100,5 +158,114 @@ class TestErrors(TestCase):
 
         assert_frames_close(
             load_outputs(os.path.join(_root, "data/out_teacup.csv")),
-            load_outputs(os.path.join(_root, "data/out_teacup_transposed.csv"),
-                         transpose=True))
+            load_outputs(
+                os.path.join(_root, "data/out_teacup_transposed.csv"),
+                transpose=True))
+
+    def test_load_columns(self):
+        from pysd.tools.benchmarking import load_outputs
+
+        out0 = load_outputs(
+            os.path.join(_root, "data/out_teacup.csv"))
+
+        out1 = load_outputs(
+            os.path.join(_root, "data/out_teacup.csv"),
+            columns=["Room Temperature", "Teacup Temperature"])
+
+        out2 = load_outputs(
+            os.path.join(_root, "data/out_teacup_transposed.csv"),
+            transpose=True,
+            columns=["Heat Loss to Room"])
+
+        self.assertEqual(
+            set(out1.columns),
+            set(["Room Temperature", "Teacup Temperature"]))
+
+        self.assertEqual(
+            set(out2.columns),
+            set(["Heat Loss to Room"]))
+
+        self.assertTrue((out0.index == out1.index).all())
+        self.assertTrue((out0.index == out2.index).all())
+
+    def test_different_cols(self):
+        from warnings import catch_warnings
+        from pysd.tools.benchmarking import assert_frames_close
+        import pandas as pd
+
+        d1 = pd.DataFrame({'a': [1, 2], 'b': [3, 4], 'd': [6, 7]})
+        d2 = pd.DataFrame({'a': [1, 2]})
+        d3 = pd.DataFrame({'a': [1, 2], 'c': [3, 4]})
+
+        with self.assertRaises(ValueError) as err:
+            assert_frames_close(
+                actual=d1,
+                expected=d2)
+
+        self.assertIn(
+            "Columns from actual and expected values must be equal.",
+            str(err.exception))
+
+        with catch_warnings(record=True) as ws:
+            assert_frames_close(
+                actual=d1,
+                expected=d2,
+                assertion="warn")
+
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 1)
+
+            self.assertIn("'b'", str(wu[0].message))
+            self.assertIn("'d'", str(wu[0].message))
+            self.assertIn(
+                "from actual values not found in expected values.",
+                str(wu[0].message))
+
+        with catch_warnings(record=True) as ws:
+            assert_frames_close(
+                expected=d1,
+                actual=d2,
+                assertion="warn")
+
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 1)
+
+            self.assertIn("'b'", str(wu[0].message))
+            self.assertIn("'d'", str(wu[0].message))
+            self.assertIn(
+                "from expected values not found in actual values.",
+                str(wu[0].message))
+
+        with catch_warnings(record=True) as ws:
+            assert_frames_close(
+                actual=d1,
+                expected=d3,
+                assertion="warn")
+
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 1)
+
+            self.assertIn("'b'", str(wu[0].message))
+            self.assertIn("'d'", str(wu[0].message))
+            self.assertIn(
+                "from actual values not found in expected values.",
+                str(wu[0].message))
+
+            self.assertIn(
+                "Columns 'c' from expected values not found in actual "
+                "values.", str(wu[0].message))
+
+    def test_invalid_input(self):
+        from pysd.tools.benchmarking import assert_frames_close
+
+        with self.assertRaises(TypeError) as err:
+            assert_frames_close(
+                actual=[1, 2],
+                expected=[1, 2])
+
+        self.assertIn(
+            "Inputs must both be pandas DataFrames.",
+            str(err.exception))
