@@ -304,9 +304,9 @@ class TestEquationStringParsing(unittest.TestCase):
                 + r"'SheetName', 'index'\ , 'values'))",
                 "py_name": "get_lookup",
                 "subs": [],
+                "merge_subs": []
             },
-            {},
-            {"get_lookup": []}
+            {}
         )[1][0]
 
         self.assertEqual(
@@ -478,10 +478,10 @@ class TestParse_general_expression(unittest.TestCase):
             {
                 "expr": "INTEG (FlowA, -10)",
                 "py_name": "test_stock",
-                "subs": []
+                "subs": [],
+                "merge_subs": []
             },
-            {"FlowA": "flowa"},
-            elements_subs_dict={"test_stock": []},
+            {"FlowA": "flowa"}
         )
 
         self.assertEqual(res[1][0]["kind"], "stateful")
@@ -500,13 +500,13 @@ class TestParse_general_expression(unittest.TestCase):
                 "expr": "DELAY1(Variable, DelayTime)",
                 "py_name": "test_delay",
                 "subs": [],
+                "merge_subs": []
             },
             {
                 "Variable": "variable",
                 "DelayTime": "delaytime",
                 "TIME STEP": "time_step",
-            },
-            elements_subs_dict={"test_delay": {}},
+            }
         )
 
         def time_step():
@@ -533,9 +533,9 @@ class TestParse_general_expression(unittest.TestCase):
                 "expr": "SMOOTH(Variable, DelayTime)",
                 "py_name": "test_smooth",
                 "subs": [],
+                "merge_subs": []
             },
             {"Variable": "variable", "DelayTime": "delaytime"},
-            elements_subs_dict={"test_smooth": []},
         )
 
         # check stateful object creation
@@ -556,8 +556,9 @@ class TestParse_general_expression(unittest.TestCase):
 
         # case 1
         element = parse_general_expression(
-            {"expr": "3.32", "subs": ["Dim1"], "py_name": "var"}, {},
-            _subscript_dict, elements_subs_dict={"var": ["Dim1"]}
+            {"expr": "3.32", "subs": ["Dim1"], "py_name": "var",
+             "merge_subs": ["Dim1"]}, {},
+            _subscript_dict
 
         )
         string = element[0]["py_expr"]
@@ -578,9 +579,8 @@ class TestParse_general_expression(unittest.TestCase):
 
         # case 2: xarray subscript is a subrange from the final subscript range
         element = parse_general_expression(
-            {"expr": "3.32", "subs": ["Dim1"], "py_name": "var"}, {},
-            _subscript_dict, elements_subs_dict={"var": ["Dim"]}
-
+            {"expr": "3.32", "subs": ["Dim1"], "py_name": "var",
+             "merge_subs": ["Dim"]}, {}, _subscript_dict
         )
         string = element[0]["py_expr"]
         # TODO we should use a = eval(string)
@@ -603,10 +603,9 @@ class TestParse_general_expression(unittest.TestCase):
 
         _subscript_dict = {"Dim1": ["A", "B", "C"], "Dim2": ["D", "E"]}
         element = parse_general_expression(
-            {"expr": "1, 2, 3", "subs": ["Dim1"], "py_name": "var"},
-            {},
-            _subscript_dict,
-            elements_subs_dict={"var": ["Dim1"]}
+            {"expr": "1, 2, 3", "subs": ["Dim1"], "py_name": "var",
+             "merge_subs": ["Dim1"]},
+            {}, _subscript_dict
         )
         string = element[0]["py_expr"]
         # TODO we should use a = eval(string)
@@ -631,8 +630,8 @@ class TestParse_general_expression(unittest.TestCase):
         _subscript_dict = {"Dim1": ["A", "B", "C"], "Dim2": ["D", "E"]}
         element = parse_general_expression(
             {"expr": "1, 2; 3, 4; 5, 6;", "subs": ["Dim1", "Dim2"],
-             "py_name": "var"}, {}, _subscript_dict,
-            elements_subs_dict={"var": ["Dim1", "Dim2"]}
+             "merge_subs": ["Dim1", "Dim2"], "py_name": "var"},
+            {}, _subscript_dict
         )
         string = element[0]["py_expr"]
         a = eval(string)
@@ -649,8 +648,8 @@ class TestParse_general_expression(unittest.TestCase):
         _subscript_dict = {"Dim1": ["A", "B", "C"], "Dim2": ["D", "E"]}
         element = parse_general_expression(
             {"expr": "1, 2; 3, 4; 5, 6;", "subs": ["Dim1", "Dim2"],
-             "py_name": "var"}, {}, _subscript_dict,
-            elements_subs_dict={"var": ["Dim1", "Dim2"]}
+             "merge_subs": ["Dim1", "Dim2"], "py_name": "var"},
+            {}, _subscript_dict,
         )
         string = element[0]["py_expr"]
         a = eval(string)
@@ -677,10 +676,10 @@ class TestParse_general_expression(unittest.TestCase):
         # subrange of a greater range
         element = parse_general_expression(
             {"py_name": "var1", "subs": ["B"], "real_name": "var1", "eqn": "",
-             "expr": "GET DIRECT CONSTANTS('input.xlsx', 'Sheet1', 'C20')"},
+             "expr": "GET DIRECT CONSTANTS('input.xlsx', 'Sheet1', 'C20')",
+             "merge_subs": ["Dim2"]},
             {},
-            _subscript_dict,
-            elements_subs_dict={"var1": ["Dim2"]}
+            _subscript_dict
         )
         self.assertIn(
             "'Dim2': ['B']", element[1][0]['py_expr'])
@@ -691,9 +690,9 @@ class TestParse_general_expression(unittest.TestCase):
             {"py_name": "var1b", "subs": ["B"],
              "real_name": "var1b", "eqn": "",
              "expr": "(GET DIRECT LOOKUPS('input.xlsx', 'Sheet1',"
-                     " '19', 'C20'))"},
+                     " '19', 'C20'))",
+             "merge_subs": ["Dim2"]},
             _subscript_dict,
-            elements_subs_dict={"var1b": ["Dim2"]}
         )
         self.assertIn(
             "'Dim2': ['B']", element[1][0]['py_expr'])
@@ -703,10 +702,10 @@ class TestParse_general_expression(unittest.TestCase):
         element = parse_general_expression(
             {"py_name": "var2", "subs": ["Dim2"],
              "real_name": "var2", "eqn": "",
-             "expr": "GET DIRECT CONSTANTS('input.xlsx', 'Sheet1', 'C20')"},
+             "expr": "GET DIRECT CONSTANTS('input.xlsx', 'Sheet1', 'C20')",
+             "merge_subs": ["Dim2"]},
             {},
-            _subscript_dict,
-            elements_subs_dict={"var2": ["Dim2"]}
+            _subscript_dict
         )
         self.assertIn(
             "'Dim2': _subscript_dict['Dim2']", element[1][0]['py_expr'])
@@ -716,10 +715,10 @@ class TestParse_general_expression(unittest.TestCase):
         # a similar subrange before
         element = parse_general_expression(
             {"py_name": "var3", "subs": ["B"], "real_name": "var3", "eqn": "",
-             "expr": "GET DIRECT CONSTANTS('input.xlsx', 'Sheet1', 'C20')"},
+             "expr": "GET DIRECT CONSTANTS('input.xlsx', 'Sheet1', 'C20')",
+             "merge_subs": ["Dim3"]},
             {},
-            _subscript_dict,
-            elements_subs_dict={"var3": ["Dim3"]}
+            _subscript_dict
         )
         self.assertIn(
             "'Dim3': ['B']", element[1][0]['py_expr'])
@@ -729,10 +728,10 @@ class TestParse_general_expression(unittest.TestCase):
         element = parse_general_expression(
             {"py_name": "var4", "subs": ["Dim2"],
              "real_name": "var4", "eqn": "",
-             "expr": "GET DIRECT CONSTANTS('input.xlsx', 'Sheet1', 'C20')"},
+             "expr": "GET DIRECT CONSTANTS('input.xlsx', 'Sheet1', 'C20')",
+             "merge_subs": ["Dim1"]},
             {},
             _subscript_dict,
-            elements_subs_dict={"var4": ["Dim1"]}
         )
         self.assertIn(
             "'Dim1': _subscript_dict['Dim2']", element[1][0]['py_expr'])
@@ -743,10 +742,9 @@ class TestParse_general_expression(unittest.TestCase):
             {"py_name": "var4b", "subs": ["Dim2"],
              "real_name": "var4b", "eqn": "",
              "expr": "GET DIRECT DATA('input.xlsx', 'Sheet1', '19', 'C20')",
-             "keyword": None},
+             "keyword": None, "merge_subs": ["Dim1"]},
             {},
-            _subscript_dict,
-            elements_subs_dict={"var4b": ["Dim1"]}
+            _subscript_dict
         )
         self.assertIn(
             "'Dim1': _subscript_dict['Dim2']", element[1][0]['py_expr'])
@@ -757,10 +755,9 @@ class TestParse_general_expression(unittest.TestCase):
             {"py_name": "var4c", "subs": ["Dim2"],
              "real_name": "var4c", "eqn": "",
              "expr": "GET DIRECT LOOKUPS('input.xlsx', 'Sheet1',"
-             " '19', 'C20')"},
+             " '19', 'C20')", "merge_subs": ["Dim1"]},
             {},
-            _subscript_dict,
-            elements_subs_dict={"var4c": ["Dim1"]}
+            _subscript_dict
         )
         self.assertIn(
             "'Dim1': _subscript_dict['Dim2']", element[1][0]['py_expr'])
@@ -771,9 +768,8 @@ class TestParse_general_expression(unittest.TestCase):
             {"py_name": "var4d", "subs": ["Dim2"],
              "real_name": "var4d", "eqn": "",
              "expr": "(GET DIRECT LOOKUPS('input.xlsx', 'Sheet1',"
-                     " '19', 'C20'))"},
-            _subscript_dict,
-            elements_subs_dict={"var4d": ["Dim1"]}
+                     " '19', 'C20'))", "merge_subs": ["Dim1"]},
+            _subscript_dict
         )
         self.assertIn(
             "'Dim1': _subscript_dict['Dim2']", element[1][0]['py_expr'])
@@ -782,11 +778,11 @@ class TestParse_general_expression(unittest.TestCase):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
 
         res = parse_general_expression(
-            {"expr": "Var A[Dim1, Dim2]"},
+            {"expr": "Var A[Dim1, Dim2]", "real_name": "Var2", "eqn": ""},
             {"Var A": "var_a"},
             {"Dim1": ["A", "B"], "Dim2": ["C", "D", "E"]},
             None,
-            {"var_a": ["Dim1", "Dim2"]},
+            {"var_a": ["Dim1", "Dim2"]}
         )
 
         self.assertEqual(res[0]["py_expr"], "var_a()")
@@ -864,7 +860,8 @@ class TestParse_general_expression(unittest.TestCase):
             {
                 "expr": "INVERT MATRIX(A, 3)",
                 "real_name": "A1",
-                "py_name": "a",
+                "py_name": "a1",
+                "merge_subs": ["dim1", "dim2"]
             },
             {
                 "A": "a",
@@ -872,10 +869,6 @@ class TestParse_general_expression(unittest.TestCase):
             },
             subscript_dict={
                 "dim1": ["a", "b", "c"], "dim2": ["a", "b", "c"]
-            },
-            elements_subs_dict={
-                "a1": ["dim1", "dim2"],
-                "a": ["dim1", "dim2"]
             }
         )
 
@@ -889,15 +882,13 @@ class TestParse_general_expression(unittest.TestCase):
                 "expr": "IF THEN ELSE(dim1=dim2, 5, 0)",
                 "real_name": "A",
                 "py_name": "a",
+                "merge_subs": ["dim1", "dim2"]
             },
             {
                 "A": "a",
             },
             subscript_dict={
                 "dim1": ["a", "b", "c"], "dim2": ["a", "b", "c"]
-            },
-            elements_subs_dict={
-                "a": ["dim1", "dim2"]
             }
         )
 
@@ -920,14 +911,14 @@ class TestParse_general_expression(unittest.TestCase):
                     "py_name": "incomplete_func",
                     "eqn": "Incomplete Func = A FUNCTION OF(Unspecified "
                            + "Eqn,Var A,Var B)",
-                    "subs": []
+                    "subs": [],
+                    "merge_subs": []
                 },
                 {
                     "Unspecified Eqn": "unspecified_eqn",
                     "Var A": "var_a",
                     "Var B": "var_b",
-                },
-                elements_subs_dict={"incomplete_func": []},
+                }
             )
             self.assertEqual(len(w), 1)
             self.assertTrue(

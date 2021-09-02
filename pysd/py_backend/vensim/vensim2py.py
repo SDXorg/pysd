@@ -774,14 +774,15 @@ data_ops = {
 }
 
 builders = {
-    "integ": lambda element, subscript_dict, new_dims, args:
+    "integ": lambda element, subscript_dict, merge_subs, args:
     builder.add_stock(
         identifier=element["py_name"],
         expression=args[0],
         initial_condition=args[1],
         subs=element["subs"],
+        merge_subs=merge_subs
     ),
-    "delay1": lambda element, subscript_dict, new_dims, args:
+    "delay1": lambda element, subscript_dict, merge_subs, args:
     builder.add_delay(
         identifier=element["py_name"],
         delay_input=args[0],
@@ -789,8 +790,9 @@ builders = {
         initial_value=args[0],
         order="1",
         subs=element["subs"],
+        merge_subs=merge_subs
     ),
-    "delay1i": lambda element, subscript_dict, new_dims, args:
+    "delay1i": lambda element, subscript_dict, merge_subs, args:
     builder.add_delay(
         identifier=element["py_name"],
         delay_input=args[0],
@@ -798,8 +800,9 @@ builders = {
         initial_value=args[2],
         order="1",
         subs=element["subs"],
+        merge_subs=merge_subs
     ),
-    "delay3": lambda element, subscript_dict, new_dims, args:
+    "delay3": lambda element, subscript_dict, merge_subs, args:
     builder.add_delay(
         identifier=element["py_name"],
         delay_input=args[0],
@@ -807,8 +810,9 @@ builders = {
         initial_value=args[0],
         order="3",
         subs=element["subs"],
+        merge_subs=merge_subs
     ),
-    "delay3i": lambda element, subscript_dict, new_dims, args:
+    "delay3i": lambda element, subscript_dict, merge_subs, args:
     builder.add_delay(
         identifier=element["py_name"],
         delay_input=args[0],
@@ -816,15 +820,16 @@ builders = {
         initial_value=args[2],
         order="3",
         subs=element["subs"],
+        merge_subs=merge_subs
     ),
-    "delay fixed": lambda element, subscript_dict, new_dims, args:
+    "delay fixed": lambda element, subscript_dict, merge_subs, args:
     builder.add_delay_f(
         identifier=element["py_name"],
         delay_input=args[0],
         delay_time=args[1],
-        initial_value=args[2],
+        initial_value=args[2]
     ),
-    "delay n": lambda element, subscript_dict, new_dims, args:
+    "delay n": lambda element, subscript_dict, merge_subs, args:
     builder.add_n_delay(
         identifier=element["py_name"],
         delay_input=args[0],
@@ -832,16 +837,18 @@ builders = {
         initial_value=args[2],
         order=args[3],
         subs=element["subs"],
+        merge_subs=merge_subs
     ),
-    "sample if true": lambda element, subscript_dict, new_dims, args:
+    "sample if true": lambda element, subscript_dict, merge_subs, args:
     builder.add_sample_if_true(
         identifier=element["py_name"],
         condition=args[0],
         actual_value=args[1],
         initial_value=args[2],
-        subs=element["subs"]
+        subs=element["subs"],
+        merge_subs=merge_subs
     ),
-    "smooth": lambda element, subscript_dict, new_dims, args:
+    "smooth": lambda element, subscript_dict, merge_subs, args:
     builder.add_n_smooth(
         identifier=element["py_name"],
         smooth_input=args[0],
@@ -849,8 +856,9 @@ builders = {
         initial_value=args[0],
         order="1",
         subs=element["subs"],
+        merge_subs=merge_subs
     ),
-    "smoothi": lambda element, subscript_dict, new_dims, args:
+    "smoothi": lambda element, subscript_dict, merge_subs, args:
     builder.add_n_smooth(
         identifier=element["py_name"],
         smooth_input=args[0],
@@ -858,8 +866,9 @@ builders = {
         initial_value=args[2],
         order="1",
         subs=element["subs"],
+        merge_subs=merge_subs
     ),
-    "smooth3": lambda element, subscript_dict, new_dims, args:
+    "smooth3": lambda element, subscript_dict, merge_subs, args:
     builder.add_n_smooth(
         identifier=element["py_name"],
         smooth_input=args[0],
@@ -867,8 +876,9 @@ builders = {
         initial_value=args[0],
         order="3",
         subs=element["subs"],
+        merge_subs=merge_subs
     ),
-    "smooth3i": lambda element, subscript_dict, new_dims, args:
+    "smooth3i": lambda element, subscript_dict, merge_subs, args:
     builder.add_n_smooth(
         identifier=element["py_name"],
         smooth_input=args[0],
@@ -876,8 +886,9 @@ builders = {
         initial_value=args[2],
         order="3",
         subs=element["subs"],
+        merge_subs=merge_subs
     ),
-    "smooth n": lambda element, subscript_dict, new_dims, args:
+    "smooth n": lambda element, subscript_dict, merge_subs, args:
     builder.add_n_smooth(
         identifier=element["py_name"],
         smooth_input=args[0],
@@ -885,16 +896,18 @@ builders = {
         initial_value=args[2],
         order=args[3],
         subs=element["subs"],
+        merge_subs=merge_subs
     ),
-    "trend": lambda element, subscript_dict, new_dims, args:
+    "trend": lambda element, subscript_dict, merge_subs, args:
     builder.add_n_trend(
         identifier=element["py_name"],
         trend_input=args[0],
         average_time=args[1],
         initial_trend=args[2],
         subs=element["subs"],
+        merge_subs=merge_subs
     ),
-    "get xls data": lambda element, subscript_dict, new_dims, args:
+    "get xls data": lambda element, subscript_dict, merge_subs, args:
     builder.add_ext_data(
         identifier=element["py_name"],
         file_name=args[0],
@@ -903,10 +916,10 @@ builders = {
         cell=args[3],
         subs=element["subs"],
         subscript_dict=subscript_dict,
-        new_dims=new_dims,
+        merge_subs=merge_subs,
         keyword=element["keyword"],
     ),
-    "get xls constants": lambda element, subscript_dict, new_dims, args:
+    "get xls constants": lambda element, subscript_dict, merge_subs, args:
     builder.add_ext_constant(
         identifier=element["py_name"],
         file_name=args[0],
@@ -914,9 +927,9 @@ builders = {
         cell=args[2],
         subs=element["subs"],
         subscript_dict=subscript_dict,
-        new_dims=new_dims,
+        merge_subs=merge_subs,
     ),
-    "get xls lookups": lambda element, subscript_dict, new_dims, args:
+    "get xls lookups": lambda element, subscript_dict, merge_subs, args:
     builder.add_ext_lookup(
         identifier=element["py_name"],
         file_name=args[0],
@@ -925,13 +938,13 @@ builders = {
         cell=args[3],
         subs=element["subs"],
         subscript_dict=subscript_dict,
-        new_dims=new_dims,
+        merge_subs=merge_subs,
     ),
-    "initial": lambda element, subscript_dict, new_dims, args:
+    "initial": lambda element, subscript_dict, merge_subs, args:
     builder.add_initial(
         identifier=element["py_name"],
         value=args[0]),
-    "a function of": lambda element, subscript_dict, new_dims, args:
+    "a function of": lambda element, subscript_dict, merge_subs, args:
     builder.add_incomplete(
         element["real_name"], args
     ),
@@ -1292,8 +1305,8 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
                      utils.simplify_subscript_input(
                          coords, subscript_dict,
                          return_full=True,
-                         new_dims=elements_subs_dict[element["py_name"]]),
-                     repr(elements_subs_dict[element["py_name"]])]
+                         merge_subs=element["merge_subs"]),
+                     repr(element["merge_subs"])]
                     )
             else:
                 return n.text.replace(" ", "")
@@ -1356,7 +1369,7 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
             # needed for the good working of externals
             subs_dict = {
                 k: subscript_dict[k] for k in
-                elements_subs_dict[element["py_name"]]
+                element["merge_subs"]
             }
             # add subscript ranges given in expr
             subs_dict.update({
@@ -1367,7 +1380,7 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
             self.kind = "component"
             builder_name = vc[0].strip().lower()
             name, structure = builders[builder_name](
-                element, subs_dict, elements_subs_dict[element["py_name"]],
+                element, subs_dict, element["merge_subs"],
                 vc[4])
 
             self.new_structure += structure
@@ -1436,7 +1449,7 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
     )
 
 
-def parse_lookup_expression(element, subscript_dict, elements_subs_dict):
+def parse_lookup_expression(element, subscript_dict):
     """This syntax parses lookups that are defined with their own element"""
 
     lookup_grammar = r"""
@@ -1480,7 +1493,7 @@ def parse_lookup_expression(element, subscript_dict, elements_subs_dict):
             # needed for the good working of externals
             subs_dict = {
                 k: subscript_dict[k] for k in
-                elements_subs_dict[element["py_name"]]
+                element["merge_subs"]
             }
             # add subscript ranges given in expr
             subs_dict.update({
@@ -1489,7 +1502,7 @@ def parse_lookup_expression(element, subscript_dict, elements_subs_dict):
             })
             trans, structure = builders["get xls lookups"](
                 element, subs_dict,
-                elements_subs_dict[element["py_name"]], arglist
+                element["merge_subs"], arglist
             )
 
             self.translation = trans
@@ -1574,6 +1587,13 @@ def translate_section(section, macro_list, sketch, root_path, subview_sep=""):
         for el in elements_subs_dict
     }
 
+    for element in model_elements:
+        if "py_name" in element and element["py_name"] in elements_subs_dict:
+            element["merge_subs"] =\
+                elements_subs_dict[element["py_name"]]
+        else:
+            element["merge_subs"] = None
+
     # Parse components to python syntax.
     for element in model_elements:
         if (element["kind"] == "component" and "py_expr" not in element) or \
@@ -1585,8 +1605,8 @@ def translate_section(section, macro_list, sketch, root_path, subview_sep=""):
                 namespace=namespace,
                 subscript_dict=subscript_dict,
                 macro_list=macro_list,
-                elements_subs_dict=elements_subs_dict,
                 subs_compatibility=subs_compatibility_dict,
+                elements_subs_dict=elements_subs_dict
             )
             element.update(translation)
             model_elements += new_structure
@@ -1594,8 +1614,7 @@ def translate_section(section, macro_list, sketch, root_path, subview_sep=""):
         elif element["kind"] == "lookup":
             translation, new_structure = parse_lookup_expression(
                 element,
-                subscript_dict=subscript_dict,
-                elements_subs_dict=elements_subs_dict,
+                subscript_dict=subscript_dict
             )
             element.update(translation)
             model_elements += new_structure

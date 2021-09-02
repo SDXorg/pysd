@@ -224,7 +224,10 @@ def make_merge_list(subs_list, subscript_dict, element=""):
             dims[i] = dims1[0]
         else:
             # find a suitable coordinate
-            other_dims = dims_list[indexes != i]
+            if len(dims_list.shape) == 2:
+                other_dims = dims_list[indexes != i]
+            else:
+                other_dims = []
             for name, elements in subscript_dict.items():
                 if coord2 == set(elements) and name not in other_dims:
                     dims[i] = name
@@ -736,7 +739,7 @@ def round_(x):
     return round(x)
 
 
-def simplify_subscript_input(coords, subscript_dict, return_full, new_dims):
+def simplify_subscript_input(coords, subscript_dict, return_full, merge_subs):
     """
     Parameters
     ----------
@@ -750,7 +753,7 @@ def simplify_subscript_input(coords, subscript_dict, return_full, new_dims):
         If True the when coords == subscript_dict, '_subscript_dict'
         will be returned
 
-    new_dims: list of strings
+    merge_subs: list of strings
         List of the final subscript range of the python array after
         merging with other objects
 
@@ -766,7 +769,7 @@ def simplify_subscript_input(coords, subscript_dict, return_full, new_dims):
         return "_subscript_dict"
 
     coordsp = []
-    for ndim, (dim, coord) in zip(new_dims, coords.items()):
+    for ndim, (dim, coord) in zip(merge_subs, coords.items()):
         # find dimensions can be retrieved from _subscript_dict
         if coord == subscript_dict[dim]:
             # use _subscript_dict

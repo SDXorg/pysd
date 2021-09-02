@@ -153,7 +153,8 @@ builders = {
         delay_time=args[1],
         initial_value=args[2] if len(args) > 2 else args[0],
         order="1",
-        subs=element["subs"]
+        subs=element["subs"],
+        merge_subs=None
         ),
 
     "delay3": lambda element, subscript_dict, args: builder.add_n_delay(
@@ -162,7 +163,8 @@ builders = {
         delay_time=args[1],
         initial_value=args[2] if len(args) > 2 else args[0],
         order="3",
-        subs=element["subs"]
+        subs=element["subs"],
+        merge_subs=None
         ),
 
     "delayn": lambda element, subscript_dict, args: builder.add_n_delay(
@@ -171,7 +173,8 @@ builders = {
         delay_time=args[1],
         initial_value=args[2] if len(args) > 3 else args[0],
         order=args[2],
-        subs=element["subs"]
+        subs=element["subs"],
+        merge_subs=None
         ),
 
     "smth1": lambda element, subscript_dict, args: builder.add_n_smooth(
@@ -180,7 +183,8 @@ builders = {
         smooth_time=args[1],
         initial_value=args[2] if len(args) > 2 else args[0],
         order="1",
-        subs=element["subs"]
+        subs=element["subs"],
+        merge_subs=None
         ),
 
     "smth3": lambda element, subscript_dict, args: builder.add_n_smooth(
@@ -189,7 +193,8 @@ builders = {
         smooth_time=args[1],
         initial_value=args[2] if len(args) > 2 else args[0],
         order="3",
-        subs=element["subs"]
+        subs=element["subs"],
+        merge_subs=None
         ),
 
     "smthn": lambda element, subscript_dict, args: builder.add_n_smooth(
@@ -198,7 +203,8 @@ builders = {
         smooth_time=args[1],
         initial_value=args[2] if len(args) > 3 else args[0],
         order=args[2],
-        subs=element["subs"]
+        subs=element["subs"],
+        merge_subs=None
         ),
 
     # "forcst" !TODO!
@@ -208,7 +214,8 @@ builders = {
         trend_input=args[0],
         average_time=args[1],
         initial_trend=args[2] if len(args) > 2 else 0,
-        subs=element["subs"]
+        subs=element["subs"],
+        merge_subs=None
         ),
 
     "init": lambda element, subscript_dict, args: builder.add_initial(

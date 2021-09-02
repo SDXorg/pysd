@@ -248,6 +248,7 @@ def translate_xmile(xmile_file):
 
         py_expr, new_structure = builder.add_stock(identifier=py_name,
                                                    subs=[],  # Todo later
+                                                   merge_subs=[],
                                                    expression=py_ddt,
                                                    initial_condition=py_initial_value
                                                    )
