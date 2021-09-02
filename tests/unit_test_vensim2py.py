@@ -306,6 +306,7 @@ class TestEquationStringParsing(unittest.TestCase):
                 "subs": [],
             },
             {},
+            {"get_lookup": []}
         )[1][0]
 
         self.assertEqual(
@@ -548,9 +549,16 @@ class TestParse_general_expression(unittest.TestCase):
     def test_subscript_float_initialization(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
 
-        _subscript_dict = {"Dim1": ["A", "B", "C"], "Dim2": ["D", "E"]}
+        _subscript_dict = {
+            "Dim": ["A", "B", "C", "D", "E"],
+            "Dim1": ["A", "B", "C"], "Dim2": ["D", "E"]
+        }
+
+        # case 1
         element = parse_general_expression(
-            {"expr": "3.32", "subs": ["Dim1"]}, {}, _subscript_dict
+            {"expr": "3.32", "subs": ["Dim1"], "py_name": "var"}, {},
+            _subscript_dict, elements_subs_dict={"var": ["Dim1"]}
+
         )
         string = element[0]["py_expr"]
         # TODO we should use a = eval(string)
@@ -568,12 +576,37 @@ class TestParse_general_expression(unittest.TestCase):
         )
         self.assertEqual(a.loc[{"Dim1": "B"}], 3.32)
 
+        # case 2: xarray subscript is a subrange from the final subscript range
+        element = parse_general_expression(
+            {"expr": "3.32", "subs": ["Dim1"], "py_name": "var"}, {},
+            _subscript_dict, elements_subs_dict={"var": ["Dim"]}
+
+        )
+        string = element[0]["py_expr"]
+        # TODO we should use a = eval(string)
+        # hoewever eval is not detecting _subscript_dict variable
+        self.assertEqual(
+            string,
+            "xr.DataArray(3.32,{'Dim': _subscript_dict['Dim1']},['Dim'])",
+        )
+        a = xr.DataArray(
+            3.32, {"Dim": _subscript_dict["Dim1"]}, ["Dim"]
+        )
+        self.assertDictEqual(
+            {key: list(val.values) for key, val in a.coords.items()},
+            {"Dim": ["A", "B", "C"]},
+        )
+        self.assertEqual(a.loc[{"Dim": "B"}], 3.32)
+
     def test_subscript_1d_constant(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
 
         _subscript_dict = {"Dim1": ["A", "B", "C"], "Dim2": ["D", "E"]}
         element = parse_general_expression(
-            {"expr": "1, 2, 3", "subs": ["Dim1"]}, {}, _subscript_dict
+            {"expr": "1, 2, 3", "subs": ["Dim1"], "py_name": "var"},
+            {},
+            _subscript_dict,
+            elements_subs_dict={"var": ["Dim1"]}
         )
         string = element[0]["py_expr"]
         # TODO we should use a = eval(string)
@@ -597,8 +630,9 @@ class TestParse_general_expression(unittest.TestCase):
 
         _subscript_dict = {"Dim1": ["A", "B", "C"], "Dim2": ["D", "E"]}
         element = parse_general_expression(
-            {"expr": "1, 2; 3, 4; 5, 6;", "subs": ["Dim1", "Dim2"]}, {},
-            _subscript_dict
+            {"expr": "1, 2; 3, 4; 5, 6;", "subs": ["Dim1", "Dim2"],
+             "py_name": "var"}, {}, _subscript_dict,
+            elements_subs_dict={"var": ["Dim1", "Dim2"]}
         )
         string = element[0]["py_expr"]
         a = eval(string)
@@ -614,8 +648,9 @@ class TestParse_general_expression(unittest.TestCase):
 
         _subscript_dict = {"Dim1": ["A", "B", "C"], "Dim2": ["D", "E"]}
         element = parse_general_expression(
-            {"expr": "1, 2; 3, 4; 5, 6;", "subs": ["Dim1", "Dim2"]}, {},
-            _subscript_dict
+            {"expr": "1, 2; 3, 4; 5, 6;", "subs": ["Dim1", "Dim2"],
+             "py_name": "var"}, {}, _subscript_dict,
+            elements_subs_dict={"var": ["Dim1", "Dim2"]}
         )
         string = element[0]["py_expr"]
         a = eval(string)
@@ -625,6 +660,123 @@ class TestParse_general_expression(unittest.TestCase):
         )
         self.assertEqual(a.loc[{"Dim1": "A", "Dim2": "D"}], 1)
         self.assertEqual(a.loc[{"Dim1": "B", "Dim2": "E"}], 4)
+
+    def test_subscript_builder(self):
+        """
+        Testing how subscripts are translated when we have common subscript
+        ranges.
+        """
+        from pysd.py_backend.vensim.vensim2py import parse_general_expression,\
+            parse_lookup_expression
+
+        _subscript_dict = {
+            "Dim1": ["A", "B", "C"], "Dim2": ["B", "C"], "Dim3": ["B", "C"]
+        }
+
+        # case 1: subscript of the expr is in the final range, which is a
+        # subrange of a greater range
+        element = parse_general_expression(
+            {"py_name": "var1", "subs": ["B"], "real_name": "var1", "eqn": "",
+             "expr": "GET DIRECT CONSTANTS('input.xlsx', 'Sheet1', 'C20')"},
+            {},
+            _subscript_dict,
+            elements_subs_dict={"var1": ["Dim2"]}
+        )
+        self.assertIn(
+            "'Dim2': ['B']", element[1][0]['py_expr'])
+
+        # case 1b: subscript of the expr is in the final range, which is a
+        # subrange of a greater range
+        element = parse_lookup_expression(
+            {"py_name": "var1b", "subs": ["B"],
+             "real_name": "var1b", "eqn": "",
+             "expr": "(GET DIRECT LOOKUPS('input.xlsx', 'Sheet1',"
+                     " '19', 'C20'))"},
+            _subscript_dict,
+            elements_subs_dict={"var1b": ["Dim2"]}
+        )
+        self.assertIn(
+            "'Dim2': ['B']", element[1][0]['py_expr'])
+
+        # case 2: subscript of the expr is a subscript subrange equal to the
+        # final range, which is a subrange of a greater range
+        element = parse_general_expression(
+            {"py_name": "var2", "subs": ["Dim2"],
+             "real_name": "var2", "eqn": "",
+             "expr": "GET DIRECT CONSTANTS('input.xlsx', 'Sheet1', 'C20')"},
+            {},
+            _subscript_dict,
+            elements_subs_dict={"var2": ["Dim2"]}
+        )
+        self.assertIn(
+            "'Dim2': _subscript_dict['Dim2']", element[1][0]['py_expr'])
+
+        # case 3: subscript of the expr is a subscript subrange equal to the
+        # final range, which is a subrange of a greater range, but there is
+        # a similar subrange before
+        element = parse_general_expression(
+            {"py_name": "var3", "subs": ["B"], "real_name": "var3", "eqn": "",
+             "expr": "GET DIRECT CONSTANTS('input.xlsx', 'Sheet1', 'C20')"},
+            {},
+            _subscript_dict,
+            elements_subs_dict={"var3": ["Dim3"]}
+        )
+        self.assertIn(
+            "'Dim3': ['B']", element[1][0]['py_expr'])
+
+        # case 4: subscript of the expr is a subscript subrange and the final
+        # subscript is a greater range
+        element = parse_general_expression(
+            {"py_name": "var4", "subs": ["Dim2"],
+             "real_name": "var4", "eqn": "",
+             "expr": "GET DIRECT CONSTANTS('input.xlsx', 'Sheet1', 'C20')"},
+            {},
+            _subscript_dict,
+            elements_subs_dict={"var4": ["Dim1"]}
+        )
+        self.assertIn(
+            "'Dim1': _subscript_dict['Dim2']", element[1][0]['py_expr'])
+
+        # case 4b: subscript of the expr is a subscript subrange and the final
+        # subscript is a greater range
+        element = parse_general_expression(
+            {"py_name": "var4b", "subs": ["Dim2"],
+             "real_name": "var4b", "eqn": "",
+             "expr": "GET DIRECT DATA('input.xlsx', 'Sheet1', '19', 'C20')",
+             "keyword": None},
+            {},
+            _subscript_dict,
+            elements_subs_dict={"var4b": ["Dim1"]}
+        )
+        self.assertIn(
+            "'Dim1': _subscript_dict['Dim2']", element[1][0]['py_expr'])
+
+        # case 4c: subscript of the expr is a subscript subrange and the final
+        # subscript is a greater range
+        element = parse_general_expression(
+            {"py_name": "var4c", "subs": ["Dim2"],
+             "real_name": "var4c", "eqn": "",
+             "expr": "GET DIRECT LOOKUPS('input.xlsx', 'Sheet1',"
+             " '19', 'C20')"},
+            {},
+            _subscript_dict,
+            elements_subs_dict={"var4c": ["Dim1"]}
+        )
+        self.assertIn(
+            "'Dim1': _subscript_dict['Dim2']", element[1][0]['py_expr'])
+
+        # case 4d: subscript of the expr is a subscript subrange and the final
+        # subscript is a greater range
+        element = parse_lookup_expression(
+            {"py_name": "var4d", "subs": ["Dim2"],
+             "real_name": "var4d", "eqn": "",
+             "expr": "(GET DIRECT LOOKUPS('input.xlsx', 'Sheet1',"
+                     " '19', 'C20'))"},
+            _subscript_dict,
+            elements_subs_dict={"var4d": ["Dim1"]}
+        )
+        self.assertIn(
+            "'Dim1': _subscript_dict['Dim2']", element[1][0]['py_expr'])
 
     def test_subscript_reference(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
@@ -766,6 +918,9 @@ class TestParse_general_expression(unittest.TestCase):
                     "expr": "A FUNCTION OF(Unspecified Eqn,Var A,Var B)",
                     "real_name": "Incomplete Func",
                     "py_name": "incomplete_func",
+                    "eqn": "Incomplete Func = A FUNCTION OF(Unspecified "
+                           + "Eqn,Var A,Var B)",
+                    "subs": []
                 },
                 {
                     "Unspecified Eqn": "unspecified_eqn",

@@ -168,7 +168,7 @@ def make_coord_dict(subs, subscript_dict, terse=True):
     return coordinates
 
 
-def make_merge_list(subs_list, subscript_dict):
+def make_merge_list(subs_list, subscript_dict, element=""):
     """
     This is for assisting when building xrmerge. From a list of subscript
     lists returns the final subscript list after mergin. Necessary when
@@ -183,6 +183,10 @@ def make_merge_list(subs_list, subscript_dict):
     subscript_dict: dict
         The full dictionary of subscript names and values.
 
+    element: str (optional)
+        Element name, if given it will be pinted with any error or
+        warning message. Default is "".
+
     Returns
     -------
     dims: list
@@ -196,19 +200,33 @@ def make_merge_list(subs_list, subscript_dict):
 
     """
     coords_set = [set() for i in range(len(subs_list[0]))]
-    for subs in subs_list:
-        coords = make_coord_dict(subs, subscript_dict, terse=False)
-        [coords_set[i].update(coords[dim]) for i, dim in enumerate(coords)]
+    coords_list = [
+        make_coord_dict(subs, subscript_dict, terse=False)
+        for subs in subs_list
+    ]
+
+    # update coords set
+    [[coords_set[i].update(coords[dim]) for i, dim in enumerate(coords)]
+     for coords in coords_list]
 
     dims = [None] * len(coords_set)
-    for i, (coord1, coord2) in enumerate(zip(coords, coords_set)):
-        if set(coords[coord1]) == coord2:
+    # create an array with the name of the subranges for all merging elements
+    dims_list = np.array([list(coords) for coords in coords_list]).transpose()
+    indexes = np.arange(len(dims))
+
+    for i, coord2 in enumerate(coords_set):
+        dims1 = [
+            dim for dim in dims_list[i]
+            if dim is not None and set(subscript_dict[dim]) == coord2
+        ]
+        if dims1:
             # if the given coordinate already matches return it
-            dims[i] = coord1
+            dims[i] = dims1[0]
         else:
             # find a suitable coordinate
+            other_dims = dims_list[indexes != i]
             for name, elements in subscript_dict.items():
-                if coord2 == set(elements) and name not in subs_list[0]:
+                if coord2 == set(elements) and name not in other_dims:
                     dims[i] = name
                     break
 
@@ -217,10 +235,11 @@ def make_merge_list(subs_list, subscript_dict):
                 # dimension that completes it
                 for name, elements in subscript_dict.items():
                     if coord2.issubset(set(elements))\
-                      and name not in subs_list[0]:
+                      and name not in other_dims:
                         dims[i] = name
                         warnings.warn(
-                            "\nDimension given by subscripts:"
+                            element
+                            + "\nDimension given by subscripts:"
                             + "\n\t{}\nis incomplete ".format(coord2)
                             + "using {} instead.".format(name)
                             + "\nSubscript_dict:"
@@ -237,14 +256,17 @@ def make_merge_list(subs_list, subscript_dict):
                         subscript_dict[name + str(j)] = elements
                         dims[i] = name + str(j)
                         warnings.warn(
-                            "\nAdding new subscript range to subscript_dict:\n"
+                            element
+                            + "\nAdding new subscript range to"
+                            + " subscript_dict:\n"
                             + name + str(j) + ": " + ', '.join(elements))
                         break
 
             if not dims[i]:
                 # not able to find the correct dimension
                 raise ValueError(
-                    "\nImpossible to find the dimension that contains:"
+                    element
+                    + "\nImpossible to find the dimension that contains:"
                     + "\n\t{}\nFor subscript_dict:".format(coord2)
                     + "\n\t{}".format(subscript_dict)
                 )
@@ -714,8 +736,7 @@ def round_(x):
     return round(x)
 
 
-def simplify_subscript_input(coords, subscript_dict,
-                             return_full=True):
+def simplify_subscript_input(coords, subscript_dict, return_full, new_dims):
     """
     Parameters
     ----------
@@ -725,13 +746,13 @@ def simplify_subscript_input(coords, subscript_dict,
     subscript_dict: dict
         The subscript dictionary of the model file.
 
-    return_full: bool (optional)
+    return_full: bool
         If True the when coords == subscript_dict, '_subscript_dict'
-        will be returned. Default is True
+        will be returned
 
-    partial: bool (optional)
-        If True "_subscript_dict" will not be returned as possible dict.
-        Used when subscript_dict is not the full dictionary. Default is False.
+    new_dims: list of strings
+        List of the final subscript range of the python array after
+        merging with other objects
 
     Returns
     -------
@@ -745,14 +766,14 @@ def simplify_subscript_input(coords, subscript_dict,
         return "_subscript_dict"
 
     coordsp = []
-    for dim, coord in coords.items():
+    for ndim, (dim, coord) in zip(new_dims, coords.items()):
         # find dimensions can be retrieved from _subscript_dict
         if coord == subscript_dict[dim]:
             # use _subscript_dict
-            coordsp.append(f"'{dim}': _subscript_dict['{dim}']")
+            coordsp.append(f"'{ndim}': _subscript_dict['{dim}']")
         else:
             # write whole dict
-            coordsp.append(f"'{dim}': {coord}")
+            coordsp.append(f"'{ndim}': {coord}")
 
     return "{" + ", ".join(coordsp) + "}"
 

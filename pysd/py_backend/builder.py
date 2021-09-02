@@ -1533,7 +1533,7 @@ def add_initial(identifier, value):
 
 
 def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs,
-                 subscript_dict, keyword):
+                 subscript_dict, new_dims, keyword):
     """
     Constructs a external object for handling Vensim's GET XLS DATA and
     GET DIRECT DATA functionality.
@@ -1563,6 +1563,10 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs,
         Dictionary describing the possible dimensions of the stock's
         subscripts.
 
+    new_dims: list of strings
+        List of the final subscript range of the python array after
+        merging with other objects.
+
     keyword: str
         Data retrieval method ('interpolate', 'look forward', 'hold backward').
 
@@ -1580,7 +1584,7 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs,
 
     coords = utils.simplify_subscript_input(
         utils.make_coord_dict(subs, subscript_dict, terse=False),
-        subscript_dict, return_full=False)
+        subscript_dict, return_full=False, new_dims=new_dims)
     keyword = (
         "'%s'" % keyword.strip(":").lower() if isinstance(keyword, str) else
         keyword)
@@ -1621,7 +1625,8 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs,
     return "%s(time())" % external["py_name"], [external]
 
 
-def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
+def add_ext_constant(identifier, file_name, tab, cell,
+                     subs, subscript_dict, new_dims):
     """
     Constructs a external object for handling Vensim's GET XLS CONSTANT and
     GET DIRECT CONSTANT functionality.
@@ -1648,6 +1653,10 @@ def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
         Dictionary describing the possible dimensions of the stock's
         subscripts.
 
+    new_dims: list of strings
+        List of the final subscript range of the python array after
+        merging with other objects.
+
     Returns
     -------
     reference: str
@@ -1662,7 +1671,7 @@ def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
 
     coords = utils.simplify_subscript_input(
         utils.make_coord_dict(subs, subscript_dict, terse=False),
-        subscript_dict, return_full=False)
+        subscript_dict, return_full=False, new_dims=new_dims)
     name = utils.make_python_identifier("_ext_constant_%s" % identifier)[0]
 
     # Check if the object already exists
@@ -1700,7 +1709,7 @@ def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
 
 
 def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell,
-                   subs, subscript_dict):
+                   subs, subscript_dict, new_dims):
     """
     Constructs a external object for handling Vensim's GET XLS LOOKUPS and
     GET DIRECT LOOKUPS functionality.
@@ -1730,6 +1739,10 @@ def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell,
         Dictionary describing the possible dimensions of the stock's
         subscripts.
 
+    new_dims: list of strings
+        List of the final subscript range of the python array after
+        merging with other objects.
+
     Returns
     -------
     reference: str
@@ -1744,7 +1757,7 @@ def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell,
 
     coords = utils.simplify_subscript_input(
         utils.make_coord_dict(subs, subscript_dict, terse=False),
-        subscript_dict, return_full=False)
+        subscript_dict, return_full=False, new_dims=new_dims)
     name = utils.make_python_identifier("_ext_lookup_%s" % identifier)[0]
 
     # Check if the object already exists

@@ -99,6 +99,13 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner(test_models + '/game/test_game.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    def test_get_constants_subrange(self):
+        output, canon = runner(
+          test_models + '/get_constants_subranges/'
+          + 'test_get_constants_subranges.mdl'
+        )
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_get_data_args_3d_xls(self):
         """
         Test for usage of GET DIRECT/XLS DATA with arguments from a Excel file
