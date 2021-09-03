@@ -184,7 +184,7 @@ def make_merge_list(subs_list, subscript_dict, element=""):
         The full dictionary of subscript names and values.
 
     element: str (optional)
-        Element name, if given it will be pinted with any error or
+        Element name, if given it will be printed with any error or
         warning message. Default is "".
 
     Returns
@@ -224,10 +224,7 @@ def make_merge_list(subs_list, subscript_dict, element=""):
             dims[i] = dims1[0]
         else:
             # find a suitable coordinate
-            if len(dims_list.shape) == 2:
-                other_dims = dims_list[indexes != i]
-            else:
-                other_dims = []
+            other_dims = dims_list[indexes != i]
             for name, elements in subscript_dict.items():
                 if coord2 == set(elements) and name not in other_dims:
                     dims[i] = name

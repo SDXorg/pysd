@@ -639,7 +639,8 @@ def build_element(element, subscript_dict):
             # dimensions always, we should try to reduce to the
             # maximum when we use it
             # re arrange the python object
-            element["subs_dec"] = "@subs(%s, _subscript_dict)" % element["merge_subs"]
+            element["subs_dec"] =\
+                "@subs(%s, _subscript_dict)" % element["merge_subs"]
             Imports.add("subs")
 
     indent = 8

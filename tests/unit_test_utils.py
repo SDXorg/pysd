@@ -374,6 +374,14 @@ class TestUtils(TestCase):
             "dim2n": ["E", "F"],
             "dim2y": ["G", "H"]
         }
+
+        # merging two subranges
+        self.assertEqual(
+            make_merge_list([["dim1y"],
+                             ["dim1n"]],
+                            subscript_dict2),
+            ["dim1"])
+
         # final subscript in list
         self.assertEqual(
             make_merge_list([["dim1", "dim2n"],
