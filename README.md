@@ -1,6 +1,5 @@
 PySD
 ====
-[![Build Status](https://travis-ci.com/JamesPHoughton/pysd.svg?branch=master)](https://travis-ci.com/JamesPHoughton/pysd)
 [![Coverage Status](https://coveralls.io/repos/github/JamesPHoughton/pysd/badge.svg?branch=master)](https://coveralls.io/github/JamesPHoughton/pysd?branch=master)
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/pysd/badges/version.svg)](https://anaconda.org/conda-forge/pysd)
 [![PyPI version](https://badge.fury.io/py/pysd.svg)](https://badge.fury.io/py/pysd)

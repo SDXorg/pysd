@@ -588,11 +588,6 @@ def build_element(element, subscript_dict):
     # external objecets via .add method
     py_expr_no_ADD = ["ADD" not in py_expr for py_expr in element["py_expr"]]
 
-    if element["subs"][0]:
-        new_subs = utils.make_merge_list(element["subs"], subscript_dict)
-    else:
-        new_subs = None
-
     if sum(py_expr_no_ADD) > 1 and element["kind"] not in [
         "stateful",
         "external",
@@ -611,7 +606,7 @@ def build_element(element, subscript_dict):
                     terse=False)
                 coords = {
                     new_dim: coords[dim]
-                    for new_dim, dim in zip(new_subs, coords)
+                    for new_dim, dim in zip(element["merge_subs"], coords)
                 }
                 dims = list(coords)
                 Imports.add("utils", "rearrange")
@@ -631,12 +626,12 @@ def build_element(element, subscript_dict):
     element["subs_dec"] = ""
     element["subs_doc"] = "None"
 
-    if new_subs:
+    if element["merge_subs"]:
         # We add the list of the subs to the __doc__ of the function
         # this will give more information to the user and make possible
         # to rewrite subscripted values with model.run(params=X) or
         # model.run(initial_condition=(n,x))
-        element["subs_doc"] = "%s" % new_subs
+        element["subs_doc"] = "%s" % element["merge_subs"]
         if element["kind"] in ["component", "setup",
                                "constant", "component_ext_data"]:
             # the decorator is not always necessary as the objects
@@ -644,7 +639,8 @@ def build_element(element, subscript_dict):
             # dimensions always, we should try to reduce to the
             # maximum when we use it
             # re arrange the python object
-            element["subs_dec"] = "@subs(%s, _subscript_dict)" % new_subs
+            element["subs_dec"] =\
+                "@subs(%s, _subscript_dict)" % element["merge_subs"]
             Imports.add("subs")
 
     indent = 8
@@ -743,7 +739,6 @@ def merge_partial_elements(element_list):
                 # Use 'expr' for Vensim models, and 'eqn' for Xmile
                 # (This makes the Vensim equation prettier.)
                 eqn = element["expr"] if "expr" in element else element["eqn"]
-
                 outs[name] = {
                     "py_name": element["py_name"],
                     "real_name": element["real_name"],
@@ -751,6 +746,8 @@ def merge_partial_elements(element_list):
                     "py_expr": [element["py_expr"]],  # in a list
                     "unit": element["unit"],
                     "subs": [element["subs"]],
+                    "merge_subs": element["merge_subs"]
+                    if "merge_subs" in element else None,
                     "lims": element["lims"],
                     "eqn": [eqn.replace(r"\ ", "")],
                     "kind": element["kind"],
@@ -771,7 +768,7 @@ def merge_partial_elements(element_list):
     return list(outs.values())
 
 
-def add_stock(identifier, expression, initial_condition, subs):
+def add_stock(identifier, expression, initial_condition, subs, merge_subs):
     """
     Creates new model element dictionaries for the model elements associated
     with a stock.
@@ -790,6 +787,10 @@ def add_stock(identifier, expression, initial_condition, subs):
     subs: list of strings
         List of strings of subscript indices that correspond to the
         list of expressions, and collectively define the shape of the output.
+
+    merge_subs: list of strings
+        List of the final subscript range of the python array after
+        merging with other objects
 
     Returns
     -------
@@ -831,6 +832,7 @@ def add_stock(identifier, expression, initial_condition, subs):
                 "kind": "setup",
                 "py_expr": initial_condition,
                 "subs": subs,
+                "merge_subs": merge_subs,
                 "doc": "Provides initial conditions for %s function"
                         % identifier,
                 "unit": "See docs for %s" % identifier,
@@ -848,6 +850,7 @@ def add_stock(identifier, expression, initial_condition, subs):
                 "kind": "component",
                 "doc": "Provides derivative for %s function" % identifier,
                 "subs": subs,
+                "merge_subs": merge_subs,
                 "unit": "See docs for %s" % identifier,
                 "lims": "None",
                 "eqn": "None",
@@ -868,6 +871,7 @@ def add_stock(identifier, expression, initial_condition, subs):
             "lims": "None",
             "eqn": "None",
             "subs": "",
+            "merge_subs": None,
             "kind": "stateful",
             "arguments": "",
         }
@@ -876,7 +880,8 @@ def add_stock(identifier, expression, initial_condition, subs):
     return "%s()" % py_name, new_structure
 
 
-def add_delay(identifier, delay_input, delay_time, initial_value, order, subs):
+def add_delay(identifier, delay_input, delay_time, initial_value, order,
+              subs, merge_subs):
     """
     Creates code to instantiate a stateful 'Delay' object,
     and provides reference to that object's output.
@@ -912,6 +917,10 @@ def add_delay(identifier, delay_input, delay_time, initial_value, order, subs):
     subs: list of strings
         List of strings of subscript indices that correspond to the
         list of expressions, and collectively define the shape of the output.
+
+    merge_subs: list of strings
+        List of the final subscript range of the python array after
+        merging with other objects
 
     Returns
     -------
@@ -953,6 +962,7 @@ def add_delay(identifier, delay_input, delay_time, initial_value, order, subs):
                 # exist
                 "py_expr": initial_value,
                 "subs": subs,
+                "merge_subs": merge_subs,
                 "doc": "Provides initial conditions for %s function" \
                         % identifier,
                 "unit": "See docs for %s" % identifier,
@@ -970,6 +980,7 @@ def add_delay(identifier, delay_input, delay_time, initial_value, order, subs):
                 "kind": "component",
                 "doc": "Provides input for %s function" % identifier,
                 "subs": subs,
+                "merge_subs": merge_subs,
                 "unit": "See docs for %s" % identifier,
                 "lims": "None",
                 "eqn": "None",
@@ -991,6 +1002,7 @@ def add_delay(identifier, delay_input, delay_time, initial_value, order, subs):
             "lims": "None",
             "eqn": "None",
             "subs": "",
+            "merge_subs": None,
             "kind": "stateful",
             "arguments": "",
         }
@@ -1059,6 +1071,7 @@ def add_delay_f(identifier, delay_input, delay_time, initial_value):
         "lims": "None",
         "eqn": "None",
         "subs": "",
+        "merge_subs": None,
         "kind": "stateful",
         "arguments": "",
     }
@@ -1067,7 +1080,7 @@ def add_delay_f(identifier, delay_input, delay_time, initial_value):
 
 
 def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
-                subs):
+                subs, merge_subs):
     """
     Creates code to instantiate a stateful 'DelayN' object,
     and provides reference to that object's output.
@@ -1103,6 +1116,10 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
     subs: list of strings
         List of strings of subscript indices that correspond to the
         list of expressions, and collectively define the shape of the output.
+
+    merge_subs: list of strings
+        List of the final subscript range of the python array after
+        merging with other objects
 
     Returns
     -------
@@ -1144,6 +1161,7 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
                 # exist
                 "py_expr": initial_value,
                 "subs": subs,
+                "merge_subs": merge_subs,
                 "doc": "Provides initial conditions for %s function" \
                         % identifier,
                 "unit": "See docs for %s" % identifier,
@@ -1161,6 +1179,7 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
                 "kind": "component",
                 "doc": "Provides input for %s function" % identifier,
                 "subs": subs,
+                "merge_subs": merge_subs,
                 "unit": "See docs for %s" % identifier,
                 "lims": "None",
                 "eqn": "None",
@@ -1183,6 +1202,7 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
             "lims": "None",
             "eqn": "None",
             "subs": "",
+            "merge_subs": None,
             "kind": "stateful",
             "arguments": "",
         }
@@ -1192,7 +1212,7 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
 
 
 def add_sample_if_true(identifier, condition, actual_value, initial_value,
-                       subs):
+                       subs, merge_subs):
     """
     Creates code to instantiate a stateful 'SampleIfTrue' object,
     and provides reference to that object's output.
@@ -1216,6 +1236,10 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value,
     subs: list of strings
         List of strings of subscript indices that correspond to the
         list of expressions, and collectively define the shape of the output.
+
+    merge_subs: list of strings
+        List of the final subscript range of the python array after
+        merging with other objects
 
     Returns
     -------
@@ -1251,6 +1275,7 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value,
             "kind": "setup",  # not specified in the model file, but must exist
             "py_expr": initial_value,
             "subs": subs,
+            "merge_subs": merge_subs,
             "doc": "Provides initial conditions for %s function" % identifier,
             "unit": "See docs for %s" % identifier,
             "lims": "None",
@@ -1269,6 +1294,7 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value,
         "lims": "None",
         "eqn": "None",
         "subs": "",
+        "merge_subs": None,
         "kind": "stateful",
         "arguments": ""
     })
@@ -1277,7 +1303,7 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value,
 
 
 def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order,
-                 subs):
+                 subs, merge_subs):
     """
     Constructs stock and flow chains that implement the calculation of
     a smoothing function.
@@ -1309,6 +1335,10 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order,
     subs: list of strings
         List of strings of subscript indices that correspond to the
         list of expressions, and collectively define the shape of the output
+
+    merge_subs: list of strings
+        List of the final subscript range of the python array after
+        merging with other objects
 
     Returns
     -------
@@ -1352,6 +1382,7 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order,
                 # exist
                 "py_expr": initial_value,
                 "subs": subs,
+                "merge_subs": merge_subs,
                 "doc": "Provides initial conditions for %s function" % \
                        identifier,
                 "unit": "See docs for %s" % identifier,
@@ -1369,6 +1400,7 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order,
                 "kind": "component",
                 "doc": "Provides input for %s function" % identifier,
                 "subs": subs,
+                "merge_subs": merge_subs,
                 "unit": "See docs for %s" % identifier,
                 "lims": "None",
                 "eqn": "None",
@@ -1390,6 +1422,7 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order,
             "lims": "None",
             "eqn": "None",
             "subs": "",
+            "merge_subs": None,
             "kind": "stateful",
             "arguments": "",
         }
@@ -1398,7 +1431,8 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order,
     return "%s()" % py_name, new_structure
 
 
-def add_n_trend(identifier, trend_input, average_time, initial_trend, subs):
+def add_n_trend(identifier, trend_input, average_time, initial_trend,
+                subs, merge_subs):
     """
     Constructs Trend object.
 
@@ -1419,6 +1453,10 @@ def add_n_trend(identifier, trend_input, average_time, initial_trend, subs):
     subs: list of strings
         List of strings of subscript indices that correspond to the
         list of expressions, and collectively define the shape of the output.
+
+    merge_subs: list of strings
+        List of the final subscript range of the python array after
+        merging with other objects
 
     Returns
     -------
@@ -1459,6 +1497,7 @@ def add_n_trend(identifier, trend_input, average_time, initial_trend, subs):
                 # exist
                 "py_expr": initial_trend,
                 "subs": subs,
+                "merge_subs": merge_subs,
                 "doc": "Provides initial conditions for %s function"
                         % identifier,
                 "unit": "See docs for %s" % identifier,
@@ -1480,6 +1519,7 @@ def add_n_trend(identifier, trend_input, average_time, initial_trend, subs):
             "lims": "None",
             "eqn": "None",
             "subs": "",
+            "merge_subs": None,
             "kind": "stateful",
             "arguments": "",
         }
@@ -1525,6 +1565,7 @@ def add_initial(identifier, value):
         "lims": "None",
         "eqn": "None",
         "subs": "",
+        "merge_subs": None,
         "kind": "stateful",
         "arguments": "",
     }
@@ -1533,7 +1574,7 @@ def add_initial(identifier, value):
 
 
 def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs,
-                 subscript_dict, keyword):
+                 subscript_dict, merge_subs, keyword):
     """
     Constructs a external object for handling Vensim's GET XLS DATA and
     GET DIRECT DATA functionality.
@@ -1563,6 +1604,10 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs,
         Dictionary describing the possible dimensions of the stock's
         subscripts.
 
+    merge_subs: list of strings
+        List of the final subscript range of the python array after
+        merging with other objects.
+
     keyword: str
         Data retrieval method ('interpolate', 'look forward', 'hold backward').
 
@@ -1580,7 +1625,7 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs,
 
     coords = utils.simplify_subscript_input(
         utils.make_coord_dict(subs, subscript_dict, terse=False),
-        subscript_dict, return_full=False)
+        subscript_dict, return_full=False, merge_subs=merge_subs)
     keyword = (
         "'%s'" % keyword.strip(":").lower() if isinstance(keyword, str) else
         keyword)
@@ -1614,6 +1659,7 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs,
         "lims": "None",
         "eqn": "None",
         "subs": subs,
+        "merge_subs": merge_subs,
         "kind": kind,
         "arguments": "",
     }
@@ -1621,7 +1667,8 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs,
     return "%s(time())" % external["py_name"], [external]
 
 
-def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
+def add_ext_constant(identifier, file_name, tab, cell,
+                     subs, subscript_dict, merge_subs):
     """
     Constructs a external object for handling Vensim's GET XLS CONSTANT and
     GET DIRECT CONSTANT functionality.
@@ -1648,6 +1695,10 @@ def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
         Dictionary describing the possible dimensions of the stock's
         subscripts.
 
+    merge_subs: list of strings
+        List of the final subscript range of the python array after
+        merging with other objects.
+
     Returns
     -------
     reference: str
@@ -1662,7 +1713,7 @@ def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
 
     coords = utils.simplify_subscript_input(
         utils.make_coord_dict(subs, subscript_dict, terse=False),
-        subscript_dict, return_full=False)
+        subscript_dict, return_full=False, merge_subs=merge_subs)
     name = utils.make_python_identifier("_ext_constant_%s" % identifier)[0]
 
     # Check if the object already exists
@@ -1692,6 +1743,7 @@ def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
         "lims": "None",
         "eqn": "None",
         "subs": subs,
+        "merge_subs": merge_subs,
         "kind": kind,
         "arguments": "",
     }
@@ -1700,7 +1752,7 @@ def add_ext_constant(identifier, file_name, tab, cell, subs, subscript_dict):
 
 
 def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell,
-                   subs, subscript_dict):
+                   subs, subscript_dict, merge_subs):
     """
     Constructs a external object for handling Vensim's GET XLS LOOKUPS and
     GET DIRECT LOOKUPS functionality.
@@ -1730,6 +1782,10 @@ def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell,
         Dictionary describing the possible dimensions of the stock's
         subscripts.
 
+    merge_subs: list of strings
+        List of the final subscript range of the python array after
+        merging with other objects.
+
     Returns
     -------
     reference: str
@@ -1744,7 +1800,7 @@ def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell,
 
     coords = utils.simplify_subscript_input(
         utils.make_coord_dict(subs, subscript_dict, terse=False),
-        subscript_dict, return_full=False)
+        subscript_dict, return_full=False, merge_subs=merge_subs)
     name = utils.make_python_identifier("_ext_lookup_%s" % identifier)[0]
 
     # Check if the object already exists
@@ -1774,6 +1830,7 @@ def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell,
         "lims": "None",
         "eqn": "None",
         "subs": subs,
+        "merge_subs": merge_subs,
         "kind": kind,
         "arguments": "x",
     }
@@ -1826,6 +1883,7 @@ def add_macro(macro_name, filename, arg_names, arg_vals):
         "lims": "None",
         "eqn": "None",
         "subs": "",
+        "merge_subs": None,
         "kind": "stateful",
         "arguments": "",
     }

@@ -358,13 +358,37 @@ class TestUtils(TestCase):
             make_merge_list([["dim1", "A", "dim"],
                             ["dim1", "B", "dim"],
                             ["dim1", "C", "dim"]],
-                            subscript_dict),
+                            subscript_dict)
             # use only user warnings
             wu = [w for w in ws if issubclass(w.category, UserWarning)]
             self.assertTrue(len(wu), 1)
             self.assertIn(
                 "Adding new subscript range to subscript_dict:\ndim2: A, B, C",
                 str(wu[0].message))
+
+        subscript_dict2 = {
+            "dim1": ["A", "B", "C", "D"],
+            "dim1n": ["A", "B"],
+            "dim1y": ["C", "D"],
+            "dim2": ["E", "F", "G", "H"],
+            "dim2n": ["E", "F"],
+            "dim2y": ["G", "H"]
+        }
+
+        # merging two subranges
+        self.assertEqual(
+            make_merge_list([["dim1y"],
+                             ["dim1n"]],
+                            subscript_dict2),
+            ["dim1"])
+
+        # final subscript in list
+        self.assertEqual(
+            make_merge_list([["dim1", "dim2n"],
+                             ["dim1n", "dim2y"],
+                             ["dim1y", "dim2y"]],
+                            subscript_dict2),
+            ["dim1", "dim2"])
 
     def test_compute_shape(self):
         """"
