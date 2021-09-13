@@ -504,6 +504,39 @@ class TestStateful(unittest.TestCase):
             self.assertIn("Casting delay order from 1.500000 to 2",
                           str(wu[0].message))
 
+    def test_forecast(self):
+        import pysd
+
+        input_val = 5
+
+        def input():
+            return input_val
+
+        frcst = pysd.functions.Forecast(forecast_input=input,
+                                        average_time=lambda: 3,
+                                        horizon=lambda: 10,
+                                        py_name='forecast')
+
+        frcst.initialize()
+        self.assertEqual(frcst(), input_val)
+
+        frcst.state = frcst.state + 0.1*frcst.ddt()
+        input_val = 20
+        self.assertEqual(frcst(), 220)
+
+        frcst.state = frcst.state + 0.1*frcst.ddt()
+        input_val = 35.5
+        self.assertEqual(
+            frcst(),
+            input_val*(1+(input_val-frcst.state)/(3*frcst.state)*10))
+
+        input_val = 7
+        init_val = 6
+        frcst.initialize(init_val)
+        self.assertEqual(
+            frcst(),
+            input_val*(1+(input_val-init_val)/(3*init_val)*10))
+
     def test_initial(self):
         import pysd
         a = 1

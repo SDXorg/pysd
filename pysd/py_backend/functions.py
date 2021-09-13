@@ -355,6 +355,56 @@ class DelayFixed(DynamicStateful):
             'pipe': self.pipe}}
 
 
+class Forecast(DynamicStateful):
+    """
+    Implements FORECAST function
+    """
+    def __init__(self, forecast_input, average_time, horizon, py_name):
+        """
+
+        Parameters
+        ----------
+        forecast_input: function
+        average_time: function
+        horizon: function
+        py_name: str
+          Python name to identify the object
+        """
+
+        super().__init__()
+        self.horizon = horizon
+        self.average_time = average_time
+        self.input = forecast_input
+        self.py_name = py_name
+
+    def initialize(self, init_val=None):
+
+        # self.state = AV in the vensim docs
+        if init_val is None:
+            self.state = self.input()
+        else:
+            self.state = init_val
+
+        if isinstance(self.state, xr.DataArray):
+            self.shape_info = {'dims': self.state.dims,
+                               'coords': self.state.coords}
+
+    def __call__(self):
+        return self.input() * (
+            1 + zidz(self.input() - self.state,
+                     self.average_time() * self.state
+                     )*self.horizon()
+        )
+
+    def ddt(self):
+        return (self.input() - self.state) / self.average_time()
+
+    def export(self):
+        return {self.py_name: {
+            'state': self.state,
+            'shape_info': self.shape_info}}
+
+
 class Smooth(DynamicStateful):
     """
     Implements SMOOTH function

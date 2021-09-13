@@ -568,6 +568,29 @@ class TestPySD(unittest.TestCase):
 
             assert_frames_close(stocks2, stocks)
 
+            # forecast
+            test_trend = os.path.join(
+                _root,
+                'test-models/tests/forecast/'
+                + 'test_forecast.mdl')
+            model = pysd.read_vensim(test_trend)
+            stocks = model.run(return_timestamps=50, flatten_output=True)
+            model.initialize()
+            model.run(return_timestamps=20)
+            model.export('frcst20.pic')
+            stocks2 = model.run(initial_condition='frcst20.pic',
+                                return_timestamps=50,
+                                flatten_output=True)
+            self.assertTrue((stocks['INITIAL TIME'] == 0).all().all())
+            self.assertTrue((stocks2['INITIAL TIME'] == 20).all().all())
+            stocks.drop('INITIAL TIME', axis=1, inplace=True)
+            stocks2.drop('INITIAL TIME', axis=1, inplace=True)
+            stocks.drop('FINAL TIME', axis=1, inplace=True)
+            stocks2.drop('FINAL TIME', axis=1, inplace=True)
+            os.remove('frcst20.pic')
+
+            assert_frames_close(stocks2, stocks)
+
             # smooth
             test_smooth = os.path.join(
                 _root,

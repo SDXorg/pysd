@@ -468,6 +468,15 @@ class TestParse_general_expression(unittest.TestCase):
         res = parse_general_expression({"expr": "-1.3e-10"})
         self.assertEqual(res[0]["py_expr"], "-1.3e-10")
 
+    def test_nan_parsing(self):
+        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        from pysd.py_backend.builder import Imports
+
+        self.assertFalse(Imports._numpy)
+        res = parse_general_expression({'expr': ':NA:'})
+        self.assertEqual(res[0]['py_expr'], 'np.nan')
+        self.assertTrue(Imports._numpy)
+
     def test_stock_construction_function_no_subscripts(self):
         """ stock construction should create a stateful variable and
         reference it """
@@ -515,6 +524,35 @@ class TestParse_general_expression(unittest.TestCase):
         self.assertEqual(res[1][0]["kind"], "stateful")
         a = eval(res[1][0]["py_expr"])
         self.assertIsInstance(a, Delay)
+
+        # check the reference to that variable
+        self.assertEqual(res[0]["py_expr"], res[1][0]["py_name"] + "()")
+
+    def test_forecast_construction_function_no_subscripts(self):
+        """ Tests translation of 'forecast'
+
+        This translation should create a new stateful object to hold the
+        forecast elements, and then pass back a reference to that value
+        """
+        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        from pysd.py_backend.functions import Forecast
+
+        res = parse_general_expression(
+            {
+                "expr": "FORECAST(Variable, AverageTime, Horizon)",
+                "py_name": "test_forecast",
+                "subs": [],
+                "merge_subs": []
+            },
+            {"Variable": "variable", "AverageTime": "averagetime",
+             "Horizon": "horizon"},
+            elements_subs_dict={"test_forecast": []},
+        )
+
+        # check stateful object creation
+        self.assertEqual(res[1][0]["kind"], "stateful")
+        a = eval(res[1][0]["py_expr"])
+        self.assertIsInstance(a, Forecast)
 
         # check the reference to that variable
         self.assertEqual(res[0]["py_expr"], res[1][0]["py_name"] + "()")
@@ -874,6 +912,28 @@ class TestParse_general_expression(unittest.TestCase):
 
         self.assertEqual(res[0]["py_expr"], "invert_matrix(a())")
 
+    def test_subscript_elmcount(self):
+        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+
+        res = parse_general_expression(
+            {
+                "expr": "ELMCOUNT(dim1)",
+                "real_name": "A",
+                "py_name": "a",
+                "merge_subs": []
+            },
+            {
+                "A": "a",
+            },
+            subscript_dict={
+                "dim1": ["a", "b", "c"], "dim2": ["a", "b", "c"]
+            }
+        )
+
+        self.assertIn(
+            "len(_subscript_dict['dim1'])",
+            res[0]["py_expr"], )
+
     def test_subscript_logicals(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
 
@@ -897,6 +957,33 @@ class TestParse_general_expression(unittest.TestCase):
             "{'dim1': _subscript_dict['dim1']},'dim1')"
             "==xr.DataArray(_subscript_dict['dim2'],"
             "{'dim2': _subscript_dict['dim2']},'dim2')",
+            res[0]["py_expr"], )
+
+    def test_ref_with_subscript_prefix(self):
+        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+
+        # When parsing functions arguments first the subscript ranges are
+        # parsed and later the general id is used, however, the if a reference
+        # to a var starts with a subscript range name this could make the
+        # parser crash
+        res = parse_general_expression(
+            {
+                "expr": "ABS(Upper var)",
+                "real_name": "A",
+                "eqn": "A = ABS(Upper var)",
+                "py_name": "a",
+                "merge_subs": []
+            },
+            {
+                "Upper var": "upper_var",
+            },
+            subscript_dict={
+                "upper": ["a", "b", "c"]
+            }
+        )
+
+        self.assertIn(
+            "abs(upper_var())",
             res[0]["py_expr"], )
 
     def test_incomplete_expression(self):

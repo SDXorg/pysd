@@ -790,7 +790,7 @@ def add_stock(identifier, expression, initial_condition, subs, merge_subs):
 
     merge_subs: list of strings
         List of the final subscript range of the python array after
-        merging with other objects
+        merging with other objects.
 
     Returns
     -------
@@ -920,7 +920,7 @@ def add_delay(identifier, delay_input, delay_time, initial_value, order,
 
     merge_subs: list of strings
         List of the final subscript range of the python array after
-        merging with other objects
+        merging with other objects.
 
     Returns
     -------
@@ -1119,7 +1119,7 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
 
     merge_subs: list of strings
         List of the final subscript range of the python array after
-        merging with other objects
+        merging with other objects.
 
     Returns
     -------
@@ -1211,6 +1211,103 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
     return "%s()" % py_name, new_structure
 
 
+def add_forecast(identifier, forecast_input, average_time, horizon,
+                 subs, merge_subs):
+    """
+    Constructs Forecast object.
+
+    Parameters
+    ----------
+    identifier: str
+        The python-safe name of the forecast.
+
+    forecast_input: str
+        Input of the forecast.
+
+    average_time: str
+        Average time of the forecast.
+
+    horizon: str
+        Horizon for the forecast.
+
+    subs: list of strings
+        List of strings of subscript indices that correspond to the
+        list of expressions, and collectively define the shape of the output.
+
+    merge_subs: list of strings
+        List of the final subscript range of the python array after
+        merging with other objects.
+
+    Returns
+    -------
+    reference: str
+        Reference to the forecast object `__call__` method, which will return
+        the output of the forecast process.
+
+    new_structure: list
+        List of element construction dictionaries for the builder to assemble.
+
+    """
+    Imports.add("functions", "Forecast")
+
+    new_structure = []
+    py_name = "_forecast_%s" % identifier
+
+    if len(subs) == 0:
+        stateful_py_expr = "Forecast(lambda: %s, lambda: %s,"\
+                           " lambda: %s, '%s')" % (
+                               forecast_input, average_time,
+                               horizon, py_name)
+
+    else:
+        # only need to re-dimension init as xarray will take care of other
+        stateful_py_expr = "Forecast(_forecast_input_%s, lambda: %s,"\
+                           " lambda: %s, '%s')" % (
+                               identifier, average_time,
+                               horizon, py_name)
+
+        # following elements not specified in the model file, but must exist
+        # create the delay initialization element
+        new_structure.append(
+            {
+                "py_name": "_forecast_input_%s" % identifier,
+                "parent_name": identifier,
+                "real_name": "Implicit",
+                "kind": "setup",  # not specified in the model file, but must
+                # exist
+                "py_expr": forecast_input,
+                "subs": subs,
+                "merge_subs": merge_subs,
+                "doc": "Provides input for %s function"
+                        % identifier,
+                "unit": "See docs for %s" % identifier,
+                "lims": "None",
+                "eqn": "None",
+                "arguments": "",
+            }
+        )
+
+    new_structure.append(
+        {
+            "py_name": py_name,
+            "parent_name": identifier,
+            "real_name": "Forecast of %s" % forecast_input,
+            "doc": "Forecast average time: %s \n Horizon %s"
+            % (average_time, horizon),
+            "py_expr": stateful_py_expr,
+            "unit": "None",
+            "lims": "None",
+            "eqn": "None",
+            "subs": "",
+            "merge_subs": None,
+            "kind": "stateful",
+            "arguments": "",
+        }
+    )
+
+    return "%s()" % py_name, new_structure
+
+
 def add_sample_if_true(identifier, condition, actual_value, initial_value,
                        subs, merge_subs):
     """
@@ -1239,7 +1336,7 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value,
 
     merge_subs: list of strings
         List of the final subscript range of the python array after
-        merging with other objects
+        merging with other objects.
 
     Returns
     -------
@@ -1338,7 +1435,7 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order,
 
     merge_subs: list of strings
         List of the final subscript range of the python array after
-        merging with other objects
+       .
 
     Returns
     -------
@@ -1448,7 +1545,7 @@ def add_n_trend(identifier, trend_input, average_time, initial_trend,
         Average time of the trend.
 
     trend_initial: str
-        This is used to initialize the trend .
+        This is used to initialize the trend.
 
     subs: list of strings
         List of strings of subscript indices that correspond to the
@@ -1456,7 +1553,7 @@ def add_n_trend(identifier, trend_input, average_time, initial_trend,
 
     merge_subs: list of strings
         List of the final subscript range of the python array after
-        merging with other objects
+        merging with other objects.
 
     Returns
     -------
@@ -1940,8 +2037,11 @@ def build_function_call(function_def, user_arguments):
                                 delayed runtime evaluation in the method call
                 "time",       - provide access to current instance of
                                 time object
-                "scope"       - provide access to current instance of
+                "scope",      - provide access to current instance of
                                 scope object (instance of Macro object)
+                "subs_range_to_list"
+                              - provides the list of subscripts in a given
+                                subscript range
             ]
 
     user_arguments: list of arguments provided from model.
@@ -2000,6 +2100,7 @@ def build_function_call(function_def, user_arguments):
                     "lambda": "lambda: " + user_argument,
                     "time": "__data['time']",
                     "scope": "__data['scope']",
+                    "subs_range_to_list": f"_subscript_dict['{user_argument}']"
                 }[parameter_type]
             )
 
