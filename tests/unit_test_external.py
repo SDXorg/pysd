@@ -204,12 +204,6 @@ class TestExternalMethods(unittest.TestCase):
         interp = np.array([1., 1., 1., 3., 3.5, 4.,
                            5., 6., 7., 8., 8., 8.])
 
-        ext.interp = "raw"
-        datac = data.copy()
-        ext._fill_missing(series, datac)
-        self.assertTrue(np.all(data[~np.isnan(data)]
-                        == datac[~np.isnan(datac)]))
-
         ext.interp = "hold backward"
         datac = data.copy()
         ext._fill_missing(series, datac)
@@ -1889,6 +1883,76 @@ class TestWarningsErrors(unittest.TestCase):
 
     # Following test are for ExtData class only
     # as the initialization of ExtLookup uses the same function
+    def test_data_interp_h1dm_row(self):
+        """
+        Test for warning 1d horizontal series interpolation when series
+        has missing or NaN data
+        """
+        import pysd
+        from warnings import catch_warnings
+
+        file_name = "data/input.xlsx"
+        sheet = "Horizontal missing"
+        time_row_or_col = "time_missing"
+        cell = "len_0"
+        coords = {}
+        interp = None
+        py_name = "test_data_interp_h1dm_row"
+
+        pysd.external.External.missing = "warning"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     sheet=sheet,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     interp=interp,
+                                     py_name=py_name)
+
+        with catch_warnings(record=True) as ws:
+            data.initialize()
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertTrue("Not able to interpolate" in str(wu[-1].message))
+
+        self.assertTrue(all(np.isnan(data.data.values)))
+
+    def test_data_interp_h1dm_row2(self):
+        """
+        Test for warning 1d horizontal series interpolation when series
+        has missing or NaN data
+        """
+        import pysd
+        from warnings import catch_warnings
+
+        file_name = "data/input.xlsx"
+        sheet = "Horizontal missing"
+        time_row_or_col = "4"
+        cell = "C9"
+        coords = {"dim": ["B", "C", "D"]}
+        interp = None
+        py_name = "test_data_interp_h1dm_row2"
+
+        pysd.external.External.missing = "warning"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     sheet=sheet,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell,
+                                     coords=coords,
+                                     interp=interp,
+                                     py_name=py_name)
+
+        with catch_warnings(record=True) as ws:
+            data.initialize()
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertTrue("Not able to interpolate" in str(wu[-1].message))
+
+        self.assertFalse(any(np.isnan(data.data.loc[:, "B"].values)))
+        self.assertFalse(any(np.isnan(data.data.loc[:, "C"].values)))
+        self.assertTrue(all(np.isnan(data.data.loc[:, "D"].values)))
+
     def test_data_interp_h1dm(self):
         """
         Test for warning 1d horizontal series interpolation when series
@@ -1921,7 +1985,7 @@ class TestWarningsErrors(unittest.TestCase):
             # use only user warnings
             wu = [w for w in ws if issubclass(w.category, UserWarning)]
             self.assertEqual(len(wu), 1)
-            self.assertTrue("missing" in str(wu[0].message))
+            self.assertIn("missing", str(wu[0].message))
 
         with catch_warnings(record=True) as ws:
             for x, y in zip(_exp.xpts, _exp.interp_1d):
@@ -2287,6 +2351,9 @@ class TestWarningsErrors(unittest.TestCase):
             self.assertTrue(np.all(
                 ["missing" in str(w.message) for w in wu]
                 ))
+            self.assertTrue(np.all(
+                ["will be filled" in str(w.message) for w in wu]
+                ))
 
         with catch_warnings(record=True) as ws:
             for x, y in zip(_exp.xpts, _exp.interp_3d):
@@ -2299,6 +2366,54 @@ class TestWarningsErrors(unittest.TestCase):
                             + " of the time" in str(wu[0].message))
             self.assertTrue("extrapolating data above the maximum value"
                             + " of the time" in str(wu[1].message))
+
+    def test_data_interp_hn3dmd_raw(self):
+        """
+        Test for warning 1d horizontal series interpolation when series
+        has missing or NaN data
+        """
+        import pysd
+        from warnings import catch_warnings
+
+        file_name = "data/input.xlsx"
+        sheet = "Horizontal missing"
+        time_row_or_col = "time"
+        cell_1 = "data_2d"
+        cell_2 = "data_2db"
+        coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C']}
+        coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C']}
+        interp = "raw"
+        py_name = "test_data_interp_hn3dmd_raw"
+
+        pysd.external.External.missing = "warning"
+
+        data = pysd.external.ExtData(file_name=file_name,
+                                     sheet=sheet,
+                                     time_row_or_col=time_row_or_col,
+                                     root=_root,
+                                     cell=cell_1,
+                                     interp=interp,
+                                     coords=coords_1,
+                                     py_name=py_name)
+
+        data.add(file_name=file_name,
+                 sheet=sheet,
+                 time_row_or_col=time_row_or_col,
+                 cell=cell_2,
+                 interp=interp,
+                 coords=coords_2)
+
+        with catch_warnings(record=True) as ws:
+            data.initialize()
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 2)
+            self.assertTrue(np.all(
+                ["missing" in str(w.message) for w in wu]
+                ))
+            self.assertTrue(np.all(
+                ["will be filled" not in str(w.message) for w in wu]
+                ))
 
     def test_lookup_hn3dmd_raise(self):
         """
@@ -2592,6 +2707,7 @@ class TestWarningsErrors(unittest.TestCase):
         coords = {}
         interp = None
         py_name = "test_data_interp_h1d0"
+        pysd.external.External.missing = "warning"
 
         data = pysd.external.ExtData(file_name=file_name,
                                      sheet=sheet,
@@ -2728,7 +2844,7 @@ class TestWarningsErrors(unittest.TestCase):
         cell = "C12"
         coords = {}
         interp = None
-        py_name = "test_data_interp_hnnnm"
+        py_name = "test_data_interp_hnnm"
 
         data = pysd.external.ExtData(file_name=file_name,
                                      sheet=sheet,
