@@ -16,6 +16,9 @@ test_model_look = os.path.join(
     _root,
     "test-models/tests/get_lookups_subscripted_args/"
     + "test_get_lookups_subscripted_args.mdl")
+test_model_data = os.path.join(
+    _root,
+    "test-models/tests/get_data_args_3d_xls/test_get_data_args_3d_xls.mdl")
 
 more_tests = os.path.join(_root, "more-tests")
 
@@ -1793,6 +1796,111 @@ class TestPySD(unittest.TestCase):
 
         with self.assertRaises(NameError):
             model.get_coords('not_a_var')
+
+    def test_getitem(self):
+        import pysd
+
+        model = pysd.read_vensim(test_model)
+        model2 = pysd.read_vensim(test_model_look)
+        model3 = pysd.read_vensim(test_model_data)
+
+        coords = {'Dim': ['A', 'B'], 'Rows': ['Row1', 'Row2']}
+        room_temp = 70
+        temp0 = 180
+        temp1 = 75.37400067686977
+        data0 = xr.DataArray([[0, 4], [-1, 0]], coords, list(coords))
+        data1 = xr.DataArray([[5, 2], [5, 0]], coords, list(coords))
+        self.assertEqual(model['Room Temperature'], room_temp)
+        self.assertEqual(model['room_temperature'], room_temp)
+        self.assertEqual(model['Teacup Temperature'], temp0)
+        self.assertEqual(model['teacup_temperature'], temp0)
+        self.assertEqual(model['_integ_teacup_temperature'], temp0)
+
+        model.run()
+
+        self.assertEqual(model['Room Temperature'], room_temp)
+        self.assertEqual(model['room_temperature'], room_temp)
+        self.assertEqual(model['Teacup Temperature'], temp1)
+        self.assertEqual(model['teacup_temperature'], temp1)
+        self.assertEqual(model['_integ_teacup_temperature'], temp1)
+
+        with self.assertRaises(ValueError) as err:
+            model2['lookup 1d']
+            self.assertIn("Trying to get the current value of a lookup",
+                          err.args[0])
+
+        self.assertTrue(model3['data backward'].equals(data0))
+        model3.run()
+        self.assertTrue(model3['data backward'].equals(data1))
+
+    def test_get_series_data(self):
+        import pysd
+
+        model = pysd.read_vensim(test_model)
+        model2 = pysd.read_vensim(test_model_look)
+        model3 = pysd.read_vensim(test_model_data)
+
+        with self.assertRaises(ValueError) as err:
+            model.get_series_data('Room Temperature')
+            self.assertIn(
+                "Trying to get the values of a hardcoded lookup/data "
+                "or other type of variable.",
+                err.args[0])
+
+        with self.assertRaises(ValueError) as err:
+            model.get_series_data('Teacup Temperature')
+            self.assertIn(
+                "Trying to get the values of a hardcoded lookup/data "
+                "or other type of variable.",
+                err.args[0])
+
+        lookup_exp = xr.DataArray(
+            [0, -2, 10, 1, -5, 0, 5],
+            {"lookup_dim": [0, 5, 10, 15, 20, 25, 30]},
+            ["lookup_dim"])
+
+        lookup_exp2 = xr.DataArray(
+            [[0, 4], [-2, 5], [10, 5], [1, 5], [-5, 5], [0, 5], [5, 2]],
+            {"lookup_dim": [0, 5, 10, 15, 20, 25, 30],
+             "Rows": ["Row1", "Row2"]},
+            ["lookup_dim", "Rows"])
+
+        data_exp = xr.DataArray(
+            [[[0, 4], [-1, 0]], [[-2, 5], [-3, 0]], [[10, 5], [-5, 1]],
+             [[1, 5], [10, 2]], [[-5, 5], [4, 1]], [[0, 5], [5, 0]],
+             [[5, 2], [5, 0]]],
+            {"time": [0, 5, 10, 15, 20, 25, 30],
+             "Rows": ["Row1", "Row2"], "Dim": ["A", "B"]},
+            ["time", "Dim", "Rows"])
+
+        # lookup
+        lookup = model2.get_series_data('lookup 1d')
+        self.assertTrue(lookup.equals(lookup_exp))
+
+        lookup = model2.get_series_data('lookup_1d')
+        self.assertTrue(lookup.equals(lookup_exp))
+
+        lookup = model2.get_series_data('_ext_lookup_lookup_1d')
+        self.assertTrue(lookup.equals(lookup_exp))
+
+        lookup = model2.get_series_data('lookup 2d')
+        self.assertTrue(lookup.equals(lookup_exp2))
+
+        lookup = model2.get_series_data('lookup_2d')
+        self.assertTrue(lookup.equals(lookup_exp2))
+
+        lookup = model2.get_series_data('_ext_lookup_lookup_2d')
+        self.assertTrue(lookup.equals(lookup_exp2))
+
+        # data
+        data = model3.get_series_data('data backward')
+        self.assertTrue(data.equals(data_exp))
+
+        data = model3.get_series_data('data_backward')
+        self.assertTrue(data.equals(data_exp))
+
+        data = model3.get_series_data('_ext_data_data_backward')
+        self.assertTrue(data.equals(data_exp))
 
     def test__build_euler_timeseries(self):
         import pysd

@@ -1129,7 +1129,7 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
            # finding a partial keyword
            'subs': '|'.join(reversed(sorted(sub_names_list + sub_elems_list,
                                             key=len))),
-           'subs_range': '|'.join(reversed(sorted(sub_names_list,key=len))),
+           'subs_range': '|'.join(reversed(sorted(sub_names_list, key=len))),
            'funcs': '|'.join(reversed(sorted(functions.keys(), key=len))),
            'in_ops': '|'.join(reversed(sorted(in_ops_list, key=len))),
            'pre_ops': '|'.join(reversed(sorted(pre_ops_list, key=len))),

@@ -925,10 +925,88 @@ class Macro(DynamicStateful):
         else:
             return None
 
+    def __getitem__(self, param):
+        """
+        Returns the current value of a model component.
+
+        Parameters
+        ----------
+        param: str or func
+            The model element name.
+
+        Returns
+        -------
+        value: float or xarray.DataArray
+            The value of the model component.
+
+        Examples
+        --------
+        >>> model['birth_rate']
+        >>> model['Birth Rate']
+
+        Note
+        ----
+        It will crash if the model component takes arguments.
+
+        """
+        func_name = utils.get_value_by_insensitive_key_or_value(
+            param,
+            self.components._namespace) or param
+
+        if self.get_args(getattr(self.components, func_name)):
+            raise ValueError(
+                "Trying to get the current value of a lookup "
+                "to get all the values with the series data use "
+                "model.get_series_data(param)\n\n")
+
+        return getattr(self.components, func_name)()
+
+    def get_series_data(self, param):
+        """
+        Returns the original values of a model lookup/data component.
+
+        Parameters
+        ----------
+        param: str
+            The model lookup/data element name.
+
+        Returns
+        -------
+        value: xarray.DataArray
+            Array with the value of the interpolating series
+            in the first dimension.
+
+        Examples
+        --------
+        >>> model['room_temperature']
+        >>> model['Room temperature']
+
+        """
+        func_name = utils.get_value_by_insensitive_key_or_value(
+            param,
+            self.components._namespace) or param
+
+        if func_name.startswith("_ext_"):
+            if hasattr(self.components, func_name):
+                return getattr(self.components, func_name).data
+        elif self.get_args(getattr(self.components, func_name)):
+            if hasattr(self.components, "_ext_lookup_" + func_name):
+                return getattr(self.components,
+                               "_ext_lookup_" + func_name).data
+        else:
+            if hasattr(self.components, "_ext_data_" + func_name):
+                return getattr(self.components,
+                               "_ext_data_" + func_name).data
+
+        raise ValueError(
+            "Trying to get the values of a hardcoded lookup/data or "
+            "other type of variable. 'model.get_series_data' only works "
+            "with external lookups/data objects.\n\n")
+
     def set_components(self, params):
         """ Set the value of exogenous model elements.
-        Element values can be passed as keyword=value pairs in the function call.
-        Values can be numeric type or pandas Series.
+        Element values can be passed as keyword=value pairs in the
+        function call. Values can be numeric type or pandas Series.
         Series will be interpolated by integrator.
 
         Examples
