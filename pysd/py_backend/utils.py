@@ -8,6 +8,7 @@ import os
 import warnings
 import keyword
 import json
+from collections.abc import Mapping
 
 import regex as re
 import progressbar
@@ -873,6 +874,12 @@ def open_module(root_dir, model_name, module, submodule=None):
     str:
         Model file content.
     """
+
+    warnings.warn(
+            "open_module function will be deprecated from release 2.0. Use "
+            + "load_modules instead.",
+            FutureWarning
+        )
     if not submodule:
         rel_file_path = module + ".py"
     else:
@@ -880,6 +887,24 @@ def open_module(root_dir, model_name, module, submodule=None):
 
     return open(
         os.path.join(root_dir, "modules_" + model_name, rel_file_path)).read()
+
+
+def load_modules(module_name, module_content, root_dir, model_name,
+                 work_dir=None, submodules=[]):
+    if not work_dir:
+        work_dir = os.path.join(root_dir, "modules_" + model_name)
+
+    if isinstance(module_content, list):
+        submodules.append(
+            open(os.path.join(work_dir, module_name + ".py"), "r").read())
+    else:
+        work_dir = os.path.join(work_dir, module_name)
+        for submod_name, submod_content in module_content.items():
+            load_modules(
+                submod_name, submod_content, root_dir, model_name,
+                work_dir=work_dir, submodules=submodules)
+
+    return "\n\n".join(submodules)
 
 
 def clean_file_names(*args):
@@ -903,6 +928,31 @@ def clean_file_names(*args):
                             ).lstrip("0123456789")
                      )
     return clean
+
+
+def merge_nested_dicts(original_dict, dict_to_merge):
+    """
+    Merge dictionaries recursively, preserving common keys.
+
+    Parameters
+    ----------
+    original_dict: dict
+        Dictionary onto which the merge is executed.
+
+    dict_to_merge: dict
+        Dictionary to be merged to the original_dict.
+
+    Returns
+    -------
+        None
+    """
+
+    for k, v in dict_to_merge.items():
+        if (k in original_dict and isinstance(original_dict[k], dict)
+                and isinstance(dict_to_merge[k], Mapping)):
+            merge_nested_dicts(original_dict[k], dict_to_merge[k])
+        else:
+            original_dict[k] = dict_to_merge[k]
 
 
 class ProgressBar:
