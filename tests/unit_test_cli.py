@@ -259,7 +259,7 @@ class TestPySD(unittest.TestCase):
 
         model_split = pysd.read_vensim(
             root_dir + model_name + ".mdl", split_views=True,
-            subview_sep="."
+            subview_sep=["."]
         )
 
         namespace_filename = "_namespace_" + model_name + ".json"
@@ -273,19 +273,17 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(out.returncode, 0)
 
         # check that the modules folders were created
-        self.assertTrue(os.path.isdir(root_dir + modules_dirname + "/VIEW_1"))
-        self.assertTrue(os.path.isdir(root_dir + modules_dirname + "/VIEW_2"))
+        self.assertTrue(os.path.isdir(root_dir + modules_dirname + "/view_1"))
 
         # check creation of module files
         self.assertTrue(
-            os.path.isfile(root_dir + modules_dirname + "/VIEW_1/" +
+            os.path.isfile(root_dir + modules_dirname + "/view_1/" +
                            "submodule_1.py"))
         self.assertTrue(
-            os.path.isfile(root_dir + modules_dirname + "/VIEW_1/" +
+            os.path.isfile(root_dir + modules_dirname + "/view_1/" +
                            "submodule_2.py"))
         self.assertTrue(
-            os.path.isfile(root_dir + modules_dirname + "/VIEW_2/" +
-                           "view_2.py"))
+            os.path.isfile(root_dir + modules_dirname + "/view_2.py"))
 
         # check that the results of the split model are the same than those
         # without splitting

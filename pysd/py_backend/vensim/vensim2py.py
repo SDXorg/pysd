@@ -559,8 +559,9 @@ def parse_sketch_line(sketch_line, namespace):
 
         def visit_var_definition(self, n, vc):
             if int(vc[10]) % 2 != 0:  # not a shadow variable
-                self.view_or_var["variable_name"] = self.namespace.get(vc[4],
-                                                                       "")
+                self.view_or_var["variable_name"] = \
+                    self.namespace.get(vc[4], "") or \
+                    self.namespace.get(vc[4].replace(" ", "_"), "")
 
         def generic_visit(self, n, vc):
             return "".join(filter(None, vc)) or n.text or ""
@@ -1698,8 +1699,8 @@ def _classify_elements_by_module(sketch, namespace, subview_sep):
         Translation from original model element names (keys) to python
         safe function identifiers (values).
 
-    subview_sep: str
-        Character used to split view names into view + subview
+    subview_sep: list
+        Characters used to split view names into view + subview
         (e.g. if a view is named ENERGY.Demand and suview_sep is set to ".",
         then the Demand subview would be placed inside the ENERGY directory)
 
@@ -1735,27 +1736,34 @@ def _classify_elements_by_module(sketch, namespace, subview_sep):
 
     # split into subviews, if subview_sep is provided
     views_dict = {}
+    if subview_sep and any(
+         sep in view for sep in subview_sep for view in non_empty_views):
+        escaped_separators = list(map(lambda x: re.escape(x), subview_sep))
+        for full_name, values in non_empty_views.items():
+            # split the full view name using the separator and make the
+            # individual parts safe file or directory names
+            clean_view_parts = utils.clean_file_names(
+                                     *re.split(
+                                         "|".join(escaped_separators),
+                                         full_name))
+            # creating a nested dict for each view.subview
+            # (e.g. {view_name: {subview_name: [values]}})
+            nested_dict = values
 
-    if subview_sep and any(filter(lambda x: subview_sep in x,
-                           non_empty_views.keys())):
-        for name, elements in non_empty_views.items():
-            # split and clean view/subview names as they are not yet safe
-            view_subview = name.split(subview_sep)
+            for item in reversed(clean_view_parts):
 
-            if len(view_subview) == 2:
-                view, subview = utils.clean_file_names(*view_subview)
-            else:
-                view = utils.clean_file_names(*view_subview)[0]
-                subview = ""
+                nested_dict = {item: nested_dict}
+            # merging the new nested_dict into the views_dict, preserving
+            # repeated keys
+            utils.merge_nested_dicts(views_dict, nested_dict)
 
-            if view.upper() not in views_dict.keys():
-                views_dict[view.upper()] = {}
-            if not subview:
-                views_dict[view.upper()][view.lower()] = elements
-            else:
-                views_dict[view.upper()][subview.lower()] = elements
+    # view names do not have separators or separator characters not provided
     else:
-        # clean file names
+        if subview_sep and not any(
+         sep in view for sep in subview_sep for view in non_empty_views):
+            warnings.warn("The given subview separators were not matched in "
+                          + "any view name.")
+
         for view_name, elements in non_empty_views.items():
             views_dict[utils.clean_file_names(view_name)[0]] = elements
 
