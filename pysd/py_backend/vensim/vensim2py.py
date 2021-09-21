@@ -475,6 +475,7 @@ def get_equation_components(equation_str, root_path=None):
         "subs": parse_object.subscripts,
         "subs_compatibility": parse_object.subscripts_compatibility,
         "expr": parse_object.expression,
+        "dependencies": set(),
         "kind": parse_object.kind,
         "keyword": parse_object.keyword,
     }
@@ -1153,6 +1154,7 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
             self.translation = ""
             self.subs = None  # the subscript list if given
             self.lookup_subs = []
+            self.dependencies = []
             self.apply_dim = set()  # the dimensions with ! if given
             self.kind = "constant"  # change if we reference anything else
             self.new_structure = []
@@ -1295,12 +1297,14 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
             return py_expr
 
         def visit_id(self, n, vc):
+            self.dependencies.append(namespace[n.text.strip()])
             return namespace[n.text.strip()]
 
         def visit_lookup_with_def(self, n, vc):
             """This exists because vensim has multiple ways of doing lookups.
             Which is frustrating."""
             self.kind = "lookup"
+            element["dependencies"].add("__lookup__")
             x_val = vc[4]
             pairs = vc[11]
             mixed_list = pairs.replace("(", "").replace(")", "").split(",")
@@ -1417,12 +1421,17 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
             if "lookups" in builder_name:
                 self.arguments = "x"
                 self.kind = "lookup"
+                element["dependencies"].add("__external__", "__lookup__")
             elif "constant" in builder_name:
                 # External constants
                 self.kind = "constant"
+                element["dependencies"].add("__external__")
             elif "data" in builder_name:
                 # External data
                 self.kind = "component_ext_data"
+                element["dependencies"].add("__external__", "time")
+            elif "initial" not in builder_name:
+                element["dependencies"].add("__stateful__")
 
             return name
 
@@ -1471,6 +1480,7 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
             "\nSee parsimonious output above." % (element["real_name"],
                                                   element["eqn"])
         )
+    element["dependencies"].update(parse_object.dependencies)
 
     return (
         {
@@ -1651,6 +1661,8 @@ def translate_section(section, macro_list, sketch, root_path, subview_sep=""):
             element.update(translation)
             model_elements += new_structure
 
+            element["dependencies"].add("__lookup__")
+    print({element["py_name"]: element["dependencies"] for element in model_elements if "dependencies" in element and "py_name" in element})
     # send the pieces to be built
     build_elements = [
         e for e in model_elements if e["kind"] not in ["subdef", "test",
