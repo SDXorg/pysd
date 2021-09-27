@@ -91,10 +91,10 @@ def read_vensim(mdl_file, initialize=True, missing_values="warning",
 
     **kwargs: (optional)
         Additional keyword arguments.
-        subview_sep:(str)
-            Character used to separate views and subviews. If provided,
-            and split_views=True, each submodule will be placed inside the
-            folder of the parent view.
+        subview_sep:(list)
+            Characters used to separate views and subviews (e.g. [",", "."]).
+            If provided, and split_views=True, each submodule will be placed
+            inside the directory of the parent view.
 
 
     Returns
