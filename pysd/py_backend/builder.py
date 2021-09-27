@@ -152,9 +152,9 @@ def build_modular_model(elements, subscript_dict, namespace, main_filename,
     main_filename: str
         The name of the file to write the main module of the model to.
 
-    elements_per_module: dict
-        Contains the names of the modules as keys and the variables in
-        each specific module inside a list as values.
+    elements_per_view: dict
+        Contains the names of the modules and submodules as keys and the
+        variables in each specific module inside a list as values.
 
     """
     root_dir = os.path.dirname(main_filename)
@@ -163,53 +163,49 @@ def build_modular_model(elements, subscript_dict, namespace, main_filename,
     # create modules directory if it does not exist
     os.makedirs(modules_dir, exist_ok=True)
 
-    # check if there are subviews or only main views
-    subviews = all(isinstance(n, dict) for n in elements_per_view.values())
-
-    all_views = elements_per_view.keys()
-    # creating the rest of files per module (this needs to be run before the
-    # main module, as it updates the import_modules)
-    processed_elements = []
-    for view_name in all_views:
-        view_elems = []
-        if not subviews:  # only main views
+    def process_views_tree(view_name,
+                           view_content,
+                           working_directory,
+                           processed_elements):
+        """
+        Creates a directory tree based on the elements_per_view dictionary.
+        If it's the final view, it creates a file, if not, it creates a folder.
+        """
+        if isinstance(view_content, list):  # will become a module
+            subview_elems = []
             for element in elements:
-                if element.get("py_name", None) in \
-                   elements_per_view[view_name] or \
-                   element.get("parent_name", None) in \
-                   elements_per_view[view_name]:
-                    view_elems.append(element)
+                if element.get("py_name") in view_content or \
+                   element.get("parent_name", None) in view_content:
+                    subview_elems.append(element)
 
-            _build_separate_module(view_elems, subscript_dict, view_name,
-                                   modules_dir)
+            _build_separate_module(subview_elems, subscript_dict,
+                                   view_name, working_directory)
+            processed_elements += subview_elems
 
-        else:
-            # create subdirectory
-            view_dir = os.path.join(modules_dir, view_name)
-            os.makedirs(view_dir, exist_ok=True)
+        else:  # the current view has subviews
+            working_directory = os.path.join(working_directory, view_name)
+            os.makedirs(working_directory, exist_ok=True)
 
-            for subview_name in elements_per_view[view_name].keys():
-                subview_elems = []
-                for element in elements:
-                    if element.get("py_name", None) in \
-                       elements_per_view[view_name][subview_name] or \
-                       element.get("parent_name", None) in \
-                       elements_per_view[view_name][subview_name]:
-                        subview_elems.append(element)
+            for subview_name, subview_content in view_content.items():
+                process_views_tree(subview_name,
+                                   subview_content,
+                                   working_directory,
+                                   processed_elements)
 
-                _build_separate_module(subview_elems, subscript_dict,
-                                       subview_name, view_dir)
-                view_elems += subview_elems
-
-        processed_elements += view_elems
+    processed_elements = []
+    for view_name, view_content in elements_per_view.items():
+        process_views_tree(view_name,
+                           view_content,
+                           modules_dir,
+                           processed_elements)
 
     # the unprocessed will go in the main file
     unprocessed_elements = [
         element for element in elements if element not in processed_elements
     ]
+
     # building main file using the build function
-    _build_main_module(unprocessed_elements, subscript_dict,
-                       main_filename, subviews)
+    _build_main_module(unprocessed_elements, subscript_dict, main_filename)
 
     # create json file for the modules and corresponding model elements
     with open(os.path.join(modules_dir, "_modules.json"), "w") as outfile:
@@ -228,7 +224,7 @@ def build_modular_model(elements, subscript_dict, namespace, main_filename,
         json.dump(subscript_dict, outfile, indent=4, sort_keys=True)
 
 
-def _build_main_module(elements, subscript_dict, file_name, subviews):
+def _build_main_module(elements, subscript_dict, file_name):
     """
     Constructs and writes the python representation of the main model
     module, when the split_views=True in the read_vensim function.
@@ -252,10 +248,6 @@ def _build_main_module(elements, subscript_dict, file_name, subviews):
     file_name: str
         Path of the file where the main module will be stored.
 
-    subviews: bool
-        True or false depending on whether the views are split in subviews or
-        not.
-
     Returns
     -------
     None or text: None or str
@@ -277,7 +269,7 @@ def _build_main_module(elements, subscript_dict, file_name, subviews):
     funcs = _generate_functions(elements, subscript_dict)
 
     Imports.add("utils", "load_model_data")
-    Imports.add("utils", "open_module")
+    Imports.add("utils", "load_modules")
 
     # import of needed functions and packages
     text, root = Imports.get_header(os.path.basename(file_name),
@@ -302,25 +294,14 @@ def _build_main_module(elements, subscript_dict, file_name, subviews):
 
     text += _get_control_vars(control_vars)
 
-    if not subviews:
-        text += textwrap.dedent("""
-        # load modules from the modules_%(outfile)s directory
-        for module in _modules:
-            exec(open_module(_root, "%(outfile)s", module))
+    text += textwrap.dedent("""
+        # load modules from modules_%(outfile)s directory
+        exec(load_modules("modules_%(outfile)s", _modules, _root, []))
 
         """ % {
             "outfile": os.path.basename(file_name).split(".")[0],
         })
-    else:
-        text += textwrap.dedent("""
-        # load submodules from subdirs in modules_%(outfile)s directory
-        for mod_name, mod_submods in _modules.items():
-            for submod_name in mod_submods.keys():
-                exec(open_module(_root, "%(outfile)s", mod_name, submod_name))
-
-        """ % {
-            "outfile": os.path.basename(file_name).split(".")[0],
-        })
+    print(text)
 
     text += funcs
     text = black.format_file_contents(text, fast=True, mode=black.FileMode())
