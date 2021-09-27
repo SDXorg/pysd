@@ -296,13 +296,12 @@ def _build_main_module(elements, subscript_dict, file_name):
 
     text += textwrap.dedent("""
         # load modules from modules_%(outfile)s directory
-        for module_name, module_content in _modules.items():
-            exec(load_modules(module_name, module_content, _root,
-                              "%(outfile)s", submodules=[]))
+        exec(load_modules("modules_%(outfile)s", _modules, _root, []))
 
         """ % {
             "outfile": os.path.basename(file_name).split(".")[0],
         })
+    print(text)
 
     text += funcs
     text = black.format_file_contents(text, fast=True, mode=black.FileMode())

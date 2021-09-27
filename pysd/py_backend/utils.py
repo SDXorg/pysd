@@ -889,21 +889,18 @@ def open_module(root_dir, model_name, module, submodule=None):
         os.path.join(root_dir, "modules_" + model_name, rel_file_path)).read()
 
 
-def load_modules(module_name, module_content, root_dir, model_name,
-                 work_dir=None, submodules=[]):
+def load_modules(module_name, module_content, work_dir, submodules):
     # TODO: document
-    if not work_dir:
-        work_dir = os.path.join(root_dir, "modules_" + model_name)
 
     if isinstance(module_content, list):
         with open(os.path.join(work_dir, module_name + ".py"), "r") as file:
             submodules.append(file.read())
     else:
-        work_dir = os.path.join(work_dir, module_name)
         for submod_name, submod_content in module_content.items():
             load_modules(
-                submod_name, submod_content, root_dir, model_name,
-                work_dir=work_dir, submodules=submodules)
+                submod_name, submod_content,
+                os.path.join(work_dir, module_name),
+                submodules)
 
     return "\n\n".join(submodules)
 
