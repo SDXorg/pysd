@@ -297,7 +297,8 @@ def _build_main_module(elements, subscript_dict, file_name):
     text += textwrap.dedent("""
         # load modules from modules_%(outfile)s directory
         for module_name, module_content in _modules.items():
-            exec(load_modules(module_name, module_content, _root, "%(outfile)s"))
+            exec(load_modules(module_name, module_content, _root,
+                              "%(outfile)s", submodules=[]))
 
         """ % {
             "outfile": os.path.basename(file_name).split(".")[0],

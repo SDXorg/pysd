@@ -1861,7 +1861,9 @@ def translate_vensim(mdl_file, split_views, **kwargs):
         else:  # separate macro elements into their own files
             section["py_name"] = utils.make_python_identifier(
                 section["name"])[0]
-            section["file_name"] = out_dir + "/" + section["py_name"] + ".py"
+            section["file_name"] = os.path.join(
+                out_dir,
+                section["py_name"] + ".py")
 
     macro_list = [s for s in file_sections if s["name"] != "_main_"]
 
