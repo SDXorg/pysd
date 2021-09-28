@@ -301,7 +301,6 @@ def _build_main_module(elements, subscript_dict, file_name):
         """ % {
             "outfile": os.path.basename(file_name).split(".")[0],
         })
-    print(text)
 
     text += funcs
     text = black.format_file_contents(text, fast=True, mode=black.FileMode())
@@ -1916,12 +1915,15 @@ def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell,
     return "%s(x)" % external["py_name"], [external]
 
 
-def add_macro(macro_name, filename, arg_names, arg_vals):
+def add_macro(identifier, macro_name, filename, arg_names, arg_vals):
     """
-    Constructs a stateful object instantiating a 'Macro'
+    Constructs a stateful object instantiating a 'Macro'.
 
     Parameters
     ----------
+    identifier: str
+        The python-safe name of the element that calls the macro.
+
     macro_name: str
         Python safe name for macro.
 
@@ -1934,16 +1936,16 @@ def add_macro(macro_name, filename, arg_names, arg_vals):
     Returns
     -------
     reference: str
-        reference to the Initial object `__call__` method,
-        which will return the first calculated value of `initial_input`
+        Reference to the Initial object `__call__` method,
+        which will return the first calculated value of `initial_input`.
+
     new_structure: list
-        list of element construction dictionaries for the builder to assemble
+        List of element construction dictionaries for the builder to assemble.
 
     """
     Imports.add("functions", "Macro")
 
-    py_name = "_macro_" + macro_name + "_" + "_".join(
-        [utils.make_python_identifier(f)[0] for f in arg_vals])
+    py_name = "_macro_" + macro_name + "_" + identifier
 
     func_args = "{ %s }" % ", ".join(
         ["'%s': lambda: %s" % (key, val) for key, val in zip(arg_names,
@@ -1951,7 +1953,7 @@ def add_macro(macro_name, filename, arg_names, arg_vals):
 
     stateful = {
         "py_name": py_name,
-        "parent_name": macro_name,
+        "parent_name": identifier,
         "real_name": "Macro Instantiation of " + macro_name,
         "doc": "Instantiates the Macro",
         "py_expr": "Macro('%s', %s, '%s',"

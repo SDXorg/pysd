@@ -850,8 +850,9 @@ def load_model_data(root_dir, model_name):
     return namespace, subscripts, modules
 
 
-def open_module(root_dir, model_name, module, submodule=None):
+def open_module(root_dir, model_name, module, submodule=None):  # pragma: no cover
     """
+    This function will be deprecated from release 2.0.
     Used to load model modules from the main model file, when
     split_views=True in the read_vensim function.
 
@@ -873,11 +874,11 @@ def open_module(root_dir, model_name, module, submodule=None):
     -------
     str:
         Model file content.
-    """
 
+    """
     warnings.warn(
             "open_module function will be deprecated from release 2.0. Use "
-            + "load_modules instead.",
+            + "load_modules instead or translate the model again.",
             FutureWarning
         )
     if not submodule:
@@ -885,16 +886,46 @@ def open_module(root_dir, model_name, module, submodule=None):
     else:
         rel_file_path = os.path.join(module, submodule + ".py")
 
-    return open(
-        os.path.join(root_dir, "modules_" + model_name, rel_file_path)).read()
+    with open(os.path.join(root_dir, "modules_" + model_name, rel_file_path),
+              "r") as mod:
+        return mod.read()
 
 
 def load_modules(module_name, module_content, work_dir, submodules):
-    # TODO: document
+    """
+    Used to load model modules from the main model file, when
+    split_views=True in the read_vensim function. This function is used
+    to iterate over the different layers of the nested dictionary that
+    describes which model variables belong to each module/submodule.
 
+    Parameters
+    ----------
+    module_name: str
+        Name of the module to load.
+
+    module_content: dict or list
+        Content of the module. If it's a dictionary, it means that the
+        module has submodules, whereas if it is a list it means that that
+        particular module/submodule is a final one.
+
+    work_dir: str
+        Path to the module file.
+
+    submodules: list
+        This list gets updated at every recursive iteration, and each element
+        corresponds to the string representation of each module/submodule that
+        is read.
+
+    Returns
+    -------
+    str:
+        String representations of the modules/submodules to execute in the main
+        model file.
+
+    """
     if isinstance(module_content, list):
-        with open(os.path.join(work_dir, module_name + ".py"), "r") as file:
-            submodules.append(file.read())
+        with open(os.path.join(work_dir, module_name + ".py"), "r") as mod:
+            submodules.append(mod.read())
     else:
         for submod_name, submod_content in module_content.items():
             load_modules(
