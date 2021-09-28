@@ -9,6 +9,7 @@ There should be nothing here that has to know about either vensim or
 xmile specific syntax.
 """
 
+import re
 import os.path
 import textwrap
 import warnings
@@ -749,7 +750,7 @@ def merge_partial_elements(element_list):
     return list(outs.values())
 
 
-def add_stock(identifier, expression, initial_condition, subs, merge_subs):
+def add_stock(identifier, expression, initial_condition, subs, merge_subs, deps):
     """
     Creates new model element dictionaries for the model elements associated
     with a stock.
@@ -786,6 +787,13 @@ def add_stock(identifier, expression, initial_condition, subs, merge_subs):
 
     """
     Imports.add("functions", "Integ")
+
+    deps = build_dependencies(
+        deps, "integ",
+        {
+            initial_condition: ["initial"],
+            expression: ["step"]
+        })
 
     new_structure = []
     py_name = "_integ_%s" % identifier
@@ -858,7 +866,7 @@ def add_stock(identifier, expression, initial_condition, subs, merge_subs):
         }
     )
 
-    return "%s()" % py_name, new_structure
+    return "%s()" % py_name, new_structure, deps
 
 
 def add_delay(identifier, delay_input, delay_time, initial_value, order,
@@ -1998,6 +2006,22 @@ def add_incomplete(var_name, dependencies):
 
     # first arg is `self` reference
     return "incomplete(%s)" % ", ".join(dependencies), []
+
+
+def build_dependencies(deps, stype, exps):
+
+    deps_dict = {stype: {"initial": set(), "step": set()}}
+
+    for expr, target in exps.items():
+        for dep in deps:
+            if re.findall("(?<![0-9A-Fa-f_])" + dep + "(?![0-9A-Fa-f_])",
+                          expr):
+                if "initial" in target:
+                    deps_dict[stype]["initial"].add(dep)
+                if "step" in target:
+                    deps_dict[stype]["step"].add(dep)
+
+    return deps_dict
 
 
 def build_function_call(function_def, user_arguments):

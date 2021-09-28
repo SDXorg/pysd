@@ -800,7 +800,8 @@ builders = {
             expression=args[0],
             initial_condition=args[1],
             subs=element["subs"],
-            merge_subs=element["merge_subs"]
+            merge_subs=element["merge_subs"],
+            deps=element["dependencies"]
         ),
     "delay1": lambda element, subscript_dict, args:
         builder.add_delay(
@@ -1155,7 +1156,6 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
             self.translation = ""
             self.subs = None  # the subscript list if given
             self.lookup_subs = []
-            self.dependencies = []
             self.apply_dim = set()  # the dimensions with ! if given
             self.kind = "constant"  # change if we reference anything else
             self.new_structure = []
@@ -1298,7 +1298,7 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
             return py_expr
 
         def visit_id(self, n, vc):
-            self.dependencies.append(namespace[n.text.strip()])
+            element["dependencies"].add(namespace[n.text.strip()])
             return namespace[n.text.strip()]
 
         def visit_lookup_with_def(self, n, vc):
@@ -1414,15 +1414,19 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
 
             self.kind = "component"
             builder_name = vc[0].strip().lower()
-            name, structure = builders[builder_name](
-                element, subs_dict, vc[4])
 
+            if "integ" in builder_name:
+                name, structure, element["dependencies"] = builders[builder_name](
+                    element, subs_dict, vc[4])
+            else:
+                name, structure = builders[builder_name](
+                    element, subs_dict, vc[4])
             self.new_structure += structure
 
             if "lookups" in builder_name:
                 self.arguments = "x"
                 self.kind = "lookup"
-                element["dependencies"].add("__external__", "__lookup__")
+                element["dependencies"].update(["__external__", "__lookup__"])
             elif "constant" in builder_name:
                 # External constants
                 self.kind = "constant"
@@ -1430,9 +1434,7 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
             elif "data" in builder_name:
                 # External data
                 self.kind = "component_ext_data"
-                element["dependencies"].add("__external__", "time")
-            elif "initial" not in builder_name:
-                element["dependencies"].add("__stateful__")
+                element["dependencies"].update(["__external__", "time"])
 
             return name
 
@@ -1481,7 +1483,6 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
             "\nSee parsimonious output above." % (element["real_name"],
                                                   element["eqn"])
         )
-    element["dependencies"].update(parse_object.dependencies)
 
     return (
         {
@@ -1547,6 +1548,7 @@ def parse_lookup_expression(element, subscript_dict):
             trans, structure = builders["get xls lookups"](
                 element, subs_dict, arglist
             )
+            element["dependencies"].add("__external__")
 
             self.translation = trans
             self.new_structure += structure
@@ -1663,6 +1665,7 @@ def translate_section(section, macro_list, sketch, root_path, subview_sep=""):
             model_elements += new_structure
 
             element["dependencies"].add("__lookup__")
+
     print({element["py_name"]: element["dependencies"] for element in model_elements if "dependencies" in element and "py_name" in element})
     # send the pieces to be built
     build_elements = [
