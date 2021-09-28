@@ -890,8 +890,37 @@ def open_module(root_dir, model_name, module, submodule=None):
 
 
 def load_modules(module_name, module_content, work_dir, submodules):
-    # TODO: document
+    """
+    Used to load model modules from the main model file, when
+    split_views=True in the read_vensim function. This function is used
+    to iterate over the different layers of the nested dictionary that
+    describes which model variables belong to each module/submodule.
 
+    Parameters
+    ----------
+    module_name: str
+        Name of the module to load.
+
+    module_content: dict or list
+        Content of the module. If it's a dictionary, it means that the
+        module has submodules, whereas if it is a list it means that that
+        particular module/submodule is a final one.
+
+    work_dir: str
+        Path to the module file.
+
+    submodules: list
+        This list gets updated at every recursive iteration, and each element
+        corresponds to the string representation of each module/submodule that
+        is read.
+
+    Returns
+    -------
+    str:
+        String representations of the modules/submodules to execute in the main
+        model file.
+
+    """
     if isinstance(module_content, list):
         with open(os.path.join(work_dir, module_name + ".py"), "r") as file:
             submodules.append(file.read())
