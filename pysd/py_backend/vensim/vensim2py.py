@@ -1446,7 +1446,7 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
             macro = [x for x in macro_list if x["py_name"] == py_name][
                 0
             ]  # should match once
-            name, structure = builder.add_macro(
+            name, structure = builder.add_macro(element["py_name"],
                 macro["py_name"], macro["file_name"], macro["params"], arglist
             )
             self.new_structure += structure
