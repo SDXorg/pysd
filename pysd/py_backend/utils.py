@@ -841,6 +841,9 @@ def load_model_data(root_dir, model_name):
     with open(os.path.join(root_dir, "_namespace_" + model_name + ".json")
               ) as names:
         namespace = json.load(names)
+    with open(os.path.join(root_dir, "_dependencies_" + model_name + ".json")
+              ) as deps:
+        dependencies = json.load(deps)
 
     # the _modules.json in the sketch_var folder shows to which module each
     # variable belongs
@@ -848,7 +851,7 @@ def load_model_data(root_dir, model_name):
               ) as mods:
         modules = json.load(mods)
 
-    return namespace, subscripts, modules
+    return namespace, subscripts, dependencies, modules
 
 
 def open_module(root_dir, model_name, module, submodule=None):  # pragma: no cover
@@ -1034,3 +1037,11 @@ class ProgressBar:
         except AttributeError:
             # Error if bar is not imported
             pass
+
+
+class SetEncoder(json.JSONEncoder):
+    """ Encode sets as lists. Used for exporting dependencies json."""
+    def default(self, obj):
+        if isinstance(obj, set):
+            return list(obj)
+        return json.JSONEncoder.default(self, obj)

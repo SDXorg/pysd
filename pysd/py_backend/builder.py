@@ -224,6 +224,13 @@ def build_modular_model(elements, subscript_dict, namespace, dependencies,
     ) as outfile:
         json.dump(subscript_dict, outfile, indent=4, sort_keys=True)
 
+    # create single subscript_dict in a separate json file
+    with open(
+        os.path.join(root_dir, "_dependencies_" + model_name + ".json"), "w"
+    ) as outfile:
+        json.dump(dependencies, outfile, indent=4, sort_keys=True,
+                  cls=utils.SetEncoder)
+
 
 def _build_main_module(elements, subscript_dict, file_name):
     """
@@ -284,8 +291,8 @@ def _build_main_module(elements, subscript_dict, file_name):
         'time': lambda: 0
     }
     %(root)s
-    _namespace, _subscript_dict, _modules = load_model_data(_root,
-    "%(outfile)s")
+    _namespace, _subscript_dict, _dependencies, _modules = load_model_data(
+        _root, "%(outfile)s")
     """ % {
         "outfile": os.path.basename(file_name).split(".")[0],
         "root": root,
