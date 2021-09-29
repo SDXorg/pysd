@@ -6,6 +6,7 @@ normal operation.
 """
 
 import sys
+from .py_backend.statefuls import Model
 
 if sys.version_info[:2] < (3, 7):  # pragma: no cover
     raise RuntimeError(
@@ -143,6 +144,5 @@ def load(py_model_file, initialize=True, missing_values="warning"):
     >>> model = load('../tests/test-models/samples/teacup/teacup.py')
 
     """
-    from .py_backend import statefuls
 
-    return statefuls.Model(py_model_file, initialize, missing_values)
+    return Model(py_model_file, initialize, missing_values)

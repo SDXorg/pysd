@@ -656,6 +656,8 @@ class Macro(DynamicStateful):
 
         if params is not None:
             self.set_components(params)
+            for param in params:
+                self.components._dependencies[param] = {"time"}
 
         # Get the collections of stateful elements and external elements
         self._stateful_elements = [
@@ -671,6 +673,8 @@ class Macro(DynamicStateful):
             if isinstance(getattr(self.components, name), External)
         ]
 
+        self._assign_cache_type()
+
         if return_func is not None:
             self.return_func = getattr(self.components, return_func)
         else:
@@ -680,6 +684,72 @@ class Macro(DynamicStateful):
 
     def __call__(self):
         return self.return_func()
+
+    def _assign_cache_type(self):
+        """
+        Assigns the cache type to all the elements from the namespace.
+        """
+        self.cache_type = {"time": None}
+
+        for element in self.components._namespace.values():
+            if element not in self.cache_type\
+               and element in self.components._dependencies:
+                self._assign_cache(element)
+
+        print(self.cache_type)
+
+    def _assign_cache(self, element):
+        """
+        Assigns the cache type to the given element and its dependencies if
+        needed.
+
+        Parameters
+        ----------
+        element: str
+            Element name.
+
+        Returns
+        -------
+        None
+
+        """
+        if not self.components._dependencies[element]:
+            self.cache_type[element] = "run"
+        elif "__lookup__" in self.components._dependencies[element]:
+            self.cache_type[element] = None
+        elif self._isdynamic(self.components._dependencies[element]):
+            self.cache_type[element] = "step"
+        else:
+            self.cache_type[element] = "run"
+            for subelement in self.components._dependencies[element]:
+                if subelement.startswith("_initial_"):
+                    continue
+                if subelement not in self.cache_type:
+                    self._assign_cache(subelement)
+                if self.cache_type[subelement] == "step":
+                    self.cache_type[element] = "step"
+                    break
+
+    def _isdynamic(self, dependencies):
+        """
+
+        Parameters
+        ----------
+        dependencies: iterable
+            List of dependencies.
+
+        Returns
+        -------
+        isdynamic: bool
+            True if 'time' or a dynamic stateful objects is in dependencies.
+
+        """
+        if "time" in dependencies:
+            return True
+        for dep in dependencies:
+            if dep.startswith("_") and not dep.startswith("_initial_"):
+                return True
+        return False
 
     def get_pysd_compiler_version(self):
         """

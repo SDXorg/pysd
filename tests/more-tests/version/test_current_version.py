@@ -2,6 +2,9 @@ from pysd import cache
 
 __pysd_version__ = "2.99.3"
 
+_namespace = {}
+_dependencies = {}
+
 __data = {'scope': None, 'time': lambda: 0}
 
 
