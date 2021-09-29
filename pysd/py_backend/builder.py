@@ -606,7 +606,7 @@ def build_element(element, subscript_dict):
                 # element comes from external or xarray
                 py_expr_i.append(py_expr)
         Imports.add("utils", "xrmerge")
-        py_expr = "xrmerge([%s,])" % (
+        py_expr = "xrmerge(%s)" % (
             ",\n".join(py_expr_i))
     else:
         py_expr = element["py_expr"][0]

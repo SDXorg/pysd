@@ -739,13 +739,12 @@ class ExtData(External):
         """
         Initialize all elements and create the self.data xarray.DataArray
         """
-        data = []
-        zipped = zip(self.files, self.sheets, self.time_row_or_cols,
-                     self.cells, self.coordss)
-        for (self.file, self.sheet, self.x_row_or_col,
-             self.cell, self.coords) in zipped:
-            data.append(self._initialize_data("data"))
-        self.data = utils.xrmerge(data)
+        self.data = utils.xrmerge(*[
+            self._initialize_data("data")
+            for self.file, self.sheet, self.x_row_or_col,
+            self.cell, self.coords
+            in zip(self.files, self.sheets, self.time_row_or_cols,
+                   self.cells, self.coordss)])
 
     def __call__(self, time):
 
@@ -812,13 +811,12 @@ class ExtLookup(External):
         """
         Initialize all elements and create the self.data xarray.DataArray
         """
-        data = []
-        zipped = zip(self.files, self.sheets, self.x_row_or_cols,
-                     self.cells, self.coordss)
-        for (self.file, self.sheet, self.x_row_or_col,
-             self.cell, self.coords) in zipped:
-            data.append(self._initialize_data("lookup"))
-        self.data = utils.xrmerge(data)
+        self.data = utils.xrmerge(*[
+            self._initialize_data("lookup")
+            for self.file, self.sheet, self.x_row_or_col,
+            self.cell, self.coords
+            in zip(self.files, self.sheets, self.x_row_or_cols,
+                   self.cells, self.coordss)])
 
     def __call__(self, x):
         return self._call(self.data, x)
@@ -905,13 +903,11 @@ class ExtConstant(External):
         """
         Initialize all elements and create the self.data xarray.DataArray
         """
-        data = []
-        zipped = zip(self.files, self.sheets, self.transposes,
-                     self.cells, self.coordss)
-        for (self.file, self.sheet, self.transpose,
-             self.cell, self.coords) in zipped:
-            data.append(self._initialize())
-        self.data = utils.xrmerge(data)
+        self.data = utils.xrmerge(*[
+            self._initialize()
+            for self.file, self.sheet, self.transpose, self.cell, self.coords
+            in zip(self.files, self.sheets, self.transposes,
+                   self.cells, self.coordss)])
 
     def _initialize(self):
         """

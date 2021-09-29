@@ -22,17 +22,15 @@ from .functions import __dir__ as fdir
 from .statefuls import __dir__ as sdir
 
 
-def xrmerge(das, accept_new=True):
+def xrmerge(*das):
     """
     Merges xarrays with different dimension sets.
 
     Parameters
     ----------
-    das: list of xarray.DataArrays
-        The list of the data arrays to merge.
+    *das: xarray.DataArrays
+        The data arrays to merge.
 
-    accept_new: bool (optional)
-        Default is True.
 
     Returns
     -------
@@ -48,10 +46,8 @@ def xrmerge(das, accept_new=True):
     """
     da = das[0]
     for new_da in das[1:]:
-        # Expand both to have same dimensions, padding with NaN
-        da, new_da = xr.align(da, new_da, join="outer")
-        # Fill NaNs one way or the other re. accept_new
-        da = new_da.fillna(da) if accept_new else da.fillna(new_da)
+        da = da.combine_first(new_da)
+
     return da
 
 
