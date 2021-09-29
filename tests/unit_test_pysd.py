@@ -2228,3 +2228,57 @@ class TestSplitViews(unittest.TestCase):
                 wu[0].message)
         )
 
+
+class TestDependencies(unittest.TestCase):
+    def test_teacup_deps(self):
+        from pysd import read_vensim
+
+        model = read_vensim(test_model)
+
+        expected_dep = {
+            'characteristic_time': None,
+            'heat_loss_to_room': {
+                'teacup_temperature',
+                'room_temperature',
+                'characteristic_time'
+            },
+            'room_temperature': None,
+            'teacup_temperature': {'_integ_teacup_temperature'},
+            '_integ_teacup_temperature': {
+                'initial': None,
+                'step': {'heat_loss_to_room'}
+            },
+            'final_time': None,
+            'initial_time': None,
+            'saveper': {'time_step'},
+            'time_step': None
+        }
+        self.assertEqual(model.components._dependencies, expected_dep)
+
+    def test_multiple_deps(self):
+        from pysd import read_vensim
+
+        model = read_vensim(
+            more_tests + "/subscript_individually_defined_stocks2/"
+            + "test_subscript_individually_defined_stocks2.mdl")
+
+        expected_dep = {
+            "stock_a": {"_integ_stock_a"},
+            "inflow_a": {"rate_a"},
+            "inflow_b": {"rate_a"},
+            "initial_values": {"initial_values_a", "initial_values_b"},
+            "initial_values_a": None,
+            "initial_values_b": None,
+            "rate_a": None,
+            "final_time": None,
+            "initial_time": None,
+            "saveper": {"time_step"},
+            "time_step": None,
+            "_integ_stock_a": {
+                "initial": {"initial_values"},
+                "step": {"inflow_a", "inflow_b"}
+            },
+        }
+        self.assertEqual(model.components._dependencies, expected_dep)
+
+

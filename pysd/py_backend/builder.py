@@ -118,8 +118,8 @@ class Imports():
 build_names = set()
 
 
-def build_modular_model(elements, subscript_dict, namespace, main_filename,
-                        elements_per_view):
+def build_modular_model(elements, subscript_dict, namespace, dependencies,
+                        main_filename, elements_per_view):
 
     """
     This is equivalent to the build function, but is used when the
@@ -256,14 +256,13 @@ def _build_main_module(elements, subscript_dict, file_name):
         instead of saving it. It is used for testing.
 
     """
-    all_elements = merge_partial_elements(elements)
     # separating between control variables and rest of variables
-    control_vars_ = [element for element in all_elements if
+    control_vars_ = [element for element in elements if
                      element["py_name"] in ["initial_time",
                                             "final_time",
                                             "time_step",
                                             "saveper"]]
-    elements = [element for element in all_elements if element not in
+    elements = [element for element in elements if element not in
                 control_vars_]
 
     control_vars = _generate_functions(control_vars_, subscript_dict)
@@ -352,7 +351,6 @@ def _build_separate_module(elements, subscript_dict, module_name, module_dir):
         "module_name": module_name,
         "version": __version__,
     })
-    elements = merge_partial_elements(elements)
     funcs = _generate_functions(elements, subscript_dict)
     text += funcs
     text = black.format_file_contents(text, fast=True, mode=black.FileMode())
@@ -363,7 +361,7 @@ def _build_separate_module(elements, subscript_dict, module_name, module_dir):
         out.write(text)
 
 
-def build(elements, subscript_dict, namespace, outfile_name):
+def build(elements, subscript_dict, namespace, dependencies, outfile_name):
     """
     Constructs and writes the python representation of the model, when the
     the split_modules is set to False in the read_vensim function. The entire
@@ -386,6 +384,11 @@ def build(elements, subscript_dict, namespace, outfile_name):
         Translation from original model element names (keys) to python safe
         function identifiers (values).
 
+    dependencies: dict
+        Dependencies dictionary. Variables as keys and set of called values or
+        objects, objects as keys and a dictionary of dependencies for
+        initialization and dependencies for run.
+
     outfile_name: str
         The name of the file to write the model to.
 
@@ -396,17 +399,13 @@ def build(elements, subscript_dict, namespace, outfile_name):
         instead of saving it. It is used for testing.
 
     """
-    # Todo: deal with model level documentation
-    # Todo: Make presence of subscript_dict instantiation conditional on usage
-    # Todo: Sort elements (alphabetically? group stock funcs?)
-    all_elements = merge_partial_elements(elements)
     # separating between control variables and rest of variables
-    control_vars_ = [element for element in all_elements if
+    control_vars_ = [element for element in elements if
                      element["py_name"] in ["final_time",
                                             "initial_time",
                                             "saveper",
                                             "time_step"]]
-    elements = [element for element in all_elements if element not in
+    elements = [element for element in elements if element not in
                 control_vars_]
 
     control_vars = _generate_functions(control_vars_, subscript_dict)
@@ -425,9 +424,12 @@ def build(elements, subscript_dict, namespace, outfile_name):
     _subscript_dict = %(subscript_dict)s
 
     _namespace = %(namespace)s
+
+    _dependencies = %(dependencies)s
     """ % {
         "subscript_dict": repr(subscript_dict),
         "namespace": repr(namespace),
+        "dependencies": repr(dependencies),
         "root": root,
         "version": __version__,
     })
@@ -729,6 +731,8 @@ def merge_partial_elements(element_list):
                     "subs": [element["subs"]],
                     "merge_subs": element["merge_subs"]
                     if "merge_subs" in element else None,
+                    "dependencies": element["dependencies"]
+                    if "dependencies" in element else None,
                     "lims": element["lims"],
                     "eqn": [eqn.replace(r"\ ", "")],
                     "kind": element["kind"],
@@ -744,6 +748,13 @@ def merge_partial_elements(element_list):
                 outs[name]["eqn"] += [eqn.replace(r"\ ", "")]
                 outs[name]["py_expr"] += [element["py_expr"]]
                 outs[name]["subs"] += [element["subs"]]
+                # merge dependencies
+                if isinstance(outs[name]["dependencies"], set):
+                    outs[name]["dependencies"].update(element["dependencies"])
+                elif isinstance(outs[name]["dependencies"], dict):
+                    for target in outs[name]["dependencies"]:
+                        outs[name]["dependencies"][target].update(
+                            element["dependencies"][target])
                 outs[name]["arguments"] = element["arguments"]
 
     return list(outs.values())
@@ -788,7 +799,7 @@ def add_stock(identifier, expression, initial_condition, subs, merge_subs, deps)
     Imports.add("functions", "Integ")
 
     deps = build_dependencies(
-        deps, "integ",
+        deps,
         {
             initial_condition: ["initial"],
             expression: ["step"]
@@ -812,64 +823,59 @@ def add_stock(identifier, expression, initial_condition, subs, merge_subs, deps)
 
         # following elements not specified in the model file, but must exist
         # create the stock initialization element
-        new_structure.append(
-            {
-                "py_name": "_integ_init_%s" % identifier,
-                "parent_name": identifier,
-                "real_name": "Implicit",
-                "kind": "setup",
-                "py_expr": initial_condition,
-                "subs": subs,
-                "merge_subs": merge_subs,
-                "doc": "Provides initial conditions for %s function"
-                        % identifier,
-                "unit": "See docs for %s" % identifier,
-                "lims": "None",
-                "eqn": "None",
-                "arguments": "",
-            }
-        )
-
-        new_structure.append(
-            {
-                "py_name": "_integ_input_%s" % identifier,
-                "parent_name": identifier,
-                "real_name": "Implicit",
-                "kind": "component",
-                "doc": "Provides derivative for %s function" % identifier,
-                "subs": subs,
-                "merge_subs": merge_subs,
-                "unit": "See docs for %s" % identifier,
-                "lims": "None",
-                "eqn": "None",
-                "py_expr": expression,
-                "arguments": "",
-            }
-        )
-
-    # describe the stateful object
-    new_structure.append(
-        {
-            "py_name": py_name,
+        new_structure.append({
+            "py_name": "_integ_init_%s" % identifier,
             "parent_name": identifier,
-            "real_name": "Representation of  %s" % identifier,
-            "doc": "Integrates Expression %s" % expression,
-            "py_expr": stateful_py_expr,
-            "unit": "None",
+            "real_name": "Implicit",
+            "kind": "setup",
+            "py_expr": initial_condition,
+            "subs": subs,
+            "merge_subs": merge_subs,
+            "doc": "Provides initial conditions for %s function"
+                    % identifier,
+            "unit": "See docs for %s" % identifier,
             "lims": "None",
             "eqn": "None",
-            "subs": "",
-            "merge_subs": None,
-            "kind": "stateful",
             "arguments": "",
-        }
-    )
+        })
 
-    return "%s()" % py_name, new_structure, deps
+        new_structure.append({
+            "py_name": "_integ_input_%s" % identifier,
+            "parent_name": identifier,
+            "real_name": "Implicit",
+            "kind": "component",
+            "doc": "Provides derivative for %s function" % identifier,
+            "subs": subs,
+            "merge_subs": merge_subs,
+            "unit": "See docs for %s" % identifier,
+            "lims": "None",
+            "eqn": "None",
+            "py_expr": expression,
+            "arguments": "",
+        })
+
+    # describe the stateful object
+    new_structure.append({
+        "py_name": py_name,
+        "parent_name": identifier,
+        "real_name": "Representation of  %s" % identifier,
+        "doc": "Integrates Expression %s" % expression,
+        "py_expr": stateful_py_expr,
+        "unit": "None",
+        "lims": "None",
+        "eqn": "None",
+        "subs": "",
+        "merge_subs": None,
+        "dependencies": deps,
+        "kind": "stateful",
+        "arguments": "",
+    })
+
+    return "%s()" % py_name, new_structure
 
 
 def add_delay(identifier, delay_input, delay_time, initial_value, order,
-              subs, merge_subs):
+              subs, merge_subs, deps):
     """
     Creates code to instantiate a stateful 'Delay' object,
     and provides reference to that object's output.
@@ -922,6 +928,15 @@ def add_delay(identifier, delay_input, delay_time, initial_value, order,
     """
     Imports.add("functions", "Delay")
 
+    deps = build_dependencies(
+        deps,
+        {
+            initial_value: ["initial"],
+            order: ["initial"],
+            delay_time: ["initial", "step"],
+            delay_input: ["step"]
+        })
+
     new_structure = []
     py_name = "_delay_%s" % identifier
 
@@ -941,65 +956,59 @@ def add_delay(identifier, delay_input, delay_time, initial_value, order,
 
         # following elements not specified in the model file, but must exist
         # create the delay initialization element
-        new_structure.append(
-            {
-                "py_name": "_delay_init_%s" % identifier,
-                "parent_name": identifier,
-                "real_name": "Implicit",
-                "kind": "setup",  # not specified in the model file, but must
-                # exist
-                "py_expr": initial_value,
-                "subs": subs,
-                "merge_subs": merge_subs,
-                "doc": "Provides initial conditions for %s function" \
-                        % identifier,
-                "unit": "See docs for %s" % identifier,
-                "lims": "None",
-                "eqn": "None",
-                "arguments": "",
-            }
-        )
-
-        new_structure.append(
-            {
-                "py_name": "_delay_input_%s" % identifier,
-                "parent_name": identifier,
-                "real_name": "Implicit",
-                "kind": "component",
-                "doc": "Provides input for %s function" % identifier,
-                "subs": subs,
-                "merge_subs": merge_subs,
-                "unit": "See docs for %s" % identifier,
-                "lims": "None",
-                "eqn": "None",
-                "py_expr": delay_input,
-                "arguments": "",
-            }
-        )
-
-    # describe the stateful object
-    new_structure.append(
-        {
-            "py_name": py_name,
+        new_structure.append({
+            "py_name": "_delay_init_%s" % identifier,
             "parent_name": identifier,
-            "real_name": "Delay of %s" % delay_input,
-            "doc": "Delay time: %s \n Delay initial value %s \n Delay order %s"
-            % (delay_time, initial_value, order),
-            "py_expr": stateful_py_expr,
-            "unit": "None",
+            "real_name": "Implicit",
+            "kind": "setup",  # not specified in the model file, but must exist
+            "py_expr": initial_value,
+            "subs": subs,
+            "merge_subs": merge_subs,
+            "doc": "Provides initial conditions for %s function" \
+                    % identifier,
+            "unit": "See docs for %s" % identifier,
             "lims": "None",
             "eqn": "None",
-            "subs": "",
-            "merge_subs": None,
-            "kind": "stateful",
             "arguments": "",
-        }
-    )
+        })
+
+        new_structure.append({
+            "py_name": "_delay_input_%s" % identifier,
+            "parent_name": identifier,
+            "real_name": "Implicit",
+            "kind": "component",
+            "doc": "Provides input for %s function" % identifier,
+            "subs": subs,
+            "merge_subs": merge_subs,
+            "unit": "See docs for %s" % identifier,
+            "lims": "None",
+            "eqn": "None",
+            "py_expr": delay_input,
+            "arguments": "",
+        })
+
+    # describe the stateful object
+    new_structure.append({
+        "py_name": py_name,
+        "parent_name": identifier,
+        "real_name": "Delay of %s" % delay_input,
+        "doc": "Delay time: %s \n Delay initial value %s \n Delay order %s"
+        % (delay_time, initial_value, order),
+        "py_expr": stateful_py_expr,
+        "unit": "None",
+        "lims": "None",
+        "eqn": "None",
+        "subs": "",
+        "merge_subs": None,
+        "dependencies": deps,
+        "kind": "stateful",
+        "arguments": "",
+    })
 
     return "%s()" % py_name, new_structure
 
 
-def add_delay_f(identifier, delay_input, delay_time, initial_value):
+def add_delay_f(identifier, delay_input, delay_time, initial_value, deps):
     """
     Creates code to instantiate a stateful 'DelayFixed' object,
     and provides reference to that object's output.
@@ -1039,6 +1048,14 @@ def add_delay_f(identifier, delay_input, delay_time, initial_value):
     """
     Imports.add("functions", "DelayFixed")
 
+    deps = build_dependencies(
+        deps,
+        {
+            initial_value: ["initial"],
+            delay_time: ["initial"],
+            delay_input: ["step"]
+        })
+
     py_name = "_delayfixed_%s" % identifier
 
     stateful_py_expr = (
@@ -1060,6 +1077,7 @@ def add_delay_f(identifier, delay_input, delay_time, initial_value):
         "eqn": "None",
         "subs": "",
         "merge_subs": None,
+        "dependencies": deps,
         "kind": "stateful",
         "arguments": "",
     }
@@ -1068,7 +1086,7 @@ def add_delay_f(identifier, delay_input, delay_time, initial_value):
 
 
 def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
-                subs, merge_subs):
+                subs, merge_subs, deps):
     """
     Creates code to instantiate a stateful 'DelayN' object,
     and provides reference to that object's output.
@@ -1121,6 +1139,15 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
     """
     Imports.add("functions", "DelayN")
 
+    deps = build_dependencies(
+        deps,
+        {
+            initial_value: ["initial"],
+            order: ["initial"],
+            delay_time: ["initial", "step"],
+            delay_input: ["step"]
+        })
+
     new_structure = []
     py_name = "_delayn_%s" % identifier
 
@@ -1140,67 +1167,61 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
 
         # following elements not specified in the model file, but must exist
         # create the delay initialization element
-        new_structure.append(
-            {
-                "py_name": "_delayn_init_%s" % identifier,
-                "parent_name": identifier,
-                "real_name": "Implicit",
-                "kind": "setup",  # not specified in the model file, but must
-                # exist
-                "py_expr": initial_value,
-                "subs": subs,
-                "merge_subs": merge_subs,
-                "doc": "Provides initial conditions for %s function" \
-                        % identifier,
-                "unit": "See docs for %s" % identifier,
-                "lims": "None",
-                "eqn": "None",
-                "arguments": "",
-            }
-        )
-
-        new_structure.append(
-            {
-                "py_name": "_delayn_input_%s" % identifier,
-                "parent_name": identifier,
-                "real_name": "Implicit",
-                "kind": "component",
-                "doc": "Provides input for %s function" % identifier,
-                "subs": subs,
-                "merge_subs": merge_subs,
-                "unit": "See docs for %s" % identifier,
-                "lims": "None",
-                "eqn": "None",
-                "py_expr": delay_input,
-                "arguments": "",
-            }
-        )
-
-    # describe the stateful object
-    new_structure.append(
-        {
-            "py_name": py_name,
+        new_structure.append({
+            "py_name": "_delayn_init_%s" % identifier,
             "parent_name": identifier,
-            "real_name": "DelayN of %s" % delay_input,
-            "doc": "DelayN time: %s \n DelayN initial value %s \n DelayN order\
-                    %s"
-            % (delay_time, initial_value, order),
-            "py_expr": stateful_py_expr,
-            "unit": "None",
+            "real_name": "Implicit",
+            "kind": "setup",  # not specified in the model file, but must exist
+            "py_expr": initial_value,
+            "subs": subs,
+            "merge_subs": merge_subs,
+            "doc": "Provides initial conditions for %s function" \
+                    % identifier,
+            "unit": "See docs for %s" % identifier,
             "lims": "None",
             "eqn": "None",
-            "subs": "",
-            "merge_subs": None,
-            "kind": "stateful",
             "arguments": "",
-        }
-    )
+        })
+
+        new_structure.append({
+            "py_name": "_delayn_input_%s" % identifier,
+            "parent_name": identifier,
+            "real_name": "Implicit",
+            "kind": "component",
+            "doc": "Provides input for %s function" % identifier,
+            "subs": subs,
+            "merge_subs": merge_subs,
+            "unit": "See docs for %s" % identifier,
+            "lims": "None",
+            "eqn": "None",
+            "py_expr": delay_input,
+            "arguments": "",
+        })
+
+    # describe the stateful object
+    new_structure.append({
+        "py_name": py_name,
+        "parent_name": identifier,
+        "real_name": "DelayN of %s" % delay_input,
+        "doc": "DelayN time: %s \n DelayN initial value %s \n DelayN order\
+                %s"
+        % (delay_time, initial_value, order),
+        "py_expr": stateful_py_expr,
+        "unit": "None",
+        "lims": "None",
+        "eqn": "None",
+        "subs": "",
+        "merge_subs": None,
+        "dependencies": deps,
+        "kind": "stateful",
+        "arguments": "",
+    })
 
     return "%s()" % py_name, new_structure
 
 
 def add_forecast(identifier, forecast_input, average_time, horizon,
-                 subs, merge_subs):
+                 subs, merge_subs, deps):
     """
     Constructs Forecast object.
 
@@ -1238,6 +1259,14 @@ def add_forecast(identifier, forecast_input, average_time, horizon,
     """
     Imports.add("functions", "Forecast")
 
+    deps = build_dependencies(
+        deps,
+        {
+            forecast_input: ["initial", "step"],
+            average_time: ["step"],
+            horizon: ["step"]
+        })
+
     new_structure = []
     py_name = "_forecast_%s" % identifier
 
@@ -1256,48 +1285,44 @@ def add_forecast(identifier, forecast_input, average_time, horizon,
 
         # following elements not specified in the model file, but must exist
         # create the delay initialization element
-        new_structure.append(
-            {
-                "py_name": "_forecast_input_%s" % identifier,
-                "parent_name": identifier,
-                "real_name": "Implicit",
-                "kind": "setup",  # not specified in the model file, but must
-                # exist
-                "py_expr": forecast_input,
-                "subs": subs,
-                "merge_subs": merge_subs,
-                "doc": "Provides input for %s function"
-                        % identifier,
-                "unit": "See docs for %s" % identifier,
-                "lims": "None",
-                "eqn": "None",
-                "arguments": "",
-            }
-        )
-
-    new_structure.append(
-        {
-            "py_name": py_name,
+        new_structure.append({
+            "py_name": "_forecast_input_%s" % identifier,
             "parent_name": identifier,
-            "real_name": "Forecast of %s" % forecast_input,
-            "doc": "Forecast average time: %s \n Horizon %s"
-            % (average_time, horizon),
-            "py_expr": stateful_py_expr,
-            "unit": "None",
+            "real_name": "Implicit",
+            "kind": "setup",  # not specified in the model file, but must exist
+            "py_expr": forecast_input,
+            "subs": subs,
+            "merge_subs": merge_subs,
+            "doc": "Provides input for %s function"
+                    % identifier,
+            "unit": "See docs for %s" % identifier,
             "lims": "None",
             "eqn": "None",
-            "subs": "",
-            "merge_subs": None,
-            "kind": "stateful",
             "arguments": "",
-        }
-    )
+        })
+
+    new_structure.append({
+        "py_name": py_name,
+        "parent_name": identifier,
+        "real_name": "Forecast of %s" % forecast_input,
+        "doc": "Forecast average time: %s \n Horizon %s"
+        % (average_time, horizon),
+        "py_expr": stateful_py_expr,
+        "unit": "None",
+        "lims": "None",
+        "eqn": "None",
+        "subs": "",
+        "merge_subs": None,
+        "dependencies": deps,
+        "kind": "stateful",
+        "arguments": "",
+    })
 
     return "%s()" % py_name, new_structure
 
 
 def add_sample_if_true(identifier, condition, actual_value, initial_value,
-                       subs, merge_subs):
+                       subs, merge_subs, deps):
     """
     Creates code to instantiate a stateful 'SampleIfTrue' object,
     and provides reference to that object's output.
@@ -1337,6 +1362,14 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value,
 
     """
     Imports.add("functions", "SampleIfTrue")
+
+    deps = build_dependencies(
+        deps,
+        {
+            initial_value: ["initial"],
+            actual_value: ["step"],
+            condition: ["step"]
+        })
 
     new_structure = []
     py_name = "_sample_if_true_%s" % identifier
@@ -1380,6 +1413,7 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value,
         "eqn": "None",
         "subs": "",
         "merge_subs": None,
+        "dependencies": deps,
         "kind": "stateful",
         "arguments": ""
     })
@@ -1388,7 +1422,7 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value,
 
 
 def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order,
-                 subs, merge_subs):
+                 subs, merge_subs, deps):
     """
     Constructs stock and flow chains that implement the calculation of
     a smoothing function.
@@ -1437,6 +1471,15 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order,
     """
     Imports.add("functions", "Smooth")
 
+    deps = build_dependencies(
+        deps,
+        {
+            initial_value: ["initial"],
+            order: ["initial"],
+            smooth_input: ["step"],
+            smooth_time: ["step"]
+        })
+
     new_structure = []
     py_name = "_smooth_%s" % identifier
 
@@ -1458,66 +1501,59 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order,
 
         # following elements not specified in the model file, but must exist
         # create the delay initialization element
-        new_structure.append(
-            {
-                "py_name": "_smooth_init_%s" % identifier,
-                "parent_name": identifier,
-                "real_name": "Implicit",
-                "kind": "setup",  # not specified in the model file, but must
-                # exist
-                "py_expr": initial_value,
-                "subs": subs,
-                "merge_subs": merge_subs,
-                "doc": "Provides initial conditions for %s function" % \
-                       identifier,
-                "unit": "See docs for %s" % identifier,
-                "lims": "None",
-                "eqn": "None",
-                "arguments": "",
-            }
-        )
-
-        new_structure.append(
-            {
-                "py_name": "_smooth_input_%s" % identifier,
-                "parent_name": identifier,
-                "real_name": "Implicit",
-                "kind": "component",
-                "doc": "Provides input for %s function" % identifier,
-                "subs": subs,
-                "merge_subs": merge_subs,
-                "unit": "See docs for %s" % identifier,
-                "lims": "None",
-                "eqn": "None",
-                "py_expr": smooth_input,
-                "arguments": "",
-            }
-        )
-
-    new_structure.append(
-        {
-            "py_name": py_name,
+        new_structure.append({
+            "py_name": "_smooth_init_%s" % identifier,
             "parent_name": identifier,
-            "real_name": "Smooth of %s" % smooth_input,
-            "doc": "Smooth time:" +
-                   "%s \n Smooth initial value %s \n Smooth order %s"
-                   % (smooth_time, initial_value, order),
-            "py_expr": stateful_py_expr,
-            "unit": "None",
+            "real_name": "Implicit",
+            "kind": "setup",  # not specified in the model file, but must exist
+            "py_expr": initial_value,
+            "subs": subs,
+            "merge_subs": merge_subs,
+            "doc": "Provides initial conditions for %s function" % \
+                    identifier,
+            "unit": "See docs for %s" % identifier,
             "lims": "None",
             "eqn": "None",
-            "subs": "",
-            "merge_subs": None,
-            "kind": "stateful",
             "arguments": "",
-        }
-    )
+        })
+
+        new_structure.append({
+            "py_name": "_smooth_input_%s" % identifier,
+            "parent_name": identifier,
+            "real_name": "Implicit",
+            "kind": "component",
+            "doc": "Provides input for %s function" % identifier,
+            "subs": subs,
+            "merge_subs": merge_subs,
+            "unit": "See docs for %s" % identifier,
+            "lims": "None",
+            "eqn": "None",
+            "py_expr": smooth_input,
+            "arguments": "",
+        })
+
+    new_structure.append({
+        "py_name": py_name,
+        "parent_name": identifier,
+        "real_name": "Smooth of %s" % smooth_input,
+        "doc": "Smooth time %s \n Initial value %s \n Smooth order %s" % (
+            smooth_time, initial_value, order),
+        "py_expr": stateful_py_expr,
+        "unit": "None",
+        "lims": "None",
+        "eqn": "None",
+        "subs": "",
+        "merge_subs": None,
+        "dependencies": deps,
+        "kind": "stateful",
+        "arguments": "",
+    })
 
     return "%s()" % py_name, new_structure
 
 
 def add_n_trend(identifier, trend_input, average_time, initial_trend,
-                subs, merge_subs):
+                subs, merge_subs, deps):
     """
     Constructs Trend object.
 
@@ -1555,6 +1591,14 @@ def add_n_trend(identifier, trend_input, average_time, initial_trend,
     """
     Imports.add("functions", "Trend")
 
+    deps = build_dependencies(
+        deps,
+        {
+            initial_trend: ["initial"],
+            trend_input: ["initial", "step"],
+            average_time: ["initial", "step"]
+        })
+
     new_structure = []
     py_name = "_trend_%s" % identifier
 
@@ -1573,47 +1617,43 @@ def add_n_trend(identifier, trend_input, average_time, initial_trend,
 
         # following elements not specified in the model file, but must exist
         # create the delay initialization element
-        new_structure.append(
-            {
-                "py_name": "_trend_init_%s" % identifier,
-                "parent_name": identifier,
-                "real_name": "Implicit",
-                "kind": "setup",  # not specified in the model file, but must
-                # exist
-                "py_expr": initial_trend,
-                "subs": subs,
-                "merge_subs": merge_subs,
-                "doc": "Provides initial conditions for %s function"
-                        % identifier,
-                "unit": "See docs for %s" % identifier,
-                "lims": "None",
-                "eqn": "None",
-                "arguments": "",
-            }
-        )
-
-    new_structure.append(
-        {
-            "py_name": py_name,
+        new_structure.append({
+            "py_name": "_trend_init_%s" % identifier,
             "parent_name": identifier,
-            "real_name": "trend of %s" % trend_input,
-            "doc": "Trend average time: %s \n Trend initial value %s"
-            % (average_time, initial_trend),
-            "py_expr": stateful_py_expr,
-            "unit": "None",
+            "real_name": "Implicit",
+            "kind": "setup",  # not specified in the model file, but must exist
+            "py_expr": initial_trend,
+            "subs": subs,
+            "merge_subs": merge_subs,
+            "doc": "Provides initial conditions for %s function"
+                    % identifier,
+            "unit": "See docs for %s" % identifier,
             "lims": "None",
             "eqn": "None",
-            "subs": "",
-            "merge_subs": None,
-            "kind": "stateful",
             "arguments": "",
-        }
-    )
+        })
+
+    new_structure.append({
+        "py_name": py_name,
+        "parent_name": identifier,
+        "real_name": "trend of %s" % trend_input,
+        "doc": "Trend average time: %s \n Trend initial value %s"
+        % (average_time, initial_trend),
+        "py_expr": stateful_py_expr,
+        "unit": "None",
+        "lims": "None",
+        "eqn": "None",
+        "subs": "",
+        "merge_subs": None,
+        "dependencies": deps,
+        "kind": "stateful",
+        "arguments": "",
+    })
 
     return "%s()" % py_name, new_structure
 
 
-def add_initial(identifier, value):
+def add_initial(identifier, value, deps):
     """
     Constructs a stateful object for handling vensim's 'Initial' functionality.
 
@@ -1637,6 +1677,13 @@ def add_initial(identifier, value):
 
     """
     Imports.add("functions", "Initial")
+
+    deps = build_dependencies(
+        deps,
+        {
+            value: ["initial"]
+        })
+
     py_name = utils.make_python_identifier("_initial_%s"
                                            % identifier)[0]
 
@@ -1651,6 +1698,7 @@ def add_initial(identifier, value):
         "eqn": "None",
         "subs": "",
         "merge_subs": None,
+        "dependencies": deps,
         "kind": "stateful",
         "arguments": "",
     }
@@ -1923,7 +1971,7 @@ def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell,
     return "%s(x)" % external["py_name"], [external]
 
 
-def add_macro(identifier, macro_name, filename, arg_names, arg_vals):
+def add_macro(identifier, macro_name, filename, arg_names, arg_vals, deps):
     """
     Constructs a stateful object instantiating a 'Macro'.
 
@@ -1953,6 +2001,12 @@ def add_macro(identifier, macro_name, filename, arg_names, arg_vals):
     """
     Imports.add("functions", "Macro")
 
+    deps = build_dependencies(
+        deps,
+        {
+            arg: ["initial", "step"] for arg in arg_vals
+        })
+
     py_name = "_macro_" + macro_name + "_" + identifier
 
     func_args = "{ %s }" % ", ".join(
@@ -1972,6 +2026,7 @@ def add_macro(identifier, macro_name, filename, arg_names, arg_vals):
         "eqn": "None",
         "subs": "",
         "merge_subs": None,
+        "dependencies": deps,
         "kind": "stateful",
         "arguments": "",
     }
@@ -2010,23 +2065,21 @@ def add_incomplete(var_name, dependencies):
     return "incomplete(%s)" % ", ".join(dependencies), []
 
 
-def build_dependencies(deps, stype, exps):
+def build_dependencies(deps, exps):
+    # TODO document
 
-    deps_dict = {stype: {"initial": set(), "step": set()}}
+    deps_dict = {"initial": set(), "step": set()}
 
-    for expr, target in exps.items():
+    for expr, targets in exps.items():
         for dep in deps:
             if re.findall("(?<![0-9A-Fa-f_])" + dep + "(?![0-9A-Fa-f_])",
                           expr):
-                if "initial" in target:
-                    deps_dict[stype]["initial"].add(dep)
-                if "step" in target:
-                    deps_dict[stype]["step"].add(dep)
+                [deps_dict[target].add(dep) for target in targets]
 
     return deps_dict
 
 
-def build_function_call(function_def, user_arguments):
+def build_function_call(function_def, user_arguments, dependencies=set()):
     """
 
     Parameters
@@ -2051,7 +2104,11 @@ def build_function_call(function_def, user_arguments):
                                 subscript range
             ]
 
-    user_arguments: list of arguments provided from model.
+    user_arguments: list
+        Arguments provided from model.
+
+    dependencies: set (optional)
+        Set to update dependencies if needed.
 
     Returns
     -------
@@ -2098,8 +2155,12 @@ def build_function_call(function_def, user_arguments):
                 "expression")
 
             user_argument = user_arguments[argument_idx]
-            if parameter_type in ["expression", "lambda"]:
+            if parameter_type in ["expression",
+                                  "lambda",
+                                  "subs_range_to_list"]:
                 argument_idx += 1
+            elif parameter_type == "time":
+                dependencies.add("time")
 
             arguments.append(
                 {

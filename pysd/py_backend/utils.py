@@ -984,6 +984,14 @@ def merge_nested_dicts(original_dict, dict_to_merge):
             original_dict[k] = dict_to_merge[k]
 
 
+def replace_set_by_none(deps):
+    for key, value in deps.items():
+        if isinstance(value, dict):
+            replace_set_by_none(value)
+        if not value:
+            deps[key] = None
+
+
 class ProgressBar:
     """
     Progress bar for integration

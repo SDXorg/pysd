@@ -78,6 +78,24 @@ class TestBuildFunctionCall(TestCase):
                             + "not implemented on PySD."
                             in str(ws[0].message))
 
+    def test_build_function_with_time_dependency(self):
+        from pysd.py_backend.builder import build_function_call
+        args = ['a', 'b']
+        pulse = {
+            "name": "pulse",
+            "parameters": [
+                {"name": "time", "type": "time"},
+                {"name": "start"},
+                {"name": "duration"},
+            ],
+            "module": "functions",
+        }
+
+        dependencies = {'a', 'b'}
+        self.assertNotIn('time', dependencies)
+        build_function_call(pulse, args, dependencies)
+        self.assertIn('time', dependencies)
+
 
 class TestBuild(TestCase):
     def test_build(self):
@@ -89,37 +107,51 @@ class TestBuild(TestCase):
                              'doc': '',
                              'py_name': 'stocka',
                              'real_name': 'StockA',
-                             'py_expr': "_state['stocka']",
-                             'eqn': '',
+                             'py_expr': ["_state['stocka']"],
+                             'eqn': [''],
                              'lims': '',
                              'unit': '',
+                             'merge_subs': [],
                              'arguments': ''},
                             {'kind': 'component',
-                             'subs': '',
-                             'doc': 'Provides derivative for stocka function',
+                             'subs': [],
+                             'doc': 'Provides derivative for stocka',
                              'py_name': '_dstocka_dt',
                              'real_name': 'Implicit',
-                             'py_expr': 'flowa()',
+                             'py_expr': ['flowa()'],
                              'unit': 'See docs for stocka',
-                             'eqn': '',
+                             'eqn': [''],
                              'lims': '',
+                             'merge_subs': [],
                              'arguments': ''},
                             {'kind': 'setup',
-                             'subs': None,
-                             'doc': 'Provides initial conditions for stocka function',
+                             'subs': [],
+                             'doc': 'Provides initial conditions for stocka',
                              'py_name': 'init_stocka',
                              'real_name': 'Implicit',
-                             'py_expr': '-10',
+                             'py_expr': ['-10'],
                              'unit': 'See docs for stocka',
-                             'eqn': '',
+                             'eqn': [''],
                              'lims': '',
+                             'merge_subs': [],
                              'arguments': ''}],
                   namespace={'StockA': 'stocka'},
                   subscript_dict={'Dim1': ['A', 'B', 'C']},
+                  dependencies={
+                      "stocka": {"_integ_stocka"},
+                      "_integ_stocka": {
+                          "initial": None,
+                          "step": {"flowa"}
+                      },
+                      "flowa": None
+                  },
                   outfile_name='return'))
-
         self.assertIn('_subscript_dict = {"Dim1": ["A", "B", "C"]}', actual)
         self.assertIn('_namespace = {"StockA": "stocka"}', actual)
+        self.assertIn(
+            '_dependencies = {\n    "stocka": {"_integ_stocka"},'
+            + '\n    "_integ_stocka": {"initial": None, "step": {"flowa"}},'
+            + '\n    "flowa": None,\n}', actual)
 
 
 class TestMergePartialElements(TestCase):
@@ -132,19 +164,19 @@ class TestMergePartialElements(TestCase):
                   'subs': ['Name1', 'element1'],
                   'merge_subs': ['Name1', 'Elements'],
                   'real_name': 'A', 'doc': 'Test', 'unit': None,
-                  'eqn': 'eq1', 'lims': '',
+                  'eqn': 'eq1', 'lims': '', 'dependencies': {'b', 'time'},
                   'kind': 'component', 'arguments': ''},
                  {'py_name': 'a', 'py_expr': 'njk',
                   'subs': ['Name1', 'element2'],
                   'merge_subs': ['Name1', 'Elements'],
                   'real_name': 'A', 'doc': None, 'unit': None,
-                  'eqn': 'eq2', 'lims': '',
+                  'eqn': 'eq2', 'lims': '', 'dependencies': {'c', 'time'},
                   'kind': 'component', 'arguments': ''},
                  {'py_name': 'a', 'py_expr': 'as',
                   'subs': ['Name1', 'element3'],
                   'merge_subs': ['Name1', 'Elements'],
                   'real_name': 'A', 'doc': '', 'unit': None,
-                  'eqn': 'eq3', 'lims': '',
+                  'eqn': 'eq3', 'lims': '', 'dependencies': {'b'},
                   'kind': 'component', 'arguments': ''}]),
             [{'py_name': 'a',
               'py_expr': ['ms', 'njk', 'as'],
@@ -158,6 +190,7 @@ class TestMergePartialElements(TestCase):
               'unit': None,
               'eqn': ['eq1', 'eq2', 'eq3'],
               'lims': '',
+              'dependencies': {'b', 'c', 'time'},
               'arguments': ''
               }])
 
@@ -165,27 +198,30 @@ class TestMergePartialElements(TestCase):
         from pysd.py_backend.builder import merge_partial_elements
         actual = merge_partial_elements(
             [{'py_name': 'a', 'py_expr': 'ms', 'subs': ['Name1', 'element1'],
-              'merge_subs': ['Name1', 'Elements'],
+              'merge_subs': ['Name1', 'Elements'], 'dependencies': {'b'},
               'real_name': 'A', 'doc': 'Test', 'unit': None,
               'eqn': 'eq1', 'lims': '', 'kind': 'component', 'arguments': ''},
              {'py_name': 'a', 'py_expr': 'njk', 'subs': ['Name1', 'element2'],
-              'merge_subs': ['Name1', 'Elements'],
+              'merge_subs': ['Name1', 'Elements'], 'dependencies': {'b'},
               'real_name': 'A', 'doc': None, 'unit': None,
               'eqn': 'eq2', 'lims': '', 'kind': 'component', 'arguments': ''},
              {'py_name': 'a', 'py_expr': 'as', 'subs': ['Name1', 'element3'],
-              'merge_subs': ['Name1', 'Elements'],
+              'merge_subs': ['Name1', 'Elements'], 'dependencies': {'b'},
               'real_name': 'A', 'doc': '', 'unit': None,
               'eqn': 'eq3', 'lims': '', 'kind': 'component', 'arguments': ''},
              {'py_name': 'b', 'py_expr': 'bgf', 'subs': ['Name1', 'element1'],
-              'merge_subs': ['Name1', 'Elements'],
+              'merge_subs': ['Name1', 'Elements'], 'dependencies': {
+                  'initial': {'c'}, 'step': set()},
               'real_name': 'B', 'doc': 'Test', 'unit': None,
               'eqn': 'eq4', 'lims': '', 'kind': 'component', 'arguments': ''},
              {'py_name': 'b', 'py_expr': 'r4', 'subs': ['Name1', 'element2'],
-              'merge_subs': ['Name1', 'Elements'],
+              'merge_subs': ['Name1', 'Elements'], 'dependencies': {
+                  'initial': {'d'}, 'step': {'time', 'd'}},
               'real_name': 'B', 'doc': None, 'unit': None,
               'eqn': 'eq5', 'lims': '', 'kind': 'component', 'arguments': ''},
              {'py_name': 'b', 'py_expr': 'ymt', 'subs': ['Name1', 'element3'],
-              'merge_subs': ['Name1', 'Elements'],
+              'merge_subs': ['Name1', 'Elements'], 'dependencies': {
+                  'initial': set(), 'step': {'time', 'a'}},
               'real_name': 'B', 'doc': '', 'unit': None,
               'eqn': 'eq6', 'lims': '', 'kind': 'component', 'arguments': ''}])
 
@@ -201,6 +237,7 @@ class TestMergePartialElements(TestCase):
                      'unit': None,
                      'eqn': ['eq1', 'eq2', 'eq3'],
                      'lims': '',
+                     'dependencies': {'b'},
                      'arguments': ''
                      },
                     {'py_name': 'b',
@@ -215,6 +252,10 @@ class TestMergePartialElements(TestCase):
                      'unit': None,
                      'eqn': ['eq4', 'eq5', 'eq6'],
                      'lims': '',
+                     'dependencies': {
+                         'initial': {'c', 'd'},
+                         'step': {'time', 'a', 'd'}
+                     },
                      'arguments': ''
                      }]
         self.assertIn(actual[0], expected)
@@ -224,15 +265,15 @@ class TestMergePartialElements(TestCase):
         from pysd.py_backend.builder import merge_partial_elements
         actual = merge_partial_elements(
             [{'py_name': 'a', 'py_expr': 'ms', 'subs': ['Name1', 'element1'],
-              'merge_subs': ['Name1', 'Elements'],
+              'merge_subs': ['Name1', 'Elements'], 'dependencies': {'c'},
               'real_name': 'A', 'doc': 'Test', 'unit': None,
               'eqn': 'eq1', 'lims': '', 'kind': 'component', 'arguments': ''},
              {'py_name': 'a', 'py_expr': 'njk', 'subs': ['Name1', 'element2'],
-              'merge_subs': ['Name1', 'Elements'],
+              'merge_subs': ['Name1', 'Elements'], 'dependencies': {'b'},
               'real_name': 'A', 'doc': None, 'unit': None,
               'eqn': 'eq2', 'lims': '', 'kind': 'component', 'arguments': ''},
              {'py_name': 'c', 'py_expr': 'as', 'subs': ['Name1', 'element3'],
-              'merge_subs': ['Name1', 'elements3'],
+              'merge_subs': ['Name1', 'elements3'], 'dependencies': set(),
               'real_name': 'C', 'doc': 'hi', 'unit': None,
               'eqn': 'eq3', 'lims': '', 'kind': 'component', 'arguments': ''},
              ])
@@ -247,6 +288,7 @@ class TestMergePartialElements(TestCase):
                      'unit': None,
                      'eqn': ['eq1', 'eq2'],
                      'lims': '',
+                     'dependencies': {'b', 'c'},
                      'arguments': ''
                      },
                     {'py_name': 'c',
@@ -259,6 +301,7 @@ class TestMergePartialElements(TestCase):
                      'unit': None,
                      'eqn': ['eq3'],
                      'lims': '',
+                     'dependencies': set(),
                      'arguments': ''
                      }]
 
