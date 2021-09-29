@@ -143,6 +143,6 @@ def load(py_model_file, initialize=True, missing_values="warning"):
     >>> model = load('../tests/test-models/samples/teacup/teacup.py')
 
     """
-    from .py_backend import functions
+    from .py_backend import statefuls
 
-    return functions.Model(py_model_file, initialize, missing_values)
+    return statefuls.Model(py_model_file, initialize, missing_values)

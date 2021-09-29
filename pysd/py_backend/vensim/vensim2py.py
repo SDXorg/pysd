@@ -643,8 +643,21 @@ functions = {
     "random normal": {"name": "bounded_normal", "module": "functions"},
     "poisson": {"name": "np.random.poisson", "module": "numpy"},
     "exprnd": {"name": "np.random.exponential", "module": "numpy"},
-    "random 0 1": {"name": "random_0_1", "module": "functions"},
-    "random uniform": {"name": "random_uniform", "module": "functions"},
+    "random 0 1": {
+        "name": "np.random.uniform",
+        "parameters": [
+            {"name": "0", "type": "predef"},
+            {"name": "1", "type": "predef"}
+        ],
+        "module": "numpy"},
+    "random uniform": {
+        "name": "np.random.uniform",
+        "parameters": [
+            {"name": "m"},
+            {"name": "x"},
+            {"name": "s", "type": "ignore"}
+        ],
+        "module": "numpy"},
     "elmcount": {
         "name": "len",
         "parameters": [
@@ -719,7 +732,8 @@ functions = {
     "invert matrix": {
         "name": "invert_matrix",
         "parameters": [
-            {"name": "mat"}
+            {"name": "mat"},
+            {"name": "n", "type": "ignore"}
             # we can safely ignore VENSIM's n parameter
         ],
         "module": "functions"},

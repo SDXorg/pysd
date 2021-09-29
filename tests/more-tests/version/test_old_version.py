@@ -1,6 +1,6 @@
-from pysd import cache, external
+from pysd import cache
 
-__pysd_version__ = "0.5.0"
+__pysd_version__ = "1.5.0"
 
 __data = {'scope': None, 'time': lambda: 0}
 

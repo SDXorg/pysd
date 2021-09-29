@@ -27,7 +27,9 @@ class Imports():
     Class to save the imported modules information for intelligent import
     """
     _numpy, _xarray, _subs = False, False, False
-    _functions, _external, _utils = set(), set(), set()
+    _functions, _statefuls, _external, _utils = set(), set(), set(), set()
+    _external_libs = {"numpy": "np", "xarray": "xr"}
+    _internal_libs = ["functions", "statefuls", "external", "utils"]
 
     @classmethod
     def add(cls, module, function=None):
@@ -79,21 +81,19 @@ class Imports():
             # define root only if needed
             text += "from os import path\n"
             _root = "\n    _root = path.dirname(__file__)\n"
-        if cls._numpy:
-            text += "import numpy as np\n"
-        if cls._xarray:
-            text += "import xarray as xr\n"
+
+        for module, shortname in cls._external_libs.items():
+            if getattr(cls, f"_{module}"):
+                text += f"import {module} as {shortname}\n"
+
         text += "\n"
 
-        if cls._functions:
-            text += "from pysd.py_backend.functions import %(methods)s\n"\
-                    % {"methods": ", ".join(cls._functions)}
-        if cls._external:
-            text += "from pysd.py_backend.external import %(methods)s\n"\
-                    % {"methods": ", ".join(cls._external)}
-        if cls._utils:
-            text += "from pysd.py_backend.utils import %(methods)s\n"\
-                    % {"methods": ", ".join(cls._utils)}
+        for module in cls._internal_libs:
+            if getattr(cls, f"_{module}"):
+                text += "from pysd.py_backend.%(module)s import %(methods)s\n"\
+                        % {
+                            "module": module,
+                            "methods": ", ".join(getattr(cls, f"_{module}"))}
 
         if cls._subs:
             text += "from pysd import cache, subs\n"
@@ -796,7 +796,7 @@ def add_stock(identifier, expression, initial_condition, subs, merge_subs, deps)
         that these can be appropriately aggregated.
 
     """
-    Imports.add("functions", "Integ")
+    Imports.add("statefuls", "Integ")
 
     deps = build_dependencies(
         deps,
@@ -926,7 +926,7 @@ def add_delay(identifier, delay_input, delay_time, initial_value, order,
         List of element construction dictionaries for the builder to assemble.
 
     """
-    Imports.add("functions", "Delay")
+    Imports.add("statefuls", "Delay")
 
     deps = build_dependencies(
         deps,
@@ -1046,7 +1046,7 @@ def add_delay_f(identifier, delay_input, delay_time, initial_value, deps):
         List of element construction dictionaries for the builder to assemble.
 
     """
-    Imports.add("functions", "DelayFixed")
+    Imports.add("statefuls", "DelayFixed")
 
     deps = build_dependencies(
         deps,
@@ -1137,7 +1137,7 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
         List of element construction dictionaries for the builder to assemble.
 
     """
-    Imports.add("functions", "DelayN")
+    Imports.add("statefuls", "DelayN")
 
     deps = build_dependencies(
         deps,
@@ -1257,7 +1257,7 @@ def add_forecast(identifier, forecast_input, average_time, horizon,
         List of element construction dictionaries for the builder to assemble.
 
     """
-    Imports.add("functions", "Forecast")
+    Imports.add("statefuls", "Forecast")
 
     deps = build_dependencies(
         deps,
@@ -1361,7 +1361,7 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value,
         List of element construction dictionaries for the builder to assemble.
 
     """
-    Imports.add("functions", "SampleIfTrue")
+    Imports.add("statefuls", "SampleIfTrue")
 
     deps = build_dependencies(
         deps,
@@ -1469,7 +1469,7 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order,
         List of element construction dictionaries for the builder to assemble.
 
     """
-    Imports.add("functions", "Smooth")
+    Imports.add("statefuls", "Smooth")
 
     deps = build_dependencies(
         deps,
@@ -1589,7 +1589,7 @@ def add_n_trend(identifier, trend_input, average_time, initial_trend,
         List of element construction dictionaries for the builder to assemble.
 
     """
-    Imports.add("functions", "Trend")
+    Imports.add("statefuls", "Trend")
 
     deps = build_dependencies(
         deps,
@@ -1676,7 +1676,7 @@ def add_initial(identifier, value, deps):
         List of element construction dictionaries for the builder to assemble.
 
     """
-    Imports.add("functions", "Initial")
+    Imports.add("statefuls", "Initial")
 
     deps = build_dependencies(
         deps,
@@ -1999,7 +1999,7 @@ def add_macro(identifier, macro_name, filename, arg_names, arg_vals, deps):
         List of element construction dictionaries for the builder to assemble.
 
     """
-    Imports.add("functions", "Macro")
+    Imports.add("statefuls", "Macro")
 
     deps = build_dependencies(
         deps,
@@ -2099,6 +2099,10 @@ def build_function_call(function_def, user_arguments, dependencies=set()):
                                 time object
                 "scope",      - provide access to current instance of
                                 scope object (instance of Macro object)
+                "predef"      - provide an invariant argument. Argument not
+                                given in Vensim/Xmile but needed for python.
+                "ignore"      - ignore an user argument. Argument given in
+                                Vensim/Xmile but not needed for python.
                 "subs_range_to_list"
                               - provides the list of subscripts in a given
                                 subscript range
@@ -2139,6 +2143,7 @@ def build_function_call(function_def, user_arguments, dependencies=set()):
 
     if "parameters" in function_def:
         parameters = function_def["parameters"]
+        user_argument = ""
         arguments = []
         argument_idx = 0
         for parameter_idx in range(len(parameters)):
@@ -2154,13 +2159,16 @@ def build_function_call(function_def, user_arguments, dependencies=set()):
                 parameter_def["type"] if "type" in parameter_def else
                 "expression")
 
-            user_argument = user_arguments[argument_idx]
             if parameter_type in ["expression",
                                   "lambda",
                                   "subs_range_to_list"]:
+                user_argument = user_arguments[argument_idx]
                 argument_idx += 1
             elif parameter_type == "time":
                 dependencies.add("time")
+            elif parameter_type == "ignore":
+                argument_idx += 1
+                continue
 
             arguments.append(
                 {
@@ -2168,6 +2176,7 @@ def build_function_call(function_def, user_arguments, dependencies=set()):
                     "lambda": "lambda: " + user_argument,
                     "time": "__data['time']",
                     "scope": "__data['scope']",
+                    "predef": parameter_def["name"],
                     "subs_range_to_list": f"_subscript_dict['{user_argument}']"
                 }[parameter_type]
             )

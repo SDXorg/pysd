@@ -19,6 +19,7 @@ import xarray as xr
 from .decorators import __dir__ as ddir
 from .external import __dir__ as edir
 from .functions import __dir__ as fdir
+from .statefuls import __dir__ as sdir
 
 
 def xrmerge(das, accept_new=True):
@@ -396,7 +397,7 @@ def make_python_identifier(
         reserved_words = list()
 
     # reserved the names of PySD functions and methods
-    reserved_words += dir() + fdir() + edir() + ddir()
+    reserved_words += dir() + fdir() + edir() + ddir() + sdir()
 
     if string in namespace:
         return namespace[string], namespace

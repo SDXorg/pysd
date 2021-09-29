@@ -4,10 +4,10 @@ Translated using PySD
 """
 
 
-from pysd.py_backend.functions import Integ
+from pysd.py_backend.statefuls import Integ
 from pysd import cache
 
-__pysd_version__ = "1.6.0"
+__pysd_version__ = "2.0.0"
 
 _subscript_dict = {}
 
@@ -21,6 +21,18 @@ _namespace = {
     "INITIAL TIME": "initial_time",
     "SAVEPER": "saveper",
     "TIME STEP": "time_step",
+}
+
+_dependencies = {
+    'initial_time': None,
+    'final_time': None,
+    'time_step': None,
+    'saveper': 'time_step',
+    'initial_parameter': None,
+    'stock_a': {'_integ_stock_a'},
+    'stock_b': {'_integ_stock_b'},
+    '_integ_stock_a': {'initial': {'initial_parameter'}, 'step': None},
+    '_integ_stock_b': {'initial': {'stock_a'}, 'step': None}
 }
 
 __data = {"scope": None, "time": lambda: 0}

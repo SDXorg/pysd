@@ -1811,7 +1811,7 @@ class TestModelInteraction(unittest.TestCase):
     def test_not_able_to_update_stateful_object(self):
         import pysd
 
-        integ = pysd.functions.Integ(
+        integ = pysd.statefuls.Integ(
             lambda: xr.DataArray([1, 2], {"Dim": ["A", "B"]}, ["Dim"]),
             lambda: xr.DataArray(0, {"Dim": ["A", "B"]}, ["Dim"]),
             "my_integ_object",
@@ -2281,4 +2281,6 @@ class TestDependencies(unittest.TestCase):
         }
         self.assertEqual(model.components._dependencies, expected_dep)
 
-
+        os.remove(
+            more_tests + "/subscript_individually_defined_stocks2/"
+            + "test_subscript_individually_defined_stocks2.py")
