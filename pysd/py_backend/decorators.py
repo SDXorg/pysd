@@ -75,8 +75,7 @@ class Cache(object):
             """Step wise cache function"""
             try:  # fails if cache is not instantiated or if it is None
                 value = self.data['step'][func.__name__]
-                assert value is not None
-            except (KeyError, AssertionError):
+            except KeyError:
                 value = func(*args)
                 self.data['step'][func.__name__] = value
             return value
@@ -92,8 +91,7 @@ class Cache(object):
           The time to be set.
 
         """
-        for key in self.data['step']:
-            self.data['step'][key] = None
+        self.data['step'] = {}
 
         self.time = time
 

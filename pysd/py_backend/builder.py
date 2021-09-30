@@ -767,7 +767,8 @@ def merge_partial_elements(element_list):
     return list(outs.values())
 
 
-def add_stock(identifier, expression, initial_condition, subs, merge_subs, deps):
+def add_stock(identifier, expression, initial_condition, subs, merge_subs,
+              deps):
     """
     Creates new model element dictionaries for the model elements associated
     with a stock.
@@ -808,8 +809,8 @@ def add_stock(identifier, expression, initial_condition, subs, merge_subs, deps)
     deps = build_dependencies(
         deps,
         {
-            initial_condition: ["initial"],
-            expression: ["step"]
+            "initial": [initial_condition],
+            "step": [expression]
         })
 
     new_structure = []
@@ -938,10 +939,8 @@ def add_delay(identifier, delay_input, delay_time, initial_value, order,
     deps = build_dependencies(
         deps,
         {
-            initial_value: ["initial"],
-            order: ["initial"],
-            delay_time: ["initial", "step"],
-            delay_input: ["step"]
+            "initial": [initial_value, order, delay_time],
+            "step": [delay_time, delay_input]
         })
 
     new_structure = []
@@ -1058,9 +1057,8 @@ def add_delay_f(identifier, delay_input, delay_time, initial_value, deps):
     deps = build_dependencies(
         deps,
         {
-            initial_value: ["initial"],
-            delay_time: ["initial"],
-            delay_input: ["step"]
+            "initial": [initial_value, delay_time],
+            "step": [delay_input]
         })
 
     py_name = "_delayfixed_%s" % identifier
@@ -1149,10 +1147,8 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
     deps = build_dependencies(
         deps,
         {
-            initial_value: ["initial"],
-            order: ["initial"],
-            delay_time: ["initial", "step"],
-            delay_input: ["step"]
+            "initial": [initial_value, order, delay_time],
+            "step": [delay_time, delay_input]
         })
 
     new_structure = []
@@ -1269,9 +1265,8 @@ def add_forecast(identifier, forecast_input, average_time, horizon,
     deps = build_dependencies(
         deps,
         {
-            forecast_input: ["initial", "step"],
-            average_time: ["step"],
-            horizon: ["step"]
+            "initial": [forecast_input],
+            "step": [forecast_input, average_time, horizon]
         })
 
     new_structure = []
@@ -1373,9 +1368,8 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value,
     deps = build_dependencies(
         deps,
         {
-            initial_value: ["initial"],
-            actual_value: ["step"],
-            condition: ["step"]
+            "initial": [initial_value],
+            "step": [actual_value, condition]
         })
 
     new_structure = []
@@ -1481,10 +1475,8 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order,
     deps = build_dependencies(
         deps,
         {
-            initial_value: ["initial"],
-            order: ["initial"],
-            smooth_input: ["step"],
-            smooth_time: ["step"]
+            "initial": [initial_value, order],
+            "step": [smooth_input, smooth_time]
         })
 
     new_structure = []
@@ -1601,9 +1593,8 @@ def add_n_trend(identifier, trend_input, average_time, initial_trend,
     deps = build_dependencies(
         deps,
         {
-            initial_trend: ["initial"],
-            trend_input: ["initial", "step"],
-            average_time: ["initial", "step"]
+            "initial": [initial_trend, trend_input, average_time],
+            "step": [trend_input, average_time]
         })
 
     new_structure = []
@@ -1688,7 +1679,7 @@ def add_initial(identifier, value, deps):
     deps = build_dependencies(
         deps,
         {
-            value: ["initial"]
+            "initial": [value]
         })
 
     py_name = utils.make_python_identifier("_initial_%s"
@@ -2011,7 +2002,8 @@ def add_macro(identifier, macro_name, filename, arg_names, arg_vals, deps):
     deps = build_dependencies(
         deps,
         {
-            arg: ["initial", "step"] for arg in arg_vals
+            "initial": arg_vals,
+            "step": arg_vals
         })
 
     py_name = "_macro_" + macro_name + "_" + identifier
@@ -2077,11 +2069,12 @@ def build_dependencies(deps, exps):
 
     deps_dict = {"initial": set(), "step": set()}
 
-    for expr, targets in exps.items():
+    for target, exprs in exps.items():
+        expr = ".".join(exprs)
         for dep in deps:
             if re.findall("(?<![0-9A-Fa-f_])" + dep + "(?![0-9A-Fa-f_])",
                           expr):
-                [deps_dict[target].add(dep) for target in targets]
+                deps_dict[target].add(dep)
 
     return deps_dict
 

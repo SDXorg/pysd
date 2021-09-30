@@ -1801,10 +1801,8 @@ class TestModelInteraction(unittest.TestCase):
         self.assertIn("_integ_integ", str(err.exception))
         self.assertIn("_delay_delay", str(err.exception))
         self.assertIn(
-            "Unresolvable Reference: "
-            + "Probable circular initialization...\n"
-            + "Not able to initialize the "
-            + "following objects:",
+            "Circular initialization...\n"
+            + "Not able to initialize the following objects:",
             str(err.exception),
         )
 

@@ -623,7 +623,6 @@ class Macro(DynamicStateful):
         self.time = time
         self.time_initialization = time_initialization
         self.py_name = py_name
-        self.initialize_order = None
 
         # need a unique identifier for the imported module.
         module_name = os.path.splitext(py_model_file)[0]\
@@ -674,6 +673,7 @@ class Macro(DynamicStateful):
         ]
 
         self._assign_cache_type()
+        self._get_initialize_order()
 
         if return_func is not None:
             self.return_func = getattr(self.components, return_func)
@@ -685,6 +685,84 @@ class Macro(DynamicStateful):
     def __call__(self):
         return self.return_func()
 
+    def _get_initialize_order(self):
+        """
+        Get the initialization order of the stateful elements
+        and their the full dependencies.
+        """
+        # get the full set of dependencies to initialize an stateful object
+        # includying all levels
+        self.stateful_initial_dependencies = {
+            ext: set()
+            for ext in self.components._dependencies
+            if ext.startswith("_")
+        }
+        for element in self.stateful_initial_dependencies:
+            self._get_full_dependencies(
+                element, self.stateful_initial_dependencies[element])
+
+        # get the full dependencies of stateful objects taking into account
+        # only other objects
+        current_deps = {
+            element: [dep for dep in deps if dep.startswith("_")]
+            for element, deps in self.stateful_initial_dependencies.items()
+        }
+
+        # get initialization order of the stateful elements
+        self.initialize_order = []
+        delete = True
+        while delete:
+            delete = []
+            for element in current_deps:
+                if not current_deps[element]:
+                    # if stateful element has no deps on others
+                    # add to the queue to initialize
+                    self.initialize_order.append(element)
+                    delete.append(element)
+                    for element2 in current_deps:
+                        # remove dependency on the initialized element
+                        if element in current_deps[element2]:
+                            current_deps[element2].remove(element)
+            # delete visited elements
+            for element in delete:
+                del current_deps[element]
+
+        if current_deps:
+            # if current_deps is not an empty set there is a circular
+            # reference between stateful objects
+            raise ValueError(
+                'Circular initialization...\n'
+                + 'Not able to initialize the following objects:\n\t'
+                + '\n\t'.join(current_deps))
+
+    def _get_full_dependencies(self, element, dep_set):
+        """
+        Get all dependencies of an element, i.e., also get the dependencies
+        of the dependencies. When finding an stateful element only dependencies
+        for initialization are considered.
+
+        Parameters
+        ----------
+        element: str
+            Element to get the full dependencies.
+        dep_set: set
+            Set to include the dependencies of the element.
+
+        Returns
+        -------
+        None
+
+        """
+        deps = self.components._dependencies[element]
+        if isinstance(deps, dict):
+            deps = deps["initial"]
+        if deps is None:
+            return
+        for dep in deps:
+            if dep not in dep_set and not dep.startswith("__") and dep != "time":
+                dep_set.add(dep)
+                self._get_full_dependencies(dep, dep_set)
+
     def _assign_cache_type(self):
         """
         Assigns the cache type to all the elements from the namespace.
@@ -695,8 +773,6 @@ class Macro(DynamicStateful):
             if element not in self.cache_type\
                and element in self.components._dependencies:
                 self._assign_cache(element)
-
-        print(self.cache_type)
 
     def _assign_cache(self, element):
         """
@@ -758,19 +834,11 @@ class Macro(DynamicStateful):
         """
         return self.components.__pysd_version__
 
-    def initialize(self, initialization_order=None):
+    def initialize(self):
         """
-        This function tries to initialize the stateful objects.
-
-        In the case where an initialization function for `Stock A` depends on
-        the value of `Stock B`, if we try to initialize `Stock A` before
-        `Stock B` then we will get an error, as the value will not yet exist.
-
-        In this case, just skip initializing `Stock A` for now, and
-        go on to the other state initializations. Then come back to it and
-        try again.
+        This function initializes the external objects and stateful objects
+        in the given order.
         """
-
         # Initialize time
         if self.time is None:
             self.time = self.time_initialization()
@@ -789,53 +857,14 @@ class Macro(DynamicStateful):
 
         Excels.clean()
 
+        # Initialize stateful objects
         remaining = set(self._stateful_elements)
-        if len(set([element.py_name for element in self._stateful_elements]))\
-           == len(set(self._stateful_elements)) and self.initialize_order:
-            # use elements names to initialize them, this is available
-            # after the model is initialized one time
-            # solves issue #247 until we have a dependency dictionary
-            try:
-                for element_name in self.initialize_order:
-                    for element in remaining:
-                        if element.py_name == element_name:
-                            element.initialize()
-                            break
-                    remaining.remove(element)
-                assert len(remaining) == 0
-                return
-            except Exception as err:
-                # if user includes new stateful objects or some other
-                # dependencies the previous initialization order may
-                # not be keept
-                warnings.warn(
-                    err.args[0] +
-                    "\n\nNot able to initialize statefull elements "
-                    "with the same order as before..."
-                    "Trying to find a new order.")
-                # initialize as always
-
-        self.initialize_order = []
-        # Initialize stateful elements
-        remaining = set(self._stateful_elements)
-        while remaining:
-            progress = set()
+        for element_name in self.initialize_order:
             for element in remaining:
-                try:
+                if element.py_name == element_name:
                     element.initialize()
-                    progress.add(element)
-                    self.initialize_order.append(element.py_name)
-                except (KeyError, TypeError, AttributeError):
-                    pass
-
-            if progress:
-                remaining.difference_update(progress)
-            else:
-                raise ValueError('Unresolvable Reference: '
-                                 + 'Probable circular initialization...\n'
-                                 + 'Not able to initialize the '
-                                 + 'following objects:\n\t'
-                                 + '\n\t'.join([e.py_name for e in remaining]))
+                    break
+            remaining.remove(element)
 
     def ddt(self):
         return np.array([component.ddt() for component

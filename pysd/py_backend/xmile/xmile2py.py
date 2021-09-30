@@ -276,6 +276,7 @@ def translate_xmile(xmile_file):
             initial_condition=py_initial_value,
             deps=element["dependencies"])
         element['py_expr'] = py_expr
+        element["dependencies"] = {new_structure[-1]["py_name"]}
         model_elements.append(element)
         model_elements += new_structure
 
