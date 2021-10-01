@@ -292,12 +292,11 @@ class SMILEParser(NodeVisitor):
         # http://docs.oasis-open.org/xmile/xmile/v1.0/csprd01/xmile-v1.0-csprd01.html#_Toc398039973
         text = re.sub(r"\{[^}]*\}", "", text)
         if "dependencies" not in element:
-            element["dependencies"] = set()
+            element["dependencies"] = dict()
 
         self.ast = self.grammar.parse(text)
         self.context = context
         self.element = element
-        self.dependencies = set()
         self.new_structure = []
 
         py_expr = self.visit(self.ast)
@@ -316,12 +315,22 @@ class SMILEParser(NodeVisitor):
         return self.extended_model_namespace[vc[1]]
 
     def visit_identifier(self, n, vc):
+        subelement = self.extended_model_namespace[n.text]
+        if subelement in self.element["dependencies"]:
+            self.element["dependencies"][subelement] += 1
+        else:
+            self.element["dependencies"][subelement] = 1
+        return subelement + '()'
         self.element["dependencies"].add(self.extended_model_namespace[n.text])
         return self.extended_model_namespace[n.text] + '()'
 
     def visit_quoted_identifier(self, n, vc):
-        self.element["dependencies"].add(self.extended_model_namespace[vc[1]])
-        return self.extended_model_namespace[vc[1]] + '()'
+        subelement = self.extended_model_namespace[vc[1]]
+        if subelement in self.element["dependencies"]:
+            self.element["dependencies"][subelement] += 1
+        else:
+            self.element["dependencies"][subelement] = 1
+        return subelement + '()'
 
     def visit_call(self, n, vc):
         function_name = vc[0].lower()
@@ -338,7 +347,7 @@ class SMILEParser(NodeVisitor):
         name, structure = builders[builder_name](
             self.element, self.subscript_dict, arguments)
         self.new_structure += structure
-        self.element["dependencies"] = {structure[-1]["py_name"]}
+        self.element["dependencies"] = {structure[-1]["py_name"]: 1}
         return name
 
     def visit_pre_oper(self, n, vc):

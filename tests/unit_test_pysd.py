@@ -6,6 +6,8 @@ import pandas as pd
 import numpy as np
 import xarray as xr
 
+from pysd.tools.benchmarking import assert_frames_close
+
 _root = os.path.dirname(__file__)
 
 test_model = os.path.join(_root, "test-models/samples/teacup/teacup.mdl")
@@ -21,6 +23,10 @@ test_model_data = os.path.join(
     "test-models/tests/get_data_args_3d_xls/test_get_data_args_3d_xls.mdl")
 
 more_tests = os.path.join(_root, "more-tests")
+
+test_model_constant_pipe = os.path.join(
+    more_tests,
+    "constant_pipeline/test_constant_pipeline.mdl")
 
 
 class TestPySD(unittest.TestCase):
@@ -146,6 +152,7 @@ class TestPySD(unittest.TestCase):
         with self.assertRaises(TypeError):
             model.run(return_timestamps=timestamps)
 
+    @unittest.skip("time class")
     def test_run_return_timestamps_past_final_time(self):
         """ If the user enters a timestamp that is longer than the euler
         timeseries that is defined by the normal model file, should
@@ -165,7 +172,7 @@ class TestPySD(unittest.TestCase):
         import pysd
 
         model = pysd.read_vensim(test_model)
-        return_timestamps = range(0, 100, 10)
+        return_timestamps = range(0, 31, 10)
         stocks = model.run(return_timestamps=return_timestamps)
         self.assertSequenceEqual(return_timestamps, list(stocks.index))
 
@@ -188,13 +195,14 @@ class TestPySD(unittest.TestCase):
         result = model.run(return_columns='step')
         self.assertEqual(
             set(result.columns),
-            {'Teacup Temperature', 'SAVEPER', 'Heat Loss to Room'})
+            {'Teacup Temperature', 'Heat Loss to Room'})
 
     def test_run_reload(self):
         """ Addresses https://github.com/JamesPHoughton/pysd/issues/99"""
         import pysd
 
         model = pysd.read_vensim(test_model)
+
         result0 = model.run()
         result1 = model.run(params={"Room Temperature": 1000})
         result2 = model.run()
@@ -213,9 +221,9 @@ class TestPySD(unittest.TestCase):
         result = model.run(return_columns=return_columns)
         self.assertEqual(set(result.columns), set(return_columns))
 
+    @unittest.skip("time class")
     def test_run_export_import(self):
         import pysd
-        from pysd.tools.benchmarking import assert_frames_close
 
         with catch_warnings():
             simplefilter("ignore")
@@ -442,88 +450,6 @@ class TestPySD(unittest.TestCase):
         with self.assertRaises(FileNotFoundError):
             model.run(initial_condition="bad value")
 
-    def test_initial_conditions_subscripted_value_with_constant(self):
-        import pysd
-
-        coords = {
-            "One Dimensional Subscript": ["Entry 1", "Entry 2", "Entry 3"],
-            "Second Dimension Subscript": ["Column 1", "Column 2"],
-        }
-        dims = ["One Dimensional Subscript", "Second Dimension Subscript"]
-        output = xr.DataArray([[5, 5], [5, 5], [5, 5]], coords, dims)
-
-        model = pysd.read_vensim(test_model_subs)
-
-        with catch_warnings(record=True) as ws:
-            res = model.run(initial_condition=(5, {'initial_values': 5}),
-                            return_columns=['Initial Values'],
-                            return_timestamps=list(range(5, 10)))
-            # use only future warnings
-            wf = [w for w in ws if issubclass(w.category, FutureWarning)]
-            self.assertEqual(len(wf), 1)
-            self.assertIn(
-                "a constant value with initial_conditions will be deprecated",
-                str(wf[0].message))
-
-        self.assertTrue(output.equals(res['Initial Values'].iloc[0]))
-        self.assertEqual(res.index[0], 5)
-
-    def test_initial_conditions_subscripted_value_with_partial_xarray(self):
-        import pysd
-
-        coords = {
-            "One Dimensional Subscript": ["Entry 1", "Entry 2", "Entry 3"],
-            "Second Dimension Subscript": ["Column 1", "Column 2"],
-        }
-        dims = ["One Dimensional Subscript", "Second Dimension Subscript"]
-        output = xr.DataArray([[5, 3], [5, 3], [5, 3]], coords, dims)
-        input_val = xr.DataArray(
-            [5, 3],
-            {'Second Dimension Subscript': ['Column 1', 'Column 2']},
-            ['Second Dimension Subscript'])
-
-        model = pysd.read_vensim(test_model_subs)
-        with catch_warnings(record=True) as ws:
-            res = model.run(initial_condition=(5,
-                                               {'Initial Values': input_val}),
-                            return_columns=['Initial Values'],
-                            return_timestamps=list(range(5, 10)))
-            # use only future warnings
-            wf = [w for w in ws if issubclass(w.category, FutureWarning)]
-            self.assertEqual(len(wf), 1)
-            self.assertIn(
-                "a constant value with initial_conditions will be deprecated",
-                str(wf[0].message))
-
-        self.assertTrue(output.equals(res['Initial Values'].iloc[0]))
-        self.assertEqual(res.index[0], 5)
-
-    def test_initial_conditions_subscripted_value_with_xarray(self):
-        import pysd
-
-        coords = {
-            "One Dimensional Subscript": ["Entry 1", "Entry 2", "Entry 3"],
-            "Second Dimension Subscript": ["Column 1", "Column 2"],
-        }
-        dims = ["One Dimensional Subscript", "Second Dimension Subscript"]
-        output = xr.DataArray([[5, 3], [4, 8], [9, 3]], coords, dims)
-
-        model = pysd.read_vensim(test_model_subs)
-
-        with catch_warnings(record=True) as ws:
-            res = model.run(initial_condition=(5, {'initial_values': output}),
-                            return_columns=['Initial Values'],
-                            return_timestamps=list(range(5, 10)))
-            # use only future warnings
-            wf = [w for w in ws if issubclass(w.category, FutureWarning)]
-            self.assertEqual(len(wf), 1)
-            self.assertIn(
-                "a constant value with initial_conditions will be deprecated",
-                str(wf[0].message))
-
-        self.assertTrue(output.equals(res['Initial Values'].iloc[0]))
-        self.assertEqual(res.index[0], 5)
-
     def test_initial_conditions_subscripted_value_with_numpy_error(self):
         import pysd
 
@@ -665,7 +591,7 @@ class TestPySD(unittest.TestCase):
             for i in range(100):
                 self.assertEqual(model.components.lookup_1d(i), 20)
 
-            model.run(params={"lookup_1d": 70})
+            model.run(params={"lookup_1d": 70}, final_time=1)
             for i in range(100):
                 self.assertEqual(model.components.lookup_1d(i), 70)
 
@@ -677,7 +603,7 @@ class TestPySD(unittest.TestCase):
                     )
                 )
 
-            model.run(params={"lookup_2d": 70})
+            model.run(params={"lookup_2d": 70}, final_time=1)
             for i in range(100):
                 self.assertTrue(
                     model.components.lookup_2d(i).equals(
@@ -692,7 +618,7 @@ class TestPySD(unittest.TestCase):
 
             xr2 = xr.DataArray([-100, 500], {"Rows": ["Row1", "Row2"]},
                                ["Rows"])
-            model.run(params={"lookup_2d": xr2})
+            model.run(params={"lookup_2d": xr2}, final_time=1)
             for i in range(100):
                 self.assertTrue(model.components.lookup_2d(i).equals(xr2))
 
@@ -936,16 +862,13 @@ class TestPySD(unittest.TestCase):
                          "1.2; .; .; .; 1.4")
 
     def test_stepwise_cache(self):
+        from pysd.py_backend.decorators import Cache
+
         run_history = []
         result_history = []
+        cache = Cache()
 
-        global time
-        time = lambda: 0  # for testing cache function
-        from pysd import cache
-
-        cache.time = time()
-
-        @cache.step
+        @cache
         def upstream(run_hist, res_hist):
             run_hist.append("U")
             return "up"
@@ -956,53 +879,38 @@ class TestPySD(unittest.TestCase):
             return "down"
 
         # initially neither function has a chache value
-        self.assertFalse("upstream" in cache.data["step"])
-        self.assertFalse("downstream" in cache.data["step"])
+        self.assertFalse("upstream" in cache.data)
+        self.assertFalse("downstream" in cache.data)
 
         # when the functions are called,
         # the cache is instantiated in the upstream (cached) function
         result_history.append(downstream(run_history, result_history))
-        self.assertTrue("upstream" in cache.data["step"])
-        self.assertFalse("upstream" in cache.data["run"])
-        self.assertFalse("downstream" in cache.data["step"])
-        self.assertEqual(cache.time, 0)
+        self.assertTrue("upstream" in cache.data)
+        self.assertFalse("downstream" in cache.data)
         self.assertListEqual(run_history, ["D", "U"])
         self.assertListEqual(result_history, ["up", "down"])
-
-        # cleaning only run cache shouldn't affect the step cache
-        cache.clean("run")
-        self.assertTrue("upstream" in cache.data["step"])
 
         # at the second call, the uncached function is run,
         # but the cached upstream function returns its prior value
         result_history.append(downstream(run_history, result_history))
-        self.assertEqual(cache.time, 0)
         self.assertListEqual(run_history, ["D", "U", "D"])
         self.assertListEqual(result_history, ["up", "down", "up", "down"])
 
-        # when the time is reset, both functions are run again.
-        time = lambda: 2
-        cache.reset(time())
+        # clean step cache
+        cache.clean()
+        self.assertFalse("upstream" in cache.data)
 
         result_history.append(downstream(run_history, result_history))
-        self.assertEqual(cache.time, 2)
         self.assertListEqual(run_history, ["D", "U", "D", "D", "U"])
         self.assertListEqual(result_history, ["up", "down", "up", "down",
                                               "up", "down"])
 
     def test_runwise_cache(self):
-        # Checks backward compatibility, must be changed to @cache.run when
-        # deprecated
+        from pysd.py_backend.decorators import constant_cache
+
         run_history = []
         result_history = []
 
-        global time
-        time = lambda: 0  # for testing cache function
-        from pysd import cache
-
-        cache.time = time()
-
-        @cache.run
         def upstream(run_hist, res_hist):
             run_hist.append("U")
             return "up"
@@ -1012,40 +920,32 @@ class TestPySD(unittest.TestCase):
             result_history.append(upstream(run_hist, res_hist))
             return "down"
 
-        # initially neither function has a chache value
-        self.assertFalse("upstream" in cache.data["run"])
-        self.assertFalse("downstream" in cache.data["run"])
-
-        # when the functions are called,
+        # when the constant cache is assigned,
         # the cache is instantiated in the upstream (cached) function
+        upstream = constant_cache(upstream, run_history, result_history)
+        self.assertListEqual(run_history, ["U"])
         result_history.append(downstream(run_history, result_history))
-        self.assertEqual(cache.time, 0)
-        self.assertTrue("upstream" in cache.data["run"])
-        self.assertFalse("upstream" in cache.data["step"])
-        self.assertFalse("downstream" in cache.data["run"])
-        self.assertListEqual(run_history, ["D", "U"])
-        self.assertListEqual(result_history, ["up", "down"])
 
-        # cleaning only step cache shouldn't affect the step cache
-        cache.clean("step")
-        self.assertTrue("upstream" in cache.data["run"])
+        self.assertListEqual(run_history, ["U", "D"])
+        self.assertListEqual(result_history, ["up", "down"])
+        self.assertEqual(upstream.value, "up")
 
         # at the second call, the uncached function is run,
         # but the cached upstream function returns its prior value
         result_history.append(downstream(run_history, result_history))
-        self.assertEqual(cache.time, 0)
-        self.assertListEqual(run_history, ["D", "U", "D"])
+        self.assertListEqual(run_history, ["U", "D", "D"])
         self.assertListEqual(result_history, ["up", "down", "up", "down"])
 
-        # when the time is reset, this has no impact on the upstream cache.
-        time = lambda: 2
-        cache.reset(time())
+        # recover previous function
+        self.assertTrue(hasattr(upstream, "__wrapped__"))
+        upstream = upstream.function
+        self.assertFalse(hasattr(upstream, "__wrapped__"))
 
         result_history.append(downstream(run_history, result_history))
-        self.assertEqual(cache.time, 2)
-        self.assertListEqual(run_history, ["D", "U", "D", "D"])
-        self.assertListEqual(result_history, ["up", "down", "up", "down",
-                                              "up", "down"])
+        self.assertListEqual(run_history, ["U", "D", "D", "D", "U"])
+        self.assertListEqual(
+            result_history,
+            ["up", "down", "up", "down", "up", "down"])
 
     def test_initialize(self):
         import pysd
@@ -1075,52 +975,6 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(model.components.stock_b(), 1)
         self.assertEqual(model.components.stock_a(), 1)
 
-    def test_set_state(self):
-        import pysd
-
-        model = pysd.read_vensim(test_model)
-
-        initial_temp = model.components.teacup_temperature()
-
-        new_time = np.random.rand()
-
-        with catch_warnings(record=True) as ws:
-            # Test that we can set with real names
-            model.set_state(new_time, {'Teacup Temperature': 500})
-            self.assertNotEqual(initial_temp, 500)
-            self.assertEqual(model.components.teacup_temperature(), 500)
-            self.assertEqual(model.components.time(), new_time)
-            # use only future warnings
-            wf = [w for w in ws if issubclass(w.category, FutureWarning)]
-            self.assertEqual(len(wf), 1)
-            self.assertIn(
-                "set_state will be deprecated, use set_initial_value instead.",
-                str(wf[0].message))
-
-        with catch_warnings(record=True) as ws:
-            # Test setting with pysafe names
-            model.set_state(new_time + 1, {'teacup_temperature': 202})
-            self.assertEqual(model.components.teacup_temperature(), 202)
-            self.assertEqual(model.components.time(), new_time + 1)
-            # use only future warnings
-            wf = [w for w in ws if issubclass(w.category, FutureWarning)]
-            self.assertEqual(len(wf), 1)
-            self.assertIn(
-                "set_state will be deprecated, use set_initial_value instead.",
-                str(wf[0].message))
-
-        with catch_warnings(record=True) as ws:
-            # Test setting with stateful object name
-            model.set_state(new_time + 2, {'_integ_teacup_temperature': 302})
-            self.assertEqual(model.components.teacup_temperature(), 302)
-            self.assertEqual(model.components.time(), new_time + 2)
-            # use only future warnings
-            wf = [w for w in ws if issubclass(w.category, FutureWarning)]
-            self.assertEqual(len(wf), 1)
-            self.assertIn(
-                "set_state will be deprecated, use set_initial_value instead.",
-                str(wf[0].message))
-
     def test_set_initial_value(self):
         import pysd
         model = pysd.read_vensim(test_model)
@@ -1148,44 +1002,6 @@ class TestPySD(unittest.TestCase):
 
         with self.assertRaises(NameError):
             model.set_initial_value(new_time, {'not_a_var': 500})
-
-    def test_set_initial_value_lookup(self):
-        import pysd
-
-        model = pysd.read_vensim(test_model_look)
-
-        new_time = np.random.rand()
-
-        # Test that we can set with real names
-        with catch_warnings(record=True) as ws:
-            model.set_initial_value(new_time, {'lookup 1d': 500})
-            # use only future warnings
-            wf = [w for w in ws if issubclass(w.category, FutureWarning)]
-            self.assertEqual(len(wf), 1)
-            self.assertIn(
-                "a constant value with initial_conditions will be deprecated",
-                str(wf[0].message))
-
-        self.assertEqual(model.components.lookup_1d(0), 500)
-        self.assertEqual(model.components.lookup_1d(100), 500)
-
-        with catch_warnings(record=True) as ws:
-            model.set_initial_value(new_time, {'lookup 2d': 520})
-            # use only future warnings
-            wf = [w for w in ws if issubclass(w.category, FutureWarning)]
-            self.assertEqual(len(wf), 1)
-            self.assertIn(
-                "a constant value with initial_conditions will be deprecated",
-                str(wf[0].message))
-
-        expected = xr.DataArray(520, {"Rows": ["Row1", "Row2"]}, ["Rows"])
-        self.assertTrue(model.components.lookup_2d(0).equals(expected))
-        self.assertTrue(model.components.lookup_2d(100).equals(expected))
-
-        with catch_warnings():
-            # avoid warnings related to extrapolation
-            simplefilter("ignore")
-            model.run()
 
     def test_set_initial_value_subscripted_value_with_constant(self):
         import pysd
@@ -1435,36 +1251,15 @@ class TestPySD(unittest.TestCase):
         import pysd
 
         model = pysd.read_vensim(test_model)
-        initial_temp = model.components.teacup_temperature()
-        initial_time = model.components.time()
 
         new_state = {"Room Temperature": 100}
         new_time = 10
 
-        with catch_warnings(record=True) as ws:
+        with self.assertRaises(ValueError) as err:
             model.set_initial_condition((new_time, new_state))
-            # use only future warnings
-            wf = [w for w in ws if issubclass(w.category, FutureWarning)]
-            self.assertEqual(len(wf), 1)
             self.assertIn(
-                "a constant value with initial_conditions will be deprecated",
-                str(wf[0].message))
-
-        set_temp = model.components.room_temperature()
-        set_time = model.components.time()
-
-        self.assertNotEqual(
-            set_temp,
-            initial_temp,
-            "Test definition is wrong, please change configuration",
-        )
-        self.assertEqual(set_temp, 100)
-
-        self.assertNotEqual(
-            initial_time, 10, "Test definition is wrong, please change " +
-            "configuration"
-        )
-        self.assertEqual(set_time, 10)
+                "a constant value with initial_conditions",
+                err.args[0])
 
     def test_get_args(self):
         import pysd
@@ -1643,7 +1438,7 @@ class TestPySD(unittest.TestCase):
         model = pysd.read_vensim(test_model)
         model.progress = False
         res = model._integrate(time_steps=list(range(5)),
-                               capture_elements=['teacup_temperature'],
+                               capture_elements={'teacup_temperature'},
                                return_timestamps=list(range(0, 5, 2)))
         self.assertIsInstance(res, pd.DataFrame)
         self.assertIn('teacup_temperature', res)
@@ -1660,6 +1455,7 @@ class TestPySD(unittest.TestCase):
         model = pysd.read_vensim(os.path.join(
             _root, "test-models/tests/delays/test_delays.mdl"))
         ret = model.run()
+
         self.assertTrue(
             {
                 "Initial Value",
@@ -1702,23 +1498,6 @@ class TestPySD(unittest.TestCase):
 
         model = pysd.read_vensim(test_model)
         self.assertEqual(model.mdl_file, test_model)
-
-    @unittest.skip("infinite loop")
-    def test_incomplete_model(self):
-        import pysd
-
-        with catch_warnings(record=True) as w:
-            simplefilter("always")
-            model = pysd.read_vensim(os.path.join(
-                _root,
-                "test-models/tests/incomplete_equations/"
-                + "test_incomplete_model.mdl"
-            ))
-        self.assertTrue(any([warn.category == SyntaxWarning for warn in w]))
-
-        with catch_warnings(record=True) as w:
-            model.run()
-        self.assertEqual(len(w), 1)
 
 
 class TestModelInteraction(unittest.TestCase):
@@ -1840,7 +1619,6 @@ class TestMultiRun(unittest.TestCase):
 class TestSplitViews(unittest.TestCase):
     def test_read_vensim_split_model(self):
         import pysd
-        from pysd.tools.benchmarking import assert_frames_close
 
         root_dir = more_tests + "/split_model/"
 
@@ -1926,14 +1704,14 @@ class TestSplitViews(unittest.TestCase):
 
     def test_read_vensim_split_model_vensim_8_2_1(self):
         import pysd
-        from pysd.tools.benchmarking import assert_frames_close
 
         root_dir = os.path.join(_root, "more-tests/split_model_vensim_8_2_1/")
 
         model_name = "test_split_model_vensim_8_2_1"
-        model_split = pysd.read_vensim(
-            root_dir + model_name + ".mdl", split_views=True, subview_sep="."
-        )
+        with catch_warnings(record=True):
+            model_split = pysd.read_vensim(
+                root_dir + model_name + ".mdl",
+                split_views=True, subview_sep=".")
 
         namespace_filename = "_namespace_" + model_name + ".json"
         subscript_dict_filename = "_subscripts_" + model_name + ".json"
@@ -2005,7 +1783,6 @@ class TestSplitViews(unittest.TestCase):
 
     def test_read_vensim_split_model_subviews(self):
         import pysd
-        from pysd.tools.benchmarking import assert_frames_close
 
         root_dir = os.path.join(_root, "more-tests/split_model/")
 
@@ -2077,7 +1854,6 @@ class TestSplitViews(unittest.TestCase):
 
     def test_read_vensim_split_model_several_subviews(self):
         import pysd
-        from pysd.tools.benchmarking import assert_frames_close
 
         root_dir = os.path.join(_root, "more-tests/split_model/")
 
@@ -2165,7 +1941,6 @@ class TestSplitViews(unittest.TestCase):
 
     def test_read_vensim_split_model_with_macro(self):
         import pysd
-        from pysd.tools.benchmarking import assert_frames_close
 
         root_dir = more_tests + "/split_model_with_macro/"
 
@@ -2246,22 +2021,22 @@ class TestDependencies(unittest.TestCase):
         model = read_vensim(test_model)
 
         expected_dep = {
-            'characteristic_time': None,
+            'characteristic_time': {},
             'heat_loss_to_room': {
-                'teacup_temperature',
-                'room_temperature',
-                'characteristic_time'
+                'teacup_temperature': 1,
+                'room_temperature': 1,
+                'characteristic_time': 1
             },
-            'room_temperature': None,
-            'teacup_temperature': {'_integ_teacup_temperature'},
+            'room_temperature': {},
+            'teacup_temperature': {'_integ_teacup_temperature': 1},
             '_integ_teacup_temperature': {
-                'initial': None,
-                'step': {'heat_loss_to_room'}
+                'initial': {},
+                'step': {'heat_loss_to_room': 1}
             },
-            'final_time': None,
-            'initial_time': None,
-            'saveper': {'time_step'},
-            'time_step': None
+            'final_time': {},
+            'initial_time': {},
+            'saveper': {'time_step': 1},
+            'time_step': {}
         }
         self.assertEqual(model.components._dependencies, expected_dep)
 
@@ -2273,20 +2048,20 @@ class TestDependencies(unittest.TestCase):
             + "test_subscript_individually_defined_stocks2.mdl")
 
         expected_dep = {
-            "stock_a": {"_integ_stock_a"},
-            "inflow_a": {"rate_a"},
-            "inflow_b": {"rate_a"},
-            "initial_values": {"initial_values_a", "initial_values_b"},
-            "initial_values_a": None,
-            "initial_values_b": None,
-            "rate_a": None,
-            "final_time": None,
-            "initial_time": None,
-            "saveper": {"time_step"},
-            "time_step": None,
+            "stock_a": {"_integ_stock_a": 2},
+            "inflow_a": {"rate_a": 1},
+            "inflow_b": {"rate_a": 1},
+            "initial_values": {"initial_values_a": 1, "initial_values_b": 1},
+            "initial_values_a": {},
+            "initial_values_b": {},
+            "rate_a": {},
+            "final_time": {},
+            "initial_time": {},
+            "saveper": {"time_step": 1},
+            "time_step": {},
             "_integ_stock_a": {
-                "initial": {"initial_values"},
-                "step": {"inflow_a", "inflow_b"}
+                "initial": {"initial_values": 2},
+                "step": {"inflow_a": 1, "inflow_b": 1}
             },
         }
         self.assertEqual(model.components._dependencies, expected_dep)
@@ -2294,3 +2069,61 @@ class TestDependencies(unittest.TestCase):
         os.remove(
             more_tests + "/subscript_individually_defined_stocks2/"
             + "test_subscript_individually_defined_stocks2.py")
+
+    def test_constant_deps(self):
+        from pysd import read_vensim
+
+        model = read_vensim(test_model_constant_pipe)
+
+        expected_dep = {
+            "constant1": {},
+            "constant2": {"constant1": 1},
+            "constant3": {"constant1": 3, "constant2": 1},
+            "final_time": {},
+            "initial_time": {},
+            "time_step": {},
+            "saveper": {"time_step": 1}
+        }
+        self.assertEqual(model.components._dependencies, expected_dep)
+
+        for key, value in model.cache_type.items():
+            if key != "time":
+                self.assertEqual(value, "run")
+
+        os.remove(
+            test_model_constant_pipe.replace(".mdl", ".py"))
+
+    def test_change_constant_pipe(self):
+        from pysd import read_vensim
+
+        model = read_vensim(test_model_constant_pipe)
+
+        new_var = pd.Series(
+            index=[0, 1, 2, 3, 4, 5],
+            data=[1, 2, 3, 4, 5, 6])
+
+        pipe = ["constant1", "constant2", "constant3"]
+
+        out1 = model.run()
+
+        [self.assertEqual(model.cache_type[key], "run") for key in pipe]
+
+        # we should ensure that the constant_cache is removed
+        # when passing new param
+        out2 = model.run(params={"constant1": new_var})
+
+
+        self.assertFalse(np.all(out1 - out2 == 0))
+
+        [self.assertEqual(model.cache_type[key], "step") for key in pipe]
+
+        [self.assertFalse((out1[key] == out2[key]).all()) for key in pipe]
+        [self.assertTrue((np.diff(out2[key]) != 0).all()) for key in pipe]
+
+        self.assertTrue((out2["constant2"] == 4*new_var.values).all())
+        self.assertTrue(
+            (out2["constant3"] == (5*new_var.values-1)*new_var.values).all()
+        )
+
+        os.remove(
+            test_model_constant_pipe.replace(".mdl", ".py"))

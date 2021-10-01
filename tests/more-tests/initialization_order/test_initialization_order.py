@@ -5,7 +5,6 @@ Translated using PySD
 
 
 from pysd.py_backend.statefuls import Integ
-from pysd import cache
 
 __pysd_version__ = "2.0.0"
 
@@ -24,15 +23,15 @@ _namespace = {
 }
 
 _dependencies = {
-    'initial_time': None,
-    'final_time': None,
-    'time_step': None,
-    'saveper': 'time_step',
-    'initial_parameter': None,
-    'stock_a': {'_integ_stock_a'},
-    'stock_b': {'_integ_stock_b'},
-    '_integ_stock_a': {'initial': {'initial_parameter'}, 'step': None},
-    '_integ_stock_b': {'initial': {'stock_a'}, 'step': None}
+    'initial_time': {},
+    'final_time': {},
+    'time_step': {},
+    'saveper': {'time_step': 1},
+    'initial_parameter': {},
+    'stock_a': {'_integ_stock_a': 1},
+    'stock_b': {'_integ_stock_b': 1},
+    '_integ_stock_a': {'initial': {'initial_parameter': 1}, 'step': {}},
+    '_integ_stock_b': {'initial': {'stock_a': 1}, 'step': {}}
 }
 
 __data = {"scope": None, "time": lambda: 0}
@@ -47,7 +46,6 @@ def time():
     return __data["time"]()
 
 
-@cache.step
 def stock_b():
     """
     Real Name: Stock B
@@ -62,7 +60,6 @@ def stock_b():
     return _integ_stock_b()
 
 
-@cache.step
 def stock_a():
     """
     Real Name: Stock A
@@ -77,7 +74,6 @@ def stock_a():
     return _integ_stock_a()
 
 
-@cache.run
 def initial_parameter():
     """
     Real Name: Initial Parameter
@@ -92,7 +88,6 @@ def initial_parameter():
     return 42
 
 
-@cache.run
 def final_time():
     """
     Real Name: FINAL TIME
@@ -107,7 +102,6 @@ def final_time():
     return 1
 
 
-@cache.run
 def initial_time():
     """
     Real Name: INITIAL TIME
@@ -122,7 +116,6 @@ def initial_time():
     return 0
 
 
-@cache.step
 def saveper():
     """
     Real Name: SAVEPER
@@ -137,7 +130,6 @@ def saveper():
     return time_step()
 
 
-@cache.run
 def time_step():
     """
     Real Name: TIME STEP

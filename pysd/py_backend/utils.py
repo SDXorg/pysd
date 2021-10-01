@@ -6,7 +6,6 @@ functions.py
 
 import os
 import warnings
-import keyword
 import json
 from collections.abc import Mapping
 
@@ -15,11 +14,17 @@ import progressbar
 import numpy as np
 import xarray as xr
 
-# used to create python safe names
+# used to create python safe names with the variable reserved_words
+from keyword import kwlist
+from builtins import __dir__ as bidir
 from .decorators import __dir__ as ddir
 from .external import __dir__ as edir
 from .functions import __dir__ as fdir
 from .statefuls import __dir__ as sdir
+
+
+reserved_words = set(dir() + fdir() + edir() + ddir() + sdir() + bidir())
+reserved_words = reserved_words.union(kwlist)
 
 
 def xrmerge(*das):
@@ -272,9 +277,7 @@ def make_merge_list(subs_list, subscript_dict, element=""):
     return dims
 
 
-def make_python_identifier(
-    string, namespace=None, reserved_words=None, convert="drop", handle="force"
-):
+def make_python_identifier(string, namespace=None):
     """
     Takes an arbitrary string and creates a valid Python identifier.
 
@@ -296,89 +299,53 @@ def make_python_identifier(
     namespace: dict
         Map of existing translations into python safe identifiers.
         This is to ensure that two strings are not translated into
-        the same python identifier.
-
-    reserved_words: list of strings (optional)
-        List of words that are reserved (because they have other meanings
-        in this particular program, such as also being the names of
-        libraries, etc.
-
-    convert: str (optional)
-        Tells the function what to do with characters that are not
-        valid in python identifiers.
-        - 'hex' implies that they will be converted to their hexidecimal
-                representation. This is handy if you have variables that
-                have a lot of reserved characters, or you don't want the
-                name to be dependent on when things were added to the
-                namespace.
-        - 'drop' implies that they will just be dropped altogether.
-
-    handle: str (optional)
-        Tells the function how to deal with namespace conflicts
-        - 'force' will create a representation which is not in conflict
-                  by appending _n to the resulting variable where n is
-                  the lowest number necessary to avoid a conflict
-        - 'throw' will raise an exception
+        the same python identifier. If string is already in the namespace
+        its value will be returned. Otherwise, namespace will be mutated
+        adding string as a new key and its value.
 
     Returns
     -------
     identifier: str
-        A vaild python identifier based on the input string
-
-    namespace: dict
-        An updated map of the translations of words to python identifiers,
-        including the passed in 'string'.
+        A vaild python identifier based on the input string.
 
     Examples
     --------
     >>> make_python_identifier('Capital')
-    ('capital', {'Capital': 'capital'})
+    'capital'
 
     >>> make_python_identifier('multiple words')
-    ('multiple_words', {'multiple words': 'multiple_words'})
+    'multiple_words'
 
     >>> make_python_identifier('multiple     spaces')
-    ('multiple_spaces', {'multiple     spaces': 'multiple_spaces'})
+    'multiple_spaces'
 
     When the name is a python keyword, add '_1' to differentiate it
     >>> make_python_identifier('for')
-    ('for_1', {'for': 'for_1'})
+    'for_1'
 
     Remove leading and trailing whitespace
     >>> make_python_identifier('  whitespace  ')
-    ('whitespace', {'  whitespace  ': 'whitespace'})
+    'whitespace'
 
     Remove most special characters outright:
     >>> make_python_identifier('H@t tr!ck')
-    ('ht_trck', {'H@t tr!ck': 'ht_trck'})
-
-    Replace special characters with their hex representations
-    >>> make_python_identifier('H@t tr!ck', convert='hex')
-    ('h40t_tr21ck', {'H@t tr!ck': 'h40t_tr21ck'})
+    'ht_trck'
 
     remove leading digits
     >>> make_python_identifier('123abc')
-    ('abc', {'123abc': 'abc'})
+    'nvs_123abc'
 
     already in namespace
     >>> make_python_identifier('Var$', namespace={'Var$': 'var'})
-    ('var', {'Var$': 'var'})
+    ''var'
 
     namespace conflicts
     >>> make_python_identifier('Var@', namespace={'Var$': 'var'})
-    ('var_1', {'Var$': 'var', 'Var@': 'var_1'})
+    'var_1'
 
     >>> make_python_identifier('Var$', namespace={'Var@': 'var',
     ...                                           'Var%':'var_1'})
-    ('var_2', {'Var@': 'var', 'Var%': 'var_1', 'Var$': 'var_2'})
-
-    throw exception instead
-    >>> make_python_identifier('Var$', namespace={'Var@': 'var'},
-    ...                        handle='throw')
-    Traceback (most recent call last):
-     ...
-    NameError: variable already exists in namespace or is a reserved word
-
+    'var_2'
 
     References
     ----------
@@ -389,14 +356,8 @@ def make_python_identifier(
     if namespace is None:
         namespace = dict()
 
-    if reserved_words is None:
-        reserved_words = list()
-
-    # reserved the names of PySD functions and methods
-    reserved_words += dir() + fdir() + edir() + ddir() + sdir()
-
     if string in namespace:
-        return namespace[string], namespace
+        return namespace[string]
 
     # create a working copy (and make it lowercase, while we're at it)
     s = string.lower()
@@ -407,43 +368,29 @@ def make_python_identifier(
     # Make spaces into underscores
     s = re.sub(r"[\s\t\n]+", "_", s)
 
-    if convert == "hex":
-        # Convert invalid characters to hex. Note: \p{l} designates all
-        # Unicode letter characters (any language), \p{m} designates all
-        # mark symbols (e.g., vowel marks in Indian scrips, such as the final)
-        # and \p{n} designates all numbers. We allow any of these to be
-        # present in the regex.
-        s = "".join(
-            [c.encode("hex") if re.findall(r"[^\p{l}\p{m}\p{n}_]", c)
-             else c for c in s]
-        )
-
-    elif convert == "drop":
-        # Remove invalid characters
-        s = re.sub(r"[^\p{l}\p{m}\p{n}_]", "", s)
+    # Remove invalid characters
+    s = re.sub(r"[^\p{l}\p{m}\p{n}_]", "", s)
 
     # If leading characters are not a letter or underscore add nvs_.
     # Only letters can be leading characters.
     if re.findall(r"^[^\p{l}_]+", s):
         s = "nvs_" + s
 
+    # reserved the names of PySD functions and methods and other vars
+    # in the namespace
+    used_words = reserved_words.union(namespace.values())
+
     # Check that the string is not a python identifier
-    while (s in keyword.kwlist or
-           s in namespace.values() or
-           s in reserved_words):
-        if handle == "throw":
-            raise NameError(
-                s + " already exists in namespace or is a reserved word")
-        if handle == "force":
-            if re.match(r".*?_\d+$", s):
-                i = re.match(r".*?_(\d+)$", s).groups()[0]
-                s = s.strip("_" + i) + "_" + str(int(i) + 1)
-            else:
-                s += "_1"
+    while s in used_words:
+        if re.match(r".*?_\d+$", s):
+            i = re.match(r".*?_(\d+)$", s).groups()[0]
+            s = s.strip("_" + i) + "_" + str(int(i) + 1)
+        else:
+            s += "_1"
 
     namespace[string] = s
 
-    return s, namespace
+    return s
 
 
 def make_add_identifier(identifier, build_names):
@@ -850,47 +797,6 @@ def load_model_data(root_dir, model_name):
     return namespace, subscripts, dependencies, modules
 
 
-def open_module(root_dir, model_name, module, submodule=None):  # pragma: no cover
-    """
-    This function will be deprecated from release 2.0.
-    Used to load model modules from the main model file, when
-    split_views=True in the read_vensim function.
-
-    Parameters
-    ----------
-    root_dir: str
-        Path to the model file.
-
-    model_name: str
-        Name of the model without file type extension (e.g. "my_model").
-
-    module: str
-        Name of the module folder or file to open.
-
-    sub_module: str (optional)
-        Name of the submodule to open.
-
-    Returns
-    -------
-    str:
-        Model file content.
-
-    """
-    warnings.warn(
-            "open_module function will be deprecated from release 2.0. Use "
-            + "load_modules instead or translate the model again.",
-            FutureWarning
-        )
-    if not submodule:
-        rel_file_path = module + ".py"
-    else:
-        rel_file_path = os.path.join(module, submodule + ".py")
-
-    with open(os.path.join(root_dir, "modules_" + model_name, rel_file_path),
-              "r") as mod:
-        return mod.read()
-
-
 def load_modules(module_name, module_content, work_dir, submodules):
     """
     Used to load model modules from the main model file, when
@@ -984,14 +890,6 @@ def merge_nested_dicts(original_dict, dict_to_merge):
             original_dict[k] = dict_to_merge[k]
 
 
-def replace_set_by_none(deps):
-    for key, value in deps.items():
-        if isinstance(value, dict):
-            replace_set_by_none(value)
-        if not value:
-            deps[key] = None
-
-
 class ProgressBar:
     """
     Progress bar for integration
@@ -1033,11 +931,3 @@ class ProgressBar:
         except AttributeError:
             # Error if bar is not imported
             pass
-
-
-class SetEncoder(json.JSONEncoder):
-    """ Encode sets as lists. Used for exporting dependencies json."""
-    def default(self, obj):
-        if isinstance(obj, set):
-            return list(obj)
-        return json.JSONEncoder.default(self, obj)

@@ -16,29 +16,26 @@ small_vensim = 1e-6  # What is considered zero according to Vensim Help
 
 def ramp(time, slope, start, finish=0):
     """
-    Implements vensim's and xmile's RAMP function
+    Implements vensim's and xmile's RAMP function.
 
     Parameters
     ----------
     time: function
-        The current time of modelling
+        The current time of modelling.
     slope: float
-        The slope of the ramp starting at zero at time start
+        The slope of the ramp starting at zero at time start.
     start: float
-        Time at which the ramp begins
+        Time at which the ramp begins.
     finish: float
-        Optional. Time at which the ramp ends
+        Optional. Time at which the ramp ends.
 
     Returns
     -------
     response: float
-        If prior to ramp start, returns zero
-        If after ramp ends, returns top of ramp
-    Examples
-    --------
+        If prior to ramp start, returns zero.
+        If after ramp ends, returns top of ramp.
 
     """
-
     t = time()
     if t < start:
         return 0
@@ -53,33 +50,50 @@ def ramp(time, slope, start, finish=0):
 
 def step(time, value, tstep):
     """"
-    Implements vensim's STEP function
+    Implements vensim's STEP function.
 
     Parameters
     ----------
     value: float
-        The height of the step
+        The height of the step.
     tstep: float
-        The time at and after which `result` equals `value`
+        The time at and after which `result` equals `value`.
 
     Returns
     -------
-    - In range [-inf, tstep) returns 0
-    - In range [tstep, +inf] returns `value`
+    float:
+        - In range [-inf, tstep):
+            returns 0
+        - In range [tstep, +inf]:
+            returns `value`
     """
     return value if time() >= tstep else 0
 
 
 def pulse(time, start, duration):
     """
-    Implements vensim's PULSE function
+    Implements vensim's PULSE function.
 
-    In range [-inf, start):
-        returns 0
-    In range [start, start + duration):
-        returns 1
-    In range [start + duration, +inf]:
-        returns 0
+    Parameters
+    ----------
+    time: function
+        Function that returns the current time.
+
+    start: float
+        Starting time of the pulse.
+
+    duration: float
+        Duration of the pulse.
+
+    Returns
+    -------
+    float:
+        - In range [-inf, start):
+            returns 0
+        - In range [start, start + duration):
+            returns 1
+        - In range [start + duration, +inf]:
+            returns 0
 
     """
     t = time()
@@ -88,14 +102,35 @@ def pulse(time, start, duration):
 
 def pulse_train(time, start, duration, repeat_time, end):
     """
-    Implements vensim's PULSE TRAIN function
+    Implements vensim's PULSE TRAIN function.
 
-    In range [-inf, start):
-        returns 0
-    In range [start + n * repeat_time, start + n * repeat_time + duration):
-        returns 1
-    In range [start + n * repeat_time + duration, start + (n+1) * repeat_time):
-        returns 0
+    Parameters
+    ----------
+    time: function
+        Function that returns the current time.
+
+    start: float
+        Starting time of the pulse.
+
+    duration: float
+        Duration of the pulse.
+
+    repeat_time: float
+        Time interval of the pulse repetition.
+
+    end: float
+        Final time of the pulse.
+
+    Returns
+    -------
+    float:
+        - In range [-inf, start):
+            returns 0
+        - In range [start + n*repeat_time, start + n*repeat_time + duration):
+            returns 1
+        - In range [start + n*repeat_time + duration,
+                    start + (n+1)*repeat_time):
+            returns 0
 
     """
     t = time()
@@ -106,16 +141,39 @@ def pulse_train(time, start, duration, repeat_time, end):
 
 
 def pulse_magnitude(time, magnitude, start, repeat_time=0):
-    """ Implements xmile's PULSE function
+    """
+    Implements xmile's PULSE function. Generate a one-DT wide pulse
+    at the given time.
 
-    PULSE:             Generate a one-DT wide pulse at the given time
-       Parameters:     2 or 3:  (magnitude, first time[, interval])
-                       Without interval or when interval = 0, the PULSE is generated only once
-       Example:        PULSE(20, 12, 5) generates a pulse value of 20/DT at time 12, 17, 22, etc.
+    Parameters
+    ----------
+    time: function
+        Function that returns the current time.
 
-    In rage [-inf, start) returns 0
-    In range [start + n * repeat_time, start + n * repeat_time + dt) return magnitude/dt
-    In rage [start + n * repeat_time + dt, start + (n + 1) * repeat_time) return 0
+    magnitude:
+        Magnitude of the pulse.
+
+    start: float
+        Starting time of the pulse.
+
+    repeat_time: float (optional)
+        Time interval of the pulse repetition.  Default is 0, only one
+        pulse will be generated.
+
+    Notes
+    -----
+    PULSE(time(), 20, 12, 5) generates a pulse value of 20/DT at
+    time 12, 17, 22, etc.
+
+    Returns
+    -------
+    float:
+        - In rage [-inf, start):
+            returns 0
+        - In range [start + n*repeat_time, start + n*repeat_time + dt):
+            returns magnitude/dt
+        - In rage [start + n*repeat_time + dt, start + (n+1)*repeat_time):
+            returns 0
 
     """
     t = time()

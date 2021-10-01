@@ -20,6 +20,7 @@ import xarray as xr
 from . import utils
 from .functions import zidz, if_then_else
 from .external import External, Excels
+from .decorators import Cache, constant_cache
 
 from pysd._version import __version__
 
@@ -622,6 +623,7 @@ class Macro(DynamicStateful):
         super().__init__()
         self.time = time
         self.time_initialization = time_initialization
+        self.cache = Cache()
         self.py_name = py_name
 
         # need a unique identifier for the imported module.
@@ -656,7 +658,8 @@ class Macro(DynamicStateful):
         if params is not None:
             self.set_components(params)
             for param in params:
-                self.components._dependencies[param] = {"time"}
+                self.components._dependencies[
+                    self.components._namespace[param]] = {"time"}
 
         # Get the collections of stateful elements and external elements
         self._stateful_elements = [
@@ -670,6 +673,10 @@ class Macro(DynamicStateful):
         self._external_elements = [
             getattr(self.components, name) for name in dir(self.components)
             if isinstance(getattr(self.components, name), External)
+        ]
+        self._macro_elements = [
+            getattr(self.components, name) for name in dir(self.components)
+            if isinstance(getattr(self.components, name), Macro)
         ]
 
         self._assign_cache_type()
@@ -685,6 +692,11 @@ class Macro(DynamicStateful):
     def __call__(self):
         return self.return_func()
 
+    def clean_caches(self):
+        self.cache.clean()
+        # if nested macros
+        [macro.clean_caches() for macro in self._macro_elements]
+
     def _get_initialize_order(self):
         """
         Get the initialization order of the stateful elements
@@ -699,7 +711,8 @@ class Macro(DynamicStateful):
         }
         for element in self.stateful_initial_dependencies:
             self._get_full_dependencies(
-                element, self.stateful_initial_dependencies[element])
+                element, self.stateful_initial_dependencies[element],
+                "initial")
 
         # get the full dependencies of stateful objects taking into account
         # only other objects
@@ -735,7 +748,7 @@ class Macro(DynamicStateful):
                 + 'Not able to initialize the following objects:\n\t'
                 + '\n\t'.join(current_deps))
 
-    def _get_full_dependencies(self, element, dep_set):
+    def _get_full_dependencies(self, element, dep_set, stateful_deps):
         """
         Get all dependencies of an element, i.e., also get the dependencies
         of the dependencies. When finding an stateful element only dependencies
@@ -747,6 +760,8 @@ class Macro(DynamicStateful):
             Element to get the full dependencies.
         dep_set: set
             Set to include the dependencies of the element.
+        stateful_deps: "initial" or "step"
+            The type of dependencies to take in the case of stateful objects.
 
         Returns
         -------
@@ -754,14 +769,36 @@ class Macro(DynamicStateful):
 
         """
         deps = self.components._dependencies[element]
-        if isinstance(deps, dict):
-            deps = deps["initial"]
-        if deps is None:
-            return
+        if element.startswith("_"):
+            deps = deps[stateful_deps]
         for dep in deps:
-            if dep not in dep_set and not dep.startswith("__") and dep != "time":
+            if dep not in dep_set and not dep.startswith("__")\
+               and dep != "time":
                 dep_set.add(dep)
-                self._get_full_dependencies(dep, dep_set)
+                self._get_full_dependencies(dep, dep_set, stateful_deps)
+
+    def _add_constant_cache(self):
+        self.constant_funcs = set()
+        for element, cache_type in self.cache_type.items():
+            if cache_type == "run":
+                if self.get_args(element):
+                    setattr(
+                        self.components, element,
+                        constant_cache(getattr(self.components, element), None)
+                    )
+                else:
+                    setattr(
+                        self.components, element,
+                        constant_cache(getattr(self.components, element))
+                    )
+                self.constant_funcs.add(element)
+
+    def _remove_constant_cache(self):
+        for element in self.constant_funcs:
+            setattr(
+                self.components, element,
+                getattr(self.components, element).function)
+        self.constant_funcs = set()
 
     def _assign_cache_type(self):
         """
@@ -773,6 +810,36 @@ class Macro(DynamicStateful):
             if element not in self.cache_type\
                and element in self.components._dependencies:
                 self._assign_cache(element)
+
+        for element, cache_type in self.cache_type.items():
+            if cache_type is not None:
+                if element not in self.cache.cached_funcs\
+                   and self._count_calls(element) > 1:
+                    setattr(
+                        self.components, element,
+                        self.cache(getattr(self.components, element)))
+                    self.cache.cached_funcs.add(element)
+
+    def _count_calls(self, element):
+        n_calls = 0
+        for subelement in self.components._dependencies:
+            if subelement.startswith("_") and\
+               element in self.components._dependencies[subelement]["step"]:
+                if element in\
+                   self.components._dependencies[subelement]["initial"]:
+                    n_calls +=\
+                        2*self.components._dependencies[subelement][
+                            "step"][element]
+                else:
+                    n_calls +=\
+                        self.components._dependencies[subelement][
+                            "step"][element]
+            elif (not subelement.startswith("_") and
+                  element in self.components._dependencies[subelement]):
+                n_calls +=\
+                    self.components._dependencies[subelement][element]
+
+        return n_calls
 
     def _assign_cache(self, element):
         """
@@ -798,7 +865,7 @@ class Macro(DynamicStateful):
         else:
             self.cache_type[element] = "run"
             for subelement in self.components._dependencies[element]:
-                if subelement.startswith("_initial_"):
+                if subelement.startswith("_initial_") or subelement.startswith("__"):
                     continue
                 if subelement not in self.cache_type:
                     self._assign_cache(subelement)
@@ -823,7 +890,7 @@ class Macro(DynamicStateful):
         if "time" in dependencies:
             return True
         for dep in dependencies:
-            if dep.startswith("_") and not dep.startswith("_initial_"):
+            if dep.startswith("_") and not dep.startswith("_initial_") and not dep.startswith("__"):
                 return True
         return False
 
@@ -843,8 +910,7 @@ class Macro(DynamicStateful):
         if self.time is None:
             self.time = self.time_initialization()
 
-        self.components.cache.clean()
-        self.components.cache.time = self.time()
+        self.cache.clean()
 
         self.components._init_outer_references({
             'scope': self,
@@ -931,7 +997,6 @@ class Macro(DynamicStateful):
         self.set_stateful(stateful_dict)
 
         self.time.update(time)
-        self.components.cache.reset(time)
 
     def get_args(self, param):
         """
@@ -1148,14 +1213,14 @@ class Macro(DynamicStateful):
                 dims, args = None, None
 
             if isinstance(value, pd.Series):
-                new_function, cache = self._timeseries_component(
+                new_function, deps = self._timeseries_component(
                     value, dims, args)
+                self.components._dependencies[func_name] = deps
             elif callable(value):
                 new_function = value
-                cache = None
             else:
                 new_function = self._constant_component(value, dims, args)
-                cache = 'run'
+                self.components._dependencies[func_name] = {}
 
             # this won't handle other statefuls...
             if '_integ_' + func_name in dir(self.components):
@@ -1163,15 +1228,10 @@ class Macro(DynamicStateful):
                               + "{} with params".format(key),
                               stacklevel=2)
 
-            # add cache
             new_function.__name__ = func_name
-            if cache == 'run':
-                new_function = self.components.cache.run(new_function)
-            elif cache == 'step':
-                new_function = self.components.cache.step(new_function)
-
             setattr(self.components, func_name, new_function)
-            self.components.cache.clean()
+            if func_name in self.cache.cached_funcs:
+                self.cache.cached_funcs.remove(func_name)
 
     def _timeseries_component(self, series, dims, args=[]):
         """ Internal function for creating a timeseries model element """
@@ -1185,7 +1245,7 @@ class Macro(DynamicStateful):
                 series.values,
                 series.index).interp(concat_dim=x).reset_coords(
                 'concat_dim', drop=True),
-                dims, self.components._subscript_dict), 'lookup'
+                dims, self.components._subscript_dict), {'__lookup__': None}
 
         elif isinstance(series.values[0], xr.DataArray):
             # the interpolation will be time dependent
@@ -1193,31 +1253,32 @@ class Macro(DynamicStateful):
                 series.values,
                 series.index).interp(concat_dim=self.time()).reset_coords(
                 'concat_dim', drop=True),
-                dims, self.components._subscript_dict), 'step'
+                dims, self.components._subscript_dict), {'time': 1}
 
         elif args and dims:
             # the argument is already given in the model when the model
             # is called
             return lambda x: utils.rearrange(
                 np.interp(x, series.index, series.values),
-                dims, self.components._subscript_dict), 'lookup'
+                dims, self.components._subscript_dict), {'__lookup__': None}
 
         elif args:
             # the argument is already given in the model when the model
             # is called
             return lambda x:\
-                np.interp(x, series.index, series.values), 'lookup'
+                np.interp(x, series.index, series.values), {'__lookup__': None}
 
         elif dims:
             # the interpolation will be time dependent
             return lambda: utils.rearrange(
                 np.interp(self.time(), series.index, series.values),
-                dims, self.components._subscript_dict), 'step'
+                dims, self.components._subscript_dict), {'time': 1}
 
         else:
             # the interpolation will be time dependent
             return lambda:\
-                np.interp(self.time(), series.index, series.values), 'step'
+                np.interp(self.time(), series.index, series.values),\
+                {'time': 1}
 
     def _constant_component(self, value, dims, args=[]):
         """ Internal function for creating a constant model element """
@@ -1239,13 +1300,6 @@ class Macro(DynamicStateful):
         else:
             return lambda: value
 
-    def set_state(self, t, initial_value):
-        """ Old set_state method use set_initial_value"""
-        warnings.warn(
-            "\nset_state will be deprecated, use set_initial_value instead.",
-            FutureWarning)
-        self.set_initial_value(t, initial_value)
-
     def set_initial_value(self, t, initial_value):
         """ Set the system initial value.
 
@@ -1261,7 +1315,7 @@ class Macro(DynamicStateful):
 
         """
         self.time.update(t)
-        self.components.cache.reset(t)
+        self.clean_caches()
         stateful_name = "_NONE"
         # TODO make this more solid, link with builder or next TODO?
         stateful_init = [
@@ -1309,20 +1363,14 @@ class Macro(DynamicStateful):
                         value, dims,
                         self.components._subscript_dict)
                 element.initialize(value)
-                self.components.cache.clean()
+                # TODO clean only necessary cache
+                self.cache.clean()
             else:
                 # Try to override component
-                warnings.warn(
+                raise ValueError(
                     f"\nSetting {component_name} to a constant value with "
-                    "initial_conditions will be deprecated. Use params={"
-                    f"'{component_name}': {value}"+"} instead.",
-                    FutureWarning)
-
-                setattr(self.components, component_name,
-                        self._constant_component(
-                            value, dims,
-                            self.get_args(component_name)))
-                self.components.cache.clean()
+                    "initial_conditions. Use params={"
+                    f"'{component_name}': {value}"+"} instead.")
 
     def set_stateful(self, stateful_dict):
         """
@@ -1627,14 +1675,18 @@ class Model(Macro):
         if params:
             self.set_components(params)
 
-        self.set_initial_condition(initial_condition)
+        # update cache types after setting params
+        self._assign_cache_type()
 
+        self.set_initial_condition(initial_condition)
         # TODO move control variables to a class
         # save control variables
         replace = {
             'initial_time': self.time()
         }
         # END TODO
+
+        self._add_constant_cache()
 
         return_timestamps = self._format_return_timestamps(return_timestamps)
 
@@ -1644,7 +1696,8 @@ class Model(Macro):
             return_columns = self._default_return_columns(return_columns)
 
         self.time.stage = 'Run'
-        self.components.cache.clean()
+        # need to clean cache to remove the values from active_initial
+        self.cache.clean()
 
         capture_elements, return_addresses = utils.get_return_elements(
             return_columns, self.components._namespace)
@@ -1656,6 +1709,7 @@ class Model(Macro):
                               return_timestamps)
 
         self._add_run_elements(res, capture_elements['run'], replace=replace)
+        self._remove_constant_cache()
 
         return_df = utils.make_flat_df(res, return_addresses, flatten_output)
 
@@ -1694,15 +1748,12 @@ class Model(Macro):
             types = ['step', 'run']
 
         return_columns = []
-        parsed_expr = ['time']  # time is alredy returned as index
 
-        for key, value in self.components._namespace.items():
-            if hasattr(self.components, value):
-                func = getattr(self.components, value)
-                if value not in parsed_expr and\
-                   hasattr(func, 'type') and getattr(func, 'type') in types:
-                    return_columns.append(key)
-                    parsed_expr.append(value)
+        for key, pykey in self.components._namespace.items():
+            if pykey in self.cache_type and self.cache_type[pykey] in types\
+               and not self.get_args(pykey):
+
+                return_columns.append(key)
 
         return return_columns
 
@@ -1722,16 +1773,9 @@ class Model(Macro):
             Dictionary of sets with keywords step and run.
 
         """
-        capture_dict = {'step': set(), 'run': set()}
-        for element in capture_elements:
-            func = getattr(self.components, element)
-            if hasattr(func, 'type') and getattr(func, 'type') == 'run':
-                capture_dict['run'].add(element)
-            else:
-                # those with a cache different to run or non-identified
-                # will be saved each step
-                capture_dict['step'].add(element)
-
+        capture_dict = {'step': set(), 'run': set(), None: set()}
+        [capture_dict[self.cache_type[element]].add(element)
+         for element in capture_elements]
         return capture_dict
 
     def set_initial_condition(self, initial_condition):
@@ -1796,7 +1840,7 @@ class Model(Macro):
         ----------
         time_steps: iterable
             the time steps that the integrator progresses over
-        capture_elements: list
+        capture_elements: set
             which model elements to capture - uses pysafe names
         return_timestamps:
             which subset of 'timesteps' should be values be returned?
@@ -1806,6 +1850,10 @@ class Model(Macro):
         outputs: list of dictionaries
 
         """
+        # necessary to have always a non-xaray object for appending objects
+        # to the DataFrame time will always be a model element and not saved
+        # TODO: find a better way of saving outputs
+        capture_elements.add("time")
         outputs = pd.DataFrame(columns=capture_elements)
 
         if self.progress:
@@ -1820,8 +1868,8 @@ class Model(Macro):
                 outputs.at[self.time()] = [getattr(self.components, key)()
                                            for key in capture_elements]
             self._euler_step(t2 - self.time())
-            self.time.update(t2)  # this will clear the stepwise caches
-            self.components.cache.reset(t2)
+            self.time.update(t2)
+            self.clean_caches()
             progressbar.update()
             # TODO move control variables to a class and automatically stop
             # when updating time
@@ -1836,6 +1884,9 @@ class Model(Macro):
 
         progressbar.finish()
 
+        # delete time column as it was created only for avoiding errors
+        # of appending data. See previous TODO.
+        del outputs["time"]
         return outputs
 
     def _add_run_elements(self, df, capture_elements, replace={}):

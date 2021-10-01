@@ -1,5 +1,3 @@
-from pysd import cache
-
 __pysd_version__ = "1.5.0"
 
 _namespace = {}

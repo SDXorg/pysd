@@ -1,13 +1,12 @@
-from pysd import cache
 from pysd.py_backend.statefuls import Integ, Delay
 
 _subscript_dict = {}
 _namespace = {'integ': 'integ', 'delay': 'delay'}
 _dependencies = {
-    'integ': {'_integ_integ'},
-    'delay': {'_delay_delay'},
-    '_integ_integ': {'initial': {'delay'}, 'step': None},
-    '_delay_delay': {'initial': {'integ'}, 'step': None}
+    'integ': {'_integ_integ': 1},
+    'delay': {'_delay_delay': 1},
+    '_integ_integ': {'initial': {'delay': 1}, 'step': {}},
+    '_delay_delay': {'initial': {'integ': 1}, 'step': {}}
 }
 __pysd_version__ = "2.0.0"
 

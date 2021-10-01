@@ -96,10 +96,7 @@ class Imports():
                             "methods": ", ".join(getattr(cls, f"_{module}"))}
 
         if cls._subs:
-            text += "from pysd import cache, subs\n"
-        else:
-            # we need to import always cache as it is called in the integration
-            text += "from pysd import cache\n"
+            text += "from pysd import subs\n"
 
         cls.reset()
 
@@ -560,19 +557,6 @@ def build_element(element, subscript_dict):
         The function to write in the model file.
 
     """
-    if element["kind"] == "constant":
-        cache_type = "@cache.run"
-    elif element["kind"] in ["component", "component_ext_data"]:
-        cache_type = "@cache.step"
-    elif element["kind"] == "lookup":
-        # lookups may be called with different values in a round
-        cache_type = ""
-    elif element["kind"] in ["setup", "stateful", "external", "external_add"]:
-        # setups only get called once, caching is wasted
-        cache_type = ""
-    else:
-        raise AttributeError("Bad value for 'kind'")
-
     # check the elements with ADD in their name
     # as these wones are directly added to the
     # external objecets via .add method
@@ -636,7 +620,6 @@ def build_element(element, subscript_dict):
     indent = 8
     element.update(
         {
-            "cache": cache_type,
             "ulines": "-" * len(element["real_name"]),
             "contents": contents.replace("\n", "\n" + " " * indent),
         }
@@ -682,7 +665,6 @@ def build_element(element, subscript_dict):
 
         func = (
             '''
-    %(cache)s
     %(subs_dec)s
     def %(py_name)s(%(arguments)s):
         """
@@ -755,16 +737,50 @@ def merge_partial_elements(element_list):
                 outs[name]["eqn"] += [eqn.replace(r"\ ", "")]
                 outs[name]["py_expr"] += [element["py_expr"]]
                 outs[name]["subs"] += [element["subs"]]
-                # merge dependencies
-                if isinstance(outs[name]["dependencies"], set):
-                    outs[name]["dependencies"].update(element["dependencies"])
-                elif isinstance(outs[name]["dependencies"], dict):
-                    for target in outs[name]["dependencies"]:
-                        outs[name]["dependencies"][target].update(
-                            element["dependencies"][target])
+                if outs[name]["dependencies"] is not None:
+                    if name.startswith("_"):
+                        # stateful object merge initial and step
+                        for target in outs[name]["dependencies"]:
+                            _merge_dependencies(
+                                outs[name]["dependencies"][target],
+                                element["dependencies"][target])
+                    else:
+                        # regular element
+                        _merge_dependencies(
+                            outs[name]["dependencies"],
+                            element["dependencies"])
                 outs[name]["arguments"] = element["arguments"]
 
     return list(outs.values())
+
+
+def _merge_dependencies(current, new):
+    """
+    Merge two dependencies dicts of an element.
+
+    Parameters
+    ----------
+    current: dict
+        Current dependencies of the element. It will be mutated.
+
+    new: dict
+        New dependencies to add.
+
+    Returns
+    -------
+    None
+
+    """
+    current_set, new_set = set(current), set(new)
+    for dep in current_set.intersection(new_set):
+        if dep.startswith("__"):
+            # if it is special (__lookup__, __external__) continue
+            continue
+        # if dependency is in both sum the number of calls
+        current[dep] += new[dep]
+    for dep in new_set.difference(current_set):
+        # if dependency is only in new copy it
+        current[dep] = new[dep]
 
 
 def add_stock(identifier, expression, initial_condition, subs, merge_subs,
@@ -1682,8 +1698,7 @@ def add_initial(identifier, value, deps):
             "initial": [value]
         })
 
-    py_name = utils.make_python_identifier("_initial_%s"
-                                           % identifier)[0]
+    py_name = "_initial_%s" % identifier
 
     stateful = {
         "py_name": py_name,
@@ -1760,7 +1775,7 @@ def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs,
     keyword = (
         "'%s'" % keyword.strip(":").lower() if isinstance(keyword, str) else
         keyword)
-    name = utils.make_python_identifier("_ext_data_%s" % identifier)[0]
+    name = "_ext_data_%s" % identifier
 
     # Check if the object already exists
     if name in build_names:
@@ -1845,7 +1860,7 @@ def add_ext_constant(identifier, file_name, tab, cell,
     coords = utils.simplify_subscript_input(
         utils.make_coord_dict(subs, subscript_dict, terse=False),
         subscript_dict, return_full=False, merge_subs=merge_subs)
-    name = utils.make_python_identifier("_ext_constant_%s" % identifier)[0]
+    name = "_ext_constant_%s" % identifier
 
     # Check if the object already exists
     if name in build_names:
@@ -1932,7 +1947,7 @@ def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell,
     coords = utils.simplify_subscript_input(
         utils.make_coord_dict(subs, subscript_dict, terse=False),
         subscript_dict, return_full=False, merge_subs=merge_subs)
-    name = utils.make_python_identifier("_ext_lookup_%s" % identifier)[0]
+    name = "_ext_lookup_%s" % identifier
 
     # Check if the object already exists
     if name in build_names:
@@ -2067,14 +2082,18 @@ def add_incomplete(var_name, dependencies):
 def build_dependencies(deps, exps):
     # TODO document
 
-    deps_dict = {"initial": set(), "step": set()}
+    deps_dict = {"initial": {}, "step": {}}
 
     for target, exprs in exps.items():
         expr = ".".join(exprs)
         for dep in deps:
-            if re.findall("(?<![0-9A-Fa-f_])" + dep + "(?![0-9A-Fa-f_])",
-                          expr):
-                deps_dict[target].add(dep)
+            n_calls = len(
+                re.findall(
+                    "(?<![0-9A-Za-z_])" + dep + "(?![0-9A-Za-z_])",
+                    expr)
+            )
+            if n_calls > 0:
+                deps_dict[target][dep] = n_calls
 
     return deps_dict
 
@@ -2165,7 +2184,10 @@ def build_function_call(function_def, user_arguments, dependencies=set()):
                 user_argument = user_arguments[argument_idx]
                 argument_idx += 1
             elif parameter_type == "time":
-                dependencies.add("time")
+                if "time" in dependencies:
+                    dependencies["time"] += 1
+                else:
+                    dependencies["time"] = 1
             elif parameter_type == "ignore":
                 argument_idx += 1
                 continue

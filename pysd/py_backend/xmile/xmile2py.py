@@ -113,7 +113,7 @@ def translate_xmile(xmile_file):
 
     for node in root.xpath(names_xpath, namespaces={'ns': NS}):
         name = node.attrib['name']
-        _, namespace = utils.make_python_identifier(name, namespace)
+        utils.make_python_identifier(name, namespace)
 
     model_elements = []
     smile_parser = SMILEParser(namespace)
@@ -173,7 +173,6 @@ def translate_xmile(xmile_file):
                 # This lookup declared as inline, so we should implement
                 # inline mode for flow and aux
                 'arguments': "x = None",
-                'dependencies': {"__lookup__"},
                 'py_expr': py_expr
             })
 
@@ -203,7 +202,7 @@ def translate_xmile(xmile_file):
             'py_name': py_name,
             'py_expr': py_expr,
             'arguments': 'x',
-            'dependencies': {"__lookup__"},
+            'dependencies': {"__lookup__": None},
             'subs': [],  # Todo later
         }
         model_elements.append(element)
@@ -276,7 +275,7 @@ def translate_xmile(xmile_file):
             initial_condition=py_initial_value,
             deps=element["dependencies"])
         element['py_expr'] = py_expr
-        element["dependencies"] = {new_structure[-1]["py_name"]}
+        element["dependencies"] = {new_structure[-1]["py_name"]: 1}
         model_elements.append(element)
         model_elements += new_structure
 
@@ -376,7 +375,7 @@ def translate_xmile(xmile_file):
         'py_name': 'saveper',
         'py_expr': 'time_step()',
         'subs': None,
-        'dependencies': {'time_step'},
+        'dependencies': {'time_step': 1},
         'arguments': '',
     })
 
@@ -392,7 +391,6 @@ def translate_xmile(xmile_file):
         for element in build_elements
         if element["dependencies"] is not None
     }
-    utils.replace_set_by_none(dependencies)
     file_name, file_extension = os.path.splitext(xmile_file)
     outfile_name = file_name + '.py'
 

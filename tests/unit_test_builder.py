@@ -3,7 +3,6 @@ import textwrap
 from unittest import TestCase
 
 import numpy as np
-from pysd import cache
 from numbers import Number
 import xarray as xr
 
@@ -12,7 +11,7 @@ def runner(string, ns=None):
     code = compile(string, '<string>', 'exec')
     if not ns:
         ns = dict()
-    ns.update({'cache': cache, 'xr': xr, 'np': np})
+    ns.update({'xr': xr, 'np': np})
     exec(code, ns)
     return ns
 
@@ -91,10 +90,125 @@ class TestBuildFunctionCall(TestCase):
             "module": "functions",
         }
 
-        dependencies = {'a', 'b'}
+        dependencies = {'a': 1, 'b': 2}
         self.assertNotIn('time', dependencies)
-        build_function_call(pulse, args, dependencies)
+        self.assertEqual(build_function_call(pulse, args, dependencies),
+                         "pulse(__data['time'], a, b)")
         self.assertIn('time', dependencies)
+
+    def test_build_function_ignore_arguments(self):
+        from pysd.py_backend.builder import build_function_call
+        args = ['a', 'b', 'c']
+        my_func_conf = {
+            "name": "my_func",
+            "parameters": [
+                {"name": "A"},
+                {"name": "B", "type": "ignore"},
+                {"name": "C"}
+            ]
+        }
+
+        self.assertEqual(build_function_call(my_func_conf, args),
+                         "my_func(a, c)")
+
+        my_func_conf = {
+            "name": "my_func",
+            "parameters": [
+                {"name": "A", "type": "ignore"},
+                {"name": "B"},
+                {"name": "C", "type": "ignore"}
+            ]
+        }
+
+        self.assertEqual(build_function_call(my_func_conf, args),
+                         "my_func(b)")
+
+    def test_build_function_lambda_arguments(self):
+        from pysd.py_backend.builder import build_function_call
+        args = ['a', 'b', 'c']
+        my_func_conf = {
+            "name": "my_func",
+            "parameters": [
+                {"name": "A"},
+                {"name": "B", "type": "lambda"},
+                {"name": "C"}
+            ]
+        }
+
+        self.assertEqual(build_function_call(my_func_conf, args),
+                         "my_func(a, lambda: b, c)")
+
+        my_func_conf = {
+            "name": "my_func",
+            "parameters": [
+                {"name": "A", "type": "lambda"},
+                {"name": "B"},
+                {"name": "C", "type": "lambda"}
+            ]
+        }
+
+        self.assertEqual(build_function_call(my_func_conf, args),
+                         "my_func(lambda: a, b, lambda: c)")
+
+    def test_build_function_optional_arguments(self):
+        from pysd.py_backend.builder import build_function_call
+        my_func_conf = {
+            "name": "my_func",
+            "parameters": [
+                {"name": "A"},
+                {"name": "B"},
+                {"name": "C", "optional": True}
+            ]
+        }
+
+        self.assertEqual(build_function_call(my_func_conf, ['a', 'b', 'c']),
+                         "my_func(a, b, c)")
+
+        self.assertEqual(build_function_call(my_func_conf, ['a', 'b']),
+                         "my_func(a, b)")
+
+        # optional lambda argument, check optional + type
+        my_func_conf = {
+            "name": "my_func",
+            "parameters": [
+                {"name": "A"},
+                {"name": "B"},
+                {"name": "C", "type": "lambda", "optional": True}
+            ]
+        }
+
+        self.assertEqual(build_function_call(my_func_conf, ['a', 'b', 'c']),
+                         "my_func(a, b, lambda: c)")
+
+        self.assertEqual(build_function_call(my_func_conf, ['a', 'b']),
+                         "my_func(a, b)")
+
+    def test_build_function_predef_arguments(self):
+        from pysd.py_backend.builder import build_function_call
+        args = ['a', 'c']
+        my_func_conf = {
+            "name": "my_func",
+            "parameters": [
+                {"name": "A"},
+                {"name": "0", "type": "predef"},
+                {"name": "C"}
+            ]
+        }
+
+        self.assertEqual(build_function_call(my_func_conf, args),
+                         "my_func(a, 0, c)")
+
+        my_func_conf = {
+            "name": "my_func",
+            "parameters": [
+                {"name": "time_step()", "type": "predef"},
+                {"name": "B"},
+                {"name": "1", "type": "predef"}
+            ]
+        }
+
+        self.assertEqual(build_function_call(my_func_conf, ["b"]),
+                         "my_func(time_step(), b, 1)")
 
 
 class TestBuild(TestCase):
@@ -164,19 +278,19 @@ class TestMergePartialElements(TestCase):
                   'subs': ['Name1', 'element1'],
                   'merge_subs': ['Name1', 'Elements'],
                   'real_name': 'A', 'doc': 'Test', 'unit': None,
-                  'eqn': 'eq1', 'lims': '', 'dependencies': {'b', 'time'},
+                  'eqn': 'eq1', 'lims': '', 'dependencies': {'b': 1, 'time': 3},
                   'kind': 'component', 'arguments': ''},
                  {'py_name': 'a', 'py_expr': 'njk',
                   'subs': ['Name1', 'element2'],
                   'merge_subs': ['Name1', 'Elements'],
                   'real_name': 'A', 'doc': None, 'unit': None,
-                  'eqn': 'eq2', 'lims': '', 'dependencies': {'c', 'time'},
+                  'eqn': 'eq2', 'lims': '', 'dependencies': {'c': 1, 'time': 5},
                   'kind': 'component', 'arguments': ''},
                  {'py_name': 'a', 'py_expr': 'as',
                   'subs': ['Name1', 'element3'],
                   'merge_subs': ['Name1', 'Elements'],
                   'real_name': 'A', 'doc': '', 'unit': None,
-                  'eqn': 'eq3', 'lims': '', 'dependencies': {'b'},
+                  'eqn': 'eq3', 'lims': '', 'dependencies': {'b': 1},
                   'kind': 'component', 'arguments': ''}]),
             [{'py_name': 'a',
               'py_expr': ['ms', 'njk', 'as'],
@@ -190,7 +304,7 @@ class TestMergePartialElements(TestCase):
               'unit': None,
               'eqn': ['eq1', 'eq2', 'eq3'],
               'lims': '',
-              'dependencies': {'b', 'c', 'time'},
+              'dependencies': {'b': 2, 'c': 1, 'time': 8},
               'arguments': ''
               }])
 
@@ -198,30 +312,30 @@ class TestMergePartialElements(TestCase):
         from pysd.py_backend.builder import merge_partial_elements
         actual = merge_partial_elements(
             [{'py_name': 'a', 'py_expr': 'ms', 'subs': ['Name1', 'element1'],
-              'merge_subs': ['Name1', 'Elements'], 'dependencies': {'b'},
+              'merge_subs': ['Name1', 'Elements'], 'dependencies': {'b': 1},
               'real_name': 'A', 'doc': 'Test', 'unit': None,
               'eqn': 'eq1', 'lims': '', 'kind': 'component', 'arguments': ''},
              {'py_name': 'a', 'py_expr': 'njk', 'subs': ['Name1', 'element2'],
-              'merge_subs': ['Name1', 'Elements'], 'dependencies': {'b'},
+              'merge_subs': ['Name1', 'Elements'], 'dependencies': {'b': 2},
               'real_name': 'A', 'doc': None, 'unit': None,
               'eqn': 'eq2', 'lims': '', 'kind': 'component', 'arguments': ''},
              {'py_name': 'a', 'py_expr': 'as', 'subs': ['Name1', 'element3'],
-              'merge_subs': ['Name1', 'Elements'], 'dependencies': {'b'},
+              'merge_subs': ['Name1', 'Elements'], 'dependencies': {'b': 1},
               'real_name': 'A', 'doc': '', 'unit': None,
               'eqn': 'eq3', 'lims': '', 'kind': 'component', 'arguments': ''},
-             {'py_name': 'b', 'py_expr': 'bgf', 'subs': ['Name1', 'element1'],
+             {'py_name': '_b', 'py_expr': 'bgf', 'subs': ['Name1', 'element1'],
               'merge_subs': ['Name1', 'Elements'], 'dependencies': {
-                  'initial': {'c'}, 'step': set()},
+                  'initial': {'c': 3}, 'step': {}},
               'real_name': 'B', 'doc': 'Test', 'unit': None,
               'eqn': 'eq4', 'lims': '', 'kind': 'component', 'arguments': ''},
-             {'py_name': 'b', 'py_expr': 'r4', 'subs': ['Name1', 'element2'],
+             {'py_name': '_b', 'py_expr': 'r4', 'subs': ['Name1', 'element2'],
               'merge_subs': ['Name1', 'Elements'], 'dependencies': {
-                  'initial': {'d'}, 'step': {'time', 'd'}},
+                  'initial': {'d': 1}, 'step': {'time': 2, 'd': 5}},
               'real_name': 'B', 'doc': None, 'unit': None,
               'eqn': 'eq5', 'lims': '', 'kind': 'component', 'arguments': ''},
-             {'py_name': 'b', 'py_expr': 'ymt', 'subs': ['Name1', 'element3'],
+             {'py_name': '_b', 'py_expr': 'ymt', 'subs': ['Name1', 'element3'],
               'merge_subs': ['Name1', 'Elements'], 'dependencies': {
-                  'initial': set(), 'step': {'time', 'a'}},
+                  'initial': {}, 'step': {'time': 3, 'a': 1}},
               'real_name': 'B', 'doc': '', 'unit': None,
               'eqn': 'eq6', 'lims': '', 'kind': 'component', 'arguments': ''}])
 
@@ -237,10 +351,10 @@ class TestMergePartialElements(TestCase):
                      'unit': None,
                      'eqn': ['eq1', 'eq2', 'eq3'],
                      'lims': '',
-                     'dependencies': {'b'},
+                     'dependencies': {'b': 4},
                      'arguments': ''
                      },
-                    {'py_name': 'b',
+                    {'py_name': '_b',
                      'py_expr': ['bgf', 'r4', 'ymt'],
                      'subs': [['Name1', 'element1'],
                               ['Name1', 'element2'],
@@ -253,8 +367,8 @@ class TestMergePartialElements(TestCase):
                      'eqn': ['eq4', 'eq5', 'eq6'],
                      'lims': '',
                      'dependencies': {
-                         'initial': {'c', 'd'},
-                         'step': {'time', 'a', 'd'}
+                         'initial': {'c': 3, 'd': 1},
+                         'step': {'time': 5, 'a': 1, 'd': 5}
                      },
                      'arguments': ''
                      }]
@@ -265,15 +379,15 @@ class TestMergePartialElements(TestCase):
         from pysd.py_backend.builder import merge_partial_elements
         actual = merge_partial_elements(
             [{'py_name': 'a', 'py_expr': 'ms', 'subs': ['Name1', 'element1'],
-              'merge_subs': ['Name1', 'Elements'], 'dependencies': {'c'},
+              'merge_subs': ['Name1', 'Elements'], 'dependencies': {'c': 1},
               'real_name': 'A', 'doc': 'Test', 'unit': None,
               'eqn': 'eq1', 'lims': '', 'kind': 'component', 'arguments': ''},
              {'py_name': 'a', 'py_expr': 'njk', 'subs': ['Name1', 'element2'],
-              'merge_subs': ['Name1', 'Elements'], 'dependencies': {'b'},
+              'merge_subs': ['Name1', 'Elements'], 'dependencies': {'b': 2},
               'real_name': 'A', 'doc': None, 'unit': None,
               'eqn': 'eq2', 'lims': '', 'kind': 'component', 'arguments': ''},
              {'py_name': 'c', 'py_expr': 'as', 'subs': ['Name1', 'element3'],
-              'merge_subs': ['Name1', 'elements3'], 'dependencies': set(),
+              'merge_subs': ['Name1', 'elements3'], 'dependencies': {},
               'real_name': 'C', 'doc': 'hi', 'unit': None,
               'eqn': 'eq3', 'lims': '', 'kind': 'component', 'arguments': ''},
              ])
@@ -288,7 +402,7 @@ class TestMergePartialElements(TestCase):
                      'unit': None,
                      'eqn': ['eq1', 'eq2'],
                      'lims': '',
-                     'dependencies': {'b', 'c'},
+                     'dependencies': {'b': 2, 'c': 1},
                      'arguments': ''
                      },
                     {'py_name': 'c',
@@ -301,16 +415,9 @@ class TestMergePartialElements(TestCase):
                      'unit': None,
                      'eqn': ['eq3'],
                      'lims': '',
-                     'dependencies': set(),
+                     'dependencies': {},
                      'arguments': ''
                      }]
 
         self.assertIn(actual[0], expected)
         self.assertIn(actual[1], expected)
-
-    def test_bad_value_kind(self):
-        from pysd.py_backend.builder import build_element
-
-        with self.assertRaises(AttributeError):
-            build_element({'kind': 'nonvalid'}, {})
-

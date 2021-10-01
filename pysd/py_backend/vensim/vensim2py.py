@@ -709,7 +709,7 @@ functions = {
             {"name": "time", "type": "time"},
             {"name": "slope"},
             {"name": "start"},
-            {"name": "finish", "optional": True},
+            {"name": "finish"},
         ],
         "module": "functions",
     },
@@ -1077,7 +1077,7 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
 
     """
 
-    element["dependencies"] = set()
+    element["dependencies"] = dict()
     # spaces important for word-based operators
     in_ops = {
         "+": "+", "-": "-", "*": "*", "/": "/", "^": "**", "=": "==",
@@ -1329,14 +1329,16 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
             return py_expr
 
         def visit_id(self, n, vc):
-            element["dependencies"].add(namespace[n.text.strip()])
-            return namespace[n.text.strip()]
+            subelement = namespace[n.text.strip()]
+            if subelement in element["dependencies"]:
+                element["dependencies"][subelement] += 1
+            else:
+                element["dependencies"][subelement] = 1
+            return subelement
 
         def visit_lookup_with_def(self, n, vc):
             """This exists because vensim has multiple ways of doing lookups.
             Which is frustrating."""
-            self.kind = "lookup"
-            element["dependencies"].add("__lookup__")
             x_val = vc[4]
             pairs = vc[11]
             mixed_list = pairs.replace("(", "").replace(")", "").split(",")
@@ -1454,17 +1456,22 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
             if "lookups" in builder_name:
                 self.arguments = "x"
                 self.kind = "lookup"
-                element["dependencies"].update(["__external__", "__lookup__"])
+                element["dependencies"].update({
+                    "__external__": None, "__lookup__": None})
             elif "constant" in builder_name:
                 # External constants
                 self.kind = "constant"
-                element["dependencies"].add("__external__")
+                element["dependencies"]["__external__"] = None
             elif "data" in builder_name:
                 # External data
                 self.kind = "component_ext_data"
-                element["dependencies"].update(["__external__", "time"])
+                element["dependencies"]["__external__"] = None
+                if "time" in element["dependencies"]:
+                    element["dependencies"]["time"] += 1
+                else:
+                    element["dependencies"]["time"] = 1
             elif "a function of" not in builder_name:
-                element["dependencies"] = {structure[-1]["py_name"]}
+                element["dependencies"] = {structure[-1]["py_name"]: 1}
 
             return name
 
@@ -1472,7 +1479,7 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
             call = vc[0]
             arglist = vc[4]
             self.kind = "component"
-            py_name = utils.make_python_identifier(call)[0]
+            py_name = utils.make_python_identifier(call)
             macro = [x for x in macro_list if x["py_name"] == py_name][
                 0
             ]  # should match once
@@ -1481,7 +1488,7 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
                 macro["py_name"], macro["file_name"],
                 macro["params"], arglist, element["dependencies"]
             )
-            element["dependencies"] = {structure[-1]["py_name"]}
+            element["dependencies"] = {structure[-1]["py_name"]: 1}
             self.new_structure += structure
             return name
 
@@ -1530,7 +1537,7 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
 def parse_lookup_expression(element, subscript_dict):
     """This syntax parses lookups that are defined with their own element"""
 
-    element["dependencies"] = set()
+    element["dependencies"] = dict()
 
     lookup_grammar = r"""
     lookup = _ "(" _ (regularLookup / excelLookup) _ ")"
@@ -1583,7 +1590,7 @@ def parse_lookup_expression(element, subscript_dict):
             trans, structure = builders["get xls lookups"](
                 element, subs_dict, arglist
             )
-            element["dependencies"].add("__external__")
+            element["dependencies"]["__external__"] = None
 
             self.translation = trans
             self.new_structure += structure
@@ -1612,15 +1619,15 @@ def translate_section(section, macro_list, sketch, root_path, subview_sep=""):
 
     # make python identifiers and track for namespace conflicts
     namespace = {"TIME": "time", "Time": "time"}  # Initialize with builtins
+
     # add macro parameters when parsing a macro section
     for param in section["params"]:
-        name, namespace = utils.make_python_identifier(param, namespace)
+        utils.make_python_identifier(param, namespace)
 
     # add macro functions to namespace
     for macro in macro_list:
         if macro["name"] != "_main_":
-            name, namespace = utils.make_python_identifier(macro["name"],
-                                                           namespace)
+            utils.make_python_identifier(macro["name"], namespace)
 
     # Create a namespace for the subscripts as these aren't used to
     # create actual python functions, but are just labels on arrays,
@@ -1652,9 +1659,8 @@ def translate_section(section, macro_list, sketch, root_path, subview_sep=""):
     # add model elements
     for element in model_elements:
         if element["kind"] not in ["subdef", "section"]:
-            element["py_name"], namespace = utils.make_python_identifier(
-                element["real_name"], namespace
-            )
+            element["py_name"] = utils.make_python_identifier(
+                element["real_name"], namespace)
             # dictionary to save the subscripts of each element so we can avoid
             # using utils.rearrange when calling them with the same dimensions
             if element["py_name"] in elements_subs_dict:
@@ -1699,7 +1705,7 @@ def translate_section(section, macro_list, sketch, root_path, subview_sep=""):
             element.update(translation)
             model_elements += new_structure
 
-            element["dependencies"].add("__lookup__")
+            element["dependencies"]["__lookup__"] = None
 
     # send the pieces to be built
     build_elements = builder.merge_partial_elements([
@@ -1713,7 +1719,6 @@ def translate_section(section, macro_list, sketch, root_path, subview_sep=""):
         for element in build_elements
         if element["dependencies"] is not None
     }
-    utils.replace_set_by_none(dependencies)
 
     # macros are built in their own separate files, and their inputs and
     # outputs are put in views/subviews
@@ -1918,7 +1923,7 @@ def translate_vensim(mdl_file, split_views, **kwargs):
             section["file_name"] = outfile_name
         else:  # separate macro elements into their own files
             section["py_name"] = utils.make_python_identifier(
-                section["name"])[0]
+                section["name"])
             section["file_name"] = os.path.join(
                 out_dir,
                 section["py_name"] + ".py")
