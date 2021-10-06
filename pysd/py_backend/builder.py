@@ -225,8 +225,7 @@ def build_modular_model(elements, subscript_dict, namespace, dependencies,
     with open(
         os.path.join(root_dir, "_dependencies_" + model_name + ".json"), "w"
     ) as outfile:
-        json.dump(dependencies, outfile, indent=4, sort_keys=True,
-                  cls=utils.SetEncoder)
+        json.dump(dependencies, outfile, indent=4, sort_keys=True)
 
 
 def _build_main_module(elements, subscript_dict, file_name):

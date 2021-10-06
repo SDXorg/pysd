@@ -369,13 +369,26 @@ class TestParse_general_expression(unittest.TestCase):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
 
         res = parse_general_expression({"expr": "Abs(-3)"})
-        self.assertEqual(res[0]["py_expr"], "abs(-3)")
+        self.assertEqual(res[0]["py_expr"], "np.abs(-3)")
 
         res = parse_general_expression({"expr": "ABS(-3)"})
-        self.assertEqual(res[0]["py_expr"], "abs(-3)")
+        self.assertEqual(res[0]["py_expr"], "np.abs(-3)")
 
         res = parse_general_expression({"expr": "aBS(-3)"})
-        self.assertEqual(res[0]["py_expr"], "abs(-3)")
+        self.assertEqual(res[0]["py_expr"], "np.abs(-3)")
+
+    def test_empty(self):
+        from warnings import catch_warnings
+        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+
+        with catch_warnings(record=True) as ws:
+            res = parse_general_expression({"expr": "", "real_name": "Var"})
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 1)
+            self.assertIn("Empty expression for 'Var'", str(wu[0].message))
+
+        self.assertEqual(res[0]["py_expr"], "None")
 
     def test_function_calls(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
@@ -384,7 +397,7 @@ class TestParse_general_expression(unittest.TestCase):
                                         "real_name": "AB",
                                         "eqn": "AB = ABS(StockA)"},
                                        {"StockA": "stocka"})
-        self.assertEqual(res[0]["py_expr"], "abs(stocka())")
+        self.assertEqual(res[0]["py_expr"], "np.abs(stocka())")
 
         res = parse_general_expression(
             {"expr": "If Then Else(A>B, 1, 0)",
@@ -477,6 +490,7 @@ class TestParse_general_expression(unittest.TestCase):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
         from pysd.py_backend.builder import Imports
 
+        Imports.reset()
         self.assertFalse(Imports._numpy)
         res = parse_general_expression({'expr': ':NA:'})
         self.assertEqual(res[0]['py_expr'], 'np.nan')
@@ -988,7 +1002,7 @@ class TestParse_general_expression(unittest.TestCase):
         )
 
         self.assertIn(
-            "abs(upper_var())",
+            "np.abs(upper_var())",
             res[0]["py_expr"], )
 
     def test_random_0_1(self):

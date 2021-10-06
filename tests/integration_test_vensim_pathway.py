@@ -201,6 +201,10 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner(test_models + '/input_functions/test_inputs.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    def test_subscripted_round(self):
+        output, canon = runner(test_models + '/subscripted_round/test_subscripted_round.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_invert_matrix(self):
         output, canon = runner(test_models + '/invert_matrix/test_invert_matrix.mdl')
         assert_frames_close(output, canon, rtol=rtol)
@@ -311,7 +315,6 @@ class TestIntegrationExamples(unittest.TestCase):
             output, canon = runner(test_models + '/repeated_subscript/test_repeated_subscript.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('in branch')
     def test_rounding(self):
         output, canon = runner(test_models + '/rounding/test_rounding.mdl')
         assert_frames_close(output, canon, rtol=rtol)

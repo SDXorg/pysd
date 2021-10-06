@@ -371,26 +371,27 @@ def make_python_identifier(string, namespace=None):
     # Remove invalid characters
     s = re.sub(r"[^\p{l}\p{m}\p{n}_]", "", s)
 
-    # If leading characters are not a letter or underscore add nvs_.
+    # If leading character is not a letter add nvs_.
     # Only letters can be leading characters.
-    if re.findall(r"^[^\p{l}_]+", s):
+    if re.findall(r"^[^\p{l}_]", s):
         s = "nvs_" + s
+    elif re.findall(r"^_", s):
+        s = "nvs" + s
 
     # reserved the names of PySD functions and methods and other vars
     # in the namespace
     used_words = reserved_words.union(namespace.values())
 
     # Check that the string is not a python identifier
-    while s in used_words:
-        if re.match(r".*?_\d+$", s):
-            i = re.match(r".*?_(\d+)$", s).groups()[0]
-            s = s.strip("_" + i) + "_" + str(int(i) + 1)
-        else:
-            s += "_1"
+    identifier = s
+    i = 1
+    while identifier in used_words:
+        identifier = s + '_' + str(i)
+        i += 1
 
-    namespace[string] = s
+    namespace[string] = identifier
 
-    return s
+    return identifier
 
 
 def make_add_identifier(identifier, build_names):
@@ -670,17 +671,6 @@ def rearrange(data, dims, coords):
 
     return None
 
-
-def round_(x):
-    """
-    Redefinition of round function to make it work with floats and xarrays
-    """
-    if isinstance(x, xr.DataArray):
-        return x.round()
-
-    return round(x)
-
-
 def simplify_subscript_input(coords, subscript_dict, return_full, merge_subs):
     """
     Parameters
@@ -888,6 +878,30 @@ def merge_nested_dicts(original_dict, dict_to_merge):
             merge_nested_dicts(original_dict[k], dict_to_merge[k])
         else:
             original_dict[k] = dict_to_merge[k]
+
+
+def update_dependency(dependency, deps_dict):
+    """
+    Update dependency in dependencies dict.
+
+    Parameters
+    ----------
+    dependency: str
+        The dependency to add to the dependency dict.
+
+    deps_dict: dict
+        The dictionary of dependencies. If dependency is in deps_dict add 1
+        to its value. Otherwise, add dependency to deps_dict with value 1.
+
+    Returns
+    -------
+    None
+
+    """
+    if dependency in deps_dict:
+        deps_dict[dependency] += 1
+    else:
+        deps_dict[dependency] = 1
 
 
 class ProgressBar:

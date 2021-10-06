@@ -2112,7 +2112,6 @@ class TestDependencies(unittest.TestCase):
         # when passing new param
         out2 = model.run(params={"constant1": new_var})
 
-
         self.assertFalse(np.all(out1 - out2 == 0))
 
         [self.assertEqual(model.cache_type[key], "step") for key in pipe]

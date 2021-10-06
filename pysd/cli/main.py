@@ -71,12 +71,12 @@ def load(model_file, missing_values, split_views, **kwargs):
     pysd.model
 
     """
-    if model_file.lower().endswith('.mdl'):
+    if model_file.lower().endswith(".mdl"):
         print("\nTranslating model file...\n")
         return pysd.read_vensim(model_file, initialize=False,
                                 missing_values=missing_values,
                                 split_views=split_views, **kwargs)
-    elif model_file.lower().endswith('.xmile'):
+    elif model_file.lower().endswith(".xmile"):
         print("\nTranslating model file...\n")
         return pysd.read_xmile(model_file, initialize=False,
                                missing_values=missing_values)
@@ -102,9 +102,9 @@ def create_configuration(model, options):
     """
     conf_dict = {
         "progress": options.progress,
-        "params": options.new_values['param'],
+        "params": options.new_values["param"],
         "initial_condition": (options.initial_time or model.time(),
-                              options.new_values['initial']),
+                              options.new_values["initial"]),
         "return_columns": options.return_columns,
         "final_time": options.final_time,
         "time_step": options.time_step,
@@ -142,11 +142,11 @@ def save(output, options):
             ))[0]\
                 + datetime.now().strftime("_output_%Y_%m_%d-%H_%M_%S_%f.tab")
 
-    if output_file.endswith('.tab'):
-        sep = '\t'
+    if output_file.endswith(".tab"):
+        sep = "\t"
     else:
-        sep = ','
+        sep = ","
 
-    output.to_csv(output_file, sep, index_label='Time')
+    output.to_csv(output_file, sep, index_label="Time")
 
-    print(f'Data saved in {output_file}')
+    print(f"Data saved in '{output_file}'")

@@ -865,7 +865,8 @@ class Macro(DynamicStateful):
         else:
             self.cache_type[element] = "run"
             for subelement in self.components._dependencies[element]:
-                if subelement.startswith("_initial_") or subelement.startswith("__"):
+                if subelement.startswith("_initial_")\
+                   or subelement.startswith("__"):
                     continue
                 if subelement not in self.cache_type:
                     self._assign_cache(subelement)
@@ -890,7 +891,8 @@ class Macro(DynamicStateful):
         if "time" in dependencies:
             return True
         for dep in dependencies:
-            if dep.startswith("_") and not dep.startswith("_initial_") and not dep.startswith("__"):
+            if dep.startswith("_") and not dep.startswith("_initial_")\
+               and not dep.startswith("__"):
                 return True
         return False
 

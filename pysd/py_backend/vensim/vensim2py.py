@@ -361,6 +361,7 @@ def get_equation_components(equation_str, root_path=None):
             self.kind = "data"
 
         def visit_test_definition(self, n, vc):
+            # TODO: add test for test
             self.kind = "test"
 
         def visit_keyword(self, n, vc):
@@ -368,6 +369,8 @@ def get_equation_components(equation_str, root_path=None):
 
         def visit_imported_subscript(self, n, vc):
             # TODO: make this less fragile
+            # TODO: allow reading the subscripts from Excel
+            # once the model has been translated
             args = [x.strip().strip("'") for x in vc[4].split(",")]
             self.subscripts += external.ExtSubscript(*args, root=root_path
                                                      ).subscript
@@ -394,6 +397,7 @@ def get_equation_components(equation_str, root_path=None):
             )
 
             if ":" in str(vc):
+                # TODO: add test for this condition
                 # Obtain subscript name and split by : and (
                 name_mapped = str(vc).split(":")[0].split("(")[1]
             else:
@@ -619,9 +623,7 @@ def parse_units(units_str):
 
 functions = {
     # element-wise functions
-    "abs": "abs",
-    "integer": "int",
-    "modulo": {"name": "np.mod", "module": "numpy"},
+    "abs": {"name": "np.abs", "module": "numpy"},
     "min": {"name": "np.minimum", "module": "numpy"},
     "max": {"name": "np.maximum", "module": "numpy"},
     "exp": {"name": "np.exp", "module": "numpy"},
@@ -635,6 +637,9 @@ functions = {
     "cosh": {"name": "np.cosh", "module": "numpy"},
     "tanh": {"name": "np.tanh", "module": "numpy"},
     "sqrt": {"name": "np.sqrt", "module": "numpy"},
+    "integer": {"name": "integer", "module": "functions"},
+    "quantum": {"name": "quantum", "module": "functions"},
+    "modulo": {"name": "modulo", "module": "functions"},
     "xidz": {"name": "xidz", "module": "functions"},
     "zidz": {"name": "zidz", "module": "functions"},
     "ln": {"name": "np.log", "module": "numpy"},
@@ -770,7 +775,6 @@ vectorial_funcs = ["sum", "prod", "vmax", "vmin"]
 # other functions
 functions_utils = {
     "lookup": {"name": "lookup", "module": "functions"},
-    "round": {"name": "round_", "module": "utils"},
     "rearrange": {"name": "rearrange", "module": "utils"},
     "DataArray": {"name": "xr.DataArray", "module": "xarray"},
 }
@@ -1330,10 +1334,7 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
 
         def visit_id(self, n, vc):
             subelement = namespace[n.text.strip()]
-            if subelement in element["dependencies"]:
-                element["dependencies"][subelement] += 1
-            else:
-                element["dependencies"][subelement] = 1
+            utils.update_dependency(subelement, element["dependencies"])
             return subelement
 
         def visit_lookup_with_def(self, n, vc):
@@ -1466,10 +1467,7 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
                 # External data
                 self.kind = "component_ext_data"
                 element["dependencies"]["__external__"] = None
-                if "time" in element["dependencies"]:
-                    element["dependencies"]["time"] += 1
-                else:
-                    element["dependencies"]["time"] = 1
+                element["dependencies"]["time"] = 1
             elif "a function of" not in builder_name:
                 element["dependencies"] = {structure[-1]["py_name"]: 1}
 
@@ -1505,6 +1503,7 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
             return "np.nan"
 
         def visit_empty(self, n, vc):
+            warnings.warn(f"Empty expression for '{element['real_name']}''.")
             return "None"
 
         def generic_visit(self, n, vc):
@@ -1640,20 +1639,13 @@ def translate_section(section, macro_list, sketch, root_path, subview_sep=""):
         if e["kind"] == "subdef":
             subscript_dict[e["real_name"]] = e["subs"]
             for compatible in e["subs_compatibility"]:
-                if compatible in subs_compatibility_dict:
-                    subs_compatibility_dict[compatible].update(
-                        e["subs_compatibility"][compatible]
-                    )
-                else:
-                    subs_compatibility_dict[compatible] = set(
-                        e["subs_compatibility"][compatible]
-                    )
+                subs_compatibility_dict[compatible] =\
+                    set(e["subs_compatibility"][compatible])
                 # check if copy
                 if not subscript_dict[compatible]:
                     # copy subscript to subscript_dict
-                    subscript_dict[compatible] = subscript_dict[
-                        e["subs_compatibility"][compatible][0]
-                    ]
+                    subscript_dict[compatible] =\
+                        subscript_dict[e["subs_compatibility"][compatible][0]]
 
     elements_subs_dict = {}
     # add model elements
@@ -1890,7 +1882,7 @@ def translate_vensim(mdl_file, split_views, **kwargs):
 
     Examples
     --------
-    >>> translate_vensim('../tests/test-models/tests/subscript_3d_arrays/test_subscript_3d_arrays.mdl')
+    >>> translate_vensim('teacup.mdl')
 
     """
     # character used to place subviews in the parent view folder

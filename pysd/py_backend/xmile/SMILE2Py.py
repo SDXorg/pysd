@@ -20,7 +20,7 @@ import parsimonious
 from parsimonious.nodes import NodeVisitor
 import pkg_resources
 import re
-from .. import builder
+from .. import builder, utils
 
 # Here we define which python function each XMILE keyword corresponds to
 functions = {
@@ -246,12 +246,7 @@ def format_word_list(word_list):
 
 
 class SMILEParser(NodeVisitor):
-    def __init__(self, model_namespace=None, subscript_dict=None):
-        if model_namespace is None:
-            model_namespace = {}
-
-        if subscript_dict is None:
-            subscript_dict = {}
+    def __init__(self, model_namespace={}, subscript_dict={}):
 
         self.model_namespace = model_namespace
         self.subscript_dict = subscript_dict
@@ -316,20 +311,12 @@ class SMILEParser(NodeVisitor):
 
     def visit_identifier(self, n, vc):
         subelement = self.extended_model_namespace[n.text]
-        if subelement in self.element["dependencies"]:
-            self.element["dependencies"][subelement] += 1
-        else:
-            self.element["dependencies"][subelement] = 1
+        utils.update_dependency(subelement, self.element["dependencies"])
         return subelement + '()'
-        self.element["dependencies"].add(self.extended_model_namespace[n.text])
-        return self.extended_model_namespace[n.text] + '()'
 
     def visit_quoted_identifier(self, n, vc):
         subelement = self.extended_model_namespace[vc[1]]
-        if subelement in self.element["dependencies"]:
-            self.element["dependencies"][subelement] += 1
-        else:
-            self.element["dependencies"][subelement] = 1
+        utils.update_dependency(subelement, self.element["dependencies"])
         return subelement + '()'
 
     def visit_call(self, n, vc):

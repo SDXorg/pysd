@@ -424,6 +424,72 @@ def log(x, base):
     return np.log(x) / np.log(base)
 
 
+def integer(x):
+    """
+    Implements Vensim's INTEGER function.
+
+    Parameters
+    ----------
+    x: float or xarray.DataArray
+        Input value.
+
+    Returns
+    -------
+    Returns integer part of x.
+
+    """
+    if isinstance(x, xr.DataArray):
+        return x.astype(int)
+    else:
+        return int(x)
+
+
+def quantum(a, b):
+    """
+    Implements Vensim's QUANTUM function.
+
+    Parameters
+    ----------
+    a: float or xarray.DataArray
+        Input value.
+    b: float or xarray.DataArray
+        Input value.
+
+    Returns
+    -------
+    quantum: float or xarray.DataArray
+        If b > 0 returns b * integer(a/b). Otherwise, returns a.
+
+    """
+    if isinstance(b, xr.DataArray):
+        return xr.where(b < small_vensim, a, b*integer(a/b))
+    if b < small_vensim:
+        return a
+    else:
+        return b*integer(a/b)
+
+
+def modulo(x, m):
+    """
+    Implements Vensim's MODULO function.
+
+    Parameters
+    ----------
+    x: float or xarray.DataArray
+        Input value.
+
+    m: float or xarray.DataArray
+        Modulo to compute.
+
+    Returns
+    -------
+    Returns x modulo m, if x is smaller than 0 the result is given in
+    the range (-m, 0] as Vensim does. x - quantum(x, m)
+
+    """
+    return x - quantum(x, m)
+
+
 def sum(x, dim=None):
     """
     Implements Vensim's SUM function.
