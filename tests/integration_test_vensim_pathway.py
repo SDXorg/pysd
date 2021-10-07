@@ -91,6 +91,10 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner(test_models + '/exponentiation/exponentiation.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    def test_forecast(self):
+        output, canon = runner(test_models + '/forecast/test_forecast.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_function_capitalization(self):
         output, canon = runner(test_models + '/function_capitalization/test_function_capitalization.mdl')
         assert_frames_close(output, canon, rtol=rtol)

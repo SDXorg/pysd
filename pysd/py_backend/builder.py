@@ -152,9 +152,9 @@ def build_modular_model(elements, subscript_dict, namespace, main_filename,
     main_filename: str
         The name of the file to write the main module of the model to.
 
-    elements_per_module: dict
-        Contains the names of the modules as keys and the variables in
-        each specific module inside a list as values.
+    elements_per_view: dict
+        Contains the names of the modules and submodules as keys and the
+        variables in each specific module inside a list as values.
 
     """
     root_dir = os.path.dirname(main_filename)
@@ -163,53 +163,49 @@ def build_modular_model(elements, subscript_dict, namespace, main_filename,
     # create modules directory if it does not exist
     os.makedirs(modules_dir, exist_ok=True)
 
-    # check if there are subviews or only main views
-    subviews = all(isinstance(n, dict) for n in elements_per_view.values())
-
-    all_views = elements_per_view.keys()
-    # creating the rest of files per module (this needs to be run before the
-    # main module, as it updates the import_modules)
-    processed_elements = []
-    for view_name in all_views:
-        view_elems = []
-        if not subviews:  # only main views
+    def process_views_tree(view_name,
+                           view_content,
+                           working_directory,
+                           processed_elements):
+        """
+        Creates a directory tree based on the elements_per_view dictionary.
+        If it's the final view, it creates a file, if not, it creates a folder.
+        """
+        if isinstance(view_content, list):  # will become a module
+            subview_elems = []
             for element in elements:
-                if element.get("py_name", None) in \
-                   elements_per_view[view_name] or \
-                   element.get("parent_name", None) in \
-                   elements_per_view[view_name]:
-                    view_elems.append(element)
+                if element.get("py_name") in view_content or \
+                   element.get("parent_name", None) in view_content:
+                    subview_elems.append(element)
 
-            _build_separate_module(view_elems, subscript_dict, view_name,
-                                   modules_dir)
+            _build_separate_module(subview_elems, subscript_dict,
+                                   view_name, working_directory)
+            processed_elements += subview_elems
 
-        else:
-            # create subdirectory
-            view_dir = os.path.join(modules_dir, view_name)
-            os.makedirs(view_dir, exist_ok=True)
+        else:  # the current view has subviews
+            working_directory = os.path.join(working_directory, view_name)
+            os.makedirs(working_directory, exist_ok=True)
 
-            for subview_name in elements_per_view[view_name].keys():
-                subview_elems = []
-                for element in elements:
-                    if element.get("py_name", None) in \
-                       elements_per_view[view_name][subview_name] or \
-                       element.get("parent_name", None) in \
-                       elements_per_view[view_name][subview_name]:
-                        subview_elems.append(element)
+            for subview_name, subview_content in view_content.items():
+                process_views_tree(subview_name,
+                                   subview_content,
+                                   working_directory,
+                                   processed_elements)
 
-                _build_separate_module(subview_elems, subscript_dict,
-                                       subview_name, view_dir)
-                view_elems += subview_elems
-
-        processed_elements += view_elems
+    processed_elements = []
+    for view_name, view_content in elements_per_view.items():
+        process_views_tree(view_name,
+                           view_content,
+                           modules_dir,
+                           processed_elements)
 
     # the unprocessed will go in the main file
     unprocessed_elements = [
         element for element in elements if element not in processed_elements
     ]
+
     # building main file using the build function
-    _build_main_module(unprocessed_elements, subscript_dict,
-                       main_filename, subviews)
+    _build_main_module(unprocessed_elements, subscript_dict, main_filename)
 
     # create json file for the modules and corresponding model elements
     with open(os.path.join(modules_dir, "_modules.json"), "w") as outfile:
@@ -228,7 +224,7 @@ def build_modular_model(elements, subscript_dict, namespace, main_filename,
         json.dump(subscript_dict, outfile, indent=4, sort_keys=True)
 
 
-def _build_main_module(elements, subscript_dict, file_name, subviews):
+def _build_main_module(elements, subscript_dict, file_name):
     """
     Constructs and writes the python representation of the main model
     module, when the split_views=True in the read_vensim function.
@@ -252,10 +248,6 @@ def _build_main_module(elements, subscript_dict, file_name, subviews):
     file_name: str
         Path of the file where the main module will be stored.
 
-    subviews: bool
-        True or false depending on whether the views are split in subviews or
-        not.
-
     Returns
     -------
     None or text: None or str
@@ -277,7 +269,7 @@ def _build_main_module(elements, subscript_dict, file_name, subviews):
     funcs = _generate_functions(elements, subscript_dict)
 
     Imports.add("utils", "load_model_data")
-    Imports.add("utils", "open_module")
+    Imports.add("utils", "load_modules")
 
     # import of needed functions and packages
     text, root = Imports.get_header(os.path.basename(file_name),
@@ -302,21 +294,9 @@ def _build_main_module(elements, subscript_dict, file_name, subviews):
 
     text += _get_control_vars(control_vars)
 
-    if not subviews:
-        text += textwrap.dedent("""
-        # load modules from the modules_%(outfile)s directory
-        for module in _modules:
-            exec(open_module(_root, "%(outfile)s", module))
-
-        """ % {
-            "outfile": os.path.basename(file_name).split(".")[0],
-        })
-    else:
-        text += textwrap.dedent("""
-        # load submodules from subdirs in modules_%(outfile)s directory
-        for mod_name, mod_submods in _modules.items():
-            for submod_name in mod_submods.keys():
-                exec(open_module(_root, "%(outfile)s", mod_name, submod_name))
+    text += textwrap.dedent("""
+        # load modules from modules_%(outfile)s directory
+        exec(load_modules("modules_%(outfile)s", _modules, _root, []))
 
         """ % {
             "outfile": os.path.basename(file_name).split(".")[0],
@@ -790,7 +770,7 @@ def add_stock(identifier, expression, initial_condition, subs, merge_subs):
 
     merge_subs: list of strings
         List of the final subscript range of the python array after
-        merging with other objects
+        merging with other objects.
 
     Returns
     -------
@@ -920,7 +900,7 @@ def add_delay(identifier, delay_input, delay_time, initial_value, order,
 
     merge_subs: list of strings
         List of the final subscript range of the python array after
-        merging with other objects
+        merging with other objects.
 
     Returns
     -------
@@ -1119,7 +1099,7 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
 
     merge_subs: list of strings
         List of the final subscript range of the python array after
-        merging with other objects
+        merging with other objects.
 
     Returns
     -------
@@ -1211,6 +1191,103 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
     return "%s()" % py_name, new_structure
 
 
+def add_forecast(identifier, forecast_input, average_time, horizon,
+                 subs, merge_subs):
+    """
+    Constructs Forecast object.
+
+    Parameters
+    ----------
+    identifier: str
+        The python-safe name of the forecast.
+
+    forecast_input: str
+        Input of the forecast.
+
+    average_time: str
+        Average time of the forecast.
+
+    horizon: str
+        Horizon for the forecast.
+
+    subs: list of strings
+        List of strings of subscript indices that correspond to the
+        list of expressions, and collectively define the shape of the output.
+
+    merge_subs: list of strings
+        List of the final subscript range of the python array after
+        merging with other objects.
+
+    Returns
+    -------
+    reference: str
+        Reference to the forecast object `__call__` method, which will return
+        the output of the forecast process.
+
+    new_structure: list
+        List of element construction dictionaries for the builder to assemble.
+
+    """
+    Imports.add("functions", "Forecast")
+
+    new_structure = []
+    py_name = "_forecast_%s" % identifier
+
+    if len(subs) == 0:
+        stateful_py_expr = "Forecast(lambda: %s, lambda: %s,"\
+                           " lambda: %s, '%s')" % (
+                               forecast_input, average_time,
+                               horizon, py_name)
+
+    else:
+        # only need to re-dimension init as xarray will take care of other
+        stateful_py_expr = "Forecast(_forecast_input_%s, lambda: %s,"\
+                           " lambda: %s, '%s')" % (
+                               identifier, average_time,
+                               horizon, py_name)
+
+        # following elements not specified in the model file, but must exist
+        # create the delay initialization element
+        new_structure.append(
+            {
+                "py_name": "_forecast_input_%s" % identifier,
+                "parent_name": identifier,
+                "real_name": "Implicit",
+                "kind": "setup",  # not specified in the model file, but must
+                # exist
+                "py_expr": forecast_input,
+                "subs": subs,
+                "merge_subs": merge_subs,
+                "doc": "Provides input for %s function"
+                        % identifier,
+                "unit": "See docs for %s" % identifier,
+                "lims": "None",
+                "eqn": "None",
+                "arguments": "",
+            }
+        )
+
+    new_structure.append(
+        {
+            "py_name": py_name,
+            "parent_name": identifier,
+            "real_name": "Forecast of %s" % forecast_input,
+            "doc": "Forecast average time: %s \n Horizon %s"
+            % (average_time, horizon),
+            "py_expr": stateful_py_expr,
+            "unit": "None",
+            "lims": "None",
+            "eqn": "None",
+            "subs": "",
+            "merge_subs": None,
+            "kind": "stateful",
+            "arguments": "",
+        }
+    )
+
+    return "%s()" % py_name, new_structure
+
+
 def add_sample_if_true(identifier, condition, actual_value, initial_value,
                        subs, merge_subs):
     """
@@ -1239,7 +1316,7 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value,
 
     merge_subs: list of strings
         List of the final subscript range of the python array after
-        merging with other objects
+        merging with other objects.
 
     Returns
     -------
@@ -1338,7 +1415,7 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order,
 
     merge_subs: list of strings
         List of the final subscript range of the python array after
-        merging with other objects
+       .
 
     Returns
     -------
@@ -1448,7 +1525,7 @@ def add_n_trend(identifier, trend_input, average_time, initial_trend,
         Average time of the trend.
 
     trend_initial: str
-        This is used to initialize the trend .
+        This is used to initialize the trend.
 
     subs: list of strings
         List of strings of subscript indices that correspond to the
@@ -1456,7 +1533,7 @@ def add_n_trend(identifier, trend_input, average_time, initial_trend,
 
     merge_subs: list of strings
         List of the final subscript range of the python array after
-        merging with other objects
+        merging with other objects.
 
     Returns
     -------
@@ -1838,12 +1915,15 @@ def add_ext_lookup(identifier, file_name, tab, x_row_or_col, cell,
     return "%s(x)" % external["py_name"], [external]
 
 
-def add_macro(macro_name, filename, arg_names, arg_vals):
+def add_macro(identifier, macro_name, filename, arg_names, arg_vals):
     """
-    Constructs a stateful object instantiating a 'Macro'
+    Constructs a stateful object instantiating a 'Macro'.
 
     Parameters
     ----------
+    identifier: str
+        The python-safe name of the element that calls the macro.
+
     macro_name: str
         Python safe name for macro.
 
@@ -1856,16 +1936,16 @@ def add_macro(macro_name, filename, arg_names, arg_vals):
     Returns
     -------
     reference: str
-        reference to the Initial object `__call__` method,
-        which will return the first calculated value of `initial_input`
+        Reference to the Initial object `__call__` method,
+        which will return the first calculated value of `initial_input`.
+
     new_structure: list
-        list of element construction dictionaries for the builder to assemble
+        List of element construction dictionaries for the builder to assemble.
 
     """
     Imports.add("functions", "Macro")
 
-    py_name = "_macro_" + macro_name + "_" + "_".join(
-        [utils.make_python_identifier(f)[0] for f in arg_vals])
+    py_name = "_macro_" + macro_name + "_" + identifier
 
     func_args = "{ %s }" % ", ".join(
         ["'%s': lambda: %s" % (key, val) for key, val in zip(arg_names,
@@ -1873,7 +1953,7 @@ def add_macro(macro_name, filename, arg_names, arg_vals):
 
     stateful = {
         "py_name": py_name,
-        "parent_name": macro_name,
+        "parent_name": identifier,
         "real_name": "Macro Instantiation of " + macro_name,
         "doc": "Instantiates the Macro",
         "py_expr": "Macro('%s', %s, '%s',"
@@ -1940,8 +2020,11 @@ def build_function_call(function_def, user_arguments):
                                 delayed runtime evaluation in the method call
                 "time",       - provide access to current instance of
                                 time object
-                "scope"       - provide access to current instance of
+                "scope",      - provide access to current instance of
                                 scope object (instance of Macro object)
+                "subs_range_to_list"
+                              - provides the list of subscripts in a given
+                                subscript range
             ]
 
     user_arguments: list of arguments provided from model.
@@ -2000,6 +2083,7 @@ def build_function_call(function_def, user_arguments):
                     "lambda": "lambda: " + user_argument,
                     "time": "__data['time']",
                     "scope": "__data['scope']",
+                    "subs_range_to_list": f"_subscript_dict['{user_argument}']"
                 }[parameter_type]
             )
 

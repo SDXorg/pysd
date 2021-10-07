@@ -388,6 +388,14 @@ class External(object):
             valid_values = ~np.isnan(series)
             series = series[valid_values]
             data = data[valid_values]
+            if all(np.isnan(series)):
+                raise ValueError(
+                    self.py_name + "\n"
+                    + "Dimension given in:\n"
+                    + self._file_sheet
+                    + "\t{}:\t{}\n".format(series_across, self.x_row_or_col)
+                    + " has length 0"
+                    )
             if self.missing == "warning":
                 warnings.warn(
                   self.py_name + "\n"
@@ -419,7 +427,6 @@ class External(object):
                                     series_across, self.x_row_or_col)
                                  + " has repeated values")
 
-
         # Check for missing values in data
         if np.any(np.isnan(data)) and self.missing != "keep":
             if series_across == "name":
@@ -430,13 +437,19 @@ class External(object):
             if self.missing == "warning":
                 # Fill missing values with the chosen interpolation method
                 # what Vensim does during running for DATA
+                if self.interp != "raw":
+                    interpolate_message =\
+                        " the corresponding value will be filled "\
+                        + "with the interpolation method of the object."
+                else:
+                    interpolate_message = ""
+
                 warnings.warn(
                     self.py_name + "\n"
                     + "Data value missing or non-valid in:\n"
                     + self._file_sheet
                     + "\t{}:\t{}\n".format(cell_type, self.cell)
-                    + " the corresponding value will be filled "
-                    + "with the interpolation method of the object.\n\n"
+                    + interpolate_message + "\n\n"
                     )
             elif self.missing == "raise":
                 raise ValueError(
@@ -446,7 +459,8 @@ class External(object):
                     + "\t{}:\t{}\n".format(cell_type, self.cell)
                     )
             # fill values
-            self._fill_missing(series, data)
+            if self.interp != "raw":
+                self._fill_missing(series, data)
 
         reshape_dims = tuple([len(series)] + utils.compute_shape(self.coords))
 
@@ -483,17 +497,29 @@ class External(object):
         """
         # if data is 2dims we need to interpolate
         datanan = np.isnan(data)
+        keeping_nan = False
         if len(data.shape) == 1:
-            data[datanan] = self._interpolate_missing(
-                series[datanan],
-                series[~datanan],
-                data[~datanan])
+            if not np.all(datanan):
+                data[datanan] = self._interpolate_missing(
+                    series[datanan],
+                    series[~datanan],
+                    data[~datanan])
+            else:
+                keeping_nan = True
         else:
             for i, nanlist in enumerate(list(datanan.transpose())):
-                data[nanlist, i] = self._interpolate_missing(
-                    series[nanlist],
-                    series[~nanlist],
-                    data[~nanlist][:, i])
+                if not np.all(nanlist):
+                    data[nanlist, i] = self._interpolate_missing(
+                        series[nanlist],
+                        series[~nanlist],
+                        data[~nanlist][:, i])
+                else:
+                    keeping_nan = True
+
+        if keeping_nan:
+            warnings.warn(
+                "Not able to interpolate some values..."
+                " keeping them as missing.\n")
 
     def _interpolate_missing(self, x, xr, yr):
         """
@@ -516,9 +542,7 @@ class External(object):
         """
         y = np.empty_like(x, dtype=float)
         for i, value in enumerate(x):
-            if self.interp == "raw":
-                y[i] = np.nan
-            elif value >= xr[-1]:
+            if value >= xr[-1]:
                 y[i] = yr[-1]
             elif value <= xr[0]:
                 y[i] = yr[0]

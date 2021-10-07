@@ -67,9 +67,9 @@ In a Vensim model with three separate views (e.g. `view_1`, `view_2` and `view_3
 
 .. note ::
     Often, modelers wish to organise views further. To that end, a common practice is to include a particular character in the View name to indicate that what comes after it is the name of the subview. For instance, we could name one view as `ENERGY.Supply` and another one as `ENERGY.Demand`.
-    In that particular case, setting the `subview_sep` kwarg equal to `"."`, as in the code below, would name the translated views as `demand.py` and `supply.py` and place them inside the `ENERGY` folder::
+    In that particular case, setting the `subview_sep` kwarg equal to `["."]`, as in the code below, would name the translated views as `demand.py` and `supply.py` and place them inside the `ENERGY` folder::
     
-      read_vensim("many_views_model.mdl", split_views=True, subview_sep=".")
+      read_vensim("many_views_model.mdl", split_views=True, subview_sep=["."])
 
 If macros are present, they will be self-contained in files named as the macro itself. The macro inner variables will be placed inside the module that corresponds with the view in which they were defined.
 
