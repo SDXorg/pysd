@@ -512,6 +512,8 @@ def make_flat_df(df, return_addresses, flatten=False):
     """
     cols_to_remove = set()
     rename_cols = {}
+    # TODO check if it is possible to improve the performance of this function
+    # avoiding pandas PerformanceWarning
     for real_name, (pyname, address) in return_addresses.items():
         if address:
             cols_to_remove.add(pyname)
@@ -670,6 +672,7 @@ def rearrange(data, dims, coords):
         return xr.DataArray(data, coords, dims)
 
     return None
+
 
 def simplify_subscript_input(coords, subscript_dict, return_full, merge_subs):
     """

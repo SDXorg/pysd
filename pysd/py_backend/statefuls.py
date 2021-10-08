@@ -21,6 +21,7 @@ from . import utils
 from .functions import zidz, if_then_else
 from .external import External, Excels
 from .decorators import Cache, constant_cache
+from .time import Time
 
 from pysd._version import __version__
 
@@ -36,6 +37,7 @@ class Stateful(object):
     def __init__(self):
         self._state = None
         self.shape_info = None
+        self.py_name = ""
 
     def __call__(self, *args, **kwargs):
         return self.state
@@ -43,8 +45,10 @@ class Stateful(object):
     @property
     def state(self):
         if self._state is None:
-            raise AttributeError('Attempt to call stateful element'
-                                 + ' before it is initialized.')
+            raise AttributeError(
+                self.py_name
+                + "\nAttempt to call stateful element"
+                + " before it is initialized.")
         return self._state
 
     @state.setter
@@ -73,7 +77,7 @@ class Integ(DynamicStateful):
     """
     Implements INTEG function
     """
-    def __init__(self, ddt, initial_value, py_name="Integ object"):
+    def __init__(self, ddt, initial_value, py_name):
         """
 
         Parameters
@@ -101,9 +105,7 @@ class Integ(DynamicStateful):
                                'coords': self.state.coords}
 
     def export(self):
-        return {self.py_name: {
-            'state': self.state,
-            'shape_info': self.shape_info}}
+        return {'state': self.state, 'shape_info': self.shape_info}
 
 
 class Delay(DynamicStateful):
@@ -117,8 +119,8 @@ class Delay(DynamicStateful):
     # whatever is convenient. This method forces them to acknowledge that
     # additional structure is being created in the delay object.
 
-    def __init__(self, delay_input, delay_time, initial_value, order,
-                 tstep=lambda: 0, py_name="Delay object"):
+    def __init__(self, delay_input, delay_time, initial_value, order, tstep,
+                 py_name):
         """
 
         Parameters
@@ -187,9 +189,7 @@ class Delay(DynamicStateful):
         return (inflows - outflows) * self.order
 
     def export(self):
-        return {self.py_name: {
-            'state': self.state,
-            'shape_info': self.shape_info}}
+        return {'state': self.state, 'shape_info': self.shape_info}
 
 
 class DelayN(DynamicStateful):
@@ -203,8 +203,8 @@ class DelayN(DynamicStateful):
     # whatever is convenient. This method forces them to acknowledge that
     # additional structure is being created in the delay object.
 
-    def __init__(self, delay_input, delay_time, initial_value, order,
-                 tstep, py_name):
+    def __init__(self, delay_input, delay_time, initial_value, order, tstep,
+                 py_name):
         """
 
         Parameters
@@ -285,10 +285,8 @@ class DelayN(DynamicStateful):
         return (inflows - outflows)*self.order
 
     def export(self):
-        return {self.py_name: {
-            'state': self.state,
-            'times': self.times,
-            'shape_info': self.shape_info}}
+        return {'state': self.state, 'times': self.times,
+                'shape_info': self.shape_info}
 
 
 class DelayFixed(DynamicStateful):
@@ -351,10 +349,8 @@ class DelayFixed(DynamicStateful):
         self.state = self.pipe[self.pointer]
 
     def export(self):
-        return {self.py_name: {
-            'state': self.state,
-            'pointer': self.pointer,
-            'pipe': self.pipe}}
+        return {'state': self.state, 'pointer': self.pointer,
+                'pipe': self.pipe}
 
 
 class Forecast(DynamicStateful):
@@ -402,9 +398,7 @@ class Forecast(DynamicStateful):
         return (self.input() - self.state) / self.average_time()
 
     def export(self):
-        return {self.py_name: {
-            'state': self.state,
-            'shape_info': self.shape_info}}
+        return {'state': self.state, 'shape_info': self.shape_info}
 
 
 class Smooth(DynamicStateful):
@@ -412,7 +406,7 @@ class Smooth(DynamicStateful):
     Implements SMOOTH function
     """
     def __init__(self, smooth_input, smooth_time, initial_value, order,
-                 py_name="Smooth object"):
+                 py_name):
         """
 
         Parameters
@@ -465,17 +459,14 @@ class Smooth(DynamicStateful):
         return (targets - self.state) * self.order / self.smooth_time_func()
 
     def export(self):
-        return {self.py_name: {
-            'state': self.state,
-            'shape_info': self.shape_info}}
+        return {'state': self.state, 'shape_info': self.shape_info}
 
 
 class Trend(DynamicStateful):
     """
     Implements TREND function
     """
-    def __init__(self, trend_input, average_time, initial_trend,
-                 py_name="Trend object"):
+    def __init__(self, trend_input, average_time, initial_trend, py_name):
         """
 
         Parameters
@@ -513,14 +504,11 @@ class Trend(DynamicStateful):
         return (self.input_func() - self.state) / self.average_time_function()
 
     def export(self):
-        return {self.py_name: {
-            'state': self.state,
-            'shape_info': self.shape_info}}
+        return {'state': self.state, 'shape_info': self.shape_info}
 
 
 class SampleIfTrue(DynamicStateful):
-    def __init__(self, condition, actual_value, initial_value,
-                 py_name="SampleIfTrue object"):
+    def __init__(self, condition, actual_value, initial_value, py_name):
         """
 
         Parameters
@@ -560,16 +548,14 @@ class SampleIfTrue(DynamicStateful):
                                                  lambda: self.state)
 
     def export(self):
-        return {self.py_name: {
-            'state': self.state,
-            'shape_info': self.shape_info}}
+        return {'state': self.state, 'shape_info': self.shape_info}
 
 
 class Initial(Stateful):
     """
     Implements INITIAL function
     """
-    def __init__(self, initial_value, py_name="Initial object"):
+    def __init__(self, initial_value, py_name):
         """
 
         Parameters
@@ -589,8 +575,7 @@ class Initial(Stateful):
             self.state = init_val
 
     def export(self):
-        return {self.py_name: {
-            'state': self.state}}
+        return {'state': self.state}
 
 
 class Macro(DynamicStateful):
@@ -662,10 +647,11 @@ class Macro(DynamicStateful):
                     self.components._namespace[param]] = {"time"}
 
         # Get the collections of stateful elements and external elements
-        self._stateful_elements = [
-            getattr(self.components, name) for name in dir(self.components)
+        self._stateful_elements = {
+            name: getattr(self.components, name)
+            for name in dir(self.components)
             if isinstance(getattr(self.components, name), Stateful)
-        ]
+        }
         self._dynamicstateful_elements = [
             getattr(self.components, name) for name in dir(self.components)
             if isinstance(getattr(self.components, name), DynamicStateful)
@@ -912,6 +898,8 @@ class Macro(DynamicStateful):
         if self.time is None:
             self.time = self.time_initialization()
 
+        # Reset time to the initial one
+        self.time.reset()
         self.cache.clean()
 
         self.components._init_outer_references({
@@ -926,13 +914,8 @@ class Macro(DynamicStateful):
         Excels.clean()
 
         # Initialize stateful objects
-        remaining = set(self._stateful_elements)
         for element_name in self.initialize_order:
-            for element in remaining:
-                if element.py_name == element_name:
-                    element.initialize()
-                    break
-            remaining.remove(element)
+            self._stateful_elements[element_name].initialize()
 
     def ddt(self):
         return np.array([component.ddt() for component
@@ -963,9 +946,10 @@ class Macro(DynamicStateful):
             " different versions of PySD or xarray, current versions:\n"
             f"\tPySD {__version__}\n\txarray {xr.__version__}\n"
         )
-        stateful_elements = {}
-        [stateful_elements.update(component.export()) for component
-         in self._stateful_elements]
+        stateful_elements = {
+            name: element.export()
+            for name, element in self._stateful_elements.items()
+        }
 
         with open(file_name, 'wb') as file:
             pickle.dump(
@@ -988,7 +972,7 @@ class Macro(DynamicStateful):
             time, stateful_dict, metadata = pickle.load(file)
 
         if __version__ != metadata['pysd']\
-           or xr.__version__ != metadata['xarray']:
+           or xr.__version__ != metadata['xarray']:  # pragma: no cover
             warnings.warn(
                 "\nCompatibility of exported states could be broken between"
                 " different versions of PySD or xarray. Current versions:\n"
@@ -996,9 +980,9 @@ class Macro(DynamicStateful):
                 "Loaded versions:\n"
                 f"\tPySD {metadata['pysd']}\n\txarray {metadata['xarray']}\n"
                 )
-        self.set_stateful(stateful_dict)
 
-        self.time.update(time)
+        self.set_stateful(stateful_dict)
+        self.time.set_control_vars(initial=time)
 
     def get_args(self, param):
         """
@@ -1316,7 +1300,7 @@ class Macro(DynamicStateful):
             original model file names
 
         """
-        self.time.update(t)
+        self.time.set_control_vars(initial=t)
         self.clean_caches()
         stateful_name = "_NONE"
         # TODO make this more solid, link with builder or next TODO?
@@ -1328,12 +1312,12 @@ class Macro(DynamicStateful):
             component_name = utils.get_value_by_insensitive_key_or_value(
                 key, self.components._namespace)
             if component_name is not None:
-                for element in self._stateful_elements:
+                for element_name in self._stateful_elements.keys():
                     # TODO make this more solid, add link between stateful
                     # objects and model vars
                     for init in stateful_init:
-                        if init + component_name == element.py_name:
-                            stateful_name = element.py_name
+                        if init + component_name == element_name:
+                            stateful_name = element_name
             else:
                 component_name = key
                 stateful_name = key
@@ -1454,130 +1438,31 @@ class Macro(DynamicStateful):
         return string
 
 
-class Time(object):
-    def __init__(self, t=None, dt=None):
-        self._t = t
-        self._step = dt
-        self.stage = None
-
-    def __call__(self):
-        return self._t
-
-    def step(self):
-        return self._step
-
-    def update(self, value):
-        if self._t is not None:
-            self._step = value - self._t
-
-        self._t = value
-
-
 class Model(Macro):
     def __init__(self, py_model_file, initialize, missing_values):
         """ Sets up the python objects """
         super().__init__(py_model_file, None, None, Time())
         self.time.stage = 'Load'
+        self.time.set_control_vars(
+            initial=self.components._initial_time,
+            final=self.components._final_time,
+            step=self.components._time_step,
+            save=self.components._saveper
+        )
         self.missing_values = missing_values
         if initialize:
             self.initialize()
 
     def initialize(self):
         """ Initializes the simulation model """
-        self.time.update(self.components.initial_time())
         self.time.stage = 'Initialization'
         External.missing = self.missing_values
         super().initialize()
 
-    def _build_euler_timeseries(self, return_timestamps=None, final_time=None):
-        """
-        - The integration steps need to include the return values.
-        - There is no point running the model past the last return value.
-        - The last timestep will be the last in that requested for return
-        - Spacing should be at maximum what is specified by the integration
-          time step.
-        - The initial time should be the one specified by the model file,
-          OR it should be the initial condition.
-        - This function needs to be called AFTER the model is set in its
-          initial state
-        Parameters
-        ----------
-        return_timestamps: numpy array
-            Must be specified by user or built from model file before this
-            function is called.
-
-        final_time: float or None
-            Final time of the simulation. If float, the given final time
-            will be used. If None, the last return_timestamps will be used.
-            Default is None.
-
-        Returns
-        -------
-        ts: numpy array
-            The times that the integrator will use to compute time history
-
-        """
-        t_0 = self.time()
-        try:
-            t_f = return_timestamps[-1]
-        except IndexError:
-            # return_timestamps is an empty list
-            # model default final time or passed argument value
-            t_f = self.components.final_time()
-
-        if final_time is not None:
-            t_f = max(final_time, t_f)
-
-        ts = np.arange(
-            t_0,
-            t_f+self.components.time_step()/2,
-            self.components.time_step(),
-            dtype=np.float64
-        )
-
-        # Add the returned time series into the integration array.
-        # Best we can do for now. This does change the integration ever
-        # so slightly, but for well-specified models there shouldn't be
-        # sensitivity to a finer integration time step.
-        return np.sort(np.unique(np.append(ts, return_timestamps)))
-
-    def _format_return_timestamps(self, return_timestamps=None):
-        """
-        Format the passed in return timestamps value as a numpy array.
-        If no value is passed, build up array of timestamps based upon
-        model start and end times, and the 'saveper' value.
-
-        Parameters
-        ----------
-        return_timestamps: float, iterable of floats or None (optional)
-          Iterable of timestamps to return or None. Default is None.
-
-        Returns
-        -------
-        ndarray (float)
-
-        """
-        if return_timestamps is None:
-            # Build based upon model file Start, Stop times and Saveper
-            # Vensim's standard is to expect that the data set includes
-            # the `final time`, so we have to add an extra period to
-            # make sure we get that value in what numpy's `arange` gives us.
-            return np.arange(
-                self.time(),
-                self.components.final_time() + self.components.saveper()/2,
-                self.components.saveper(), dtype=float
-            )
-
-        try:
-            return np.array(return_timestamps, ndmin=1, dtype=float)
-        except Exception:
-            raise TypeError(
-                '`return_timestamps` expects an iterable of numeric values'
-                ' or a single numeric value')
-
     def run(self, params=None, return_columns=None, return_timestamps=None,
             initial_condition='original', final_time=None, time_step=None,
-            saveper=None, reload=False, progress=False, flatten_output=False):
+            saveper=None, reload=False, progress=False, flatten_output=False,
+            cache_output=True):
         """
         Simulate the model's behavior over time.
         Return a pandas dataframe with timestamps as rows,
@@ -1641,6 +1526,13 @@ class Model(Macro):
             split the xarrays in new columns following vensim's naming
             to make a totally flat output. Default is False.
 
+        cache_output: bool (optional)
+           If True, the number of calls of outputs variables will be increased
+           in 1. This helps caching output variables if they are called only
+           once. If time step = saveper it is recommended to activate this
+           feature, if time step << saveper it is recommended to deactivate it.
+           Default is True.
+
         Examples
         --------
         >>> model.run(params={'exogenous_constant': 42})
@@ -1660,19 +1552,12 @@ class Model(Macro):
 
         self.progress = progress
 
-        # TODO move control variables to a class
-        if params is None:
-            params = {}
-        if final_time:
-            params['final_time'] = final_time
-        elif return_timestamps is not None:
-            params['final_time'] =\
-                self._format_return_timestamps(return_timestamps)[-1]
-        if time_step:
-            params['time_step'] = time_step
-        if saveper:
-            params['saveper'] = saveper
-        # END TODO
+        self.time.add_return_timestamps(return_timestamps)
+        if self.time.return_timestamps is not None and not final_time:
+            final_time = self.time.return_timestamps[-1]
+
+        self.time.set_control_vars(
+            final=final_time, step=time_step, save=saveper)
 
         if params:
             self.set_components(params)
@@ -1681,25 +1566,9 @@ class Model(Macro):
         self._assign_cache_type()
 
         self.set_initial_condition(initial_condition)
-        # TODO move control variables to a class
-        # save control variables
-        replace = {
-            'initial_time': self.time()
-        }
-        # END TODO
-
-        self._add_constant_cache()
-
-        return_timestamps = self._format_return_timestamps(return_timestamps)
-
-        t_series = self._build_euler_timeseries(return_timestamps, final_time)
 
         if return_columns is None or isinstance(return_columns, str):
             return_columns = self._default_return_columns(return_columns)
-
-        self.time.stage = 'Run'
-        # need to clean cache to remove the values from active_initial
-        self.cache.clean()
 
         capture_elements, return_addresses = utils.get_return_elements(
             return_columns, self.components._namespace)
@@ -1707,10 +1576,23 @@ class Model(Macro):
         # create a dictionary splitting run cached and others
         capture_elements = self._split_capture_elements(capture_elements)
 
-        res = self._integrate(t_series, capture_elements['step'],
-                              return_timestamps)
+        self.components._dependencies["OUTPUTS"] = {
+            element: 1 for element in capture_elements["step"]
+        }
+        if cache_output:
+            self._assign_cache_type()
+        self._add_constant_cache()
 
-        self._add_run_elements(res, capture_elements['run'], replace=replace)
+        # Run the model
+        self.time.stage = 'Run'
+        # need to clean cache to remove the values from active_initial
+        self.cache.clean()
+
+        res = self._integrate(capture_elements['step'])
+
+        del self.components._dependencies["OUTPUTS"]
+
+        self._add_run_elements(res, capture_elements['run'])
         self._remove_constant_cache()
 
         return_df = utils.make_flat_df(res, return_addresses, flatten_output)
@@ -1804,22 +1686,28 @@ class Model(Macro):
 
         See Also
         --------
-        PySD.set_initial_value()
+        model.set_initial_value()
 
         """
-
         if isinstance(initial_condition, tuple):
             self.initialize()
             self.set_initial_value(*initial_condition)
+            # TODO initialize the stateful objects that depend on changed
+            # initial conditions
         elif isinstance(initial_condition, str):
-            if initial_condition.lower() in ['original', 'o']:
+            if initial_condition.lower() in ["original", "o"]:
+                self.time.set_control_vars(
+                    initial=self.components._initial_time)
                 self.initialize()
-            elif initial_condition.lower() in ['current', 'c']:
+            elif initial_condition.lower() in ["current", "c"]:
                 pass
             else:
                 self.import_pickle(initial_condition)
         else:
-            raise TypeError('Check documentation for valid entries')
+            raise TypeError(
+                "Invalid initial conditions. "
+                + "Check documentation for valid entries or use "
+                + "'help(model.set_initial_condition)'.")
 
     def _euler_step(self, dt):
         """
@@ -1834,22 +1722,19 @@ class Model(Macro):
         """
         self.state = self.state + self.ddt() * dt
 
-    def _integrate(self, time_steps, capture_elements, return_timestamps):
+    def _integrate(self, capture_elements):
         """
-        Performs euler integration
+        Performs euler integration.
 
         Parameters
         ----------
-        time_steps: iterable
-            the time steps that the integrator progresses over
         capture_elements: set
-            which model elements to capture - uses pysafe names
-        return_timestamps:
-            which subset of 'timesteps' should be values be returned?
+            Which model elements to capture - uses pysafe names.
 
         Returns
         -------
-        outputs: list of dictionaries
+        outputs: pandas.DataFrame
+            Output capture_elements data.
 
         """
         # necessary to have always a non-xaray object for appending objects
@@ -1860,27 +1745,25 @@ class Model(Macro):
 
         if self.progress:
             # initialize progress bar
-            progressbar = utils.ProgressBar(len(time_steps)-1)
+            progressbar = utils.ProgressBar(
+                int((self.time.final()-self.time())/self.time.step())
+            )
         else:
             # when None is used the update will do nothing
             progressbar = utils.ProgressBar(None)
 
-        for t2 in time_steps[1:]:
-            if self.time() in return_timestamps:
+        while self.time.in_bounds():
+            if self.time.in_return():
                 outputs.at[self.time()] = [getattr(self.components, key)()
                                            for key in capture_elements]
-            self._euler_step(t2 - self.time())
-            self.time.update(t2)
+            self._euler_step(self.time.step())
+            self.time.update(self.time()+self.time.step())
             self.clean_caches()
             progressbar.update()
-            # TODO move control variables to a class and automatically stop
-            # when updating time
-            if self.time() >= self.components.final_time():
-                break
 
         # need to add one more time step, because we run only the state
         # updates in the previous loop and thus may be one short.
-        if self.time() in return_timestamps:
+        if self.time.in_return():
             outputs.at[self.time()] = [getattr(self.components, key)()
                                        for key in capture_elements]
 
@@ -1891,7 +1774,7 @@ class Model(Macro):
         del outputs["time"]
         return outputs
 
-    def _add_run_elements(self, df, capture_elements, replace={}):
+    def _add_run_elements(self, df, capture_elements):
         """
         Adds constant elements to a dataframe.
 
@@ -1903,10 +1786,6 @@ class Model(Macro):
         capture_elements: list
             List of constant elements
 
-        replace: dict
-            Ouputs values to replace.
-            TODO: move control variables to a class and avoid this.
-
         Returns
         -------
         None
@@ -1915,15 +1794,3 @@ class Model(Macro):
         nt = len(df.index.values)
         for element in capture_elements:
             df[element] = [getattr(self.components, element)()] * nt
-
-        # TODO: move control variables to a class and avoid this.
-        # update initial time values in df (necessary if initial_conditions)
-        for it, value in replace.items():
-            if it in df:
-                df[it] = value
-            elif it.upper() in df:
-                df[it.upper()] = value
-            elif it.replace('_', ' ') in df:
-                df[it.replace('_', ' ')] = value
-            elif it.replace('_', ' ').upper() in df:
-                df[it.replace('_', ' ').upper()] = value

@@ -113,16 +113,10 @@ class TestPySD(unittest.TestCase):
         import pysd
 
         model = pysd.read_vensim(test_model)
-
-        model.components.initial_time = lambda: 3
-        model.components.final_time = lambda: 7
-        model.components.time_step = lambda: 1
-        model.initialize()
-
-        res = model.run()
+        res = model.run(final_time=7, time_step=2, initial_condition=(3, {}))
 
         actual = list(res.index)
-        expected = [3.0, 4.0, 5.0, 6.0, 7.0]
+        expected = [3.0, 5.0, 7.0]
         self.assertSequenceEqual(actual, expected)
 
     def test_run_progress(self):
@@ -141,7 +135,7 @@ class TestPySD(unittest.TestCase):
         import pysd
 
         model = pysd.read_vensim(test_model)
-        timestamps = np.random.rand(5).cumsum()
+        timestamps = np.random.randint(1, 5, 5).cumsum()
         stocks = model.run(return_timestamps=timestamps)
         self.assertTrue((stocks.index.values == timestamps).all())
 
@@ -152,7 +146,6 @@ class TestPySD(unittest.TestCase):
         with self.assertRaises(TypeError):
             model.run(return_timestamps=timestamps)
 
-    @unittest.skip("time class")
     def test_run_return_timestamps_past_final_time(self):
         """ If the user enters a timestamp that is longer than the euler
         timeseries that is defined by the normal model file, should
@@ -221,190 +214,17 @@ class TestPySD(unittest.TestCase):
         result = model.run(return_columns=return_columns)
         self.assertEqual(set(result.columns), set(return_columns))
 
-    @unittest.skip("time class")
-    def test_run_export_import(self):
+    def test_initial_conditions_invalid(self):
         import pysd
 
-        with catch_warnings():
-            simplefilter("ignore")
-            model = pysd.read_vensim(test_model)
-            stocks = model.run(return_timestamps=[0, 10, 20, 30])
-            self.assertTrue((stocks['INITIAL TIME'] == 0).all().all())
-            self.assertTrue((stocks['FINAL TIME'] == 30).all().all())
-
-            model.initialize()
-            stocks1 = model.run(return_timestamps=[0, 10], final_time=12)
-            self.assertTrue((stocks1['INITIAL TIME'] == 0).all().all())
-            self.assertTrue((stocks1['FINAL TIME'] == 12).all().all())
-            model.export('teacup12.pic')
-            model.initialize()
-            stocks2 = model.run(initial_condition='teacup12.pic',
-                                return_timestamps=[20, 30])
-            self.assertTrue((stocks2['INITIAL TIME'] == 12).all().all())
-            self.assertTrue((stocks2['FINAL TIME'] == 30).all().all())
-            stocks.drop('INITIAL TIME', axis=1, inplace=True)
-            stocks1.drop('INITIAL TIME', axis=1, inplace=True)
-            stocks2.drop('INITIAL TIME', axis=1, inplace=True)
-            stocks.drop('FINAL TIME', axis=1, inplace=True)
-            stocks1.drop('FINAL TIME', axis=1, inplace=True)
-            stocks2.drop('FINAL TIME', axis=1, inplace=True)
-            os.remove('teacup12.pic')
-
-            assert_frames_close(stocks1, stocks.loc[[0, 10]])
-            assert_frames_close(stocks2, stocks.loc[[20, 30]])
-
-            # delays
-            test_delays = os.path.join(
-                _root,
-                'test-models/tests/delays/test_delays.mdl')
-            model = pysd.read_vensim(test_delays)
-            stocks = model.run(return_timestamps=20)
-            model.initialize()
-            model.run(return_timestamps=[], final_time=7)
-            model.export('delays7.pic')
-            stocks2 = model.run(initial_condition='delays7.pic',
-                                return_timestamps=20)
-            self.assertTrue((stocks['INITIAL TIME'] == 0).all().all())
-            self.assertTrue((stocks2['INITIAL TIME'] == 7).all().all())
-            stocks.drop('INITIAL TIME', axis=1, inplace=True)
-            stocks2.drop('INITIAL TIME', axis=1, inplace=True)
-            stocks.drop('FINAL TIME', axis=1, inplace=True)
-            stocks2.drop('FINAL TIME', axis=1, inplace=True)
-            os.remove('delays7.pic')
-
-            assert_frames_close(stocks2, stocks)
-
-            # delay fixed
-            test_delayf = os.path.join(
-                _root,
-                'test-models/tests/delay_fixed/test_delay_fixed.mdl')
-            model = pysd.read_vensim(test_delayf)
-            stocks = model.run(return_timestamps=20)
-            model.initialize()
-            model.run(return_timestamps=7)
-            model.export('delayf7.pic')
-            stocks2 = model.run(initial_condition='delayf7.pic',
-                                return_timestamps=20)
-            self.assertTrue((stocks['INITIAL TIME'] == 0).all().all())
-            self.assertTrue((stocks2['INITIAL TIME'] == 7).all().all())
-            stocks.drop('INITIAL TIME', axis=1, inplace=True)
-            stocks2.drop('INITIAL TIME', axis=1, inplace=True)
-            stocks.drop('FINAL TIME', axis=1, inplace=True)
-            stocks2.drop('FINAL TIME', axis=1, inplace=True)
-            os.remove('delayf7.pic')
-
-            assert_frames_close(stocks2, stocks)
-
-            # forecast
-            test_trend = os.path.join(
-                _root,
-                'test-models/tests/forecast/'
-                + 'test_forecast.mdl')
-            model = pysd.read_vensim(test_trend)
-            stocks = model.run(return_timestamps=50, flatten_output=True)
-            model.initialize()
-            model.run(return_timestamps=20)
-            model.export('frcst20.pic')
-            stocks2 = model.run(initial_condition='frcst20.pic',
-                                return_timestamps=50,
-                                flatten_output=True)
-            self.assertTrue((stocks['INITIAL TIME'] == 0).all().all())
-            self.assertTrue((stocks2['INITIAL TIME'] == 20).all().all())
-            stocks.drop('INITIAL TIME', axis=1, inplace=True)
-            stocks2.drop('INITIAL TIME', axis=1, inplace=True)
-            stocks.drop('FINAL TIME', axis=1, inplace=True)
-            stocks2.drop('FINAL TIME', axis=1, inplace=True)
-            os.remove('frcst20.pic')
-
-            assert_frames_close(stocks2, stocks)
-
-            # smooth
-            test_smooth = os.path.join(
-                _root,
-                'test-models/tests/subscripted_smooth/'
-                + 'test_subscripted_smooth.mdl')
-            model = pysd.read_vensim(test_smooth)
-            stocks = model.run(return_timestamps=20, flatten_output=True)
-            model.initialize()
-            model.run(return_timestamps=7)
-            model.export('smooth7.pic')
-            stocks2 = model.run(initial_condition='smooth7.pic',
-                                return_timestamps=20,
-                                flatten_output=True)
-            self.assertTrue((stocks['INITIAL TIME'] == 0).all().all())
-            self.assertTrue((stocks2['INITIAL TIME'] == 7).all().all())
-            stocks.drop('INITIAL TIME', axis=1, inplace=True)
-            stocks2.drop('INITIAL TIME', axis=1, inplace=True)
-            stocks.drop('FINAL TIME', axis=1, inplace=True)
-            stocks2.drop('FINAL TIME', axis=1, inplace=True)
-            os.remove('smooth7.pic')
-
-            assert_frames_close(stocks2, stocks)
-
-            # trend
-            test_trend = os.path.join(
-                _root,
-                'test-models/tests/subscripted_trend/'
-                + 'test_subscripted_trend.mdl')
-            model = pysd.read_vensim(test_trend)
-            stocks = model.run(return_timestamps=20, flatten_output=True)
-            model.initialize()
-            model.run(return_timestamps=7)
-            model.export('trend7.pic')
-            stocks2 = model.run(initial_condition='trend7.pic',
-                                return_timestamps=20,
-                                flatten_output=True)
-            self.assertTrue((stocks['INITIAL TIME'] == 0).all().all())
-            self.assertTrue((stocks2['INITIAL TIME'] == 7).all().all())
-            stocks.drop('INITIAL TIME', axis=1, inplace=True)
-            stocks2.drop('INITIAL TIME', axis=1, inplace=True)
-            stocks.drop('FINAL TIME', axis=1, inplace=True)
-            stocks2.drop('FINAL TIME', axis=1, inplace=True)
-            os.remove('trend7.pic')
-
-            assert_frames_close(stocks2, stocks)
-
-            # initial
-            test_initial = os.path.join(
-                _root, 'test-models/tests/initial_function/test_initial.mdl')
-            model = pysd.read_vensim(test_initial)
-            stocks = model.run(return_timestamps=20)
-            model.initialize()
-            model.run(return_timestamps=7)
-            model.export('initial7.pic')
-            stocks2 = model.run(initial_condition='initial7.pic',
-                                return_timestamps=20)
-            self.assertTrue((stocks['INITIAL TIME'] == 0).all().all())
-            self.assertTrue((stocks2['INITIAL TIME'] == 7).all().all())
-            stocks.drop('INITIAL TIME', axis=1, inplace=True)
-            stocks2.drop('INITIAL TIME', axis=1, inplace=True)
-            stocks.drop('FINAL TIME', axis=1, inplace=True)
-            stocks2.drop('FINAL TIME', axis=1, inplace=True)
-            os.remove('initial7.pic')
-
-            assert_frames_close(stocks2, stocks)
-
-            # sample if true
-            test_sample_if_true = os.path.join(
-                _root,
-                'test-models/tests/sample_if_true/test_sample_if_true.mdl')
-            model = pysd.read_vensim(test_sample_if_true)
-            stocks = model.run(return_timestamps=20, flatten_output=True)
-            model.initialize()
-            model.run(return_timestamps=7)
-            model.export('sample_if_true7.pic')
-            stocks2 = model.run(initial_condition='sample_if_true7.pic',
-                                return_timestamps=20,
-                                flatten_output=True)
-            self.assertTrue((stocks['INITIAL TIME'] == 0).all().all())
-            self.assertTrue((stocks2['INITIAL TIME'] == 7).all().all())
-            stocks.drop('INITIAL TIME', axis=1, inplace=True)
-            stocks2.drop('INITIAL TIME', axis=1, inplace=True)
-            stocks.drop('FINAL TIME', axis=1, inplace=True)
-            stocks2.drop('FINAL TIME', axis=1, inplace=True)
-            os.remove('sample_if_true7.pic')
-
-            assert_frames_close(stocks2, stocks)
+        model = pysd.read_vensim(test_model)
+        with self.assertRaises(TypeError) as err:
+            model.run(initial_condition=["this is not valid"])
+            self.assertIn(
+                "Invalid initial conditions. "
+                + "Check documentation for valid entries or use "
+                + "'help(model.set_initial_condition)'.",
+                err.args[0])
 
     def test_initial_conditions_tuple_pysafe_names(self):
         import pysd
@@ -964,10 +784,8 @@ class TestPySD(unittest.TestCase):
         model = pysd.load(more_tests + "/initialization_order/"
                           "test_initialization_order.py")
 
-        if model._stateful_elements[0].py_name.endswith('stock_a'):
-            # we want to have stock b first always
-            model._stateful_elements.reverse()
-
+        self.assertEqual(model.initialize_order,
+                         ["_integ_stock_a", "_integ_stock_b"])
         self.assertEqual(model.components.stock_b(), 42)
         self.assertEqual(model.components.stock_a(), 42)
         model.components.initial_parameter = lambda: 1
@@ -1413,33 +1231,14 @@ class TestPySD(unittest.TestCase):
         data = model3.get_series_data('_ext_data_data_backward')
         self.assertTrue(data.equals(data_exp))
 
-    def test__build_euler_timeseries(self):
-        import pysd
-
-        model = pysd.read_vensim(test_model)
-        model.components.initial_time = lambda: 3
-        model.components.final_time = lambda: 50
-        model.components.time_step = lambda: 1
-        model.initialize()
-
-        actual = list(model._build_euler_timeseries(return_timestamps=[10]))
-        expected = range(3, 11, 1)
-        self.assertSequenceEqual(actual, expected)
-
-        actual = list(model._build_euler_timeseries(return_timestamps=[10],
-                                                    final_time=50))
-        expected = range(3, 51, 1)
-        self.assertSequenceEqual(actual, expected)
-
     def test__integrate(self):
         import pysd
 
         # Todo: think through a stronger test here...
         model = pysd.read_vensim(test_model)
         model.progress = False
-        res = model._integrate(time_steps=list(range(5)),
-                               capture_elements={'teacup_temperature'},
-                               return_timestamps=list(range(0, 5, 2)))
+        model.time.add_return_timestamps(list(range(0, 5, 2)))
+        res = model._integrate(capture_elements={'teacup_temperature'})
         self.assertIsInstance(res, pd.DataFrame)
         self.assertIn('teacup_temperature', res)
         self.assertTrue(all(res.index.values == list(range(0, 5, 2))))
@@ -2126,3 +1925,217 @@ class TestDependencies(unittest.TestCase):
 
         os.remove(
             test_model_constant_pipe.replace(".mdl", ".py"))
+
+
+class TestExportImport(unittest.TestCase):
+    def test_run_export_import_integ(self):
+        from pysd import read_vensim
+
+        with catch_warnings():
+            simplefilter("ignore")
+            model = read_vensim(test_model)
+            stocks = model.run(return_timestamps=[0, 10, 20, 30])
+            self.assertTrue((stocks['INITIAL TIME'] == 0).all().all())
+            self.assertTrue((stocks['FINAL TIME'] == 30).all().all())
+
+            model.reload()
+            stocks1 = model.run(return_timestamps=[0, 10], final_time=12)
+            self.assertTrue((stocks1['INITIAL TIME'] == 0).all().all())
+            self.assertTrue((stocks1['FINAL TIME'] == 12).all().all())
+            model.export('teacup12.pic')
+            model.reload()
+            stocks2 = model.run(initial_condition='teacup12.pic',
+                                return_timestamps=[20, 30])
+            self.assertTrue((stocks2['INITIAL TIME'] == 12).all().all())
+            self.assertTrue((stocks2['FINAL TIME'] == 30).all().all())
+            stocks.drop('INITIAL TIME', axis=1, inplace=True)
+            stocks1.drop('INITIAL TIME', axis=1, inplace=True)
+            stocks2.drop('INITIAL TIME', axis=1, inplace=True)
+            stocks.drop('FINAL TIME', axis=1, inplace=True)
+            stocks1.drop('FINAL TIME', axis=1, inplace=True)
+            stocks2.drop('FINAL TIME', axis=1, inplace=True)
+            os.remove('teacup12.pic')
+
+            assert_frames_close(stocks1, stocks.loc[[0, 10]])
+            assert_frames_close(stocks2, stocks.loc[[20, 30]])
+
+    def test_run_export_import_delay(self):
+        from pysd import read_vensim
+
+        with catch_warnings():
+            simplefilter("ignore")
+            test_delays = os.path.join(
+                _root,
+                'test-models/tests/delays/test_delays.mdl')
+            model = read_vensim(test_delays)
+            stocks = model.run(return_timestamps=20)
+            model.reload()
+            model.run(return_timestamps=[], final_time=7)
+            model.export('delays7.pic')
+            stocks2 = model.run(initial_condition='delays7.pic',
+                                return_timestamps=20)
+            self.assertTrue((stocks['INITIAL TIME'] == 0).all().all())
+            self.assertTrue((stocks2['INITIAL TIME'] == 7).all().all())
+            stocks.drop('INITIAL TIME', axis=1, inplace=True)
+            stocks2.drop('INITIAL TIME', axis=1, inplace=True)
+            stocks.drop('FINAL TIME', axis=1, inplace=True)
+            stocks2.drop('FINAL TIME', axis=1, inplace=True)
+            os.remove('delays7.pic')
+
+            assert_frames_close(stocks2, stocks)
+
+    def test_run_export_import_delay_fixed(self):
+        from pysd import read_vensim
+
+        with catch_warnings():
+            simplefilter("ignore")
+            test_delayf = os.path.join(
+                _root,
+                'test-models/tests/delay_fixed/test_delay_fixed.mdl')
+            model = read_vensim(test_delayf)
+            stocks = model.run(return_timestamps=20)
+            model.reload()
+            model.run(return_timestamps=7)
+            model.export('delayf7.pic')
+            stocks2 = model.run(initial_condition='delayf7.pic',
+                                return_timestamps=20)
+            self.assertTrue((stocks['INITIAL TIME'] == 0).all().all())
+            self.assertTrue((stocks2['INITIAL TIME'] == 7).all().all())
+            stocks.drop('INITIAL TIME', axis=1, inplace=True)
+            stocks2.drop('INITIAL TIME', axis=1, inplace=True)
+            stocks.drop('FINAL TIME', axis=1, inplace=True)
+            stocks2.drop('FINAL TIME', axis=1, inplace=True)
+            os.remove('delayf7.pic')
+
+            assert_frames_close(stocks2, stocks)
+
+    def test_run_export_import_forecast(self):
+        from pysd import read_vensim
+
+        with catch_warnings():
+            simplefilter("ignore")
+            test_trend = os.path.join(
+                _root,
+                'test-models/tests/forecast/'
+                + 'test_forecast.mdl')
+            model = read_vensim(test_trend)
+            stocks = model.run(return_timestamps=50, flatten_output=True)
+            model.reload()
+            model.run(return_timestamps=20)
+            model.export('frcst20.pic')
+            stocks2 = model.run(initial_condition='frcst20.pic',
+                                return_timestamps=50,
+                                flatten_output=True)
+            self.assertTrue((stocks['INITIAL TIME'] == 0).all().all())
+            self.assertTrue((stocks2['INITIAL TIME'] == 20).all().all())
+            stocks.drop('INITIAL TIME', axis=1, inplace=True)
+            stocks2.drop('INITIAL TIME', axis=1, inplace=True)
+            stocks.drop('FINAL TIME', axis=1, inplace=True)
+            stocks2.drop('FINAL TIME', axis=1, inplace=True)
+            os.remove('frcst20.pic')
+
+            assert_frames_close(stocks2, stocks)
+
+    def test_run_export_import_sample_if_true(self):
+        from pysd import read_vensim
+
+        with catch_warnings():
+            simplefilter("ignore")
+            test_sample_if_true = os.path.join(
+                _root,
+                'test-models/tests/sample_if_true/test_sample_if_true.mdl')
+            model = read_vensim(test_sample_if_true)
+            stocks = model.run(return_timestamps=20, flatten_output=True)
+            model.reload()
+            model.run(return_timestamps=7)
+            model.export('sample_if_true7.pic')
+            stocks2 = model.run(initial_condition='sample_if_true7.pic',
+                                return_timestamps=20,
+                                flatten_output=True)
+            self.assertTrue((stocks['INITIAL TIME'] == 0).all().all())
+            self.assertTrue((stocks2['INITIAL TIME'] == 7).all().all())
+            stocks.drop('INITIAL TIME', axis=1, inplace=True)
+            stocks2.drop('INITIAL TIME', axis=1, inplace=True)
+            stocks.drop('FINAL TIME', axis=1, inplace=True)
+            stocks2.drop('FINAL TIME', axis=1, inplace=True)
+            os.remove('sample_if_true7.pic')
+
+            assert_frames_close(stocks2, stocks)
+
+    def test_run_export_import_smooth(self):
+        from pysd import read_vensim
+
+        with catch_warnings():
+            simplefilter("ignore")
+            test_smooth = os.path.join(
+                _root,
+                'test-models/tests/subscripted_smooth/'
+                + 'test_subscripted_smooth.mdl')
+            model = read_vensim(test_smooth)
+            stocks = model.run(return_timestamps=20, flatten_output=True)
+            model.reload()
+            model.run(return_timestamps=7)
+            model.export('smooth7.pic')
+            stocks2 = model.run(initial_condition='smooth7.pic',
+                                return_timestamps=20,
+                                flatten_output=True)
+            self.assertTrue((stocks['INITIAL TIME'] == 0).all().all())
+            self.assertTrue((stocks2['INITIAL TIME'] == 7).all().all())
+            stocks.drop('INITIAL TIME', axis=1, inplace=True)
+            stocks2.drop('INITIAL TIME', axis=1, inplace=True)
+            stocks.drop('FINAL TIME', axis=1, inplace=True)
+            stocks2.drop('FINAL TIME', axis=1, inplace=True)
+            os.remove('smooth7.pic')
+
+            assert_frames_close(stocks2, stocks)
+
+    def test_run_export_import_trend(self):
+        from pysd import read_vensim
+
+        with catch_warnings():
+            simplefilter("ignore")
+            test_trend = os.path.join(
+                _root,
+                'test-models/tests/subscripted_trend/'
+                + 'test_subscripted_trend.mdl')
+            model = read_vensim(test_trend)
+            stocks = model.run(return_timestamps=20, flatten_output=True)
+            model.reload()
+            model.run(return_timestamps=7)
+            model.export('trend7.pic')
+            stocks2 = model.run(initial_condition='trend7.pic',
+                                return_timestamps=20,
+                                flatten_output=True)
+            self.assertTrue((stocks['INITIAL TIME'] == 0).all().all())
+            self.assertTrue((stocks2['INITIAL TIME'] == 7).all().all())
+            stocks.drop('INITIAL TIME', axis=1, inplace=True)
+            stocks2.drop('INITIAL TIME', axis=1, inplace=True)
+            stocks.drop('FINAL TIME', axis=1, inplace=True)
+            stocks2.drop('FINAL TIME', axis=1, inplace=True)
+            os.remove('trend7.pic')
+
+            assert_frames_close(stocks2, stocks)
+
+    def test_run_export_import_initial(self):
+        from pysd import read_vensim
+
+        with catch_warnings():
+            simplefilter("ignore")
+            test_initial = os.path.join(
+                _root, 'test-models/tests/initial_function/test_initial.mdl')
+            model = read_vensim(test_initial)
+            stocks = model.run(return_timestamps=20)
+            model.reload()
+            model.run(return_timestamps=7)
+            model.export('initial7.pic')
+            stocks2 = model.run(initial_condition='initial7.pic',
+                                return_timestamps=20)
+            self.assertTrue((stocks['INITIAL TIME'] == 0).all().all())
+            self.assertTrue((stocks2['INITIAL TIME'] == 7).all().all())
+            stocks.drop('INITIAL TIME', axis=1, inplace=True)
+            stocks2.drop('INITIAL TIME', axis=1, inplace=True)
+            stocks.drop('FINAL TIME', axis=1, inplace=True)
+            stocks2.drop('FINAL TIME', axis=1, inplace=True)
+            os.remove('initial7.pic')
+
+            assert_frames_close(stocks2, stocks)

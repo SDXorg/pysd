@@ -11,5 +11,17 @@ def _init_outer_references(data):
         __data[key] = data[key]
 
 
-def initial_time():
+def _time_step():
+    return 0.5
+
+
+def _initial_time():
     return 0
+
+
+def _final_time():
+    return 0.5
+
+
+def _saveper():
+    return 0.5

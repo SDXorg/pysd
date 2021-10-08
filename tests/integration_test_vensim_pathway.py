@@ -42,6 +42,10 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner(test_models + '/chained_initialization/test_chained_initialization.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    def test_control_vars(self):
+        output, canon = runner(test_models + '/control_vars/test_control_vars.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_constant_expressions(self):
         output, canon = runner(test_models + '/constant_expressions/test_constant_expressions.mdl')
         assert_frames_close(output, canon, rtol=rtol)

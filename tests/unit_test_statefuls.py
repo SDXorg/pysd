@@ -18,7 +18,7 @@ class TestStateful(unittest.TestCase):
         def init_func():
             return init_val
 
-        stock = Integ(lambda: ddt_func(), lambda: init_func())
+        stock = Integ(lambda: ddt_func(), lambda: init_func(), "stock")
 
         stock.initialize()
 
@@ -45,7 +45,7 @@ class TestStateful(unittest.TestCase):
     def test_stateful_identification(self):
         from pysd.py_backend.statefuls import Integ, Stateful
 
-        stock = Integ(lambda: 5, lambda: 7)
+        stock = Integ(lambda: 5, lambda: 7, "stock")
 
         self.assertIsInstance(stock, Stateful)
 
@@ -252,13 +252,13 @@ class TestStateful(unittest.TestCase):
         # test that the function returns the first value
         # after it is called once
         f1_0 = func1()
-        initial_f10 = Initial(lambda: func1())
+        initial_f10 = Initial(lambda: func1(), "initial_f10")
         initial_f10.initialize()
         f1_i0 = initial_f10()
         self.assertEqual(f1_0, f1_i0)
 
         f2_0 = func2()
-        initial_f20 = Initial(func2)
+        initial_f20 = Initial(func2, "initial_f20")
         initial_f20.initialize()
         f2_i0 = initial_f20()
         self.assertEqual(f2_0, f2_i0)
@@ -330,3 +330,17 @@ class TestStateful(unittest.TestCase):
 
         trend.initialize(6)
         self.assertEqual(round(trend(), 8), 6)
+
+
+class TestStatefulErrors(unittest.TestCase):
+    def test_not_initialized_object(self):
+        from pysd.py_backend.statefuls import Stateful
+
+        obj = Stateful()
+        obj.py_name = "my_object"
+        with self.assertRaises(AttributeError) as err:
+            obj.state
+            self.assertIn(
+                "my_object\nAttempt to call stateful element"
+                + " before it is initialized.",
+                err.args[0])

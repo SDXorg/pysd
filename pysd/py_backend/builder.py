@@ -260,16 +260,7 @@ def _build_main_module(elements, subscript_dict, file_name):
 
     """
     # separating between control variables and rest of variables
-    control_vars_ = [element for element in elements if
-                     element["py_name"] in ["initial_time",
-                                            "final_time",
-                                            "time_step",
-                                            "saveper"]]
-    elements = [element for element in elements if element not in
-                control_vars_]
-
-    control_vars = _generate_functions(control_vars_, subscript_dict)
-    funcs = _generate_functions(elements, subscript_dict)
+    control_vars, funcs = _build_variables(elements, subscript_dict)
 
     Imports.add("utils", "load_model_data")
     Imports.add("utils", "load_modules")
@@ -403,16 +394,10 @@ def build(elements, subscript_dict, namespace, dependencies, outfile_name):
 
     """
     # separating between control variables and rest of variables
-    control_vars_ = [element for element in elements if
-                     element["py_name"] in ["final_time",
-                                            "initial_time",
-                                            "saveper",
-                                            "time_step"]]
-    elements = [element for element in elements if element not in
-                control_vars_]
+    control_vars, funcs = _build_variables(elements, subscript_dict)
 
-    control_vars = _generate_functions(control_vars_, subscript_dict)
-    funcs = _generate_functions(elements, subscript_dict)
+    #control_vars = _generate_functions(control_vars_, subscript_dict)
+    #funcs = _generate_functions(elements, subscript_dict)
 
     text, root = Imports.get_header(os.path.basename(outfile_name))
 
@@ -526,6 +511,31 @@ def _get_control_vars(control_vars):
     """)
 
     return text
+
+
+def _build_variables(elements, subscript_dict):
+    control_vars_dict = {
+        "initial_time": {"py_expr": ["__data['time'].initial()"]},
+        "final_time": {"py_expr": ["__data['time'].final()"]},
+        "time_step": {"py_expr": ["__data['time'].step()"]},
+        "saveper": {"py_expr": ["__data['time'].save()"]}
+    }
+    regular_vars = []
+    for element in elements:
+        if element["py_name"] in ["initial_time", "final_time", "time_step", "saveper"]:
+            name = element["py_name"]
+            for key, value in element.items():
+                if key != "py_expr":
+                    control_vars_dict[name][key] = value
+                control_vars_dict["_" + name] = element.copy()
+                control_vars_dict["_" + name]["py_name"] = "_" + element["py_name"]
+        else:
+            regular_vars.append(element)
+    if len(control_vars_dict) == 4:
+        # macro objects
+        control_vars_dict = {}
+    return _generate_functions(control_vars_dict.values(), subscript_dict),\
+        _generate_functions(regular_vars, subscript_dict)
 
 
 def build_element(element, subscript_dict):

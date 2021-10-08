@@ -88,60 +88,20 @@ def initial_parameter():
     return 42
 
 
-def final_time():
-    """
-    Real Name: FINAL TIME
-    Original Eqn: 1
-    Units: Month
-    Limits: (None, None)
-    Type: constant
-    Subs: None
-
-    The final time for the simulation.
-    """
-    return 1
+def _time_step():
+    return 0.5
 
 
-def initial_time():
-    """
-    Real Name: INITIAL TIME
-    Original Eqn: 0
-    Units: Month
-    Limits: (None, None)
-    Type: constant
-    Subs: None
-
-    The initial time for the simulation.
-    """
+def _initial_time():
     return 0
 
 
-def saveper():
-    """
-    Real Name: SAVEPER
-    Original Eqn: TIME STEP
-    Units: Month
-    Limits: (0.0, None)
-    Type: component
-    Subs: None
-
-    The frequency with which output is stored.
-    """
-    return time_step()
+def _final_time():
+    return 0.5
 
 
-def time_step():
-    """
-    Real Name: TIME STEP
-    Original Eqn: 1
-    Units: Month
-    Limits: (0.0, None)
-    Type: constant
-    Subs: None
-
-    The time step for the simulation.
-    """
-    return 1
+def _saveper():
+    return 0.5
 
 
 _integ_stock_b = Integ(lambda: 1, lambda: stock_a(), "_integ_stock_b")

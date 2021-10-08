@@ -296,7 +296,8 @@ class TestPySD(unittest.TestCase):
 
     def test_run_return_timestamps(self):
 
-        timestamps = np.round(np.random.rand(5).cumsum(), 4).astype(str)
+        timestamps =\
+            np.random.randint(1, 5, 5).cumsum().astype(float).astype(str)
         command = f"{call} -o {out_csv_file} -R {','.join(timestamps)} "\
                   f" {test_model}"
         out = subprocess.run(split_bash(command), capture_output=True)

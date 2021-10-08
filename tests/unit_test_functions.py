@@ -69,31 +69,45 @@ class TestInputFunctions(unittest.TestCase):
 
         # Pulse function with repeat time
         # before first impulse
-        self.assertEqual(pulse_magnitude(Time(0, 1), 10, 2, 5), 0)
+        t = Time()
+        t.set_control_vars(initial=0, step=1)
+        self.assertEqual(pulse_magnitude(t, 10, 2, 5), 0)
         # first impulse
-        self.assertEqual(pulse_magnitude(Time(2, 1), 10, 2, 5), 10)
+        t.update(2)
+        self.assertEqual(pulse_magnitude(t, 10, 2, 5), 10)
         # after first impulse and before second
-        self.assertEqual(pulse_magnitude(Time(4, 1), 10, 2, 5), 0)
+        t.update(4)
+        self.assertEqual(pulse_magnitude(t, 10, 2, 5), 0)
         # second impulse
-        self.assertEqual(pulse_magnitude(Time(7, 1), 10, 2, 5), 10)
+        t.update(7)
+        self.assertEqual(pulse_magnitude(t, 10, 2, 5), 10)
         # after second and before third impulse
-        self.assertEqual(pulse_magnitude(Time(9, 1), 10, 2, 5), 0)
+        t.update(9)
+        self.assertEqual(pulse_magnitude(t, 10, 2, 5), 0)
         # third impulse
-        self.assertEqual(pulse_magnitude(Time(12, 1), 10, 2, 5), 10)
+        t.update(12)
+        self.assertEqual(pulse_magnitude(t, 10, 2, 5), 10)
         # after third impulse
-        self.assertEqual(pulse_magnitude(Time(14, 1), 10, 2, 5), 0)
+        t.update(14)
+        self.assertEqual(pulse_magnitude(t, 10, 2, 5), 0)
 
         # Pulse function without repeat time
         # before first impulse
-        self.assertEqual(pulse_magnitude(Time(0, 1), 10, 2), 0)
+        t = Time()
+        t.set_control_vars(initial=0, step=1)
+        self.assertEqual(pulse_magnitude(t, 10, 2), 0)
         # first impulse
-        self.assertEqual(pulse_magnitude(Time(2, 1), 10, 2), 10)
+        t.update(2)
+        self.assertEqual(pulse_magnitude(t, 10, 2), 10)
         # after first impulse and before second
-        self.assertEqual(pulse_magnitude(Time(4, 1), 10, 2), 0)
+        t.update(4)
+        self.assertEqual(pulse_magnitude(t, 10, 2), 0)
         # second impulse
-        self.assertEqual(pulse_magnitude(Time(7, 1), 10, 2), 0)
+        t.update(7)
+        self.assertEqual(pulse_magnitude(t, 10, 2), 0)
         # after second and before third impulse
-        self.assertEqual(pulse_magnitude(Time(9, 1), 10, 2), 0)
+        t.update(9)
+        self.assertEqual(pulse_magnitude(t, 10, 2), 0)
 
     def test_xidz(self):
         from pysd.py_backend.functions import xidz
