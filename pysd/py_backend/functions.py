@@ -178,13 +178,13 @@ def pulse_magnitude(time, magnitude, start, repeat_time=0):
     """
     t = time()
     if repeat_time <= small_vensim:
-        if abs(t - start) < time.step():
-            return magnitude * time.step()
+        if abs(t - start) < time.time_step():
+            return magnitude * time.time_step()
         else:
             return 0
     else:
-        if abs((t - start) % repeat_time) < time.step():
-            return magnitude * time.step()
+        if abs((t - start) % repeat_time) < time.time_step():
+            return magnitude * time.time_step()
         else:
             return 0
 

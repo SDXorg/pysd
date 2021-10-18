@@ -15,17 +15,17 @@ class Time(object):
         Parameters
         ----------
         **kwards:
-            initial: float, callable or None
+            initial_time: float, callable or None
                 Initial time.
-            final: float, callable or None
+            final_time: float, callable or None
                 Final time.
-            step: float, callable or None
+            time_step: float, callable or None
                 Time step.
-            save: float, callable or None
+            saveper: float, callable or None
                 Saveper.
 
         """
-        def convert_value(value):
+        def _convert_value(value):
             # this function is necessary to avoid copying the pointer in the
             # lambda function.
             if callable(value):
@@ -35,11 +35,11 @@ class Time(object):
 
         for key, value in kwargs.items():
             if value is not None:
-                setattr(self, key, convert_value(value))
+                setattr(self, key, _convert_value(value))
 
-        if "initial" in kwargs:
-            self._initial = self.initial()
-            self._time = self.initial()
+        if "initial_time" in kwargs:
+            self._initial_time = self.initial_time()
+            self._time = self.initial_time()
 
     def in_bounds(self):
         """
@@ -51,19 +51,14 @@ class Time(object):
             True if time is smaller than final time. Otherwise, returns Fase.
 
         """
-        return self._time < self.final()
+        return self._time < self.final_time()
 
     def in_return(self):
         """ Check if current time should be returned """
         if self.return_timestamps is not None:
-            if self._time in self.return_timestamps:
-                return True
-            else:
-                return False
-        elif (self._time - self._initial) % self.save() == 0:
-            return True
-        else:
-            return False
+            return self._time in self.return_timestamps
+
+        return (self._time - self._initial_time) % self.saveper() == 0
 
     def add_return_timestamps(self, return_timestamps):
         """ Add return timestamps """
@@ -78,4 +73,4 @@ class Time(object):
 
     def reset(self):
         """ Reset time value to the initial """
-        self._time = self._initial
+        self._time = self._initial_time

@@ -70,7 +70,7 @@ class TestInputFunctions(unittest.TestCase):
         # Pulse function with repeat time
         # before first impulse
         t = Time()
-        t.set_control_vars(initial=0, step=1)
+        t.set_control_vars(initial_time=0, time_step=1)
         self.assertEqual(pulse_magnitude(t, 10, 2, 5), 0)
         # first impulse
         t.update(2)
@@ -94,7 +94,7 @@ class TestInputFunctions(unittest.TestCase):
         # Pulse function without repeat time
         # before first impulse
         t = Time()
-        t.set_control_vars(initial=0, step=1)
+        t.set_control_vars(initial_time=0, time_step=1)
         self.assertEqual(pulse_magnitude(t, 10, 2), 0)
         # first impulse
         t.update(2)

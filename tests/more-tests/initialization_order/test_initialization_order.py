@@ -36,6 +36,13 @@ _dependencies = {
 
 __data = {"scope": None, "time": lambda: 0}
 
+_control_vars = {
+    "initial_time": lambda: 0,
+    "final_time": lambda: 20,
+    "time_step": lambda: 1,
+    "saveper": lambda: time_step()
+}
+
 
 def _init_outer_references(data):
     for key in data:
@@ -44,6 +51,22 @@ def _init_outer_references(data):
 
 def time():
     return __data["time"]()
+
+
+def initial_time():
+    return __data["time"].initial_time()
+
+
+def final_time():
+    return __data["time"].final_time()
+
+
+def time_step():
+    return __data["time"].time_step()
+
+
+def saveper():
+    return __data["time"].saveper()
 
 
 def stock_b():
@@ -86,22 +109,6 @@ def initial_parameter():
 
     """
     return 42
-
-
-def _time_step():
-    return 0.5
-
-
-def _initial_time():
-    return 0
-
-
-def _final_time():
-    return 0.5
-
-
-def _saveper():
-    return 0.5
 
 
 _integ_stock_b = Integ(lambda: 1, lambda: stock_a(), "_integ_stock_b")

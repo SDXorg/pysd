@@ -5,23 +5,34 @@ _dependencies = {}
 
 __data = {'scope': None, 'time': lambda: 0}
 
+_control_vars = {
+    "initial_time": lambda: 0,
+    "final_time": lambda: 20,
+    "time_step": lambda: 1,
+    "saveper": lambda: time_step()
+}
+
 
 def _init_outer_references(data):
     for key in data:
         __data[key] = data[key]
 
 
-def _time_step():
-    return 0.5
+def time():
+    return __data["time"]()
 
 
-def _initial_time():
-    return 0
+def initial_time():
+    return __data["time"].initial_time()
 
 
-def _final_time():
-    return 0.5
+def final_time():
+    return __data["time"].final_time()
 
 
-def _saveper():
-    return 0.5
+def time_step():
+    return __data["time"].time_step()
+
+
+def saveper():
+    return __data["time"].saveper()

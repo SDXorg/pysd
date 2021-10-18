@@ -396,9 +396,6 @@ def build(elements, subscript_dict, namespace, dependencies, outfile_name):
     # separating between control variables and rest of variables
     control_vars, funcs = _build_variables(elements, subscript_dict)
 
-    #control_vars = _generate_functions(control_vars_, subscript_dict)
-    #funcs = _generate_functions(elements, subscript_dict)
-
     text, root = Imports.get_header(os.path.basename(outfile_name))
 
     text += textwrap.dedent("""
@@ -491,7 +488,7 @@ def _get_control_vars(control_vars):
     ##########################################################################
     #                            CONTROL VARIABLES                           #
     ##########################################################################
-
+    %(control_vars_dict)s
     def _init_outer_references(data):
         for key in data:
             __data[key] = data[key]
@@ -500,9 +497,9 @@ def _get_control_vars(control_vars):
     def time():
         return __data['time']()
 
-    """)
+    """ % {"control_vars_dict": control_vars[0]})
 
-    text += control_vars
+    text += control_vars[1]
 
     text += textwrap.dedent("""
     ##########################################################################
@@ -514,27 +511,61 @@ def _get_control_vars(control_vars):
 
 
 def _build_variables(elements, subscript_dict):
+    """
+    Build model variables (functions) and separate then in control variables
+    and regular variables.
+
+    Parameters
+    ----------
+    elements: list
+        Model elements.
+
+    subscript_dict:
+
+    Returns
+    -------
+    control_vars, regular_vars: tuple, str
+        control_vars is a tuple of length 2. First element is the dictionary
+        of original control vars. Second is the string to add the control
+        variables' functions. regular_vars is the string to add the regular
+        variables' functions.
+
+    """
+    # returns of the control variables
     control_vars_dict = {
-        "initial_time": {"py_expr": ["__data['time'].initial()"]},
-        "final_time": {"py_expr": ["__data['time'].final()"]},
-        "time_step": {"py_expr": ["__data['time'].step()"]},
-        "saveper": {"py_expr": ["__data['time'].save()"]}
+        "initial_time": ["__data['time'].initial_time()"],
+        "final_time": ["__data['time'].final_time()"],
+        "time_step": ["__data['time'].time_step()"],
+        "saveper": ["__data['time'].saveper()"]
     }
     regular_vars = []
+    control_vars = []
+
     for element in elements:
-        if element["py_name"] in ["initial_time", "final_time", "time_step", "saveper"]:
-            name = element["py_name"]
-            for key, value in element.items():
-                if key != "py_expr":
-                    control_vars_dict[name][key] = value
-                control_vars_dict["_" + name] = element.copy()
-                control_vars_dict["_" + name]["py_name"] = "_" + element["py_name"]
+        if element["py_name"] in control_vars_dict:
+            # change the return expression in the element and update the dict
+            # with the original expression
+            control_vars_dict[element["py_name"]], element["py_expr"] =\
+                element["py_expr"][0], control_vars_dict[element["py_name"]]
+            control_vars.append(element)
         else:
             regular_vars.append(element)
-    if len(control_vars_dict) == 4:
-        # macro objects
-        control_vars_dict = {}
-    return _generate_functions(control_vars_dict.values(), subscript_dict),\
+
+    if len(control_vars) == 0:
+        # macro objects, no control variables
+        control_vars_dict = ""
+    else:
+        control_vars_dict = """
+    _control_vars = {
+        "initial_time": lambda: %(initial_time)s,
+        "final_time": lambda: %(final_time)s,
+        "time_step": lambda: %(time_step)s,
+        "saveper": lambda: %(saveper)s
+    }
+    """ % control_vars_dict
+
+    return (control_vars_dict,
+            _generate_functions(control_vars, subscript_dict)),\
         _generate_functions(regular_vars, subscript_dict)
 
 

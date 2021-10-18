@@ -911,6 +911,7 @@ class Macro(DynamicStateful):
         for element in self._external_elements:
             element.initialize()
 
+        # Remove Excel data from memory
         Excels.clean()
 
         # Initialize stateful objects
@@ -982,7 +983,7 @@ class Macro(DynamicStateful):
                 )
 
         self.set_stateful(stateful_dict)
-        self.time.set_control_vars(initial=time)
+        self.time.set_control_vars(initial_time=time)
 
     def get_args(self, param):
         """
@@ -1173,6 +1174,7 @@ class Macro(DynamicStateful):
         # TODO: allow the params argument to take a pandas dataframe, where
         # column names are variable names. However some variables may be
         # constant or have no values for some index. This should be processed.
+        # TODO: make this compatible with loading outputs from other files
 
         for key, value in params.items():
             func_name = utils.get_value_by_insensitive_key_or_value(
@@ -1204,6 +1206,19 @@ class Macro(DynamicStateful):
                 self.components._dependencies[func_name] = deps
             elif callable(value):
                 new_function = value
+                args = self.get_args(value)
+                if args:
+                    # user function needs arguments, add it as a lookup
+                    # to avoud caching it
+                    self.components._dependencies[func_name] =\
+                        {"__lookup__": None}
+                else:
+                    # TODO it would be better if we can parse the content
+                    # of the function to get all the dependencies
+                    # user function takes no arguments, using step cache
+                    # adding time as dependency
+                    self.components._dependencies[func_name] = {"time": 1}
+
             else:
                 new_function = self._constant_component(value, dims, args)
                 self.components._dependencies[func_name] = {}
@@ -1300,24 +1315,18 @@ class Macro(DynamicStateful):
             original model file names
 
         """
-        self.time.set_control_vars(initial=t)
-        self.clean_caches()
+        self.time.set_control_vars(initial_time=t)
         stateful_name = "_NONE"
-        # TODO make this more solid, link with builder or next TODO?
-        stateful_init = [
-            "_integ_", "_delay_", "_delayfixed_", "_delayn_",
-            "_sample_if_true_", "_smooth_", "_trend_", "_initial_"]
+        modified_statefuls = set()
 
         for key, value in initial_value.items():
             component_name = utils.get_value_by_insensitive_key_or_value(
                 key, self.components._namespace)
             if component_name is not None:
-                for element_name in self._stateful_elements.keys():
-                    # TODO make this more solid, add link between stateful
-                    # objects and model vars
-                    for init in stateful_init:
-                        if init + component_name == element_name:
-                            stateful_name = element_name
+                if self.components._dependencies[component_name]:
+                    deps = list(self.components._dependencies[component_name])
+                    if len(deps) == 1 and deps[0] in self.initialize_order:
+                        stateful_name = deps[0]
             else:
                 component_name = key
                 stateful_name = key
@@ -1349,14 +1358,40 @@ class Macro(DynamicStateful):
                         value, dims,
                         self.components._subscript_dict)
                 element.initialize(value)
-                # TODO clean only necessary cache
-                self.cache.clean()
+                modified_statefuls.add(stateful_name)
             else:
                 # Try to override component
                 raise ValueError(
-                    f"\nSetting {component_name} to a constant value with "
-                    "initial_conditions. Use params={"
-                    f"'{component_name}': {value}"+"} instead.")
+                    f"\nUnrecognized stateful '{component_name}'. If you want"
+                    " to set a value of a regular component. Use params={"
+                    f"'{component_name}': {value}" + "} instead.")
+
+        self.clean_caches()
+
+        # get the elements to initialize
+        elements_to_initialize =\
+            self._get_elements_to_initialize(modified_statefuls)
+
+        # Initialize remaining stateful objects
+        for element_name in self.initialize_order:
+            if element_name in elements_to_initialize:
+                self._stateful_elements[element_name].initialize()
+
+    def _get_elements_to_initialize(self, modified_statefuls):
+        elements_to_initialize = set()
+        for stateful, deps in self.stateful_initial_dependencies.items():
+            if stateful in modified_statefuls:
+                # if elements initial conditions have been modified
+                # we should not modify it
+                continue
+            for modified_sateteful in modified_statefuls:
+                if modified_sateteful in deps:
+                    # if element has dependencies on a modified element
+                    # we should re-initialize it
+                    elements_to_initialize.add(stateful)
+                    continue
+
+        return elements_to_initialize
 
     def set_stateful(self, stateful_dict):
         """
@@ -1443,12 +1478,7 @@ class Model(Macro):
         """ Sets up the python objects """
         super().__init__(py_model_file, None, None, Time())
         self.time.stage = 'Load'
-        self.time.set_control_vars(
-            initial=self.components._initial_time,
-            final=self.components._final_time,
-            step=self.components._time_step,
-            save=self.components._saveper
-        )
+        self.time.set_control_vars(**self.components._control_vars)
         self.missing_values = missing_values
         if initialize:
             self.initialize()
@@ -1529,9 +1559,9 @@ class Model(Macro):
         cache_output: bool (optional)
            If True, the number of calls of outputs variables will be increased
            in 1. This helps caching output variables if they are called only
-           once. If time step = saveper it is recommended to activate this
-           feature, if time step << saveper it is recommended to deactivate it.
-           Default is True.
+           once. For performance reasons, if time step = saveper it is
+           recommended to activate this feature, if time step << saveper
+           it is recommended to deactivate it. Default is True.
 
         Examples
         --------
@@ -1557,7 +1587,7 @@ class Model(Macro):
             final_time = self.time.return_timestamps[-1]
 
         self.time.set_control_vars(
-            final=final_time, step=time_step, save=saveper)
+            final_time=final_time, time_step=time_step, saveper=saveper)
 
         if params:
             self.set_components(params)
@@ -1576,17 +1606,18 @@ class Model(Macro):
         # create a dictionary splitting run cached and others
         capture_elements = self._split_capture_elements(capture_elements)
 
+        # include outputs in cache if needed
         self.components._dependencies["OUTPUTS"] = {
             element: 1 for element in capture_elements["step"]
         }
         if cache_output:
             self._assign_cache_type()
-        self._add_constant_cache()
+            self._add_constant_cache()
 
         # Run the model
         self.time.stage = 'Run'
         # need to clean cache to remove the values from active_initial
-        self.cache.clean()
+        self.clean_caches()
 
         res = self._integrate(capture_elements['step'])
 
@@ -1692,12 +1723,10 @@ class Model(Macro):
         if isinstance(initial_condition, tuple):
             self.initialize()
             self.set_initial_value(*initial_condition)
-            # TODO initialize the stateful objects that depend on changed
-            # initial conditions
         elif isinstance(initial_condition, str):
             if initial_condition.lower() in ["original", "o"]:
                 self.time.set_control_vars(
-                    initial=self.components._initial_time)
+                    initial_time=self.components._control_vars["initial_time"])
                 self.initialize()
             elif initial_condition.lower() in ["current", "c"]:
                 pass
@@ -1746,7 +1775,7 @@ class Model(Macro):
         if self.progress:
             # initialize progress bar
             progressbar = utils.ProgressBar(
-                int((self.time.final()-self.time())/self.time.step())
+                int((self.time.final_time()-self.time())/self.time.time_step())
             )
         else:
             # when None is used the update will do nothing
@@ -1756,8 +1785,8 @@ class Model(Macro):
             if self.time.in_return():
                 outputs.at[self.time()] = [getattr(self.components, key)()
                                            for key in capture_elements]
-            self._euler_step(self.time.step())
-            self.time.update(self.time()+self.time.step())
+            self._euler_step(self.time.time_step())
+            self.time.update(self.time()+self.time.time_step())
             self.clean_caches()
             progressbar.update()
 

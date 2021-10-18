@@ -278,8 +278,8 @@ class TestPySD(unittest.TestCase):
         model = pysd.read_vensim(test_model_subs)
 
         with self.assertRaises(TypeError):
-            model.run(initial_condition=(5, {'initial_values': input_}),
-                      return_columns=['Initial Values'],
+            model.run(initial_condition=(5, {'stock_a': input_}),
+                      return_columns=['stock_a'],
                       return_timestamps=list(range(5, 10)))
 
     def test_set_constant_parameter(self):
@@ -792,6 +792,28 @@ class TestPySD(unittest.TestCase):
         model.initialize()
         self.assertEqual(model.components.stock_b(), 1)
         self.assertEqual(model.components.stock_a(), 1)
+
+    def test_set_initial_with_deps(self):
+        import pysd
+        model = pysd.load(more_tests + "/initialization_order/"
+                          "test_initialization_order.py")
+
+        original_a = model.components.stock_a()
+
+        model.set_initial_condition((0, {"_integ_stock_a": 23}))
+        self.assertEqual(model.components.stock_a(), 23)
+        self.assertEqual(model.components.stock_b(), 23)
+
+        model.reload()
+        model.set_initial_condition((0, {"_integ_stock_b": 53}))
+        self.assertEqual(model.components.stock_a(), original_a)
+        self.assertEqual(model.components.stock_b(), 53)
+
+        model.reload()
+        model.set_initial_condition((0, {"_integ_stock_a": 89,
+                                         "_integ_stock_b": 73}))
+        self.assertEqual(model.components.stock_a(), 89)
+        self.assertEqual(model.components.stock_b(), 73)
 
     def test_set_initial_value(self):
         import pysd

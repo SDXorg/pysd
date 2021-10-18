@@ -1,7 +1,13 @@
 import unittest
+import os
 import warnings
 
+
 import xarray as xr
+
+_root = os.path.dirname(__file__)
+
+more_tests = os.path.join(_root, "more-tests")
 
 
 class TestStateful(unittest.TestCase):
@@ -344,3 +350,26 @@ class TestStatefulErrors(unittest.TestCase):
                 "my_object\nAttempt to call stateful element"
                 + " before it is initialized.",
                 err.args[0])
+
+
+class TestMacroMethods(unittest.TestCase):
+    def test_get_elements_to_initialize(self):
+        from pysd.py_backend.statefuls import Macro
+
+        macro = Macro(more_tests + "/version/test_current_version.py")
+
+        macro.stateful_initial_dependencies = {
+            "A": {"B", "C"},
+            "B": {"C"},
+            "C": {},
+            "D": {"E"},
+            "E": {}
+        }
+
+        self.assertEqual(macro._get_elements_to_initialize(["A"]), set())
+        self.assertEqual(macro._get_elements_to_initialize(["B"]), {"A"})
+        self.assertEqual(macro._get_elements_to_initialize(["B", "A"]), set())
+        self.assertEqual(macro._get_elements_to_initialize(["C"]), {"A", "B"})
+        self.assertEqual(macro._get_elements_to_initialize(["A", "C"]), {"B"})
+        self.assertEqual(macro._get_elements_to_initialize(
+            ["C", "E"]), {"A", "B", "D"})
