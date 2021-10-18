@@ -2,6 +2,7 @@ import doctest
 from unittest import TestCase
 
 import pandas as pd
+import numpy as np
 import xarray as xr
 
 from pysd.tools.benchmarking import assert_frames_close
@@ -119,8 +120,7 @@ class TestUtils(TestCase):
                                   'Dim2': ['D', 'E', 'F']},
                                  dims=['Dim1', 'Dim2'])]
 
-        expected = pd.DataFrame(index=[1], columns=['Elem1[B,F]'])
-        expected.at[1] = [6]
+        expected = pd.DataFrame(index=[1], data={'Elem1[B,F]': 6.})
 
         return_addresses = {
             'Elem1[B,F]': ('elem1', {'Dim1': ['B'], 'Dim2': ['F']})}
@@ -129,7 +129,7 @@ class TestUtils(TestCase):
 
         # check all columns are in the DataFrame
         self.assertEqual(set(actual.columns), set(expected.columns))
-        assert_frames_close(actual, df, rtol=1e-8, atol=1e-8)
+        assert_frames_close(actual, expected, rtol=1e-8, atol=1e-8)
 
     def test_make_flat_df_nosubs(self):
         import pysd
@@ -147,8 +147,8 @@ class TestUtils(TestCase):
 
         # check all columns are in the DataFrame
         self.assertEqual(set(actual.columns), set(expected.columns))
-        self.assertTrue(all(actual['Elem1'] == df['Elem1']))
-        self.assertTrue(all(actual['Elem2'] == df['Elem2']))
+        self.assertTrue(all(actual['Elem1'] == expected['Elem1']))
+        self.assertTrue(all(actual['Elem2'] == expected['Elem2']))
 
     def test_make_flat_df_return_array(self):
         """ There could be cases where we want to
@@ -188,9 +188,9 @@ class TestUtils(TestCase):
         # need to assert one by one as they are xarrays
         self.assertTrue(
             actual.loc[1, 'Elem1[A, Dim2]'].equals(
-                df.loc[1, 'Elem1[A, Dim2]']))
+                expected.loc[1, 'Elem1[A, Dim2]']))
         self.assertTrue(
-            actual.loc[1, 'Elem2'].equals(df.loc[1, 'Elem2']))
+            actual.loc[1, 'Elem2'].equals(expected.loc[1, 'Elem2']))
 
     def test_make_flat_df_flatten(self):
         import pysd
@@ -234,7 +234,7 @@ class TestUtils(TestCase):
         for col in set(expected.columns):
             self.assertEqual(
                 actual.loc[:, col].values,
-                df.loc[:, col].values)
+                expected.loc[:, col].values)
 
     def test_make_flat_df_times(self):
         import pysd
@@ -259,7 +259,7 @@ class TestUtils(TestCase):
         # check all columns are in the DataFrame
         self.assertEqual(set(actual.columns), set(expected.columns))
         self.assertEqual(set(actual.index), set(expected.index))
-        self.assertTrue(all(actual['Elem1[B,F]'] == df['Elem1[B,F]']))
+        self.assertTrue(all(actual['Elem1[B,F]'] == expected['Elem1[B,F]']))
 
     def test_make_coord_dict(self):
         import pysd

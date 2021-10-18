@@ -13,6 +13,7 @@ import regex as re
 import progressbar
 import numpy as np
 import xarray as xr
+import pandas as pd
 
 # used to create python safe names with the variable reserved_words
 from keyword import kwlist
@@ -506,60 +507,63 @@ def make_flat_df(df, return_addresses, flatten=False):
 
     Returns
     -------
-    df: pandas.DataFrame
+    new_df: pandas.DataFrame
         Formatted dataframe.
 
     """
-    cols_to_remove = set()
-    rename_cols = {}
-    # TODO check if it is possible to improve the performance of this function
-    # avoiding pandas PerformanceWarning
+    new_df = {}
     for real_name, (pyname, address) in return_addresses.items():
         if address:
-            cols_to_remove.add(pyname)
-            # subset the value and add it to a new column
-            xrval = [x.loc[address] for x in df[pyname].values]
-            if xrval[0].size > 1:
-                df[real_name] = xrval
-            else:
-                df[real_name] = [float(x) for x in xrval]
+            # subset the specific address
+            values = [x.loc[address] for x in df[pyname].values]
         else:
-            # save the name to change it in the dataframe
-            try:
-                # some elements are returned as 0-d arrays, convert
-                # them to float
-                df[pyname] = [float(x) for x in df[pyname].values]
-            except TypeError:
-                pass
-            rename_cols[pyname] = real_name
+            # get the full column
+            values = df[pyname].to_list()
 
-    df.rename(columns=rename_cols, inplace=True)
+        is_dataarray = len(values) != 0 and isinstance(values[0], xr.DataArray)
 
-    if cols_to_remove:
-        # remove the columns of the subset values
-        df.drop(cols_to_remove, axis='columns', inplace=True)
+        if is_dataarray and values[0].size == 1:
+            # some elements are returned as 0-d arrays, convert
+            # them to float
+            values = [float(x) for x in values]
 
-    if flatten:
-        # create a totally flat df (no xarray.DataArray)
-        cols_to_remove.clear()
-        for col in df.columns:
-            if isinstance(df[col].values[0], xr.DataArray):
-                # remove subscripts from name if given
-                name = re.sub(r'\[.*\]', '', col)
-                # split values in xarray.DataArray
-                lval = [xrsplit(val) for val in df[col].values]
-                for i, ar in enumerate(lval[0]):
-                    vals = [float(v[i]) for v in lval]
-                    subs = '[' + ','.join([str(ar.coords[dim].values)
-                                           for dim in list(ar.coords)]) + ']'
-                    df[name+subs] = vals
-                    cols_to_remove.add(col)
+        if flatten and is_dataarray:
+            _add_flat(new_df, real_name, values)
+        else:
+            new_df[real_name] = values
 
-        if cols_to_remove:
-            # remove the columns of the subset values
-            df.drop(cols_to_remove, axis='columns', inplace=True)
+    return pd.DataFrame(index=df.index, data=new_df)
 
-    return df
+
+def _add_flat(savedict, name, values):
+    """
+    Add float lists from a list of xarrays to a provided dictionary.
+
+    Parameters
+    ----------
+    savedict: dict
+        Dictionary to save the data on.
+
+    name: str
+        The base name of the variable to save the data.
+
+    values: list
+        List of xarrays to convert to split in floats.
+
+    Returns
+    -------
+    None
+
+    """
+    # remove subscripts from name if given
+    name = re.sub(r'\[.*\]', '', name)
+    # split values in xarray.DataArray
+    lval = [xrsplit(val) for val in values]
+    for i, ar in enumerate(lval[0]):
+        vals = [float(v[i]) for v in lval]
+        subs = '[' + ','.join([str(ar.coords[dim].values)
+                               for dim in list(ar.coords)]) + ']'
+        savedict[name+subs] = vals
 
 
 def compute_shape(coords, reshape_len=None, py_name=""):
