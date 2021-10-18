@@ -2140,6 +2140,7 @@ def build_dependencies(deps, exps):
 
 def build_function_call(function_def, user_arguments, dependencies=set()):
     """
+    Build a function call using the arguments from the original model.
 
     Parameters
     ----------

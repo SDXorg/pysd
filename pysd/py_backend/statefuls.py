@@ -1,8 +1,7 @@
 """
-These functions have no direct analog in the standard python data analytics
-stack, or require information about the internal state of the system beyond
-what is present in the function call. We provide them in a structure that
-makes it easy for the model elements to call.
+The stateful objects are used and updated each time step with an update
+method. This include from basic Integ class objects until the Model
+class objects.
 """
 
 import inspect

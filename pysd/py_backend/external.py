@@ -75,7 +75,6 @@ class External(object):
         the values without showing anything. If "keep" it will keep
         the missing values, this option may cause the integration to
         fail, but it may be used to check the quality of the data.
-
     file: str
         File name from which the data is read.
     sheet: str
@@ -195,13 +194,13 @@ class External(object):
             The way to read series file.
         series_row_or_col: int or str
             If series_across is "row" the row number where the series data is.
-            If series_across is "column" the column name where
-              the series data is.
-            If series_across is "name" the cell range name where
-              the series data is.
+            If series_across is "column" the column name where the series
+            data is.
+            If series_across is "name" the cell range name where the series
+            data is.
         cell:
-            If series_across is not "name, the top left cell where
-              the data table starts.
+            If series_across is not "name, the top left cell where the
+            data table starts.
             Else the name of the cell range where the data is.
         size:
             The size of the 2nd dimension of the data.

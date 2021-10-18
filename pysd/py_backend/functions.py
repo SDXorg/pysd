@@ -78,10 +78,8 @@ def pulse(time, start, duration):
     ----------
     time: function
         Function that returns the current time.
-
     start: float
         Starting time of the pulse.
-
     duration: float
         Duration of the pulse.
 
@@ -108,16 +106,12 @@ def pulse_train(time, start, duration, repeat_time, end):
     ----------
     time: function
         Function that returns the current time.
-
     start: float
         Starting time of the pulse.
-
     duration: float
         Duration of the pulse.
-
     repeat_time: float
         Time interval of the pulse repetition.
-
     end: float
         Final time of the pulse.
 
@@ -149,13 +143,10 @@ def pulse_magnitude(time, magnitude, start, repeat_time=0):
     ----------
     time: function
         Function that returns the current time.
-
     magnitude:
         Magnitude of the pulse.
-
     start: float
         Starting time of the pulse.
-
     repeat_time: float (optional)
         Time interval of the pulse repetition.  Default is 0, only one
         pulse will be generated.
@@ -413,13 +404,15 @@ def log(x, base):
 
     Parameters
     ----------
-    x: input value
-    base: base of the logarithm
+    x: float or xarray.DataArray
+        Input value.
+    base: float or xarray.DataArray
+        Base of the logarithm.
 
     Returns
     -------
     float
-      the log of 'x' in base 'base'
+      The log of 'x' in base 'base'.
     """
     return np.log(x) / np.log(base)
 
@@ -477,7 +470,6 @@ def modulo(x, m):
     ----------
     x: float or xarray.DataArray
         Input value.
-
     m: float or xarray.DataArray
         Modulo to compute.
 
@@ -497,15 +489,15 @@ def sum(x, dim=None):
     Parameters
     ----------
     x: xarray.DataArray
-      Input value
+      Input value.
     dim: list of strs (optional)
       Dimensions to apply the function over.
-      If not given the function will be applied over all dimensions
+      If not given the function will be applied over all dimensions.
 
     Returns
     -------
     xarray.DataArray or float
-      The result of the sum operation in the given dimensions
+      The result of the sum operation in the given dimensions.
 
     """
     # float returned if the function is applied over all the dimensions
@@ -522,15 +514,15 @@ def prod(x, dim=None):
     Parameters
     ----------
     x: xarray.DataArray
-      Input value
+      Input value.
     dim: list of strs (optional)
       Dimensions to apply the function over.
-      If not given the function will be applied over all dimensions
+      If not given the function will be applied over all dimensions.
 
     Returns
     -------
     xarray.DataArray or float
-      The result of the product operation in the given dimensions
+      The result of the product operation in the given dimensions.
 
     """
     # float returned if the function is applied over all the dimensions
@@ -547,15 +539,15 @@ def vmin(x, dim=None):
     Parameters
     ----------
     x: xarray.DataArray
-      Input value
+      Input value.
     dim: list of strs (optional)
       Dimensions to apply the function over.
-      If not given the function will be applied over all dimensions
+      If not given the function will be applied over all dimensions.
 
     Returns
     -------
     xarray.DataArray or float
-      The result of the minimum value over the given dimensions
+      The result of the minimum value over the given dimensions.
 
     """
     # float returned if the function is applied over all the dimensions
@@ -572,15 +564,15 @@ def vmax(x, dim=None):
     Parameters
     ----------
     x: xarray.DataArray
-      Input value
+      Input value.
     dim: list of strs (optional)
       Dimensions to apply the function over.
-      If not given the function will be applied over all dimensions
+      If not given the function will be applied over all dimensions.
 
     Returns
     -------
     xarray.DataArray or float
-      The result of the maximum value over the dimensions
+      The result of the maximum value over the dimensions.
 
     """
     # float returned if the function is applied over all the dimensions
@@ -596,7 +588,7 @@ def invert_matrix(mat):
 
     Invert the matrix defined by the last two dimensions of xarray.DataArray.
 
-    Paramteters
+    Parameters
     -----------
     mat: xarray.DataArray
         The matrix to invert.

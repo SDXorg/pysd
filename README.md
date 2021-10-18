@@ -14,6 +14,8 @@ This project is a simple library for running [System Dynamics](http://en.wikiped
 
 **The current version needs to run at least Python 3.7. If you need support for Python 2, please use the release here: https://github.com/JamesPHoughton/pysd/releases/tag/LastPy2**
 
+**table2py feature was dropped in version 2.0.0, please use the release here if you want to build PySD model from a tabular file: https://github.com/JamesPHoughton/pysd/releases/tag/v1.11.0**
+
 ### Resources
 See the [project documentation](http://pysd.readthedocs.org/) for information about:
 

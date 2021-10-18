@@ -91,8 +91,8 @@ def read_vensim(mdl_file, initialize=True, missing_values="warning",
         models split in many different views. Default is False.
 
     **kwargs: (optional)
-        Additional keyword arguments.
-        subview_sep:(list)
+        Additional keyword arguments for translation.
+        subview_sep: list
             Characters used to separate views and subviews (e.g. [",", "."]).
             If provided, and split_views=True, each submodule will be placed
             inside the directory of the parent view.

@@ -7,32 +7,27 @@ tracker. <https://github.com/JamesPHoughton/pysd/issues>`_ To get involved see :
 
 High Priority
 -------------
-* Subscripts/arrays `Github Issue Track <https://github.com/JamesPHoughton/pysd/issues/21>`_
-* Refactor delays to take advantage of array architecture
-* Improve translation of model documentation strings and units into python function docstrings
+* Improve running speed using numpy.arrays instead of xarray.DataArrays
+* Adding unit and full tests for Xmile translation
+* Subscripts/arrays support for Xmile models
 
 
 Medium Priority
 ---------------
-* Outsource model translation to `SDXchange <https://github.com/SDXchange>`_ model translation toolset
 * Improve model exexution speed using cython, theano, numba, or another package
-* Improve performance when returning non-stock model elements
 
 
 Low Priority
 ------------
-* Import model component documentation in a way that enables doctest, to enable writing unit tests
-  within the modeling environment.
+* Import model component documentation in a way that enables doctest, to enable writing unit tests within the modeling environment
 * Handle simulating over timeseries
 * Implement run memoization to improve speed of larger analyses
-* Implement an interface for running the model over a range of conditions, build in intelligent
-  parallelization.
+* Implement an interface for running the model over a range of conditions, build in intelligent parallelization.
 
 
 Not Planned
 -----------
 * Model Construction
-* Display of Model Diagrams
 * Outputting models to XMILE or other formats
 
 

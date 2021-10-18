@@ -1,3 +1,8 @@
+"""
+Time managing class, includying the management of control variables:
+initial_time, final_time, time_step and saveper.
+"""
+
 
 class Time(object):
     def __init__(self):

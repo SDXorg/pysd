@@ -28,7 +28,8 @@ def get_file_sections(file_str):
 
     Parameters
     ----------
-    file_str
+    file_str: str
+        File content to parse.
 
     Returns
     -------
@@ -114,8 +115,8 @@ def get_model_elements(model_str):
 
     Parameters
     ----------
-    model_str : string
-
+    model_str : str
+        Model file conten to read.
 
     Returns
     -------
@@ -125,7 +126,6 @@ def get_model_elements(model_str):
 
     Examples
     --------
-
     # Basic Parsing:
     >>> get_model_elements(r'a~b~c| d~e~f| g~h~i|')
     [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'f', 'unit': 'e', 'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
@@ -150,8 +150,7 @@ def get_model_elements(model_str):
     [{'doc': 'Docstring!', 'unit': '', 'eqn': ''}, {'doc': 'f', 'unit': 'e', 'eqn': 'd'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
 
     # Handle control sections, returning appropriate docstring pieces
-    >>> get_model_elements(r'a~b~c| ****.Control***~ Simulation Control
-    Parameters | g~h~i|')
+    >>> get_model_elements(r'a~b~c| ****.Control***~ Simulation Control Parameters | g~h~i|')
     [{'doc': 'c', 'unit': 'b', 'eqn': 'a'}, {'doc': 'i', 'unit': 'h', 'eqn': 'g'}]
 
     # Handle the model display elements (ignore them)
