@@ -35,13 +35,13 @@ Once the regression model is fit, we write a wrapper function for its predict me
       room_temp = model.components.room_temperature()
       return regression.predict([room_temp, tea_temp])[0]
 
-We can substitute this function directly for the heat_loss_to_room model component using the :py:func:`set_component()` method::
+In order to substitute this function directly for the heat_loss_to_room model component using the :py:func:`set_component()` method::
 
    model.set_component({'heat_loss_to_room': new_heatflow_function})
 
 If you want to replace a subscripted variable, you need to ensure that the output from the new function is the same as the previous one. You can check the current coordinates and dimensions of a component by using :py:data:`.get_coords(variable_name)` as it is explained in :doc:`basic usage <../basic_usage>`.
 
-.. note::
+.. warning::
    From PySD 2.0.0 on the cache is automatically assigned from dependencies dictionary. Using `model.components.heat_loss_to_room = new_heatflow_function` will not update the dependencies dictionary and may assign incorrect cache to the new function and the functions that depend on it.
 
 Splitting Vensim views in separate Python files (modules)

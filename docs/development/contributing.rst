@@ -9,8 +9,8 @@ To get started, you can fork the repository and make contributions to your own v
 When you're happy with your edits, submit a pull request to the main branch.
 
 .. note::
-  In order to open a pull request, you must test your new features changes.
-  To do so, you should add unit test of the new feature or of the new translated function, please check the Development Tools section bellow. When opening a pull request all tests are run and the coverage and pep8 style are checked.
+  In order to open a pull request,the new features and changes should be througly tested.
+  To do so, unit tests of new features or translated functions should be added, please check the Development Tools section bellow. When opening a pull request all tests are run and the coverage and pep8 style are checked.
 
 Development Tools
 -----------------

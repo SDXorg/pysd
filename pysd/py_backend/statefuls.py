@@ -609,6 +609,7 @@ class Macro(DynamicStateful):
         self.time_initialization = time_initialization
         self.cache = Cache()
         self.py_name = py_name
+        self.external_loaded = False
 
         # need a unique identifier for the imported module.
         module_name = os.path.splitext(py_model_file)[0]\
@@ -906,12 +907,15 @@ class Macro(DynamicStateful):
             'time': self.time
         })
 
-        # Initialize external elements
-        for element in self._external_elements:
-            element.initialize()
+        if not self.external_loaded:
+            # Initialize external elements
+            for element in self._external_elements:
+                element.initialize()
 
-        # Remove Excel data from memory
-        Excels.clean()
+            # Remove Excel data from memory
+            Excels.clean()
+
+            self.external_loaded = True
 
         # Initialize stateful objects
         for element_name in self.initialize_order:
@@ -1719,6 +1723,7 @@ class Model(Macro):
         model.set_initial_value()
 
         """
+
         if isinstance(initial_condition, tuple):
             self.initialize()
             self.set_initial_value(*initial_condition)

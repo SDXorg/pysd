@@ -79,24 +79,24 @@ class TestPySD(unittest.TestCase):
             + 'test_get_with_missing_values_xlsx.py')
 
         with catch_warnings(record=True) as ws:
-            # warnings for missing values
+            # ignore warnings for missing values
             model = pysd.read_vensim(model_mdl, missing_values="ignore")
             self.assertTrue(all(["missing" not in str(w.message) for w in ws]))
 
         with catch_warnings(record=True) as ws:
-            # warnings for missing values
+            # ignore warnings for missing values
             model.run()
             self.assertTrue(all(["missing" not in str(w.message) for w in ws]))
 
         with catch_warnings(record=True) as ws:
-            # ignore warnings for missing values
+            # warnings for missing values
             model = pysd.load(model_py)
             self.assertTrue(any(["missing" in str(w.message) for w in ws]))
 
         with catch_warnings(record=True) as ws:
-            # ignore warnings for missing values
+            # second initialization of external avoided
             model.run()
-            self.assertTrue(any(["missing" in str(w.message) for w in ws]))
+            self.assertTrue(all(["missing" not in str(w.message) for w in ws]))
 
         with self.assertRaises(ValueError):
             # errors for missing values
