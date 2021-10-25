@@ -5,12 +5,9 @@ class objects.
 """
 
 import inspect
-import os
 import re
 import pickle
-import random
 import warnings
-from importlib.machinery import SourceFileLoader
 
 import numpy as np
 import pandas as pd
@@ -20,7 +17,7 @@ from . import utils
 from .functions import zidz, if_then_else
 from .external import External, Excels
 from .decorators import Cache, constant_cache
-from .time import Time
+from .components import Components, Time
 
 from pysd._version import __version__
 
@@ -610,23 +607,7 @@ class Macro(DynamicStateful):
         self.cache = Cache()
         self.py_name = py_name
         self.external_loaded = False
-
-        # need a unique identifier for the imported module.
-        module_name = os.path.splitext(py_model_file)[0]\
-            + str(random.randint(0, 1000000))
-        try:
-            self.components = SourceFileLoader(module_name,
-                                               py_model_file).load_module()
-        except TypeError:
-            raise ImportError(
-                "\n\nNot able to import the model. "
-                + "This may be because the model was compiled with an "
-                + "earlier version of PySD, you can check on the top of "
-                + " the model file you are trying to load."
-                + "\nThe current version of PySd is :"
-                + "\n\tPySD " + __version__ + "\n\n"
-                + "Please translate again the model with the function"
-                + " read_vensim or read_xmile.")
+        self.components = Components(py_model_file, self.set_components)
 
         if __version__.split(".")[0]\
            != self.get_pysd_compiler_version().split(".")[0]:
@@ -641,7 +622,7 @@ class Macro(DynamicStateful):
                 + " read_vensim or read_xmile.")
 
         if params is not None:
-            self.set_components(params)
+            self.set_components(params, new=True)
             for param in params:
                 self.components._dependencies[
                     self.components._namespace[param]] = {"time"}
@@ -768,21 +749,21 @@ class Macro(DynamicStateful):
         for element, cache_type in self.cache_type.items():
             if cache_type == "run":
                 if self.get_args(element):
-                    setattr(
-                        self.components, element,
+                    self.components._set_component(
+                        element,
                         constant_cache(getattr(self.components, element), None)
                     )
                 else:
-                    setattr(
-                        self.components, element,
+                    self.components._set_component(
+                        element,
                         constant_cache(getattr(self.components, element))
                     )
                 self.constant_funcs.add(element)
 
     def _remove_constant_cache(self):
         for element in self.constant_funcs:
-            setattr(
-                self.components, element,
+            self.components._set_component(
+                element,
                 getattr(self.components, element).function)
         self.constant_funcs = set()
 
@@ -801,8 +782,8 @@ class Macro(DynamicStateful):
             if cache_type is not None:
                 if element not in self.cache.cached_funcs\
                    and self._count_calls(element) > 1:
-                    setattr(
-                        self.components, element,
+                    self.components._set_component(
+                        element,
                         self.cache(getattr(self.components, element)))
                     self.cache.cached_funcs.add(element)
 
@@ -1013,12 +994,7 @@ class Macro(DynamicStateful):
                 param,
                 self.components._namespace) or param
 
-            if hasattr(self.components, func_name):
-                func = getattr(self.components, func_name)
-            else:
-                NameError(
-                    "\n'%s' is not recognized as a model component."
-                    % param)
+            func = getattr(self.components, func_name)
         else:
             func = param
 
@@ -1058,12 +1034,8 @@ class Macro(DynamicStateful):
                 param,
                 self.components._namespace) or param
 
-            if hasattr(self.components, func_name):
-                func = getattr(self.components, func_name)
-            else:
-                NameError(
-                    "\n'%s' is not recognized as a model component."
-                    % param)
+            func = getattr(self.components, func_name)
+
         else:
             func = param
 
@@ -1141,24 +1113,22 @@ class Macro(DynamicStateful):
             param,
             self.components._namespace) or param
 
-        if func_name.startswith("_ext_"):
-            if hasattr(self.components, func_name):
+        try:
+            if func_name.startswith("_ext_"):
                 return getattr(self.components, func_name).data
-        elif self.get_args(getattr(self.components, func_name)):
-            if hasattr(self.components, "_ext_lookup_" + func_name):
+            elif self.get_args(getattr(self.components, func_name)):
                 return getattr(self.components,
                                "_ext_lookup_" + func_name).data
-        else:
-            if hasattr(self.components, "_ext_data_" + func_name):
+            else:
                 return getattr(self.components,
                                "_ext_data_" + func_name).data
+        except NameError:
+            raise ValueError(
+                "Trying to get the values of a hardcoded lookup/data or "
+                "other type of variable. 'model.get_series_data' only works "
+                "with external lookups/data objects.\n\n")
 
-        raise ValueError(
-            "Trying to get the values of a hardcoded lookup/data or "
-            "other type of variable. 'model.get_series_data' only works "
-            "with external lookups/data objects.\n\n")
-
-    def set_components(self, params):
+    def set_components(self, params, new=False):
         """ Set the value of exogenous model elements.
         Element values can be passed as keyword=value pairs in the
         function call. Values can be numeric type or pandas Series.
@@ -1196,12 +1166,12 @@ class Macro(DynamicStateful):
                     "\n'%s' is not recognized as a model component."
                     % key)
 
-            try:
+            if new:
+                dims, args = None, None
+            else:
                 func = getattr(self.components, func_name)
                 _, dims = self.get_coords(func) or (None, None)
                 args = self.get_args(func)
-            except (AttributeError, TypeError):
-                dims, args = None, None
 
             if isinstance(value, pd.Series):
                 new_function, deps = self._timeseries_component(
@@ -1233,7 +1203,7 @@ class Macro(DynamicStateful):
                               stacklevel=2)
 
             new_function.__name__ = func_name
-            setattr(self.components, func_name, new_function)
+            self.components._set_component(func_name, new_function)
             if func_name in self.cache.cached_funcs:
                 self.cache.cached_funcs.remove(func_name)
 
@@ -1354,7 +1324,7 @@ class Macro(DynamicStateful):
                     '(https://pysd.readthedocs.io/en/master/basic_usage.html)')
 
             # Try to update stateful component
-            if hasattr(self.components, stateful_name):
+            try:
                 element = getattr(self.components, stateful_name)
                 if dims:
                     value = utils.rearrange(
@@ -1362,7 +1332,7 @@ class Macro(DynamicStateful):
                         self.components._subscript_dict)
                 element.initialize(value)
                 modified_statefuls.add(stateful_name)
-            else:
+            except NameError:
                 # Try to override component
                 raise ValueError(
                     f"\nUnrecognized stateful '{component_name}'. If you want"

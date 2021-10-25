@@ -2,7 +2,7 @@ import unittest
 
 import numpy as np
 
-from pysd.py_backend.time import Time
+from pysd.py_backend.components import Time
 
 
 class TestTime(unittest.TestCase):
