@@ -365,6 +365,27 @@ class TestParse_general_expression(unittest.TestCase):
         res = parse_general_expression({"expr": "-10^3+4"})
         self.assertEqual(res[0]["py_expr"], "-10**3+4")
 
+    def test_arithmetic_scientific(self):
+        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+
+        res = parse_general_expression({"expr": "1e+4"})
+        self.assertEqual(res[0]["py_expr"], "1e+4")
+
+        res = parse_general_expression({"expr": "2e4"})
+        self.assertEqual(res[0]["py_expr"], "2e4")
+
+        res = parse_general_expression({"expr": "3.43e04"})
+        self.assertEqual(res[0]["py_expr"], "3.43e04")
+
+        res = parse_general_expression({"expr": "1.0E4"})
+        self.assertEqual(res[0]["py_expr"], "1.0E4")
+
+        res = parse_general_expression({"expr": "-2.0E43"})
+        self.assertEqual(res[0]["py_expr"], "-2.0E43")
+
+        res = parse_general_expression({"expr": "-2.0e-43"})
+        self.assertEqual(res[0]["py_expr"], "-2.0e-43")
+
     def test_caps_handling(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
 
