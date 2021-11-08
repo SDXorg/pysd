@@ -2,6 +2,7 @@ import doctest
 from unittest import TestCase
 
 import pandas as pd
+import numpy as np
 import xarray as xr
 
 from pysd.tools.benchmarking import assert_frames_close
@@ -119,8 +120,7 @@ class TestUtils(TestCase):
                                   'Dim2': ['D', 'E', 'F']},
                                  dims=['Dim1', 'Dim2'])]
 
-        expected = pd.DataFrame(index=[1], columns=['Elem1[B,F]'])
-        expected.at[1] = [6]
+        expected = pd.DataFrame(index=[1], data={'Elem1[B,F]': 6.})
 
         return_addresses = {
             'Elem1[B,F]': ('elem1', {'Dim1': ['B'], 'Dim2': ['F']})}
@@ -129,7 +129,7 @@ class TestUtils(TestCase):
 
         # check all columns are in the DataFrame
         self.assertEqual(set(actual.columns), set(expected.columns))
-        assert_frames_close(actual, df, rtol=1e-8, atol=1e-8)
+        assert_frames_close(actual, expected, rtol=1e-8, atol=1e-8)
 
     def test_make_flat_df_nosubs(self):
         import pysd
@@ -147,8 +147,8 @@ class TestUtils(TestCase):
 
         # check all columns are in the DataFrame
         self.assertEqual(set(actual.columns), set(expected.columns))
-        self.assertTrue(all(actual['Elem1'] == df['Elem1']))
-        self.assertTrue(all(actual['Elem2'] == df['Elem2']))
+        self.assertTrue(all(actual['Elem1'] == expected['Elem1']))
+        self.assertTrue(all(actual['Elem2'] == expected['Elem2']))
 
     def test_make_flat_df_return_array(self):
         """ There could be cases where we want to
@@ -188,9 +188,9 @@ class TestUtils(TestCase):
         # need to assert one by one as they are xarrays
         self.assertTrue(
             actual.loc[1, 'Elem1[A, Dim2]'].equals(
-                df.loc[1, 'Elem1[A, Dim2]']))
+                expected.loc[1, 'Elem1[A, Dim2]']))
         self.assertTrue(
-            actual.loc[1, 'Elem2'].equals(df.loc[1, 'Elem2']))
+            actual.loc[1, 'Elem2'].equals(expected.loc[1, 'Elem2']))
 
     def test_make_flat_df_flatten(self):
         import pysd
@@ -234,7 +234,7 @@ class TestUtils(TestCase):
         for col in set(expected.columns):
             self.assertEqual(
                 actual.loc[:, col].values,
-                df.loc[:, col].values)
+                expected.loc[:, col].values)
 
     def test_make_flat_df_times(self):
         import pysd
@@ -259,7 +259,7 @@ class TestUtils(TestCase):
         # check all columns are in the DataFrame
         self.assertEqual(set(actual.columns), set(expected.columns))
         self.assertEqual(set(actual.index), set(expected.index))
-        self.assertTrue(all(actual['Elem1[B,F]'] == df['Elem1[B,F]']))
+        self.assertTrue(all(actual['Elem1[B,F]'] == expected['Elem1[B,F]']))
 
     def test_make_coord_dict(self):
         import pysd
@@ -512,17 +512,6 @@ class TestUtils(TestCase):
         self.assertEqual(None,
                          rearrange(None, ['d2'], _subscript_dict))
 
-    def test_round_(self):
-        import pysd
-        coords = {'d1': [9, 1], 'd2': [2, 4]}
-        dims = ['d1', 'd2']
-        xr_input = xr.DataArray([[1.2, 2.7], [3.05, 4]], coords, dims)
-        xr_output = xr.DataArray([[1., 3.], [3., 4.]], coords, dims)
-
-        self.assertEqual(pysd.utils.round_(2.7), 3)
-        self.assertEqual(pysd.utils.round_(4.2), 4)
-        self.assertTrue(pysd.utils.round_(xr_input).equals(xr_output))
-
     def test_add_entries_underscore(self):
         """"
         Test for add_entries_undescore
@@ -569,10 +558,61 @@ class TestUtils(TestCase):
         self.assertEqual(make_add_identifier(name, build_names), "valuesADD_4")
         self.assertEqual(make_add_identifier(name2, build_names), "bb_aADD_2")
 
-    def test_progressbar(self):
-        import pysd
+    def test_make_python_identifier(self):
+        from pysd.py_backend.utils import make_python_identifier
 
-        pbar = pysd.py_backend.utils.ProgressBar(10)
+        self.assertEqual(
+            make_python_identifier('Capital'), 'capital')
+
+        self.assertEqual(
+            make_python_identifier('multiple words'), 'multiple_words')
+
+        self.assertEqual(
+            make_python_identifier('multiple     spaces'), 'multiple_spaces')
+
+        self.assertEqual(
+            make_python_identifier('for'), 'for_1')
+
+        self.assertEqual(
+            make_python_identifier('  whitespace  '), 'whitespace')
+
+        self.assertEqual(
+            make_python_identifier('H@t tr!ck'), 'ht_trck')
+
+        self.assertEqual(
+            make_python_identifier('123abc'), 'nvs_123abc')
+
+        self.assertEqual(
+            make_python_identifier('Var$', {'Var$': 'var'}),
+            'var')
+
+        self.assertEqual(
+            make_python_identifier('Var@', {'Var$': 'var'}), 'var_1')
+
+        self.assertEqual(
+            make_python_identifier('Var$', {'Var@': 'var', 'Var%': 'var_1'}),
+            'var_2')
+
+        my_vars = ["GDP 2010$", "GDP 2010€", "GDP 2010£"]
+        namespace = {}
+        expected = ["gdp_2010", "gdp_2010_1", "gdp_2010_2"]
+        for var, expect in zip(my_vars, expected):
+            self.assertEqual(
+                make_python_identifier(var, namespace),
+                expect)
+
+        self.assertEqual(
+            make_python_identifier('1995 value'),
+            'nvs_1995_value')
+
+        self.assertEqual(
+            make_python_identifier('$ value'),
+            'nvs_value')
+
+    def test_progressbar(self):
+        from pysd.py_backend.utils import ProgressBar
+
+        pbar = ProgressBar(10)
 
         for i in range(10):
             self.assertEqual(pbar.counter, i)
@@ -580,7 +620,25 @@ class TestUtils(TestCase):
 
         pbar.finish()
 
-        pbar = pysd.py_backend.utils.ProgressBar()
+        pbar = ProgressBar()
         self.assertFalse(hasattr(pbar, 'counter'))
         pbar.update()
         pbar.finish()
+
+    def test_update_dependency(self):
+        from pysd.py_backend.utils import update_dependency
+
+        deps_dict = {}
+
+        update_dependency("var1", deps_dict)
+        self.assertEqual(deps_dict, {"var1": 1})
+
+        update_dependency("var1", deps_dict)
+        self.assertEqual(deps_dict, {"var1": 2})
+
+        update_dependency("var2", deps_dict)
+        self.assertEqual(deps_dict, {"var1": 2, "var2": 1})
+
+        for i in range(10):
+            update_dependency("var1", deps_dict)
+        self.assertEqual(deps_dict, {"var1": 12, "var2": 1})

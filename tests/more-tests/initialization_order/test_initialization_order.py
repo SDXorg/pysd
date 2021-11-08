@@ -4,10 +4,9 @@ Translated using PySD
 """
 
 
-from pysd.py_backend.functions import Integ
-from pysd import cache
+from pysd.py_backend.statefuls import Integ
 
-__pysd_version__ = "1.6.0"
+__pysd_version__ = "2.0.0"
 
 _subscript_dict = {}
 
@@ -23,7 +22,26 @@ _namespace = {
     "TIME STEP": "time_step",
 }
 
+_dependencies = {
+    'initial_time': {},
+    'final_time': {},
+    'time_step': {},
+    'saveper': {'time_step': 1},
+    'initial_parameter': {},
+    'stock_a': {'_integ_stock_a': 1},
+    'stock_b': {'_integ_stock_b': 1},
+    '_integ_stock_a': {'initial': {'initial_parameter': 1}, 'step': {}},
+    '_integ_stock_b': {'initial': {'stock_a': 1}, 'step': {}}
+}
+
 __data = {"scope": None, "time": lambda: 0}
+
+_control_vars = {
+    "initial_time": lambda: 0,
+    "final_time": lambda: 20,
+    "time_step": lambda: 1,
+    "saveper": lambda: time_step()
+}
 
 
 def _init_outer_references(data):
@@ -35,7 +53,22 @@ def time():
     return __data["time"]()
 
 
-@cache.step
+def initial_time():
+    return __data["time"].initial_time()
+
+
+def final_time():
+    return __data["time"].final_time()
+
+
+def time_step():
+    return __data["time"].time_step()
+
+
+def saveper():
+    return __data["time"].saveper()
+
+
 def stock_b():
     """
     Real Name: Stock B
@@ -50,7 +83,6 @@ def stock_b():
     return _integ_stock_b()
 
 
-@cache.step
 def stock_a():
     """
     Real Name: Stock A
@@ -65,7 +97,6 @@ def stock_a():
     return _integ_stock_a()
 
 
-@cache.run
 def initial_parameter():
     """
     Real Name: Initial Parameter
@@ -78,66 +109,6 @@ def initial_parameter():
 
     """
     return 42
-
-
-@cache.run
-def final_time():
-    """
-    Real Name: FINAL TIME
-    Original Eqn: 1
-    Units: Month
-    Limits: (None, None)
-    Type: constant
-    Subs: None
-
-    The final time for the simulation.
-    """
-    return 1
-
-
-@cache.run
-def initial_time():
-    """
-    Real Name: INITIAL TIME
-    Original Eqn: 0
-    Units: Month
-    Limits: (None, None)
-    Type: constant
-    Subs: None
-
-    The initial time for the simulation.
-    """
-    return 0
-
-
-@cache.step
-def saveper():
-    """
-    Real Name: SAVEPER
-    Original Eqn: TIME STEP
-    Units: Month
-    Limits: (0.0, None)
-    Type: component
-    Subs: None
-
-    The frequency with which output is stored.
-    """
-    return time_step()
-
-
-@cache.run
-def time_step():
-    """
-    Real Name: TIME STEP
-    Original Eqn: 1
-    Units: Month
-    Limits: (0.0, None)
-    Type: constant
-    Subs: None
-
-    The time step for the simulation.
-    """
-    return 1
 
 
 _integ_stock_b = Integ(lambda: 1, lambda: stock_a(), "_integ_stock_b")

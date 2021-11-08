@@ -8,6 +8,10 @@ for contribution.
 To get started, you can fork the repository and make contributions to your own version.
 When you're happy with your edits, submit a pull request to the main branch.
 
+.. note::
+  In order to open a pull request,the new features and changes should be througly tested.
+  To do so, unit tests of new features or translated functions should be added, please check the Development Tools section below. When opening a pull request all tests are run and the coverage and pep8 style are checked.
+
 Development Tools
 -----------------
 There are a number of tools that you might find helpful in development:
@@ -29,6 +33,10 @@ that current functionality remains intact. If any new functionality is added or 
 bug is corrected, the tests should be updated with new models in test suite or
 complementary tests in the corresponding `unit_test_*.py` file.
 
+.. note::
+  If your changes correct some existing bug related to the translation or running
+  of a Vensim (or Xmile) model. You should add a new test in the `test suite repo <https://github.com/SDXorg/test-models>`_ reproducing the solved bug and addthe necessary lines in `integration_test_vensim_pathway.py` (or `integration_test_xmile_pathway.py`) to run the new test. Then, it is encoraged to add also unit test in `unit_test_vensim2py.py` (or `unit_test_xmile2py.py`) reproducing the translation of the new function and test of the workflow in
+  `unit_test_functions.py` (or `unit_test_statefuls.py`).
 
 Speed Tests
 ^^^^^^^^^^^

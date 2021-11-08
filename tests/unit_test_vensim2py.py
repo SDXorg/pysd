@@ -365,27 +365,66 @@ class TestParse_general_expression(unittest.TestCase):
         res = parse_general_expression({"expr": "-10^3+4"})
         self.assertEqual(res[0]["py_expr"], "-10**3+4")
 
+    def test_arithmetic_scientific(self):
+        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+
+        res = parse_general_expression({"expr": "1e+4"})
+        self.assertEqual(res[0]["py_expr"], "1e+4")
+
+        res = parse_general_expression({"expr": "2e4"})
+        self.assertEqual(res[0]["py_expr"], "2e4")
+
+        res = parse_general_expression({"expr": "3.43e04"})
+        self.assertEqual(res[0]["py_expr"], "3.43e04")
+
+        res = parse_general_expression({"expr": "1.0E4"})
+        self.assertEqual(res[0]["py_expr"], "1.0E4")
+
+        res = parse_general_expression({"expr": "-2.0E43"})
+        self.assertEqual(res[0]["py_expr"], "-2.0E43")
+
+        res = parse_general_expression({"expr": "-2.0e-43"})
+        self.assertEqual(res[0]["py_expr"], "-2.0e-43")
+
     def test_caps_handling(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
 
         res = parse_general_expression({"expr": "Abs(-3)"})
-        self.assertEqual(res[0]["py_expr"], "abs(-3)")
+        self.assertEqual(res[0]["py_expr"], "np.abs(-3)")
 
         res = parse_general_expression({"expr": "ABS(-3)"})
-        self.assertEqual(res[0]["py_expr"], "abs(-3)")
+        self.assertEqual(res[0]["py_expr"], "np.abs(-3)")
 
         res = parse_general_expression({"expr": "aBS(-3)"})
-        self.assertEqual(res[0]["py_expr"], "abs(-3)")
+        self.assertEqual(res[0]["py_expr"], "np.abs(-3)")
+
+    def test_empty(self):
+        from warnings import catch_warnings
+        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+
+        with catch_warnings(record=True) as ws:
+            res = parse_general_expression({"expr": "", "real_name": "Var"})
+            # use only user warnings
+            wu = [w for w in ws if issubclass(w.category, UserWarning)]
+            self.assertEqual(len(wu), 1)
+            self.assertIn("Empty expression for 'Var'", str(wu[0].message))
+
+        self.assertEqual(res[0]["py_expr"], "None")
 
     def test_function_calls(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
 
-        res = parse_general_expression({"expr": "ABS(StockA)"},
+        res = parse_general_expression({"expr": "ABS(StockA)",
+                                        "real_name": "AB",
+                                        "eqn": "AB = ABS(StockA)"},
                                        {"StockA": "stocka"})
-        self.assertEqual(res[0]["py_expr"], "abs(stocka())")
+        self.assertEqual(res[0]["py_expr"], "np.abs(stocka())")
 
         res = parse_general_expression(
-            {"expr": "If Then Else(A>B, 1, 0)"}, {"A": "a", "B": "b"}
+            {"expr": "If Then Else(A>B, 1, 0)",
+             "real_name": "IFE",
+             "eqn": "IFE = If Then Else(A>B, 1, 0)"},
+            {"A": "a", "B": "b"}
         )
         self.assertEqual(
             res[0]["py_expr"], "if_then_else(a()>b(), lambda: 1, lambda: 0)"
@@ -472,6 +511,7 @@ class TestParse_general_expression(unittest.TestCase):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
         from pysd.py_backend.builder import Imports
 
+        Imports.reset()
         self.assertFalse(Imports._numpy)
         res = parse_general_expression({'expr': ':NA:'})
         self.assertEqual(res[0]['py_expr'], 'np.nan')
@@ -481,7 +521,7 @@ class TestParse_general_expression(unittest.TestCase):
         """ stock construction should create a stateful variable and
         reference it """
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
-        from pysd.py_backend.functions import Integ
+        from pysd.py_backend.statefuls import Integ
 
         res = parse_general_expression(
             {
@@ -502,7 +542,7 @@ class TestParse_general_expression(unittest.TestCase):
 
     def test_delay_construction_function_no_subscripts(self):
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
-        from pysd.py_backend.functions import Delay
+        from pysd.py_backend.statefuls import Delay
 
         res = parse_general_expression(
             {
@@ -535,7 +575,7 @@ class TestParse_general_expression(unittest.TestCase):
         forecast elements, and then pass back a reference to that value
         """
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
-        from pysd.py_backend.functions import Forecast
+        from pysd.py_backend.statefuls import Forecast
 
         res = parse_general_expression(
             {
@@ -564,7 +604,7 @@ class TestParse_general_expression(unittest.TestCase):
         elements, and then pass back a reference to that value
         """
         from pysd.py_backend.vensim.vensim2py import parse_general_expression
-        from pysd.py_backend.functions import Smooth
+        from pysd.py_backend.statefuls import Smooth
 
         res = parse_general_expression(
             {
@@ -983,7 +1023,57 @@ class TestParse_general_expression(unittest.TestCase):
         )
 
         self.assertIn(
-            "abs(upper_var())",
+            "np.abs(upper_var())",
+            res[0]["py_expr"], )
+
+    def test_random_0_1(self):
+        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+
+        # When parsing functions arguments first the subscript ranges are
+        # parsed and later the general id is used, however, the if a reference
+        # to a var starts with a subscript range name this could make the
+        # parser crash
+        res = parse_general_expression(
+            {
+                "expr": "RANDOM 0 1()",
+                "real_name": "A",
+                "eqn": "A = RANDOM 0 1()",
+                "py_name": "a",
+                "merge_subs": [],
+                "dependencies": set()
+            },
+            {
+                "A": "a",
+            }
+        )
+
+        self.assertIn(
+            "np.random.uniform(0, 1)",
+            res[0]["py_expr"], )
+
+    def test_random_uniform(self):
+        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+
+        # When parsing functions arguments first the subscript ranges are
+        # parsed and later the general id is used, however, the if a reference
+        # to a var starts with a subscript range name this could make the
+        # parser crash
+        res = parse_general_expression(
+            {
+                "expr": "RANDOM UNIFORM(10, 15, 3)",
+                "real_name": "A",
+                "eqn": "A = RANDOM UNIFORM(10, 15, 3)",
+                "py_name": "a",
+                "merge_subs": [],
+                "dependencies": set()
+            },
+            {
+                "A": "a",
+            }
+        )
+
+        self.assertIn(
+            "np.random.uniform(10, 15)",
             res[0]["py_expr"], )
 
     def test_incomplete_expression(self):

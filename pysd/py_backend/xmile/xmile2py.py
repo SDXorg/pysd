@@ -21,7 +21,6 @@ def translate_xmile(xmile_file):
     Functionality is currently limited.
 
     """
-
     # process xml file
     xml_parser = etree.XMLParser(encoding="utf-8", recover=True)
     root = etree.parse(xmile_file, parser=xml_parser).getroot()
@@ -34,7 +33,7 @@ def translate_xmile(xmile_file):
             ns = {'ns': NS}
         try:
             return node.xpath(path, namespaces=ns)[0].text
-        except:
+        except IndexError:
             return default
 
     def get_xpath_attrib(node, path, attrib, ns=None, default=None):
@@ -44,19 +43,23 @@ def translate_xmile(xmile_file):
             ns = {'ns': NS}
         try:
             return node.xpath(path, namespaces=ns)[0].attrib[attrib]
-        except:
+        except IndexError:
             return default
 
     def is_constant_expression(py_expr):
         try:
-            val = float(py_expr)
+            float(py_expr)
             return True
         except ValueError:
             return False
 
     def parse_lookup_xml_node(node):
         ys_node = node.xpath('ns:ypts', namespaces={'ns': NS})[0]
-        ys = np.fromstring(ys_node.text, dtype=float, sep=ys_node.attrib['sep'] if 'sep' in ys_node.attrib else ',')
+        ys = np.fromstring(
+            ys_node.text,
+            dtype=float,
+            sep=ys_node.attrib['sep'] if 'sep' in ys_node.attrib else ','
+        )
         xscale_node = node.xpath('ns:xscale', namespaces={'ns': NS})
         if len(xscale_node) > 0:
             xmin = xscale_node[0].attrib['min']
@@ -64,7 +67,11 @@ def translate_xmile(xmile_file):
             xs = np.linspace(float(xmin), float(xmax), len(ys))
         else:
             xs_node = node.xpath('ns:xpts', namespaces={'ns': NS})[0]
-            xs = np.fromstring(xs_node.text, dtype=float, sep=xs_node.attrib['sep'] if 'sep' in xs_node.attrib else ',')
+            xs = np.fromstring(
+                xs_node.text,
+                dtype=float,
+                sep=xs_node.attrib['sep'] if 'sep' in xs_node.attrib else ','
+            )
 
         type = node.attrib['type'] if 'type' in node.attrib else 'continuous'
 
@@ -82,7 +89,8 @@ def translate_xmile(xmile_file):
                 "module": "functions"
             }
         }
-        lookup_function = functions_map[type] if type in functions_map else functions_map['continuous']
+        lookup_function = functions_map[type] if type in functions_map\
+            else functions_map['continuous']
 
         return {
             'name': node.attrib['name'] if 'name' in node.attrib else '',
@@ -105,27 +113,30 @@ def translate_xmile(xmile_file):
 
     for node in root.xpath(names_xpath, namespaces={'ns': NS}):
         name = node.attrib['name']
-        _, namespace = utils.make_python_identifier(name, namespace)
+        utils.make_python_identifier(name, namespace)
 
     model_elements = []
     smile_parser = SMILEParser(namespace)
 
     # add aux and flow elements
-    flaux_xpath = '//ns:model/ns:variables/ns:aux|//ns:model/ns:variables/ns:flow'
+    flaux_xpath =\
+        '//ns:model/ns:variables/ns:aux|//ns:model/ns:variables/ns:flow'
     for node in root.xpath(flaux_xpath, namespaces={'ns': NS}):
         name = node.attrib['name']
         units = get_xpath_text(node, 'ns:units')
-        lims = (get_xpath_attrib(node, 'ns:range', 'min'), get_xpath_attrib(node, 'ns:range', 'max'))
+        lims = (
+            get_xpath_attrib(node, 'ns:range', 'min'),
+            get_xpath_attrib(node, 'ns:range', 'max')
+        )
         lims = str(tuple(float(x) if x is not None else x for x in lims))
         doc = get_xpath_text(node, 'ns:doc')
         py_name = namespace[name]
         eqn = get_xpath_text(node, 'ns:eqn')
 
-        # Replace new lines with space, and replace 2 or more spaces with single space
-        # Then ensure there is no space at start or end of equation
-        eqn = (re.sub(r"(\s{2,})", " ", eqn.replace("\n", ' '))
-                 .strip()
-        )
+        # Replace new lines with space, and replace 2 or more spaces with
+        # single space. Then ensure there is no space at start or end of
+        # equation
+        eqn = (re.sub(r"(\s{2,})", " ", eqn.replace("\n", ' ')).strip())
 
         element = {
             'kind': 'component',
@@ -159,9 +170,10 @@ def translate_xmile(xmile_file):
                                               ['x', xs, ys])
             element.update({
                 'kind': 'lookup',
-                # This lookup declared as inline, so we should implement inline mode for flow and aux
+                # This lookup declared as inline, so we should implement
+                # inline mode for flow and aux
                 'arguments': "x = None",
-                'py_expr': py_expr,
+                'py_expr': py_expr
             })
 
         model_elements.append(element)
@@ -190,6 +202,7 @@ def translate_xmile(xmile_file):
             'py_name': py_name,
             'py_expr': py_expr,
             'arguments': 'x',
+            'dependencies': {"__lookup__": None},
             'subs': [],  # Todo later
         }
         model_elements.append(element)
@@ -199,14 +212,19 @@ def translate_xmile(xmile_file):
     for node in root.xpath(stock_xpath, namespaces={'ns': NS}):
         name = node.attrib['name']
         units = get_xpath_text(node, 'ns:units')
-        lims = (get_xpath_attrib(node, 'ns:range', 'min'), get_xpath_attrib(node, 'ns:range', 'max'))
+        lims = (
+            get_xpath_attrib(node, 'ns:range', 'min'),
+            get_xpath_attrib(node, 'ns:range', 'max')
+        )
         lims = str(tuple(float(x) if x is not None else x for x in lims))
         doc = get_xpath_text(node, 'ns:doc')
         py_name = namespace[name]
 
         # Extract input and output flows equations
-        inflows = [n.text for n in node.xpath('ns:inflow', namespaces={'ns': NS})]
-        outflows = [n.text for n in node.xpath('ns:outflow', namespaces={'ns': NS})]
+        inflows = [
+            n.text for n in node.xpath('ns:inflow', namespaces={'ns': NS})]
+        outflows = [
+            n.text for n in node.xpath('ns:outflow', namespaces={'ns': NS})]
 
         eqn = ' + '.join(inflows) if inflows else ''
         eqn += (' - ' + ' - '.join(outflows)) if outflows else ''
@@ -226,14 +244,16 @@ def translate_xmile(xmile_file):
         # Parse each flow equations
         py_inflows = []
         for inputFlow in inflows:
-            translation, new_structure = smile_parser.parse(inputFlow, element)
+            translation, new_structure = smile_parser.parse(
+                inputFlow, element)
             py_inflows.append(translation['py_expr'])
             model_elements += new_structure
 
         # Parse each flow equations
         py_outflows = []
         for outputFlow in outflows:
-            translation, new_structure = smile_parser.parse(outputFlow, element)
+            translation, new_structure = smile_parser.parse(
+                outputFlow, element)
             py_outflows.append(translation['py_expr'])
             model_elements += new_structure
 
@@ -242,34 +262,44 @@ def translate_xmile(xmile_file):
 
         # Read the initial value equation for stock element
         initial_value_eqn = get_xpath_text(node, 'ns:eqn')
-        translation, new_structure = smile_parser.parse(initial_value_eqn, element)
+        translation, new_structure = smile_parser.parse(
+            initial_value_eqn, element)
         py_initial_value = translation['py_expr']
         model_elements += new_structure
 
-        py_expr, new_structure = builder.add_stock(identifier=py_name,
-                                                   subs=[],  # Todo later
-                                                   merge_subs=[],
-                                                   expression=py_ddt,
-                                                   initial_condition=py_initial_value
-                                                   )
+        py_expr, new_structure = builder.add_stock(
+            identifier=py_name,
+            subs=[],  # Todo later
+            merge_subs=[],
+            expression=py_ddt,
+            initial_condition=py_initial_value,
+            deps=element["dependencies"])
         element['py_expr'] = py_expr
+        element["dependencies"] = {new_structure[-1]["py_name"]: 1}
         model_elements.append(element)
         model_elements += new_structure
 
     # remove timestamp pieces so as not to double-count
     model_elements_parsed = []
     for element in model_elements:
-        if element['real_name'].lower() not in ['initial time', 'final time', 'time step', 'saveper']:
+        if element['real_name'].lower() not in ['initial time',
+                                                'final time',
+                                                'time step',
+                                                'saveper']:
             model_elements_parsed.append(element)
     model_elements = model_elements_parsed
 
     # Add timeseries information
 
     # Read the start time of simulation
-    sim_spec_node = root.xpath('//ns:sim_specs', namespaces={'ns': NS});
-    time_units = sim_spec_node[0].attrib['time_units'] if (len(sim_spec_node) > 0 and 'time_units' in sim_spec_node[0].attrib) else ""
+    sim_spec_node = root.xpath('//ns:sim_specs', namespaces={'ns': NS})
+    time_units = sim_spec_node[0].attrib['time_units']\
+        if len(sim_spec_node) > 0 and 'time_units' in sim_spec_node[0].attrib\
+        else ""
 
-    tstart = root.xpath('//ns:sim_specs/ns:start', namespaces={'ns': NS})[0].text
+    tstart = root.xpath(
+        '//ns:sim_specs/ns:start',
+        namespaces={'ns': NS})[0].text
     element = {
         'kind': 'constant',
         'real_name': 'INITIAL TIME',
@@ -314,7 +344,8 @@ def translate_xmile(xmile_file):
         dt_node = dt_node[0]
         dt_eqn = dt_node.text
         # If reciprocal mode are defined for `dt`, we should inverse value
-        if ("reciprocal" in dt_node.attrib and dt_node.attrib["reciprocal"].lower() == "true"):
+        if "reciprocal" in dt_node.attrib\
+           and dt_node.attrib["reciprocal"].lower() == "true":
             dt_eqn = "1/" + dt_eqn
 
     element = {
@@ -344,15 +375,29 @@ def translate_xmile(xmile_file):
         'py_name': 'saveper',
         'py_expr': 'time_step()',
         'subs': None,
+        'dependencies': {'time_step': 1},
         'arguments': '',
     })
 
+    # send the pieces to be built
+    build_elements = builder.merge_partial_elements([
+        e for e in model_elements if e["kind"] not in ["subdef", "test",
+                                                       "section"]
+    ])
+
+    dependencies = {
+        element["py_name"]: element["dependencies"]
+
+        for element in build_elements
+        if element["dependencies"] is not None
+    }
     file_name, file_extension = os.path.splitext(xmile_file)
     outfile_name = file_name + '.py'
 
-    builder.build(elements=model_elements,
+    builder.build(elements=build_elements,
                   subscript_dict={},
                   namespace=namespace,
+                  dependencies=dependencies,
                   outfile_name=outfile_name)
 
     return outfile_name

@@ -6,7 +6,6 @@ functions.py
 
 import os
 import warnings
-import keyword
 import json
 from collections.abc import Mapping
 
@@ -14,24 +13,30 @@ import regex as re
 import progressbar
 import numpy as np
 import xarray as xr
+import pandas as pd
 
-# used to create python safe names
+# used to create python safe names with the variable reserved_words
+from keyword import kwlist
+from builtins import __dir__ as bidir
 from .decorators import __dir__ as ddir
 from .external import __dir__ as edir
 from .functions import __dir__ as fdir
+from .statefuls import __dir__ as sdir
 
 
-def xrmerge(das, accept_new=True):
+reserved_words = set(dir() + fdir() + edir() + ddir() + sdir() + bidir())
+reserved_words = reserved_words.union(kwlist)
+
+
+def xrmerge(*das):
     """
     Merges xarrays with different dimension sets.
 
     Parameters
     ----------
-    das: list of xarray.DataArrays
-        The list of the data arrays to merge.
+    *das: xarray.DataArrays
+        The data arrays to merge.
 
-    accept_new: bool (optional)
-        Default is True.
 
     Returns
     -------
@@ -47,10 +52,8 @@ def xrmerge(das, accept_new=True):
     """
     da = das[0]
     for new_da in das[1:]:
-        # Expand both to have same dimensions, padding with NaN
-        da, new_da = xr.align(da, new_da, join="outer")
-        # Fill NaNs one way or the other re. accept_new
-        da = new_da.fillna(da) if accept_new else da.fillna(new_da)
+        da = da.combine_first(new_da)
+
     return da
 
 
@@ -275,9 +278,7 @@ def make_merge_list(subs_list, subscript_dict, element=""):
     return dims
 
 
-def make_python_identifier(
-    string, namespace=None, reserved_words=None, convert="drop", handle="force"
-):
+def make_python_identifier(string, namespace=None):
     """
     Takes an arbitrary string and creates a valid Python identifier.
 
@@ -299,89 +300,53 @@ def make_python_identifier(
     namespace: dict
         Map of existing translations into python safe identifiers.
         This is to ensure that two strings are not translated into
-        the same python identifier.
-
-    reserved_words: list of strings (optional)
-        List of words that are reserved (because they have other meanings
-        in this particular program, such as also being the names of
-        libraries, etc.
-
-    convert: str (optional)
-        Tells the function what to do with characters that are not
-        valid in python identifiers.
-        - 'hex' implies that they will be converted to their hexidecimal
-                representation. This is handy if you have variables that
-                have a lot of reserved characters, or you don't want the
-                name to be dependent on when things were added to the
-                namespace.
-        - 'drop' implies that they will just be dropped altogether.
-
-    handle: str (optional)
-        Tells the function how to deal with namespace conflicts
-        - 'force' will create a representation which is not in conflict
-                  by appending _n to the resulting variable where n is
-                  the lowest number necessary to avoid a conflict
-        - 'throw' will raise an exception
+        the same python identifier. If string is already in the namespace
+        its value will be returned. Otherwise, namespace will be mutated
+        adding string as a new key and its value.
 
     Returns
     -------
     identifier: str
-        A vaild python identifier based on the input string
-
-    namespace: dict
-        An updated map of the translations of words to python identifiers,
-        including the passed in 'string'.
+        A vaild python identifier based on the input string.
 
     Examples
     --------
     >>> make_python_identifier('Capital')
-    ('capital', {'Capital': 'capital'})
+    'capital'
 
     >>> make_python_identifier('multiple words')
-    ('multiple_words', {'multiple words': 'multiple_words'})
+    'multiple_words'
 
     >>> make_python_identifier('multiple     spaces')
-    ('multiple_spaces', {'multiple     spaces': 'multiple_spaces'})
+    'multiple_spaces'
 
     When the name is a python keyword, add '_1' to differentiate it
     >>> make_python_identifier('for')
-    ('for_1', {'for': 'for_1'})
+    'for_1'
 
     Remove leading and trailing whitespace
     >>> make_python_identifier('  whitespace  ')
-    ('whitespace', {'  whitespace  ': 'whitespace'})
+    'whitespace'
 
     Remove most special characters outright:
     >>> make_python_identifier('H@t tr!ck')
-    ('ht_trck', {'H@t tr!ck': 'ht_trck'})
-
-    Replace special characters with their hex representations
-    >>> make_python_identifier('H@t tr!ck', convert='hex')
-    ('h40t_tr21ck', {'H@t tr!ck': 'h40t_tr21ck'})
+    'ht_trck'
 
     remove leading digits
     >>> make_python_identifier('123abc')
-    ('abc', {'123abc': 'abc'})
+    'nvs_123abc'
 
     already in namespace
     >>> make_python_identifier('Var$', namespace={'Var$': 'var'})
-    ('var', {'Var$': 'var'})
+    ''var'
 
     namespace conflicts
     >>> make_python_identifier('Var@', namespace={'Var$': 'var'})
-    ('var_1', {'Var$': 'var', 'Var@': 'var_1'})
+    'var_1'
 
     >>> make_python_identifier('Var$', namespace={'Var@': 'var',
     ...                                           'Var%':'var_1'})
-    ('var_2', {'Var@': 'var', 'Var%': 'var_1', 'Var$': 'var_2'})
-
-    throw exception instead
-    >>> make_python_identifier('Var$', namespace={'Var@': 'var'},
-    ...                        handle='throw')
-    Traceback (most recent call last):
-     ...
-    NameError: variable already exists in namespace or is a reserved word
-
+    'var_2'
 
     References
     ----------
@@ -392,14 +357,8 @@ def make_python_identifier(
     if namespace is None:
         namespace = dict()
 
-    if reserved_words is None:
-        reserved_words = list()
-
-    # reserved the names of PySD functions and methods
-    reserved_words += dir() + fdir() + edir() + ddir()
-
     if string in namespace:
-        return namespace[string], namespace
+        return namespace[string]
 
     # create a working copy (and make it lowercase, while we're at it)
     s = string.lower()
@@ -410,43 +369,30 @@ def make_python_identifier(
     # Make spaces into underscores
     s = re.sub(r"[\s\t\n]+", "_", s)
 
-    if convert == "hex":
-        # Convert invalid characters to hex. Note: \p{l} designates all
-        # Unicode letter characters (any language), \p{m} designates all
-        # mark symbols (e.g., vowel marks in Indian scrips, such as the final)
-        # and \p{n} designates all numbers. We allow any of these to be
-        # present in the regex.
-        s = "".join(
-            [c.encode("hex") if re.findall(r"[^\p{l}\p{m}\p{n}_]", c)
-             else c for c in s]
-        )
+    # Remove invalid characters
+    s = re.sub(r"[^\p{l}\p{m}\p{n}_]", "", s)
 
-    elif convert == "drop":
-        # Remove invalid characters
-        s = re.sub(r"[^\p{l}\p{m}\p{n}_]", "", s)
-
-    # If leading characters are not a letter or underscore add nvs_.
+    # If leading character is not a letter add nvs_.
     # Only letters can be leading characters.
-    if re.findall(r"^[^\p{l}_]+", s):
+    if re.findall(r"^[^\p{l}_]", s):
         s = "nvs_" + s
+    elif re.findall(r"^_", s):
+        s = "nvs" + s
+
+    # reserved the names of PySD functions and methods and other vars
+    # in the namespace
+    used_words = reserved_words.union(namespace.values())
 
     # Check that the string is not a python identifier
-    while (s in keyword.kwlist or
-           s in namespace.values() or
-           s in reserved_words):
-        if handle == "throw":
-            raise NameError(
-                s + " already exists in namespace or is a reserved word")
-        if handle == "force":
-            if re.match(r".*?_\d+$", s):
-                i = re.match(r".*?_(\d+)$", s).groups()[0]
-                s = s.strip("_" + i) + "_" + str(int(i) + 1)
-            else:
-                s += "_1"
+    identifier = s
+    i = 1
+    while identifier in used_words:
+        identifier = s + '_' + str(i)
+        i += 1
 
-    namespace[string] = s
+    namespace[string] = identifier
 
-    return s, namespace
+    return identifier
 
 
 def make_add_identifier(identifier, build_names):
@@ -561,58 +507,63 @@ def make_flat_df(df, return_addresses, flatten=False):
 
     Returns
     -------
-    df: pandas.DataFrame
+    new_df: pandas.DataFrame
         Formatted dataframe.
 
     """
-    cols_to_remove = set()
-    rename_cols = {}
+    new_df = {}
     for real_name, (pyname, address) in return_addresses.items():
         if address:
-            cols_to_remove.add(pyname)
-            # subset the value and add it to a new column
-            xrval = [x.loc[address] for x in df[pyname].values]
-            if xrval[0].size > 1:
-                df[real_name] = xrval
-            else:
-                df[real_name] = [float(x) for x in xrval]
+            # subset the specific address
+            values = [x.loc[address] for x in df[pyname].values]
         else:
-            # save the name to change it in the dataframe
-            try:
-                # some elements are returned as 0-d arrays, convert
-                # them to float
-                df[pyname] = [float(x) for x in df[pyname].values]
-            except TypeError:
-                pass
-            rename_cols[pyname] = real_name
+            # get the full column
+            values = df[pyname].to_list()
 
-    df.rename(columns=rename_cols, inplace=True)
+        is_dataarray = len(values) != 0 and isinstance(values[0], xr.DataArray)
 
-    if cols_to_remove:
-        # remove the columns of the subset values
-        df.drop(cols_to_remove, axis='columns', inplace=True)
+        if is_dataarray and values[0].size == 1:
+            # some elements are returned as 0-d arrays, convert
+            # them to float
+            values = [float(x) for x in values]
 
-    if flatten:
-        # create a totally flat df (no xarray.DataArray)
-        cols_to_remove.clear()
-        for col in df.columns:
-            if isinstance(df[col].values[0], xr.DataArray):
-                # remove subscripts from name if given
-                name = re.sub(r'\[.*\]', '', col)
-                # split values in xarray.DataArray
-                lval = [xrsplit(val) for val in df[col].values]
-                for i, ar in enumerate(lval[0]):
-                    vals = [float(v[i]) for v in lval]
-                    subs = '[' + ','.join([str(ar.coords[dim].values)
-                                           for dim in list(ar.coords)]) + ']'
-                    df[name+subs] = vals
-                    cols_to_remove.add(col)
+        if flatten and is_dataarray:
+            _add_flat(new_df, real_name, values)
+        else:
+            new_df[real_name] = values
 
-        if cols_to_remove:
-            # remove the columns of the subset values
-            df.drop(cols_to_remove, axis='columns', inplace=True)
+    return pd.DataFrame(index=df.index, data=new_df)
 
-    return df
+
+def _add_flat(savedict, name, values):
+    """
+    Add float lists from a list of xarrays to a provided dictionary.
+
+    Parameters
+    ----------
+    savedict: dict
+        Dictionary to save the data on.
+
+    name: str
+        The base name of the variable to save the data.
+
+    values: list
+        List of xarrays to convert to split in floats.
+
+    Returns
+    -------
+    None
+
+    """
+    # remove subscripts from name if given
+    name = re.sub(r'\[.*\]', '', name)
+    # split values in xarray.DataArray
+    lval = [xrsplit(val) for val in values]
+    for i, ar in enumerate(lval[0]):
+        vals = [float(v[i]) for v in lval]
+        subs = '[' + ','.join([str(ar.coords[dim].values)
+                               for dim in list(ar.coords)]) + ']'
+        savedict[name+subs] = vals
 
 
 def compute_shape(coords, reshape_len=None, py_name=""):
@@ -727,16 +678,6 @@ def rearrange(data, dims, coords):
     return None
 
 
-def round_(x):
-    """
-    Redefinition of round function to make it work with floats and xarrays
-    """
-    if isinstance(x, xr.DataArray):
-        return x.round()
-
-    return round(x)
-
-
 def simplify_subscript_input(coords, subscript_dict, return_full, merge_subs):
     """
     Parameters
@@ -840,6 +781,9 @@ def load_model_data(root_dir, model_name):
     with open(os.path.join(root_dir, "_namespace_" + model_name + ".json")
               ) as names:
         namespace = json.load(names)
+    with open(os.path.join(root_dir, "_dependencies_" + model_name + ".json")
+              ) as deps:
+        dependencies = json.load(deps)
 
     # the _modules.json in the sketch_var folder shows to which module each
     # variable belongs
@@ -847,48 +791,7 @@ def load_model_data(root_dir, model_name):
               ) as mods:
         modules = json.load(mods)
 
-    return namespace, subscripts, modules
-
-
-def open_module(root_dir, model_name, module, submodule=None):  # pragma: no cover
-    """
-    This function will be deprecated from release 2.0.
-    Used to load model modules from the main model file, when
-    split_views=True in the read_vensim function.
-
-    Parameters
-    ----------
-    root_dir: str
-        Path to the model file.
-
-    model_name: str
-        Name of the model without file type extension (e.g. "my_model").
-
-    module: str
-        Name of the module folder or file to open.
-
-    sub_module: str (optional)
-        Name of the submodule to open.
-
-    Returns
-    -------
-    str:
-        Model file content.
-
-    """
-    warnings.warn(
-            "open_module function will be deprecated from release 2.0. Use "
-            + "load_modules instead or translate the model again.",
-            FutureWarning
-        )
-    if not submodule:
-        rel_file_path = module + ".py"
-    else:
-        rel_file_path = os.path.join(module, submodule + ".py")
-
-    with open(os.path.join(root_dir, "modules_" + model_name, rel_file_path),
-              "r") as mod:
-        return mod.read()
+    return namespace, subscripts, dependencies, modules
 
 
 def load_modules(module_name, module_content, work_dir, submodules):
@@ -982,6 +885,30 @@ def merge_nested_dicts(original_dict, dict_to_merge):
             merge_nested_dicts(original_dict[k], dict_to_merge[k])
         else:
             original_dict[k] = dict_to_merge[k]
+
+
+def update_dependency(dependency, deps_dict):
+    """
+    Update dependency in dependencies dict.
+
+    Parameters
+    ----------
+    dependency: str
+        The dependency to add to the dependency dict.
+
+    deps_dict: dict
+        The dictionary of dependencies. If dependency is in deps_dict add 1
+        to its value. Otherwise, add dependency to deps_dict with value 1.
+
+    Returns
+    -------
+    None
+
+    """
+    if dependency in deps_dict:
+        deps_dict[dependency] += 1
+    else:
+        deps_dict[dependency] = 1
 
 
 class ProgressBar:

@@ -1,5 +1,6 @@
 import os
 import unittest
+import warnings
 
 from importlib.machinery import SourceFileLoader
 import numpy as np
@@ -20,60 +21,60 @@ class TestExcels(unittest.TestCase):
         """
         Test for reading files with pandas
         """
-        import pysd
+        from pysd.py_backend.external import Excels
 
         file_name = os.path.join(_root, "data/input.xlsx")
         sheet_name = "Vertical"
         sheet_name2 = "Horizontal"
 
         # reading a file
-        excel = pysd.external.Excels.read(file_name, sheet_name)
+        excel = Excels.read(file_name, sheet_name)
         self.assertTrue(isinstance(excel, np.ndarray))
 
         # check if it is in the dictionary
         self.assertTrue(file_name+sheet_name in
-                        list(pysd.external.Excels._Excels))
+                        list(Excels._Excels))
 
-        pysd.external.Excels.read(file_name, sheet_name2)
+        Excels.read(file_name, sheet_name2)
         self.assertTrue(file_name+sheet_name2 in
-                        list(pysd.external.Excels._Excels))
+                        list(Excels._Excels))
 
         # clean
-        pysd.external.Excels.clean()
-        self.assertEqual(list(pysd.external.Excels._Excels),
+        Excels.clean()
+        self.assertEqual(list(Excels._Excels),
                          [])
 
     def test_read_clean_opyxl(self):
         """
         Test for reading files with openpyxl
         """
-        import pysd
+        from pysd.py_backend.external import Excels
         from openpyxl import Workbook
 
         file_name = os.path.join(_root, "data/input.xlsx")
 
         # reading a file
-        excel = pysd.external.Excels.read_opyxl(file_name)
+        excel = Excels.read_opyxl(file_name)
         self.assertTrue(isinstance(excel, Workbook))
 
         # check if it is in the dictionary
-        self.assertEqual(list(pysd.external.Excels._Excels_opyxl),
+        self.assertEqual(list(Excels._Excels_opyxl),
                          [file_name])
 
-        pysd.external.Excels.read_opyxl(file_name)
-        self.assertEqual(list(pysd.external.Excels._Excels_opyxl),
+        Excels.read_opyxl(file_name)
+        self.assertEqual(list(Excels._Excels_opyxl),
                          [file_name])
 
         # clean
-        pysd.external.Excels.clean()
-        self.assertEqual(list(pysd.external.Excels._Excels_opyxl),
+        Excels.clean()
+        self.assertEqual(list(Excels._Excels_opyxl),
                          [])
 
     def test_close_file(self):
         """
         Test for checking if excel files were closed
         """
-        import pysd
+        from pysd.py_backend.external import Excels
         import psutil
 
         p = psutil.Process()
@@ -86,14 +87,14 @@ class TestExcels(unittest.TestCase):
         sheet_name2 = "Horizontal"
 
         # reading files
-        pysd.external.Excels.read(file_name, sheet_name)
-        pysd.external.Excels.read(file_name, sheet_name2)
-        pysd.external.Excels.read_opyxl(file_name)
+        Excels.read(file_name, sheet_name)
+        Excels.read(file_name, sheet_name2)
+        Excels.read_opyxl(file_name)
 
         self.assertGreater(len(p.open_files()), n_files)
 
         # clean
-        pysd.external.Excels.clean()
+        Excels.clean()
         self.assertEqual(len(p.open_files()), n_files)
 
 
@@ -106,9 +107,9 @@ class TestExternalMethods(unittest.TestCase):
         """
         External._num_to_col and External._col_to_num test
         """
-        import pysd
+        from pysd.py_backend.external import External
 
-        col_to_num = pysd.external.External._col_to_num
+        col_to_num = External._col_to_num
 
         # Check col_to_num
         self.assertEqual(col_to_num("A"), 0)
@@ -121,9 +122,9 @@ class TestExternalMethods(unittest.TestCase):
         """
         External._split_excel_cell test
         """
-        import pysd
+        from pysd.py_backend.external import External
 
-        ext = pysd.external.External('external')
+        ext = External('external')
 
         # No cells, function must return nothing
         nocells = ["A2A", "H0", "0", "5A", "A_1", "ZZZZ1", "A"]
@@ -142,10 +143,10 @@ class TestExternalMethods(unittest.TestCase):
         """
         External._reshape test
         """
-        import pysd
+        from pysd.py_backend.external import External
         import pandas as pd
 
-        reshape = pysd.external.External._reshape
+        reshape = External._reshape
 
         data1d = np.array([2, 3, 5, 6])
         data2d = np.array([[2, 3, 5, 6],
@@ -169,9 +170,9 @@ class TestExternalMethods(unittest.TestCase):
         """
         External._series_selector test
         """
-        import pysd
+        from pysd.py_backend.external import External
 
-        ext = pysd.external.External('external')
+        ext = External('external')
 
         # row selector
         self.assertEqual(ext._series_selector("12", "A5"), "row")
@@ -189,11 +190,11 @@ class TestExternalMethods(unittest.TestCase):
         self.assertEqual(ext._series_selector("Aeee", "aajh2"), "name")
 
     def test_fill_missing(self):
-        import pysd
+        from pysd.py_backend.external import External
 
         # simple casses are tested with 1 dimensional data
         # 1 and 2 dimensional data is tested with test-models
-        ext = pysd.external.External("external")
+        ext = External("external")
         series = np.arange(12)
         data = np.array([np.nan, np.nan, 1., 3., np.nan, 4.,
                          np.nan, np.nan, 7., 8., np.nan, np.nan])
@@ -223,10 +224,10 @@ class TestExternalMethods(unittest.TestCase):
         """
         External._resolve_file
         """
-        import pysd
+        from pysd.py_backend.external import External
 
         root = os.path.dirname(__file__)
-        ext = pysd.external.External('external')
+        ext = External('external')
         ext.file = 'data/input.xlsx'
         ext._resolve_file(root=root)
 
@@ -336,7 +337,6 @@ class TestData(unittest.TestCase):
         ExtData test for 1d horizontal series interpolation
         """
         import pysd
-        import warnings
 
         file_name = "data/input.xlsx"
         sheet = "Horizontal"
@@ -367,7 +367,6 @@ class TestData(unittest.TestCase):
         ExtData test for 1d vertical series interpolation
         """
         import pysd
-        import warnings
 
         file_name = "data/input.xlsx"
         sheet = "Vertical"
@@ -398,7 +397,6 @@ class TestData(unittest.TestCase):
         ExtData test for 1d horizontal series interpolation by cellrange names
         """
         import pysd
-        import warnings
 
         file_name = "data/input.xlsx"
         sheet = "Horizontal"
@@ -429,7 +427,6 @@ class TestData(unittest.TestCase):
         ExtData test for 1d vertical series interpolation by cellrange names
         """
         import pysd
-        import warnings
 
         file_name = "data/input.xlsx"
         sheet = "Vertical"
@@ -460,7 +457,6 @@ class TestData(unittest.TestCase):
         ExtData test for 1d horizontal series look forward
         """
         import pysd
-        import warnings
 
         file_name = "data/input.xlsx"
         sheet = "Horizontal"
@@ -491,7 +487,6 @@ class TestData(unittest.TestCase):
         ExtData test for 1d vertical series look forward
         """
         import pysd
-        import warnings
 
         file_name = "data/input.xlsx"
         sheet = "Vertical"
@@ -522,7 +517,6 @@ class TestData(unittest.TestCase):
         ExtData test for 1d horizontal series look forward by cell range names
         """
         import pysd
-        import warnings
 
         file_name = "data/input.xlsx"
         sheet = "Horizontal"
@@ -553,7 +547,6 @@ class TestData(unittest.TestCase):
         ExtData test for 1d vertical series look forward by cell range names
         """
         import pysd
-        import warnings
 
         file_name = "data/input.xlsx"
         sheet = "Vertical"
@@ -584,7 +577,6 @@ class TestData(unittest.TestCase):
         ExtData test for 1d horizontal series hold backward
         """
         import pysd
-        import warnings
 
         file_name = "data/input.xlsx"
         sheet = "Horizontal"
@@ -615,7 +607,6 @@ class TestData(unittest.TestCase):
         ExtData test for 1d vertical series hold backward by cell range names
         """
         import pysd
-        import warnings
 
         file_name = "data/input.xlsx"
         sheet = "Vertical"
@@ -646,7 +637,6 @@ class TestData(unittest.TestCase):
         ExtData test for 1d horizontal series hold backward by cell range names
         """
         import pysd
-        import warnings
 
         file_name = "data/input.xlsx"
         sheet = "Horizontal"
@@ -677,7 +667,6 @@ class TestData(unittest.TestCase):
         ExtData test for 1d vertical series hold backward by cell range names
         """
         import pysd
-        import warnings
 
         file_name = "data/input.xlsx"
         sheet = "Vertical"
@@ -708,7 +697,6 @@ class TestData(unittest.TestCase):
         ExtData test for 2d vertical series interpolation by cell range names
         """
         import pysd
-        import warnings
 
         file_name = "data/input.xlsx"
         sheet = "Vertical"
@@ -739,7 +727,6 @@ class TestData(unittest.TestCase):
         ExtData test for 2d vertical series look forward by cell range names
         """
         import pysd
-        import warnings
 
         file_name = "data/input.xlsx"
         sheet = "Horizontal"
@@ -770,7 +757,6 @@ class TestData(unittest.TestCase):
         ExtData test for 2d vertical series hold backward
         """
         import pysd
-        import warnings
 
         file_name = "data/input.xlsx"
         sheet = "Vertical"
@@ -802,7 +788,6 @@ class TestData(unittest.TestCase):
         ExtData test for 3d horizontal series interpolation
         """
         import pysd
-        import warnings
 
         file_name = "data/input.xlsx"
         sheet = "Horizontal"
@@ -843,7 +828,6 @@ class TestData(unittest.TestCase):
         ExtData test for 3d vertical series look forward
         """
         import pysd
-        import warnings
 
         file_name = "data/input.xlsx"
         sheet = "Vertical"
@@ -884,7 +868,6 @@ class TestData(unittest.TestCase):
         ExtData test for 3d horizontal series hold backward by cellrange names
         """
         import pysd
-        import warnings
 
         file_name = "data/input.xlsx"
         sheet = "Horizontal"
@@ -968,7 +951,6 @@ class TestLookup(unittest.TestCase):
         ExtLookup test for 1d horizontal series
         """
         import pysd
-        import warnings
 
         file_name = "data/input.xlsx"
         sheet = "Horizontal"
@@ -997,7 +979,6 @@ class TestLookup(unittest.TestCase):
         ExtLookup test for 1d vertical series
         """
         import pysd
-        import warnings
 
         file_name = "data/input.xlsx"
         sheet = "Vertical"
@@ -1026,7 +1007,6 @@ class TestLookup(unittest.TestCase):
         ExtLookup test for 1d horizontal series by cellrange names
         """
         import pysd
-        import warnings
 
         file_name = "data/input.xlsx"
         sheet = "Horizontal"
@@ -1055,7 +1035,6 @@ class TestLookup(unittest.TestCase):
         ExtLookup test for 1d vertical series by cellrange names
         """
         import pysd
-        import warnings
 
         file_name = "data/input.xlsx"
         sheet = "Vertical"
@@ -1084,7 +1063,6 @@ class TestLookup(unittest.TestCase):
         ExtLookup test for 2d horizontal series
         """
         import pysd
-        import warnings
 
         file_name = "data/input.xlsx"
         sheet = "Horizontal"
@@ -1114,7 +1092,6 @@ class TestLookup(unittest.TestCase):
         ExtLookup test for 3d vertical series by cellrange names
         """
         import pysd
-        import warnings
 
         file_name = "data/input.xlsx"
         sheet = "Vertical"
@@ -1153,7 +1130,6 @@ class TestLookup(unittest.TestCase):
         passing shape 0 xarray as argument
         """
         import pysd
-        import warnings
 
         file_name = "data/input.xlsx"
         sheet = "Vertical"
@@ -1192,7 +1168,6 @@ class TestLookup(unittest.TestCase):
         using xarray for interpolation
         """
         import pysd
-        import warnings
 
         file_name = "data/input.xlsx"
         sheet = "Vertical"
@@ -1252,7 +1227,6 @@ class TestLookup(unittest.TestCase):
         using xarray for interpolation
         """
         import pysd
-        import warnings
 
         file_name = "data/input.xlsx"
         sheet = "Vertical"
@@ -1889,7 +1863,6 @@ class TestWarningsErrors(unittest.TestCase):
         has missing or NaN data
         """
         import pysd
-        from warnings import catch_warnings
 
         file_name = "data/input.xlsx"
         sheet = "Horizontal missing"
@@ -1910,7 +1883,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      interp=interp,
                                      py_name=py_name)
 
-        with catch_warnings(record=True) as ws:
+        with warnings.catch_warnings(record=True) as ws:
             data.initialize()
             wu = [w for w in ws if issubclass(w.category, UserWarning)]
             self.assertTrue("Not able to interpolate" in str(wu[-1].message))
@@ -1923,7 +1896,6 @@ class TestWarningsErrors(unittest.TestCase):
         has missing or NaN data
         """
         import pysd
-        from warnings import catch_warnings
 
         file_name = "data/input.xlsx"
         sheet = "Horizontal missing"
@@ -1944,7 +1916,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      interp=interp,
                                      py_name=py_name)
 
-        with catch_warnings(record=True) as ws:
+        with warnings.catch_warnings(record=True) as ws:
             data.initialize()
             wu = [w for w in ws if issubclass(w.category, UserWarning)]
             self.assertTrue("Not able to interpolate" in str(wu[-1].message))
@@ -1959,7 +1931,6 @@ class TestWarningsErrors(unittest.TestCase):
         has missing or NaN data
         """
         import pysd
-        from warnings import catch_warnings
 
         file_name = "data/input.xlsx"
         sheet = "Horizontal missing"
@@ -1980,14 +1951,14 @@ class TestWarningsErrors(unittest.TestCase):
                                      interp=interp,
                                      py_name=py_name)
 
-        with catch_warnings(record=True) as ws:
+        with warnings.catch_warnings(record=True) as ws:
             data.initialize()
             # use only user warnings
             wu = [w for w in ws if issubclass(w.category, UserWarning)]
             self.assertEqual(len(wu), 1)
             self.assertIn("missing", str(wu[0].message))
 
-        with catch_warnings(record=True) as ws:
+        with warnings.catch_warnings(record=True) as ws:
             for x, y in zip(_exp.xpts, _exp.interp_1d):
                 self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
             # use only user warnings
@@ -2004,7 +1975,6 @@ class TestWarningsErrors(unittest.TestCase):
         has missing or NaN data
         """
         import pysd
-        from warnings import catch_warnings
 
         file_name = "data/input.xlsx"
         sheet = "Horizontal missing"
@@ -2025,13 +1995,13 @@ class TestWarningsErrors(unittest.TestCase):
                                      interp=interp,
                                      py_name=py_name)
 
-        with catch_warnings(record=True) as ws:
+        with warnings.catch_warnings(record=True) as ws:
             data.initialize()
             # use only user warnings
             wu = [w for w in ws if issubclass(w.category, UserWarning)]
             self.assertEqual(len(wu), 0)
 
-        with catch_warnings(record=True) as ws:
+        with warnings.catch_warnings(record=True) as ws:
             for x, y in zip(_exp.xpts, _exp.interp_1d):
                 self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
             # use only user warnings
@@ -2077,7 +2047,6 @@ class TestWarningsErrors(unittest.TestCase):
         missing or NaN data
         """
         import pysd
-        from warnings import catch_warnings
 
         file_name = "data/input.xlsx"
         sheet = "Vertical missing"
@@ -2098,14 +2067,14 @@ class TestWarningsErrors(unittest.TestCase):
                                      interp=interp,
                                      py_name=py_name)
 
-        with catch_warnings(record=True) as ws:
+        with warnings.catch_warnings(record=True) as ws:
             data.initialize()
             # use only user warnings
             wu = [w for w in ws if issubclass(w.category, UserWarning)]
             self.assertEqual(len(wu), 1)
             self.assertTrue("missing" in str(wu[0].message))
 
-        with catch_warnings(record=True) as ws:
+        with warnings.catch_warnings(record=True) as ws:
             for x, y in zip(_exp.xpts, _exp.interp_1d):
                 self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
             # use only user warnings
@@ -2122,7 +2091,6 @@ class TestWarningsErrors(unittest.TestCase):
         missing or NaN data
         """
         import pysd
-        from warnings import catch_warnings
 
         file_name = "data/input.xlsx"
         sheet = "Vertical missing"
@@ -2143,13 +2111,13 @@ class TestWarningsErrors(unittest.TestCase):
                                      interp=interp,
                                      py_name=py_name)
 
-        with catch_warnings(record=True) as ws:
+        with warnings.catch_warnings(record=True) as ws:
             data.initialize()
             # use only user warnings
             wu = [w for w in ws if issubclass(w.category, UserWarning)]
             self.assertEqual(len(wu), 0)
 
-        with catch_warnings(record=True) as ws:
+        with warnings.catch_warnings(record=True) as ws:
             for x, y in zip(_exp.xpts, _exp.interp_1d):
                 self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
             # use only user warnings
@@ -2195,7 +2163,6 @@ class TestWarningsErrors(unittest.TestCase):
         when series has missing or NaN data
         """
         import pysd
-        from warnings import catch_warnings
 
         file_name = "data/input.xlsx"
         sheet = "Horizontal missing"
@@ -2216,14 +2183,14 @@ class TestWarningsErrors(unittest.TestCase):
                                      interp=interp,
                                      py_name=py_name)
 
-        with catch_warnings(record=True) as ws:
+        with warnings.catch_warnings(record=True) as ws:
             data.initialize()
             # use only user warnings
             wu = [w for w in ws if issubclass(w.category, UserWarning)]
             self.assertEqual(len(wu), 1)
             self.assertTrue("missing" in str(wu[0].message))
 
-        with catch_warnings(record=True) as ws:
+        with warnings.catch_warnings(record=True) as ws:
             for x, y in zip(_exp.xpts, _exp.interp_1d):
                 self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
             # use only user warnings
@@ -2240,7 +2207,6 @@ class TestWarningsErrors(unittest.TestCase):
         when series has missing or NaN data
         """
         import pysd
-        from warnings import catch_warnings
 
         file_name = "data/input.xlsx"
         sheet = "Horizontal missing"
@@ -2261,13 +2227,13 @@ class TestWarningsErrors(unittest.TestCase):
                                      interp=interp,
                                      py_name=py_name)
 
-        with catch_warnings(record=True) as ws:
+        with warnings.catch_warnings(record=True) as ws:
             data.initialize()
             # use only user warnings
             wu = [w for w in ws if issubclass(w.category, UserWarning)]
             self.assertEqual(len(wu), 0)
 
-        with catch_warnings(record=True) as ws:
+        with warnings.catch_warnings(record=True) as ws:
             for x, y in zip(_exp.xpts, _exp.interp_1d):
                 self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
             # use only user warnings
@@ -2313,7 +2279,6 @@ class TestWarningsErrors(unittest.TestCase):
         with missing data values. More cases are tested with test-models
         """
         import pysd
-        from warnings import catch_warnings
 
         file_name = "data/input.xlsx"
         sheet = "Horizontal missing"
@@ -2343,7 +2308,7 @@ class TestWarningsErrors(unittest.TestCase):
                  interp=interp,
                  coords=coords_2)
 
-        with catch_warnings(record=True) as ws:
+        with warnings.catch_warnings(record=True) as ws:
             data.initialize()
             # use only user warnings
             wu = [w for w in ws if issubclass(w.category, UserWarning)]
@@ -2355,7 +2320,7 @@ class TestWarningsErrors(unittest.TestCase):
                 ["will be filled" in str(w.message) for w in wu]
                 ))
 
-        with catch_warnings(record=True) as ws:
+        with warnings.catch_warnings(record=True) as ws:
             for x, y in zip(_exp.xpts, _exp.interp_3d):
                 self.assertTrue(y.equals(data(x)),
                                 "Wrong result at X=" + str(x))
@@ -2373,7 +2338,6 @@ class TestWarningsErrors(unittest.TestCase):
         has missing or NaN data
         """
         import pysd
-        from warnings import catch_warnings
 
         file_name = "data/input.xlsx"
         sheet = "Horizontal missing"
@@ -2403,7 +2367,7 @@ class TestWarningsErrors(unittest.TestCase):
                  interp=interp,
                  coords=coords_2)
 
-        with catch_warnings(record=True) as ws:
+        with warnings.catch_warnings(record=True) as ws:
             data.initialize()
             # use only user warnings
             wu = [w for w in ws if issubclass(w.category, UserWarning)]
@@ -2455,7 +2419,6 @@ class TestWarningsErrors(unittest.TestCase):
         missing data values.
         """
         import pysd
-        from warnings import catch_warnings
 
         file_name = "data/input.xlsx"
         sheet = "Horizontal missing"
@@ -2481,13 +2444,13 @@ class TestWarningsErrors(unittest.TestCase):
                  cell=cell_2,
                  coords=coords_2)
 
-        with catch_warnings(record=True) as ws:
+        with warnings.catch_warnings(record=True) as ws:
             data.initialize()
             # use only user warnings
             wu = [w for w in ws if issubclass(w.category, UserWarning)]
             self.assertEqual(len(wu), 0)
 
-        with catch_warnings(record=True) as ws:
+        with warnings.catch_warnings(record=True) as ws:
             for x, y in zip(_exp.xpts, _exp.interp_3d):
                 self.assertTrue(y.equals(data(x)),
                                 "Wrong result at X=" + str(x))
@@ -2505,7 +2468,6 @@ class TestWarningsErrors(unittest.TestCase):
         values.
         """
         import pysd
-        from warnings import catch_warnings
 
         file_name = "data/input.xlsx"
         sheet = "Horizontal missing"
@@ -2530,7 +2492,7 @@ class TestWarningsErrors(unittest.TestCase):
                  cell=cell_2,
                  coords=coords_2)
 
-        with catch_warnings(record=True) as ws:
+        with warnings.catch_warnings(record=True) as ws:
             data.initialize()
             # use only user warnings
             wu = [w for w in ws if issubclass(w.category, UserWarning)]
@@ -2545,7 +2507,6 @@ class TestWarningsErrors(unittest.TestCase):
         values.
         """
         import pysd
-        from warnings import catch_warnings
 
         file_name = "data/input.xlsx"
         sheet = "Horizontal missing"
@@ -2570,7 +2531,7 @@ class TestWarningsErrors(unittest.TestCase):
                  cell=cell_2,
                  coords=coords_2)
 
-        with catch_warnings(record=True) as ws:
+        with warnings.catch_warnings(record=True) as ws:
             data.initialize()
             # use only user warnings
             wu = [w for w in ws if issubclass(w.category, UserWarning)]
@@ -2861,8 +2822,10 @@ class TestWarningsErrors(unittest.TestCase):
                     3: -1, 4: -1, 5: 1, 6: 1,
                     7: 0, 8: 0, 9: 0}
 
-        for i in range(-1, 9):
-            self.assertEqual(data(i), expected[i])
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for i in range(-1, 9):
+                self.assertEqual(data(i), expected[i])
 
         time_row_or_col = "11"
         py_name = "test_data_interp_hnnnm2"
@@ -2882,8 +2845,10 @@ class TestWarningsErrors(unittest.TestCase):
                     3: 2, 4: 3, 5: -1, 6: -1,
                     7: 1, 8: 2, 9: 2}
 
-        for i in range(-1, 9):
-            self.assertEqual(data(i), expected[i])
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            for i in range(-1, 9):
+                self.assertEqual(data(i), expected[i])
 
     def test_data_h3d_interpnv(self):
         """

@@ -23,6 +23,7 @@ Contents:
    tools
    functions
    development/development_index
+   reporting_bugs
 
 
 Additional Resources
@@ -40,10 +41,10 @@ Contributing
 ^^^^^^^^^^^^
 The code for this package is available at: https://github.com/JamesPHoughton/pysd
 
-If you find a bug, or are interested in a particular feature, see the project's `issue tracker on github <https://github.com/JamesPHoughton/pysd/issues>`_.
+If you find a bug, or are interested in a particular feature, see :doc:`reporting bugs <../reporting_bugs>`.
 
-If you are interested in contributing to the development of PySD, see the Developer Documentation
-listed above, create a fork on github, and submit your pull requests when ready.
+If you are interested in contributing to the development of PySD, see the :doc:`developer documentation <../development/development_index>`
+listed above.
 
 Support
 ^^^^^^^

@@ -6,6 +6,16 @@ This section documents the functions that are going on behaind the scenes, for t
 Special functions needed for model execution
 --------------------------------------------
 
+.. automodule:: pysd.py_backend.components
+   :members:
+   :undoc-members:
+   :private-members:
+
+.. automodule:: pysd.py_backend.statefuls
+   :members:
+   :undoc-members:
+   :private-members:
+
 .. automodule:: pysd.py_backend.functions
    :members:
    :undoc-members:

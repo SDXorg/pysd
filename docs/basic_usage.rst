@@ -156,7 +156,7 @@ Setting simulation initial conditions
 -------------------------------------
 Finally, we can set the initial conditions of our model in several ways. So far, we’ve been using the default value for the initial_condition keyword argument, which is ‘original’. This value runs the model from the initial conditions that were specified originally by the model file. We can alternately specify a tuple containing the start time and a dictionary of values for the system’s stocks. Here we start the model with the tea at just above freezing::
 
-   model.run(initial_condition=(0, {'Teacup Temperature':33}))
+   model.run(initial_condition=(0, {'Teacup Temperature': 33}))
 
 The new value setted can be a *xarray.DataArray* as it is explained in the previous section.
 
@@ -172,9 +172,13 @@ There are times when we may choose to overwrite a stock with a constant value (i
 
 Querying current values
 -----------------------
-We can easily access the current value of a model component by calling its associated method (using python safe names) in the components subclass. For instance, to find the temperature of the teacup, we simply call::
+We can easily access the current value of a model component using curly brackets. For instance, to find the temperature of the teacup, we simply call::
 
-   model.components.teacup_temperature()
+   model['Teacup Temperature']
+
+If you try to get the current values of a lookup variable the previous method will fail as lookup variables take arguments. However, it is possible to get the full series of a lookup or data object with :py:func:`.get_series_data` method::
+
+   model.get_series_data('Growth lookup')
 
 Supported functions
 -------------------

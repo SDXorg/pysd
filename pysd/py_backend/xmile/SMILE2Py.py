@@ -20,7 +20,7 @@ import parsimonious
 from parsimonious.nodes import NodeVisitor
 import pkg_resources
 import re
-from .. import builder
+from .. import builder, utils
 
 # Here we define which python function each XMILE keyword corresponds to
 functions = {
@@ -96,7 +96,7 @@ functions = {
     # 3.5.6 Miscellaneous Functions
     # http://docs.oasis-open.org/xmile/xmile/v1.0/csprd01/xmile-v1.0-csprd01.html#_Toc398039985
     # ===
-   "if then else": {
+    "if then else": {
         "name": "if_then_else",
         "parameters": [
             {"name": 'condition'},
@@ -147,80 +147,96 @@ infix_operators = {
 builders = {
     # "delay" !TODO! How to add the infinity delay?
 
-    "delay1": lambda element, subscript_dict, args: builder.add_n_delay(
-        identifier=element["py_name"],
-        delay_input=args[0],
-        delay_time=args[1],
-        initial_value=args[2] if len(args) > 2 else args[0],
-        order="1",
-        subs=element["subs"],
-        merge_subs=None
+    "delay1": lambda element, subscript_dict, args:
+        builder.add_n_delay(
+            identifier=element["py_name"],
+            delay_input=args[0],
+            delay_time=args[1],
+            initial_value=args[2] if len(args) > 2 else args[0],
+            order="1",
+            subs=element["subs"],
+            merge_subs=None,
+            deps=element["dependencies"]
         ),
 
-    "delay3": lambda element, subscript_dict, args: builder.add_n_delay(
-        identifier=element["py_name"],
-        delay_input=args[0],
-        delay_time=args[1],
-        initial_value=args[2] if len(args) > 2 else args[0],
-        order="3",
-        subs=element["subs"],
-        merge_subs=None
+    "delay3": lambda element, subscript_dict, args:
+        builder.add_n_delay(
+            identifier=element["py_name"],
+            delay_input=args[0],
+            delay_time=args[1],
+            initial_value=args[2] if len(args) > 2 else args[0],
+            order="3",
+            subs=element["subs"],
+            merge_subs=None,
+            deps=element["dependencies"]
         ),
 
-    "delayn": lambda element, subscript_dict, args: builder.add_n_delay(
-        identifier=element["py_name"],
-        delay_input=args[0],
-        delay_time=args[1],
-        initial_value=args[2] if len(args) > 3 else args[0],
-        order=args[2],
-        subs=element["subs"],
-        merge_subs=None
+    "delayn": lambda element, subscript_dict, args:
+        builder.add_n_delay(
+            identifier=element["py_name"],
+            delay_input=args[0],
+            delay_time=args[1],
+            initial_value=args[2] if len(args) > 3 else args[0],
+            order=args[2],
+            subs=element["subs"],
+            merge_subs=None,
+            deps=element["dependencies"]
         ),
 
-    "smth1": lambda element, subscript_dict, args: builder.add_n_smooth(
-        identifier=element["py_name"],
-        smooth_input=args[0],
-        smooth_time=args[1],
-        initial_value=args[2] if len(args) > 2 else args[0],
-        order="1",
-        subs=element["subs"],
-        merge_subs=None
+    "smth1": lambda element, subscript_dict, args:
+        builder.add_n_smooth(
+            identifier=element["py_name"],
+            smooth_input=args[0],
+            smooth_time=args[1],
+            initial_value=args[2] if len(args) > 2 else args[0],
+            order="1",
+            subs=element["subs"],
+            merge_subs=None,
+            deps=element["dependencies"]
         ),
 
-    "smth3": lambda element, subscript_dict, args: builder.add_n_smooth(
-        identifier=element["py_name"],
-        smooth_input=args[0],
-        smooth_time=args[1],
-        initial_value=args[2] if len(args) > 2 else args[0],
-        order="3",
-        subs=element["subs"],
-        merge_subs=None
+    "smth3": lambda element, subscript_dict, args:
+        builder.add_n_smooth(
+            identifier=element["py_name"],
+            smooth_input=args[0],
+            smooth_time=args[1],
+            initial_value=args[2] if len(args) > 2 else args[0],
+            order="3",
+            subs=element["subs"],
+            merge_subs=None,
+            deps=element["dependencies"]
         ),
 
-    "smthn": lambda element, subscript_dict, args: builder.add_n_smooth(
-        identifier=element["py_name"],
-        smooth_input=args[0],
-        smooth_time=args[1],
-        initial_value=args[2] if len(args) > 3 else args[0],
-        order=args[2],
-        subs=element["subs"],
-        merge_subs=None
+    "smthn": lambda element, subscript_dict, args:
+        builder.add_n_smooth(
+            identifier=element["py_name"],
+            smooth_input=args[0],
+            smooth_time=args[1],
+            initial_value=args[2] if len(args) > 3 else args[0],
+            order=args[2],
+            subs=element["subs"],
+            merge_subs=None,
+            deps=element["dependencies"]
         ),
 
     # "forcst" !TODO!
 
-    "trend": lambda element, subscript_dict, args: builder.add_n_trend(
-        identifier=element["py_name"],
-        trend_input=args[0],
-        average_time=args[1],
-        initial_trend=args[2] if len(args) > 2 else 0,
-        subs=element["subs"],
-        merge_subs=None
+    "trend": lambda element, subscript_dict, args:
+        builder.add_n_trend(
+            identifier=element["py_name"],
+            trend_input=args[0],
+            average_time=args[1],
+            initial_trend=args[2] if len(args) > 2 else 0,
+            subs=element["subs"],
+            merge_subs=None,
+            deps=element["dependencies"]
         ),
 
-    "init": lambda element, subscript_dict, args: builder.add_initial(
-        identifier=element["py_name"],
-        value=args[0]),
+    "init": lambda element, subscript_dict, args:
+        builder.add_initial(
+            identifier=element["py_name"],
+            value=args[0],
+            deps=element["dependencies"]),
 }
 
 
@@ -230,12 +246,7 @@ def format_word_list(word_list):
 
 
 class SMILEParser(NodeVisitor):
-    def __init__(self, model_namespace=None, subscript_dict=None):
-        if model_namespace is None:
-            model_namespace = {}
-
-        if subscript_dict is None:
-            subscript_dict = {}
+    def __init__(self, model_namespace={}, subscript_dict={}):
 
         self.model_namespace = model_namespace
         self.subscript_dict = subscript_dict
@@ -252,7 +263,8 @@ class SMILEParser(NodeVisitor):
         self.extended_model_namespace.update({'starttime': 'initial_time'})
         self.extended_model_namespace.update({'endtime': 'final_time'})
 
-        grammar = pkg_resources.resource_string("pysd", "py_backend/xmile/smile.grammar")
+        grammar = pkg_resources.resource_string(
+            "pysd", "py_backend/xmile/smile.grammar")
         grammar = grammar.decode('ascii').format(
             funcs=format_word_list(functions.keys()),
             in_ops=format_word_list(infix_operators.keys()),
@@ -266,13 +278,16 @@ class SMILEParser(NodeVisitor):
     def parse(self, text, element, context='eqn'):
         """
            context : <string> 'eqn', 'defn'
-                If context is set to equation, lone identifiers will be parsed as calls to elements
-                If context is set to definition, lone identifiers will be cleaned and returned.
+                If context is set to equation, lone identifiers will be
+                parsed as calls to elements. If context is set to definition,
+                lone identifiers will be cleaned and returned.
         """
 
         # Remove the inline comments from `text` before parsing the grammar
         # http://docs.oasis-open.org/xmile/xmile/v1.0/csprd01/xmile-v1.0-csprd01.html#_Toc398039973
         text = re.sub(r"\{[^}]*\}", "", text)
+        if "dependencies" not in element:
+            element["dependencies"] = dict()
 
         self.ast = self.grammar.parse(text)
         self.context = context
@@ -286,9 +301,7 @@ class SMILEParser(NodeVisitor):
         }, self.new_structure)
 
     def visit_conditional_statement(self, n, vc):
-        _IF, _1, condition_expr, _2, _THEN, _3, then_expr, _4, _ELSE, _5, else_expr = vc
-        return builder.build_function_call(functions["if then else"],
-            [condition_expr, then_expr, else_expr])
+        return builder.build_function_call(functions["if then else"], vc[2::4])
 
     def visit_user_call_identifier(self, n, vc):
         return self.extended_model_namespace[n.text]
@@ -297,15 +310,20 @@ class SMILEParser(NodeVisitor):
         return self.extended_model_namespace[vc[1]]
 
     def visit_identifier(self, n, vc):
-        return self.extended_model_namespace[n.text] + '()'
+        subelement = self.extended_model_namespace[n.text]
+        utils.update_dependency(subelement, self.element["dependencies"])
+        return subelement + '()'
 
     def visit_quoted_identifier(self, n, vc):
-        return self.extended_model_namespace[vc[1]] + '()'
+        subelement = self.extended_model_namespace[vc[1]]
+        utils.update_dependency(subelement, self.element["dependencies"])
+        return subelement + '()'
 
     def visit_call(self, n, vc):
         function_name = vc[0].lower()
         arguments = [e.strip() for e in vc[4].split(",")]
-        return builder.build_function_call(functions[function_name], arguments)
+        return builder.build_function_call(
+            functions[function_name], arguments, self.element["dependencies"])
 
     def visit_user_call(self, n, vc):
         return vc[0] + '(' + vc[4] + ')'
@@ -313,8 +331,10 @@ class SMILEParser(NodeVisitor):
     def visit_build_call(self, n, vc):
         builder_name = vc[0].lower()
         arguments = [e.strip() for e in vc[4].split(",")]
-        name, structure = builders[builder_name](self.element, self.subscript_dict, arguments)
+        name, structure = builders[builder_name](
+            self.element, self.subscript_dict, arguments)
         self.new_structure += structure
+        self.element["dependencies"] = {structure[-1]["py_name"]: 1}
         return name
 
     def visit_pre_oper(self, n, vc):

@@ -27,6 +27,13 @@ The use of a one-to-one dictionary in translation means that the breadth of func
 
 In addition to translating individual commands between Vensim/XMILE and Python, PySD reworks component identifiers to be Python-safe by replacing spaces with underscores. The translator allows source identifiers to make use of alphanumeric characters, spaces, or the $ symbol.
 
+During translation some dictionaries are created that allow the correct operation of the model:
+
+* **_namespace**: used to connect real name (from the original model) with the Python name.
+* **_subscript_dict**: Used to define the subscript range and subranges.
+* **_dependencies**: Used to define the dependencies of each variable and assign cache type and initialize the model.
+
+
 The model class
 ^^^^^^^^^^^^^^^
 The translator constructs a Python class that represents the system dynamics model. The class maintains a dictionary representing the current values of each of the system stocks, and the current simulation time, making it a ‘statefull’ model in much the same way that the system itself has a specific state at any point in time.

@@ -75,7 +75,6 @@ class External(object):
         the values without showing anything. If "keep" it will keep
         the missing values, this option may cause the integration to
         fail, but it may be used to check the quality of the data.
-
     file: str
         File name from which the data is read.
     sheet: str
@@ -195,13 +194,13 @@ class External(object):
             The way to read series file.
         series_row_or_col: int or str
             If series_across is "row" the row number where the series data is.
-            If series_across is "column" the column name where
-              the series data is.
-            If series_across is "name" the cell range name where
-              the series data is.
+            If series_across is "column" the column name where the series
+            data is.
+            If series_across is "name" the cell range name where the series
+            data is.
         cell:
-            If series_across is not "name, the top left cell where
-              the data table starts.
+            If series_across is not "name, the top left cell where the
+            data table starts.
             Else the name of the cell range where the data is.
         size:
             The size of the 2nd dimension of the data.
@@ -739,13 +738,12 @@ class ExtData(External):
         """
         Initialize all elements and create the self.data xarray.DataArray
         """
-        data = []
-        zipped = zip(self.files, self.sheets, self.time_row_or_cols,
-                     self.cells, self.coordss)
-        for (self.file, self.sheet, self.x_row_or_col,
-             self.cell, self.coords) in zipped:
-            data.append(self._initialize_data("data"))
-        self.data = utils.xrmerge(data)
+        self.data = utils.xrmerge(*[
+            self._initialize_data("data")
+            for self.file, self.sheet, self.x_row_or_col,
+            self.cell, self.coords
+            in zip(self.files, self.sheets, self.time_row_or_cols,
+                   self.cells, self.coordss)])
 
     def __call__(self, time):
 
@@ -812,13 +810,12 @@ class ExtLookup(External):
         """
         Initialize all elements and create the self.data xarray.DataArray
         """
-        data = []
-        zipped = zip(self.files, self.sheets, self.x_row_or_cols,
-                     self.cells, self.coordss)
-        for (self.file, self.sheet, self.x_row_or_col,
-             self.cell, self.coords) in zipped:
-            data.append(self._initialize_data("lookup"))
-        self.data = utils.xrmerge(data)
+        self.data = utils.xrmerge(*[
+            self._initialize_data("lookup")
+            for self.file, self.sheet, self.x_row_or_col,
+            self.cell, self.coords
+            in zip(self.files, self.sheets, self.x_row_or_cols,
+                   self.cells, self.coordss)])
 
     def __call__(self, x):
         return self._call(self.data, x)
@@ -905,13 +902,11 @@ class ExtConstant(External):
         """
         Initialize all elements and create the self.data xarray.DataArray
         """
-        data = []
-        zipped = zip(self.files, self.sheets, self.transposes,
-                     self.cells, self.coordss)
-        for (self.file, self.sheet, self.transpose,
-             self.cell, self.coords) in zipped:
-            data.append(self._initialize())
-        self.data = utils.xrmerge(data)
+        self.data = utils.xrmerge(*[
+            self._initialize()
+            for self.file, self.sheet, self.transpose, self.cell, self.coords
+            in zip(self.files, self.sheets, self.transposes,
+                   self.cells, self.coordss)])
 
     def _initialize(self):
         """

@@ -35,12 +35,18 @@ Once the regression model is fit, we write a wrapper function for its predict me
       room_temp = model.components.room_temperature()
       return regression.predict([room_temp, tea_temp])[0]
 
-We can substitute this function directly for the heat_loss_to_room model component::
+In order to substitute this function directly for the heat_loss_to_room model component using the :py:func:`set_component()` method::
 
-   model.components.heat_loss_to_room = new_heatflow_function
+   model.set_components({'heat_loss_to_room': new_heatflow_function})
 
 If you want to replace a subscripted variable, you need to ensure that the output from the new function is the same as the previous one. You can check the current coordinates and dimensions of a component by using :py:data:`.get_coords(variable_name)` as it is explained in :doc:`basic usage <../basic_usage>`.
 
+.. note::
+   Alternatively, you can also set a model component directly::
+
+      model.components.heat_loss_to_room = new_heatflow_function
+
+   However, this will only accept the python name of the model component. While for the :py:func:`set_component()` method, the original name can be also used.
 
 Splitting Vensim views in separate Python files (modules)
 ---------------------------------------------------------
@@ -68,7 +74,7 @@ In a Vensim model with three separate views (e.g. `view_1`, `view_2` and `view_3
 .. note ::
     Often, modelers wish to organise views further. To that end, a common practice is to include a particular character in the View name to indicate that what comes after it is the name of the subview. For instance, we could name one view as `ENERGY.Supply` and another one as `ENERGY.Demand`.
     In that particular case, setting the `subview_sep` kwarg equal to `["."]`, as in the code below, would name the translated views as `demand.py` and `supply.py` and place them inside the `ENERGY` folder::
-    
+
       read_vensim("many_views_model.mdl", split_views=True, subview_sep=["."])
 
 If macros are present, they will be self-contained in files named as the macro itself. The macro inner variables will be placed inside the module that corresponds with the view in which they were defined.
@@ -76,7 +82,7 @@ If macros are present, they will be self-contained in files named as the macro i
 
 Starting simulations from an end-state of another simulation
 ------------------------------------------------------------
-The current state of a model can be saved in a pickle file using the :py:data:`.export()`method::
+The current state of a model can be saved in a pickle file using the :py:data:`.export()` method::
 
    import pysd
    model1 = pysd.read_vensim("my_model.mdl")

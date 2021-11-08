@@ -6,6 +6,7 @@ normal operation.
 """
 
 import sys
+from .py_backend.statefuls import Model
 
 if sys.version_info[:2] < (3, 7):  # pragma: no cover
     raise RuntimeError(
@@ -90,8 +91,8 @@ def read_vensim(mdl_file, initialize=True, missing_values="warning",
         models split in many different views. Default is False.
 
     **kwargs: (optional)
-        Additional keyword arguments.
-        subview_sep:(list)
+        Additional keyword arguments for translation.
+        subview_sep: list
             Characters used to separate views and subviews (e.g. [",", "."]).
             If provided, and split_views=True, each submodule will be placed
             inside the directory of the parent view.
@@ -143,6 +144,5 @@ def load(py_model_file, initialize=True, missing_values="warning"):
     >>> model = load('../tests/test-models/samples/teacup/teacup.py')
 
     """
-    from .py_backend import functions
 
-    return functions.Model(py_model_file, initialize, missing_values)
+    return Model(py_model_file, initialize, missing_values)

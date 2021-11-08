@@ -1,9 +1,14 @@
-from pysd import cache, external
-from pysd.py_backend.functions import Integ, Delay
+from pysd.py_backend.statefuls import Integ, Delay
 
 _subscript_dict = {}
 _namespace = {'integ': 'integ', 'delay': 'delay'}
-__pysd_version__ = "1.1.1"
+_dependencies = {
+    'integ': {'_integ_integ': 1},
+    'delay': {'_delay_delay': 1},
+    '_integ_integ': {'initial': {'delay': 1}, 'step': {}},
+    '_delay_delay': {'initial': {'integ': 1}, 'step': {}}
+}
+__pysd_version__ = "2.0.0"
 
 __data = {'scope': None, 'time': lambda: 0}
 
@@ -17,12 +22,36 @@ def time():
     return __data["time"]()
 
 
-def time_step():
+def _time_step():
     return 0.5
 
 
-def initial_time():
+def _initial_time():
     return 0
+
+
+def _final_time():
+    return 0.5
+
+
+def _saveper():
+    return 0.5
+
+
+def time_step():
+    return __data["time"].step()
+
+
+def initial_time():
+    return __data["time"].initial()
+
+
+def final_time():
+    return __data["time"].final()
+
+
+def saveper():
+    return __data["time"].save()
 
 
 def integ():
