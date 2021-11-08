@@ -1124,7 +1124,7 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
     lookup_call_subs = (id _ subscript_list) / id # check first for subscript
 
     nan = ":NA:"
-    number = ("+"/"-")? ~r"\d+\.?\d*(e[+-]\d+)?"
+    number = ("+"/"-")? ~r"\d+\.?\d*([eE][+-]?\d+)?"
     range = _ "[" ~r"[^\]]*" "]" _ ","
 
     arguments = ((logical_expr / (subs_range !(_ id)) / expr) _ ","? _)*
