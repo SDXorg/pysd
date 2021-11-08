@@ -1,8 +1,48 @@
 import unittest
+import os
 
 import numpy as np
 
-from pysd.py_backend.components import Time
+from pysd.py_backend.components import Time, Components
+
+_root = os.path.dirname(__file__)
+
+test_model = os.path.join(_root, "test-models/samples/teacup/teacup.mdl")
+test_model_py = os.path.join(_root, "test-models/samples/teacup/teacup.py")
+
+
+class TestComponents(unittest.TestCase):
+    def test_load_components(self):
+        from pysd import read_vensim
+        read_vensim(test_model)
+
+        # set function for testing
+        executed = []
+
+        def set_component(input_dict):
+            executed.append(("SET", input_dict))
+
+        # create object
+        components = Components(test_model_py, set_component)
+
+        # main attributes of the class
+        self.assertTrue(hasattr(components, "_components"))
+        self.assertTrue(hasattr(components, "_set_components"))
+
+        # check getting elements
+        self.assertEqual(components.room_temperature(), 70)
+
+        # check setting elements
+        components.room_temperature = 5
+
+        self.assertIn(("SET", {"room_temperature": 5}), executed)
+
+        def temperature():
+            return 34
+
+        components.teacup_temperature = temperature
+
+        self.assertIn(("SET", {"teacup_temperature": temperature}), executed)
 
 
 class TestTime(unittest.TestCase):

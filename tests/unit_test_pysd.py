@@ -297,6 +297,19 @@ class TestPySD(unittest.TestCase):
         with self.assertRaises(NameError):
             model.set_components({'not_a_var': 20})
 
+    def test_set_constant_parameter_inline(self):
+        import pysd
+
+        model = pysd.read_vensim(test_model)
+        model.components.room_temperature = 20
+        self.assertEqual(model.components.room_temperature(), 20)
+
+        model.run(params={"room_temperature": 70})
+        self.assertEqual(model.components.room_temperature(), 70)
+
+        with self.assertRaises(NameError):
+            model.components.not_a_var = 20
+
     def test_set_timeseries_parameter(self):
         import pysd
 
@@ -308,6 +321,22 @@ class TestPySD(unittest.TestCase):
         )
         res = model.run(
             params={"room_temperature": temp_timeseries},
+            return_columns=["room_temperature"],
+            return_timestamps=timeseries,
+        )
+        self.assertTrue((res["room_temperature"] == temp_timeseries).all())
+
+    def test_set_timeseries_parameter_inline(self):
+        import pysd
+
+        model = pysd.read_vensim(test_model)
+        timeseries = list(range(30))
+        temp_timeseries = pd.Series(
+            index=timeseries,
+            data=(50 + np.random.rand(len(timeseries)).cumsum())
+        )
+        model.components.room_temperature = temp_timeseries
+        res = model.run(
             return_columns=["room_temperature"],
             return_timestamps=timeseries,
         )
