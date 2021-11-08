@@ -116,7 +116,7 @@ def get_model_elements(model_str):
     Parameters
     ----------
     model_str : str
-        Model file conten to read.
+        Model file content to read.
 
     Returns
     -------

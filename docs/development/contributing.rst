@@ -10,7 +10,7 @@ When you're happy with your edits, submit a pull request to the main branch.
 
 .. note::
   In order to open a pull request,the new features and changes should be througly tested.
-  To do so, unit tests of new features or translated functions should be added, please check the Development Tools section bellow. When opening a pull request all tests are run and the coverage and pep8 style are checked.
+  To do so, unit tests of new features or translated functions should be added, please check the Development Tools section below. When opening a pull request all tests are run and the coverage and pep8 style are checked.
 
 Development Tools
 -----------------
