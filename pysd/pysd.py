@@ -54,7 +54,7 @@ def read_xmile(xmile_file, initialize=True, missing_values="warning"):
     >>> model = read_xmile('../tests/test-models/samples/teacup/teacup.xmile')
 
     """
-    from .py_backend.xmile.xmile2py import translate_xmile
+    from .translation.xmile.xmile2py import translate_xmile
 
     py_model_file = translate_xmile(xmile_file)
     model = load(py_model_file, initialize, missing_values)
@@ -109,7 +109,7 @@ def read_vensim(mdl_file, initialize=True, missing_values="warning",
     >>> model = read_vensim('../tests/test-models/samples/teacup/teacup.mdl')
 
     """
-    from .py_backend.vensim.vensim2py import translate_vensim
+    from .translation.vensim.vensim2py import translate_vensim
 
     py_model_file = translate_vensim(mdl_file, split_views, **kwargs)
     model = load(py_model_file, initialize, missing_values)

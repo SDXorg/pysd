@@ -2,7 +2,7 @@ import os
 import unittest
 import tempfile
 
-from pysd.py_backend.xmile.xmile2py import translate_xmile
+from pysd.translation.xmile.xmile2py import translate_xmile
 
 _root = os.path.dirname(__file__)
 TARGET_STMX_FILE = os.path.join(_root, "test-models/tests/game/test_game.stmx")

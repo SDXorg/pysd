@@ -744,52 +744,50 @@ def merge_partial_elements(element_list):
     outs = dict()  # output data structure
 
     for element in element_list:
-        if element["py_expr"] != "None":  # for
-            name = element["py_name"]
-            if name not in outs:
+        name = element["py_name"]
+        if name not in outs:
+            # Use 'expr' for Vensim models, and 'eqn' for Xmile
+            # (This makes the Vensim equation prettier.)
+            eqn = element["expr"] if "expr" in element else element["eqn"]
+            outs[name] = {
+                "py_name": element["py_name"],
+                "real_name": element["real_name"],
+                "doc": element["doc"],
+                "py_expr": [element["py_expr"]],  # in a list
+                "unit": element["unit"],
+                "subs": [element["subs"]],
+                "merge_subs": element["merge_subs"]
+                if "merge_subs" in element else None,
+                "dependencies": element["dependencies"]
+                if "dependencies" in element else None,
+                "lims": element["lims"],
+                "eqn": [eqn.replace(r"\ ", "")],
+                "kind": element["kind"],
+                "arguments": element["arguments"],
+            }
 
-                # Use 'expr' for Vensim models, and 'eqn' for Xmile
-                # (This makes the Vensim equation prettier.)
-                eqn = element["expr"] if "expr" in element else element["eqn"]
-                outs[name] = {
-                    "py_name": element["py_name"],
-                    "real_name": element["real_name"],
-                    "doc": element["doc"],
-                    "py_expr": [element["py_expr"]],  # in a list
-                    "unit": element["unit"],
-                    "subs": [element["subs"]],
-                    "merge_subs": element["merge_subs"]
-                    if "merge_subs" in element else None,
-                    "dependencies": element["dependencies"]
-                    if "dependencies" in element else None,
-                    "lims": element["lims"],
-                    "eqn": [eqn.replace(r"\ ", "")],
-                    "kind": element["kind"],
-                    "arguments": element["arguments"],
-                }
+        else:
+            eqn = element["expr"] if "expr" in element else element["eqn"]
 
-            else:
-                eqn = element["expr"] if "expr" in element else element["eqn"]
-
-                outs[name]["doc"] = outs[name]["doc"] or element["doc"]
-                outs[name]["unit"] = outs[name]["unit"] or element["unit"]
-                outs[name]["lims"] = outs[name]["lims"] or element["lims"]
-                outs[name]["eqn"] += [eqn.replace(r"\ ", "")]
-                outs[name]["py_expr"] += [element["py_expr"]]
-                outs[name]["subs"] += [element["subs"]]
-                if outs[name]["dependencies"] is not None:
-                    if name.startswith("_"):
-                        # stateful object merge initial and step
-                        for target in outs[name]["dependencies"]:
-                            _merge_dependencies(
-                                outs[name]["dependencies"][target],
-                                element["dependencies"][target])
-                    else:
-                        # regular element
+            outs[name]["doc"] = outs[name]["doc"] or element["doc"]
+            outs[name]["unit"] = outs[name]["unit"] or element["unit"]
+            outs[name]["lims"] = outs[name]["lims"] or element["lims"]
+            outs[name]["eqn"] += [eqn.replace(r"\ ", "")]
+            outs[name]["py_expr"] += [element["py_expr"]]
+            outs[name]["subs"] += [element["subs"]]
+            if outs[name]["dependencies"] is not None:
+                if name.startswith("_"):
+                    # stateful object merge initial and step
+                    for target in outs[name]["dependencies"]:
                         _merge_dependencies(
-                            outs[name]["dependencies"],
-                            element["dependencies"])
-                outs[name]["arguments"] = element["arguments"]
+                            outs[name]["dependencies"][target],
+                            element["dependencies"][target])
+                else:
+                    # regular element
+                    _merge_dependencies(
+                        outs[name]["dependencies"],
+                        element["dependencies"])
+            outs[name]["arguments"] = element["arguments"]
 
     return list(outs.values())
 

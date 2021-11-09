@@ -15,7 +15,9 @@ from parsimonious.exceptions import IncompleteParseError,\
                                     VisitationError,\
                                     ParseError
 
-from .. import builder, utils, external
+from .. import builder, utils
+from ...py_backend.external import ExtSubscript
+from ...py_backend.utils import compute_shape
 
 
 def get_file_sections(file_str):
@@ -299,10 +301,11 @@ def get_equation_components(equation_str, root_path=None):
 
     component_structure_grammar = _include_common_grammar(
         r"""
-    entry = component / data_definition / test_definition / subscript_definition / lookup_definition / subscript_copy
+    entry = component / ext_data_definition / data_definition / test_definition / subscript_definition / lookup_definition / subscript_copy
     component = name _ subscriptlist? _ "=" "="? _ expression
     subscript_definition = name _ ":" _ (imported_subscript / literal_subscript / numeric_range) _ subscript_mapping_list?
-    data_definition = name _ subscriptlist? _ keyword? _ ":=" _ expression
+    ext_data_definition = name _ subscriptlist? _ keyword? _ ":=" _ expression
+    data_definition = name _ subscriptlist? _ keyword
     lookup_definition = name _ subscriptlist? &"(" _ expression  # uses
     # lookahead assertion to capture whole group
     test_definition = name _ subscriptlist? _ &keyword _ expression
@@ -356,6 +359,9 @@ def get_equation_components(equation_str, root_path=None):
         def visit_component(self, n, vc):
             self.kind = "component"
 
+        def visit_ext_data_definition(self, n, vc):
+            self.kind = "component"
+
         def visit_data_definition(self, n, vc):
             self.kind = "data"
 
@@ -371,8 +377,7 @@ def get_equation_components(equation_str, root_path=None):
             # TODO: allow reading the subscripts from Excel
             # once the model has been translated
             args = [x.strip().strip("'") for x in vc[4].split(",")]
-            self.subscripts += external.ExtSubscript(*args, root=root_path
-                                                     ).subscript
+            self.subscripts += ExtSubscript(*args, root=root_path).subscript
 
         def visit_subscript_copy(self, n, vc):
             self.kind = "subdef"
@@ -1358,7 +1363,7 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
                 if ";" in n.text or "," in n.text:
                     text = n.text.strip(";").replace(" ", "").replace(";", ",")
                     data = np.array([float(s) for s in text.split(",")])
-                    data = data.reshape(utils.compute_shape(coords))
+                    data = data.reshape(compute_shape(coords))
                     datastr = (
                         np.array2string(data, separator=",")
                         .replace("\n", "")
@@ -1673,8 +1678,7 @@ def translate_section(section, macro_list, sketch, root_path, subview_sep=""):
 
     # Parse components to python syntax.
     for element in model_elements:
-        if (element["kind"] == "component" and "py_expr" not in element) or \
-           (element["kind"] == "data"):
+        if element["kind"] == "component" and "py_expr" not in element:
             # TODO: if there is new structure,
             # it should be added to the namespace...
             translation, new_structure = parse_general_expression(
@@ -1687,6 +1691,11 @@ def translate_section(section, macro_list, sketch, root_path, subview_sep=""):
             )
             element.update(translation)
             model_elements += new_structure
+
+        elif element["kind"] == "data":
+            element["eqn"] = element["expr"] = element["arguments"] = ""
+            element["py_expr"] = "None"
+            element["dependencies"] = {"time": 1, "__data__": None}
 
         elif element["kind"] == "lookup":
             translation, new_structure = parse_lookup_expression(

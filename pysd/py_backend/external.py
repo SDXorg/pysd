@@ -12,6 +12,7 @@ import numpy as np
 import xarray as xr
 from openpyxl import load_workbook
 from . import utils
+from .components import Data
 
 
 class Excels():
@@ -685,7 +686,7 @@ class External(object):
                 return "name"
 
 
-class ExtData(External):
+class ExtData(External, Data):
     """
     Class for Vensim GET XLS DATA/GET DIRECT DATA
     """
@@ -700,6 +701,7 @@ class ExtData(External):
         self.coordss = [coords]
         self.root = root
         self.interp = interp
+        self.is_float = not bool(coords)
 
         # check if the interpolation method is valid
         if not interp:
@@ -744,36 +746,6 @@ class ExtData(External):
             self.cell, self.coords
             in zip(self.files, self.sheets, self.time_row_or_cols,
                    self.cells, self.coordss)])
-
-    def __call__(self, time):
-
-        if time in self.data['time'].values:
-            outdata = self.data.sel(time=time)
-        elif self.interp == "raw":
-            return np.nan
-        elif time > self.data['time'].values[-1]:
-            warnings.warn(
-              self.py_name + "\n"
-              + "extrapolating data above the maximum value of the time")
-            outdata = self.data[-1]
-        elif time < self.data['time'].values[0]:
-            warnings.warn(
-              self.py_name + "\n"
-              + "extrapolating data below the minimum value of the time")
-            outdata = self.data[0]
-        elif self.interp == "interpolate":
-            outdata = self.data.interp(time=time)
-        elif self.interp == 'look forward':
-            outdata = self.data.sel(time=time, method="backfill")
-        elif self.interp == 'hold backward':
-            outdata = self.data.sel(time=time, method="pad")
-
-        if self.coordss[0]:
-            # Remove time coord from the DataArray
-            return outdata.reset_coords('time', drop=True)
-        else:
-            # if data has no-coords return a float
-            return float(outdata)
 
 
 class ExtLookup(External):

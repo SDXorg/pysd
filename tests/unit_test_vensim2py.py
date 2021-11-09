@@ -5,7 +5,7 @@ import xarray as xr
 class TestGetFileSections(unittest.TestCase):
     def test_normal_load(self):
         """normal model file with no macros"""
-        from pysd.py_backend.vensim.vensim2py import get_file_sections
+        from pysd.translation.vensim.vensim2py import get_file_sections
 
         actual = get_file_sections(r"a~b~c| d~e~f| g~h~i|")
         expected = [
@@ -20,7 +20,7 @@ class TestGetFileSections(unittest.TestCase):
 
     def test_macro_only(self):
         """ Macro Only """
-        from pysd.py_backend.vensim.vensim2py import get_file_sections
+        from pysd.translation.vensim.vensim2py import get_file_sections
 
         actual = get_file_sections(":MACRO: MAC(z) a~b~c| :END OF MACRO:")
         expected = [{"returns": [], "params": ["z"], "name": "MAC",
@@ -29,7 +29,7 @@ class TestGetFileSections(unittest.TestCase):
 
     def test_macro_and_model(self):
         """ basic macro and model """
-        from pysd.py_backend.vensim.vensim2py import get_file_sections
+        from pysd.translation.vensim.vensim2py import get_file_sections
 
         actual = get_file_sections(
             ":MACRO: MAC(z) a~b~c| :END OF MACRO: d~e~f| g~h~i|")
@@ -43,7 +43,7 @@ class TestGetFileSections(unittest.TestCase):
 
     def test_macro_multiple_inputs(self):
         """ macro with multiple input parameters """
-        from pysd.py_backend.vensim.vensim2py import get_file_sections
+        from pysd.translation.vensim.vensim2py import get_file_sections
 
         actual = get_file_sections(
             ":MACRO: MAC(z, y) a~b~c| :END OF MACRO: d~e~f| g~h~i|"
@@ -58,7 +58,7 @@ class TestGetFileSections(unittest.TestCase):
 
     def test_macro_with_returns(self):
         """ macro with return values """
-        from pysd.py_backend.vensim.vensim2py import get_file_sections
+        from pysd.translation.vensim.vensim2py import get_file_sections
 
         actual = get_file_sections(
             ":MACRO: MAC(z, y :x, w) a~b~c| :END OF MACRO: d~e~f| g~h~i|"
@@ -77,7 +77,7 @@ class TestGetFileSections(unittest.TestCase):
 
     def test_handle_encoding(self):
         """ Handle encoding """
-        from pysd.py_backend.vensim.vensim2py import get_file_sections
+        from pysd.translation.vensim.vensim2py import get_file_sections
 
         actual = get_file_sections(r"{UTF-8} a~b~c| d~e~f| g~h~i|")
         expected = [
@@ -92,7 +92,7 @@ class TestGetFileSections(unittest.TestCase):
 
     def test_handle_encoding_like_strings(self):
         """ Handle encoding-like strings in other places in the file """
-        from pysd.py_backend.vensim.vensim2py import get_file_sections
+        from pysd.translation.vensim.vensim2py import get_file_sections
 
         actual = get_file_sections(r"a~b~c| d~e~f{special}| g~h~i|")
         expected = [
@@ -110,7 +110,7 @@ class TestEquationStringParsing(unittest.TestCase):
     """ Tests the 'get_equation_components function """
 
     def test_basics(self):
-        from pysd.py_backend.vensim.vensim2py import get_equation_components
+        from pysd.translation.vensim.vensim2py import get_equation_components
 
         self.assertEqual(
             get_equation_components(r'constant = 25'),
@@ -126,7 +126,7 @@ class TestEquationStringParsing(unittest.TestCase):
 
     def test_equals_handling(self):
         """ Parse cases with equal signs within the expression """
-        from pysd.py_backend.vensim.vensim2py import get_equation_components
+        from pysd.translation.vensim.vensim2py import get_equation_components
 
         self.assertEqual(
             get_equation_components(r"Boolean = IF THEN ELSE(1 = 1, 1, 0)"),
@@ -142,7 +142,7 @@ class TestEquationStringParsing(unittest.TestCase):
 
     def test_whitespace_handling(self):
         """ Whitespaces should be shortened to a single space """
-        from pysd.py_backend.vensim.vensim2py import get_equation_components
+        from pysd.translation.vensim.vensim2py import get_equation_components
 
         self.assertEqual(
             get_equation_components(
@@ -176,7 +176,7 @@ class TestEquationStringParsing(unittest.TestCase):
         )
 
     def test_subscript_definition_parsing(self):
-        from pysd.py_backend.vensim.vensim2py import get_equation_components
+        from pysd.translation.vensim.vensim2py import get_equation_components
 
         self.assertEqual(
             get_equation_components(r"""Sub1: Entry 1, Entry 2, Entry 3 """),
@@ -214,7 +214,7 @@ class TestEquationStringParsing(unittest.TestCase):
             str(err.exception))
 
     def test_subscript_references(self):
-        from pysd.py_backend.vensim.vensim2py import get_equation_components
+        from pysd.translation.vensim.vensim2py import get_equation_components
 
         self.assertEqual(
             get_equation_components(
@@ -269,7 +269,7 @@ class TestEquationStringParsing(unittest.TestCase):
         )
 
     def test_lookup_definitions(self):
-        from pysd.py_backend.vensim.vensim2py import get_equation_components
+        from pysd.translation.vensim.vensim2py import get_equation_components
 
         self.assertEqual(
             get_equation_components(r"table([(0,-1)-(45,1)],(0,0),(5,0))"),
@@ -296,7 +296,7 @@ class TestEquationStringParsing(unittest.TestCase):
         )
 
     def test_get_lookup(self):
-        from pysd.py_backend.vensim.vensim2py import parse_lookup_expression
+        from pysd.translation.vensim.vensim2py import parse_lookup_expression
 
         res = parse_lookup_expression(
             {
@@ -316,7 +316,7 @@ class TestEquationStringParsing(unittest.TestCase):
         )
 
     def test_pathological_names(self):
-        from pysd.py_backend.vensim.vensim2py import get_equation_components
+        from pysd.translation.vensim.vensim2py import get_equation_components
 
         self.assertEqual(
             get_equation_components(r'"silly-string" = 25'),
@@ -343,7 +343,7 @@ class TestEquationStringParsing(unittest.TestCase):
         )
 
     def test_get_equation_components_error(self):
-        from pysd.py_backend.vensim.vensim2py import get_equation_components
+        from pysd.translation.vensim.vensim2py import get_equation_components
 
         defi = "NIF: NF<x-x>NF"
         try:
@@ -360,13 +360,13 @@ class TestEquationStringParsing(unittest.TestCase):
 
 class TestParse_general_expression(unittest.TestCase):
     def test_arithmetic(self):
-        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        from pysd.translation.vensim.vensim2py import parse_general_expression
 
         res = parse_general_expression({"expr": "-10^3+4"})
         self.assertEqual(res[0]["py_expr"], "-10**3+4")
 
     def test_arithmetic_scientific(self):
-        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        from pysd.translation.vensim.vensim2py import parse_general_expression
 
         res = parse_general_expression({"expr": "1e+4"})
         self.assertEqual(res[0]["py_expr"], "1e+4")
@@ -387,7 +387,7 @@ class TestParse_general_expression(unittest.TestCase):
         self.assertEqual(res[0]["py_expr"], "-2.0e-43")
 
     def test_caps_handling(self):
-        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        from pysd.translation.vensim.vensim2py import parse_general_expression
 
         res = parse_general_expression({"expr": "Abs(-3)"})
         self.assertEqual(res[0]["py_expr"], "np.abs(-3)")
@@ -400,7 +400,7 @@ class TestParse_general_expression(unittest.TestCase):
 
     def test_empty(self):
         from warnings import catch_warnings
-        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        from pysd.translation.vensim.vensim2py import parse_general_expression
 
         with catch_warnings(record=True) as ws:
             res = parse_general_expression({"expr": "", "real_name": "Var"})
@@ -412,7 +412,7 @@ class TestParse_general_expression(unittest.TestCase):
         self.assertEqual(res[0]["py_expr"], "None")
 
     def test_function_calls(self):
-        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        from pysd.translation.vensim.vensim2py import parse_general_expression
 
         res = parse_general_expression({"expr": "ABS(StockA)",
                                         "real_name": "AB",
@@ -439,14 +439,14 @@ class TestParse_general_expression(unittest.TestCase):
         )
 
     def test_id_parsing(self):
-        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        from pysd.translation.vensim.vensim2py import parse_general_expression
 
         res = parse_general_expression({"expr": "StockA"},
                                        {"StockA": "stocka"})
         self.assertEqual(res[0]["py_expr"], "stocka()")
 
     def test_logicals(self):
-        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        from pysd.translation.vensim.vensim2py import parse_general_expression
 
         res = parse_general_expression(
             {'expr': 'IF THEN ELSE(1 :AND: 0,0,1)'})
@@ -494,7 +494,7 @@ class TestParse_general_expression(unittest.TestCase):
                  'eqn': 'logical = IF THEN ELSE(1 :AND: 0 :OR: 1,0,1)'})
 
     def test_number_parsing(self):
-        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        from pysd.translation.vensim.vensim2py import parse_general_expression
         res = parse_general_expression({'expr': '20'})
         self.assertEqual(res[0]['py_expr'], '20')
 
@@ -508,8 +508,8 @@ class TestParse_general_expression(unittest.TestCase):
         self.assertEqual(res[0]["py_expr"], "-1.3e-10")
 
     def test_nan_parsing(self):
-        from pysd.py_backend.vensim.vensim2py import parse_general_expression
-        from pysd.py_backend.builder import Imports
+        from pysd.translation.vensim.vensim2py import parse_general_expression
+        from pysd.translation.builder import Imports
 
         Imports.reset()
         self.assertFalse(Imports._numpy)
@@ -520,7 +520,7 @@ class TestParse_general_expression(unittest.TestCase):
     def test_stock_construction_function_no_subscripts(self):
         """ stock construction should create a stateful variable and
         reference it """
-        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        from pysd.translation.vensim.vensim2py import parse_general_expression
         from pysd.py_backend.statefuls import Integ
 
         res = parse_general_expression(
@@ -541,7 +541,7 @@ class TestParse_general_expression(unittest.TestCase):
         self.assertEqual(res[0]["py_expr"], res[1][0]["py_name"] + "()")
 
     def test_delay_construction_function_no_subscripts(self):
-        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        from pysd.translation.vensim.vensim2py import parse_general_expression
         from pysd.py_backend.statefuls import Delay
 
         res = parse_general_expression(
@@ -574,7 +574,7 @@ class TestParse_general_expression(unittest.TestCase):
         This translation should create a new stateful object to hold the
         forecast elements, and then pass back a reference to that value
         """
-        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        from pysd.translation.vensim.vensim2py import parse_general_expression
         from pysd.py_backend.statefuls import Forecast
 
         res = parse_general_expression(
@@ -603,7 +603,7 @@ class TestParse_general_expression(unittest.TestCase):
         This translation should create a new stateful object to hold the delay
         elements, and then pass back a reference to that value
         """
-        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        from pysd.translation.vensim.vensim2py import parse_general_expression
         from pysd.py_backend.statefuls import Smooth
 
         res = parse_general_expression(
@@ -625,7 +625,7 @@ class TestParse_general_expression(unittest.TestCase):
         self.assertEqual(res[0]["py_expr"], res[1][0]["py_name"] + "()")
 
     def test_subscript_float_initialization(self):
-        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        from pysd.translation.vensim.vensim2py import parse_general_expression
 
         _subscript_dict = {
             "Dim": ["A", "B", "C", "D", "E"],
@@ -677,7 +677,7 @@ class TestParse_general_expression(unittest.TestCase):
         self.assertEqual(a.loc[{"Dim": "B"}], 3.32)
 
     def test_subscript_1d_constant(self):
-        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        from pysd.translation.vensim.vensim2py import parse_general_expression
 
         _subscript_dict = {"Dim1": ["A", "B", "C"], "Dim2": ["D", "E"]}
         element = parse_general_expression(
@@ -703,7 +703,7 @@ class TestParse_general_expression(unittest.TestCase):
         self.assertEqual(a.loc[{"Dim1": "A"}], 1)
 
     def test_subscript_2d_constant(self):
-        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        from pysd.translation.vensim.vensim2py import parse_general_expression
 
         _subscript_dict = {"Dim1": ["A", "B", "C"], "Dim2": ["D", "E"]}
         element = parse_general_expression(
@@ -721,7 +721,7 @@ class TestParse_general_expression(unittest.TestCase):
         self.assertEqual(a.loc[{"Dim1": "B", "Dim2": "E"}], 4)
 
     def test_subscript_3d_depth(self):
-        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        from pysd.translation.vensim.vensim2py import parse_general_expression
 
         _subscript_dict = {"Dim1": ["A", "B", "C"], "Dim2": ["D", "E"]}
         element = parse_general_expression(
@@ -743,8 +743,8 @@ class TestParse_general_expression(unittest.TestCase):
         Testing how subscripts are translated when we have common subscript
         ranges.
         """
-        from pysd.py_backend.vensim.vensim2py import parse_general_expression,\
-            parse_lookup_expression
+        from pysd.translation.vensim.vensim2py import\
+            parse_general_expression, parse_lookup_expression
 
         _subscript_dict = {
             "Dim1": ["A", "B", "C"], "Dim2": ["B", "C"], "Dim3": ["B", "C"]
@@ -853,7 +853,7 @@ class TestParse_general_expression(unittest.TestCase):
             "'Dim1': _subscript_dict['Dim2']", element[1][0]['py_expr'])
 
     def test_subscript_reference(self):
-        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        from pysd.translation.vensim.vensim2py import parse_general_expression
 
         res = parse_general_expression(
             {"expr": "Var A[Dim1, Dim2]", "real_name": "Var2", "eqn": ""},
@@ -916,7 +916,7 @@ class TestParse_general_expression(unittest.TestCase):
             "float(var_c().loc['B', 'C', 'H'])")
 
     def test_subscript_ranges(self):
-        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        from pysd.translation.vensim.vensim2py import parse_general_expression
 
         res = parse_general_expression(
             {"expr": "Var D[Range1]"},
@@ -932,7 +932,7 @@ class TestParse_general_expression(unittest.TestCase):
         )
 
     def test_invert_matrix(self):
-        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        from pysd.translation.vensim.vensim2py import parse_general_expression
 
         res = parse_general_expression(
             {
@@ -953,7 +953,7 @@ class TestParse_general_expression(unittest.TestCase):
         self.assertEqual(res[0]["py_expr"], "invert_matrix(a())")
 
     def test_subscript_elmcount(self):
-        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        from pysd.translation.vensim.vensim2py import parse_general_expression
 
         res = parse_general_expression(
             {
@@ -975,7 +975,7 @@ class TestParse_general_expression(unittest.TestCase):
             res[0]["py_expr"], )
 
     def test_subscript_logicals(self):
-        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        from pysd.translation.vensim.vensim2py import parse_general_expression
 
         res = parse_general_expression(
             {
@@ -1000,7 +1000,7 @@ class TestParse_general_expression(unittest.TestCase):
             res[0]["py_expr"], )
 
     def test_ref_with_subscript_prefix(self):
-        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        from pysd.translation.vensim.vensim2py import parse_general_expression
 
         # When parsing functions arguments first the subscript ranges are
         # parsed and later the general id is used, however, the if a reference
@@ -1027,7 +1027,7 @@ class TestParse_general_expression(unittest.TestCase):
             res[0]["py_expr"], )
 
     def test_random_0_1(self):
-        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        from pysd.translation.vensim.vensim2py import parse_general_expression
 
         # When parsing functions arguments first the subscript ranges are
         # parsed and later the general id is used, however, the if a reference
@@ -1052,7 +1052,7 @@ class TestParse_general_expression(unittest.TestCase):
             res[0]["py_expr"], )
 
     def test_random_uniform(self):
-        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        from pysd.translation.vensim.vensim2py import parse_general_expression
 
         # When parsing functions arguments first the subscript ranges are
         # parsed and later the general id is used, however, the if a reference
@@ -1077,7 +1077,7 @@ class TestParse_general_expression(unittest.TestCase):
             res[0]["py_expr"], )
 
     def test_incomplete_expression(self):
-        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        from pysd.translation.vensim.vensim2py import parse_general_expression
         from warnings import catch_warnings
 
         with catch_warnings(record=True) as w:
@@ -1107,7 +1107,7 @@ class TestParse_general_expression(unittest.TestCase):
                          "incomplete(unspecified_eqn(), var_a(), var_b())")
 
     def test_parse_general_expression_error(self):
-        from pysd.py_backend.vensim.vensim2py import parse_general_expression
+        from pysd.translation.vensim.vensim2py import parse_general_expression
 
         element = {
             "expr": "NIF(1,3)",
@@ -1129,7 +1129,7 @@ class TestParse_general_expression(unittest.TestCase):
 
 class TestParse_sketch_line(unittest.TestCase):
     def test_parse_sketch_line(self):
-        from pysd.py_backend.vensim.vensim2py import parse_sketch_line
+        from pysd.translation.vensim.vensim2py import parse_sketch_line
 
         namespace = {'"var-n"': "varn", "Stock": "stock", '"rate-1"': "rate1"}
         lines = [
@@ -1164,7 +1164,7 @@ class TestParse_sketch_line(unittest.TestCase):
 class TestParse_private_functions(unittest.TestCase):
     def test__split_sketch_warning(self):
         import warnings
-        from pysd.py_backend.vensim.vensim2py import _split_sketch
+        from pysd.translation.vensim.vensim2py import _split_sketch
 
         model_str = "this is my model"
 

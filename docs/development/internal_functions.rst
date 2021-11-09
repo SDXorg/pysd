@@ -29,7 +29,7 @@ Special functions needed for model execution
 Building the python model file
 ------------------------------
 
-.. automodule:: pysd.py_backend.builder
+.. automodule:: pysd.translation.builder
    :members:
    :undoc-members:
    :private-members:

@@ -3,10 +3,16 @@ Model components and time managing classes.
 """
 
 import os
+import warnings
+import re
 import random
 from importlib.machinery import SourceFileLoader
 
+import numpy as np
+import xarray as xr
+
 from pysd._version import __version__
+from .utils import load_outputs, get_columns_to_load
 
 
 class Components(object):
@@ -158,3 +164,80 @@ class Time(object):
     def reset(self):
         """ Reset time value to the initial """
         self._time = self._initial_time
+
+
+class Data(object):
+    def __init__(self, data=None, file_name=None, var=None, transpose=False,
+                 coords={}, interp="interpolate"):
+
+        self.interp = interp
+        self.is_float = not bool(coords)
+        if not data:
+            self.data = self.load_from_output(
+                file_name, var, coords, transpose)
+        else:
+            self.data = data
+
+    @staticmethod
+    def load_from_output(file_name, var, coords, transpose):
+
+        if not coords:
+            # 0 dimensional data
+            values = load_outputs(file_name, transpose, columns=[var])
+            return xr.DataArray(
+                values[var].values,
+                {'time': values.index.values},
+                ['time'])
+
+        # subscripted data
+        dims = list(coords)
+
+        values = load_outputs(
+            file_name, transpose,
+            columns=get_columns_to_load(file_name, transpose, vars=[var]))
+
+        out = xr.DataArray(
+            np.nan,
+            {'time': values.index.values, **coords},
+            ['time'] + dims)
+
+        for var in values.columns:
+            coords = {
+                dim: [coord]
+                for (dim, coord)
+                in zip(dims, re.split(r'\[|\]|\s*,\s*', var)[1:-1])
+            }
+            out.loc[coords] = np.expand_dims(
+                values[var].values,
+                axis=tuple(range(1, len(coords)+1))
+            )
+        return out
+
+    def __call__(self, time):
+        if time in self.data['time'].values:
+            outdata = self.data.sel(time=time)
+        elif self.interp == "raw":
+            return np.nan
+        elif time > self.data['time'].values[-1]:
+            warnings.warn(
+              self.py_name + "\n"
+              + "extrapolating data above the maximum value of the time")
+            outdata = self.data[-1]
+        elif time < self.data['time'].values[0]:
+            warnings.warn(
+              self.py_name + "\n"
+              + "extrapolating data below the minimum value of the time")
+            outdata = self.data[0]
+        elif self.interp == "interpolate":
+            outdata = self.data.interp(time=time)
+        elif self.interp == 'look forward':
+            outdata = self.data.sel(time=time, method="backfill")
+        elif self.interp == 'hold backward':
+            outdata = self.data.sel(time=time, method="pad")
+
+        if self.is_float:
+            # if data has no-coords return a float
+            return float(outdata)
+        else:
+            # Remove time coord from the DataArray
+            return outdata.reset_coords('time', drop=True)

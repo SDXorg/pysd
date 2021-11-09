@@ -8,9 +8,9 @@ import warnings
 
 import numpy as np
 import pandas as pd
-from chardet.universaldetector import UniversalDetector
 
 from pysd import read_vensim, read_xmile
+from ..py_backend.utils import load_outputs, detect_encoding
 
 
 def runner(model_file, canonical_file=None, transpose=False):
@@ -63,66 +63,6 @@ def runner(model_file, canonical_file=None, transpose=False):
     # run model and return the result
 
     return model.run(return_columns=canon.columns), canon
-
-
-def load_outputs(file_name, transpose=False, columns=None, encoding=None):
-    """
-    Load outputs file
-
-    Parameters
-    ----------
-    file_name: str
-        Output file to read. Must be csv or tab.
-
-    transpose: bool (optional)
-        If True reads transposed outputs file, i.e. one variable per row.
-        Default is False.
-
-    columns: list or None (optional)
-        List of the column names to load. If None loads all the columns.
-        Default is None.
-        NOTE: if transpose=False, the loading will be faster as only
-        selected columns will be loaded. If transpose=True the whole
-        file must be read and it will be subselected later.
-
-    encoding: str or None (optional)
-        Encoding type to read output file. Needed if the file has special
-        characters. Default is None.
-
-    Returns
-    -------
-    pandas.DataFrame
-        A pandas.DataFrame with the outputs values.
-
-    """
-    read_func = {'.csv': pd.read_csv, '.tab': pd.read_table}
-
-    if columns:
-        columns = set(columns)
-        if not transpose:
-            columns.add("Time")
-
-    for end, func in read_func.items():
-        if file_name.lower().endswith(end):
-            if transpose:
-                out = func(file_name,
-                           encoding=encoding,
-                           index_col=0).T
-                if columns:
-                    out = out[columns]
-            else:
-                out = func(file_name,
-                           encoding=encoding,
-                           usecols=columns,
-                           index_col="Time")
-
-            out.index = out.index.astype(float)
-            # return the dataframe removing nan index values
-            return out[~np.isnan(out.index)]
-
-    raise ValueError(
-        f"\nNot able to read '{file_name}'. "
-        + f"Only {', '.join(list(read_func))} files are accepted.")
 
 
 def assert_frames_close(actual, expected, assertion="raise",
@@ -319,25 +259,3 @@ def _remove_constant_nan(df):
     """
     nan_cols = np.isnan(df.iloc[1:, :]).all()
     df.loc[:, nan_cols] = df.loc[:, nan_cols].iloc[0].values
-
-
-def detect_encoding(filename):
-    """
-    Detects the encoding of a file.
-
-    Parameters
-    ----------
-    filename: str
-        Name of the file to detect the encoding.
-
-    Returns
-    -------
-    encoding: str
-        The encoding of the file.
-
-    """
-    detector = UniversalDetector()
-    for line in open(filename, 'rb').readlines():
-        detector.feed(line)
-    detector.close()
-    return detector.result['encoding']
