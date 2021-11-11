@@ -54,6 +54,33 @@ def check_model(string):
     return string
 
 
+def check_data_file(string):
+    """
+    Check that data file is a tab or csv file and that exists.
+    """
+    if not string.endswith('.tab') and not string.endswith('.csv'):
+        parser.error(
+            f'when parsing {string}'
+            '\nThe data file name must be .tab or .csv...')
+    elif not os.path.isfile(string):
+        parser.error(
+            f'when parsing {string}'
+            '\nThe data file does not exist...')
+    else:
+        return string
+
+
+def split_files(string):
+    """
+    Splits the data files and returns and error if file doesn't exists
+    --data 'file1.tab, file2.csv' -> ['file1.tab', 'file2.csv']
+    --data file1.tab -> ['file1.tab']
+
+    """
+    print([check_data_file(s.strip()) for s in string.split(',')])
+    return [check_data_file(s.strip()) for s in string.split(',')]
+
+
 def split_columns(string):
     """
     Splits the return-columns argument or reads it from .txt
@@ -217,6 +244,10 @@ model_arguments.add_argument(
     help='provide the return time stamps separated by commas, if given '
          '--saveper will be ignored')
 
+model_arguments.add_argument(
+    '-D', '--data', dest='data_files',
+    action='store', type=split_files, metavar='\'FILE1, FILE2, .., FILEN\'',
+    help='input data file or files to run the model')
 
 #########################
 # Translation arguments #

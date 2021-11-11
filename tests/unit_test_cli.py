@@ -518,6 +518,48 @@ class TestPySD(unittest.TestCase):
         assert_frames_close(stocks1, stocks.loc[[0, 10]])
         assert_frames_close(stocks2, stocks.loc[[20, 30]])
 
+    def test_run_model_with_data(self):
+        data_file = os.path.join(
+            _root, "test-models/tests/data_from_other_model/data.tab")
+        model_file = os.path.join(
+            _root,
+            "test-models/tests/data_from_other_model/"
+            + "test_data_from_other_model.mdl")
+
+        command = f"{call} -o {out_tab_file} -D {data_file}"\
+                  f" {model_file}"
+
+        out = subprocess.run(split_bash(command), capture_output=True)
+        self.assertEqual(out.returncode, 0)
+        stocks = load_outputs(out_tab_file)
+        canon = load_outputs(os.path.join(
+            _root,
+            "test-models/tests/data_from_other_model/output.tab"))
+
+        assert_frames_close(stocks[canon.columns], canon)
+
+        # invalid data file
+        command = f"{call} -o {out_tab_file} -D my_file.txt"\
+                  f" {model_file}"
+
+        out = subprocess.run(split_bash(command), capture_output=True)
+        self.assertNotEqual(out.returncode, 0)
+        stderr = out.stderr.decode(encoding_stderr)
+        self.assertIn("PySD: error: when parsing my_file.txt", stderr)
+        self.assertIn(
+            "The data file name must be .tab or .csv...", stderr)
+
+        # not found data file
+        command = f"{call} -o {out_tab_file} -D my_file.tab"\
+                  f" {model_file}"
+
+        out = subprocess.run(split_bash(command), capture_output=True)
+        self.assertNotEqual(out.returncode, 0)
+        stderr = out.stderr.decode(encoding_stderr)
+        self.assertIn("PySD: error: when parsing my_file.tab", stderr)
+        self.assertIn(
+            "The data file does not exist...", stderr)
+
     def test_save_without_name(self):
         import re
 

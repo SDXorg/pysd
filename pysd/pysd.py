@@ -36,6 +36,10 @@ def read_xmile(xmile_file, data_files=None, initialize=True,
         If False, the model will not be initialize when it is loaded.
         Default is True.
 
+    data_files: list or None (optional)
+        If given the list of files where the necessary data to run the model
+        is given. Default is None.
+
     missing_values : str ("warning", "error", "ignore", "keep") (optional)
         What to do with missing values. If "warning" (default)
         shows a warning message and interpolates the values.
@@ -76,6 +80,10 @@ def read_vensim(mdl_file, data_files=None, initialize=True,
     initialize: bool (optional)
         If False, the model will not be initialize when it is loaded.
         Default is True.
+
+    data_files: list or None (optional)
+        If given the list of files where the necessary data to run the model
+        is given. Default is None.
 
     missing_values : str ("warning", "error", "ignore", "keep") (optional)
         What to do with missing values. If "warning" (default)
@@ -132,6 +140,10 @@ def load(py_model_file, data_files=None, initialize=True,
     initialize: bool (optional)
         If False, the model will not be initialize when it is loaded.
         Default is True.
+
+    data_files: list or None (optional)
+        If given the list of files where the necessary data to run the model
+        is given. Default is None.
 
     missing_values : str ("warning", "error", "ignore", "keep") (optional)
         What to do with missing values. If "warning" (default)

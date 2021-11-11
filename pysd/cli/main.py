@@ -25,8 +25,9 @@ def main(args):
     """
     options = parser.parse_args(args)
 
-    model = load(options.model_file, options.missing_values,
-                 options.split_views, subview_sep=options.subview_sep)
+    model = load(options.model_file, options.data_files,
+                 options.missing_values, options.split_views,
+                 subview_sep=options.subview_sep)
 
     if not options.run:
         print("\nFinished!")
@@ -44,7 +45,7 @@ def main(args):
     sys.exit()
 
 
-def load(model_file, missing_values, split_views, **kwargs):
+def load(model_file, data_files, missing_values, split_views, **kwargs):
     """
     Translate and load model file.
 
@@ -52,6 +53,18 @@ def load(model_file, missing_values, split_views, **kwargs):
     ---------
     model_file: str
         Vensim, Xmile or PySD model file.
+
+    data_files: list
+        If given the list of files where the necessary data to run the model
+        is given.
+
+    missing_values : str ("warning", "error", "ignore", "keep")
+        What to do with missing values. If "warning" (default)
+        shows a warning message and interpolates the values.
+        If "raise" raises an error. If "ignore" interpolates
+        the values without showing anything. If "keep" it will keep
+        the missing values, this option may cause the integration to
+        fail, but it may be used to check the quality of the data.
 
     split_views: bool (optional)
         If True, the sketch is parsed to detect model elements in each
@@ -74,14 +87,17 @@ def load(model_file, missing_values, split_views, **kwargs):
     if model_file.lower().endswith(".mdl"):
         print("\nTranslating model file...\n")
         return pysd.read_vensim(model_file, initialize=False,
+                                data_files=data_files,
                                 missing_values=missing_values,
                                 split_views=split_views, **kwargs)
     elif model_file.lower().endswith(".xmile"):
         print("\nTranslating model file...\n")
         return pysd.read_xmile(model_file, initialize=False,
+                               data_files=data_files,
                                missing_values=missing_values)
     else:
         return pysd.load(model_file, initialize=False,
+                         data_files=data_files,
                          missing_values=missing_values)
 
 
