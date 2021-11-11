@@ -256,15 +256,13 @@ def compute_shape(coords, reshape_len=None, py_name=""):
     return [1] * (reshape_len - shape_len) + shape
 
 
-def get_value_by_insensitive_key_or_value(key, dict):
+def get_key_and_value_by_insensitive_key_or_value(key, dict):
     lower_key = key.lower()
     for real_key, real_value in dict.items():
-        if real_key.lower() == lower_key:
-            return dict[real_key]
-        if real_value.lower() == lower_key:
-            return real_value
+        if real_key.lower() == lower_key or real_value.lower() == lower_key:
+            return real_key, real_value
 
-    return None
+    return None, None
 
 
 def rearrange(data, dims, coords):
@@ -503,7 +501,7 @@ def get_columns_to_load(file_name, transpose=False, vars=None, encoding=None):
             else:
                 out = func(file_name,
                            encoding=encoding,
-                           nrows=0).iloc[:, 1:]
+                           nrows=1).iloc[:, 1:]
 
             out = set(out)
 

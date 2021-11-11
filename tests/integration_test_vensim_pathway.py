@@ -50,6 +50,12 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner(test_models + '/constant_expressions/test_constant_expressions.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    def test_data_from_other_model(self):
+        output, canon = runner(
+            test_models + '/data_from_other_model/test_data_from_other_model.mdl',
+            data_files=[test_models + '/data_from_other_model/data.tab'])
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_delay_fixed(self):
         # issue https://github.com/JamesPHoughton/pysd/issues/147
         with warnings.catch_warnings():

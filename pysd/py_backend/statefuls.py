@@ -17,7 +17,7 @@ from . import utils
 from .functions import zidz, if_then_else
 from .external import External, Excels
 from .decorators import Cache, constant_cache
-from .components import Components, Time
+from .components import Components, Time, Data, RegData
 
 from pysd._version import __version__
 
@@ -586,7 +586,8 @@ class Macro(DynamicStateful):
     """
 
     def __init__(self, py_model_file, params=None, return_func=None,
-                 time=None, time_initialization=None, py_name=None):
+                 time=None, time_initialization=None, data_files=None,
+                 py_name=None):
         """
         The model object will be created with components drawn from a
         translated python model file.
@@ -646,6 +647,14 @@ class Macro(DynamicStateful):
             if isinstance(getattr(self.components, name), Macro)
         ]
 
+        self._data_elements = [
+            getattr(self.components, name) for name in dir(self.components)
+            if isinstance(getattr(self.components, name), RegData)
+        ]
+
+        if data_files:
+            self._get_data(data_files)
+
         self._assign_cache_type()
         self._get_initialize_order()
 
@@ -663,6 +672,18 @@ class Macro(DynamicStateful):
         self.cache.clean()
         # if nested macros
         [macro.clean_caches() for macro in self._macro_elements]
+
+    def _get_data(self, data_files):
+        if isinstance(data_files, dict):
+            for data_file, vars in data_files.items():
+                for var in vars:
+                    for element in self._data_elements:
+                        if var in element.var:
+                            element.load_data(data_file)
+
+        else:
+            for element in self._data_elements:
+                element.load_data(data_files)
 
     def _get_initialize_order(self):
         """
@@ -990,9 +1011,9 @@ class Macro(DynamicStateful):
 
         """
         if isinstance(param, str):
-            func_name = utils.get_value_by_insensitive_key_or_value(
+            func_name = utils.get_key_and_value_by_insensitive_key_or_value(
                 param,
-                self.components._namespace) or param
+                self.components._namespace)[1] or param
 
             func = getattr(self.components, func_name)
         else:
@@ -1030,9 +1051,9 @@ class Macro(DynamicStateful):
 
         """
         if isinstance(param, str):
-            func_name = utils.get_value_by_insensitive_key_or_value(
+            func_name = utils.get_key_and_value_by_insensitive_key_or_value(
                 param,
-                self.components._namespace) or param
+                self.components._namespace)[1] or param
 
             func = getattr(self.components, func_name)
 
@@ -1076,9 +1097,9 @@ class Macro(DynamicStateful):
         It will crash if the model component takes arguments.
 
         """
-        func_name = utils.get_value_by_insensitive_key_or_value(
+        func_name = utils.get_key_and_value_by_insensitive_key_or_value(
             param,
-            self.components._namespace) or param
+            self.components._namespace)[1] or param
 
         if self.get_args(getattr(self.components, func_name)):
             raise ValueError(
@@ -1109,9 +1130,9 @@ class Macro(DynamicStateful):
         >>> model['Room temperature']
 
         """
-        func_name = utils.get_value_by_insensitive_key_or_value(
+        func_name = utils.get_key_and_value_by_insensitive_key_or_value(
             param,
-            self.components._namespace) or param
+            self.components._namespace)[1] or param
 
         try:
             if func_name.startswith("_ext_"):
@@ -1150,9 +1171,9 @@ class Macro(DynamicStateful):
         # TODO: make this compatible with loading outputs from other files
 
         for key, value in params.items():
-            func_name = utils.get_value_by_insensitive_key_or_value(
+            func_name = utils.get_key_and_value_by_insensitive_key_or_value(
                 key,
-                self.components._namespace)
+                self.components._namespace)[1]
 
             if isinstance(value, np.ndarray) or isinstance(value, list):
                 raise TypeError(
@@ -1293,8 +1314,9 @@ class Macro(DynamicStateful):
         modified_statefuls = set()
 
         for key, value in initial_value.items():
-            component_name = utils.get_value_by_insensitive_key_or_value(
-                key, self.components._namespace)
+            component_name =\
+                utils.get_key_and_value_by_insensitive_key_or_value(
+                    key, self.components._namespace)[1]
             if component_name is not None:
                 if self.components._dependencies[component_name]:
                     deps = list(self.components._dependencies[component_name])
@@ -1447,11 +1469,13 @@ class Macro(DynamicStateful):
 
 
 class Model(Macro):
-    def __init__(self, py_model_file, initialize, missing_values):
+    def __init__(self, py_model_file, data_files, initialize, missing_values):
         """ Sets up the python objects """
-        super().__init__(py_model_file, None, None, Time())
+        super().__init__(py_model_file, None, None, Time(),
+                         data_files=data_files)
         self.time.stage = 'Load'
         self.time.set_control_vars(**self.components._control_vars)
+        self.data_files = data_files
         self.missing_values = missing_values
         if initialize:
             self.initialize()
@@ -1608,7 +1632,8 @@ class Model(Macro):
         Reloads the model from the translated model file, so that all the
         parameters are back to their original value.
         """
-        self.__init__(self.py_model_file, initialize=True,
+        self.__init__(self.py_model_file, data_files=self.data_files,
+                      initialize=True,
                       missing_values=self.missing_values)
 
     def _default_return_columns(self, which):

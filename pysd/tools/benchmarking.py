@@ -13,7 +13,7 @@ from pysd import read_vensim, read_xmile
 from ..py_backend.utils import load_outputs, detect_encoding
 
 
-def runner(model_file, canonical_file=None, transpose=False):
+def runner(model_file, canonical_file=None, transpose=False, data_files=None):
     """
     Translates and runs a model and returns its output and the
     canonical output.
@@ -30,6 +30,9 @@ def runner(model_file, canonical_file=None, transpose=False):
     transpose: bool (optional)
         If True reads transposed canonical file, i.e. one variable per row.
         Default is False.
+
+    data_files: list (optional)
+        List of the data files needed to run the model.
 
     Returns
     -------
@@ -54,9 +57,9 @@ def runner(model_file, canonical_file=None, transpose=False):
 
     # load model
     if model_file.lower().endswith('.mdl'):
-        model = read_vensim(model_file)
+        model = read_vensim(model_file, data_files)
     elif model_file.lower().endswith(".xmile"):
-        model = read_xmile(model_file)
+        model = read_xmile(model_file, data_files)
     else:
         raise ValueError('\nModelfile should be *.mdl or *.xmile')
 
@@ -250,7 +253,7 @@ def assert_allclose(x, y, rtol=1.e-5, atol=1.e-5):
     None
 
     """
-    return (abs(x - y) <= atol + rtol * abs(y)).all()
+    return ((abs(x - y) <= atol + rtol * abs(y)) + x.isna()*y.isna()).all()
 
 
 def _remove_constant_nan(df):

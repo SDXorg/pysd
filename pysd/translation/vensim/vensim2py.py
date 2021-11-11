@@ -1694,8 +1694,13 @@ def translate_section(section, macro_list, sketch, root_path, subview_sep=""):
 
         elif element["kind"] == "data":
             element["eqn"] = element["expr"] = element["arguments"] = ""
-            element["py_expr"] = "None"
+            element["py_expr"], new_structure = builder.add_reg_data(
+                element["py_name"], element["real_name"],
+                element["subs"], subscript_dict, element["merge_subs"],
+                element["keyword"])
+
             element["dependencies"] = {"time": 1, "__data__": None}
+            model_elements += new_structure
 
         elif element["kind"] == "lookup":
             translation, new_structure = parse_lookup_expression(

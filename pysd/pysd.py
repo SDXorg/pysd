@@ -22,7 +22,8 @@ if sys.version_info[:2] < (3, 7):  # pragma: no cover
     )
 
 
-def read_xmile(xmile_file, initialize=True, missing_values="warning"):
+def read_xmile(xmile_file, data_files=None, initialize=True,
+               missing_values="warning"):
     """
     Construct a model from `.xmile` file.
 
@@ -57,13 +58,13 @@ def read_xmile(xmile_file, initialize=True, missing_values="warning"):
     from .translation.xmile.xmile2py import translate_xmile
 
     py_model_file = translate_xmile(xmile_file)
-    model = load(py_model_file, initialize, missing_values)
+    model = load(py_model_file, data_files, initialize, missing_values)
     model.xmile_file = xmile_file
     return model
 
 
-def read_vensim(mdl_file, initialize=True, missing_values="warning",
-                split_views=False, **kwargs):
+def read_vensim(mdl_file, data_files=None, initialize=True,
+                missing_values="warning", split_views=False, **kwargs):
     """
     Construct a model from Vensim `.mdl` file.
 
@@ -112,12 +113,13 @@ def read_vensim(mdl_file, initialize=True, missing_values="warning",
     from .translation.vensim.vensim2py import translate_vensim
 
     py_model_file = translate_vensim(mdl_file, split_views, **kwargs)
-    model = load(py_model_file, initialize, missing_values)
+    model = load(py_model_file, data_files, initialize, missing_values)
     model.mdl_file = mdl_file
     return model
 
 
-def load(py_model_file, initialize=True, missing_values="warning"):
+def load(py_model_file, data_files=None, initialize=True,
+         missing_values="warning"):
     """
     Load a python-converted model file.
 
@@ -145,4 +147,4 @@ def load(py_model_file, initialize=True, missing_values="warning"):
 
     """
 
-    return Model(py_model_file, initialize, missing_values)
+    return Model(py_model_file, data_files, initialize, missing_values)

@@ -27,9 +27,11 @@ class Imports():
     Class to save the imported modules information for intelligent import
     """
     _numpy, _xarray, _subs = False, False, False
-    _functions, _statefuls, _external, _utils = set(), set(), set(), set()
+    _functions, _statefuls, _external, _components, _utils =\
+        set(), set(), set(), set(), set()
     _external_libs = {"numpy": "np", "xarray": "xr"}
-    _internal_libs = ["functions", "statefuls", "external", "utils"]
+    _internal_libs = [
+        "functions", "statefuls", "external", "components","utils"]
 
     @classmethod
     def add(cls, module, function=None):
@@ -108,7 +110,8 @@ class Imports():
         Reset the imported modules
         """
         cls._numpy, cls._xarray, cls._subs = False, False, False
-        cls._functions, cls._external, cls._utils = set(), set(), set()
+        cls._functions, cls._statefuls, cls._external, cls._components,\
+            cls._utils = set(), set(), set(), set(), set()
 
 
 # Variable to save identifiers of external objects
@@ -646,8 +649,8 @@ def build_element(element, subscript_dict):
         # to rewrite subscripted values with model.run(params=X) or
         # model.run(initial_condition=(n,x))
         element["subs_doc"] = "%s" % element["merge_subs"]
-        if element["kind"] in ["component", "setup",
-                               "constant", "component_ext_data"]:
+        if element["kind"] in ["component", "setup", "constant",
+                               "component_ext_data", "data"]:
             # the decorator is not always necessary as the objects
             # defined as xarrays in the model will have the right
             # dimensions always, we should try to reduce to the
@@ -669,7 +672,7 @@ def build_element(element, subscript_dict):
     # convert newline indicator and add expected level of indentation
     element["doc"] = element["doc"].replace("\\", "\n").replace("\n", "\n    ")
 
-    if element["kind"] in ["stateful", "external"]:
+    if element["kind"] in ["stateful", "external", "reg_data"]:
         func = """
     %(py_name)s = %(py_expr)s
             """ % {
@@ -1755,6 +1758,74 @@ def add_initial(identifier, value, deps):
     }
 
     return "%s()" % stateful["py_name"], [stateful]
+
+
+def add_reg_data(identifier, real_name, subs,
+                 subscript_dict, merge_subs, keyword):
+    """
+    Constructs a external object for handling Vensim's GET XLS DATA and
+    GET DIRECT DATA functionality.
+
+    Parameters
+    ----------
+    identifier: str
+        The python-safe name of the external values.
+
+    real_name: str
+        The real name of the variable.
+
+    subs: list of strings
+        List of strings of subscript indices that correspond to the
+        list of expressions, and collectively define the shape of the output.
+
+    subscript_dict: dict
+        Dictionary describing the possible dimensions of the stock's
+        subscripts.
+
+    merge_subs: list of strings
+        List of the final subscript range of the python array after
+        merging with other objects.
+
+    keyword: str
+        Data retrieval method ('interpolate', 'look forward', 'hold backward').
+
+    Returns
+    -------
+    reference: str
+        Reference to the ExtData object `__call__` method, which will
+        return the retrieved value of data for the current time step.
+
+    new_structure: list
+        List of element construction dictionaries for the builder to assemble.
+
+    """
+    Imports.add("components", "RegData")
+
+    coords = utils.simplify_subscript_input(
+        utils.make_coord_dict(subs, subscript_dict, terse=False),
+        subscript_dict, return_full=False, merge_subs=merge_subs)
+    keyword = (
+        "'%s'" % keyword.strip(":").lower() if isinstance(keyword, str) else
+        keyword)
+    name = "_data_%s" % identifier
+
+    data = {
+        "py_name": name,
+        "parent_name": identifier,
+        "real_name": "Data for %s" % identifier,
+        "doc": "Provides data for data variable %s" % identifier,
+        "py_expr": "RegData('%s', '%s', %s, %s)" % (
+            real_name, identifier, coords, keyword),
+        "unit": "None",
+        "lims": "None",
+        "eqn": "None",
+        "subs": subs,
+        "merge_subs": merge_subs,
+        "kind": "reg_data",
+        "arguments": "",
+    }
+
+    return "%s(time())" % data["py_name"], [data]
 
 
 def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs,

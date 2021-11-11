@@ -148,7 +148,10 @@ class Time(object):
         if self.return_timestamps is not None:
             return self._time in self.return_timestamps
 
-        return (self._time - self._initial_time) % self.saveper() == 0
+        time_delay = self._time - self._initial_time
+        save_per = self.saveper()
+        prec = self.time_step() * 1e-10
+        return time_delay % save_per < prec or -time_delay % save_per < prec
 
     def add_return_timestamps(self, return_timestamps):
         """ Add return timestamps """
@@ -167,51 +170,10 @@ class Time(object):
 
 
 class Data(object):
-    def __init__(self, data=None, file_name=None, var=None, transpose=False,
-                 coords={}, interp="interpolate"):
-
-        self.interp = interp
+    def __init__(self, data, coords, interp="interpolate"):
+        self.data = data
+        self.interp = "interpolate"
         self.is_float = not bool(coords)
-        if not data:
-            self.data = self.load_from_output(
-                file_name, var, coords, transpose)
-        else:
-            self.data = data
-
-    @staticmethod
-    def load_from_output(file_name, var, coords, transpose):
-
-        if not coords:
-            # 0 dimensional data
-            values = load_outputs(file_name, transpose, columns=[var])
-            return xr.DataArray(
-                values[var].values,
-                {'time': values.index.values},
-                ['time'])
-
-        # subscripted data
-        dims = list(coords)
-
-        values = load_outputs(
-            file_name, transpose,
-            columns=get_columns_to_load(file_name, transpose, vars=[var]))
-
-        out = xr.DataArray(
-            np.nan,
-            {'time': values.index.values, **coords},
-            ['time'] + dims)
-
-        for var in values.columns:
-            coords = {
-                dim: [coord]
-                for (dim, coord)
-                in zip(dims, re.split(r'\[|\]|\s*,\s*', var)[1:-1])
-            }
-            out.loc[coords] = np.expand_dims(
-                values[var].values,
-                axis=tuple(range(1, len(coords)+1))
-            )
-        return out
 
     def __call__(self, time):
         if time in self.data['time'].values:
@@ -241,3 +203,104 @@ class Data(object):
         else:
             # Remove time coord from the DataArray
             return outdata.reset_coords('time', drop=True)
+
+
+class RegData(Data):
+    def __init__(self, real_name, py_name, coords, interp="interpolate"):
+        self.real_name = real_name
+        self.py_name = py_name
+        self.coords = coords
+        self.interp = interp
+        self.is_float = not bool(coords)
+        self.data = None
+
+    def load_data(self, file_names):
+        """
+        Load data values from files.
+
+        Parameters
+        ----------
+        file_names: list
+            Name of the files to search the variable in.
+
+        Returns
+        -------
+        out: xarray.DataArray
+            Resulting data array with the time in the first dimension.
+
+        """
+
+        for file_name in file_names:
+            self.data = self._load_data(file_name)
+            if self.data is not None:
+                break
+
+        if self.data is None:
+            raise ValueError(
+                f"_data_{self.py_name}\n"
+                f"Data for {self.real_name} not found in "
+                f"{', '.join(file_names)}")
+
+    def _load_data(self, file_name):
+        """
+        Load data values from output
+
+        Parameters
+        ----------
+        file_name: str
+            Name of the file to search the variable in.
+
+        Returns
+        -------
+        out: xarray.DataArray or None
+            Resulting data array with the time in the first dimension.
+
+        """
+        # get columns to load variable
+        columns = get_columns_to_load(
+            file_name, False, vars=[self.real_name, self.py_name])
+
+        if not columns:
+            # try reading transposed file
+            columns = get_columns_to_load(
+                file_name, True, vars=[self.real_name, self.py_name])
+
+            if not columns:
+                # variable not found
+                return None
+            else:
+                # variable must be read from a transposed file
+                transpose = True
+        else:
+            # variable found
+            transpose = False
+
+        if not self.coords:
+            # 0 dimensional data
+            values = load_outputs(file_name, transpose, columns=columns)
+            return xr.DataArray(
+                values.iloc[:, 0].values,
+                {'time': values.index.values},
+                ['time'])
+
+        # subscripted data
+        dims = list(self.coords)
+
+        values = load_outputs(file_name, transpose, columns=columns)
+
+        out = xr.DataArray(
+            np.nan,
+            {'time': values.index.values, **self.coords},
+            ['time'] + dims)
+
+        for column in values.columns:
+            coords = {
+                dim: [coord]
+                for (dim, coord)
+                in zip(dims, re.split(r'\[|\]|\s*,\s*', column)[1:-1])
+            }
+            out.loc[coords] = np.expand_dims(
+                values[column].values,
+                axis=tuple(range(1, len(coords)+1))
+            )
+        return out
