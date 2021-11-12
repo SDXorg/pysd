@@ -58,6 +58,27 @@ To show a progressbar during the model integration the progress flag can be pass
 
    >>> stocks = model.run(progress=True)
 
+Running models with DATA type components
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Venim's regular DATA type components are given by an empty expression in the model equation. This values are read from a binary `.vdf` file. PySD allows running models with this kind of data definition using the data_files argument when calling :py:func:`.run()` command, e.g.::
+
+   >>> stocks = model.run(data_files="input_data.tab")
+
+Several files can be passed by using a list, then if the data information has not been found in the first file, the next one will be used until finding the data values::
+
+   >>> stocks = model.run(data_files=["input_data.tab", "input_data2.tab", ..., "input_datan.tab"])
+
+If a variable is given in different files to choose the specific file a dictionary can be used::
+
+   >>> stocks = model.run(data_files={"input_data.tab": ["data_var1", "data_var3"], "input_data2.tab": ["data_var2"]})
+
+.. note::
+   Only `tab` and `csv` files are supported, they should be given as a table, each variable one column (or row) and the time in the first column (or first row). The column (or row) names can be given using the original name or using python names.
+
+.. note::
+   Subscripted variables must be given in the vensim format, one column (or row) per subscript combination. Example of column names for 2x2 variable:
+      `subs var[A, C]`  `subs var[B, C]`  `subs var[A, D]`  `subs var[B, D]`
+
 Outputting various run information
 ----------------------------------
 The :py:func:`.run()` command has a few options that make it more useful. In many situations we want to access components of the model other than merely the stocks – we can specify which components of the model should be included in the returned dataframe by including them in a list that we pass to the :py:func:`.run()` command, using the return_columns keyword argument::

@@ -36,7 +36,7 @@ def read_xmile(xmile_file, data_files=None, initialize=True,
         If False, the model will not be initialize when it is loaded.
         Default is True.
 
-    data_files: list or None (optional)
+    data_files: list or str or None (optional)
         If given the list of files where the necessary data to run the model
         is given. Default is None.
 
@@ -81,7 +81,7 @@ def read_vensim(mdl_file, data_files=None, initialize=True,
         If False, the model will not be initialize when it is loaded.
         Default is True.
 
-    data_files: list or None (optional)
+    data_files: list or str or None (optional)
         If given the list of files where the necessary data to run the model
         is given. Default is None.
 
@@ -141,7 +141,7 @@ def load(py_model_file, data_files=None, initialize=True,
         If False, the model will not be initialize when it is loaded.
         Default is True.
 
-    data_files: list or None (optional)
+    data_files: list or str or None (optional)
         If given the list of files where the necessary data to run the model
         is given. Default is None.
 

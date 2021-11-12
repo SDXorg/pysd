@@ -497,11 +497,13 @@ def get_columns_to_load(file_name, transpose=False, vars=None, encoding=None):
             if transpose:
                 out = func(file_name,
                            encoding=encoding,
-                           usecols=[0]).iloc[:, 0].to_list()
+                           usecols=[0],
+                           dtype=str).iloc[:, 0].to_list()
             else:
                 out = func(file_name,
                            encoding=encoding,
-                           nrows=1).iloc[:, 1:]
+                           nrows=1,
+                           dtype=str).iloc[:, 1:]
 
             out = set(out)
 
@@ -511,17 +513,26 @@ def get_columns_to_load(file_name, transpose=False, vars=None, encoding=None):
             + f"Only {', '.join(list(read_func))} files are accepted.")
 
     if vars is None:
+        # Not var specified, return all available variables
         return out
 
     else:
+        vars_extended = []
+        for var in vars:
+            vars_extended.append(var)
+            if var.startswith('"') and var.endswith('"'):
+                # the variables in "" are reded without " by pandas
+                vars_extended.append(var[1:-1])
         outs = set()
         for var in out:
-            if var in vars:
+            if var in vars_extended:
+                # var is in vars_extended (no subscripts)
                 outs.add(var)
-                vars.remove(var)
+                vars_extended.remove(var)
             else:
-                for var1 in vars:
+                for var1 in vars_extended:
                     if var.startswith(var1 + "["):
+                        # var is subscripted
                         outs.add(var)
 
         return outs

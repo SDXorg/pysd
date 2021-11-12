@@ -1,10 +1,13 @@
 import doctest
+import os
 from unittest import TestCase
 
 import pandas as pd
 import xarray as xr
 
 from pysd.tools.benchmarking import assert_frames_close
+
+_root = os.path.dirname(__file__)
 
 
 class TestUtils(TestCase):
@@ -386,6 +389,112 @@ class TestUtils(TestCase):
         self.assertEqual(None,
                          rearrange(None, ['d2'], _subscript_dict))
 
+
+class TestLoadOutputs(TestCase):
+    def test_non_valid_outputs(self):
+        from pysd.py_backend.utils import load_outputs
+
+        with self.assertRaises(ValueError) as err:
+            load_outputs(
+                os.path.join(
+                    _root,
+                    "more-tests/not_vensim/test_not_vensim.txt"))
+
+        self.assertIn(
+            "Not able to read '",
+            str(err.exception))
+        self.assertIn(
+            "more-tests/not_vensim/test_not_vensim.txt'.",
+            str(err.exception))
+
+    def test_transposed_frame(self):
+        from pysd.py_backend.utils import load_outputs
+
+        assert_frames_close(
+            load_outputs(os.path.join(_root, "data/out_teacup.csv")),
+            load_outputs(
+                os.path.join(_root, "data/out_teacup_transposed.csv"),
+                transpose=True))
+
+    def test_load_columns(self):
+        from pysd.py_backend.utils import load_outputs
+
+        out0 = load_outputs(
+            os.path.join(_root, "data/out_teacup.csv"))
+
+        out1 = load_outputs(
+            os.path.join(_root, "data/out_teacup.csv"),
+            columns=["Room Temperature", "Teacup Temperature"])
+
+        out2 = load_outputs(
+            os.path.join(_root, "data/out_teacup_transposed.csv"),
+            transpose=True,
+            columns=["Heat Loss to Room"])
+
+        self.assertEqual(
+            set(out1.columns),
+            set(["Room Temperature", "Teacup Temperature"]))
+
+        self.assertEqual(
+            set(out2.columns),
+            set(["Heat Loss to Room"]))
+
+        self.assertTrue((out0.index == out1.index).all())
+        self.assertTrue((out0.index == out2.index).all())
+
+    def test_non_valid_outputs_get_columns(self):
+        from pysd.py_backend.utils import get_columns_to_load
+
+        with self.assertRaises(ValueError) as err:
+            get_columns_to_load(
+                os.path.join(
+                    _root,
+                    "more-tests/not_vensim/test_not_vensim.txt"))
+
+        self.assertIn(
+            "Not able to read '",
+            str(err.exception))
+        self.assertIn(
+            "more-tests/not_vensim/test_not_vensim.txt'.",
+            str(err.exception))
+
+    def test_transposed_frame_get_columns(self):
+        from pysd.py_backend.utils import get_columns_to_load
+
+        self.assertEqual(get_columns_to_load(
+            os.path.join(_root, "data/out_teacup.csv")),
+                         get_columns_to_load(
+            os.path.join(_root, "data/out_teacup_transposed.csv"),
+            transpose=True)
+        )
+
+    def test_load_column_get_columns(self):
+        from pysd.py_backend.utils import get_columns_to_load
+
+        out0 = get_columns_to_load(
+            os.path.join(_root, "data/out_teacup.csv"))
+
+        out1 = get_columns_to_load(
+            os.path.join(_root, "data/out_teacup.csv"),
+            vars=["Room Temperature", "Teacup Temperature"])
+
+        out2 = get_columns_to_load(
+            os.path.join(_root, "data/out_teacup_transposed.csv"),
+            transpose=True,
+            vars=["Heat Loss to Room"])
+
+        self.assertTrue(out1.issubset(out0))
+        self.assertEqual(
+            out1,
+            set(["Room Temperature", "Teacup Temperature"]))
+
+        self.assertTrue(out2.issubset(out0))
+        self.assertEqual(
+            out2,
+            set(["Heat Loss to Room"]))
+
+
+class TestProgressbar(TestCase):
     def test_progressbar(self):
         from pysd.py_backend.utils import ProgressBar
 

@@ -1978,6 +1978,103 @@ class TestDependencies(unittest.TestCase):
             test_model_constant_pipe.replace(".mdl", ".py"))
 
 
+class TestDataReading(unittest.TestCase):
+    data_folder = os.path.join(_root, "more-tests/data_model/")
+    data_model = os.path.join(data_folder, "test_data_model.mdl")
+
+    def test_no_data_files_provided(self):
+        from pysd import read_vensim
+        model = read_vensim(self.data_model)
+
+        with self.assertRaises(ValueError) as err:
+            model.run(return_columns=["var1", "var2", "var3"])
+
+        self.assertIn("Trying to interpolate data variable before loading"
+                      " the data...", str(err.exception))
+
+    def test_missing_data(self):
+        from pysd import read_vensim
+
+        with self.assertRaises(ValueError) as err:
+            read_vensim(
+                self.data_model, data_files=self.data_folder+"data3.tab")
+
+        self.assertIn(
+            "Data for \"data-3\" not found in "
+            "/home/eneko/CREAF/dev/pysd/tests/more-tests/data_model/data3.tab",
+            str(err.exception))
+
+    def test_get_data_variable_not_found_from_dict_file(self):
+        from pysd import read_vensim
+
+        with self.assertRaises(ValueError) as err:
+            read_vensim(
+                self.data_model,
+                data_files={
+                    self.data_folder+"data1.tab": ["non-existing-var"]})
+
+        self.assertIn(
+            "'non-existing-var' not found as model data variable",
+            str(err.exception))
+
+    def test_get_data_from_one_file(self):
+        from pysd import read_vensim
+
+        model = read_vensim(
+            self.data_model, data_files=self.data_folder+"data1.tab")
+        out = model.run(return_columns=["var1", "var2", "var3"])
+        times = np.arange(11)
+        expected = pd.DataFrame(
+            index=times,
+            data={'var1': times, "var2": 2*times, "var3": 3*times})
+
+        assert_frames_close(out, expected)
+
+    def test_get_data_from_two_file(self):
+        from pysd import read_vensim
+
+        model = read_vensim(
+            self.data_model,
+            data_files=[self.data_folder+"data3.tab",
+                        self.data_folder+"data1.tab"])
+        out = model.run(return_columns=["var1", "var2", "var3"])
+        times = np.arange(11)
+        expected = pd.DataFrame(
+            index=times,
+            data={'var1': -times, "var2": -2*times, "var3": 3*times})
+
+        assert_frames_close(out, expected)
+
+    def test_get_data_from_transposed_file(self):
+        from pysd import read_vensim
+
+        model = read_vensim(
+            self.data_model,
+            data_files=[self.data_folder+"data2.tab"])
+        out = model.run(return_columns=["var1", "var2", "var3"])
+        times = np.arange(11)
+        expected = pd.DataFrame(
+            index=times,
+            data={'var1': times-5, "var2": 2*times-5, "var3": 3*times-5})
+
+        assert_frames_close(out, expected)
+
+    def test_get_data_from_dict_file(self):
+        from pysd import read_vensim
+
+        model = read_vensim(
+            self.data_model,
+            data_files={self.data_folder+"data2.tab": ["\"data-3\""],
+                        self.data_folder+"data1.tab": ["data_1", "Data 2"]})
+        out = model.run(return_columns=["var1", "var2", "var3"])
+        times = np.arange(11)
+        expected = pd.DataFrame(
+            index=times,
+            data={'var1': times, "var2": 2*times, "var3": 3*times-5})
+
+        assert_frames_close(out, expected)
+
+
 class TestExportImport(unittest.TestCase):
     def test_run_export_import_integ(self):
         from pysd import read_vensim

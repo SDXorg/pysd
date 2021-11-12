@@ -677,9 +677,15 @@ class Macro(DynamicStateful):
         if isinstance(data_files, dict):
             for data_file, vars in data_files.items():
                 for var in vars:
+                    found = False
                     for element in self._data_elements:
-                        if var in element.var:
+                        if var in [element.py_name, element.real_name]:
                             element.load_data(data_file)
+                            found = True
+                            break
+                    if not found:
+                        raise ValueError(
+                            f"'{var}' not found as model data variable")
 
         else:
             for element in self._data_elements:

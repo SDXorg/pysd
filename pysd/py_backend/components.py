@@ -170,39 +170,48 @@ class Time(object):
 
 
 class Data(object):
-    def __init__(self, data, coords, interp="interpolate"):
-        self.data = data
-        self.interp = "interpolate"
-        self.is_float = not bool(coords)
+    # TODO add __init__ and use this clas for used input pandas.Series
+    # as Data
+    # def __init__(self, data, coords, interp="interpolate"):
 
     def __call__(self, time):
-        if time in self.data['time'].values:
-            outdata = self.data.sel(time=time)
-        elif self.interp == "raw":
-            return np.nan
-        elif time > self.data['time'].values[-1]:
-            warnings.warn(
-              self.py_name + "\n"
-              + "extrapolating data above the maximum value of the time")
-            outdata = self.data[-1]
-        elif time < self.data['time'].values[0]:
-            warnings.warn(
-              self.py_name + "\n"
-              + "extrapolating data below the minimum value of the time")
-            outdata = self.data[0]
-        elif self.interp == "interpolate":
-            outdata = self.data.interp(time=time)
-        elif self.interp == 'look forward':
-            outdata = self.data.sel(time=time, method="backfill")
-        elif self.interp == 'hold backward':
-            outdata = self.data.sel(time=time, method="pad")
+        try:
+            if time in self.data['time'].values:
+                outdata = self.data.sel(time=time)
+            elif self.interp == "raw":
+                return np.nan
+            elif time > self.data['time'].values[-1]:
+                warnings.warn(
+                    self.py_name + "\n"
+                    + "extrapolating data above the maximum value of the time")
+                outdata = self.data[-1]
+            elif time < self.data['time'].values[0]:
+                warnings.warn(
+                    self.py_name + "\n"
+                    + "extrapolating data below the minimum value of the time")
+                outdata = self.data[0]
+            elif self.interp == "interpolate":
+                outdata = self.data.interp(time=time)
+            elif self.interp == 'look forward':
+                outdata = self.data.sel(time=time, method="backfill")
+            elif self.interp == 'hold backward':
+                outdata = self.data.sel(time=time, method="pad")
 
-        if self.is_float:
-            # if data has no-coords return a float
-            return float(outdata)
-        else:
-            # Remove time coord from the DataArray
-            return outdata.reset_coords('time', drop=True)
+            if self.is_float:
+                # if data has no-coords return a float
+                return float(outdata)
+            else:
+                # Remove time coord from the DataArray
+                return outdata.reset_coords('time', drop=True)
+        except Exception as err:
+            if self.data is None:
+                raise ValueError(
+                    self.py_name + "\n"
+                    "Trying to interpolate data variable before loading"
+                    " the data...")
+            else:
+                # raise any other possible error
+                raise err
 
 
 class RegData(Data):
@@ -220,7 +229,7 @@ class RegData(Data):
 
         Parameters
         ----------
-        file_names: list
+        file_names: list or str
             Name of the files to search the variable in.
 
         Returns
@@ -229,6 +238,8 @@ class RegData(Data):
             Resulting data array with the time in the first dimension.
 
         """
+        if isinstance(file_names, str):
+            file_names = [file_names]
 
         for file_name in file_names:
             self.data = self._load_data(file_name)
@@ -256,6 +267,8 @@ class RegData(Data):
             Resulting data array with the time in the first dimension.
 
         """
+        # TODO manage missing values on data, as external elements, create a
+        # hierarchy from External?
         # get columns to load variable
         columns = get_columns_to_load(
             file_name, False, vars=[self.real_name, self.py_name])

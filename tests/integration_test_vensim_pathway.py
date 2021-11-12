@@ -53,7 +53,7 @@ class TestIntegrationExamples(unittest.TestCase):
     def test_data_from_other_model(self):
         output, canon = runner(
             test_models + '/data_from_other_model/test_data_from_other_model.mdl',
-            data_files=[test_models + '/data_from_other_model/data.tab'])
+            data_files=test_models + '/data_from_other_model/data.tab')
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_delay_fixed(self):
