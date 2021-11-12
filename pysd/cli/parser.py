@@ -77,7 +77,6 @@ def split_files(string):
     --data file1.tab -> ['file1.tab']
 
     """
-    print([check_data_file(s.strip()) for s in string.split(',')])
     return [check_data_file(s.strip()) for s in string.split(',')]
 
 

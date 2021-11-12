@@ -17,7 +17,8 @@ from . import utils
 from .functions import zidz, if_then_else
 from .external import External, Excels
 from .decorators import Cache, constant_cache
-from .components import Components, Time, Data, RegData
+from .data import Data, TabData
+from .components import Components, Time
 
 from pysd._version import __version__
 
@@ -649,7 +650,7 @@ class Macro(DynamicStateful):
 
         self._data_elements = [
             getattr(self.components, name) for name in dir(self.components)
-            if isinstance(getattr(self.components, name), RegData)
+            if isinstance(getattr(self.components, name), TabData)
         ]
 
         if data_files:

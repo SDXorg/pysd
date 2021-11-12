@@ -60,7 +60,7 @@ To show a progressbar during the model integration the progress flag can be pass
 
 Running models with DATA type components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Venim's regular DATA type components are given by an empty expression in the model equation. This values are read from a binary `.vdf` file. PySD allows running models with this kind of data definition using the data_files argument when calling :py:func:`.run()` command, e.g.::
+Venim's regular DATA type components are given by an empty expression in the model equation. These values are read from a binary `.vdf` file. PySD allows running models with this kind of data definition using the data_files argument when calling :py:func:`.run()` command, e.g.::
 
    >>> stocks = model.run(data_files="input_data.tab")
 

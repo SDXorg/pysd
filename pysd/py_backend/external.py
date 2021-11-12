@@ -12,7 +12,7 @@ import numpy as np
 import xarray as xr
 from openpyxl import load_workbook
 from . import utils
-from .components import Data
+from .data import Data
 
 
 class Excels():

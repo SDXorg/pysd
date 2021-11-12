@@ -1,6 +1,7 @@
 import sys
 import os
 
+from csv import QUOTE_NONE
 from datetime import datetime
 
 from .parser import parser
@@ -163,6 +164,8 @@ def save(output, options):
     else:
         sep = ","
 
-    output.to_csv(output_file, sep, index_label="Time")
+    # QUOTE_NONE used to print the csv/tab files af vensim does with special
+    # characterse, e.g.: "my-var"[Dimension]
+    output.to_csv(output_file, sep, index_label="Time", quoting=QUOTE_NONE)
 
     print(f"Data saved in '{output_file}'")

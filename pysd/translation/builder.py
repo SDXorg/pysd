@@ -27,11 +27,11 @@ class Imports():
     Class to save the imported modules information for intelligent import
     """
     _numpy, _xarray, _subs = False, False, False
-    _functions, _statefuls, _external, _components, _utils =\
+    _functions, _statefuls, _external, _data, _utils =\
         set(), set(), set(), set(), set()
     _external_libs = {"numpy": "np", "xarray": "xr"}
     _internal_libs = [
-        "functions", "statefuls", "external", "components","utils"]
+        "functions", "statefuls", "external", "data", "utils"]
 
     @classmethod
     def add(cls, module, function=None):
@@ -110,7 +110,7 @@ class Imports():
         Reset the imported modules
         """
         cls._numpy, cls._xarray, cls._subs = False, False, False
-        cls._functions, cls._statefuls, cls._external, cls._components,\
+        cls._functions, cls._statefuls, cls._external, cls._data,\
             cls._utils = set(), set(), set(), set(), set()
 
 
@@ -672,7 +672,7 @@ def build_element(element, subscript_dict):
     # convert newline indicator and add expected level of indentation
     element["doc"] = element["doc"].replace("\\", "\n").replace("\n", "\n    ")
 
-    if element["kind"] in ["stateful", "external", "reg_data"]:
+    if element["kind"] in ["stateful", "external", "tab_data"]:
         func = """
     %(py_name)s = %(py_expr)s
             """ % {
@@ -1760,11 +1760,10 @@ def add_initial(identifier, value, deps):
     return "%s()" % stateful["py_name"], [stateful]
 
 
-def add_reg_data(identifier, real_name, subs,
+def add_tab_data(identifier, real_name, subs,
                  subscript_dict, merge_subs, keyword):
     """
-    Constructs a external object for handling Vensim's GET XLS DATA and
-    GET DIRECT DATA functionality.
+    Constructs an object for handling Vensim's regular DATA components.
 
     Parameters
     ----------
@@ -1792,14 +1791,14 @@ def add_reg_data(identifier, real_name, subs,
     Returns
     -------
     reference: str
-        Reference to the ExtData object `__call__` method, which will
+        Reference to the TabData object `__call__` method, which will
         return the retrieved value of data for the current time step.
 
     new_structure: list
         List of element construction dictionaries for the builder to assemble.
 
     """
-    Imports.add("components", "RegData")
+    Imports.add("data", "TabData")
 
     coords = utils.simplify_subscript_input(
         utils.make_coord_dict(subs, subscript_dict, terse=False),
@@ -1814,14 +1813,14 @@ def add_reg_data(identifier, real_name, subs,
         "parent_name": identifier,
         "real_name": "Data for %s" % identifier,
         "doc": "Provides data for data variable %s" % identifier,
-        "py_expr": "RegData('%s', '%s', %s, %s)" % (
+        "py_expr": "TabData('%s', '%s', %s, %s)" % (
             real_name, identifier, coords, keyword),
         "unit": "None",
         "lims": "None",
         "eqn": "None",
         "subs": subs,
         "merge_subs": merge_subs,
-        "kind": "reg_data",
+        "kind": "tab_data",
         "arguments": "",
     }
 

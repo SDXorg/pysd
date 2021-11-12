@@ -1694,7 +1694,7 @@ def translate_section(section, macro_list, sketch, root_path, subview_sep=""):
 
         elif element["kind"] == "data":
             element["eqn"] = element["expr"] = element["arguments"] = ""
-            element["py_expr"], new_structure = builder.add_reg_data(
+            element["py_expr"], new_structure = builder.add_tab_data(
                 element["py_name"], element["real_name"],
                 element["subs"], subscript_dict, element["merge_subs"],
                 element["keyword"])
