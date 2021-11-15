@@ -2,6 +2,8 @@ import os
 import itertools
 import unittest
 
+import xarray as xr
+
 _root = os.path.dirname(__file__)
 
 
@@ -141,3 +143,55 @@ class TestColumns(unittest.TestCase):
         })
 
         self.assertEqual(cols2, expected)
+
+
+class TestData(unittest.TestCase):
+    # Several Data cases are tested in unit_test_external while some other
+    # are tested indirectly in unit_test_pysd and integration_test_vensim
+
+    def test_no_data_error(self):
+        from pysd.py_backend.data import Data
+        obj = Data()
+        obj.data = None
+        obj.interp = "interpolate"
+        obj.py_name = "data"
+        with self.assertRaises(ValueError) as err:
+            obj(1.5)
+
+        self.assertIn(
+            "Trying to interpolate data variable before loading the data...",
+            str(err.exception))
+
+    def test_invalid_data_regular_error(self):
+        # test that try/except block on call doesn't catch errors differents
+        # than data = None
+        from pysd.py_backend.data import Data
+
+        obj = Data()
+
+        obj.data = 3
+
+        with self.assertRaises(TypeError) as err:
+            obj(1.5)
+
+        self.assertIn(
+            "'int' object is not subscriptable",
+            str(err.exception))
+
+        obj.data = xr.DataArray([10, 20], {'dim1': [0, 1]}, ['dim1'])
+
+        with self.assertRaises(KeyError) as err:
+            obj(1.5)
+
+        self.assertIn(
+            "'time'",
+            str(err.exception))
+
+        obj.data = xr.DataArray([10, 20], {'time': [0, 1]}, ['time'])
+
+        with self.assertRaises(AttributeError) as err:
+            obj(1.5)
+
+        self.assertIn(
+            "'Data' object has no attribute 'interp'",
+            str(err.exception))
