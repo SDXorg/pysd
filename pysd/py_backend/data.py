@@ -72,16 +72,13 @@ class Columns():
         """
         Read the firts row and return a set of it.
         """
-        # TODO add decode method if encoding is pased
-
-        with open(file_name, 'r') as file:
-            header = file.readline().rstrip()
-
         if file_name.lower().endswith(".tab"):
-            return set(header.split("\t")[1:])
+            return set(pd.read_table(file_name,
+                                     nrows=0,
+                                     encoding=encoding,
+                                     dtype=str,
+                                     header=0).iloc[:, 1:])
         elif file_name.lower().endswith(".csv"):
-            # TODO improve like previous to go faster
-            # splitting csv is not easy as , are in subscripts
             return set(pd.read_csv(file_name,
                                    nrows=0,
                                    encoding=encoding,
@@ -144,10 +141,6 @@ class Columns():
             if var.startswith('"') and var.endswith('"'):
                 # the variables in "" are reded without " by pandas
                 vars_extended.append(var[1:-1])
-            else:
-                # the variable may have " on its name in the tab or csv file
-                vars_extended.append('"' + var)
-                vars_extended.append('"' + var + '"')
 
         outs = set()
         for var in columns:

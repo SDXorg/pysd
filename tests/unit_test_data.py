@@ -121,7 +121,7 @@ class TestColumns(unittest.TestCase):
             vars=["Three Dimensional Constant"])[0]
 
         expected = {
-            "\"Three Dimensional Constant[" + ",".join(el) + "]\""
+            "Three Dimensional Constant[" + ",".join(el) + "]"
             for el in itertools.product(subsd["d1"], subsd["d2"], subsd["d3"])
         }
 
@@ -133,12 +133,12 @@ class TestColumns(unittest.TestCase):
 
         subs = list(itertools.product(subsd["d1"], subsd["d2"]))
         expected = {
-            "\"Rate A[" + ",".join(el) + "]\""
+            "Rate A[" + ",".join(el) + "]"
             for el in subs
         }
 
         expected.update({
-            "\"Stock A[" + ",".join(el) + "]\""
+            "Stock A[" + ",".join(el) + "]"
             for el in subs
         })
 
