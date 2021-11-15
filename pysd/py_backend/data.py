@@ -17,7 +17,7 @@ class Columns():
     @classmethod
     def read(cls, file_name, encoding=None):
         """
-        Read the Excel file or return the previously read one
+        Read the columns from the data file or return the previously read ones
         """
         if file_name in cls._files:
             return cls._files[file_name]
@@ -69,6 +69,9 @@ class Columns():
 
     @classmethod
     def read_line(cls, file_name, encoding=None):
+        """
+        Read the firts row and return a set of it.
+        """
         # TODO add decode method if encoding is pased
 
         with open(file_name, 'r') as file:
@@ -89,6 +92,9 @@ class Columns():
 
     @classmethod
     def read_row(cls, file_name, encoding=None):
+        """
+        Read the firts column and return a set of it.
+        """
         if file_name.lower().endswith(".tab"):
             return set(pd.read_table(file_name,
                                      usecols=[0],
@@ -102,6 +108,30 @@ class Columns():
 
     @classmethod
     def get_columns(cls, file_name, vars=None, encoding=None):
+        """
+        Get columns names from a tab or csv file and return those that
+        match with the given ones.
+
+        Parameters
+        ----------
+        file_name: str
+            Output file to read. Must be csv or tab.
+
+        vars: list
+            List of var names to find in the file.
+
+        encoding: str or None (optional)
+            Encoding type to read output file. Needed if the file has special
+            characters. Default is None.
+
+        Return
+        ------
+        columns, transpose: set, bool
+            The set of columns as they are named in the input file and a
+            boolean flag to indicate if the input file is transposed or
+            not.
+
+        """
         if vars is None:
             # Not var specified, return all available variables
             return cls.read(file_name, encoding)
@@ -115,6 +145,7 @@ class Columns():
                 # the variables in "" are reded without " by pandas
                 vars_extended.append(var[1:-1])
             else:
+                # the variable may have " on its name in the tab or csv file
                 vars_extended.append('"' + var)
                 vars_extended.append('"' + var + '"')
 
@@ -279,4 +310,3 @@ class TabData(Data):
                 axis=tuple(range(1, len(coords)+1))
             )
         return out
-
