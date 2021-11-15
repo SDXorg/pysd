@@ -17,7 +17,7 @@ from . import utils
 from .functions import zidz, if_then_else
 from .external import External, Excels
 from .decorators import Cache, constant_cache
-from .data import Data, TabData
+from .data import TabData
 from .components import Components, Time
 
 from pysd._version import __version__

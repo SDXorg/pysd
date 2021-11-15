@@ -49,7 +49,10 @@ class Columns():
         """
         out = cls.read_line(file_name, encoding)
         if out is None:
-            return None
+            raise ValueError(
+                f"\nNot able to read '{file_name}'. "
+                + "Only '.csv', '.tab' files are accepted.")
+
         transpose = False
 
         try:
@@ -60,8 +63,9 @@ class Columns():
         except ValueError:
             return out, transpose
         else:
-            #TODO writte and test
-            raise ValueError("Invalid file format, variable names must in")
+            raise ValueError(
+                f"Invalid file format '{file_name}'... varible names "
+                "should appear in the first row or in the first column...")
 
     @classmethod
     def read_line(cls, file_name, encoding=None):
@@ -110,6 +114,9 @@ class Columns():
             if var.startswith('"') and var.endswith('"'):
                 # the variables in "" are reded without " by pandas
                 vars_extended.append(var[1:-1])
+            else:
+                vars_extended.append('"' + var)
+                vars_extended.append('"' + var + '"')
 
         outs = set()
         for var in columns:
@@ -134,7 +141,7 @@ class Columns():
 
 
 class Data(object):
-    # TODO add __init__ and use this clas for used input pandas.Series
+    # TODO add __init__ and use this class for used input pandas.Series
     # as Data
     # def __init__(self, data, coords, interp="interpolate"):
 
@@ -234,6 +241,7 @@ class TabData(Data):
             Resulting data array with the time in the first dimension.
 
         """
+        # TODO inlcude missing values managment as External objects
         # get columns to load variable
         columns, transpose = Columns.get_columns(
             file_name, vars=[self.real_name, self.py_name])

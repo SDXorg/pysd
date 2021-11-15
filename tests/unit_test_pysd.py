@@ -2001,7 +2001,7 @@ class TestDataReading(unittest.TestCase):
 
         self.assertIn(
             "Data for \"data-3\" not found in "
-            "/home/eneko/CREAF/dev/pysd/tests/more-tests/data_model/data3.tab",
+            + self.data_folder + "data3.tab",
             str(err.exception))
 
     def test_get_data_variable_not_found_from_dict_file(self):

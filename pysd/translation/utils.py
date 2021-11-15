@@ -14,7 +14,8 @@ import numpy as np
 from keyword import kwlist
 from builtins import __dir__ as bidir
 from ..py_backend.components import __dir__ as cdir
-from ..py_backend.decorators import __dir__ as ddir
+from ..py_backend.data import __dir__ as ddir
+from ..py_backend.decorators import __dir__ as dedir
 from ..py_backend.external import __dir__ as edir
 from ..py_backend.functions import __dir__ as fdir
 from ..py_backend.statefuls import __dir__ as sdir
@@ -22,7 +23,8 @@ from ..py_backend.utils import __dir__ as udir
 
 
 reserved_words = set(
-    dir() + bidir() + cdir() + fdir() + edir() + ddir() + sdir() + udir())
+    dir() + bidir() + cdir() + ddir() + dedir() + edir() + fdir()
+    + sdir() + udir())
 reserved_words = reserved_words.union(kwlist)
 
 
