@@ -22,6 +22,8 @@ from .components import Components, Time
 
 from pysd._version import __version__
 
+from pysd.py_backend import components
+
 
 small_vensim = 1e-6  # What is considered zero according to Vensim Help
 
@@ -1633,6 +1635,80 @@ class Model(Macro):
         return_df = utils.make_flat_df(res, return_addresses, flatten_output)
 
         return return_df
+
+    def get_dependencies(self, vars):
+        """
+        Get the dependencies of a set of variables or modules.
+
+        Parameters
+        ----------
+        vars: set or list
+            Set or list of variables to get the dependencies from
+
+        Returns
+        -------
+        dependencies: set
+            Set of dependencies nedded to run vars.
+
+        """
+        dependencies = set()
+        current_vars = set()
+        for var in vars:
+            py_name = utils.get_key_and_value_by_insensitive_key_or_value(
+                    var,
+                    self.components._namespace)[1]
+            if py_name is None:
+                current_vars.update(self.get_vars_in_module(var))
+                pass
+            else:
+                current_vars.add(py_name)
+
+        return current_vars
+        return dependencies
+
+    def get_vars_in_module(self, module):
+        """
+        Return the name of python vars in a module.
+
+        Parameters
+        ----------
+        module: str
+            Name of the module to search in.
+
+        Returns
+        -------
+        vars: set
+            Set of varible names in the given module.
+
+        """
+        modules = self.components._modules.copy()
+
+        while modules:
+            # find the module or the submodule
+            if module in modules:
+                module_content = [modules[module]]
+                break
+            new_modules = {}
+            [new_modules.update(value) for value in modules.values()
+             if isinstance(value, dict)]
+            modules = new_modules
+
+        if not modules:
+            raise ValueError(f"Module or submodule '{module}' not found...\n")
+
+        vars, new_content = set(), []
+
+        while module_content:
+            # find the vars in the module or the submodule
+            for content in module_content:
+                if isinstance(content, list):
+                    vars.update(content)
+                else:
+                    [new_content.append(value) for value in content.values()]
+
+            module_content, new_content = new_content, []
+
+        return vars
 
     def reload(self):
         """

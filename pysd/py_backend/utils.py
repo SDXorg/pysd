@@ -257,6 +257,24 @@ def compute_shape(coords, reshape_len=None, py_name=""):
 
 
 def get_key_and_value_by_insensitive_key_or_value(key, dict):
+    """
+    Providing a key or value in a dictionary search for the real key and value
+    in the dictionary ignoring case sensitivity.
+
+    Parameters
+    ----------
+    key: str
+        Key or value to look for in the dictionary.
+    dict: dict
+        Dictionary to search in.
+
+    Returns
+    -------
+    real key, real value: (str, str) or (None, None)
+        The real key and value that appear in the dictionary or a tuple
+        of Nones if the input key is not in the dictionary.
+
+    """
     lower_key = key.lower()
     for real_key, real_value in dict.items():
         if real_key.lower() == lower_key or real_value.lower() == lower_key:
