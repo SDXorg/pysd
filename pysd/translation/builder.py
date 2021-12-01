@@ -176,7 +176,7 @@ def build_modular_model(elements, subscript_dict, namespace, dependencies,
             subview_elems = []
             for element in elements:
                 if element.get("py_name") in view_content or \
-                   element.get("parent_name", None) in view_content:
+                   element.get("parent_name") in view_content:
                     subview_elems.append(element)
 
             _build_separate_module(subview_elems, subscript_dict,
@@ -752,6 +752,8 @@ def merge_partial_elements(element_list):
             # Use 'expr' for Vensim models, and 'eqn' for Xmile
             # (This makes the Vensim equation prettier.)
             eqn = element["expr"] if "expr" in element else element["eqn"]
+            parent_name = element["parent_name"] if "parent_name" in element\
+                else None
             outs[name] = {
                 "py_name": element["py_name"],
                 "real_name": element["real_name"],
@@ -765,6 +767,7 @@ def merge_partial_elements(element_list):
                 if "dependencies" in element else None,
                 "lims": element["lims"],
                 "eqn": [eqn.replace(r"\ ", "")],
+                "parent_name": parent_name,
                 "kind": element["kind"],
                 "arguments": element["arguments"],
             }

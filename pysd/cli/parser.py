@@ -110,6 +110,15 @@ def split_timestamps(string):
             f'See {docs} for examples.')
 
 
+def split_subview_sep(string):
+    """
+    Splits the subview separators
+    --subview-sep ' - ,.' -> [' - ', '.']
+
+    """
+    return string.split(",")
+
+
 def split_vars(string):
     """
     Splits the arguments from new_values.
@@ -270,7 +279,8 @@ trans_arguments.add_argument(
 
 trans_arguments.add_argument(
     '--subview-sep', dest='subview_sep',
-    action='store', type=str, default="", metavar='STRING',
+    action='store', type=split_subview_sep, default=[],
+    metavar='\'STRING1,STRING2,..,STRINGN\'',
     help='further division of views split in subviews, by identifying the'
          'separator string in the view name, only availabe if --split-views'
          ' is used')
