@@ -158,5 +158,4 @@ def load(py_model_file, data_files=None, initialize=True,
     >>> model = load('../tests/test-models/samples/teacup/teacup.py')
 
     """
-
-    return Model(py_model_file, data_files, initialize, missing_values)
+    return Model(str(py_model_file), data_files, initialize, missing_values)

@@ -502,6 +502,13 @@ def detect_encoding(filename):
     return detector.result['encoding']
 
 
+def print_objects_format(object_set, text):
+    text += " (total %(n_obj)s):\n\t%(objs)s\n" % {
+        "n_obj": len(object_set),
+        "objs": ", ".join(object_set)
+    }
+    return text
+
 class ProgressBar:
     """
     Progress bar for integration

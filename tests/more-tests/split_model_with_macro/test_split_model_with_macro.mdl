@@ -71,14 +71,13 @@ $192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,1
 1,3,2,1,0,0,0,0,0,128,0,-1--1--1,,1|(156,125)|
 ///---\\\
 :L<%^E!@
-1:Z:\Development\pysd\tests\test-models\tests\macro_stock\Current.vdf
 9:Current
 15:0,0,0,0,0,0
-19:100,1
+19:100,0
 27:2,
 34:0,
 4:Time
-5:new var
+5:macro output
 35:Date
 36:YYYY-MM-DD
 37:2000

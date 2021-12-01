@@ -42,6 +42,11 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner(test_models + '/chained_initialization/test_chained_initialization.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    @unittest.skip("Working on it")
+    def test_conditional_subscripts(self):
+        output, canon = runner(test_models + '/conditional_subscripts/test_conditional_subscripts.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_control_vars(self):
         output, canon = runner(test_models + '/control_vars/test_control_vars.mdl')
         assert_frames_close(output, canon, rtol=rtol)

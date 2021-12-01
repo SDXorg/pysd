@@ -22,8 +22,6 @@ from .components import Components, Time
 
 from pysd._version import __version__
 
-from pysd.py_backend import components
-
 
 small_vensim = 1e-6  # What is considered zero according to Vensim Help
 
@@ -1069,18 +1067,23 @@ class Macro(DynamicStateful):
         else:
             func = param
 
-        if not self.get_args(func):
-            value = func()
-        else:
-            value = func(0)
-
-        if isinstance(value, xr.DataArray):
-            dims = list(value.dims)
-            coords = {coord: list(value.coords[coord].values)
-                      for coord in value.coords}
+        # TODO simplify this, make all model elements have a dims attribute
+        if hasattr(func, "dims"):
+            dims = func.dims
+            coords = {dim: self.components._subscript_dict[dim]
+                      for dim in dims}
             return coords, dims
+        elif hasattr(func, "state") and isinstance(func.state, xr.DataArray):
+            value = func()
+        elif self.get_args(func) and isinstance(func(0), xr.DataArray):
+            value = func(0)
         else:
             return None
+
+        dims = list(value.dims)
+        coords = {coord: list(value.coords[coord].values)
+                  for coord in value.coords}
+        return coords, dims
 
     def __getitem__(self, param):
         """
@@ -1233,6 +1236,8 @@ class Macro(DynamicStateful):
                               stacklevel=2)
 
             new_function.__name__ = func_name
+            if dims:
+                new_function.dims = dims
             self.components._set_component(func_name, new_function)
             if func_name in self.cache.cached_funcs:
                 self.cache.cached_funcs.remove(func_name)
@@ -1636,14 +1641,57 @@ class Model(Macro):
 
         return return_df
 
-    def get_dependencies(self, vars):
+    def select_submodel(self, vars=[], modules=[], contour_values={}):
+        c_vars, d_vars, s_deps = self._get_dependencies(vars, modules)
+        warnings.warn(
+            "Selecting submodel, "
+            "to run the full model again use model.reload()")
+
+        self._stateful_elements = {
+            name: getattr(self.components, name)
+            for name in s_deps
+            if isinstance(getattr(self.components, name), Stateful)
+        }
+        self._dynamicstateful_elements = [
+            getattr(self.components, name) for name in s_deps
+            if isinstance(getattr(self.components, name), DynamicStateful)
+        ]
+        self._macro_elements = [
+            getattr(self.components, name) for name in s_deps
+            if isinstance(getattr(self.components, name), Macro)
+        ]
+
+        all_deps = d_vars["initial"].copy()
+        all_deps.update(d_vars["step"])
+        all_deps.update(d_vars["lookup"])
+
+        all_vars = all_deps.copy()
+        all_vars.update(c_vars)
+
+        for real_name, py_name in self.components._namespace.copy().items():
+            if py_name not in all_vars:
+                del self.components._namespace[real_name]
+                del self.components._dependencies[py_name]
+
+        for py_name in self.components._dependencies.copy().keys():
+            if py_name.startswith("_") and py_name not in s_deps:
+                del self.components._dependencies[py_name]
+
+        self.set_components({element: np.nan for element in all_deps})
+        self.set_components(contour_values)
+        self._assign_cache_type()
+        self._get_initialize_order()
+
+    def get_dependencies(self, vars=[], modules=[]):
         """
         Get the dependencies of a set of variables or modules.
 
         Parameters
         ----------
-        vars: set or list
+        vars: dict
             Set or list of variables to get the dependencies from
+        modules: dict
+            Set or list of modules to get the dependencies from
 
         Returns
         -------
@@ -1651,20 +1699,84 @@ class Model(Macro):
             Set of dependencies nedded to run vars.
 
         """
-        dependencies = set()
-        current_vars = set()
+        c_vars, d_vars, s_deps = self._get_dependencies(vars, modules)
+
+        text = utils.print_objects_format(c_vars, "Selected variables")
+
+        if d_vars["initial"]:
+            text += utils.print_objects_format(
+                d_vars["initial"],
+                "\nDependencies for initialization only")
+        if d_vars["step"]:
+            text += utils.print_objects_format(
+                d_vars["step"],
+                "\nDependencies that may change over time")
+        if d_vars["lookup"]:
+            text += utils.print_objects_format(
+                d_vars["lookup"],
+                "\nLookup table dependencies")
+
+        text += utils.print_objects_format(
+            s_deps,
+            "\nStateful objects integrated with the selected variables")
+
+        print(text)
+
+    def _get_dependencies(self, vars=[], modules=[]):
+        """
+        Get the dependencies of a set of variables or modules.
+
+        Parameters
+        ----------
+        vars: dict
+            Set or list of variables to get the dependencies from
+        modules: dict
+            Set or list of modules to get the dependencies from
+
+        Returns
+        -------
+        dependencies: set
+            Set of dependencies nedded to run vars.
+
+        """
+        def check_dep(dependencies, initial=False):
+            for dep in dependencies:
+                if dep in c_vars or dep.startswith("__"):
+                    continue
+                elif dep.startswith("_"):
+                    s_deps.add(dep)
+                    dep = self.components._dependencies[dep]
+                    check_dep(dep["initial"], True)
+                    check_dep(dep["step"])
+                else:
+                    if initial and dep not in d_deps["step"]\
+                       and dep not in d_deps["lookup"]:
+                        d_deps["initial"].add(dep)
+                    else:
+                        if dep in d_deps["initial"]:
+                            d_deps["initial"].remove(dep)
+                        if self.get_args(dep):
+                            d_deps["lookup"].add(dep)
+                        else:
+                            d_deps["step"].add(dep)
+
+        d_deps = {"initial": set(), "step": set(), "lookup": set()}
+        s_deps = set()
+        c_vars = {"time", "time_step", "initial_time", "final_time", "saveper"}
         for var in vars:
             py_name = utils.get_key_and_value_by_insensitive_key_or_value(
                     var,
                     self.components._namespace)[1]
-            if py_name is None:
-                current_vars.update(self.get_vars_in_module(var))
-                pass
-            else:
-                current_vars.add(py_name)
+            c_vars.add(py_name)
+        for module in modules:
+            c_vars.update(self.get_vars_in_module(module))
 
-        return current_vars
-        return dependencies
+        for var in c_vars:
+            if var == "time":
+                continue
+            check_dep(self.components._dependencies[var])
+
+        return c_vars, d_deps, s_deps
 
     def get_vars_in_module(self, module):
         """

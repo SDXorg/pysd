@@ -13,6 +13,8 @@ def subs(dims, subcoords):
     xarray.DataArray. The algorithm is a simple version of utils.rearrange
     """
     def decorator(function):
+        function.dims = dims
+
         @wraps(function)
         def wrapper(*args):
             data = function(*args)

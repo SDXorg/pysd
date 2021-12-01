@@ -5,6 +5,7 @@ knowledge of vensim syntax should be here.
 """
 
 import os
+import pathlib
 import re
 import warnings
 from io import open
@@ -1876,7 +1877,7 @@ def translate_vensim(mdl_file, split_views, **kwargs):
 
     Parameters
     ----------
-    mdl_file: str
+    mdl_file: str or pathlib.PosixPath
         File path of a vensim model file to translate to python.
 
     split_views: bool
@@ -1901,20 +1902,22 @@ def translate_vensim(mdl_file, split_views, **kwargs):
     # character used to place subviews in the parent view folder
     subview_sep = kwargs.get("subview_sep", "")
 
-    root_path = os.path.split(mdl_file)[0]
+    if isinstance(mdl_file, str):
+        mdl_file = pathlib.Path(mdl_file)
+
+    root_path = mdl_file.parent
     with open(mdl_file, "r", encoding="UTF-8") as in_file:
         text = in_file.read()
 
     # check for model extension
-    if not mdl_file.lower().endswith(".mdl"):
+    if mdl_file.suffix.lower() != ".mdl":
         raise ValueError(
             "The file to translate, "
             + mdl_file
             + " is not a vensim model. It must end with mdl extension."
         )
-    mdl_insensitive = re.compile(re.escape('.mdl'), re.IGNORECASE)
-    outfile_name = mdl_insensitive.sub(".py", mdl_file)
-    out_dir = os.path.dirname(outfile_name)
+
+    outfile_name = mdl_file.with_suffix(".py")
 
     if split_views:
         text, sketch = _split_sketch(text)
@@ -1929,8 +1932,7 @@ def translate_vensim(mdl_file, split_views, **kwargs):
         else:  # separate macro elements into their own files
             section["py_name"] = utils.make_python_identifier(
                 section["name"])
-            section["file_name"] = os.path.join(
-                out_dir,
+            section["file_name"] = root_path.joinpath(
                 section["py_name"] + ".py")
 
     macro_list = [s for s in file_sections if s["name"] != "_main_"]
