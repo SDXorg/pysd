@@ -1793,7 +1793,11 @@ class Model(Macro):
             Set of varible names in the given module.
 
         """
-        modules = self.components._modules.copy()
+        try:
+            modules = self.components._modules.copy()
+        except NameError:
+            raise ValueError(
+                "Trying to get a module from a non-modularized model")
 
         while modules:
             # find the module or the submodule
@@ -1806,7 +1810,7 @@ class Model(Macro):
             modules = new_modules
 
         if not modules:
-            raise ValueError(f"Module or submodule '{module}' not found...\n")
+            raise NameError(f"Module or submodule '{module}' not found...\n")
 
         vars, new_content = set(), []
 

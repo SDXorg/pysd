@@ -1913,7 +1913,7 @@ def translate_vensim(mdl_file, split_views, **kwargs):
     if mdl_file.suffix.lower() != ".mdl":
         raise ValueError(
             "The file to translate, "
-            + mdl_file
+            + str(mdl_file)
             + " is not a vensim model. It must end with mdl extension."
         )
 

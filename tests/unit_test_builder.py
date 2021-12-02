@@ -306,6 +306,7 @@ class TestMergePartialElements(TestCase):
               'unit': None,
               'eqn': ['eq1', 'eq2', 'eq3'],
               'lims': '',
+              'parent_name': None,
               'dependencies': {'b': 2, 'c': 1, 'time': 8},
               'arguments': ''
               }])
@@ -353,6 +354,7 @@ class TestMergePartialElements(TestCase):
                      'unit': None,
                      'eqn': ['eq1', 'eq2', 'eq3'],
                      'lims': '',
+                     'parent_name': None,
                      'dependencies': {'b': 4},
                      'arguments': ''
                      },
@@ -368,6 +370,7 @@ class TestMergePartialElements(TestCase):
                      'unit': None,
                      'eqn': ['eq4', 'eq5', 'eq6'],
                      'lims': '',
+                     'parent_name': None,
                      'dependencies': {
                          'initial': {'c': 3, 'd': 1},
                          'step': {'time': 5, 'a': 1, 'd': 5}
@@ -404,6 +407,7 @@ class TestMergePartialElements(TestCase):
                      'unit': None,
                      'eqn': ['eq1', 'eq2'],
                      'lims': '',
+                     'parent_name': None,
                      'dependencies': {'b': 2, 'c': 1},
                      'arguments': ''
                      },
@@ -417,6 +421,7 @@ class TestMergePartialElements(TestCase):
                      'unit': None,
                      'eqn': ['eq3'],
                      'lims': '',
+                     'parent_name': None,
                      'dependencies': {},
                      'arguments': ''
                      }]

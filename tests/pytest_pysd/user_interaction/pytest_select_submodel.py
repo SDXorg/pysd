@@ -1,6 +1,7 @@
 
 import pytest
 import shutil
+from pathlib import Path
 import numpy as np
 
 import pysd
@@ -10,7 +11,7 @@ import pysd
     "model_path,subview_sep,variables,modules,n_deps,dep_vars",
     [
         (
-            "test_split_model",
+            Path("more-tests/split_model/test_split_model.mdl"),
             [],
             ["stock"],
             [],
@@ -18,7 +19,7 @@ import pysd
             {"rate1": 4, "initial_stock": 2}
         ),
         (
-            "test_split_model_subviews",
+            Path("more-tests/split_model/test_split_model_subviews.mdl"),
             ["."],
             [],
             ["view_1"],
@@ -28,7 +29,7 @@ import pysd
             }
         ),
         (
-            "test_split_model_sub_subviews",
+            Path("more-tests/split_model/test_split_model_sub_subviews.mdl"),
             [".", "-"],
             ["variablex"],
             ["subview_1", "submodule_1"],
@@ -54,26 +55,20 @@ class TestSubmodel:
         }
 
     @pytest.fixture
-    def models_dir(self, _root):
-        return _root.joinpath("more-tests/split_model")
-
-    @pytest.fixture
-    def model(self, shared_tmpdir, models_dir, model_path, subview_sep):
+    def model(self, shared_tmpdir, model_path, subview_sep, _root):
         """
         Translate the model or read a translated version.
         This way each file is only translated once.
         """
         # expected file
-        file = shared_tmpdir.joinpath(model_path + '.py')
+        file = shared_tmpdir.joinpath(model_path.with_suffix(".py").name)
         if file.is_file():
             # load already translated file
             return pysd.load(file)
         else:
             # copy mdl file to tmp_dir and translate it
-            file = shared_tmpdir.joinpath(model_path + '.mdl')
-            shutil.copy(
-                models_dir.joinpath(model_path + '.mdl'),
-                file)
+            file = shared_tmpdir.joinpath(model_path.name)
+            shutil.copy(_root.joinpath(model_path), file)
             return pysd.read_vensim(
                 file,
                 split_views=True, subview_sep=subview_sep)
@@ -154,3 +149,46 @@ class TestSubmodel:
             assert np.any(np.isnan(model.run()))
             # redefine dependencies
             assert not np.any(np.isnan(model.run(params=dep_vars)))
+
+
+@pytest.mark.parametrize(
+    "model_path,split_views,module,raise_type,error_message",
+    [
+        (
+            Path("more-tests/split_model/test_split_model.mdl"),
+            True,
+            "view_4",
+            NameError,
+            "Module or submodule 'view_4' not found..."
+
+        ),
+        (
+            Path("more-tests/split_model/test_split_model.mdl"),
+            False,
+            "view_1",
+            ValueError,
+            "Trying to get a module from a non-modularized model"
+
+        )
+    ],
+)
+class TestGetVarsInModuleErrors:
+    @pytest.fixture
+    def model(self, shared_tmpdir, model_path, split_views, _root):
+        """
+        Translate the model.
+        """
+        # mdl file
+        file = shared_tmpdir.joinpath(model_path.name)
+
+        if not file.is_file():
+            # copy mdl file
+            shutil.copy(_root.joinpath(model_path), file)
+
+        return pysd.read_vensim(file, split_views=split_views)
+
+    def test_get_vars_in_module_errors(self, model, module, raise_type,
+                                       error_message):
+        # assert raises are produced
+        with pytest.raises(raise_type, match=error_message):
+            model.get_vars_in_module(module)
