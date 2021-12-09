@@ -1247,6 +1247,8 @@ class Macro(DynamicStateful):
         # this is only called if the set_component function recognizes a
         # pandas series
         # TODO: raise a warning if extrapolating from the end of the series.
+        # TODO: data type variables should be creted using a Data object
+        # lookup type variables should be created using a Lookup object
         if isinstance(series.values[0], xr.DataArray) and args:
             # the argument is already given in the model when the model
             # is called
@@ -1641,12 +1643,77 @@ class Model(Macro):
 
         return return_df
 
-    def select_submodel(self, vars=[], modules=[], contour_values={}):
+    def select_submodel(self, vars=[], modules=[], exogenous_components={}):
+        """
+        Select a submodel from the original model. After selecting a submodel
+        only the necessary stateful objects for integrating this submodel will
+        be computed.
+
+        Parameters
+        ----------
+        vars: set or list of strings (optional)
+            Variables to include in the new submodel.
+            It can be an empty list if the submodel is only selected by
+            module names. Default is an empty list.
+
+        modules: set or list of strings (optional)
+            Modules to include in the new submodel.
+            It can be an empty list if the submodel is only selected by
+            variable names. Default is an empty list. Can select a full
+            module or a submodule by passing the path without the .py, e.g.:
+            "view_1/submodule1".
+
+        exogenous_components: dictionary of parameters (optional)
+            Exogenous value to fix to the model variables that are needed
+            to run the selected submodel. The exogenous_components should
+            be passed as a dictionary in the same way it is done for
+            set_components method. By default it is an empty dict and
+            the needed exogenous components will be set to a numpy.nan value.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        modules can be only passed when the model has been split in
+        different files during translation.
+
+        Examples
+        --------
+        >>> model.select_submodel(
+        ...     vars=["Room Temperature", "Teacup temperature"])
+        UserWarning: Selecting submodel, to run the full model again use model.reload()
+
+        >>> model.select_submodel(
+        ...     modules=["view_1", "view_2/subview_1"])
+        UserWarning: Selecting submodel, to run the full model again use model.reload()
+        UserWarning: Exogenous components for the following variables are necessary but not given:
+            initial_value_stock1, stock3
+
+        >>> model.select_submodel(
+        ...     vars=["stock3"],
+        ...     modules=["view_1", "view_2/subview_1"])
+        UserWarning: Selecting submodel, to run the full model again use model.reload()
+        UserWarning: Exogenous components for the following variables are necessary but not given:
+            initial_value_stock1, initial_value_stock3
+        Please, set them before running the model using set_components method...
+
+        >>> model.select_submodel(
+        ...     vars=["stock3"],
+        ...     modules=["view_1", "view_2/subview_1"],
+        ...     exogenous_components={
+        ...         "initial_value_stock1": 3,
+        ...         "initial_value_stock3": 5})
+        UserWarning: Selecting submodel, to run the full model again use model.reload()
+
+        """
         c_vars, d_vars, s_deps = self._get_dependencies(vars, modules)
         warnings.warn(
             "Selecting submodel, "
             "to run the full model again use model.reload()")
 
+        # reassing the dictionary and lists of needed stateful objects
         self._stateful_elements = {
             name: getattr(self.components, name)
             for name in s_deps
@@ -1660,7 +1727,10 @@ class Model(Macro):
             getattr(self.components, name) for name in s_deps
             if isinstance(getattr(self.components, name), Macro)
         ]
+        # TODO: include subselection of external objects (update in the deps
+        # dictionary is needed -> NO BACK COMPATIBILITY)
 
+        # get set of all dependencies and all variables to select
         all_deps = d_vars["initial"].copy()
         all_deps.update(d_vars["step"])
         all_deps.update(d_vars["lookup"])
@@ -1668,6 +1738,7 @@ class Model(Macro):
         all_vars = all_deps.copy()
         all_vars.update(c_vars)
 
+        # clean dependendies and namespace dictionaries
         for real_name, py_name in self.components._namespace.copy().items():
             if py_name not in all_vars:
                 del self.components._namespace[real_name]
@@ -1677,8 +1748,30 @@ class Model(Macro):
             if py_name.startswith("_") and py_name not in s_deps:
                 del self.components._dependencies[py_name]
 
-        self.set_components({element: np.nan for element in all_deps})
-        self.set_components(contour_values)
+        # set all exogenous values to np.nan by default
+        new_components = {element: np.nan for element in all_deps}
+        # update exogenous values with the user input
+        [new_components.update(
+            {
+                utils.get_key_and_value_by_insensitive_key_or_value(
+                    key,
+                    self.components._namespace)[1]: value
+            }) for key, value in exogenous_components.items()]
+
+        self.set_components(new_components)
+
+        # show a warning message if exogenous values are needed for a
+        # dependency
+        new_components = [
+            key for key, value in new_components.items() if value is np.nan]
+        if new_components:
+            warnings.warn(
+                "Exogenous components for the following variables are "
+                f"necessary but not given:\n\t{', '.join(new_components)}"
+                "\n\n Please, set them before running the model using "
+                "set_components method...")
+
+        # re-assign the cache_type and initialization order
         self._assign_cache_type()
         self._get_initialize_order()
 
@@ -1688,15 +1781,56 @@ class Model(Macro):
 
         Parameters
         ----------
-        vars: dict
-            Set or list of variables to get the dependencies from
-        modules: dict
-            Set or list of modules to get the dependencies from
+        vars: set or list of strings (optional)
+            Variables to get the dependencies from.
+            It can be an empty list if the dependencies are computed only
+            using modules. Default is an empty list.
+        modules: set or list of strings (optional)
+            Modules to get the dependencies from.
+            It can be an empty list if the dependencies are computed only
+            using variables. Default is an empty list. Can select a full
+            module or a submodule by passing the path without the .py, e.g.:
+            "view_1/submodule1".
 
         Returns
         -------
         dependencies: set
             Set of dependencies nedded to run vars.
+
+        Notes
+        -----
+        modules can be only passed when the model has been split in
+        different files during translation.
+
+        Examples
+        --------
+        >>> model.get_dependencies(
+        ...     vars=["Room Temperature", "Teacup temperature"])
+        Selected variables (total 1):
+            room_temperature, teacup_temperature
+        Stateful objects integrated with the selected variables (total 1):
+            _integ_teacup_temperature
+
+        >>> model.get_dependencies(
+        ...     modules=["view_1", "view_2/subview_1"])
+        Selected variables (total 4):
+            var1, var2, stock1, delay1
+        Dependencies for initialization only (total 1):
+            initial_value_stock1
+        Dependencies that may change over time (total 2):
+            stock3
+        Stateful objects integrated with the selected variables (total 1):
+            _integ_stock1, _delay_fixed_delay1
+
+        >>> model.get_dependencies(
+        ...     vars=["stock3"],
+        ...     modules=["view_1", "view_2/subview_1"])
+        Selected variables (total 4):
+            var1, var2, stock1, stock3, delay1
+        Dependencies for initialization only (total 1):
+            initial_value_stock1, initial_value_stock3
+        Stateful objects integrated with the selected variables (total 1):
+            _integ_stock1, _integ_stock3, _delay_fixed_delay1
 
         """
         c_vars, d_vars, s_deps = self._get_dependencies(vars, modules)
@@ -1728,21 +1862,32 @@ class Model(Macro):
 
         Parameters
         ----------
-        vars: dict
-            Set or list of variables to get the dependencies from
-        modules: dict
-            Set or list of modules to get the dependencies from
+        vars: set or list of strings (optional)
+            Variables to get the dependencies from.
+            It can be an empty list if the dependencies are computed only
+            using modules. Default is an empty list.
+        modules: set or list of strings (optional)
+            Modules to get the dependencies from.
+            It can be an empty list if the dependencies are computed only
+            using variables. Default is an empty list. Can select a full
+            module or a submodule by passing the path without the .py, e.g.:
+            "view_1/submodule1".
 
         Returns
         -------
-        dependencies: set
-            Set of dependencies nedded to run vars.
+        c_vars: set
+            Set of all selected model variables.
+        d_deps: dict of sets
+            Dictionary of dependencies nedded to run vars and modules.
+        s_deps: set
+            Set of stateful objects to update when integrating selected
+            model variables.
 
         """
         def check_dep(dependencies, initial=False):
             for dep in dependencies:
                 if dep in c_vars or dep.startswith("__"):
-                    continue
+                    pass
                 elif dep.startswith("_"):
                     s_deps.add(dep)
                     dep = self.components._dependencies[dep]
@@ -1794,23 +1939,19 @@ class Model(Macro):
 
         """
         try:
-            modules = self.components._modules.copy()
+            module_content = self.components._modules.copy()
         except NameError:
             raise ValueError(
                 "Trying to get a module from a non-modularized model")
 
-        while modules:
-            # find the module or the submodule
-            if module in modules:
-                module_content = [modules[module]]
-                break
-            new_modules = {}
-            [new_modules.update(value) for value in modules.values()
-             if isinstance(value, dict)]
-            modules = new_modules
-
-        if not modules:
-            raise NameError(f"Module or submodule '{module}' not found...\n")
+        try:
+            # get the module or the submodule content
+            for submodule in module.split("/"):
+                module_content = module_content[submodule]
+            module_content = [module_content]
+        except KeyError:
+            raise NameError(
+                f"Module or submodule '{submodule}' not found...\n")
 
         vars, new_content = set(), []
 

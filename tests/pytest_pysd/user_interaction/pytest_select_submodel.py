@@ -15,8 +15,8 @@ import pysd
             [],
             ["stock"],
             [],
-            (6, 1, 1, 0, 1),
-            {"rate1": 4, "initial_stock": 2}
+            (6, 1, 2, 0, 1),
+            {"rate1": 4, "initial_stock": 2, "initial_stock_correction": 0}
         ),
         (
             Path("more-tests/split_model/test_split_model_subviews.mdl"),
@@ -32,7 +32,7 @@ import pysd
             Path("more-tests/split_model/test_split_model_sub_subviews.mdl"),
             [".", "-"],
             ["variablex"],
-            ["subview_1", "submodule_1"],
+            ["view_3/subview_1", "view_1/submodule_1"],
             (12, 0, 1, 1, 1),
             {"another_var": 5, "look_up_definition": 3}
         )
@@ -125,8 +125,11 @@ class TestSubmodel:
         assert "Stock" in model.components._namespace
 
         # select submodel
-        with pytest.warns(UserWarning, match=self.warning):
+        with pytest.warns(UserWarning) as record:
             model.select_submodel(vars=variables, modules=modules)
+
+        # assert warning
+        assert str(record[0].message) == self.warning
 
         # assert stateful elements change
         assert len(model._dynamicstateful_elements) == 1
@@ -142,13 +145,30 @@ class TestSubmodel:
         if not dep_vars:
             # totally independent submodels can run without producing
             # nan values
+            assert len(record) == 1
             assert not np.any(np.isnan(model.run()))
         else:
             # running the model without redefining dependencies will
             # produce nan values
+            assert len(record) == 2
+            assert "Exogenous components for the following variables are"\
+                + " necessary but not given:" in str(record[1].message)
+            assert "Please, set them before running the model using "\
+                + "set_components method..." in str(record[1].message)
+            for var in dep_vars:
+                assert var in str(record[1].message)
             assert np.any(np.isnan(model.run()))
             # redefine dependencies
             assert not np.any(np.isnan(model.run(params=dep_vars)))
+
+        # select submodel using contour values
+        model.reload()
+        with pytest.warns(UserWarning) as record:
+            model.select_submodel(vars=variables, modules=modules,
+                                  exogenous_components=dep_vars)
+
+        assert len(record) == 1
+        assert not np.any(np.isnan(model.run()))
 
 
 @pytest.mark.parametrize(

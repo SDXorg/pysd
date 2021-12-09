@@ -92,7 +92,6 @@ class TestSplitViews:
         [files.add(shared_tmpdir.joinpath(macro + ".py")) for macro in macros]
         return files
 
-
     @pytest.mark.filterwarnings("ignore")
     def test_read_vensim_split_model(self, model_file, subview_sep,
                                      expected_files, modules,

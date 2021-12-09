@@ -503,11 +503,16 @@ def detect_encoding(filename):
 
 
 def print_objects_format(object_set, text):
+    """
+    Return a printable version of the variables in object_sect with the
+    header given with text.
+    """
     text += " (total %(n_obj)s):\n\t%(objs)s\n" % {
         "n_obj": len(object_set),
         "objs": ", ".join(object_set)
     }
     return text
+
 
 class ProgressBar:
     """

@@ -198,7 +198,8 @@ class TestPySD(unittest.TestCase):
 
         model_name = "test_split_model"
         namespace_filename = "_namespace_" + model_name + ".json"
-        subscript_dict_filename = "_subscripts_" + model_name + ".json"
+        dependencies_filename = "_dependencies_" + model_name + ".json"
+        subscript_filename = "_subscripts_" + model_name + ".json"
         modules_filename = "_modules.json"
         modules_dirname = "modules_" + model_name
         model_name_mdl = root_dir + model_name + ".mdl"
@@ -209,7 +210,8 @@ class TestPySD(unittest.TestCase):
 
         # check that _namespace and _subscript_dict json files where created
         self.assertTrue(os.path.isfile(root_dir + namespace_filename))
-        self.assertTrue(os.path.isfile(root_dir + subscript_dict_filename))
+        self.assertTrue(os.path.isfile(root_dir + subscript_filename))
+        self.assertTrue(os.path.isfile(root_dir + dependencies_filename))
 
         # check that the main model file was created
         self.assertTrue(os.path.isfile(root_dir + model_name + ".py"))
@@ -231,7 +233,8 @@ class TestPySD(unittest.TestCase):
         # remove newly created files
         os.remove(root_dir + model_name + ".py")
         os.remove(root_dir + namespace_filename)
-        os.remove(root_dir + subscript_dict_filename)
+        os.remove(root_dir + subscript_filename)
+        os.remove(root_dir + dependencies_filename)
 
         # remove newly created modules folder
         shutil.rmtree(root_dir + modules_dirname)
@@ -251,7 +254,8 @@ class TestPySD(unittest.TestCase):
         )
 
         namespace_filename = "_namespace_" + model_name + ".json"
-        subscript_dict_filename = "_subscripts_" + model_name + ".json"
+        subscript_filename = "_subscripts_" + model_name + ".json"
+        dependencies_filename = "_dependencies_" + model_name + ".json"
         modules_dirname = "modules_" + model_name
 
         separator = "."
@@ -289,7 +293,8 @@ class TestPySD(unittest.TestCase):
         # remove newly created files
         os.remove(root_dir + model_name + ".py")
         os.remove(root_dir + namespace_filename)
-        os.remove(root_dir + subscript_dict_filename)
+        os.remove(root_dir + subscript_filename)
+        os.remove(root_dir + dependencies_filename)
 
         # remove newly created modules folder
         shutil.rmtree(root_dir + modules_dirname)

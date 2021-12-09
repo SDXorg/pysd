@@ -1,12 +1,6 @@
 {UTF-8}
-other stock= INTEG (
-	6*"var-n",
-		3)
-	~	
-	~		|
-
-"variable-x"=
-	lookup table(6*another var)
+another var=
+	3*Stock
 	~	
 	~		|
 
@@ -15,19 +9,19 @@ initial stock=
 	~	
 	~		|
 
+initial stock correction=
+	0
+	~	
+	~		|
+
 lookup table(
 	(1,0), (10,2), (100,2), (1000,3), (10000,4))
 	~	
 	~		|
 
-Stock= INTEG (
-	"rate-1",
-		initial stock)
-	~	
-	~		|
-
-another var=
-	3*Stock
+other stock= INTEG (
+	6*"var-n",
+		3)
 	~	
 	~		|
 
@@ -36,8 +30,19 @@ another var=
 	~	
 	~		|
 
+Stock= INTEG (
+	"rate-1"+Time*initial stock correction,
+		initial stock+initial stock correction)
+	~	
+	~		|
+
 "var-n"=
 	5
+	~	
+	~		|
+
+"variable-x"=
+	lookup table(6*another var)
 	~	
 	~		|
 
@@ -83,13 +88,17 @@ Stock
 10,8,"var-n",207,367,18,11,8,3,0,0,0,0,0,0
 1,9,8,6,0,0,0,0,0,128,0,-1--1--1,,1|(288,318)|
 10,10,initial stock,431,347,36,11,8,3,0,0,0,0,0,0
-1,11,10,1,0,0,0,0,0,128,1,-1--1--1,,1|(457,302)|
+1,11,10,1,0,0,0,0,0,128,0,-1--1--1,,1|(457,302)|
 10,12,other stock,371,488,40,20,3,3,0,0,0,0,0,0
 12,13,48,95,500,10,8,0,3,0,0,-1,0,0,0
-11,14,0,218,500,6,8,2,3,0,0,1,0,0,0
+11,14,48,218,500,6,8,2,3,0,0,1,0,0,0
 1,15,14,12,4,0,0,22,0,0,0,-1--1--1,,1|(277,500)|
 1,16,14,13,100,0,0,22,0,0,0,-1--1--1,,1|(158,500)|
 1,17,8,14,0,0,0,0,0,128,0,-1--1--1,,1|(211,429)|
+10,18,Time,445,175,26,11,8,2,0,3,-1,0,0,0,128-128-128,0-0-0,|12||128-128-128
+1,19,18,1,0,0,0,0,0,128,0,-1--1--1,,1|(462,196)|
+10,20,initial stock correction,573,348,34,19,8,3,0,0,0,0,0,0
+1,21,20,1,0,0,0,0,0,128,0,-1--1--1,,1|(538,298)|
 \\\---/// Sketch information - do not modify anything except names
 V300  Do not put anything below this section - it will be ignored
 *View-2
@@ -122,7 +131,7 @@ $192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,1
 27:0,
 34:0,
 4:Time
-5:other stock
+5:another var
 35:Date
 36:YYYY-MM-DD
 37:2000

@@ -66,7 +66,8 @@ In a Vensim model with three separate views (e.g. `view_1`, `view_2` and `view_3
 | │   ├── view_2.py
 | │   └── view_3.py
 | ├── _namespace_many_views_model.json
-| ├── _subscripts_dict_many_views_model.json
+| ├── _subscripts_many_views_model.json
+| ├── _dependencies_many_views_model.json
 | ├── many_views_model.py
 |
 |
@@ -109,3 +110,16 @@ the new simulation will have initial time equal to 50 with the saved values from
 .. warning::
   Exported data is saved and loaded using `pickle <https://docs.python.org/3/library/pickle.html>`_, this data can be incompatible with future versions of
   *PySD* or *xarray*. In order to prevent data losses save always the source code.
+
+
+Selecting and running a submodel
+--------------------------------
+A submodel of a translated model can be selected in order to run only a part of the original model. This can be done through the :py:data:`.select_submodel()` method:
+
+.. autoclass:: pysd.py_backend.statefuls.Model
+   :members: select_submodel
+
+In order to preview the needed exogenous variables the :py:data:`.get_dependencies()` method can be used:
+
+.. autoclass:: pysd.py_backend.statefuls.Model
+   :members: get_dependencies
