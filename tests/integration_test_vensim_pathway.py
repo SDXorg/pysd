@@ -42,12 +42,23 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner(test_models + '/chained_initialization/test_chained_initialization.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    @unittest.skip("Working on it")
+    def test_conditional_subscripts(self):
+        output, canon = runner(test_models + '/conditional_subscripts/test_conditional_subscripts.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_control_vars(self):
         output, canon = runner(test_models + '/control_vars/test_control_vars.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_constant_expressions(self):
         output, canon = runner(test_models + '/constant_expressions/test_constant_expressions.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
+    def test_data_from_other_model(self):
+        output, canon = runner(
+            test_models + '/data_from_other_model/test_data_from_other_model.mdl',
+            data_files=test_models + '/data_from_other_model/data.tab')
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_delay_fixed(self):

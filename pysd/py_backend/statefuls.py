@@ -17,6 +17,7 @@ from . import utils
 from .functions import zidz, if_then_else
 from .external import External, Excels
 from .decorators import Cache, constant_cache
+from .data import TabData
 from .components import Components, Time
 
 from pysd._version import __version__
@@ -586,7 +587,8 @@ class Macro(DynamicStateful):
     """
 
     def __init__(self, py_model_file, params=None, return_func=None,
-                 time=None, time_initialization=None, py_name=None):
+                 time=None, time_initialization=None, data_files=None,
+                 py_name=None):
         """
         The model object will be created with components drawn from a
         translated python model file.
@@ -646,6 +648,14 @@ class Macro(DynamicStateful):
             if isinstance(getattr(self.components, name), Macro)
         ]
 
+        self._data_elements = [
+            getattr(self.components, name) for name in dir(self.components)
+            if isinstance(getattr(self.components, name), TabData)
+        ]
+
+        if data_files:
+            self._get_data(data_files)
+
         self._assign_cache_type()
         self._get_initialize_order()
 
@@ -663,6 +673,24 @@ class Macro(DynamicStateful):
         self.cache.clean()
         # if nested macros
         [macro.clean_caches() for macro in self._macro_elements]
+
+    def _get_data(self, data_files):
+        if isinstance(data_files, dict):
+            for data_file, vars in data_files.items():
+                for var in vars:
+                    found = False
+                    for element in self._data_elements:
+                        if var in [element.py_name, element.real_name]:
+                            element.load_data(data_file)
+                            found = True
+                            break
+                    if not found:
+                        raise ValueError(
+                            f"'{var}' not found as model data variable")
+
+        else:
+            for element in self._data_elements:
+                element.load_data(data_files)
 
     def _get_initialize_order(self):
         """
@@ -990,9 +1018,9 @@ class Macro(DynamicStateful):
 
         """
         if isinstance(param, str):
-            func_name = utils.get_value_by_insensitive_key_or_value(
+            func_name = utils.get_key_and_value_by_insensitive_key_or_value(
                 param,
-                self.components._namespace) or param
+                self.components._namespace)[1] or param
 
             func = getattr(self.components, func_name)
         else:
@@ -1030,27 +1058,32 @@ class Macro(DynamicStateful):
 
         """
         if isinstance(param, str):
-            func_name = utils.get_value_by_insensitive_key_or_value(
+            func_name = utils.get_key_and_value_by_insensitive_key_or_value(
                 param,
-                self.components._namespace) or param
+                self.components._namespace)[1] or param
 
             func = getattr(self.components, func_name)
 
         else:
             func = param
 
-        if not self.get_args(func):
-            value = func()
-        else:
-            value = func(0)
-
-        if isinstance(value, xr.DataArray):
-            dims = list(value.dims)
-            coords = {coord: list(value.coords[coord].values)
-                      for coord in value.coords}
+        # TODO simplify this, make all model elements have a dims attribute
+        if hasattr(func, "dims"):
+            dims = func.dims
+            coords = {dim: self.components._subscript_dict[dim]
+                      for dim in dims}
             return coords, dims
+        elif hasattr(func, "state") and isinstance(func.state, xr.DataArray):
+            value = func()
+        elif self.get_args(func) and isinstance(func(0), xr.DataArray):
+            value = func(0)
         else:
             return None
+
+        dims = list(value.dims)
+        coords = {coord: list(value.coords[coord].values)
+                  for coord in value.coords}
+        return coords, dims
 
     def __getitem__(self, param):
         """
@@ -1076,9 +1109,9 @@ class Macro(DynamicStateful):
         It will crash if the model component takes arguments.
 
         """
-        func_name = utils.get_value_by_insensitive_key_or_value(
+        func_name = utils.get_key_and_value_by_insensitive_key_or_value(
             param,
-            self.components._namespace) or param
+            self.components._namespace)[1] or param
 
         if self.get_args(getattr(self.components, func_name)):
             raise ValueError(
@@ -1109,9 +1142,9 @@ class Macro(DynamicStateful):
         >>> model['Room temperature']
 
         """
-        func_name = utils.get_value_by_insensitive_key_or_value(
+        func_name = utils.get_key_and_value_by_insensitive_key_or_value(
             param,
-            self.components._namespace) or param
+            self.components._namespace)[1] or param
 
         try:
             if func_name.startswith("_ext_"):
@@ -1150,9 +1183,9 @@ class Macro(DynamicStateful):
         # TODO: make this compatible with loading outputs from other files
 
         for key, value in params.items():
-            func_name = utils.get_value_by_insensitive_key_or_value(
+            func_name = utils.get_key_and_value_by_insensitive_key_or_value(
                 key,
-                self.components._namespace)
+                self.components._namespace)[1]
 
             if isinstance(value, np.ndarray) or isinstance(value, list):
                 raise TypeError(
@@ -1203,6 +1236,8 @@ class Macro(DynamicStateful):
                               stacklevel=2)
 
             new_function.__name__ = func_name
+            if dims:
+                new_function.dims = dims
             self.components._set_component(func_name, new_function)
             if func_name in self.cache.cached_funcs:
                 self.cache.cached_funcs.remove(func_name)
@@ -1212,6 +1247,8 @@ class Macro(DynamicStateful):
         # this is only called if the set_component function recognizes a
         # pandas series
         # TODO: raise a warning if extrapolating from the end of the series.
+        # TODO: data type variables should be creted using a Data object
+        # lookup type variables should be created using a Lookup object
         if isinstance(series.values[0], xr.DataArray) and args:
             # the argument is already given in the model when the model
             # is called
@@ -1293,8 +1330,9 @@ class Macro(DynamicStateful):
         modified_statefuls = set()
 
         for key, value in initial_value.items():
-            component_name = utils.get_value_by_insensitive_key_or_value(
-                key, self.components._namespace)
+            component_name =\
+                utils.get_key_and_value_by_insensitive_key_or_value(
+                    key, self.components._namespace)[1]
             if component_name is not None:
                 if self.components._dependencies[component_name]:
                     deps = list(self.components._dependencies[component_name])
@@ -1447,11 +1485,13 @@ class Macro(DynamicStateful):
 
 
 class Model(Macro):
-    def __init__(self, py_model_file, initialize, missing_values):
+    def __init__(self, py_model_file, data_files, initialize, missing_values):
         """ Sets up the python objects """
-        super().__init__(py_model_file, None, None, Time())
+        super().__init__(py_model_file, None, None, Time(),
+                         data_files=data_files)
         self.time.stage = 'Load'
         self.time.set_control_vars(**self.components._control_vars)
+        self.data_files = data_files
         self.missing_values = missing_values
         if initialize:
             self.initialize()
@@ -1603,12 +1643,337 @@ class Model(Macro):
 
         return return_df
 
+    def select_submodel(self, vars=[], modules=[], exogenous_components={}):
+        """
+        Select a submodel from the original model. After selecting a submodel
+        only the necessary stateful objects for integrating this submodel will
+        be computed.
+
+        Parameters
+        ----------
+        vars: set or list of strings (optional)
+            Variables to include in the new submodel.
+            It can be an empty list if the submodel is only selected by
+            module names. Default is an empty list.
+
+        modules: set or list of strings (optional)
+            Modules to include in the new submodel.
+            It can be an empty list if the submodel is only selected by
+            variable names. Default is an empty list. Can select a full
+            module or a submodule by passing the path without the .py, e.g.:
+            "view_1/submodule1".
+
+        exogenous_components: dictionary of parameters (optional)
+            Exogenous value to fix to the model variables that are needed
+            to run the selected submodel. The exogenous_components should
+            be passed as a dictionary in the same way it is done for
+            set_components method. By default it is an empty dict and
+            the needed exogenous components will be set to a numpy.nan value.
+
+        Returns
+        -------
+        None
+
+        Notes
+        -----
+        modules can be only passed when the model has been split in
+        different files during translation.
+
+        Examples
+        --------
+        >>> model.select_submodel(
+        ...     vars=["Room Temperature", "Teacup temperature"])
+        UserWarning: Selecting submodel, to run the full model again use model.reload()
+
+        >>> model.select_submodel(
+        ...     modules=["view_1", "view_2/subview_1"])
+        UserWarning: Selecting submodel, to run the full model again use model.reload()
+        UserWarning: Exogenous components for the following variables are necessary but not given:
+            initial_value_stock1, stock3
+
+        >>> model.select_submodel(
+        ...     vars=["stock3"],
+        ...     modules=["view_1", "view_2/subview_1"])
+        UserWarning: Selecting submodel, to run the full model again use model.reload()
+        UserWarning: Exogenous components for the following variables are necessary but not given:
+            initial_value_stock1, initial_value_stock3
+        Please, set them before running the model using set_components method...
+
+        >>> model.select_submodel(
+        ...     vars=["stock3"],
+        ...     modules=["view_1", "view_2/subview_1"],
+        ...     exogenous_components={
+        ...         "initial_value_stock1": 3,
+        ...         "initial_value_stock3": 5})
+        UserWarning: Selecting submodel, to run the full model again use model.reload()
+
+        """
+        c_vars, d_vars, s_deps = self._get_dependencies(vars, modules)
+        warnings.warn(
+            "Selecting submodel, "
+            "to run the full model again use model.reload()")
+
+        # reassing the dictionary and lists of needed stateful objects
+        self._stateful_elements = {
+            name: getattr(self.components, name)
+            for name in s_deps
+            if isinstance(getattr(self.components, name), Stateful)
+        }
+        self._dynamicstateful_elements = [
+            getattr(self.components, name) for name in s_deps
+            if isinstance(getattr(self.components, name), DynamicStateful)
+        ]
+        self._macro_elements = [
+            getattr(self.components, name) for name in s_deps
+            if isinstance(getattr(self.components, name), Macro)
+        ]
+        # TODO: include subselection of external objects (update in the deps
+        # dictionary is needed -> NO BACK COMPATIBILITY)
+
+        # get set of all dependencies and all variables to select
+        all_deps = d_vars["initial"].copy()
+        all_deps.update(d_vars["step"])
+        all_deps.update(d_vars["lookup"])
+
+        all_vars = all_deps.copy()
+        all_vars.update(c_vars)
+
+        # clean dependendies and namespace dictionaries
+        for real_name, py_name in self.components._namespace.copy().items():
+            if py_name not in all_vars:
+                del self.components._namespace[real_name]
+                del self.components._dependencies[py_name]
+
+        for py_name in self.components._dependencies.copy().keys():
+            if py_name.startswith("_") and py_name not in s_deps:
+                del self.components._dependencies[py_name]
+
+        # set all exogenous values to np.nan by default
+        new_components = {element: np.nan for element in all_deps}
+        # update exogenous values with the user input
+        [new_components.update(
+            {
+                utils.get_key_and_value_by_insensitive_key_or_value(
+                    key,
+                    self.components._namespace)[1]: value
+            }) for key, value in exogenous_components.items()]
+
+        self.set_components(new_components)
+
+        # show a warning message if exogenous values are needed for a
+        # dependency
+        new_components = [
+            key for key, value in new_components.items() if value is np.nan]
+        if new_components:
+            warnings.warn(
+                "Exogenous components for the following variables are "
+                f"necessary but not given:\n\t{', '.join(new_components)}"
+                "\n\n Please, set them before running the model using "
+                "set_components method...")
+
+        # re-assign the cache_type and initialization order
+        self._assign_cache_type()
+        self._get_initialize_order()
+
+    def get_dependencies(self, vars=[], modules=[]):
+        """
+        Get the dependencies of a set of variables or modules.
+
+        Parameters
+        ----------
+        vars: set or list of strings (optional)
+            Variables to get the dependencies from.
+            It can be an empty list if the dependencies are computed only
+            using modules. Default is an empty list.
+        modules: set or list of strings (optional)
+            Modules to get the dependencies from.
+            It can be an empty list if the dependencies are computed only
+            using variables. Default is an empty list. Can select a full
+            module or a submodule by passing the path without the .py, e.g.:
+            "view_1/submodule1".
+
+        Returns
+        -------
+        dependencies: set
+            Set of dependencies nedded to run vars.
+
+        Notes
+        -----
+        modules can be only passed when the model has been split in
+        different files during translation.
+
+        Examples
+        --------
+        >>> model.get_dependencies(
+        ...     vars=["Room Temperature", "Teacup temperature"])
+        Selected variables (total 1):
+            room_temperature, teacup_temperature
+        Stateful objects integrated with the selected variables (total 1):
+            _integ_teacup_temperature
+
+        >>> model.get_dependencies(
+        ...     modules=["view_1", "view_2/subview_1"])
+        Selected variables (total 4):
+            var1, var2, stock1, delay1
+        Dependencies for initialization only (total 1):
+            initial_value_stock1
+        Dependencies that may change over time (total 2):
+            stock3
+        Stateful objects integrated with the selected variables (total 1):
+            _integ_stock1, _delay_fixed_delay1
+
+        >>> model.get_dependencies(
+        ...     vars=["stock3"],
+        ...     modules=["view_1", "view_2/subview_1"])
+        Selected variables (total 4):
+            var1, var2, stock1, stock3, delay1
+        Dependencies for initialization only (total 1):
+            initial_value_stock1, initial_value_stock3
+        Stateful objects integrated with the selected variables (total 1):
+            _integ_stock1, _integ_stock3, _delay_fixed_delay1
+
+        """
+        c_vars, d_vars, s_deps = self._get_dependencies(vars, modules)
+
+        text = utils.print_objects_format(c_vars, "Selected variables")
+
+        if d_vars["initial"]:
+            text += utils.print_objects_format(
+                d_vars["initial"],
+                "\nDependencies for initialization only")
+        if d_vars["step"]:
+            text += utils.print_objects_format(
+                d_vars["step"],
+                "\nDependencies that may change over time")
+        if d_vars["lookup"]:
+            text += utils.print_objects_format(
+                d_vars["lookup"],
+                "\nLookup table dependencies")
+
+        text += utils.print_objects_format(
+            s_deps,
+            "\nStateful objects integrated with the selected variables")
+
+        print(text)
+
+    def _get_dependencies(self, vars=[], modules=[]):
+        """
+        Get the dependencies of a set of variables or modules.
+
+        Parameters
+        ----------
+        vars: set or list of strings (optional)
+            Variables to get the dependencies from.
+            It can be an empty list if the dependencies are computed only
+            using modules. Default is an empty list.
+        modules: set or list of strings (optional)
+            Modules to get the dependencies from.
+            It can be an empty list if the dependencies are computed only
+            using variables. Default is an empty list. Can select a full
+            module or a submodule by passing the path without the .py, e.g.:
+            "view_1/submodule1".
+
+        Returns
+        -------
+        c_vars: set
+            Set of all selected model variables.
+        d_deps: dict of sets
+            Dictionary of dependencies nedded to run vars and modules.
+        s_deps: set
+            Set of stateful objects to update when integrating selected
+            model variables.
+
+        """
+        def check_dep(dependencies, initial=False):
+            for dep in dependencies:
+                if dep in c_vars or dep.startswith("__"):
+                    pass
+                elif dep.startswith("_"):
+                    s_deps.add(dep)
+                    dep = self.components._dependencies[dep]
+                    check_dep(dep["initial"], True)
+                    check_dep(dep["step"])
+                else:
+                    if initial and dep not in d_deps["step"]\
+                       and dep not in d_deps["lookup"]:
+                        d_deps["initial"].add(dep)
+                    else:
+                        if dep in d_deps["initial"]:
+                            d_deps["initial"].remove(dep)
+                        if self.get_args(dep):
+                            d_deps["lookup"].add(dep)
+                        else:
+                            d_deps["step"].add(dep)
+
+        d_deps = {"initial": set(), "step": set(), "lookup": set()}
+        s_deps = set()
+        c_vars = {"time", "time_step", "initial_time", "final_time", "saveper"}
+        for var in vars:
+            py_name = utils.get_key_and_value_by_insensitive_key_or_value(
+                    var,
+                    self.components._namespace)[1]
+            c_vars.add(py_name)
+        for module in modules:
+            c_vars.update(self.get_vars_in_module(module))
+
+        for var in c_vars:
+            if var == "time":
+                continue
+            check_dep(self.components._dependencies[var])
+
+        return c_vars, d_deps, s_deps
+
+    def get_vars_in_module(self, module):
+        """
+        Return the name of python vars in a module.
+
+        Parameters
+        ----------
+        module: str
+            Name of the module to search in.
+
+        Returns
+        -------
+        vars: set
+            Set of varible names in the given module.
+
+        """
+        try:
+            module_content = self.components._modules.copy()
+        except NameError:
+            raise ValueError(
+                "Trying to get a module from a non-modularized model")
+
+        try:
+            # get the module or the submodule content
+            for submodule in module.split("/"):
+                module_content = module_content[submodule]
+            module_content = [module_content]
+        except KeyError:
+            raise NameError(
+                f"Module or submodule '{submodule}' not found...\n")
+
+        vars, new_content = set(), []
+
+        while module_content:
+            # find the vars in the module or the submodule
+            for content in module_content:
+                if isinstance(content, list):
+                    vars.update(content)
+                else:
+                    [new_content.append(value) for value in content.values()]
+
+            module_content, new_content = new_content, []
+
+        return vars
+
     def reload(self):
         """
         Reloads the model from the translated model file, so that all the
         parameters are back to their original value.
         """
-        self.__init__(self.py_model_file, initialize=True,
+        self.__init__(self.py_model_file, data_files=self.data_files,
+                      initialize=True,
                       missing_values=self.missing_values)
 
     def _default_return_columns(self, which):

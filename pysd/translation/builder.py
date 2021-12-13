@@ -27,9 +27,11 @@ class Imports():
     Class to save the imported modules information for intelligent import
     """
     _numpy, _xarray, _subs = False, False, False
-    _functions, _statefuls, _external, _utils = set(), set(), set(), set()
+    _functions, _statefuls, _external, _data, _utils =\
+        set(), set(), set(), set(), set()
     _external_libs = {"numpy": "np", "xarray": "xr"}
-    _internal_libs = ["functions", "statefuls", "external", "utils"]
+    _internal_libs = [
+        "functions", "statefuls", "external", "data", "utils"]
 
     @classmethod
     def add(cls, module, function=None):
@@ -108,7 +110,8 @@ class Imports():
         Reset the imported modules
         """
         cls._numpy, cls._xarray, cls._subs = False, False, False
-        cls._functions, cls._external, cls._utils = set(), set(), set()
+        cls._functions, cls._statefuls, cls._external, cls._data,\
+            cls._utils = set(), set(), set(), set(), set()
 
 
 # Variable to save identifiers of external objects
@@ -173,7 +176,7 @@ def build_modular_model(elements, subscript_dict, namespace, dependencies,
             subview_elems = []
             for element in elements:
                 if element.get("py_name") in view_content or \
-                   element.get("parent_name", None) in view_content:
+                   element.get("parent_name") in view_content:
                     subview_elems.append(element)
 
             _build_separate_module(subview_elems, subscript_dict,
@@ -646,8 +649,8 @@ def build_element(element, subscript_dict):
         # to rewrite subscripted values with model.run(params=X) or
         # model.run(initial_condition=(n,x))
         element["subs_doc"] = "%s" % element["merge_subs"]
-        if element["kind"] in ["component", "setup",
-                               "constant", "component_ext_data"]:
+        if element["kind"] in ["component", "setup", "constant",
+                               "component_ext_data", "data"]:
             # the decorator is not always necessary as the objects
             # defined as xarrays in the model will have the right
             # dimensions always, we should try to reduce to the
@@ -669,7 +672,7 @@ def build_element(element, subscript_dict):
     # convert newline indicator and add expected level of indentation
     element["doc"] = element["doc"].replace("\\", "\n").replace("\n", "\n    ")
 
-    if element["kind"] in ["stateful", "external"]:
+    if element["kind"] in ["stateful", "external", "tab_data"]:
         func = """
     %(py_name)s = %(py_expr)s
             """ % {
@@ -744,52 +747,53 @@ def merge_partial_elements(element_list):
     outs = dict()  # output data structure
 
     for element in element_list:
-        if element["py_expr"] != "None":  # for
-            name = element["py_name"]
-            if name not in outs:
+        name = element["py_name"]
+        if name not in outs:
+            # Use 'expr' for Vensim models, and 'eqn' for Xmile
+            # (This makes the Vensim equation prettier.)
+            eqn = element["expr"] if "expr" in element else element["eqn"]
+            parent_name = element["parent_name"] if "parent_name" in element\
+                else None
+            outs[name] = {
+                "py_name": element["py_name"],
+                "real_name": element["real_name"],
+                "doc": element["doc"],
+                "py_expr": [element["py_expr"]],  # in a list
+                "unit": element["unit"],
+                "subs": [element["subs"]],
+                "merge_subs": element["merge_subs"]
+                if "merge_subs" in element else None,
+                "dependencies": element["dependencies"]
+                if "dependencies" in element else None,
+                "lims": element["lims"],
+                "eqn": [eqn.replace(r"\ ", "")],
+                "parent_name": parent_name,
+                "kind": element["kind"],
+                "arguments": element["arguments"],
+            }
 
-                # Use 'expr' for Vensim models, and 'eqn' for Xmile
-                # (This makes the Vensim equation prettier.)
-                eqn = element["expr"] if "expr" in element else element["eqn"]
-                outs[name] = {
-                    "py_name": element["py_name"],
-                    "real_name": element["real_name"],
-                    "doc": element["doc"],
-                    "py_expr": [element["py_expr"]],  # in a list
-                    "unit": element["unit"],
-                    "subs": [element["subs"]],
-                    "merge_subs": element["merge_subs"]
-                    if "merge_subs" in element else None,
-                    "dependencies": element["dependencies"]
-                    if "dependencies" in element else None,
-                    "lims": element["lims"],
-                    "eqn": [eqn.replace(r"\ ", "")],
-                    "kind": element["kind"],
-                    "arguments": element["arguments"],
-                }
+        else:
+            eqn = element["expr"] if "expr" in element else element["eqn"]
 
-            else:
-                eqn = element["expr"] if "expr" in element else element["eqn"]
-
-                outs[name]["doc"] = outs[name]["doc"] or element["doc"]
-                outs[name]["unit"] = outs[name]["unit"] or element["unit"]
-                outs[name]["lims"] = outs[name]["lims"] or element["lims"]
-                outs[name]["eqn"] += [eqn.replace(r"\ ", "")]
-                outs[name]["py_expr"] += [element["py_expr"]]
-                outs[name]["subs"] += [element["subs"]]
-                if outs[name]["dependencies"] is not None:
-                    if name.startswith("_"):
-                        # stateful object merge initial and step
-                        for target in outs[name]["dependencies"]:
-                            _merge_dependencies(
-                                outs[name]["dependencies"][target],
-                                element["dependencies"][target])
-                    else:
-                        # regular element
+            outs[name]["doc"] = outs[name]["doc"] or element["doc"]
+            outs[name]["unit"] = outs[name]["unit"] or element["unit"]
+            outs[name]["lims"] = outs[name]["lims"] or element["lims"]
+            outs[name]["eqn"] += [eqn.replace(r"\ ", "")]
+            outs[name]["py_expr"] += [element["py_expr"]]
+            outs[name]["subs"] += [element["subs"]]
+            if outs[name]["dependencies"] is not None:
+                if name.startswith("_"):
+                    # stateful object merge initial and step
+                    for target in outs[name]["dependencies"]:
                         _merge_dependencies(
-                            outs[name]["dependencies"],
-                            element["dependencies"])
-                outs[name]["arguments"] = element["arguments"]
+                            outs[name]["dependencies"][target],
+                            element["dependencies"][target])
+                else:
+                    # regular element
+                    _merge_dependencies(
+                        outs[name]["dependencies"],
+                        element["dependencies"])
+            outs[name]["arguments"] = element["arguments"]
 
     return list(outs.values())
 
@@ -1757,6 +1761,73 @@ def add_initial(identifier, value, deps):
     }
 
     return "%s()" % stateful["py_name"], [stateful]
+
+
+def add_tab_data(identifier, real_name, subs,
+                 subscript_dict, merge_subs, keyword):
+    """
+    Constructs an object for handling Vensim's regular DATA components.
+
+    Parameters
+    ----------
+    identifier: str
+        The python-safe name of the external values.
+
+    real_name: str
+        The real name of the variable.
+
+    subs: list of strings
+        List of strings of subscript indices that correspond to the
+        list of expressions, and collectively define the shape of the output.
+
+    subscript_dict: dict
+        Dictionary describing the possible dimensions of the stock's
+        subscripts.
+
+    merge_subs: list of strings
+        List of the final subscript range of the python array after
+        merging with other objects.
+
+    keyword: str
+        Data retrieval method ('interpolate', 'look forward', 'hold backward').
+
+    Returns
+    -------
+    reference: str
+        Reference to the TabData object `__call__` method, which will
+        return the retrieved value of data for the current time step.
+
+    new_structure: list
+        List of element construction dictionaries for the builder to assemble.
+
+    """
+    Imports.add("data", "TabData")
+
+    coords = utils.simplify_subscript_input(
+        utils.make_coord_dict(subs, subscript_dict, terse=False),
+        subscript_dict, return_full=False, merge_subs=merge_subs)
+    keyword = (
+        "'%s'" % keyword.strip(":").lower() if isinstance(keyword, str) else
+        keyword)
+    name = "_data_%s" % identifier
+
+    data = {
+        "py_name": name,
+        "parent_name": identifier,
+        "real_name": "Data for %s" % identifier,
+        "doc": "Provides data for data variable %s" % identifier,
+        "py_expr": "TabData('%s', '%s', %s, %s)" % (
+            real_name, identifier, coords, keyword),
+        "unit": "None",
+        "lims": "None",
+        "eqn": "None",
+        "subs": subs,
+        "merge_subs": merge_subs,
+        "kind": "tab_data",
+        "arguments": "",
+    }
+
+    return "%s(time())" % data["py_name"], [data]
 
 
 def add_ext_data(identifier, file_name, tab, time_row_or_col, cell, subs,

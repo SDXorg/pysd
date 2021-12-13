@@ -18,7 +18,7 @@ def runner(string, ns=None):
 
 class TestBuildElement(TestCase):
     def test_no_subs_constant(self):
-        from pysd.py_backend.builder import build_element
+        from pysd.translation.builder import build_element
         string = textwrap.dedent(
             build_element(element={'kind': 'constant',
                                    'subs': [[]],
@@ -39,7 +39,7 @@ class TestBuildElement(TestCase):
         self.assertEqual(a, .01)
 
     def test_no_subs_call(self):
-        from pysd.py_backend.builder import build_element
+        from pysd.translation.builder import build_element
         string = textwrap.dedent(
             build_element(element={'kind': 'constant',
                                    'subs': [[]],
@@ -64,7 +64,7 @@ class TestBuildElement(TestCase):
 class TestBuildFunctionCall(TestCase):
     def test_build_function_not_implemented(self):
         from warnings import catch_warnings
-        from pysd.py_backend.builder import build_function_call
+        from pysd.translation.builder import build_function_call
         args = ['a', 'b']
         nif = {"name": "not_implemented_function",
                "module": "functions",
@@ -78,7 +78,7 @@ class TestBuildFunctionCall(TestCase):
                             in str(ws[0].message))
 
     def test_build_function_with_time_dependency(self):
-        from pysd.py_backend.builder import build_function_call
+        from pysd.translation.builder import build_function_call
         args = ['a', 'b']
         pulse = {
             "name": "pulse",
@@ -97,7 +97,7 @@ class TestBuildFunctionCall(TestCase):
         self.assertIn('time', dependencies)
 
     def test_build_function_ignore_arguments(self):
-        from pysd.py_backend.builder import build_function_call
+        from pysd.translation.builder import build_function_call
         args = ['a', 'b', 'c']
         my_func_conf = {
             "name": "my_func",
@@ -124,7 +124,7 @@ class TestBuildFunctionCall(TestCase):
                          "my_func(b)")
 
     def test_build_function_lambda_arguments(self):
-        from pysd.py_backend.builder import build_function_call
+        from pysd.translation.builder import build_function_call
         args = ['a', 'b', 'c']
         my_func_conf = {
             "name": "my_func",
@@ -151,7 +151,7 @@ class TestBuildFunctionCall(TestCase):
                          "my_func(lambda: a, b, lambda: c)")
 
     def test_build_function_optional_arguments(self):
-        from pysd.py_backend.builder import build_function_call
+        from pysd.translation.builder import build_function_call
         my_func_conf = {
             "name": "my_func",
             "parameters": [
@@ -184,7 +184,7 @@ class TestBuildFunctionCall(TestCase):
                          "my_func(a, b)")
 
     def test_build_function_predef_arguments(self):
-        from pysd.py_backend.builder import build_function_call
+        from pysd.translation.builder import build_function_call
         args = ['a', 'c']
         my_func_conf = {
             "name": "my_func",
@@ -214,7 +214,7 @@ class TestBuildFunctionCall(TestCase):
 class TestBuild(TestCase):
     def test_build(self):
         # Todo: add other builder-specific inclusions to this test
-        from pysd.py_backend.builder import build
+        from pysd.translation.builder import build
         actual = textwrap.dedent(
             build(elements=[{'kind': 'component',
                              'subs': [],
@@ -270,7 +270,7 @@ class TestBuild(TestCase):
 
 class TestMergePartialElements(TestCase):
     def test_single_set(self):
-        from pysd.py_backend.builder import merge_partial_elements
+        from pysd.translation.builder import merge_partial_elements
 
         self.assertEqual(
             merge_partial_elements(
@@ -306,12 +306,13 @@ class TestMergePartialElements(TestCase):
               'unit': None,
               'eqn': ['eq1', 'eq2', 'eq3'],
               'lims': '',
+              'parent_name': None,
               'dependencies': {'b': 2, 'c': 1, 'time': 8},
               'arguments': ''
               }])
 
     def test_multiple_sets(self):
-        from pysd.py_backend.builder import merge_partial_elements
+        from pysd.translation.builder import merge_partial_elements
         actual = merge_partial_elements(
             [{'py_name': 'a', 'py_expr': 'ms', 'subs': ['Name1', 'element1'],
               'merge_subs': ['Name1', 'Elements'], 'dependencies': {'b': 1},
@@ -353,6 +354,7 @@ class TestMergePartialElements(TestCase):
                      'unit': None,
                      'eqn': ['eq1', 'eq2', 'eq3'],
                      'lims': '',
+                     'parent_name': None,
                      'dependencies': {'b': 4},
                      'arguments': ''
                      },
@@ -368,6 +370,7 @@ class TestMergePartialElements(TestCase):
                      'unit': None,
                      'eqn': ['eq4', 'eq5', 'eq6'],
                      'lims': '',
+                     'parent_name': None,
                      'dependencies': {
                          'initial': {'c': 3, 'd': 1},
                          'step': {'time': 5, 'a': 1, 'd': 5}
@@ -378,7 +381,7 @@ class TestMergePartialElements(TestCase):
         self.assertIn(actual[1], expected)
 
     def test_non_set(self):
-        from pysd.py_backend.builder import merge_partial_elements
+        from pysd.translation.builder import merge_partial_elements
         actual = merge_partial_elements(
             [{'py_name': 'a', 'py_expr': 'ms', 'subs': ['Name1', 'element1'],
               'merge_subs': ['Name1', 'Elements'], 'dependencies': {'c': 1},
@@ -404,6 +407,7 @@ class TestMergePartialElements(TestCase):
                      'unit': None,
                      'eqn': ['eq1', 'eq2'],
                      'lims': '',
+                     'parent_name': None,
                      'dependencies': {'b': 2, 'c': 1},
                      'arguments': ''
                      },
@@ -417,6 +421,7 @@ class TestMergePartialElements(TestCase):
                      'unit': None,
                      'eqn': ['eq3'],
                      'lims': '',
+                     'parent_name': None,
                      'dependencies': {},
                      'arguments': ''
                      }]

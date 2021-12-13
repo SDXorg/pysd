@@ -31,22 +31,6 @@ class TestErrors(TestCase):
             'Modelfile should be *.mdl or *.xmile',
             str(err.exception))
 
-    def test_non_valid_outputs(self):
-        from pysd.tools.benchmarking import load_outputs
-
-        with self.assertRaises(ValueError) as err:
-            load_outputs(
-                os.path.join(
-                    _root,
-                    "more-tests/not_vensim/test_not_vensim.txt"))
-
-        self.assertIn(
-            "Not able to read '",
-            str(err.exception))
-        self.assertIn(
-            "more-tests/not_vensim/test_not_vensim.txt'.",
-            str(err.exception))
-
     def test_different_frames_error(self):
         from pysd.tools.benchmarking import load_outputs, assert_frames_close
 
@@ -152,41 +136,6 @@ class TestErrors(TestCase):
             self.assertIn(
                 "Expected values:\n\t",
                 str(wu[0].message))
-
-    def test_transposed_frame(self):
-        from pysd.tools.benchmarking import load_outputs, assert_frames_close
-
-        assert_frames_close(
-            load_outputs(os.path.join(_root, "data/out_teacup.csv")),
-            load_outputs(
-                os.path.join(_root, "data/out_teacup_transposed.csv"),
-                transpose=True))
-
-    def test_load_columns(self):
-        from pysd.tools.benchmarking import load_outputs
-
-        out0 = load_outputs(
-            os.path.join(_root, "data/out_teacup.csv"))
-
-        out1 = load_outputs(
-            os.path.join(_root, "data/out_teacup.csv"),
-            columns=["Room Temperature", "Teacup Temperature"])
-
-        out2 = load_outputs(
-            os.path.join(_root, "data/out_teacup_transposed.csv"),
-            transpose=True,
-            columns=["Heat Loss to Room"])
-
-        self.assertEqual(
-            set(out1.columns),
-            set(["Room Temperature", "Teacup Temperature"]))
-
-        self.assertEqual(
-            set(out2.columns),
-            set(["Heat Loss to Room"]))
-
-        self.assertTrue((out0.index == out1.index).all())
-        self.assertTrue((out0.index == out2.index).all())
 
     def test_different_cols(self):
         from warnings import catch_warnings

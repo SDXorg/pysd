@@ -264,7 +264,7 @@ class SMILEParser(NodeVisitor):
         self.extended_model_namespace.update({'endtime': 'final_time'})
 
         grammar = pkg_resources.resource_string(
-            "pysd", "py_backend/xmile/smile.grammar")
+            "pysd", "translation/xmile/smile.grammar")
         grammar = grammar.decode('ascii').format(
             funcs=format_word_list(functions.keys()),
             in_ops=format_word_list(infix_operators.keys()),

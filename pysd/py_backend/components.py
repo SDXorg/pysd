@@ -142,7 +142,10 @@ class Time(object):
         if self.return_timestamps is not None:
             return self._time in self.return_timestamps
 
-        return (self._time - self._initial_time) % self.saveper() == 0
+        time_delay = self._time - self._initial_time
+        save_per = self.saveper()
+        prec = self.time_step() * 1e-10
+        return time_delay % save_per < prec or -time_delay % save_per < prec
 
     def add_return_timestamps(self, return_timestamps):
         """ Add return timestamps """
