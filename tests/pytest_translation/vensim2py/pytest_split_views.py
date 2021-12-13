@@ -11,7 +11,7 @@ from pysd.tools.benchmarking import assert_frames_close
     "model_path,subview_sep,modules,macros,original_vars,py_vars,"
     + "stateful_objs",
     [
-        (
+        (  # split_views
             Path("more-tests/split_model/test_split_model.mdl"),
             [],
             ["view_1", "view2", "view_3"],
@@ -20,7 +20,7 @@ from pysd.tools.benchmarking import assert_frames_close
             ["another_var", "rate1", "varn", "variablex", "stock"],
             ["_integ_stock"]
         ),
-        (
+        (  # split_subviews
             Path("more-tests/split_model/test_split_model_subviews.mdl"),
             ["."],
             ["view_1/submodule_1", "view_1/submodule_2", "view_2"],
@@ -29,7 +29,7 @@ from pysd.tools.benchmarking import assert_frames_close
             ["another_var", "rate1", "varn", "variablex", "stock"],
             ["_integ_stock"]
         ),
-        (
+        (  # split_sub_subviews
             Path("more-tests/split_model/test_split_model_sub_subviews.mdl"),
             [".", "-"],
             [
@@ -43,7 +43,7 @@ from pysd.tools.benchmarking import assert_frames_close
              "interesting_var_2", "great_var"],
             ["_integ_stock"]
         ),
-        (
+        (  # split_macro
             Path("more-tests/split_model_with_macro/"
                  + "test_split_model_with_macro.mdl"),
             [".", "-"],
@@ -53,7 +53,7 @@ from pysd.tools.benchmarking import assert_frames_close
             ["new_var"],
             ["_macro_macro_output"]
         ),
-        (
+        (  # split_vensim_8_2_1
             Path("more-tests/split_model_vensim_8_2_1/"
                  + "test_split_model_vensim_8_2_1.mdl"),
             [],
@@ -64,6 +64,8 @@ from pysd.tools.benchmarking import assert_frames_close
             ["integ_teacup_temperature", "integ_cream_temperature"]
         )
     ],
+    ids=["split_views", "split_subviews", "split_sub_subviews", "split_macro",
+         "split_vensim_8_2_1"]
 )
 class TestSplitViews:
     """
@@ -152,18 +154,19 @@ class TestSplitViews:
 @pytest.mark.parametrize(
     "model_path,subview_sep,warning_message",
     [
-        (
+        (  # warning_noviews
             Path("test-models/samples/teacup/teacup.mdl"),
             [],
             "Only a single view with no subviews was detected. The model"
             + " will be built in a single file."
         ),
-        (
+        (  # not_match_separator
             Path("more-tests/split_model/test_split_model_sub_subviews.mdl"),
             ["a"],
             "The given subview separators were not matched in any view name."
         ),
     ],
+    ids=["warning_noviews", "not_match_separator"]
 )
 class TestSplitViewsWarnings:
     """

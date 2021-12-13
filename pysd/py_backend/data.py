@@ -1,5 +1,6 @@
 import warnings
 import re
+from pathlib import Path
 
 import numpy as np
 import xarray as xr
@@ -19,6 +20,8 @@ class Columns():
         """
         Read the columns from the data file or return the previously read ones
         """
+        if isinstance(file_name, str):
+            file_name = Path(file_name)
         if file_name in cls._files:
             return cls._files[file_name]
         else:
@@ -50,7 +53,7 @@ class Columns():
         out = cls.read_line(file_name, encoding)
         if out is None:
             raise ValueError(
-                f"\nNot able to read '{file_name}'. "
+                f"\nNot able to read '{str(file_name)}'. "
                 + "Only '.csv', '.tab' files are accepted.")
 
         transpose = False
@@ -64,7 +67,7 @@ class Columns():
             return out, transpose
         else:
             raise ValueError(
-                f"Invalid file format '{file_name}'... varible names "
+                f"Invalid file format '{str(file_name)}'... varible names "
                 "should appear in the first row or in the first column...")
 
     @classmethod
@@ -72,13 +75,13 @@ class Columns():
         """
         Read the firts row and return a set of it.
         """
-        if file_name.lower().endswith(".tab"):
+        if file_name.suffix.lower() == ".tab":
             return set(pd.read_table(file_name,
                                      nrows=0,
                                      encoding=encoding,
                                      dtype=str,
                                      header=0).iloc[:, 1:])
-        elif file_name.lower().endswith(".csv"):
+        elif file_name.suffix.lower() == ".csv":
             return set(pd.read_csv(file_name,
                                    nrows=0,
                                    encoding=encoding,
@@ -92,12 +95,12 @@ class Columns():
         """
         Read the firts column and return a set of it.
         """
-        if file_name.lower().endswith(".tab"):
+        if file_name.suffix.lower() == ".tab":
             return set(pd.read_table(file_name,
                                      usecols=[0],
                                      encoding=encoding,
                                      dtype=str).iloc[:, 0].to_list())
-        elif file_name.lower().endswith(".csv"):
+        elif file_name.suffix.lower() == ".csv":
             return set(pd.read_csv(file_name,
                                    usecols=[0],
                                    encoding=encoding,
@@ -236,7 +239,7 @@ class TabData(Data):
             Resulting data array with the time in the first dimension.
 
         """
-        if isinstance(file_names, str):
+        if isinstance(file_names, (str, Path)):
             file_names = [file_names]
 
         for file_name in file_names:
@@ -248,7 +251,7 @@ class TabData(Data):
             raise ValueError(
                 f"_data_{self.py_name}\n"
                 f"Data for {self.real_name} not found in "
-                f"{', '.join(file_names)}")
+                f"{', '.join([str(file_name) for file_name in file_names])}")
 
     def _load_data(self, file_name):
         """

@@ -6,6 +6,7 @@ functions.py
 
 import os
 import json
+from pathlib import Path
 from chardet.universaldetector import UniversalDetector
 
 import regex as re
@@ -452,13 +453,16 @@ def load_outputs(file_name, transpose=False, columns=None, encoding=None):
     """
     read_func = {'.csv': pd.read_csv, '.tab': pd.read_table}
 
+    if isinstance(file_name, str):
+        file_name = Path(file_name)
+
     if columns:
         columns = set(columns)
         if not transpose:
             columns.add("Time")
 
     for end, func in read_func.items():
-        if file_name.lower().endswith(end):
+        if file_name.suffix.lower() == end:
             if transpose:
                 out = func(file_name,
                            encoding=encoding,

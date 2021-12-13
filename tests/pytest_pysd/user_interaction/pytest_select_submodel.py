@@ -10,7 +10,7 @@ import pysd
 @pytest.mark.parametrize(
     "model_path,subview_sep,variables,modules,n_deps,dep_vars",
     [
-        (
+        (  # split_views
             Path("more-tests/split_model/test_split_model.mdl"),
             [],
             ["stock"],
@@ -18,7 +18,7 @@ import pysd
             (6, 1, 2, 0, 1),
             {"rate1": 4, "initial_stock": 2, "initial_stock_correction": 0}
         ),
-        (
+        (  # split_subviews
             Path("more-tests/split_model/test_split_model_subviews.mdl"),
             ["."],
             [],
@@ -28,7 +28,7 @@ import pysd
 
             }
         ),
-        (
+        (  # split_sub_subviews
             Path("more-tests/split_model/test_split_model_sub_subviews.mdl"),
             [".", "-"],
             ["variablex"],
@@ -37,6 +37,7 @@ import pysd
             {"another_var": 5, "look_up_definition": 3}
         )
     ],
+    ids=["split_views", "split_subviews", "split_sub_subviews"]
 )
 class TestSubmodel:
     """Submodel selecting class"""
@@ -174,7 +175,7 @@ class TestSubmodel:
 @pytest.mark.parametrize(
     "model_path,split_views,module,raise_type,error_message",
     [
-        (
+        (  # module_not_found
             Path("more-tests/split_model/test_split_model.mdl"),
             True,
             "view_4",
@@ -182,7 +183,7 @@ class TestSubmodel:
             "Module or submodule 'view_4' not found..."
 
         ),
-        (
+        (  # not_modularized_model
             Path("more-tests/split_model/test_split_model.mdl"),
             False,
             "view_1",
@@ -191,6 +192,7 @@ class TestSubmodel:
 
         )
     ],
+    ids=["module_not_found", "not_modularized_model"]
 )
 class TestGetVarsInModuleErrors:
     @pytest.fixture
