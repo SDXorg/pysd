@@ -68,7 +68,8 @@ def read_xmile(xmile_file, data_files=None, initialize=True,
 
 
 def read_vensim(mdl_file, data_files=None, initialize=True,
-                missing_values="warning", split_views=False, **kwargs):
+                missing_values="warning", split_views=False,
+                encoding=None, **kwargs):
     """
     Construct a model from Vensim `.mdl` file.
 
@@ -99,6 +100,11 @@ def read_vensim(mdl_file, data_files=None, initialize=True,
         file. Setting this argument to True is recommended for large
         models split in many different views. Default is False.
 
+    encoding: str or None (optional)
+        Encoding of the source model file. If None, the encoding will be
+        read from the model, if the encoding is not defined in the model
+        file it will be set to 'UTF-8'. Default is None.
+
     **kwargs: (optional)
         Additional keyword arguments for translation.
         subview_sep: list
@@ -120,9 +126,9 @@ def read_vensim(mdl_file, data_files=None, initialize=True,
     """
     from .translation.vensim.vensim2py import translate_vensim
 
-    py_model_file = translate_vensim(mdl_file, split_views, **kwargs)
+    py_model_file = translate_vensim(mdl_file, split_views, encoding, **kwargs)
     model = load(py_model_file, data_files, initialize, missing_values)
-    model.mdl_file = mdl_file
+    model.mdl_file = str(mdl_file)
     return model
 
 
@@ -158,4 +164,4 @@ def load(py_model_file, data_files=None, initialize=True,
     >>> model = load('../tests/test-models/samples/teacup/teacup.py')
 
     """
-    return Model(str(py_model_file), data_files, initialize, missing_values)
+    return Model(py_model_file, data_files, initialize, missing_values)

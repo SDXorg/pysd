@@ -1,5 +1,5 @@
 import doctest
-import os
+from pathlib import Path
 from unittest import TestCase
 
 import pandas as pd
@@ -7,7 +7,7 @@ import xarray as xr
 
 from pysd.tools.benchmarking import assert_frames_close
 
-_root = os.path.dirname(__file__)
+_root = Path(__file__).parent
 
 
 class TestUtils(TestCase):
@@ -394,40 +394,33 @@ class TestLoadOutputs(TestCase):
     def test_non_valid_outputs(self):
         from pysd.py_backend.utils import load_outputs
 
-        with self.assertRaises(ValueError) as err:
-            load_outputs(
-                os.path.join(
-                    _root,
-                    "more-tests/not_vensim/test_not_vensim.txt"))
+        outputs = _root.joinpath("more-tests/not_vensim/test_not_vensim.txt")
 
-        self.assertIn(
-            "Not able to read '",
-            str(err.exception))
-        self.assertIn(
-            "more-tests/not_vensim/test_not_vensim.txt'.",
-            str(err.exception))
+        with self.assertRaises(ValueError) as err:
+            load_outputs(outputs)
+
+        self.assertIn("Not able to read '%s'." % outputs, str(err.exception))
 
     def test_transposed_frame(self):
         from pysd.py_backend.utils import load_outputs
 
         assert_frames_close(
-            load_outputs(os.path.join(_root, "data/out_teacup.csv")),
+            load_outputs(_root.joinpath("data/out_teacup.csv")),
             load_outputs(
-                os.path.join(_root, "data/out_teacup_transposed.csv"),
+                _root.joinpath("data/out_teacup_transposed.csv"),
                 transpose=True))
 
     def test_load_columns(self):
         from pysd.py_backend.utils import load_outputs
 
-        out0 = load_outputs(
-            os.path.join(_root, "data/out_teacup.csv"))
+        out0 = load_outputs(_root.joinpath("data/out_teacup.csv"))
 
         out1 = load_outputs(
-            os.path.join(_root, "data/out_teacup.csv"),
+            _root.joinpath("data/out_teacup.csv"),
             columns=["Room Temperature", "Teacup Temperature"])
 
         out2 = load_outputs(
-            os.path.join(_root, "data/out_teacup_transposed.csv"),
+            _root.joinpath("data/out_teacup_transposed.csv"),
             transpose=True,
             columns=["Heat Loss to Room"])
 

@@ -609,7 +609,7 @@ class Macro(DynamicStateful):
         self.cache = Cache()
         self.py_name = py_name
         self.external_loaded = False
-        self.components = Components(py_model_file, self.set_components)
+        self.components = Components(str(py_model_file), self.set_components)
 
         if __version__.split(".")[0]\
            != self.get_pysd_compiler_version().split(".")[0]:
@@ -664,7 +664,7 @@ class Macro(DynamicStateful):
         else:
             self.return_func = lambda: 0
 
-        self.py_model_file = py_model_file
+        self.py_model_file = str(py_model_file)
 
     def __call__(self):
         return self.return_func()

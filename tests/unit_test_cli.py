@@ -54,6 +54,7 @@ def split_bash(string):
     return spl
 
 
+@unittest.skipIf(sys.platform.startswith("win"), "not working on Windows")
 class TestPySD(unittest.TestCase):
     """ These tests are similar to unit_test_pysd but adapted for cli """
     def test_read_not_model(self):

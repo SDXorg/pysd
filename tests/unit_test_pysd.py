@@ -1,5 +1,5 @@
 import unittest
-import os
+from pathlib import Path
 from warnings import simplefilter, catch_warnings
 import pandas as pd
 import numpy as np
@@ -7,53 +7,44 @@ import xarray as xr
 
 from pysd.tools.benchmarking import assert_frames_close
 
-_root = os.path.dirname(__file__)
+import pysd
 
-test_model = os.path.join(_root, "test-models/samples/teacup/teacup.mdl")
-test_model_subs = os.path.join(
-    _root,
+_root = Path(__file__).parent
+
+test_model = _root.joinpath("test-models/samples/teacup/teacup.mdl")
+test_model_subs = _root.joinpath(
     "test-models/tests/subscript_2d_arrays/test_subscript_2d_arrays.mdl")
-test_model_look = os.path.join(
-    _root,
+test_model_look = _root.joinpath(
     "test-models/tests/get_lookups_subscripted_args/"
     + "test_get_lookups_subscripted_args.mdl")
-test_model_data = os.path.join(
-    _root,
+test_model_data = _root.joinpath(
     "test-models/tests/get_data_args_3d_xls/test_get_data_args_3d_xls.mdl")
 
-more_tests = os.path.join(_root, "more-tests")
+more_tests = _root.joinpath("more-tests/")
 
-test_model_constant_pipe = os.path.join(
-    more_tests,
+test_model_constant_pipe = more_tests.joinpath(
     "constant_pipeline/test_constant_pipeline.mdl")
 
 
 class TestPySD(unittest.TestCase):
     def test_load_different_version_error(self):
-        import pysd
-
         # old PySD major version
         with self.assertRaises(ImportError):
-            pysd.load(more_tests + "/version/test_old_version.py")
+            pysd.load(more_tests.joinpath("version/test_old_version.py"))
 
         # current PySD major version
-        pysd.load(more_tests + "/version/test_current_version.py")
+        pysd.load(more_tests.joinpath("version/test_current_version.py"))
 
     def test_load_type_error(self):
-        import pysd
-
         with self.assertRaises(ImportError):
-            pysd.load(more_tests + "/type_error/test_type_error.py")
+            pysd.load(more_tests.joinpath("type_error/test_type_error.py"))
 
     def test_read_not_model_vensim(self):
-        import pysd
-
         with self.assertRaises(ValueError):
-            pysd.read_vensim(more_tests + "/not_vensim/test_not_vensim.txt")
+            pysd.read_vensim(
+                more_tests.joinpath("not_vensim/test_not_vensim.txt"))
 
     def test_run(self):
-        import pysd
-
         model = pysd.read_vensim(test_model)
         stocks = model.run()
         self.assertTrue(isinstance(stocks, pd.DataFrame))  # return a dataframe
@@ -66,14 +57,10 @@ class TestPySD(unittest.TestCase):
         )  # there are no null values in the set
 
     def test_run_ignore_missing(self):
-        import pysd
-
-        model_mdl = os.path.join(
-            _root,
+        model_mdl = _root.joinpath(
             'test-models/tests/get_with_missing_values_xlsx/'
             + 'test_get_with_missing_values_xlsx.mdl')
-        model_py = os.path.join(
-            _root,
+        model_py = _root.joinpath(
             'test-models/tests/get_with_missing_values_xlsx/'
             + 'test_get_with_missing_values_xlsx.py')
 
@@ -102,15 +89,11 @@ class TestPySD(unittest.TestCase):
             pysd.load(model_py, missing_values="raise")
 
     def test_run_includes_last_value(self):
-        import pysd
-
         model = pysd.read_vensim(test_model)
         res = model.run()
         self.assertEqual(res.index[-1], model.components.final_time())
 
     def test_run_build_timeseries(self):
-        import pysd
-
         model = pysd.read_vensim(test_model)
         res = model.run(final_time=7, time_step=2, initial_condition=(3, {}))
 
@@ -119,8 +102,6 @@ class TestPySD(unittest.TestCase):
         self.assertSequenceEqual(actual, expected)
 
     def test_run_progress(self):
-        import pysd
-
         # same as test_run but with progressbar
         model = pysd.read_vensim(test_model)
         stocks = model.run(progress=True)
@@ -131,7 +112,6 @@ class TestPySD(unittest.TestCase):
 
     def test_run_return_timestamps(self):
         """Addresses https://github.com/JamesPHoughton/pysd/issues/17"""
-        import pysd
 
         model = pysd.read_vensim(test_model)
         timestamps = np.random.randint(1, 5, 5).cumsum()
@@ -149,7 +129,6 @@ class TestPySD(unittest.TestCase):
         """ If the user enters a timestamp that is longer than the euler
         timeseries that is defined by the normal model file, should
         extend the euler series to the largest timestamp"""
-        import pysd
 
         model = pysd.read_vensim(test_model)
         return_timestamps = list(range(0, 100, 10))
@@ -161,7 +140,6 @@ class TestPySD(unittest.TestCase):
         Tests that return timestamps may receive a 'range'.
         It will be cast to a numpy array in the end...
         """
-        import pysd
 
         model = pysd.read_vensim(test_model)
         return_timestamps = range(0, 31, 10)
@@ -171,7 +149,6 @@ class TestPySD(unittest.TestCase):
     def test_run_return_columns_original_names(self):
         """Addresses https://github.com/JamesPHoughton/pysd/issues/26
         - Also checks that columns are returned in the correct order"""
-        import pysd
 
         model = pysd.read_vensim(test_model)
         return_columns = ["Room Temperature", "Teacup Temperature"]
@@ -182,7 +159,6 @@ class TestPySD(unittest.TestCase):
         """
         Return only cache 'step' variables
         """
-        import pysd
         model = pysd.read_vensim(test_model)
         result = model.run(return_columns='step')
         self.assertEqual(
@@ -191,7 +167,6 @@ class TestPySD(unittest.TestCase):
 
     def test_run_reload(self):
         """ Addresses https://github.com/JamesPHoughton/pysd/issues/99"""
-        import pysd
 
         model = pysd.read_vensim(test_model)
 
@@ -206,7 +181,6 @@ class TestPySD(unittest.TestCase):
 
     def test_run_return_columns_pysafe_names(self):
         """Addresses https://github.com/JamesPHoughton/pysd/issues/26"""
-        import pysd
 
         model = pysd.read_vensim(test_model)
         return_columns = ["room_temperature", "teacup_temperature"]
@@ -214,8 +188,6 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(set(result.columns), set(return_columns))
 
     def test_initial_conditions_invalid(self):
-        import pysd
-
         model = pysd.read_vensim(test_model)
         with self.assertRaises(TypeError) as err:
             model.run(initial_condition=["this is not valid"])
@@ -226,8 +198,6 @@ class TestPySD(unittest.TestCase):
                 err.args[0])
 
     def test_initial_conditions_tuple_pysafe_names(self):
-        import pysd
-
         model = pysd.read_vensim(test_model)
         stocks = model.run(
             initial_condition=(3000, {"teacup_temperature": 33}),
@@ -238,7 +208,6 @@ class TestPySD(unittest.TestCase):
 
     def test_initial_conditions_tuple_original_names(self):
         """ Responds to https://github.com/JamesPHoughton/pysd/issues/77"""
-        import pysd
 
         model = pysd.read_vensim(test_model)
         stocks = model.run(
@@ -249,8 +218,6 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(stocks["Teacup Temperature"].iloc[0], 33)
 
     def test_initial_conditions_current(self):
-        import pysd
-
         model = pysd.read_vensim(test_model)
         stocks1 = model.run(return_timestamps=list(range(0, 31)))
         stocks2 = model.run(
@@ -262,16 +229,12 @@ class TestPySD(unittest.TestCase):
         )
 
     def test_initial_condition_bad_value(self):
-        import pysd
-
         model = pysd.read_vensim(test_model)
 
         with self.assertRaises(FileNotFoundError):
             model.run(initial_condition="bad value")
 
     def test_initial_conditions_subscripted_value_with_numpy_error(self):
-        import pysd
-
         input_ = np.array([[5, 3], [4, 8], [9, 3]])
 
         model = pysd.read_vensim(test_model_subs)
@@ -284,7 +247,6 @@ class TestPySD(unittest.TestCase):
     def test_set_constant_parameter(self):
         """ In response to:
         re: https://github.com/JamesPHoughton/pysd/issues/5"""
-        import pysd
 
         model = pysd.read_vensim(test_model)
         model.set_components({"room_temperature": 20})
@@ -297,8 +259,6 @@ class TestPySD(unittest.TestCase):
             model.set_components({'not_a_var': 20})
 
     def test_set_constant_parameter_inline(self):
-        import pysd
-
         model = pysd.read_vensim(test_model)
         model.components.room_temperature = 20
         self.assertEqual(model.components.room_temperature(), 20)
@@ -310,8 +270,6 @@ class TestPySD(unittest.TestCase):
             model.components.not_a_var = 20
 
     def test_set_timeseries_parameter(self):
-        import pysd
-
         model = pysd.read_vensim(test_model)
         timeseries = list(range(30))
         temp_timeseries = pd.Series(
@@ -326,8 +284,6 @@ class TestPySD(unittest.TestCase):
         self.assertTrue((res["room_temperature"] == temp_timeseries).all())
 
     def test_set_timeseries_parameter_inline(self):
-        import pysd
-
         model = pysd.read_vensim(test_model)
         timeseries = list(range(30))
         temp_timeseries = pd.Series(
@@ -342,8 +298,6 @@ class TestPySD(unittest.TestCase):
         self.assertTrue((res["room_temperature"] == temp_timeseries).all())
 
     def test_set_component_with_real_name(self):
-        import pysd
-
         model = pysd.read_vensim(test_model)
         model.set_components({"Room Temperature": 20})
         self.assertEqual(model.components.room_temperature(), 20)
@@ -353,7 +307,6 @@ class TestPySD(unittest.TestCase):
 
     def test_set_components_warnings(self):
         """Addresses https://github.com/JamesPHoughton/pysd/issues/80"""
-        import pysd
 
         model = pysd.read_vensim(test_model)
         with catch_warnings(record=True) as w:
@@ -370,16 +323,12 @@ class TestPySD(unittest.TestCase):
         def test_func():
             return 5
 
-        import pysd
-
         model = pysd.read_vensim(test_model)
         model.set_components({"Room Temperature": test_func})
         res = model.run(return_columns=["Room Temperature"])
         self.assertEqual(test_func(), res["Room Temperature"].iloc[0])
 
     def test_set_subscripted_value_with_constant(self):
-        import pysd
-
         coords = {
             "One Dimensional Subscript": ["Entry 1", "Entry 2", "Entry 3"],
             "Second Dimension Subscript": ["Column 1", "Column 2"],
@@ -393,8 +342,6 @@ class TestPySD(unittest.TestCase):
         self.assertTrue(output.equals(res["Initial Values"].iloc[0]))
 
     def test_set_subscripted_value_with_partial_xarray(self):
-        import pysd
-
         coords = {
             "One Dimensional Subscript": ["Entry 1", "Entry 2", "Entry 3"],
             "Second Dimension Subscript": ["Column 1", "Column 2"],
@@ -413,8 +360,6 @@ class TestPySD(unittest.TestCase):
         self.assertTrue(output.equals(res["Initial Values"].iloc[0]))
 
     def test_set_subscripted_value_with_xarray(self):
-        import pysd
-
         coords = {
             "One Dimensional Subscript": ["Entry 1", "Entry 2", "Entry 3"],
             "Second Dimension Subscript": ["Column 1", "Column 2"],
@@ -428,8 +373,6 @@ class TestPySD(unittest.TestCase):
         self.assertTrue(output.equals(res["Initial Values"].iloc[0]))
 
     def test_set_constant_parameter_lookup(self):
-        import pysd
-
         model = pysd.read_vensim(test_model_look)
 
         with catch_warnings():
@@ -471,8 +414,6 @@ class TestPySD(unittest.TestCase):
                 self.assertTrue(model.components.lookup_2d(i).equals(xr2))
 
     def test_set_timeseries_parameter_lookup(self):
-        import pysd
-
         model = pysd.read_vensim(test_model_look)
         timeseries = list(range(30))
 
@@ -539,8 +480,6 @@ class TestPySD(unittest.TestCase):
             )
 
     def test_set_subscripted_value_with_numpy_error(self):
-        import pysd
-
         input_ = np.array([[5, 3], [4, 8], [9, 3]])
 
         model = pysd.read_vensim(test_model_subs)
@@ -548,8 +487,6 @@ class TestPySD(unittest.TestCase):
             model.set_components({"initial_values": input_, "final_time": 10})
 
     def test_set_subscripted_timeseries_parameter_with_constant(self):
-        import pysd
-
         coords = {
             "One Dimensional Subscript": ["Entry 1", "Entry 2", "Entry 3"],
             "Second Dimension Subscript": ["Column 1", "Column 2"],
@@ -577,8 +514,6 @@ class TestPySD(unittest.TestCase):
         )
 
     def test_set_subscripted_timeseries_parameter_with_partial_xarray(self):
-        import pysd
-
         coords = {
             "One Dimensional Subscript": ["Entry 1", "Entry 2", "Entry 3"],
             "Second Dimension Subscript": ["Column 1", "Column 2"],
@@ -608,8 +543,6 @@ class TestPySD(unittest.TestCase):
         )
 
     def test_set_subscripted_timeseries_parameter_with_xarray(self):
-        import pysd
-
         coords = {
             "One Dimensional Subscript": ["Entry 1", "Entry 2", "Entry 3"],
             "Second Dimension Subscript": ["Column 1", "Column 2"],
@@ -644,7 +577,6 @@ class TestPySD(unittest.TestCase):
 
     def test_docs(self):
         """ Test that the model prints some documentation """
-        import pysd
 
         model = pysd.read_vensim(test_model)
         self.assertIsInstance(str(model), str)  # tests string conversion of
@@ -689,10 +621,8 @@ class TestPySD(unittest.TestCase):
 
     def test_docs_multiline_eqn(self):
         """ Test that the model prints some documentation """
-        import pysd
 
-        path2model = os.path.join(
-            _root,
+        path2model = _root.joinpath(
             "test-models/tests/multiple_lines_def/" +
             "test_multiple_lines_def.mdl")
         model = pysd.read_vensim(path2model)
@@ -796,8 +726,6 @@ class TestPySD(unittest.TestCase):
             ["up", "down", "up", "down", "up", "down"])
 
     def test_initialize(self):
-        import pysd
-
         model = pysd.read_vensim(test_model)
         initial_temp = model.components.teacup_temperature()
         model.run()
@@ -808,9 +736,8 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(initial_temp, reset_temp)
 
     def test_initialize_order(self):
-        import pysd
-        model = pysd.load(more_tests + "/initialization_order/"
-                          "test_initialization_order.py")
+        model = pysd.load(more_tests.joinpath(
+            "initialization_order/test_initialization_order.py"))
 
         self.assertEqual(model.initialize_order,
                          ["_integ_stock_a", "_integ_stock_b"])
@@ -822,9 +749,8 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(model.components.stock_a(), 1)
 
     def test_set_initial_with_deps(self):
-        import pysd
-        model = pysd.load(more_tests + "/initialization_order/"
-                          "test_initialization_order.py")
+        model = pysd.load(more_tests.joinpath("initialization_order/"
+                          "test_initialization_order.py"))
 
         original_a = model.components.stock_a()
 
@@ -844,7 +770,6 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(model.components.stock_b(), 73)
 
     def test_set_initial_value(self):
-        import pysd
         model = pysd.read_vensim(test_model)
 
         initial_temp = model.components.teacup_temperature()
@@ -872,8 +797,6 @@ class TestPySD(unittest.TestCase):
             model.set_initial_value(new_time, {'not_a_var': 500})
 
     def test_set_initial_value_subscripted_value_with_constant(self):
-        import pysd
-
         coords = {
             "One Dimensional Subscript": ["Entry 1", "Entry 2", "Entry 3"],
             "Second Dimension Subscript": ["Column 1", "Column 2"],
@@ -907,8 +830,6 @@ class TestPySD(unittest.TestCase):
             )
 
     def test_set_initial_value_subscripted_value_with_partial_xarray(self):
-        import pysd
-
         coords = {
             "One Dimensional Subscript": ["Entry 1", "Entry 2", "Entry 3"],
             "Second Dimension Subscript": ["Column 1", "Column 2"],
@@ -954,8 +875,6 @@ class TestPySD(unittest.TestCase):
         self.assertTrue(model.components.stock_a().equals(output3))
 
     def test_set_initial_value_subscripted_value_with_xarray(self):
-        import pysd
-
         coords = {
             "One Dimensional Subscript": ["Entry 1", "Entry 2", "Entry 3"],
             "Second Dimension Subscript": ["Column 1", "Column 2"],
@@ -984,8 +903,6 @@ class TestPySD(unittest.TestCase):
         self.assertTrue(model.components.stock_a().equals(output3))
 
     def test_set_initial_value_subscripted_value_with_numpy_error(self):
-        import pysd
-
         input1 = np.array([[5, 3], [4, 8], [9, 3]])
         input2 = np.array([[53, 43], [84, 80], [29, 63]])
         input3 = np.array([[54, 32], [40, 87], [93, 93]])
@@ -1007,8 +924,6 @@ class TestPySD(unittest.TestCase):
             model.set_initial_value(new_time + 2, {'_integ_stock_a': input3})
 
     def test_replace_element(self):
-        import pysd
-
         model = pysd.read_vensim(test_model)
         stocks1 = model.run()
         model.components.characteristic_time = lambda: 3
@@ -1019,8 +934,6 @@ class TestPySD(unittest.TestCase):
         )
 
     def test_set_initial_condition_origin_full(self):
-        import pysd
-
         model = pysd.read_vensim(test_model)
         initial_temp = model.components.teacup_temperature()
         initial_time = model.components.time()
@@ -1054,8 +967,6 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(initial_time, set_time)
 
     def test_set_initial_condition_origin_short(self):
-        import pysd
-
         model = pysd.read_vensim(test_model)
         initial_temp = model.components.teacup_temperature()
         initial_time = model.components.time()
@@ -1089,8 +1000,6 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(initial_time, set_time)
 
     def test_set_initial_condition_for_stock_component(self):
-        import pysd
-
         model = pysd.read_vensim(test_model)
         initial_temp = model.components.teacup_temperature()
         initial_time = model.components.time()
@@ -1116,8 +1025,6 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(set_time, 10)
 
     def test_set_initial_condition_for_constant_component(self):
-        import pysd
-
         model = pysd.read_vensim(test_model)
 
         new_state = {"Room Temperature": 100}
@@ -1130,8 +1037,6 @@ class TestPySD(unittest.TestCase):
                 err.args[0])
 
     def test_get_args(self):
-        import pysd
-
         model = pysd.read_vensim(test_model)
         model2 = pysd.read_vensim(test_model_look)
 
@@ -1149,8 +1054,6 @@ class TestPySD(unittest.TestCase):
             model.get_args('not_a_var')
 
     def test_get_coords(self):
-        import pysd
-
         coords = {
             "One Dimensional Subscript": ["Entry 1", "Entry 2", "Entry 3"],
             "Second Dimension Subscript": ["Column 1", "Column 2"],
@@ -1177,8 +1080,6 @@ class TestPySD(unittest.TestCase):
             model.get_coords('not_a_var')
 
     def test_getitem(self):
-        import pysd
-
         model = pysd.read_vensim(test_model)
         model2 = pysd.read_vensim(test_model_look)
         model3 = pysd.read_vensim(test_model_data)
@@ -1213,8 +1114,6 @@ class TestPySD(unittest.TestCase):
         self.assertTrue(model3['data backward'].equals(data1))
 
     def test_get_series_data(self):
-        import pysd
-
         model = pysd.read_vensim(test_model)
         model2 = pysd.read_vensim(test_model_look)
         model3 = pysd.read_vensim(test_model_data)
@@ -1282,8 +1181,6 @@ class TestPySD(unittest.TestCase):
         self.assertTrue(data.equals(data_exp))
 
     def test__integrate(self):
-        import pysd
-
         # Todo: think through a stronger test here...
         model = pysd.read_vensim(test_model)
         model.progress = False
@@ -1299,10 +1196,9 @@ class TestPySD(unittest.TestCase):
         to get default return functions.
 
         """
-        import pysd
 
-        model = pysd.read_vensim(os.path.join(
-            _root, "test-models/tests/delays/test_delays.mdl"))
+        model = pysd.read_vensim(
+            _root.joinpath("test-models/tests/delays/test_delays.mdl"))
         ret = model.run()
 
         self.assertTrue(
@@ -1323,10 +1219,9 @@ class TestPySD(unittest.TestCase):
         The default settings should skip model elements with no particular
         return value
         """
-        import pysd
 
-        model = pysd.read_vensim(os.path.join(
-                _root, "test-models/tests/lookups/test_lookups.mdl"))
+        model = pysd.read_vensim(
+            _root.joinpath("test-models/tests/lookups/test_lookups.mdl"))
         ret = model.run()
         self.assertTrue(
             {"accumulation", "rate", "lookup function call"} <=
@@ -1335,18 +1230,16 @@ class TestPySD(unittest.TestCase):
 
     def test_py_model_file(self):
         """Addresses https://github.com/JamesPHoughton/pysd/issues/86"""
-        import pysd
 
         model = pysd.read_vensim(test_model)
         self.assertEqual(model.py_model_file,
-                         test_model.replace(".mdl", ".py"))
+                         str(test_model.with_suffix(".py")))
 
     def test_mdl_file(self):
         """Relates to https://github.com/JamesPHoughton/pysd/issues/86"""
-        import pysd
 
         model = pysd.read_vensim(test_model)
-        self.assertEqual(model.mdl_file, test_model)
+        self.assertEqual(model.mdl_file, str(test_model))
 
 
 class TestModelInteraction(unittest.TestCase):
@@ -1364,12 +1257,11 @@ class TestModelInteraction(unittest.TestCase):
         https://github.com/JamesPHoughton/pysd/issues/23
 
         """
-        import pysd
 
-        model_1 = pysd.read_vensim(os.path.join(
-                _root, "test-models/samples/teacup/teacup.mdl"))
-        model_2 = pysd.read_vensim(os.path.join(
-                _root, "test-models/samples/SIR/SIR.mdl"))
+        model_1 = pysd.read_vensim(
+            _root.joinpath("test-models/samples/teacup/teacup.mdl"))
+        model_2 = pysd.read_vensim(
+            _root.joinpath("test-models/samples/SIR/SIR.mdl"))
 
         self.assertNotIn("teacup_temperature", dir(model_2.components))
         self.assertIn("susceptible", dir(model_2.components))
@@ -1387,12 +1279,11 @@ class TestModelInteraction(unittest.TestCase):
 
         """
         # Todo: this test could be made more comprehensive
-        import pysd
 
-        model_1 = pysd.read_vensim(os.path.join(
-                _root, "test-models/samples/teacup/teacup.mdl"))
-        model_2 = pysd.read_vensim(os.path.join(
-                _root, "test-models/samples/SIR/SIR.mdl"))
+        model_1 = pysd.read_vensim(
+            _root.joinpath("test-models/samples/teacup/teacup.mdl"))
+        model_2 = pysd.read_vensim(
+            _root.joinpath("test-models/samples/SIR/SIR.mdl"))
 
         model_1.components.initial_time = lambda: 10
         self.assertNotEqual(model_2.components.initial_time, 10)
@@ -1407,7 +1298,6 @@ class TestModelInteraction(unittest.TestCase):
          if the variable is changed and the model re-run, the cache updates
          to the new variable, instead of maintaining the old one.
         """
-        import pysd
 
         model = pysd.read_vensim(test_model)
         model.run()
@@ -1419,12 +1309,9 @@ class TestModelInteraction(unittest.TestCase):
         self.assertNotEqual(old, new)
 
     def test_circular_reference(self):
-        import pysd
-
         with self.assertRaises(ValueError) as err:
-            pysd.load(
-                more_tests
-                + "/circular_reference/test_circular_reference.py")
+            pysd.load(more_tests.joinpath(
+                "circular_reference/test_circular_reference.py"))
 
         self.assertIn("_integ_integ", str(err.exception))
         self.assertIn("_delay_delay", str(err.exception))
@@ -1435,8 +1322,6 @@ class TestModelInteraction(unittest.TestCase):
         )
 
     def test_not_able_to_update_stateful_object(self):
-        import pysd
-
         integ = pysd.statefuls.Integ(
             lambda: xr.DataArray([1, 2], {"Dim": ["A", "B"]}, ["Dim"]),
             lambda: xr.DataArray(0, {"Dim": ["A", "B"]}, ["Dim"]),
@@ -1455,10 +1340,7 @@ class TestModelInteraction(unittest.TestCase):
 
 class TestMultiRun(unittest.TestCase):
     def test_delay_reinitializes(self):
-        import pysd
-
-        model = pysd.read_vensim(os.path.join(
-            _root,
+        model = pysd.read_vensim(_root.joinpath(
             "test-models/tests/delays/test_delays.mdl"))
         res1 = model.run()
         res2 = model.run()
@@ -1495,8 +1377,9 @@ class TestDependencies(unittest.TestCase):
         from pysd import read_vensim
 
         model = read_vensim(
-            more_tests + "/subscript_individually_defined_stocks2/"
-            + "test_subscript_individually_defined_stocks2.mdl")
+            more_tests.joinpath(
+                "subscript_individually_defined_stocks2/"
+                + "test_subscript_individually_defined_stocks2.mdl"))
 
         expected_dep = {
             "stock_a": {"_integ_stock_a": 2},
@@ -1517,9 +1400,9 @@ class TestDependencies(unittest.TestCase):
         }
         self.assertEqual(model.components._dependencies, expected_dep)
 
-        os.remove(
-            more_tests + "/subscript_individually_defined_stocks2/"
-            + "test_subscript_individually_defined_stocks2.py")
+        more_tests.joinpath(
+            "subscript_individually_defined_stocks2/"
+            + "test_subscript_individually_defined_stocks2.py").unlink()
 
     def test_constant_deps(self):
         from pysd import read_vensim
@@ -1541,8 +1424,7 @@ class TestDependencies(unittest.TestCase):
             if key != "time":
                 self.assertEqual(value, "run")
 
-        os.remove(
-            test_model_constant_pipe.replace(".mdl", ".py"))
+        test_model_constant_pipe.with_suffix(".py").unlink()
 
     def test_change_constant_pipe(self):
         from pysd import read_vensim
@@ -1575,8 +1457,7 @@ class TestDependencies(unittest.TestCase):
             (out2["constant3"] == (5*new_var.values-1)*new_var.values).all()
         )
 
-        os.remove(
-            test_model_constant_pipe.replace(".mdl", ".py"))
+        test_model_constant_pipe.with_suffix(".py").unlink()
 
 
 class TestExportImport(unittest.TestCase):
@@ -1606,7 +1487,7 @@ class TestExportImport(unittest.TestCase):
             stocks.drop('FINAL TIME', axis=1, inplace=True)
             stocks1.drop('FINAL TIME', axis=1, inplace=True)
             stocks2.drop('FINAL TIME', axis=1, inplace=True)
-            os.remove('teacup12.pic')
+            Path('teacup12.pic').unlink()
 
             assert_frames_close(stocks1, stocks.loc[[0, 10]])
             assert_frames_close(stocks2, stocks.loc[[20, 30]])
@@ -1616,8 +1497,7 @@ class TestExportImport(unittest.TestCase):
 
         with catch_warnings():
             simplefilter("ignore")
-            test_delays = os.path.join(
-                _root,
+            test_delays = _root.joinpath(
                 'test-models/tests/delays/test_delays.mdl')
             model = read_vensim(test_delays)
             stocks = model.run(return_timestamps=20)
@@ -1632,7 +1512,7 @@ class TestExportImport(unittest.TestCase):
             stocks2.drop('INITIAL TIME', axis=1, inplace=True)
             stocks.drop('FINAL TIME', axis=1, inplace=True)
             stocks2.drop('FINAL TIME', axis=1, inplace=True)
-            os.remove('delays7.pic')
+            Path('delays7.pic').unlink()
 
             assert_frames_close(stocks2, stocks)
 
@@ -1641,8 +1521,7 @@ class TestExportImport(unittest.TestCase):
 
         with catch_warnings():
             simplefilter("ignore")
-            test_delayf = os.path.join(
-                _root,
+            test_delayf = _root.joinpath(
                 'test-models/tests/delay_fixed/test_delay_fixed.mdl')
             model = read_vensim(test_delayf)
             stocks = model.run(return_timestamps=20)
@@ -1657,7 +1536,7 @@ class TestExportImport(unittest.TestCase):
             stocks2.drop('INITIAL TIME', axis=1, inplace=True)
             stocks.drop('FINAL TIME', axis=1, inplace=True)
             stocks2.drop('FINAL TIME', axis=1, inplace=True)
-            os.remove('delayf7.pic')
+            Path('delayf7.pic').unlink()
 
             assert_frames_close(stocks2, stocks)
 
@@ -1666,8 +1545,7 @@ class TestExportImport(unittest.TestCase):
 
         with catch_warnings():
             simplefilter("ignore")
-            test_trend = os.path.join(
-                _root,
+            test_trend = _root.joinpath(
                 'test-models/tests/forecast/'
                 + 'test_forecast.mdl')
             model = read_vensim(test_trend)
@@ -1684,7 +1562,7 @@ class TestExportImport(unittest.TestCase):
             stocks2.drop('INITIAL TIME', axis=1, inplace=True)
             stocks.drop('FINAL TIME', axis=1, inplace=True)
             stocks2.drop('FINAL TIME', axis=1, inplace=True)
-            os.remove('frcst20.pic')
+            Path('frcst20.pic').unlink()
 
             assert_frames_close(stocks2, stocks)
 
@@ -1693,8 +1571,7 @@ class TestExportImport(unittest.TestCase):
 
         with catch_warnings():
             simplefilter("ignore")
-            test_sample_if_true = os.path.join(
-                _root,
+            test_sample_if_true = _root.joinpath(
                 'test-models/tests/sample_if_true/test_sample_if_true.mdl')
             model = read_vensim(test_sample_if_true)
             stocks = model.run(return_timestamps=20, flatten_output=True)
@@ -1710,7 +1587,7 @@ class TestExportImport(unittest.TestCase):
             stocks2.drop('INITIAL TIME', axis=1, inplace=True)
             stocks.drop('FINAL TIME', axis=1, inplace=True)
             stocks2.drop('FINAL TIME', axis=1, inplace=True)
-            os.remove('sample_if_true7.pic')
+            Path('sample_if_true7.pic').unlink()
 
             assert_frames_close(stocks2, stocks)
 
@@ -1719,8 +1596,7 @@ class TestExportImport(unittest.TestCase):
 
         with catch_warnings():
             simplefilter("ignore")
-            test_smooth = os.path.join(
-                _root,
+            test_smooth = _root.joinpath(
                 'test-models/tests/subscripted_smooth/'
                 + 'test_subscripted_smooth.mdl')
             model = read_vensim(test_smooth)
@@ -1737,7 +1613,7 @@ class TestExportImport(unittest.TestCase):
             stocks2.drop('INITIAL TIME', axis=1, inplace=True)
             stocks.drop('FINAL TIME', axis=1, inplace=True)
             stocks2.drop('FINAL TIME', axis=1, inplace=True)
-            os.remove('smooth7.pic')
+            Path('smooth7.pic').unlink()
 
             assert_frames_close(stocks2, stocks)
 
@@ -1746,8 +1622,7 @@ class TestExportImport(unittest.TestCase):
 
         with catch_warnings():
             simplefilter("ignore")
-            test_trend = os.path.join(
-                _root,
+            test_trend = _root.joinpath(
                 'test-models/tests/subscripted_trend/'
                 + 'test_subscripted_trend.mdl')
             model = read_vensim(test_trend)
@@ -1764,7 +1639,7 @@ class TestExportImport(unittest.TestCase):
             stocks2.drop('INITIAL TIME', axis=1, inplace=True)
             stocks.drop('FINAL TIME', axis=1, inplace=True)
             stocks2.drop('FINAL TIME', axis=1, inplace=True)
-            os.remove('trend7.pic')
+            Path('trend7.pic').unlink()
 
             assert_frames_close(stocks2, stocks)
 
@@ -1773,8 +1648,8 @@ class TestExportImport(unittest.TestCase):
 
         with catch_warnings():
             simplefilter("ignore")
-            test_initial = os.path.join(
-                _root, 'test-models/tests/initial_function/test_initial.mdl')
+            test_initial = _root.joinpath(
+                'test-models/tests/initial_function/test_initial.mdl')
             model = read_vensim(test_initial)
             stocks = model.run(return_timestamps=20)
             model.reload()
@@ -1788,6 +1663,6 @@ class TestExportImport(unittest.TestCase):
             stocks2.drop('INITIAL TIME', axis=1, inplace=True)
             stocks.drop('FINAL TIME', axis=1, inplace=True)
             stocks2.drop('FINAL TIME', axis=1, inplace=True)
-            os.remove('initial7.pic')
+            Path('initial7.pic').unlink()
 
             assert_frames_close(stocks2, stocks)

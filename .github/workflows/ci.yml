@@ -6,11 +6,10 @@ on: [push, pull_request]
 
 jobs:
   test:
-    #runs-on: ${{ matrix.os }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        #os: [ubuntu-latest, macos-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest]
         python-version: [3.7, 3.9]
 
     steps:
@@ -26,7 +25,7 @@ jobs:
       - name: Test and coverage
         run: pytest tests/ --cov=pysd
       - name: Coveralls
-        if: matrix.python-version == 3.7
+        if: ${{ matrix.python-version == 3.7 && matrix.os == 'ubuntu-latest' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: coveralls --service=github

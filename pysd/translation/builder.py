@@ -53,7 +53,7 @@ class Imports():
             setattr(cls, f"_{module}", True)
 
     @classmethod
-    def get_header(cls, outfile, force_root=False):
+    def get_header(cls, outfile):
         """
         Returns the importing information to print in the model file
 
@@ -61,12 +61,6 @@ class Imports():
         ----------
         outfile: str
             Name of the outfile to print in the header.
-
-        force_root: bool (optional)
-            If True, the _root variable will be returned to include in the
-            model file and os.path will be imported. If False, the _root
-            variable will only be included if the model has External
-            objects.
 
         Returns
         -------
@@ -77,12 +71,7 @@ class Imports():
         text =\
             f'"""\nPython model \'{outfile}\'\nTranslated using PySD\n"""\n\n'
 
-        _root = ""
-
-        if cls._external or force_root:
-            # define root only if needed
-            text += "from os import path\n"
-            _root = "\n    _root = path.dirname(__file__)\n"
+        text += "from pathlib import Path\n"
 
         for module, shortname in cls._external_libs.items():
             if getattr(cls, f"_{module}"):
@@ -102,7 +91,7 @@ class Imports():
 
         cls.reset()
 
-        return text, _root
+        return text
 
     @classmethod
     def reset(cls):
@@ -269,8 +258,7 @@ def _build_main_module(elements, subscript_dict, file_name):
     Imports.add("utils", "load_modules")
 
     # import of needed functions and packages
-    text, root = Imports.get_header(os.path.basename(file_name),
-                                    force_root=True)
+    text = Imports.get_header(os.path.basename(file_name))
 
     # import namespace from json file
     text += textwrap.dedent("""
@@ -280,12 +268,13 @@ def _build_main_module(elements, subscript_dict, file_name):
         'scope': None,
         'time': lambda: 0
     }
-    %(root)s
+
+    _root = Path(__file__).parent
+
     _namespace, _subscript_dict, _dependencies, _modules = load_model_data(
         _root, "%(outfile)s")
     """ % {
         "outfile": os.path.basename(file_name).split(".")[0],
-        "root": root,
         "version": __version__
     })
 
@@ -399,7 +388,7 @@ def build(elements, subscript_dict, namespace, dependencies, outfile_name):
     # separating between control variables and rest of variables
     control_vars, funcs = _build_variables(elements, subscript_dict)
 
-    text, root = Imports.get_header(os.path.basename(outfile_name))
+    text = Imports.get_header(os.path.basename(outfile_name))
 
     text += textwrap.dedent("""
     __pysd_version__ = '%(version)s'
@@ -408,7 +397,9 @@ def build(elements, subscript_dict, namespace, dependencies, outfile_name):
         'scope': None,
         'time': lambda: 0
     }
-    %(root)s
+
+    _root = Path(__file__).parent
+
     _subscript_dict = %(subscript_dict)s
 
     _namespace = %(namespace)s
@@ -418,7 +409,6 @@ def build(elements, subscript_dict, namespace, dependencies, outfile_name):
         "subscript_dict": repr(subscript_dict),
         "namespace": repr(namespace),
         "dependencies": repr(dependencies),
-        "root": root,
         "version": __version__,
     })
 
@@ -2143,7 +2133,7 @@ def add_macro(identifier, macro_name, filename, arg_names, arg_vals, deps):
         "parent_name": identifier,
         "real_name": "Macro Instantiation of " + macro_name,
         "doc": "Instantiates the Macro",
-        "py_expr": "Macro('%s', %s, '%s',"
+        "py_expr": "Macro(_root.joinpath('%s'), %s, '%s',"
         " time_initialization=lambda: __data['time'],"
         " py_name='%s')" % (filename, func_args, macro_name, py_name),
         "unit": "None",
