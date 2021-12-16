@@ -24,6 +24,10 @@ class TestIntegrationExamples(unittest.TestCase):
         output, canon = runner(test_models + '/active_initial/test_active_initial.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    def test_active_initial_circular(self):
+        output, canon = runner(test_models + '/active_initial_circular/test_active_initial_circular.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_arguments(self):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")

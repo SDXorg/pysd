@@ -595,7 +595,10 @@ def build_element(element, subscript_dict):
     # external objecets via .add method
     py_expr_no_ADD = ["ADD" not in py_expr for py_expr in element["py_expr"]]
 
-    if sum(py_expr_no_ADD) > 1 and element["kind"] not in [
+    if element["kind"] == "dependencies":
+        # element only used to update dependencies
+        return ""
+    elif sum(py_expr_no_ADD) > 1 and element["kind"] not in [
         "stateful",
         "external",
         "external_add",
@@ -817,6 +820,63 @@ def _merge_dependencies(current, new):
         current[dep] = new[dep]
 
 
+def build_active_initial_deps(identifier, arguments, deps):
+    """
+    Creates new model element dictionaries for the model elements associated
+    with a stock.
+
+    Parameters
+    ----------
+    identifier: str
+        The python-safe name of the stock.
+
+    expression: str
+        Formula which forms the regular value for active initial.
+
+    initial: str
+        Formula which forms the initial value for active initial.
+
+    deps: dict
+        The dictionary with all the denpendencies in the expression.
+
+    Returns
+    -------
+    reference: str
+        A reference to the gost variable that defines the dependencies.
+
+    new_structure: list
+        List of additional model element dictionaries.
+
+    """
+    deps = build_dependencies(
+        deps,
+        {
+            "initial": [arguments[1]],
+            "step": [arguments[0]]
+        })
+
+    py_name = "_active_initial_%s" % identifier
+
+    # describe the stateful object
+    new_structure = [{
+        "py_name": py_name,
+        "parent_name": "",
+        "real_name": "",
+        "doc": "",
+        "py_expr": "",
+        "unit": "",
+        "lims": "",
+        "eqn": "",
+        "subs": "",
+        "merge_subs": None,
+        "dependencies": deps,
+        "kind": "dependencies",
+        "arguments": "",
+    }]
+
+    return py_name, new_structure
+
+
 def add_stock(identifier, expression, initial_condition, subs, merge_subs,
               deps):
     """
@@ -841,6 +901,9 @@ def add_stock(identifier, expression, initial_condition, subs, merge_subs,
     merge_subs: list of strings
         List of the final subscript range of the python array after
         merging with other objects.
+
+    deps: dict
+        The dictionary with all the denpendencies in the expression.
 
     Returns
     -------
@@ -974,6 +1037,9 @@ def add_delay(identifier, delay_input, delay_time, initial_value, order,
         List of the final subscript range of the python array after
         merging with other objects.
 
+    deps: dict
+        The dictionary with all the denpendencies in the expression.
+
     Returns
     -------
     reference: str
@@ -1092,6 +1158,9 @@ def add_delay_f(identifier, delay_input, delay_time, initial_value, deps):
         We initialize the stocks with equal values so that the outflow in
         the first timestep is equal to this value.
 
+    deps: dict
+        The dictionary with all the denpendencies in the expression.
+
     Returns
     -------
     reference: str
@@ -1181,6 +1250,9 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
     merge_subs: list of strings
         List of the final subscript range of the python array after
         merging with other objects.
+
+    deps: dict
+        The dictionary with all the denpendencies in the expression.
 
     Returns
     -------
@@ -1300,6 +1372,9 @@ def add_forecast(identifier, forecast_input, average_time, horizon,
         List of the final subscript range of the python array after
         merging with other objects.
 
+    deps: dict
+        The dictionary with all the denpendencies in the expression.
+
     Returns
     -------
     reference: str
@@ -1402,6 +1477,9 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value,
     merge_subs: list of strings
         List of the final subscript range of the python array after
         merging with other objects.
+
+    deps: dict
+        The dictionary with all the denpendencies in the expression.
 
     Returns
     -------
@@ -1507,8 +1585,10 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order,
         list of expressions, and collectively define the shape of the output
 
     merge_subs: list of strings
-        List of the final subscript range of the python array after
-       .
+        List of the final subscript range of the python array after.
+
+    deps: dict
+        The dictionary with all the denpendencies in the expression.
 
     Returns
     -------
@@ -1628,6 +1708,9 @@ def add_n_trend(identifier, trend_input, average_time, initial_trend,
         List of the final subscript range of the python array after
         merging with other objects.
 
+    deps: dict
+        The dictionary with all the denpendencies in the expression.
+
     Returns
     -------
     reference: str
@@ -1713,6 +1796,9 @@ def add_initial(identifier, value, deps):
     value: str
         The expression which will be evaluated, and the first value of
         which returned.
+
+    deps: dict
+        The dictionary with all the denpendencies in the expression.
 
     Returns
     -------

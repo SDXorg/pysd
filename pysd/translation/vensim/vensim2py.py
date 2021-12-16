@@ -1227,6 +1227,12 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
                 arguments += ["dim=" + str(tuple(self.apply_dim))]
                 self.apply_dim = set()
 
+            if re.match(r"active(_|\s)initial", function_name):
+                ghost_name, new_structure = builder.build_active_initial_deps(
+                    element["py_name"], arguments, element["dependencies"])
+                element["dependencies"] = {ghost_name: 1}
+                self.new_structure += new_structure
+
             return builder.build_function_call(
                 functions[function_name],
                 arguments, element["dependencies"])

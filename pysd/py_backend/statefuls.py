@@ -702,7 +702,7 @@ class Macro(DynamicStateful):
         self.stateful_initial_dependencies = {
             ext: set()
             for ext in self.components._dependencies
-            if ext.startswith("_")
+            if (ext.startswith("_") and not ext.startswith("_active_initial_"))
         }
         for element in self.stateful_initial_dependencies:
             self._get_full_dependencies(
@@ -712,8 +712,10 @@ class Macro(DynamicStateful):
         # get the full dependencies of stateful objects taking into account
         # only other objects
         current_deps = {
-            element: [dep for dep in deps if dep.startswith("_")]
-            for element, deps in self.stateful_initial_dependencies.items()
+            element: [
+                dep for dep in deps
+                if dep in self.stateful_initial_dependencies
+            ] for element, deps in self.stateful_initial_dependencies.items()
         }
 
         # get initialization order of the stateful elements
@@ -887,6 +889,7 @@ class Macro(DynamicStateful):
             return True
         for dep in dependencies:
             if dep.startswith("_") and not dep.startswith("_initial_")\
+               and not dep.startswith("_active_initial_")\
                and not dep.startswith("__"):
                 return True
         return False
