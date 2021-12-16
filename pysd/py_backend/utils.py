@@ -4,7 +4,6 @@ model file. Vensim's function equivalents should not go here but in
 functions.py
 """
 
-import os
 import json
 from pathlib import Path
 from chardet.universaldetector import UniversalDetector
@@ -326,7 +325,7 @@ def rearrange(data, dims, coords):
     return None
 
 
-def load_model_data(root_dir, model_name):
+def load_model_data(root, model_name):
 
     """
     Used for models split in several files.
@@ -334,7 +333,7 @@ def load_model_data(root_dir, model_name):
 
     Parameters
     ----------
-    root_dir: str
+    root: pathlib.Path or str
         Path to the model file.
 
     model_name: str
@@ -355,22 +354,22 @@ def load_model_data(root_dir, model_name):
         corresponding variables as values.
 
     """
+    if isinstance(root, str):  # pragma: no cover
+        # backwards compatibility
+        # TODO: remove with PySD 3.0.0
+        root = Path(root)
 
-    with open(os.path.join(root_dir, "_subscripts_" + model_name + ".json")
-              ) as subs:
+    with open(root.joinpath("_subscripts_" + model_name + ".json")) as subs:
         subscripts = json.load(subs)
 
-    with open(os.path.join(root_dir, "_namespace_" + model_name + ".json")
-              ) as names:
+    with open(root.joinpath("_namespace_" + model_name + ".json")) as names:
         namespace = json.load(names)
-    with open(os.path.join(root_dir, "_dependencies_" + model_name + ".json")
-              ) as deps:
+    with open(root.joinpath("_dependencies_" + model_name + ".json")) as deps:
         dependencies = json.load(deps)
 
     # the _modules.json in the sketch_var folder shows to which module each
     # variable belongs
-    with open(os.path.join(root_dir, "modules_" + model_name, "_modules.json")
-              ) as mods:
+    with open(root.joinpath("modules_" + model_name, "_modules.json")) as mods:
         modules = json.load(mods)
 
     return namespace, subscripts, dependencies, modules
@@ -408,14 +407,20 @@ def load_modules(module_name, module_content, work_dir, submodules):
         model file.
 
     """
+    if isinstance(work_dir, str):  # pragma: no cover
+        # backwards compatibility
+        # TODO: remove with PySD 3.0.0
+        work_dir = Path(work_dir)
+
     if isinstance(module_content, list):
-        with open(os.path.join(work_dir, module_name + ".py"), "r") as mod:
+        with open(work_dir.joinpath(module_name + ".py"), "r",
+                  encoding="UTF-8") as mod:
             submodules.append(mod.read())
     else:
         for submod_name, submod_content in module_content.items():
             load_modules(
                 submod_name, submod_content,
-                os.path.join(work_dir, module_name),
+                work_dir.joinpath(module_name),
                 submodules)
 
     return "\n\n".join(submodules)

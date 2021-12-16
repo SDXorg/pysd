@@ -1,3 +1,4 @@
+import sys
 import pytest
 import itertools
 
@@ -125,6 +126,9 @@ class TestColumns:
     ],
     ids=["invalid_file_type", "invalid_file_format"]
 )
+@pytest.mark.skipif(
+    sys.platform.startswith("win"),
+    reason=r"bad scape \e")
 class TestColumnsErrors:
     # Test errors associated with Columns class
 

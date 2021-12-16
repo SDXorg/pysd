@@ -1,15 +1,16 @@
-import os
+import sys
 import unittest
 import warnings
+from pathlib import Path
 
 from importlib.machinery import SourceFileLoader
 import numpy as np
 import xarray as xr
 
-_root = os.path.dirname(__file__)
+_root = Path(__file__).parent
 _exp = SourceFileLoader(
     'expected_data',
-    os.path.join(_root, 'data/expected_data.py')
+    str(_root.joinpath('data/expected_data.py'))
     ).load_module()
 
 
@@ -23,7 +24,7 @@ class TestExcels(unittest.TestCase):
         """
         from pysd.py_backend.external import Excels
 
-        file_name = os.path.join(_root, "data/input.xlsx")
+        file_name = _root.joinpath("data/input.xlsx")
         sheet_name = "Vertical"
         sheet_name2 = "Horizontal"
 
@@ -32,11 +33,11 @@ class TestExcels(unittest.TestCase):
         self.assertTrue(isinstance(excel, np.ndarray))
 
         # check if it is in the dictionary
-        self.assertTrue(file_name+sheet_name in
+        self.assertTrue(file_name.joinpath(sheet_name) in
                         list(Excels._Excels))
 
         Excels.read(file_name, sheet_name2)
-        self.assertTrue(file_name+sheet_name2 in
+        self.assertTrue(file_name.joinpath(sheet_name2) in
                         list(Excels._Excels))
 
         # clean
@@ -51,7 +52,7 @@ class TestExcels(unittest.TestCase):
         from pysd.py_backend.external import Excels
         from openpyxl import Workbook
 
-        file_name = os.path.join(_root, "data/input.xlsx")
+        file_name = _root.joinpath("data/input.xlsx")
 
         # reading a file
         excel = Excels.read_opyxl(file_name)
@@ -70,6 +71,7 @@ class TestExcels(unittest.TestCase):
         self.assertEqual(list(Excels._Excels_opyxl),
                          [])
 
+    @unittest.skipIf(sys.platform.startswith("win"), "not working on Windows")
     def test_close_file(self):
         """
         Test for checking if excel files were closed
@@ -82,7 +84,7 @@ class TestExcels(unittest.TestCase):
         # number of files already open
         n_files = len(p.open_files())
 
-        file_name = os.path.join(_root, "data/input.xlsx")
+        file_name = _root.joinpath("data/input.xlsx")
         sheet_name = "Vertical"
         sheet_name2 = "Horizontal"
 
@@ -226,18 +228,18 @@ class TestExternalMethods(unittest.TestCase):
         """
         from pysd.py_backend.external import External
 
-        root = os.path.dirname(__file__)
+        root = Path(__file__).parent
         ext = External('external')
         ext.file = 'data/input.xlsx'
         ext._resolve_file(root=root)
 
-        self.assertEqual(ext.file, os.path.join(root, 'data/input.xlsx'))
+        self.assertEqual(ext.file, root.joinpath('data/input.xlsx'))
 
-        root = os.path.join(root, 'data')
+        root = root.joinpath('data')
         ext.file = 'input.xlsx'
         ext._resolve_file(root=root)
 
-        self.assertEqual(ext.file, os.path.join(root, 'input.xlsx'))
+        self.assertEqual(ext.file, root.joinpath('input.xlsx'))
 
         ext.file = 'input2.xlsx'
 
@@ -245,7 +247,7 @@ class TestExternalMethods(unittest.TestCase):
             ext._resolve_file(root=root)
 
         self.assertIn(
-            f"File '{os.path.join(root, 'input2.xlsx')}' not found.",
+            "File '%s' not found." % root.joinpath('input2.xlsx'),
             str(err.exception))
 
         # TODO in the future we may add an option to include indirect

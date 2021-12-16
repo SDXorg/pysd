@@ -4,11 +4,11 @@ module to write a python version of the model. Everything that requires
 knowledge of vensim syntax should be here.
 """
 
-import os
 import pathlib
 import re
 import warnings
 from io import open
+from chardet import detect
 
 import numpy as np
 import parsimonious
@@ -1227,6 +1227,12 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
                 arguments += ["dim=" + str(tuple(self.apply_dim))]
                 self.apply_dim = set()
 
+            if re.match(r"active(_|\s)initial", function_name):
+                ghost_name, new_structure = builder.build_active_initial_deps(
+                    element["py_name"], arguments, element["dependencies"])
+                element["dependencies"] = {ghost_name: 1}
+                self.new_structure += new_structure
+
             return builder.build_function_call(
                 functions[function_name],
                 arguments, element["dependencies"])
@@ -1742,15 +1748,15 @@ def translate_section(section, macro_list, sketch, root_path, subview_sep=""):
                 subscript_dict,
                 namespace,
                 dependencies,
-                section["file_name"],
+                section["file_path"],
                 module_elements,
             )
-            return section["file_name"]
+            return section["file_path"]
 
     builder.build(build_elements, subscript_dict, namespace, dependencies,
-                  section["file_name"])
+                  section["file_path"])
 
-    return section["file_name"]
+    return section["file_path"]
 
 
 def _classify_elements_by_module(sketch, namespace, subview_sep):
@@ -1871,7 +1877,7 @@ def _split_sketch(text):
     return text, sketch
 
 
-def translate_vensim(mdl_file, split_views, **kwargs):
+def translate_vensim(mdl_file, split_views, encoding=None, **kwargs):
     """
     Translate a vensim file.
 
@@ -1885,6 +1891,11 @@ def translate_vensim(mdl_file, split_views, **kwargs):
         model view, and then translate each view in a separate python
         file. Setting this argument to True is recommended for large
         models that are split in many different views.
+
+    encoding: str or None (optional)
+        Encoding of the source model file. If None, the encoding will be
+        read from the model, if the encoding is not defined in the model
+        file it will be set to 'UTF-8'. Default is None.
 
     **kwargs: (optional)
         Additional parameters passed to the translate_vensim function
@@ -1905,10 +1916,6 @@ def translate_vensim(mdl_file, split_views, **kwargs):
     if isinstance(mdl_file, str):
         mdl_file = pathlib.Path(mdl_file)
 
-    root_path = mdl_file.parent
-    with open(mdl_file, "r", encoding="UTF-8") as in_file:
-        text = in_file.read()
-
     # check for model extension
     if mdl_file.suffix.lower() != ".mdl":
         raise ValueError(
@@ -1916,6 +1923,14 @@ def translate_vensim(mdl_file, split_views, **kwargs):
             + str(mdl_file)
             + " is not a vensim model. It must end with mdl extension."
         )
+
+    root_path = mdl_file.parent
+
+    if encoding is None:
+        encoding = _detect_encoding_from_file(mdl_file)
+
+    with open(mdl_file, "r", encoding=encoding, errors="ignore") as in_file:
+        text = in_file.read()
 
     outfile_name = mdl_file.with_suffix(".py")
 
@@ -1928,12 +1943,12 @@ def translate_vensim(mdl_file, split_views, **kwargs):
 
     for section in file_sections:
         if section["name"] == "_main_":
-            section["file_name"] = outfile_name
+            section["file_path"] = outfile_name
         else:  # separate macro elements into their own files
             section["py_name"] = utils.make_python_identifier(
                 section["name"])
-            section["file_name"] = root_path.joinpath(
-                section["py_name"] + ".py")
+            section["file_name"] = section["py_name"] + ".py"
+            section["file_path"] = root_path.joinpath(section["file_name"])
 
     macro_list = [s for s in file_sections if s["name"] != "_main_"]
 
@@ -1941,3 +1956,17 @@ def translate_vensim(mdl_file, split_views, **kwargs):
         translate_section(section, macro_list, sketch, root_path, subview_sep)
 
     return outfile_name
+
+
+def _detect_encoding_from_file(mdl_file):
+
+    try:
+        with open(mdl_file, "rb") as in_file:
+            f_line = in_file.readline()
+        f_line = f_line.decode(detect(f_line)['encoding'])
+        return re.search(r"(?<={)(.*)(?=})", f_line).group()
+    except (AttributeError, UnicodeDecodeError):
+        warnings.warn(
+            "No encoding specified or detected to translate the model "
+            "file. 'UTF-8' encoding will be used.")
+        return "UTF-8"

@@ -5,8 +5,8 @@ the Stateful objects by functions.Model.initialize.
 """
 
 import re
-import os
 import warnings
+from pathlib import Path
 import pandas as pd  # TODO move to openpyxl
 import numpy as np
 import xarray as xr
@@ -26,15 +26,15 @@ class Excels():
         """
         Read the Excel file or return the previously read one
         """
-        if file_name + sheet_name in cls._Excels:
-            return cls._Excels[file_name + sheet_name]
+        if file_name.joinpath(sheet_name) in cls._Excels:
+            return cls._Excels[file_name.joinpath(sheet_name)]
         else:
             excel = np.array([
                 pd.to_numeric(ex, errors='coerce')
                 for ex in
                 pd.read_excel(file_name, sheet_name, header=None).values
                 ])
-            cls._Excels[file_name + sheet_name] = excel
+            cls._Excels[file_name.joinpath(sheet_name)] = excel
             return excel
 
     @classmethod
@@ -110,7 +110,7 @@ class External(object):
 
         """
         # TODO move to openpyxl to avoid pandas dependency in this file.
-        ext = os.path.splitext(self.file)[1].lower()
+        ext = self.file.suffix.lower()
         if ext in ['.xls', '.xlsx']:
             # read data
             data = Excels.read(
@@ -314,7 +314,7 @@ class External(object):
 
         Parameters
         ----------
-        root: str
+        root: pathlib.Path or str
             The root path to the model file.
 
         Returns
@@ -328,12 +328,17 @@ class External(object):
                 self.py_name + "\n"
                 + f"Indirect reference to file: {self.file}")
 
-        self.file = os.path.join(root, self.file)
+        if isinstance(root, str):  # pragma: no cover
+            # backwards compatibility
+            # TODO: remove with PySD 3.0.0
+            root = Path(root)
 
-        if not os.path.isfile(self.file):
+        self.file = root.joinpath(self.file)
+
+        if not self.file.is_file():
             raise FileNotFoundError(
                 self.py_name + "\n"
-                + f"File '{self.file}' not found.")
+                + "File '%s' not found." % self.file)
 
     def _initialize_data(self, element_type):
         """

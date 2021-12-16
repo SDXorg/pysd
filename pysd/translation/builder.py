@@ -53,7 +53,7 @@ class Imports():
             setattr(cls, f"_{module}", True)
 
     @classmethod
-    def get_header(cls, outfile, force_root=False):
+    def get_header(cls, outfile):
         """
         Returns the importing information to print in the model file
 
@@ -61,12 +61,6 @@ class Imports():
         ----------
         outfile: str
             Name of the outfile to print in the header.
-
-        force_root: bool (optional)
-            If True, the _root variable will be returned to include in the
-            model file and os.path will be imported. If False, the _root
-            variable will only be included if the model has External
-            objects.
 
         Returns
         -------
@@ -77,12 +71,7 @@ class Imports():
         text =\
             f'"""\nPython model \'{outfile}\'\nTranslated using PySD\n"""\n\n'
 
-        _root = ""
-
-        if cls._external or force_root:
-            # define root only if needed
-            text += "from os import path\n"
-            _root = "\n    _root = path.dirname(__file__)\n"
+        text += "from pathlib import Path\n"
 
         for module, shortname in cls._external_libs.items():
             if getattr(cls, f"_{module}"):
@@ -102,7 +91,7 @@ class Imports():
 
         cls.reset()
 
-        return text, _root
+        return text
 
     @classmethod
     def reset(cls):
@@ -269,8 +258,7 @@ def _build_main_module(elements, subscript_dict, file_name):
     Imports.add("utils", "load_modules")
 
     # import of needed functions and packages
-    text, root = Imports.get_header(os.path.basename(file_name),
-                                    force_root=True)
+    text = Imports.get_header(os.path.basename(file_name))
 
     # import namespace from json file
     text += textwrap.dedent("""
@@ -280,12 +268,13 @@ def _build_main_module(elements, subscript_dict, file_name):
         'scope': None,
         'time': lambda: 0
     }
-    %(root)s
+
+    _root = Path(__file__).parent
+
     _namespace, _subscript_dict, _dependencies, _modules = load_model_data(
         _root, "%(outfile)s")
     """ % {
         "outfile": os.path.basename(file_name).split(".")[0],
-        "root": root,
         "version": __version__
     })
 
@@ -399,7 +388,7 @@ def build(elements, subscript_dict, namespace, dependencies, outfile_name):
     # separating between control variables and rest of variables
     control_vars, funcs = _build_variables(elements, subscript_dict)
 
-    text, root = Imports.get_header(os.path.basename(outfile_name))
+    text = Imports.get_header(os.path.basename(outfile_name))
 
     text += textwrap.dedent("""
     __pysd_version__ = '%(version)s'
@@ -408,7 +397,9 @@ def build(elements, subscript_dict, namespace, dependencies, outfile_name):
         'scope': None,
         'time': lambda: 0
     }
-    %(root)s
+
+    _root = Path(__file__).parent
+
     _subscript_dict = %(subscript_dict)s
 
     _namespace = %(namespace)s
@@ -418,7 +409,6 @@ def build(elements, subscript_dict, namespace, dependencies, outfile_name):
         "subscript_dict": repr(subscript_dict),
         "namespace": repr(namespace),
         "dependencies": repr(dependencies),
-        "root": root,
         "version": __version__,
     })
 
@@ -605,7 +595,10 @@ def build_element(element, subscript_dict):
     # external objecets via .add method
     py_expr_no_ADD = ["ADD" not in py_expr for py_expr in element["py_expr"]]
 
-    if sum(py_expr_no_ADD) > 1 and element["kind"] not in [
+    if element["kind"] == "dependencies":
+        # element only used to update dependencies
+        return ""
+    elif sum(py_expr_no_ADD) > 1 and element["kind"] not in [
         "stateful",
         "external",
         "external_add",
@@ -827,6 +820,63 @@ def _merge_dependencies(current, new):
         current[dep] = new[dep]
 
 
+def build_active_initial_deps(identifier, arguments, deps):
+    """
+    Creates new model element dictionaries for the model elements associated
+    with a stock.
+
+    Parameters
+    ----------
+    identifier: str
+        The python-safe name of the stock.
+
+    expression: str
+        Formula which forms the regular value for active initial.
+
+    initial: str
+        Formula which forms the initial value for active initial.
+
+    deps: dict
+        The dictionary with all the denpendencies in the expression.
+
+    Returns
+    -------
+    reference: str
+        A reference to the gost variable that defines the dependencies.
+
+    new_structure: list
+        List of additional model element dictionaries.
+
+    """
+    deps = build_dependencies(
+        deps,
+        {
+            "initial": [arguments[1]],
+            "step": [arguments[0]]
+        })
+
+    py_name = "_active_initial_%s" % identifier
+
+    # describe the stateful object
+    new_structure = [{
+        "py_name": py_name,
+        "parent_name": "",
+        "real_name": "",
+        "doc": "",
+        "py_expr": "",
+        "unit": "",
+        "lims": "",
+        "eqn": "",
+        "subs": "",
+        "merge_subs": None,
+        "dependencies": deps,
+        "kind": "dependencies",
+        "arguments": "",
+    }]
+
+    return py_name, new_structure
+
+
 def add_stock(identifier, expression, initial_condition, subs, merge_subs,
               deps):
     """
@@ -851,6 +901,9 @@ def add_stock(identifier, expression, initial_condition, subs, merge_subs,
     merge_subs: list of strings
         List of the final subscript range of the python array after
         merging with other objects.
+
+    deps: dict
+        The dictionary with all the denpendencies in the expression.
 
     Returns
     -------
@@ -984,6 +1037,9 @@ def add_delay(identifier, delay_input, delay_time, initial_value, order,
         List of the final subscript range of the python array after
         merging with other objects.
 
+    deps: dict
+        The dictionary with all the denpendencies in the expression.
+
     Returns
     -------
     reference: str
@@ -1102,6 +1158,9 @@ def add_delay_f(identifier, delay_input, delay_time, initial_value, deps):
         We initialize the stocks with equal values so that the outflow in
         the first timestep is equal to this value.
 
+    deps: dict
+        The dictionary with all the denpendencies in the expression.
+
     Returns
     -------
     reference: str
@@ -1191,6 +1250,9 @@ def add_n_delay(identifier, delay_input, delay_time, initial_value, order,
     merge_subs: list of strings
         List of the final subscript range of the python array after
         merging with other objects.
+
+    deps: dict
+        The dictionary with all the denpendencies in the expression.
 
     Returns
     -------
@@ -1310,6 +1372,9 @@ def add_forecast(identifier, forecast_input, average_time, horizon,
         List of the final subscript range of the python array after
         merging with other objects.
 
+    deps: dict
+        The dictionary with all the denpendencies in the expression.
+
     Returns
     -------
     reference: str
@@ -1412,6 +1477,9 @@ def add_sample_if_true(identifier, condition, actual_value, initial_value,
     merge_subs: list of strings
         List of the final subscript range of the python array after
         merging with other objects.
+
+    deps: dict
+        The dictionary with all the denpendencies in the expression.
 
     Returns
     -------
@@ -1517,8 +1585,10 @@ def add_n_smooth(identifier, smooth_input, smooth_time, initial_value, order,
         list of expressions, and collectively define the shape of the output
 
     merge_subs: list of strings
-        List of the final subscript range of the python array after
-       .
+        List of the final subscript range of the python array after.
+
+    deps: dict
+        The dictionary with all the denpendencies in the expression.
 
     Returns
     -------
@@ -1638,6 +1708,9 @@ def add_n_trend(identifier, trend_input, average_time, initial_trend,
         List of the final subscript range of the python array after
         merging with other objects.
 
+    deps: dict
+        The dictionary with all the denpendencies in the expression.
+
     Returns
     -------
     reference: str
@@ -1723,6 +1796,9 @@ def add_initial(identifier, value, deps):
     value: str
         The expression which will be evaluated, and the first value of
         which returned.
+
+    deps: dict
+        The dictionary with all the denpendencies in the expression.
 
     Returns
     -------
@@ -2143,7 +2219,7 @@ def add_macro(identifier, macro_name, filename, arg_names, arg_vals, deps):
         "parent_name": identifier,
         "real_name": "Macro Instantiation of " + macro_name,
         "doc": "Instantiates the Macro",
-        "py_expr": "Macro('%s', %s, '%s',"
+        "py_expr": "Macro(_root.joinpath('%s'), %s, '%s',"
         " time_initialization=lambda: __data['time'],"
         " py_name='%s')" % (filename, func_args, macro_name, py_name),
         "unit": "None",
