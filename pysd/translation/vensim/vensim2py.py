@@ -1144,7 +1144,7 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
     reference = (id _ subscript_list) / id  # check first for subscript
     subscript_list = "[" _ ~"\""? _ (subs _ ~"\""? _ "!"? _ ","? _)+ _ "]"
 
-    array = (number _ ("," / ";")? _)+ !~r"."  # negative lookahead for
+    array = (number _ ("," / ";")? _ "\\"? _)+ !~r"."  # negative lookahead for
     # anything other than an array
     string = "\'" ( "\\\'" / ~r"[^\']"IU )* "\'"
 
@@ -1368,7 +1368,8 @@ def parse_general_expression(element, namespace={}, subscript_dict={},
                     element["subs"], subscript_dict, terse=False
                 )
                 if ";" in n.text or "," in n.text:
-                    text = n.text.strip(";").replace(" ", "").replace(";", ",")
+                    text = n.text.strip(";").replace(" ", "").replace(
+                        ";", ",").replace("\\", "")
                     data = np.array([float(s) for s in text.split(",")])
                     data = data.reshape(compute_shape(coords))
                     datastr = (
