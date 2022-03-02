@@ -487,9 +487,9 @@ def merge_nested_dicts(original_dict, dict_to_merge):
 
     Returns
     -------
-        None
-    """
+    None
 
+    """
     for k, v in dict_to_merge.items():
         if (k in original_dict and isinstance(original_dict[k], dict)
                 and isinstance(dict_to_merge[k], Mapping)):

@@ -240,7 +240,19 @@ def if_then_else(condition, val_if_true, val_if_false):
     The value depending on the condition.
 
     """
+    # NUMPY: replace xr by np
     if isinstance(condition, xr.DataArray):
+        # NUMPY: neccessarry for keep the same shape always
+        # if condition.all():
+        #    value = val_if_true()
+        # elif not condition.any():
+        #    value = val_if_false()
+        # else:
+        #    return np.where(condition, val_if_true(), val_if_false())
+        #
+        # if isinstance(value, np.ndarray):
+        #    return value
+        # return np.full_like(condition, value)
         if condition.all():
             return val_if_true()
         elif not condition.any():
@@ -293,7 +305,7 @@ def logical_or(*args):
     return current
 
 
-def xidz(numerator, denominator, value_if_denom_is_zero):
+def xidz(numerator, denominator, x):
     """
     Implements Vensim's XIDZ function.
     https://www.vensim.com/documentation/fn_xidz.htm
@@ -304,26 +316,34 @@ def xidz(numerator, denominator, value_if_denom_is_zero):
     Parameters
     ----------
     numerator: float or xarray.DataArray
+        Numerator of the operation.
     denominator: float or xarray.DataArray
-        Components of the division operation
-    value_if_denom_is_zero: float or xarray.DataArray
-        The value to return if the denominator is zero
+        Denominator of the operation.
+    x: float or xarray.DataArray
+        The value to return if the denominator is zero.
 
     Returns
     -------
-    numerator / denominator if denominator > 1e-6
+    numerator/denominator if denominator > small_vensim
     otherwise, returns value_if_denom_is_zero
 
     """
+    # NUMPY: replace DataArray by np.ndarray, xr.where -> np.where
     if isinstance(denominator, xr.DataArray):
         return xr.where(np.abs(denominator) < small_vensim,
-                        value_if_denom_is_zero,
-                        numerator * 1.0 / denominator)
+                        x,
+                        numerator/denominator)
 
     if abs(denominator) < small_vensim:
-        return value_if_denom_is_zero
+        # NUMPY: neccessarry for keep the same shape always
+        # if isinstance(numerator, np.ndarray):
+        #    return np.full_like(numerator, x)
+        return x
     else:
-        return numerator * 1.0 / denominator
+        # NUMPY: neccessarry for keep the same shape always
+        # if isinstance(x, np.ndarray):
+        #    return np.full_like(x, numerator/denominator)
+        return numerator/denominator
 
 
 def zidz(numerator, denominator):
@@ -345,15 +365,21 @@ def zidz(numerator, denominator):
     otherwise zero.
 
     """
+    # NUMPY: replace DataArray by np.ndarray, xr.where -> np.where
     if isinstance(denominator, xr.DataArray):
         return xr.where(np.abs(denominator) < small_vensim,
                         0,
-                        numerator * 1.0 / denominator)
+                        numerator/denominator)
 
     if abs(denominator) < small_vensim:
+        # NUMPY: neccessarry for keep the same shape always
+        # if isinstance(denominator, np.ndarray):
+        #    return np.zeros_like(denominator)
+        if isinstance(numerator, xr.DataArray):
+            return xr.DataArray(0, numerator.coords, numerator.dims)
         return 0
     else:
-        return numerator * 1.0 / denominator
+        return numerator/denominator
 
 
 def active_initial(time, expr, init_val):
@@ -361,15 +387,19 @@ def active_initial(time, expr, init_val):
     Implements vensim's ACTIVE INITIAL function
     Parameters
     ----------
-    time: function
-        The current time function
-    expr
-    init_val
+    stage: str
+        The stage of the model.
+    expr: function
+        Running stage value
+    init_val: float or xarray.DataArray
+        Initialization stage value.
 
     Returns
     -------
 
     """
+    # TODO replace time by stage when doing a non compatible version
+    # NUMPY: both must have same dimensions in inputs, remove time.stage
     if time.stage == 'Initialization':
         return init_val
     else:
@@ -414,6 +444,7 @@ def log(x, base):
     float
       The log of 'x' in base 'base'.
     """
+    # TODO remove with PySD 3.0.0, log could be directly created in the file
     return np.log(x) / np.log(base)
 
 
@@ -431,6 +462,7 @@ def integer(x):
     Returns integer part of x.
 
     """
+    # NUMPY: replace xr by np
     if isinstance(x, xr.DataArray):
         return x.astype(int)
     else:
@@ -454,6 +486,7 @@ def quantum(a, b):
         If b > 0 returns b * integer(a/b). Otherwise, returns a.
 
     """
+    # NUMPY: replace xr by np
     if isinstance(b, xr.DataArray):
         return xr.where(b < small_vensim, a, b*integer(a/b))
     if b < small_vensim:
@@ -500,6 +533,7 @@ def sum(x, dim=None):
       The result of the sum operation in the given dimensions.
 
     """
+    # NUMPY: replace by np.sum(x, axis=axis) put directly in the file
     # float returned if the function is applied over all the dimensions
     if dim is None or set(x.dims) == set(dim):
         return float(x.sum())
@@ -525,6 +559,7 @@ def prod(x, dim=None):
       The result of the product operation in the given dimensions.
 
     """
+    # NUMPY: replace by np.prod(x, axis=axis) put directly in the file
     # float returned if the function is applied over all the dimensions
     if dim is None or set(x.dims) == set(dim):
         return float(x.prod())
@@ -550,6 +585,7 @@ def vmin(x, dim=None):
       The result of the minimum value over the given dimensions.
 
     """
+    # NUMPY: replace by np.min(x, axis=axis) put directly in the file
     # float returned if the function is applied over all the dimensions
     if dim is None or set(x.dims) == set(dim):
         return float(x.min())
@@ -575,6 +611,7 @@ def vmax(x, dim=None):
       The result of the maximum value over the dimensions.
 
     """
+    # NUMPY: replace by np.max(x, axis=axis) put directly in the file
     # float returned if the function is applied over all the dimensions
     if dim is None or set(x.dims) == set(dim):
         return float(x.max())
@@ -599,4 +636,6 @@ def invert_matrix(mat):
         Inverted matrix.
 
     """
+    # NUMPY: avoid converting to xarray, put directly the expression
+    # in the model
     return xr.DataArray(np.linalg.inv(mat.values), mat.coords, mat.dims)

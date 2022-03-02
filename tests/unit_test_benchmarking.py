@@ -28,7 +28,7 @@ class TestErrors(TestCase):
                 "more-tests/not_vensim/test_not_vensim.txt"))
 
         self.assertIn(
-            'Modelfile should be *.mdl or *.xmile',
+            'Modelfile should be *.mdl, *.xmile, or *.py',
             str(err.exception))
 
     def test_different_frames_error(self):

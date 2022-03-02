@@ -68,7 +68,6 @@ def get_file_sections(file_str):
     encoding = ~r"\{[^\}]*\}"
     """
     )
-
     parser = parsimonious.Grammar(file_structure_grammar)
     tree = parser.parse(file_str)
 

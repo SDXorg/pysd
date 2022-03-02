@@ -2,18 +2,18 @@
 Benchmarking tools for testing and comparing outputs between different files.
 Some of these functions are also used for testing.
 """
-
-import os.path
 import warnings
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 
-from pysd import read_vensim, read_xmile
+from pysd import read_vensim, read_xmile, load
 from ..py_backend.utils import load_outputs, detect_encoding
 
 
-def runner(model_file, canonical_file=None, transpose=False, data_files=None):
+def runner(model_file, canonical_file=None, transpose=False, data_files=None,
+           old=False):
     """
     Translates and runs a model and returns its output and the
     canonical output.
@@ -34,34 +34,42 @@ def runner(model_file, canonical_file=None, transpose=False, data_files=None):
     data_files: list (optional)
         List of the data files needed to run the model.
 
+    old: bool(optional)
+        If True use old translation method, used for testing backward compatibility.
+
     Returns
     -------
     output, canon: (pandas.DataFrame, pandas.DataFrame)
         pandas.DataFrame of the model output and the canonical output.
 
     """
-    directory = os.path.dirname(model_file)
+    if isinstance(model_file, str):
+        model_file = Path(model_file)
+
+    directory = model_file.parent
 
     # load canonical output
     if not canonical_file:
-        if os.path.isfile(os.path.join(directory, 'output.csv')):
-            canonical_file = os.path.join(directory, 'output.csv')
-        elif os.path.isfile(os.path.join(directory, 'output.tab')):
-            canonical_file = os.path.join(directory, 'output.tab')
+        if directory.joinpath('output.csv').is_file():
+            canonical_file = directory.joinpath('output.csv')
+        elif directory.joinpath('output.tab').is_file():
+            canonical_file = directory.joinpath('output.tab')
         else:
-            raise FileNotFoundError('\nCanonical output file not found.')
+            raise FileNotFoundError("\nCanonical output file not found.")
 
     canon = load_outputs(canonical_file,
                          transpose=transpose,
                          encoding=detect_encoding(canonical_file))
 
     # load model
-    if model_file.lower().endswith('.mdl'):
-        model = read_vensim(model_file, data_files)
-    elif model_file.lower().endswith(".xmile"):
+    if model_file.suffix.lower() == ".mdl":
+        model = read_vensim(model_file, data_files, old=old)
+    elif model_file.suffix.lower() == ".xmile":
         model = read_xmile(model_file, data_files)
+    elif model_file.suffix.lower() == ".py":
+        model = load(model_file, data_files)
     else:
-        raise ValueError('\nModelfile should be *.mdl or *.xmile')
+        raise ValueError("\nModelfile should be *.mdl, *.xmile, or *.py")
 
     # run model and return the result
 
@@ -87,8 +95,8 @@ def assert_frames_close(actual, expected, assertion="raise",
 
     assertion: str (optional)
         "raise" if an error should be raised when not able to assert
-        that two frames are close. Otherwise, it will show a warning
-        message. Default is "raise".
+        that two frames are close. If "warning", it will show a warning
+        message. If "return" it will return information. Default is "raise".
 
     verbose: bool (optional)
         If True, if any column is not close the actual and expected values
@@ -166,15 +174,17 @@ def assert_frames_close(actual, expected, assertion="raise",
         message = ""
 
         if actual_cols.difference(expected_cols):
-            columns = ["'" + col + "'" for col
-                       in actual_cols.difference(expected_cols)]
+            columns = sorted([
+                "'" + col + "'" for col
+                in actual_cols.difference(expected_cols)])
             columns = ", ".join(columns)
             message += '\nColumns ' + columns\
                        + ' from actual values not found in expected values.'
 
         if expected_cols.difference(actual_cols):
-            columns = ["'" + col + "'" for col
-                       in expected_cols.difference(actual_cols)]
+            columns = sorted([
+                "'" + col + "'" for col
+                in expected_cols.difference(actual_cols)])
             columns = ", ".join(columns)
             message += '\nColumns ' + columns\
                        + ' from expected values not found in actual values.'
@@ -190,8 +200,8 @@ def assert_frames_close(actual, expected, assertion="raise",
 
     # TODO let compare dataframes with different timestamps if "warn"
     assert np.all(np.equal(expected.index.values, actual.index.values)), \
-        'test set and actual set must share a common index' \
-        'instead found' + expected.index.values + 'vs' + actual.index.values
+        "test set and actual set must share a common index, "\
+        "instead found %s vs %s" % (expected.index.values, actual.index.values)
 
     # if for Vensim outputs where constant values are only in the first row
     _remove_constant_nan(expected)
@@ -201,13 +211,25 @@ def assert_frames_close(actual, expected, assertion="raise",
                         actual[columns],
                         **kwargs)
 
-    if c.all():
-        return
+    if c.all().all():
+        return (set(), np.nan, set()) if assertion == "return" else None
 
-    columns = np.array(columns, dtype=str)[~c.values]
+    # Get the columns that have the first different value, useful for
+    # debugging
+    false_index = c.apply(
+        lambda x: np.where(~x)[0][0] if not x.all() else np.nan)
+    index_first_false = int(np.nanmin(false_index))
+    time_first_false = c.index[index_first_false]
+    variable_first_false = sorted(
+        false_index.index[false_index == index_first_false])
+
+    columns = sorted(np.array(columns, dtype=str)[~c.all().values])
 
     assertion_details = "\nFollowing columns are not close:\n\t"\
-                        + ", ".join(columns)
+                        + ", ".join(columns) + "\n\n"\
+                        + f"First false values ({time_first_false}):\n\t"\
+                        + ", ".join(variable_first_false)
+
     if verbose:
         for col in columns:
             assertion_details += '\n\n'\
@@ -229,13 +251,15 @@ def assert_frames_close(actual, expected, assertion="raise",
 
     if assertion == "raise":
         raise AssertionError(assertion_details)
+    elif assertion == "return":
+        return (set(columns), time_first_false, set(variable_first_false))
     else:
         warnings.warn(assertion_details)
 
 
 def assert_allclose(x, y, rtol=1.e-5, atol=1.e-5):
     """
-    Asserts if all numeric values from two arrays are close.
+    Asserts if numeric values from two arrays are close.
 
     Parameters
     ----------
@@ -253,7 +277,7 @@ def assert_allclose(x, y, rtol=1.e-5, atol=1.e-5):
     None
 
     """
-    return ((abs(x - y) <= atol + rtol * abs(y)) + x.isna()*y.isna()).all()
+    return ((abs(x - y) <= atol + rtol * abs(y)) + x.isna()*y.isna())
 
 
 def _remove_constant_nan(df):

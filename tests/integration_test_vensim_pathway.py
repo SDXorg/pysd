@@ -17,119 +17,119 @@ test_models = os.path.join(_root, "test-models/tests")
 class TestIntegrationExamples(unittest.TestCase):
 
     def test_abs(self):
-        output, canon = runner(test_models + '/abs/test_abs.mdl')
+        output, canon = runner(test_models + '/abs/test_abs.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_active_initial(self):
-        output, canon = runner(test_models + '/active_initial/test_active_initial.mdl')
+        output, canon = runner(test_models + '/active_initial/test_active_initial.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_active_initial_circular(self):
-        output, canon = runner(test_models + '/active_initial_circular/test_active_initial_circular.mdl')
+        output, canon = runner(test_models + '/active_initial_circular/test_active_initial_circular.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_arguments(self):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            output, canon = runner(test_models + '/arguments/test_arguments.mdl')
+            output, canon = runner(test_models + '/arguments/test_arguments.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_array_with_line_break(self):
-        output, canon = runner(test_models + '/array_with_line_break/test_array_with_line_break.mdl')
+        output, canon = runner(test_models + '/array_with_line_break/test_array_with_line_break.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_builtin_max(self):
-        output, canon = runner(test_models + '/builtin_max/builtin_max.mdl')
+        output, canon = runner(test_models + '/builtin_max/builtin_max.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_builtin_min(self):
-        output, canon = runner(test_models + '/builtin_min/builtin_min.mdl')
+        output, canon = runner(test_models + '/builtin_min/builtin_min.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_chained_initialization(self):
-        output, canon = runner(test_models + '/chained_initialization/test_chained_initialization.mdl')
+        output, canon = runner(test_models + '/chained_initialization/test_chained_initialization.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     @unittest.skip("Working on it")
     def test_conditional_subscripts(self):
-        output, canon = runner(test_models + '/conditional_subscripts/test_conditional_subscripts.mdl')
+        output, canon = runner(test_models + '/conditional_subscripts/test_conditional_subscripts.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_control_vars(self):
-        output, canon = runner(test_models + '/control_vars/test_control_vars.mdl')
+        output, canon = runner(test_models + '/control_vars/test_control_vars.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_constant_expressions(self):
-        output, canon = runner(test_models + '/constant_expressions/test_constant_expressions.mdl')
+        output, canon = runner(test_models + '/constant_expressions/test_constant_expressions.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_data_from_other_model(self):
         output, canon = runner(
             test_models + '/data_from_other_model/test_data_from_other_model.mdl',
-            data_files=test_models + '/data_from_other_model/data.tab')
+            data_files=test_models + '/data_from_other_model/data.tab', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_delay_fixed(self):
         # issue https://github.com/JamesPHoughton/pysd/issues/147
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            output, canon = runner(test_models + '/delay_fixed/test_delay_fixed.mdl')
+            output, canon = runner(test_models + '/delay_fixed/test_delay_fixed.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_delay_numeric_error(self):
         # issue https://github.com/JamesPHoughton/pysd/issues/225
-        output, canon = runner(test_models + '/delay_numeric_error/test_delay_numeric_error.mdl')
+        output, canon = runner(test_models + '/delay_numeric_error/test_delay_numeric_error.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_delay_parentheses(self):
-        output, canon = runner(test_models + '/delay_parentheses/test_delay_parentheses.mdl')
+        output, canon = runner(test_models + '/delay_parentheses/test_delay_parentheses.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_delay_pipeline(self):
         # issue https://github.com/JamesPHoughton/pysd/issues/147
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            output, canon = runner(test_models + '/delay_pipeline/test_pipeline_delays.mdl')
+            output, canon = runner(test_models + '/delay_pipeline/test_pipeline_delays.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_delays(self):
         # issue https://github.com/JamesPHoughton/pysd/issues/147
-        output, canon = runner(test_models + '/delays/test_delays.mdl')
+        output, canon = runner(test_models + '/delays/test_delays.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_dynamic_final_time(self):
         # issue https://github.com/JamesPHoughton/pysd/issues/278
-        output, canon = runner(test_models + '/dynamic_final_time/test_dynamic_final_time.mdl')
+        output, canon = runner(test_models + '/dynamic_final_time/test_dynamic_final_time.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_euler_step_vs_saveper(self):
-        output, canon = runner(test_models + '/euler_step_vs_saveper/test_euler_step_vs_saveper.mdl')
+        output, canon = runner(test_models + '/euler_step_vs_saveper/test_euler_step_vs_saveper.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_exp(self):
-        output, canon = runner(test_models + '/exp/test_exp.mdl')
+        output, canon = runner(test_models + '/exp/test_exp.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_exponentiation(self):
-        output, canon = runner(test_models + '/exponentiation/exponentiation.mdl')
+        output, canon = runner(test_models + '/exponentiation/exponentiation.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_forecast(self):
-        output, canon = runner(test_models + '/forecast/test_forecast.mdl')
+        output, canon = runner(test_models + '/forecast/test_forecast.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_function_capitalization(self):
-        output, canon = runner(test_models + '/function_capitalization/test_function_capitalization.mdl')
+        output, canon = runner(test_models + '/function_capitalization/test_function_capitalization.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_game(self):
-        output, canon = runner(test_models + '/game/test_game.mdl')
+        output, canon = runner(test_models + '/game/test_game.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_get_constants_subrange(self):
         output, canon = runner(
           test_models + '/get_constants_subranges/'
-          + 'test_get_constants_subranges.mdl'
+          + 'test_get_constants_subranges.mdl', old=True
         )
         assert_frames_close(output, canon, rtol=rtol)
 
@@ -142,7 +142,7 @@ class TestIntegrationExamples(unittest.TestCase):
         """
         output, canon = runner(
           test_models + '/get_data_args_3d_xls/'
-          + 'test_get_data_args_3d_xls.mdl'
+          + 'test_get_data_args_3d_xls.mdl', old=True
         )
         assert_frames_close(output, canon, rtol=rtol)
 
@@ -155,7 +155,7 @@ class TestIntegrationExamples(unittest.TestCase):
         """
         output, canon = runner(
           test_models + '/get_lookups_data_3d_xls/'
-          + 'test_get_lookups_data_3d_xls.mdl'
+          + 'test_get_lookups_data_3d_xls.mdl', old=True
         )
         assert_frames_close(output, canon, rtol=rtol)
 
@@ -164,14 +164,14 @@ class TestIntegrationExamples(unittest.TestCase):
             warnings.simplefilter("ignore")
             output, canon = runner(
               test_models + '/get_lookups_subscripted_args/'
-              + 'test_get_lookups_subscripted_args.mdl'
+              + 'test_get_lookups_subscripted_args.mdl', old=True
             )
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_get_lookups_subset(self):
         output, canon = runner(
           test_models + '/get_lookups_subset/'
-          + 'test_get_lookups_subset.mdl'
+          + 'test_get_lookups_subset.mdl', old=True
         )
         assert_frames_close(output, canon, rtol=rtol)
 
@@ -180,7 +180,7 @@ class TestIntegrationExamples(unittest.TestCase):
             warnings.simplefilter("ignore")
             output, canon = runner(
                 test_models + '/get_with_missing_values_xlsx/'
-                + 'test_get_with_missing_values_xlsx.mdl'
+                + 'test_get_with_missing_values_xlsx.mdl', old=True
             )
 
         assert_frames_close(output, canon, rtol=rtol)
@@ -188,7 +188,7 @@ class TestIntegrationExamples(unittest.TestCase):
     def test_get_mixed_definitions(self):
         output, canon = runner(
           test_models + '/get_mixed_definitions/'
-          + 'test_get_mixed_definitions.mdl'
+          + 'test_get_mixed_definitions.mdl', old=True
         )
         assert_frames_close(output, canon, rtol=rtol)
 
@@ -201,343 +201,343 @@ class TestIntegrationExamples(unittest.TestCase):
         """
         output, canon = runner(
           test_models + '/get_subscript_3d_arrays_xls/'
-          + 'test_get_subscript_3d_arrays_xls.mdl'
+          + 'test_get_subscript_3d_arrays_xls.mdl', old=True
         )
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_get_xls_cellrange(self):
         output, canon = runner(
           test_models + '/get_xls_cellrange/'
-          + 'test_get_xls_cellrange.mdl'
+          + 'test_get_xls_cellrange.mdl', old=True
         )
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_if_stmt(self):
-        output, canon = runner(test_models + '/if_stmt/if_stmt.mdl')
+        output, canon = runner(test_models + '/if_stmt/if_stmt.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_initial_function(self):
-        output, canon = runner(test_models + '/initial_function/test_initial.mdl')
+        output, canon = runner(test_models + '/initial_function/test_initial.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_input_functions(self):
-        output, canon = runner(test_models + '/input_functions/test_inputs.mdl')
+        output, canon = runner(test_models + '/input_functions/test_inputs.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscripted_round(self):
-        output, canon = runner(test_models + '/subscripted_round/test_subscripted_round.mdl')
+        output, canon = runner(test_models + '/subscripted_round/test_subscripted_round.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_invert_matrix(self):
-        output, canon = runner(test_models + '/invert_matrix/test_invert_matrix.mdl')
+        output, canon = runner(test_models + '/invert_matrix/test_invert_matrix.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_limits(self):
-        output, canon = runner(test_models + '/limits/test_limits.mdl')
+        output, canon = runner(test_models + '/limits/test_limits.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_line_breaks(self):
-        output, canon = runner(test_models + '/line_breaks/test_line_breaks.mdl')
+        output, canon = runner(test_models + '/line_breaks/test_line_breaks.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_line_continuation(self):
-        output, canon = runner(test_models + '/line_continuation/test_line_continuation.mdl')
+        output, canon = runner(test_models + '/line_continuation/test_line_continuation.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_ln(self):
-        output, canon = runner(test_models + '/ln/test_ln.mdl')
+        output, canon = runner(test_models + '/ln/test_ln.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_log(self):
-        output, canon = runner(test_models + '/log/test_log.mdl')
+        output, canon = runner(test_models + '/log/test_log.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_logicals(self):
-        output, canon = runner(test_models + '/logicals/test_logicals.mdl')
+        output, canon = runner(test_models + '/logicals/test_logicals.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_lookups(self):
-        output, canon = runner(test_models + '/lookups/test_lookups.mdl')
+        output, canon = runner(test_models + '/lookups/test_lookups.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_lookups_without_range(self):
-        output, canon = runner(test_models + '/lookups_without_range/test_lookups_without_range.mdl')
+        output, canon = runner(test_models + '/lookups_without_range/test_lookups_without_range.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_lookups_funcnames(self):
-        output, canon = runner(test_models + '/lookups_funcnames/test_lookups_funcnames.mdl')
+        output, canon = runner(test_models + '/lookups_funcnames/test_lookups_funcnames.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_lookups_inline(self):
-        output, canon = runner(test_models + '/lookups_inline/test_lookups_inline.mdl')
+        output, canon = runner(test_models + '/lookups_inline/test_lookups_inline.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_lookups_inline_bounded(self):
-        output, canon = runner(test_models + '/lookups_inline_bounded/test_lookups_inline_bounded.mdl')
+        output, canon = runner(test_models + '/lookups_inline_bounded/test_lookups_inline_bounded.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_lookups_with_expr(self):
-        output, canon = runner(test_models + '/lookups_with_expr/test_lookups_with_expr.mdl')
+        output, canon = runner(test_models + '/lookups_with_expr/test_lookups_with_expr.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_macro_cross_reference(self):
-        output, canon = runner(test_models + '/macro_cross_reference/test_macro_cross_reference.mdl')
+        output, canon = runner(test_models + '/macro_cross_reference/test_macro_cross_reference.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_macro_expression(self):
-        output, canon = runner(test_models + '/macro_expression/test_macro_expression.mdl')
+        output, canon = runner(test_models + '/macro_expression/test_macro_expression.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_macro_multi_expression(self):
-        output, canon = runner(test_models + '/macro_multi_expression/test_macro_multi_expression.mdl')
+        output, canon = runner(test_models + '/macro_multi_expression/test_macro_multi_expression.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_macro_multi_macros(self):
-        output, canon = runner(test_models + '/macro_multi_macros/test_macro_multi_macros.mdl')
+        output, canon = runner(test_models + '/macro_multi_macros/test_macro_multi_macros.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     @unittest.skip('working')
     def test_macro_output(self):
-        output, canon = runner(test_models + '/macro_output/test_macro_output.mdl')
+        output, canon = runner(test_models + '/macro_output/test_macro_output.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_macro_stock(self):
-        output, canon = runner(test_models + '/macro_stock/test_macro_stock.mdl')
+        output, canon = runner(test_models + '/macro_stock/test_macro_stock.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
-    @unittest.skip('do we need this?')
+    @unittest.skip("Working on it")
     def test_macro_trailing_definition(self):
-        output, canon = runner(test_models + '/macro_trailing_definition/test_macro_trailing_definition.mdl')
+        output, canon = runner(test_models + '/macro_trailing_definition/test_macro_trailing_definition.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_model_doc(self):
-        output, canon = runner(test_models + '/model_doc/model_doc.mdl')
+        output, canon = runner(test_models + '/model_doc/model_doc.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_nested_functions(self):
-        output, canon = runner(test_models + '/nested_functions/test_nested_functions.mdl')
+        output, canon = runner(test_models + '/nested_functions/test_nested_functions.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_number_handling(self):
-        output, canon = runner(test_models + '/number_handling/test_number_handling.mdl')
+        output, canon = runner(test_models + '/number_handling/test_number_handling.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_parentheses(self):
-        output, canon = runner(test_models + '/parentheses/test_parens.mdl')
+        output, canon = runner(test_models + '/parentheses/test_parens.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     @unittest.skip('low priority')
     def test_reference_capitalization(self):
         """A properly formatted Vensim model should never create this failure"""
-        output, canon = runner(test_models + '/reference_capitalization/test_reference_capitalization.mdl')
+        output, canon = runner(test_models + '/reference_capitalization/test_reference_capitalization.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_repeated_subscript(self):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            output, canon = runner(test_models + '/repeated_subscript/test_repeated_subscript.mdl')
+            output, canon = runner(test_models + '/repeated_subscript/test_repeated_subscript.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_rounding(self):
-        output, canon = runner(test_models + '/rounding/test_rounding.mdl')
+        output, canon = runner(test_models + '/rounding/test_rounding.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_sample_if_true(self):
-        output, canon = runner(test_models + '/sample_if_true/test_sample_if_true.mdl')
+        output, canon = runner(test_models + '/sample_if_true/test_sample_if_true.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_smooth(self):
-        output, canon = runner(test_models + '/smooth/test_smooth.mdl')
+        output, canon = runner(test_models + '/smooth/test_smooth.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_smooth_and_stock(self):
-        output, canon = runner(test_models + '/smooth_and_stock/test_smooth_and_stock.mdl')
+        output, canon = runner(test_models + '/smooth_and_stock/test_smooth_and_stock.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_special_characters(self):
-        output, canon = runner(test_models + '/special_characters/test_special_variable_names.mdl')
+        output, canon = runner(test_models + '/special_characters/test_special_variable_names.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_sqrt(self):
-        output, canon = runner(test_models + '/sqrt/test_sqrt.mdl')
+        output, canon = runner(test_models + '/sqrt/test_sqrt.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subrange_merge(self):
-        output, canon = runner(test_models + '/subrange_merge/test_subrange_merge.mdl')
+        output, canon = runner(test_models + '/subrange_merge/test_subrange_merge.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_logicals(self):
-        output, canon = runner(test_models + '/subscript_logicals/test_subscript_logicals.mdl')
+        output, canon = runner(test_models + '/subscript_logicals/test_subscript_logicals.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_multiples(self):
-        output, canon = runner(test_models + '/subscript_multiples/test_multiple_subscripts.mdl')
+        output, canon = runner(test_models + '/subscript_multiples/test_multiple_subscripts.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_1d_arrays(self):
-        output, canon = runner(test_models + '/subscript_1d_arrays/test_subscript_1d_arrays.mdl')
+        output, canon = runner(test_models + '/subscript_1d_arrays/test_subscript_1d_arrays.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_2d_arrays(self):
-        output, canon = runner(test_models + '/subscript_2d_arrays/test_subscript_2d_arrays.mdl')
+        output, canon = runner(test_models + '/subscript_2d_arrays/test_subscript_2d_arrays.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_3d_arrays(self):
-        output, canon = runner(test_models + '/subscript_3d_arrays/test_subscript_3d_arrays.mdl')
+        output, canon = runner(test_models + '/subscript_3d_arrays/test_subscript_3d_arrays.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_3d_arrays_lengthwise(self):
-        output, canon = runner(test_models + '/subscript_3d_arrays_lengthwise/test_subscript_3d_arrays_lengthwise.mdl')
+        output, canon = runner(test_models + '/subscript_3d_arrays_lengthwise/test_subscript_3d_arrays_lengthwise.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_3d_arrays_widthwise(self):
-        output, canon = runner(test_models + '/subscript_3d_arrays_widthwise/test_subscript_3d_arrays_widthwise.mdl')
+        output, canon = runner(test_models + '/subscript_3d_arrays_widthwise/test_subscript_3d_arrays_widthwise.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_aggregation(self):
-        output, canon = runner(test_models + '/subscript_aggregation/test_subscript_aggregation.mdl')
+        output, canon = runner(test_models + '/subscript_aggregation/test_subscript_aggregation.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_constant_call(self):
-        output, canon = runner(test_models + '/subscript_constant_call/test_subscript_constant_call.mdl')
+        output, canon = runner(test_models + '/subscript_constant_call/test_subscript_constant_call.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_copy(self):
-        output, canon = runner(test_models + '/subscript_copy/test_subscript_copy.mdl')
+        output, canon = runner(test_models + '/subscript_copy/test_subscript_copy.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_docs(self):
-        output, canon = runner(test_models + '/subscript_docs/subscript_docs.mdl')
+        output, canon = runner(test_models + '/subscript_docs/subscript_docs.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_element_name(self):
         # issue https://github.com/JamesPHoughton/pysd/issues/216
-        output, canon = runner(test_models + '/subscript_element_name/test_subscript_element_name.mdl')
+        output, canon = runner(test_models + '/subscript_element_name/test_subscript_element_name.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_individually_defined_1_of_2d_arrays(self):
-        output, canon = runner(test_models + '/subscript_individually_defined_1_of_2d_arrays/subscript_individually_defined_1_of_2d_arrays.mdl')
+        output, canon = runner(test_models + '/subscript_individually_defined_1_of_2d_arrays/subscript_individually_defined_1_of_2d_arrays.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_individually_defined_1_of_2d_arrays_from_floats(self):
-        output, canon = runner(test_models + '/subscript_individually_defined_1_of_2d_arrays_from_floats/subscript_individually_defined_1_of_2d_arrays_from_floats.mdl')
+        output, canon = runner(test_models + '/subscript_individually_defined_1_of_2d_arrays_from_floats/subscript_individually_defined_1_of_2d_arrays_from_floats.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_individually_defined_1d_arrays(self):
-        output, canon = runner(test_models + '/subscript_individually_defined_1d_arrays/subscript_individually_defined_1d_arrays.mdl')
+        output, canon = runner(test_models + '/subscript_individually_defined_1d_arrays/subscript_individually_defined_1d_arrays.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_individually_defined_stocks(self):
-        output, canon = runner(test_models + '/subscript_individually_defined_stocks/test_subscript_individually_defined_stocks.mdl')
+        output, canon = runner(test_models + '/subscript_individually_defined_stocks/test_subscript_individually_defined_stocks.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_mapping_simple(self):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            output, canon = runner(test_models + '/subscript_mapping_simple/test_subscript_mapping_simple.mdl')
+            output, canon = runner(test_models + '/subscript_mapping_simple/test_subscript_mapping_simple.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_mapping_vensim(self):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            output, canon = runner(test_models + '/subscript_mapping_vensim/test_subscript_mapping_vensim.mdl')
+            output, canon = runner(test_models + '/subscript_mapping_vensim/test_subscript_mapping_vensim.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_mixed_assembly(self):
-        output, canon = runner(test_models + '/subscript_mixed_assembly/test_subscript_mixed_assembly.mdl')
+        output, canon = runner(test_models + '/subscript_mixed_assembly/test_subscript_mixed_assembly.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_selection(self):
-        output, canon = runner(test_models + '/subscript_selection/subscript_selection.mdl')
+        output, canon = runner(test_models + '/subscript_selection/subscript_selection.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_numeric_range(self):
-        output, canon = runner(test_models + '/subscript_numeric_range/test_subscript_numeric_range.mdl')
+        output, canon = runner(test_models + '/subscript_numeric_range/test_subscript_numeric_range.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_subranges(self):
-        output, canon = runner(test_models + '/subscript_subranges/test_subscript_subrange.mdl')
+        output, canon = runner(test_models + '/subscript_subranges/test_subscript_subrange.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_subranges_equal(self):
-        output, canon = runner(test_models + '/subscript_subranges_equal/test_subscript_subrange_equal.mdl')
+        output, canon = runner(test_models + '/subscript_subranges_equal/test_subscript_subrange_equal.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_switching(self):
-        output, canon = runner(test_models + '/subscript_switching/subscript_switching.mdl')
+        output, canon = runner(test_models + '/subscript_switching/subscript_switching.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_transposition(self):
-        output, canon = runner(test_models + '/subscript_transposition/test_subscript_transposition.mdl')
+        output, canon = runner(test_models + '/subscript_transposition/test_subscript_transposition.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscript_updimensioning(self):
-        output, canon = runner(test_models + '/subscript_updimensioning/test_subscript_updimensioning.mdl')
+        output, canon = runner(test_models + '/subscript_updimensioning/test_subscript_updimensioning.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscripted_delays(self):
-        output, canon = runner(test_models + '/subscripted_delays/test_subscripted_delays.mdl')
+        output, canon = runner(test_models + '/subscripted_delays/test_subscripted_delays.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscripted_flows(self):
-        output, canon = runner(test_models + '/subscripted_flows/test_subscripted_flows.mdl')
+        output, canon = runner(test_models + '/subscripted_flows/test_subscripted_flows.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscripted_if_then_else(self):
-        output, canon = runner(test_models + '/subscripted_if_then_else/test_subscripted_if_then_else.mdl')
+        output, canon = runner(test_models + '/subscripted_if_then_else/test_subscripted_if_then_else.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscripted_logicals(self):
-        output, canon = runner(test_models + '/subscripted_logicals/test_subscripted_logicals.mdl')
+        output, canon = runner(test_models + '/subscripted_logicals/test_subscripted_logicals.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscripted_smooth(self):
         # issue https://github.com/JamesPHoughton/pysd/issues/226
-        output, canon = runner(test_models + '/subscripted_smooth/test_subscripted_smooth.mdl')
+        output, canon = runner(test_models + '/subscripted_smooth/test_subscripted_smooth.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscripted_trend(self):
         # issue https://github.com/JamesPHoughton/pysd/issues/226
-        output, canon = runner(test_models + '/subscripted_trend/test_subscripted_trend.mdl')
+        output, canon = runner(test_models + '/subscripted_trend/test_subscripted_trend.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subscripted_xidz(self):
-        output, canon = runner(test_models + '/subscripted_xidz/test_subscripted_xidz.mdl')
+        output, canon = runner(test_models + '/subscripted_xidz/test_subscripted_xidz.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_subset_duplicated_coord(self):
         output, canon = runner(test_models + '/subset_duplicated_coord/'
-                               + 'test_subset_duplicated_coord.mdl')
+                               + 'test_subset_duplicated_coord.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_time(self):
-        output, canon = runner(test_models + '/time/test_time.mdl')
+        output, canon = runner(test_models + '/time/test_time.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_trend(self):
-        output, canon = runner(test_models + '/trend/test_trend.mdl')
+        output, canon = runner(test_models + '/trend/test_trend.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_trig(self):
-        output, canon = runner(test_models + '/trig/test_trig.mdl')
+        output, canon = runner(test_models + '/trig/test_trig.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_variable_ranges(self):
-        output, canon = runner(test_models + '/variable_ranges/test_variable_ranges.mdl')
+        output, canon = runner(test_models + '/variable_ranges/test_variable_ranges.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_unicode_characters(self):
-        output, canon = runner(test_models + '/unicode_characters/unicode_test_model.mdl')
+        output, canon = runner(test_models + '/unicode_characters/unicode_test_model.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_xidz_zidz(self):
-        output, canon = runner(test_models + '/xidz_zidz/xidz_zidz.mdl')
+        output, canon = runner(test_models + '/xidz_zidz/xidz_zidz.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_run_uppercase(self):
-        output, canon = runner(test_models + '/case_sensitive_extension/teacup-upper.MDL')
+        output, canon = runner(test_models + '/case_sensitive_extension/teacup-upper.MDL', old=True)
         assert_frames_close(output, canon, rtol=rtol)
 
     def test_odd_number_quotes(self):
-        output, canon = runner(test_models + '/odd_number_quotes/teacup_3quotes.mdl')
+        output, canon = runner(test_models + '/odd_number_quotes/teacup_3quotes.mdl', old=True)
         assert_frames_close(output, canon, rtol=rtol)

@@ -4,6 +4,7 @@ Model components and time managing classes.
 
 import os
 import random
+import numpy as np
 from importlib.machinery import SourceFileLoader
 
 from pysd._version import __version__
@@ -84,6 +85,8 @@ class Components(object):
 
 
 class Time(object):
+    rprec = 1e-10  # relative precission for final time and saving time
+
     def __init__(self):
         self._time = None
         self.stage = None
@@ -135,7 +138,7 @@ class Time(object):
             True if time is smaller than final time. Otherwise, returns Fase.
 
         """
-        return self._time < self.final_time()
+        return self._time + self.time_step()*self.rprec < self.final_time()
 
     def in_return(self):
         """ Check if current time should be returned """
@@ -144,8 +147,14 @@ class Time(object):
 
         time_delay = self._time - self._initial_time
         save_per = self.saveper()
-        prec = self.time_step() * 1e-10
+        prec = self.time_step() * self.rprec
         return time_delay % save_per < prec or -time_delay % save_per < prec
+
+    def round(self):
+        """ Return rounded time to outputs to avoid float precission error"""
+        return np.round(
+            self._time,
+            -int(np.log10(self.time_step()*self.rprec)))
 
     def add_return_timestamps(self, return_timestamps):
         """ Add return timestamps """

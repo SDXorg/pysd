@@ -13,6 +13,7 @@ import xarray as xr
 from openpyxl import load_workbook
 from . import utils
 from .data import Data
+from .lookups import Lookups
 
 
 class Excels():
@@ -551,9 +552,9 @@ class External(object):
                 y[i] = yr[-1]
             elif value <= xr[0]:
                 y[i] = yr[0]
-            elif self.interp == 'look forward':
+            elif self.interp == 'look_forward':
                 y[i] = yr[xr >= value][0]
-            elif self.interp == 'hold backward':
+            elif self.interp == 'hold_backward':
                 y[i] = yr[xr <= value][-1]
             else:
                 y[i] = np.interp(value, xr, yr)
@@ -705,7 +706,8 @@ class ExtData(External, Data):
         self.cells = [cell]
         self.coordss = [coords]
         self.root = root
-        self.interp = interp
+        # TODO remove in 3.0.0 (self.interp = interp)
+        self.interp = interp.replace(" ", "_") if interp else None
         self.is_float = not bool(coords)
 
         # check if the interpolation method is valid
@@ -713,11 +715,11 @@ class ExtData(External, Data):
             self.interp = "interpolate"
 
         if self.interp not in ["interpolate", "raw",
-                               "look forward", "hold backward"]:
+                               "look_forward", "hold_backward"]:
             raise ValueError(self.py_name + "\n"
                              + " The interpolation method (interp) must be "
                              + "'raw', 'interpolate', "
-                             + "'look forward' or 'hold backward")
+                             + "'look_forward' or 'hold_backward")
 
     def add(self, file_name, sheet, time_row_or_col, cell,
             interp, coords):
@@ -732,7 +734,7 @@ class ExtData(External, Data):
 
         if not interp:
             interp = "interpolate"
-        if interp != self.interp:
+        if interp.replace(" ", "_") != self.interp:
             raise ValueError(self.py_name + "\n"
                              + "Error matching interpolation method with "
                              + "previously defined one")
@@ -753,7 +755,7 @@ class ExtData(External, Data):
                    self.cells, self.coordss)])
 
 
-class ExtLookup(External):
+class ExtLookup(External, Lookups):
     """
     Class for Vensim GET XLS LOOKUPS/GET DIRECT LOOKUPS
     """
@@ -768,6 +770,7 @@ class ExtLookup(External):
         self.root = root
         self.coordss = [coords]
         self.interp = "interpolate"
+        self.is_float = not bool(coords)
 
     def add(self, file_name, sheet, x_row_or_col, cell, coords):
         """
@@ -793,58 +796,6 @@ class ExtLookup(External):
             self.cell, self.coords
             in zip(self.files, self.sheets, self.x_row_or_cols,
                    self.cells, self.coordss)])
-
-    def __call__(self, x):
-        return self._call(self.data, x)
-
-    def _call(self, data, x):
-        if isinstance(x, xr.DataArray):
-            if not x.dims:
-                # shape 0 xarrays
-                return self._call(data, float(x))
-            if np.all(x > data['lookup_dim'].values[-1]):
-                outdata, _ = xr.broadcast(data[-1], x)
-                warnings.warn(
-                  self.py_name + "\n"
-                  + "extrapolating data above the maximum value of the series")
-            elif np.all(x < data['lookup_dim'].values[0]):
-                outdata, _ = xr.broadcast(data[0], x)
-                warnings.warn(
-                  self.py_name + "\n"
-                  + "extrapolating data below the minimum value of the series")
-            else:
-                data, _ = xr.broadcast(data, x)
-                outdata = data[0].copy()
-                for a in utils.xrsplit(x):
-                    outdata.loc[a.coords] = self._call(
-                        data.loc[a.coords],
-                        float(a))
-            # the output will be always an xarray
-            return outdata.reset_coords('lookup_dim', drop=True)
-
-        else:
-            if x in data['lookup_dim'].values:
-                outdata = data.sel(lookup_dim=x)
-            elif x > data['lookup_dim'].values[-1]:
-                outdata = data[-1]
-                warnings.warn(
-                  self.py_name + "\n"
-                  + "extrapolating data above the maximum value of the series")
-            elif x < data['lookup_dim'].values[0]:
-                outdata = data[0]
-                warnings.warn(
-                  self.py_name + "\n"
-                  + "extrapolating data below the minimum value of the series")
-            else:
-                outdata = data.interp(lookup_dim=x)
-
-            # the output could be a float or an xarray
-            if self.coordss[0]:
-                # Remove lookup dimension coord from the DataArray
-                return outdata.reset_coords('lookup_dim', drop=True)
-            else:
-                # if lookup has no-coords return a float
-                return float(outdata)
 
 
 class ExtConstant(External):

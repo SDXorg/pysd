@@ -207,12 +207,12 @@ class TestExternalMethods(unittest.TestCase):
         interp = np.array([1., 1., 1., 3., 3.5, 4.,
                            5., 6., 7., 8., 8., 8.])
 
-        ext.interp = "hold backward"
+        ext.interp = "hold_backward"
         datac = data.copy()
         ext._fill_missing(series, datac)
         self.assertTrue(np.all(hold_back == datac))
 
-        ext.interp = "look forward"
+        ext.interp = "look_forward"
         datac = data.copy()
         ext._fill_missing(series, datac)
         self.assertTrue(np.all(look_for == datac))
@@ -456,7 +456,7 @@ class TestData(unittest.TestCase):
 
     def test_data_forward_h1d(self):
         """
-        ExtData test for 1d horizontal series look forward
+        ExtData test for 1d horizontal series look_forward
         """
         import pysd
 
@@ -465,7 +465,7 @@ class TestData(unittest.TestCase):
         time_row_or_col = "4"
         cell = "C5"
         coords = {}
-        interp = "look forward"
+        interp = "look_forward"
         py_name = "test_data_forward_h1d"
 
         data = pysd.external.ExtData(file_name=file_name,
@@ -486,7 +486,7 @@ class TestData(unittest.TestCase):
 
     def test_data_forward_v1d(self):
         """
-        ExtData test for 1d vertical series look forward
+        ExtData test for 1d vertical series look_forward
         """
         import pysd
 
@@ -495,7 +495,7 @@ class TestData(unittest.TestCase):
         time_row_or_col = "B"
         cell = "C5"
         coords = {}
-        interp = "look forward"
+        interp = "look_forward"
         py_name = "test_data_forward_v1d"
 
         data = pysd.external.ExtData(file_name=file_name,
@@ -516,7 +516,7 @@ class TestData(unittest.TestCase):
 
     def test_data_forward_hn1d(self):
         """
-        ExtData test for 1d horizontal series look forward by cell range names
+        ExtData test for 1d horizontal series look_forward by cell range names
         """
         import pysd
 
@@ -525,7 +525,7 @@ class TestData(unittest.TestCase):
         time_row_or_col = "time"
         cell = "data_1d"
         coords = {}
-        interp = "look forward"
+        interp = "look_forward"
         py_name = "test_data_forward_hn1d"
 
         data = pysd.external.ExtData(file_name=file_name,
@@ -546,7 +546,7 @@ class TestData(unittest.TestCase):
 
     def test_data_forward_vn1d(self):
         """
-        ExtData test for 1d vertical series look forward by cell range names
+        ExtData test for 1d vertical series look_forward by cell range names
         """
         import pysd
 
@@ -555,7 +555,7 @@ class TestData(unittest.TestCase):
         time_row_or_col = "time"
         cell = "data_1d"
         coords = {}
-        interp = "look forward"
+        interp = "look_forward"
         py_name = "test_data_forward_vn1d"
 
         data = pysd.external.ExtData(file_name=file_name,
@@ -576,7 +576,7 @@ class TestData(unittest.TestCase):
 
     def test_data_backward_h1d(self):
         """
-        ExtData test for 1d horizontal series hold backward
+        ExtData test for 1d horizontal series hold_backward
         """
         import pysd
 
@@ -585,7 +585,7 @@ class TestData(unittest.TestCase):
         time_row_or_col = "4"
         cell = "C5"
         coords = {}
-        interp = "hold backward"
+        interp = "hold_backward"
         py_name = "test_data_backward_h1d"
 
         data = pysd.external.ExtData(file_name=file_name,
@@ -606,7 +606,7 @@ class TestData(unittest.TestCase):
 
     def test_data_backward_v1d(self):
         """
-        ExtData test for 1d vertical series hold backward by cell range names
+        ExtData test for 1d vertical series hold_backward by cell range names
         """
         import pysd
 
@@ -615,7 +615,7 @@ class TestData(unittest.TestCase):
         time_row_or_col = "B"
         cell = "C5"
         coords = {}
-        interp = "hold backward"
+        interp = "hold_backward"
         py_name = "test_data_backward_v1d"
 
         data = pysd.external.ExtData(file_name=file_name,
@@ -636,7 +636,7 @@ class TestData(unittest.TestCase):
 
     def test_data_backward_hn1d(self):
         """
-        ExtData test for 1d horizontal series hold backward by cell range names
+        ExtData test for 1d horizontal series hold_backward by cell range names
         """
         import pysd
 
@@ -645,7 +645,7 @@ class TestData(unittest.TestCase):
         time_row_or_col = "time"
         cell = "data_1d"
         coords = {}
-        interp = "hold backward"
+        interp = "hold_backward"
         py_name = "test_data_backward_hn1d"
 
         data = pysd.external.ExtData(file_name=file_name,
@@ -666,7 +666,7 @@ class TestData(unittest.TestCase):
 
     def test_data_backward_vn1d(self):
         """
-        ExtData test for 1d vertical series hold backward by cell range names
+        ExtData test for 1d vertical series hold_backward by cell range names
         """
         import pysd
 
@@ -675,7 +675,7 @@ class TestData(unittest.TestCase):
         time_row_or_col = "time"
         cell = "data_1d"
         coords = {}
-        interp = "hold backward"
+        interp = "hold_backward"
         py_name = "test_data_backward_vn1d"
 
         data = pysd.external.ExtData(file_name=file_name,
@@ -726,7 +726,7 @@ class TestData(unittest.TestCase):
 
     def test_data_forward_hn2d(self):
         """
-        ExtData test for 2d vertical series look forward by cell range names
+        ExtData test for 2d vertical series look_forward by cell range names
         """
         import pysd
 
@@ -735,7 +735,7 @@ class TestData(unittest.TestCase):
         time_row_or_col = "time"
         cell = "data_2d"
         coords = {'ABC': ['A', 'B', 'C']}
-        interp = "look forward"
+        interp = "look_forward"
         py_name = "test_data_forward_hn2d"
 
         data = pysd.external.ExtData(file_name=file_name,
@@ -756,7 +756,7 @@ class TestData(unittest.TestCase):
 
     def test_data_backward_v2d(self):
         """
-        ExtData test for 2d vertical series hold backward
+        ExtData test for 2d vertical series hold_backward
         """
         import pysd
 
@@ -765,7 +765,7 @@ class TestData(unittest.TestCase):
         time_row_or_col = "B"
         cell = "C5"
         coords = {'ABC': ['A', 'B', 'C']}
-        interp = "hold backward"
+        interp = "hold_backward"
         py_name = "test_data_backward_v2d"
 
         data = pysd.external.ExtData(file_name=file_name,
@@ -827,7 +827,7 @@ class TestData(unittest.TestCase):
 
     def test_data_forward_v3d(self):
         """
-        ExtData test for 3d vertical series look forward
+        ExtData test for 3d vertical series look_forward
         """
         import pysd
 
@@ -838,7 +838,7 @@ class TestData(unittest.TestCase):
         cell_2 = "F5"
         coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C']}
         coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C']}
-        interp = "look forward"
+        interp = "look_forward"
         py_name = "test_data_forward_v3d"
 
         data = pysd.external.ExtData(file_name=file_name,
@@ -867,7 +867,7 @@ class TestData(unittest.TestCase):
 
     def test_data_backward_hn3d(self):
         """
-        ExtData test for 3d horizontal series hold backward by cellrange names
+        ExtData test for 3d horizontal series hold_backward by cellrange names
         """
         import pysd
 
@@ -878,7 +878,7 @@ class TestData(unittest.TestCase):
         cell_2 = "data_2db"
         coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C']}
         coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C']}
-        interp = "hold backward"
+        interp = "hold_backward"
         py_name = "test_data_backward_hn3d"
 
         data = pysd.external.ExtData(file_name=file_name,
@@ -2890,7 +2890,7 @@ class TestWarningsErrors(unittest.TestCase):
         coords_1 = {'ABC': ['A', 'B', 'C'], 'XY': ['X']}
         coords_2 = {'ABC': ['A', 'B', 'C'], 'XY': ['Y']}
         interp = None
-        interp2 = "look forward"
+        interp2 = "look_forward"
         py_name = "test_data_h3d_interp"
 
         data = pysd.external.ExtData(file_name=file_name,

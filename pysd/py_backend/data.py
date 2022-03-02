@@ -1,5 +1,6 @@
 import warnings
 import re
+import random
 from pathlib import Path
 
 import numpy as np
@@ -50,6 +51,8 @@ class Columns():
             indicate if the output file is transposed.
 
         """
+        # in the most cases variables will be split per columns, then
+        # read the first row to have all the column names
         out = cls.read_line(file_name, encoding)
         if out is None:
             raise ValueError(
@@ -59,10 +62,16 @@ class Columns():
         transpose = False
 
         try:
-            [float(col) for col in out]
-            out = cls.read_row(file_name, encoding)
+            # if we fail converting columns to float then they are
+            # not numeric values, so current direction is okay
+            [float(col) for col in random.sample(out, 3)]
+            # we did not fail, read the first column to see if variables
+            # are split per rows
+            out = cls.read_col(file_name, encoding)
             transpose = True
-            [float(col) for col in out]
+            # if we still are able to transform values to float the
+            # file is not valid
+            [float(col) for col in random.sample(out, 3)]
         except ValueError:
             return out, transpose
         else:
@@ -91,7 +100,7 @@ class Columns():
             return None
 
     @classmethod
-    def read_row(cls, file_name, encoding=None):
+    def read_col(cls, file_name, encoding=None):
         """
         Read the firts column and return a set of it.
         """
@@ -190,9 +199,9 @@ class Data(object):
                 outdata = self.data[0]
             elif self.interp == "interpolate":
                 outdata = self.data.interp(time=time)
-            elif self.interp == 'look forward':
+            elif self.interp == 'look_forward':
                 outdata = self.data.sel(time=time, method="backfill")
-            elif self.interp == 'hold backward':
+            elif self.interp == 'hold_backward':
                 outdata = self.data.sel(time=time, method="pad")
 
             if self.is_float:
@@ -214,15 +223,22 @@ class Data(object):
 
 class TabData(Data):
     """
-    Data from tabular file tab/cls, it could be from Vensim output.
+    Data from tabular file tab/csv, it could be from Vensim output.
     """
     def __init__(self, real_name, py_name, coords, interp="interpolate"):
         self.real_name = real_name
         self.py_name = py_name
         self.coords = coords
-        self.interp = interp
+        self.interp = interp.replace(" ", "_") if interp else None
         self.is_float = not bool(coords)
         self.data = None
+
+        if self.interp not in ["interpolate", "raw",
+                               "look_forward", "hold_backward"]:
+            raise ValueError(self.py_name + "\n"
+                             + " The interpolation method (interp) must be "
+                             + "'raw', 'interpolate', "
+                             + "'look_forward' or 'hold_backward")
 
     def load_data(self, file_names):
         """

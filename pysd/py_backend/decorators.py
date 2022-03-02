@@ -14,6 +14,7 @@ def subs(dims, subcoords):
     """
     def decorator(function):
         function.dims = dims
+        function.args = inspect.getfullargspec(function)[0]
 
         @wraps(function)
         def wrapper(*args):

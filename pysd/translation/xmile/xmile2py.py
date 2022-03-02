@@ -21,6 +21,8 @@ def translate_xmile(xmile_file):
     Functionality is currently limited.
 
     """
+    if not isinstance(xmile_file, str):
+        xmile_file = str(xmile_file)
     # process xml file
     xml_parser = etree.XMLParser(encoding="utf-8", recover=True)
     root = etree.parse(xmile_file, parser=xml_parser).getroot()
