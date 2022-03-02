@@ -1,0 +1,19 @@
+# Parsing Expression Grammar: common_grammar
+
+name = basic_id / escape_group
+
+# This takes care of models with Unicode variable names
+basic_id = id_start id_continue*
+
+id_start = ~r"[\w]"IU
+id_continue = id_start / ~r"[0-9\'\$\s\_]"
+
+# between quotes, either escaped quote or character that is not a quote
+escape_group = "\"" ( "\\\"" / ~r"[^\"]" )* "\""
+
+number = raw_number
+raw_number = ("+"/"-")? ~r"\d+\.?\d*([eE][+-]?\d+)?"
+string = "\'" (~r"[^\']"IU)* "\'"
+range = _ "[" ~r"[^\]]*" "]" _ ","
+
+_ = ~r"[\s\\]*"

@@ -1,0 +1,12 @@
+# Parsing Expression Grammar: section_elements
+
+model = (entry / section)+ sketch?
+entry = element "~" element "~" doc ("~" element)? "|"
+section = element "~" element "|"
+sketch = ~r".*"  #anything
+
+# Either an escape group, or a character that is not tilde or pipe
+element = ( escape_group / ~r"[^~|]")*
+
+# Anything other that is not a tilde or pipe
+doc = (~r"[^~|]")*

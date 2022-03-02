@@ -1,0 +1,7 @@
+# Parsing Expression Grammar: lookups
+
+lookup = _ "(" _ (regularLookup / excelLookup) _ ")"
+regularLookup = range? _ ( "(" _ number _ "," _ number _ ")" _ ","? _ )+
+excelLookup = ~"GET( |_)(XLS|DIRECT)( |_)LOOKUPS"I _ "(" (args _ ","? _)+ ")"
+
+args = ~r"[^,()]*"

@@ -1,0 +1,36 @@
+# Parsing Expression Grammar: components
+
+expr_type = array / final_expr / empty
+
+final_expr = logic_expr _ (logic_oper _ logic_expr)*  # logic operators (:and:, :or:)
+logic_expr = not_oper? _ comp_expr  # :not: operator
+comp_expr = add_expr _ (comp_oper _ add_expr)?  # comparison (e.g. '<', '=>')
+add_expr = prod_expr _ (add_oper _ prod_expr)*  # addition and substraction
+prod_expr = exp_expr _ (prod_oper _ exp_expr)*  # product and division
+exp_expr = neg_expr _ (exp_oper _ neg_expr)*  # exponential
+neg_expr = pre_oper? _ expr  # pre operators (-, +)
+expr = lookup_with_def / call / parens / number / reference / nan
+
+lookup_with_def = ~r"(WITH\ LOOKUP)"I _ "(" _ final_expr _ "," _ "(" _  range?  ( "(" _ raw_number _ "," _ raw_number _ ")" _ ","? _ )+ _ ")" _ ")"
+
+nan = ":NA:"
+
+arguments = ((string / final_expr) _ ","? _)*
+parens   = "(" _ final_expr _ ")"
+
+call = reference _ "(" _ arguments _ ")"
+
+reference = (name _ subscript_list) / name  # check first for subscript
+subscript_list = "[" _ (name _ "!"? _ ","? _)+ _ "]"
+
+array = (raw_number _ ("," / ";")? _)+ !~r"."  # negative lookahead for
+
+logic_oper = ~r"(%(logic_ops)s)"IU
+not_oper = ~r"(%(not_ops)s)"IU
+comp_oper = ~r"(%(comp_ops)s)"IU
+add_oper = ~r"(%(add_ops)s)"IU
+prod_oper = ~r"(%(prod_ops)s)"IU
+exp_oper = ~r"(%(exp_ops)s)"IU
+pre_oper = ~r"(%(pre_ops)s)"IU
+
+empty = "" # empty string

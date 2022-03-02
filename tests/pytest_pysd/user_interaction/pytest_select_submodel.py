@@ -146,18 +146,16 @@ class TestSubmodel:
         if not dep_vars:
             # totally independent submodels can run without producing
             # nan values
-            assert len(record) == 1
             assert not np.any(np.isnan(model.run()))
         else:
             # running the model without redefining dependencies will
             # produce nan values
-            assert len(record) == 2
             assert "Exogenous components for the following variables are"\
-                + " necessary but not given:" in str(record[1].message)
+                + " necessary but not given:" in str(record[-1].message)
             assert "Please, set them before running the model using "\
-                + "set_components method..." in str(record[1].message)
+                + "set_components method..." in str(record[-1].message)
             for var in dep_vars:
-                assert var in str(record[1].message)
+                assert var in str(record[-1].message)
             assert np.any(np.isnan(model.run()))
             # redefine dependencies
             assert not np.any(np.isnan(model.run(params=dep_vars)))
@@ -168,7 +166,6 @@ class TestSubmodel:
             model.select_submodel(vars=variables, modules=modules,
                                   exogenous_components=dep_vars)
 
-        assert len(record) == 1
         assert not np.any(np.isnan(model.run()))
 
 

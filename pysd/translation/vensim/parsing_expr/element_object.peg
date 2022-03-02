@@ -1,0 +1,47 @@
+# Parsing Expression Grammar: element_object
+
+entry = unchangeable_constant / component / data_definition / subscript_definition / lookup_definition / subscript_copy
+
+# Regular component definition "="
+component = name _ subscript_component? _ "=" _ expression
+
+# Unchangeable constant definition "=="
+unchangeable_constant = name _ subscript_component? _ "==" _ expression
+
+# Lookup definition "()", uses lookahead assertion to capture whole group
+lookup_definition = name _ subscript_component? &"(" _ expression
+
+
+# Data type definition ":=" or empty with keyword
+data_definition = component_data_definition / empty_data_definition
+component_data_definition = name _ subscript_component? _ keyword? _ ":=" _ expression
+empty_data_definition = name _ subscript_component? _ keyword
+
+# Subscript ranges
+# Subcript range  regular definition ":"
+subscript_definition = name _ ":" _ (imported_subscript / literal_subscript) _ subscript_mapping_list?
+imported_subscript = basic_id _ "(" _ (string _ ","? _)* ")"
+literal_subscript = (subscript_range / subscript) _ ("," _ (subscript_range / subscript) _)*
+subscript_range = "(" _ basic_id _ "-" _ basic_id _ ")"
+
+# Subcript range  definition by copy "<->"
+subscript_copy = name _ "<->" _ name_mapping
+
+# Subscript mapping
+subscript_mapping_list = "->" _ subscript_mapping _ ("," _ subscript_mapping _)*
+subscript_mapping = (_ name_mapping _) / (_ "(" _ name_mapping _ ":" _ index_list _")" )
+name_mapping = basic_id / escape_group
+
+# Subscript except match
+subscript_list_except = ":EXCEPT:" _ '[' _ subscript_except _ ("," _ subscript_except _)* _ ']'
+subscript_except = basic_id / escape_group
+
+# Subscript match
+subscript_list = "[" _ index_list _ "]"
+index_list = subscript _ ("," _ subscript _)*
+subscript = basic_id / escape_group
+
+# Other definitions
+subscript_component = subscript_list _ subscript_list_except?
+expression = ~r".*"  # expression could be anything, at this point.
+keyword = ":" _ basic_id _ ":"

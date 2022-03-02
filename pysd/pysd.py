@@ -8,6 +8,7 @@ normal operation.
 import sys
 from .py_backend.statefuls import Model
 
+
 if sys.version_info[:2] < (3, 7):  # pragma: no cover
     raise RuntimeError(
         "\n\n"
@@ -69,7 +70,7 @@ def read_xmile(xmile_file, data_files=None, initialize=True,
 
 def read_vensim(mdl_file, data_files=None, initialize=True,
                 missing_values="warning", split_views=False,
-                encoding=None, **kwargs):
+                encoding=None, old=False, **kwargs):
     """
     Construct a model from Vensim `.mdl` file.
 
@@ -124,9 +125,21 @@ def read_vensim(mdl_file, data_files=None, initialize=True,
     >>> model = read_vensim('../tests/test-models/samples/teacup/teacup.mdl')
 
     """
-    from .translation.vensim.vensim2py import translate_vensim
+    if old:
+        from .translation.vensim.vensim2py import translate_vensim
+        py_model_file = translate_vensim(mdl_file, split_views, encoding, **kwargs)
+    else:
+        from pysd.translation.vensim.vensin_file import VensimFile
+        from pysd.building.python.python_builder import ModelBuilder
+        ven_file = VensimFile(mdl_file)
+        ven_file.parse()
+        if split_views:
+            subview_sep = kwargs.get("subview_sep", "")
+            ven_file.parse_sketch(subview_sep)
 
-    py_model_file = translate_vensim(mdl_file, split_views, encoding, **kwargs)
+        abs_model = ven_file.get_abstract_model()
+        py_model_file = ModelBuilder(abs_model).build_model()
+
     model = load(py_model_file, data_files, initialize, missing_values)
     model.mdl_file = str(mdl_file)
     return model

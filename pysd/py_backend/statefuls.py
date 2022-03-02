@@ -889,7 +889,6 @@ class Macro(DynamicStateful):
             return True
         for dep in dependencies:
             if dep.startswith("_") and not dep.startswith("_initial_")\
-               and not dep.startswith("_active_initial_")\
                and not dep.startswith("__"):
                 return True
         return False
@@ -1148,6 +1147,7 @@ class Macro(DynamicStateful):
         func_name = utils.get_key_and_value_by_insensitive_key_or_value(
             param,
             self.components._namespace)[1] or param
+        print(func_name, self.get_args(getattr(self.components, func_name)))
 
         try:
             if func_name.startswith("_ext_"):
@@ -1436,6 +1436,26 @@ class Macro(DynamicStateful):
                 - Units string
                 - Documentation strings from the original model file
         """
+        warnings.warn(
+            "doc method will become an attribute in version 3.0.0...",
+            FutureWarning)
+        return self._doc
+
+    def _build_doc(self):
+        """
+        Formats a table of documentation strings to help users remember
+        variable names, and understand how they are translated into
+        python safe names.
+
+        Returns
+        -------
+        docs_df: pandas dataframe
+            Dataframe with columns for the model components:
+                - Real names
+                - Python safe identifiers (as used in model.components)
+                - Units string
+                - Documentation strings from the original model file
+        """
         collector = []
         for name, varname in self.components._namespace.items():
             try:
@@ -1454,25 +1474,43 @@ class Macro(DynamicStateful):
                     eqn = '; '.join(
                         [line.strip() for line in lines[3:unit_line]])
 
-                collector.append(
-                    {'Real Name': name,
-                     'Py Name': varname,
-                     'Eqn': eqn,
-                     'Unit': lines[unit_line].replace("Units:", "").strip(),
-                     'Lims': lines[unit_line+1].replace("Limits:", "").strip(),
-                     'Type': lines[unit_line+2].replace("Type:", "").strip(),
-                     'Subs': lines[unit_line+3].replace("Subs:", "").strip(),
-                     'Comment': '\n'.join(lines[(unit_line+4):]).strip()})
+                vardoc = {
+                    'Real Name': name,
+                    'Py Name': varname,
+                    'Eqn': eqn,
+                    'Unit': lines[unit_line].replace("Units:", "").strip(),
+                    'Lims': lines[unit_line+1].replace("Limits:", "").strip(),
+                    'Type': lines[unit_line+2].replace("Type:", "").strip()
+                }
+
+                if "Subtype:" in lines[unit_line+3]:
+                    vardoc["Subtype"] =\
+                        lines[unit_line+3].replace("Subtype:", "").strip()
+                    vardoc["Subs"] =\
+                        lines[unit_line+4].replace("Subs:", "").strip()
+                    vardoc["Comment"] =\
+                        '\n'.join(lines[(unit_line+5):]).strip()
+                else:
+                    vardoc["Subtype"] = None
+                    vardoc["Subs"] =\
+                        lines[unit_line+3].replace("Subs:", "").strip()
+                    vardoc["Comment"] =\
+                        '\n'.join(lines[(unit_line+4):]).strip()
+
+                collector.append(vardoc)
             except Exception:
                 pass
 
-        docs_df = pd.DataFrame(collector)
-        docs_df.fillna('None', inplace=True)
-
-        order = ['Real Name', 'Py Name', 'Unit', 'Lims',
-                 'Type', 'Subs', 'Eqn', 'Comment']
-        return docs_df[order].sort_values(
-            by='Real Name').reset_index(drop=True)
+        if collector:
+            docs_df = pd.DataFrame(collector)
+            docs_df.fillna("None", inplace=True)
+            order = ["Real Name", "Py Name", "Unit", "Lims",
+                     "Type", "Subtype", "Subs", "Eqn", "Comment"]
+            return docs_df[order].sort_values(
+                by="Real Name").reset_index(drop=True)
+        else:
+            # manage models with no documentation (mainly test models)
+            return None
 
     def __str__(self):
         """ Return model source files """
@@ -1496,6 +1534,7 @@ class Model(Macro):
         self.time.set_control_vars(**self.components._control_vars)
         self.data_files = data_files
         self.missing_values = missing_values
+        self._doc = self._build_doc()
         if initialize:
             self.initialize()
 
@@ -2125,8 +2164,9 @@ class Model(Macro):
 
         while self.time.in_bounds():
             if self.time.in_return():
-                outputs.at[self.time()] = [getattr(self.components, key)()
-                                           for key in capture_elements]
+                outputs.at[self.time.round()] = [
+                    getattr(self.components, key)()
+                    for key in capture_elements]
             self._euler_step(self.time.time_step())
             self.time.update(self.time()+self.time.time_step())
             self.clean_caches()
@@ -2135,8 +2175,8 @@ class Model(Macro):
         # need to add one more time step, because we run only the state
         # updates in the previous loop and thus may be one short.
         if self.time.in_return():
-            outputs.at[self.time()] = [getattr(self.components, key)()
-                                       for key in capture_elements]
+            outputs.at[self.time.round()] = [getattr(self.components, key)()
+                                             for key in capture_elements]
 
         progressbar.finish()
 
