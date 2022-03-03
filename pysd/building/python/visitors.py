@@ -216,8 +216,26 @@ class CallBuilder(StructureBuilder):
         elif function_name == "a_function_of":
             self.build = self.build_incomplete_call
         else:
-            # error
-            raise ValueError("Undefined function %s" % function_name)
+            self.function = function_name
+            self.build = self.build_not_implemented
+
+    def build_not_implemented(self, arguments):
+        final_subscripts = self.reorder(arguments, def_subs=self.def_subs)
+        warnings.warn(
+            "\n\nTrying to translate "
+            + self.function
+            + " which it is not implemented on PySD. The translated "
+            + "model will crash... "
+        )
+        self.section.imports.add("functions", "not_implemented_function")
+
+        return BuildAST(
+            expression="not_implemented_function('%s', %s)" % (
+                self.function,
+                ", ".join(arg.expression for arg in arguments.values())),
+            calls=self.join_calls(arguments),
+            subscripts=final_subscripts,
+            order=0)
 
     def build_macro_call(self, arguments):
         self.section.imports.add("statefuls", "Macro")
@@ -1045,7 +1063,10 @@ class ReferenceBuilder(StructureBuilder):
                 # NUMPY: subset value [:, :, np.array([1, 0]), :]
                 # NUMPY: as order may change we need to check if dim != orig_dim
                 # NUMPY: use also ranges [:, :, 2:5, :] when possible
-                loc.append("_subscript_dict['%s']" % dim)
+                if dim.endswith("!"):
+                    loc.append("_subscript_dict['%s']" % dim[:-1])
+                else:
+                    loc.append("_subscript_dict['%s']" % dim)
                 final_subs[dim] = coord
                 float = False
             else:

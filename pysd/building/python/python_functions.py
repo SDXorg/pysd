@@ -2,7 +2,7 @@
 # functions that can be diretcly applied over an array
 functionspace = {
     # directly build functions without dependencies
-    "elmcount": ("len(_subscript_dict['%(0)s'])", None),
+    "elmcount": ("len(%(0)s)", None),
 
     # directly build numpy based functions
     "abs": ("np.abs(%(0)s)", ("numpy",)),

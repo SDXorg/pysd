@@ -71,21 +71,22 @@ class HardcodedLookups(Lookups):
         # TODO: avoid add and merge all declarations in one definition
         self.is_float = not bool(coords)
         self.py_name = py_name
+        y = np.array(y).reshape((len(x),) + (1,)*len(coords))
         self.data = xr.DataArray(
-            np.array(y).reshape(tuple([len(x)] + utils.compute_shape(coords))),
+            np.tile(y, [1] + utils.compute_shape(coords)),
             {"lookup_dim": x, **coords},
             ["lookup_dim"] + list(coords)
         )
         self.x = set(x)
 
     def add(self, x, y, coords):
+        y = np.array(y).reshape((len(x),) + (1,)*len(coords))
         self.data = self.data.combine_first(
             xr.DataArray(
-                np.array(y).reshape(tuple([len(x)] + utils.compute_shape(coords))),
+                np.tile(y, [1] + utils.compute_shape(coords)),
                 {"lookup_dim": x, **coords},
                 ["lookup_dim"] + list(coords)
             ))
-
         if np.any(np.isnan(self.data)):
             # fill missing values of different input lookup_dim values
             values = self.data.values

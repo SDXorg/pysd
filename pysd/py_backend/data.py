@@ -64,14 +64,14 @@ class Columns():
         try:
             # if we fail converting columns to float then they are
             # not numeric values, so current direction is okay
-            [float(col) for col in random.sample(out, 3)]
+            [float(col) for col in random.sample(out, min(3, len(out)))]
             # we did not fail, read the first column to see if variables
             # are split per rows
             out = cls.read_col(file_name, encoding)
             transpose = True
             # if we still are able to transform values to float the
             # file is not valid
-            [float(col) for col in random.sample(out, 3)]
+            [float(col) for col in random.sample(out, min(3, len(out)))]
         except ValueError:
             return out, transpose
         else:
