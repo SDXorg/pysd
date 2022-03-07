@@ -807,7 +807,8 @@ class ExtConstant(External):
         super().__init__(py_name)
         self.files = [file_name]
         self.sheets = [sheet]
-        self.transposes = [cell[-1] == '*']
+        self.transposes = [
+            cell[-1] == '*' and np.prod(utils.compute_shape(coords)) > 1]
         self.cells = [cell.strip('*')]
         self.root = root
         self.coordss = [coords]
@@ -818,7 +819,8 @@ class ExtConstant(External):
         """
         self.files.append(file_name)
         self.sheets.append(sheet)
-        self.transposes.append(cell[-1] == '*')
+        self.transposes.append(
+            cell[-1] == '*' and np.prod(utils.compute_shape(coords)) > 1)
         self.cells.append(cell.strip('*'))
         self.coordss.append(coords)
 
