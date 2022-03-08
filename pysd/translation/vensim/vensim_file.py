@@ -87,7 +87,7 @@ class VensimFile():
             section.path = self.mdl_path.parent.joinpath(
                 self.clean_file_names(section.name)[0]
                 ).with_suffix(".py")
-        # TODO modify names and paths of macros
+
         for section in self.sections:
             section._parse()
 

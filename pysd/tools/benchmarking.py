@@ -65,7 +65,7 @@ def runner(model_file, canonical_file=None, transpose=False, data_files=None,
     if model_file.suffix.lower() == ".mdl":
         model = read_vensim(model_file, data_files, old=old)
     elif model_file.suffix.lower() == ".xmile":
-        model = read_xmile(model_file, data_files)
+        model = read_xmile(model_file, data_files, old=old)
     elif model_file.suffix.lower() == ".py":
         model = load(model_file, data_files)
     else:

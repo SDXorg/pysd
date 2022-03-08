@@ -1,4 +1,5 @@
 import pytest
+import shutil
 from pysd.tools.benchmarking import runner, assert_frames_close
 
 # TODO add warnings catcher per test
@@ -482,28 +483,39 @@ class TestIntegrateVensim:
     """
     Test for splitting Vensim views in modules and submodules
     """
+    @pytest.fixture
+    def test_folder(self, tmp_path, _test_models, test_data):
+        """
+        Copy test folder to a temporary folder therefore we avoid creating
+        PySD model files in the original folder
+        """
+        test_folder = tmp_path.joinpath(test_data["folder"])
+        shutil.copytree(
+            _test_models.joinpath(test_data["folder"]),
+            test_folder
+        )
+        return test_folder
 
     @pytest.fixture
-    def model_path(self, _test_models, test_data):
-        return _test_models.joinpath(
-            test_data["folder"]).joinpath(test_data["file"])
+    def model_path(self, test_folder, test_data):
+        """Return model path"""
+        return test_folder.joinpath(test_data["file"])
 
     @pytest.fixture
-    def data_path(self, _test_models, test_data):
+    def data_path(self, test_folder, test_data):
         """Fixture for models with data_path"""
         if "data_files" in test_data:
             if isinstance(test_data["data_files"], str):
-                return _test_models.joinpath(
-                    test_data["folder"]).joinpath(test_data["data_files"])
+                return test_folder.joinpath(test_data["data_files"])
             elif isinstance(test_data["data_files"], list):
                 return [
-                    _test_models.joinpath(test_data["folder"]).joinpath(file)
+                    test_folder.joinpath(file)
                     for file in test_data["data_files"]
                 ]
             else:
                 return {
-                    _test_models.joinpath(test_data["folder"]).joinpath(file):
-                    values for file, values in test_data["data_files"].items()
+                    test_folder.joinpath(file): values
+                    for file, values in test_data["data_files"].items()
                 }
         else:
             return None

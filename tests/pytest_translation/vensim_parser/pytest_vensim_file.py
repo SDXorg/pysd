@@ -2,7 +2,7 @@
 import pytest
 from pathlib import Path
 
-from pysd.translation.vensim.vensin_file import VensimFile
+from pysd.translation.vensim.vensim_file import VensimFile
 
 
 @pytest.mark.parametrize(
@@ -35,7 +35,7 @@ class TestVensimFile:
         return _root.joinpath(path)
 
     @pytest.mark.dependency(name="read_vensim_file")
-    def test_read_vensim_file(self, request, path, model_path):
+    def test_read_vensim_file(self, model_path):
         # assert that the files don't exist in the temporary directory
         ven_file = VensimFile(model_path)
 
@@ -48,7 +48,7 @@ class TestVensimFile:
         assert isinstance(getattr(ven_file, "model_text"), str)
 
     @pytest.mark.dependency(depends=["read_vensim_file"])
-    def test_file_split_file_sections(self, request, path, model_path):
+    def test_file_split_file_sections(self, model_path):
         ven_file = VensimFile(model_path)
         ven_file.parse()
         print(ven_file.verbose)

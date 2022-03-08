@@ -1,26 +1,26 @@
 from typing import List, Union
 from pathlib import Path
-import parsimonious
 
 from ..structures.abstract_model import\
     AbstractElement, AbstractSubscriptRange,  AbstractSection
 
-from . import vensim_utils as vu
-from .vensim_element import Element, SubscriptRange, Component
+from .xmile_element import SubscriptRange, Flaux, Gf, Stock
 
 
 class FileSection():  # File section dataclass
 
     def __init__(self, name: str, path: Path, type: str,
                  params: List[str], returns: List[str],
-                 content: str, split: bool, views_dict: Union[dict, None]
+                 content_root: str, namespace: str, split: bool,
+                 views_dict: Union[dict, None]
                  ) -> object:
         self.name = name
         self.path = path
         self.type = type
         self.params = params
         self.returns = returns
-        self.content = content
+        self.content = content_root
+        self.ns = {"ns": namespace}
         self.split = split
         self.views_dict = views_dict
         self.elements = None
@@ -44,22 +44,44 @@ class FileSection():  # File section dataclass
         print(self._verbose)
 
     def _parse(self):
-        tree = vu.Grammar.get("section_elements").parse(self.content)
-        self.elements = SectionElementsParser(tree).entries
-        self.elements = [element._parse() for element in self.elements]
-        # split subscript from other components
-        self.subscripts = [
-            element for element in self.elements
-            if isinstance(element, SubscriptRange)
-        ]
-        self.components = [
-            element for element in self.elements
-            if isinstance(element, Component)
-        ]
-        # reorder element list for better printing
+        self.subscripts = self._parse_subscripts()
+        self.components = self._parse_components()
         self.elements = self.subscripts + self.components
 
-        [component._parse() for component in self.components]
+    def _parse_subscripts(self):
+        """Parse the subscripts of the section"""
+        subscripts_ranges = []
+        path = "ns:dimensions/ns:dim"
+        for node in self.content.xpath(path, namespaces=self.ns):
+            name = node.attrib["name"]
+            subscripts = [
+                sub.attrib["name"]
+                for sub in node.xpath("ns:elem", namespaces=self.ns)
+            ]
+            subscripts_ranges.append(SubscriptRange(name, subscripts, []))
+        return subscripts_ranges
+
+    def _parse_components(self):
+        components = []
+
+        flaux_xpath = "ns:model/ns:variables/ns:aux|"\
+                      "ns:model/ns:variables/ns:flow"
+        for node in self.conten.xpath(flaux_xpath, namespace=self.ns):
+            # flows and auxiliary variables
+            components.append(Flaux(node, self.ns))
+
+        gf_xpath = "ns:model/ns:variables/ns:gf"
+        for node in self.conten.xpath(gf_xpath, namespace=self.ns):
+            # Lookups
+            components.append(Gf(node, self.ns))
+
+        stock_xpath = "ns:model/ns:variables/ns:stock"
+        for node in self.conten.xpath(stock_xpath, namespace=self.ns):
+            # Integs (stocks)
+            components.append(Stock(node, self.ns))
+
+        [component._parse() for component in components]
+        return components
 
     def get_abstract_section(self):
         return AbstractSection(
@@ -101,22 +123,3 @@ class FileSection():  # File section dataclass
             merged[name].components.append(component.get_abstract_component())
 
         return list(merged.values())
-
-
-class SectionElementsParser(parsimonious.NodeVisitor):
-    # TODO include units parsing
-    def __init__(self, ast):
-        self.entries = []
-        self.visit(ast)
-
-    def visit_entry(self, n, vc):
-        self.entries.append(
-            Element(
-                equation=vc[0].strip(),
-                units=vc[2].strip(),
-                documentation=vc[4].strip(),
-            )
-        )
-
-    def generic_visit(self, n, vc):
-        return "".join(filter(None, vc)) or n.text or ""

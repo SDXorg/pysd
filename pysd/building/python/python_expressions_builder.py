@@ -1,11 +1,10 @@
-from re import X
 import warnings
 from dataclasses import dataclass
 
 import numpy as np
 from pysd.py_backend.utils import compute_shape
 
-from pysd.translation.structures import components as ct
+from pysd.translation.structures import abstract_expressions as ae
 from .python_functions import functionspace
 
 
@@ -435,6 +434,7 @@ class ExtLookupBuilder(StructureBuilder):
                 subscripts=final_subs,
                 order=0)
 
+
 class ExtDataBuilder(StructureBuilder):
     def __init__(self, getdata_str,  component):
         super().__init__(None, component)
@@ -728,7 +728,8 @@ class SmoothBuilder(StructureBuilder):
         self.component.subtype = "Smooth"
         self.section.imports.add("statefuls", "Smooth")
         arguments["input"].reshape(self.section.subscripts, self.def_subs)
-        arguments["smooth_time"].reshape(self.section.subscripts, self.def_subs)
+        arguments["smooth_time"].reshape(
+            self.section.subscripts, self.def_subs)
         arguments["initial"].reshape(self.section.subscripts, self.def_subs)
         arguments["name"] = self.section.namespace.make_python_identifier(
             self.element.identifier, prefix="_smooth")
@@ -775,7 +776,8 @@ class TrendBuilder(StructureBuilder):
         self.component.subtype = "Trend"
         self.section.imports.add("statefuls", "Trend")
         arguments["input"].reshape(self.section.subscripts, self.def_subs)
-        arguments["average_time"].reshape(self.section.subscripts, self.def_subs)
+        arguments["average_time"].reshape(
+            self.section.subscripts, self.def_subs)
         arguments["initial"].reshape(self.section.subscripts, self.def_subs)
         arguments["name"] = self.section.namespace.make_python_identifier(
             self.element.identifier, prefix="_trend")
@@ -817,7 +819,8 @@ class ForecastBuilder(StructureBuilder):
         self.component.subtype = "Forecast"
         self.section.imports.add("statefuls", "Forecast")
         arguments["input"].reshape(self.section.subscripts, self.def_subs)
-        arguments["average_time"].reshape(self.section.subscripts, self.def_subs)
+        arguments["average_time"].reshape(
+            self.section.subscripts, self.def_subs)
         arguments["horizon"].reshape(self.section.subscripts, self.def_subs)
         arguments["name"] = self.section.namespace.make_python_identifier(
             self.element.identifier, prefix="_forecast")
@@ -1041,7 +1044,8 @@ class ReferenceBuilder(StructureBuilder):
         original_subs = self.section.subscripts.make_coord_dict(
                     self.section.subscripts.elements[reference])
 
-        expression, final_subs = self.visit_subscripts(expression, original_subs)
+        expression, final_subs = self.visit_subscripts(
+            expression, original_subs)
 
         return BuildAST(
             expression=expression,
@@ -1061,7 +1065,8 @@ class ReferenceBuilder(StructureBuilder):
             elif len(coord) < len(orig_coord):
                 # subset a subrange
                 # NUMPY: subset value [:, :, np.array([1, 0]), :]
-                # NUMPY: as order may change we need to check if dim != orig_dim
+                # NUMPY: as order may change we need to check if
+                #        dim != orig_dim
                 # NUMPY: use also ranges [:, :, 2:5, :] when possible
                 if dim.endswith("!"):
                     loc.append("_subscript_dict['%s']" % dim[:-1])
@@ -1077,7 +1082,8 @@ class ReferenceBuilder(StructureBuilder):
                 float = False
 
             if dim != orig_dim and len(coord) != 1:
-                # NUMPY: check order of dimensions, make all subranges work with the same dimensions?
+                # NUMPY: check order of dimensions, make all subranges work
+                #        with the same dimensions?
                 # NUMPY: this could be solved in the previous if/then/else
                 rename[orig_dim] = dim
 
@@ -1187,27 +1193,27 @@ def _merge_dependencies(current, new):
 
 class ASTVisitor:
     builders = {
-        ct.InitialStructure: InitialBuilder,
-        ct.IntegStructure: IntegBuilder,
-        ct.DelayStructure: lambda x, y: DelayBuilder("Delay", x, y),
-        ct.DelayNStructure: lambda x, y: DelayBuilder("DelayN", x, y),
-        ct.DelayFixedStructure: DelayFixedBuilder,
-        ct.SmoothStructure: SmoothBuilder,
-        ct.SmoothNStructure: SmoothBuilder,
-        ct.TrendStructure: TrendBuilder,
-        ct.ForecastStructure: ForecastBuilder,
-        ct.SampleIfTrueStructure: SampleIfTrueBuilder,
-        ct.GetConstantsStructure: ExtConstantBuilder,
-        ct.GetDataStructure: ExtDataBuilder,
-        ct.GetLookupsStructure: ExtLookupBuilder,
-        ct.LookupsStructure: LookupsBuilder,
-        ct.InlineLookupsStructure: InlineLookupsBuilder,
-        ct.DataStructure: TabDataBuilder,
-        ct.ReferenceStructure: ReferenceBuilder,
-        ct.CallStructure: CallBuilder,
-        ct.GameStructure: GameBuilder,
-        ct.LogicStructure: OperationBuilder,
-        ct.ArithmeticStructure: OperationBuilder,
+        ae.InitialStructure: InitialBuilder,
+        ae.IntegStructure: IntegBuilder,
+        ae.DelayStructure: lambda x, y: DelayBuilder("Delay", x, y),
+        ae.DelayNStructure: lambda x, y: DelayBuilder("DelayN", x, y),
+        ae.DelayFixedStructure: DelayFixedBuilder,
+        ae.SmoothStructure: SmoothBuilder,
+        ae.SmoothNStructure: SmoothBuilder,
+        ae.TrendStructure: TrendBuilder,
+        ae.ForecastStructure: ForecastBuilder,
+        ae.SampleIfTrueStructure: SampleIfTrueBuilder,
+        ae.GetConstantsStructure: ExtConstantBuilder,
+        ae.GetDataStructure: ExtDataBuilder,
+        ae.GetLookupsStructure: ExtLookupBuilder,
+        ae.LookupsStructure: LookupsBuilder,
+        ae.InlineLookupsStructure: InlineLookupsBuilder,
+        ae.DataStructure: TabDataBuilder,
+        ae.ReferenceStructure: ReferenceBuilder,
+        ae.CallStructure: CallBuilder,
+        ae.GameStructure: GameBuilder,
+        ae.LogicStructure: OperationBuilder,
+        ae.ArithmeticStructure: OperationBuilder,
         int: NumericBuilder,
         float: NumericBuilder,
         np.ndarray: ArrayBuilder
@@ -1217,10 +1223,8 @@ class ASTVisitor:
         self.ast = component.ast
         self.subscripts = component.subscripts_dict
         self.component = component
-        # TODO add a attribute for "new structures"
 
     def visit(self):
-        # TODO: if final_subscripts == self.subscripts OK, else -> redimension
         visit_out = self._visit(self.ast)
 
         if not visit_out:
@@ -1239,6 +1243,8 @@ class ASTVisitor:
 
         if not visit_out.subscripts\
           and self.subscripts != self.component.element.subs_dict:
+            # expression is a float, but it will be upper dimensioned
+            # when assigning values to the xarray.DataArray
             return visit_out
 
         # NUMPY not needed
@@ -1274,5 +1280,8 @@ class ASTVisitor:
 
     def _visit(self, ast_object):
         builder = self.builders[type(ast_object)](ast_object, self.component)
-        arguments = {name: self._visit(value) for name, value in builder.arguments.items()}
+        arguments = {
+            name: self._visit(value)
+            for name, value in builder.arguments.items()
+        }
         return builder.build(arguments)

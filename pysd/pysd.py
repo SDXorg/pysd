@@ -23,14 +23,14 @@ if sys.version_info[:2] < (3, 7):  # pragma: no cover
     )
 
 
-def read_xmile(xmile_file, data_files=None, initialize=True,
+def read_xmile(xmile_file, data_files=None, initialize=True, old=False,
                missing_values="warning"):
     """
     Construct a model from `.xmile` file.
 
     Parameters
     ----------
-    xmile_file : str
+    xmile_file:  str or pathlib.Path
         The relative path filename for a raw `.xmile` file.
 
     initialize: bool (optional)
@@ -60,11 +60,20 @@ def read_xmile(xmile_file, data_files=None, initialize=True,
     >>> model = read_xmile('../tests/test-models/samples/teacup/teacup.xmile')
 
     """
-    from .translation.xmile.xmile2py import translate_xmile
+    if old:
+        # TODO: remove when this branch is ready to merge
+        from .translation.xmile.xmile2py import translate_xmile
+        py_model_file = translate_xmile(xmile_file)
+    else:
+        from pysd.translation.xmile.xmile_file import XmileFile
+        from pysd.building.python.python_model_builder import ModelBuilder
+        xmile_file_obj = XmileFile(xmile_file)
+        xmile_file_obj.parse()
 
-    py_model_file = translate_xmile(xmile_file)
+        abs_model = xmile_file_obj.get_abstract_model()
+        py_model_file = ModelBuilder(abs_model).build_model()
     model = load(py_model_file, data_files, initialize, missing_values)
-    model.xmile_file = xmile_file
+    model.xmile_file = str(xmile_file)
     return model
 
 
@@ -76,7 +85,7 @@ def read_vensim(mdl_file, data_files=None, initialize=True,
 
     Parameters
     ----------
-    mdl_file : str
+    mdl_file: str or pathlib.Path
         The relative path filename for a raw Vensim `.mdl` file.
 
     initialize: bool (optional)
@@ -87,7 +96,7 @@ def read_vensim(mdl_file, data_files=None, initialize=True,
         If given the list of files where the necessary data to run the model
         is given. Default is None.
 
-    missing_values : str ("warning", "error", "ignore", "keep") (optional)
+    missing_values: str ("warning", "error", "ignore", "keep") (optional)
         What to do with missing values. If "warning" (default)
         shows a warning message and interpolates the values.
         If "raise" raises an error. If "ignore" interpolates
@@ -126,11 +135,13 @@ def read_vensim(mdl_file, data_files=None, initialize=True,
 
     """
     if old:
+        # TODO: remove when this branch is ready to merge
         from .translation.vensim.vensim2py import translate_vensim
-        py_model_file = translate_vensim(mdl_file, split_views, encoding, **kwargs)
+        py_model_file = translate_vensim(
+            mdl_file, split_views, encoding, **kwargs)
     else:
-        from pysd.translation.vensim.vensin_file import VensimFile
-        from pysd.building.python.python_builder import ModelBuilder
+        from pysd.translation.vensim.vensim_file import VensimFile
+        from pysd.building.python.python_model_builder import ModelBuilder
         ven_file = VensimFile(mdl_file)
         ven_file.parse()
         if split_views:

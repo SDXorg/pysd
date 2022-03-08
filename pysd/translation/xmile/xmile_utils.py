@@ -10,7 +10,7 @@ from chardet import detect
 
 class Grammar():
     _common_grammar = None
-    _grammar_path: Path = Path(__file__).parent.joinpath("parsing_grammars")
+    _grammar_path: Path = Path(__file__).parent.joinpath("parsing_expr")
     _grammar: Dict = {}
 
     @classmethod

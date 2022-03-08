@@ -3,13 +3,15 @@ import warnings
 import parsimonious
 import numpy as np
 
-from ..structures.abstract_model import AbstractData, AbstractLookup, AbstractComponent, AbstractUnchangeableConstant
+from ..structures.abstract_model import\
+    AbstractData, AbstractLookup, AbstractComponent,\
+    AbstractUnchangeableConstant
 
 from . import vensim_utils as vu
-from .vensim_structures import structures, operators, parsing_ops
+from .vensim_structures import structures, parsing_ops
 
 
-class Element():  # File section dataclass
+class Element():
 
     def __init__(self, equation, units, documentation):
         self.equation = equation

@@ -5,7 +5,7 @@ import json
 from pysd.translation.structures.abstract_model import\
     AbstractComponent, AbstractElement, AbstractModel, AbstractSection
 
-from . import visitors as vs
+from . import python_expressions_builder as vs
 from .namespace import NamespaceManager
 from .subscripts import SubscriptManager
 from .imports import ImportsManager
