@@ -110,10 +110,10 @@ xmile_test = {
         "folder": "lookups",
         "file": "test_lookups_ypts_sep.xmile"
     },
-    "lookups_inline": pytest.param({
+    "lookups_inline": {
         "folder": "lookups_inline",
         "file": "test_lookups_inline.xmile"
-    },  marks=pytest.mark.xfail(reason="failing originally")),
+    },
     "macro_expression": pytest.param({
         "folder": "macro_expression",
         "file": "test_macro_expression.xmile"
@@ -158,42 +158,42 @@ xmile_test = {
         "folder": "sqrt",
         "file": "test_sqrt.xmile"
     },
-    "subscript_1d_arrays": {
+    "subscript_1d_arrays": pytest.param({
         "folder": "subscript_1d_arrays",
         "file": "test_subscript_1d_arrays.xmile"
-    },
-    "subscript_constant_call": {
+    },  marks=pytest.mark.xfail(reason="eqn with ??? in the model")),
+    "subscript_constant_call": pytest.param({
         "folder": "subscript_constant_call",
         "file": "test_subscript_constant_call.xmile"
-    },
+    },  marks=pytest.mark.xfail(reason="eqn with ??? in the model")),
     "subscript_individually_defined_1d_arrays": {
         "folder": "subscript_individually_defined_1d_arrays",
         "file": "subscript_individually_defined_1d_arrays.xmile"
     },
-    "subscript_mixed_assembly": {
+    "subscript_mixed_assembly": pytest.param({
         "folder": "subscript_mixed_assembly",
         "file": "test_subscript_mixed_assembly.xmile"
-    },
-    "subscript_multiples": {
+    },  marks=pytest.mark.xfail(reason="eqn with ??? in the model")),
+    "subscript_multiples": pytest.param({
         "folder": "subscript_multiples",
         "file": "test_multiple_subscripts.xmile"
-    },
-    "subscript_subranges": {
+    },  marks=pytest.mark.xfail(reason="eqn with ??? in the model")),
+    "subscript_subranges": pytest.param({
         "folder": "subscript_subranges",
         "file": "test_subscript_subrange.xmile"
-    },
-    "subscript_subranges_equal": {
+    },  marks=pytest.mark.xfail(reason="eqn with ??? in the model")),
+    "subscript_subranges_equal": pytest.param({
         "folder": "subscript_subranges_equal",
         "file": "test_subscript_subrange_equal.xmile"
-    },
-    "subscript_updimensioning": {
+    },  marks=pytest.mark.xfail(reason="eqn with ??? in the model")),
+    "subscript_updimensioning": pytest.param({
         "folder": "subscript_updimensioning",
         "file": "test_subscript_updimensioning.xmile"
-    },
-    "subscripted_flows": {
+    },  marks=pytest.mark.xfail(reason="eqn with ??? in the model")),
+    "subscripted_flows": pytest.param({
         "folder": "subscripted_flows",
         "file": "test_subscripted_flows.xmile"
-    },
+    },  marks=pytest.mark.xfail(reason="eqn with ??? in the model")),
     "trig": {
         "folder": "trig",
         "file": "test_trig.xmile"

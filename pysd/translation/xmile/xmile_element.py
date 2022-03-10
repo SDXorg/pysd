@@ -1,10 +1,9 @@
 import re
-import warnings
 import parsimonious
 import numpy as np
 
-from ..structures.abstract_model import AbstractData, AbstractLookup,\
-    AbstractComponent
+from ..structures.abstract_model import AbstractElement, AbstractLookup,\
+                                        AbstractComponent
 
 from . import xmile_utils as vu
 from .xmile_structures import structures, parsing_ops
@@ -12,12 +11,20 @@ from .xmile_structures import structures, parsing_ops
 
 class Element():
 
+    interp_methods = {
+        "continuous": "interpolate",
+        "extrapolate": "extrapolate",
+        "discrete": "hold_backward"
+    }
+
     def __init__(self, node, ns):
         self.node = node
         self.ns = ns
-        self.name = node.attrib['name']
-        self.units = self.get_xpath_text(node, 'ns:units') or ""
-        self.documentation = self.get_xpath_text(node, 'ns:doc') or ""
+        self.name = node.attrib["name"]
+        self.units = self.get_xpath_text(node, "ns:units") or ""
+        self.documentation = self.get_xpath_text(node, "ns:doc") or ""
+        self.limits = (None, None)
+        self.components = []
 
     def __str__(self):
         text = "\n%s definition: %s" % (self.kind, self.name)
@@ -84,38 +91,49 @@ class Element():
                 sep=xs_node.attrib['sep'] if 'sep' in xs_node.attrib else ','
             )
 
-        type = node.attrib['type'] if 'type' in node.attrib else 'continuous'
+        interp = node.attrib['type'] if 'type' in node.attrib else 'continuous'
 
-        functions_map = {
-            "continuous": {
-                "name": "lookup",
-                "module": "functions"
-            },
-            'extrapolation': {
-                "name": "lookup_extrapolation",
-                "module": "functions"
-            },
-            'discrete': {
-                "name": "lookup_discrete",
-                "module": "functions"
-            }
-        }
-        lookup_function = functions_map[type] if type in functions_map\
-            else functions_map['continuous']
+        return structures["lookup"](
+            x=tuple(xs[np.argsort(xs)]),
+            y=tuple(ys[np.argsort(xs)]),
+            x_range=(np.min(xs), np.max(xs)),
+            y_range=(np.min(ys), np.max(ys)),
+            type=self.interp_methods[interp]
+        )
 
-        return {
-            'name': node.attrib['name'] if 'name' in node.attrib else '',
-            'xs': xs,
-            'ys': ys,
-            'type': type,
-            'function': lookup_function
-        }
+    def _parse(self):
+        if self.node.xpath("ns:element", namespaces=self.ns):
+            for subnode in self.node.xpath("ns:element", namespaces=self.ns):
+                self.components.append(
+                    ((subnode.attrib["subscript"].split(","), []),
+                     self._parse_component(subnode))
+                )
+        else:
+            subscripts = []
+            for subnode in self.node.xpath("ns:dimensions/ns:dim", namespaces=self.ns):
+                subscripts.append(subnode.attrib["name"])
+            self.components = [
+                ((subscripts, []),
+                 self._parse_component(self.node))
+            ]
+
+    def smile_parser(self, expression):
+        tree = vu.Grammar.get("equations", parsing_ops).parse(expression)
+        return EquationParser(tree).translation
+
+    def get_abstract_element(self):
+        return AbstractElement(
+            name=self.name,
+            units=self.units,
+            range=self.limits,
+            documentation=self.documentation,
+            components=[])
 
 
 class Flaux(Element):
     """Flow or auxiliary variable"""
     def __init__(self, node, ns):
-        super.__init__(node, ns)
+        super().__init__(node, ns)
         self.limits = self.get_lims()
 
     @property
@@ -126,38 +144,29 @@ class Flaux(Element):
     def verbose(self):
         print(self._verbose)
 
-    def _parse(self):
-        eqn = self.get_xpath_text(self.node, 'ns:eqn')
+    def _parse_component(self, node):
+        eqn = self.get_xpath_text(node, 'ns:eqn')
 
         # Replace new lines with space, and replace 2 or more spaces with
         # single space. Then ensure there is no space at start or end of
         # equation
         eqn = re.sub(r"(\s{2,})", " ", eqn.replace("\n", ' ')).strip()
-        ast = smile_parser.parse(eqn, element)
+        ast = self.smile_parser(eqn)
 
-        gf_node = self.node.xpath("ns:gf", namespace=self.ns)
+        gf_node = self.node.xpath("ns:gf", namespaces=self.ns)
         if len(gf_node) > 0:
-            gf_data = parse_lookup_xml_node(gf_node[0])
-            xs = '[' + ','.join("%10.3f" % x for x in gf_data['xs']) + ']'
-            ys = '[' + ','.join("%10.3f" % x for x in gf_data['ys']) + ']'
-            py_expr =\
-                builder.build_function_call(gf_data['function'],
-                                            [element['py_expr'], xs, ys])\
-                + ' if x is None else '\
-                + builder.build_function_call(gf_data['function'],
-                                              ['x', xs, ys])
-            element.update({
-                'kind': 'lookup',
-                # This lookup declared as inline, so we should implement
-                # inline mode for flow and aux
-                'arguments': "x = None",
-                'py_expr': py_expr
-            })
+            ast = structures["inline_lookup"](
+                ast, self.parse_lookup_xml_node(gf_node[0]))
 
-        self.ast = ast
+        return ast
 
     def get_abstract_component(self):
-        return AbstractComponent(subscripts=self.subscripts, ast=self.ast)
+        ae = self.get_abstract_element()
+        for component in self.components:
+            ae.components.append(AbstractComponent(
+                subscripts=component[0],
+                ast=component[1]))
+        return ae
 
 
 class Gf(Element):
@@ -165,7 +174,7 @@ class Gf(Element):
     kind = "Gf component"
 
     def __init__(self, node, ns):
-        super.__init__(node, ns)
+        super().__init__(node, ns)
         self.limits = self.get_lims()
 
     def get_lims(self):
@@ -175,14 +184,16 @@ class Gf(Element):
         )
         return tuple(float(x) if x is not None else x for x in lims)
 
-    def _parse(self):
-        gf_data = self.parse_lookup_xml_node(self.node)
-        xs = gf_data['xs']
-        ys = gf_data['ys']
-        self.ast = None
+    def _parse_component(self, node):
+        return self.parse_lookup_xml_node(self.node)
 
     def get_abstract_component(self):
-        return AbstractLookup(subscripts=self.subscripts, ast=self.ast)
+        ae = self.get_abstract_element()
+        for component in self.components:
+            ae.components.append(AbstractLookup(
+                subscripts=component[0],
+                ast=component[1]))
+        return ae
 
 
 class Stock(Element):
@@ -190,16 +201,16 @@ class Stock(Element):
     kind = "Stock component"
 
     def __init__(self, node, ns):
-        super.__init__(node, ns)
+        super().__init__(node, ns)
         self.limits = self.get_lims()
 
-    def _parse(self):
+    def _parse_component(self, node):
         # Parse each flow equations
         inflows = [
-            smile_parser.parse(inflow.text)
+            self.smile_parser(inflow.text)
             for inflow in self.node.xpath('ns:inflow', namespaces=self.ns)]
         outflows = [
-            smile_parser.parse(outflow.text)
+            self.smile_parser(outflow.text)
             for outflow in self.node.xpath('ns:outflow', namespaces=self.ns)]
 
         if inflows:
@@ -219,15 +230,42 @@ class Stock(Element):
             flows = structures["arithmetic"](expr, inflows+outflows)
         else:
             # stock has only one flow
-            flows = inflows + outflows
+            flows = inflows[0] if inflows else outflows[0]
 
         # Read the initial value equation for stock element
-        initial = smile_parser.parse(self.get_xpath_text(self.node, 'ns:eqn'))
+        initial = self.smile_parser(self.get_xpath_text(self.node, 'ns:eqn'))
 
-        self.ast = structures["stock"](flows, initial)
+        return structures["stock"](flows, initial)
 
     def get_abstract_component(self):
-        return AbstractComponent(subscripts=self.subscripts, ast=self.ast)
+        ae = self.get_abstract_element()
+        for component in self.components:
+            ae.components.append(AbstractComponent(
+                subscripts=component[0],
+                ast=component[1]))
+        return ae
+
+
+class ControlElement(Element):
+    """Control variable (lookup)"""
+    kind = "Control bvariable"
+
+    def __init__(self, name, units, documentation, eqn):
+        self.name = name
+        self.units = units
+        self.documentation = documentation
+        self.limits = (None, None)
+        self.eqn = eqn
+
+    def _parse(self):
+        self.ast = self.smile_parser(self.eqn)
+
+    def get_abstract_component(self):
+        ae = self.get_abstract_element()
+        ae.components.append(AbstractComponent(
+            subscripts=([], []),
+            ast=self.ast))
+        return ae
 
 
 class SubscriptRange():
@@ -252,8 +290,7 @@ class SubscriptRange():
         print(self._verbose)
 
 
-
-class ComponentsParser(parsimonious.NodeVisitor):
+class EquationParser(parsimonious.NodeVisitor):
     def __init__(self, ast):
         self.translation = None
         self.elements = {}
@@ -264,14 +301,14 @@ class ComponentsParser(parsimonious.NodeVisitor):
     def visit_expr_type(self, n, vc):
         self.translation = self.elements[vc[0]]
 
-    def visit_final_expr(self, n, vc):
+    def visit_logic2_expr(self, n, vc):
         return vu.split_arithmetic(
             structures["logic"], parsing_ops["logic_ops"],
             "".join(vc).strip(), self.elements)
 
     def visit_logic_expr(self, n, vc):
         id = vc[2]
-        if vc[0].lower() == ":not:":
+        if vc[0].lower() == "not":
             id = self.add_element(structures["logic"](
                 [":NOT:"],
                 (self.elements[id],)
@@ -311,37 +348,25 @@ class ComponentsParser(parsimonious.NodeVisitor):
         func = self.elements[vc[0]]
         args = self.elements[vc[4]]
         if func.reference in structures:
-            return self.add_element(structures[func.reference](*args))
+            func_str = structures[func.reference]
+            if isinstance(func_str, dict):
+                return self.add_element(func_str[len(args)](*args))
+            else:
+                return self.add_element(func_str(*args))
         else:
             return self.add_element(structures["call"](func, args))
 
+    def visit_conditional_statement(self, n, vc):
+        return self.add_element(structures["if_then_else"](
+            self.elements[vc[2]],
+            self.elements[vc[6]],
+            self.elements[vc[10]]))
+
     def visit_reference(self, n, vc):
         id = self.add_element(structures["reference"](
-            vc[0].lower().replace(" ", "_"), self.subs))
+            vc[0].lower().replace(" ", "_").strip("\""), self.subs))
         self.subs = None
         return id
-
-    def visit_range(self, n, vc):
-        return self.add_element(n.text.strip()[:-1].replace(")-(", "),("))
-
-    def visit_lookup_with_def(self, n, vc):
-        if vc[10]:
-            xy_range = np.array(eval(self.elements[vc[10]]))
-        else:
-            xy_range = np.full((2, 2), np.nan)
-
-        values = np.array((eval(vc[11])))
-        values = values[np.argsort(values[:, 0])]
-
-        lookup = structures["lookup"](
-            x=tuple(values[:, 0]),
-            y=tuple(values[:, 1]),
-            x_range=tuple(xy_range[:, 0]),
-            y_range=tuple(xy_range[:, 1])
-        )
-
-        return self.add_element(structures["with_lookup"](
-            self.elements[vc[4]], lookup))
 
     def visit_array(self, n, vc):
         if ";" in n.text or "," in n.text:
@@ -352,7 +377,7 @@ class ComponentsParser(parsimonious.NodeVisitor):
             return self.add_element(eval(n.text))
 
     def visit_subscript_list(self, n, vc):
-        subs = [x.strip() for x in vc[2].split(",")]
+        subs = [x.strip().replace("_", " ") for x in vc[2].split(",")]
         self.subs = structures["subscripts_ref"](subs)
         return ""
 

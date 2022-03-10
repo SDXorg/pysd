@@ -505,13 +505,11 @@ class ElementBuilder:
 
         indent = 12
 
+        # convert newline indicator and add expected level of indentation
         self.contents = contents.replace("\n", "\n" + " " * (indent+4))
         self.objects = objects.replace("\n", "\n" + " " * indent)
-
-        # convert newline indicator and add expected level of indentation
-        # TODO check if this is neccessary
         self.documentation = self.documentation.replace(
-            "\\", "\n").replace("\n", "\n" + "" * indent)
+            "\\", "\n").replace("\n", "\n" + " " * indent)
 
         return textwrap.dedent('''
             %(subs_dec)s

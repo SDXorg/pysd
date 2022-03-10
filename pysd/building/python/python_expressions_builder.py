@@ -893,6 +893,7 @@ class LookupsBuilder(StructureBuilder):
         self.arguments = {}
         self.x = lookups_str.x
         self.y = lookups_str.y
+        self.keyword = lookups_str.type
 
     def build(self, arguments):
         self.component.type = "Lookup"
@@ -908,6 +909,7 @@ class LookupsBuilder(StructureBuilder):
             threshold=len(self.y)
         )
         arguments["subscripts"] = self.def_subs
+        arguments["interp"] = self.keyword
 
         if "hardcoded_lookups" in self.element.objects:
             # object already exists
@@ -926,7 +928,8 @@ class LookupsBuilder(StructureBuilder):
             self.element.objects["hardcoded_lookups"] = {
                 "name": arguments["name"],
                 "expression": "%(name)s = HardcodedLookups(%(x)s, %(y)s, "
-                              "%(subscripts)s, '%(name)s')" % arguments
+                              "%(subscripts)s, '%(interp)s', '%(name)s')"
+                              % arguments
             }
 
             return BuildAST(

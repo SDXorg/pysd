@@ -1,0 +1,53 @@
+# Parsing Expression Grammar: components
+
+expr_type = array / final_expr / empty
+
+final_expr = conditional_statement / logic2_expr
+
+logic2_expr = logic_expr (_ logic_oper _ logic_expr)*  # logic operators (:and:, :or:)
+logic_expr = not_oper? _ comp_expr  # :not: operator
+comp_expr = add_expr (_ comp_oper _ add_expr)?  # comparison (e.g. '<', '=>')
+add_expr = prod_expr (_ add_oper _ prod_expr)*  # addition and substraction
+prod_expr = exp_expr (_ prod_oper _ exp_expr)*  # product and division
+exp_expr = neg_expr (_ exp_oper _ neg_expr)*  # exponential
+neg_expr = pre_oper? _ expr  # pre operators (-, +)
+expr = call / parens / number / reference
+
+arguments = ((string / final_expr) _ ","? _)*
+parens   = "(" _ final_expr _ ")"
+
+call = reference _ "(" _ arguments _ ")"
+conditional_statement = "IF" _ logic2_expr _ "THEN"  _ logic2_expr _ "ELSE" _ logic2_expr
+
+reference = (name _ subscript_list) / name  # check first for subscript
+subscript_list = "[" _ (name _ "!"? _ ","? _)+ _ "]"
+
+array = (raw_number _ ("," / ";")? _)+ !~r"."  # negative lookahead for
+
+logic_oper = ~r"(%(logic_ops)s)"IU
+not_oper = ~r"(%(not_ops)s)"IU
+comp_oper = ~r"(%(comp_ops)s)"IU
+add_oper = ~r"(%(add_ops)s)"IU
+prod_oper = ~r"(%(prod_ops)s)"IU
+exp_oper = ~r"(%(exp_ops)s)"IU
+pre_oper = ~r"(%(pre_ops)s)"IU
+
+empty = "" # empty string
+
+_ = spacechar*
+spacechar = " "* ~"\t"*
+
+name = basic_id / escape_group
+
+# This takes care of models with Unicode variable names
+basic_id = id_start id_continue*
+
+id_start = ~r"[\w]"IU
+id_continue = id_start / ~r"[0-9\'\$\_]"
+
+# between quotes, either escaped quote or character that is not a quote
+escape_group = "\"" ( "\\\"" / ~r"[^\"]" )* "\""
+
+number = raw_number
+raw_number = ("+"/"-")? ~r"\d+\.?\d*([eE][+-]?\d+)?"
+string = "\'" (~r"[^\']"IU)* "\'"

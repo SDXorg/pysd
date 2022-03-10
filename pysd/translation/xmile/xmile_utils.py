@@ -10,7 +10,7 @@ from chardet import detect
 
 class Grammar():
     _common_grammar = None
-    _grammar_path: Path = Path(__file__).parent.joinpath("parsing_expr")
+    _grammar_path: Path = Path(__file__).parent.joinpath("parsing_grammars")
     _grammar: Dict = {}
 
     @classmethod
@@ -30,18 +30,7 @@ class Grammar():
         with cls._gpath(grammar).open(encoding="ascii") as gfile:
             source_grammar: str = gfile.read()
 
-        return cls._include_common_grammar(source_grammar)
-
-    @classmethod
-    def _include_common_grammar(cls, source_grammar: str) -> str:
-        """Include common grammar"""
-        if not cls._common_grammar:
-            with cls._gpath("common_grammar").open(encoding="ascii") as gfile:
-                cls._common_grammar: str = gfile.read()
-
-        return r"{source_grammar}{common_grammar}".format(
-            source_grammar=source_grammar, common_grammar=cls._common_grammar
-        )
+        return source_grammar
 
     @classmethod
     def _gpath(cls, grammar: str) -> Path:
@@ -55,26 +44,14 @@ class Grammar():
         cls._grammar: Dict = {}
 
 
-def _detect_encoding_from_file(mdl_file: Path) -> str:
-    """Detect and return the encoding from a Vensim file"""
-    try:
-        with mdl_file.open("rb") as in_file:
-            f_line: bytes = in_file.readline()
-        f_line: str = f_line.decode(detect(f_line)['encoding'])
-        return re.search(r"(?<={)(.*)(?=})", f_line).group()
-    except (AttributeError, UnicodeDecodeError):
-        warnings.warn(
-            "No encoding specified or detected to translate the model "
-            "file. 'UTF-8' encoding will be used.")
-        return "UTF-8"
-
-
 def split_arithmetic(structure: object, parsing_ops: dict,
                      expression: str, elements: dict,
                      negatives: set = set()) -> object:
     pattern = re.compile(parsing_ops)
     parts = pattern.split(expression)
     ops = pattern.findall(expression)
+    ops = list(map(
+        lambda x: x.replace('and', ':AND:').replace('or', ':OR:'), ops))
     if not ops:
         if parts[0] in negatives:
             negatives.remove(parts[0])

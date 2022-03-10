@@ -207,10 +207,11 @@ class LookupsStructure:
     y: tuple
     x_range: tuple
     y_range: tuple
+    type: str
 
     def __str__(self) -> str:
-        return "LookupStructure:\n\tx %s = %s\n\ty %s = %s\n" % (
-            self.x_range, self.x, self.y_range, self.y
+        return "LookupStructure (%s):\n\tx %s = %s\n\ty %s = %s\n" % (
+            self.type, self.x_range, self.x, self.y_range, self.y
         )
 
 

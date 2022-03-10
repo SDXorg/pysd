@@ -323,7 +323,8 @@ class LookupsParser(parsimonious.NodeVisitor):
             x=tuple(values[:, 0]),
             y=tuple(values[:, 1]),
             x_range=tuple(xy_range[:, 0]),
-            y_range=tuple(xy_range[:, 1])
+            y_range=tuple(xy_range[:, 1]),
+            type="interpolate"
         )
 
     def visit_excelLookup(self, n, vc):
@@ -424,7 +425,8 @@ class ComponentsParser(parsimonious.NodeVisitor):
             x=tuple(values[:, 0]),
             y=tuple(values[:, 1]),
             x_range=tuple(xy_range[:, 0]),
-            y_range=tuple(xy_range[:, 1])
+            y_range=tuple(xy_range[:, 1]),
+            type="interpolate"
         )
 
         return self.add_element(structures["with_lookup"](

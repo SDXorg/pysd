@@ -8,38 +8,53 @@ structures = {
     "arithmetic": ae.ArithmeticStructure,
     "logic": ae.LogicStructure,
     "inline_lookup": ae.InlineLookupsStructure,
-    "call": ae.CallStructure,
-    "game": ae.GameStructure,
-    "get_xls_lookups": ae.GetLookupsStructure,
-    "get_direct_lookups": ae.GetLookupsStructure,
-    "get_xls_data": ae.GetDataStructure,
-    "get_direct_data": ae.GetDataStructure,
-    "get_xls_constants": ae.GetConstantsStructure,
-    "get_direct_constants": ae.GetConstantsStructure,
-    "initial": ae.InitialStructure,
-    "stock": ae.IntegStructure,
-    "delay1": lambda x, y: ae.DelayStructure(x, y, x, 1),
-    "delay1i": lambda x, y, z: ae.DelayStructure(x, y, z, 1),
-    "delay3": lambda x, y: ae.DelayStructure(x, y, x, 3),
-    "delay3i": lambda x, y, z: ae.DelayStructure(x, y, z, 3),
-    "delay_n": ae.DelayNStructure,
-    "delay_fixed": ae.DelayFixedStructure,
-    "smooth": lambda x, y: ae.SmoothStructure(x, y, x, 1),
-    "smoothi": lambda x, y, z: ae.SmoothStructure(x, y, z, 1),
-    "smooth3": lambda x, y: ae.SmoothStructure(x, y, x, 3),
-    "smooth3i": lambda x, y, z: ae.SmoothStructure(x, y, z, 3),
-    "smooth_n": ae.SmoothNStructure,
-    "trend": ae.TrendStructure,
-    "forecast": ae.ForecastStructure,
-    "sample_if_true": ae.SampleIfTrueStructure,
     "lookup": ae.LookupsStructure,
-    "data": ae.DataStructure
+    "call": ae.CallStructure,
+    "init": ae.InitialStructure,
+    "stock": ae.IntegStructure,
+    "delay1": {
+        2: lambda x, y: ae.DelayStructure(x, y, x, 1),
+        3: lambda x, y, z: ae.DelayStructure(x, y, z, 1)
+    },
+    "delay3": {
+        2: lambda x, y: ae.DelayStructure(x, y, x, 3),
+        3: lambda x, y, z: ae.DelayStructure(x, y, z, 3),
+    },
+    "delayn": {
+        3: lambda x, y, n: ae.DelayNStructure(x, y, x, n),
+        4: ae.DelayNStructure,
+    },
+    "smth1": {
+        2: lambda x, y: ae.SmoothStructure(x, y, x, 1),
+        3: lambda x, y, z: ae.SmoothStructure(x, y, z, 1)
+    },
+    "smth3": {
+        2: lambda x, y: ae.SmoothStructure(x, y, x, 3),
+        3: lambda x, y, z: ae.SmoothStructure(x, y, z, 3)
+    },
+    "smthn": {
+        3: lambda x, y, n: ae.SmoothNStructure(x, y, x, n),
+        4: ae.SmoothNStructure
+    },
+    "trend": {
+        2: lambda x, y: ae.TrendStructure(x, y, 0),
+        3: ae.TrendStructure,
+    },
+    "safediv": {
+        2: lambda x, y: ae.CallStructure(
+            ae.ReferenceStructure("zidz"), (x, y)),
+        3: lambda x, y, z: ae.CallStructure(
+            ae.ReferenceStructure("xidz"), (x, y, z))
+    },
+    "if_then_else": lambda x, y, z: ae.CallStructure(
+            ae.ReferenceStructure("if_then_else"), (x, y, z)),
+    "negative": lambda x: ae.ArithmeticStructure(["negative"], (x,))
 }
 
 
 operators = {
-    "logic_ops": [":AND:", ":OR:"],
-    "not_ops": [":NOT:"],
+    "logic_ops": ["and", "or"],
+    "not_ops": ["not"],
     "comp_ops": ["=", "<>", "<=", "<", ">=", ">"],
     "add_ops": ["+", "-"],
     "prod_ops": ["*", "/"],

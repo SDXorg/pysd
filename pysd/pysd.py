@@ -71,7 +71,9 @@ def read_xmile(xmile_file, data_files=None, initialize=True, old=False,
         xmile_file_obj.parse()
 
         abs_model = xmile_file_obj.get_abstract_model()
+        #print(abs_model.dump(indent=" "))
         py_model_file = ModelBuilder(abs_model).build_model()
+
     model = load(py_model_file, data_files, initialize, missing_values)
     model.xmile_file = str(xmile_file)
     return model

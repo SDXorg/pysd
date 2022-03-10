@@ -19,12 +19,14 @@ class Lookups(object):
             if not x.dims:
                 # shape 0 xarrays
                 return self._call(data, float(x))
-            if np.all(x > data['lookup_dim'].values[-1]):
+            if self.interp != "extrapolate" and\
+               np.all(x > data['lookup_dim'].values[-1]):
                 outdata, _ = xr.broadcast(data[-1], x)
                 warnings.warn(
                   self.py_name + "\n"
                   + "extrapolating data above the maximum value of the series")
-            elif np.all(x < data['lookup_dim'].values[0]):
+            elif self.interp != "extrapolate" and\
+              np.all(x < data['lookup_dim'].values[0]):
                 outdata, _ = xr.broadcast(data[0], x)
                 warnings.warn(
                   self.py_name + "\n"
@@ -43,15 +45,31 @@ class Lookups(object):
             if x in data['lookup_dim'].values:
                 outdata = data.sel(lookup_dim=x)
             elif x > data['lookup_dim'].values[-1]:
-                outdata = data[-1]
+                if self.interp == "extrapolate":
+                    # extrapolate method for xmile models
+                    k = (data[-1]-data[-2])\
+                        / (data['lookup_dim'].values[-1]
+                           - data['lookup_dim'].values[-2])
+                    outdata = data[-1] + k*(x - data['lookup_dim'].values[-1])
+                else:
+                    outdata = data[-1]
                 warnings.warn(
                   self.py_name + "\n"
                   + "extrapolating data above the maximum value of the series")
             elif x < data['lookup_dim'].values[0]:
-                outdata = data[0]
+                if self.interp == "extrapolate":
+                    # extrapolate method for xmile models
+                    k = (data[1]-data[0])\
+                        / (data['lookup_dim'].values[1]
+                           - data['lookup_dim'].values[0])
+                    outdata = data[0] + k*(x - data['lookup_dim'].values[0])
+                else:
+                    outdata = data[0]
                 warnings.warn(
                   self.py_name + "\n"
                   + "extrapolating data below the minimum value of the series")
+            elif self.interp == 'hold_backward':
+                outdata = data.sel(lookup_dim=x, method="pad")
             else:
                 outdata = data.interp(lookup_dim=x)
 
@@ -67,7 +85,7 @@ class Lookups(object):
 class HardcodedLookups(Lookups):
     """Class for lookups defined in the file"""
 
-    def __init__(self, x, y, coords, py_name):
+    def __init__(self, x, y, coords, interp, py_name):
         # TODO: avoid add and merge all declarations in one definition
         self.is_float = not bool(coords)
         self.py_name = py_name
@@ -78,6 +96,7 @@ class HardcodedLookups(Lookups):
             ["lookup_dim"] + list(coords)
         )
         self.x = set(x)
+        self.interp = interp
 
     def add(self, x, y, coords):
         y = np.array(y).reshape((len(x),) + (1,)*len(coords))
