@@ -6,7 +6,10 @@ normal operation.
 """
 
 import sys
-from .py_backend.statefuls import Model
+from pysd.translation.vensim.vensim_file import VensimFile
+from pysd.translation.xmile.xmile_file import XmileFile
+from pysd.building.python.python_model_builder import ModelBuilder
+from pysd.py_backend.statefuls import Model
 
 
 if sys.version_info[:2] < (3, 7):  # pragma: no cover
@@ -23,7 +26,7 @@ if sys.version_info[:2] < (3, 7):  # pragma: no cover
     )
 
 
-def read_xmile(xmile_file, data_files=None, initialize=True, old=False,
+def read_xmile(xmile_file, data_files=None, initialize=True,
                missing_values="warning"):
     """
     Construct a model from `.xmile` file.
@@ -60,28 +63,26 @@ def read_xmile(xmile_file, data_files=None, initialize=True, old=False,
     >>> model = read_xmile('../tests/test-models/samples/teacup/teacup.xmile')
 
     """
-    if old:
-        # TODO: remove when this branch is ready to merge
-        from .translation.xmile.xmile2py import translate_xmile
-        py_model_file = translate_xmile(xmile_file)
-    else:
-        from pysd.translation.xmile.xmile_file import XmileFile
-        from pysd.building.python.python_model_builder import ModelBuilder
-        xmile_file_obj = XmileFile(xmile_file)
-        xmile_file_obj.parse()
+    # Read and parse Xmile file
+    xmile_file_obj = XmileFile(xmile_file)
+    xmile_file_obj.parse()
 
-        abs_model = xmile_file_obj.get_abstract_model()
-        #print(abs_model.dump(indent=" "))
-        py_model_file = ModelBuilder(abs_model).build_model()
+    # get AbstractModel
+    abs_model = xmile_file_obj.get_abstract_model()
 
+    # build python file
+    py_model_file = ModelBuilder(abs_model).build_model()
+
+    # load python file
     model = load(py_model_file, data_files, initialize, missing_values)
     model.xmile_file = str(xmile_file)
+
     return model
 
 
 def read_vensim(mdl_file, data_files=None, initialize=True,
                 missing_values="warning", split_views=False,
-                encoding=None, old=False, **kwargs):
+                encoding=None, **kwargs):
     """
     Construct a model from Vensim `.mdl` file.
 
@@ -136,25 +137,24 @@ def read_vensim(mdl_file, data_files=None, initialize=True,
     >>> model = read_vensim('../tests/test-models/samples/teacup/teacup.mdl')
 
     """
-    if old:
-        # TODO: remove when this branch is ready to merge
-        from .translation.vensim.vensim2py import translate_vensim
-        py_model_file = translate_vensim(
-            mdl_file, split_views, encoding, **kwargs)
-    else:
-        from pysd.translation.vensim.vensim_file import VensimFile
-        from pysd.building.python.python_model_builder import ModelBuilder
-        ven_file = VensimFile(mdl_file)
-        ven_file.parse()
-        if split_views:
-            subview_sep = kwargs.get("subview_sep", "")
-            ven_file.parse_sketch(subview_sep)
+    # Read and parse Vensim file
+    ven_file = VensimFile(mdl_file, encoding=encoding)
+    ven_file.parse()
+    if split_views:
+        # split variables per views
+        subview_sep = kwargs.get("subview_sep", "")
+        ven_file.parse_sketch(subview_sep)
 
-        abs_model = ven_file.get_abstract_model()
-        py_model_file = ModelBuilder(abs_model).build_model()
+    # get AbstractModel
+    abs_model = ven_file.get_abstract_model()
 
+    # build python file
+    py_model_file = ModelBuilder(abs_model).build_model()
+
+    # load python file
     model = load(py_model_file, data_files, initialize, missing_values)
     model.mdl_file = str(mdl_file)
+
     return model
 
 

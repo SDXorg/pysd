@@ -1,4 +1,6 @@
 import re
+from typing import Tuple, Union, List
+from lxml import etree
 import parsimonious
 import numpy as np
 
@@ -17,13 +19,15 @@ class Element():
         "discrete": "hold_backward"
     }
 
-    def __init__(self, node, ns):
+    kind = "Element"
+
+    def __init__(self, node: etree._Element, ns: dict):
         self.node = node
         self.ns = ns
         self.name = node.attrib["name"]
         self.units = self.get_xpath_text(node, "ns:units") or ""
         self.documentation = self.get_xpath_text(node, "ns:doc") or ""
-        self.limits = (None, None)
+        self.range = (None, None)
         self.components = []
 
     def __str__(self):
@@ -42,36 +46,49 @@ class Element():
             return self.node.text.replace("\n", "\n\t")
 
     @property
-    def _verbose(self):
+    def _verbose(self) -> str:
+        """Get model information"""
         return self.__str__()
 
     @property
     def verbose(self):
+        """Print model information"""
         print(self._verbose)
 
-    def get_xpath_text(self, node, xpath):
-        """ Safe access of occassionally missing text"""
+    def get_xpath_text(self, node: etree._Element,
+                       xpath: str) -> Union[str, None]:
+        """Safe access of occassionally missing text"""
         try:
             return node.xpath(xpath, namespaces=self.ns)[0].text
         except IndexError:
             return None
 
-    def get_xpath_attrib(self, node, xpath, attrib):
-        """ Safe access of occassionally missing attributes"""
+    def get_xpath_attrib(self, node: etree._Element,
+                         xpath: str, attrib: str) -> Union[str, None]:
+        """Safe access of occassionally missing attributes"""
         # defined here to take advantage of NS in default
         try:
             return node.xpath(xpath, namespaces=self.ns)[0].attrib[attrib]
         except IndexError:
             return None
 
-    def get_lims(self):
+    def get_range(self) -> Tuple[Union[None, str], Union[None, str]]:
+        """Get the range of the element"""
         lims = (
             self.get_xpath_attrib(self.node, 'ns:range', 'min'),
             self.get_xpath_attrib(self.node, 'ns:range', 'max')
         )
         return tuple(float(x) if x is not None else x for x in lims)
 
-    def parse_lookup_xml_node(self, node):
+    def parse_lookup_xml_node(self, node: etree._Element) -> object:
+        """
+        Parse lookup definition
+
+        Returns
+        -------
+        AST: AbstractSyntaxTree
+
+        """
         ys_node = node.xpath('ns:ypts', namespaces=self.ns)[0]
         ys = np.fromstring(
             ys_node.text,
@@ -101,7 +118,8 @@ class Element():
             type=self.interp_methods[interp]
         )
 
-    def _parse(self):
+    def _parse(self) -> None:
+        """Parse all the components of an element"""
         if self.node.xpath("ns:element", namespaces=self.ns):
             for subnode in self.node.xpath("ns:element", namespaces=self.ns):
                 self.components.append(
@@ -109,42 +127,62 @@ class Element():
                      self._parse_component(subnode))
                 )
         else:
-            subscripts = []
-            for subnode in self.node.xpath("ns:dimensions/ns:dim", namespaces=self.ns):
-                subscripts.append(subnode.attrib["name"])
+            subscripts = [
+                subnode.attrib["name"]
+                for subnode
+                in self.node.xpath("ns:dimensions/ns:dim", namespaces=self.ns)
+            ]
             self.components = [
                 ((subscripts, []),
                  self._parse_component(self.node))
             ]
 
-    def smile_parser(self, expression):
+    def smile_parser(self, expression: str) -> object:
+        """
+        Parse expression with parsimonious.
+
+        Returns
+        -------
+        AST: AbstractSyntaxTree
+
+        """
         tree = vu.Grammar.get("equations", parsing_ops).parse(expression)
         return EquationParser(tree).translation
 
-    def get_abstract_element(self):
+    def get_empty_abstract_element(self) -> AbstractElement:
+        """
+        Get empty Abstract used for building
+
+        Returns
+        -------
+        AbstractElement
+        """
         return AbstractElement(
             name=self.name,
             units=self.units,
-            range=self.limits,
+            range=self.range,
             documentation=self.documentation,
             components=[])
 
 
 class Flaux(Element):
     """Flow or auxiliary variable"""
+
+    kind = "Flaux"
+
     def __init__(self, node, ns):
         super().__init__(node, ns)
-        self.limits = self.get_lims()
+        self.range = self.get_range()
 
-    @property
-    def _verbose(self):
-        return self.__str__()
+    def _parse_component(self, node) -> object:
+        """
+        Parse one Flaux component
 
-    @property
-    def verbose(self):
-        print(self._verbose)
+        Returns
+        -------
+        AST: AbstractSyntaxTree
 
-    def _parse_component(self, node):
+        """
         eqn = self.get_xpath_text(node, 'ns:eqn')
 
         # Replace new lines with space, and replace 2 or more spaces with
@@ -160,8 +198,15 @@ class Flaux(Element):
 
         return ast
 
-    def get_abstract_component(self):
-        ae = self.get_abstract_element()
+    def get_abstract_element(self) -> AbstractElement:
+        """
+        Get Abstract Element with components used for building
+
+        Returns
+        -------
+        AbstractElement
+        """
+        ae = self.get_empty_abstract_element()
         for component in self.components:
             ae.components.append(AbstractComponent(
                 subscripts=component[0],
@@ -171,24 +216,41 @@ class Flaux(Element):
 
 class Gf(Element):
     """Gf variable (lookup)"""
+
     kind = "Gf component"
 
     def __init__(self, node, ns):
         super().__init__(node, ns)
-        self.limits = self.get_lims()
+        self.range = self.get_range()
 
-    def get_lims(self):
+    def get_range(self) -> Tuple[Union[None, str], Union[None, str]]:
+        """Get the range of the Gf element"""
         lims = (
             self.get_xpath_attrib(self.node, 'ns:yscale', 'min'),
             self.get_xpath_attrib(self.node, 'ns:yscale', 'max')
         )
         return tuple(float(x) if x is not None else x for x in lims)
 
-    def _parse_component(self, node):
+    def _parse_component(self, node) -> object:
+        """
+        Parse one Gf component
+
+        Returns
+        -------
+        AST: AbstractSyntaxTree
+
+        """
         return self.parse_lookup_xml_node(self.node)
 
-    def get_abstract_component(self):
-        ae = self.get_abstract_element()
+    def get_abstract_element(self) -> AbstractElement:
+        """
+        Get Abstract Element with components used for building
+
+        Returns
+        -------
+        AbstractElement
+        """
+        ae = self.get_empty_abstract_element()
         for component in self.components:
             ae.components.append(AbstractLookup(
                 subscripts=component[0],
@@ -198,13 +260,22 @@ class Gf(Element):
 
 class Stock(Element):
     """Stock component (Integ)"""
+
     kind = "Stock component"
 
     def __init__(self, node, ns):
         super().__init__(node, ns)
-        self.limits = self.get_lims()
+        self.range = self.get_range()
 
-    def _parse_component(self, node):
+    def _parse_component(self, node) -> object:
+        """
+        Parse one Stock component
+
+        Returns
+        -------
+        AST: AbstractSyntaxTree
+
+        """
         # Parse each flow equations
         inflows = [
             self.smile_parser(inflow.text)
@@ -237,8 +308,15 @@ class Stock(Element):
 
         return structures["stock"](flows, initial)
 
-    def get_abstract_component(self):
-        ae = self.get_abstract_element()
+    def get_abstract_element(self) -> AbstractElement:
+        """
+        Get Abstract Element with components used for building
+
+        Returns
+        -------
+        AbstractElement
+        """
+        ae = self.get_empty_abstract_element()
         for component in self.components:
             ae.components.append(AbstractComponent(
                 subscripts=component[0],
@@ -254,14 +332,29 @@ class ControlElement(Element):
         self.name = name
         self.units = units
         self.documentation = documentation
-        self.limits = (None, None)
+        self.range = (None, None)
         self.eqn = eqn
 
-    def _parse(self):
+    def _parse(self) -> None:
+        """
+        Parse control elment.
+
+        Returns
+        -------
+        AST: AbstractSyntaxTree
+
+        """
         self.ast = self.smile_parser(self.eqn)
 
-    def get_abstract_component(self):
-        ae = self.get_abstract_element()
+    def get_abstract_element(self) -> AbstractElement:
+        """
+        Get Abstract Element with components used for building
+
+        Returns
+        -------
+        AbstractElement
+        """
+        ae = self.get_empty_abstract_element()
         ae.components.append(AbstractComponent(
             subscripts=([], []),
             ast=self.ast))
@@ -271,7 +364,8 @@ class ControlElement(Element):
 class SubscriptRange():
     """Subscript range definition."""
 
-    def __init__(self, name, definition, mapping=[]):
+    def __init__(self, name: str, definition: List[str],
+                 mapping: List[str] = []):
         self.name = name
         self.definition = definition
         self.mapping = mapping
@@ -282,15 +376,18 @@ class SubscriptRange():
             self.definition)
 
     @property
-    def _verbose(self):
+    def _verbose(self) -> str:
+        """Get model information"""
         return self.__str__()
 
     @property
     def verbose(self):
+        """Print model information"""
         print(self._verbose)
 
 
 class EquationParser(parsimonious.NodeVisitor):
+    """Visit the elements of a equation to get the AST"""
     def __init__(self, ast):
         self.translation = None
         self.elements = {}
@@ -302,11 +399,13 @@ class EquationParser(parsimonious.NodeVisitor):
         self.translation = self.elements[vc[0]]
 
     def visit_logic2_expr(self, n, vc):
+        # expressions with logical binary operators (and, or)
         return vu.split_arithmetic(
             structures["logic"], parsing_ops["logic_ops"],
             "".join(vc).strip(), self.elements)
 
     def visit_logic_expr(self, n, vc):
+        # expressions with logical unitary operators (not)
         id = vc[2]
         if vc[0].lower() == "not":
             id = self.add_element(structures["logic"](
@@ -316,21 +415,25 @@ class EquationParser(parsimonious.NodeVisitor):
         return id
 
     def visit_comp_expr(self, n, vc):
+        # expressions with comparisons (=, <>, <, <=, >, >=)
         return vu.split_arithmetic(
             structures["logic"], parsing_ops["comp_ops"],
             "".join(vc).strip(), self.elements)
 
     def visit_add_expr(self, n, vc):
+        # expressions with additions (+, -)
         return vu.split_arithmetic(
             structures["arithmetic"], parsing_ops["add_ops"],
             "".join(vc).strip(), self.elements)
 
     def visit_prod_expr(self, n, vc):
+        # expressions with products (*, /)
         return vu.split_arithmetic(
             structures["arithmetic"], parsing_ops["prod_ops"],
             "".join(vc).strip(), self.elements)
 
     def visit_exp_expr(self, n, vc):
+        # expressions with exponentials (^)
         return vu.split_arithmetic(
             structures["arithmetic"], parsing_ops["exp_ops"],
             "".join(vc).strip(), self.elements, self.negatives)
@@ -403,14 +506,13 @@ class EquationParser(parsimonious.NodeVisitor):
         return vc[2]
 
     def visit__(self, n, vc):
-        """Handles whitespace characters"""
+        # handles whitespace characters
         return ""
 
     def visit_nan(self, n, vc):
         return "np.nan"
 
     def visit_empty(self, n, vc):
-        #warnings.warn(f"Empty expression for '{element['real_name']}''.")
         return self.add_element(None)
 
     def generic_visit(self, n, vc):

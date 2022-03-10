@@ -12,8 +12,7 @@ from pysd import read_vensim, read_xmile, load
 from ..py_backend.utils import load_outputs, detect_encoding
 
 
-def runner(model_file, canonical_file=None, transpose=False, data_files=None,
-           old=False):
+def runner(model_file, canonical_file=None, transpose=False, data_files=None):
     """
     Translates and runs a model and returns its output and the
     canonical output.
@@ -63,9 +62,9 @@ def runner(model_file, canonical_file=None, transpose=False, data_files=None,
 
     # load model
     if model_file.suffix.lower() == ".mdl":
-        model = read_vensim(model_file, data_files, old=old)
+        model = read_vensim(model_file, data_files)
     elif model_file.suffix.lower() == ".xmile":
-        model = read_xmile(model_file, data_files, old=old)
+        model = read_xmile(model_file, data_files)
     elif model_file.suffix.lower() == ".py":
         model = load(model_file, data_files)
     else:

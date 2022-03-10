@@ -624,50 +624,6 @@ class TestPySD(unittest.TestCase):
             "(32.0, 212.0)",
         )
 
-    def test_docs_old(self):
-        """ Test that the model prints some documentation """
-
-        model = pysd.read_vensim(test_model, old=True)
-        self.assertIsInstance(str(model), str)  # tests string conversion of
-        # model
-
-        doc = model.doc()
-        self.assertIsInstance(doc, pd.DataFrame)
-        self.assertSetEqual(
-            {
-                "Characteristic Time",
-                "Teacup Temperature",
-                "FINAL TIME",
-                "Heat Loss to Room",
-                "INITIAL TIME",
-                "Room Temperature",
-                "SAVEPER",
-                "TIME STEP",
-            },
-            set(doc["Real Name"].values),
-        )
-
-        self.assertEqual(
-            doc[doc["Real Name"] == "Heat Loss to Room"]["Unit"].values[0],
-            "Degrees Fahrenheit/Minute",
-        )
-        self.assertEqual(
-            doc[doc["Real Name"] == "Teacup Temperature"]["Py Name"].values[0],
-            "teacup_temperature",
-        )
-        self.assertEqual(
-            doc[doc["Real Name"] == "INITIAL TIME"]["Comment"].values[0],
-            "The initial time for the simulation.",
-        )
-        self.assertEqual(
-            doc[doc["Real Name"] == "Characteristic Time"]["Type"].values[0],
-            "constant"
-        )
-        self.assertEqual(
-            doc[doc["Real Name"] == "Teacup Temperature"]["Lims"].values[0],
-            "(32.0, 212.0)",
-        )
-
     def test_docs_multiline_eqn(self):
         """ Test that the model prints some documentation """
 
@@ -685,9 +641,6 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(
             doc[doc["Real Name"] == "price"]["Subs"].values[0], "['fruits']"
         )
-        # TODO: keep eqn?
-        #self.assertEqual(doc[doc["Real Name"] == "price"]["Eqn"].values[0],
-        #                 "1.2; .; .; .; 1.4")
 
     def test_stepwise_cache(self):
         from pysd.py_backend.decorators import Cache

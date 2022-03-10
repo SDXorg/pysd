@@ -1,4 +1,5 @@
 import re
+from typing import Union, Tuple, List
 import warnings
 import parsimonious
 import numpy as np
@@ -12,10 +13,11 @@ from .vensim_structures import structures, parsing_ops
 
 
 class Element():
+    """Model element parsed definition"""
 
-    def __init__(self, equation, units, documentation):
+    def __init__(self, equation: str, units: str, documentation: str):
         self.equation = equation
-        self.units, self.limits = self._parse_units(units)
+        self.units, self.range = self._parse_units(units)
         self.documentation = documentation
 
     def __str__(self):
@@ -23,14 +25,17 @@ class Element():
             self.equation, self.units, self.documentation)
 
     @property
-    def _verbose(self):
+    def _verbose(self) -> str:
+        """Get model information"""
         return self.__str__()
 
     @property
     def verbose(self):
+        """Print model information"""
         print(self._verbose)
 
-    def _parse_units(self, units_str):
+    def _parse_units(self, units_str: str) -> Tuple[str, tuple]:
+        """Split the range from the units"""
         # TODO improve units parsing: move to _parse_section_elements
         if not units_str:
             return "", (None, None)
@@ -49,16 +54,19 @@ class Element():
         )
         return units, lims
 
-    def _parse(self):
+    def _parse(self) -> object:
+        """Parse model element to get the component object"""
         tree = vu.Grammar.get("element_object").parse(self.equation)
         self.component = ElementsComponentParser(tree).component
         self.component.units = self.units
-        self.component.limits = self.limits
+        self.component.range = self.range
         self.component.documentation = self.documentation
         return self.component
 
 
 class ElementsComponentParser(parsimonious.NodeVisitor):
+    """Visit model element definition to get the component object"""
+
     def __init__(self, ast):
         self.mapping = []
         self.subscripts = []
@@ -176,7 +184,8 @@ class ElementsComponentParser(parsimonious.NodeVisitor):
 class SubscriptRange():
     """Subscript range definition, defined by ":" or "<->" in Vensim."""
 
-    def __init__(self, name, definition, mapping=[]):
+    def __init__(self, name: str, definition: Union[List[str], str, dict],
+                 mapping: List[str] = []):
         self.name = name
         self.definition = definition
         self.mapping = mapping
@@ -188,11 +197,13 @@ class SubscriptRange():
             if self.mapping else self.definition)
 
     @property
-    def _verbose(self):
+    def _verbose(self) -> str:
+        """Get model information"""
         return self.__str__()
 
     @property
     def verbose(self):
+        """Print model information"""
         print(self._verbose)
 
 
@@ -200,7 +211,8 @@ class Component():
     """Model component defined by "name = expr" in Vensim."""
     kind = "Model component"
 
-    def __init__(self, name, subscripts, expression):
+    def __init__(self, name: str, subscripts: Tuple[list, list],
+                 expression: str):
         self.name = name
         self.subscripts = subscripts
         self.expression = expression
@@ -230,16 +242,20 @@ class Component():
     def verbose(self):
         print(self._verbose)
 
-    def _parse(self):
+    def _parse(self) -> None:
+        """Parse model component to get the AST"""
         tree = vu.Grammar.get("components", parsing_ops).parse(self.expression)
-        self.ast = ComponentsParser(tree).translation
+        self.ast = EquationParser(tree).translation
         if isinstance(self.ast, structures["get_xls_lookups"]):
             self.lookup = True
         else:
             self.lookup = False
 
-    def get_abstract_component(self):
+    def get_abstract_component(self) -> Union[AbstractComponent,
+                                              AbstractLookup]:
+        """Get Abstract Component used for building"""
         if self.lookup:
+            # get lookups equations
             return AbstractLookup(subscripts=self.subscripts, ast=self.ast)
         else:
             return AbstractComponent(subscripts=self.subscripts, ast=self.ast)
@@ -249,10 +265,12 @@ class UnchangeableConstant(Component):
     """Unchangeable constant defined by "name == expr" in Vensim."""
     kind = "Unchangeable constant component"
 
-    def __init__(self, name, subscripts, expression):
+    def __init__(self, name: str, subscripts: Tuple[list, list],
+                 expression: str):
         super().__init__(name, subscripts, expression)
 
-    def get_abstract_component(self):
+    def get_abstract_component(self) -> AbstractUnchangeableConstant:
+        """Get Abstract Component used for building"""
         return AbstractUnchangeableConstant(
             subscripts=self.subscripts, ast=self.ast)
 
@@ -261,14 +279,17 @@ class Lookup(Component):
     """Lookup variable, defined by "name(expr)" in Vensim."""
     kind = "Lookup component"
 
-    def __init__(self, name, subscripts, expression):
+    def __init__(self, name: str, subscripts: Tuple[list, list],
+                 expression: str):
         super().__init__(name, subscripts, expression)
 
-    def _parse(self):
+    def _parse(self) -> None:
+        """Parse model component to get the AST"""
         tree = vu.Grammar.get("lookups").parse(self.expression)
         self.ast = LookupsParser(tree).translation
 
-    def get_abstract_component(self):
+    def get_abstract_component(self) -> AbstractLookup:
+        """Get Abstract Component used for building"""
         return AbstractLookup(subscripts=self.subscripts, ast=self.ast)
 
 
@@ -276,7 +297,8 @@ class Data(Component):
     """Data variable, defined by "name := expr" in Vensim."""
     kind = "Data component"
 
-    def __init__(self, name, subscripts, keyword, expression):
+    def __init__(self, name: str, subscripts: Tuple[list, list],
+                 keyword: str, expression: str):
         super().__init__(name, subscripts, expression)
         self.keyword = keyword
 
@@ -290,19 +312,22 @@ class Data(Component):
         text += "\n\t%s" % self._expression
         return text
 
-    def _parse(self):
+    def _parse(self) -> None:
+        """Parse model component to get the AST"""
         if not self.expression:
             # empty data vars, read from vdf file
             self.ast = structures["data"]()
         else:
             super()._parse()
 
-    def get_abstract_component(self):
+    def get_abstract_component(self) -> AbstractData:
+        """Get Abstract Component used for building"""
         return AbstractData(
             subscripts=self.subscripts, ast=self.ast, keyword=self.keyword)
 
 
 class LookupsParser(parsimonious.NodeVisitor):
+    """Visit the elements of a lookups to get the AST"""
     def __init__(self, ast):
         self.translation = None
         self.visit(ast)
@@ -341,7 +366,8 @@ class LookupsParser(parsimonious.NodeVisitor):
         return "".join(filter(None, vc)) or n.text
 
 
-class ComponentsParser(parsimonious.NodeVisitor):
+class EquationParser(parsimonious.NodeVisitor):
+    """Visit the elements of a equation to get the AST"""
     def __init__(self, ast):
         self.translation = None
         self.elements = {}
@@ -353,11 +379,13 @@ class ComponentsParser(parsimonious.NodeVisitor):
         self.translation = self.elements[vc[0]]
 
     def visit_final_expr(self, n, vc):
+        # expressions with logical binary operators (:AND:, :OR:)
         return vu.split_arithmetic(
             structures["logic"], parsing_ops["logic_ops"],
             "".join(vc).strip(), self.elements)
 
     def visit_logic_expr(self, n, vc):
+        # expressions with logical unitary operators (:NOT:)
         id = vc[2]
         if vc[0].lower() == ":not:":
             id = self.add_element(structures["logic"](
@@ -367,21 +395,25 @@ class ComponentsParser(parsimonious.NodeVisitor):
         return id
 
     def visit_comp_expr(self, n, vc):
+        # expressions with comparisons (=, <>, <, <=, >, >=)
         return vu.split_arithmetic(
             structures["logic"], parsing_ops["comp_ops"],
             "".join(vc).strip(), self.elements)
 
     def visit_add_expr(self, n, vc):
+        # expressions with additions (+, -)
         return vu.split_arithmetic(
             structures["arithmetic"], parsing_ops["add_ops"],
             "".join(vc).strip(), self.elements)
 
     def visit_prod_expr(self, n, vc):
+        # expressions with products (*, /)
         return vu.split_arithmetic(
             structures["arithmetic"], parsing_ops["prod_ops"],
             "".join(vc).strip(), self.elements)
 
     def visit_exp_expr(self, n, vc):
+        # expressions with exponentials (^)
         return vu.split_arithmetic(
             structures["arithmetic"], parsing_ops["exp_ops"],
             "".join(vc).strip(), self.elements, self.negatives)
@@ -467,14 +499,13 @@ class ComponentsParser(parsimonious.NodeVisitor):
         return vc[2]
 
     def visit__(self, n, vc):
-        """Handles whitespace characters"""
+        # handles whitespace characters
         return ""
 
     def visit_nan(self, n, vc):
         return "np.nan"
 
     def visit_empty(self, n, vc):
-        #warnings.warn(f"Empty expression for '{element['real_name']}''.")
         return self.add_element(None)
 
     def generic_visit(self, n, vc):

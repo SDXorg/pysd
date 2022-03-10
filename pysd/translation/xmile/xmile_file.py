@@ -1,3 +1,4 @@
+from typing import Union
 from pathlib import Path
 from lxml import etree
 
@@ -15,13 +16,8 @@ class XmileFile():
     xmile_path: str or pathlib.Path
         Path to the Xmile model.
 
-    encoding: str or None (optional)
-        Encoding of the source model file. If None, the encoding will be
-        read from the model, if the encoding is not defined in the model
-        file it will be set to 'UTF-8'. Default is None.
-
     """
-    def __init__(self, xmile_path, encoding=None):
+    def __init__(self, xmile_path: Union[str, Path]):
         self.xmile_path = Path(xmile_path)
         self.root_path = self.xmile_path.parent
         self.xmile_root = self.get_root()
@@ -32,7 +28,8 @@ class XmileFile():
         return "\nXmile model file, loaded from:\n\t%s\n" % self.xmile_path
 
     @property
-    def _verbose(self):
+    def _verbose(self) -> str:
+        """Get model information"""
         text = self.__str__()
         for section in self.sections:
             text += section._verbose
@@ -41,10 +38,18 @@ class XmileFile():
 
     @property
     def verbose(self):
+        """Print model information"""
         print(self._verbose)
 
-    def get_root(self):
-        """Read a Xmile file and assign its content to self.model_text"""
+    def get_root(self) -> etree._Element:
+        """
+        Read a Xmile file and assign its content to self.model_text
+
+        Returns
+        -------
+        lxml.etree._Element: parsed xml object
+
+        """
         # check for model extension
         if self.xmile_path.suffix.lower() != ".xmile":
             raise ValueError(
@@ -57,14 +62,14 @@ class XmileFile():
             parser=etree.XMLParser(encoding="utf-8", recover=True)
         ).getroot()
 
-    def parse(self):
+    def parse(self) -> None:
         # We keep everything in a single section
         # TODO: in order to make macros work we need to split them here in
         # several sections
         self.sections = [FileSection(
                 name="__main__",
                 path=self.xmile_path.with_suffix(".py"),
-                type="main",
+                section_type="main",
                 params=[],
                 returns=[],
                 content_root=self.xmile_root,
@@ -75,7 +80,14 @@ class XmileFile():
         for section in self.sections:
             section._parse()
 
-    def get_abstract_model(self):
+    def get_abstract_model(self) -> AbstractModel:
+        """
+        Get Abstract Model used for building
+
+        Returns
+        -------
+        AbstractModel
+        """
         return AbstractModel(
             original_path=self.xmile_path,
             sections=tuple(section.get_abstract_section()

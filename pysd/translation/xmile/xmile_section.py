@@ -1,8 +1,9 @@
 from typing import List, Union
+from lxml import etree
 from pathlib import Path
 
 from ..structures.abstract_model import\
-    AbstractElement, AbstractSubscriptRange,  AbstractSection
+    AbstractSubscriptRange, AbstractSection
 
 from .xmile_element import ControlElement, SubscriptRange, Flaux, Gf, Stock
 
@@ -11,14 +12,14 @@ class FileSection():  # File section dataclass
 
     control_vars = ["initial_time", "final_time", "time_step", "saveper"]
 
-    def __init__(self, name: str, path: Path, type: str,
+    def __init__(self, name: str, path: Path, section_type: str,
                  params: List[str], returns: List[str],
-                 content_root: str, namespace: str, split: bool,
+                 content_root: etree._Element, namespace: str, split: bool,
                  views_dict: Union[dict, None]
-                 ) -> object:
+                 ):
         self.name = name
         self.path = path
-        self.type = type
+        self.type = section_type
         self.params = params
         self.returns = returns
         self.content = content_root
@@ -31,7 +32,8 @@ class FileSection():  # File section dataclass
         return "\nFile section: %s\n" % self.name
 
     @property
-    def _verbose(self):
+    def _verbose(self) -> str:
+        """Get model information"""
         text = self.__str__()
         if self.elements:
             for element in self.elements:
@@ -43,36 +45,47 @@ class FileSection():  # File section dataclass
 
     @property
     def verbose(self):
+        """Print model information"""
         print(self._verbose)
 
-    def _parse(self):
+    def _parse(self) -> None:
+        """Parse the section"""
+        # parse subscripts and components
         self.subscripts = self._parse_subscripts()
         self.components = self._parse_components()
+
         if self.name == "__main__":
+            # parse control variables
             self.components += self._parse_control_vars()
+
+        # define elements for printting information
         self.elements = self.subscripts + self.components
 
-    def _parse_subscripts(self):
+    def _parse_subscripts(self) -> List[SubscriptRange]:
         """Parse the subscripts of the section"""
-        subscripts_ranges = []
-        path = "ns:dimensions/ns:dim"
-        for node in self.content.xpath(path, namespaces=self.ns):
-            name = node.attrib["name"]
-            subscripts = [
-                sub.attrib["name"]
-                for sub in node.xpath("ns:elem", namespaces=self.ns)
-            ]
-            subscripts_ranges.append(SubscriptRange(name, subscripts, []))
-        return subscripts_ranges
+        return [
+            SubscriptRange(
+                node.attrib["name"],
+                [
+                    sub.attrib["name"]
+                    for sub in node.xpath("ns:elem", namespaces=self.ns)
+                ],
+                [])   # no subscript mapping implemented
+            for node
+            in self.content.xpath("ns:dimensions/ns:dim", namespaces=self.ns)
+        ]
 
-    def _parse_control_vars(self):
+    def _parse_control_vars(self) -> List[ControlElement]:
+        """Parse control vars and rename them with Vensim standard"""
 
         # Read the start time of simulation
         node = self.content.xpath('ns:sim_specs', namespaces=self.ns)[0]
-        time_units = node.attrib['time_units'] if 'time_units' in node.attrib else ""
+        time_units = node.attrib['time_units']\
+            if 'time_units' in node.attrib else ""
 
         control_vars = []
 
+        # initial time of the simulation
         control_vars.append(ControlElement(
             name="INITIAL TIME",
             units=time_units,
@@ -80,6 +93,7 @@ class FileSection():  # File section dataclass
             eqn=node.xpath("ns:start", namespaces=self.ns)[0].text
         ))
 
+        # final time of the simulation
         control_vars.append(ControlElement(
             name="FINAL TIME",
             units=time_units,
@@ -87,18 +101,11 @@ class FileSection():  # File section dataclass
             eqn=node.xpath("ns:stop", namespaces=self.ns)[0].text
         ))
 
-        # Read the time step of simulation
-        dt_node = node.xpath("ns:dt", namespaces=self.ns)
-
-        # Use default value for time step if `dt` is not specified in model
-        dt_eqn = "1"
-        if len(dt_node) > 0:
-            dt_node = dt_node[0]
-            dt_eqn = dt_node.text
-            # If reciprocal mode are defined for `dt`, we should inverse value
-            if "reciprocal" in dt_node.attrib\
-              and dt_node.attrib["reciprocal"].lower() == "true":
-                dt_eqn = "1/(" + dt_eqn + ")"
+        # time step of simulation
+        dt_node = node.xpath("ns:dt", namespaces=self.ns)[0]
+        dt_eqn = "1/(" + dt_node.text + ")" if "reciprocal" in dt_node.attrib\
+            and dt_node.attrib["reciprocal"].lower() == "true"\
+            else dt_node.text
 
         control_vars.append(ControlElement(
             name="TIME STEP",
@@ -107,6 +114,7 @@ class FileSection():  # File section dataclass
             eqn=dt_eqn
         ))
 
+        # saving time of the simulation = time step
         control_vars.append(ControlElement(
             name="SAVEPER",
             units=time_units,
@@ -117,7 +125,13 @@ class FileSection():  # File section dataclass
         [component._parse() for component in control_vars]
         return control_vars
 
-    def _parse_components(self):
+    def _parse_components(self) -> List[Union[Flaux, Gf, Stock]]:
+        """
+        Parse model components. Three groups defined:
+        Flaux: flows and auxiliary variables
+        Gf: lookups
+        Stock: integs
+        """
 
         # Add flows and auxiliary variables
         components = [
@@ -147,7 +161,14 @@ class FileSection():  # File section dataclass
         [component._parse() for component in components]
         return components
 
-    def get_abstract_section(self):
+    def get_abstract_section(self) -> AbstractSection:
+        """
+        Get Abstract Section used for building
+
+        Returns
+        -------
+        AbstractSection
+        """
         return AbstractSection(
             name=self.name,
             path=self.path,
@@ -156,14 +177,15 @@ class FileSection():  # File section dataclass
             returns=self.returns,
             subscripts=self.solve_subscripts(),
             elements=[
-                component.get_abstract_component()
-                for component in self.components
+                element.get_abstract_element()
+                for element in self.components
             ],
             split=self.split,
             views_dict=self.views_dict
         )
 
-    def solve_subscripts(self):
+    def solve_subscripts(self) -> List[AbstractSubscriptRange]:
+        """Convert the subscript ranges to Abstract Subscript Ranges"""
         return [AbstractSubscriptRange(
             name=subs_range.name,
             subscripts=subs_range.definition,

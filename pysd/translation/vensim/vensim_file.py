@@ -1,4 +1,5 @@
 import re
+from typing import Union, List
 from pathlib import Path
 import warnings
 import parsimonious
@@ -25,7 +26,8 @@ class VensimFile():
         file it will be set to 'UTF-8'. Default is None.
 
     """
-    def __init__(self, mdl_path, encoding=None):
+    def __init__(self, mdl_path: Union[str, Path],
+                 encoding: Union[None, str] = None):
         self.mdl_path = Path(mdl_path)
         self.root_path = self.mdl_path.parent
         self.model_text = self._read(encoding)
@@ -37,7 +39,8 @@ class VensimFile():
         return "\nVensim model file, loaded from:\n\t%s\n" % self.mdl_path
 
     @property
-    def _verbose(self):
+    def _verbose(self) -> str:
+        """Get model information"""
         text = self.__str__()
         for section in self.sections:
             text += section._verbose
@@ -46,10 +49,18 @@ class VensimFile():
 
     @property
     def verbose(self):
+        """Print model information"""
         print(self._verbose)
 
-    def _read(self, encoding):
-        """Read a Vensim file and assign its content to self.model_text"""
+    def _read(self, encoding: Union[None, str]) -> str:
+        """
+        Read a Vensim file and assign its content to self.model_text
+
+        Returns
+        -------
+        str: model file content
+
+        """
         # check for model extension
         if self.mdl_path.suffix.lower() != ".mdl":
             raise ValueError(
@@ -58,6 +69,7 @@ class VensimFile():
             )
 
         if encoding is None:
+            # Try detecting the encoding from the file
             encoding = vu._detect_encoding_from_file(self.mdl_path)
 
         with self.mdl_path.open("r", encoding=encoding,
@@ -66,7 +78,7 @@ class VensimFile():
 
         return model_text
 
-    def _split_sketch(self):
+    def _split_sketch(self) -> None:
         """Split model from the sketch"""
         try:
             split_model = self.model_text.split("\\\\\\---///", 1)
@@ -76,22 +88,31 @@ class VensimFile():
         except LookupError:
             pass
 
-    def _clean(self, text):
+    def _clean(self, text: str) -> str:
+        """Remove unnecessary characters"""
         return re.sub(r"[\n\t\s]+", " ", re.sub(r"\\\n\t", " ", text))
 
-    def parse(self):
+    def parse(self) -> None:
+        """Parse model file"""
+        # get model sections (__main__ + macros)
         tree = vu.Grammar.get("file_sections").parse(self.model_text)
         self.sections = FileSectionsParser(tree).entries
+
+        # main section path (Python model file)
         self.sections[0].path = self.mdl_path.with_suffix(".py")
+
         for section in self.sections[1:]:
+            # macrots paths
             section.path = self.mdl_path.parent.joinpath(
                 self.clean_file_names(section.name)[0]
                 ).with_suffix(".py")
 
         for section in self.sections:
+            # parse each section
             section._parse()
 
-    def parse_sketch(self, subview_sep):
+    def parse_sketch(self, subview_sep: List[str]) -> None:
+        """Parse the sketch of the models to classify the variables"""
         if self.sketch:
             sketch = list(map(
                 lambda x: x.strip(),
@@ -164,7 +185,14 @@ class VensimFile():
         self.sections[0].split = True
         self.sections[0].views_dict = views_dict
 
-    def get_abstract_model(self):
+    def get_abstract_model(self) -> AbstractModel:
+        """
+        Get Abstract Model used for building
+
+        Returns
+        -------
+        AbstractModel
+        """
         return AbstractModel(
             original_path=self.mdl_path,
             sections=tuple(section.get_abstract_section()
@@ -230,7 +258,7 @@ class FileSectionsParser(parsimonious.NodeVisitor):
             self.entries[0] = FileSection(
                 name="__main__",
                 path=Path("."),
-                type="main",
+                section_type="main",
                 params=[],
                 returns=[],
                 content=n.text.strip(),
@@ -246,9 +274,11 @@ class FileSectionsParser(parsimonious.NodeVisitor):
             FileSection(
                 name=vc[2].strip().lower().replace(" ", "_"),
                 path=Path("."),
-                type="macro",
-                params=[x.strip() for x in vc[6].split(",")] if vc[6] else [],
-                returns=[x.strip() for x in vc[10].split(",")] if vc[10] else [],
+                section_type="macro",
+                params=[
+                    x.strip() for x in vc[6].split(",")] if vc[6] else [],
+                returns=[
+                    x.strip() for x in vc[10].split(",")] if vc[10] else [],
                 content=vc[13].strip(),
                 split=False,
                 views_dict=None
@@ -260,6 +290,7 @@ class FileSectionsParser(parsimonious.NodeVisitor):
 
 
 class SketchParser(parsimonious.NodeVisitor):
+    """Sketch visitor to save the view names and the variables in each"""
     def __init__(self, ast):
         self.variable_name = None
         self.view_name = None
