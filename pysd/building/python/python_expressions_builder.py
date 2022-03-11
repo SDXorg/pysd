@@ -1181,12 +1181,10 @@ def _merge_dependencies(current, new):
     """
     current_set, new_set = set(current), set(new)
     for dep in current_set.intersection(new_set):
+        # if dependency is in both sum the number of calls
         if dep.startswith("__"):
             # if it is special (__lookup__, __external__) continue
             continue
-        # if dependency is in both sum the number of calls
-        if dep in ["initial", "step"]:
-            _merge_dependencies(current[dep], new[dep])
         else:
             current[dep] += new[dep]
     for dep in new_set.difference(current_set):

@@ -51,4 +51,3 @@ class TestVensimFile:
     def test_file_split_file_sections(self, model_path):
         ven_file = VensimFile(model_path)
         ven_file.parse()
-        print(ven_file.verbose)

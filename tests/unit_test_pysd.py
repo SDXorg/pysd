@@ -44,6 +44,11 @@ class TestPySD(unittest.TestCase):
             pysd.read_vensim(
                 more_tests.joinpath("not_vensim/test_not_vensim.txt"))
 
+    def test_read_not_model_xmile(self):
+        with self.assertRaises(ValueError):
+            pysd.read_xmile(
+                more_tests.joinpath("not_vensim/test_not_vensim.txt"))
+
     def test_run(self):
         model = pysd.read_vensim(test_model)
         stocks = model.run()

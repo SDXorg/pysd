@@ -20,17 +20,17 @@ class Element():
         self.units, self.range = self._parse_units(units)
         self.documentation = documentation
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return "Model element:\n\t%s\nunits: %s\ndocs: %s\n" % (
             self.equation, self.units, self.documentation)
 
     @property
-    def _verbose(self) -> str:
+    def _verbose(self) -> str:  # pragma: no cover
         """Get model information"""
         return self.__str__()
 
     @property
-    def verbose(self):
+    def verbose(self):  # pragma: no cover
         """Print model information"""
         print(self._verbose)
 
@@ -190,19 +190,19 @@ class SubscriptRange():
         self.definition = definition
         self.mapping = mapping
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return "\nSubscript range definition:  %s\n\t%s\n" % (
             self.name,
             "%s <- %s" % (self.definition, self.mapping)
             if self.mapping else self.definition)
 
     @property
-    def _verbose(self) -> str:
+    def _verbose(self) -> str:  # pragma: no cover
         """Get model information"""
         return self.__str__()
 
     @property
-    def verbose(self):
+    def verbose(self):  # pragma: no cover
         """Print model information"""
         print(self._verbose)
 
@@ -217,7 +217,7 @@ class Component():
         self.subscripts = subscripts
         self.expression = expression
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         text = "\n%s definition: %s" % (self.kind, self.name)
         text += "\nSubscrips: %s" % repr(self.subscripts[0])\
             if self.subscripts[0] else ""
@@ -227,7 +227,7 @@ class Component():
         return text
 
     @property
-    def _expression(self):
+    def _expression(self):  # pragma: no cover
         if hasattr(self, "ast"):
             return str(self.ast).replace("\n", "\n\t")
 
@@ -235,11 +235,11 @@ class Component():
             return self.expression.replace("\n", "\n\t")
 
     @property
-    def _verbose(self):
+    def _verbose(self) -> str:  # pragma: no cover
         return self.__str__()
 
     @property
-    def verbose(self):
+    def verbose(self):  # pragma: no cover
         print(self._verbose)
 
     def _parse(self) -> None:
@@ -302,7 +302,7 @@ class Data(Component):
         super().__init__(name, subscripts, expression)
         self.keyword = keyword
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         text = "\n%s definition: %s" % (self.kind, self.name)
         text += "\nSubscrips: %s" % repr(self.subscripts[0])\
             if self.subscripts[0] else ""

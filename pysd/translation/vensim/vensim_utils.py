@@ -48,35 +48,40 @@ class Grammar():
         """Get the grammar file path"""
         return cls._grammar_path.joinpath(grammar).with_suffix(".peg")
 
-    @classmethod
-    def clean(cls) -> None:
-        """Clean the saved grammars (used for debugging)"""
-        cls._common_grammar = None
-        cls._grammar: Dict = {}
-
-
-def _detect_encoding_from_file(mdl_file: Path) -> str:
-    """Detect and return the encoding from a Vensim file"""
-    try:
-        with mdl_file.open("rb") as in_file:
-            f_line: bytes = in_file.readline()
-        f_line: str = f_line.decode(detect(f_line)['encoding'])
-        return re.search(r"(?<={)(.*)(?=})", f_line).group()
-    except (AttributeError, UnicodeDecodeError):
-        warnings.warn(
-            "No encoding specified or detected to translate the model "
-            "file. 'UTF-8' encoding will be used.")
-        return "UTF-8"
-
 
 def split_arithmetic(structure: object, parsing_ops: dict,
                      expression: str, elements: dict,
                      negatives: set = set()) -> object:
+    """
+    Split arithmetic pattern and return the corresponding object.
+
+    Parameters
+    ----------
+    structure: callable
+       Callable that generates the arithmetic object to return.
+    parsing_ops: dict
+       The parsing operators dictionary.
+    expression: str
+       Original expression with the operator and the hex code to the objects.
+    elements: dict
+       Dictionary of the hex identifiers and the objects that represent.
+    negative: set
+       Set of element hex values that must change their sign.
+
+    Returns
+    -------
+    object: structure
+        Final object of the arithmetic operation or initial object if
+        no operations are performed.
+
+    """
     pattern = re.compile(parsing_ops)
-    parts = pattern.split(expression)
-    ops = pattern.findall(expression)
+    parts = pattern.split(expression)  # list of elements ids
+    ops = pattern.findall(expression)  # operators list
     if not ops:
+        # no operators return original object
         if parts[0] in negatives:
+            # make original object negative
             negatives.remove(parts[0])
             return add_element(
                 elements,
@@ -85,6 +90,7 @@ def split_arithmetic(structure: object, parsing_ops: dict,
             return expression
     else:
         if not negatives:
+            # create arithmetic object
             return add_element(
                 elements,
                 structure(
@@ -110,6 +116,37 @@ def split_arithmetic(structure: object, parsing_ops: dict,
 
 
 def add_element(elements: dict, element: object) -> str:
+    """
+    Add element to elements dict using an unique hex identifier
+
+    Parameters
+    ----------
+    elements: dict
+      Dictionary of all elements.
+
+    element: object
+      Element to add.
+
+    Returns
+    -------
+    id: str (hex)
+      The name of the key where element is saved in elements.
+
+    """
     id = uuid.uuid4().hex
     elements[id] = element
     return id
+
+
+def _detect_encoding_from_file(mdl_file: Path) -> str:
+    """Detect and return the encoding from a Vensim file"""
+    try:
+        with mdl_file.open("rb") as in_file:
+            f_line: bytes = in_file.readline()
+        f_line: str = f_line.decode(detect(f_line)['encoding'])
+        return re.search(r"(?<={)(.*)(?=})", f_line).group()
+    except (AttributeError, UnicodeDecodeError):
+        warnings.warn(
+            "No encoding specified or detected to translate the model "
+            "file. 'UTF-8' encoding will be used.")
+        return "UTF-8"

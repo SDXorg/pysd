@@ -35,11 +35,11 @@ class VensimFile():
         self.view_elements = None
         self._split_sketch()
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return "\nVensim model file, loaded from:\n\t%s\n" % self.mdl_path
 
     @property
-    def _verbose(self) -> str:
+    def _verbose(self) -> str:  # pragma: no cover
         """Get model information"""
         text = self.__str__()
         for section in self.sections:
@@ -48,7 +48,7 @@ class VensimFile():
         return text
 
     @property
-    def verbose(self):
+    def verbose(self):  # pragma: no cover
         """Print model information"""
         print(self._verbose)
 

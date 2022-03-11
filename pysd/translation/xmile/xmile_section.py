@@ -28,11 +28,11 @@ class FileSection():  # File section dataclass
         self.views_dict = views_dict
         self.elements = None
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return "\nFile section: %s\n" % self.name
 
     @property
-    def _verbose(self) -> str:
+    def _verbose(self) -> str:  # pragma: no cover
         """Get model information"""
         text = self.__str__()
         if self.elements:
@@ -44,7 +44,7 @@ class FileSection():  # File section dataclass
         return text
 
     @property
-    def verbose(self):
+    def verbose(self):  # pragma: no cover
         """Print model information"""
         print(self._verbose)
 

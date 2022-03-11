@@ -24,11 +24,11 @@ class XmileFile():
         self.ns = self.xmile_root.nsmap[None]  # namespace of the xmile
         self.view_elements = None
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return "\nXmile model file, loaded from:\n\t%s\n" % self.xmile_path
 
     @property
-    def _verbose(self) -> str:
+    def _verbose(self) -> str:  # pragma: no cover
         """Get model information"""
         text = self.__str__()
         for section in self.sections:
@@ -37,7 +37,7 @@ class XmileFile():
         return text
 
     @property
-    def verbose(self):
+    def verbose(self):  # pragma: no cover
         """Print model information"""
         print(self._verbose)
 

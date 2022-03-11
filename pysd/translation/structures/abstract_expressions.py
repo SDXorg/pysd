@@ -7,7 +7,7 @@ class ArithmeticStructure:
     operators: str
     arguments: tuple
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         return "ArithmeticStructure:\n\t %s %s" % (
             self.operators, self.arguments)
 
@@ -17,7 +17,7 @@ class LogicStructure:
     operators: str
     arguments: tuple
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         return "LogicStructure:\n\t %s %s" % (
             self.operators, self.arguments)
 
@@ -26,7 +26,7 @@ class LogicStructure:
 class SubscriptsReferenceStructure:
     subscripts: tuple
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         return "SubscriptReferenceStructure:\n\t %s" % self.subscripts
 
 
@@ -35,7 +35,7 @@ class ReferenceStructure:
     reference: str
     subscripts: Union[SubscriptsReferenceStructure, None] = None
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         return "ReferenceStructure:\n\t %s%s" % (
             self.reference,
             "\n\t" + str(self.subscripts or "").replace("\n", "\n\t"))
@@ -46,7 +46,7 @@ class CallStructure:
     function: Union[str, object]
     arguments: tuple
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         return "CallStructure:\n\t%s(%s)" % (
             self.function,
             "\n\t\t,".join([
@@ -59,7 +59,7 @@ class CallStructure:
 class GameStructure:
     expression: object
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         return "GameStructure:\n\t%s" % self.expression
 
 
@@ -67,7 +67,7 @@ class GameStructure:
 class InitialStructure:
     initial: object
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         return "InitialStructure:\n\t%s" % (
             self.initial)
 
@@ -77,7 +77,7 @@ class IntegStructure:
     flow: object
     initial: object
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         return "IntegStructure:\n\t%s,\n\t%s" % (
             self.flow,
             self.initial)
@@ -90,7 +90,7 @@ class DelayStructure:
     initial: object
     order: float
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         return "DelayStructure (order %s):\n\t%s,\n\t%s,\n\t%s" % (
             self.order,
             self.input,
@@ -108,7 +108,7 @@ class DelayNStructure:
     # DELAY N may behave different than other delays when the delay time
     # changes during integration
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         return "DelayNStructure (order %s):\n\t%s,\n\t%s,\n\t%s" % (
             self.order,
             self.input,
@@ -122,7 +122,7 @@ class DelayFixedStructure:
     delay_time: object
     initial: object
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         return "DelayFixedStructure:\n\t%s,\n\t%s,\n\t%s" % (
             self.input,
             self.delay_time,
@@ -136,7 +136,7 @@ class SmoothStructure:
     initial: object
     order: float
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         return "SmoothStructure (order %s):\n\t%s,\n\t%s,\n\t%s" % (
             self.order,
             self.input,
@@ -154,7 +154,7 @@ class SmoothNStructure:
     # SMOOTH N may behave different than other smooths with RungeKutta
     # integration
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         return "SmoothNStructure (order %s):\n\t%s,\n\t%s,\n\t%s" % (
             self.order,
             self.input,
@@ -168,7 +168,7 @@ class TrendStructure:
     average_time: object
     initial: object
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         return "TrendStructure:\n\t%s,\n\t%s,\n\t%s" % (
             self.input,
             self.average_time,
@@ -181,7 +181,7 @@ class ForecastStructure:
     average_time: object
     horizon: object
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         return "ForecastStructure:\n\t%s,\n\t%s,\n\t%s" % (
             self.input,
             self.average_time,
@@ -194,7 +194,7 @@ class SampleIfTrueStructure:
     input: object
     initial: object
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         return "SampleIfTrueStructure:\n\t%s,\n\t%s,\n\t%s" % (
             self.condition,
             self.input,
@@ -209,7 +209,7 @@ class LookupsStructure:
     y_range: tuple
     type: str
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         return "LookupStructure (%s):\n\tx %s = %s\n\ty %s = %s\n" % (
             self.type, self.x_range, self.x, self.y_range, self.y
         )
@@ -220,7 +220,7 @@ class InlineLookupsStructure:
     argument: None
     lookups: LookupsStructure
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         return "InlineLookupsStructure:\n\t%s\n\t%s" % (
             str(self.argument).replace("\n", "\n\t"),
             str(self.lookups).replace("\n", "\n\t")
@@ -231,7 +231,7 @@ class InlineLookupsStructure:
 class DataStructure:
     pass
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         return "DataStructure"
 
 
@@ -242,7 +242,7 @@ class GetLookupsStructure:
     x_row_or_col: str
     cell: str
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         return "GetLookupStructure:\n\t'%s', '%s', '%s', '%s'\n" % (
             self.file, self.tab, self.x_row_or_col, self.cell
         )
@@ -255,7 +255,7 @@ class GetDataStructure:
     time_row_or_col: str
     cell: str
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         return "GetDataStructure:\n\t'%s', '%s', '%s', '%s'\n" % (
             self.file, self.tab, self.time_row_or_col, self.cell
         )
@@ -267,7 +267,7 @@ class GetConstantsStructure:
     tab: str
     cell: str
 
-    def __str__(self) -> str:
+    def __str__(self) -> str:  # pragma: no cover
         return "GetConstantsStructure:\n\t'%s', '%s', '%s'\n" % (
             self.file, self.tab, self.cell
         )

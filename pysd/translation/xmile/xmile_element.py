@@ -31,7 +31,7 @@ class Element():
         self.components = []
         self.subscripts = subscripts
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         text = "\n%s definition: %s" % (self.kind, self.name)
         text += "\nSubscrips: %s" % repr(self.subscripts)\
             if self.subscripts else ""
@@ -39,7 +39,7 @@ class Element():
         return text
 
     @property
-    def _expression(self):
+    def _expression(self):  # pragma: no cover
         if hasattr(self, "ast"):
             return str(self.ast).replace("\n", "\n\t")
 
@@ -47,12 +47,12 @@ class Element():
             return self.node.text.replace("\n", "\n\t")
 
     @property
-    def _verbose(self) -> str:
+    def _verbose(self) -> str:  # pragma: no cover
         """Get model information"""
         return self.__str__()
 
     @property
-    def verbose(self):
+    def verbose(self):  # pragma: no cover
         """Print model information"""
         print(self._verbose)
 
@@ -383,18 +383,18 @@ class SubscriptRange():
         self.definition = definition
         self.mapping = mapping
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return "\nSubscript range definition:  %s\n\t%s\n" % (
             self.name,
             self.definition)
 
     @property
-    def _verbose(self) -> str:
+    def _verbose(self) -> str:  # pragma: no cover
         """Get model information"""
         return self.__str__()
 
     @property
-    def verbose(self):
+    def verbose(self):  # pragma: no cover
         """Print model information"""
         print(self._verbose)
 

@@ -28,7 +28,7 @@ vensim_test = {
     "arguments": {
         "folder": "arguments",
         "file": "test_arguments.mdl",
-        "rtol": 1e-2 # TODO test why it is failing with smaller tolerance
+        "rtol": 1e-2  # TODO test why it is failing with smaller tolerance
     },
     "array_with_line_break": {
         "folder": "array_with_line_break",

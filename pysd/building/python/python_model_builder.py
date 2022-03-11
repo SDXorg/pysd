@@ -49,9 +49,6 @@ class SectionBuilder:
         self.macrospace = {}
         self.dependencies = {}
 
-    def __str__(self):
-        return "SectionBuilder " + self.path.name
-
     def build_section(self):
         # Create namespace
         for element in self.elements:
@@ -182,13 +179,13 @@ class SectionBuilder:
         Parameters
         ----------
         elements: list
-            Elements belonging to the main module. Ideally, there should only be
-            the initial_time, final_time, saveper and time_step, functions, though
-            there might be others in some situations. Each element is a
-            dictionary, with the various components needed to assemble a model
-            component in python syntax. This will contain multiple entries for
-            elements that have multiple definitions in the original file, and
-            which need to be combined.
+            Elements belonging to the main module. Ideally, there should
+            only be the initial_time, final_time, saveper and time_step,
+            functions, though there might be others in some situations.
+            Each element is a dictionary, with the various components
+            needed to assemble a model component in python syntax. This
+            will contain multiple entries for elements that have multiple
+            definitions in the original file, and which need to be combined.
 
         Returns
         -------
@@ -235,7 +232,8 @@ class SectionBuilder:
             })
 
         text += funcs
-        text = black.format_file_contents(text, fast=True, mode=black.FileMode())
+        text = black.format_file_contents(
+            text, fast=True, mode=black.FileMode())
 
         with self.path.open("w", encoding="UTF-8") as out:
             out.write(text)
@@ -271,25 +269,21 @@ class SectionBuilder:
         text = black.format_file_contents(
             text, fast=True, mode=black.FileMode())
 
-        # this is used for testing
-        if not self.path:
-            return text
-
         with self.path.open("w", encoding="UTF-8") as out:
             out.write(text)
 
     def _build_variables(self, elements):
         """
-        Build model variables (functions) and separate then in control variables
-        and regular variables.
+        Build model variables (functions) and separate then in control
+        variables and regular variables.
 
         Returns
         -------
         control_vars, regular_vars: tuple, str
-            control_vars is a tuple of length 2. First element is the dictionary
-            of original control vars. Second is the string to add the control
-            variables' functions. regular_vars is the string to add the regular
-            variables' functions.
+            control_vars is a tuple of length 2. First element is the
+            dictionary of original control vars. Second is the string to
+            add the control variables' functions. regular_vars is the
+            string to add the regular variables' functions.
 
         """
         # returns of the control variables
@@ -304,8 +298,8 @@ class SectionBuilder:
 
         for element in elements:
             if element.identifier in control_vars_dict:
-                # change the return expression in the element and update the dict
-                # with the original expression
+                # change the return expression in the element and update
+                # the dict with the original expression
                 control_vars_dict[element.identifier], element.expression =\
                     element.expression, control_vars_dict[element.identifier]
                 control_vars.append(element)
@@ -332,18 +326,18 @@ class SectionBuilder:
     def _generate_functions(self, elements):
         """
         Builds all model elements as functions in string format.
-        NOTE: this function calls the build_element function, which updates the
-        import_modules.
-        Therefore, it needs to be executed before the_generate_automatic_imports
-        function.
+        NOTE: this function calls the build_element function, which
+        updates the import_modules.
+        Therefore, it needs to be executed before the method
+        _generate_automatic_imports.
 
         Parameters
         ----------
         elements: dict
-            Each element is a dictionary, with the various components needed to
-            assemble a model component in python syntax. This will contain
-            multiple entries for elements that have multiple definitions in the
-            original file, and which need to be combined.
+            Each element is a dictionary, with the various components
+            needed to assemble a model component in python syntax. This
+            will contain multiple entries for elements that have multiple
+            definitions in the original file, and which need to be combined.
 
         Returns
         -------
@@ -394,16 +388,10 @@ class SectionBuilder:
         return text
 
 
-class SubSectionBuilder(SectionBuilder):
-    def __init__(self, abstract_section: AbstractSection):
-        pass
-        # TODO Use an intermediate class to split model, this calls could be inexistent and point to Section
-        # Namespace, subscripts and imports should point to parent section, others should remain in subsection
-
-
 class ElementBuilder:
 
-    def __init__(self, abstract_element: AbstractElement, section: SectionBuilder):
+    def __init__(self, abstract_element: AbstractElement,
+                 section: SectionBuilder):
         self.__dict__ = abstract_element.__dict__.copy()
         self.type = None
         self.subtype = None
