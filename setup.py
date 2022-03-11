@@ -42,7 +42,7 @@ setup(
             ]
         },
     package_data={
-        'py_backend': [
+        'translation': [
             'xmile/smile.grammar'
         ]
     },
