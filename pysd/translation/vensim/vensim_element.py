@@ -503,7 +503,7 @@ class EquationParser(parsimonious.NodeVisitor):
         return ""
 
     def visit_nan(self, n, vc):
-        return "np.nan"
+        return self.add_element(np.nan)
 
     def visit_empty(self, n, vc):
         return self.add_element(None)

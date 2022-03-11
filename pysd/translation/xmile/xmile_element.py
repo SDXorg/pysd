@@ -522,9 +522,6 @@ class EquationParser(parsimonious.NodeVisitor):
         # handles whitespace characters
         return ""
 
-    def visit_nan(self, n, vc):
-        return "np.nan"
-
     def visit_empty(self, n, vc):
         return self.add_element(None)
 

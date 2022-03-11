@@ -115,6 +115,10 @@ vensim_test = {
         "folder": "function_capitalization",
         "file": "test_function_capitalization.mdl"
     },
+    "fully_invalid_names": {
+        "folder": "fully_invalid_names",
+        "file": "test_fully_invalid_names.mdl"
+    },
     "game": {
         "folder": "game",
         "file": "test_game.mdl"
@@ -259,6 +263,10 @@ vensim_test = {
         "folder": "multiple_lines_def",
         "file": "test_multiple_lines_def.mdl"
     },
+    "na": {
+        "folder": "na",
+        "file": "test_na.mdl"
+    },
     "nested_functions": {
         "folder": "nested_functions",
         "file": "test_nested_functions.mdl"
@@ -290,6 +298,10 @@ vensim_test = {
     "sample_if_true": {
         "folder": "sample_if_true",
         "file": "test_sample_if_true.mdl"
+    },
+    "smaller_range": {
+        "folder": "smaller_range",
+        "file": "test_smaller_range.mdl"
     },
     "smooth": {
         "folder": "smooth",
@@ -342,6 +354,10 @@ vensim_test = {
     "subscript_copy": {
         "folder": "subscript_copy",
         "file": "test_subscript_copy.mdl"
+    },
+    "subscript_copy2": {
+        "folder": "subscript_copy",
+        "file": "test_subscript_copy2.mdl"
     },
     "subscript_docs": {
         "folder": "subscript_docs",
@@ -470,6 +486,10 @@ vensim_test = {
     "trig": {
         "folder": "trig",
         "file": "test_trig.mdl"
+    },
+    "unchangeable_constant": {
+        "folder": "unchangeable_constant",
+        "file": "test_unchangeable_constant.mdl"
     },
     "unicode_characters": {
         "folder": "unicode_characters",

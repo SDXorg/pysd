@@ -124,7 +124,7 @@ class NamespaceManager:
         # Only letters can be leading characters.
         if prefix is not None:
             s = prefix + "_" + s
-        elif re.findall(r"^[0-9]", s):
+        elif re.findall(r"^[0-9]", s) or not s:
             s = "nvs_" + s
         elif re.findall(r"^_", s):
             s = "nvs" + s

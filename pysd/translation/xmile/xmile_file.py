@@ -51,10 +51,11 @@ class XmileFile():
 
         """
         # check for model extension
-        if self.xmile_path.suffix.lower() != ".xmile":
+        if self.xmile_path.suffix.lower() not in [".xmile", ".xml", ".stmx"]:
             raise ValueError(
                 "The file to translate, '%s' " % self.xmile_path
-                + "is not a Xmile model. It must end with xmile extension."
+                + "is not a Xmile model. It must end with xmile, xml or "
+                + "stmx extension."
             )
 
         return etree.parse(

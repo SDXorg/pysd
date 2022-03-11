@@ -198,7 +198,6 @@ class CallBuilder(StructureBuilder):
         function_name = call_str.function.reference
         self.arguments = {
             str(i): arg for i, arg in enumerate(call_str.arguments)}
-
         # move this to a setter
         if function_name in self.section.macrospace:
             # build macro
@@ -1116,12 +1115,24 @@ class ReferenceBuilder(StructureBuilder):
 
 
 class NumericBuilder(StructureBuilder):
-    # Standard class, inherit all from StructureBuilder
-    pass
+    def build(self, arguments):
+        if np.isnan(self.value):
+            self.section.imports.add("numpy")
+
+            return BuildAST(
+                expression="np.nan",
+                calls={},
+                subscripts={},
+                order=0)
+        else:
+            return BuildAST(
+                expression=repr(self.value),
+                calls={},
+                subscripts={},
+                order=0)
 
 
 class ArrayBuilder(StructureBuilder):
-    # Standard class, inherit all from StructureBuilder
     def build(self, arguments):
         self.value = np.array2string(
             self.value.reshape(compute_shape(self.def_subs)),
@@ -1217,7 +1228,7 @@ class ASTVisitor:
         ae.ArithmeticStructure: OperationBuilder,
         int: NumericBuilder,
         float: NumericBuilder,
-        np.ndarray: ArrayBuilder
+        np.ndarray: ArrayBuilder,
     }
 
     def __init__(self, component):
