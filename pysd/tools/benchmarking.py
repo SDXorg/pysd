@@ -33,9 +33,6 @@ def runner(model_file, canonical_file=None, transpose=False, data_files=None):
     data_files: list (optional)
         List of the data files needed to run the model.
 
-    old: bool(optional)
-        If True use old translation method, used for testing backward compatibility.
-
     Returns
     -------
     output, canon: (pandas.DataFrame, pandas.DataFrame)

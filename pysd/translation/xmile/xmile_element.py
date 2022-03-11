@@ -21,7 +21,7 @@ class Element():
 
     kind = "Element"
 
-    def __init__(self, node: etree._Element, ns: dict):
+    def __init__(self, node: etree._Element, ns: dict, subscripts):
         self.node = node
         self.ns = ns
         self.name = node.attrib["name"]
@@ -29,6 +29,7 @@ class Element():
         self.documentation = self.get_xpath_text(node, "ns:doc") or ""
         self.range = (None, None)
         self.components = []
+        self.subscripts = subscripts
 
     def __str__(self):
         text = "\n%s definition: %s" % (self.kind, self.name)
@@ -121,21 +122,32 @@ class Element():
     def _parse(self) -> None:
         """Parse all the components of an element"""
         if self.node.xpath("ns:element", namespaces=self.ns):
+            # defined in several equations each with one subscript
             for subnode in self.node.xpath("ns:element", namespaces=self.ns):
                 self.components.append(
                     ((subnode.attrib["subscript"].split(","), []),
-                     self._parse_component(subnode))
+                     self._parse_component(subnode)[0])
                 )
         else:
+            # get the subscripts from element
             subscripts = [
                 subnode.attrib["name"]
                 for subnode
                 in self.node.xpath("ns:dimensions/ns:dim", namespaces=self.ns)
             ]
-            self.components = [
-                ((subscripts, []),
-                 self._parse_component(self.node))
-            ]
+            parsed = self._parse_component(self.node)
+            if len(parsed) == 1:
+                # element defined with one equation
+                self.components = [((subscripts, []),  parsed[0])]
+            else:
+                # element defined in several equations, but only the general
+                # subscripts are given, save each equation with its
+                # subscrtipts
+                subs_list = self.subscripts[subscripts[0]]
+                self.components = [
+                    (([subs], []), parsed_i) for subs, parsed_i in
+                    zip(subs_list, parsed)
+                ]
 
     def smile_parser(self, expression: str) -> object:
         """
@@ -170,11 +182,11 @@ class Flaux(Element):
 
     kind = "Flaux"
 
-    def __init__(self, node, ns):
-        super().__init__(node, ns)
+    def __init__(self, node, ns, subscripts):
+        super().__init__(node, ns, subscripts)
         self.range = self.get_range()
 
-    def _parse_component(self, node) -> object:
+    def _parse_component(self, node: etree._Element) -> List[object]:
         """
         Parse one Flaux component
 
@@ -183,20 +195,21 @@ class Flaux(Element):
         AST: AbstractSyntaxTree
 
         """
-        eqn = self.get_xpath_text(node, 'ns:eqn')
+        asts = []
+        for eqn in node.xpath('ns:eqn', namespaces=self.ns):
+            # Replace new lines with space, and replace 2 or more spaces with
+            # single space. Then ensure there is no space at start or end of
+            # equation
+            eqn = re.sub(r"(\s{2,})", " ", eqn.text.replace("\n", ' ')).strip()
+            ast = self.smile_parser(eqn)
 
-        # Replace new lines with space, and replace 2 or more spaces with
-        # single space. Then ensure there is no space at start or end of
-        # equation
-        eqn = re.sub(r"(\s{2,})", " ", eqn.replace("\n", ' ')).strip()
-        ast = self.smile_parser(eqn)
+            gf_node = self.node.xpath("ns:gf", namespaces=self.ns)
+            if len(gf_node) > 0:
+                ast = structures["inline_lookup"](
+                    ast, self.parse_lookup_xml_node(gf_node[0]))
+            asts.append(ast)
 
-        gf_node = self.node.xpath("ns:gf", namespaces=self.ns)
-        if len(gf_node) > 0:
-            ast = structures["inline_lookup"](
-                ast, self.parse_lookup_xml_node(gf_node[0]))
-
-        return ast
+        return asts
 
     def get_abstract_element(self) -> AbstractElement:
         """
@@ -219,8 +232,8 @@ class Gf(Element):
 
     kind = "Gf component"
 
-    def __init__(self, node, ns):
-        super().__init__(node, ns)
+    def __init__(self, node, ns, subscripts):
+        super().__init__(node, ns, subscripts)
         self.range = self.get_range()
 
     def get_range(self) -> Tuple[Union[None, str], Union[None, str]]:
@@ -231,7 +244,7 @@ class Gf(Element):
         )
         return tuple(float(x) if x is not None else x for x in lims)
 
-    def _parse_component(self, node) -> object:
+    def _parse_component(self, node: etree._Element) -> object:
         """
         Parse one Gf component
 
@@ -240,7 +253,7 @@ class Gf(Element):
         AST: AbstractSyntaxTree
 
         """
-        return self.parse_lookup_xml_node(self.node)
+        return [self.parse_lookup_xml_node(self.node)]
 
     def get_abstract_element(self) -> AbstractElement:
         """
@@ -263,8 +276,8 @@ class Stock(Element):
 
     kind = "Stock component"
 
-    def __init__(self, node, ns):
-        super().__init__(node, ns)
+    def __init__(self, node, ns, subscripts):
+        super().__init__(node, ns, subscripts)
         self.range = self.get_range()
 
     def _parse_component(self, node) -> object:
@@ -306,7 +319,7 @@ class Stock(Element):
         # Read the initial value equation for stock element
         initial = self.smile_parser(self.get_xpath_text(self.node, 'ns:eqn'))
 
-        return structures["stock"](flows, initial)
+        return [structures["stock"](flows, initial)]
 
     def get_abstract_element(self) -> AbstractElement:
         """

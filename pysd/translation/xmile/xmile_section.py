@@ -63,7 +63,7 @@ class FileSection():  # File section dataclass
 
     def _parse_subscripts(self) -> List[SubscriptRange]:
         """Parse the subscripts of the section"""
-        return [
+        subscripts = [
             SubscriptRange(
                 node.attrib["name"],
                 [
@@ -74,6 +74,9 @@ class FileSection():  # File section dataclass
             for node
             in self.content.xpath("ns:dimensions/ns:dim", namespaces=self.ns)
         ]
+        self.subscripts_dict = {
+            subr.name: subr.definition for subr in subscripts}
+        return subscripts
 
     def _parse_control_vars(self) -> List[ControlElement]:
         """Parse control vars and rename them with Vensim standard"""
@@ -135,7 +138,7 @@ class FileSection():  # File section dataclass
 
         # Add flows and auxiliary variables
         components = [
-            Flaux(node, self.ns)
+            Flaux(node, self.ns, self.subscripts_dict)
             for node in self.content.xpath(
                 "ns:model/ns:variables/ns:aux|ns:model/ns:variables/ns:flow",
                 namespaces=self.ns)
@@ -144,7 +147,7 @@ class FileSection():  # File section dataclass
 
         # Add lookups
         components += [
-            Gf(node, self.ns)
+            Gf(node, self.ns, self.subscripts_dict)
             for node in self.content.xpath(
                 "ns:model/ns:variables/ns:gf",
                 namespaces=self.ns)
@@ -152,7 +155,7 @@ class FileSection():  # File section dataclass
 
         # Add stocks
         components += [
-            Stock(node, self.ns)
+            Stock(node, self.ns, self.subscripts_dict)
             for node in self.content.xpath(
                 "ns:model/ns:variables/ns:stock",
                 namespaces=self.ns)

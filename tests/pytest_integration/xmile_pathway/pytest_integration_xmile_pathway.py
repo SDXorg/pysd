@@ -14,6 +14,10 @@ xmile_test = {
         "folder": "active_initial",
         "file": "test_active_initial.xmile"
     },  marks=pytest.mark.xfail(reason="failing originally")),
+    "arithmetics_exp": {
+        "folder": "arithmetics_exp",
+        "file": "test_arithmetics_exp.xmile"
+    },
     "builtin_max": {
         "folder": "builtin_max",
         "file": "builtin_max.xmile"
@@ -34,10 +38,6 @@ xmile_test = {
         "folder": "constant_expressions",
         "file": "test_constant_expressions.xmile"
     },
-    "euler_step_vs_saveper": pytest.param({
-        "folder": "euler_step_vs_saveper",
-        "file": "test_euler_step_vs_saveper.xmile"
-    },  marks=pytest.mark.xfail(reason="failing originally")),
     "eval_order": {
         "folder": "eval_order",
         "file": "eval_order.xmile"
@@ -150,10 +150,10 @@ xmile_test = {
         "folder": "smooth_and_stock",
         "file": "test_smooth_and_stock.xmile"
     },  marks=pytest.mark.xfail(reason="failing originally")),
-    "special_characters":  pytest.param({
+    "special_characters": pytest.param({
         "folder": "special_characters",
         "file": "test_special_variable_names.xmile"
-    },  marks=pytest.mark.xfail(reason="failing originally")),
+    }, marks=pytest.mark.xfail(reason="failing originally")),
     "sqrt": {
         "folder": "sqrt",
         "file": "test_sqrt.xmile"
@@ -194,6 +194,10 @@ xmile_test = {
         "folder": "subscripted_flows",
         "file": "test_subscripted_flows.xmile"
     },  marks=pytest.mark.xfail(reason="eqn with ??? in the model")),
+    "subscripted_trig": {
+        "folder": "subscripted_trig",
+        "file": "test_subscripted_trig.xmile"
+    },
     "trig": {
         "folder": "trig",
         "file": "test_trig.xmile"

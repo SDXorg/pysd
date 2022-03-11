@@ -21,6 +21,10 @@ vensim_test = {
         "folder": "arithmetics",
         "file": "test_arithmetics.mdl"
     },
+    "arithmetics_exp": {
+        "folder": "arithmetics_exp",
+        "file": "test_arithmetics_exp.mdl"
+    },
     "arguments": {
         "folder": "arguments",
         "file": "test_arguments.mdl",
@@ -82,6 +86,10 @@ vensim_test = {
     "dynamic_final_time": {
         "folder": "dynamic_final_time",
         "file": "test_dynamic_final_time.mdl"
+    },
+    "elm_count": {
+        "folder": "elm_count",
+        "file": "test_elm_count.mdl"
     },
     "euler_step_vs_saveper": {
         "folder": "euler_step_vs_saveper",
@@ -438,6 +446,10 @@ vensim_test = {
     "subscripted_trend": {
         "folder": "subscripted_trend",
         "file": "test_subscripted_trend.mdl"
+    },
+    "subscripted_trig": {
+        "folder": "subscripted_trig",
+        "file": "test_subscripted_trig.mdl"
     },
     "subscripted_xidz": {
         "folder": "subscripted_xidz",
