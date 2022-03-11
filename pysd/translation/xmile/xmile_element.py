@@ -439,6 +439,17 @@ class EquationParser(parsimonious.NodeVisitor):
             structures["arithmetic"], parsing_ops["add_ops"],
             "".join(vc).strip(), self.elements)
 
+    def visit_mod_expr(self, n, vc):
+        # modulo expressions (mod)
+        if vc[1].lower().startswith("mod"):
+            return self.add_element(
+                structures["call"](
+                    structures["reference"]("modulo"),
+                    (self.elements[vc[0]], self.elements[vc[1][3:]])
+                ))
+        else:
+            return vc[0]
+
     def visit_prod_expr(self, n, vc):
         # expressions with products (*, /)
         return vu.split_arithmetic(

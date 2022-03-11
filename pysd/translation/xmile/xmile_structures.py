@@ -48,7 +48,9 @@ structures = {
     },
     "if_then_else": lambda x, y, z: ae.CallStructure(
             ae.ReferenceStructure("if_then_else"), (x, y, z)),
-    "negative": lambda x: ae.ArithmeticStructure(["negative"], (x,))
+    "negative": lambda x: ae.ArithmeticStructure(["negative"], (x,)),
+    "int": lambda x: ae.CallStructure(
+            ae.ReferenceStructure("integer"), (x,))
 }
 
 

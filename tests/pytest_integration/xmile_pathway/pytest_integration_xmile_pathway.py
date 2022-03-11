@@ -146,6 +146,10 @@ xmile_test = {
         "folder": "reference_capitalization",
         "file": "test_reference_capitalization.xmile"
     },
+    "rounding": {
+        "folder": "rounding",
+        "file": "test_rounding.xmile"
+    },
     "smooth_and_stock": pytest.param({
         "folder": "smooth_and_stock",
         "file": "test_smooth_and_stock.xmile"

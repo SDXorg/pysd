@@ -7,7 +7,8 @@ final_expr = conditional_statement / logic2_expr
 logic2_expr = logic_expr (_ logic_oper _ logic_expr)*  # logic operators (:and:, :or:)
 logic_expr = not_oper? _ comp_expr  # :not: operator
 comp_expr = add_expr (_ comp_oper _ add_expr)?  # comparison (e.g. '<', '=>')
-add_expr = prod_expr (_ add_oper _ prod_expr)*  # addition and substraction
+add_expr = mod_expr (_ add_oper _ mod_expr)*  # addition and substraction
+mod_expr = prod_expr (_ "mod" _ prod_expr)?  # modulo
 prod_expr = exp_expr (_ prod_oper _ exp_expr)*  # product and division
 exp_expr = neg_expr (_ exp_oper _ neg_expr)*  # exponential
 neg_expr = pre_oper? _ expr  # pre operators (-, +)
