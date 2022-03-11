@@ -43,7 +43,7 @@ setup(
         },
     package_data={
         'translation': [
-            'xmile/smile.grammar'
+            '*/parsing_grammars/*.peg'
         ]
     },
     include_package_data=True
