@@ -6,9 +6,7 @@ normal operation.
 """
 
 import sys
-from pysd.translation.vensim.vensim_file import VensimFile
-from pysd.translation.xmile.xmile_file import XmileFile
-from pysd.building.python.python_model_builder import ModelBuilder
+
 from pysd.py_backend.statefuls import Model
 
 
@@ -63,6 +61,9 @@ def read_xmile(xmile_file, data_files=None, initialize=True,
     >>> model = read_xmile('../tests/test-models/samples/teacup/teacup.xmile')
 
     """
+    from pysd.translation.xmile.xmile_file import XmileFile
+    from pysd.building.python.python_model_builder import ModelBuilder
+
     # Read and parse Xmile file
     xmile_file_obj = XmileFile(xmile_file)
     xmile_file_obj.parse()
@@ -137,6 +138,8 @@ def read_vensim(mdl_file, data_files=None, initialize=True,
     >>> model = read_vensim('../tests/test-models/samples/teacup/teacup.mdl')
 
     """
+    from pysd.translation.vensim.vensim_file import VensimFile
+    from pysd.building.python.python_model_builder import ModelBuilder
     # Read and parse Vensim file
     ven_file = VensimFile(mdl_file, encoding=encoding)
     ven_file.parse()
