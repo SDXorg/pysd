@@ -157,6 +157,7 @@ def make_flat_df(df, return_addresses, flatten=False):
             # some elements are returned as 0-d arrays, convert
             # them to float
             values = [float(x) for x in values]
+            is_dataarray = False
 
         if flatten and is_dataarray:
             _add_flat(new_df, real_name, values)
