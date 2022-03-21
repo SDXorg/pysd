@@ -33,7 +33,8 @@ subscript_mapping = (_ name_mapping _) / (_ "(" _ name_mapping _ ":" _ index_lis
 name_mapping = basic_id / escape_group
 
 # Subscript except match
-subscript_list_except = ":EXCEPT:" _ '[' _ subscript_except _ ("," _ subscript_except _)* _ ']'
+subscript_list_except = ":EXCEPT:" _ subscript_except_group (_ ',' _ subscript_except_group)*
+subscript_except_group = '[' _ subscript_except _ ("," _ subscript_except _)* _ ']'
 subscript_except = basic_id / escape_group
 
 # Subscript match

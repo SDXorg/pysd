@@ -59,7 +59,7 @@ class ImportsManager():
 
         for module in self._external_submodules:
             if getattr(self, f"_{module}"):
-                text += "%(module)s import %(submodules)s\n" % {
+                text += "from %(module)s import %(submodules)s\n" % {
                     "module": module,
                     "submodules": ", ".join(getattr(self, f"_{module}"))}
 

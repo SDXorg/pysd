@@ -414,7 +414,7 @@ class ElementBuilder:
         # that can be easily vecorized (GET, expressions, Stocks...)
         expressions = []
         for component in self.components:
-            expr, subs = component.build_component()
+            expr, subs, except_subscripts = component.build_component()
             if expr is None:
                 continue
             else:
@@ -422,7 +422,15 @@ class ElementBuilder:
                     esubs: subs[csubs]
                     for csubs, esubs in zip(subs, self.subscripts)
                 }
-                expressions.append({"expr": expr, "subs": subs})
+                exc_subs = [
+                    {
+                        esubs: subs_e[csubs]
+                        for csubs, esubs in zip(subs_e, self.subscripts)
+                    }
+                    for subs_e in except_subscripts
+                ]
+                expressions.append(
+                    {"expr": expr, "subs": subs, "subs_except": exc_subs})
 
         if len(expressions) > 1:
             # NUMPY: xrmerge would be sustitute by a multiple line definition
@@ -446,11 +454,17 @@ class ElementBuilder:
                     # NUMPY not necessary
                     expression["expr"].lower_order(0, force_0=True)
                     expression["expr"].expression += ".values"
-                self.pre_expression += "value.loc[%(subs)s] = %(expr)s\n" % (
-                    expression)
+                if expression["subs_except"]:
+                    # there is an excep in the definition of the component
+                    self.pre_expression += self.manage_except(expression)
+                else:
+                    self.pre_expression +=\
+                        "value.loc[%(subs)s] = %(expr)s\n" % expression
             self.expression = "value"
         else:
             self.pre_expression = ""
+            # NUMPY: reshape to the final shape if meeded
+            # expressions[0]["expr"].reshape(self.section.subscripts, {})
             self.expression = expressions[0]["expr"]
 
         self.type = ", ".join(
@@ -459,6 +473,31 @@ class ElementBuilder:
         self.subtype = ", ".join(
             set(component.subtype for component in self.components)
         )
+
+    def manage_except(self, expression):
+        if expression["subs"] == self.subs_dict:
+            # Final subscripts are the same as the main subscripts
+            # of the component. Generate a True array like value
+            final_expr = "except_subs = xr.ones_like(value, dtype=bool)\n"
+        else:
+            # Final subscripts are greater than the main subscripts
+            # of the component. Generate a False array like value and
+            # set to True the subarray of the component coordinates
+            final_expr = "except_subs = xr.zeros_like(value, dtype=bool)\n"\
+                         "except_subs.loc[%(subs)s] = True\n" % expression
+
+        for except_subs in expression["subs_except"]:
+            # We set to False the dimensions in the EXCEPT
+            final_expr += "except_subs.loc[%s] = False\n" % except_subs
+
+        if expression["expr"].subscripts:
+            # assign the values of an array
+            return final_expr + "value.values[except_subs.values] = "\
+                "%(expr)s[except_subs.values]\n" % expression
+        else:
+            # assign the values of a float
+            return final_expr + "value.values[except_subs.values] = "\
+                "%(expr)s\n" % expression
 
     def build_element_out(self):
         """
@@ -533,4 +572,11 @@ class ComponentBuilder:
     def build_component(self):
         self.subscripts_dict = self.section.subscripts.make_coord_dict(
             self.subscripts[0])
-        return (vs.ASTVisitor(self).visit(), self.subscripts_dict)
+        # NUMPY: use vs.ExceptVisitor
+        except_subscripts = [self.section.subscripts.make_coord_dict(
+            except_list) for except_list in self.subscripts[1]]
+        return (
+            vs.ASTVisitor(self).visit(),
+            self.subscripts_dict,
+            except_subscripts
+        )

@@ -71,6 +71,7 @@ class ElementsComponentParser(parsimonious.NodeVisitor):
         self.mapping = []
         self.subscripts = []
         self.subscripts_except = []
+        self.subscripts_except_groups = []
         self.name = None
         self.expression = None
         self.keyword = None
@@ -83,28 +84,28 @@ class ElementsComponentParser(parsimonious.NodeVisitor):
     def visit_lookup_definition(self, n, vc):
         self.component = Lookup(
             self.name,
-            (self.subscripts, self.subscripts_except),
+            (self.subscripts, self.subscripts_except_groups),
             self.expression
         )
 
     def visit_unchangeable_constant(self, n, vc):
         self.component = UnchangeableConstant(
             self.name,
-            (self.subscripts, self.subscripts_except),
+            (self.subscripts, self.subscripts_except_groups),
             self.expression
         )
 
     def visit_component(self, n, vc):
         self.component = Component(
             self.name,
-            (self.subscripts, self.subscripts_except),
+            (self.subscripts, self.subscripts_except_groups),
             self.expression
         )
 
     def visit_data_definition(self, n, vc):
         self.component = Data(
             self.name,
-            (self.subscripts, self.subscripts_except),
+            (self.subscripts, self.subscripts_except_groups),
             self.keyword,
             self.expression
         )
@@ -169,6 +170,10 @@ class ElementsComponentParser(parsimonious.NodeVisitor):
 
     def visit_subscript_except(self, n, vc):
         self.subscripts_except.append(n.text.strip())
+
+    def visit_subscript_except_group(self, n, vc):
+        self.subscripts_except_groups.append(self.subscripts_except.copy())
+        self.subscripts_except = []
 
     def visit_expression(self, n, vc):
         self.expression = n.text.strip()

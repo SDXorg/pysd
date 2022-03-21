@@ -1253,10 +1253,8 @@ class ASTVisitor:
             visit_out.calls,
             inplace=True)
 
-        if not visit_out.subscripts\
-          and self.subscripts != self.component.element.subs_dict:
-            # expression is a float, but it will be upper dimensioned
-            # when assigning values to the xarray.DataArray
+        if not visit_out.subscripts:
+            # expression is a float
             return visit_out
 
         # NUMPY not needed
@@ -1297,3 +1295,24 @@ class ASTVisitor:
             for name, value in builder.arguments.items()
         }
         return builder.build(arguments)
+
+
+class ExceptVisitor:  # pragma: no cover
+    # this class will be used in the numpy array backend
+    def __init__(self, component):
+        self.except_definitions = component.subscripts[1]
+        self.subscripts = component.section.subscripts
+        self.subscripts_dict = component.subscripts_dict
+
+    def visit(self):
+        excepts = [
+            BuildAST("", self.subscripts_dict, {}, 0)
+            for _ in self.except_definitions
+        ]
+        [
+            except_def.reshape(
+                self.subscripts,
+                self.subscripts.make_coord_dict(except_list))
+            for except_def, except_list in zip(excepts, self.except_definitions)
+        ]
+        return excepts

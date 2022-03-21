@@ -99,6 +99,10 @@ vensim_test = {
         "folder": "except",
         "file": "test_except.mdl"
     },
+    "except_multiple": {
+        "folder": "except_multiple",
+        "file": "test_except_multiple.mdl"
+    },
     "exp": {
         "folder": "exp",
         "file": "test_exp.mdl"
