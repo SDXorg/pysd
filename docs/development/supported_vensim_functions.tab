@@ -1,0 +1,88 @@
+Vensim	Vensim example	Xmile	Xmile example	Abstract Syntax	Python Translation	Comments
+Binary operators
+^	A ^ B	^	A ^ B	"ArithmeticStructure(['^'], (A, B))"	A**B
+*	A * B	*	A * B	"ArithmeticStructure(['*'], (A, B))"	A*B
+/	A / B	/	A / B	"ArithmeticStructure(['/'], (A, B))"	A/B
+		mod	A mod B	"CallStructure('modulo', (A, B))"	"pysd.functions.modulo(A, B)"	In Vensim the modulo is computed with a function and not an operator
++	A + B	+	A + B	"ArithmeticStructure(['+'], (A, B))"	A+B
+-	A - B	-	A - B	"ArithmeticStructure(['-'], (A, B))"	A-B
+=	A = B	=	A = B	"LogicStructure(['='], (A, B))"	A == B
+<	A < B	<	A < B	"LogicStructure(['<'], (A, B))"	A < B
+>	A > B	>	A > B	"LogicStructure(['>'], (A, B))"	A > B
+>=	A >= B	>=	A >= B	"LogicStructure(['>='], (A, B))"	A >= B
+<=	A <= B	<=	A <= B	"LogicStructure(['<='], (A, B))"	A <= B
+:AND:	A :AND: B	and	A and B	"LogicStructure[':AND:'], (A, B))"	"numpy.and(A, B)"
+:OR:	A :OR: B	or	A or B	"LogicStructure[':OR:'], (A, B))"	"numpy.or(A, B)"
+
+Unary operators
+-	#NAME?	-	#NAME?	"LogicStructure(['negative'], (A,))"	#NAME?
++	#NAME?	+	#NAME?	A	A
+:NOT:	:NOT: A	not	not A	"LogicStructure[':NOT:'], (A,))"	numpy.not(A)
+
+Functions
+ABS	ABS(A)	abs(A)	abs(A)	"CallStructure('abs', (A,))"	numpy.abs(A)
+MIN	"MIN(A, B)"	min	"min(A, B)"	"CallStructure('min', (A, B))"	"numpy.minimum(A, B)"
+MAX	"MAX(A, B)"	max	"max(A, B)"	"CallStructure('max', (A, B))"	"numpy.maximum(A, B)"
+SQRT	SQRT(A)	sqrt	sqrt(A)	"CallStructure('sqrt', (A,))"	numpy.sqrt
+EXP	EXP(A)	exp	exp(A)	"CallStructure('exp', (A,))"	numpy.exp(A)
+LN	LN(A)	ln	ln(A)	"CallStructure('ln', (A,))"	numpy.log(A)
+SIN	SIN(A)	sin	sin(A)	"CallStructure('sin', (A,))"	numpy.sin(A)
+COS	COS(A)	cos	cos(A)	"CallStructure('cos', (A,))"	numpy.cos(A)
+TAN	TAN(A)	tan	tan(A)	"CallStructure('tan', (A,))"	numpy.tan(A)
+ARCSIN	ARCSIN(A)	arcsin	arcsin(A)	"CallStructure('arcsin', (A,))"	numpy.arcsin(A)
+ARCCOS	ARCCOS(A)	arccos	arccos(A)	"CallStructure('arccos', (A,))"	numpy.arccos(A)
+ARCTAN	ARCTAN(A)	arctan	arctan(A)	"CallStructure('arctan', (A,))"	numpy.arctan(A)
+INVERT MATRIX	INVERT MATRIX(A)			"CallStructure('invert_matrix', (A,))"	pysd.functions.invert_matrix(A)
+ELMCOUNT	ELMCOUNT(A)			"CallStructure('elmcount', (A,))"	len(A)
+INTEGER	INTEGER(A)	int	int(A)	"CallStructure('int', (A,))"	pysd.functions.integer(A)
+QUANTUM	"QUANTUM(A, B)"			"CallStructure('quantum', (A, B))"	"pysd.functions.quantum(A, B)"
+MODULO	"MODULO(A, B)"			"CallStructure('modulo', (A, B))"	"pysd.functions.modulo(A, B)"	In Xmile the modulo is computed with the 'mod' operator
+IF THEN ELSE	"IF THEN ELSE(A, B, C)"	if_then_else	"if_then_else(A, B, C)"	"CallStructure('if_then_else', (A, B))"	"pysd.functions.if_then_else(A, lambda: B, lambda: C)"
+		IF condition THEN value_true ELSE value_false	IF A THEN B ELSE C	"CallStructure('if_then_else', (A, B))"	"pysd.functions.if_then_else(A, lambda: B, lambda: C)"
+XIDZ	"XIDZ(A, B, X)"	safediv	"safediv(A, B, X)"	"CallStructure('xidz', (A, B, X))"	"pysd.functions.xidz(A, B, X)"
+ZIDZ	"ZIDZ(A, B)"	safediv	"safediv(A, B)"	"CallStructure('zidz', (A, B))"	"pysd.functions.zidz(A, B)"
+
+VMIN	VMIN(A)			"CallStructure('vmin', (A,))"	pysd.functions.vmin(A)
+VMAX	VMAX(A)			"CallStructure('vmax', (A,))"	pysd.functions.vmax(A)
+SUM	SUM(A)			"CallStructure('sum', (A,))"	pysd.functions.sum(A)
+PROD	PROD(A)			"CallStructure('prod', (A,))"	pysd.functions.prod(A)
+
+PULSE	PULSE				pysd.functions.pulse
+PULSE TRAIN	PULSE TRAIN				pysd.functions.pulse_train
+RAMP	RAMP				pysd.functions.ramp
+STEP	STEP				pysd.functions.step
+
+Stocks
+INTEG
+
+Delay functions
+DELAY1I	"DELAY1I(input, delay_time, initial_value)"	delay1	"delay1(input, delay_time, initial_value)"	"DelayStructure(input, delay_time, initial_value, 1)"	pysd.statefuls.Delay(...)	Not tested for Xmile!
+DELAY1	"DELAY1(input, delay_time)"	delay1	"delay1(input, delay_time)"	"DelayStructure(input, delay_time, input, 1)"	pysd.statefuls.Delay(...)	Not tested for Xmile!
+DELAY3I	"DELAY3I(input, delay_time, initial_value)"	delay3	"delay3(input, delay_time, initial_value)"	"DelayStructure(input, delay_time, initial_value, 3)"	pysd.statefuls.Delay(...)	Not tested for Xmile!
+DELAY3	"DELAY3(input, delay_time)"	delay3	"delay3(input, delay_time)"	"DelayStructure(input, delay_time, input, 3)"	pysd.statefuls.Delay(...)	Not tested for Xmile!
+DELAY N	"DELAY N(input, delay_time, initial_value, n)"	delayn	"delayn(input, delay_time,  n, initial_value)"	"DelayNStructure(input, delay_time, initial_value, n)"	pysd.statefuls.DelayN(...)	Not tested for Xmile!
+		delayn	"delayn(input, delay_time, n)"	"DelayNStructure(input, delay_time, input, n)"	pysd.statefuls.DelayN(...)	Not tested for Xmile!
+DELAY FIXED	"DELAY FIXED(input, delay_time, initial_value)"			"DelayFixed(input, delay_time, initial_value)"	pysd.statefuls.DelayFixed(...)	Not tested for Xmile!
+SMOOTHI	"SMOOTH1I(input, delay_time, initial_value)"	smth1	"smth1(input, smth_time, initial_value)"	"SmoothStructure(input, smth_time, initial_value, 1)"	pysd.statefuls.Smooth(...)	Not tested for Xmile!
+SMOOTH	"SMOOTH1(input, delay_time)"	smth1	"smth1(input, smth_time)"	"SmoothStructure(input, smth_time, input, 1)"	pysd.statefuls.Smooth(...)	Not tested for Xmile!
+SMOOTH3I	"SMOOTH3I(input, delay_time, initial_value)"	smth3	"smth3(input, smth_time, initial_value)"	"SmoothStructure(input, smth_time, initial_value, 3)"	pysd.statefuls.Smooth(...)	Not tested for Xmile!
+SMOOTH3	"SMOOTH3(input, delay_time)"	smth3	"smth3(input, smth_time)"	"SmoothStructure(input, smth_time, input, 3)"	pysd.statefuls.Smooth(...)	Not tested for Xmile!
+SMOOTH N	"SMOOTH N(input, delay_time, initial_value, n)"	smthn	"smthn(input, smth_time,  n, initial_value)"	"SmoothNStructure(input, smth_time, initial_value, n)"	pysd.statefuls.SmoothN(...)	Not tested for Xmile!
+		smthn	"smthn(input, smth_time, n)"	"SmoothNStructure(input, smth_time, input, n)"	pysd.statefuls.SmoothN(...)	Not tested for Xmile!
+		forcst	"forcst(input, average_time, horizon, initial_trend)"	"ForecastStructure(input, average_time, horizon, initial_trend)"	pysd.statefuls.Forecast(...)	Not tested for Xmile!
+FORECAST	"FORECAST(input, average_time, horizon)"	forcst	"forcst(input, average_time, horizon)"	"ForecastStructure(input, average_time, horizon, 0)"	pysd.statefuls.Forecast(...)	Not tested for Xmile!
+TREND	"TREND(input, average_time, initial_trend)"	trend	"trend(input, average_time, initial_trend)"	"TrendStructure(input, average_time, initial_trend)"	pysd.statefuls.Trend(...)	Not tested for Xmile!
+TREND		trend	"trend(input, average_time)"	"TrendStructure(input, average_time, 0)"	pysd.statefuls.Trend(...)	Not tested for Xmile!
+
+INITIAL	INITIAL(pysd.statefuls.Initial				pysd.statefuls.Initial
+SAMPLE IF TRUE	"SAMPLE IF TRUE(condition, input, initial_value)"			"SampleIfTrueStructure(condition, input, initial_value)"	pysd.statefuls.SampleIfTrue(�)
+
+Get functions
+GET XLS DATA	"GET XLS DATA('file', 'sheet', 'time_row_or_col', 'cell')"			"GetDataStructure('file', 'sheet', 'time_row_or_col', 'cell')"	pysd.external.ExtData(...)
+GET DIRECT DATA	"GET DIRECT DATA('file', 'sheet', 'time_row_or_col', 'cell')"			"GetDataStructure('file', 'sheet', 'time_row_or_col', 'cell')"	pysd.external.ExtData(...)
+GET XLS LOOKUPS	"GET XLS LOOKUPS('file', 'sheet', 'x_row_or_col', 'cell')"			"GetLookupsStructure('file', 'sheet', 'x_row_or_col', 'cell')"	pysd.external.ExtLookup(...)
+GET DIRECT LOOKUPS	"GET DIRECT LOOKUPS('file', 'sheet', 'x_row_or_col', 'cell')"			"GetLookupsStructure('file', 'sheet', 'x_row_or_col', 'cell')"	pysd.external.ExtLookup(...)
+GET XLS CONSTANTS	"GET XLS CONSTANTS('file', 'sheet', 'cell')"			"GetConstantsStructure('file', 'sheet', 'cell')"	pysd.external.ExtConstant(...)
+GET DIRECT CONSTANTS	"GET DIRECT CONSTANTS('file', 'sheet', 'cell')"			"GetConstantsStructure('file', 'sheet', 'cell')"	pysd.external.ExtConstant(...)
+GET XLS SUBSCRIPT	"GET XLS SUBSCRIPT('file', 'sheet', 'first_cell', 'last_cell', 'prefix')"				pysd.external.ExtSubscript(...)
+GET DIRECT SUBSCRIPT	"GET DIRECT SUBSCRIPT('file', 'sheet', 'first_cell', 'last_cell', 'prefix')"				pysd.external.ExtSubscript(...)
