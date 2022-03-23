@@ -354,7 +354,8 @@ class Forecast(DynamicStateful):
     """
     Implements FORECAST function
     """
-    def __init__(self, forecast_input, average_time, horizon, py_name):
+    def __init__(self, forecast_input, average_time, horizon, initial_trend,
+                 py_name):
         """
 
         Parameters
@@ -370,15 +371,16 @@ class Forecast(DynamicStateful):
         self.horizon = horizon
         self.average_time = average_time
         self.input = forecast_input
+        self.initial_trend = initial_trend
         self.py_name = py_name
 
     def initialize(self, init_val=None):
 
         # self.state = AV in the vensim docs
         if init_val is None:
-            self.state = self.input()
+            self.state = self.input() / (1 + self.initial_trend())
         else:
-            self.state = init_val
+            self.state = self.input() / (1 + init_val)
 
         if isinstance(self.state, xr.DataArray):
             self.shape_info = {'dims': self.state.dims,

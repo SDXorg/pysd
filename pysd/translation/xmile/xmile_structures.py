@@ -22,7 +22,7 @@ structures = {
     },
     "delayn": {
         3: lambda x, y, n: ae.DelayNStructure(x, y, x, n),
-        4: ae.DelayNStructure,
+        4: lambda x, y, n, z: ae.DelayNStructure(x, y, z, n),
     },
     "smth1": {
         2: lambda x, y: ae.SmoothStructure(x, y, x, 1),
@@ -34,11 +34,15 @@ structures = {
     },
     "smthn": {
         3: lambda x, y, n: ae.SmoothNStructure(x, y, x, n),
-        4: ae.SmoothNStructure
+        4: lambda x, y, n, z: ae.SmoothNStructure(x, y, z, n)
     },
     "trend": {
         2: lambda x, y: ae.TrendStructure(x, y, 0),
         3: ae.TrendStructure,
+    },
+    "forcst": {
+        3: lambda x, y, z: ae.ForecastStructure(x, y, z, 0),
+        4: ae.ForecastStructure
     },
     "safediv": {
         2: lambda x, y: ae.CallStructure(

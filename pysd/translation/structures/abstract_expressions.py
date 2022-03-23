@@ -180,12 +180,14 @@ class ForecastStructure:
     input: object
     average_time: object
     horizon: object
+    initial_trend: object
 
     def __str__(self) -> str:  # pragma: no cover
-        return "ForecastStructure:\n\t%s,\n\t%s,\n\t%s" % (
+        return "ForecastStructure:\n\t%s,\n\t%s,\n\t%s,\n\t%s" % (
             self.input,
             self.average_time,
-            self.horizon)
+            self.horizon,
+            self.initial_trend)
 
 
 @dataclass

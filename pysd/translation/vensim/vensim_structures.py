@@ -30,7 +30,7 @@ structures = {
     "smooth3i": lambda x, y, z: ae.SmoothStructure(x, y, z, 3),
     "smooth_n": ae.SmoothNStructure,
     "trend": ae.TrendStructure,
-    "forecast": ae.ForecastStructure,
+    "forecast": lambda x, y, z: ae.ForecastStructure(x, y, z, 0),
     "sample_if_true": ae.SampleIfTrueStructure,
     "lookup": ae.LookupsStructure,
     "data": ae.DataStructure

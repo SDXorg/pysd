@@ -811,6 +811,7 @@ class ForecastBuilder(StructureBuilder):
             "input": forecast_str.input,
             "average_time": forecast_str.average_time,
             "horizon": forecast_str.horizon,
+            "initial_trend": forecast_str.initial_trend
         }
 
     def build(self, arguments):
@@ -821,6 +822,7 @@ class ForecastBuilder(StructureBuilder):
         arguments["average_time"].reshape(
             self.section.subscripts, self.def_subs)
         arguments["horizon"].reshape(self.section.subscripts, self.def_subs)
+        arguments["initial_trend"].reshape(self.section.subscripts, self.def_subs)
         arguments["name"] = self.section.namespace.make_python_identifier(
             self.element.identifier, prefix="_forecast")
 
@@ -828,10 +830,11 @@ class ForecastBuilder(StructureBuilder):
             "name": arguments["name"],
             "expression": "%(name)s = Forecast(lambda: %(input)s, "
                           "lambda: %(average_time)s, lambda: %(horizon)s, "
-                          "'%(name)s')" % arguments,
+                          "lambda: %(initial_trend)s, '%(name)s')" % arguments,
             "calls": {
-                "initial":
+                "initial": merge_dependencies(
                     arguments["input"].calls,
+                    arguments["initial_trend"].calls),
                 "step": merge_dependencies(
                     arguments["input"].calls,
                     arguments["average_time"].calls,
