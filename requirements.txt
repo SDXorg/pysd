@@ -9,4 +9,3 @@ black
 openpyxl
 scipy
 progressbar2
-
