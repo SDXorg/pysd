@@ -85,7 +85,13 @@ class External(object):
     """
     missing = "warning"
 
-    def __init__(self, py_name):
+    def __init__(self, py_name, final_coords=None):
+        if py_name is None:
+            # backwards compatibility
+            # TODO remove in future
+            self.final_coords, py_name = py_name, final_coords
+        else:
+            self.final_coords = final_coords
         self.py_name = py_name
         self.file = None
         self.sheet = None
@@ -323,7 +329,7 @@ class External(object):
         None
 
         """
-        if self.file[0] == '?':
+        if str(self.file)[0] == '?':
             # TODO add an option to include indirect references
             raise ValueError(
                 self.py_name + "\n"
@@ -647,10 +653,10 @@ class External(object):
         numpy.ndarray
           reshaped array
         """
-        try:
+        if isinstance(data, (float, int)):
+            data = np.array(data)
+        elif isinstance(data, xr.DataArray):
             data = data.values
-        except AttributeError:
-            pass
 
         return data.reshape(dims)
 
@@ -698,8 +704,8 @@ class ExtData(External, Data):
     """
 
     def __init__(self, file_name, sheet, time_row_or_col, cell,
-                 interp, coords, root, py_name):
-        super().__init__(py_name)
+                 interp, coords, root, final_coords=None, py_name=None):
+        super().__init__(py_name, final_coords)
         self.files = [file_name]
         self.sheets = [sheet]
         self.time_row_or_cols = [time_row_or_col]
@@ -707,13 +713,10 @@ class ExtData(External, Data):
         self.coordss = [coords]
         self.root = root
         # TODO remove in 3.0.0 (self.interp = interp)
-        self.interp = interp.replace(" ", "_") if interp else None
+        self.interp = interp.replace(" ", "_") if interp else "interpolate"
         self.is_float = not bool(coords)
 
         # check if the interpolation method is valid
-        if not interp:
-            self.interp = "interpolate"
-
         if self.interp not in ["interpolate", "raw",
                                "look_forward", "hold_backward"]:
             raise ValueError(self.py_name + "\n"
@@ -747,12 +750,39 @@ class ExtData(External, Data):
         """
         Initialize all elements and create the self.data xarray.DataArray
         """
-        self.data = utils.xrmerge(*[
-            self._initialize_data("data")
-            for self.file, self.sheet, self.x_row_or_col,
-            self.cell, self.coords
-            in zip(self.files, self.sheets, self.time_row_or_cols,
-                   self.cells, self.coordss)])
+        if self.final_coords is None:
+            # backward compatibility
+            # TODO remove in the future
+            self.data = utils.xrmerge(*[
+                self._initialize_data("data")
+                for self.file, self.sheet, self.x_row_or_col,
+                self.cell, self.coords
+                in zip(self.files, self.sheets, self.time_row_or_cols,
+                       self.cells, self.coordss)])
+        elif len(self.coordss) == 1:
+            # Just loag one value (no add)
+            for self.file, self.sheet, self.x_row_or_col,\
+                self.cell, self.coords\
+                in zip(self.files, self.sheets, self.time_row_or_cols,
+                       self.cells, self.coordss):
+                self.data = self._initialize_data("data")
+        else:
+            # Load in several lines (add)
+            self.data = xr.DataArray(
+                np.nan, self.final_coords, list(self.final_coords))
+
+            for self.file, self.sheet, self.x_row_or_col,\
+                self.cell, self.coords\
+                in zip(self.files, self.sheets, self.time_row_or_cols,
+                       self.cells, self.coordss):
+                values = self._initialize_data("data")
+
+                coords = {"time": values.coords["time"].values, **self.coords}
+                if "time" not in self.data.dims:
+                    self.data = self.data.expand_dims(
+                        {"time": coords["time"]}, axis=0).copy()
+
+                self.data.loc[coords] = values.values
 
 
 class ExtLookup(External, Lookups):
@@ -760,9 +790,9 @@ class ExtLookup(External, Lookups):
     Class for Vensim GET XLS LOOKUPS/GET DIRECT LOOKUPS
     """
 
-    def __init__(self, file_name, sheet, x_row_or_col, cell,
-                 coords, root, py_name):
-        super().__init__(py_name)
+    def __init__(self, file_name, sheet, x_row_or_col, cell, coords,
+                 root, final_coords=None, py_name=None):
+        super().__init__(py_name, final_coords)
         self.files = [file_name]
         self.sheets = [sheet]
         self.x_row_or_cols = [x_row_or_col]
@@ -790,12 +820,39 @@ class ExtLookup(External, Lookups):
         """
         Initialize all elements and create the self.data xarray.DataArray
         """
-        self.data = utils.xrmerge(*[
-            self._initialize_data("lookup")
-            for self.file, self.sheet, self.x_row_or_col,
-            self.cell, self.coords
-            in zip(self.files, self.sheets, self.x_row_or_cols,
-                   self.cells, self.coordss)])
+        if self.final_coords is None:
+            # backward compatibility
+            # TODO remove in the future
+            self.data = utils.xrmerge(*[
+                self._initialize_data("lookup")
+                for self.file, self.sheet, self.x_row_or_col,
+                self.cell, self.coords
+                in zip(self.files, self.sheets, self.x_row_or_cols,
+                       self.cells, self.coordss)])
+        elif len(self.coordss) == 1:
+            # Just loag one value (no add)
+            for self.file, self.sheet, self.x_row_or_col,\
+                self.cell, self.coords\
+                in zip(self.files, self.sheets, self.x_row_or_cols,
+                       self.cells, self.coordss):
+                self.data = self._initialize_data("lookup")
+        else:
+            # Load in several lines (add)
+            self.data = xr.DataArray(
+                np.nan, self.final_coords, list(self.final_coords))
+
+            for self.file, self.sheet, self.x_row_or_col,\
+                self.cell, self.coords\
+                in zip(self.files, self.sheets, self.x_row_or_cols,
+                       self.cells, self.coordss):
+                values = self._initialize_data("lookup")
+
+                coords = {"lookup_dim": values.coords["lookup_dim"].values, **self.coords}
+                if "lookup_dim" not in self.data.dims:
+                    self.data = self.data.expand_dims(
+                        {"lookup_dim": coords["lookup_dim"]}, axis=0).copy()
+
+                self.data.loc[coords] = values.values
 
 
 class ExtConstant(External):
@@ -803,8 +860,9 @@ class ExtConstant(External):
     Class for Vensim GET XLS CONSTANTS/GET DIRECT CONSTANTS
     """
 
-    def __init__(self, file_name, sheet, cell, coords, root, py_name):
-        super().__init__(py_name)
+    def __init__(self, file_name, sheet, cell, coords,
+                 root, final_coords=None, py_name=None):
+        super().__init__(py_name, final_coords)
         self.files = [file_name]
         self.sheets = [sheet]
         self.transposes = [
@@ -832,11 +890,31 @@ class ExtConstant(External):
         """
         Initialize all elements and create the self.data xarray.DataArray
         """
-        self.data = utils.xrmerge(*[
-            self._initialize()
-            for self.file, self.sheet, self.transpose, self.cell, self.coords
-            in zip(self.files, self.sheets, self.transposes,
-                   self.cells, self.coordss)])
+        if self.final_coords is None:
+            # backward compatibility
+            # TODO remove in the future
+            self.data = utils.xrmerge(*[
+                self._initialize()
+                for self.file, self.sheet, self.transpose, self.cell,
+                self.coords
+                in zip(self.files, self.sheets, self.transposes,
+                       self.cells, self.coordss)])
+        elif len(self.coordss) == 1:
+            # Just loag one value (no add)
+            for self.file, self.sheet, self.transpose, self.cell, self.coords\
+                in zip(self.files, self.sheets, self.transposes,
+                       self.cells, self.coordss):
+                self.data = self._initialize()
+        else:
+            # Load in several lines (add)
+
+            self.data = xr.DataArray(
+                np.nan, self.final_coords, list(self.final_coords))
+
+            for self.file, self.sheet, self.transpose, self.cell, self.coords\
+                in zip(self.files, self.sheets, self.transposes,
+                       self.cells, self.coordss):
+                self.data.loc[self.coords] = self._initialize().values
 
     def _initialize(self):
         """

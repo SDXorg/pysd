@@ -150,15 +150,24 @@ class TestExternalMethods(unittest.TestCase):
 
         reshape = External._reshape
 
+        data0d = np.array(5)
         data1d = np.array([2, 3, 5, 6])
         data2d = np.array([[2, 3, 5, 6],
                            [1, 7, 5, 8]])
 
-        series1d = pd.Series(data1d)
-        df2d = pd.DataFrame(data2d)
+        float0d = float(data0d)
+        int0d = int(data0d)
+        series1d = xr.DataArray(data1d)
+        df2d = xr.DataArray(data2d)
 
+        shapes0d = [(1,), (1, 1)]
         shapes1d = [(4,), (4, 1, 1), (1, 1, 4), (1, 4, 1)]
         shapes2d = [(2, 4), (2, 4, 1), (1, 2, 4), (2, 1, 4)]
+
+        for shape_i in shapes0d:
+            self.assertEqual(reshape(data0d, shape_i).shape, shape_i)
+            self.assertEqual(reshape(float0d, shape_i).shape, shape_i)
+            self.assertEqual(reshape(int0d, shape_i).shape, shape_i)
 
         for shape_i in shapes1d:
             self.assertEqual(reshape(data1d, shape_i).shape, shape_i)

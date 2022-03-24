@@ -413,24 +413,30 @@ class ElementBuilder:
         # TODO include some kind of magic vectorization to identify patterns
         # that can be easily vecorized (GET, expressions, Stocks...)
         expressions = []
+        [component.build_component() for component in self.components]
         for component in self.components:
-            expr, subs, except_subscripts = component.build_component()
+            expr, subs, except_subscripts = component.get()
             if expr is None:
                 continue
+            if isinstance(subs, list):
+                subs = [{
+                    esubs: subsi[csubs]
+                    for csubs, esubs in zip(subsi, self.subscripts)
+                } for subsi in subs]
             else:
                 subs = {
                     esubs: subs[csubs]
                     for csubs, esubs in zip(subs, self.subscripts)
                 }
-                exc_subs = [
-                    {
-                        esubs: subs_e[csubs]
-                        for csubs, esubs in zip(subs_e, self.subscripts)
-                    }
-                    for subs_e in except_subscripts
-                ]
-                expressions.append(
-                    {"expr": expr, "subs": subs, "subs_except": exc_subs})
+            exc_subs = [
+                {
+                    esubs: subs_e[csubs]
+                    for csubs, esubs in zip(subs_e, self.subscripts)
+                }
+                for subs_e in except_subscripts
+            ]
+            expressions.append(
+                {"expr": expr, "subs": subs, "subs_except": exc_subs})
 
         if len(expressions) > 1:
             # NUMPY: xrmerge would be sustitute by a multiple line definition
@@ -457,6 +463,8 @@ class ElementBuilder:
                 if expression["subs_except"]:
                     # there is an excep in the definition of the component
                     self.pre_expression += self.manage_except(expression)
+                elif isinstance(expression["subs"], list):
+                    self.pre_expression += self.manage_multi_def(expression)
                 else:
                     self.pre_expression +=\
                         "value.loc[%(subs)s] = %(expr)s\n" % expression
@@ -473,6 +481,14 @@ class ElementBuilder:
         self.subtype = ", ".join(
             set(component.subtype for component in self.components)
         )
+
+    def manage_multi_def(self, expression):
+        final_expr = "def_subs = xr.zeros_like(value, dtype=bool)\n"
+        for subs in expression["subs"]:
+            final_expr += "def_subs.loc[%s] = True\n" % subs
+
+        return final_expr + "value.values[def_subs.values] = "\
+            "%(expr)s[def_subs.values]\n" % expression
 
     def manage_except(self, expression):
         if expression["subs"] == self.subs_dict:
@@ -526,7 +542,9 @@ class ElementBuilder:
             self.section.imports.add("subs")
 
         objects = "\n\n".join([
-            value["expression"] for value in self.objects.values()
+            value["expression"] % {
+                "final_subs": value.get("final_subs", "")}
+            for value in self.objects.values()
             if value["expression"] is not None
         ])
 
@@ -573,10 +591,9 @@ class ComponentBuilder:
         self.subscripts_dict = self.section.subscripts.make_coord_dict(
             self.subscripts[0])
         # NUMPY: use vs.ExceptVisitor
-        except_subscripts = [self.section.subscripts.make_coord_dict(
+        self.except_subscripts = [self.section.subscripts.make_coord_dict(
             except_list) for except_list in self.subscripts[1]]
-        return (
-            vs.ASTVisitor(self).visit(),
-            self.subscripts_dict,
-            except_subscripts
-        )
+        self.ast_build = vs.ASTVisitor(self).visit()
+
+    def get(self):
+        return self.ast_build, self.subscripts_dict, self.except_subscripts
