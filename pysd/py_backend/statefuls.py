@@ -374,13 +374,13 @@ class Forecast(DynamicStateful):
         self.initial_trend = initial_trend
         self.py_name = py_name
 
-    def initialize(self, init_val=None):
+    def initialize(self, init_trend=None):
 
         # self.state = AV in the vensim docs
-        if init_val is None:
+        if init_trend is None:
             self.state = self.input() / (1 + self.initial_trend())
         else:
-            self.state = self.input() / (1 + init_val)
+            self.state = self.input() / (1 + init_trend)
 
         if isinstance(self.state, xr.DataArray):
             self.shape_info = {'dims': self.state.dims,
@@ -483,13 +483,13 @@ class Trend(DynamicStateful):
         self.input_func = trend_input
         self.py_name = py_name
 
-    def initialize(self, init_val=None):
-        if init_val is None:
+    def initialize(self, init_trend=None):
+        if init_trend is None:
             self.state = self.input_func()\
                 / (1 + self.init_func()*self.average_time_function())
         else:
             self.state = self.input_func()\
-                / (1 + init_val*self.average_time_function())
+                / (1 + init_trend*self.average_time_function())
 
         if isinstance(self.state, xr.DataArray):
             self.shape_info = {'dims': self.state.dims,
