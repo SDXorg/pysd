@@ -8,5 +8,4 @@ chardet
 black
 openpyxl
 scipy
-progressbar
-
+progressbar2
