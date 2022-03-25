@@ -7,6 +7,9 @@ import numpy as np
 from ..structures.abstract_model import\
     AbstractData, AbstractLookup, AbstractComponent,\
     AbstractUnchangeableConstant
+from parsimonious.exceptions import IncompleteParseError,\
+                                    VisitationError,\
+                                    ParseError
 
 from . import vensim_utils as vu
 from .vensim_structures import structures, parsing_ops
@@ -249,8 +252,26 @@ class Component():
 
     def _parse(self) -> None:
         """Parse model component to get the AST"""
-        tree = vu.Grammar.get("components", parsing_ops).parse(self.expression)
-        self.ast = EquationParser(tree).translation
+        try:
+            tree = vu.Grammar.get("components", parsing_ops).parse(
+                self.expression)
+        except (IncompleteParseError, ParseError) as err:
+            raise ValueError(
+                err.args[0] + "\n\n"
+                "\nError when parsing definition:\n\t %s\n\n"
+                "probably used definition is invalid or not integrated..."
+                "\nSee parsimonious output above." % self.expression
+            )
+        try:
+            self.ast = EquationParser(tree).translation
+        except VisitationError as err:
+            raise ValueError(
+                err.args[0] + "\n\n"
+                "\nError when visiting definition:\n\t %s\n\n"
+                "probably used definition is invalid or not integrated..."
+                "\nSee parsimonious output above." % self.expression
+            )
+
         if isinstance(self.ast, structures["get_xls_lookups"]):
             self.lookup = True
         else:
