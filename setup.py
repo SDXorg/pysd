@@ -3,8 +3,6 @@ from setuptools import setup, find_packages
 exec(open('pysd/_version.py').read())
 print(__version__)
 
-test_pckgs = open('dev-requirements.txt').read().strip().split('\n')
-
 setup(
     name='pysd',
     version=__version__,
@@ -30,19 +28,8 @@ setup(
         'Programming Language :: Python :: 3.9',
     ],
     install_requires=open('requirements.txt').read().strip().split('\n'),
-    tests_require=test_pckgs,
-    extras_require={
-        "test": test_pckgs,
-        "docs": [
-            # pin sphinx to match what RTD uses:
-            # https://github.com/readthedocs/readthedocs.org/blob/ecac31de54bbb2c100f933e86eb22b0f4389ba84/requirements/pip.txt#L16
-            'sphinx<2',
-            'sphinx-rtd-theme<0.5',
-            'docutils<0.18'
-            ]
-        },
     package_data={
-        'py_backend': [
+        'translation': [
             'xmile/smile.grammar'
         ]
     },

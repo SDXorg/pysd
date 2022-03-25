@@ -34,6 +34,10 @@ class TestIntegrationExamples(unittest.TestCase):
             output, canon = runner(test_models + '/arguments/test_arguments.mdl')
         assert_frames_close(output, canon, rtol=rtol)
 
+    def test_array_with_line_break(self):
+        output, canon = runner(test_models + '/array_with_line_break/test_array_with_line_break.mdl')
+        assert_frames_close(output, canon, rtol=rtol)
+
     def test_builtin_max(self):
         output, canon = runner(test_models + '/builtin_max/builtin_max.mdl')
         assert_frames_close(output, canon, rtol=rtol)
