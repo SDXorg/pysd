@@ -8,20 +8,22 @@ The components object is wrapped within a Python class that provides methods for
 
 
 Translation
-^^^^^^^^^^^
+-----------
 
-The internal functions of the model translation components can be seen in the following documents
+The internal functions of the model translation components and relevant objects can be seen in the following documents:
 
 .. toctree::
    :maxdepth: 2
 
    vensim_translation
    xmile_translation
+   abstract_model
 
 
 The PySD module is capable of importing models from a Vensim model file (\*.mdl) or an XMILE format xml file. Translation makes use of a Parsing Expression Grammar parser, using the third party Python library Parsimonious13 to construct an abstract syntax tree based upon the full model file (in the case of Vensim) or individual expressions (in the case of XMILE).
 
-The translators then crawl the tree, using a dictionary to translate Vensim or Xmile syntax into its appropriate Python equivalent. The use of a translation dictionary for all syntactic and programmatic components prevents execution of arbitrary code from unverified model files, and ensures that we only translate commands that PySD is equipped to handle. Any unsupported model functionality should therefore be discovered at import, instead of at runtime.
+The translators then crawl the tree, using a set of classes to define a pseudo model representation called :doc:`Abstract Model <abstract_model>`. Its structure is defined in the following document:
+
 
 The use of a one-to-one dictionary in translation means that the breadth of functionality is inherently limited. In the case where no direct Python equivalent is available, PySD provides a library of functions such as pulse, step, etc. that are specific to dynamic model behavior.
 
@@ -34,8 +36,22 @@ During translation some dictionaries are created that allow the correct operatio
 * **_dependencies**: Used to define the dependencies of each variable and assign cache type and initialize the model.
 
 
-The model class
-^^^^^^^^^^^^^^^
+Building the model
+------------------
+.. toctree::
+   :maxdepth: 2
+
+   python_builder
+
+The Python model class
+-----------------------
+
+.. toctree::
+   :maxdepth: 2
+
+   model_loading
+
+
 The translator constructs a Python class that represents the system dynamics model. The class maintains a dictionary representing the current values of each of the system stocks, and the current simulation time, making it a ‘statefull’ model in much the same way that the system itself has a specific state at any point in time.
 
 The model class also contains a function for each of the model components, representing the essential model equations. The docstring for each function contains the model documentation and units as translated from the original model file. A query to any of the model functions will calculate and return its value according to the stored state of the system.
@@ -46,14 +62,6 @@ Lastly, the model class provides a set of methods that are used to facilitate si
 
 The PySD class
 ^^^^^^^^^^^^^^
-.. toctree::
-   :maxdepth: 2
-
-   internal_functions
-
-
-
-
 The PySD class provides the machinery to get the model moving, supply it with data, or modify its parameters. In addition, this class is the primary way that users interact with the PySD module.
 
 The basic function for executing a model is appropriately named.run(). This function passes the model into scipy’s odeint() ordinary differential equations solver. The scipy integrator is itself utilizing the lsoda integrator from the Fortran library odepack14, and so integration takes advantage of highly optimized low-level routines to improve speed. We use the model’s timestep to set the maximum step size for the integrator’s adaptive solver to ensure that the integrator properly accounts for discontinuities.

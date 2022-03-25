@@ -37,25 +37,9 @@ PySD
 This project is a simple library for running System Dynamics models in python, with the purpose of
 improving integration of Big Data and Machine Learning into the SD workflow.
 
-PySD translates :doc:`Vensim <development/vensim_translation>` or
-:doc:`XMILE <development/xmile_translation>` model files into python modules,
+PySD translates :doc:`Vensim <structure/vensim_translation>` or
+:doc:`XMILE <structure/xmile_translation>` model files into python modules,
 and provides methods to modify, simulate, and observe those translated models.
-
-
-Contents:
----------
-
-.. toctree::
-   :maxdepth: 2
-
-   installation
-   basic_usage
-   advanced_usage
-   command_line_usage
-   tools
-   functions
-   development/development_index
-   reporting_bugs
 
 
 Additional Resources
@@ -92,3 +76,21 @@ You can also cite the library using the `DOI provided by Zenodo <https://doi.org
 Support
 ^^^^^^^
 For additional help or consulting, contact james.p.houghton@gmail.com or eneko.martin.martinez@gmail.com.
+
+
+Contents
+--------
+
+.. toctree::
+   :maxdepth: 2
+
+   installation
+   basic_usage
+   advanced_usage
+   command_line_usage
+   tools
+   functions
+   structure/structure_index
+   development/development_index
+   reporting_bugs
+   about

@@ -1,3 +1,10 @@
+"""
+The VensimFile class allows reading the original Vensim model file,
+parsing it into SectionFile elements using the FileSectionsParser,
+parsing its sketch using SketchParser in order to classify the varibales
+per view. The final result can be exported to an AbstractModel class in
+order to build a model in other language.
+"""
 import re
 from typing import Union, List
 from pathlib import Path
@@ -14,6 +21,9 @@ from .vensim_section import FileSection
 class VensimFile():
     """
     Create a VensimFile object which allows parsing a mdl file.
+    When the objext is created the model file is automatically opened;
+    unnecessary tabs, whitespaces, and linebreaks are removed; and
+    the sketch is split from the model.
 
     Parameters
     ----------
@@ -93,10 +103,17 @@ class VensimFile():
         return re.sub(r"[\n\t\s]+", " ", re.sub(r"\\\n\t", " ", text))
 
     def parse(self) -> None:
-        """Parse model file"""
+        """
+        Parse model file with parsimonious using the grammar given in
+        parsin_grammars/file_sections.peg and the class FileSectionVisitor
+        to visit the parsed expressions.
+
+        This will break the model file in VensimSections, which are the
+        main model + macros. Then the sections will be automatically parsed.
+        """
         # get model sections (__main__ + macros)
         tree = vu.Grammar.get("file_sections").parse(self.model_text)
-        self.sections = FileSectionsParser(tree).entries
+        self.sections = FileSectionsVisitor(tree).entries
 
         # main section path (Python model file)
         self.sections[0].path = self.mdl_path.with_suffix(".py")
@@ -104,7 +121,7 @@ class VensimFile():
         for section in self.sections[1:]:
             # macrots paths
             section.path = self.mdl_path.parent.joinpath(
-                self.clean_file_names(section.name)[0]
+                self._clean_file_names(section.name)[0]
                 ).with_suffix(".py")
 
         for section in self.sections:
@@ -112,7 +129,27 @@ class VensimFile():
             section._parse()
 
     def parse_sketch(self, subview_sep: List[str]) -> None:
-        """Parse the sketch of the models to classify the variables"""
+        """
+        Parse the sketch of the model with parsimonious using the grammar
+        given in parsin_grammars/sketch.peg and the class SketchVisitor
+        to visit the parsed expressions.
+
+        It will modify the views_dict of the first section, includying
+        the dictionary of the variables classification by views. This,
+        method should be called after calling self.parse method.
+
+        Parameters
+        ----------
+        subview_sep: list
+           List oh the separators to use to classify the model views in
+           folders and subfolders. The sepparator must be ordered in the
+           same order they appear in the view patter. For example,
+           if a view is named "economy:demand.exports" if
+           subview_sep=[":", "."] this view variables will be included
+           the file 'exports' inside the folders economy/demand.
+
+
+        """
         if self.sketch:
             sketch = list(map(
                 lambda x: x.strip(),
@@ -130,7 +167,7 @@ class VensimFile():
             for sketch_line in module.split("\n"):
                 # parsed line could have information about new view name
                 # or of a variable inside a view
-                parsed = SketchParser(grammar.parse(sketch_line))
+                parsed = SketchVisitor(grammar.parse(sketch_line))
 
                 if parsed.view_name:
                     view_name = parsed.view_name
@@ -158,7 +195,7 @@ class VensimFile():
             for full_name, values in non_empty_views.items():
                 # split the full view name using the separator and make the
                 # individual parts safe file or directory names
-                clean_view_parts = self.clean_file_names(
+                clean_view_parts = self._clean_file_names(
                     *re.split("|".join(escaped_separators), full_name))
                 # creating a nested dict for each view.subview
                 # (e.g. {view_name: {subview_name: [values]}})
@@ -168,7 +205,7 @@ class VensimFile():
                     nested_dict = {item: nested_dict}
                 # merging the new nested_dict into the views_dict, preserving
                 # repeated keys
-                self.merge_nested_dicts(views_dict, nested_dict)
+                self._merge_nested_dicts(views_dict, nested_dict)
         else:
             # view names do not have separators or separator characters
             # not provided
@@ -180,18 +217,23 @@ class VensimFile():
                     "any view name.")
 
             for view_name, elements in non_empty_views.items():
-                views_dict[self.clean_file_names(view_name)[0]] = elements
+                views_dict[self._clean_file_names(view_name)[0]] = elements
 
         self.sections[0].split = True
         self.sections[0].views_dict = views_dict
 
     def get_abstract_model(self) -> AbstractModel:
         """
-        Get Abstract Model used for building
+        Get Abstract Model used for building. This, method should be
+        called after calling self.parse_sketch method or self.parse,
+        in the case you do not want to split variables per views.
 
         Returns
         -------
-        AbstractModel
+        AbstractModel: AbstractModel
+          Abstract Model object that can be used for building the model
+          in another language.
+
         """
         return AbstractModel(
             original_path=self.mdl_path,
@@ -199,7 +241,7 @@ class VensimFile():
                            for section in self.sections))
 
     @staticmethod
-    def clean_file_names(*args):
+    def _clean_file_names(*args):
         """
         Removes special characters and makes clean file names.
 
@@ -221,7 +263,7 @@ class VensimFile():
             ).lstrip("0123456789")
             for name in args]
 
-    def merge_nested_dicts(self, original_dict, dict_to_merge):
+    def _merge_nested_dicts(self, original_dict, dict_to_merge):
         """
         Merge dictionaries recursively, preserving common keys.
 
@@ -241,12 +283,12 @@ class VensimFile():
         for key, value in dict_to_merge.items():
             if (key in original_dict and isinstance(original_dict[key], dict)
                     and isinstance(value, Mapping)):
-                self.merge_nested_dicts(original_dict[key], value)
+                self._merge_nested_dicts(original_dict[key], value)
             else:
                 original_dict[key] = value
 
 
-class FileSectionsParser(parsimonious.NodeVisitor):
+class FileSectionsVisitor(parsimonious.NodeVisitor):
     """Parse file sections"""
     def __init__(self, ast):
         self.entries = [None]
@@ -289,7 +331,7 @@ class FileSectionsParser(parsimonious.NodeVisitor):
         return "".join(filter(None, vc)) or n.text or ""
 
 
-class SketchParser(parsimonious.NodeVisitor):
+class SketchVisitor(parsimonious.NodeVisitor):
     """Sketch visitor to save the view names and the variables in each"""
     def __init__(self, ast):
         self.variable_name = None

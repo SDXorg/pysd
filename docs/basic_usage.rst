@@ -201,9 +201,3 @@ If you try to get the current values of a lookup variable the previous method wi
 
    model.get_series_data('Growth lookup')
 
-Supported functions
--------------------
-
-Vensim functions include:
-
-.. include:: development/supported_vensim_functions.rst
