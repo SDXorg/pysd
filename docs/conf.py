@@ -25,7 +25,8 @@ MOCK_MODULES = [
     'numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot', 'scipy.stats',
     'scipy.integrate', 'pandas', 'parsimonious', 'parsimonious.nodes',
     'lxml', 'xarray', 'autopep8', 'scipy.linalg', 'parsimonious.exceptions',
-    'scipy.stats.distributions', 'progressbar', 'black']
+    'scipy.stats.distributions', 'progressbar', 'black'
+]
 
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = mock.Mock()
