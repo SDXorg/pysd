@@ -19,13 +19,15 @@ doi = {10.1016/j.rser.2020.110105},
 }
 
 @misc{medeasproj,
-title = {H2020 MEDEAS project},
+author = {MEDEAS},
+title = {H2020 MEDEAS project website},
 howpublished = {Available at \url{https://medeas.eu/}, (2022/01/19)},
 year = "2016"
 }
 
 @misc{locomotionproj,
-title = {H2020 LOCOMOTION project},
+author = {LOCOMOTION},
+title = {H2020 LOCOMOTION project website},
 howpublished = {Available at \url{https://www.locomotion-h2020.eu/}, (2022/01/19)},
 year = "2019"
 }
@@ -38,12 +40,14 @@ year = "2022"
 }
 
 @misc{sdopentools,
+author = {SDXorg},
 title = {SD Tools: List of open source system dynamics tools},
 howpublished = {Available at \url{https://github.com/SDXorg/SD-Tools}, (2022/01/19)},
 year = "2021"
 }
 
 @article{samso:2020,
+author = {Roger Samsó and Ignacio {de Blas} and Ilaria Perissi and Gianluca Martelloni and Jordi Solé},
 title = {Scenario analysis and sensitivity exploration of the MEDEAS Europe energy-economy-environment model},
 journal = {Energy Strategy Reviews},
 volume = {32},
@@ -52,7 +56,6 @@ year = {2020},
 issn = {2211-467X},
 doi = {https://doi.org/10.1016/j.esr.2020.100582},
 url = {https://www.sciencedirect.com/science/article/pii/S2211467X20301358},
-author = {Roger Samsó and Ignacio {de Blas} and Ilaria Perissi and Gianluca Martelloni and Jordi Solé},
 keywords = {Energy transition, Sustainability, Python, Vensim®, Factor prioritization, Euclidean distance, Sensitivity analysis, Uncertainty analysis, Policy-making, Integrated assessment models},
 abstract = {Today's decision-makers rely heavily on Integrated Assessment Models to guide the decarbonisation of the energy system. Uncertainty is embedded in the assumptions these models are built upon. Unless those uncertainties are adequately assessed, using Integrated Assessment Models for policy design is unadvised. In this work we run Monte Carlo simulations with the MEDEAS model at European Union scale to assess how the uncertainties on the main drivers of the transition affect key socioeconomic and environmental indicators. In addition, One-at-a-time sensitivity exploration is performed to grade the contribution of a set of model parameters to the uncertainty in the same key indicators. The combination of the uncertainties in the model drivers magnify the uncertainty in the model outputs, which widens over time. Parameters affecting sectorial and households' energy efficiency and households' transport energy use ranked amongst the most impacting ones on simulation results.}
 }
@@ -71,6 +74,7 @@ year = {2012}
 }
 
 @article{Moallemi:2021,
+author = {Enayat A Moallemi and Edoardo Bertone and Sibel Eker and Lei Gao and Katrina Szetey and Nick Taylor and Brett A Bryan},
 doi = {10.1088/1748-9326/ac2f62},
 url = {https://doi.org/10.1088/1748-9326/ac2f62},
 year = 2021,
@@ -79,24 +83,9 @@ publisher = {{IOP} Publishing},
 volume = {16},
 number = {11},
 pages = {113004},
-author = {Enayat A Moallemi and Edoardo Bertone and Sibel Eker and Lei Gao and Katrina Szetey and Nick Taylor and Brett A Bryan},
 title = {A review of systems modelling for local sustainability},
 journal = {Environmental Research Letters},
 abstract = {The 17 Sustainable Development Goals (SDGs) represent a holistic and ambitious agenda for transforming the world towards societal well-being, economic prosperity, and environmental protection. Achieving the SDGs is, however, challenged by the performance of interconnected sectors and the complexity of their interactions which drive non-linear system responses, tipping points, and spillover effects. Systems modelling, as an integrated way of thinking about and modelling multisectoral dynamics, can help explain how feedback interactions within and among different sectors can lead to broader system transformation and progress towards the SDGs. Here, we review how system dynamics, as a prominent systems modelling approach, can inform and contribute to sustainability research and implementation, framed by the SDGs. We systematically analyse 357 system dynamics studies undertaken at the local scale where the most important SDG impacts and their initiators are often located, published between 2015 (i.e. SDGs’ inception) and 2020. We analyse the studies to illuminate strengths and limitations in four key areas: diversity of scope; interdisciplinarity of the approaches; the role of stakeholder participation; and the analysis of SDG interactions. Our review highlights opportunities for a better consideration of societal aspects of sustainable development (e.g. poverty, inequality) in modelling efforts; integrating with new interdisciplinary methods to leverage system dynamics modelling capabilities; improving genuine stakeholder engagement for credibility and impacts on the ground; and a more in-depth analysis of SDG interactions (i.e. synergies and trade-offs) with the feedback-rich structure of system dynamics models.}
-}
-
-@article{FETENEADANE2019212,
-title = {Application of system dynamics for analysis of performance of manufacturing systems},
-journal = {Journal of Manufacturing Systems},
-volume = {53},
-pages = {212-233},
-year = {2019},
-issn = {0278-6125},
-doi = {https://doi.org/10.1016/j.jmsy.2019.10.004},
-url = {https://www.sciencedirect.com/science/article/pii/S0278612519300895},
-author = {Tigist {Fetene Adane} and Maria Floriana Bianchi and Andreas Archenti and Mihai Nicolescu},
-keywords = {Manufacturing system, Machining strategy, Performance evaluation, System dynamics modelling, Cutting data optimization, Process parameters interaction},
-abstract = {Machining of parts by using dedicated production systems has been, and continues to be, a viable manufacturing method. There are situations, however, where this type of system is not feasible due to changes in product type, customer demand, work-piece material, or design specification. From a competitive manufacturing environment, production system selection is a crucial issue for all component manufacturing companies. Improper selections could negatively affect the overall performance of a manufacturing system, for instance the productivity, as well as the cost and quality of manufactured components. In this paper, the application of system dynamics modelling and simulation of a complex manufacturing process is presented as a potential tool to investigate and analyse the performance of manufacturing system in response to disturbances in the system’s inputs (e.g., volume of products). In order to investigate the model soundness, a case study applied to the manufacturing of an engine block will be examined. The model presented here has been developed based on current engine block production for the vehicle manufacturing industry. Such a model can assist manufacturing system selection–centered round the capacity to control machining system parameters –as a testable way to choose a machining strategy from pre-selected performance criteria. More specifically, the benefit of this research lies in the fact that it will enable companies to implement improved potential manufacturing system optimization that responds during unexpected demand fluctuations. In addition, it will help in understanding the complex interaction between the process and operational parameters of a manufacturing system and help identify those critical parameters, ones that can lead to an optimizing strategy in the manufacturing standards of engine block production.}
 }
 
 @article{harvey:2021,
@@ -113,32 +102,31 @@ year = {2021}
 }
 
 @software{pysd:2014,
-author       = {James Houghton and
-                Eneko Martin-Martinez and
-                Alexey and
-                Roger Samsó and
-                Julien Malard-Adam and
-                SimonStrong and
-                Takuya Iwanaga and
-                Patrick Breach and
-                Diego Rodrigo and
-                ... and
-                ainar and
-                Joona Tuovinen and
-                Manuel Ruh and
-                María Robles del Blanco and
-                mhy05},
-title        = {JamesPHoughton/pysd},
-month        = dec,
-year         = 2014,
-publisher    = {Zenodo},
-doi          = {10.5281/zenodo.5654824},
-url          = {https://doi.org/10.5281/zenodo.5654824}
+author = {James Houghton and Eneko Martin-Martinez and Alexey and Roger Samsó and Julien Malard-Adam and SimonStrong and Takuya Iwanaga and Patrick Breach and Diego Rodrigo and ... and ainar and Joona Tuovinen and Manuel Ruh and María Robles del Blanco and mhy05},
+title = {JamesPHoughton/pysd},
+month = dec,
+year = 2014,
+publisher = {Zenodo},
+doi = {10.5281/zenodo.5654824},
+url = {https://doi.org/10.5281/zenodo.5654824}
 }
 
 @inbook{houghton_siegel_2015,
-title = {Advanced data analytics for system dynamics models using PySD},
-booktitle = {Proceedings of the  33rd International  Conference of the System Dynamics Society}, 
+chapter = {Advanced data analytics for system dynamics models using PySD},
+title = {Proceedings of the  33rd International  Conference of the System Dynamics Society}, 
 author = {Houghton, James P and Siegel, Michael}, 
 year = {2015}
 } 
+
+@article{FETENEADANE2019212,
+author = {Tigist {Fetene Adane} and Maria Floriana Bianchi and Andreas Archenti and Mihai Nicolescu},
+title = {Application of system dynamics for analysis of performance of manufacturing systems},
+journal = {Journal of Manufacturing Systems},
+volume = {53},
+year = {2019},
+issn ={0278-6125},
+pages = {212-233},
+doi = {https://doi.org/10.1016/j.jmsy.2019.10.004},
+url = {https://www.sciencedirect.com/science/article/pii/S0278612519300895},
+keywords = {Manufacturing system, Machining strategy, Performance evaluation, System dynamics modelling, Cutting data optimization, Process parameters interaction}
+}
