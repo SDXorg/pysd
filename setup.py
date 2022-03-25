@@ -33,14 +33,8 @@ setup(
     tests_require=test_pckgs,
     extras_require={
         "test": test_pckgs,
-        "docs": [
-            # pin sphinx to match what RTD uses:
-            # https://github.com/readthedocs/readthedocs.org/blob/ecac31de54bbb2c100f933e86eb22b0f4389ba84/requirements/pip.txt#L16
-            'sphinx<2',
-            'sphinx-rtd-theme<0.5',
-            'docutils<0.18'
-            ]
-        },
+        "docs": open('docs/requirements.txt').read().strip().split('\n')
+    },
     package_data={
         'translation': [
             'xmile/smile.grammar'
