@@ -12,7 +12,7 @@ id_continue = id_start / ~r"[0-9\'\$\s\_]"
 escape_group = "\"" ( "\\\"" / ~r"[^\"]" )* "\""
 
 number = raw_number
-raw_number = ("+"/"-")? ~r"\d+\.?\d*([eE][+-]?\d+)?"
+raw_number = ("+"/"-")? _ ~r"\d+\.?\d*([eE][+-]?\d+)?"
 string = "\'" (~r"[^\']"IU)* "\'"
 range = _ "[" ~r"[^\]]*" "]" _ ","
 

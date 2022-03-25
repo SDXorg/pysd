@@ -11,7 +11,7 @@ exp_expr = neg_expr (_ exp_oper _ neg_expr)*  # exponential
 neg_expr = pre_oper? _ expr  # pre operators (-, +)
 expr = lookup_with_def / call / parens / number / reference / nan
 
-lookup_with_def = ~r"(WITH\ LOOKUP)"I _ "(" _ final_expr _ "," _ "(" _  range?  ( "(" _ raw_number _ "," _ raw_number _ ")" _ ","? _ )+ _ ")" _ ")"
+lookup_with_def = ~r"(WITH\ LOOKUP)"I _ "(" _ final_expr _ "," _ "(" _  range?  ( _ "(" _ raw_number _ "," _ raw_number _ ")" _ ","? _ )+ _ ")" _ ")"
 
 nan = ":NA:"
 
