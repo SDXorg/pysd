@@ -227,6 +227,10 @@ vensim_test = {
         "folder": "lookups_inline_bounded",
         "file": "test_lookups_inline_bounded.mdl"
     },
+    "lookups_inline_spaces": {
+        "folder": "lookups_inline_spaces",
+        "file": "test_lookups_inline_spaces.mdl"
+    },
     "lookups_with_expr": {
         "folder": "lookups_with_expr",
         "file": "test_lookups_with_expr.mdl"
