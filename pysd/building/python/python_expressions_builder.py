@@ -116,12 +116,12 @@ class StructureBuilder:
         # TODO reorder final_subscripts taking into account def_subs
         return expression
 
-    def update_object_subscripts(self, name):
+    def update_object_subscripts(self, name, component_final_subs):
         origin_comp = self.element.objects[name]["component"]
         if isinstance(origin_comp.subscripts_dict, dict):
             if len(list(origin_comp.subscripts_dict)) == 1:
                 key = list(origin_comp.subscripts_dict.keys())[0]
-                value = list(self.component.subscripts_dict.values())[0]
+                value = list(component_final_subs.values())[0]
                 origin_comp.subscripts_dict[key] += value
                 self.element.objects[name]["final_subs"] =\
                     origin_comp.subscripts_dict
@@ -130,8 +130,7 @@ class StructureBuilder:
                 self.element.objects[name]["final_subs"] =\
                     self.element.subs_dict
         if isinstance(origin_comp.subscripts_dict, list):
-            origin_comp.subscripts_dict.append(
-                self.component.subscripts_dict)
+            origin_comp.subscripts_dict.append(component_final_subs)
 
 
 class OperationBuilder(StructureBuilder):
@@ -429,7 +428,7 @@ class ExtLookupBuilder(StructureBuilder):
                 + self.element.objects["ext_lookups"]["name"]\
                 + ".add(%(params)s, %(subscripts)s)" % arguments
 
-            self.update_object_subscripts("ext_lookups")
+            self.update_object_subscripts("ext_lookups", final_subs)
 
             return None
         else:
@@ -439,6 +438,7 @@ class ExtLookupBuilder(StructureBuilder):
             arguments["name"] = self.section.namespace.make_python_identifier(
                 self.element.identifier, prefix="_ext_lookup")
             arguments["final_subs"] = "%(final_subs)s"
+            self.component.subscripts_dict = final_subs
 
             self.element.objects["ext_lookups"] = {
                 "name": arguments["name"],
@@ -446,7 +446,7 @@ class ExtLookupBuilder(StructureBuilder):
                               "%(subscripts)s, _root, "
                               "%(final_subs)s , '%(name)s')" % arguments,
                 "component": self.component,
-                "final_subs": self.def_subs
+                "final_subs": final_subs
             }
 
             return BuildAST(
@@ -483,7 +483,7 @@ class ExtDataBuilder(StructureBuilder):
                 + self.element.objects["ext_data"]["name"]\
                 + ".add(%(params)s, %(method)s, %(subscripts)s)" % arguments
 
-            self.update_object_subscripts("ext_data")
+            self.update_object_subscripts("ext_data", final_subs)
 
             return None
         else:
@@ -493,6 +493,7 @@ class ExtDataBuilder(StructureBuilder):
             arguments["name"] = self.section.namespace.make_python_identifier(
                 self.element.identifier, prefix="_ext_data")
             arguments["final_subs"] = "%(final_subs)s"
+            self.component.subscripts_dict = final_subs
 
             self.element.objects["ext_data"] = {
                 "name": arguments["name"],
@@ -500,7 +501,7 @@ class ExtDataBuilder(StructureBuilder):
                               " %(method)s, %(subscripts)s, "
                               "_root, %(final_subs)s ,'%(name)s')" % arguments,
                 "component": self.component,
-                "final_subs": self.def_subs
+                "final_subs": final_subs
             }
 
             return BuildAST(
@@ -534,7 +535,7 @@ class ExtConstantBuilder(StructureBuilder):
                 + self.element.objects["constants"]["name"]\
                 + ".add(%(params)s, %(subscripts)s)" % arguments
 
-            self.update_object_subscripts("constants")
+            self.update_object_subscripts("constants", final_subs)
 
             return None
         else:
@@ -544,6 +545,7 @@ class ExtConstantBuilder(StructureBuilder):
             arguments["name"] = self.section.namespace.make_python_identifier(
                 self.element.identifier, prefix="_ext_constant")
             arguments["final_subs"] = "%(final_subs)s"
+            self.component.subscripts_dict = final_subs
 
             self.element.objects["constants"] = {
                 "name": arguments["name"],
@@ -551,7 +553,7 @@ class ExtConstantBuilder(StructureBuilder):
                               "%(subscripts)s, _root, %(final_subs)s, "
                               "'%(name)s')" % arguments,
                 "component": self.component,
-                "final_subs": self.def_subs
+                "final_subs": final_subs
             }
 
             return BuildAST(
