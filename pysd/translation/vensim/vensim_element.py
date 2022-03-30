@@ -1,3 +1,18 @@
+"""
+The Element class allows parsing the LHS side of a model equation,
+depending on the LHS a SubscriptRange object or Component object will
+be returned. There are 4 tipes of components:
+
+- Component: Regular component, defined with '='.
+- UnchangeableConstant: Unchangeable constant, defined with '=='.
+- Data: Data component, defined with ':='
+- Lookup: Lookup component, defined with '()'
+
+Lookup components have their own parser for the RHS of the expression,
+while the other 3 components share the same RHS parser.The final result
+from a parsed component can be exported to an AbstractComponent object
+in order to build a model in other language.
+"""
 import re
 from typing import Union, Tuple, List
 import warnings
@@ -6,17 +21,31 @@ import numpy as np
 
 from ..structures.abstract_model import\
     AbstractData, AbstractLookup, AbstractComponent,\
-    AbstractUnchangeableConstant
-from parsimonious.exceptions import IncompleteParseError,\
-                                    VisitationError,\
-                                    ParseError
+    AbstractUnchangeableConstant, AbstractSubscriptRange
 
 from . import vensim_utils as vu
 from .vensim_structures import structures, parsing_ops
 
 
 class Element():
-    """Model element parsed definition"""
+    """
+    Element object allows parsing the elements the LHS of the Vensim
+    expressions.
+
+    Parameters
+    ----------
+    equation: str
+        Original equation in the Vensim file.
+
+    units: str
+        The units of the element with the range, i.e., the content after
+        the first '~' symbol.
+
+    documentation: str
+        The comment of the element, i.e., the content after the seconf
+        '~' symbol.
+
+    """
 
     def __init__(self, equation: str, units: str, documentation: str):
         self.equation = equation
@@ -29,17 +58,18 @@ class Element():
 
     @property
     def _verbose(self) -> str:  # pragma: no cover
-        """Get model information"""
+        """Get element information."""
         return self.__str__()
 
     @property
     def verbose(self):  # pragma: no cover
-        """Print model information"""
+        """Print element information."""
         print(self._verbose)
 
     def _parse_units(self, units_str: str) -> Tuple[str, tuple]:
         """Split the range from the units"""
-        # TODO improve units parsing: move to _parse_section_elements
+        # TODO improve units parsing: parse them when parsing the section
+        # elements
         if not units_str:
             return "", (None, None)
 
@@ -57,17 +87,32 @@ class Element():
         )
         return units, lims
 
-    def _parse(self) -> object:
-        """Parse model element to get the component object"""
+    def parse(self) -> object:
+        """
+        Parse element object with parsimonious using the grammar given in
+        'parsin_grammars/element_object.peg' and the class
+        ElementsComponentVisitor to visit the parsed expressions.
+
+        Splits the LHS from the RHS of the equation. If the returned
+        object is a SubscriptRange, no more parsing is needed. Otherwise,
+        the RHS of the returned object (Component) should be parsed
+        to get the Abstract Syntax Tree.
+
+        Returns
+        -------
+        self.component: SubscriptRange or Component
+            The subscript range definition object or component object.
+
+        """
         tree = vu.Grammar.get("element_object").parse(self.equation)
-        self.component = ElementsComponentParser(tree).component
+        self.component = ElementsComponentVisitor(tree).component
         self.component.units = self.units
         self.component.range = self.range
         self.component.documentation = self.documentation
         return self.component
 
 
-class ElementsComponentParser(parsimonious.NodeVisitor):
+class ElementsComponentVisitor(parsimonious.NodeVisitor):
     """Visit model element definition to get the component object"""
 
     def __init__(self, ast):
@@ -190,7 +235,9 @@ class ElementsComponentParser(parsimonious.NodeVisitor):
 
 
 class SubscriptRange():
-    """Subscript range definition, defined by ":" or "<->" in Vensim."""
+    """
+    Subscript range definition, defined by ":" or "<->" in Vensim.
+    """
 
     def __init__(self, name: str, definition: Union[List[str], str, dict],
                  mapping: List[str] = []):
@@ -206,18 +253,52 @@ class SubscriptRange():
 
     @property
     def _verbose(self) -> str:  # pragma: no cover
-        """Get model information"""
+        """Get subscript range information."""
         return self.__str__()
 
     @property
     def verbose(self):  # pragma: no cover
-        """Print model information"""
+        """Print subscript range information."""
         print(self._verbose)
+
+    def get_abstract_subscript_range(self) -> AbstractSubscriptRange:
+        """
+        Get Abstract Subscript Range used for building. This method is
+        automatically called by Sections's get_abstract_section.
+
+        Returns
+        -------
+        AbstractSubscriptRange: AbstractSubscriptRange
+          Abstract Subscript Range object that can be used for building
+          the model in another language.
+
+        """
+        return AbstractSubscriptRange(
+            name=self.name,
+            subscripts=self.definition,
+            mapping=self.mapping
+        )
 
 
 class Component():
-    """Model component defined by "name = expr" in Vensim."""
-    kind = "Model component"
+    """
+    Model component defined by "name = expr" in Vensim.
+
+    Parameters
+    ----------
+    name: str
+        The original name of the component.
+
+    subscripts: tuple
+        Tuple of length two with first argument the list of subscripts
+        in the variable definition and the second argument the list of
+        subscripts list that appears after :EXCEPT: keyword (if used).
+
+    expression: str
+        The RHS of the element, expression to parse.
+
+    """
+    _kind = "Model component"
 
     def __init__(self, name: str, subscripts: Tuple[list, list],
                  expression: str):
@@ -226,7 +307,7 @@ class Component():
         self.expression = expression
 
     def __str__(self):  # pragma: no cover
-        text = "\n%s definition: %s" % (self.kind, self.name)
+        text = "\n%s definition: %s" % (self._kind, self.name)
         text += "\nSubscrips: %s" % repr(self.subscripts[0])\
             if self.subscripts[0] else ""
         text += "  EXCEPT  %s" % repr(self.subscripts[1])\
@@ -244,33 +325,23 @@ class Component():
 
     @property
     def _verbose(self) -> str:  # pragma: no cover
+        """Get component information."""
         return self.__str__()
 
     @property
     def verbose(self):  # pragma: no cover
+        """Print component information."""
         print(self._verbose)
 
-    def _parse(self) -> None:
-        """Parse model component to get the AST"""
-        try:
-            tree = vu.Grammar.get("components", parsing_ops).parse(
-                self.expression)
-        except (IncompleteParseError, ParseError) as err:
-            raise ValueError(
-                err.args[0] + "\n\n"
-                "\nError when parsing definition:\n\t %s\n\n"
-                "probably used definition is invalid or not integrated..."
-                "\nSee parsimonious output above." % self.expression
-            )
-        try:
-            self.ast = EquationParser(tree).translation
-        except VisitationError as err:
-            raise ValueError(
-                err.args[0] + "\n\n"
-                "\nError when visiting definition:\n\t %s\n\n"
-                "probably used definition is invalid or not integrated..."
-                "\nSee parsimonious output above." % self.expression
-            )
+    def parse(self) -> None:
+        """
+        Parse component object with parsimonious using the grammar given
+        in 'parsin_grammars/components.peg' and the class EquationVisitor
+        to visit the RHS of the expressions.
+
+        """
+        tree = vu.Grammar.get("components", parsing_ops).parse(self.expression)
+        self.ast = EquationVisitor(tree).translation
 
         if isinstance(self.ast, structures["get_xls_lookups"]):
             self.lookup = True
@@ -279,7 +350,19 @@ class Component():
 
     def get_abstract_component(self) -> Union[AbstractComponent,
                                               AbstractLookup]:
-        """Get Abstract Component used for building"""
+        """
+        Get Abstract Component used for building. This method is
+        automatically called by Sections's get_abstract_section.
+
+        Returns
+        -------
+        AbstractComponent: AbstractComponent or AbstractLookup
+          Abstract Component object that can be used for building
+          the model in another language. If the component equations
+          includes external lookups (GET XLS/DIRECT LOOKUPS)
+          AbstractLookup class will be used
+
+        """
         if self.lookup:
             # get lookups equations
             return AbstractLookup(subscripts=self.subscripts, ast=self.ast)
@@ -288,40 +371,119 @@ class Component():
 
 
 class UnchangeableConstant(Component):
-    """Unchangeable constant defined by "name == expr" in Vensim."""
-    kind = "Unchangeable constant component"
+    """
+    Unchangeable constant defined by "name == expr" in Vensim.
+    This class is a soon of Component.
+
+    Parameters
+    ----------
+    name: str
+        The original name of the component.
+
+    subscripts: tuple
+        Tuple of length two with first argument the list of subscripts
+        in the variable definition and the second argument the list of
+        subscripts list that appears after :EXCEPT: keyword (if used).
+
+    expression: str
+        The RHS of the element, expression to parse.
+
+    """
+    _kind = "Unchangeable constant component"
 
     def __init__(self, name: str, subscripts: Tuple[list, list],
                  expression: str):
         super().__init__(name, subscripts, expression)
 
     def get_abstract_component(self) -> AbstractUnchangeableConstant:
-        """Get Abstract Component used for building"""
+        """
+        Get Abstract Component used for building. This method is
+        automatically called by Sections's get_abstract_section.
+
+        Returns
+        -------
+        AbstractComponent: AbstractUnchangeableConstant
+          Abstract Component object that can be used for building
+          the model in another language.
+
+        """
         return AbstractUnchangeableConstant(
             subscripts=self.subscripts, ast=self.ast)
 
 
 class Lookup(Component):
-    """Lookup variable, defined by "name(expr)" in Vensim."""
-    kind = "Lookup component"
+    """
+    Lookup component, defined by "name(expr)" in Vensim.
+    This class is a soon of Component.
+
+    Parameters
+    ----------
+    name: str
+        The original name of the component.
+
+    subscripts: tuple
+        Tuple of length two with first argument the list of subscripts
+        in the variable definition and the second argument the list of
+        subscripts list that appears after :EXCEPT: keyword (if used).
+
+    expression: str
+        The RHS of the element, expression to parse.
+
+    """
+    _kind = "Lookup component"
 
     def __init__(self, name: str, subscripts: Tuple[list, list],
                  expression: str):
         super().__init__(name, subscripts, expression)
 
-    def _parse(self) -> None:
-        """Parse model component to get the AST"""
+    def parse(self) -> None:
+        """
+        Parse component object with parsimonious using the grammar given
+        in 'parsin_grammars/lookups.peg' and the class LookupsVisitor
+        to visit the RHS of the expressions.
+        """
         tree = vu.Grammar.get("lookups").parse(self.expression)
-        self.ast = LookupsParser(tree).translation
+        self.ast = LookupsVisitor(tree).translation
 
     def get_abstract_component(self) -> AbstractLookup:
-        """Get Abstract Component used for building"""
+        """
+        Get Abstract Component used for building. This method is
+        automatically called by Sections's get_abstract_section.
+
+        Returns
+        -------
+        AbstractComponent: AbstractLookup
+          Abstract Component object that can be used for building
+          the model in another language.
+
+        """
         return AbstractLookup(subscripts=self.subscripts, ast=self.ast)
 
 
 class Data(Component):
-    """Data variable, defined by "name := expr" in Vensim."""
-    kind = "Data component"
+    """
+    Data component, defined by "name := expr" in Vensim.
+    This class is a soon of Component.
+
+    Parameters
+    ----------
+    name: str
+        The original name of the component.
+
+    subscripts: tuple
+        Tuple of length two with first argument the list of subscripts
+        in the variable definition and the second argument the list of
+        subscripts list that appears after :EXCEPT: keyword (if used).
+
+    keyword: str
+        The keyword used befor the ":=" symbol, it could be ('interpolate',
+        'raw', 'hold_backward', 'look_forward')
+
+    expression: str
+        The RHS of the element, expression to parse.
+
+    """
+    _kind = "Data component"
 
     def __init__(self, name: str, subscripts: Tuple[list, list],
                  keyword: str, expression: str):
@@ -329,7 +491,7 @@ class Data(Component):
         self.keyword = keyword
 
     def __str__(self):  # pragma: no cover
-        text = "\n%s definition: %s" % (self.kind, self.name)
+        text = "\n%s definition: %s" % (self._kind, self.name)
         text += "\nSubscrips: %s" % repr(self.subscripts[0])\
             if self.subscripts[0] else ""
         text += "  EXCEPT  %s" % repr(self.subscripts[1])\
@@ -338,21 +500,39 @@ class Data(Component):
         text += "\n\t%s" % self._expression
         return text
 
-    def _parse(self) -> None:
-        """Parse model component to get the AST"""
+    def parse(self) -> None:
+        """
+        Parse component object with parsimonious using the grammar given
+        in 'parsin_grammars/components.peg' and the class EquationVisitor
+        to visit the RHS of the expressions.
+
+        If the expression is None, then de data will be readen from a
+        VDF file in Vensim.
+
+        """
         if not self.expression:
             # empty data vars, read from vdf file
             self.ast = structures["data"]()
         else:
-            super()._parse()
+            super().parse()
 
     def get_abstract_component(self) -> AbstractData:
-        """Get Abstract Component used for building"""
+        """
+        Get Abstract Component used for building. This method is
+        automatically called by Sections's get_abstract_section.
+
+        Returns
+        -------
+        AbstractComponent: AbstractData
+          Abstract Component object that can be used for building
+          the model in another language.
+
+        """
         return AbstractData(
             subscripts=self.subscripts, ast=self.ast, keyword=self.keyword)
 
 
-class LookupsParser(parsimonious.NodeVisitor):
+class LookupsVisitor(parsimonious.NodeVisitor):
     """Visit the elements of a lookups to get the AST"""
     def __init__(self, ast):
         self.translation = None
@@ -392,7 +572,7 @@ class LookupsParser(parsimonious.NodeVisitor):
         return "".join(filter(None, vc)) or n.text
 
 
-class EquationParser(parsimonious.NodeVisitor):
+class EquationVisitor(parsimonious.NodeVisitor):
     """Visit the elements of a equation to get the AST"""
     def __init__(self, ast):
         self.translation = None

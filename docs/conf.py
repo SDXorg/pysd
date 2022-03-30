@@ -18,13 +18,18 @@ import sys
 import mock
 import sphinx_rtd_theme
 
+from generate_tables import generate_tables
+
+
 sys.path.insert(0, os.path.abspath('../'))
 
+# Generate tables used for documentation
+generate_tables()
 
 MOCK_MODULES = [
     'numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot', 'scipy.stats',
     'scipy.integrate', 'pandas', 'parsimonious', 'parsimonious.nodes',
-    'lxml', 'xarray', 'autopep8', 'scipy.linalg', 'parsimonious.exceptions',
+    'xarray', 'autopep8', 'scipy.linalg', 'parsimonious.exceptions',
     'scipy.stats.distributions', 'progressbar', 'black'
 ]
 
@@ -139,3 +144,6 @@ intersphinx_mapping = {
     'python': ('https://docs.python.org/3.7', None),
     'pysdcookbook': ('http://pysd-cookbook.readthedocs.org/en/latest/', None)
 }
+
+# -- Options for autodoc --------------------------------------------------
+autodoc_member_order = 'bysource'

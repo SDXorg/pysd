@@ -1,38 +1,69 @@
+"""
+The Element class child classes alow parsing the expressions of a
+given model element. There are 3 tipes of elements:
+
+- Flows and auxiliars (Flaux class): Regular elements, defined with
+  <flow> or <aux>.
+- Gfs (Gf class): Lookup elements, defined with <gf>.
+- Stocks (Stock class): Data component, defined with <stock>
+
+Moreover, a 4 type element is defined ControlElement, which allows parsing
+the values of the model control variables (time step, initialtime, final time).
+
+The final result from a parsed element can be exported to an
+AbstractElement object in order to build a model in other language.
+"""
 import re
 from typing import Tuple, Union, List
 from lxml import etree
 import parsimonious
 import numpy as np
 
-from ..structures.abstract_model import AbstractElement, AbstractLookup,\
-                                        AbstractComponent
+from ..structures.abstract_model import\
+    AbstractElement, AbstractLookup, AbstractComponent, AbstractSubscriptRange
 
 from . import xmile_utils as vu
 from .xmile_structures import structures, parsing_ops
 
 
 class Element():
+    """
+    Element class. This class provides the shared methods for its childs:
+    Flaux, Gf, Stock, and ControlElement.
 
-    interp_methods = {
+    Parameters
+    ----------
+    node: etree._Element
+        The element node content.
+
+    ns: dict
+        The namespace of the section.
+
+    subscripts: dict
+        The subscript dictionary of the section, necessary to parse
+        some subscripted elements.
+
+    """
+    _interp_methods = {
         "continuous": "interpolate",
         "extrapolate": "extrapolate",
         "discrete": "hold_backward"
     }
 
-    kind = "Element"
+    _kind = "Element"
 
     def __init__(self, node: etree._Element, ns: dict, subscripts):
         self.node = node
         self.ns = ns
         self.name = node.attrib["name"]
-        self.units = self.get_xpath_text(node, "ns:units") or ""
-        self.documentation = self.get_xpath_text(node, "ns:doc") or ""
+        self.units = self._get_xpath_text(node, "ns:units") or ""
+        self.documentation = self._get_xpath_text(node, "ns:doc") or ""
         self.range = (None, None)
         self.components = []
         self.subscripts = subscripts
 
     def __str__(self):  # pragma: no cover
-        text = "\n%s definition: %s" % (self.kind, self.name)
+        text = "\n%s definition: %s" % (self._kind, self.name)
         text += "\nSubscrips: %s" % repr(self.subscripts)\
             if self.subscripts else ""
         text += "\n\t%s" % self._expression
@@ -48,24 +79,24 @@ class Element():
 
     @property
     def _verbose(self) -> str:  # pragma: no cover
-        """Get model information"""
+        """Get element information."""
         return self.__str__()
 
     @property
     def verbose(self):  # pragma: no cover
-        """Print model information"""
+        """Print element information."""
         print(self._verbose)
 
-    def get_xpath_text(self, node: etree._Element,
-                       xpath: str) -> Union[str, None]:
+    def _get_xpath_text(self, node: etree._Element,
+                        xpath: str) -> Union[str, None]:
         """Safe access of occassionally missing text"""
         try:
             return node.xpath(xpath, namespaces=self.ns)[0].text
         except IndexError:
             return None
 
-    def get_xpath_attrib(self, node: etree._Element,
-                         xpath: str, attrib: str) -> Union[str, None]:
+    def _get_xpath_attrib(self, node: etree._Element,
+                          xpath: str, attrib: str) -> Union[str, None]:
         """Safe access of occassionally missing attributes"""
         # defined here to take advantage of NS in default
         try:
@@ -73,15 +104,15 @@ class Element():
         except IndexError:
             return None
 
-    def get_range(self) -> Tuple[Union[None, str], Union[None, str]]:
+    def _get_range(self) -> Tuple[Union[None, str], Union[None, str]]:
         """Get the range of the element"""
         lims = (
-            self.get_xpath_attrib(self.node, 'ns:range', 'min'),
-            self.get_xpath_attrib(self.node, 'ns:range', 'max')
+            self._get_xpath_attrib(self.node, 'ns:range', 'min'),
+            self._get_xpath_attrib(self.node, 'ns:range', 'max')
         )
         return tuple(float(x) if x is not None else x for x in lims)
 
-    def parse_lookup_xml_node(self, node: etree._Element) -> object:
+    def _parse_lookup_xml_node(self, node: etree._Element) -> object:
         """
         Parse lookup definition
 
@@ -116,10 +147,10 @@ class Element():
             y=tuple(ys[np.argsort(xs)]),
             x_range=(np.min(xs), np.max(xs)),
             y_range=(np.min(ys), np.max(ys)),
-            type=self.interp_methods[interp]
+            type=self._interp_methods[interp]
         )
 
-    def _parse(self) -> None:
+    def parse(self) -> None:
         """Parse all the components of an element"""
         if self.node.xpath("ns:element", namespaces=self.ns):
             # defined in several equations each with one subscript
@@ -149,7 +180,7 @@ class Element():
                     zip(subs_list, parsed)
                 ]
 
-    def smile_parser(self, expression: str) -> object:
+    def _smile_parser(self, expression: str) -> object:
         """
         Parse expression with parsimonious.
 
@@ -159,9 +190,9 @@ class Element():
 
         """
         tree = vu.Grammar.get("equations", parsing_ops).parse(expression)
-        return EquationParser(tree).translation
+        return EquationVisitor(tree).translation
 
-    def get_empty_abstract_element(self) -> AbstractElement:
+    def _get_empty_abstract_element(self) -> AbstractElement:
         """
         Get empty Abstract used for building
 
@@ -178,13 +209,27 @@ class Element():
 
 
 class Flaux(Element):
-    """Flow or auxiliary variable"""
+    """
+    Flow or auxiliary variable definde by <flow> or <aux> in Xmile.
 
-    kind = "Flaux"
+    Parameters
+    ----------
+    node: etree._Element
+        The element node content.
+
+    ns: dict
+        The namespace of the section.
+
+    subscripts: dict
+        The subscript dictionary of the section, necessary to parse
+        some subscripted elements.
+
+    """
+    _kind = "Flaux"
 
     def __init__(self, node, ns, subscripts):
         super().__init__(node, ns, subscripts)
-        self.range = self.get_range()
+        self.range = self._get_range()
 
     def _parse_component(self, node: etree._Element) -> List[object]:
         """
@@ -201,25 +246,31 @@ class Flaux(Element):
             # single space. Then ensure there is no space at start or end of
             # equation
             eqn = re.sub(r"(\s{2,})", " ", eqn.text.replace("\n", ' ')).strip()
-            ast = self.smile_parser(eqn)
+            ast = self._smile_parser(eqn)
 
             gf_node = self.node.xpath("ns:gf", namespaces=self.ns)
             if len(gf_node) > 0:
                 ast = structures["inline_lookup"](
-                    ast, self.parse_lookup_xml_node(gf_node[0]))
+                    ast, self._parse_lookup_xml_node(gf_node[0]))
             asts.append(ast)
 
         return asts
 
     def get_abstract_element(self) -> AbstractElement:
         """
-        Get Abstract Element with components used for building
+        Get Abstract Element used for building. This method is
+        automatically called by Sections's get_abstract_section.
 
         Returns
         -------
-        AbstractElement
+        AbstractElement: AbstractElement
+          Abstract Element object that can be used for building
+          the model in another language. It contains a list of
+          AbstractComponents with the Abstract Syntax Tree of each of
+          the expressions.
+
         """
-        ae = self.get_empty_abstract_element()
+        ae = self._get_empty_abstract_element()
         for component in self.components:
             ae.components.append(AbstractComponent(
                 subscripts=component[0],
@@ -228,9 +279,23 @@ class Flaux(Element):
 
 
 class Gf(Element):
-    """Gf variable (lookup)"""
+    """
+    Gf variable (lookup) definde by <gf> in Xmile.
 
-    kind = "Gf component"
+    Parameters
+    ----------
+    node: etree._Element
+        The element node content.
+
+    ns: dict
+        The namespace of the section.
+
+    subscripts: dict
+        The subscript dictionary of the section, necessary to parse
+        some subscripted elements.
+
+    """
+    _kind = "Gf component"
 
     def __init__(self, node, ns, subscripts):
         super().__init__(node, ns, subscripts)
@@ -239,8 +304,8 @@ class Gf(Element):
     def get_range(self) -> Tuple[Union[None, str], Union[None, str]]:
         """Get the range of the Gf element"""
         lims = (
-            self.get_xpath_attrib(self.node, 'ns:yscale', 'min'),
-            self.get_xpath_attrib(self.node, 'ns:yscale', 'max')
+            self._get_xpath_attrib(self.node, 'ns:yscale', 'min'),
+            self._get_xpath_attrib(self.node, 'ns:yscale', 'max')
         )
         return tuple(float(x) if x is not None else x for x in lims)
 
@@ -253,17 +318,23 @@ class Gf(Element):
         AST: AbstractSyntaxTree
 
         """
-        return [self.parse_lookup_xml_node(self.node)]
+        return [self._parse_lookup_xml_node(self.node)]
 
     def get_abstract_element(self) -> AbstractElement:
         """
-        Get Abstract Element with components used for building
+        Get Abstract Element used for building. This method is
+        automatically called by Sections's get_abstract_section.
 
         Returns
         -------
-        AbstractElement
+        AbstractElement: AbstractElement
+          Abstract Element object that can be used for building
+          the model in another language. It contains a list of
+          AbstractComponents with the Abstract Syntax Tree of each of
+          the expressions.
+
         """
-        ae = self.get_empty_abstract_element()
+        ae = self._get_empty_abstract_element()
         for component in self.components:
             ae.components.append(AbstractLookup(
                 subscripts=component[0],
@@ -272,13 +343,28 @@ class Gf(Element):
 
 
 class Stock(Element):
-    """Stock component (Integ)"""
+    """
+    Stock variable definde by <stock> in Xmile.
 
-    kind = "Stock component"
+    Parameters
+    ----------
+    node: etree._Element
+        The element node content.
+
+    ns: dict
+        The namespace of the section.
+
+    subscripts: dict
+        The subscript dictionary of the section, necessary to parse
+        some subscripted elements.
+
+    """
+
+    _kind = "Stock component"
 
     def __init__(self, node, ns, subscripts):
         super().__init__(node, ns, subscripts)
-        self.range = self.get_range()
+        self.range = self._get_range()
 
     def _parse_component(self, node) -> object:
         """
@@ -291,10 +377,10 @@ class Stock(Element):
         """
         # Parse each flow equations
         inflows = [
-            self.smile_parser(inflow.text)
+            self._smile_parser(inflow.text)
             for inflow in self.node.xpath('ns:inflow', namespaces=self.ns)]
         outflows = [
-            self.smile_parser(outflow.text)
+            self._smile_parser(outflow.text)
             for outflow in self.node.xpath('ns:outflow', namespaces=self.ns)]
 
         if inflows:
@@ -317,19 +403,25 @@ class Stock(Element):
             flows = inflows[0] if inflows else outflows[0]
 
         # Read the initial value equation for stock element
-        initial = self.smile_parser(self.get_xpath_text(self.node, 'ns:eqn'))
+        initial = self._smile_parser(self._get_xpath_text(self.node, 'ns:eqn'))
 
         return [structures["stock"](flows, initial)]
 
     def get_abstract_element(self) -> AbstractElement:
         """
-        Get Abstract Element with components used for building
+        Get Abstract Element used for building. This method is
+        automatically called by Sections's get_abstract_section.
 
         Returns
         -------
-        AbstractElement
+        AbstractElement: AbstractElement
+          Abstract Element object that can be used for building
+          the model in another language. It contains a list of
+          AbstractComponents with the Abstract Syntax Tree of each of
+          the expressions.
+
         """
-        ae = self.get_empty_abstract_element()
+        ae = self._get_empty_abstract_element()
         for component in self.components:
             ae.components.append(AbstractComponent(
                 subscripts=component[0],
@@ -339,7 +431,7 @@ class Stock(Element):
 
 class ControlElement(Element):
     """Control variable (lookup)"""
-    kind = "Control bvariable"
+    _kind = "Control variable"
 
     def __init__(self, name, units, documentation, eqn):
         self.name = name
@@ -348,7 +440,7 @@ class ControlElement(Element):
         self.range = (None, None)
         self.eqn = eqn
 
-    def _parse(self) -> None:
+    def parse(self) -> None:
         """
         Parse control elment.
 
@@ -357,17 +449,22 @@ class ControlElement(Element):
         AST: AbstractSyntaxTree
 
         """
-        self.ast = self.smile_parser(self.eqn)
+        self.ast = self._smile_parser(self.eqn)
 
     def get_abstract_element(self) -> AbstractElement:
         """
-        Get Abstract Element with components used for building
+        Get Abstract Element used for building. This method is
+        automatically called by Sections's get_abstract_section.
 
         Returns
         -------
-        AbstractElement
+        AbstractElement: AbstractElement
+          Abstract Element object that can be used for building
+          the model in another language. It contains an AbstractComponent
+          with the Abstract Syntax Tree of the expression.
+
         """
-        ae = self.get_empty_abstract_element()
+        ae = self._get_empty_abstract_element()
         ae.components.append(AbstractComponent(
             subscripts=([], []),
             ast=self.ast))
@@ -390,16 +487,34 @@ class SubscriptRange():
 
     @property
     def _verbose(self) -> str:  # pragma: no cover
-        """Get model information"""
+        """Get subscript range information."""
         return self.__str__()
 
     @property
     def verbose(self):  # pragma: no cover
-        """Print model information"""
+        """Print subscript range information."""
         print(self._verbose)
 
+    def get_abstract_subscript_range(self) -> AbstractSubscriptRange:
+        """
+        Get Abstract Subscript Range used for building. This method is
+        automatically called by Sections's get_abstract_section.
 
-class EquationParser(parsimonious.NodeVisitor):
+        Returns
+        -------
+        AbstractSubscriptRange: AbstractSubscriptRange
+          Abstract Subscript Range object that can be used for building
+          the model in another language.
+
+        """
+        return AbstractSubscriptRange(
+            name=self.name,
+            subscripts=self.definition,
+            mapping=self.mapping
+        )
+
+
+class EquationVisitor(parsimonious.NodeVisitor):
     """Visit the elements of a equation to get the AST"""
     def __init__(self, ast):
         self.translation = None

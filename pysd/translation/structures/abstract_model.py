@@ -1,3 +1,10 @@
+"""
+The main Abstract dataclasses provide the structure for the information
+from the Component level to the Model level. This classes are hierarchical
+An AbstractComponent will be inside an AbstractElement, which is inside an
+AbstractSection, which is a part of an AbstractModel.
+
+"""
 from dataclasses import dataclass
 from typing import Tuple, List, Union
 from pathlib import Path
@@ -5,7 +12,24 @@ from pathlib import Path
 
 @dataclass
 class AbstractComponent:
-    subscripts: Tuple[str]
+    """
+    Dataclass for a regular component.
+
+    Parameters
+    ----------
+    subscripts: tuple
+        Tuple of length two with first argument the list of subscripts
+        in the variable definition and the second argument the list of
+        subscripts list that must be ignored (EXCEPT).
+    ast: object
+        The AbstractSyntaxTree of the component expression
+    type: str (optional)
+        The type of component. 'Auxiliary' by default.
+    subtype: str (optional)
+        The subtype of component. 'Normal' by default.
+
+    """
+    subscripts: Tuple[List[str], List[List[str]]]
     ast: object
     type: str = "Auxiliary"
     subtype: str = "Normal"
@@ -15,6 +39,19 @@ class AbstractComponent:
             "%s" % repr(list(self.subscripts)) if self.subscripts else "")
 
     def dump(self, depth=None, indent="") -> str:  # pragma: no cover
+        """
+        Dump the component to a printable version.
+
+        Parameters
+        ----------
+        depth: int (optional)
+            The number of depht levels to show in the dumped output.
+            Default is None which will dump everything.
+
+        indent: str (optional)
+            The indent to use for a lower level object. Default is ''.
+
+        """
         if depth == 0:
             return self.__str__()
 
@@ -26,7 +63,25 @@ class AbstractComponent:
 
 @dataclass
 class AbstractUnchangeableConstant(AbstractComponent):
-    subscripts: Tuple[str]
+    """
+    Dataclass for an unchangeable constant component. This class is a child
+    of AbstractComponent.
+
+    Parameters
+    ----------
+    subscripts: tuple
+        Tuple of length two with first argument the list of subscripts
+        in the variable definition and the second argument the list of
+        subscripts list that must be ignored (EXCEPT).
+    ast: object
+        The AbstractSyntaxTree of the component expression
+    type: str (optional)
+        The type of component. 'Constant' by default.
+    subtype: str (optional)
+        The subtype of component. 'Unchangeable' by default.
+
+    """
+    subscripts: Tuple[List[str], List[List[str]]]
     ast: object
     type: str = "Constant"
     subtype: str = "Unchangeable"
@@ -38,7 +93,27 @@ class AbstractUnchangeableConstant(AbstractComponent):
 
 @dataclass
 class AbstractLookup(AbstractComponent):
-    subscripts: Tuple[str]
+    """
+    Dataclass for a lookup component. This class is a child of
+    AbstractComponent.
+
+    Parameters
+    ----------
+    subscripts: tuple
+        Tuple of length two with first argument the list of subscripts
+        in the variable definition and the second argument the list of
+        subscripts list that must be ignored (EXCEPT).
+    ast: object
+        The AbstractSyntaxTree of the component expression
+    arguments: str (optional)
+        The name of the argument to use. 'x' by default.
+    type: str (optional)
+        The type of component. 'Lookup' by default.
+    subtype: str (optional)
+        The subtype of component. 'Hardcoded' by default.
+
+    """
+    subscripts: Tuple[List[str], List[List[str]]]
     ast: object
     arguments: str = "x"
     type: str = "Lookup"
@@ -51,7 +126,28 @@ class AbstractLookup(AbstractComponent):
 
 @dataclass
 class AbstractData(AbstractComponent):
-    subscripts: Tuple[str]
+    """
+    Dataclass for a data component. This class is a child
+    of AbstractComponent.
+
+    Parameters
+    ----------
+    subscripts: tuple
+        Tuple of length two with first argument the list of subscripts
+        in the variable definition and the second argument the list of
+        subscripts list that must be ignored (EXCEPT).
+    ast: object
+        The AbstractSyntaxTree of the component expression
+    keyword: str or None (optional)
+        The data object keyword ('interpolate', 'hold_backward',
+        'look_forward', 'raw'). Default is None.
+    type: str (optional)
+        The type of component. 'Data' by default.
+    subtype: str (optional)
+        The subtype of component. 'Normal' by default.
+
+    """
+    subscripts: Tuple[List[str], List[List[str]]]
     ast: object
     keyword: Union[str, None] = None
     type: str = "Data"
@@ -63,6 +159,19 @@ class AbstractData(AbstractComponent):
             "%s" % repr(list(self.subscripts)) if self.subscripts else "")
 
     def dump(self, depth=None, indent="") -> str:  # pragma: no cover
+        """
+        Dump the component to a printable version.
+
+        Parameters
+        ----------
+        depth: int (optional)
+            The number of depht levels to show in the dumped output.
+            Default is None which will dump everything.
+
+        indent: str (optional)
+            The indent to use for a lower level object. Default is ''.
+
+        """
         if depth == 0:
             return self.__str__()
 
@@ -74,6 +183,23 @@ class AbstractData(AbstractComponent):
 
 @dataclass
 class AbstractElement:
+    """
+    Dataclass for an element.
+
+    Parameters
+    ----------
+    name: str
+        The name of the element.
+    components: list
+        The list of AbstractComponents that define this element.
+    units: str (optional)
+        The units of the element. '' by default.
+    range: tuple (optional)
+        The range of the element. (None, None) by default.
+    units: str (optional)
+        The documentation of the element. '' by default.
+
+    """
     name: str
     components: List[AbstractComponent]
     units: str = ""
@@ -85,6 +211,19 @@ class AbstractElement:
             self.name, self.units, self.range, self.documentation)
 
     def dump(self, depth=None, indent="") -> str:  # pragma: no cover
+        """
+        Dump the element to a printable version.
+
+        Parameters
+        ----------
+        depth: int (optional)
+            The number of depht levels to show in the dumped output.
+            Default is None which will dump everything.
+
+        indent: str (optional)
+            The indent to use for a lower level object. Default is ''.
+
+        """
         if depth == 0:
             return self.__str__()
         elif depth is not None:
@@ -100,8 +239,22 @@ class AbstractElement:
 
 @dataclass
 class AbstractSubscriptRange:
+    """
+    Dataclass for a subscript range.
+
+    Parameters
+    ----------
     name: str
-    subscripts: Tuple[str]
+        The name of the element.
+    subscripts: tuple or str or dict
+        The subscripts as a tuple for a regular definition, str for a
+        copy definition and as a dict for a GET XLS/DIRECT definition.
+    mapping: tuple
+        The set of subscript range that can be mapped to.
+
+    """
+    name: str
+    subscripts: Union[Tuple[str], str, dict]
     mapping: Tuple[str]
 
     def __str__(self) -> str:  # pragma: no cover
@@ -111,11 +264,54 @@ class AbstractSubscriptRange:
             if self.mapping else self.subscripts)
 
     def dump(self, depth=None, indent="") -> str:  # pragma: no cover
+        """
+        Dump the subscript range to a printable version.
+
+        Parameters
+        ----------
+        depth: int (optional)
+            The number of depht levels to show in the dumped output.
+            Default is None which will dump everything.
+
+        indent: str (optional)
+            The indent to use for a lower level object. Default is ''.
+
+        """
         return self.__str__()
 
 
 @dataclass
 class AbstractSection:
+    """
+    Dataclass for an element.
+
+    Parameters
+    ----------
+    name: str
+        Section name. '__main__' for the main section or the macro name.
+    path: pathlib.Path
+        Section path. It should be the model name for main  section and
+        the clean macro name for a macro.
+    section_type: str ('main' or 'macro')
+        The section type.
+    params: list
+        List of params that takes the section. In the case of main
+        section it will be an empty list.
+    returns: list
+        List of variables that returns the section. In the case of main
+        section it will be an empty list.
+    subscripts: tuple
+        Tuple of AbstractSubscriptRanges that are defined in the section.
+    elements: tuple
+        Tuple of AbstractElements that are defined in the section.
+    split: bool
+        If split is True the created section will split the variables
+        depending on the views_dict.
+    views_dict: dict
+        The dictionary of the views. Giving the variables classified at
+        any level in order to split them by files.
+
+    """
     name: str
     path: Path
     type: str  # main, macro or module
@@ -131,6 +327,19 @@ class AbstractSection:
             self.type, self.name, self.path)
 
     def dump(self, depth=None, indent="") -> str:  # pragma: no cover
+        """
+        Dump the section to a printable version.
+
+        Parameters
+        ----------
+        depth: int (optional)
+            The number of depht levels to show in the dumped output.
+            Default is None which will dump everything.
+
+        indent: str (optional)
+            The indent to use for a lower level object. Default is ''.
+
+        """
         if depth == 0:
             return self.__str__()
         elif depth is not None:
@@ -148,6 +357,17 @@ class AbstractSection:
 
 @dataclass
 class AbstractModel:
+    """
+    Dataclass for an element.
+
+    Parameters
+    ----------
+    original_path: pathlib.Path
+        The path to the original file.
+    sections: tuple
+        Tuple of AbstractSectionss that are defined in the model.
+
+    """
     original_path: Path
     sections: Tuple[AbstractSection]
 
@@ -155,6 +375,19 @@ class AbstractModel:
         return "AbstractModel:\t%s\n" % self.original_path
 
     def dump(self, depth=None, indent="") -> str:  # pragma: no cover
+        """
+        Dump the model to a printable version.
+
+        Parameters
+        ----------
+        depth: int (optional)
+            The number of depht levels to show in the dumped output.
+            Default is None which will dump everything.
+
+        indent: str (optional)
+            The indent to use for a lower level object. Default is ''.
+
+        """
         if depth == 0:
             return self.__str__()
         elif depth is not None:

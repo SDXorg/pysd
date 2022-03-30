@@ -609,7 +609,9 @@ class InitialBuilder(StructureBuilder):
         self.component.type = "Stateful"
         self.component.subtype = "Initial"
         self.section.imports.add("statefuls", "Initial")
+
         arguments["initial"].reshape(self.section.subscripts, self.def_subs)
+
         arguments["name"] = self.section.namespace.make_python_identifier(
             self.element.identifier, prefix="_initial")
 
@@ -642,8 +644,10 @@ class IntegBuilder(StructureBuilder):
         self.component.type = "Stateful"
         self.component.subtype = "Integ"
         self.section.imports.add("statefuls", "Integ")
+
         arguments["initial"].reshape(self.section.subscripts, self.def_subs)
         arguments["flow"].reshape(self.section.subscripts, self.def_subs)
+
         arguments["name"] = self.section.namespace.make_python_identifier(
             self.element.identifier, prefix="_integ")
 
@@ -679,9 +683,11 @@ class DelayBuilder(StructureBuilder):
         self.component.type = "Stateful"
         self.component.subtype = "Delay"
         self.section.imports.add("statefuls", self.dtype)
+
         arguments["input"].reshape(self.section.subscripts, self.def_subs)
         arguments["delay_time"].reshape(self.section.subscripts, self.def_subs)
         arguments["initial"].reshape(self.section.subscripts, self.def_subs)
+
         arguments["name"] = self.section.namespace.make_python_identifier(
             self.element.identifier, prefix=f"_{self.dtype.lower()}")
         arguments["dtype"] = self.dtype
@@ -723,8 +729,10 @@ class DelayFixedBuilder(StructureBuilder):
         self.component.type = "Stateful"
         self.component.subtype = "DelayFixed"
         self.section.imports.add("statefuls", "DelayFixed")
+
         arguments["input"].reshape(self.section.subscripts, self.def_subs)
         arguments["initial"].reshape(self.section.subscripts, self.def_subs)
+
         arguments["name"] = self.section.namespace.make_python_identifier(
             self.element.identifier, prefix="_delayfixed")
 
@@ -761,10 +769,14 @@ class SmoothBuilder(StructureBuilder):
         self.component.type = "Stateful"
         self.component.subtype = "Smooth"
         self.section.imports.add("statefuls", "Smooth")
-        arguments["input"].reshape(self.section.subscripts, self.def_subs)
+
+        arguments["input"].reshape(
+            self.section.subscripts, self.def_subs)
         arguments["smooth_time"].reshape(
             self.section.subscripts, self.def_subs)
-        arguments["initial"].reshape(self.section.subscripts, self.def_subs)
+        arguments["initial"].reshape(
+            self.section.subscripts, self.def_subs)
+
         arguments["name"] = self.section.namespace.make_python_identifier(
             self.element.identifier, prefix="_smooth")
 
@@ -802,28 +814,33 @@ class TrendBuilder(StructureBuilder):
         self.arguments = {
             "input": trend_str.input,
             "average_time": trend_str.average_time,
-            "initial": trend_str.initial,
+            "initial_trend": trend_str.initial_trend,
         }
 
     def build(self, arguments):
         self.component.type = "Stateful"
         self.component.subtype = "Trend"
         self.section.imports.add("statefuls", "Trend")
-        arguments["input"].reshape(self.section.subscripts, self.def_subs)
+
+        arguments["input"].reshape(
+            self.section.subscripts, self.def_subs)
         arguments["average_time"].reshape(
             self.section.subscripts, self.def_subs)
-        arguments["initial"].reshape(self.section.subscripts, self.def_subs)
+        arguments["initial_trend"].reshape(
+            self.section.subscripts, self.def_subs)
+
         arguments["name"] = self.section.namespace.make_python_identifier(
             self.element.identifier, prefix="_trend")
 
         self.element.objects[arguments["name"]] = {
             "name": arguments["name"],
             "expression": "%(name)s = Trend(lambda: %(input)s, "
-                          "lambda: %(average_time)s, lambda: %(initial)s, "
+                          "lambda: %(average_time)s, "
+                          "lambda: %(initial_trend)s, "
                           "'%(name)s')" % arguments,
             "calls": {
                 "initial": merge_dependencies(
-                    arguments["initial"].calls,
+                    arguments["initial_trend"].calls,
                     arguments["input"].calls,
                     arguments["average_time"].calls),
                 "step": merge_dependencies(
@@ -853,11 +870,16 @@ class ForecastBuilder(StructureBuilder):
         self.component.type = "Stateful"
         self.component.subtype = "Forecast"
         self.section.imports.add("statefuls", "Forecast")
-        arguments["input"].reshape(self.section.subscripts, self.def_subs)
+
+        arguments["input"].reshape(
+            self.section.subscripts, self.def_subs)
         arguments["average_time"].reshape(
             self.section.subscripts, self.def_subs)
-        arguments["horizon"].reshape(self.section.subscripts, self.def_subs)
-        arguments["initial_trend"].reshape(self.section.subscripts, self.def_subs)
+        arguments["horizon"].reshape(
+            self.section.subscripts, self.def_subs)
+        arguments["initial_trend"].reshape(
+            self.section.subscripts, self.def_subs)
+
         arguments["name"] = self.section.namespace.make_python_identifier(
             self.element.identifier, prefix="_forecast")
 
@@ -897,9 +919,11 @@ class SampleIfTrueBuilder(StructureBuilder):
         self.component.type = "Stateful"
         self.component.subtype = "SampleIfTrue"
         self.section.imports.add("statefuls", "SampleIfTrue")
+
         arguments["condition"].reshape(self.section.subscripts, self.def_subs)
         arguments["input"].reshape(self.section.subscripts, self.def_subs)
         arguments["initial"].reshape(self.section.subscripts, self.def_subs)
+
         arguments["name"] = self.section.namespace.make_python_identifier(
             self.element.identifier, prefix="_sampleiftrue")
 
@@ -1351,6 +1375,7 @@ class ExceptVisitor:  # pragma: no cover
             except_def.reshape(
                 self.subscripts,
                 self.subscripts.make_coord_dict(except_list))
-            for except_def, except_list in zip(excepts, self.except_definitions)
+            for except_def, except_list
+            in zip(excepts, self.except_definitions)
         ]
         return excepts

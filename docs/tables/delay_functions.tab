@@ -1,0 +1,18 @@
+Vensim	Vensim example	Xmile	Xmile example	Abstract Syntax	Python Translation	Vensim comments	Xmile comments	Python comments
+DELAY1I	"DELAY1I(input, delay_time, initial_value)"	delay1	"delay1(input, delay_time, initial_value)"	"DelayStructure(input, delay_time, initial_value, 1)"	pysd.statefuls.Delay(...)		Not tested for Xmile!
+DELAY1	"DELAY1(input, delay_time)"	delay1	"delay1(input, delay_time)"	"DelayStructure(input, delay_time, input, 1)"	pysd.statefuls.Delay(...)		Not tested for Xmile!
+DELAY3I	"DELAY3I(input, delay_time, initial_value)"	delay3	"delay3(input, delay_time, initial_value)"	"DelayStructure(input, delay_time, initial_value, 3)"	pysd.statefuls.Delay(...)		Not tested for Xmile!
+DELAY3	"DELAY3(input, delay_time)"	delay3	"delay3(input, delay_time)"	"DelayStructure(input, delay_time, input, 3)"	pysd.statefuls.Delay(...)		Not tested for Xmile!
+DELAY N	"DELAY N(input, delay_time, initial_value, n)"	delayn	"delayn(input, delay_time,  n, initial_value)"	"DelayNStructure(input, delay_time, initial_value, n)"	pysd.statefuls.DelayN(...)		Not tested for Xmile!
+		delayn	"delayn(input, delay_time, n)"	"DelayNStructure(input, delay_time, input, n)"	pysd.statefuls.DelayN(...)		Not tested for Xmile!
+DELAY FIXED	"DELAY FIXED(input, delay_time, initial_value)"			"DelayFixed(input, delay_time, initial_value)"	pysd.statefuls.DelayFixed(...)		Not tested for Xmile!
+SMOOTHI	"SMOOTH1I(input, delay_time, initial_value)"	smth1	"smth1(input, smth_time, initial_value)"	"SmoothStructure(input, smth_time, initial_value, 1)"	pysd.statefuls.Smooth(...)		Not tested for Xmile!
+SMOOTH	"SMOOTH1(input, delay_time)"	smth1	"smth1(input, smth_time)"	"SmoothStructure(input, smth_time, input, 1)"	pysd.statefuls.Smooth(...)		Not tested for Xmile!
+SMOOTH3I	"SMOOTH3I(input, delay_time, initial_value)"	smth3	"smth3(input, smth_time, initial_value)"	"SmoothStructure(input, smth_time, initial_value, 3)"	pysd.statefuls.Smooth(...)		Not tested for Xmile!
+SMOOTH3	"SMOOTH3(input, delay_time)"	smth3	"smth3(input, smth_time)"	"SmoothStructure(input, smth_time, input, 3)"	pysd.statefuls.Smooth(...)		Not tested for Xmile!
+SMOOTH N	"SMOOTH N(input, delay_time, initial_value, n)"	smthn	"smthn(input, smth_time,  n, initial_value)"	"SmoothNStructure(input, smth_time, initial_value, n)"	pysd.statefuls.SmoothN(...)		Not tested for Xmile!
+		smthn	"smthn(input, smth_time, n)"	"SmoothNStructure(input, smth_time, input, n)"	pysd.statefuls.SmoothN(...)		Not tested for Xmile!
+		forcst	"forcst(input, average_time, horizon, initial_trend)"	"ForecastStructure(input, average_time, horizon, initial_trend)"	pysd.statefuls.Forecast(...)		Not tested for Xmile!
+FORECAST	"FORECAST(input, average_time, horizon)"	forcst	"forcst(input, average_time, horizon)"	"ForecastStructure(input, average_time, horizon, 0)"	pysd.statefuls.Forecast(...)		Not tested for Xmile!
+TREND	"TREND(input, average_time, initial_trend)"	trend	"trend(input, average_time, initial_trend)"	"TrendStructure(input, average_time, initial_trend)"	pysd.statefuls.Trend(...)		Not tested for Xmile!
+		trend	"trend(input, average_time)"	"TrendStructure(input, average_time, 0)"	pysd.statefuls.Trend(...)		Not tested for Xmile!

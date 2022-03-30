@@ -1,3 +1,8 @@
+"""
+The AST structures are created with the help of the parsimonious visitors
+using the structures dictionary.
+
+"""
 import re
 from ..structures import abstract_expressions as ae
 
