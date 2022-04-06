@@ -367,7 +367,11 @@ class SectionBuilder:
                 __data[key] = data[key]
 
 
+        @component(name="Time")
         def time():
+            '''
+            Current time of the model.
+            '''
             return __data['time']()
 
         """ % {"control_vars_dict": control_vars[0]})
@@ -401,6 +405,27 @@ class ElementBuilder:
         self.subs_dict = section.subscripts.make_coord_dict(self.subscripts)
         self.dependencies = {}
         self.objects = {}
+
+    def _format_limits(self, limits):
+        if limits == (None, None):
+            return None
+
+        new_limits = []
+        for value in limits:
+            value = repr(value)
+            if value == "nan" or value is None:
+                self.section.imports.add("numpy")
+                new_limits.append("np.nan")
+            elif value.endswith("inf"):
+                self.section.imports.add("numpy")
+                new_limits.append(value.strip("inf") + "np.inf")
+            else:
+                new_limits.append(value)
+
+        if new_limits[0] == "np.nan" and new_limits[1] == "np.nan":
+            return None
+
+        return "(" + ", ".join(new_limits) + ")"
 
     def build_element(self):
         # TODO think better how to build the components at once to build
@@ -468,7 +493,13 @@ class ElementBuilder:
             self.pre_expression = ""
             # NUMPY: reshape to the final shape if meeded
             # expressions[0]["expr"].reshape(self.section.subscripts, {})
-            self.expression = expressions[0]["expr"]
+            if not expressions[0]["expr"].subscripts and self.subscripts:
+                self.expression = "xr.DataArray(%s, %s, %s)\n" % (
+                     expressions[0]["expr"],
+                     self.subs_dict, list(self.subs_dict)
+                )
+            else:
+                self.expression = expressions[0]["expr"]
 
         self.type = ", ".join(
             set(component.type for component in self.components)
@@ -520,21 +551,7 @@ class ElementBuilder:
             The function to write in the model file.
 
         """
-        # TODO: merge with the previous build to do all at once
         contents = self.pre_expression + "return %s" % self.expression
-
-        self.subs_dec = ""
-        self.subs_doc = "None"
-
-        if self.subscripts:
-            # We add the list of the subs to the __doc__ of the function
-            # this will give more information to the user and make possible
-            # to rewrite subscripted values with model.run(params=X) or
-            # model.run(initial_condition=(n,x))
-            self.subs_doc = "%s" % self.subscripts
-            self.subs_dec =\
-                "@subs(%s, _subscript_dict)" % self.subscripts
-            self.section.imports.add("subs")
 
         objects = "\n\n".join([
             value["expression"] % {
@@ -543,27 +560,41 @@ class ElementBuilder:
             if value["expression"] is not None
         ])
 
+        self.limits = self._format_limits(self.limits)
+
+        if self.arguments == 'x':
+            self.arguments = 'x, final_subs=None'
+
+        # define variable metadata for the @component decorator
+        meta_data = [f"name={repr(self.name)}"]
+
+        if self.units:
+            meta_data.append(f"units={repr(self.units)}")
+        if self.limits:
+            meta_data.append("limits=%(limits)s")
+        if self.subscripts:
+            self.section.imports.add("subs")
+            meta_data.append("subscripts=%(subscripts)s")
+        if self.documentation:
+            doc = self.documentation.replace("\\", "\n")
+            contents = f'"""{doc}"""\n'\
+                + contents
+
+        meta_data.append("comp_type='%(type)s'")
+        meta_data.append("comp_subtype='%(subtype)s'")
+
+        self.meta_data = f"@component({', '.join(meta_data)})"\
+            % self.__dict__
+
         indent = 12
 
         # convert newline indicator and add expected level of indentation
         self.contents = contents.replace("\n", "\n" + " " * (indent+4))
         self.objects = objects.replace("\n", "\n" + " " * indent)
-        self.documentation = self.documentation.replace(
-            "\\", "\n").replace("\n", "\n" + " " * indent)
 
         return textwrap.dedent('''
-            %(subs_dec)s
+            %(meta_data)s
             def %(identifier)s(%(arguments)s):
-                """
-                Real Name: %(name)s
-                Units: %(units)s
-                Limits: %(range)s
-                Type: %(type)s
-                Subtype: %(subtype)s
-                Subs: %(subscripts)s
-
-                %(documentation)s
-                """
                 %(contents)s
 
 

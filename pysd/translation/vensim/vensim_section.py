@@ -171,9 +171,9 @@ class Section():
             if component.units:
                 # add units to element data
                 merged[name].units = component.units
-            if component.range != (None, None):
-                # add range to element data
-                merged[name].range = component.range
+            if component.limits:
+                # add limits to element data
+                merged[name].limits = component.limits
             if component.documentation:
                 # add documentation to element data
                 merged[name].documentation = component.documentation

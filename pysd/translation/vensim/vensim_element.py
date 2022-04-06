@@ -38,7 +38,7 @@ class Element():
         Original equation in the Vensim file.
 
     units: str
-        The units of the element with the range, i.e., the content after
+        The units of the element with the limits, i.e., the content after
         the first '~' symbol.
 
     documentation: str
@@ -49,7 +49,7 @@ class Element():
 
     def __init__(self, equation: str, units: str, documentation: str):
         self.equation = equation
-        self.units, self.range = self._parse_units(units)
+        self.units, self.limits = self._parse_units(units)
         self.documentation = documentation
 
     def __str__(self):  # pragma: no cover
@@ -67,17 +67,16 @@ class Element():
         print(self._verbose)
 
     def _parse_units(self, units_str: str) -> Tuple[str, tuple]:
-        """Split the range from the units"""
+        """Split the limits from the units"""
         # TODO improve units parsing: parse them when parsing the section
         # elements
         if not units_str:
-            return "", (None, None)
+            return "", None
 
         if units_str.endswith("]"):
             units, lims = units_str.rsplit("[")  # types: str, str
         else:
-            units = units_str
-            lims = "?, ?]"
+            return units_str, None
 
         lims = tuple(
             [
@@ -107,7 +106,7 @@ class Element():
         tree = vu.Grammar.get("element_object").parse(self.equation)
         self.component = ElementsComponentVisitor(tree).component
         self.component.units = self.units
-        self.component.range = self.range
+        self.component.limits = self.limits
         self.component.documentation = self.documentation
         return self.component
 
@@ -534,14 +533,14 @@ class LookupsVisitor(parsimonious.NodeVisitor):
         self.translation = None
         self.visit(ast)
 
-    def visit_range(self, n, vc):
+    def visit_limits(self, n, vc):
         return n.text.strip()[:-1].replace(")-(", "),(")
 
     def visit_regularLookup(self, n, vc):
         if vc[0]:
-            xy_range = np.array(eval(vc[0]))
+            xy_limits = np.array(eval(vc[0]))
         else:
-            xy_range = np.full((2, 2), np.nan)
+            xy_limits = np.full((2, 2), np.nan)
 
         values = np.array((eval(vc[2])))
         values = values[np.argsort(values[:, 0])]
@@ -549,8 +548,8 @@ class LookupsVisitor(parsimonious.NodeVisitor):
         self.translation = structures["lookup"](
             x=tuple(values[:, 0]),
             y=tuple(values[:, 1]),
-            x_range=tuple(xy_range[:, 0]),
-            y_range=tuple(xy_range[:, 1]),
+            x_limits=tuple(xy_limits[:, 0]),
+            y_limits=tuple(xy_limits[:, 1]),
             type="interpolate"
         )
 
@@ -643,14 +642,14 @@ class EquationVisitor(parsimonious.NodeVisitor):
         self.subs = None
         return id
 
-    def visit_range(self, n, vc):
+    def visit_limits(self, n, vc):
         return self.add_element(n.text.strip()[:-1].replace(")-(", "),("))
 
     def visit_lookup_with_def(self, n, vc):
         if vc[10]:
-            xy_range = np.array(eval(self.elements[vc[10]]))
+            xy_limits = np.array(eval(self.elements[vc[10]]))
         else:
-            xy_range = np.full((2, 2), np.nan)
+            xy_limits = np.full((2, 2), np.nan)
 
         values = np.array((eval(vc[11])))
         values = values[np.argsort(values[:, 0])]
@@ -658,8 +657,8 @@ class EquationVisitor(parsimonious.NodeVisitor):
         lookup = structures["lookup"](
             x=tuple(values[:, 0]),
             y=tuple(values[:, 1]),
-            x_range=tuple(xy_range[:, 0]),
-            y_range=tuple(xy_range[:, 1]),
+            x_limits=tuple(xy_limits[:, 0]),
+            y_limits=tuple(xy_limits[:, 1]),
             type="interpolate"
         )
 

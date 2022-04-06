@@ -586,9 +586,9 @@ class TestPySD(unittest.TestCase):
         model = pysd.read_vensim(test_model)
         self.assertIsInstance(str(model), str)  # tests string conversion of
         # model
-        print(model.doc().columns)
+        print(model.doc.columns)
 
-        doc = model._doc
+        doc = model.doc
         self.assertIsInstance(doc, pd.DataFrame)
         self.assertSetEqual(
             {
@@ -600,12 +600,13 @@ class TestPySD(unittest.TestCase):
                 "Room Temperature",
                 "SAVEPER",
                 "TIME STEP",
+                "Time"
             },
             set(doc["Real Name"].values),
         )
 
         self.assertEqual(
-            doc[doc["Real Name"] == "Heat Loss to Room"]["Unit"].values[0],
+            doc[doc["Real Name"] == "Heat Loss to Room"]["Units"].values[0],
             "Degrees Fahrenheit/Minute",
         )
         self.assertEqual(
@@ -625,30 +626,12 @@ class TestPySD(unittest.TestCase):
             "Normal"
         )
         self.assertEqual(
-            doc[doc["Real Name"] == "Teacup Temperature"]["Lims"].values[0],
-            "(32.0, 212.0)",
-        )
-
-    def test_docs_multiline_eqn(self):
-        """ Test that the model prints some documentation """
-
-        path2model = _root.joinpath(
-            "test-models/tests/multiple_lines_def/" +
-            "test_multiple_lines_def.mdl")
-        model = pysd.read_vensim(path2model)
-
-        doc = model.doc()
-
-        self.assertEqual(doc[doc["Real Name"] == "price"]["Unit"].values[0],
-                         "euros/kg")
-        self.assertEqual(doc[doc["Real Name"] == "price"]["Py Name"].values[0],
-                         "price")
-        self.assertEqual(
-            doc[doc["Real Name"] == "price"]["Subs"].values[0], "['fruits']"
+            doc[doc["Real Name"] == "Teacup Temperature"]["Limits"].values[0],
+            (32.0, 212.0),
         )
 
     def test_stepwise_cache(self):
-        from pysd.py_backend.decorators import Cache
+        from pysd.py_backend.cache import Cache
 
         run_history = []
         result_history = []
@@ -692,7 +675,7 @@ class TestPySD(unittest.TestCase):
                                               "up", "down"])
 
     def test_runwise_cache(self):
-        from pysd.py_backend.decorators import constant_cache
+        from pysd.py_backend.cache import constant_cache
 
         run_history = []
         result_history = []
@@ -1053,10 +1036,10 @@ class TestPySD(unittest.TestCase):
         self.assertEqual(model.get_args('teacup_temperature'), [])
         self.assertEqual(model.get_args('_integ_teacup_temperature'), [])
 
-        self.assertEqual(model2.get_args('lookup 1d'), ['x'])
-        self.assertEqual(model2.get_args('lookup_1d'), ['x'])
-        self.assertEqual(model2.get_args('lookup 2d'), ['x'])
-        self.assertEqual(model2.get_args('lookup_2d'), ['x'])
+        self.assertEqual(model2.get_args('lookup 1d'), ['x', 'final_subs'])
+        self.assertEqual(model2.get_args('lookup_1d'), ['x', 'final_subs'])
+        self.assertEqual(model2.get_args('lookup 2d'), ['x', 'final_subs'])
+        self.assertEqual(model2.get_args('lookup_2d'), ['x', 'final_subs'])
 
         with self.assertRaises(NameError):
             model.get_args('not_a_var')

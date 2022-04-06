@@ -5,8 +5,9 @@ Translated using PySD
 
 
 from pysd.py_backend.statefuls import Integ
+from pysd import component
 
-__pysd_version__ = "2.0.0"
+__pysd_version__ = "3.0.0"
 
 _subscript_dict = {}
 
@@ -49,65 +50,43 @@ def _init_outer_references(data):
         __data[key] = data[key]
 
 
+@component(name="Time")
 def time():
     return __data["time"]()
 
 
+@component(name="Initial time")
 def initial_time():
     return __data["time"].initial_time()
 
 
+@component(name="Final time")
 def final_time():
     return __data["time"].final_time()
 
 
+@component(name="Time step")
 def time_step():
     return __data["time"].time_step()
 
 
+@component(name="Saveper")
 def saveper():
     return __data["time"].saveper()
 
 
+@component(name="Stock B")
 def stock_b():
-    """
-    Real Name: Stock B
-    Original Eqn: INTEG(1, Stock A)
-    Units:
-    Limits: (None, None)
-    Type: component
-    Subs: None
-
-
-    """
     return _integ_stock_b()
 
 
+@component(name="Stock A")
 def stock_a():
-    """
-    Real Name: Stock A
-    Original Eqn: INTEG (1, Initial Parameter)
-    Units:
-    Limits: (None, None)
-    Type: component
-    Subs: None
-
-
-    """
     return _integ_stock_a()
 
 
+@component(name="Initial parameter")
 def initial_parameter():
-    """
-    Real Name: Initial Parameter
-    Original Eqn: 42
-    Units:
-    Limits: (None, None)
-    Type: constant
-    Subs: None
-
-
-    """
     return 42
 
 

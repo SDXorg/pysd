@@ -11,35 +11,40 @@ class Lookups(object):
     # as Lookups
     # def __init__(self, data, coords, interp="interpolate"):
 
-    def __call__(self, x):
-        return self._call(self.data, x)
+    def __call__(self, x, final_subs=None):
+        return self._call(self.data, x, final_subs)
 
-    def _call(self, data, x):
+    def _call(self, data, x, final_subs=None):
         if isinstance(x, xr.DataArray):
             if not x.dims:
                 # shape 0 xarrays
                 return self._call(data, float(x))
+
+            outdata = xr.DataArray(np.nan, final_subs, list(final_subs))
+
             if self.interp != "extrapolate" and\
                np.all(x > data['lookup_dim'].values[-1]):
-                outdata, _ = xr.broadcast(data[-1], x)
+                outdata_ext = data[-1]
                 warnings.warn(
                   self.py_name + "\n"
                   + "extrapolating data above the maximum value of the series")
             elif self.interp != "extrapolate" and\
               np.all(x < data['lookup_dim'].values[0]):
-                outdata, _ = xr.broadcast(data[0], x)
+                outdata_ext = data[0]
                 warnings.warn(
                   self.py_name + "\n"
                   + "extrapolating data below the minimum value of the series")
             else:
-                data, _ = xr.broadcast(data, x)
-                outdata = data[0].copy()
+                data = xr.broadcast(data, x)[0]
                 for a in utils.xrsplit(x):
                     outdata.loc[a.coords] = self._call(
                         data.loc[a.coords],
                         float(a))
-            # the output will be always an xarray
-            return outdata.reset_coords('lookup_dim', drop=True)
+                return outdata
+
+            # return the final array in the specified dimensions order
+            return xr.broadcast(
+                outdata, outdata_ext.reset_coords('lookup_dim', drop=True))[1]
 
         else:
             if x in data['lookup_dim'].values:

@@ -186,7 +186,7 @@ class Data(object):
             if time in self.data['time'].values:
                 outdata = self.data.sel(time=time)
             elif self.interp == "raw":
-                return np.nan
+                return self.nan
             elif time > self.data['time'].values[-1]:
                 warnings.warn(
                     self.py_name + "\n"
@@ -295,6 +295,7 @@ class TabData(Data):
 
         if not self.coords:
             # 0 dimensional data
+            self.nan = np.nan
             values = load_outputs(file_name, transpose, columns=columns)
             return xr.DataArray(
                 values.iloc[:, 0].values,
@@ -306,6 +307,7 @@ class TabData(Data):
 
         values = load_outputs(file_name, transpose, columns=columns)
 
+        self.nan = xr.DataArray(np.nan, self.coords, dims)
         out = xr.DataArray(
             np.nan,
             {'time': values.index.values, **self.coords},

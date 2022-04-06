@@ -194,8 +194,8 @@ class AbstractElement:
         The list of AbstractComponents that define this element.
     units: str (optional)
         The units of the element. '' by default.
-    range: tuple (optional)
-        The range of the element. (None, None) by default.
+    limits: tuple (optional)
+        The limits of the element. (None, None) by default.
     units: str (optional)
         The documentation of the element. '' by default.
 
@@ -203,12 +203,12 @@ class AbstractElement:
     name: str
     components: List[AbstractComponent]
     units: str = ""
-    range: tuple = (None, None)
+    limits: tuple = (None, None)
     documentation: str = ""
 
     def __str__(self) -> str:  # pragma: no cover
         return "AbstractElement:\t%s (%s, %s)\n%s\n" % (
-            self.name, self.units, self.range, self.documentation)
+            self.name, self.units, self.limits, self.documentation)
 
     def dump(self, depth=None, indent="") -> str:  # pragma: no cover
         """

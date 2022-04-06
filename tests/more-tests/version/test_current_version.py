@@ -1,4 +1,4 @@
-__pysd_version__ = "2.99.3"
+__pysd_version__ = "3.0.0"
 
 _namespace = {}
 _dependencies = {}

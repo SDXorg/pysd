@@ -298,8 +298,16 @@ class CallBuilder(StructureBuilder):
             order=0)
 
     def build_lookups_call(self, arguments):
-        expression = arguments["function"].expression.replace("()", "(%(0)s)")
-        final_subscripts = self.get_final_subscripts(arguments, self.def_subs)
+        if arguments["0"].subscripts:
+            final_subscripts =\
+                self.get_final_subscripts(arguments, self.def_subs)
+            expression = arguments["function"].expression.replace(
+                "()", f"(%(0)s, {final_subscripts})")
+        else:
+            final_subscripts = arguments["function"].subscripts
+            expression = arguments["function"].expression.replace(
+                "()", "(%(0)s)")
+
         # NUMPY: we need to manage inside lookup with subscript and later
         #        return the values in a correct ndarray
         return BuildAST(
@@ -449,7 +457,7 @@ class ExtLookupBuilder(StructureBuilder):
             }
 
             return BuildAST(
-                expression=arguments["name"] + "(x)",
+                expression=arguments["name"] + "(x, final_subs)",
                 calls={"__external__": None, "__lookup__": None},
                 subscripts=final_subs,
                 order=0)
@@ -993,7 +1001,7 @@ class LookupsBuilder(StructureBuilder):
             }
 
             return BuildAST(
-                expression=arguments["name"] + "(x)",
+                expression=arguments["name"] + "(x, final_subs)",
                 calls={"__lookup__": None},
                 subscripts=self.def_subs,
                 order=0)

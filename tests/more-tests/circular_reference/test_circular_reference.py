@@ -1,4 +1,5 @@
 from pysd.py_backend.statefuls import Integ, Delay
+from pysd import component
 
 _subscript_dict = {}
 _namespace = {'integ': 'integ', 'delay': 'delay'}
@@ -8,7 +9,7 @@ _dependencies = {
     '_integ_integ': {'initial': {'delay': 1}, 'step': {}},
     '_delay_delay': {'initial': {'integ': 1}, 'step': {}}
 }
-__pysd_version__ = "2.0.0"
+__pysd_version__ = "3.0.0"
 
 __data = {'scope': None, 'time': lambda: 0}
 
@@ -54,10 +55,12 @@ def saveper():
     return __data["time"].save()
 
 
+@component(name="Integ")
 def integ():
     return _integ_integ()
 
 
+@component(name="Delay")
 def delay():
     return _delay_delay()
 

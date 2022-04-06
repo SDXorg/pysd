@@ -10,7 +10,7 @@ class ImportsManager():
     ]
 
     def __init__(self):
-        self._numpy, self._xarray, self._subs = False, False, False
+        self._numpy, self._xarray = False, False
         self._functions, self._statefuls, self._external, self._data,\
             self._lookups, self._utils, self._scipy =\
             set(), set(), set(), set(), set(), set(), set()
@@ -72,7 +72,6 @@ class ImportsManager():
                             "module": module,
                             "methods": ", ".join(getattr(self, f"_{module}"))}
 
-        if self._subs:
-            text += "from pysd import subs\n"
+        text += "from pysd import component\n"
 
         return text

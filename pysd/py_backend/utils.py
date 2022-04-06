@@ -15,35 +15,6 @@ import xarray as xr
 import pandas as pd
 
 
-def xrmerge(*das):
-    """
-    Merges xarrays with different dimension sets.
-
-    Parameters
-    ----------
-    *das: xarray.DataArrays
-        The data arrays to merge.
-
-
-    Returns
-    -------
-    da: xarray.DataArray
-        Merged data array.
-
-    References
-    ----------
-    Thanks to @jcmgray
-    https://github.com/pydata/xarray/issues/742#issue-130753818
-
-    In the future, we may not need this as xarray may provide the merge for us.
-    """
-    da = das[0]
-    for new_da in das[1:]:
-        da = da.combine_first(new_da)
-
-    return da
-
-
 def xrsplit(array):
     """
     Split an array to a list of all the components.
@@ -145,6 +116,7 @@ def make_flat_df(df, return_addresses, flatten=False):
     new_df = {}
     for real_name, (pyname, address) in return_addresses.items():
         if address:
+            print(df[pyname].values[0], "\n", address, "_________\n")
             # subset the specific address
             values = [x.loc[address] for x in df[pyname].values]
         else:

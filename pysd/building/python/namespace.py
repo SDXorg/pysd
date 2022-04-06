@@ -7,7 +7,7 @@ from keyword import kwlist
 from builtins import __dir__ as bidir
 from pysd.py_backend.components import __dir__ as cdir
 from pysd.py_backend.data import __dir__ as ddir
-from pysd.py_backend.decorators import __dir__ as dedir
+from pysd.py_backend.cache import __dir__ as cadir
 from pysd.py_backend.external import __dir__ as edir
 from pysd.py_backend.functions import __dir__ as fdir
 from pysd.py_backend.statefuls import __dir__ as sdir
@@ -16,7 +16,7 @@ from pysd.py_backend.utils import __dir__ as udir
 
 class NamespaceManager:
     reserved_words = set(
-        dir() + bidir() + cdir() + ddir() + dedir() + edir() + fdir()
+        dir() + bidir() + cdir() + ddir() + cadir() + edir() + fdir()
         + sdir() + udir()).union(kwlist)
 
     def __init__(self, parameters=[]):
@@ -128,6 +128,9 @@ class NamespaceManager:
             s = "nvs_" + s
         elif re.findall(r"^_", s):
             s = "nvs" + s
+
+        # replace multiple _ after cleaning
+        s = re.sub(r"[_]+", "_", s)
 
         # Check that the string is not a python identifier
         identifier = s

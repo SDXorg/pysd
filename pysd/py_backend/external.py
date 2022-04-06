@@ -6,7 +6,6 @@ the Stateful objects by functions.Model.initialize.
 
 import re
 import warnings
-from pathlib import Path
 import pandas as pd  # TODO move to openpyxl
 import numpy as np
 import xarray as xr
@@ -763,6 +762,13 @@ class ExtData(External, Data):
                         {"time": coords["time"]}, axis=0).copy()
 
                 self.data.loc[coords] = values.values
+
+        # set what to return when raw
+        if self.final_coords:
+            self.nan = xr.DataArray(
+                np.nan, self.final_coords, list(self.final_coords))
+        else:
+            self.nan = np.nan
 
 
 class ExtLookup(External, Lookups):

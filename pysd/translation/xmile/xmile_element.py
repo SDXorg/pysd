@@ -58,7 +58,7 @@ class Element():
         self.name = node.attrib["name"]
         self.units = self._get_xpath_text(node, "ns:units") or ""
         self.documentation = self._get_xpath_text(node, "ns:doc") or ""
-        self.range = (None, None)
+        self.limits = (None, None)
         self.components = []
         self.subscripts = subscripts
 
@@ -104,8 +104,8 @@ class Element():
         except IndexError:
             return None
 
-    def _get_range(self) -> Tuple[Union[None, str], Union[None, str]]:
-        """Get the range of the element"""
+    def _get_limits(self) -> Tuple[Union[None, str], Union[None, str]]:
+        """Get the limits of the element"""
         lims = (
             self._get_xpath_attrib(self.node, 'ns:range', 'min'),
             self._get_xpath_attrib(self.node, 'ns:range', 'max')
@@ -145,8 +145,8 @@ class Element():
         return structures["lookup"](
             x=tuple(xs[np.argsort(xs)]),
             y=tuple(ys[np.argsort(xs)]),
-            x_range=(np.min(xs), np.max(xs)),
-            y_range=(np.min(ys), np.max(ys)),
+            x_limits=(np.min(xs), np.max(xs)),
+            y_limits=(np.min(ys), np.max(ys)),
             type=self._interp_methods[interp]
         )
 
@@ -203,7 +203,7 @@ class Element():
         return AbstractElement(
             name=self.name,
             units=self.units,
-            range=self.range,
+            limits=self.limits,
             documentation=self.documentation,
             components=[])
 
@@ -229,7 +229,7 @@ class Flaux(Element):
 
     def __init__(self, node, ns, subscripts):
         super().__init__(node, ns, subscripts)
-        self.range = self._get_range()
+        self.limits = self._get_limits()
 
     def _parse_component(self, node: etree._Element) -> List[object]:
         """
@@ -299,10 +299,10 @@ class Gf(Element):
 
     def __init__(self, node, ns, subscripts):
         super().__init__(node, ns, subscripts)
-        self.range = self.get_range()
+        self.limits = self.get_limits()
 
-    def get_range(self) -> Tuple[Union[None, str], Union[None, str]]:
-        """Get the range of the Gf element"""
+    def get_limits(self) -> Tuple[Union[None, str], Union[None, str]]:
+        """Get the limits of the Gf element"""
         lims = (
             self._get_xpath_attrib(self.node, 'ns:yscale', 'min'),
             self._get_xpath_attrib(self.node, 'ns:yscale', 'max')
@@ -364,7 +364,7 @@ class Stock(Element):
 
     def __init__(self, node, ns, subscripts):
         super().__init__(node, ns, subscripts)
-        self.range = self._get_range()
+        self.limits = self._get_limits()
 
     def _parse_component(self, node) -> object:
         """
@@ -437,7 +437,7 @@ class ControlElement(Element):
         self.name = name
         self.units = units
         self.documentation = documentation
-        self.range = (None, None)
+        self.limits = (None, None)
         self.eqn = eqn
 
     def parse(self) -> None:

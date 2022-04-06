@@ -4,10 +4,30 @@ Model components and time managing classes.
 
 import os
 import random
-import numpy as np
+import inspect
 from importlib.machinery import SourceFileLoader
 
+import numpy as np
+
 from pysd._version import __version__
+
+
+def component(name, units=None, limits=(np.nan, np.nan),
+              subscripts=None, comp_type=None, comp_subtype=None):
+    """
+    This decorators allows assigning metadata to a function.
+    """
+    def decorator(function):
+        function.name = name
+        function.units = units
+        function.limits = limits
+        function.subscripts = subscripts
+        function.type = comp_type
+        function.subtype = comp_subtype
+        function.args = inspect.getfullargspec(function)[0]
+        return function
+
+    return decorator
 
 
 class Components(object):

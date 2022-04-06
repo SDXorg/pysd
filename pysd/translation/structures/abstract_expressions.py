@@ -420,9 +420,9 @@ class LookupsStructure:
         The list of the x values of the lookup.
     y: tuple
         The list of the y values of the lookup.
-    x_range: tuple
+    x_limits: tuple
         The minimum and maximum value of x.
-    y_range: tuple
+    y_limits: tuple
         The minimum and maximum value of y.
     type: str
         The interpolation method.
@@ -430,13 +430,13 @@ class LookupsStructure:
     """
     x: tuple
     y: tuple
-    x_range: tuple
-    y_range: tuple
+    x_limits: tuple
+    y_limits: tuple
     type: str
 
     def __str__(self) -> str:  # pragma: no cover
         return "LookupStructure (%s):\n\tx %s = %s\n\ty %s = %s\n" % (
-            self.type, self.x_range, self.x, self.y_range, self.y
+            self.type, self.x_limits, self.x, self.y_limits, self.y
         )
 
 

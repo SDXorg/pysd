@@ -5,7 +5,6 @@ class objects.
 """
 
 import inspect
-import re
 import pickle
 import warnings
 
@@ -16,7 +15,7 @@ import xarray as xr
 from . import utils
 from .functions import zidz, if_then_else
 from .external import External, Excels
-from .decorators import Cache, constant_cache
+from .cache import Cache, constant_cache
 from .data import TabData
 from .components import Components, Time
 
@@ -1071,16 +1070,15 @@ class Macro(DynamicStateful):
         else:
             func = param
 
-        # TODO simplify this, make all model elements have a dims attribute
-        if hasattr(func, "dims"):
-            dims = func.dims
+        if hasattr(func, "subscripts"):
+            dims = func.subscripts
+            if not dims:
+                return None
             coords = {dim: self.components._subscript_dict[dim]
                       for dim in dims}
             return coords, dims
         elif hasattr(func, "state") and isinstance(func.state, xr.DataArray):
             value = func()
-        elif self.get_args(func) and isinstance(func(0), xr.DataArray):
-            value = func(0)
         else:
             return None
 
@@ -1149,7 +1147,6 @@ class Macro(DynamicStateful):
         func_name = utils.get_key_and_value_by_insensitive_key_or_value(
             param,
             self.components._namespace)[1] or param
-        print(func_name, self.get_args(getattr(self.components, func_name)))
 
         try:
             if func_name.startswith("_ext_"):
@@ -1257,7 +1254,7 @@ class Macro(DynamicStateful):
         if isinstance(series.values[0], xr.DataArray) and args:
             # the argument is already given in the model when the model
             # is called
-            return lambda x: utils.rearrange(xr.concat(
+            return lambda x, final_subs: utils.rearrange(xr.concat(
                 series.values,
                 series.index).interp(concat_dim=x).reset_coords(
                 'concat_dim', drop=True),
@@ -1274,14 +1271,14 @@ class Macro(DynamicStateful):
         elif args and dims:
             # the argument is already given in the model when the model
             # is called
-            return lambda x: utils.rearrange(
+            return lambda x, final_subs: utils.rearrange(
                 np.interp(x, series.index, series.values),
                 dims, self.components._subscript_dict), {'__lookup__': None}
 
         elif args:
             # the argument is already given in the model when the model
             # is called
-            return lambda x:\
+            return lambda x, final_subs:\
                 np.interp(x, series.index, series.values), {'__lookup__': None}
 
         elif dims:
@@ -1425,7 +1422,13 @@ class Macro(DynamicStateful):
 
     @property
     def doc(self):
-        return self._doc
+        return self._doc.copy()
+
+    def namespace(self):
+        return self.components._namespace.copy()
+
+    def subscript_dict(self):
+        return self.components._subscript_dict.copy()
 
     def _build_doc(self):
         """
@@ -1443,38 +1446,24 @@ class Macro(DynamicStateful):
                 - Documentation strings from the original model file
         """
         collector = []
-        for name, varname in self.components._namespace.items():
-            try:
-                docstring = getattr(self.components, varname).__doc__
-                lines = docstring.split('\n')
-
-                for unit_line in range(3, 9):
-                    # this loop detects where Units: starts
-                    if re.findall('Units:', lines[unit_line]):
-                        break
-
-                vardoc = {
-                    'Real Name': name,
-                    'Py Name': varname,
-                    'Unit': lines[unit_line].replace("Units:", "").strip(),
-                    'Lims': lines[unit_line+1].replace("Limits:", "").strip(),
-                    'Type': lines[unit_line+2].replace("Type:", "").strip(),
-                    'Subtype': lines[unit_line+3].replace("Subtype:", "").strip(),
-                    'Subs': lines[unit_line+4].replace("Subs:", "").strip(),
-                    'Comment': '\n'.join(lines[(unit_line+5):]).strip()
-                }
-
-                collector.append(vardoc)
-            except Exception:
-                pass
+        for name, pyname in self.components._namespace.items():
+            element = getattr(self.components, pyname)
+            print(pyname)
+            collector.append({
+                'Real Name': name,
+                'Py Name': pyname,
+                'Subscripts': element.subscripts,
+                'Units': element.units,
+                'Limits': element.limits,
+                'Type': element.type,
+                'Subtype': element.subtype,
+                'Comment': element.__doc__.strip() if element.__doc__ else None
+            })
 
         if collector:
             docs_df = pd.DataFrame(collector)
             docs_df.fillna("None", inplace=True)
-            order = ["Real Name", "Py Name", "Unit", "Lims",
-                     "Type", "Subtype", "Subs", "Comment"]
-            return docs_df[order].sort_values(
-                by="Real Name").reset_index(drop=True)
+            return docs_df.sort_values(by="Real Name").reset_index(drop=True)
         else:
             # manage models with no documentation (mainly test models)
             return None
