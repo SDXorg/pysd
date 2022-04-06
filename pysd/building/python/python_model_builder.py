@@ -577,7 +577,7 @@ class ElementBuilder:
             meta_data.append("subscripts=%(subscripts)s")
         if self.documentation:
             doc = self.documentation.replace("\\", "\n")
-            contents = f'"""{doc}"""\n'\
+            contents = f'"""\n{doc}\n"""\n'\
                 + contents
 
         meta_data.append("comp_type='%(type)s'")

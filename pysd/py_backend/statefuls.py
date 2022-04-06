@@ -771,7 +771,7 @@ class Macro(DynamicStateful):
             deps = deps[stateful_deps]
         for dep in deps:
             if dep not in dep_set and not dep.startswith("__")\
-               and dep != "time":
+               and not dep.startswith("_ext") and dep != "time":
                 dep_set.add(dep)
                 self._get_full_dependencies(dep, dep_set, stateful_deps)
 
@@ -864,7 +864,8 @@ class Macro(DynamicStateful):
             self.cache_type[element] = "run"
             for subelement in self.components._dependencies[element]:
                 if subelement.startswith("_initial_")\
-                   or subelement.startswith("__"):
+                   or subelement.startswith("__")\
+                   or subelement.startswith("_ext_"):
                     continue
                 if subelement not in self.cache_type:
                     self._assign_cache(subelement)
@@ -890,7 +891,7 @@ class Macro(DynamicStateful):
             return True
         for dep in dependencies:
             if dep.startswith("_") and not dep.startswith("_initial_")\
-               and not dep.startswith("__"):
+               and not dep.startswith("__") and not dep.startswith("_ext_"):
                 return True
         return False
 
@@ -1448,7 +1449,6 @@ class Macro(DynamicStateful):
         collector = []
         for name, pyname in self.components._namespace.items():
             element = getattr(self.components, pyname)
-            print(pyname)
             collector.append({
                 'Real Name': name,
                 'Py Name': pyname,
@@ -1457,7 +1457,8 @@ class Macro(DynamicStateful):
                 'Limits': element.limits,
                 'Type': element.type,
                 'Subtype': element.subtype,
-                'Comment': element.__doc__.strip() if element.__doc__ else None
+                'Comment': element.__doc__.strip().strip("\n").strip()
+                           if element.__doc__ else None
             })
 
         if collector:
@@ -1711,23 +1712,6 @@ class Model(Macro):
             "Selecting submodel, "
             "to run the full model again use model.reload()")
 
-        # reassing the dictionary and lists of needed stateful objects
-        self._stateful_elements = {
-            name: getattr(self.components, name)
-            for name in s_deps
-            if isinstance(getattr(self.components, name), Stateful)
-        }
-        self._dynamicstateful_elements = [
-            getattr(self.components, name) for name in s_deps
-            if isinstance(getattr(self.components, name), DynamicStateful)
-        ]
-        self._macro_elements = [
-            getattr(self.components, name) for name in s_deps
-            if isinstance(getattr(self.components, name), Macro)
-        ]
-        # TODO: include subselection of external objects (update in the deps
-        # dictionary is needed -> NO BACK COMPATIBILITY)
-
         # get set of all dependencies and all variables to select
         all_deps = d_vars["initial"].copy()
         all_deps.update(d_vars["step"])
@@ -1745,6 +1729,32 @@ class Model(Macro):
         for py_name in self.components._dependencies.copy().keys():
             if py_name.startswith("_") and py_name not in s_deps:
                 del self.components._dependencies[py_name]
+
+        # reassing the dictionary and lists of needed stateful objects
+        self._stateful_elements = {
+            name: getattr(self.components, name)
+            for name in s_deps
+            if isinstance(getattr(self.components, name), Stateful)
+        }
+        self._dynamicstateful_elements = [
+            getattr(self.components, name) for name in s_deps
+            if isinstance(getattr(self.components, name), DynamicStateful)
+        ]
+        self._macro_elements = [
+            getattr(self.components, name) for name in s_deps
+            if isinstance(getattr(self.components, name), Macro)
+        ]
+
+        # keeping only needed external objects
+        ext_deps = set()
+        for values in self.components._dependencies.values():
+            for value in values:
+                if value.startswith("_ext_"):
+                    ext_deps.add(value)
+        self._external_elements = [
+            getattr(self.components, name) for name in ext_deps
+            if isinstance(getattr(self.components, name), External)
+        ]
 
         # set all exogenous values to np.nan by default
         new_components = {element: np.nan for element in all_deps}
@@ -1884,7 +1894,8 @@ class Model(Macro):
         """
         def check_dep(dependencies, initial=False):
             for dep in dependencies:
-                if dep in c_vars or dep.startswith("__"):
+                if dep in c_vars or dep.startswith("__")\
+                   or dep.startswith("_ext_"):
                     pass
                 elif dep.startswith("_"):
                     s_deps.add(dep)

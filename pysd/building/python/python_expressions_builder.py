@@ -458,7 +458,7 @@ class ExtLookupBuilder(StructureBuilder):
 
             return BuildAST(
                 expression=arguments["name"] + "(x, final_subs)",
-                calls={"__external__": None, "__lookup__": None},
+                calls={arguments["name"]: 1,  "__lookup__": None},
                 subscripts=final_subs,
                 order=0)
 
@@ -513,7 +513,7 @@ class ExtDataBuilder(StructureBuilder):
 
             return BuildAST(
                 expression=arguments["name"] + "(time())",
-                calls={"__external__": None, "time": 1},
+                calls={arguments["name"]: 1, "time": 1},
                 subscripts=final_subs,
                 order=0)
 
@@ -565,7 +565,7 @@ class ExtConstantBuilder(StructureBuilder):
 
             return BuildAST(
                 expression=arguments["name"] + "()",
-                calls={"__external__": None},
+                calls={arguments["name"]: 1},
                 subscripts=final_subs,
                 order=0)
 

@@ -121,26 +121,6 @@ class TestInputFunctions(unittest.TestCase):
         self.assertEqual(zidz(1, 0), 0)
         self.assertEqual(zidz(1, 8), 0.125)
 
-
-class TestStatsFunctions(unittest.TestCase):
-    def test_bounded_normal(self):
-        from pysd.py_backend.functions import bounded_normal
-        min_val = -4
-        max_val = .2
-        mean = -1
-        std = .05
-        seed = 1
-        results = np.array(
-            [bounded_normal(min_val, max_val, mean, std, seed)
-             for _ in range(1000)])
-
-        self.assertGreaterEqual(results.min(), min_val)
-        self.assertLessEqual(results.max(), max_val)
-        self.assertAlmostEqual(results.mean(), mean, delta=std)
-        self.assertAlmostEqual(results.std(), std, delta=std)
-        self.assertGreater(len(np.unique(results)), 100)
-
-
 class TestLogicFunctions(unittest.TestCase):
     def test_if_then_else_basic(self):
         from pysd.py_backend.functions import if_then_else
@@ -188,99 +168,6 @@ class TestLogicFunctions(unittest.TestCase):
             if_then_else(xr_mixed, lambda: 1/0, lambda: 0)
         with self.assertRaises(ZeroDivisionError):
             if_then_else(xr_mixed, lambda: 1, lambda: 1/0)
-
-
-class TestLookup(unittest.TestCase):
-    def test_lookup(self):
-        from pysd.py_backend.functions import lookup
-
-        xpts = [0, 1, 2, 3,  5,  6, 7, 8]
-        ypts = [0, 0, 1, 1, -1, -1, 0, 0]
-
-        for x, y in zip(xpts, ypts):
-            self.assertEqual(
-                y,
-                lookup(x, xpts, ypts),
-                "Wrong result at X=" + str(x))
-
-    def test_lookup_extrapolation_inbounds(self):
-        from pysd.py_backend.functions import lookup_extrapolation
-
-        xpts = [0, 1, 2, 3,  5,  6, 7, 8]
-        ypts = [0, 0, 1, 1, -1, -1, 0, 0]
-
-        expected_xpts = np.arange(-0.5, 8.6, 0.5)
-        expected_ypts = [
-            0,
-            0, 0,
-            0, 0.5,
-            1, 1,
-            1, 0.5, 0, -0.5, -1,
-            -1, -1, -0.5,
-            0, 0, 0, 0
-        ]
-
-        for x, y in zip(expected_xpts, expected_ypts):
-            self.assertEqual(
-                y,
-                lookup_extrapolation(x, xpts, ypts),
-                "Wrong result at X=" + str(x))
-
-    def test_lookup_extrapolation_two_points(self):
-        from pysd.py_backend.functions import lookup_extrapolation
-
-        xpts = [0, 1]
-        ypts = [0, 1]
-
-        expected_xpts = np.arange(-0.5, 1.6, 0.5)
-        expected_ypts = [-0.5, 0.0, 0.5, 1.0, 1.5]
-
-        for x, y in zip(expected_xpts, expected_ypts):
-            self.assertEqual(
-                y,
-                lookup_extrapolation(x, xpts, ypts),
-                "Wrong result at X=" + str(x))
-
-    def test_lookup_extrapolation_outbounds(self):
-        from pysd.py_backend.functions import lookup_extrapolation
-
-        xpts = [0, 1, 2, 3]
-        ypts = [0, 1, 1, 0]
-
-        expected_xpts = np.arange(-0.5, 3.6, 0.5)
-        expected_ypts = [
-            -0.5,
-            0.0, 0.5, 1.0,
-            1.0, 1.0,
-            0.5, 0,
-            -0.5
-        ]
-
-        for x, y in zip(expected_xpts, expected_ypts):
-            self.assertEqual(
-                y,
-                lookup_extrapolation(x, xpts, ypts),
-                "Wrong result at X=" + str(x))
-
-    def test_lookup_discrete(self):
-        from pysd.py_backend.functions import lookup_discrete
-
-        xpts = [0, 1, 2, 3,  5,  6, 7, 8]
-        ypts = [0, 0, 1, 1, -1, -1, 0, 0]
-
-        expected_xpts = np.arange(-0.5, 8.6, 0.5)
-        expected_ypts = [
-            0, 0, 0, 0, 0,
-            1, 1, 1, 1, 1, 1,
-            -1, -1, -1, -1,
-            0, 0, 0, 0
-        ]
-
-        for x, y in zip(expected_xpts, expected_ypts):
-            self.assertEqual(
-                y,
-                lookup_discrete(x, xpts, ypts),
-                "Wrong result at X=" + str(x))
 
 
 class TestFunctions(unittest.TestCase):
