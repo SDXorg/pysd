@@ -229,10 +229,6 @@ class ElementsComponentVisitor(parsimonious.NodeVisitor):
     def generic_visit(self, n, vc):
         return "".join(filter(None, vc)) or n.text
 
-    def visit__(self, n, vc):
-        # TODO check if necessary when finished
-        return " "
-
 
 class SubscriptRange():
     """

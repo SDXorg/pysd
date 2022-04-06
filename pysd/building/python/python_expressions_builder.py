@@ -333,7 +333,6 @@ class CallBuilder(StructureBuilder):
         elif self.function == "active_initial":
             # we need to ensure that active initial outputs are always the
             # same and update dependencies as stateful object
-            # TODO: update calls as statefull object
             name = self.section.namespace.make_python_identifier(
                 self.element.identifier, prefix="_active_initial")
             final_subscripts = self.reorder(
@@ -1094,8 +1093,6 @@ class ReferenceBuilder(StructureBuilder):
 
         reference = self.section.namespace.cleanspace[self.reference]
 
-        # TODO lookups are passed as a reference first, in that case we will
-        # need to replace () in the lookup call
         expression = reference + "()"
 
         if not self.subscripts:

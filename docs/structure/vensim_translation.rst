@@ -74,6 +74,11 @@ Not all the Vensim functions all included yet, the list of supported functions a
    :header-rows: 1
 
 
+Stocks
+^^^^^^
+Stocks defined in Vensim as `INTEG(flow, initial_value)` are supported and are translated to the AST as `IntegStructure(flow, initial_value)`.
+
+
 Subscripts
 ^^^^^^^^^^
 Several subscript related features all supported. This include:

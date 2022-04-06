@@ -85,13 +85,7 @@ class External(object):
     """
     missing = "warning"
 
-    def __init__(self, py_name, final_coords=None):
-        if py_name is None:
-            # backwards compatibility
-            # TODO remove in future
-            self.final_coords, py_name = py_name, final_coords
-        else:
-            self.final_coords = final_coords
+    def __init__(self, py_name):
         self.py_name = py_name
         self.file = None
         self.sheet = None
@@ -334,11 +328,6 @@ class External(object):
             raise ValueError(
                 self.py_name + "\n"
                 + f"Indirect reference to file: {self.file}")
-
-        if isinstance(root, str):  # pragma: no cover
-            # backwards compatibility
-            # TODO: remove with PySD 3.0.0
-            root = Path(root)
 
         self.file = root.joinpath(self.file)
 
@@ -704,16 +693,16 @@ class ExtData(External, Data):
     """
 
     def __init__(self, file_name, sheet, time_row_or_col, cell,
-                 interp, coords, root, final_coords=None, py_name=None):
-        super().__init__(py_name, final_coords)
+                 interp, coords, root, final_coords, py_name):
+        super().__init__(py_name)
         self.files = [file_name]
         self.sheets = [sheet]
         self.time_row_or_cols = [time_row_or_col]
         self.cells = [cell]
         self.coordss = [coords]
         self.root = root
-        # TODO remove in 3.0.0 (self.interp = interp)
-        self.interp = interp.replace(" ", "_") if interp else "interpolate"
+        self.final_coords = final_coords
+        self.interp = interp or "interpolate"
         self.is_float = not bool(coords)
 
         # check if the interpolation method is valid
@@ -735,8 +724,8 @@ class ExtData(External, Data):
         self.cells.append(cell)
         self.coordss.append(coords)
 
-        if not interp:
-            interp = "interpolate"
+        interp = interp or "interpolate"
+
         if interp.replace(" ", "_") != self.interp:
             raise ValueError(self.py_name + "\n"
                              + "Error matching interpolation method with "
@@ -750,16 +739,7 @@ class ExtData(External, Data):
         """
         Initialize all elements and create the self.data xarray.DataArray
         """
-        if self.final_coords is None:
-            # backward compatibility
-            # TODO remove in the future
-            self.data = utils.xrmerge(*[
-                self._initialize_data("data")
-                for self.file, self.sheet, self.x_row_or_col,
-                self.cell, self.coords
-                in zip(self.files, self.sheets, self.time_row_or_cols,
-                       self.cells, self.coordss)])
-        elif len(self.coordss) == 1:
+        if len(self.coordss) == 1:
             # Just loag one value (no add)
             for self.file, self.sheet, self.x_row_or_col,\
                 self.cell, self.coords\
@@ -791,14 +771,15 @@ class ExtLookup(External, Lookups):
     """
 
     def __init__(self, file_name, sheet, x_row_or_col, cell, coords,
-                 root, final_coords=None, py_name=None):
-        super().__init__(py_name, final_coords)
+                 root, final_coords, py_name):
+        super().__init__(py_name)
         self.files = [file_name]
         self.sheets = [sheet]
         self.x_row_or_cols = [x_row_or_col]
         self.cells = [cell]
-        self.root = root
         self.coordss = [coords]
+        self.root = root
+        self.final_coords = final_coords
         self.interp = "interpolate"
         self.is_float = not bool(coords)
 
@@ -820,16 +801,7 @@ class ExtLookup(External, Lookups):
         """
         Initialize all elements and create the self.data xarray.DataArray
         """
-        if self.final_coords is None:
-            # backward compatibility
-            # TODO remove in the future
-            self.data = utils.xrmerge(*[
-                self._initialize_data("lookup")
-                for self.file, self.sheet, self.x_row_or_col,
-                self.cell, self.coords
-                in zip(self.files, self.sheets, self.x_row_or_cols,
-                       self.cells, self.coordss)])
-        elif len(self.coordss) == 1:
+        if len(self.coordss) == 1:
             # Just loag one value (no add)
             for self.file, self.sheet, self.x_row_or_col,\
                 self.cell, self.coords\
@@ -847,7 +819,10 @@ class ExtLookup(External, Lookups):
                        self.cells, self.coordss):
                 values = self._initialize_data("lookup")
 
-                coords = {"lookup_dim": values.coords["lookup_dim"].values, **self.coords}
+                coords = {
+                    "lookup_dim": values.coords["lookup_dim"].values,
+                    **self.coords
+                }
                 if "lookup_dim" not in self.data.dims:
                     self.data = self.data.expand_dims(
                         {"lookup_dim": coords["lookup_dim"]}, axis=0).copy()
@@ -861,15 +836,16 @@ class ExtConstant(External):
     """
 
     def __init__(self, file_name, sheet, cell, coords,
-                 root, final_coords=None, py_name=None):
-        super().__init__(py_name, final_coords)
+                 root, final_coords, py_name):
+        super().__init__(py_name)
         self.files = [file_name]
         self.sheets = [sheet]
         self.transposes = [
             cell[-1] == '*' and np.prod(utils.compute_shape(coords)) > 1]
         self.cells = [cell.strip('*')]
-        self.root = root
         self.coordss = [coords]
+        self.root = root
+        self.final_coords = final_coords
 
     def add(self, file_name, sheet, cell, coords):
         """
@@ -890,16 +866,7 @@ class ExtConstant(External):
         """
         Initialize all elements and create the self.data xarray.DataArray
         """
-        if self.final_coords is None:
-            # backward compatibility
-            # TODO remove in the future
-            self.data = utils.xrmerge(*[
-                self._initialize()
-                for self.file, self.sheet, self.transpose, self.cell,
-                self.coords
-                in zip(self.files, self.sheets, self.transposes,
-                       self.cells, self.coordss)])
-        elif len(self.coordss) == 1:
+        if len(self.coordss) == 1:
             # Just loag one value (no add)
             for self.file, self.sheet, self.transpose, self.cell, self.coords\
                 in zip(self.files, self.sheets, self.transposes,

@@ -246,16 +246,17 @@ class AbstractSubscriptRange:
     ----------
     name: str
         The name of the element.
-    subscripts: tuple or str or dict
-        The subscripts as a tuple for a regular definition, str for a
-        copy definition and as a dict for a GET XLS/DIRECT definition.
-    mapping: tuple
-        The set of subscript range that can be mapped to.
+    subscripts: list or str or dict
+        The subscripts as a list of strings for a regular definition,
+        str for a copy definition and as a dict for a GET XLS/DIRECT
+        definition.
+    mapping: list
+        The list of subscript range that can be mapped to.
 
     """
     name: str
-    subscripts: Union[Tuple[str], str, dict]
-    mapping: Tuple[str]
+    subscripts: Union[list, str, dict]
+    mapping: list
 
     def __str__(self) -> str:  # pragma: no cover
         return "AbstractSubscriptRange:\t%s\n\t%s\n" % (

@@ -1423,24 +1423,8 @@ class Macro(DynamicStateful):
             for attr, value in attrs.items():
                 setattr(getattr(self.components, element), attr, value)
 
+    @property
     def doc(self):
-        """
-        Formats a table of documentation strings to help users remember
-        variable names, and understand how they are translated into
-        python safe names.
-
-        Returns
-        -------
-        docs_df: pandas dataframe
-            Dataframe with columns for the model components:
-                - Real names
-                - Python safe identifiers (as used in model.components)
-                - Units string
-                - Documentation strings from the original model file
-        """
-        warnings.warn(
-            "doc method will become an attribute in version 3.0.0...",
-            FutureWarning)
         return self._doc
 
     def _build_doc(self):
@@ -1461,43 +1445,24 @@ class Macro(DynamicStateful):
         collector = []
         for name, varname in self.components._namespace.items():
             try:
-                # TODO correct this when Original Eqn is in several lines
                 docstring = getattr(self.components, varname).__doc__
                 lines = docstring.split('\n')
 
                 for unit_line in range(3, 9):
-                    # this loop detects where Units: starts as
-                    # sometimes eqn could be split in several lines
+                    # this loop detects where Units: starts
                     if re.findall('Units:', lines[unit_line]):
                         break
-                if unit_line == 3:
-                    eqn = lines[2].replace("Original Eqn:", "").strip()
-                else:
-                    eqn = '; '.join(
-                        [line.strip() for line in lines[3:unit_line]])
 
                 vardoc = {
                     'Real Name': name,
                     'Py Name': varname,
-                    'Eqn': eqn,
                     'Unit': lines[unit_line].replace("Units:", "").strip(),
                     'Lims': lines[unit_line+1].replace("Limits:", "").strip(),
-                    'Type': lines[unit_line+2].replace("Type:", "").strip()
+                    'Type': lines[unit_line+2].replace("Type:", "").strip(),
+                    'Subtype': lines[unit_line+3].replace("Subtype:", "").strip(),
+                    'Subs': lines[unit_line+4].replace("Subs:", "").strip(),
+                    'Comment': '\n'.join(lines[(unit_line+5):]).strip()
                 }
-
-                if "Subtype:" in lines[unit_line+3]:
-                    vardoc["Subtype"] =\
-                        lines[unit_line+3].replace("Subtype:", "").strip()
-                    vardoc["Subs"] =\
-                        lines[unit_line+4].replace("Subs:", "").strip()
-                    vardoc["Comment"] =\
-                        '\n'.join(lines[(unit_line+5):]).strip()
-                else:
-                    vardoc["Subtype"] = None
-                    vardoc["Subs"] =\
-                        lines[unit_line+3].replace("Subs:", "").strip()
-                    vardoc["Comment"] =\
-                        '\n'.join(lines[(unit_line+4):]).strip()
 
                 collector.append(vardoc)
             except Exception:
@@ -1507,7 +1472,7 @@ class Macro(DynamicStateful):
             docs_df = pd.DataFrame(collector)
             docs_df.fillna("None", inplace=True)
             order = ["Real Name", "Py Name", "Unit", "Lims",
-                     "Type", "Subtype", "Subs", "Eqn", "Comment"]
+                     "Type", "Subtype", "Subs", "Comment"]
             return docs_df[order].sort_values(
                 by="Real Name").reset_index(drop=True)
         else:

@@ -57,11 +57,6 @@ class SectionBuilder:
             element.identifier = identifier
             self.subscripts.elements[identifier] = element.subscripts
 
-        # TODO
-        # 1. split control variables, main element, elements from other modules
-        # 2. build elements (only build 1 time!)
-        # 3. write model
-
         for element in self.elements:
             element.build_element()
             self.dependencies[element.identifier] = element.dependencies
@@ -561,7 +556,6 @@ class ElementBuilder:
             def %(identifier)s(%(arguments)s):
                 """
                 Real Name: %(name)s
-                Original Eqn:
                 Units: %(units)s
                 Limits: %(range)s
                 Type: %(type)s

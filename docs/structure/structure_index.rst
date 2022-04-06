@@ -1,11 +1,15 @@
 Structure of the PySD module
 ============================
 
-PySD provides a set of translators that interpret a Vensim or XMILE format model into a Python native class. The model components object represents the state of the system, and contains methods that compute auxiliary and flow variables based upon the current state.
+PySD provides a set of translators that allow to build an original model into an abstract model representation (AMR), also called Abstract Model. This representation is based on a series of Python classes that allow to have a version of the model independent of the source language which classifies its elements depending on their type and expresses the mathematical formulations in an abstract syntax tree. This representation can be used by a builder, which allows to write the final functional language in another programming language. See the example of the complete process in the figure below.
 
-The components object is wrapped within a Python class that provides methods for modifying and executing the model. These three pieces constitute the core functionality of the PySD module, and allow it to interact with the Python data analytics stack.
+.. image:: ../images/abstract_model.png
+   :width: 700 px
+   :align: center
 
+Currently, PYSD can translate Vensim models (mdl format) or models in Xmile format (exported from Vensim, Stella or other software). The only builder available at the moment builds the models in Python.
 
+For models translated into Python, all the necessary functions and classes are incorporated in this library so that they can be executed. The Model class is the main class that allows loading and running a model, as well as modifying the values of its parameters, among many other possibilities.
 
 Translation
 -----------
@@ -20,7 +24,8 @@ The internal functions of the model translation components and relevant objects 
    abstract_model
 
 
-The PySD module is capable of importing models from a Vensim model file (\*.mdl) or an XMILE format xml file. Translation makes use of a Parsing Expression Grammar parser, using the third party Python library Parsimonious13 to construct an abstract syntax tree based upon the full model file (in the case of Vensim) or individual expressions (in the case of XMILE).
+
+The PySD module is capable of importing models from a Vensim model file (\*.mdl) or an XMILE format xml file. Translation makes use of a Parsing Expression Grammar parser, using the third party Python library Parsimonious to construct an abstract syntax tree based upon the full model file (in the case of Vensim) or individual expressions (in the case of XMILE).
 
 The translators then crawl the tree, using a set of classes to define a pseudo model representation called :doc:`Abstract Model <abstract_model>`. Its structure is defined in the following document:
 
@@ -32,7 +37,7 @@ In addition to translating individual commands between Vensim/XMILE and Python, 
 During translation some dictionaries are created that allow the correct operation of the model:
 
 * **_namespace**: used to connect real name (from the original model) with the Python name.
-* **_subscript_dict**: Used to define the subscript range and subranges.
+* **_subscript_dict**: Used to define the subscript ranges and subranges.
 * **_dependencies**: Used to define the dependencies of each variable and assign cache type and initialize the model.
 
 

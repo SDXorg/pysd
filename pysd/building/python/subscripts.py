@@ -17,7 +17,6 @@ class SubscriptManager:
         self.elements = {}
         self.subranges = self._get_main_subscripts()
         self.subscript2num = self._get_subscript2num()
-        # TODO: manage subscript mapping
 
     @property
     def subscripts(self):

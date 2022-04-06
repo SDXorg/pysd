@@ -179,49 +179,6 @@ def pulse_magnitude(time, magnitude, start, repeat_time=0):
         else:
             return 0
 
-
-def lookup(x, xs, ys):
-    """
-    Intermediate values are calculated with linear interpolation between
-    the intermediate points. Out-of-range values are the same as the
-    closest endpoint (i.e, no extrapolation is performed).
-    """
-    return np.interp(x, xs, ys)
-
-
-def lookup_extrapolation(x, xs, ys):
-    """
-    Intermediate values are calculated with linear interpolation between
-    the intermediate points. Out-of-range values are calculated with linear
-    extrapolation from the last two values at either end.
-    """
-    if x < xs[0]:
-        dx = xs[1] - xs[0]
-        dy = ys[1] - ys[0]
-        k = dy / dx
-        return ys[0] + (x - xs[0]) * k
-    if x > xs[-1]:
-        dx = xs[-1] - xs[-2]
-        dy = ys[-1] - ys[-2]
-        k = dy / dx
-        return ys[-1] + (x - xs[-1]) * k
-    return np.interp(x, xs, ys)
-
-
-def lookup_discrete(x, xs, ys):
-    """
-    Intermediate values take on the value associated with the next lower
-    x-coordinate (also called a step-wise function). The last two points
-    of a discrete graphical function must have the same y value.
-    Out-of-range values are the same as the closest endpoint
-    (i.e, no extrapolation is performed).
-    """
-    for index in range(0, len(xs)):
-        if x < xs[index]:
-            return ys[index - 1] if index > 0 else ys[index]
-    return ys[-1]
-
-
 def if_then_else(condition, val_if_true, val_if_false):
     """
     Implements Vensim's IF THEN ELSE function.
@@ -261,48 +218,6 @@ def if_then_else(condition, val_if_true, val_if_false):
         return xr.where(condition, val_if_true(), val_if_false())
 
     return val_if_true() if condition else val_if_false()
-
-
-def logical_and(*args):
-    """
-    Implements Vensim's :AND: method for two or several arguments.
-
-    Parameters
-    ----------
-    *args: arguments
-        The values to compare with and operator
-
-    Returns
-    -------
-    result: bool or xarray.DataArray
-        The result of the comparison.
-
-    """
-    current = args[0]
-    for arg in args[1:]:
-        current = np.logical_and(arg, current)
-    return current
-
-
-def logical_or(*args):
-    """
-    Implements Vensim's :OR: method for two or several arguments.
-
-    Parameters
-    ----------
-    *args: arguments
-        The values to compare with and operator
-
-    Returns
-    -------
-    result: bool or xarray.DataArray
-        The result of the comparison.
-
-    """
-    current = args[0]
-    for arg in args[1:]:
-        current = np.logical_or(arg, current)
-    return current
 
 
 def xidz(numerator, denominator, x):
@@ -382,7 +297,7 @@ def zidz(numerator, denominator):
         return numerator/denominator
 
 
-def active_initial(time, expr, init_val):
+def active_initial(stage, expr, init_val):
     """
     Implements vensim's ACTIVE INITIAL function
     Parameters
@@ -398,21 +313,11 @@ def active_initial(time, expr, init_val):
     -------
 
     """
-    # TODO replace time by stage when doing a non compatible version
     # NUMPY: both must have same dimensions in inputs, remove time.stage
-    if time.stage == 'Initialization':
+    if stage == 'Initialization':
         return init_val
     else:
         return expr()
-
-
-def bounded_normal(minimum, maximum, mean, std, seed):
-    """
-    Implements vensim's BOUNDED NORMAL function
-    """
-    # np.random.seed(seed)
-    # we could bring this back later, but for now, ignore
-    return stats.truncnorm.rvs(minimum, maximum, loc=mean, scale=std)
 
 
 def incomplete(*args):
@@ -426,26 +331,6 @@ def incomplete(*args):
 def not_implemented_function(*args):
     raise NotImplementedError(
         'Not implemented function {}'.format(args[0]))
-
-
-def log(x, base):
-    """
-    Implements Vensim's LOG function with change of base.
-
-    Parameters
-    ----------
-    x: float or xarray.DataArray
-        Input value.
-    base: float or xarray.DataArray
-        Base of the logarithm.
-
-    Returns
-    -------
-    float
-      The log of 'x' in base 'base'.
-    """
-    # TODO remove with PySD 3.0.0, log could be directly created in the file
-    return np.log(x) / np.log(base)
 
 
 def integer(x):

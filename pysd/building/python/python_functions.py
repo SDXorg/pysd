@@ -35,8 +35,8 @@ functionspace = {
     "vmin": ("vmin(%(0)s, dim=%(axis)s)", ("functions", "vmin")),
 
     # functions defined in pysd.py_bakcend.functions
-    "active_initial": (  # TODO replace time by stage when doing a non compatible version
-        "active_initial(__data['time'], lambda: %(0)s, %(1)s)",
+    "active_initial": (
+        "active_initial(__data[\"time\"].stage, lambda: %(0)s, %(1)s)",
         ("functions", "active_initial")),
     "if_then_else": (
         "if_then_else(%(0)s, lambda: %(1)s, lambda: %(2)s)",

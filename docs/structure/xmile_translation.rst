@@ -75,6 +75,10 @@ Not all the Xmile functions all included yet, the list of supported functions ar
    :header-rows: 1
 
 
+Stocks
+^^^^^^
+Stocks are supported with any number of inflows and outflows. The stocks are translated to the AST as `IntegStructure(flows, initial_value)`.
+
 Subscripts
 ^^^^^^^^^^
 Several subscript related features all supported. This include:

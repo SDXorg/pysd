@@ -38,6 +38,22 @@ def subs(dims, subcoords):
     return decorator
 
 
+def metadata(name, units=None, range=(None, None),
+             dims=None, type=None, subtype=None):
+    """
+    This decorators allows assigning metadate to a function.
+    """
+    def decorator(function):
+        function.original_name = name
+        function.units = units
+        function.range = range
+        function.dims = dims
+        function.type = type
+        function.subtype = subtype
+        function.args = inspect.getfullargspec(function)[0]
+    return decorator
+
+
 class Cache(object):
     """
     This is the class for the chache. Several cache types can be saved
