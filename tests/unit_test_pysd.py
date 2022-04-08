@@ -1112,15 +1112,13 @@ class TestPySD(unittest.TestCase):
         with self.assertRaises(ValueError) as err:
             model.get_series_data('Room Temperature')
             self.assertIn(
-                "Trying to get the values of a hardcoded lookup/data "
-                "or other type of variable.",
+                "Trying to get the values of a constant variable.",
                 err.args[0])
 
         with self.assertRaises(ValueError) as err:
             model.get_series_data('Teacup Temperature')
             self.assertIn(
-                "Trying to get the values of a hardcoded lookup/data "
-                "or other type of variable.",
+                "Trying to get the values of a constant variable.",
                 err.args[0])
 
         lookup_exp = xr.DataArray(

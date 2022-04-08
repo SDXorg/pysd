@@ -181,6 +181,32 @@ class Data(object):
     # as Data
     # def __init__(self, data, coords, interp="interpolate"):
 
+    def set_values(self, values):
+        """Set new values from user input"""
+        self.data = xr.DataArray(
+            np.nan, self.final_coords, list(self.final_coords))
+
+        if isinstance(values, pd.Series):
+            index = list(values.index)
+            index.sort()
+            self.data = self.data.expand_dims(
+                {'time': index}, axis=0).copy()
+
+            for index, value in values.items():
+                if isinstance(values.values[0], xr.DataArray):
+                    self.data.loc[index].loc[value.coords] =\
+                        value
+                else:
+                    self.data.loc[index] = value
+        else:
+            if isinstance(values, xr.DataArray):
+                self.data.loc[values.coords] = values.values
+            else:
+                if self.final_coords:
+                    self.data.loc[:] = values
+                else:
+                    self.data = values
+
     def __call__(self, time):
         try:
             if time in self.data['time'].values:
@@ -210,15 +236,18 @@ class Data(object):
             else:
                 # Remove time coord from the DataArray
                 return outdata.reset_coords('time', drop=True)
-        except Exception as err:
+        except (TypeError, KeyError):
             if self.data is None:
                 raise ValueError(
                     self.py_name + "\n"
                     "Trying to interpolate data variable before loading"
                     " the data...")
-            else:
-                # raise any other possible error
-                raise err
+
+            # this except catch the errors when a data has been
+            # changed to a constant value by the user
+            return self.data
+        except Exception as err:
+            raise err
 
 
 class TabData(Data):

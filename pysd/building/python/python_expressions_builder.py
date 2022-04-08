@@ -458,7 +458,10 @@ class ExtLookupBuilder(StructureBuilder):
 
             return BuildAST(
                 expression=arguments["name"] + "(x, final_subs)",
-                calls={arguments["name"]: 1,  "__lookup__": None},
+                calls={
+                    "__external__": arguments["name"],
+                    "__lookup__": arguments["name"]
+                },
                 subscripts=final_subs,
                 order=0)
 
@@ -513,7 +516,10 @@ class ExtDataBuilder(StructureBuilder):
 
             return BuildAST(
                 expression=arguments["name"] + "(time())",
-                calls={arguments["name"]: 1, "time": 1},
+                calls={
+                    "__external__": arguments["name"],
+                    "__data__": arguments["name"],
+                    "time": 1},
                 subscripts=final_subs,
                 order=0)
 
@@ -565,7 +571,7 @@ class ExtConstantBuilder(StructureBuilder):
 
             return BuildAST(
                 expression=arguments["name"] + "()",
-                calls={arguments["name"]: 1},
+                calls={"__external__": arguments["name"]},
                 subscripts=final_subs,
                 order=0)
 
@@ -600,7 +606,7 @@ class TabDataBuilder(StructureBuilder):
 
         return BuildAST(
             expression=arguments["name"] + "(time())",
-            calls={"time": 1, "__data__": None},
+            calls={"time": 1, "__data__": arguments["name"]},
             subscripts=final_subs,
             order=0)
 
@@ -1002,7 +1008,7 @@ class LookupsBuilder(StructureBuilder):
 
             return BuildAST(
                 expression=arguments["name"] + "(x, final_subs)",
-                calls={"__lookup__": None},
+                calls={"__lookup__": arguments["name"]},
                 subscripts=self.def_subs,
                 order=0)
 

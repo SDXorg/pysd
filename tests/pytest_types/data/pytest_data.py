@@ -16,26 +16,14 @@ from pysd.py_backend.data import Data
         ),
         # test that try/except block on call doesn't catch errors differents
         # than data = None
-        (  # try_except_1
-            3,
-            None,
-            TypeError,
-            "'int' object is not subscriptable"
-        ),
-        (  # try_except_2
-            xr.DataArray([10, 20], {'dim1': [0, 1]}, ['dim1']),
-            None,
-            KeyError,
-            "'time'"
-        ),
-        (  # try_except_3
+        (  # try_except
             xr.DataArray([10, 20], {'time': [0, 1]}, ['time']),
             None,
             AttributeError,
             "'Data' object has no attribute 'is_float'"
         )
     ],
-    ids=["not_loaded_data", "try_except_1", "try_except_2", "try_except_3"]
+    ids=["not_loaded_data", "try_except"]
 )
 @pytest.mark.filterwarnings("ignore")
 class TestDataErrors():

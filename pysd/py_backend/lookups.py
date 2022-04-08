@@ -1,5 +1,6 @@
 import warnings
 
+import pandas as pd
 import numpy as np
 import xarray as xr
 
@@ -11,8 +12,40 @@ class Lookups(object):
     # as Lookups
     # def __init__(self, data, coords, interp="interpolate"):
 
+    def set_values(self, values):
+        """Set new values from user input"""
+        self.data = xr.DataArray(
+            np.nan, self.final_coords, list(self.final_coords))
+
+        if isinstance(values, pd.Series):
+            index = list(values.index)
+            index.sort()
+            self.data = self.data.expand_dims(
+                {'lookup_dim': index}, axis=0).copy()
+
+            for index, value in values.items():
+                if isinstance(values.values[0], xr.DataArray):
+                    self.data.loc[index].loc[value.coords] =\
+                        value
+                else:
+                    self.data.loc[index] = value
+        else:
+            if isinstance(values, xr.DataArray):
+                self.data.loc[values.coords] = values.values
+            else:
+                if self.final_coords:
+                    self.data.loc[:] = values
+                else:
+                    self.data = values
+
     def __call__(self, x, final_subs=None):
-        return self._call(self.data, x, final_subs)
+        try:
+            return self._call(self.data, x, final_subs)
+        except (TypeError, KeyError):
+            # this except catch the errors when a lookups has been
+            # changed to a constant valuue by the user
+            # TODO need to expand data to final_subs if they are given
+            return self.data
 
     def _call(self, data, x, final_subs=None):
         if isinstance(x, xr.DataArray):
@@ -92,6 +125,7 @@ class HardcodedLookups(Lookups):
 
     def __init__(self, x, y, coords, interp, py_name):
         # TODO: avoid add and merge all declarations in one definition
+        # TODO: add final subs
         self.is_float = not bool(coords)
         self.py_name = py_name
         y = np.array(y).reshape((len(x),) + (1,)*len(coords))

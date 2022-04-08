@@ -625,6 +625,7 @@ class Macro(DynamicStateful):
                 + " read_vensim or read_xmile.")
 
         self._namespace = self.components._components.component.namespace
+        self._dependencies = self.components._dependencies
         self._doc = self._build_doc()
 
         if params is not None:
@@ -634,7 +635,7 @@ class Macro(DynamicStateful):
             self.set_components(params, new=True)
             # update dependencies
             for param in params:
-                self.components._dependencies[
+                self._dependencies[
                     self._namespace[param]] = {"time"}
 
         # Get the collections of stateful elements and external elements
@@ -685,6 +686,10 @@ class Macro(DynamicStateful):
     def namespace(self):
         return self._namespace.copy()
 
+    @property
+    def dependencies(self):
+        return self._dependencies.copy()
+
     def clean_caches(self):
         self.cache.clean()
         # if nested macros
@@ -717,7 +722,7 @@ class Macro(DynamicStateful):
         # includying all levels
         self.stateful_initial_dependencies = {
             ext: set()
-            for ext in self.components._dependencies
+            for ext in self._dependencies
             if (ext.startswith("_") and not ext.startswith("_active_initial_"))
         }
         for element in self.stateful_initial_dependencies:
@@ -781,12 +786,12 @@ class Macro(DynamicStateful):
         None
 
         """
-        deps = self.components._dependencies[element]
+        deps = self._dependencies[element]
         if element.startswith("_"):
             deps = deps[stateful_deps]
         for dep in deps:
             if dep not in dep_set and not dep.startswith("__")\
-               and not dep.startswith("_ext") and dep != "time":
+               and dep != "time":
                 dep_set.add(dep)
                 self._get_full_dependencies(dep, dep_set, stateful_deps)
 
@@ -821,7 +826,7 @@ class Macro(DynamicStateful):
 
         for element in self._namespace.values():
             if element not in self.cache_type\
-               and element in self.components._dependencies:
+               and element in self._dependencies:
                 self._assign_cache(element)
 
         for element, cache_type in self.cache_type.items():
@@ -835,22 +840,20 @@ class Macro(DynamicStateful):
 
     def _count_calls(self, element):
         n_calls = 0
-        for subelement in self.components._dependencies:
+        for subelement in self._dependencies:
             if subelement.startswith("_") and\
-               element in self.components._dependencies[subelement]["step"]:
+               element in self._dependencies[subelement]["step"]:
                 if element in\
-                   self.components._dependencies[subelement]["initial"]:
+                   self._dependencies[subelement]["initial"]:
                     n_calls +=\
-                        2*self.components._dependencies[subelement][
-                            "step"][element]
+                        2*self._dependencies[subelement]["step"][element]
                 else:
                     n_calls +=\
-                        self.components._dependencies[subelement][
-                            "step"][element]
+                        self._dependencies[subelement]["step"][element]
             elif (not subelement.startswith("_") and
-                  element in self.components._dependencies[subelement]):
+                  element in self._dependencies[subelement]):
                 n_calls +=\
-                    self.components._dependencies[subelement][element]
+                    self._dependencies[subelement][element]
 
         return n_calls
 
@@ -869,18 +872,17 @@ class Macro(DynamicStateful):
         None
 
         """
-        if not self.components._dependencies[element]:
+        if not self._dependencies[element]:
             self.cache_type[element] = "run"
-        elif "__lookup__" in self.components._dependencies[element]:
+        elif "__lookup__" in self._dependencies[element]:
             self.cache_type[element] = None
-        elif self._isdynamic(self.components._dependencies[element]):
+        elif self._isdynamic(self._dependencies[element]):
             self.cache_type[element] = "step"
         else:
             self.cache_type[element] = "run"
-            for subelement in self.components._dependencies[element]:
+            for subelement in self._dependencies[element]:
                 if subelement.startswith("_initial_")\
-                   or subelement.startswith("__")\
-                   or subelement.startswith("_ext_"):
+                   or subelement.startswith("__"):
                     continue
                 if subelement not in self.cache_type:
                     self._assign_cache(subelement)
@@ -906,7 +908,7 @@ class Macro(DynamicStateful):
             return True
         for dep in dependencies:
             if dep.startswith("_") and not dep.startswith("_initial_")\
-               and not dep.startswith("__") and not dep.startswith("_ext_"):
+               and not dep.startswith("__"):
                 return True
         return False
 
@@ -1164,20 +1166,22 @@ class Macro(DynamicStateful):
             param,
             self._namespace)[1] or param
 
-        try:
-            if func_name.startswith("_ext_"):
-                return getattr(self.components, func_name).data
-            elif self.get_args(getattr(self.components, func_name)):
-                return getattr(self.components,
-                               "_ext_lookup_" + func_name).data
-            else:
-                return getattr(self.components,
-                               "_ext_data_" + func_name).data
-        except NameError:
+        if func_name.startswith("_ext_"):
+            return getattr(self.components, func_name).data
+        elif "__data__" in self._dependencies[func_name]:
+            return getattr(
+                self.components,
+                self._dependencies[func_name]["__data__"]
+            ).data
+        elif "__lookup__" in self._dependencies[func_name]:
+            return getattr(
+                self.components,
+                self._dependencies[func_name]["__lookup__"]
+            ).data
+        else:
             raise ValueError(
-                "Trying to get the values of a hardcoded lookup/data or "
-                "other type of variable. 'model.get_series_data' only works "
-                "with external lookups/data objects.\n\n")
+                "Trying to get the values of a constant variable. "
+                "'model.get_series_data' only works lookups/data objects.\n\n")
 
     def set_components(self, params, new=False):
         """ Set the value of exogenous model elements.
@@ -1218,34 +1222,48 @@ class Macro(DynamicStateful):
                     % key)
 
             if new:
-                dims, args = None, None
+                func = None
+                dims = None
             else:
                 func = getattr(self.components, func_name)
                 _, dims = self.get_coords(func) or (None, None)
-                args = self.get_args(func)
+
+            # if the variable is a lookup or a data we perform the change in
+            # the object they call
+            if getattr(func, "type", None) == "Lookup":
+                getattr(
+                    self.components,
+                    self._dependencies[func_name]["__lookup__"]
+                ).set_values(value)
+                continue
+            elif getattr(func, "type", None) == "Data":
+                getattr(
+                    self.components,
+                    self._dependencies[func_name]["__data__"]
+                ).set_values(value)
+                continue
 
             if isinstance(value, pd.Series):
                 new_function, deps = self._timeseries_component(
-                    value, dims, args)
-                self.components._dependencies[func_name] = deps
+                    value, dims)
+                self._dependencies[func_name] = deps
             elif callable(value):
                 new_function = value
                 args = self.get_args(value)
                 if args:
                     # user function needs arguments, add it as a lookup
                     # to avoud caching it
-                    self.components._dependencies[func_name] =\
-                        {"__lookup__": None}
+                    self._dependencies[func_name] = {"__lookup__": None}
                 else:
                     # TODO it would be better if we can parse the content
                     # of the function to get all the dependencies
                     # user function takes no arguments, using step cache
                     # adding time as dependency
-                    self.components._dependencies[func_name] = {"time": 1}
+                    self._dependencies[func_name] = {"time": 1}
 
             else:
-                new_function = self._constant_component(value, dims, args)
-                self.components._dependencies[func_name] = {}
+                new_function = self._constant_component(value, dims)
+                self._dependencies[func_name] = {}
 
             # this won't handle other statefuls...
             if '_integ_' + func_name in dir(self.components):
@@ -1260,42 +1278,21 @@ class Macro(DynamicStateful):
             if func_name in self.cache.cached_funcs:
                 self.cache.cached_funcs.remove(func_name)
 
-    def _timeseries_component(self, series, dims, args=[]):
+    def _timeseries_component(self, series, dims):
         """ Internal function for creating a timeseries model element """
         # this is only called if the set_component function recognizes a
         # pandas series
         # TODO: raise a warning if extrapolating from the end of the series.
         # TODO: data type variables should be creted using a Data object
         # lookup type variables should be created using a Lookup object
-        if isinstance(series.values[0], xr.DataArray) and args:
-            # the argument is already given in the model when the model
-            # is called
-            return lambda x, final_subs: utils.rearrange(xr.concat(
-                series.values,
-                series.index).interp(concat_dim=x).reset_coords(
-                'concat_dim', drop=True),
-                dims, self.components._subscript_dict), {'__lookup__': None}
 
-        elif isinstance(series.values[0], xr.DataArray):
+        if isinstance(series.values[0], xr.DataArray):
             # the interpolation will be time dependent
             return lambda: utils.rearrange(xr.concat(
                 series.values,
                 series.index).interp(concat_dim=self.time()).reset_coords(
                 'concat_dim', drop=True),
                 dims, self.components._subscript_dict), {'time': 1}
-
-        elif args and dims:
-            # the argument is already given in the model when the model
-            # is called
-            return lambda x, final_subs: utils.rearrange(
-                np.interp(x, series.index, series.values),
-                dims, self.components._subscript_dict), {'__lookup__': None}
-
-        elif args:
-            # the argument is already given in the model when the model
-            # is called
-            return lambda x, final_subs:\
-                np.interp(x, series.index, series.values), {'__lookup__': None}
 
         elif dims:
             # the interpolation will be time dependent
@@ -1309,20 +1306,9 @@ class Macro(DynamicStateful):
                 np.interp(self.time(), series.index, series.values),\
                 {'time': 1}
 
-    def _constant_component(self, value, dims, args=[]):
+    def _constant_component(self, value, dims):
         """ Internal function for creating a constant model element """
-        if args and dims:
-            # need to pass an argument to keep consistency with the calls
-            # to the function
-            return lambda x: utils.rearrange(
-                value, dims, self.components._subscript_dict)
-
-        elif args:
-            # need to pass an argument to keep consistency with the calls
-            # to the function
-            return lambda x: value
-
-        elif dims:
+        if dims:
             return lambda: utils.rearrange(
                 value, dims, self.components._subscript_dict)
 
@@ -1352,8 +1338,8 @@ class Macro(DynamicStateful):
                 utils.get_key_and_value_by_insensitive_key_or_value(
                     key, self._namespace)[1]
             if component_name is not None:
-                if self.components._dependencies[component_name]:
-                    deps = list(self.components._dependencies[component_name])
+                if self._dependencies[component_name]:
+                    deps = list(self._dependencies[component_name])
                     if len(deps) == 1 and deps[0] in self.initialize_order:
                         stateful_name = deps[0]
             else:
@@ -1626,7 +1612,7 @@ class Model(Macro):
         capture_elements = self._split_capture_elements(capture_elements)
 
         # include outputs in cache if needed
-        self.components._dependencies["OUTPUTS"] = {
+        self._dependencies["OUTPUTS"] = {
             element: 1 for element in capture_elements["step"]
         }
         if cache_output:
@@ -1640,7 +1626,7 @@ class Model(Macro):
 
         res = self._integrate(capture_elements['step'])
 
-        del self.components._dependencies["OUTPUTS"]
+        del self._dependencies["OUTPUTS"]
 
         self._add_run_elements(res, capture_elements['run'])
         self._remove_constant_cache()
@@ -1731,11 +1717,11 @@ class Model(Macro):
         for real_name, py_name in self._namespace.copy().items():
             if py_name not in all_vars:
                 del self._namespace[real_name]
-                del self.components._dependencies[py_name]
+                del self._dependencies[py_name]
 
-        for py_name in self.components._dependencies.copy().keys():
+        for py_name in self._dependencies.copy().keys():
             if py_name.startswith("_") and py_name not in s_deps:
-                del self.components._dependencies[py_name]
+                del self._dependencies[py_name]
 
         # reassing the dictionary and lists of needed stateful objects
         self._stateful_elements = {
@@ -1754,10 +1740,9 @@ class Model(Macro):
 
         # keeping only needed external objects
         ext_deps = set()
-        for values in self.components._dependencies.values():
-            for value in values:
-                if value.startswith("_ext_"):
-                    ext_deps.add(value)
+        for values in self._dependencies.values():
+            if "__external__" in values:
+                ext_deps.add(values["__external__"])
         self._external_elements = [
             getattr(self.components, name) for name in ext_deps
             if isinstance(getattr(self.components, name), External)
@@ -1901,12 +1886,11 @@ class Model(Macro):
         """
         def check_dep(dependencies, initial=False):
             for dep in dependencies:
-                if dep in c_vars or dep.startswith("__")\
-                   or dep.startswith("_ext_"):
+                if dep in c_vars or dep.startswith("__"):
                     pass
                 elif dep.startswith("_"):
                     s_deps.add(dep)
-                    dep = self.components._dependencies[dep]
+                    dep = self._dependencies[dep]
                     check_dep(dep["initial"], True)
                     check_dep(dep["step"])
                 else:
@@ -1935,7 +1919,7 @@ class Model(Macro):
         for var in c_vars:
             if var == "time":
                 continue
-            check_dep(self.components._dependencies[var])
+            check_dep(self._dependencies[var])
 
         return c_vars, d_deps, s_deps
 
