@@ -624,11 +624,18 @@ class Macro(DynamicStateful):
                 + "Please translate again the model with the function"
                 + " read_vensim or read_xmile.")
 
+        self._namespace = self.components._components.component.namespace
+        self._doc = self._build_doc()
+
         if params is not None:
+            # add params to namespace
+            self._namespace.update(self.components._components._params)
+            # create new components with the params
             self.set_components(params, new=True)
+            # update dependencies
             for param in params:
                 self.components._dependencies[
-                    self.components._namespace[param]] = {"time"}
+                    self._namespace[param]] = {"time"}
 
         # Get the collections of stateful elements and external elements
         self._stateful_elements = {
@@ -669,6 +676,14 @@ class Macro(DynamicStateful):
 
     def __call__(self):
         return self.return_func()
+
+    @property
+    def doc(self):
+        return self._doc.copy()
+
+    @property
+    def namespace(self):
+        return self._namespace.copy()
 
     def clean_caches(self):
         self.cache.clean()
@@ -804,7 +819,7 @@ class Macro(DynamicStateful):
         """
         self.cache_type = {"time": None}
 
-        for element in self.components._namespace.values():
+        for element in self._namespace.values():
             if element not in self.cache_type\
                and element in self.components._dependencies:
                 self._assign_cache(element)
@@ -1024,7 +1039,7 @@ class Macro(DynamicStateful):
         if isinstance(param, str):
             func_name = utils.get_key_and_value_by_insensitive_key_or_value(
                 param,
-                self.components._namespace)[1] or param
+                self._namespace)[1] or param
 
             func = getattr(self.components, func_name)
         else:
@@ -1064,7 +1079,7 @@ class Macro(DynamicStateful):
         if isinstance(param, str):
             func_name = utils.get_key_and_value_by_insensitive_key_or_value(
                 param,
-                self.components._namespace)[1] or param
+                self._namespace)[1] or param
 
             func = getattr(self.components, func_name)
 
@@ -1114,7 +1129,7 @@ class Macro(DynamicStateful):
         """
         func_name = utils.get_key_and_value_by_insensitive_key_or_value(
             param,
-            self.components._namespace)[1] or param
+            self._namespace)[1] or param
 
         if self.get_args(getattr(self.components, func_name)):
             raise ValueError(
@@ -1147,7 +1162,7 @@ class Macro(DynamicStateful):
         """
         func_name = utils.get_key_and_value_by_insensitive_key_or_value(
             param,
-            self.components._namespace)[1] or param
+            self._namespace)[1] or param
 
         try:
             if func_name.startswith("_ext_"):
@@ -1188,7 +1203,7 @@ class Macro(DynamicStateful):
         for key, value in params.items():
             func_name = utils.get_key_and_value_by_insensitive_key_or_value(
                 key,
-                self.components._namespace)[1]
+                self._namespace)[1]
 
             if isinstance(value, np.ndarray) or isinstance(value, list):
                 raise TypeError(
@@ -1335,7 +1350,7 @@ class Macro(DynamicStateful):
         for key, value in initial_value.items():
             component_name =\
                 utils.get_key_and_value_by_insensitive_key_or_value(
-                    key, self.components._namespace)[1]
+                    key, self._namespace)[1]
             if component_name is not None:
                 if self.components._dependencies[component_name]:
                     deps = list(self.components._dependencies[component_name])
@@ -1421,13 +1436,6 @@ class Macro(DynamicStateful):
             for attr, value in attrs.items():
                 setattr(getattr(self.components, element), attr, value)
 
-    @property
-    def doc(self):
-        return self._doc.copy()
-
-    def namespace(self):
-        return self.components._namespace.copy()
-
     def subscript_dict(self):
         return self.components._subscript_dict.copy()
 
@@ -1447,7 +1455,7 @@ class Macro(DynamicStateful):
                 - Documentation strings from the original model file
         """
         collector = []
-        for name, pyname in self.components._namespace.items():
+        for name, pyname in self._namespace.items():
             element = getattr(self.components, pyname)
             collector.append({
                 'Real Name': name,
@@ -1491,7 +1499,6 @@ class Model(Macro):
         self.time.set_control_vars(**self.components._control_vars)
         self.data_files = data_files
         self.missing_values = missing_values
-        self._doc = self._build_doc()
         if initialize:
             self.initialize()
 
@@ -1613,7 +1620,7 @@ class Model(Macro):
             return_columns = self._default_return_columns(return_columns)
 
         capture_elements, return_addresses = utils.get_return_elements(
-            return_columns, self.components._namespace)
+            return_columns, self._namespace)
 
         # create a dictionary splitting run cached and others
         capture_elements = self._split_capture_elements(capture_elements)
@@ -1721,9 +1728,9 @@ class Model(Macro):
         all_vars.update(c_vars)
 
         # clean dependendies and namespace dictionaries
-        for real_name, py_name in self.components._namespace.copy().items():
+        for real_name, py_name in self._namespace.copy().items():
             if py_name not in all_vars:
-                del self.components._namespace[real_name]
+                del self._namespace[real_name]
                 del self.components._dependencies[py_name]
 
         for py_name in self.components._dependencies.copy().keys():
@@ -1763,7 +1770,7 @@ class Model(Macro):
             {
                 utils.get_key_and_value_by_insensitive_key_or_value(
                     key,
-                    self.components._namespace)[1]: value
+                    self._namespace)[1]: value
             }) for key, value in exogenous_components.items()]
 
         self.set_components(new_components)
@@ -1920,7 +1927,7 @@ class Model(Macro):
         for var in vars:
             py_name = utils.get_key_and_value_by_insensitive_key_or_value(
                     var,
-                    self.components._namespace)[1]
+                    self._namespace)[1]
             c_vars.add(py_name)
         for module in modules:
             c_vars.update(self.get_vars_in_module(module))
@@ -2011,7 +2018,7 @@ class Model(Macro):
 
         return_columns = []
 
-        for key, pykey in self.components._namespace.items():
+        for key, pykey in self._namespace.items():
             if pykey in self.cache_type and self.cache_type[pykey] in types\
                and not self.get_args(pykey):
 

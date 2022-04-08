@@ -49,6 +49,12 @@ class SectionBuilder:
         self.macrospace = {}
         self.dependencies = {}
 
+        # create parameters dict necessary in macros
+        self.params = {
+            key: self.namespace.namespace[key]
+            for key in self.params
+        }
+
     def build_section(self):
         # Create namespace
         for element in self.elements:
@@ -198,7 +204,7 @@ class SectionBuilder:
         # import of needed functions and packages
         text = self.imports.get_header(self.path.name)
 
-        # import namespace from json file
+        # import subscript dict and dependencies from json file
         text += textwrap.dedent("""
         __pysd_version__ = '%(version)s'
 
@@ -208,10 +214,14 @@ class SectionBuilder:
         }
 
         _root = Path(__file__).parent
-
-        _namespace, _subscript_dict, _dependencies, _modules = load_model_data(
+        %(params)s
+        _subscript_dict, _dependencies, _modules = load_model_data(
             _root, "%(model_name)s")
+
+        component = Component()
         """ % {
+            "params": f"\n        _params = {self.params}\n"
+                      if self.params else "",
             "model_name": self.model_name,
             "version": __version__
         })
@@ -246,16 +256,17 @@ class SectionBuilder:
         }
 
         _root = Path(__file__).parent
-
+        %(params)s
         _subscript_dict = %(subscript_dict)s
 
-        _namespace = %(namespace)s
-
         _dependencies = %(dependencies)s
+
+        component = Component()
         """ % {
             "subscript_dict": repr(self.subscripts.subscripts),
-            "namespace": repr(self.namespace.namespace),
             "dependencies": repr(self.dependencies),
+            "params": f"\n        _params = {self.params}\n"
+                      if self.params else "",
             "version": __version__,
         })
 
@@ -367,7 +378,7 @@ class SectionBuilder:
                 __data[key] = data[key]
 
 
-        @component(name="Time")
+        @component.add(name="Time")
         def time():
             '''
             Current time of the model.
@@ -566,10 +577,12 @@ class ElementBuilder:
             self.arguments = 'x, final_subs=None'
 
         # define variable metadata for the @component decorator
-        meta_data = [f"name={repr(self.name)}"]
+        self.name = repr(self.name)
+        meta_data = ["name=%(name)s"]
 
         if self.units:
-            meta_data.append(f"units={repr(self.units)}")
+            meta_data.append("units=%(units)s")
+            self.units = repr(self.units)
         if self.limits:
             meta_data.append("limits=%(limits)s")
         if self.subscripts:
@@ -583,7 +596,7 @@ class ElementBuilder:
         meta_data.append("comp_type='%(type)s'")
         meta_data.append("comp_subtype='%(subtype)s'")
 
-        self.meta_data = f"@component({', '.join(meta_data)})"\
+        self.meta_data = f"@component.add({', '.join(meta_data)})"\
             % self.__dict__
 
         indent = 12

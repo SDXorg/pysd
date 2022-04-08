@@ -302,7 +302,7 @@ def load_model_data(root, model_name):
 
     """
     Used for models split in several files.
-    Loads subscripts_dic, namespace and modules dictionaries
+    Loads subscripts, depenencies and modules dictionaries
 
     Parameters
     ----------
@@ -314,13 +314,12 @@ def load_model_data(root, model_name):
 
     Returns
     -------
-    namespace: dict
-        Translation from original model element names (keys) to python safe
-        function identifiers (values).
-
     subscripts: dict
         Dictionary describing the possible dimensions of the stock's
         subscripts.
+
+    dependencies: dict
+        DIctionary containing the dependencies of each model component.
 
     modules: dict
         Dictionary containing view (module) names as keys and a list of the
@@ -335,8 +334,6 @@ def load_model_data(root, model_name):
     with open(root.joinpath("_subscripts_" + model_name + ".json")) as subs:
         subscripts = json.load(subs)
 
-    with open(root.joinpath("_namespace_" + model_name + ".json")) as names:
-        namespace = json.load(names)
     with open(root.joinpath("_dependencies_" + model_name + ".json")) as deps:
         dependencies = json.load(deps)
 
@@ -345,7 +342,7 @@ def load_model_data(root, model_name):
     with open(root.joinpath("modules_" + model_name, "_modules.json")) as mods:
         modules = json.load(mods)
 
-    return namespace, subscripts, dependencies, modules
+    return subscripts, dependencies, modules
 
 
 def load_modules(module_name, module_content, work_dir, submodules):

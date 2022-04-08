@@ -119,11 +119,11 @@ class TestSubmodel:
         assert "_integ_other_stock" in model._stateful_elements
         assert "_integ_other_stock" in model.components._dependencies
         assert "other_stock" in model.components._dependencies
-        assert "other stock" in model.components._namespace
+        assert "other stock" in model._namespace
         assert "_integ_stock" in model._stateful_elements
         assert "_integ_stock" in model.components._dependencies
         assert "stock" in model.components._dependencies
-        assert "Stock" in model.components._namespace
+        assert "Stock" in model._namespace
 
         # select submodel
         with pytest.warns(UserWarning) as record:
@@ -137,11 +137,11 @@ class TestSubmodel:
         assert "_integ_other_stock" not in model._stateful_elements
         assert "_integ_other_stock" not in model.components._dependencies
         assert "other_stock" not in model.components._dependencies
-        assert "other stock" not in model.components._namespace
+        assert "other stock" not in model._namespace
         assert "_integ_stock" in model._stateful_elements
         assert "_integ_stock" in model.components._dependencies
         assert "stock" in model.components._dependencies
-        assert "Stock" in model.components._namespace
+        assert "Stock" in model._namespace
 
         if not dep_vars:
             # totally independent submodels can run without producing

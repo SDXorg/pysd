@@ -112,7 +112,7 @@ class TestSplitViews:
             assert file.is_file(), f"File {file} has not been created..."
 
         # check the dictionaries
-        assert isinstance(model_split.components._namespace, dict)
+        assert isinstance(model_split._namespace, dict)
         assert isinstance(model_split.components._subscript_dict, dict)
         assert isinstance(model_split.components._dependencies, dict)
         assert isinstance(model_split.components._modules, dict)
@@ -124,7 +124,7 @@ class TestSplitViews:
 
         # assert that original variables are in the namespace
         for var in original_vars:
-            assert var in model_split.components._namespace.keys()
+            assert var in model_split._namespace.keys()
 
         # assert that the functions are not defined in the main file
         model_py_file = model_file.with_suffix(".py")

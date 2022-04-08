@@ -734,7 +734,7 @@ class TestPySD(unittest.TestCase):
                          ["_integ_stock_a", "_integ_stock_b"])
         self.assertEqual(model.components.stock_b(), 42)
         self.assertEqual(model.components.stock_a(), 42)
-        model.components.initial_parameter = lambda: 1
+        model.components.initial_par = lambda: 1
         model.initialize()
         self.assertEqual(model.components.stock_b(), 1)
         self.assertEqual(model.components.stock_a(), 1)

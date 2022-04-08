@@ -121,6 +121,7 @@ class TestInputFunctions(unittest.TestCase):
         self.assertEqual(zidz(1, 0), 0)
         self.assertEqual(zidz(1, 8), 0.125)
 
+
 class TestLogicFunctions(unittest.TestCase):
     def test_if_then_else_basic(self):
         from pysd.py_backend.functions import if_then_else

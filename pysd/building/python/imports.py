@@ -72,6 +72,6 @@ class ImportsManager():
                             "module": module,
                             "methods": ", ".join(getattr(self, f"_{module}"))}
 
-        text += "from pysd import component\n"
+        text += "from pysd import Component\n"
 
         return text
