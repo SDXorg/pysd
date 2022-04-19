@@ -258,6 +258,7 @@ class TabData(Data):
         self.real_name = real_name
         self.py_name = py_name
         self.coords = coords
+        self.final_coords = coords
         self.interp = interp.replace(" ", "_") if interp else None
         self.is_float = not bool(coords)
         self.data = None

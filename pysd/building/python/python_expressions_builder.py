@@ -999,10 +999,13 @@ class LookupsBuilder(StructureBuilder):
             arguments["name"] = self.section.namespace.make_python_identifier(
                 self.element.identifier, prefix="_hardcodedlookup")
 
+            arguments["final_subs"] = self.element.subs_dict
+
             self.element.objects["hardcoded_lookups"] = {
                 "name": arguments["name"],
                 "expression": "%(name)s = HardcodedLookups(%(x)s, %(y)s, "
-                              "%(subscripts)s, '%(interp)s', '%(name)s')"
+                              "%(subscripts)s, '%(interp)s', "
+                              "%(final_subs)s, '%(name)s')"
                               % arguments
             }
 

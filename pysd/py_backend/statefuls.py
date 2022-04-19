@@ -17,6 +17,7 @@ from .functions import zidz, if_then_else
 from .external import External, Excels
 from .cache import Cache, constant_cache
 from .data import TabData
+from .lookups import HardcodedLookups
 from .components import Components, Time
 
 from pysd._version import __version__
@@ -610,6 +611,7 @@ class Macro(DynamicStateful):
         self.cache = Cache()
         self.py_name = py_name
         self.external_loaded = False
+        self.lookups_loaded = False
         self.components = Components(str(py_model_file), self.set_components)
 
         if __version__.split(".")[0]\
@@ -660,6 +662,11 @@ class Macro(DynamicStateful):
         self._data_elements = [
             getattr(self.components, name) for name in dir(self.components)
             if isinstance(getattr(self.components, name), TabData)
+        ]
+
+        self._lookup_elements = [
+            getattr(self.components, name) for name in dir(self.components)
+            if isinstance(getattr(self.components, name), HardcodedLookups)
         ]
 
         if data_files:
@@ -936,6 +943,13 @@ class Macro(DynamicStateful):
             'scope': self,
             'time': self.time
         })
+
+        if not self.lookups_loaded:
+            # Initialize HardcodedLookups elements
+            for element in self._lookup_elements:
+                element.initialize()
+
+            self.lookups_loaded = True
 
         if not self.external_loaded:
             # Initialize external elements

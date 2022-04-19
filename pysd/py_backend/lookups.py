@@ -123,28 +123,54 @@ class Lookups(object):
 class HardcodedLookups(Lookups):
     """Class for lookups defined in the file"""
 
-    def __init__(self, x, y, coords, interp, py_name):
+    def __init__(self, x, y, coords, interp, final_coords, py_name):
         # TODO: avoid add and merge all declarations in one definition
-        # TODO: add final subs
         self.is_float = not bool(coords)
         self.py_name = py_name
-        y = np.array(y).reshape((len(x),) + (1,)*len(coords))
-        self.data = xr.DataArray(
-            np.tile(y, [1] + utils.compute_shape(coords)),
-            {"lookup_dim": x, **coords},
-            ["lookup_dim"] + list(coords)
-        )
-        self.x = set(x)
+        self.final_coords = final_coords
+        self.values = [(x, y, coords)]
         self.interp = interp
 
     def add(self, x, y, coords):
-        y = np.array(y).reshape((len(x),) + (1,)*len(coords))
-        self.data = self.data.combine_first(
-            xr.DataArray(
-                np.tile(y, [1] + utils.compute_shape(coords)),
-                {"lookup_dim": x, **coords},
-                ["lookup_dim"] + list(coords)
-            ))
+        self.values.append((x, y, coords))
+
+    def initialize(self):
+        """
+        Initialize all elements and create the self.data xarray.DataArray
+        """
+        if len(self.values) == 1:
+            # Just loag one value (no add)
+            for x, y, coords in self.values:
+                y = np.array(y).reshape((len(x),) + (1,)*len(coords))
+                self.data = xr.DataArray(
+                    np.tile(y, [1] + utils.compute_shape(coords)),
+                    {"lookup_dim": x, **coords},
+                    ["lookup_dim"] + list(coords)
+                )
+        else:
+            # Load in several lines (add)
+            self.data = xr.DataArray(
+                np.nan, self.final_coords, list(self.final_coords))
+
+            for x, y, coords in self.values:
+                if "lookup_dim" not in self.data.dims:
+                    # include lookup_dim dimension in the final array
+                    self.data = self.data.expand_dims(
+                        {"lookup_dim": x}, axis=0).copy()
+                else:
+                    # add new coordinates (if needed) to lookup_dim
+                    x_old = list(self.data.lookup_dim.values)
+                    x_new = list(set(x).difference(x_old))
+                    self.data = self.data.reindex(lookup_dim=x_old+x_new)
+
+                # reshape y value and assign it to self.data
+                y = np.array(y).reshape((len(x),) + (1,)*len(coords))
+                self.data.loc[{"lookup_dim": x, **coords}] =\
+                    np.tile(y, [1] + utils.compute_shape(coords))
+
+        # sort data
+        self.data = self.data.sortby("lookup_dim")
+
         if np.any(np.isnan(self.data)):
             # fill missing values of different input lookup_dim values
             values = self.data.values
