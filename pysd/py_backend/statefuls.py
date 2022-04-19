@@ -1471,7 +1471,6 @@ class Macro(DynamicStateful):
 
         if collector:
             docs_df = pd.DataFrame(collector)
-            docs_df.fillna("None", inplace=True)
             return docs_df.sort_values(by="Real Name").reset_index(drop=True)
         else:
             # manage models with no documentation (mainly test models)
