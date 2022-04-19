@@ -85,7 +85,6 @@ class TestSplitViews:
         )
         modules_dir = shared_tmpdir.joinpath("modules_" + model_name)
         files = {
-            shared_tmpdir.joinpath("_namespace_" + model_name + ".json"),
             shared_tmpdir.joinpath("_subscripts_" + model_name + ".json"),
             shared_tmpdir.joinpath("_dependencies_" + model_name + ".json"),
             modules_dir.joinpath("_modules.json")

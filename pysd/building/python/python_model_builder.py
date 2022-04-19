@@ -123,7 +123,6 @@ class SectionBuilder:
 
         for file, values in {
           "modules_%s/_modules": elements_per_view,
-          "_namespace_%s": self.namespace.namespace,
           "_subscripts_%s": self.subscripts.subscripts,
           "_dependencies_%s": self.dependencies}.items():
 

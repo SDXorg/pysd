@@ -198,7 +198,6 @@ class TestPySD(unittest.TestCase):
         root_dir = os.path.join(_root, "more-tests/split_model") + "/"
 
         model_name = "test_split_model"
-        namespace_filename = "_namespace_" + model_name + ".json"
         dependencies_filename = "_dependencies_" + model_name + ".json"
         subscript_filename = "_subscripts_" + model_name + ".json"
         modules_filename = "_modules.json"
@@ -209,8 +208,7 @@ class TestPySD(unittest.TestCase):
         out = subprocess.run(split_bash(command), capture_output=True)
         self.assertEqual(out.returncode, 0)
 
-        # check that _namespace and _subscript_dict json files where created
-        self.assertTrue(os.path.isfile(root_dir + namespace_filename))
+        # check that _subscript_dict and dependencies json files where created
         self.assertTrue(os.path.isfile(root_dir + subscript_filename))
         self.assertTrue(os.path.isfile(root_dir + dependencies_filename))
 
@@ -233,7 +231,6 @@ class TestPySD(unittest.TestCase):
 
         # remove newly created files
         os.remove(root_dir + model_name + ".py")
-        os.remove(root_dir + namespace_filename)
         os.remove(root_dir + subscript_filename)
         os.remove(root_dir + dependencies_filename)
 
@@ -254,7 +251,6 @@ class TestPySD(unittest.TestCase):
             subview_sep=["."]
         )
 
-        namespace_filename = "_namespace_" + model_name + ".json"
         subscript_filename = "_subscripts_" + model_name + ".json"
         dependencies_filename = "_dependencies_" + model_name + ".json"
         modules_dirname = "modules_" + model_name
@@ -293,7 +289,6 @@ class TestPySD(unittest.TestCase):
 
         # remove newly created files
         os.remove(root_dir + model_name + ".py")
-        os.remove(root_dir + namespace_filename)
         os.remove(root_dir + subscript_filename)
         os.remove(root_dir + dependencies_filename)
 
