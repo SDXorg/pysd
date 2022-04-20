@@ -5,8 +5,9 @@ Importing a model and getting started
 -------------------------------------
 To begin, we must first load the PySD module, and use it to import a supported model file::
 
-   import pysd
-   model = pysd.read_vensim('Teacup.mdl')
+   >>> import pysd
+   >>> model = pysd.read_vensim('Teacup.mdl')
+
 
 This code creates an instance of the PySD class loaded with an example model that we will use as the system dynamics equivalent of ‘Hello World’: a cup of tea cooling to room temperature.
 
@@ -14,21 +15,35 @@ This code creates an instance of the PySD class loaded with an example model tha
    :width: 350 px
    :align: center
 
+.. note::
+   The teacupe model can be found in the `samples of the test-models repository <https://github.com/SDXorg/test-models/tree/master/samples>`_.
+
 To view a synopsis of the model equations and documentation, call the :py:func:`.doc()` method of the model class. This will generate a listing of all the model elements, their documentation, units, equations, and initial values, where appropriate. Here is a sample from the teacup model::
 
-   >>> print model.doc()
+   >>> print(model.doc())
+
+                Real Name              Py Name                       Unit             Lims       Type  Subs                                                Eqn                                            Comment
+   0  Characteristic Time  characteristic_time                    Minutes      (0.0, None)   constant  None                                                 10  How long will it take the teacup to cool 1/e o...
+   1           FINAL TIME           final_time                     Minute     (None, None)   constant  None                                                 30                 The final time for the simulation.
+   2    Heat Loss to Room    heat_loss_to_room  Degrees Fahrenheit/Minute     (None, None)  component  None  (Teacup Temperature - Room Temperature) / Char...  This is the rate at which heat flows from the ...
+   3         INITIAL TIME         initial_time                     Minute     (None, None)   constant  None                                                  0               The initial time for the simulation.
+   4     Room Temperature     room_temperature         Degrees Fahrenheit  (-459.67, None)   constant  None                                                 70  Put in a check to ensure the room temperature ...
+   5              SAVEPER              saveper                     Minute      (0.0, None)  component  None                                          TIME STEP         The frequency with which output is stored.
+   6            TIME STEP            time_step                     Minute      (0.0, None)   constant  None                                              0.125                  The time step for the simulation.
+   7   Teacup Temperature   teacup_temperature         Degrees Fahrenheit    (32.0, 212.0)  component  None                   INTEG ( -Heat Loss to Room, 180)  The model is only valid for the liquid phase o...
+
 
 .. note::
   You can also load an already translated model file, what will be faster as you will load a Python file::
 
-     import pysd
-     model = pysd.load('Teacup.py')
+     >>> import pysd
+     >>> model = pysd.load('Teacup.py')
 
 .. note::
   The functions :py:func:`read_vensim()`,  :py:func:`read_xmile()` and :py:func:`load()` have optional arguments for advanced usage, you can check the full description in :doc:`User Functions Reference <../functions>` or using :py:func:`help()` e.g.::
 
-     import pysd
-     help(pysd.load)
+     >>> import pysd
+     >>> help(pysd.load)
 
 
 Running the Model
@@ -46,9 +61,9 @@ The simplest way to simulate the model is to use the :py:func:`.run()` command w
 
 Pandas gives us simple plotting capability, so we can see how the cup of tea behaves::
 
-   stocks.plot()
-   plt.ylabel('Degrees F')
-   plt.xlabel('Minutes')
+   >>> stocks.plot()
+   >>> plt.ylabel('Degrees F')
+   >>> plt.xlabel('Minutes')
 
 .. image:: images/Teacup_Cooling.png
    :width: 400 px
@@ -116,29 +131,29 @@ In many cases, we want to modify the parameters of the model to investigate its 
 
 This argument expects a dictionary whose keys correspond to the components of the model.  The associated values can either be a constant, or a Pandas series whose indices are timestamps and whose values are the values that the model component should take on at the corresponding time. For instance, in our model we can set the room temperature to a constant value::
 
-   model.run(params={'Room Temperature': 20})
+   >>> model.run(params={'Room Temperature': 20})
 
 Alternately, if we believe the room temperature is changing over the course of the simulation, we can give the run function a set of time-series values in the form of a Pandas series, and PySD will linearly interpolate between the given values in the course of its integration::
 
-   import pandas as pd
-   temp = pd.Series(index=range(30), data=range(20, 80, 2))
-   model.run(params={'Room Temperature':temp})
+   >>> import pandas as pd
+   >>> temp = pd.Series(index=range(30), data=range(20, 80, 2))
+   >>> model.run(params={'Room Temperature': temp})
 
 If the parameter value to change is a subscripted variable (vector, matrix...), there are three different options to set new value. Suposse we have ‘Subscripted var’ with dims :py:data:`['dim1', 'dim2']` and coordinates :py:data:`{'dim1': [1, 2], 'dim2': [1, 2]}`. A constant value can be used and all the values will be replaced::
 
-   model.run(params={'Subscripted var': 0})
+   >>> model.run(params={'Subscripted var': 0})
 
 A partial *xarray.DataArray* can be used, for example a new variable with ‘dim2’ but not ‘dim2’, the result will be repeated in the remaining dimensions::
 
-   import xarray as xr
-   new_value = xr.DataArray([1,5], {'dim2': [1, 2]}, ['dim2'])
-   model.run(params={'Subscripted var': new_value})
+   >>> import xarray as xr
+   >>> new_value = xr.DataArray([1, 5], {'dim2': [1, 2]}, ['dim2'])
+   >>> model.run(params={'Subscripted var': new_value})
 
 Same dimensions *xarray.DataArray* can be used (recommended)::
 
-   import xarray as xr
-   new_value = xr.DataArray([[1,5],[3,4]], {'dim1': [1, 2], 'dim2': [1, 2]}, ['dim1', 'dim2'])
-   model.run(params={'Subscripted var': new_value})
+   >>> import xarray as xr
+   >>> new_value = xr.DataArray([[1, 5], [3, 4]], {'dim1': [1, 2], 'dim2': [1, 2]}, ['dim1', 'dim2'])
+   >>> model.run(params={'Subscripted var': new_value})
 
 In the same way, a Pandas series can be used with constan values, partially defined *xarray.DataArrays* or same dimensions *xarray.DataArrays*.
 
@@ -177,14 +192,14 @@ Setting simulation initial conditions
 -------------------------------------
 Finally, we can set the initial conditions of our model in several ways. So far, we’ve been using the default value for the initial_condition keyword argument, which is ‘original’. This value runs the model from the initial conditions that were specified originally by the model file. We can alternately specify a tuple containing the start time and a dictionary of values for the system’s stocks. Here we start the model with the tea at just above freezing::
 
-   model.run(initial_condition=(0, {'Teacup Temperature': 33}))
+   >>> model.run(initial_condition=(0, {'Teacup Temperature': 33}))
 
 The new value setted can be a *xarray.DataArray* as it is explained in the previous section.
 
 Additionally we can run the model forward from its current position, by passing the initial_condition argument the keyword ‘current’. After having run the model from time zero to thirty, we can ask the model to continue running forward for another chunk of time::
 
-   model.run(initial_condition='current',
-             return_timestamps=range(31,45))
+   >>> model.run(initial_condition='current',
+                 return_timestamps=range(31, 45))
 
 The integration picks up at the last value returned in the previous run condition, and returns values at the requested timestamps.
 
@@ -195,11 +210,11 @@ Querying current values
 -----------------------
 We can easily access the current value of a model component using curly brackets. For instance, to find the temperature of the teacup, we simply call::
 
-   model['Teacup Temperature']
+   >>> model['Teacup Temperature']
 
 If you try to get the current values of a lookup variable the previous method will fail as lookup variables take arguments. However, it is possible to get the full series of a lookup or data object with :py:func:`.get_series_data` method::
 
-   model.get_series_data('Growth lookup')
+   >>> model.get_series_data('Growth lookup')
 
 Supported functions
 -------------------
