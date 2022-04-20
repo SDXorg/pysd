@@ -133,6 +133,22 @@ class TestUtils(TestCase):
         self.assertEqual(set(actual.columns), set(expected.columns))
         assert_frames_close(actual, expected, rtol=1e-8, atol=1e-8)
 
+    def test_make_flat_df_0dxarray(self):
+        import pysd
+
+        df = pd.DataFrame(index=[1], columns=['elem1'])
+        df.at[1] = [xr.DataArray(5)]
+
+        expected = pd.DataFrame(index=[1], data={'Elem1': 5.})
+
+        return_addresses = {'Elem1': ('elem1', {})}
+
+        actual = pysd.utils.make_flat_df(df, return_addresses, flatten=True)
+
+        # check all columns are in the DataFrame
+        self.assertEqual(set(actual.columns), set(expected.columns))
+        assert_frames_close(actual, expected, rtol=1e-8, atol=1e-8)
+
     def test_make_flat_df_nosubs(self):
         import pysd
 

@@ -33,7 +33,7 @@ import pysd
             [".", "-"],
             ["variablex"],
             ["view_3/subview_1", "view_1/submodule_1"],
-            (12, 0, 1, 1, 1),
+            (12, 0, 1, 1, 2),
             {"another_var": 5, "look_up_definition": 3}
         )
     ],

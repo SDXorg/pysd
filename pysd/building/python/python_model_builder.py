@@ -423,7 +423,7 @@ class ElementBuilder:
         new_limits = []
         for value in limits:
             value = repr(value)
-            if value == "nan" or value is None:
+            if value == "nan" or value == "None":
                 self.section.imports.add("numpy")
                 new_limits.append("np.nan")
             elif value.endswith("inf"):

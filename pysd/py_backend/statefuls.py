@@ -1585,7 +1585,7 @@ class Model(Macro):
         --------
         >>> model.run(params={'exogenous_constant': 42})
         >>> model.run(params={'exogenous_variable': timeseries_input})
-        >>> model.run(return_timestamps=[1, 2, 3.1415, 4, 10])
+        >>> model.run(return_timestamps=[1, 2, 3, 4, 10])
         >>> model.run(return_timestamps=10)
         >>> model.run(return_timestamps=np.linspace(1, 10, 20))
 

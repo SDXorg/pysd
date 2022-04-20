@@ -84,7 +84,7 @@ class Element():
                 for x in lims.strip("]").split(",")
             ]
         )
-        return units, lims
+        return units.strip(), lims
 
     def parse(self) -> object:
         """
