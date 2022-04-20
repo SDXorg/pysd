@@ -18,9 +18,10 @@ This code creates an instance of the PySD class loaded with an example model tha
 .. note::
    The teacupe model can be found in the `samples of the test-models repository <https://github.com/SDXorg/test-models/tree/master/samples>`_.
 
-To view a synopsis of the model equations and documentation, call the :py:func:`.doc()` method of the model class. This will generate a listing of all the model elements, their documentation, units, equations, and initial values, where appropriate. Here is a sample from the teacup model::
 
-   >>> print(model.doc())
+To view a synopsis of the model equations and documentation, call the :py:func:`.doc()` method of the model class. This will generate a listing of all the model elements, their documentation, units, equations, and initial values, where appropriate, and return them as a :py:class:`pandas.DataFrame`. Here is a sample from the teacup model::
+
+   >>> model.doc()
 
                 Real Name              Py Name                       Unit             Lims       Type  Subs                                                Eqn                                            Comment
    0  Characteristic Time  characteristic_time                    Minutes      (0.0, None)   constant  None                                                 10  How long will it take the teacup to cool 1/e o...
