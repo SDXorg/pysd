@@ -18,19 +18,20 @@ This code creates an instance of the PySD class loaded with an example model tha
 .. note::
    The teacupe model can be found in the `samples of the test-models repository <https://github.com/SDXorg/test-models/tree/master/samples>`_.
 
-To view a synopsis of the model equations and documentation, call the :py:func:`.doc()` method of the model class. This will generate a listing of all the model elements, their documentation, units, equations, and initial values, where appropriate. Here is a sample from the teacup model::
+To view a synopsis of the model equations and documentation, call the :py:func:`.doc` property of the model class. This will generate a listing of all the model elements, their documentation, units, and initial values, where appropriate, and return them as a :py:class:`pandas.DataFrame`. Here is a sample from the teacup model::
 
-   >>> print(model.doc())
+   >>> model.doc
 
-                Real Name              Py Name                       Unit             Lims       Type  Subs                                                Eqn                                            Comment
-   0  Characteristic Time  characteristic_time                    Minutes      (0.0, None)   constant  None                                                 10  How long will it take the teacup to cool 1/e o...
-   1           FINAL TIME           final_time                     Minute     (None, None)   constant  None                                                 30                 The final time for the simulation.
-   2    Heat Loss to Room    heat_loss_to_room  Degrees Fahrenheit/Minute     (None, None)  component  None  (Teacup Temperature - Room Temperature) / Char...  This is the rate at which heat flows from the ...
-   3         INITIAL TIME         initial_time                     Minute     (None, None)   constant  None                                                  0               The initial time for the simulation.
-   4     Room Temperature     room_temperature         Degrees Fahrenheit  (-459.67, None)   constant  None                                                 70  Put in a check to ensure the room temperature ...
-   5              SAVEPER              saveper                     Minute      (0.0, None)  component  None                                          TIME STEP         The frequency with which output is stored.
-   6            TIME STEP            time_step                     Minute      (0.0, None)   constant  None                                              0.125                  The time step for the simulation.
-   7   Teacup Temperature   teacup_temperature         Degrees Fahrenheit    (32.0, 212.0)  component  None                   INTEG ( -Heat Loss to Room, 180)  The model is only valid for the liquid phase o...
+                Real Name              Py Name Subscripts                     Units           Limits        Type Subtype                                            Comment
+   0  Characteristic Time  characteristic_time       None                   Minutes        (0.0, nan)   Constant  Normal  How long will it take the teacup to cool 1/e o...
+   1           FINAL TIME           final_time       None                    Minute        (nan, nan)   Constant  Normal                 The final time for the simulation.
+   2    Heat Loss to Room    heat_loss_to_room       None Degrees Fahrenheit/Minute        (nan, nan)  Auxiliary  Normal  This is the rate at which heat flows from the ...
+   3         INITIAL TIME         initial_time       None                    Minute        (nan, nan)   Constant  Normal               The initial time for the simulation.
+   4     Room Temperature     room_temperature       None        Degrees Fahrenheit    (-459.67, nan)   Constant  Normal  Put in a check to ensure the room temperature ...
+   5              SAVEPER              saveper       None                    Minute        (0.0, nan)  Auxiliary  Normal         The frequency with which output is stored.
+   6            TIME STEP            time_step       None                    Minute        (0.0, nan)   Constant  Normal                  The time step for the simulation.
+   7   Teacup Temperature   teacup_temperature       None        Degrees Fahrenheit     (32.0, 212.0)   Stateful   Integ  The model is only valid for the liquid phase o...
+   8                 Time                 time       None                      None        (nan, nan)       None    None                         Current time of the model.
 
 
 .. note::
@@ -215,4 +216,3 @@ We can easily access the current value of a model component using curly brackets
 If you try to get the current values of a lookup variable the previous method will fail as lookup variables take arguments. However, it is possible to get the full series of a lookup or data object with :py:func:`.get_series_data` method::
 
    >>> model.get_series_data('Growth lookup')
-

@@ -142,7 +142,8 @@ texinfo_documents = [
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3.7', None),
-    'pysdcookbook': ('http://pysd-cookbook.readthedocs.org/en/latest/', None)
+    'pysdcookbook': ('http://pysd-cookbook.readthedocs.org/en/latest/', None),
+    'pandas': ('https://pandas.pydata.org/docs/', None)
 }
 
 # -- Options for autodoc --------------------------------------------------
