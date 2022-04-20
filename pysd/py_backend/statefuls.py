@@ -1736,6 +1736,12 @@ class Model(Macro):
             if py_name.startswith("_") and py_name not in s_deps:
                 del self._dependencies[py_name]
 
+        # remove active initial from s_deps as they are "fake" objects
+        # in dependencies
+        s_deps = {
+            dep for dep in s_deps if not dep.startswith("_active_initial")
+        }
+
         # reassing the dictionary and lists of needed stateful objects
         self._stateful_elements = {
             name: getattr(self.components, name)
