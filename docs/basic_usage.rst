@@ -16,7 +16,7 @@ This code creates an instance of the PySD class loaded with an example model tha
    :align: center
 
 .. note::
-   The teacupe model can be found in the `samples of the test-models repository <https://github.com/SDXorg/test-models/tree/master/samples>`_.
+   The teacup model can be found in the `samples of the test-models repository <https://github.com/SDXorg/test-models/tree/master/samples>`_.
 
 To view a synopsis of the model equations and documentation, call the :py:func:`.doc` property of the model class. This will generate a listing of all the model elements, their documentation, units, and initial values, where appropriate, and return them as a :py:class:`pandas.DataFrame`. Here is a sample from the teacup model::
 
