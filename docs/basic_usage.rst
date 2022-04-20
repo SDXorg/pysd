@@ -48,22 +48,34 @@ To view a synopsis of the model equations and documentation, call the :py:func:`
 
 Running the Model
 -----------------
-The simplest way to simulate the model is to use the :py:func:`.run()` command with no options. This runs the model with the default parameters supplied by the model file, and returns a Pandas dataframe of the values of the stocks at every timestamp::
+The simplest way to simulate the model is to use the :py:func:`.run()` command with no options. This runs the model with the default parameters supplied by the model file, and returns a :py:class:`pandas.DataFrame` of the values of the model components at every timestamp::
 
    >>> stocks = model.run()
+   >>> stocks
 
-   t        teacup_temperature
-   0.000    180.000000
-   0.125    178.633556
-   0.250    177.284091
-   0.375    175.951387
-   …
+         Characteristic Time  Heat Loss to Room  Room Temperature  Teacup Temperature  FINAL TIME  INITIAL TIME  SAVEPER  TIME STEP
+   0.000                  10          11.000000                70          180.000000          30             0    0.125      0.125
+   0.125                  10          10.862500                70          178.625000          30             0    0.125      0.125
+   0.250                  10          10.726719                70          177.267188          30             0    0.125      0.125
+   0.375                  10          10.592635                70          175.926348          30             0    0.125      0.125
+   0.500                  10          10.460227                70          174.602268          30             0    0.125      0.125
+   ...                   ...                ...               ...                 ...         ...           ...      ...        ...
+   29.500                 10           0.565131                70           75.651312          30             0    0.125      0.125
+   29.625                 10           0.558067                70           75.580671          30             0    0.125      0.125
+   29.750                 10           0.551091                70           75.510912          30             0    0.125      0.125
+   29.875                 10           0.544203                70           75.442026          30             0    0.125      0.125
+   30.000                 10           0.537400                70           75.374001          30             0    0.125      0.125
+
+[241 rows x 8 columns]
 
 Pandas gives us simple plotting capability, so we can see how the cup of tea behaves::
 
-   >>> stocks.plot()
-   >>> plt.ylabel('Degrees F')
-   >>> plt.xlabel('Minutes')
+   >>> import matplotlib.pyplot as plt
+   >>> stocks["Teacup Temperature"].plot()
+   >>> plt.title("Teacup Temperature")
+   >>> plt.ylabel("Degrees F")
+   >>> plt.xlabel("Minutes")
+   >>> plt.grid()
 
 .. image:: images/Teacup_Cooling.png
    :width: 400 px
@@ -100,24 +112,37 @@ The :py:func:`.run()` command has a few options that make it more useful. In man
 
    >>> model.run(return_columns=['Teacup Temperature', 'Room Temperature'])
 
-   t         Teacup Temperature    Room Temperature
-   0.000     180.000000            75.0
-   0.125     178.633556            75.0
-   0.250     177.284091            75.0
-   0.375     175.951387            75.0
-   …
+           Teacup Temperature  Room Temperature
+   0.000           180.000000                70
+   0.125           178.625000                70
+   0.250           177.267188                70
+   0.375           175.926348                70
+   0.500           174.602268                70
+   ...                    ...               ...
+   29.500           75.651312                70
+   29.625           75.580671                70
+   29.750           75.510912                70
+   29.875           75.442026                70
+   30.000           75.374001                70
+
+   [241 rows x 2 columns]
+
 
 If the measured data that we are comparing with our model comes in at irregular timestamps, we may want to sample the model at timestamps to match. The :py:func:`.run()` function gives us this ability with the return_timestamps keyword argument::
 
-   >>> model.run(return_timestamps=[0,1,3,7,9.5,13.178,21,25,30])
+   >>> model.run(return_timestamps=[0, 1, 3, 7, 9.5, 13, 21, 25, 30])
 
-   t       Teacup Temperature
-   0.0     180.000000
-   1.0     169.532119
-   3.0     151.490002
-   7.0     124.624385
-   9.5     112.541515
-   …
+         Characteristic Time  Heat Loss to Room  Room Temperature  Teacup Temperature  FINAL TIME  INITIAL TIME  SAVEPER  TIME STEP
+   0.0                    10          11.000000                70          180.000000          30             0    0.125      0.125
+   1.0                    10           9.946940                70          169.469405          30             0    0.125      0.125
+   3.0                    10           8.133607                70          151.336071          30             0    0.125      0.125
+   7.0                    10           5.438392                70          124.383922          30             0    0.125      0.125
+   9.5                    10           4.228756                70          112.287559          30             0    0.125      0.125
+   13.0                   10           2.973388                70           99.733876          30             0    0.125      0.125
+   21.0                   10           1.329310                70           83.293098          30             0    0.125      0.125
+   25.0                   10           0.888819                70           78.888194          30             0    0.125      0.125
+   30.0                   10           0.537400                70           75.374001          30             0    0.125      0.125
+
 
 Retrieving totally flat dataframe
 ---------------------------------
