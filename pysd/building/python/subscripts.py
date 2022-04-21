@@ -1,12 +1,27 @@
 import warnings
 from pathlib import Path
 import numpy as np
+from typing import List
+
 from pysd.translation.structures.abstract_model import AbstractSubscriptRange
 from pysd.py_backend.external import ExtSubscript
-from typing import List
 
 
 class SubscriptManager:
+    """
+    SubscriptManager object allows saving the subscripts included in the
+    Section, searching for elements or keys and simplifying them.
+
+    Parameters
+    ----------
+    abstrac_subscripts: list
+        List of the AbstractSubscriptRanges comming from the AbstractModel.
+
+    _root: pathlib.Path
+        Path to the model file. Needed to read subscript ranges from
+        Excel files.
+
+    """
     def __init__(self, abstract_subscripts: List[AbstractSubscriptRange],
                  _root: Path):
         self._root = _root
@@ -18,11 +33,11 @@ class SubscriptManager:
         self.subscript2num = self._get_subscript2num()
 
     @property
-    def subscripts(self):
+    def subscripts(self) -> dict:
         return self._subscripts
 
     @subscripts.setter
-    def subscripts(self, abstract_subscripts):
+    def subscripts(self, abstract_subscripts: List[AbstractSubscriptRange]):
         self._subscripts = {}
         missing = []
         for sub in abstract_subscripts:
@@ -60,7 +75,7 @@ class SubscriptManager:
             self._subscripts[sub.name] =\
                 self._subscripts[sub.subscripts]
 
-    def _get_main_subscripts(self):
+    def _get_main_subscripts(self) -> dict:
         """
         Reutrns a dictionary with the main ranges as keys and their
         subranges as values.
@@ -99,7 +114,7 @@ class SubscriptManager:
 
         return subranges
 
-    def _get_subscript2num(self):
+    def _get_subscript2num(self) -> dict:
         """
         Build a dictionary to return the numeric value or values of a
         subscript or subscript range.
@@ -139,10 +154,10 @@ class SubscriptManager:
 
         return s2n
 
-    def find_subscript_name(self, element, avoid=[]):
+    def find_subscript_name(self, element: str, avoid: List[str] = []) -> str:
         """
-        Given a subscript dictionary, and a member of a subscript family,
-        return the first key of which the member is within the value list.
+        Given a member of a subscript family, return the first key of
+        which the member is within the value list.
         If element is already a subscript name, return that.
 
         Parameters
@@ -154,6 +169,9 @@ class SubscriptManager:
 
         Returns
         -------
+        name: str
+            The first key of which the member is within the value list
+            in the subscripts dictionary.
 
         Examples
         --------
@@ -172,7 +190,7 @@ class SubscriptManager:
             if element in elements and name not in avoid:
                 return name
 
-    def make_coord_dict(self, subs):
+    def make_coord_dict(self, subs: List[str]) -> dict:
         """
         This is for assisting with the lookup of a particular element.
 
@@ -208,7 +226,8 @@ class SubscriptManager:
                     coordinates[sub] = self.subscripts[sub]
         return coordinates
 
-    def make_merge_list(self, subs_list, element=""):
+    def make_merge_list(self, subs_list: List[List[str]],
+                        element: str = "") -> List[str]:
         """
         This is for assisting when building xrmerge. From a list of subscript
         lists returns the final subscript list after mergin. Necessary when
@@ -312,7 +331,8 @@ class SubscriptManager:
 
         return dims
 
-    def simplify_subscript_input(self, coords, merge_subs):
+    def simplify_subscript_input(self, coords: dict,
+                                 merge_subs: List[str]) -> tuple:
         """
         Parameters
         ----------

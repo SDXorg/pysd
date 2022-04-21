@@ -265,7 +265,7 @@ class TestExternalMethods(unittest.TestCase):
             ext._resolve_file(root=root)
 
         self.assertIn(
-            "Indirect reference to file: ?input.xlsx",
+            "Indirect reference to file: '?input.xlsx'",
             str(err.exception))
 
 

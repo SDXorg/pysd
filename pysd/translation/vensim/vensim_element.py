@@ -176,7 +176,7 @@ class ElementsComponentVisitor(parsimonious.NodeVisitor):
     def visit_subscript_mapping(self, n, vc):
 
         warnings.warn(
-            "\n Subscript mapping detected."
+            "\nSubscript mapping detected. "
             + "This feature works only in some simple cases."
         )
 

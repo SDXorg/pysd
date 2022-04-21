@@ -180,7 +180,7 @@ class External(object):
             # key error if the cellrange doesn't exist in the file or sheet
             raise AttributeError(
               self.py_name + "\n"
-              + "The cell range name:\t {}\n".format(cellname)
+              + "The cell range name:\t'{}'\n".format(cellname)
               + "Doesn't exist in:\n" + self._file_sheet
               )
 
@@ -265,8 +265,8 @@ class External(object):
                   self.py_name + "\n"
                   + "Dimension given in:\n"
                   + self._file_sheet
-                  + "\tDimentime_missingsion name:"
-                  + "\t{}\n".format(series_row_or_col)
+                  + "\tDimension name:"
+                  + "\t'{}'\n".format(series_row_or_col)
                   + " is a table and not a vector"
                   )
 
@@ -285,8 +285,8 @@ class External(object):
                   self.py_name + "\n"
                   + "Dimension and data given in:\n"
                   + self._file_sheet
-                  + "\tDimension name:\t{}\n".format(series_row_or_col)
-                  + "\tData name:\t{}\n".format(cell)
+                  + "\tDimension name:\t'{}'\n".format(series_row_or_col)
+                  + "\tData name:\t'{}'\n".format(cell)
                   + " don't have the same length in the 1st dimension"
                   )
 
@@ -297,7 +297,7 @@ class External(object):
                   self.py_name + "\n"
                   + "Data given in:\n"
                   + self._file_sheet
-                  + "\tData name:\t{}\n".format(cell)
+                  + "\tData name:\t'{}'\n".format(cell)
                   + " has not the same size as the given coordinates"
                   )
 
@@ -326,7 +326,7 @@ class External(object):
             # TODO add an option to include indirect references
             raise ValueError(
                 self.py_name + "\n"
-                + f"Indirect reference to file: {self.file}")
+                + f"Indirect reference to file: '{self.file}'")
 
         self.file = root.joinpath(self.file)
 
@@ -375,7 +375,7 @@ class External(object):
                     self.py_name + "\n"
                     + "Dimension given in:\n"
                     + self._file_sheet
-                    + "\t{}:\t{}\n".format(series_across, self.x_row_or_col)
+                    + "\t{}:\t'{}'\n".format(series_across, self.x_row_or_col)
                     + " has length 0"
                     )
 
@@ -393,7 +393,7 @@ class External(object):
                     self.py_name + "\n"
                     + "Dimension given in:\n"
                     + self._file_sheet
-                    + "\t{}:\t{}\n".format(series_across, self.x_row_or_col)
+                    + "\t{}:\t'{}'\n".format(series_across, self.x_row_or_col)
                     + " has length 0"
                     )
             if self.missing == "warning":
@@ -401,7 +401,7 @@ class External(object):
                   self.py_name + "\n"
                   + "Dimension value missing or non-valid in:\n"
                   + self._file_sheet
-                  + "\t{}:\t{}\n".format(series_across, self.x_row_or_col)
+                  + "\t{}:\t'{}'\n".format(series_across, self.x_row_or_col)
                   + " the corresponding data value(s) to the "
                   + "missing/non-valid value(s) will be ignored\n\n"
                   )
@@ -410,7 +410,7 @@ class External(object):
                   self.py_name + "\n"
                   + "Dimension value missing or non-valid in:\n"
                   + self._file_sheet
-                  + "\t{}:\t{}\n".format(series_across, self.x_row_or_col)
+                  + "\t{}:\t'{}'\n".format(series_across, self.x_row_or_col)
                   )
 
         # reorder data with increasing series
@@ -423,7 +423,7 @@ class External(object):
                 raise ValueError(self.py_name + "\n"
                                  + "Dimension given in:\n"
                                  + self._file_sheet
-                                 + "\t{}:\t{}\n".format(
+                                 + "\t{}:\t'{}'\n".format(
                                     series_across, self.x_row_or_col)
                                  + " has repeated values")
 
@@ -448,7 +448,7 @@ class External(object):
                     self.py_name + "\n"
                     + "Data value missing or non-valid in:\n"
                     + self._file_sheet
-                    + "\t{}:\t{}\n".format(cell_type, self.cell)
+                    + "\t{}:\t'{}'\n".format(cell_type, self.cell)
                     + interpolate_message + "\n\n"
                     )
             elif self.missing == "raise":
@@ -456,7 +456,7 @@ class External(object):
                     self.py_name + "\n"
                     + "Data value missing or non-valid in:\n"
                     + self._file_sheet
-                    + "\t{}:\t{}\n".format(cell_type, self.cell)
+                    + "\t{}:\t'{}'\n".format(cell_type, self.cell)
                     )
             # fill values
             if self.interp != "raw":
@@ -559,8 +559,8 @@ class External(object):
         """
         Returns file and sheet name in a string
         """
-        return "\tFile name:\t{}\n".format(self.file)\
-               + "\tSheet name:\t{}\n".format(self.sheet)
+        return "\tFile name:\t'{}'\n".format(self.file)\
+               + "\tSheet name:\t'{}'\n".format(self.sheet)
 
     @staticmethod
     def _col_to_num(col):
@@ -925,14 +925,14 @@ class ExtConstant(External):
                     self.py_name + "\n"
                     + "Constant value missing or non-valid in:\n"
                     + self._file_sheet
-                    + "\t{}:\t{}\n".format(cell_type, self.cell)
+                    + "\t{}:\t'{}'\n".format(cell_type, self.cell)
                     )
             elif self.missing == "raise":
                 raise ValueError(
                     self.py_name + "\n"
                     + "Constant value missing or non-valid in:\n"
                     + self._file_sheet
-                    + "\t{}:\t{}\n".format(cell_type, self.cell)
+                    + "\t{}:\t'{}'\n".format(cell_type, self.cell)
                     )
 
         # Create only an xarray if the data is not 0 dimensional

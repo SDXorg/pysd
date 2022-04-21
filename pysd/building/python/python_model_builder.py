@@ -424,15 +424,19 @@ class ElementBuilder:
         for value in limits:
             value = repr(value)
             if value == "nan" or value == "None":
+                # add numpy.nan to the values
                 self.section.imports.add("numpy")
                 new_limits.append("np.nan")
             elif value.endswith("inf"):
+                # add numpy.inf to the values
                 self.section.imports.add("numpy")
                 new_limits.append(value.strip("inf") + "np.inf")
             else:
+                # add numeric value
                 new_limits.append(value)
 
         if new_limits[0] == "np.nan" and new_limits[1] == "np.nan":
+            # if both are numpy.nan do not include limits
             return None
 
         return "(" + ", ".join(new_limits) + ")"
