@@ -453,20 +453,15 @@ class ElementBuilder:
             if expr is None:
                 continue
             if isinstance(subs, list):
-                subs = [{
-                    esubs: subsi[csubs]
-                    for csubs, esubs in zip(subsi, self.subscripts)
-                } for subsi in subs]
+                subs = [self.section.subscripts.simplify_subscript_input(
+                    subsi, self.subscripts) for subsi in subs]
             else:
-                subs = {
-                    esubs: subs[csubs]
-                    for csubs, esubs in zip(subs, self.subscripts)
-                }
+                subs = self.section.subscripts.simplify_subscript_input(
+                    subs, self.subscripts)
+
             exc_subs = [
-                {
-                    esubs: subs_e[csubs]
-                    for csubs, esubs in zip(subs_e, self.subscripts)
-                }
+                self.section.subscripts.simplify_subscript_input(
+                    subs_e, self.subscripts)
                 for subs_e in except_subscripts
             ]
             expressions.append(
@@ -500,8 +495,10 @@ class ElementBuilder:
                 elif isinstance(expression["subs"], list):
                     self.pre_expression += self.manage_multi_def(expression)
                 else:
-                    self.pre_expression +=\
-                        "value.loc[%(subs)s] = %(expr)s\n" % expression
+                    self.pre_expression += "value.loc[%s] = "\
+                        % expression["subs"][1]
+                    self.pre_expression += "%(expr)s\n" % expression
+
             self.expression = "value"
         else:
             self.pre_expression = ""
@@ -510,7 +507,9 @@ class ElementBuilder:
             if not expressions[0]["expr"].subscripts and self.subscripts:
                 self.expression = "xr.DataArray(%s, %s, %s)\n" % (
                      expressions[0]["expr"],
-                     self.subs_dict, list(self.subs_dict)
+                     self.section.subscripts.simplify_subscript_input(
+                         self.subs_dict)[1],
+                     list(self.subs_dict)
                 )
             else:
                 self.expression = expressions[0]["expr"]
@@ -525,13 +524,14 @@ class ElementBuilder:
     def manage_multi_def(self, expression):
         final_expr = "def_subs = xr.zeros_like(value, dtype=bool)\n"
         for subs in expression["subs"]:
-            final_expr += "def_subs.loc[%s] = True\n" % subs
+            final_expr += "def_subs.loc[%s] = True\n"\
+                % subs[1]
 
         return final_expr + "value.values[def_subs.values] = "\
             "%(expr)s[def_subs.values]\n" % expression
 
     def manage_except(self, expression):
-        if expression["subs"] == self.subs_dict:
+        if expression["subs"][0] == self.subs_dict:
             # Final subscripts are the same as the main subscripts
             # of the component. Generate a True array like value
             final_expr = "except_subs = xr.ones_like(value, dtype=bool)\n"
@@ -540,11 +540,11 @@ class ElementBuilder:
             # of the component. Generate a False array like value and
             # set to True the subarray of the component coordinates
             final_expr = "except_subs = xr.zeros_like(value, dtype=bool)\n"\
-                         "except_subs.loc[%(subs)s] = True\n" % expression
+                         "except_subs.loc[%s] = True\n" % expression["subs"][1]
 
         for except_subs in expression["subs_except"]:
             # We set to False the dimensions in the EXCEPT
-            final_expr += "except_subs.loc[%s] = False\n" % except_subs
+            final_expr += "except_subs.loc[%s] = False\n" % except_subs[1]
 
         if expression["expr"].subscripts:
             # assign the values of an array
@@ -569,7 +569,10 @@ class ElementBuilder:
 
         objects = "\n\n".join([
             value["expression"] % {
-                "final_subs": value.get("final_subs", "")}
+                "final_subs":
+                self.section.subscripts.simplify_subscript_input(
+                    value.get("final_subs", {}))[1]
+            }
             for value in self.objects.values()
             if value["expression"] is not None
         ])

@@ -175,11 +175,15 @@ class SubscriptManager:
 
         Examples
         --------
-        >>> find_subscript_name('D')
+        >>> sm = SubscriptManager([], Path(''))
+        >>> sm._subscripts = {
+        ...     'Dim1': ['A', 'B', 'C'],
+        ...     'Dim2': ['A', 'B', 'C', 'D']}
+        >>> sm.find_subscript_name('D')
         'Dim2'
-        >>> find_subscript_name('B')
+        >>> sm.find_subscript_name('B')
         'Dim1'
-        >>> find_subscript_name('B', avoid=['Dim1'])
+        >>> sm.find_subscript_name('B', avoid=['Dim1'])
         'Dim2'
 
         """
@@ -208,8 +212,18 @@ class SubscriptManager:
 
         Examples
         --------
-        >>> make_coord_dict(['Dim1', 'D'])
+        >>> sm = SubscriptManager([], Path(''))
+        >>> sm._subscripts = {
+        ...     'Dim1': ['A', 'B', 'C'],
+        ...     'Dim2': ['A', 'B', 'C', 'D']}
+        >>> sm.make_coord_dict(['Dim1', 'D'])
         {'Dim1': ['A', 'B', 'C'], 'Dim2': ['D']}
+        >>> sm.make_coord_dict(['A'])
+        {'Dim1': ['A']}
+        >>> sm.make_coord_dict(['A', 'B'])
+        {'Dim1': ['A'], 'Dim2': ['B']}
+        >>> sm.make_coord_dict(['A', 'Dim1'])
+        {'Dim2': ['A'], 'Dim1': ['A', 'B', 'C']}
 
         """
         sub_elems_list = [y for x in self.subscripts.values() for y in x]
@@ -249,9 +263,15 @@ class SubscriptManager:
 
         Examples
         --------
-        >>> sm = SubscriptManager()
-        >>> sm.subscripts = {"upper": ["A", "B"], "all": ["A", "B", "C"]}
+        >>> sm = SubscriptManager([], Path(''))
+        >>> sm._subscripts = {"upper": ["A", "B"], "all": ["A", "B", "C"]}
+        >>> sm.make_merge_list([['A'], ['B']])
+        ['upper']
+        >>> sm.make_merge_list([['A'], ['B'], ['C']])
+        ['all']
         >>> sm.make_merge_list([['upper'], ['C']])
+        ['all']
+        >>> sm.make_merge_list([['A'], ['C']])
         ['all']
 
         """
@@ -332,16 +352,21 @@ class SubscriptManager:
         return dims
 
     def simplify_subscript_input(self, coords: dict,
-                                 merge_subs: List[str]) -> tuple:
+                                 merge_subs: List[str] = None) -> tuple:
         """
+        Simplifies the subscripts input to avoid printing the coordinates
+        list when the _subscript_dict can be used. Makes model code more
+        simple.
+
         Parameters
         ----------
         coords: dict
             Coordinates to write in the model file.
 
-        merge_subs: list of strings
+        merge_subs: list of strings or None (optional)
             List of the final subscript range of the python array after
-            merging with other objects
+            merging with other objects. If None the merge_subs will be
+            taken from coords. Default is None.
 
         Returns
         -------
@@ -349,7 +374,23 @@ class SubscriptManager:
             Final subscripts and the equations to generate the coord
             dicttionary in the model file.
 
+        Examples
+        --------
+        >>> sm = SubscriptManager([], Path(''))
+        >>> sm._subscripts = {
+        ...     "dim": ["A", "B", "C"],
+        ...     "dim2": ["A", "B", "C", "D"]}
+        >>> sm.simplify_subscript_input({"dim": ["A", "B", "C"]})
+        ({"dim": ["A", "B", "C"]}, "{'dim': _subscript_dict['dim']}"
+        >>> sm.simplify_subscript_input({"dim": ["A", "B", "C"]}, ["dim2"])
+        ({"dim2": ["A", "B", "C"]}, "{'dim2': _subscript_dict['dim']}"
+        >>> sm.simplify_subscript_input({"dim": ["A", "B"]})
+        ({"dim": ["A", "B"]}, "{'dim': ['A', 'B']}"
+
         """
+        if merge_subs is None:
+            merge_subs = list(coords)
+
         coordsp = []
         final_subs = {}
         for ndim, (dim, coord) in zip(merge_subs, coords.items()):

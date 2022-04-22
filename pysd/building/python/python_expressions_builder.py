@@ -21,7 +21,7 @@ class BuildAST:
 
     def reshape(self, subscripts, final_subscripts):
         subscripts_out = subscripts.simplify_subscript_input(
-                final_subscripts, list(final_subscripts))[1]
+            final_subscripts)[1]
         if not final_subscripts or (
           self.subscripts == final_subscripts
           and list(self.subscripts) == list(final_subscripts)):
@@ -1096,7 +1096,7 @@ class ReferenceBuilder(StructureBuilder):
             expression, subscripts =\
                 self.section.subscripts.subscript2num[self.reference]
             subscripts_out = self.section.subscripts.simplify_subscript_input(
-                subscripts, list(subscripts))[1]
+                subscripts)[1]
             if subscripts:
                 self.section.imports.add("numpy")
                 # NUMPY: not need this if
@@ -1182,7 +1182,7 @@ class ReferenceBuilder(StructureBuilder):
         #        self.mapping_subscripts
         if self.mapping_subscripts != final_subs:
             subscripts_out = self.section.subscripts.simplify_subscript_input(
-                self.mapping_subscripts, list(self.mapping_subscripts))[1]
+                self.mapping_subscripts)[1]
             expression = "xr.DataArray(%s.values, %s, %s)" % (
                 expression, subscripts_out, list(self.mapping_subscripts)
             )
