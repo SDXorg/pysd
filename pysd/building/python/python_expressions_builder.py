@@ -1132,43 +1132,13 @@ class ReferenceBuilder(StructureBuilder):
             order=0)
 
     def visit_subscripts(self, expression, original_subs):
-        final_subs, rename, loc, reset_coords, float = {}, {}, [], False, True
-        for (dim, coord), (orig_dim, orig_coord)\
-          in zip(self.subscripts.items(), original_subs.items()):
-            if len(coord) == 1:
-                # subset a 1 dimension value
-                # NUMPY: subset value [:, N, :, :]
-                loc.append(repr(coord[0]))
-                reset_coords = True
-            elif len(coord) < len(orig_coord):
-                # subset a subrange
-                # NUMPY: subset value [:, :, np.array([1, 0]), :]
-                # NUMPY: as order may change we need to check if
-                #        dim != orig_dim
-                # NUMPY: use also ranges [:, :, 2:5, :] when possible
-                if dim.endswith("!"):
-                    loc.append("_subscript_dict['%s']" % dim[:-1])
-                else:
-                    loc.append("_subscript_dict['%s']" % dim)
-                final_subs[dim] = coord
-                float = False
-            else:
-                # do nothing
-                # NUMPY: same, we can remove float = False
-                loc.append(":")
-                final_subs[dim] = coord
-                float = False
+        loc, rename, final_subs, reset_coords, to_float =\
+            visit_loc(self.subscripts, original_subs)
 
-            if dim != orig_dim and len(coord) != 1:
-                # NUMPY: check order of dimensions, make all subranges work
-                #        with the same dimensions?
-                # NUMPY: this could be solved in the previous if/then/else
-                rename[orig_dim] = dim
-
-        if any(dim != ":" for dim in loc):
+        if loc is not None:
             # NUMPY: expression += "[%s]" % ", ".join(loc)
-            expression += ".loc[%s]" % ", ".join(loc)
-        if reset_coords and float:
+            expression += f".loc[{loc}]"
+        if to_float:
             # NUMPY: Not neccessary
             expression = "float(" + expression + ")"
         elif reset_coords:
@@ -1277,6 +1247,100 @@ def _merge_dependencies(current, new):
     for dep in new_set.difference(current_set):
         # if dependency is only in new copy it
         current[dep] = new[dep]
+
+
+def visit_loc(current_subs: dict, original_subs: dict,
+              keep_shape: bool = False) -> tuple:
+    """
+    Compares the original subscripts and the current subscripts and
+    returns subindexing information if needed.
+
+    Parameters
+    ----------
+    current_subs: dict
+        The dictionary of the subscripts that are used in the variable.
+
+    original_subs: dict
+        The dictionary of the original subscripts of the variable.
+
+    keep_shape: bool (optional)
+        If True will keep the number of dimensions of the original element
+        and return only loc. Default is False.
+
+    Returns
+    -------
+    loc: list of str or None
+        List of the subscripting in each dimensions. If all are full (":"),
+        None is rerned wich means that array indexing is not needed.
+
+    rename: dict
+        Dictionary of the dimensions to rename.
+
+    final_subs: dict
+        Dictionary of the final subscripts of the variable.
+
+    reset_coords: bool
+        Boolean indicating if the coords need to be reseted.
+
+    to_float: bool
+        Boolean indicating if the variable should be converted to a float.
+
+    """
+    final_subs, rename, loc, reset_coords, to_float = {}, {}, [], False, True
+    for (dim, coord), (orig_dim, orig_coord)\
+       in zip(current_subs.items(), original_subs.items()):
+        if len(coord) == 1:
+            # subset a 1 dimension value
+            # NUMPY: subset value [:, N, :, :]
+            if keep_shape:
+                # NUMPY: not necessary
+                loc.append(f"[{repr(coord[0])}]")
+            else:
+                loc.append(repr(coord[0]))
+            reset_coords = True
+        elif len(coord) < len(orig_coord):
+            # subset a subrange
+            # NUMPY: subset value [:, :, np.array([1, 0]), :]
+            # NUMPY: as order may change we need to check if
+            #        dim != orig_dim
+            # NUMPY: use also ranges [:, :, 2:5, :] when possible
+            if dim.endswith("!"):
+                loc.append("_subscript_dict['%s']" % dim[:-1])
+            else:
+                if dim != orig_dim:
+                    loc.append("_subscript_dict['%s']" % dim)
+                else:
+                    # workaround for locs from external objects merge
+                    loc.append(repr(coord))
+            final_subs[dim] = coord
+            to_float = False
+        else:
+            # do nothing
+            # NUMPY: same, we can remove float = False
+            loc.append(":")
+            final_subs[dim] = coord
+            to_float = False
+
+        if dim != orig_dim and len(coord) != 1:
+            # NUMPY: check order of dimensions, make all subranges work
+            #        with the same dimensions?
+            # NUMPY: this could be solved in the previous if/then/else
+            rename[orig_dim] = dim
+
+    if all(dim == ":" for dim in loc):
+        # if all are ":" then no need to loc
+        loc = None
+    else:
+        loc = ", ".join(loc)
+
+    if keep_shape:
+        return loc
+
+    # convert to float if also coords are reseted (input is an array)
+    to_float = to_float and reset_coords
+
+    # NUMPY: save and return only loc, the other are not needed
+    return loc, rename, final_subs, reset_coords, to_float
 
 
 class ASTVisitor:

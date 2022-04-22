@@ -116,7 +116,6 @@ def make_flat_df(df, return_addresses, flatten=False):
     new_df = {}
     for real_name, (pyname, address) in return_addresses.items():
         if address:
-            print(df[pyname].values[0], "\n", address, "_________\n")
             # subset the specific address
             values = [x.loc[address] for x in df[pyname].values]
         else:

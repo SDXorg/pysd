@@ -453,19 +453,21 @@ class ElementBuilder:
             if expr is None:
                 continue
             if isinstance(subs, list):
-                subs = [self.section.subscripts.simplify_subscript_input(
-                    subsi, self.subscripts) for subsi in subs]
+                loc = [vs.visit_loc(subsi, self.subs_dict, True)
+                       for subsi in subs]
             else:
-                subs = self.section.subscripts.simplify_subscript_input(
-                    subs, self.subscripts)
+                loc = vs.visit_loc(subs, self.subs_dict, True)
 
-            exc_subs = [
-                self.section.subscripts.simplify_subscript_input(
-                    subs_e, self.subscripts)
+            exc_loc = [
+                vs.visit_loc(subs_e, self.subs_dict, True)
                 for subs_e in except_subscripts
             ]
-            expressions.append(
-                {"expr": expr, "subs": subs, "subs_except": exc_subs})
+            expressions.append({
+                "expr": expr,
+                "subs": subs,
+                "loc": loc,
+                "loc_except": exc_loc
+            })
 
         if len(expressions) > 1:
             # NUMPY: xrmerge would be sustitute by a multiple line definition
@@ -489,15 +491,14 @@ class ElementBuilder:
                     # NUMPY not necessary
                     expression["expr"].lower_order(0, force_0=True)
                     expression["expr"].expression += ".values"
-                if expression["subs_except"]:
+                if expression["loc_except"]:
                     # there is an excep in the definition of the component
                     self.pre_expression += self.manage_except(expression)
                 elif isinstance(expression["subs"], list):
                     self.pre_expression += self.manage_multi_def(expression)
                 else:
-                    self.pre_expression += "value.loc[%s] = "\
-                        % expression["subs"][1]
-                    self.pre_expression += "%(expr)s\n" % expression
+                    self.pre_expression +=\
+                        "value.loc[%(loc)s] = %(expr)s\n" % expression
 
             self.expression = "value"
         else:
@@ -523,15 +524,14 @@ class ElementBuilder:
 
     def manage_multi_def(self, expression):
         final_expr = "def_subs = xr.zeros_like(value, dtype=bool)\n"
-        for subs in expression["subs"]:
-            final_expr += "def_subs.loc[%s] = True\n"\
-                % subs[1]
+        for loc in expression["loc"]:
+            final_expr += f"def_subs.loc[{loc}] = True\n"
 
         return final_expr + "value.values[def_subs.values] = "\
             "%(expr)s[def_subs.values]\n" % expression
 
     def manage_except(self, expression):
-        if expression["subs"][0] == self.subs_dict:
+        if expression["subs"] == self.subs_dict:
             # Final subscripts are the same as the main subscripts
             # of the component. Generate a True array like value
             final_expr = "except_subs = xr.ones_like(value, dtype=bool)\n"
@@ -540,11 +540,11 @@ class ElementBuilder:
             # of the component. Generate a False array like value and
             # set to True the subarray of the component coordinates
             final_expr = "except_subs = xr.zeros_like(value, dtype=bool)\n"\
-                         "except_subs.loc[%s] = True\n" % expression["subs"][1]
+                         "except_subs.loc[%(loc)s] = True\n" % expression
 
-        for except_subs in expression["subs_except"]:
+        for except_subs in expression["loc_except"]:
             # We set to False the dimensions in the EXCEPT
-            final_expr += "except_subs.loc[%s] = False\n" % except_subs[1]
+            final_expr += "except_subs.loc[%s] = False\n" % except_subs
 
         if expression["expr"].subscripts:
             # assign the values of an array
