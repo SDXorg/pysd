@@ -18,7 +18,7 @@ This code creates an instance of the PySD class loaded with an example model tha
 .. note::
    The teacup model can be found in the `samples of the test-models repository <https://github.com/SDXorg/test-models/tree/master/samples>`_.
 
-To view a synopsis of the model equations and documentation, call the :py:func:`.doc` property of the model class. This will generate a listing of all the model elements, their documentation, units, and initial values, where appropriate, and return them as a :py:class:`pandas.DataFrame`. Here is a sample from the teacup model::
+To view a synopsis of the model equations and documentation, use the :py:function:`.doc` property of the model class. This will generate a listing of all the model elements, their documentation, units, and initial values, where appropriate, and return them as a :py:class:`pandas.DataFrame`. Here is a sample from the teacup model::
 
    >>> model.doc
 
@@ -41,7 +41,7 @@ To view a synopsis of the model equations and documentation, call the :py:func:`
      >>> model = pysd.load('Teacup.py')
 
 .. note::
-  The functions :py:func:`read_vensim()`,  :py:func:`read_xmile()` and :py:func:`load()` have optional arguments for advanced usage, you can check the full description in :doc:`User Functions Reference <../functions>` or using :py:func:`help()` e.g.::
+  The functions :py:func:`pysd.read_vensim()`,  :py:func:`pysd.read_xmile()` and :py:func:`pysd.load()` have optional arguments for advanced usage, you can check the full description in :doc:`User Functions Reference <../functions>` or using :py:func:`help()` e.g.::
 
      >>> import pysd
      >>> help(pysd.load)
@@ -109,7 +109,7 @@ If a variable is given in different files to choose the specific file a dictiona
 
 Outputting various run information
 ----------------------------------
-The :py:func:`.run()` command has a few options that make it more useful. In many situations we want to access components of the model other than merely the stocks – we can specify which components of the model should be included in the returned dataframe by including them in a list that we pass to the :py:func:`.run()` command, using the return_columns keyword argument::
+The :py:func:`.run()` command has a few options that make it more useful. In many situations we want to access components of the model other than merely the stocks - we can specify which components of the model should be included in the returned dataframe by including them in a list that we pass to the :py:func:`.run()` command, using the return_columns keyword argument::
 
    >>> model.run(return_columns=['Teacup Temperature', 'Room Temperature'])
 
@@ -147,7 +147,7 @@ If the measured data that we are comparing with our model comes in at irregular 
 
 Retrieving totally flat dataframe
 ---------------------------------
-The subscripted variables, in general, will be returned as *xarray.DataArray*s in the output *pandas.DataFrame*. To get a totally flat dataframe, like Vensim outuput the `flatten=True` when calling the run function::
+The subscripted variables, in general, will be returned as :py:class:`xarray.DataArray`s in the output :py:class:`pandas.DataFrame`. To get a totally flat dataframe, like Vensim outuput the `flatten=True` when calling the run function::
 
    >>> model.run(flatten=True)
 
@@ -159,7 +159,7 @@ This argument expects a dictionary whose keys correspond to the components of th
 
    >>> model.run(params={'Room Temperature': 20})
 
-Alternately, if we believe the room temperature is changing over the course of the simulation, we can give the run function a set of time-series values in the form of a Pandas series, and PySD will linearly interpolate between the given values in the course of its integration::
+Alternately, if we believe the room temperature is changing over the course of the simulation, we can give the run function a set of time-series values in the form of a :py:class:`pandas.Series`, and PySD will linearly interpolate between the given values in the course of its integration::
 
    >>> import pandas as pd
    >>> temp = pd.Series(index=range(30), data=range(20, 80, 2))
@@ -169,22 +169,22 @@ If the parameter value to change is a subscripted variable (vector, matrix...), 
 
    >>> model.run(params={'Subscripted var': 0})
 
-A partial *xarray.DataArray* can be used, for example a new variable with ‘dim2’ but not ‘dim2’, the result will be repeated in the remaining dimensions::
+A partial :py:class:`xarray.DataArray` can be used, for example a new variable with ‘dim2’ but not ‘dim2’, the result will be repeated in the remaining dimensions::
 
    >>> import xarray as xr
    >>> new_value = xr.DataArray([1, 5], {'dim2': [1, 2]}, ['dim2'])
    >>> model.run(params={'Subscripted var': new_value})
 
-Same dimensions *xarray.DataArray* can be used (recommended)::
+Same dimensions :py:class:`xarray.DataArray` can be used (recommended)::
 
    >>> import xarray as xr
    >>> new_value = xr.DataArray([[1, 5], [3, 4]], {'dim1': [1, 2], 'dim2': [1, 2]}, ['dim1', 'dim2'])
    >>> model.run(params={'Subscripted var': new_value})
 
-In the same way, a Pandas series can be used with constan values, partially defined *xarray.DataArrays* or same dimensions *xarray.DataArrays*.
+In the same way, a Pandas series can be used with constan values, partially defined *:py:class:`xarray.DataArray`s or same dimensions :py:class:`xarray.DataArray`s.
 
 .. note::
-  That once parameters are set by the run command, they are permanently changed within the model. We can also change model parameters without running the model, using PySD’s :py:data:`set_components(params={})` method, which takes the same params dictionary as the run function. We might choose to do this in situations where we’ll be running the model many times, and only want to spend time setting the parameters once.
+  That once parameters are set by the run command, they are permanently changed within the model. We can also change model parameters without running the model, using PySD’s :py:data:`set_components(params={})` method, which takes the same params dictionary as the run function. We might choose to do this in situations where we'll be running the model many times, and only want to spend time setting the parameters once.
 
 .. note::
   If you need to know the dimensions of a variable, you can check them by using :py:data:`.get_coords(variable__name)` function::
@@ -200,11 +200,11 @@ In the same way, a Pandas series can be used with constan values, partially defi
   this will return the coords dictionary and the dimensions list if the variable is subscripted or ‘None’ if the variable is an scalar.
 
 .. note::
-  If you change the value of a lookup function by a constant, the constant value will be used always. If a *pandas.Series* is given the index and values will be used for interpolation when the function is called in the model, keeping the arguments that are included in the model file.
+  If you change the value of a lookup function by a constant, the constant value will be used always. If a :py:class:`pandas.Series` is given the index and values will be used for interpolation when the function is called in the model, keeping the arguments that are included in the model file.
 
-  If you change the value of any other variable type by a constant, the constant value will be used always. If a *pandas.Series* is given the index and values will be used for interpolation when the function is called in the model, using the time as argument.
+  If you change the value of any other variable type by a constant, the constant value will be used always. If a :py:class:`pandas.Series` is given the index and values will be used for interpolation when the function is called in the model, using the time as argument.
 
-  If you need to know if a variable takes arguments, i.e., if it is a lookup variable, you can check it by using :py:data:`.get_args(variable__name)` function::
+  If you need to know if a variable takes arguments, i.e., if it is a lookup variable, you can check it by using :py:func:`.get_args(variable__name)` function::
 
      >>> model.get_args('Room Temperature')
 
@@ -216,7 +216,7 @@ In the same way, a Pandas series can be used with constan values, partially defi
 
 Setting simulation initial conditions
 -------------------------------------
-Finally, we can set the initial conditions of our model in several ways. So far, we’ve been using the default value for the initial_condition keyword argument, which is ‘original’. This value runs the model from the initial conditions that were specified originally by the model file. We can alternately specify a tuple containing the start time and a dictionary of values for the system’s stocks. Here we start the model with the tea at just above freezing::
+Finally, we can set the initial conditions of our model in several ways. So far, we've been using the default value for the initial_condition keyword argument, which is ‘original’. This value runs the model from the initial conditions that were specified originally by the model file. We can alternately specify a tuple containing the start time and a dictionary of values for the system's stocks. Here we start the model with the tea at just above freezing::
 
    >>> model.run(initial_condition=(0, {'Teacup Temperature': 33}))
 

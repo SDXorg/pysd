@@ -1,7 +1,11 @@
 Python builder
 ==============
 
-This section documents the functions that are going on behaind the scenes, for the benefit of developers.
+The Python builder allows to build models that can be run with the PySD Model class.
+
+The use of a one-to-one dictionary in translation means that the breadth of functionality is inherently limited. In the case where no direct Python equivalent is available, PySD provides a library of functions such as `pulse`, `step`, etc. that are specific to dynamic model behavior.
+
+In addition to translating individual commands between Vensim/XMILE and Python, PySD reworks component identifiers to be Python-safe by replacing spaces with underscores. The translator allows source identifiers to make use of alphanumeric characters, spaces, or the $ symbol.
 
 Main builders
 -------------

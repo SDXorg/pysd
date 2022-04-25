@@ -119,13 +119,13 @@ def read_vensim(mdl_file, data_files=None, initialize=True,
         read from the model, if the encoding is not defined in the model
         file it will be set to 'UTF-8'. Default is None.
 
+    subview_sep: list
+        Characters used to separate views and subviews (e.g. [",", "."]).
+        If provided, and split_views=True, each submodule will be placed
+        inside the directory of the parent view.
+
     **kwargs: (optional)
         Additional keyword arguments for translation.
-        subview_sep: list
-            Characters used to separate views and subviews (e.g. [",", "."]).
-            If provided, and split_views=True, each submodule will be placed
-            inside the directory of the parent view.
-
 
     Returns
     -------

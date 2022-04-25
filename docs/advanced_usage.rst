@@ -1,7 +1,7 @@
 Advanced Usage
 ==============
 
-The power of PySD, and its motivation for existence, is its ability to tie in to other models and analysis packages in the Python environment. In this section we’ll discuss how those connections happen.
+The power of PySD, and its motivation for existence, is its ability to tie in to other models and analysis packages in the Python environment. In this section we'll discuss how those connections happen.
 
 
 Replacing model components with more complex objects
@@ -20,7 +20,7 @@ This drew on the internal state of the system, namely the time t, and the time-s
 
 Because PySD assumes that all components in a model are represented as functions taking no arguments, any component that we wish to modify must be replaced with a function taking no arguments. As the state of the system and all auxiliary or flow methods are public, our replacement function can call these methods as part of its internal structure.
 
-In our teacup example, suppose we didn’t know the functional form for calculating the heat lost to the room, but instead had a lot of data of teacup temperatures and heat flow rates. We could use a regression model (here a support vector regression from Scikit-Learn) in place of the analytic function::
+In our teacup example, suppose we didn't know the functional form for calculating the heat lost to the room, but instead had a lot of data of teacup temperatures and heat flow rates. We could use a regression model (here a support vector regression from Scikit-Learn) in place of the analytic function::
 
    from sklearn.svm import SVR
    regression = SVR()
@@ -116,10 +116,9 @@ Selecting and running a submodel
 --------------------------------
 A submodel of a translated model can be selected in order to run only a part of the original model. This can be done through the :py:data:`.select_submodel()` method:
 
-.. autoclass:: pysd.py_backend.statefuls.Model
-   :members: select_submodel
+.. automethod:: pysd.py_backend.statefuls.Model.select_submodel
+
 
 In order to preview the needed exogenous variables the :py:data:`.get_dependencies()` method can be used:
 
-.. autoclass:: pysd.py_backend.statefuls.Model
-   :members: get_dependencies
+.. automethod:: pysd.py_backend.statefuls.Model.get_dependencies
