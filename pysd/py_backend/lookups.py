@@ -43,9 +43,16 @@ class Lookups(object):
             return self._call(self.data, x, final_subs)
         except (TypeError, KeyError):
             # this except catch the errors when a lookups has been
-            # changed to a constant valuue by the user
-            # TODO need to expand data to final_subs if they are given
-            return self.data
+            # changed to a constant value by the user
+            if final_subs and isinstance(self.data, xr.DataArray):
+                # self.data is an array, reshape it
+                outdata = xr.DataArray(np.nan, final_subs, list(final_subs))
+                return xr.broadcast(outdata, self.data)[1]
+            elif final_subs:
+                # self.data is a float, create an array
+                return xr.DataArray(self.data, final_subs, list(final_subs))
+            else:
+                return self.data
 
     def _call(self, data, x, final_subs=None):
         if isinstance(x, xr.DataArray):
