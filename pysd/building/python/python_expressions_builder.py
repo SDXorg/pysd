@@ -19,9 +19,7 @@ class BuildAST:
         # makes easier building
         return self.expression
 
-    def reshape(self, subscripts, final_subscripts):
-        subscripts_out = subscripts.simplify_subscript_input(
-            final_subscripts)[1]
+    def reshape(self, subscripts, final_subscripts, final_element=False):
         if not final_subscripts or (
           self.subscripts == final_subscripts
           and list(self.subscripts) == list(final_subscripts)):
@@ -30,22 +28,42 @@ class BuildAST:
         elif not self.subscripts:
             # original expression is not an array
             # NUMPY: object.expression = np.full(%s, %(shape)s)
+            subscripts_out = subscripts.simplify_subscript_input(
+                final_subscripts)[1]
             self.expression = "xr.DataArray(%s, %s, %s)" % (
                 self.expression, subscripts_out, list(final_subscripts)
             )
             self.order = 0
+            self.subscripts = final_subscripts
         else:
             # original expression is an array
-            # NUMPY: reorder dims if neccessary with np.moveaxis or similar
-            # NUMPY: add new axis with [:, None, :] or np.tile,
-            #        depending on an input argument
-            # NUMPY: if order is not 0 need to lower the order to 0
-            # using force!
-            self.expression = "(xr.DataArray(0, %s, %s) + %s)" % (
-                subscripts_out, list(final_subscripts), self.expression
-                )
-            self.order = 0
-        self.subscripts = final_subscripts
+            self.lower_order(0, force_0=True)
+
+            # reorder subscrips
+            final_order = {
+                sub: self.subscripts[sub]
+                for sub in final_subscripts
+                if sub in self.subscripts
+            }
+            if list(final_order) != list(self.subscripts):
+                # NUMPY: reorder dims if neccessary with np.moveaxis or similar
+                self.expression +=\
+                    f".transpose({', '.join(map(repr, final_order))})"
+                self.subscripts = final_order
+
+            # add new dimensions
+            if final_element and final_subscripts != self.subscripts:
+                # NUMPY: remove final_element condition from top
+                # NUMPY: add new axis with [:, None, :]
+                # NUMPY: move final_element condition here and use np.tile
+                for i, dim in enumerate(final_subscripts):
+                    if dim not in self.subscripts:
+                        subscripts_out = subscripts.simplify_subscript_input(
+                            {dim: final_subscripts[dim]})[1]
+                        self.expression +=\
+                            f".expand_dims({subscripts_out}, {i})"
+
+                self.subscripts = final_subscripts
 
     def lower_order(self, new_order, force_0=False):
         if self.order >= new_order and self.order != 0\
@@ -93,7 +111,8 @@ class StructureBuilder:
             final_subscripts = self.get_final_subscripts(
                 arguments, def_subs)
 
-        [arguments[key].reshape(self.section.subscripts, final_subscripts)
+        [arguments[key].reshape(
+            self.section.subscripts, final_subscripts, force == "equal")
          for key in arguments
          if arguments[key].subscripts or force == "equal"]
 
@@ -364,31 +383,37 @@ class CallBuilder(StructureBuilder):
                 def_subs=self.def_subs
             )
             if self.function == "xidz" and final_subscripts:
+                # xidz must always return the same shape object
                 if not arguments["1"].subscripts:
-                    new_args = {"0": arguments["0"], "2": arguments["2"]}
-                    self.reorder(
-                        new_args,
-                        def_subs=self.def_subs,
-                        force="equal"
-                    )
-                    arguments.update(new_args)
-            if self.function == "if_then_else" and final_subscripts:
+                    [arguments[i].reshape(
+                        self.section.subscripts, final_subscripts, True)
+                     for i in ["0", "1"]]
+                elif arguments["0"].subscripts or arguments["2"].subscripts:
+                    # NUMPY: not need this statement
+                    [arguments[i].reshape(
+                        self.section.subscripts, final_subscripts, True)
+                     for i in ["0", "1", "2"]
+                     if arguments[i].subscripts]
+            elif self.function == "zidz" and final_subscripts:
+                # zidz must always return the same shape object
+                arguments["0"].reshape(
+                    self.section.subscripts, final_subscripts, True)
+                if arguments["1"].subscripts:
+                    # NUMPY: not need this statement
+                    arguments["1"].reshape(
+                        self.section.subscripts, final_subscripts, True)
+            elif self.function == "if_then_else" and final_subscripts:
+                # if_then_else must always return the same shape object
                 if not arguments["0"].subscripts:
-                    # NUMPY: we need to ensure that if_then_else always returs
-                    # the same shape object
-                    new_args = {"1": arguments["1"], "2": arguments["2"]}
-                    self.reorder(
-                        new_args,
-                        def_subs=self.def_subs,
-                        force="equal"
-                    )
-                    arguments.update(new_args)
+                    # condition is a float
+                    [arguments[i].reshape(
+                        self.section.subscripts, final_subscripts, True)
+                     for i in ["1", "2"]]
                 else:
-                    self.reorder(
-                        arguments,
-                        def_subs=self.def_subs,
-                        force="equal"
-                    )
+                    # condition has dimensions
+                    [arguments[i].reshape(
+                        self.section.subscripts, final_subscripts, True)
+                     for i in ["0", "1", "2"]]
 
         return BuildAST(
             expression=expression % arguments,
@@ -623,7 +648,8 @@ class InitialBuilder(StructureBuilder):
         self.component.subtype = "Initial"
         self.section.imports.add("statefuls", "Initial")
 
-        arguments["initial"].reshape(self.section.subscripts, self.def_subs)
+        arguments["initial"].reshape(
+            self.section.subscripts, self.def_subs, True)
 
         arguments["name"] = self.section.namespace.make_python_identifier(
             self.element.identifier, prefix="_initial")
@@ -658,8 +684,10 @@ class IntegBuilder(StructureBuilder):
         self.component.subtype = "Integ"
         self.section.imports.add("statefuls", "Integ")
 
-        arguments["initial"].reshape(self.section.subscripts, self.def_subs)
-        arguments["flow"].reshape(self.section.subscripts, self.def_subs)
+        arguments["initial"].reshape(
+            self.section.subscripts, self.def_subs, True)
+        arguments["flow"].reshape(
+            self.section.subscripts, self.def_subs, True)
 
         arguments["name"] = self.section.namespace.make_python_identifier(
             self.element.identifier, prefix="_integ")
@@ -697,9 +725,12 @@ class DelayBuilder(StructureBuilder):
         self.component.subtype = "Delay"
         self.section.imports.add("statefuls", self.dtype)
 
-        arguments["input"].reshape(self.section.subscripts, self.def_subs)
-        arguments["delay_time"].reshape(self.section.subscripts, self.def_subs)
-        arguments["initial"].reshape(self.section.subscripts, self.def_subs)
+        arguments["input"].reshape(
+            self.section.subscripts, self.def_subs, True)
+        arguments["delay_time"].reshape(
+            self.section.subscripts, self.def_subs, True)
+        arguments["initial"].reshape(
+            self.section.subscripts, self.def_subs, True)
 
         arguments["name"] = self.section.namespace.make_python_identifier(
             self.element.identifier, prefix=f"_{self.dtype.lower()}")
@@ -743,8 +774,10 @@ class DelayFixedBuilder(StructureBuilder):
         self.component.subtype = "DelayFixed"
         self.section.imports.add("statefuls", "DelayFixed")
 
-        arguments["input"].reshape(self.section.subscripts, self.def_subs)
-        arguments["initial"].reshape(self.section.subscripts, self.def_subs)
+        arguments["input"].reshape(
+            self.section.subscripts, self.def_subs, True)
+        arguments["initial"].reshape(
+            self.section.subscripts, self.def_subs, True)
 
         arguments["name"] = self.section.namespace.make_python_identifier(
             self.element.identifier, prefix="_delayfixed")
@@ -784,11 +817,11 @@ class SmoothBuilder(StructureBuilder):
         self.section.imports.add("statefuls", "Smooth")
 
         arguments["input"].reshape(
-            self.section.subscripts, self.def_subs)
+            self.section.subscripts, self.def_subs, True)
         arguments["smooth_time"].reshape(
-            self.section.subscripts, self.def_subs)
+            self.section.subscripts, self.def_subs, True)
         arguments["initial"].reshape(
-            self.section.subscripts, self.def_subs)
+            self.section.subscripts, self.def_subs, True)
 
         arguments["name"] = self.section.namespace.make_python_identifier(
             self.element.identifier, prefix="_smooth")
@@ -836,11 +869,11 @@ class TrendBuilder(StructureBuilder):
         self.section.imports.add("statefuls", "Trend")
 
         arguments["input"].reshape(
-            self.section.subscripts, self.def_subs)
+            self.section.subscripts, self.def_subs, True)
         arguments["average_time"].reshape(
-            self.section.subscripts, self.def_subs)
+            self.section.subscripts, self.def_subs, True)
         arguments["initial_trend"].reshape(
-            self.section.subscripts, self.def_subs)
+            self.section.subscripts, self.def_subs, True)
 
         arguments["name"] = self.section.namespace.make_python_identifier(
             self.element.identifier, prefix="_trend")
@@ -885,13 +918,13 @@ class ForecastBuilder(StructureBuilder):
         self.section.imports.add("statefuls", "Forecast")
 
         arguments["input"].reshape(
-            self.section.subscripts, self.def_subs)
+            self.section.subscripts, self.def_subs, True)
         arguments["average_time"].reshape(
-            self.section.subscripts, self.def_subs)
+            self.section.subscripts, self.def_subs, True)
         arguments["horizon"].reshape(
-            self.section.subscripts, self.def_subs)
+            self.section.subscripts, self.def_subs, True)
         arguments["initial_trend"].reshape(
-            self.section.subscripts, self.def_subs)
+            self.section.subscripts, self.def_subs, True)
 
         arguments["name"] = self.section.namespace.make_python_identifier(
             self.element.identifier, prefix="_forecast")
@@ -933,9 +966,12 @@ class SampleIfTrueBuilder(StructureBuilder):
         self.component.subtype = "SampleIfTrue"
         self.section.imports.add("statefuls", "SampleIfTrue")
 
-        arguments["condition"].reshape(self.section.subscripts, self.def_subs)
-        arguments["input"].reshape(self.section.subscripts, self.def_subs)
-        arguments["initial"].reshape(self.section.subscripts, self.def_subs)
+        arguments["condition"].reshape(
+            self.section.subscripts, self.def_subs, True)
+        arguments["input"].reshape(
+            self.section.subscripts, self.def_subs, True)
+        arguments["initial"].reshape(
+            self.section.subscripts, self.def_subs, True)
 
         arguments["name"] = self.section.namespace.make_python_identifier(
             self.element.identifier, prefix="_sampleiftrue")
@@ -1414,17 +1450,10 @@ class ASTVisitor:
         )
 
         if reshape:
-            # We are only comparing the dictionaries (set of dimensions)
-            # and not the list (order).
-            # With xarray we don't need to compare the order because the
-            # decorator @subs will reorder the objects
             # NUMPY: in this case we need to tile along dims if neccessary
             #        or reorder the dimensions
-            # NUMPY: if the output is a float or int and they are several
-            #        definitions we can return float or int as we can
-            #        safely do "var[:, 1, :] = 3"
             visit_out.reshape(
-                self.component.section.subscripts, self.subscripts)
+                self.component.section.subscripts, self.subscripts, True)
 
         return visit_out
 
