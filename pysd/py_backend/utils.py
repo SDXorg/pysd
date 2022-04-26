@@ -305,7 +305,7 @@ def load_model_data(root, model_name):
 
     Parameters
     ----------
-    root: pathlib.Path or str
+    root: pathlib.Path
         Path to the model file.
 
     model_name: str
@@ -322,11 +322,6 @@ def load_model_data(root, model_name):
         corresponding variables as values.
 
     """
-    if isinstance(root, str):  # pragma: no cover
-        # backwards compatibility
-        # TODO: remove with PySD 3.0.0
-        root = Path(root)
-
     with open(root.joinpath("_subscripts_" + model_name + ".json")) as subs:
         subscripts = json.load(subs)
 
@@ -355,7 +350,7 @@ def load_modules(module_name, module_content, work_dir, submodules):
         module has submodules, whereas if it is a list it means that that
         particular module/submodule is a final one.
 
-    work_dir: str
+    work_dir: pathlib.Path
         Path to the module file.
 
     submodules: list
@@ -370,11 +365,6 @@ def load_modules(module_name, module_content, work_dir, submodules):
         model file.
 
     """
-    if isinstance(work_dir, str):  # pragma: no cover
-        # backwards compatibility
-        # TODO: remove with PySD 3.0.0
-        work_dir = Path(work_dir)
-
     if isinstance(module_content, list):
         with open(work_dir.joinpath(module_name + ".py"), "r",
                   encoding="UTF-8") as mod:

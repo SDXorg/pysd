@@ -1,6 +1,6 @@
 # Parsing Expression Grammar: components
 
-expr_type = array / final_expr / empty
+expr_type = array / final_expr
 
 final_expr = conditional_statement / logic2_expr
 
@@ -14,7 +14,7 @@ exp_expr = neg_expr (_ exp_oper _ neg_expr)*  # exponential
 neg_expr = pre_oper? _ expr  # pre operators (-, +)
 expr = call / parens / number / reference
 
-arguments = ((string / final_expr) _ ","? _)*
+arguments = (final_expr _ ","? _)*
 parens   = "(" _ final_expr _ ")"
 
 call = reference _ "(" _ arguments _ ")"
@@ -33,8 +33,6 @@ prod_oper = ~r"(%(prod_ops)s)"IU
 exp_oper = ~r"(%(exp_ops)s)"IU
 pre_oper = ~r"(%(pre_ops)s)"IU
 
-empty = "" # empty string
-
 _ = spacechar*
 spacechar = " "* ~"\t"*
 
@@ -51,4 +49,3 @@ escape_group = "\"" ( "\\\"" / ~r"[^\"]" )* "\""
 
 number = raw_number
 raw_number = ("+"/"-")? ~r"\d+\.?\d*([eE][+-]?\d+)?"
-string = "\'" (~r"[^\']"IU)* "\'"

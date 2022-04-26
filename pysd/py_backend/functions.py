@@ -9,7 +9,6 @@ import warnings
 
 import numpy as np
 import xarray as xr
-import scipy.stats as stats
 
 small_vensim = 1e-6  # What is considered zero according to Vensim Help
 
@@ -179,6 +178,7 @@ def pulse_magnitude(time, magnitude, start, repeat_time=0):
         else:
             return 0
 
+
 def if_then_else(condition, val_if_true, val_if_false):
     """
     Implements Vensim's IF THEN ELSE function.
@@ -329,8 +329,7 @@ def incomplete(*args):
 
 
 def not_implemented_function(*args):
-    raise NotImplementedError(
-        'Not implemented function {}'.format(args[0]))
+    raise NotImplementedError(f"Not implemented function '{args[0]}'")
 
 
 def integer(x):

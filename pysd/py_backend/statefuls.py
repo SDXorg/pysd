@@ -618,7 +618,7 @@ class Macro(DynamicStateful):
            != self.get_pysd_compiler_version().split(".")[0]:
             raise ImportError(
                 "\n\nNot able to import the model. "
-                + "The model was compiled with a "
+                + "The model was translated with a "
                 + "not compatible version of PySD:"
                 + "\n\tPySD " + self.get_pysd_compiler_version()
                 + "\n\nThe current version of PySd is:"

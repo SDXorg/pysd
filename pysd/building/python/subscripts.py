@@ -154,11 +154,10 @@ class SubscriptManager:
 
         return s2n
 
-    def find_subscript_name(self, element: str, avoid: List[str] = []) -> str:
+    def _find_subscript_name(self, element: str, avoid: List[str] = []) -> str:
         """
         Given a member of a subscript family, return the first key of
         which the member is within the value list.
-        If element is already a subscript name, return that.
 
         Parameters
         ----------
@@ -179,17 +178,14 @@ class SubscriptManager:
         >>> sm._subscripts = {
         ...     'Dim1': ['A', 'B', 'C'],
         ...     'Dim2': ['A', 'B', 'C', 'D']}
-        >>> sm.find_subscript_name('D')
+        >>> sm._find_subscript_name('D')
         'Dim2'
-        >>> sm.find_subscript_name('B')
+        >>> sm._find_subscript_name('B')
         'Dim1'
-        >>> sm.find_subscript_name('B', avoid=['Dim1'])
+        >>> sm._find_subscript_name('B', avoid=['Dim1'])
         'Dim2'
 
         """
-        if element in self.subscripts.keys():
-            return element
-
         for name, elements in self.subscripts.items():
             if element in elements and name not in avoid:
                 return name
@@ -230,7 +226,7 @@ class SubscriptManager:
         coordinates = {}
         for sub in subs:
             if sub in sub_elems_list:
-                name = self.find_subscript_name(
+                name = self._find_subscript_name(
                     sub, avoid=subs + list(coordinates))
                 coordinates[name] = [sub]
             else:
@@ -396,10 +392,7 @@ class SubscriptManager:
         for ndim, (dim, coord) in zip(merge_subs, coords.items()):
             # find dimensions can be retrieved from _subscript_dict
             final_subs[ndim] = coord
-            if dim.endswith("!") and coord == self.subscripts[dim[:-1]]:
-                # use _subscript_dict
-                coordsp.append(f"'{ndim}': _subscript_dict['{dim[:-1]}']")
-            elif not dim.endswith("!") and coord == self.subscripts[dim]:
+            if not dim.endswith("!") and coord == self.subscripts[dim]:
                 # use _subscript_dict
                 coordsp.append(f"'{ndim}': _subscript_dict['{dim}']")
             else:

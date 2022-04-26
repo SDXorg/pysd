@@ -63,15 +63,11 @@ class NamespaceManager:
         """
         Takes an arbitrary string and creates a valid Python identifier.
 
-        If the input string is in the namespace, return its value.
-
         If the python identifier created is already in the namespace,
         but the input string is not (ie, two similar strings resolve to
-        the same python identifier)
-
-        or if the identifier is a reserved word in the reserved_words
-        list, or is a python default reserved word,
-        adds _1, or if _1 is in the namespace, _2, etc.
+        the same python identifier) or if the identifier is a reserved
+        word in the reserved_words list, or is a python default
+        reserved word, adds _1, or if _1 is in the namespace, _2, etc.
 
         Parameters
         ----------
@@ -138,9 +134,6 @@ class NamespaceManager:
         """
         s = string.lower()
         clean_s = s.replace(" ", "_")
-
-        if prefix is None and clean_s in self.cleanspace:
-            return self.cleanspace[clean_s]
 
         # Make spaces into underscores
         s = re.sub(r"[\s\t\n_]+", "_", s)

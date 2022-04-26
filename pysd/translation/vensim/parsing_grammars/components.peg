@@ -1,6 +1,6 @@
 # Parsing Expression Grammar: components
 
-expr_type = array / final_expr / empty
+expr_type = array / final_expr
 
 final_expr = logic_expr (_ logic_oper _ logic_expr)*  # logic operators (:and:, :or:)
 logic_expr = not_oper? _ comp_expr  # :not: operator
@@ -32,5 +32,3 @@ add_oper = ~r"(%(add_ops)s)"IU
 prod_oper = ~r"(%(prod_ops)s)"IU
 exp_oper = ~r"(%(exp_ops)s)"IU
 pre_oper = ~r"(%(pre_ops)s)"IU
-
-empty = "" # empty string

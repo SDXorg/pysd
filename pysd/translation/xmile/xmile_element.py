@@ -632,9 +632,6 @@ class EquationVisitor(parsimonious.NodeVisitor):
         else:
             return vc[0]
 
-    def visit_string(self, n, vc):
-        return self.add_element(eval(n.text))
-
     def visit_arguments(self, n, vc):
         arglist = tuple(x.strip(",") for x in vc)
         return self.add_element(tuple(
@@ -647,9 +644,6 @@ class EquationVisitor(parsimonious.NodeVisitor):
     def visit__(self, n, vc):
         # handles whitespace characters
         return ""
-
-    def visit_empty(self, n, vc):
-        return self.add_element(None)
 
     def generic_visit(self, n, vc):
         return "".join(filter(None, vc)) or n.text

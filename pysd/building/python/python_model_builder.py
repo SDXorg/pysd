@@ -640,7 +640,6 @@ class ComponentBuilder:
     def build_component(self):
         self.subscripts_dict = self.section.subscripts.make_coord_dict(
             self.subscripts[0])
-        # NUMPY: use vs.ExceptVisitor
         self.except_subscripts = [self.section.subscripts.make_coord_dict(
             except_list) for except_list in self.subscripts[1]]
         self.ast_build = vs.ASTVisitor(self).visit()

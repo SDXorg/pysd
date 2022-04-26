@@ -1,13 +1,12 @@
 import unittest
-import os
 import warnings
-
+from pathlib import Path
 
 import xarray as xr
 
-_root = os.path.dirname(__file__)
+_root = Path(__file__).parent
 
-more_tests = os.path.join(_root, "more-tests")
+more_tests = _root / "more-tests"
 
 
 class TestStateful(unittest.TestCase):
@@ -244,10 +243,8 @@ class TestStateful(unittest.TestCase):
         frcst.initialize(init_trend)
         self.assertEqual(
             frcst(),
-            input_val*
-            (1+
-            (input_val-input_val/(1+init_trend))
-            /(3*input_val/(1+init_trend))*10))
+            input_val * (1+(input_val-input_val/(1+init_trend))
+                         / (3*input_val/(1+init_trend))*10))
 
     def test_initial(self):
         from pysd.py_backend.statefuls import Initial
@@ -361,7 +358,8 @@ class TestMacroMethods(unittest.TestCase):
     def test_get_elements_to_initialize(self):
         from pysd.py_backend.statefuls import Macro
 
-        macro = Macro(more_tests + "/version/test_current_version.py")
+        model = "not_implemented_and_incomplete"
+        macro = Macro(more_tests / model / f"test_{model}.py")
 
         macro.stateful_initial_dependencies = {
             "A": {"B", "C"},

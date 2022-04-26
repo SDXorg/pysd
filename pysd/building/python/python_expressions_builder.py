@@ -87,13 +87,6 @@ class StructureBuilder:
         self.section = component.section
         self.def_subs = component.subscripts_dict
 
-    def build(self, arguments):
-        return BuildAST(
-            expression=repr(self.value),
-            calls={},
-            subscripts={},
-            order=0)
-
     def join_calls(self, arguments):
         if len(arguments) == 0:
             return {}
@@ -255,9 +248,9 @@ class CallBuilder(StructureBuilder):
     def build_not_implemented(self, arguments):
         final_subscripts = self.reorder(arguments, def_subs=self.def_subs)
         warnings.warn(
-            "\n\nTrying to translate "
-            + self.function
-            + " which it is not implemented on PySD. The translated "
+            "\n\nTrying to translate '"
+            + self.function.upper().replace("_", " ")
+            + "' which it is not implemented on PySD. The translated "
             + "model will crash... "
         )
         self.section.imports.add("functions", "not_implemented_function")
@@ -268,6 +261,19 @@ class CallBuilder(StructureBuilder):
                 ", ".join(arg.expression for arg in arguments.values())),
             calls=self.join_calls(arguments),
             subscripts=final_subscripts,
+            order=0)
+
+    def build_incomplete_call(self, arguments):
+        warnings.warn(
+            "'%s' has no equation specified" % self.element.name,
+            SyntaxWarning, stacklevel=2
+        )
+        self.section.imports.add("functions", "incomplete")
+        return BuildAST(
+            expression="incomplete(%s)" % ", ".join(
+                arg.expression for arg in arguments.values()),
+            calls=self.join_calls(arguments),
+            subscripts=self.def_subs,
             order=0)
 
     def build_macro_call(self, arguments):
@@ -302,19 +308,6 @@ class CallBuilder(StructureBuilder):
             expression="%s()" % arguments["name"],
             calls={arguments["name"]: 1},
             subscripts=final_subscripts,
-            order=0)
-
-    def build_incomplete_call(self, arguments):
-        warnings.warn(
-            "%s has no equation specified" % self.element.name,
-            SyntaxWarning, stacklevel=2
-        )
-        self.section.imports.add("functions", "incomplete")
-        return BuildAST(
-            expression="incomplete(%s)" % ", ".join(
-                arg.expression for arg in arguments.values()),
-            calls=self.join_calls(arguments),
-            subscripts=self.def_subs,
             order=0)
 
     def build_lookups_call(self, arguments):
@@ -1463,25 +1456,3 @@ class ASTVisitor:
             for name, value in builder.arguments.items()
         }
         return builder.build(arguments)
-
-
-class ExceptVisitor:  # pragma: no cover
-    # this class will be used in the numpy array backend
-    def __init__(self, component):
-        self.except_definitions = component.subscripts[1]
-        self.subscripts = component.section.subscripts
-        self.subscripts_dict = component.subscripts_dict
-
-    def visit(self):
-        excepts = [
-            BuildAST("", self.subscripts_dict, {}, 0)
-            for _ in self.except_definitions
-        ]
-        [
-            except_def.reshape(
-                self.subscripts,
-                self.subscripts.make_coord_dict(except_list))
-            for except_def, except_list
-            in zip(excepts, self.except_definitions)
-        ]
-        return excepts

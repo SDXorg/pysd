@@ -706,9 +706,6 @@ class EquationVisitor(parsimonious.NodeVisitor):
     def visit_nan(self, n, vc):
         return self.add_element(np.nan)
 
-    def visit_empty(self, n, vc):
-        return self.add_element(None)
-
     def generic_visit(self, n, vc):
         return "".join(filter(None, vc)) or n.text
 

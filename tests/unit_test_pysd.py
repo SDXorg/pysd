@@ -27,27 +27,6 @@ test_model_constant_pipe = more_tests.joinpath(
 
 
 class TestPySD(unittest.TestCase):
-    def test_load_different_version_error(self):
-        # old PySD major version
-        with self.assertRaises(ImportError):
-            pysd.load(more_tests.joinpath("version/test_old_version.py"))
-
-        # current PySD major version
-        pysd.load(more_tests.joinpath("version/test_current_version.py"))
-
-    def test_load_type_error(self):
-        with self.assertRaises(ImportError):
-            pysd.load(more_tests.joinpath("type_error/test_type_error.py"))
-
-    def test_read_not_model_vensim(self):
-        with self.assertRaises(ValueError):
-            pysd.read_vensim(
-                more_tests.joinpath("not_vensim/test_not_vensim.txt"))
-
-    def test_read_not_model_xmile(self):
-        with self.assertRaises(ValueError):
-            pysd.read_xmile(
-                more_tests.joinpath("not_vensim/test_not_vensim.txt"))
 
     def test_run(self):
         model = pysd.read_vensim(test_model)
@@ -1296,19 +1275,6 @@ class TestModelInteraction(unittest.TestCase):
         model.run()
         self.assertEqual(new, 345)
         self.assertNotEqual(old, new)
-
-    def test_circular_reference(self):
-        with self.assertRaises(ValueError) as err:
-            pysd.load(more_tests.joinpath(
-                "circular_reference/test_circular_reference.py"))
-
-        self.assertIn("_integ_integ", str(err.exception))
-        self.assertIn("_delay_delay", str(err.exception))
-        self.assertIn(
-            "Circular initialization...\n"
-            + "Not able to initialize the following objects:",
-            str(err.exception),
-        )
 
     def test_not_able_to_update_stateful_object(self):
         integ = pysd.statefuls.Integ(

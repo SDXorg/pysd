@@ -75,7 +75,7 @@ class VensimFile():
         if self.mdl_path.suffix.lower() != ".mdl":
             raise ValueError(
                 "The file to translate, '%s' " % self.mdl_path
-                + "is not a vensim model. It must end with mdl extension."
+                + "is not a Vensim model. It must end with mdl extension."
             )
 
         if encoding is None:
