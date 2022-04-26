@@ -11,18 +11,6 @@ __pysd_version__ = "3.0.0"
 
 _subscript_dict = {}
 
-_dependencies = {
-    'initial_time': {},
-    'final_time': {},
-    'time_step': {},
-    'saveper': {'time_step': 1},
-    'initial_par': {},
-    'stock_a': {'_integ_stock_a': 1},
-    'stock_b': {'_integ_stock_b': 1},
-    '_integ_stock_a': {'initial': {'initial_par': 1}, 'step': {}},
-    '_integ_stock_b': {'initial': {'stock_a': 1}, 'step': {}}
-}
-
 __data = {"scope": None, "time": lambda: 0}
 
 component = Component()
@@ -60,17 +48,27 @@ def time_step():
     return __data["time"].time_step()
 
 
-@component.add(name="Saveper")
+@component.add(name="Saveper", depends_on={'time_step': 1})
 def saveper():
     return __data["time"].saveper()
 
 
-@component.add(name="Stock B")
+@component.add(name="Stock B", depends_on={'_integ_stock_b': 1},
+               other_deps={
+                   '_integ_stock_b': {
+                       'initial': {'stock_a': 1},
+                       'step': {}
+                       }})
 def stock_b():
     return _integ_stock_b()
 
 
-@component.add(name="Stock A")
+@component.add(name="Stock A", depends_on={'_integ_stock_a': 1},
+               other_deps={
+                   '_integ_stock_a': {
+                       'initial': {'initial_par': 1},
+                       'step': {}
+                       }})
 def stock_a():
     return _integ_stock_a()
 

@@ -86,7 +86,6 @@ class TestSplitViews:
         modules_dir = shared_tmpdir.joinpath("modules_" + model_name)
         files = {
             shared_tmpdir.joinpath("_subscripts_" + model_name + ".json"),
-            shared_tmpdir.joinpath("_dependencies_" + model_name + ".json"),
             modules_dir.joinpath("_modules.json")
         }
         [files.add(modules_dir.joinpath(module + ".py")) for module in modules]
@@ -112,9 +111,9 @@ class TestSplitViews:
 
         # check the dictionaries
         assert isinstance(model_split._namespace, dict)
-        assert isinstance(model_split.components._subscript_dict, dict)
-        assert isinstance(model_split.components._dependencies, dict)
-        assert isinstance(model_split.components._modules, dict)
+        assert isinstance(model_split._subscript_dict, dict)
+        assert isinstance(model_split._dependencies, dict)
+        assert isinstance(model_split._modules, dict)
 
         # assert taht main modules are dictionary keys
         for module in modules:

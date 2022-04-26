@@ -1360,7 +1360,7 @@ class TestDependencies(unittest.TestCase):
             'saveper': {'time_step': 1},
             'time_step': {}
         }
-        self.assertEqual(model.components._dependencies, expected_dep)
+        self.assertEqual(model.dependencies, expected_dep)
 
     def test_multiple_deps(self):
         from pysd import read_vensim
@@ -1391,7 +1391,7 @@ class TestDependencies(unittest.TestCase):
                 'step': {'inflow_b': 1}
             }
         }
-        self.assertEqual(model.components._dependencies, expected_dep)
+        self.assertEqual(model.dependencies, expected_dep)
 
         more_tests.joinpath(
             "subscript_individually_defined_stocks2/"
@@ -1411,7 +1411,7 @@ class TestDependencies(unittest.TestCase):
             "time_step": {},
             "saveper": {"time_step": 1}
         }
-        self.assertEqual(model.components._dependencies, expected_dep)
+        self.assertEqual(model.dependencies, expected_dep)
 
         for key, value in model.cache_type.items():
             if key != "time":

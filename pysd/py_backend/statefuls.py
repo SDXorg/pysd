@@ -3,10 +3,10 @@ The stateful objects are used and updated each time step with an update
 method. This include from basic Integ class objects until the Model
 class objects.
 """
-
 import inspect
 import pickle
 import warnings
+from typing import Union
 
 import numpy as np
 import pandas as pd
@@ -627,7 +627,12 @@ class Macro(DynamicStateful):
                 + " read_vensim or read_xmile.")
 
         self._namespace = self.components._components.component.namespace
-        self._dependencies = self.components._dependencies
+        self._dependencies = self.components._components.component.dependencies
+        self._subscript_dict = getattr(
+            self.components._components, "_subscript_dict", {})
+        self._modules = getattr(
+            self.components._components, "_modules", {})
+
         self._doc = self._build_doc()
 
         if params is not None:
@@ -686,16 +691,40 @@ class Macro(DynamicStateful):
         return self.return_func()
 
     @property
-    def doc(self):
+    def doc(self) -> pd.DataFrame:
+        """
+        The documentation of the model.
+        """
         return self._doc.copy()
 
     @property
-    def namespace(self):
+    def namespace(self) -> dict:
+        """
+        The namespace dictionary of the model.
+        """
         return self._namespace.copy()
 
     @property
-    def dependencies(self):
+    def dependencies(self) -> dict:
+        """
+        The dependencies dictionary of the model.
+        """
         return self._dependencies.copy()
+
+    @property
+    def subscripts(self) -> dict:
+        """
+        The subscripts dictionary of the model.
+        """
+        return self._subscript_dict.copy()
+
+    @property
+    def modules(self) -> Union[dict, None]:
+        """
+        The dictionary of modules of the model. If the model is not
+        split by modules it returns None.
+        """
+        return self._modules.copy() or None
 
     def clean_caches(self):
         self.cache.clean()
@@ -1306,13 +1335,13 @@ class Macro(DynamicStateful):
                 series.values,
                 series.index).interp(concat_dim=self.time()).reset_coords(
                 'concat_dim', drop=True),
-                dims, self.components._subscript_dict), {'time': 1}
+                dims, self._subscript_dict), {'time': 1}
 
         elif dims:
             # the interpolation will be time dependent
             return lambda: utils.rearrange(
                 np.interp(self.time(), series.index, series.values),
-                dims, self.components._subscript_dict), {'time': 1}
+                dims, self._subscript_dict), {'time': 1}
 
         else:
             # the interpolation will be time dependent
@@ -1324,7 +1353,7 @@ class Macro(DynamicStateful):
         """ Internal function for creating a constant model element """
         if dims:
             return lambda: utils.rearrange(
-                value, dims, self.components._subscript_dict)
+                value, dims, self._subscript_dict)
 
         else:
             return lambda: value
@@ -1385,7 +1414,7 @@ class Macro(DynamicStateful):
                 if dims:
                     value = utils.rearrange(
                         value, dims,
-                        self.components._subscript_dict)
+                        self._subscript_dict)
                 element.initialize(value)
                 modified_statefuls.add(stateful_name)
             except NameError:
@@ -1436,9 +1465,6 @@ class Macro(DynamicStateful):
             for attr, value in attrs.items():
                 setattr(getattr(self.components, element), attr, value)
 
-    def subscript_dict(self):
-        return self.components._subscript_dict.copy()
-
     def _build_doc(self):
         """
         Formats a table of documentation strings to help users remember
@@ -1466,7 +1492,7 @@ class Macro(DynamicStateful):
                 'Type': element.type,
                 'Subtype': element.subtype,
                 'Comment': element.__doc__.strip().strip("\n").strip()
-                           if element.__doc__ else None
+                if element.__doc__ else None
             })
 
         if collector:
@@ -1957,9 +1983,9 @@ class Model(Macro):
             Set of varible names in the given module.
 
         """
-        try:
-            module_content = self.components._modules.copy()
-        except NameError:
+        if self._modules:
+            module_content = self._modules.copy()
+        else:
             raise ValueError(
                 "Trying to get a module from a non-modularized model")
 

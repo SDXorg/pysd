@@ -117,12 +117,12 @@ class TestSubmodel:
         # assert original stateful elements
         assert len(model._dynamicstateful_elements) == 2
         assert "_integ_other_stock" in model._stateful_elements
-        assert "_integ_other_stock" in model.components._dependencies
-        assert "other_stock" in model.components._dependencies
+        assert "_integ_other_stock" in model._dependencies
+        assert "other_stock" in model._dependencies
         assert "other stock" in model._namespace
         assert "_integ_stock" in model._stateful_elements
-        assert "_integ_stock" in model.components._dependencies
-        assert "stock" in model.components._dependencies
+        assert "_integ_stock" in model._dependencies
+        assert "stock" in model._dependencies
         assert "Stock" in model._namespace
 
         # select submodel
@@ -135,12 +135,12 @@ class TestSubmodel:
         # assert stateful elements change
         assert len(model._dynamicstateful_elements) == 1
         assert "_integ_other_stock" not in model._stateful_elements
-        assert "_integ_other_stock" not in model.components._dependencies
-        assert "other_stock" not in model.components._dependencies
+        assert "_integ_other_stock" not in model._dependencies
+        assert "other_stock" not in model._dependencies
         assert "other stock" not in model._namespace
         assert "_integ_stock" in model._stateful_elements
-        assert "_integ_stock" in model.components._dependencies
-        assert "stock" in model.components._dependencies
+        assert "_integ_stock" in model._dependencies
+        assert "stock" in model._dependencies
         assert "Stock" in model._namespace
 
         if not dep_vars:

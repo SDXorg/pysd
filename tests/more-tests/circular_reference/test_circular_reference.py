@@ -2,12 +2,7 @@ from pysd.py_backend.statefuls import Integ, Delay
 from pysd import Component
 
 _subscript_dict = {}
-_dependencies = {
-    'integ': {'_integ_integ': 1},
-    'delay': {'_delay_delay': 1},
-    '_integ_integ': {'initial': {'delay': 1}, 'step': {}},
-    '_delay_delay': {'initial': {'integ': 1}, 'step': {}}
-}
+
 __pysd_version__ = "3.0.0"
 
 __data = {'scope': None, 'time': lambda: 0}
@@ -52,12 +47,20 @@ def saveper():
     return __data["time"].save()
 
 
-@component.add(name="Integ")
+@component.add(
+    name="Integ",
+    depends_on={'_integ_integ': 1},
+    other_deps={'_integ_integ': {'initial': {'delay': 1}, 'step': {}}}
+)
 def integ():
     return _integ_integ()
 
 
-@component.add(name="Delay")
+@component.add(
+    name="Delay",
+    depends_on={'_delay_delay': 1},
+    other_deps={'_delay_delay': {'initial': {'integ': 1}, 'step': {}}}
+)
 def delay():
     return _delay_delay()
 

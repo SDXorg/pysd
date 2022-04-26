@@ -2,8 +2,6 @@ from pysd import Component
 
 __pysd_version__ = "3.0.0"
 
-_dependencies = {}
-
 __data = {'scope': None, 'time': lambda: 0}
 
 _control_vars = {

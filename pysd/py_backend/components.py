@@ -16,9 +16,11 @@ class Component(object):
 
     def __init__(self):
         self.namespace = {}
+        self.dependencies = {}
 
     def add(self, name, units=None, limits=(np.nan, np.nan),
-            subscripts=None, comp_type=None, comp_subtype=None):
+            subscripts=None, comp_type=None, comp_subtype=None,
+            depends_on={}, other_deps={}):
         """
         This decorators allows assigning metadata to a function.
         """
@@ -30,7 +32,13 @@ class Component(object):
             function.type = comp_type
             function.subtype = comp_subtype
             function.args = inspect.getfullargspec(function)[0]
+
+            # include component in namespace and dependencies
             self.namespace[name] = function.__name__
+            if function.__name__ != "time":
+                self.dependencies[function.__name__] = depends_on
+                self.dependencies.update(other_deps)
+
             return function
 
         return decorator

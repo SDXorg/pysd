@@ -47,7 +47,6 @@ class SectionBuilder:
         self.namespace = NamespaceManager(self.params)
         self.imports = ImportsManager()
         self.macrospace = {}
-        self.dependencies = {}
 
         # create parameters dict necessary in macros
         self.params = {
@@ -65,10 +64,6 @@ class SectionBuilder:
 
         for element in self.elements:
             element.build_element()
-            self.dependencies[element.identifier] = element.dependencies
-            for subelement in element.objects.values():
-                if "calls" in subelement:
-                    self.dependencies[subelement["name"]] = subelement["calls"]
 
         if self.split:
             self._build_modular(self.views_dict)
@@ -123,8 +118,7 @@ class SectionBuilder:
 
         for file, values in {
           "modules_%s/_modules": elements_per_view,
-          "_subscripts_%s": self.subscripts.subscripts,
-          "_dependencies_%s": self.dependencies}.items():
+          "_subscripts_%s": self.subscripts.subscripts}.items():
 
             with self.root.joinpath(
                 file % self.model_name).with_suffix(
@@ -203,7 +197,7 @@ class SectionBuilder:
         # import of needed functions and packages
         text = self.imports.get_header(self.path.name)
 
-        # import subscript dict and dependencies from json file
+        # import subscript dict from json file
         text += textwrap.dedent("""
         __pysd_version__ = '%(version)s'
 
@@ -214,7 +208,7 @@ class SectionBuilder:
 
         _root = Path(__file__).parent
         %(params)s
-        _subscript_dict, _dependencies, _modules = load_model_data(
+        _subscript_dict, _modules = load_model_data(
             _root, "%(model_name)s")
 
         component = Component()
@@ -246,6 +240,12 @@ class SectionBuilder:
         control_vars, funcs = self._build_variables(self.elements)
 
         text = self.imports.get_header(self.path.name)
+        indent = "\n        "
+        params = f"{indent}_params = {self.params}\n"\
+            if self.params else ""
+        subs = f"{indent}_subscript_dict = {self.subscripts.subscripts}"\
+            if self.subscripts.subscripts else ""
+
         text += textwrap.dedent("""
         __pysd_version__ = '%(version)s'
 
@@ -256,16 +256,12 @@ class SectionBuilder:
 
         _root = Path(__file__).parent
         %(params)s
-        _subscript_dict = %(subscript_dict)s
-
-        _dependencies = %(dependencies)s
+        %(subscript_dict)s
 
         component = Component()
         """ % {
-            "subscript_dict": repr(self.subscripts.subscripts),
-            "dependencies": repr(self.dependencies),
-            "params": f"\n        _params = {self.params}\n"
-                      if self.params else "",
+            "subscript_dict": subs,
+            "params": params,
             "version": __version__,
         })
 
@@ -414,6 +410,7 @@ class ElementBuilder:
             [component.subscripts[0] for component in self.components])
         self.subs_dict = section.subscripts.make_coord_dict(self.subscripts)
         self.dependencies = {}
+        self.other_dependencies = {}
         self.objects = {}
 
     def _format_limits(self, limits):
@@ -586,6 +583,7 @@ class ElementBuilder:
         self.name = repr(self.name)
         meta_data = ["name=%(name)s"]
 
+        # include basic metadata (units, limits, dimensions)
         if self.units:
             meta_data.append("units=%(units)s")
             self.units = repr(self.units)
@@ -594,16 +592,24 @@ class ElementBuilder:
         if self.subscripts:
             self.section.imports.add("subs")
             meta_data.append("subscripts=%(subscripts)s")
+
+        # include component type and subtype
+        meta_data.append("comp_type='%(type)s'")
+        meta_data.append("comp_subtype='%(subtype)s'")
+
+        # include dependencies
+        if self.dependencies:
+            meta_data.append("depends_on=%(dependencies)s")
+        if self.other_dependencies:
+            meta_data.append("other_deps=%(other_dependencies)s")
+
+        self.meta_data = f"@component.add({', '.join(meta_data)})"\
+            % self.__dict__
+
         if self.documentation:
             doc = self.documentation.replace("\\", "\n")
             contents = f'"""\n{doc}\n"""\n'\
                 + contents
-
-        meta_data.append("comp_type='%(type)s'")
-        meta_data.append("comp_subtype='%(subtype)s'")
-
-        self.meta_data = f"@component.add({', '.join(meta_data)})"\
-            % self.__dict__
 
         indent = 12
 

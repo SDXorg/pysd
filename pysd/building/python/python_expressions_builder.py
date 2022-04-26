@@ -292,11 +292,12 @@ class CallBuilder(StructureBuilder):
                           "%(args)s, '%(macro_name)s', "
                           "time_initialization=lambda: __data['time'], "
                           "py_name='%(name)s')" % arguments,
-            "calls": {
-                "initial": calls,
-                "step": calls
-            }
         }
+        self.element.other_dependencies[arguments["name"]] = {
+            "initial": calls,
+            "step": calls
+        }
+
         return BuildAST(
             expression="%s()" % arguments["name"],
             calls={arguments["name"]: 1},
@@ -367,15 +368,11 @@ class CallBuilder(StructureBuilder):
                 def_subs=self.def_subs,
                 force="equal"
             )
-            self.element.objects[name] = {
-                "name": name,
-                "expression": None,
-                "calls": {
-                    "initial": arguments["1"].calls,
-                    "step": arguments["0"].calls
-                }
-
+            self.element.other_dependencies[name] = {
+                "initial": arguments["1"].calls,
+                "step": arguments["0"].calls
             }
+
             calls = {name: 1}
         else:
             final_subscripts = self.reorder(
@@ -658,12 +655,12 @@ class InitialBuilder(StructureBuilder):
             "name": arguments["name"],
             "expression": "%(name)s = Initial(lambda: %(initial)s, "
                           "'%(name)s')" % arguments,
-            "calls": {
-                "initial": arguments["initial"].calls,
-                "step": {}
-            }
-
         }
+        self.element.other_dependencies[arguments["name"]] = {
+            "initial": arguments["initial"].calls,
+            "step": {}
+        }
+
         return BuildAST(
             expression=arguments["name"] + "()",
             calls={arguments["name"]: 1},
@@ -695,13 +692,13 @@ class IntegBuilder(StructureBuilder):
         self.element.objects[arguments["name"]] = {
             "name": arguments["name"],
             "expression": "%(name)s = Integ(lambda: %(flow)s, "
-                          "lambda: %(initial)s, '%(name)s')" % arguments,
-            "calls": {
-                "initial": arguments["initial"].calls,
-                "step": arguments["flow"].calls
-            }
-
+                          "lambda: %(initial)s, '%(name)s')" % arguments
         }
+        self.element.other_dependencies[arguments["name"]] = {
+            "initial": arguments["initial"].calls,
+            "step": arguments["flow"].calls
+        }
+
         return BuildAST(
             expression=arguments["name"] + "()",
             calls={arguments["name"]: 1},
@@ -742,17 +739,18 @@ class DelayBuilder(StructureBuilder):
                           "lambda: %(delay_time)s, lambda: %(initial)s, "
                           "lambda: %(order)s, "
                           "time_step, '%(name)s')" % arguments,
-            "calls": {
-                "initial": merge_dependencies(
-                    arguments["initial"].calls,
-                    arguments["delay_time"].calls,
-                    arguments["order"].calls),
-                "step": merge_dependencies(
-                    arguments["input"].calls,
-                    arguments["delay_time"].calls)
-
-            }
         }
+        self.element.other_dependencies[arguments["name"]] = {
+            "initial": merge_dependencies(
+                arguments["initial"].calls,
+                arguments["delay_time"].calls,
+                arguments["order"].calls),
+            "step": merge_dependencies(
+                arguments["input"].calls,
+                arguments["delay_time"].calls)
+
+        }
+
         return BuildAST(
             expression=arguments["name"] + "()",
             calls={arguments["name"]: 1},
@@ -787,13 +785,14 @@ class DelayFixedBuilder(StructureBuilder):
             "expression": "%(name)s = DelayFixed(lambda: %(input)s, "
                           "lambda: %(delay_time)s, lambda: %(initial)s, "
                           "time_step, '%(name)s')" % arguments,
-            "calls": {
-                "initial": merge_dependencies(
-                    arguments["initial"].calls,
-                    arguments["delay_time"].calls),
-                "step": arguments["input"].calls
-            }
         }
+        self.element.other_dependencies[arguments["name"]] = {
+            "initial": merge_dependencies(
+                arguments["initial"].calls,
+                arguments["delay_time"].calls),
+            "step": arguments["input"].calls
+        }
+
         return BuildAST(
             expression=arguments["name"] + "()",
             calls={arguments["name"]: 1},
@@ -836,17 +835,17 @@ class SmoothBuilder(StructureBuilder):
             "expression": "%(name)s = Smooth(lambda: %(input)s, "
                           "lambda: %(smooth_time)s, lambda: %(initial)s, "
                           "lambda: %(order)s, '%(name)s')" % arguments,
-            "calls": {
-                "initial": merge_dependencies(
-                    arguments["initial"].calls,
-                    arguments["smooth_time"].calls,
-                    arguments["order"].calls),
-                "step": merge_dependencies(
-                    arguments["input"].calls,
-                    arguments["smooth_time"].calls)
-            }
-
         }
+        self.element.other_dependencies[arguments["name"]] = {
+            "initial": merge_dependencies(
+                arguments["initial"].calls,
+                arguments["smooth_time"].calls,
+                arguments["order"].calls),
+            "step": merge_dependencies(
+                arguments["input"].calls,
+                arguments["smooth_time"].calls)
+        }
+
         return BuildAST(
             expression=arguments["name"] + "()",
             calls={arguments["name"]: 1},
@@ -884,17 +883,17 @@ class TrendBuilder(StructureBuilder):
                           "lambda: %(average_time)s, "
                           "lambda: %(initial_trend)s, "
                           "'%(name)s')" % arguments,
-            "calls": {
-                "initial": merge_dependencies(
-                    arguments["initial_trend"].calls,
-                    arguments["input"].calls,
-                    arguments["average_time"].calls),
-                "step": merge_dependencies(
-                    arguments["input"].calls,
-                    arguments["average_time"].calls)
-            }
-
         }
+        self.element.other_dependencies[arguments["name"]] = {
+            "initial": merge_dependencies(
+                arguments["initial_trend"].calls,
+                arguments["input"].calls,
+                arguments["average_time"].calls),
+            "step": merge_dependencies(
+                arguments["input"].calls,
+                arguments["average_time"].calls)
+        }
+
         return BuildAST(
             expression=arguments["name"] + "()",
             calls={arguments["name"]: 1},
@@ -934,17 +933,17 @@ class ForecastBuilder(StructureBuilder):
             "expression": "%(name)s = Forecast(lambda: %(input)s, "
                           "lambda: %(average_time)s, lambda: %(horizon)s, "
                           "lambda: %(initial_trend)s, '%(name)s')" % arguments,
-            "calls": {
-                "initial": merge_dependencies(
-                    arguments["input"].calls,
-                    arguments["initial_trend"].calls),
-                "step": merge_dependencies(
-                    arguments["input"].calls,
-                    arguments["average_time"].calls,
-                    arguments["horizon"].calls)
-            }
-
         }
+        self.element.other_dependencies[arguments["name"]] = {
+            "initial": merge_dependencies(
+                arguments["input"].calls,
+                arguments["initial_trend"].calls),
+            "step": merge_dependencies(
+                arguments["input"].calls,
+                arguments["average_time"].calls,
+                arguments["horizon"].calls)
+        }
+
         return BuildAST(
             expression=arguments["name"] + "()",
             calls={arguments["name"]: 1},
@@ -981,15 +980,15 @@ class SampleIfTrueBuilder(StructureBuilder):
             "expression": "%(name)s = SampleIfTrue(lambda: %(condition)s, "
                           "lambda: %(input)s, lambda: %(initial)s, "
                           "'%(name)s')" % arguments,
-            "calls": {
-                "initial":
-                    arguments["initial"].calls,
-                "step": merge_dependencies(
-                    arguments["condition"].calls,
-                    arguments["input"].calls)
-            }
-
         }
+        self.element.other_dependencies[arguments["name"]] = {
+            "initial":
+                arguments["initial"].calls,
+            "step": merge_dependencies(
+                arguments["condition"].calls,
+                arguments["input"].calls)
+        }
+
         return BuildAST(
             expression=arguments["name"] + "()",
             calls={arguments["name"]: 1},
