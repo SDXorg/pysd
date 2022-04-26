@@ -158,7 +158,7 @@
      showgrid="false"
      inkscape:zoom="2.2220874"
      inkscape:cx="178.21081"
-     inkscape:cy="110.70672"
+     inkscape:cy="38.702348"
      inkscape:window-width="1920"
      inkscape:window-height="1011"
      inkscape:window-x="1440"
@@ -339,7 +339,7 @@
          y="112.99321"
          style="font-size:12px;fill:#0000ff">-</tspan></text>
     <path
-       style="fill:none;stroke:#0000ff;stroke-width:1.3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#ExperimentalArrow)"
+       style="fill:none;stroke:#0000ff;stroke-width:1.3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#ExperimentalArrow-7)"
        d="m 235.43101,111.99886 c 0,0 3.40563,-40.562737 -41.64279,-63.104411"
        id="path119609"
        sodipodi:nodetypes="cc" />
