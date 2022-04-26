@@ -58,7 +58,7 @@ PySD is in use by hundreds of modelers and data scientists in academia, industry
 
 ## Acknowledgements
 
-This work and part of the development of PySD was supported by the European Union through the funding of the MEDEAS and LOCOMOTION projects under the Horizon 2020 research and innovation programme (grant agreements No 69128 and 821105, respectively).
+This work and part of the development of PySD was supported by the European Union through the funding of the MEDEAS and LOCOMOTION projects under the Horizon 2020 research and innovation programme (grant agreements No 69128 and 821105, respectively), and by the Government of Catalonia through the contract programme between the Ministries of Territory and Sustainability and Business and Labour and the Centre for Research on Ecology and Forestry Applications (CREAF), approved by Government Agreement on March 16, 2021.
 The authors of this paper would like to acknowledge all contributors from the SD community, which have helped improve PySD and kept the project alive for the 8 years since it was created.
 
 ## References
