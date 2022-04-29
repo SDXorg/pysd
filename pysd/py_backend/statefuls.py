@@ -2165,3 +2165,18 @@ class Model(Macro):
         nt = len(df.index.values)
         for element in capture_elements:
             df[element] = [getattr(self.components, element)()] * nt
+
+    def get_namespace(self):
+        """
+        gets model namespace.
+
+        Parameters
+        ----------
+
+        Returns
+        -------
+        A list with models namespace
+
+        """
+
+        return(self.components._namespace)

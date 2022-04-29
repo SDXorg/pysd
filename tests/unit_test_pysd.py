@@ -1336,6 +1336,11 @@ class TestModelInteraction(unittest.TestCase):
         self.assertIn(
             "Could not update the value of my_integ_object", str(err.exception)
         )
+    
+    def test_get_namespace(self):
+
+        model = pysd.read_vensim(test_model)
+        self.assertTrue (model.get_namespace() == model.components._namespace)
 
 
 class TestMultiRun(unittest.TestCase):
@@ -1666,3 +1671,4 @@ class TestExportImport(unittest.TestCase):
             Path('initial7.pic').unlink()
 
             assert_frames_close(stocks2, stocks)
+
