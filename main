@@ -1,3 +1,0 @@
-from tests.unit_test_pysd import TestModelInteraction as test
-m = test()
-print(m.test_get_namespace())
