@@ -1671,4 +1671,3 @@ class TestExportImport(unittest.TestCase):
             Path('initial7.pic').unlink()
 
             assert_frames_close(stocks2, stocks)
-
