@@ -11,4 +11,3 @@ tests/cover/
 tests/htmlcov/
 .idea/*
 docs/_build/*
-main
