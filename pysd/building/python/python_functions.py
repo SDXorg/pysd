@@ -83,6 +83,7 @@ functionspace = {
         "np.random.uniform(%(0)s, %(1)s, size=%(size)s)",
         ("numpy",)),
     "random_normal": (
-        "stats.truncnorm.rvs(%(0)s, %(1)s, loc=%(2)s, scale=%(3)s, size=%(size)s)",
+        "stats.truncnorm.rvs(%(0)s, %(1)s, loc=%(2)s, scale=%(3)s,"
+        " size=%(size)s)",
         ("scipy", "stats")),
 }

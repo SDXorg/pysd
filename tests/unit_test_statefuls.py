@@ -356,10 +356,12 @@ class TestStatefulErrors(unittest.TestCase):
 
 class TestMacroMethods(unittest.TestCase):
     def test_get_elements_to_initialize(self):
+        from pysd import read_vensim
         from pysd.py_backend.statefuls import Macro
 
-        model = "not_implemented_and_incomplete"
-        macro = Macro(more_tests / model / f"test_{model}.py")
+        test_model = _root.joinpath("test-models/samples/teacup/teacup.mdl")
+        read_vensim(test_model)
+        macro = Macro(test_model.with_suffix(".py"))
 
         macro.stateful_initial_dependencies = {
             "A": {"B", "C"},

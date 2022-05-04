@@ -1,0 +1,193 @@
+{UTF-8}
+A B uniform matrix[Dims,Subs]=
+	RANDOM UNIFORM(10, 11, 1)
+	~	
+	~		|
+
+A B uniform matrix 1[Dims,Subs]=
+	RANDOM UNIFORM(my var[Dims]+100, 200, 1)
+	~	
+	~		|
+
+A B uniform matrix 1 0[Dims,Subs]=
+	RANDOM UNIFORM(my var2[Subs], my var[Dims], 1)
+	~	
+	~		|
+
+A B uniform scalar=
+	RANDOM UNIFORM(-1, 10, 1)
+	~	
+	~		|
+
+A B uniform vec[Dims]=
+	RANDOM UNIFORM(2, 3, 1)
+	~	
+	~		|
+
+A B uniform vec 1[Dims]=
+	RANDOM UNIFORM(my var[Dims], 100, 1)
+	~	
+	~		|
+
+Dims:
+	(Dim1-Dim25)
+	~	
+	~		|
+
+my var[Dims]=
+	Dims-50
+	~	
+	~		|
+
+my var2[Subs]=
+	2*Subs
+	~	
+	~		|
+
+normal A B uniform matrix[Dims,Subs]=
+	RANDOM NORMAL(-1, 10, 5, 1, 1)
+	~	
+	~		|
+
+normal A B uniform matrix 1[Dims,Subs]=
+	RANDOM NORMAL(my var[Dims], my var[Dims]+5, my var[Dims]+2, 10, 1)
+	~	
+	~		|
+
+normal A B uniform matrix 1 0[Dims,Subs]=
+	RANDOM NORMAL(my var[Dims], my var[Dims]+5, my var[Dims]+2, my var2[Subs], 1)
+	~	
+	~		|
+
+normal scalar=
+	RANDOM NORMAL(2, 4, 0.5, 2, 1)
+	~	
+	~		|
+
+normal vec[Dims]=
+	RANDOM NORMAL(1, 5, 3.5, 10, 1)
+	~	
+	~		|
+
+normal vec 1[Dims]=
+	RANDOM NORMAL(my var[Dims], 400, my var[Dims]+200, 2, 1)
+	~	
+	~		|
+
+Subs:
+	(sub1-sub50)
+	~	
+	~		|
+
+uniform matrix[Dims,Subs]=
+	RANDOM 0 1()
+	~	
+	~		|
+
+uniform scalar=
+	RANDOM 0 1()
+	~	
+	~		|
+
+uniform vec[Dims]=
+	RANDOM 0 1()
+	~	
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 100
+	~	Month
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Month
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP 
+	~	Month [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 1
+	~	Month [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,100,0
+10,1,uniform scalar,275,125,44,11,8,3,0,0,0,0,0,0
+10,2,uniform vec,254,206,37,11,8,3,0,0,0,0,0,0
+10,3,uniform matrix,352,338,45,11,8,3,0,0,0,0,0,0
+10,4,A B uniform scalar,524,129,59,11,8,3,0,0,0,0,0,0
+10,5,A B uniform vec,503,210,52,11,8,3,0,0,0,0,0,0
+10,6,A B uniform matrix,601,342,60,11,8,3,0,0,0,0,0,0
+10,7,A B uniform vec 1,733,205,58,11,8,3,0,0,0,0,0,0
+10,8,A B uniform matrix 1,831,337,40,19,8,3,0,0,0,0,0,0
+10,9,A B uniform matrix 1 0,967,340,40,19,8,3,0,0,0,0,0,0
+10,10,my var,949,87,23,11,8,3,0,0,0,0,0,0
+1,11,10,8,0,0,0,0,0,128,0,-1--1--1,,1|(894,201)|
+1,12,10,7,0,0,0,0,0,128,0,-1--1--1,,1|(847,142)|
+1,13,10,9,0,0,0,0,0,128,0,-1--1--1,,1|(956,202)|
+10,14,my var2,1243,87,27,11,8,3,0,0,0,0,0,0
+1,15,14,9,0,0,0,0,0,128,0,-1--1--1,,1|(1114,204)|
+10,16,normal scalar,1157,311,45,19,8,3,0,0,0,0,0,0
+10,17,normal vec,1162,373,37,19,8,3,0,0,0,0,0,0
+10,18,normal A B uniform matrix,1281,367,46,19,8,3,0,0,0,0,0,0
+10,19,normal vec 1,1188,262,44,19,8,3,0,0,0,0,0,0
+10,20,normal A B uniform matrix 1,1511,362,63,19,8,3,0,0,0,0,0,0
+10,21,normal A B uniform matrix 1 0,1647,365,63,19,8,3,0,0,0,0,0,0
+1,22,10,19,0,0,0,0,0,128,0,-1--1--1,,1|(1057,166)|
+1,23,10,20,0,0,0,0,0,128,0,-1--1--1,,1|(1215,217)|
+1,24,10,21,0,0,0,0,0,128,0,-1--1--1,,1|(1278,218)|
+1,25,14,20,0,0,0,0,0,128,0,-1--1--1,,1|(1367,215)|
+1,26,14,21,0,0,0,0,0,128,0,-1--1--1,,1|(1432,218)|
+///---\\\
+:L<%^E!@
+1:Current.vdf
+9:Current
+15:0,0,0,0,0,0
+19:100,0
+27:0,
+34:0,
+4:Time
+5:A B uniform matrix[Dims,Subs]
+35:Date
+36:YYYY-MM-DD
+37:2000
+38:1
+39:1
+40:2
+41:0
+42:1
+24:0
+25:100
+26:100
+57:1
+54:0
+55:0
+59:0
+56:0
+58:0
+44:65001
+46:0
+45:1
+49:1
+50:0
+51:
+52:
+53:
+43:output
+47:Current
+48:
+6:Dim1
+6:sub1

@@ -8,10 +8,6 @@ from . import utils
 
 
 class Lookups(object):
-    # TODO add __init__ and use this class for used input pandas.Series
-    # as Lookups
-    # def __init__(self, data, coords, interp="interpolate"):
-
     def set_values(self, values):
         """Set new values from user input"""
         self.data = xr.DataArray(

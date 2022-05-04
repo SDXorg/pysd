@@ -1257,12 +1257,14 @@ class TestLookup(unittest.TestCase):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             self.assertTrue(
-                data(all_smaller, {**coords_1, **coords_2}
+                data(
+                    all_smaller, {**coords_1, **coords_2}
                 ).equals(all_smaller_out))
             self.assertTrue(
                 data(all_bigger, coords_1).equals(all_bigger_out))
             self.assertTrue(
-                data(all_inside, {**coords_1, **coords_2}
+                data(
+                    all_inside, {**coords_1, **coords_2}
                 ).equals(all_inside_out))
             self.assertTrue(
                 data(mixed, coords_1).equals(mixed_out))

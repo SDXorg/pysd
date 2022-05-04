@@ -601,7 +601,8 @@ class TestPySD(unittest.TestCase):
             "Constant"
         )
         self.assertEqual(
-            doc[doc["Real Name"] == "Characteristic Time"]["Subtype"].values[0],
+            doc[doc["Real Name"]
+                == "Characteristic Time"]["Subtype"].values[0],
             "Normal"
         )
         self.assertEqual(

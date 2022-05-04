@@ -38,9 +38,15 @@ def generate_tables():
 
     # different combinations to generate
     contents = {
-        "vensim": ["Vensim", "Vensim example", "Abstract Syntax", "Vensim comments"],
-        "xmile": ["Xmile", "Xmile example", "Abstract Syntax", "Xmile comments"],
-        "python": ["Abstract Syntax", "Python Translation", "Python comments"]
+        "vensim": [
+            "Vensim", "Vensim example", "Abstract Syntax", "Vensim comments"
+            ],
+        "xmile": [
+            "Xmile", "Xmile example", "Abstract Syntax", "Xmile comments"
+            ],
+        "python": [
+            "Abstract Syntax", "Python Translation", "Python comments"
+            ]
     }
 
     # load the tables

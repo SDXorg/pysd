@@ -1,11 +1,26 @@
 import pytest
+import shutil
 
 from pysd import read_vensim, read_xmile, load
 
 
 @pytest.fixture
-def model_path(_root, name, suffix):
+def original_path(_root, name, suffix):
     return _root / "more-tests" / name / f"test_{name}.{suffix}"
+
+
+@pytest.fixture
+def model_path(original_path, shared_tmpdir, _root):
+    """
+    Copy test folder to a temporary folder therefore we avoid creating
+    PySD model files in the original folder
+    """
+    new_file = shared_tmpdir / original_path.name
+    shutil.copy(
+        original_path,
+        new_file
+    )
+    return new_file
 
 
 @pytest.mark.parametrize(
