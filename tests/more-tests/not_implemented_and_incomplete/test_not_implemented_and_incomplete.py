@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 import xarray as xr
 
-from pysd.py_backend.functions import incomplete, not_implemented_function
+from pysd.py_backend.functions import not_implemented_function, incomplete
 from pysd import Component
 
 __pysd_version__ = "3.0.0"

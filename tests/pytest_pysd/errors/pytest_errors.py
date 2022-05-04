@@ -35,7 +35,7 @@ def model_path(_root, name, suffix):
             ValueError,
             "The file to translate, "
             "'.*test_not_vensim.txt' is not a "
-            r"Vensim model\. It must end with mdl extension\."
+            r"Vensim model\. It must end with \.mdl extension\."
         ),
         (  # not_xmile_model
             "not_vensim",
@@ -44,7 +44,8 @@ def model_path(_root, name, suffix):
             ValueError,
             "The file to translate, "
             "'.*test_not_vensim.txt' is not a "
-            r"Xmile model\. It must end with xmile, xml or stmx extension\."
+            r"Xmile model\. It must end with any of \.xmile, \.xml, "
+            r"\.stmx extensions\."
         ),
         (  # circular_reference
             "circular_reference",

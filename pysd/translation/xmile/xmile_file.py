@@ -10,6 +10,7 @@ from lxml import etree
 from ..structures.abstract_model import AbstractModel
 
 from .xmile_section import Section
+from .xmile_utils import supported_extensions
 
 
 class XmileFile():
@@ -58,11 +59,11 @@ class XmileFile():
 
         """
         # check for model extension
-        if self.xmile_path.suffix.lower() not in [".xmile", ".xml", ".stmx"]:
+        if self.xmile_path.suffix.lower() not in supported_extensions:
             raise ValueError(
                 "The file to translate, '%s' " % self.xmile_path
-                + "is not a Xmile model. It must end with xmile, xml or "
-                + "stmx extension."
+                + "is not a Xmile model. It must end with any of "
+                + "%s extensions." % ', '.join(supported_extensions)
             )
 
         return etree.parse(

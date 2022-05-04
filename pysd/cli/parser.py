@@ -8,6 +8,10 @@ import pandas as pd
 from argparse import ArgumentParser, Action
 
 from pysd import __version__
+from pysd.translation.vensim.vensim_utils import supported_extensions as\
+    vensim_extensions
+from pysd.translation.xmile.xmile_utils import supported_extensions as\
+    xmile_extensions
 
 docs = "https://pysd.readthedocs.io/en/master/command_line_usage.html"
 
@@ -38,18 +42,17 @@ def check_model(string):
     Checks that model file ends with .py .mdl or .xmile and that exists.
 
     """
-    if not string.lower().endswith('.mdl')\
-       and not string.lower().endswith('.xmile')\
-       and not string.endswith('.py'):
+    suffixes = [".py"] + vensim_extensions + xmile_extensions
+    if not any(string.lower().endswith(suffix) for suffix in suffixes):
         parser.error(
-            f'when parsing {string}'
-            '\nThe model file name must be Vensim (.mdl), Xmile (.xmile)'
-            ' or PySD (.py) model file...')
+            f"when parsing {string} \nThe model file name must be a Vensim"
+            f" ({', '.join(vensim_extensions)}), a Xmile "
+            f"({', '.join(xmile_extensions)}) or a PySD (.py) model file...")
 
     if not os.path.isfile(string):
         parser.error(
-            f'when parsing {string}'
-            '\nThe model file does not exist...')
+            f"when parsing {string}"
+            "\nThe model file does not exist...")
 
     return string
 

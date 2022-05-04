@@ -1,5 +1,6 @@
 import sys
 import os
+from pathlib import Path
 
 from csv import QUOTE_NONE
 from datetime import datetime
@@ -7,6 +8,10 @@ from datetime import datetime
 from .parser import parser
 
 import pysd
+from pysd.translation.vensim.vensim_utils import supported_extensions as\
+    vensim_extensions
+from pysd.translation.xmile.xmile_utils import supported_extensions as\
+    xmile_extensions
 
 
 def main(args):
@@ -85,13 +90,14 @@ def load(model_file, data_files, missing_values, split_views, **kwargs):
     pysd.model
 
     """
-    if model_file.lower().endswith(".mdl"):
+    model_file_suffix = Path(model_file).suffix.lower()
+    if model_file_suffix in vensim_extensions:
         print("\nTranslating model file...\n")
         return pysd.read_vensim(model_file, initialize=False,
                                 data_files=data_files,
                                 missing_values=missing_values,
                                 split_views=split_views, **kwargs)
-    elif model_file.lower().endswith(".xmile"):
+    elif model_file_suffix in xmile_extensions:
         print("\nTranslating model file...\n")
         return pysd.read_xmile(model_file, initialize=False,
                                data_files=data_files,

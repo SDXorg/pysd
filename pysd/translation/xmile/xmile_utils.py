@@ -6,6 +6,9 @@ from typing import Dict
 from pathlib import Path
 
 
+supported_extensions = [".xmile", ".xml", ".stmx"]
+
+
 class Grammar():
     _common_grammar = None
     _grammar_path: Path = Path(__file__).parent.joinpath("parsing_grammars")

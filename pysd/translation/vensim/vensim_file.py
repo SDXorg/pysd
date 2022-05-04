@@ -16,6 +16,7 @@ from ..structures.abstract_model import AbstractModel
 
 from . import vensim_utils as vu
 from .vensim_section import Section
+from .vensim_utils import supported_extensions
 
 
 class VensimFile():
@@ -72,10 +73,10 @@ class VensimFile():
 
         """
         # check for model extension
-        if self.mdl_path.suffix.lower() != ".mdl":
+        if self.mdl_path.suffix.lower() not in supported_extensions:
             raise ValueError(
                 "The file to translate, '%s' " % self.mdl_path
-                + "is not a Vensim model. It must end with mdl extension."
+                + "is not a Vensim model. It must end with .mdl extension."
             )
 
         if encoding is None:

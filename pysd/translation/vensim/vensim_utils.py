@@ -8,6 +8,9 @@ from pathlib import Path
 from chardet import detect
 
 
+supported_extensions = [".mdl"]
+
+
 class Grammar():
     _common_grammar = None
     _grammar_path: Path = Path(__file__).parent.joinpath("parsing_grammars")

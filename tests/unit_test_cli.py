@@ -67,8 +67,8 @@ class TestPySD(unittest.TestCase):
         self.assertNotEqual(out.returncode, 0)
         self.assertIn(f"PySD: error: when parsing {model}", stderr)
         self.assertIn(
-            "The model file name must be Vensim (.mdl), Xmile (.xmile) "
-            "or PySD (.py) model file...", stderr)
+            "The model file name must be a Vensim (.mdl), a Xmile (.xmile, "
+            ".xml, .stmx) or a PySD (.py) model file...", stderr)
 
     def test_read_model_not_exists(self):
 
