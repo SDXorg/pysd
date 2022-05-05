@@ -86,3 +86,63 @@ class TestElements:
         # assert that the files don't exist in the temporary directory
         with pytest.raises(VisitationError, match=error_message):
             element.parse()
+
+    @pytest.mark.parametrize(
+        "equation,mapping",
+        [
+            (  # single
+                "subcon : subcon1,subcon2->(del: del con1, del con2)",
+                ["del"]
+            ),
+            (  # single2
+                "subcon : subcon1,subcon2 -> (del:del con1,del con2)",
+                ["del"]
+            ),
+            (  # multiple
+                "class: class1,class2->(metal:class1 metal,class2 metal),"
+                "(our metal:ourC1,ourC2)",
+                ["metal", "our metal"]
+            ),
+            (  # multiple2
+                "class: class1,class2-> (metal:class1 metal,class2 metal) ,"
+                " (our metal:ourC1,ourC2)",
+                ["metal", "our metal"]
+            ),
+        ],
+        ids=["single", "single2", "multiple", "multiple2"]
+    )
+    def test_complex_mapping(self, element, mapping):
+        # parse the mapping
+        warning_message = r"Subscript mapping detected\. "\
+            r"This feature works only in some simple cases\."
+        with pytest.warns(UserWarning, match=warning_message):
+            out = element.parse()
+
+        assert out.mapping == mapping
+
+    @pytest.mark.parametrize(
+        "equation,mapping",
+        [
+            (  # single
+                "subcon : subcon1,subcon2 -> del",
+                ["del"]
+            ),
+            (  # single2
+                "subcon : subcon1,subcon2->del",
+                ["del"]
+            ),
+            (  # multiple
+                "class: class1,class2->metal,our metal",
+                ["metal", "our metal"]
+            ),
+            (  # multiple2
+                "class: class1,class2->metal , our metal",
+                ["metal", "our metal"]
+            ),
+        ],
+        ids=["single", "single2", "multiple", "multiple2"]
+    )
+    def test_simple_mapping(self, element, mapping):
+        # parse the mapping
+        out = element.parse()
+        assert out.mapping == mapping

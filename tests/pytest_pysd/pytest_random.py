@@ -27,4 +27,5 @@ class TestRandomModel:
         This way each file is only translated once.
         """
         # expected file
-        pysd.read_vensim(model_path)
+        model = pysd.read_vensim(model_path)
+        model.run()

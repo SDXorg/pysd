@@ -174,14 +174,13 @@ class ElementsComponentVisitor(parsimonious.NodeVisitor):
         self.component = SubscriptRange(self.name, vc[4].strip())
 
     def visit_subscript_mapping(self, n, vc):
-
-        warnings.warn(
-            "\nSubscript mapping detected. "
-            + "This feature works only in some simple cases."
-        )
-
         if ":" in str(vc):
-            # TODO: add test for this condition
+            # TODO: ensure the correct working of this condition adding
+            # full integration tests
+            warnings.warn(
+                "\nSubscript mapping detected. "
+                + "This feature works only in some simple cases."
+            )
             # Obtain subscript name and split by : and (
             self.mapping.append(str(vc).split(":")[0].split("(")[1].strip())
         else:

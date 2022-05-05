@@ -96,32 +96,30 @@ class StructureBuilder:
             return merge_dependencies(
                 *[val.calls for val in arguments.values()])
 
-    def reorder(self, arguments, def_subs=None, force=None):
+    def reorder(self, arguments, force=None):
 
         if force == "component":
-            final_subscripts = def_subs or {}
+            final_subscripts = self.def_subs or {}
         else:
-            final_subscripts = self.get_final_subscripts(
-                arguments, def_subs)
+            final_subscripts = self.get_final_subscripts(arguments)
 
         [arguments[key].reshape(
-            self.section.subscripts, final_subscripts, force == "equal")
+            self.section.subscripts, final_subscripts, bool(force))
          for key in arguments
          if arguments[key].subscripts or force == "equal"]
 
         return final_subscripts
 
-    def get_final_subscripts(self, arguments, def_subs):
+    def get_final_subscripts(self, arguments):
         if len(arguments) == 0:
             return {}
         elif len(arguments) == 1:
             return arguments["0"].subscripts
         else:
             return self._compute_final_subscripts(
-                [arg.subscripts for arg in arguments.values()],
-                def_subs)
+                [arg.subscripts for arg in arguments.values()])
 
-    def _compute_final_subscripts(self, subscripts_list, def_subs):
+    def _compute_final_subscripts(self, subscripts_list):
         expression = {}
         [expression.update(subscript)
          for subscript in subscripts_list if subscript]
@@ -173,7 +171,7 @@ class OperationBuilder(StructureBuilder):
     def build(self, arguments):
         operands = {}
         calls = self.join_calls(arguments)
-        final_subscripts = self.reorder(arguments, def_subs=self.def_subs)
+        final_subscripts = self.reorder(arguments)
         arguments = [arguments[str(i)] for i in range(len(arguments))]
         dependencies, order = self.operators_build[self.operators[-1]][1:]
 
@@ -246,7 +244,7 @@ class CallBuilder(StructureBuilder):
             self.build = self.build_not_implemented
 
     def build_not_implemented(self, arguments):
-        final_subscripts = self.reorder(arguments, def_subs=self.def_subs)
+        final_subscripts = self.reorder(arguments)
         warnings.warn(
             "\n\nTrying to translate '"
             + self.function.upper().replace("_", " ")
@@ -281,7 +279,7 @@ class CallBuilder(StructureBuilder):
         macro = self.section.macrospace[self.macro_name]
 
         calls = self.join_calls(arguments)
-        final_subscripts = self.reorder(arguments, def_subs=self.def_subs)
+        final_subscripts = self.reorder(arguments)
 
         arguments["name"] = self.section.namespace.make_python_identifier(
             self.macro_name + "_" + self.element.identifier, prefix="_macro")
@@ -313,7 +311,7 @@ class CallBuilder(StructureBuilder):
     def build_lookups_call(self, arguments):
         if arguments["0"].subscripts:
             final_subscripts =\
-                self.get_final_subscripts(arguments, self.def_subs)
+                self.get_final_subscripts(arguments)
             expression = arguments["function"].expression.replace(
                 "()", f"(%(0)s, {final_subscripts})")
         else:
@@ -344,23 +342,22 @@ class CallBuilder(StructureBuilder):
             final_subscripts, arguments["axis"] = self.compute_axis(arguments)
 
         elif "%(size)s" in expression:
-            final_subscripts = self.reorder(
-                arguments,
-                def_subs=self.def_subs,
-                force="component"
-            )
-            arguments["size"] = compute_shape(final_subscripts)
+            final_subscripts = self.reorder(arguments, force="component")
+            arguments["size"] = tuple(compute_shape(final_subscripts))
+            if arguments["size"]:
+                # NUMPY: not necessary
+                # generate an xarray from the output
+                subs = self.section.subscripts.simplify_subscript_input(
+                    self.def_subs)[1]
+                expression = f"xr.DataArray({expression}, {subs}, "\
+                    f"{list(self.def_subs)})"
 
         elif self.function == "active_initial":
             # we need to ensure that active initial outputs are always the
             # same and update dependencies as stateful object
             name = self.section.namespace.make_python_identifier(
                 self.element.identifier, prefix="_active_initial")
-            final_subscripts = self.reorder(
-                arguments,
-                def_subs=self.def_subs,
-                force="equal"
-            )
+            final_subscripts = self.reorder(arguments, force="equal")
             self.element.other_dependencies[name] = {
                 "initial": arguments["1"].calls,
                 "step": arguments["0"].calls
@@ -368,10 +365,7 @@ class CallBuilder(StructureBuilder):
 
             calls = {name: 1}
         else:
-            final_subscripts = self.reorder(
-                arguments,
-                def_subs=self.def_subs
-            )
+            final_subscripts = self.reorder(arguments)
             if self.function == "xidz" and final_subscripts:
                 # xidz must always return the same shape object
                 if not arguments["1"].subscripts:
