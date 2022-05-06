@@ -12,8 +12,16 @@ from dataclasses import dataclass
 from typing import Union
 
 
+class AbstractSyntax:
+    """
+    Generic class. All Abstract Synax structured are childs of that class.
+    Used for typing.
+    """
+    pass
+
+
 @dataclass
-class ArithmeticStructure:
+class ArithmeticStructure(AbstractSyntax):
     """
     Dataclass for an arithmetic structure.
 
@@ -34,7 +42,7 @@ class ArithmeticStructure:
 
 
 @dataclass
-class LogicStructure:
+class LogicStructure(AbstractSyntax):
     """
     Dataclass for a logic structure.
 
@@ -55,7 +63,7 @@ class LogicStructure:
 
 
 @dataclass
-class SubscriptsReferenceStructure:
+class SubscriptsReferenceStructure(AbstractSyntax):
     """
     Dataclass for a subscript reference structure.
 
@@ -72,7 +80,7 @@ class SubscriptsReferenceStructure:
 
 
 @dataclass
-class ReferenceStructure:
+class ReferenceStructure(AbstractSyntax):
     """
     Dataclass for an element reference structure.
 
@@ -94,7 +102,7 @@ class ReferenceStructure:
 
 
 @dataclass
-class CallStructure:
+class CallStructure(AbstractSyntax):
     """
     Dataclass for a call structure.
 
@@ -106,7 +114,7 @@ class CallStructure:
         The list of arguments used for calling the function.
 
     """
-    function: Union[str, object]
+    function: Union[str, ReferenceStructure]
     arguments: tuple
 
     def __str__(self) -> str:  # pragma: no cover
@@ -119,7 +127,7 @@ class CallStructure:
 
 
 @dataclass
-class GameStructure:
+class GameStructure(AbstractSyntax):
     """
     Dataclass for a game structure.
 
@@ -129,14 +137,14 @@ class GameStructure:
         The expression inside the game call.
 
     """
-    expression: object
+    expression: Union[AbstractSyntax, float]
 
     def __str__(self) -> str:  # pragma: no cover
         return "GameStructure:\n\t%s" % self.expression
 
 
 @dataclass
-class InitialStructure:
+class InitialStructure(AbstractSyntax):
     """
     Dataclass for a initial structure.
 
@@ -146,7 +154,7 @@ class InitialStructure:
         The expression inside the initial call.
 
     """
-    initial: object
+    initial: Union[AbstractSyntax, float]
 
     def __str__(self) -> str:  # pragma: no cover
         return "InitialStructure:\n\t%s" % (
@@ -154,7 +162,7 @@ class InitialStructure:
 
 
 @dataclass
-class IntegStructure:
+class IntegStructure(AbstractSyntax):
     """
     Dataclass for an integ/stock structure.
 
@@ -166,8 +174,8 @@ class IntegStructure:
         The initial value of the stock.
 
     """
-    flow: object
-    initial: object
+    flow: Union[AbstractSyntax, float]
+    initial: Union[AbstractSyntax, float]
 
     def __str__(self) -> str:  # pragma: no cover
         return "IntegStructure:\n\t%s,\n\t%s" % (
@@ -176,7 +184,7 @@ class IntegStructure:
 
 
 @dataclass
-class DelayStructure:
+class DelayStructure(AbstractSyntax):
     """
     Dataclass for a delay structure.
 
@@ -192,9 +200,9 @@ class DelayStructure:
         The order of the delay.
 
     """
-    input: object
-    delay_time: object
-    initial: object
+    input: Union[AbstractSyntax, float]
+    delay_time: Union[AbstractSyntax, float]
+    initial: Union[AbstractSyntax, float]
     order: float
 
     def __str__(self) -> str:  # pragma: no cover
@@ -206,7 +214,7 @@ class DelayStructure:
 
 
 @dataclass
-class DelayNStructure:
+class DelayNStructure(AbstractSyntax):
     """
     Dataclass for a delay n structure.
 
@@ -222,10 +230,10 @@ class DelayNStructure:
         The order of the delay.
 
     """
-    input: object
-    delay_time: object
-    initial: object
-    order: object
+    input: Union[AbstractSyntax, float]
+    delay_time: Union[AbstractSyntax, float]
+    initial: Union[AbstractSyntax, float]
+    order: Union[AbstractSyntax, float]
 
     # DELAY N may behave different than other delays when the delay time
     # changes during integration
@@ -239,7 +247,7 @@ class DelayNStructure:
 
 
 @dataclass
-class DelayFixedStructure:
+class DelayFixedStructure(AbstractSyntax):
     """
     Dataclass for a delay fixed structure.
 
@@ -253,9 +261,9 @@ class DelayFixedStructure:
         The initial value of the delay.
 
     """
-    input: object
-    delay_time: object
-    initial: object
+    input: Union[AbstractSyntax, float]
+    delay_time: Union[AbstractSyntax, float]
+    initial: Union[AbstractSyntax, float]
 
     def __str__(self) -> str:  # pragma: no cover
         return "DelayFixedStructure:\n\t%s,\n\t%s,\n\t%s" % (
@@ -265,7 +273,7 @@ class DelayFixedStructure:
 
 
 @dataclass
-class SmoothStructure:
+class SmoothStructure(AbstractSyntax):
     """
     Dataclass for a smooth structure.
 
@@ -281,9 +289,9 @@ class SmoothStructure:
         The order of the smooth.
 
     """
-    input: object
-    smooth_time: object
-    initial: object
+    input: Union[AbstractSyntax, float]
+    smooth_time: Union[AbstractSyntax, float]
+    initial: Union[AbstractSyntax, float]
     order: float
 
     def __str__(self) -> str:  # pragma: no cover
@@ -295,7 +303,7 @@ class SmoothStructure:
 
 
 @dataclass
-class SmoothNStructure:
+class SmoothNStructure(AbstractSyntax):
     """
     Dataclass for a smooth n structure.
 
@@ -311,10 +319,10 @@ class SmoothNStructure:
         The order of the smooth.
 
     """
-    input: object
-    smooth_time: object
-    initial: object
-    order: object
+    input: Union[AbstractSyntax, float]
+    smooth_time: Union[AbstractSyntax, float]
+    initial: Union[AbstractSyntax, float]
+    order: Union[AbstractSyntax, float]
 
     # SMOOTH N may behave different than other smooths with RungeKutta
     # integration
@@ -328,7 +336,7 @@ class SmoothNStructure:
 
 
 @dataclass
-class TrendStructure:
+class TrendStructure(AbstractSyntax):
     """
     Dataclass for a trend structure.
 
@@ -342,9 +350,9 @@ class TrendStructure:
         The initial trend value of the trend.
 
     """
-    input: object
-    average_time: object
-    initial_trend: object
+    input: Union[AbstractSyntax, float]
+    average_time: Union[AbstractSyntax, float]
+    initial_trend: Union[AbstractSyntax, float]
 
     def __str__(self) -> str:  # pragma: no cover
         return "TrendStructure:\n\t%s,\n\t%s,\n\t%s" % (
@@ -354,7 +362,7 @@ class TrendStructure:
 
 
 @dataclass
-class ForecastStructure:
+class ForecastStructure(AbstractSyntax):
     """
     Dataclass for a forecast structure.
 
@@ -370,10 +378,10 @@ class ForecastStructure:
         The initial trend value of the forecast.
 
     """
-    input: object
-    average_time: object
-    horizon: object
-    initial_trend: object
+    input: Union[AbstractSyntax, float]
+    average_time: Union[AbstractSyntax, float]
+    horizon: Union[AbstractSyntax, float]
+    initial_trend: Union[AbstractSyntax, float]
 
     def __str__(self) -> str:  # pragma: no cover
         return "ForecastStructure:\n\t%s,\n\t%s,\n\t%s,\n\t%s" % (
@@ -384,7 +392,7 @@ class ForecastStructure:
 
 
 @dataclass
-class SampleIfTrueStructure:
+class SampleIfTrueStructure(AbstractSyntax):
     """
     Dataclass for a sample if true structure.
 
@@ -398,9 +406,9 @@ class SampleIfTrueStructure:
         The initial value of the sample if true.
 
     """
-    condition: object
-    input: object
-    initial: object
+    condition: Union[AbstractSyntax, float]
+    input: Union[AbstractSyntax, float]
+    initial: Union[AbstractSyntax, float]
 
     def __str__(self) -> str:  # pragma: no cover
         return "SampleIfTrueStructure:\n\t%s,\n\t%s,\n\t%s" % (
@@ -410,7 +418,7 @@ class SampleIfTrueStructure:
 
 
 @dataclass
-class LookupsStructure:
+class LookupsStructure(AbstractSyntax):
     """
     Dataclass for a lookup structure.
 
@@ -441,7 +449,7 @@ class LookupsStructure:
 
 
 @dataclass
-class InlineLookupsStructure:
+class InlineLookupsStructure(AbstractSyntax):
     """
     Dataclass for an inline lookup structure.
 
@@ -453,7 +461,7 @@ class InlineLookupsStructure:
         The lookups definition.
 
     """
-    argument: object
+    argument: Union[AbstractSyntax, float]
     lookups: LookupsStructure
 
     def __str__(self) -> str:  # pragma: no cover
@@ -464,7 +472,7 @@ class InlineLookupsStructure:
 
 
 @dataclass
-class DataStructure:
+class DataStructure(AbstractSyntax):
     """
     Dataclass for an empty data structure.
 
@@ -480,7 +488,7 @@ class DataStructure:
 
 
 @dataclass
-class GetLookupsStructure:
+class GetLookupsStructure(AbstractSyntax):
     """
     Dataclass for a get lookups structure.
 
@@ -509,7 +517,7 @@ class GetLookupsStructure:
 
 
 @dataclass
-class GetDataStructure:
+class GetDataStructure(AbstractSyntax):
     """
     Dataclass for a get lookups structure.
 
@@ -538,7 +546,7 @@ class GetDataStructure:
 
 
 @dataclass
-class GetConstantsStructure:
+class GetConstantsStructure(AbstractSyntax):
     """
     Dataclass for a get lookups structure.
 

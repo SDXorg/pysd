@@ -1,9 +1,11 @@
 import warnings
 from dataclasses import dataclass
+from typing import Union
 
 import numpy as np
 from pysd.py_backend.utils import compute_shape
 
+from pysd.translation.structures.abstract_expressions import AbstractSyntax
 from pysd.translation.structures import abstract_expressions as ae
 from .python_functions import functionspace
 
@@ -1241,7 +1243,7 @@ def merge_dependencies(*dependencies, inplace=False):
     return current
 
 
-def _merge_dependencies(current, new):
+def _merge_dependencies(current: dict, new: dict) -> None:
     """
     Merge two dependencies dicts of an element.
 
@@ -1398,7 +1400,7 @@ class ASTVisitor:
         self.subscripts = component.subscripts_dict
         self.component = component
 
-    def visit(self):
+    def visit(self) -> Union[None, BuildAST]:
         visit_out = self._visit(self.ast)
 
         if not visit_out:
@@ -1443,7 +1445,7 @@ class ASTVisitor:
 
         return visit_out
 
-    def _visit(self, ast_object):
+    def _visit(self, ast_object: AbstractSyntax) -> AbstractSyntax:
         builder = self.builders[type(ast_object)](ast_object, self.component)
         arguments = {
             name: self._visit(value)

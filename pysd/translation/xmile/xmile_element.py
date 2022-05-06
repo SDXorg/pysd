@@ -22,6 +22,8 @@ import numpy as np
 from ..structures.abstract_model import\
     AbstractElement, AbstractLookup, AbstractComponent, AbstractSubscriptRange
 
+from ..structures.abstract_expressions import AbstractSyntax
+
 from . import xmile_utils as vu
 from .xmile_structures import structures, parsing_ops
 
@@ -112,13 +114,13 @@ class Element():
         )
         return tuple(float(x) if x is not None else x for x in lims)
 
-    def _parse_lookup_xml_node(self, node: etree._Element) -> object:
+    def _parse_lookup_xml_node(self, node: etree._Element) -> AbstractSyntax:
         """
         Parse lookup definition
 
         Returns
         -------
-        AST: AbstractSyntaxTree
+        AST: AbstractSyntax
 
         """
         ys_node = node.xpath('ns:ypts', namespaces=self.ns)[0]
@@ -180,13 +182,13 @@ class Element():
                     zip(subs_list, parsed)
                 ]
 
-    def _smile_parser(self, expression: str) -> object:
+    def _smile_parser(self, expression: str) -> AbstractSyntax:
         """
         Parse expression with parsimonious.
 
         Returns
         -------
-        AST: AbstractSyntaxTree
+        AST: AbstractSyntax
 
         """
         tree = vu.Grammar.get("equations", parsing_ops).parse(expression)
@@ -231,13 +233,13 @@ class Flaux(Element):
         super().__init__(node, ns, subscripts)
         self.limits = self._get_limits()
 
-    def _parse_component(self, node: etree._Element) -> List[object]:
+    def _parse_component(self, node: etree._Element) -> List[AbstractSyntax]:
         """
         Parse one Flaux component
 
         Returns
         -------
-        AST: AbstractSyntaxTree
+        AST: AbstractSyntax
 
         """
         asts = []
@@ -309,13 +311,13 @@ class Gf(Element):
         )
         return tuple(float(x) if x is not None else x for x in lims)
 
-    def _parse_component(self, node: etree._Element) -> object:
+    def _parse_component(self, node: etree._Element) -> AbstractSyntax:
         """
         Parse one Gf component
 
         Returns
         -------
-        AST: AbstractSyntaxTree
+        AST: AbstractSyntax
 
         """
         return [self._parse_lookup_xml_node(self.node)]
@@ -366,13 +368,13 @@ class Stock(Element):
         super().__init__(node, ns, subscripts)
         self.limits = self._get_limits()
 
-    def _parse_component(self, node) -> object:
+    def _parse_component(self, node) -> AbstractSyntax:
         """
         Parse one Stock component
 
         Returns
         -------
-        AST: AbstractSyntaxTree
+        AST: AbstractSyntax
 
         """
         # Parse each flow equations
@@ -446,7 +448,7 @@ class ControlElement(Element):
 
         Returns
         -------
-        AST: AbstractSyntaxTree
+        AST: AbstractSyntax
 
         """
         self.ast = self._smile_parser(self.eqn)
