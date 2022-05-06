@@ -266,9 +266,9 @@ class TabData(Data):
         if self.interp not in ["interpolate", "raw",
                                "look_forward", "hold_backward"]:
             raise ValueError(self.py_name + "\n"
-                             + " The interpolation method (interp) must be "
+                             + "The interpolation method (interp) must be "
                              + "'raw', 'interpolate', "
-                             + "'look_forward' or 'hold_backward")
+                             + "'look_forward' or 'hold_backward'")
 
     def load_data(self, file_names):
         """
