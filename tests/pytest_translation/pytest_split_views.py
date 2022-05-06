@@ -163,8 +163,14 @@ class TestSplitViews:
             ["a"],
             "The given subview separators were not matched in any view name."
         ),
+        (  # no_sketch
+            Path("more-tests/not_implemented_and_incomplete/"
+                 "test_not_implemented_and_incomplete.mdl"),
+            ["a"],
+            "No sketch detected. The model will be built in a single file."
+        ),
     ],
-    ids=["warning_noviews", "not_match_separator"]
+    ids=["warning_noviews", "not_match_separator", "no_sketch"]
 )
 class TestSplitViewsWarnings:
     """

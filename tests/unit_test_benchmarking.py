@@ -1,10 +1,11 @@
-import os
+from pathlib import Path
 from unittest import TestCase
 
 # most of the features of this script are already tested indirectly when
 # running vensim and xmile integration tests
 
-_root = os.path.dirname(__file__)
+_root = Path(__file__).parent
+test_model = _root.joinpath("test-models/samples/teacup/teacup.mdl")
 
 
 class TestErrors(TestCase):
@@ -13,7 +14,7 @@ class TestErrors(TestCase):
         from pysd.tools.benchmarking import runner
 
         with self.assertRaises(FileNotFoundError) as err:
-            runner(os.path.join(_root, "more-tests/not_existent.mdl"))
+            runner(_root.joinpath("more-tests/not_existent.mdl"))
 
         self.assertIn(
             'Canonical output file not found.',
@@ -23,12 +24,11 @@ class TestErrors(TestCase):
         from pysd.tools.benchmarking import runner
 
         with self.assertRaises(ValueError) as err:
-            runner(os.path.join(
-                _root,
-                "more-tests/not_vensim/test_not_vensim.txt"))
+            runner(_root.joinpath("more-tests/not_vensim/test_not_vensim.txt"))
 
         self.assertIn(
-            'Modelfile should be *.mdl, *.xmile, or *.py',
+            "The model file name must be a Vensim (.mdl), a Xmile "
+            "(.xmile, .xml, .stmx) or a PySD (.py) model file...",
             str(err.exception))
 
     def test_different_frames_error(self):
@@ -36,9 +36,8 @@ class TestErrors(TestCase):
 
         with self.assertRaises(AssertionError) as err:
             assert_frames_close(
-                load_outputs(os.path.join(_root, "data/out_teacup.csv")),
-                load_outputs(
-                    os.path.join(_root, "data/out_teacup_modified.csv")))
+                load_outputs(_root.joinpath("data/out_teacup.csv")),
+                load_outputs(_root.joinpath("data/out_teacup_modified.csv")))
 
         self.assertIn(
             "Following columns are not close:\n\tTeacup Temperature",
@@ -58,9 +57,8 @@ class TestErrors(TestCase):
 
         with self.assertRaises(AssertionError) as err:
             assert_frames_close(
-                load_outputs(os.path.join(_root, "data/out_teacup.csv")),
-                load_outputs(
-                    os.path.join(_root, "data/out_teacup_modified.csv")),
+                load_outputs(_root.joinpath("data/out_teacup.csv")),
+                load_outputs(_root.joinpath("data/out_teacup_modified.csv")),
                 verbose=True)
 
         self.assertIn(
@@ -85,9 +83,8 @@ class TestErrors(TestCase):
 
         with catch_warnings(record=True) as ws:
             assert_frames_close(
-                load_outputs(os.path.join(_root, "data/out_teacup.csv")),
-                load_outputs(
-                    os.path.join(_root, "data/out_teacup_modified.csv")),
+                load_outputs(_root.joinpath("data/out_teacup.csv")),
+                load_outputs(_root.joinpath("data/out_teacup_modified.csv")),
                 assertion="warn")
 
             # use only user warnings
@@ -112,9 +109,8 @@ class TestErrors(TestCase):
 
         with catch_warnings(record=True) as ws:
             assert_frames_close(
-                load_outputs(os.path.join(_root, "data/out_teacup.csv")),
-                load_outputs(
-                    os.path.join(_root, "data/out_teacup_modified.csv")),
+                load_outputs(_root.joinpath("data/out_teacup.csv")),
+                load_outputs(_root.joinpath("data/out_teacup_modified.csv")),
                 assertion="warn", verbose=True)
 
             # use only user warnings
@@ -136,6 +132,18 @@ class TestErrors(TestCase):
             self.assertIn(
                 "Expected values:\n\t",
                 str(wu[0].message))
+
+    def test_different_frames_return(self):
+        from pysd.tools.benchmarking import load_outputs, assert_frames_close
+
+        cols, first_false_time, first_false_cols = assert_frames_close(
+            load_outputs(_root.joinpath("data/out_teacup.csv")),
+            load_outputs(_root.joinpath("data/out_teacup_modified.csv")),
+            assertion="return")
+
+        assert cols == {"Teacup Temperature"}
+        assert first_false_time == 30.
+        assert first_false_cols == {"Teacup Temperature"}
 
     def test_different_cols(self):
         from warnings import catch_warnings
@@ -218,3 +226,10 @@ class TestErrors(TestCase):
         self.assertIn(
             "Inputs must both be pandas DataFrames.",
             str(err.exception))
+
+    def test_run_python(self):
+        from pysd.tools.benchmarking import runner
+        assert (
+            runner(str(test_model))[0]
+            == runner(test_model.with_suffix(".py"))[0]
+        ).all().all()

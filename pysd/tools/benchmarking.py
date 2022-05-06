@@ -10,6 +10,10 @@ import pandas as pd
 
 from pysd import read_vensim, read_xmile, load
 from ..py_backend.utils import load_outputs, detect_encoding
+from pysd.translation.vensim.vensim_utils import supported_extensions as\
+    vensim_extensions
+from pysd.translation.xmile.xmile_utils import supported_extensions as\
+    xmile_extensions
 
 
 def runner(model_file, canonical_file=None, transpose=False, data_files=None):
@@ -58,14 +62,17 @@ def runner(model_file, canonical_file=None, transpose=False, data_files=None):
                          encoding=detect_encoding(canonical_file))
 
     # load model
-    if model_file.suffix.lower() == ".mdl":
+    if model_file.suffix.lower() in vensim_extensions:
         model = read_vensim(model_file, data_files)
-    elif model_file.suffix.lower() == ".xmile":
+    elif model_file.suffix.lower() in xmile_extensions:
         model = read_xmile(model_file, data_files)
     elif model_file.suffix.lower() == ".py":
         model = load(model_file, data_files)
     else:
-        raise ValueError("\nModelfile should be *.mdl, *.xmile, or *.py")
+        raise ValueError(
+            "\nThe model file name must be a Vensim"
+            f" ({', '.join(vensim_extensions)}), a Xmile "
+            f"({', '.join(xmile_extensions)}) or a PySD (.py) model file...")
 
     # run model and return the result
 
@@ -105,6 +112,14 @@ def assert_frames_close(actual, expected, assertion="raise",
 
     kwargs:
         Optional rtol and atol values for assert_allclose.
+
+    Returns
+    -------
+    (cols, first_false_time, first_false_cols) or None: (set, float, set) or None
+        If assertion is 'return', return the sets of the all columns that are
+        different. The time when the first difference was found and the
+        variables that what different at that time. If assertion is not
+        'return' it returns None.
 
     Examples
     --------
