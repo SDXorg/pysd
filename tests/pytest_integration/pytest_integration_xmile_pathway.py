@@ -210,6 +210,10 @@ xmile_test = {
         "folder": "xidz_zidz",
         "file": "xidz_zidz.xmile"
     },
+    "zeroled_decimals": {
+        "folder": "zeroled_decimals",
+        "file": "test_zeroled_decimals.xmile"
+    }
 }
 
 

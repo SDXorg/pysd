@@ -510,6 +510,10 @@ vensim_test = {
     "xidz_zidz": {
         "folder": "xidz_zidz",
         "file": "xidz_zidz.mdl"
+    },
+    "zeroled_decimals": {
+        "folder": "zeroled_decimals",
+        "file": "test_zeroled_decimals.mdl"
     }
 }
 

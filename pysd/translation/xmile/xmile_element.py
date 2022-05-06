@@ -57,7 +57,7 @@ class Element():
     def __init__(self, node: etree._Element, ns: dict, subscripts):
         self.node = node
         self.ns = ns
-        self.name = node.attrib["name"]
+        self.name = node.attrib["name"].replace("\\n", " ")
         self.units = self._get_xpath_text(node, "ns:units") or ""
         self.documentation = self._get_xpath_text(node, "ns:doc") or ""
         self.limits = (None, None)
@@ -191,7 +191,8 @@ class Element():
         AST: AbstractSyntax
 
         """
-        tree = vu.Grammar.get("equations", parsing_ops).parse(expression)
+        tree = vu.Grammar.get("equations", parsing_ops).parse(
+            expression.strip())
         return EquationVisitor(tree).translation
 
     def _get_empty_abstract_element(self) -> AbstractElement:

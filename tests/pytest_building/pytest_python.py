@@ -1,9 +1,13 @@
 import pytest
 from pathlib import Path
 
-from pysd.building.python.python_model_builder import ComponentBuilder, ElementBuilder, SectionBuilder
-from pysd.building.python.python_expressions_builder import StructureBuilder, BuildAST
-from pysd.translation.structures.abstract_model import AbstractComponent, AbstractElement, AbstractSection
+from pysd.building.python.subscripts import SubscriptManager
+from pysd.building.python.python_model_builder import\
+    ComponentBuilder, ElementBuilder, SectionBuilder
+from pysd.building.python.python_expressions_builder import\
+    StructureBuilder, BuildAST
+from pysd.translation.structures.abstract_model import\
+    AbstractComponent, AbstractElement, AbstractSection, AbstractSubscriptRange
 
 
 class TestStructureBuilder:
@@ -106,3 +110,20 @@ class TestStructureBuilder:
     def test__get_final_subscripts(self, structure_builder,
                                    arguments, expected):
         assert structure_builder.get_final_subscripts(arguments) == expected
+
+
+class TestSubscriptManager:
+    @pytest.mark.parametrize(
+        "arguments,raise_type,error_message",
+        [
+            (  # invalid definition
+                [[AbstractSubscriptRange("my subs", 5, [])], Path("here")],
+                ValueError,
+                "Invalid definition of subscript 'my subs':\n\t5"
+            ),
+        ],
+        ids=["invalid definition"]
+    )
+    def test_invalid_subscripts(self, arguments, raise_type, error_message):
+        with pytest.raises(raise_type, match=error_message):
+            SubscriptManager(*arguments)

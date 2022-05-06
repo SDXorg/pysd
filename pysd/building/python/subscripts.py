@@ -66,7 +66,7 @@ class SubscriptManager:
                     root=self._root).subscript
             else:
                 raise ValueError(
-                    f"Invalid definition of subscript {sub.name}:\n\t"
+                    f"Invalid definition of subscript '{sub.name}':\n\t"
                     + str(sub.subscripts))
 
         while missing:
@@ -335,15 +335,6 @@ class SubscriptManager:
                                 + " subscript_dict:\n"
                                 + name + str(j) + ": " + ', '.join(elements))
                             break
-
-                if not dims[i]:
-                    # not able to find the correct dimension
-                    raise ValueError(
-                        element
-                        + "\nImpossible to find the dimension that contains:"
-                        + "\n\t{}\nFor subscript_dict:".format(coord2)
-                        + "\n\t{}".format(self.subscripts)
-                    )
 
         return dims
 
