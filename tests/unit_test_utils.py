@@ -254,6 +254,44 @@ class TestUtils(TestCase):
                 actual.loc[:, col].values,
                 expected.loc[:, col].values)
 
+    def test_make_flat_df_flatten_transposed(self):
+        import pysd
+
+        df = pd.DataFrame(index=[1], columns=['elem2'])
+        df.at[1] = [
+            xr.DataArray(
+                [[1, 4, 7], [2, 5, 8], [3, 6, 9]],
+                {'Dim2': ['D', 'E', 'F'], 'Dim1': ['A', 'B', 'C']},
+                ['Dim2', 'Dim1']
+            ).transpose("Dim1", "Dim2")
+        ]
+
+        expected = pd.DataFrame(index=[1], columns=[
+            'Elem2[A,D]',
+            'Elem2[A,E]',
+            'Elem2[A,F]',
+            'Elem2[B,D]',
+            'Elem2[B,E]',
+            'Elem2[B,F]',
+            'Elem2[C,D]',
+            'Elem2[C,E]',
+            'Elem2[C,F]'])
+
+        expected.at[1] = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+        return_addresses = {
+            'Elem2': ('elem2', {})}
+
+        actual = pysd.utils.make_flat_df(df, return_addresses, flatten=True)
+        print(actual.columns)
+        # check all columns are in the DataFrame
+        self.assertEqual(set(actual.columns), set(expected.columns))
+        # need to assert one by one as they are xarrays
+        for col in set(expected.columns):
+            self.assertEqual(
+                actual.loc[:, col].values,
+                expected.loc[:, col].values)
+
     def test_make_flat_df_times(self):
         import pysd
 

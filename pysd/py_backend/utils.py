@@ -160,12 +160,14 @@ def _add_flat(savedict, name, values):
     """
     # remove subscripts from name if given
     name = re.sub(r'\[.*\]', '', name)
+    dims = values[0].dims
+
     # split values in xarray.DataArray
     lval = [xrsplit(val) for val in values]
     for i, ar in enumerate(lval[0]):
         vals = [float(v[i]) for v in lval]
         subs = '[' + ','.join([str(ar.coords[dim].values)
-                               for dim in list(ar.coords)]) + ']'
+                               for dim in dims]) + ']'
         savedict[name+subs] = vals
 
 
