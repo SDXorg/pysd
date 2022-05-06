@@ -627,7 +627,8 @@ class Macro(DynamicStateful):
                 + " read_vensim or read_xmile.")
 
         self._namespace = self.components._components.component.namespace
-        self._dependencies = self.components._components.component.dependencies
+        self._dependencies =\
+            self.components._components.component.dependencies.copy()
         self._subscript_dict = getattr(
             self.components._components, "_subscript_dict", {})
         self._modules = getattr(
@@ -835,16 +836,10 @@ class Macro(DynamicStateful):
         self.constant_funcs = set()
         for element, cache_type in self.cache_type.items():
             if cache_type == "run":
-                if self.get_args(element):
-                    self.components._set_component(
-                        element,
-                        constant_cache(getattr(self.components, element), None)
-                    )
-                else:
-                    self.components._set_component(
-                        element,
-                        constant_cache(getattr(self.components, element))
-                    )
+                self.components._set_component(
+                    element,
+                    constant_cache(getattr(self.components, element))
+                )
                 self.constant_funcs.add(element)
 
     def _remove_constant_cache(self):
@@ -1273,17 +1268,24 @@ class Macro(DynamicStateful):
 
             # if the variable is a lookup or a data we perform the change in
             # the object they call
-            if getattr(func, "type", None) == "Lookup":
+            func_type = getattr(func, "type", None)
+            if func_type in ["Lookup", "Data"]:
+                # getting the object from original dependencies
+                obj = self._dependencies[func_name][f"__{func_type.lower()}__"]
                 getattr(
                     self.components,
-                    self._dependencies[func_name]["__lookup__"]
+                    obj
                 ).set_values(value)
-                continue
-            elif getattr(func, "type", None) == "Data":
-                getattr(
-                    self.components,
-                    self._dependencies[func_name]["__data__"]
-                ).set_values(value)
+
+                # Update dependencies
+                if func_type == "Data":
+                    if isinstance(value, pd.Series):
+                        self._dependencies[func_name] = {
+                            "time": 1, "__data__": obj
+                        }
+                    else:
+                        self._dependencies[func_name] = {"__data__": obj}
+
                 continue
 
             if isinstance(value, pd.Series):
@@ -1292,17 +1294,10 @@ class Macro(DynamicStateful):
                 self._dependencies[func_name] = deps
             elif callable(value):
                 new_function = value
-                args = self.get_args(value)
-                if args:
-                    # user function needs arguments, add it as a lookup
-                    # to avoud caching it
-                    self._dependencies[func_name] = {"__lookup__": None}
-                else:
-                    # TODO it would be better if we can parse the content
-                    # of the function to get all the dependencies
-                    # user function takes no arguments, using step cache
-                    # adding time as dependency
-                    self._dependencies[func_name] = {"time": 1}
+                # Using step cache adding time as dependency
+                # TODO it would be better if we can parse the content
+                # of the function to get all the dependencies
+                self._dependencies[func_name] = {"time": 1}
 
             else:
                 new_function = self._constant_component(value, dims)
@@ -1495,12 +1490,9 @@ class Macro(DynamicStateful):
                 if element.__doc__ else None
             })
 
-        if collector:
-            docs_df = pd.DataFrame(collector)
-            return docs_df.sort_values(by="Real Name").reset_index(drop=True)
-        else:
-            # manage models with no documentation (mainly test models)
-            return None
+        return pd.DataFrame(
+            collector
+        ).sort_values(by="Real Name").reset_index(drop=True)
 
     def __str__(self):
         """ Return model source files """
