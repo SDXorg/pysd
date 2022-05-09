@@ -109,6 +109,45 @@ class TestPySD(unittest.TestCase):
         with self.assertRaises(TypeError):
             model.run(return_timestamps=timestamps)
 
+        # assert that return_timestamps works with float error
+        stocks = model.run(time_step=0.1, return_timestamps=0.3)
+        assert 0.3 in stocks.index
+
+        # assert that return_timestamps works with float error
+        stocks = model.run(
+            time_step=0.1, return_timestamps=[0.3, 0.1, 10.5, 0.9])
+        assert 0.1 in stocks.index
+        assert 0.3 in stocks.index
+        assert 0.9 in stocks.index
+        assert 10.5 in stocks.index
+
+        # assert one timestamp is not returned because is not multiple of
+        # the time step
+        warning_message =\
+            "The returning time stamp '%s' seems to not be a multiple "\
+            "of the time step. This value will not be saved in the output. "\
+            "Please, modify the returning timestamps or the integration "\
+            "time step to avoid this."
+        # assert that return_timestamps works with float error
+        with catch_warnings(record=True) as ws:
+            stocks = model.run(
+                time_step=0.1, return_timestamps=[0.3, 0.1, 0.55, 0.9])
+            assert str(ws[0].message) == warning_message % 0.55
+        assert 0.1 in stocks.index
+        assert 0.3 in stocks.index
+        assert 0.9 in stocks.index
+        assert 0.55 not in stocks.index
+
+        with catch_warnings(record=True) as ws:
+            stocks = model.run(
+                time_step=0.1, return_timestamps=[0.3, 0.15, 0.55, 0.95])
+            for w, value in zip(ws, [0.15, 0.55, 0.95]):
+                assert str(w.message) == warning_message % value
+        assert 0.15 not in stocks.index
+        assert 0.3 in stocks.index
+        assert 0.95 not in stocks.index
+        assert 0.55 not in stocks.index
+
     def test_run_return_timestamps_past_final_time(self):
         """ If the user enters a timestamp that is longer than the euler
         timeseries that is defined by the normal model file, should
@@ -117,6 +156,7 @@ class TestPySD(unittest.TestCase):
         model = pysd.read_vensim(test_model)
         return_timestamps = list(range(0, 100, 10))
         stocks = model.run(return_timestamps=return_timestamps)
+        print(stocks.index)
         self.assertSequenceEqual(return_timestamps, list(stocks.index))
 
     def test_return_timestamps_with_range(self):

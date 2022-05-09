@@ -1620,7 +1620,12 @@ class Model(Macro):
 
         self.time.add_return_timestamps(return_timestamps)
         if self.time.return_timestamps is not None and not final_time:
-            final_time = self.time.return_timestamps[-1]
+            # if not final time given the model will end in the list
+            # return timestamp (the list is reversed for popping)
+            if self.time.return_timestamps:
+                final_time = self.time.return_timestamps[0]
+            else:
+                final_time = self.time.next_return
 
         self.time.set_control_vars(
             final_time=final_time, time_step=time_step, saveper=saveper)
