@@ -1,9 +1,10 @@
-import pytest
+import warnings
 import shutil
+import pytest
+
 from pysd.tools.benchmarking import runner, assert_frames_close
 
 # TODO add warnings catcher per test
-
 
 xmile_test = {
     "abs": {
@@ -256,5 +257,7 @@ class TestIntegrateXmile:
         return kwargs
 
     def test_read_vensim_file(self, model_path, kwargs):
-        output, canon = runner(model_path)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            output, canon = runner(model_path)
         assert_frames_close(output, canon, **kwargs)
