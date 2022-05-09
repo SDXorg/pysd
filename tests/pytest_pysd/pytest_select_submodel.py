@@ -7,6 +7,15 @@ import numpy as np
 import pysd
 
 
+@pytest.fixture(scope="class")
+def input_file(shared_tmpdir, _root):
+    input_path = Path("more-tests/split_model/input.xlsx")
+    shutil.copy(
+        _root.joinpath(input_path),
+        shared_tmpdir.joinpath(input_path.name)
+    )
+
+
 @pytest.mark.parametrize(
     "model_path,subview_sep,variables,modules,n_deps,dep_vars",
     [
@@ -56,7 +65,7 @@ class TestSubmodel:
         }
 
     @pytest.fixture
-    def model(self, shared_tmpdir, model_path, subview_sep, _root):
+    def model(self, shared_tmpdir, model_path, subview_sep, _root, input_file):
         """
         Translate the model or read a translated version.
         This way each file is only translated once.
@@ -193,7 +202,7 @@ class TestSubmodel:
 )
 class TestGetVarsInModuleErrors:
     @pytest.fixture
-    def model(self, shared_tmpdir, model_path, split_views, _root):
+    def model(self, shared_tmpdir, model_path, split_views, _root, input_file):
         """
         Translate the model.
         """

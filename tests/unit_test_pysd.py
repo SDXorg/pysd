@@ -356,6 +356,36 @@ class TestPySD(unittest.TestCase):
         res = model.run(return_columns=["Initial Values"])
         self.assertTrue(output.equals(res["Initial Values"].iloc[0]))
 
+    def test_set_parameter_data(self):
+        model = pysd.read_vensim(test_model_data)
+        timeseries = list(range(31))
+        series = pd.Series(
+            index=timeseries,
+            data=(50+np.random.rand(len(timeseries)).cumsum())
+        )
+
+        with catch_warnings():
+            # avoid warnings related to extrapolation
+            simplefilter("ignore")
+            model.set_components({"data_backward": 20, "data_forward": 70})
+
+            out = model.run(return_columns=["data_backward", "data_forward"])
+
+            for time in out.index:
+                self.assertTrue((out["data_backward"][time] == 20).all())
+                self.assertTrue((out["data_forward"][time] == 70).all())
+
+            out = model.run(
+                return_columns=["data_backward", "data_forward"],
+                final_time=20, time_step=1, saveper=1,
+                params={"data_forward": 30, "data_backward": series})
+
+            for time in out.index:
+                self.assertTrue((out["data_forward"][time] == 30).all())
+                self.assertTrue(
+                    (out["data_backward"][time] == series[time]).all()
+                )
+
     def test_set_constant_parameter_lookup(self):
         model = pysd.read_vensim(test_model_look)
 
@@ -564,9 +594,6 @@ class TestPySD(unittest.TestCase):
 
         model = pysd.read_vensim(test_model)
         self.assertIsInstance(str(model), str)  # tests string conversion of
-        # model
-        print(model.doc.columns)
-
         doc = model.doc
         self.assertIsInstance(doc, pd.DataFrame)
         self.assertSetEqual(

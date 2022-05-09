@@ -1,49 +1,49 @@
 {UTF-8}
 another var=
 	3*Stock
-	~	
+	~
 	~		|
 
 initial stock=
-	0.1
-	~	
+	GET DIRECT CONSTANTS('input.xlsx', 'Sheet1', 'A1')
+	~
 	~		|
 
 initial stock correction=
-	0
-	~	
+	GET DIRECT CONSTANTS('input.xlsx', 'Sheet1', 'A2')
+	~
 	~		|
 
 lookup table(
 	(1,0), (10,2), (100,2), (1000,3), (10000,4))
-	~	
+	~
 	~		|
 
 other stock= INTEG (
 	6*"var-n",
 		3)
-	~	
+	~
 	~		|
 
 "rate-1"=
 	"var-n"
-	~	
+	~
 	~		|
 
 Stock= INTEG (
 	"rate-1"+Time*initial stock correction,
 		initial stock+initial stock correction)
-	~	
+	~
 	~		|
 
 "var-n"=
 	5
-	~	
+	~
 	~		|
 
 "variable-x"=
 	lookup table(6*another var)
-	~	
+	~
 	~		|
 
 ********************************************************
@@ -62,7 +62,7 @@ INITIAL TIME  = 0
 	~	The initial time for the simulation.
 	|
 
-SAVEPER  = 
+SAVEPER  =
         TIME STEP
 	~	Month [0,?]
 	~	The frequency with which output is stored.

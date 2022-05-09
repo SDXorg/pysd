@@ -7,6 +7,15 @@ import pysd
 from pysd.tools.benchmarking import assert_frames_close
 
 
+@pytest.fixture(scope="class")
+def input_file(shared_tmpdir, _root):
+    input_path = Path("more-tests/split_model/input.xlsx")
+    shutil.copy(
+        _root.joinpath(input_path),
+        shared_tmpdir.joinpath(input_path.name)
+    )
+
+
 @pytest.mark.parametrize(
     "model_path,subview_sep,modules,macros,original_vars,py_vars,"
     + "stateful_objs",
@@ -72,7 +81,7 @@ class TestSplitViews:
     Test for splitting Vensim views in modules and submodules
     """
     @pytest.fixture
-    def model_file(self, shared_tmpdir, model_path):
+    def model_file(self, shared_tmpdir, model_path, input_file):
         return shared_tmpdir.joinpath(model_path.name)
 
     @pytest.fixture
