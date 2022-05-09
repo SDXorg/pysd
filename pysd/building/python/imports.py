@@ -1,3 +1,5 @@
+from typing import Union
+
 
 class ImportsManager():
     """
@@ -15,7 +17,7 @@ class ImportsManager():
             self._lookups, self._utils, self._scipy =\
             set(), set(), set(), set(), set(), set(), set()
 
-    def add(self, module, function=None):
+    def add(self, module: str, function: Union[str, None] = None) -> None:
         """
         Add a function from module.
 
@@ -33,7 +35,7 @@ class ImportsManager():
         else:
             setattr(self, f"_{module}", True)
 
-    def get_header(self, outfile):
+    def get_header(self, outfile: str) -> str:
         """
         Returns the importing information to print in the model file
 

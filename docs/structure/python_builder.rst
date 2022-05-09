@@ -25,7 +25,7 @@ Namespace manager
 -----------------
 
 .. automodule:: pysd.building.python.namespace
-   :members:
+   :members: NamespaceManager
    :undoc-members:
 
 

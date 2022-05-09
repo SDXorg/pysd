@@ -28,12 +28,12 @@ class NamespaceManager:
         By defaukt it is an empty list.
 
     """
-    reserved_words = set(
+    _reserved_words = set(
         dir() + bidir() + cdir() + ddir() + cadir() + edir() + fdir()
         + sdir() + udir()).union(kwlist)
 
     def __init__(self, parameters: List[str] = []):
-        self.used_words = self.reserved_words.copy()
+        self._used_words = self._reserved_words.copy()
         # inlcude time to the namespace
         self.namespace = {"Time": "time"}
         # include time to the cleanspace (case and whitespace/underscore
@@ -159,12 +159,12 @@ class NamespaceManager:
         # Check that the string is not a python identifier
         identifier = s
         i = 1
-        while identifier in self.used_words:
+        while identifier in self._used_words:
             identifier = s + '_' + str(i)
             i += 1
 
         # include the word in used words to avoid using it againg
-        self.used_words.add(identifier)
+        self._used_words.add(identifier)
 
         if add_to_namespace:
             # include word to the namespace

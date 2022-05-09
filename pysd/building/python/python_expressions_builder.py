@@ -1225,9 +1225,6 @@ class ArrayBuilder(StructureBuilder):
 
 
 def merge_dependencies(*dependencies, inplace=False):
-    # TODO improve dependencies in the next major release, include info
-    # about external objects and simplify the stateful objects, think about
-    # how to include data/lookups objects
     current = dependencies[0]
     if inplace:
         current = dependencies[0]
