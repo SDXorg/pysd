@@ -147,13 +147,13 @@ If the measured data that we are comparing with our model comes in at irregular 
 
 Retrieving totally flat dataframe
 ---------------------------------
-The subscripted variables, in general, will be returned as :py:class:`xarray.DataArray`s in the output :py:class:`pandas.DataFrame`. To get a totally flat dataframe, like Vensim outuput the `flatten=True` when calling the run function::
+The subscripted variables, in general, will be returned as :py:class:`xarray.DataArray` in the output :py:class:`pandas.DataFrame`. To get a totally flat dataframe, like Vensim outuput the `flatten=True` when calling the run function::
 
    >>> model.run(flatten=True)
 
 Setting parameter values
 ------------------------
-In many cases, we want to modify the parameters of the model to investigate its behavior under different assumptions. There are several ways to do this in PySD, but the :py:func:`.run()` function gives us a convenient method in the params keyword argument.
+In many cases, we want to modify the parameters of the model to investigate its behavior under different assumptions. There are several ways to do this in PySD, but the :py:func:`run()` function gives us a convenient method in the params keyword argument.
 
 This argument expects a dictionary whose keys correspond to the components of the model.  The associated values can either be a constant, or a Pandas series whose indices are timestamps and whose values are the values that the model component should take on at the corresponding time. For instance, in our model we can set the room temperature to a constant value::
 

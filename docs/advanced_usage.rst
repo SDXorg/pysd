@@ -117,8 +117,10 @@ Selecting and running a submodel
 A submodel of a translated model can be selected in order to run only a part of the original model. This can be done through the :py:data:`.select_submodel()` method:
 
 .. automethod:: pysd.py_backend.statefuls.Model.select_submodel
+   :noindex:
 
 
 In order to preview the needed exogenous variables the :py:data:`.get_dependencies()` method can be used:
 
 .. automethod:: pysd.py_backend.statefuls.Model.get_dependencies
+   :noindex:

@@ -176,9 +176,11 @@ def load(py_model_file, data_files=None, initialize=True,
         If False, the model will not be initialize when it is loaded.
         Default is True.
 
-    data_files: list or str or None (optional)
-        If given the list of files where the necessary data to run the model
-        is given. Default is None.
+    data_files: dict or list or str or None
+        The dictionary with keys the name of file and variables to
+        load the data from there. Or the list of names or name of the
+        file to search the data in. Only works for TabData type object
+        and it is neccessary to provide it. Default is None.
 
     missing_values : str ("warning", "error", "ignore", "keep") (optional)
         What to do with missing values. If "warning" (default)

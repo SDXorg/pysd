@@ -26,10 +26,10 @@ VMAX	VMAX(A)			"CallStructure('vmax', (A,))"	pysd.functions.vmax(A)
 SUM	SUM(A)			"CallStructure('sum', (A,))"	pysd.functions.sum(A)
 PROD	PROD(A)			"CallStructure('prod', (A,))"	pysd.functions.prod(A)
 
-PULSE	PULSE				pysd.functions.pulse
-PULSE TRAIN	PULSE TRAIN				pysd.functions.pulse_train
-RAMP	RAMP				pysd.functions.ramp
-STEP	STEP				pysd.functions.step
+PULSE	PULSE(start, width)			"CallStructure('train', (start, width))"	pysd.functions.pulse
+PULSE TRAIN	PULSE TRAIN(start, width, tbetween, end)			"CallStructure('pulse_train', (start, width, tbetween, end))"	pysd.functions.pulse_train
+RAMP	RAMP(slope, start time, end time)			"CallStructure('step', (slope, start time, end time))"	pysd.functions.ramp
+STEP	STEP(height, step time)			"CallStructure('step', (height, step time))"	pysd.functions.step
 GAME	GAME(A)			GameStructure(A)	A
-INITIAL	INITIAL(value)	init	init(value)	InitialStructure(value)	pysd.statefuls.Initial		
+INITIAL	INITIAL(value)	init	init(value)	InitialStructure(value)	pysd.statefuls.Initial
 SAMPLE IF TRUE	"SAMPLE IF TRUE(condition, input, initial_value)"			"SampleIfTrueStructure(condition, input, initial_value)"	pysd.statefuls.SampleIfTrue(...)

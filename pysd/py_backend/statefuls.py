@@ -579,32 +579,44 @@ class Initial(Stateful):
 
 class Macro(DynamicStateful):
     """
-    The Model class implements a stateful representation of the system,
-    and contains the majority of methods for accessing and modifying model
+    The Macro class implements a stateful representation of the system,
+    and contains the majority of methods for accessing and modifying
     components.
 
     When the instance in question also serves as the root model object
     (as opposed to a macro or submodel within another model) it will have
     added methods to facilitate execution.
-    """
 
+    The Macro object will be created with components drawn from a
+    translated python model file.
+
+    Parameters
+    ----------
+    py_model_file: str or pathlib.Path
+        Filename of a model or macro which has already been converted
+        into a python format.
+    params: dict or None (optional)
+        Dictionary of the macro parameters. Default is None.
+    return_func: str or None (optional)
+        The name of the function to return from the macro. Default is None.
+    time: components.Time or None (optional)
+        Time object for integration. If None a new time object will
+        be generated (for models), if passed the time object will be
+        used (for macros). Default is None.
+    time_initialization: callable or None
+        Time to set at the begginning of the Macro. Default is None.
+    data_files: dict or list or str or None
+        The dictionary with keys the name of file and variables to
+        load the data from there. Or the list of names or name of the
+        file to search the data in. Only works for TabData type object
+        and it is neccessary to provide it. Default is None.
+    py_name: str or None
+        The name of the Macro object. Default is None.
+
+    """
     def __init__(self, py_model_file, params=None, return_func=None,
                  time=None, time_initialization=None, data_files=None,
                  py_name=None):
-        """
-        The model object will be created with components drawn from a
-        translated python model file.
-
-        Parameters
-        ----------
-        py_model_file : <string>
-            Filename of a model which has already been converted into a
-            python format.
-        get_time:
-            needs to be a function that returns a time object
-        params
-        return_func
-        """
         super().__init__()
         self.time = time
         self.time_initialization = time_initialization
@@ -728,6 +740,10 @@ class Macro(DynamicStateful):
         return self._modules.copy() or None
 
     def clean_caches(self):
+        """
+        Clean the cahce of the object and the macros objects that it
+        contains
+        """
         self.cache.clean()
         # if nested macros
         [macro.clean_caches() for macro in self._macro_elements]
@@ -1508,6 +1524,37 @@ class Macro(DynamicStateful):
 
 
 class Model(Macro):
+    """
+    The Model class implements a stateful representation of the system.
+    It inherits methods from the Macro class to integrate the model and
+    access and modify model components. It also contains the main
+    methods for running the model.
+
+    The Model object will be created with components drawn from a
+    translated python model file.
+
+    Parameters
+    ----------
+    py_model_file: str or pathlib.Path
+        Filename of a model which has already been converted into a
+        python format.
+    data_files: dict or list or str or None
+        The dictionary with keys the name of file and variables to
+        load the data from there. Or the list of names or name of the
+        file to search the data in. Only works for TabData type object
+        and it is neccessary to provide it. Default is None.
+    initialize: bool
+        If False, the model will not be initialize when it is loaded.
+        Default is True.
+    missing_values : str ("warning", "error", "ignore", "keep") (optional)
+        What to do with missing values. If "warning" (default)
+        shows a warning message and interpolates the values.
+        If "raise" raises an error. If "ignore" interpolates
+        the values without showing anything. If "keep" it will keep
+        the missing values, this option may cause the integration to
+        fail, but it may be used to check the quality of the data.
+
+    """
     def __init__(self, py_model_file, data_files, initialize, missing_values):
         """ Sets up the python objects """
         super().__init__(py_model_file, None, None, Time(),

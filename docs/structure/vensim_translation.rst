@@ -10,7 +10,7 @@ The following translation workflow allows splitting the Vensim file while parsin
 
 1. Vensim file: Splits the file content from the skecth and allows splitting the model in sections (main section, macro section)
 2. Vensim section: Full set of varibles and definitions that can be integrated. Allows splitting the model expressions.
-3. Vensim element: A definition in the mdl file which could be a subscript (sub)range definition or a variable definition. It includes units and commnets. Definitions for the same variable are grouped after in the same :py:class:`AbstractElement` object. Allows parsing its left hand side (LHS) to get the name of the subscript (sub)range or variable and it is returned as a specific type of component depending on the used assing operator (=, ==, :=, (), :)
+3. Vensim element: A definition in the mdl file which could be a subscript (sub)range definition or a variable definition. It includes units and comments. Definitions for the same variable are grouped after in the same :py:class:`AbstractElement` object. Allows parsing its left hand side (LHS) to get the name of the subscript (sub)range or variable and it is returned as a specific type of component depending on the used assing operator (=, ==, :=, (), :)
 4. Vensim component: The classified object for a variable definition, it depends on the opperator used to define the variable. Its right hand side (RHS) can be parsed to get the Abstract Syntax Tree (AST) of the expression.
 
 Once the model is parsed and broken following the previous steps. The :py:class:`AbstractModel` can be returned.
