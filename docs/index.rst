@@ -89,7 +89,6 @@ Contents
    advanced_usage
    command_line_usage
    tools
-   functions
    structure/structure_index
    development/development_index
    reporting_bugs

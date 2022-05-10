@@ -560,7 +560,7 @@ class ElementBuilder:
                 if expression["expr"].subscripts:
                     # Get the values
                     # NUMPY not necessary
-                    expression["expr"].lower_order(0, force_0=True)
+                    expression["expr"].lower_order(-1)
                     expression["expr"].expression += ".values"
                 if expression["loc_except"]:
                     # There is an excep in the definition of the component

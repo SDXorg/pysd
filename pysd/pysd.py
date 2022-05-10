@@ -27,12 +27,12 @@ if sys.version_info[:2] < (3, 7):  # pragma: no cover
 def read_xmile(xmile_file, data_files=None, initialize=True,
                missing_values="warning"):
     """
-    Construct a model from `.xmile` file.
+    Construct a model from a Xmile file.
 
     Parameters
     ----------
     xmile_file:  str or pathlib.Path
-        The relative path filename for a raw `.xmile` file.
+        The relative path filename for a raw Xmile file.
 
     initialize: bool (optional)
         If False, the model will not be initialize when it is loaded.

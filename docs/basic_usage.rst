@@ -18,7 +18,7 @@ This code creates an instance of the PySD class loaded with an example model tha
 .. note::
    The teacup model can be found in the `samples of the test-models repository <https://github.com/SDXorg/test-models/tree/master/samples>`_.
 
-To view a synopsis of the model equations and documentation, use the :py:function:`.doc` property of the model class. This will generate a listing of all the model elements, their documentation, units, and initial values, where appropriate, and return them as a :py:class:`pandas.DataFrame`. Here is a sample from the teacup model::
+To view a synopsis of the model equations and documentation, use the :py:func:`.doc` property of the model class. This will generate a listing of all the model elements, their documentation, units, and initial values, where appropriate, and return them as a :py:class:`pandas.DataFrame`. Here is a sample from the teacup model::
 
    >>> model.doc
 
@@ -41,7 +41,7 @@ To view a synopsis of the model equations and documentation, use the :py:functio
      >>> model = pysd.load('Teacup.py')
 
 .. note::
-  The functions :py:func:`pysd.read_vensim()`,  :py:func:`pysd.read_xmile()` and :py:func:`pysd.load()` have optional arguments for advanced usage, you can check the full description in :doc:`User Functions Reference <../functions>` or using :py:func:`help()` e.g.::
+  The functions :py:func:`pysd.read_vensim()`,  :py:func:`pysd.read_xmile()` and :py:func:`pysd.load()` have optional arguments for advanced usage, you can check the full description in :doc:`Model loading <structure/model_loading>` or using :py:func:`help()` e.g.::
 
      >>> import pysd
      >>> help(pysd.load)
@@ -181,7 +181,7 @@ Same dimensions :py:class:`xarray.DataArray` can be used (recommended)::
    >>> new_value = xr.DataArray([[1, 5], [3, 4]], {'dim1': [1, 2], 'dim2': [1, 2]}, ['dim1', 'dim2'])
    >>> model.run(params={'Subscripted var': new_value})
 
-In the same way, a Pandas series can be used with constan values, partially defined *:py:class:`xarray.DataArray`s or same dimensions :py:class:`xarray.DataArray`s.
+In the same way, a Pandas series can be used with constan values, partially defined :py:class:`xarray.DataArray` or same dimensions :py:class:`xarray.DataArray`.
 
 .. note::
   That once parameters are set by the run command, they are permanently changed within the model. We can also change model parameters without running the model, using PySD’s :py:data:`set_components(params={})` method, which takes the same params dictionary as the run function. We might choose to do this in situations where we'll be running the model many times, and only want to spend time setting the parameters once.
