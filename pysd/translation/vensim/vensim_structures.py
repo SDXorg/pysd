@@ -38,9 +38,11 @@ structures = {
     "forecast": lambda x, y, z: ae.ForecastStructure(x, y, z, 0),
     "sample_if_true": ae.SampleIfTrueStructure,
     "lookup": ae.LookupsStructure,
-    "data": ae.DataStructure
+    "data": ae.DataStructure,
+    "pulse_train": lambda start, width, interval, end: ae.CallStructure(
+            ae.ReferenceStructure("pulse_train"),
+            (start, interval, width, end))
 }
-
 
 operators = {
     "logic_ops": [":AND:", ":OR:"],

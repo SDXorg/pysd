@@ -51,14 +51,24 @@ functionspace = {
         "modulo(%(0)s, %(1)s)",
         ("functions", "modulo")),
     "pulse": (
-        "pulse(__data['time'], %(0)s, %(1)s)",
+        "pulse(__data['time'], %(0)s, width=%(1)s)",
+        ("functions", "pulse")),
+    "Xpulse": (
+        "pulse(__data['time'], %(0)s, magnitude=%(1)s)",
         ("functions", "pulse")),
     "pulse_train": (
-        "pulse_train(__data['time'], %(0)s, %(1)s, %(2)s, %(3)s)",
-        ("functions", "pulse_train")),
+        "pulse(__data['time'], %(0)s, repeat_time=%(1)s, width=%(2)s, "\
+        "end=%(3)s)",
+        ("functions", "pulse")),
+    "Xpulse_train": (
+        "pulse(__data['time'], %(0)s, repeat_time=%(1)s, magnitude=%(2)s)",
+        ("functions", "pulse")),
     "quantum": (
         "quantum(%(0)s, %(1)s)",
         ("functions", "quantum")),
+    "Xramp": (
+        "ramp(__data['time'], %(0)s, %(1)s)",
+        ("functions", "ramp")),
     "ramp": (
         "ramp(__data['time'], %(0)s, %(1)s, %(2)s)",
         ("functions", "ramp")),

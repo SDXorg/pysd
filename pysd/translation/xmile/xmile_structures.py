@@ -52,6 +52,19 @@ structures = {
     },
     "if_then_else": lambda x, y, z: ae.CallStructure(
             ae.ReferenceStructure("if_then_else"), (x, y, z)),
+    "ramp": {
+        2: lambda x, y: ae.CallStructure(
+            ae.ReferenceStructure("Xramp"), (x, y)),
+        3: lambda x, y, z: ae.CallStructure(
+            ae.ReferenceStructure("ramp"), (x, y, z))
+    },
+    "pulse": {
+        2: lambda magnitude, start: ae.CallStructure(
+            ae.ReferenceStructure("Xpulse"), (start, magnitude)),
+        3: lambda magnitude, start, interval: ae.CallStructure(
+            ae.ReferenceStructure("Xpulse_train"), (start, interval, magnitude)
+            )
+    },
     "negative": lambda x: ae.ArithmeticStructure(["negative"], (x,)),
     "int": lambda x: ae.CallStructure(
             ae.ReferenceStructure("integer"), (x,))

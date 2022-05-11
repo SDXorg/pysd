@@ -86,6 +86,12 @@ Several subscript related features all supported. This include:
 - Basic subscript operations with different ranges.
 - Subscript ranges and subranges definitions.
 
+Grafic functions
+^^^^^^^^^^^^^^^^
+Xmile grafic functions (gf), also known as lookups, are supported. They can be given hardcoded or inline.
+
+.. warning::
+   Interpolation methods 'extrapolate' and 'discrete' are implemented but not tested. Full integration models with this methods are required.
 
 Supported in Vensim but not in Xmile
 ------------------------------------

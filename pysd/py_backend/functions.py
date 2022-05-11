@@ -5,6 +5,7 @@ what is present in the function call. We provide them in a structure that
 makes it easy for the model elements to call.
 """
 
+from timeit import repeat
 import warnings
 
 import numpy as np
@@ -13,20 +14,21 @@ import xarray as xr
 small_vensim = 1e-6  # What is considered zero according to Vensim Help
 
 
-def ramp(time, slope, start, finish=0):
+def ramp(time, slope, start, finish=None):
     """
     Implements vensim's and xmile's RAMP function.
 
     Parameters
     ----------
     time: function
-        The current time of modelling.
+        Function that returns the current time.
     slope: float
         The slope of the ramp starting at zero at time start.
     start: float
         Time at which the ramp begins.
-    finish: float
-        Optional. Time at which the ramp ends.
+    finish: float or None (oprional)
+        Time at which the ramp ends. If None the ramp will never end.
+        Default is None.
 
     Returns
     -------
@@ -39,7 +41,7 @@ def ramp(time, slope, start, finish=0):
     if t < start:
         return 0
     else:
-        if finish <= 0:
+        if finish is None:
             return slope * (t - start)
         elif t > finish:
             return slope * (finish - start)
@@ -53,6 +55,8 @@ def step(time, value, tstep):
 
     Parameters
     ----------
+    time: function
+        Function that returns the current time.
     value: float
         The height of the step.
     tstep: float
@@ -69,9 +73,10 @@ def step(time, value, tstep):
     return value if time() >= tstep else 0
 
 
-def pulse(time, start, duration):
+def pulse(time, start, repeat_time=0, width=None, magnitude=None, end=None):
     """
-    Implements vensim's PULSE function.
+    Implements Vensim's PULSE and PULSE TRAIN functions and Xmile's PULSE
+    function.
 
     Parameters
     ----------
@@ -79,104 +84,40 @@ def pulse(time, start, duration):
         Function that returns the current time.
     start: float
         Starting time of the pulse.
-    duration: float
-        Duration of the pulse.
+    repeat_time: float (optional)
+        Time interval of the pulse repetition. If 0 it will return a
+        single pulse. Default is 0.
+    width: float or None (optional)
+        Duration of the pulse. If None only one-time_step pulse will be
+        generated. Default is None.
+    magnitude: float or None (optional)
+        The magnitude of the pulse. If None it will return 1 when the
+        pulse happens, similar to magnitude=time_step(). Default is None.
+    end: float or None (optional)
+        Final time of the pulse. If None there is no final time.
+        Default is None.
 
     Returns
     -------
     float:
         - In range [-inf, start):
             returns 0
-        - In range [start, start + duration):
-            returns 1
-        - In range [start + duration, +inf]:
-            returns 0
-
-    """
-    t = time()
-    return 1 if start <= t < start + duration else 0
-
-
-def pulse_train(time, start, duration, repeat_time, end):
-    """
-    Implements vensim's PULSE TRAIN function.
-
-    Parameters
-    ----------
-    time: function
-        Function that returns the current time.
-    start: float
-        Starting time of the pulse.
-    duration: float
-        Duration of the pulse.
-    repeat_time: float
-        Time interval of the pulse repetition.
-    end: float
-        Final time of the pulse.
-
-    Returns
-    -------
-    float:
-        - In range [-inf, start):
-            returns 0
-        - In range [start + n*repeat_time, start + n*repeat_time + duration):
-            returns 1
-        - In range [start + n*repeat_time + duration,
+        - In range [start + n*repeat_time, start + n*repeat_time + width):
+            returns magnitude/time_step or 1
+        - In range [start + n*repeat_time + width,
                     start + (n+1)*repeat_time):
             returns 0
 
     """
     t = time()
-    if start <= t < end:
-        return 1 if (t - start) % repeat_time < duration else 0
+    width = .5*time.time_step() if width is None else width
+    out = magnitude/time.time_step() if magnitude is not None else 1
+    if repeat_time == 0:
+        return out if start - small_vensim <= t < start + width else 0
+    elif start <= t and (end is None or t < end):
+        return out if (t - start + small_vensim) % repeat_time < width else 0
     else:
         return 0
-
-
-def pulse_magnitude(time, magnitude, start, repeat_time=0):
-    """
-    Implements xmile's PULSE function. Generate a one-DT wide pulse
-    at the given time.
-
-    Parameters
-    ----------
-    time: function
-        Function that returns the current time.
-    magnitude:
-        Magnitude of the pulse.
-    start: float
-        Starting time of the pulse.
-    repeat_time: float (optional)
-        Time interval of the pulse repetition.  Default is 0, only one
-        pulse will be generated.
-
-    Notes
-    -----
-    PULSE(time(), 20, 12, 5) generates a pulse value of 20/DT at
-    time 12, 17, 22, etc.
-
-    Returns
-    -------
-    float:
-        - In rage [-inf, start):
-            returns 0
-        - In range [start + n*repeat_time, start + n*repeat_time + dt):
-            returns magnitude/dt
-        - In rage [start + n*repeat_time + dt, start + (n+1)*repeat_time):
-            returns 0
-
-    """
-    t = time()
-    if repeat_time <= small_vensim:
-        if abs(t - start) < time.time_step():
-            return magnitude * time.time_step()
-        else:
-            return 0
-    else:
-        if abs((t - start) % repeat_time) < time.time_step():
-            return magnitude * time.time_step()
-        else:
-            return 0
 
 
 def if_then_else(condition, val_if_true, val_if_false):

@@ -55,7 +55,7 @@ All the basic operators are supported, this includes the ones shown in the table
    :file: ../tables/binary_vensim.csv
    :header-rows: 1
 
-Moreover, the Vensim :EXCEPT: operator is also supported to manage exceptions in the subscripts. See the section for subscripts. TODO include link
+Moreover, the Vensim :EXCEPT: operator is also supported to manage exceptions in the subscripts. See the :ref:`Subscripts section`.
 
 Functions
 ^^^^^^^^^
@@ -79,6 +79,8 @@ Stocks
 Stocks defined in Vensim as `INTEG(flow, initial_value)` are supported and are translated to the AST as `IntegStructure(flow, initial_value)`.
 
 
+.. _Subscripts section:
+
 Subscripts
 ^^^^^^^^^^
 Several subscript related features all supported. This include:
@@ -87,10 +89,13 @@ Several subscript related features all supported. This include:
 - Subscript ranges and subranges definitions.
 - Basic subscript mapping where the subscript range is mapping to a full range (e.g. new_dim: A, B, C -> dim, dim_other), mapping to a partial range is not supported yet (e.g. new_dim: A, B, C -> dim: E, F, G).
 - Subscript copy (e.g. new_dim <-> dim).
-- \:EXCEPT: operator.
+- \:EXCEPT: operator with any number of arguments.
 - Subscript usage as a variable (e.g. my_var[dim] = another var * dim).
 - Subscript vectorial opperations (e.g. SUM(my var[dim, dim!])).
 
+Lookups
+^^^^^^^
+Vensim Lookups expressions are supported they can be given hardcoded, using `GET LOOKUPS` function or using `WITH LOOKUPS` function.
 
 Data
 ^^^^
@@ -105,6 +110,6 @@ Vensim macros are supported, The macro content between the keywords \:MACRO: and
 Planed New Functions and Features
 ---------------------------------
 - ALLOCATE BY PRIORITY
-- VECTOR SELECT
 - GET TIME VALUE
 - SHIFT IF TRUE
+- VECTOR SELECT
