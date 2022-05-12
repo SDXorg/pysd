@@ -18,7 +18,7 @@ This code creates an instance of the :doc:`PySD Model class <structure/model_cla
 .. note::
    The teacup model can be found in the `samples of the test-models repository <https://github.com/SDXorg/test-models/tree/master/samples>`_.
 
-To view a synopsis of the model equations and documentation, use the :py:func:`.doc` property of the Model class. This will generate a listing of all model elements, their documentation, units, and initial values, where appropriate, and return them as a :py:class:`pandas.DataFrame`. Here is a sample from the teacup model::
+To view a synopsis of the model equations and documentation, use the :py:attr:`.doc` property of the Model class. This will generate a listing of all model elements, their documentation, units, and initial values, where appropriate, and return them as a :py:class:`pandas.DataFrame`. Here is a sample from the teacup model::
 
    >>> model.doc
 
@@ -49,7 +49,7 @@ To view a synopsis of the model equations and documentation, use the :py:func:`.
 
 Running the Model
 -----------------
-The simplest way to simulate the model is to use the :py:func:`.run()` command with no options. This runs the model with the default parameters supplied in the model file, and returns a :py:class:`pandas.DataFrame` of the values of the model components at every timestamp::
+The simplest way to simulate the model is to use the :py:meth:`.run` command with no options. This runs the model with the default parameters supplied in the model file, and returns a :py:class:`pandas.DataFrame` of the values of the model components at every timestamp::
 
    >>> stocks = model.run()
    >>> stocks
@@ -82,13 +82,13 @@ Pandas proovides a simple plotting capability, that we can use to see how the te
    :width: 400 px
    :align: center
 
-To show a progressbar during the model integration, the `progress` argument can be passed to the :py:func:`.run()` command::
+To show a progressbar during the model integration, the `progress` argument can be passed to the :py:meth:`.run` command::
 
    >>> stocks = model.run(progress=True)
 
 Running models with DATA type components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Venim allows to import DATA type data from binary `.vdf` files. Variables defined without an equation in the model, will attempt to read their values from the `.vdf`. PySD allows running models with this kind of data definition using the data_files argument when calling :py:func:`.run()` command, e.g.::
+Venim allows to import DATA type data from binary `.vdf` files. Variables defined without an equation in the model, will attempt to read their values from the `.vdf`. PySD allows running models with this kind of data definition using the data_files argument when calling :py:meth:`.run` command, e.g.::
 
    >>> stocks = model.run(data_files="input_data.tab")
 
@@ -109,7 +109,7 @@ If a variables are defined in different files, to choose the specific file a dic
 
 Outputting various run information
 ----------------------------------
-The :py:func:`.run()` command has a few options that make it more useful. In many situations we want to access components of the model other than merely the stocks - we can specify which components of the model should be included in the returned dataframe by including them in a list that we pass to the :py:func:`.run()` command, using the return_columns keyword argument::
+The :py:meth:`.run` command has a few options that make it more useful. In many situations we want to access components of the model other than merely the stocks - we can specify which components of the model should be included in the returned dataframe by including them in a list that we pass to the :py:meth:`.run` command, using the return_columns keyword argument::
 
    >>> model.run(return_columns=['Teacup Temperature', 'Room Temperature'])
 
@@ -129,7 +129,7 @@ The :py:func:`.run()` command has a few options that make it more useful. In man
    [241 rows x 2 columns]
 
 
-If the measured data that we are comparing with our model comes in at irregular timestamps, we may want to sample the model at timestamps to match. The :py:func:`.run()` function provides this functionality with the return_timestamps keyword argument::
+If the measured data that we are comparing with our model comes in at irregular timestamps, we may want to sample the model at timestamps to match. The :py:meth:`.run` function provides this functionality with the return_timestamps keyword argument::
 
    >>> model.run(return_timestamps=[0, 1, 3, 7, 9.5, 13, 21, 25, 30])
 
@@ -147,19 +147,19 @@ If the measured data that we are comparing with our model comes in at irregular 
 
 Retrieving a flat DataFrame
 ---------------------------
-The subscripted variables, in general, will be returned as :py:class:`xarray.DataArray` in the output :py:class:`pandas.DataFrame`. To get a flat dataframe, set `flatten=True` when calling the :py:func:`run()` method::
+The subscripted variables, in general, will be returned as :py:class:`xarray.DataArray` in the output :py:class:`pandas.DataFrame`. To get a flat dataframe, set `flatten=True` when calling the :py:meth:`.run` method::
 
    >>> model.run(flatten=True)
 
 Setting parameter values
 ------------------------
-In some situations we may want to modify the parameters of the model to investigate its behavior under different assumptions. There are several ways to do this in PySD, but the :py:func:`run()` method gives us a convenient method in the `params` keyword argument.
+In some situations we may want to modify the parameters of the model to investigate its behavior under different assumptions. There are several ways to do this in PySD, but the :py:meth:`.run` method gives us a convenient method in the `params` keyword argument.
 
 This argument expects a dictionary whose keys correspond to the components of the model. The associated values can either be constants, or :py:class:`pandas.Series` whose indices are timestamps and whose values are the values that the model component should take on at the corresponding time. For instance, in our model we may set the room temperature to a constant value::
 
    >>> model.run(params={'Room Temperature': 20})
 
-Alternately, if we want the room temperature to vary over the course of the simulation, we can give the :py:func:`run()` method a set of time-series values in the form of a :py:class:`pandas.Series`, and PySD will linearly interpolate between the given values in the course of its integration::
+Alternately, if we want the room temperature to vary over the course of the simulation, we can give the :py:meth:`.run` method a set of time-series values in the form of a :py:class:`pandas.Series`, and PySD will linearly interpolate between the given values in the course of its integration::
 
    >>> import pandas as pd
    >>> temp = pd.Series(index=range(30), data=range(20, 80, 2))
@@ -184,10 +184,10 @@ Same dimensions :py:class:`xarray.DataArray` can be used (recommended)::
 In the same way, a :py:class:`pandas.Series` can be used with constant values, partially defined :py:class:`xarray.DataArray` or same dimensions :py:class:`xarray.DataArray`.
 
 .. note::
-  Once parameters are set by the :py:func:`run()` command, they are permanently changed within the model. We can also change model parameters without running the model, using PySD’s :py:data:`set_components(params={})` method, which takes the same params dictionary as the :py:func:`run()` method. We might choose to do this in situations where we will be running the model many times, and only want to set the parameters once.
+  Once parameters are set by the :py:meth:`.run` command, they are permanently changed within the model. We can also change model parameters without running the model, using PySD’s :py:meth:`.set_components` method, which takes the same params dictionary as the :py:meth:`.run` method. We might choose to do this in situations where we will be running the model many times, and only want to set the parameters once.
 
 .. note::
-  If you need to know the dimensions of a variable, you can check them by using :py:data:`.get_coords(variable__name)` function::
+  If you need to know the dimensions of a variable, you can check them by using :py:meth:`.get_coords` method::
 
      >>> model.get_coords('Room Temperature')
 
@@ -204,7 +204,7 @@ In the same way, a :py:class:`pandas.Series` can be used with constant values, p
 
   If you change the value of any other variable type by a constant, the constant value will be used always. If a :py:class:`pandas.Series` is given the index and values will be used for interpolation when the function is called in the model, using the time as argument.
 
-  If you need to know if a variable takes arguments, i.e., if it is a lookup variable, you can check it by using the :py:func:`.get_args(variable__name)` function::
+  If you need to know if a variable takes arguments, i.e., if it is a lookup variable, you can check it by using the :py:meth:`.get_args` method::
 
      >>> model.get_args('Room Temperature')
 
@@ -238,6 +238,6 @@ We can easily access the current value of a model component using curly brackets
 
    >>> model['Teacup Temperature']
 
-If you try to get the current values of a lookup variable, the previous method will fail, as lookup variables take arguments. However, it is possible to get the full series of a lookup or data object with :py:func:`.get_series_data` method::
+If you try to get the current values of a lookup variable, the previous method will fail, as lookup variables take arguments. However, it is possible to get the full series of a lookup or data object with :py:meth:`.get_series_data` method::
 
    >>> model.get_series_data('Growth lookup')

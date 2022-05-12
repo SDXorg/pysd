@@ -53,7 +53,7 @@ The Model class also contains a function for each of the model components, repre
 
 The Model class maintains only a single state of the system in memory, meaning that all functions must obey the Markov property  - that the future state of the system can be calculated entirely based upon its current state. In addition to simplifying integration, this requirement enables analyses that interact with the model at a step-by-step level.
 
-Lastly, the model class provides a set of methods that are used to facilitate simulation. The :py:func:`run()` method returns to the user a Pandas dataframe representing the output of their simulation run. A variety of options allow the user to specify which components of the model they would like returned, and the timestamps at which they would like those measurements. Additional parameters make parameter changes to the model, modify its starting conditions, or specify how simulation results should be logged.
+Lastly, the model class provides a set of methods that are used to facilitate simulation. The :py:meth:`.run` method returns to the user a Pandas dataframe representing the output of their simulation run. A variety of options allow the user to specify which components of the model they would like returned, and the timestamps at which they would like those measurements. Additional parameters make parameter changes to the model, modify its starting conditions, or specify how simulation results should be logged.
 
 .. toctree::
    :maxdepth: 2

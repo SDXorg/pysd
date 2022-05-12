@@ -35,22 +35,22 @@ Once the regression model is fit, we write a wrapper function for its predict me
       room_temp = model.components.room_temperature()
       return regression.predict([room_temp, tea_temp])[0]
 
-To substitute this function directly for the heat_loss_to_room model component using the :py:func:`set_component()` method::
+To substitute this function directly for the heat_loss_to_room model component using the :py:meth:`.set_components` method::
 
    model.set_components({'heat_loss_to_room': new_heatflow_function})
 
-If you want to replace a subscripted variable, you need to ensure that the output from the new function is the same as the previous one. You can check the current coordinates and dimensions of a component by using :py:data:`.get_coords(variable_name)` as it is explained in :doc:`basic usage <../basic_usage>`.
+If you want to replace a subscripted variable, you need to ensure that the output from the new function is the same as the previous one. You can check the current coordinates and dimensions of a component by using :py:meth:`.get_coords` as it is explained in :doc:`basic usage <../basic_usage>`.
 
 .. note::
    Alternatively, you can also set a model component directly::
 
       model.components.heat_loss_to_room = new_heatflow_function
 
-   However, this will only accept the python name of the model component. While for the :py:func:`set_component()` method, the original name can be also used.
+   However, this will only accept the python name of the model component. While for the :py:meth:`.set_components` method, the original name can be also used.
 
 Splitting Vensim views in separate Python files (modules)
 ---------------------------------------------------------
-In order to replicate the Vensim views in the translated models, the user can set the `split_views` argument to True in the :py:func:`read_vensim` function::
+In order to replicate the Vensim views in the translated models, the user can set the `split_views` argument to True in the :py:func:`pysd.read_vensim` function::
 
    read_vensim("many_views_model.mdl", split_views=True)
 
@@ -81,7 +81,7 @@ If macros are present, they will be self-contained in files named after the macr
 
 Starting simulations from an end-state of another simulation
 ------------------------------------------------------------
-The current state of a model can be saved in a pickle file using the :py:data:`.export()` method::
+The current state of a model can be saved in a pickle file using the :py:meth:`.export` method::
 
    import pysd
    model1 = pysd.read_vensim("my_model.mdl")
@@ -112,13 +112,13 @@ the new simulation will have initial time equal to 50 with the saved values from
 
 Selecting and running a submodel
 --------------------------------
-A submodel of a translated model can be run as a standalone model. This can be done through the :py:data:`.select_submodel()` method:
+A submodel of a translated model can be run as a standalone model. This can be done through the :py:meth:`.select_submodel` method:
 
 .. automethod:: pysd.py_backend.model.Model.select_submodel
    :noindex:
 
 
-In order to preview the needed exogenous variables, the :py:data:`.get_dependencies()` method can be used:
+In order to preview the needed exogenous variables, the :py:meth:`.get_dependencies` method can be used:
 
 .. automethod:: pysd.py_backend.model.Model.get_dependencies
    :noindex:
