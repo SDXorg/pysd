@@ -5,7 +5,7 @@ The Python builder allows to build models that can be run with the PySD Model cl
 
 The use of a one-to-one dictionary in translation means that the breadth of functionality is inherently limited. In the case where no direct Python equivalent is available, PySD provides a library of functions such as `pulse`, `step`, etc. that are specific to dynamic model behavior.
 
-In addition to translating individual commands between Vensim/XMILE and Python, PySD reworks component identifiers to be Python-safe by replacing spaces with underscores. The translator allows source identifiers to make use of alphanumeric characters, spaces, or the symbol.
+In addition to translating individual commands between Vensim/XMILE and Python, PySD reworks component identifiers to be Python-safe by replacing spaces with underscores. The translator allows source identifiers to make use of alphanumeric characters, spaces, or special characteres. In order to make that possible a namespace is created, which links the original name of the variable with the Python-safe name. The namespace is also available in the PySD model class to allow users working with both original names and Python-safe names.
 
 
 Main builders

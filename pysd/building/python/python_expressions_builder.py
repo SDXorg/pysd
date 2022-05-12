@@ -1880,39 +1880,19 @@ def merge_dependencies(*dependencies: dict, inplace: bool = False) -> dict:
             current.update(new)
         elif new:
             # regular element
-            _merge_dependencies(current, new)
+            current_set, new_set = set(current), set(new)
+            for dep in current_set.intersection(new_set):
+                # if dependency is in both sum the number of calls
+                if dep.startswith("__"):
+                    # if it is special (__lookup__, __external__) continue
+                    continue
+                else:
+                    current[dep] += new[dep]
+            for dep in new_set.difference(current_set):
+                # if dependency is only in new copy it
+                current[dep] = new[dep]
 
     return current
-
-
-def _merge_dependencies(current: dict, new: dict) -> None:
-    """
-    Merge two dependencies dicts of an element.
-
-    Parameters
-    ----------
-    current: dict
-        Current dependencies of the element. It will be mutated.
-
-    new: dict
-        New dependencies to add.
-
-    Returns
-    -------
-    None
-
-    """
-    current_set, new_set = set(current), set(new)
-    for dep in current_set.intersection(new_set):
-        # if dependency is in both sum the number of calls
-        if dep.startswith("__"):
-            # if it is special (__lookup__, __external__) continue
-            continue
-        else:
-            current[dep] += new[dep]
-    for dep in new_set.difference(current_set):
-        # if dependency is only in new copy it
-        current[dep] = new[dep]
 
 
 def visit_loc(current_subs: dict, original_subs: dict,

@@ -1,6 +1,6 @@
 Abstract Model Representation
 =============================
-The Abstract Model representatin allows a separation of concern between
+The Abstract Model representation allows a separation of concern between
 translation and the building. The translation will be called anything that
 happens between the source code and the Abstract Model representation. While the
 building will be everything that happens between the Abstract Model and the

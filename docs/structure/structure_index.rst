@@ -49,7 +49,7 @@ For loading a translated model with Python see :doc:`basic usage <../basic_usage
 
 The Python builder constructs a Python class that represents the system dynamics model. The class maintains a dictionary representing the current values of each of the system stocks, and the current simulation time, making it a `statefull` model in much the same way that the system itself has a specific state at any point in time.
 
-The model class also contains a function for each of the model components, representing the essential model equations. The each function contains its units, subcscripts type infromation and documentation as translated from the original model file. A query to any of the model functions will calculate and return its value according to the stored state of the system.
+The model class also contains a function for each of the model components, representing the essential model equations. Each function contains its units, subcscripts type infromation and documentation as translated from the original model file. A query to any of the model functions will calculate and return its value according to the stored state of the system.
 
 The model class maintains only a single state of the system in memory, meaning that all functions must obey the Markov property  - that the future state of the system can be calculated entirely based upon its current state. In addition to simplifying integration, this requirement enables analyses that interact with the model at a step-by-step level.
 
