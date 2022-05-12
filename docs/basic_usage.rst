@@ -9,7 +9,7 @@ To begin, we must first load the PySD module, and use it to import a model file:
    >>> model = pysd.read_vensim('Teacup.mdl')
 
 
-This code creates an instance of the PySD Model class from an example model that we will use as the system dynamics equivalent of ‘Hello World’: a cup of tea cooling at room temperature.
+This code creates an instance of the :doc:`PySD Model class <structure/model_class>` from an example model that we will use as the system dynamics equivalent of ‘Hello World’: a cup of tea cooling at room temperature.
 
 .. image:: images/Teacup.png
    :width: 350 px
