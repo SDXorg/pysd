@@ -1,12 +1,12 @@
 import pytest
 from pathlib import Path
 
-from pysd.building.python.subscripts import SubscriptManager
-from pysd.building.python.python_model_builder import\
+from pysd.builders.python.subscripts import SubscriptManager
+from pysd.builders.python.python_model_builder import\
     ComponentBuilder, ElementBuilder, SectionBuilder
-from pysd.building.python.python_expressions_builder import\
+from pysd.builders.python.python_expressions_builder import\
     StructureBuilder, BuildAST
-from pysd.translation.structures.abstract_model import\
+from pysd.translators.structures.abstract_model import\
     AbstractComponent, AbstractElement, AbstractSection, AbstractSubscriptRange
 
 

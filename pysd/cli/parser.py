@@ -8,9 +8,9 @@ import pandas as pd
 from argparse import ArgumentParser, Action
 
 from pysd import __version__
-from pysd.translation.vensim.vensim_utils import supported_extensions as\
+from pysd.translators.vensim.vensim_utils import supported_extensions as\
     vensim_extensions
-from pysd.translation.xmile.xmile_utils import supported_extensions as\
+from pysd.translators.xmile.xmile_utils import supported_extensions as\
     xmile_extensions
 
 docs = "https://pysd.readthedocs.io/en/master/command_line_usage.html"

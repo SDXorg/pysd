@@ -2,7 +2,7 @@ Abstract Model Representation
 =============================
 The Abstract Model representation allows a separation of concern between
 translation and building. Translation involves anything that
-happens from the moment the source code of the original model is loaded 
+happens from the moment the source code of the original model is loaded
 into memory up to the creation of the Abstract Model representation. Similarly,
 the building will be everything that happens between the Abstract Model and the
 source code of the model written in a programming language different than that
@@ -23,10 +23,10 @@ This includes all the operations and calls in a given component expression.
 
 Main abstract structures
 ------------------------
-.. automodule:: pysd.translation.structures.abstract_model
+.. automodule:: pysd.translators.structures.abstract_model
    :members:
 
 Abstrat structures for the AST
 ------------------------------
-.. automodule:: pysd.translation.structures.abstract_expressions
+.. automodule:: pysd.translators.structures.abstract_expressions
    :members:

@@ -19,21 +19,21 @@ Once the model is parsed and broken following the previous steps. The :py:class:
 Vensim file
 ^^^^^^^^^^^
 
-.. automodule:: pysd.translation.vensim.vensim_file
+.. automodule:: pysd.translators.vensim.vensim_file
    :members: VensimFile
    :undoc-members:
 
 Vensim section
 ^^^^^^^^^^^^^^
 
-.. automodule:: pysd.translation.vensim.vensim_section
+.. automodule:: pysd.translators.vensim.vensim_section
    :members: Section
    :undoc-members:
 
 Vensim element
 ^^^^^^^^^^^^^^
 
-.. automodule:: pysd.translation.vensim.vensim_element
+.. automodule:: pysd.translators.vensim.vensim_element
    :members: SubscriptRange, Element, Component, UnchangeableConstant, Data, Lookup
    :undoc-members:
 

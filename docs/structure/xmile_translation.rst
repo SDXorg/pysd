@@ -22,21 +22,21 @@ Once the model is parsed and broken following the previous steps. The :py:class:
 Xmile file
 ^^^^^^^^^^
 
-.. automodule:: pysd.translation.xmile.xmile_file
+.. automodule:: pysd.translators.xmile.xmile_file
    :members: XmileFile
    :undoc-members:
 
 Xmile section
 ^^^^^^^^^^^^^
 
-.. automodule:: pysd.translation.xmile.xmile_section
+.. automodule:: pysd.translators.xmile.xmile_section
    :members: Section
    :undoc-members:
 
 Xmile element
 ^^^^^^^^^^^^^
 
-.. automodule:: pysd.translation.xmile.xmile_element
+.. automodule:: pysd.translators.xmile.xmile_element
    :members: SubscriptRange, Element, Flaux, Gf, Stock
    :undoc-members:
 

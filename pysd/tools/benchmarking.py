@@ -10,9 +10,9 @@ import pandas as pd
 
 from pysd import read_vensim, read_xmile, load
 from ..py_backend.utils import load_outputs, detect_encoding
-from pysd.translation.vensim.vensim_utils import supported_extensions as\
+from pysd.translators.vensim.vensim_utils import supported_extensions as\
     vensim_extensions
-from pysd.translation.xmile.xmile_utils import supported_extensions as\
+from pysd.translators.xmile.xmile_utils import supported_extensions as\
     xmile_extensions
 
 

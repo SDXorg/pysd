@@ -11,7 +11,7 @@ import json
 from pathlib import Path
 from typing import Union
 
-from pysd.translation.structures.abstract_model import\
+from pysd.translators.structures.abstract_model import\
     AbstractComponent, AbstractElement, AbstractModel, AbstractSection
 
 from . import python_expressions_builder as vs

@@ -3,7 +3,7 @@ from pathlib import Path
 import numpy as np
 from typing import List
 
-from pysd.translation.structures.abstract_model import AbstractSubscriptRange
+from pysd.translators.structures.abstract_model import AbstractSubscriptRange
 from pysd.py_backend.external import ExtSubscript
 
 

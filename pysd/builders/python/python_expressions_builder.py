@@ -15,7 +15,7 @@ from typing import Union
 import numpy as np
 from pysd.py_backend.utils import compute_shape
 
-from pysd.translation.structures.abstract_expressions import\
+from pysd.translators.structures.abstract_expressions import\
     AbstractSyntax, ArithmeticStructure, CallStructure, DataStructure,\
     DelayFixedStructure, DelayStructure, DelayNStructure, ForecastStructure,\
     GameStructure, GetConstantsStructure, GetDataStructure,\

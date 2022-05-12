@@ -10,12 +10,12 @@ In addition to translating individual commands between Vensim/XMILE and Python, 
 
 Main builders
 -------------
-.. automodule:: pysd.building.python.python_model_builder
+.. automodule:: pysd.builders.python.python_model_builder
    :members:
 
 Expression builders
 -------------------
-.. automodule:: pysd.building.python.python_expressions_builder
+.. automodule:: pysd.builders.python.python_expressions_builder
    :members:
 
 Supported expressions examples
@@ -48,17 +48,17 @@ Functions
 
 Namespace manager
 -----------------
-.. automodule:: pysd.building.python.namespace
+.. automodule:: pysd.builders.python.namespace
    :members: NamespaceManager
 
 
 Subscript manager
 -----------------
-.. automodule:: pysd.building.python.subscripts
+.. automodule:: pysd.builders.python.subscripts
    :members:
 
 
 Imports manager
 ---------------
-.. automodule:: pysd.building.python.imports
+.. automodule:: pysd.builders.python.imports
    :members:

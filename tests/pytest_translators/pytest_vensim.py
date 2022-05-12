@@ -2,8 +2,8 @@ import pytest
 from pathlib import Path
 from parsimonious import VisitationError
 
-from pysd.translation.vensim.vensim_file import VensimFile
-from pysd.translation.vensim.vensim_element import Element
+from pysd.translators.vensim.vensim_file import VensimFile
+from pysd.translators.vensim.vensim_element import Element
 
 
 @pytest.mark.parametrize(
