@@ -4,13 +4,12 @@ The Abstract Model representation allows a separation of concern between
 translation and building. Translation involves anything that
 happens from the moment the source code of the original model is loaded
 into memory up to the creation of the Abstract Model representation. Similarly,
-the building will be everything that happens between the Abstract Model and the
+the building will be everything that takes place between the Abstract Model and the
 source code of the model written in a programming language different than that
-of the original model.
+of the original model.This approach allows to easily include new code to the translation or or building process,
+without the the risk of affecting one another. 
 
-This approach allows to easily include new source codes or output codes,
-without needing to make a lot of changes in the whole library. The
-:py:class:`AbstractModel` object should retain as much information from the
+The :py:class:`AbstractModel` object should retain as much information from the
 original model as possible. Although the information is not used
 in the output code, it may be necessary for other future output languages
 or for improvements in the currently supported outputs. For example, currently
