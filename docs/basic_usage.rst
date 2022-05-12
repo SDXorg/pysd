@@ -35,7 +35,7 @@ To view a synopsis of the model equations and documentation, use the :py:func:`.
 
 
 .. note::
-  You can also load an already translated model file. This will be faster than loading an `mdl` model, as the translation is not required::
+  You can also load an already translated model file. This will be faster than loading an original model, as the translation is not required::
 
      >>> import pysd
      >>> model = pysd.load('Teacup.py')
@@ -69,7 +69,7 @@ The simplest way to simulate the model is to use the :py:func:`.run()` command w
 
 [241 rows x 8 columns]
 
-Pandas proovides a simple plotting capability, that we can use to see how the temperature of the tea cup evolves over time::
+Pandas proovides a simple plotting capability, that we can use to see how the temperature of the teacup evolves over time::
 
    >>> import matplotlib.pyplot as plt
    >>> stocks["Teacup Temperature"].plot()
@@ -82,7 +82,7 @@ Pandas proovides a simple plotting capability, that we can use to see how the te
    :width: 400 px
    :align: center
 
-To show a progressbar during the model integration, the `progress` argument can be passed to the :py:func:`.run()` command. To do so, the progressbar package is required::
+To show a progressbar during the model integration, the `progress` argument can be passed to the :py:func:`.run()` command::
 
    >>> stocks = model.run(progress=True)
 
@@ -146,7 +146,7 @@ If the measured data that we are comparing with our model comes in at irregular 
 
 
 Retrieving a flat DataFrame
----------------------------------
+---------------------------
 The subscripted variables, in general, will be returned as :py:class:`xarray.DataArray` in the output :py:class:`pandas.DataFrame`. To get a flat dataframe, set `flatten=True` when calling the :py:func:`run()` method::
 
    >>> model.run(flatten=True)
@@ -220,7 +220,7 @@ Initial conditions for our model can be set in several ways. So far, we have use
 
    >>> model.run(initial_condition=(0, {'Teacup Temperature': 33}))
 
-The new value can be a *xarray.DataArray*, as explained in the previous section.
+The new value can be a :py:class:`xarray.DataArray`, as explained in the previous section.
 
 Additionally, we can run the model forward from its current position, by passing initial_condition=‘current’. After having run the model from time zero to thirty, we can ask the model to continue running forward for another chunk of time::
 
@@ -234,7 +234,7 @@ There are times when we may choose to overwrite a stock with a constant value (i
 
 Querying current values
 -----------------------
-We can easily access the current value of a model component using curly brackets. For instance, to find the temperature of the tea cup, we simply call::
+We can easily access the current value of a model component using curly brackets. For instance, to find the temperature of the teacup, we simply call::
 
    >>> model['Teacup Temperature']
 

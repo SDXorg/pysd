@@ -148,7 +148,7 @@ Sometimes we do not want to change the actual value of a variable but we want to
 
 this will set initial *Teacup Temperature* to 30.
 
-Putting It all together
+Putting it all together
 -----------------------
 Several commands may be used together. The optional arguments and model arguments go first (those starting with '-' or '--'), then the model file path, and finally the variable or variables to change:
 

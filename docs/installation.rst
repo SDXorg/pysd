@@ -39,7 +39,7 @@ Required Dependencies
 ---------------------
 PySD requires **python 3.7** or above.
 
-PySD builds on the core Python data analytics stack, and the Parsimonious parsing library:
+PySD builds on the core Python data analytics stack, and the following third party libraries:
 
 * Numpy
 * Scipy
@@ -52,7 +52,7 @@ PySD builds on the core Python data analytics stack, and the Parsimonious parsin
 * chardet
 * black
 * openpyxl
-* progressbar
+* progressbar2
 
 These modules should build automatically if you are installing via `pip`. If you are building from
 source, or if pip fails to load them, they can be loaded with the same `pip` syntax as
