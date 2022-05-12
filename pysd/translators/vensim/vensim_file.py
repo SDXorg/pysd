@@ -3,7 +3,7 @@ The VensimFile class allows reading the original Vensim model file,
 parsing it into Section elements using the FileSectionsVisitor,
 parsing its sketch using SketchVisitor in order to classify the varibales
 per view. The final result can be exported to an AbstractModel class in
-order to build a model in other language.
+order to build the model in another programming language.
 """
 import re
 from typing import Union, List
@@ -21,10 +21,10 @@ from .vensim_utils import supported_extensions
 
 class VensimFile():
     """
-    Create a VensimFile object which allows parsing a mdl file.
-    When the object is created the model file is automatically opened;
+    The VensimFile class allows parsing an mdl file.
+    When the object is created, the model file is automatically opened;
     unnecessary tabs, whitespaces, and linebreaks are removed; and
-    the sketch is split from the model.
+    the sketch is split from the model equations.
 
     Parameters
     ----------
@@ -60,7 +60,7 @@ class VensimFile():
 
     @property
     def verbose(self):  # pragma: no cover
-        """Print model information."""
+        """Print model information to standard output."""
         print(self._verbose)
 
     def _read(self, encoding: Union[None, str]) -> str:
@@ -106,18 +106,18 @@ class VensimFile():
     def parse(self, parse_all: bool = True) -> None:
         """
         Parse model file with parsimonious using the grammar given in
-        'parsin_grammars/file_sections.peg' and the class FileSectionsVisitor
+        'parsing_grammars/file_sections.peg' and the class FileSectionsVisitor
         to visit the parsed expressions.
 
-        This will break the model file in VensimSections, which are the
-        main model + macros.
+        This breaks the model file in VensimSections, which correspond to the
+        main model section and the macros.
 
         Parameters
         ----------
         parse_all: bool (optional)
-            If True then the created VensimSection objects will be
-            automatically parsed. Otherwise, this objects will only be
-            added to self.sections but not parser. Default is True.
+            If True, the VensimSection objects created will be
+            automatically parsed. Otherwise, these objects will only be
+            added to self.sections but not parsed. Default is True.
 
         """
         # get model sections (__main__ + macros)
@@ -142,22 +142,22 @@ class VensimFile():
     def parse_sketch(self, subview_sep: List[str]) -> None:
         """
         Parse the sketch of the model with parsimonious using the grammar
-        given in 'parsin_grammars/sketch.peg' and the class SketchVisitor
+        given in 'parsing_grammars/sketch.peg' and the class SketchVisitor
         to visit the parsed expressions.
 
-        It will modify the views_dict of the first section, includying
-        the dictionary of the variables classification by views. This,
-        method should be called after calling self.parse method.
+        It will modify the views_dict of the first section, including
+        the dictionary of the classification of variables by views. This,
+        method should be called after calling the self.parse method.
 
         Parameters
         ----------
         subview_sep: list
-           List oh the separators to use to classify the model views in
+           List of the separators to use to classify the model views in
            folders and subfolders. The sepparator must be ordered in the
-           same order they appear in the view patter. For example,
+           same order they appear in the view name. For example,
            if a view is named "economy:demand.exports" if
-           subview_sep=[":", "."] this view variables will be included
-           the file 'exports' inside the folders economy/demand.
+           subview_sep=[":", "."] this view's variables will be included
+           in the file 'exports.py' and inside the folders economy/demand.
 
 
         """
@@ -235,11 +235,11 @@ class VensimFile():
 
     def get_abstract_model(self) -> AbstractModel:
         """
-        Get Abstract Model used for building. This, method should be
-        called after parsing the model (self.parse), and the sketch
-        (self.parse_sketch) in the case you want to split the variables
-        per views. This automatically calls the get_abstract_section
-        method from the model sections.
+        Instantiate the AbstractModel object used during building. This,
+        method should be called after parsing the model (self.parse) and,  
+        in case you want to split the variables per views, also after 
+        parsing the sketch (self.parse_sketch). This automatically calls the 
+        get_abstract_section method from the model sections.
 
         Returns
         -------
@@ -261,7 +261,7 @@ class VensimFile():
         Parameters
         ----------
         *args: tuple
-            Any number of strings to to clean.
+            Any number of strings to clean.
 
         Returns
         -------
@@ -308,7 +308,7 @@ class FileSectionsVisitor(parsimonious.NodeVisitor):
         self.visit(ast)
 
     def visit_main(self, n, vc):
-        # main will be always stored as the first entry
+        # main will always be stored as the first entry
         if self.entries[0] is None:
             self.entries[0] = Section(
                 name="__main__",
