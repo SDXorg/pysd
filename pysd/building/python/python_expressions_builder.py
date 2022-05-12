@@ -541,7 +541,7 @@ class CallBuilder(StructureBuilder):
             The built object.
 
         """
-        self.section.imports.add("statefuls", "Macro")
+        self.section.imports.add("model", "Macro")
         # Get macro from macrospace
         macro = self.section.macrospace[self.macro_name]
 

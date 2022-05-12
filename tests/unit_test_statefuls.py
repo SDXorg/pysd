@@ -357,7 +357,7 @@ class TestStatefulErrors(unittest.TestCase):
 class TestMacroMethods(unittest.TestCase):
     def test_get_elements_to_initialize(self):
         from pysd import read_vensim
-        from pysd.py_backend.statefuls import Macro
+        from pysd.py_backend.model import Macro
 
         test_model = _root.joinpath("test-models/samples/teacup/teacup.mdl")
         read_vensim(test_model)

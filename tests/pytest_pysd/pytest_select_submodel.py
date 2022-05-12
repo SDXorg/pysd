@@ -129,10 +129,14 @@ class TestSubmodel:
         assert "_integ_other_stock" in model._dependencies
         assert "other_stock" in model._dependencies
         assert "other stock" in model._namespace
+        assert "other stock" in model._doc["Real Name"].to_list()
+        assert "other_stock" in model._doc["Py Name"].to_list()
         assert "_integ_stock" in model._stateful_elements
         assert "_integ_stock" in model._dependencies
         assert "stock" in model._dependencies
         assert "Stock" in model._namespace
+        assert "Stock" in model._doc["Real Name"].to_list()
+        assert "stock" in model._doc["Py Name"].to_list()
 
         # select submodel
         with pytest.warns(UserWarning) as record:
@@ -147,10 +151,14 @@ class TestSubmodel:
         assert "_integ_other_stock" not in model._dependencies
         assert "other_stock" not in model._dependencies
         assert "other stock" not in model._namespace
+        assert "other stock" not in model._doc["Real Name"].to_list()
+        assert "other_stock" not in model._doc["Py Name"].to_list()
         assert "_integ_stock" in model._stateful_elements
         assert "_integ_stock" in model._dependencies
         assert "stock" in model._dependencies
         assert "Stock" in model._namespace
+        assert "Stock" in model._doc["Real Name"].to_list()
+        assert "stock" in model._doc["Py Name"].to_list()
 
         if not dep_vars:
             # totally independent submodels can run without producing

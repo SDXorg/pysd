@@ -3,11 +3,11 @@ Python model class
 
 Model class
 -----------
-.. autoclass:: pysd.py_backend.statefuls.Model
+.. autoclass:: pysd.py_backend.model.Model
     :members:
 
 
 Macro class
 -----------
-.. autoclass:: pysd.py_backend.statefuls.Macro
+.. autoclass:: pysd.py_backend.model.Macro
     :members:

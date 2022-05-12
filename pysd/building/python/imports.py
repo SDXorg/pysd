@@ -8,14 +8,15 @@ class ImportsManager():
     _external_libs = {"numpy": "np", "xarray": "xr"}
     _external_submodules = ["scipy"]
     _internal_libs = [
-        "functions", "statefuls", "external", "data", "lookups", "utils"
+        "functions", "statefuls", "external", "data", "lookups", "utils",
+        "model"
     ]
 
     def __init__(self):
         self._numpy, self._xarray = False, False
         self._functions, self._statefuls, self._external, self._data,\
-            self._lookups, self._utils, self._scipy =\
-            set(), set(), set(), set(), set(), set(), set()
+            self._lookups, self._utils, self._scipy, self._model =\
+            set(), set(), set(), set(), set(), set(), set(), set()
 
     def add(self, module: str, function: Union[str, None] = None) -> None:
         """
