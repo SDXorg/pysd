@@ -18,7 +18,7 @@ unchangeable constansts (== defined in Vensim) are treated as regular
 components with Python, but in the future we may want to protect them
 from user interaction.
 
-The lowest level of this representation is the Abstract Syntax Tree (AST).
+The lowest level of this representation is the :py:class:`AbstractSyntax` Tree (AST).
 This includes all the operations and calls in a given component expression.
 
 Main abstract structures
