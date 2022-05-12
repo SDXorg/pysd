@@ -7,7 +7,7 @@ normal operation.
 
 import sys
 
-from pysd.py_backend.statefuls import Model
+from pysd.py_backend.model import Model
 
 
 if sys.version_info[:2] < (3, 7):  # pragma: no cover

@@ -2,6 +2,7 @@ import pytest
 import numpy as np
 import xarray as xr
 
+from pysd.py_backend.components import Time
 from pysd.py_backend.functions import\
     ramp, step, pulse, xidz, zidz, if_then_else, sum, prod, vmin, vmax,\
     invert_matrix
@@ -62,8 +63,6 @@ class TestInputFunctions():
         assert pulse(lambda: 15, 1, repeat_time=5, width=3, end=13) == 0
 
     def test_pulse_magnitude(self):
-        from pysd.py_backend.statefuls import Time
-
         # Pulse function with repeat time
         # before first impulse
         t = Time()
@@ -145,7 +144,6 @@ class TestInputFunctions():
         assert pulse(t, 4, magnitude=10) == 0
 
     def test_numeric_error(self):
-        from pysd.py_backend.statefuls import Time
         time = Time()
         time.set_control_vars(initial_time=0, time_step=0.1, final_time=10)
         err = 4e-16
