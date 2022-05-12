@@ -1796,11 +1796,16 @@ class Model(Macro):
         all_vars = all_deps.copy()
         all_vars.update(c_vars)
 
-        # clean dependendies and namespace dictionaries
+        # clean dependendies and namespace dictionaries, and remove
+        # the rows from the documentation
         for real_name, py_name in self._namespace.copy().items():
             if py_name not in all_vars:
                 del self._namespace[real_name]
                 del self._dependencies[py_name]
+                self._doc.drop(
+                    self._doc.index[self._doc["Real Name"] == real_name],
+                    inplace=True
+                )
 
         for py_name in self._dependencies.copy().keys():
             if py_name.startswith("_") and py_name not in s_deps:
