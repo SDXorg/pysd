@@ -6,10 +6,10 @@ If you are interested in helping to develop PySD, the :doc:`pathway` lists areas
 for contribution.
 
 To get started, you can fork the repository and make contributions to your own version.
-When you're happy with your edits, submit a pull request to the main branch.
+When you are happy with your edits, submit a pull request to the main branch.
 
 .. note::
-  In order to open a pull request,the new features and changes should be througly tested.
+  In order to open a pull request, the new features and changes should be througly tested.
   To do so, unit tests of new features or translated functions should be added, please check the Development Tools section below. When opening a pull request all tests are run and the coverage and pep8 style are checked.
 
 Development Tools
@@ -40,7 +40,7 @@ complementary tests in the corresponding `unit_test_*.py` file.
 
 Speed Tests
 ^^^^^^^^^^^
-The speed tests may be developed in the future. Any contribution is welcome.
+Speed tests may be developed in the future. Any contribution is welcome.
 
 
 Profiler
@@ -64,7 +64,7 @@ It doesn't need to be perfect, but we should aspire always to move in a positive
 
 PySD Design Philosophy
 ----------------------
-Understanding that a focussed project is both more robust and maintainable, PySD aspires to the
+Understanding that a focussed project is both more robust and maintainable, PySD adheres to the
 following philosophy:
 
 
@@ -73,9 +73,9 @@ following philosophy:
  * Anything that is not endemic to System Dynamics (such as plotting, integration, fitting, etc)
    should either be implemented using external tools, or omitted.
  * Stick to SD. Let other disciplines (ABM, Discrete Event Simulation, etc) create their own tools.
- * Use external model creation tools
+ * Use external model creation tools.
 
-* Use the core language of system dynamics.
+* Use the core language of System Dynamics.
 
  * Limit implementation to the basic XMILE standard.
  * Resist the urge to include everything that shows up in all vendors' tools.

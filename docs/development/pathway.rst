@@ -14,7 +14,7 @@ High Priority
 
 Medium Priority
 ---------------
-* Improve model exexution speed using cython, theano, numba, or another package
+* Improve model execution speed using cython, theano, numba, or another package
 
 
 Low Priority

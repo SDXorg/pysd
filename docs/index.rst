@@ -34,7 +34,7 @@ PySD
 .. |DOI| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.5654824.svg
    :target: https://doi.org/10.5281/zenodo.5654824
 
-This project is a simple library for running System Dynamics models in python, with the purpose of
+This project is a simple library for running System Dynamics models in Python, with the purpose of
 improving integration of Big Data and Machine Learning into the SD workflow.
 
 PySD translates :doc:`Vensim <structure/vensim_translation>` or

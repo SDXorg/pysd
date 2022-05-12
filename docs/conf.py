@@ -18,10 +18,11 @@ import sys
 import mock
 import sphinx_rtd_theme
 
-from generate_tables import generate_tables
-
-
 sys.path.insert(0, os.path.abspath('../'))
+
+from docs.generate_tables import generate_tables
+
+
 
 # Generate tables used for documentation
 generate_tables()
