@@ -46,7 +46,7 @@ class XmileFile():
 
     @property
     def verbose(self):  # pragma: no cover
-        """Print model information."""
+        """Print model information to standard output."""
         print(self._verbose)
 
     def _get_root(self) -> etree._Element:

@@ -16,6 +16,10 @@ The following translation workflow allows splitting the Vensim file while parsin
 Once the model is parsed and broken following the previous steps, the :py:class:`AbstractModel` is returned.
 
 
+.. image:: ../images/Vensim_file.svg
+   :alt: Vensim file parts
+
+
 Vensim file
 ^^^^^^^^^^^
 

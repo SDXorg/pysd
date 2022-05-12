@@ -87,7 +87,7 @@ class Section():
 
     @property
     def verbose(self):  # pragma: no cover
-        """Print section information."""
+        """Print section information to standard output."""
         print(self._verbose)
 
     def parse(self, parse_all: bool = True) -> None:
