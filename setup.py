@@ -29,7 +29,7 @@ setup(
     ],
     install_requires=open('requirements.txt').read().strip().split('\n'),
     package_data={
-        'translation': [
+        'translators': [
             '*/parsing_grammars/*.peg'
         ]
     },

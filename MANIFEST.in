@@ -1,4 +1,4 @@
 include requirements.txt
 include README.md
 include LICENSE
-graft pysd/translation/*/parsing_grammars
+graft pysd/translators/*/parsing_grammars
