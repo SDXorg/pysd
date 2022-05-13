@@ -285,9 +285,10 @@ class Component():
         The original name of the component.
 
     subscripts: tuple
-        Tuple of length two with first argument the list of subscripts
-        in the variable definition and the second argument the list of
-        subscripts list that appears after :EXCEPT: keyword (if used).
+        Tuple of length two with the list of subscripts
+        in the variable definition as first argument and the list of
+        subscripts that appears after the :EXCEPT: keyword (if used) as
+        the second argument.
 
     expression: str
         The RHS of the element, expression to parse.
@@ -330,7 +331,7 @@ class Component():
 
     def parse(self) -> None:
         """
-        Parse component object with parsimonious using the grammar given
+        Parse Component object with parsimonious using the grammar given
         in 'parsing_grammars/components.peg' and the class EquationVisitor
         to visit the RHS of the expressions.
 
@@ -347,15 +348,15 @@ class Component():
                                               AbstractLookup]:
         """
         Get Abstract Component used for building. This method is
-        automatically called by Sections's get_abstract_section.
+        automatically called by Sections's get_abstract_section method.
 
         Returns
         -------
         AbstractComponent: AbstractComponent or AbstractLookup
           Abstract Component object that can be used for building
           the model in another language. If the component equations
-          includes external lookups (GET XLS/DIRECT LOOKUPS)
-          AbstractLookup class will be used
+          include external lookups (GET XLS/DIRECT LOOKUPS), an
+          AbstractLookup class will be used.
 
         """
         if self.lookup:
@@ -368,7 +369,7 @@ class Component():
 class UnchangeableConstant(Component):
     """
     Unchangeable constant defined by "name == expr" in Vensim.
-    This class is a soon of Component.
+    This class inherits from the Component class.
 
     Parameters
     ----------
@@ -376,9 +377,10 @@ class UnchangeableConstant(Component):
         The original name of the component.
 
     subscripts: tuple
-        Tuple of length two with first argument the list of subscripts
-        in the variable definition and the second argument the list of
-        subscripts list that appears after :EXCEPT: keyword (if used).
+        Tuple of length two with the list of subscripts
+        in the variable definition as first argument and the list of
+        subscripts that appears after the :EXCEPT: keyword (if used) as
+        second argument.
 
     expression: str
         The RHS of the element, expression to parse.
@@ -393,7 +395,7 @@ class UnchangeableConstant(Component):
     def get_abstract_component(self) -> AbstractUnchangeableConstant:
         """
         Get Abstract Component used for building. This method is
-        automatically called by Sections's get_abstract_section.
+        automatically called by Sections's get_abstract_section method.
 
         Returns
         -------
@@ -409,7 +411,7 @@ class UnchangeableConstant(Component):
 class Lookup(Component):
     """
     Lookup component, defined by "name(expr)" in Vensim.
-    This class is a soon of Component.
+    This class inherits from the Component class.
 
     Parameters
     ----------
@@ -417,9 +419,9 @@ class Lookup(Component):
         The original name of the component.
 
     subscripts: tuple
-        Tuple of length two with first argument the list of subscripts
-        in the variable definition and the second argument the list of
-        subscripts list that appears after :EXCEPT: keyword (if used).
+        Tuple of length two with the list of subscripts in the variable
+        definition as first argument and the list of subscripts that appear
+        after the :EXCEPT: keyword (if used) as second argument.
 
     expression: str
         The RHS of the element, expression to parse.
@@ -443,12 +445,12 @@ class Lookup(Component):
     def get_abstract_component(self) -> AbstractLookup:
         """
         Get Abstract Component used for building. This method is
-        automatically called by Sections's get_abstract_section.
+        automatically called by Sections's get_abstract_section method.
 
         Returns
         -------
         AbstractComponent: AbstractLookup
-          Abstract Component object that can be used for building
+          Abstract Component object that may be used for building
           the model in another language.
 
         """
@@ -458,7 +460,7 @@ class Lookup(Component):
 class Data(Component):
     """
     Data component, defined by "name := expr" in Vensim.
-    This class is a soon of Component.
+    This class inherits from the Component class.
 
     Parameters
     ----------
@@ -466,13 +468,13 @@ class Data(Component):
         The original name of the component.
 
     subscripts: tuple
-        Tuple of length two with first argument the list of subscripts
-        in the variable definition and the second argument the list of
-        subscripts list that appears after :EXCEPT: keyword (if used).
+        Tuple of length two with the list of subscripts in the variable
+        definition as first argument and the list of subscripts that appear
+        after the :EXCEPT: keyword (if used) as second argument.
 
     keyword: str
-        The keyword used befor the ":=" symbol, it could be ('interpolate',
-        'raw', 'hold_backward', 'look_forward')
+        The keyword used before the ":=" symbol. The following values are
+        possible:  'interpolate', 'raw', 'hold_backward' and 'look_forward'.
 
     expression: str
         The RHS of the element, expression to parse.
@@ -501,8 +503,8 @@ class Data(Component):
         in 'parsing_grammars/components.peg' and the class EquationVisitor
         to visit the RHS of the expressions.
 
-        If the expression is None, then de data will be readen from a
-        VDF file in Vensim.
+        If the expression is None, the data will be read from a VDF file in
+        Vensim.
 
         """
         if not self.expression:
@@ -514,7 +516,7 @@ class Data(Component):
     def get_abstract_component(self) -> AbstractData:
         """
         Get Abstract Component used for building. This method is
-        automatically called by Sections's get_abstract_section.
+        automatically called by Sections's get_abstract_section method.
 
         Returns
         -------
