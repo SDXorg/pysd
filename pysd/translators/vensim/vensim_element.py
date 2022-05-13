@@ -1,7 +1,7 @@
 """
-The Element class allows parsing the LHS side of a model equation,
-depending on the LHS a SubscriptRange object or Component object will
-be returned. There are 4 tipes of components:
+The Element class allows parsing the LHS of a model equation.
+Depending on the LHS value, either a SubscriptRange object or a Component
+object will be returned. There are 4 components types:
 
 - Component: Regular component, defined with '='.
 - UnchangeableConstant: Unchangeable constant, defined with '=='.
@@ -9,9 +9,9 @@ be returned. There are 4 tipes of components:
 - Lookup: Lookup component, defined with '()'
 
 Lookup components have their own parser for the RHS of the expression,
-while the other 3 components share the same RHS parser.The final result
+while the other 3 components share the same parser. The final result
 from a parsed component can be exported to an AbstractComponent object
-in order to build a model in other language.
+in order to build a model in other programming languages.
 """
 import re
 from typing import Union, Tuple, List
@@ -29,7 +29,7 @@ from .vensim_structures import structures, parsing_ops
 
 class Element():
     """
-    Element object allows parsing the elements the LHS of the Vensim
+    Element object allows parsing the the LHS of the Vensim
     expressions.
 
     Parameters
@@ -42,7 +42,7 @@ class Element():
         the first '~' symbol.
 
     documentation: str
-        The comment of the element, i.e., the content after the seconf
+        The comment of the element, i.e., the content after the second
         '~' symbol.
 
     """
@@ -67,7 +67,7 @@ class Element():
         print(self._verbose)
 
     def _parse_units(self, units_str: str) -> Tuple[str, tuple]:
-        """Split the limits from the units"""
+        """Separate the limits from the units."""
         # TODO improve units parsing: parse them when parsing the section
         # elements
         if not units_str:
@@ -88,14 +88,14 @@ class Element():
 
     def parse(self) -> object:
         """
-        Parse element object with parsimonious using the grammar given in
-        'parsin_grammars/element_object.peg' and the class
+        Parse an Element object with parsimonious using the grammar given in
+        'parsing_grammars/element_object.peg' and the class
         ElementsComponentVisitor to visit the parsed expressions.
 
         Splits the LHS from the RHS of the equation. If the returned
         object is a SubscriptRange, no more parsing is needed. Otherwise,
         the RHS of the returned object (Component) should be parsed
-        to get the Abstract Syntax Tree.
+        to get the AbstractSyntax Tree.
 
         Returns
         -------
@@ -112,7 +112,7 @@ class Element():
 
 
 class ElementsComponentVisitor(parsimonious.NodeVisitor):
-    """Visit model element definition to get the component object"""
+    """Visit model element definition to get the component object."""
 
     def __init__(self, ast):
         self.mapping = []
@@ -179,7 +179,7 @@ class ElementsComponentVisitor(parsimonious.NodeVisitor):
             # full integration tests
             warnings.warn(
                 "\nSubscript mapping detected. "
-                + "This feature works only in some simple cases."
+                + "This feature works only for simple cases."
             )
             # Obtain subscript name and split by : and (
             self.mapping.append(str(vc).split(":")[0].split("(")[1].strip())
@@ -257,14 +257,15 @@ class SubscriptRange():
 
     def get_abstract_subscript_range(self) -> AbstractSubscriptRange:
         """
-        Get Abstract Subscript Range used for building. This method is
-        automatically called by Sections's get_abstract_section.
+        Instantiates an AbstractSubscriptRange object used for building.
+        This method is automatically called by the Sections's 
+        get_abstract_section method.
 
         Returns
         -------
         AbstractSubscriptRange: AbstractSubscriptRange
-          Abstract Subscript Range object that can be used for building
-          the model in another language.
+          AbstractSubscriptRange object that can be used for building
+          the model in another programming language.
 
         """
         return AbstractSubscriptRange(
