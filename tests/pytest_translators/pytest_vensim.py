@@ -114,7 +114,7 @@ class TestElements:
     def test_complex_mapping(self, element, mapping):
         # parse the mapping
         warning_message = r"Subscript mapping detected\. "\
-            r"This feature works only in some simple cases\."
+            r"This feature works only for simple cases\."
         with pytest.warns(UserWarning, match=warning_message):
             out = element.parse()
 
