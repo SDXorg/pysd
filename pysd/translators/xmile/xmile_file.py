@@ -1,7 +1,7 @@
 """
-The XmileFile class allows reading the original Xmile model file,
+The XmileFile class allows reading the original Xmile model file and
 parsing it into Section elements. The final result can be exported to an
-AbstractModel class in order to build a model in other language.
+AbstractModel class in order to build a model in another programming language.
 """
 from typing import Union
 from pathlib import Path
@@ -15,8 +15,8 @@ from .xmile_utils import supported_extensions
 
 class XmileFile():
     """
-    Create a XmileFile object which allows parsing a xmile file.
-    When the object is created the model file is automatically opened
+    The XmileFile class allows parsing an Xmile file.
+    When the object is created, the model file is automatically opened
     and parsed with lxml.etree.
 
     Parameters
@@ -51,7 +51,7 @@ class XmileFile():
 
     def _get_root(self) -> etree._Element:
         """
-        Read a Xmile file and assign its content to self.model_text
+        Read an Xmile file and assign its content to self.model_text
 
         Returns
         -------
@@ -74,16 +74,16 @@ class XmileFile():
     def parse(self, parse_all: bool = True) -> None:
         """
         Create a XmileSection object from the model content and parse it.
-        As currently the macros are not supported all the models will
-        have only one section. This functionshould split the macros in
+        As macros are currently not supported, all models will
+        have a single section. This function should split the macros in
         independent sections in the future.
 
         Parameters
         ----------
         parse_all: bool (optional)
-            If True then the created XmileSection objects will be
-            automatically parsed. Otherwise, this objects will only be
-            added to self.sections but not parser. Default is True.
+            If True, the created XmileSection objects will be
+            automatically parsed. Otherwise, these objects will only be
+            added to self.sections but not parsed. Default is True.
 
         """
         # TODO: in order to make macros work we need to split them here

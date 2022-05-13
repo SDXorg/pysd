@@ -64,7 +64,7 @@ All the basic operators are supported, this includes the ones shown in the table
 
 Functions
 ^^^^^^^^^
-Not all the Xmile functions all included yet, the list of supported functions are included below:
+Not all the Xmile functions are included yet. The list of supported functions is shown below:
 
 .. csv-table:: Supported basic functions
    :file: ../tables/functions_xmile.csv
