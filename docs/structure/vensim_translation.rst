@@ -59,11 +59,11 @@ All the basic operators are supported, this includes the ones shown in the table
    :file: ../tables/binary_vensim.csv
    :header-rows: 1
 
-Moreover, the Vensim :EXCEPT: operator is also supported to manage exceptions in the subscripts. See the :ref:`Subscripts section`.
+Moreover, the Vensim :EXCEPT: operator is also supported to manage exceptions in the subscripts. See the :ref:`Subscripts section` section.
 
 Functions
 ^^^^^^^^^
-Not all the Vensim functions all included yet, the list of supported functions are included below.
+The list of currentlty supported Vensim functions are detailed below:
 
 .. csv-table:: Supported basic functions
    :file: ../tables/functions_vensim.csv
@@ -87,11 +87,11 @@ Stocks defined in Vensim as `INTEG(flow, initial_value)` are supported and are t
 
 Subscripts
 ^^^^^^^^^^
-Several subscript related features all supported. This include:
+Several subscript related features are also supported. Thiese include:
 
 - Basic subscript operations with different ranges.
 - Subscript ranges and subranges definitions.
-- Basic subscript mapping where the subscript range is mapping to a full range (e.g. new_dim: A, B, C -> dim, dim_other), mapping to a partial range is not supported yet (e.g. new_dim: A, B, C -> dim: E, F, G).
+- Basic subscript mapping, where the subscript range is mapping to a full range (e.g. new_dim: A, B, C -> dim, dim_other). Mapping to a partial range is not yet supported (e.g. new_dim: A, B, C -> dim: E, F, G).
 - Subscript copy (e.g. new_dim <-> dim).
 - \:EXCEPT: operator with any number of arguments.
 - Subscript usage as a variable (e.g. my_var[dim] = another var * dim).
@@ -99,17 +99,17 @@ Several subscript related features all supported. This include:
 
 Lookups
 ^^^^^^^
-Vensim Lookups expressions are supported they can be given hardcoded, using `GET LOOKUPS` function or using `WITH LOOKUPS` function.
+Vensim Lookups expressions are supported. They can be defined using hardcoded values, using `GET LOOKUPS` function or using `WITH LOOKUPS` function.
 
 Data
 ^^^^
-Data definitions from GET functions and empty definitions (no expressions, Vensim uses a VDF file) are supported. This definitions can include or not any of the possible interpolation keywords: :INTERPOLATE:, :LOOK FORWARD:, :HOLD BACKWARD:, :RAW:. This keywords will be stored in the 'keyword' argument of :py:class:`AbstractData` as 'interpolate', 'look_forward', 'hold_backward' and 'raw', respectively. The Abstract Structure for GET XLS/DATA is given in the supported get functions table, the Abstract Structure for the empty Data declarations is a :py:class:`DataStructure`.
+Data definitions with GET functions and with empty definitions (no expressions, Vensim uses a VDF file) are supported. These definitions may or may not include any of the possible interpolation keywords: :INTERPOLATE:, :LOOK FORWARD:, :HOLD BACKWARD:, :RAW:. These keywords will be stored in the 'keyword' argument of :py:class:`AbstractData` as 'interpolate', 'look_forward', 'hold_backward' and 'raw', respectively. The Abstract Structure for GET XLS/DATA is given in the supported GET functions table. The Abstract Structure for the empty Data declarations is a :py:class:`DataStructure`.
 
-For the moment, any specific functions applying over data are supported (e.g. SHIFT IF TRUE, TIME SHIFT...), but they may be includded in the future.
+For the moment, any specific functions applying over data are supported (e.g. SHIFT IF TRUE, TIME SHIFT...), but new ones may be includded in the future.
 
 Macro
 ^^^^^
-Vensim macros are supported, The macro content between the keywords \:MACRO: and \:END OF MACRO: is classified as a section of the model and used for latelly build an independent section from the rest of the model.
+Vensim macros are supported. The macro content between the keywords \:MACRO: and \:END OF MACRO: is classified as a section of the model and is subsequently sused to build an independent section from the rest of the model.
 
 Planed New Functions and Features
 ---------------------------------
