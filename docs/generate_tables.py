@@ -60,3 +60,7 @@ def generate_tables():
                 content,
                 tables_dir / f"{table}_{language}.csv"
             )
+
+    # transform arithmetic order table
+    file = tables_dir / "arithmetic.tab"
+    pd.read_table(file).to_csv(file.with_suffix(".csv"), index=None)
