@@ -34,12 +34,12 @@ class Section():
         The section type.
 
     params: list
-        List of params that the section takes. In the case of the main
-        section it will be an empty list.
+        List of parameters that the section takes. If it is the main
+        section, it will be an empty list.
 
     returns: list
-        List of variables that returns the section. In the case of main
-        section it will be an empty list.
+        List of variables that returns the section. If it is the main
+        section, it will be an empty list.
 
     content: str
         Section content as string.
@@ -99,9 +99,9 @@ class Section():
         Parameters
         ----------
         parse_all: bool (optional)
-            If True then the created VensimElement objects will be
-            automatically parsed. Otherwise, this objects will only be
-            added to self.elements but not parser. Default is True.
+            If True, the created VensimElement objects will be
+            automatically parsed. Otherwise, these objects will only be
+            added to self.elements but not parsed. Default is True.
 
         """
         # parse the section to get the elements
