@@ -29,8 +29,7 @@ from .vensim_structures import structures, parsing_ops
 
 class Element():
     """
-    Element object allows parsing the the LHS of the Vensim
-    expressions.
+    Element object allows parsing the LHS of the Vensim expressions.
 
     Parameters
     ----------

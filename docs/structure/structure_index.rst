@@ -25,7 +25,29 @@ The internals of the translation process may be found in the following links of 
 
 
 
-PySD can import models in Vensim's \*.mdl file format and in XMILE format (\*xml file). `Parsimonious <https://github.com/erikrose/parsimonious>`_ is the Parsing Expression Grammar `(PEG) <https://en.wikipedia.org/wiki/Parsing_expression_grammar>`_ parser library used in PySD to parse the original models and construct an abstract syntax tree. The translators then crawl the tree, using a set of classes to define the :doc:`Abstract Model <abstract_model>`.
+PySD can import models in Vensim's \*.mdl file format and in XMILE format (\*.xml, \*.xmile, or \*.stmx file). `Parsimonious <https://github.com/erikrose/parsimonious>`_ is the Parsing Expression Grammar `(PEG) <https://en.wikipedia.org/wiki/Parsing_expression_grammar>`_ parser library used in PySD to parse the original models and construct an abstract syntax tree. The translators then crawl the tree, using a set of classes to define the :doc:`Abstract Model <abstract_model>`.
+
+When parsing the expressions of any language, the order of operations must be taken into account. The order is shown in the following table and is used to create :py:class:`ArithmeticStructure` and :py:class:`LogicalStructure` objects correctly. The following expression :py:data:`1+2*3-5`` will be translated to::
+
+   ArithmeticStructure(operators=['+', '-'], arguments=(1, ArithmeticStructure(operators=['*'], arguments=(2, 3)), 5))
+
+While something like :py:data:`1<5 and 5>3`::
+
+   LogicStructure(operators=[':AND:'], arguments=(LogicStructure(operators=['<'], arguments=(1, 5)), LogicStructure(operators=['>'], arguments=(5, 3))))
+
+The parenthesis also affects same order operatos, for example :py:data:`1+2-3` is translated to::
+
+   ArithmeticStructure(operators=['+', '-'], arguments=(1, 2, 3))
+
+While :py:data:`1+(2-3)` is translated to::
+
+   ArithmeticStructure(operators=['+'], arguments=(1, ArithmeticStructure(operators=['-'], arguments=(2, 3))))
+
+It is important to maintain this order because although these operations by definition are commutative due to the numerical error due to the precision, they may not be commutative in the integration.
+
+.. csv-table:: Arithmetic order
+   :file: ../tables/arithmetic.csv
+   :header-rows: 1
 
 
 Building the model
