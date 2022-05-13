@@ -236,9 +236,9 @@ class VensimFile():
     def get_abstract_model(self) -> AbstractModel:
         """
         Instantiate the AbstractModel object used during building. This,
-        method should be called after parsing the model (self.parse) and,  
-        in case you want to split the variables per views, also after 
-        parsing the sketch (self.parse_sketch). This automatically calls the 
+        method should be called after parsing the model (self.parse) and,
+        in case you want to split the variables per views, also after
+        parsing the sketch (self.parse_sketch). This automatically calls the
         get_abstract_section method from the model sections.
 
         Returns

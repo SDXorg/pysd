@@ -63,7 +63,7 @@ class Element():
 
     @property
     def verbose(self):  # pragma: no cover
-        """Print element information."""
+        """Print element information to standard output."""
         print(self._verbose)
 
     def _parse_units(self, units_str: str) -> Tuple[str, tuple]:
@@ -252,13 +252,13 @@ class SubscriptRange():
 
     @property
     def verbose(self):  # pragma: no cover
-        """Print subscript range information."""
+        """Print subscript range information to standard output."""
         print(self._verbose)
 
     def get_abstract_subscript_range(self) -> AbstractSubscriptRange:
         """
         Instantiates an AbstractSubscriptRange object used for building.
-        This method is automatically called by the Sections's 
+        This method is automatically called by the Sections's
         get_abstract_section method.
 
         Returns
@@ -325,13 +325,13 @@ class Component():
 
     @property
     def verbose(self):  # pragma: no cover
-        """Print component information."""
+        """Print component information to standard output."""
         print(self._verbose)
 
     def parse(self) -> None:
         """
         Parse component object with parsimonious using the grammar given
-        in 'parsin_grammars/components.peg' and the class EquationVisitor
+        in 'parsing_grammars/components.peg' and the class EquationVisitor
         to visit the RHS of the expressions.
 
         """
@@ -434,7 +434,7 @@ class Lookup(Component):
     def parse(self) -> None:
         """
         Parse component object with parsimonious using the grammar given
-        in 'parsin_grammars/lookups.peg' and the class LookupsVisitor
+        in 'parsing_grammars/lookups.peg' and the class LookupsVisitor
         to visit the RHS of the expressions.
         """
         tree = vu.Grammar.get("lookups").parse(self.expression)
@@ -498,7 +498,7 @@ class Data(Component):
     def parse(self) -> None:
         """
         Parse component object with parsimonious using the grammar given
-        in 'parsin_grammars/components.peg' and the class EquationVisitor
+        in 'parsing_grammars/components.peg' and the class EquationVisitor
         to visit the RHS of the expressions.
 
         If the expression is None, then de data will be readen from a

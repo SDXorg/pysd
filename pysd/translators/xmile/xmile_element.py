@@ -86,7 +86,7 @@ class Element():
 
     @property
     def verbose(self):  # pragma: no cover
-        """Print element information."""
+        """Print element information to standard output."""
         print(self._verbose)
 
     def _get_xpath_text(self, node: etree._Element,
@@ -495,7 +495,7 @@ class SubscriptRange():
 
     @property
     def verbose(self):  # pragma: no cover
-        """Print subscript range information."""
+        """Print subscript range information to standard output."""
         print(self._verbose)
 
     def get_abstract_subscript_range(self) -> AbstractSubscriptRange:
