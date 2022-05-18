@@ -103,7 +103,7 @@ Vensim Lookups expressions are supported. They can be defined using hardcoded va
 
 Data
 ^^^^
-Data definitions with GET functions and with empty definitions (no expressions, Vensim uses a VDF file) are supported. These definitions may or may not include any of the possible interpolation keywords: :INTERPOLATE:, :LOOK FORWARD:, :HOLD BACKWARD:, :RAW:. These keywords will be stored in the 'keyword' argument of :py:class:`AbstractData` as 'interpolate', 'look_forward', 'hold_backward' and 'raw', respectively. The Abstract Structure for GET XLS/DATA is given in the supported GET functions table. The Abstract Structure for the empty Data declarations is a :py:class:`DataStructure`.
+Data definitions with GET functions and empty data definitions (no expressions, Vensim uses a VDF file) are supported. These definitions may or may not include any of the possible interpolation keywords: :INTERPOLATE:, :LOOK FORWARD:, :HOLD BACKWARD:, :RAW:. These keywords will be stored in the 'keyword' argument of :py:class:`AbstractData` as 'interpolate', 'look_forward', 'hold_backward' and 'raw', respectively. The Abstract Structure for GET XLS/DATA is given in the supported GET functions table. The Abstract Structure for the empty Data declarations is a :py:class:`DataStructure`.
 
 For the moment, any specific functions applying over data are supported (e.g. SHIFT IF TRUE, TIME SHIFT...), but new ones may be includded in the future.
 
