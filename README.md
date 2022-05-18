@@ -21,8 +21,7 @@ This project is a simple library for running [System Dynamics](http://en.wikiped
 See the [project documentation](http://pysd.readthedocs.org/) for information about:
 
 - [Installation](http://pysd.readthedocs.org/en/latest/installation.html)
-- [Basic Usage](http://pysd.readthedocs.org/en/latest/basic_usage.html)
-- [Function Reference](http://pysd.readthedocs.org/en/latest/functions.html)
+- [Getting Started](http://pysd.readthedocs.org/en/latest/getting_started.html)
 
 For standard methods for data analysis with SD models, see the  [PySD Cookbook](https://github.com/JamesPHoughton/PySD-Cookbook), containing (for example):
 

@@ -4,7 +4,7 @@ Command Line Usage
 Basic command line usage
 ------------------------
 
-Most of the features available in :doc:`basic usage <../basic_usage>` are also available using the command line. Running:
+Most of the features available in :doc:`Getting started <../getting_started>` are also available using the command line. Running:
 
 .. code-block:: text
 
@@ -126,7 +126,7 @@ as the new value of a variable as two lists of the same length:
 
     python -m pysd Teacup.mdl 'Temperature Lookup=[[1, 2, 3, 4], [10, 15, 17, 18]]'
 
-The first list will be used for the *time* or *x* values, and the second for the data values. See setting parameter values in :doc:`basic usage <../basic_usage>` for further details.
+The first list will be used for the *time* or *x* values, and the second for the data values. See setting parameter values in :doc:`Getting started <../getting_started>` for further details.
 
 .. note::
 

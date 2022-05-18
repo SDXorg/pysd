@@ -716,7 +716,8 @@ class Macro(DynamicStateful):
                     'When setting ' + key + '\n'
                     'Setting subscripted must be done using a xarray.DataArray'
                     ' with the correct dimensions or a constant value '
-                    '(https://pysd.readthedocs.io/en/master/basic_usage.html)')
+                    '(https://pysd.readthedocs.io/en/master/'
+                    'getting_started.html)')
 
             if func_name is None:
                 raise NameError(
@@ -865,7 +866,8 @@ class Macro(DynamicStateful):
                     'When setting ' + key + '\n'
                     'Setting subscripted must be done using a xarray.DataArray'
                     ' with the correct dimensions or a constant value '
-                    '(https://pysd.readthedocs.io/en/master/basic_usage.html)')
+                    '(https://pysd.readthedocs.io/en/master/'
+                    'getting_started.html)')
 
             # Try to update stateful component
             try:

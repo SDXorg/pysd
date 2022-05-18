@@ -1,5 +1,5 @@
-Basic Usage
-===========
+Getting Started
+===============
 
 Importing a model and getting started
 -------------------------------------

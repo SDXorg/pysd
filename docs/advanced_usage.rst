@@ -39,7 +39,7 @@ To substitute this function directly for the heat_loss_to_room model component u
 
    model.set_components({'heat_loss_to_room': new_heatflow_function})
 
-If you want to replace a subscripted variable, you need to ensure that the output from the new function is the same as the previous one. You can check the current coordinates and dimensions of a component by using :py:meth:`.get_coords` as it is explained in :doc:`basic usage <../basic_usage>`.
+If you want to replace a subscripted variable, you need to ensure that the output from the new function is the same as the previous one. You can check the current coordinates and dimensions of a component by using :py:meth:`.get_coords` as it is explained in :doc:`Getting started <../getting_started>`.
 
 .. note::
    Alternatively, you can also set a model component directly::

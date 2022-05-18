@@ -61,7 +61,7 @@ above.
 
 Optional Dependencies
 ---------------------
-In order to plot model outputs as shown in :doc:`basic usage <../basic_usage>`:
+In order to plot model outputs as shown in :doc:`Getting started <../getting_started>`:
 
 * Matplotlib
 

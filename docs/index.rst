@@ -78,14 +78,11 @@ Support
 For additional help or consulting, contact james.p.houghton@gmail.com or eneko.martin.martinez@gmail.com.
 
 
-Contents
---------
-
 .. toctree::
-   :maxdepth: 2
+   :hidden:
 
    installation
-   basic_usage
+   getting_started
    advanced_usage
    command_line_usage
    tools
