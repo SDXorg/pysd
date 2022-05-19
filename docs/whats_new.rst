@@ -8,7 +8,13 @@ v3.0.0 (unreleased)
 New Features
 ~~~~~~~~~~~~
 
+- The new :doc:`Abstract Model Representation <structure/structure_index>` translation and building workflow will allow to add new output languages in the future.
 - Properties added to the :py:class:`pysd.py_backend.model.Macro` to make more accessible some information: :py:attr:`.namespace`, :py:attr:`.subscripts`, :py:attr:`.dependencies`, :py:attr:`.modules`, :py:attr:`.doc`.
+- The Python models now look cleaner:
+    - :py:data:`_namespace` and :py:data:`_dependencies` dictionaries are removed from the file.
+    - Variables original names, dependencies metadata are given through :py:meth:`pysd.py_backend.components.Component.add` decorator, instead of having them in the docstring.
+    - The merging of variable equations is done using the coordinates to a pre-allocated array, instead of using the `magic` function :py:data:`pysd.py_backend.utils.xrmerge()`.
+    - The arranging and subseting arrays are now done inplace instead of using the magic function :py:data:`pysd.py_backend.utils.rearrange()`.
 
 Breaking changes
 ~~~~~~~~~~~~~~~~
@@ -21,6 +27,7 @@ Breaking changes
 - The translation and the building of models has been totally modified to use the :doc:`Abstract Model Representation <structure/structure_index>`.
 - Move :py:data:`pysd.py_backend.statefuls.Model` and  :py:data:`pysd.py_backend.statefuls.Macro` to  :py:class:`pysd.py_backend.model.Model` and :py:class:`pysd.py_backend.model.Macro`, respectively.
 - All kinds of lookups are now managed with the :py:class:`pysd.py_backend.lookups.Lookups` class.
+- The lookups functions may now take a second argument to set the final coordinates when a subscripted variable is passed as an argument.
 
 Deprecations
 ~~~~~~~~~~~~
@@ -51,7 +58,8 @@ Documentation
 Performance
 ~~~~~~~~~~~
 
-- The variables defined in several equations are now assigned to a pre-allocated array instead of using :py:data:`pysd.py_backend.utils.xrmerge()`. This improves the speed of subscripted models.
+- The variables defined in several equations are now assigned to a pre-allocated array instead of using :py:data:`pysd.py_backend.utils.xrmerge()`.
+- The arranging and subseting of arrays is now done inplace instead of using the magic function :py:data:`pysd.py_backend.utils.rearrange()`.
 - The grammars for Parsimonious are only compiled once per translation.
 
 Internal Changes
