@@ -84,7 +84,7 @@ functionspace = {
 
     # random functions must have the shape of the component subscripts
     # most of them are shifted, scaled and truncated
-    # TODO: it is difficult to find same parametrization in python,
+    # TODO: it is difficult to find same parametrization in Python,
     # maybe build a new model
     "random_0_1": (
         "np.random.uniform(0, 1, size=%(size)s)",

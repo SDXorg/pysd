@@ -68,7 +68,7 @@ class External(object):
     Attributes
     ----------
     py_name: str
-        The python name of the object
+        The Python name of the object
     missing: str ("warning", "error", "ignore", "keep")
         What to do with missing values. If "warning" (default)
         shows a warning message and interpolates the values.

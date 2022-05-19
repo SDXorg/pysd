@@ -3,7 +3,7 @@ import re
 from unicodedata import normalize
 from typing import List
 
-# used to create python safe names with the variable reserved_words
+# used to create Python safe names with the variable reserved_words
 from keyword import kwlist
 from builtins import __dir__ as bidir
 from pysd.py_backend.components import __dir__ as cdir
@@ -19,7 +19,7 @@ class NamespaceManager:
     """
     NamespaceManager object allows includying new elements to the namespace
     and searching for elements in the namespace. When includying new
-    elements a python safe name is used to be able to write the equations.
+    elements a Python safe name is used to be able to write the equations.
 
     Parameters
     ----------
@@ -63,16 +63,16 @@ class NamespaceManager:
         """
         Takes an arbitrary string and creates a valid Python identifier.
 
-        If the python identifier created is already in the namespace,
+        If the Python identifier created is already in the namespace,
         but the input string is not (ie, two similar strings resolve to
-        the same python identifier) or if the identifier is a reserved
-        word in the reserved_words list, or is a python default
+        the same Python identifier) or if the identifier is a reserved
+        word in the reserved_words list, or is a Python default
         reserved word, adds _1, or if _1 is in the namespace, _2, etc.
 
         Parameters
         ----------
         string: str
-            The text to be converted into a valid python identifier.
+            The text to be converted into a valid Python identifier.
 
         prefix: str or None (optional)
             If given it will be used as a prefix for the output string.
@@ -85,7 +85,7 @@ class NamespaceManager:
         Returns
         -------
         identifier: str
-            A vaild python identifier based on the input string.
+            A vaild Python identifier based on the input string.
 
         Examples
         --------
@@ -98,7 +98,7 @@ class NamespaceManager:
         >>> make_python_identifier('multiple     spaces')
         'multiple_spaces'
 
-        When the name is a python keyword, add '_1' to differentiate it
+        When the name is a Python keyword, add '_1' to differentiate it
         >>> make_python_identifier('for')
         'for_1'
 
@@ -156,7 +156,7 @@ class NamespaceManager:
         # replace multiple _ after cleaning
         s = re.sub(r"[_]+", "_", s)
 
-        # Check that the string is not a python identifier
+        # Check that the string is not a Python identifier
         identifier = s
         i = 1
         while identifier in self._used_words:

@@ -41,6 +41,8 @@ Xmile element
    :undoc-members:
 
 
+.. _Xmile supported functions:
+
 Supported Functions and Features
 --------------------------------
 

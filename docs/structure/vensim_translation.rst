@@ -42,6 +42,8 @@ Vensim element
    :undoc-members:
 
 
+.. _Vensim supported functions:
+
 Supported Functions and Features
 --------------------------------
 

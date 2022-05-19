@@ -38,7 +38,7 @@ This project is a simple library for running System Dynamics models in Python, w
 improving integration of Big Data and Machine Learning into the SD workflow.
 
 PySD translates :doc:`Vensim <structure/vensim_translation>` or
-:doc:`XMILE <structure/xmile_translation>` model files into python modules,
+:doc:`XMILE <structure/xmile_translation>` model files into Python modules,
 and provides methods to modify, simulate, and observe those translated models.
 
 
@@ -50,7 +50,7 @@ PySD Cookbook
 A cookbook of simple recipes for advanced data analytics using PySD is available at:
 http://pysd-cookbook.readthedocs.org/
 
-The cookbook includes models, sample data, and code in the form of ipython notebooks that demonstrate a variety of data integration and analysis tasks. These models can be executed on your local machine, and modified to suit your particular analysis requirements.
+The cookbook includes models, sample data, and code in the form of iPython notebooks that demonstrate a variety of data integration and analysis tasks. These models can be executed on your local machine, and modified to suit your particular analysis requirements.
 
 
 Contributing
@@ -89,4 +89,6 @@ For additional help or consulting, contact james.p.houghton@gmail.com or eneko.m
    structure/structure_index
    development/development_index
    reporting_bugs
+   whats_new
    about
+   complement

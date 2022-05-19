@@ -36,13 +36,13 @@ class Macro(DynamicStateful):
     added methods to facilitate execution.
 
     The Macro object will be created with components drawn from a
-    translated python model file.
+    translated Python model file.
 
     Parameters
     ----------
     py_model_file: str or pathlib.Path
         Filename of a model or macro which has already been converted
-        into a python format.
+        into a Python format.
     params: dict or None (optional)
         Dictionary of the macro parameters. Default is None.
     return_func: str or None (optional)
@@ -930,7 +930,7 @@ class Macro(DynamicStateful):
         """
         Formats a table of documentation strings to help users remember
         variable names, and understand how they are translated into
-        python safe names.
+        Python safe names.
 
         Returns
         -------
@@ -981,13 +981,13 @@ class Model(Macro):
     methods for running the model.
 
     The Model object will be created with components drawn from a
-    translated python model file.
+    translated Python model file.
 
     Parameters
     ----------
     py_model_file: str or pathlib.Path
         Filename of a model which has already been converted into a
-        python format.
+        Python format.
     data_files: dict or list or str or None
         The dictionary with keys the name of file and variables to
         load the data from there. Or the list of names or name of the
@@ -1006,7 +1006,7 @@ class Model(Macro):
 
     """
     def __init__(self, py_model_file, data_files, initialize, missing_values):
-        """ Sets up the python objects """
+        """ Sets up the Python objects """
         super().__init__(py_model_file, None, None, Time(),
                          data_files=data_files)
         self.time.stage = 'Load'
@@ -1024,7 +1024,7 @@ class Model(Macro):
 
     def run(self, params=None, return_columns=None, return_timestamps=None,
             initial_condition='original', final_time=None, time_step=None,
-            saveper=None, reload=False, progress=False, flatten_output=False,
+            saveper=None, reload=False, progress=False, flatten_output=True,
             cache_output=True):
         """
         Simulate the model's behavior over time.
@@ -1086,8 +1086,8 @@ class Model(Macro):
 
         flatten_output: bool (optional)
             If True, once the output dataframe has been formatted will
-            split the xarrays in new columns following vensim's naming
-            to make a totally flat output. Default is False.
+            split the xarrays in new columns following Vensim's naming
+            to make a totally flat output. Default is True.
 
         cache_output: bool (optional)
            If True, the number of calls of outputs variables will be increased
@@ -1469,7 +1469,7 @@ class Model(Macro):
 
     def get_vars_in_module(self, module):
         """
-        Return the name of python vars in a module.
+        Return the name of Python vars in a module.
 
         Parameters
         ----------

@@ -53,7 +53,7 @@ def read_xmile(xmile_file, data_files=None, initialize=True,
     Returns
     -------
     model: a PySD class object
-        Elements from the python model are loaded into the PySD class
+        Elements from the Python model are loaded into the PySD class
         and ready to run
 
     Examples
@@ -71,10 +71,10 @@ def read_xmile(xmile_file, data_files=None, initialize=True,
     # get AbstractModel
     abs_model = xmile_file_obj.get_abstract_model()
 
-    # build python file
+    # build Python file
     py_model_file = ModelBuilder(abs_model).build_model()
 
-    # load python file
+    # load Python file
     model = load(py_model_file, data_files, initialize, missing_values)
     model.xmile_file = str(xmile_file)
 
@@ -110,7 +110,7 @@ def read_vensim(mdl_file, data_files=None, initialize=True,
 
     split_views: bool (optional)
         If True, the sketch is parsed to detect model elements in each
-        model view, and then translate each view in a separate python
+        model view, and then translate each view in a separate Python
         file. Setting this argument to True is recommended for large
         models split in many different views. Default is False.
 
@@ -130,7 +130,7 @@ def read_vensim(mdl_file, data_files=None, initialize=True,
     Returns
     -------
     model: a PySD class object
-        Elements from the python model are loaded into the PySD class
+        Elements from the Python model are loaded into the PySD class
         and ready to run
 
     Examples
@@ -151,10 +151,10 @@ def read_vensim(mdl_file, data_files=None, initialize=True,
     # get AbstractModel
     abs_model = ven_file.get_abstract_model()
 
-    # build python file
+    # build Python file
     py_model_file = ModelBuilder(abs_model).build_model()
 
-    # load python file
+    # load Python file
     model = load(py_model_file, data_files, initialize, missing_values)
     model.mdl_file = str(mdl_file)
 
@@ -164,13 +164,13 @@ def read_vensim(mdl_file, data_files=None, initialize=True,
 def load(py_model_file, data_files=None, initialize=True,
          missing_values="warning"):
     """
-    Load a python-converted model file.
+    Load a Python-converted model file.
 
     Parameters
     ----------
     py_model_file : str
         Filename of a model which has already been converted into a
-        python format.
+        Python format.
 
     initialize: bool (optional)
         If False, the model will not be initialize when it is loaded.

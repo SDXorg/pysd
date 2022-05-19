@@ -46,7 +46,7 @@ class ModelBuilder:
 
     def build_model(self) -> Path:
         """
-        Build the python model in a file callled as the orginal model
+        Build the Python model in a file callled as the orginal model
         but with '.py' suffix.
 
         Returns
@@ -102,7 +102,7 @@ class SectionBuilder:
 
     def build_section(self) -> None:
         """
-        Build the python section in a file callled as the orginal model
+        Build the Python section in a file callled as the orginal model
         if the section is main or in a file called as the macro name
         if the section is a macro.
         """
@@ -135,7 +135,7 @@ class SectionBuilder:
         """
         if isinstance(view_content, set):
             # Will become a module
-            # Convert subview elements names to python names
+            # Convert subview elements names to Python names
             view_content = {
                 self.namespace.cleanspace[var] for var in view_content
             }
@@ -183,7 +183,7 @@ class SectionBuilder:
     def _build_separate_module(self, elements: list, module_name: str,
                                module_dir: str) -> None:
         """
-        Constructs and writes the python representation of a specific model
+        Constructs and writes the Python representation of a specific model
         module, when the split_views=True in the read_vensim function.
 
         Parameters
@@ -223,7 +223,7 @@ class SectionBuilder:
 
     def _build_main_module(self, elements: list) -> None:
         """
-        Constructs and writes the python representation of the main model
+        Constructs and writes the Python representation of the main model
         module, when the split_views=True in the read_vensim function.
 
         Parameters
@@ -233,7 +233,7 @@ class SectionBuilder:
             only be the initial_time, final_time, saveper and time_step,
             functions, though there might be others in some situations.
             Each element is a dictionary, with the various components
-            needed to assemble a model component in python syntax. This
+            needed to assemble a model component in Python syntax. This
             will contain multiple entries for elements that have multiple
             definitions in the original file, and which need to be combined.
 
@@ -292,7 +292,7 @@ class SectionBuilder:
 
     def _build(self) -> None:
         """
-        Constructs and writes the python representation of a section.
+        Constructs and writes the Python representation of a section.
 
         Returns
         -------
@@ -400,7 +400,7 @@ class SectionBuilder:
         ----------
         elements: dict
             Each element is a dictionary, with the various components
-            needed to assemble a model component in python syntax. This
+            needed to assemble a model component in Python syntax. This
             will contain multiple entries for elements that have multiple
             definitions in the original file, and which need to be combined.
 

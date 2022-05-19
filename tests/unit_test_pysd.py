@@ -362,7 +362,8 @@ class TestPySD(unittest.TestCase):
 
         model = pysd.read_vensim(test_model_subs)
         model.set_components({"initial_values": 5, "final_time": 10})
-        res = model.run(return_columns=["Initial Values"])
+        res = model.run(
+            return_columns=["Initial Values"], flatten_output=False)
         self.assertTrue(output.equals(res["Initial Values"].iloc[0]))
 
     def test_set_subscripted_value_with_partial_xarray(self):
@@ -380,7 +381,8 @@ class TestPySD(unittest.TestCase):
 
         model = pysd.read_vensim(test_model_subs)
         model.set_components({"Initial Values": input_val, "final_time": 10})
-        res = model.run(return_columns=["Initial Values"])
+        res = model.run(
+            return_columns=["Initial Values"], flatten_output=False)
         self.assertTrue(output.equals(res["Initial Values"].iloc[0]))
 
     def test_set_subscripted_value_with_xarray(self):
@@ -393,7 +395,8 @@ class TestPySD(unittest.TestCase):
 
         model = pysd.read_vensim(test_model_subs)
         model.set_components({"initial_values": output, "final_time": 10})
-        res = model.run(return_columns=["Initial Values"])
+        res = model.run(
+            return_columns=["Initial Values"], flatten_output=False)
         self.assertTrue(output.equals(res["Initial Values"].iloc[0]))
 
     def test_set_parameter_data(self):
@@ -409,7 +412,9 @@ class TestPySD(unittest.TestCase):
             simplefilter("ignore")
             model.set_components({"data_backward": 20, "data_forward": 70})
 
-            out = model.run(return_columns=["data_backward", "data_forward"])
+            out = model.run(
+                return_columns=["data_backward", "data_forward"],
+                flatten_output=False)
 
             for time in out.index:
                 self.assertTrue((out["data_backward"][time] == 20).all())
@@ -418,7 +423,8 @@ class TestPySD(unittest.TestCase):
             out = model.run(
                 return_columns=["data_backward", "data_forward"],
                 final_time=20, time_step=1, saveper=1,
-                params={"data_forward": 30, "data_backward": series})
+                params={"data_forward": 30, "data_backward": series},
+                flatten_output=False)
 
             for time in out.index:
                 self.assertTrue((out["data_forward"][time] == 30).all())
@@ -484,6 +490,7 @@ class TestPySD(unittest.TestCase):
                 params={"lookup_1d": temp_timeseries},
                 return_columns=["lookup_1d_time"],
                 return_timestamps=timeseries,
+                flatten_output=False
             )
 
             self.assertTrue((res["lookup_1d_time"] == temp_timeseries).all())
@@ -492,6 +499,7 @@ class TestPySD(unittest.TestCase):
                 params={"lookup_2d": temp_timeseries},
                 return_columns=["lookup_2d_time"],
                 return_timestamps=timeseries,
+                flatten_output=False
             )
 
             self.assertTrue(
@@ -521,6 +529,7 @@ class TestPySD(unittest.TestCase):
                 params={"lookup_2d": temp_timeseries2},
                 return_columns=["lookup_2d_time"],
                 return_timestamps=timeseries,
+                flatten_output=False
             )
 
             self.assertTrue(
@@ -558,6 +567,7 @@ class TestPySD(unittest.TestCase):
             params={"initial_values": temp_timeseries, "final_time": 10},
             return_columns=["initial_values"],
             return_timestamps=timeseries,
+            flatten_output=False
         )
 
         self.assertTrue(
@@ -588,7 +598,8 @@ class TestPySD(unittest.TestCase):
         out_series = [out_b + val for val in val_series]
         model.set_components({"initial_values": temp_timeseries,
                               "final_time": 10})
-        res = model.run(return_columns=["initial_values"])
+        res = model.run(
+            return_columns=["initial_values"], flatten_output=False)
         self.assertTrue(
             np.all(
                 [r.equals(t) for r, t in zip(res["initial_values"].values,
@@ -616,6 +627,7 @@ class TestPySD(unittest.TestCase):
             params={"initial_values": temp_timeseries, "final_time": 10},
             return_columns=["initial_values"],
             return_timestamps=timeseries,
+            flatten_output=False
         )
 
         self.assertTrue(

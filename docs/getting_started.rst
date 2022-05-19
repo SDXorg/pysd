@@ -46,6 +46,8 @@ To view a synopsis of the model equations and documentation, use the :py:attr:`.
      >>> import pysd
      >>> help(pysd.load)
 
+.. note::
+  Not all the features and functions are implemented. If you are in trouble while importing a Vensim or Xmile model check the :ref:`Vensim supported functions <Vensim supported functions>` or :ref:`Xmile supported functions <Xmile supported functions>`.
 
 Running the Model
 -----------------
@@ -82,9 +84,12 @@ Pandas proovides a simple plotting capability, that we can use to see how the te
    :width: 400 px
    :align: center
 
-To show a progressbar during the model integration, the `progress` argument can be passed to the :py:meth:`.run` command::
+To show a progressbar during the model integration, the `progress` argument can be passed to the :py:meth:`.run` method::
 
    >>> stocks = model.run(progress=True)
+
+.. note::
+  The full description of the :py:meth:`.run` method and other methods can be found in the :doc:`Model methods section <../structure/model_class>`.
 
 Running models with DATA type components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -1,5 +1,5 @@
-Contributing to PySD
-====================
+Development Guidelines
+======================
 
 
 If you are interested in helping to develop PySD, the :doc:`pathway` lists areas that are ripe
@@ -54,10 +54,10 @@ The profiler depends on :py:mod:`cProfile` and `cprofilev <https://github.com/ym
 
 Python Linter
 ^^^^^^^^^^^^^
-`Pylint <http://docs.pylint.org/>`_ is a module that checks that your code meets proper python
+`Pylint <http://docs.pylint.org/>`_ is a module that checks that your code meets proper Python
 coding practices. It is helpful for making sure that the code will be easy for other people to read,
 and also is good fast feedback for improving your coding practice. The lint checker can be run for
-the entire packages, and for individual python modules or classes. It should be run at a local level
+the entire packages, and for individual Python modules or classes. It should be run at a local level
 (ie, on specific files) whenever changes are made, and globally before the package is committed.
 It doesn't need to be perfect, but we should aspire always to move in a positive direction.'
 
@@ -80,8 +80,8 @@ following philosophy:
  * Limit implementation to the basic XMILE standard.
  * Resist the urge to include everything that shows up in all vendors' tools.
 
-* Emphasize ease of use. Let SD practitioners who haven't used python before understand the basics.
-* Take advantage of general python constructions and best practices.
+* Emphasize ease of use. Let SD practitioners who haven't used Python before understand the basics.
+* Take advantage of general Python constructions and best practices.
 * Develop and use strong testing and profiling components. Share your work early. Find bugs early.
 * Avoid firefighting or rushing to add features quickly. SD knows enough about short term thinking
   in software development to know where that path leads.

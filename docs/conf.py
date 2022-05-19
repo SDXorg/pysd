@@ -53,8 +53,14 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
-    'sphinx.ext.intersphinx'
+    'sphinx.ext.intersphinx',
+    "sphinx.ext.extlinks"
 ]
+
+extlinks = {
+    "issue": ("https://github.com/JamesPHoughton/pysd/issues/%s", "issue #%s"),
+    "pull": ("https://github.com/JamesPHoughton/pysd/pull/%s", "PR #%s"),
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

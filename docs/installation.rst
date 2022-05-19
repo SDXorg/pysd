@@ -37,7 +37,7 @@ In the source directory use the command:
 
 Required Dependencies
 ---------------------
-PySD requires **python 3.7** or above.
+PySD requires **Python 3.7** or above.
 
 PySD builds on the core Python data analytics stack, and the following third party libraries:
 

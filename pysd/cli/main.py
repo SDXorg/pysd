@@ -74,7 +74,7 @@ def load(model_file, data_files, missing_values, split_views, **kwargs):
 
     split_views: bool (optional)
         If True, the sketch is parsed to detect model elements in each
-        model view, and then translate each view in a separate python
+        model view, and then translate each view in a separate Python
         file. Setting this argument to True is recommended for large
         models split in many different views. Default is False.
 

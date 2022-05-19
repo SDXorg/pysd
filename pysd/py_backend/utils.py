@@ -40,7 +40,7 @@ def get_return_elements(return_columns, namespace):
     """
     Takes a list of return elements formatted in vensim's format
     Varname[Sub1, SUb2]
-    and returns first the model elements (in python safe language)
+    and returns first the model elements (in Python safe language)
     that need to be computed and collected, and secondly the addresses
     that each element in the return columns list translates to
 

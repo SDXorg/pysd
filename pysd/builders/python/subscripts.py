@@ -351,7 +351,7 @@ class SubscriptManager:
             Coordinates to write in the model file.
 
         merge_subs: list of strings or None (optional)
-            List of the final subscript range of the python array after
+            List of the final subscript range of the Python array after
             merging with other objects. If None the merge_subs will be
             taken from coords. Default is None.
 
