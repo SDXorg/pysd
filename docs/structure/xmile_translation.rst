@@ -49,7 +49,7 @@ Supported Functions and Features
 Ongoing development of the translator will support the full set of Xmile functionality. The current release supports the following operators, functions and features:
 
 .. warning::
-   Not all the supported functions and features are properly tested. Any new test model to cover the missing functions test will be wellcome.
+   Not all the supported functions and features are properly tested. Any new test model to cover the missing functions test will be welcome.
 
 Operators
 ^^^^^^^^^
