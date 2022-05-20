@@ -34,13 +34,21 @@ PySD
 .. |DOI| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.5654824.svg
    :target: https://doi.org/10.5281/zenodo.5654824
 
-This project is a simple library for running System Dynamics models in Python, with the purpose of
-improving integration of Big Data and Machine Learning into the SD workflow.
+This project is a simple library for running System Dynamics models in Python, with the purpose of improving integration of Big Data and Machine Learning into the SD workflow.
 
 PySD translates :doc:`Vensim <structure/vensim_translation>` or
 :doc:`XMILE <structure/xmile_translation>` model files into Python modules,
-and provides methods to modify, simulate, and observe those translated models.
+and provides methods to modify, simulate, and observe those translated models. The translation is done throught an intermediate :doc:`Abstract Synatax Tree representation <structure/structure_index>`,
+which makes it possible to add builders in other languages in a simpler way
 
+Why create a new SD simulation engine?
+--------------------------------------
+
+There are a number of great SD programs out there (`Vensim <http://vensim.com/>`_, `iThink <http://www.iseesystems.com/Softwares/Business/ithinkSoftware.aspx>`_, `AnyLogic <http://www.anylogic.com/system-dynamics>`_, `Insight Maker <http://insightmaker.com/>`_, and `others <http://en.wikipedia.org/wiki/List_of_system_dynamics_software>`_). In order not to waste our effort, or fall victim to the `Not-Invented-Here <http://en.wikipedia.org/wiki/Not_invented_here>`_ fallacy, we should have a very good reason for starting a new project.
+
+That reason is this: There is a whole world of computational tools being developed in the larger data science community. **System dynamicists should directly use the tools that other people are building, instead of replicating their functionality in SD specific software.** The best way to do this is to bring specific SD functionality to the domain where those other tools are being developed.
+
+This approach allows SD modelers to take advantage of the most recent developments in data science, and focus our efforts on improving the part of the stack that is unique to System Dynamics modeling.
 
 Additional Resources
 --------------------
