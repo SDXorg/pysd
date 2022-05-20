@@ -1,8 +1,10 @@
 """
-These functions have no direct analog in the standard Python data analytics
-stack, or require information about the internal state of the system beyond
-what is present in the function call. We provide them in a structure that
-makes it easy for the model elements to call.
+The provided functions have no direct analog in the standard Python data
+analytics stack, or require information about the internal state of the
+system beyond what is present in the function call. They are provided
+in a structure that makes it easy for the model elements to call. The
+functions may be similar to the original functions given by Vensim or
+Stella, but sometimes the number or order of arguments may change.
 """
 import warnings
 
@@ -18,7 +20,7 @@ def ramp(time, slope, start, finish=None):
 
     Parameters
     ----------
-    time: function
+    time: callable
         Function that returns the current time.
     slope: float
         The slope of the ramp starting at zero at time start.
@@ -30,7 +32,7 @@ def ramp(time, slope, start, finish=None):
 
     Returns
     -------
-    response: float
+    float or xarray.DataArray:
         If prior to ramp start, returns zero.
         If after ramp ends, returns top of ramp.
 
@@ -53,7 +55,7 @@ def step(time, value, tstep):
 
     Parameters
     ----------
-    time: function
+    time: callable
         Function that returns the current time.
     value: float
         The height of the step.
@@ -62,7 +64,7 @@ def step(time, value, tstep):
 
     Returns
     -------
-    float:
+    float or xarray.DataArray:
         - In range [-inf, tstep):
             returns 0
         - In range [tstep, +inf]:
@@ -78,7 +80,7 @@ def pulse(time, start, repeat_time=0, width=None, magnitude=None, end=None):
 
     Parameters
     ----------
-    time: function
+    time: callable
         Function that returns the current time.
     start: float
         Starting time of the pulse.
@@ -97,13 +99,12 @@ def pulse(time, start, repeat_time=0, width=None, magnitude=None, end=None):
 
     Returns
     -------
-    float:
+    float or xarray.DataArray:
         - In range [-inf, start):
             returns 0
         - In range [start + n*repeat_time, start + n*repeat_time + width):
             returns magnitude/time_step or 1
-        - In range [start + n*repeat_time + width,
-                    start + (n+1)*repeat_time):
+        - In range [start + n*repeat_time + width, start + (n+1)*repeat_time):
             returns 0
 
     """
@@ -126,14 +127,15 @@ def if_then_else(condition, val_if_true, val_if_false):
     Parameters
     ----------
     condition: bool or xarray.DataArray of bools
-    val_if_true: function
+    val_if_true: callable
         Value to evaluate and return when condition is true.
-    val_if_false: function
+    val_if_false: callable
         Value to evaluate and return when condition is false.
 
     Returns
     -------
-    The value depending on the condition.
+    float or xarray.DataArray:
+        The value depending on the condition.
 
     """
     # NUMPY: replace xr by np
@@ -178,8 +180,9 @@ def xidz(numerator, denominator, x):
 
     Returns
     -------
-    numerator/denominator if denominator > small_vensim
-    otherwise, returns value_if_denom_is_zero
+    float or xarray.DataArray:
+        - numerator/denominator if denominator > small_vensim
+        - value_if_denom_is_zero otherwise
 
     """
     # NUMPY: replace DataArray by np.ndarray, xr.where -> np.where
@@ -215,8 +218,9 @@ def zidz(numerator, denominator):
 
     Returns
     -------
-    result of division numerator/denominator if denominator is not zero,
-    otherwise zero.
+    float or xarray.DataArray:
+        - numerator/denominator if denominator > small_vensim
+        - 0 or 0s array otherwise
 
     """
     # NUMPY: replace DataArray by np.ndarray, xr.where -> np.where
@@ -239,18 +243,21 @@ def zidz(numerator, denominator):
 def active_initial(stage, expr, init_val):
     """
     Implements vensim's ACTIVE INITIAL function
+
     Parameters
     ----------
     stage: str
         The stage of the model.
-    expr: function
+    expr: callable
         Running stage value
     init_val: float or xarray.DataArray
         Initialization stage value.
 
     Returns
     -------
-
+    float or xarray.DataArray:
+        - inti_val if stage='Initialization'
+        - expr() otherwise
     """
     # NUMPY: both must have same dimensions in inputs, remove time.stage
     if stage == 'Initialization':
@@ -282,7 +289,8 @@ def integer(x):
 
     Returns
     -------
-    Returns integer part of x.
+    integer: float or xarray.DataArray
+        Returns integer part of x.
 
     """
     # NUMPY: replace xr by np
@@ -331,8 +339,9 @@ def modulo(x, m):
 
     Returns
     -------
-    Returns x modulo m, if x is smaller than 0 the result is given in
-    the range (-m, 0] as Vensim does. x - quantum(x, m)
+    modulo: float or xarray.DataArray
+        Returns x modulo m, if x is smaller than 0 the result is given
+        in the range (-m, 0] as Vensim does. x - quantum(x, m)
 
     """
     return x - quantum(x, m)
@@ -345,15 +354,15 @@ def sum(x, dim=None):
     Parameters
     ----------
     x: xarray.DataArray
-      Input value.
+        Input value.
     dim: list of strs (optional)
-      Dimensions to apply the function over.
-      If not given the function will be applied over all dimensions.
+        Dimensions to apply the function over.
+        If not given the function will be applied over all dimensions.
 
     Returns
     -------
-    xarray.DataArray or float
-      The result of the sum operation in the given dimensions.
+    sum: xarray.DataArray or float
+        The result of the sum operation in the given dimensions.
 
     """
     # NUMPY: replace by np.sum(x, axis=axis) put directly in the file
@@ -371,15 +380,15 @@ def prod(x, dim=None):
     Parameters
     ----------
     x: xarray.DataArray
-      Input value.
+        Input value.
     dim: list of strs (optional)
-      Dimensions to apply the function over.
-      If not given the function will be applied over all dimensions.
+        Dimensions to apply the function over.
+        If not given the function will be applied over all dimensions.
 
     Returns
     -------
-    xarray.DataArray or float
-      The result of the product operation in the given dimensions.
+    prod: xarray.DataArray or float
+        The result of the product operation in the given dimensions.
 
     """
     # NUMPY: replace by np.prod(x, axis=axis) put directly in the file
@@ -397,15 +406,15 @@ def vmin(x, dim=None):
     Parameters
     ----------
     x: xarray.DataArray
-      Input value.
+        Input value.
     dim: list of strs (optional)
-      Dimensions to apply the function over.
-      If not given the function will be applied over all dimensions.
+        Dimensions to apply the function over.
+        If not given the function will be applied over all dimensions.
 
     Returns
     -------
-    xarray.DataArray or float
-      The result of the minimum value over the given dimensions.
+    vmin: xarray.DataArray or float
+        The result of the minimum value over the given dimensions.
 
     """
     # NUMPY: replace by np.min(x, axis=axis) put directly in the file
@@ -423,15 +432,15 @@ def vmax(x, dim=None):
     Parameters
     ----------
     x: xarray.DataArray
-      Input value.
+        Input value.
     dim: list of strs (optional)
-      Dimensions to apply the function over.
-      If not given the function will be applied over all dimensions.
+        Dimensions to apply the function over.
+        If not given the function will be applied over all dimensions.
 
     Returns
     -------
-    xarray.DataArray or float
-      The result of the maximum value over the dimensions.
+    vmax: xarray.DataArray or float
+        The result of the maximum value over the dimensions.
 
     """
     # NUMPY: replace by np.max(x, axis=axis) put directly in the file

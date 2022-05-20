@@ -5,6 +5,6 @@ Arithmetic order	Operators	Operations
 3	"\*, /"	"multiplication, division"
 4	"%"	modulo
 5	"+, -"	"addition, substraction"
-6	"=, <>, <, <=, >, >="	comparioson
+6	"=, <>, <, <=, >, >="	comparison
 7	"not"	unary logical operation
 8	"and, or"	binary logical operations

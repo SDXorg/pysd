@@ -9,7 +9,7 @@ To begin, we must first load the PySD module, and use it to import a model file:
    >>> model = pysd.read_vensim('Teacup.mdl')
 
 
-This code creates an instance of the :doc:`PySD Model class <structure/model_class>` from an example model that we will use as the system dynamics equivalent of ‘Hello World’: a cup of tea cooling at room temperature.
+This code creates an instance of the :doc:`PySD Model class <python_api/model_class>` from an example model that we will use as the system dynamics equivalent of ‘Hello World’: a cup of tea cooling at room temperature.
 
 .. image:: images/Teacup.png
    :width: 350 px
@@ -41,7 +41,7 @@ To view a synopsis of the model equations and documentation, use the :py:attr:`.
      >>> model = pysd.load('Teacup.py')
 
 .. note::
-  The functions :py:func:`pysd.read_vensim()`,  :py:func:`pysd.read_xmile()` and :py:func:`pysd.load()` have optional arguments for advanced usage. You can check the full description in :doc:`Model loading <structure/model_loading>` or using :py:func:`help()` e.g.::
+  The functions :py:func:`pysd.read_vensim()`,  :py:func:`pysd.read_xmile()` and :py:func:`pysd.load()` have optional arguments for advanced usage. You can check the full description in :doc:`Model loading <python_api/model_loading>` or using :py:func:`help()` e.g.::
 
      >>> import pysd
      >>> help(pysd.load)
@@ -89,7 +89,7 @@ To show a progressbar during the model integration, the `progress` argument can 
    >>> stocks = model.run(progress=True)
 
 .. note::
-  The full description of the :py:meth:`.run` method and other methods can be found in the :doc:`Model methods section <../structure/model_class>`.
+  The full description of the :py:meth:`.run` method and other methods can be found in the :doc:`Model methods section <python_api/model_class>`.
 
 Running models with DATA type components
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

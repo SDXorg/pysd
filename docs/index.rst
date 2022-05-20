@@ -85,6 +85,7 @@ For additional help or consulting, contact james.p.houghton@gmail.com or eneko.m
    getting_started
    advanced_usage
    command_line_usage
+   python_api/python_api_index
    tools
    structure/structure_index
    development/development_index

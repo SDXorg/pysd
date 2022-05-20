@@ -62,16 +62,10 @@ The builders allow to build the final model in any programming language (so long
 The Python model
 ----------------
 
-.. toctree::
-   :hidden:
+For loading a translated model with Python see :doc:`Getting started <../../getting_started>` or :doc:`Model loading <../../python_api/model_loading>`. The Python builder constructs a Python class that represents the system dynamics model. The class maintains a dictionary representing the current values of each of the system stocks, and the current simulation time, making it a `stateful` model in much the same way that the system itself has a specific state at any point in time.
 
-   model_loading
-   model_class
+The :doc:`Model class <../../python_api/model_class>` also contains a function for each of the model components, representing the essential model equations. Each function contains its units, subcscripts type infromation and documentation as translated from the original model file. A query to any of the model functions will calculate and return its value according to the stored state of the system.
 
-For loading a translated model with Python see :doc:`Getting started <../../getting_started>` or :doc:`Model loading <model_loading>`. The Python builder constructs a Python class that represents the system dynamics model. The class maintains a dictionary representing the current values of each of the system stocks, and the current simulation time, making it a `statefull` model in much the same way that the system itself has a specific state at any point in time.
+The :doc:`Model class <../../python_api/model_class>` maintains only a single state of the system in memory, meaning that all functions must obey the Markov property  - that the future state of the system can be calculated entirely based upon its current state. In addition to simplifying integration, this requirement enables analyses that interact with the model at a step-by-step level.
 
-The :doc:`Model class <model_class>` also contains a function for each of the model components, representing the essential model equations. Each function contains its units, subcscripts type infromation and documentation as translated from the original model file. A query to any of the model functions will calculate and return its value according to the stored state of the system.
-
-The :doc:`Model class <model_class>` maintains only a single state of the system in memory, meaning that all functions must obey the Markov property  - that the future state of the system can be calculated entirely based upon its current state. In addition to simplifying integration, this requirement enables analyses that interact with the model at a step-by-step level.
-
-Lastly, the :doc:`Model class <model_class>` provides a set of methods that are used to facilitate simulation. The :py:meth:`.run` method returns to the user a Pandas dataframe representing the output of their simulation run. A variety of options allow the user to specify which components of the model they would like returned, and the timestamps at which they would like those measurements. Additional parameters make parameter changes to the model, modify its starting conditions, or specify how simulation results should be logged.
+Lastly, the :doc:`Model class <../../python_api/model_class>` provides a set of methods that are used to facilitate simulation. The :py:meth:`.run` method returns to the user a Pandas dataframe representing the output of their simulation run. A variety of options allow the user to specify which components of the model they would like returned, and the timestamps at which they would like those measurements. Additional parameters make parameter changes to the model, modify its starting conditions, or specify how simulation results should be logged.

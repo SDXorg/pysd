@@ -1,8 +1,8 @@
 """
-The stateful objects are used and updated each time step with an update
+The Stateful objects are used and updated each time step with an update
 method. This include Integs, Delays, Forecasts, Smooths, and Trends,
-between others. The Macro class and Model class are also Stateful class
-child. But defined in the file model.py.
+between others. The Macro class and Model class are also Stateful type.
+However, they are defined appart as they are more complex.
 """
 import warnings
 
@@ -61,20 +61,24 @@ class DynamicStateful(Stateful):
 
 class Integ(DynamicStateful):
     """
-    Implements INTEG function
+    Implements INTEG function.
+
+    Parameters
+    ----------
+    ddt: callable
+        Derivate to integrate.
+    initial_value: callable
+        Initial value.
+    py_name: str
+        Python name to identify the object.
+
+    Attributes
+    ----------
+    state: float or xarray.DataArray
+        Current state of the object. Value of the stock.
+
     """
     def __init__(self, ddt, initial_value, py_name):
-        """
-
-        Parameters
-        ----------
-        ddt: function
-          This will become an attribute of the object
-        initial_value: function
-          Initial value
-        py_name: str
-          Python name to identify the object
-        """
         super().__init__()
         self.init_func = initial_value
         self.ddt = ddt
@@ -96,7 +100,29 @@ class Integ(DynamicStateful):
 
 class Delay(DynamicStateful):
     """
-    Implements DELAY function
+    Implements DELAY function.
+
+    Parameters
+    ----------
+    delay_input: callable
+        Input of the delay.
+    delay_time: callable
+        Delay time.
+    initial_value: callable
+        Initial value.
+    order: callable
+        Delay order.
+    tsetp: callable
+        The time step of the model.
+    py_name: str
+        Python name to identify the object.
+
+    Attributes
+    ----------
+    state: numpy.array or xarray.DataArray
+        Current state of the object. Array of the delays values multiplied
+        by their corresponding average time.
+
     """
     # note that we could have put the `delay_input` argument as a parameter to
     # the `__call__` function, and more closely mirrored the vensim syntax.
@@ -107,17 +133,6 @@ class Delay(DynamicStateful):
 
     def __init__(self, delay_input, delay_time, initial_value, order, tstep,
                  py_name):
-        """
-
-        Parameters
-        ----------
-        delay_input: function
-        delay_time: function
-        initial_value: function
-        order: function
-        py_name: str
-          Python name to identify the object
-        """
         super().__init__()
         self.init_func = initial_value
         self.delay_time_func = delay_time
@@ -180,7 +195,34 @@ class Delay(DynamicStateful):
 
 class DelayN(DynamicStateful):
     """
-    Implements DELAY N function
+    Implements DELAY N function.
+
+    Parameters
+    ----------
+    delay_input: callable
+        Input of the delay.
+    delay_time: callable
+        Delay time.
+    initial_value: callable
+        Initial value.
+    order: callable
+        Delay order.
+    tsetp: callable
+        The time step of the model.
+    py_name: str
+        Python name to identify the object.
+
+    Attributes
+    ----------
+    state: numpy.array or xarray.DataArray
+        Current state of the object. Array of the delays values multiplied
+        by their corresponding average time.
+
+    times: numpy.array or xarray.DataArray
+        Array of delay times used for computing the delay output.
+        If delay_time is constant, this array will be constant and
+        DelayN will behave ad Delay.
+
     """
     # note that we could have put the `delay_input` argument as a parameter to
     # the `__call__` function, and more closely mirrored the vensim syntax.
@@ -191,17 +233,6 @@ class DelayN(DynamicStateful):
 
     def __init__(self, delay_input, delay_time, initial_value, order, tstep,
                  py_name):
-        """
-
-        Parameters
-        ----------
-        delay_input: function
-        delay_time: function
-        initial_value: function
-        order: function
-        py_name: str
-          Python name to identify the object
-        """
         super().__init__()
         self.init_func = initial_value
         self.delay_time_func = delay_time
@@ -277,22 +308,34 @@ class DelayN(DynamicStateful):
 
 class DelayFixed(DynamicStateful):
     """
-    Implements DELAY FIXED function
+    Implements DELAY FIXED function.
+
+    Parameters
+    ----------
+    delay_input: callable
+        Input of the delay.
+    delay_time: callable
+        Delay time.
+    initial_value: callable
+        Initial value.
+    tsetp: callable
+        The time step of the model.
+    py_name: str
+        Python name to identify the object.
+
+    Attributes
+    ----------
+    state: float or xarray.DataArray
+        Current state of the object, equal to pipe[pointer].
+    pipe: list
+        List of the delays values.
+    pointer: int
+        Pointer to the last value in the pipe
+
     """
 
     def __init__(self, delay_input, delay_time, initial_value, tstep,
                  py_name):
-        """
-
-        Parameters
-        ----------
-        delay_input: function
-        delay_time: function
-        initial_value: function
-        order: function
-        py_name: str
-          Python name to identify the object
-        """
         super().__init__()
         self.init_func = initial_value
         self.delay_time_func = delay_time
@@ -341,21 +384,29 @@ class DelayFixed(DynamicStateful):
 
 class Forecast(DynamicStateful):
     """
-    Implements FORECAST function
+    Implements FORECAST function.
+
+    Parameters
+    ----------
+    forecast_input: callable
+        Input of the forecast.
+    average_time: callable
+        Average time.
+    horizon: callable
+        Forecast horizon.
+    initial_trend: callable
+        Initial trend of the forecast.
+    py_name: str
+        Python name to identify the object.
+
+    Attributes
+    ----------
+    state: float or xarray.DataArray
+        Current state of the object. AV value by Vensim docs.
+
     """
     def __init__(self, forecast_input, average_time, horizon, initial_trend,
                  py_name):
-        """
-
-        Parameters
-        ----------
-        forecast_input: function
-        average_time: function
-        horizon: function
-        py_name: str
-          Python name to identify the object
-        """
-
         super().__init__()
         self.horizon = horizon
         self.average_time = average_time
@@ -391,21 +442,30 @@ class Forecast(DynamicStateful):
 
 class Smooth(DynamicStateful):
     """
-    Implements SMOOTH function
+    Implements SMOOTH function.
+
+    Parameters
+    ----------
+    smooth_input: callable
+        Input of the smooth.
+    smooth_time: callable
+        Smooth time.
+    initial_value: callable
+        Initial value.
+    order: callable
+        Delay order.
+    py_name: str
+        Python name to identify the object.
+
+    Attributes
+    ----------
+    state: numpy.array or xarray.DataArray
+        Current state of the object. Array of the inputs having the
+        value to return in the last position.
+
     """
     def __init__(self, smooth_input, smooth_time, initial_value, order,
                  py_name):
-        """
-
-        Parameters
-        ----------
-        smooth_input: function
-        smooth_time: function
-        initial_value: function
-        order: function
-        py_name: str
-          Python name to identify the object
-        """
         super().__init__()
         self.init_func = initial_value
         self.smooth_time_func = smooth_time
@@ -452,20 +512,26 @@ class Smooth(DynamicStateful):
 
 class Trend(DynamicStateful):
     """
-    Implements TREND function
+    Implements TREND function.
+
+    Parameters
+    ----------
+    trend_input: callable
+        Input of the trend.
+    average_time: callable
+        Average time.
+    initial_trend: callable
+        Initial trend.
+    py_name: str
+        Python name to identify the object.
+
+    Attributes
+    ----------
+    state: float or xarray.DataArray
+        Current state of the object. AV value by Vensim docs.
+
     """
     def __init__(self, trend_input, average_time, initial_trend, py_name):
-        """
-
-        Parameters
-        ----------
-        trend_input: function
-        average_time: function
-        initial_trend: function
-        py_name: str
-          Python name to identify the object
-        """
-
         super().__init__()
         self.init_func = initial_trend
         self.average_time_function = average_time
@@ -496,17 +562,28 @@ class Trend(DynamicStateful):
 
 
 class SampleIfTrue(DynamicStateful):
-    def __init__(self, condition, actual_value, initial_value, py_name):
-        """
+    """
+    Implements SAMPLE IF TRUE function.
 
-        Parameters
-        ----------
-        condition: function
-        actual_value: function
-        initial_value: function
-        py_name: str
-          Python name to identify the object
-        """
+    Parameters
+    ----------
+    condition: callable
+        Condition for sample.
+    actual_value: callable
+        Value to update if condition is true.
+    initial_value: callable
+        Initial value.
+    py_name: str
+        Python name to identify the object.
+
+    Attributes
+    ----------
+    state: float or xarray.DataArray
+        Current state of the object. Last actual_value when condition
+        was true or the initial_value if condition has never been true.
+
+    """
+    def __init__(self, condition, actual_value, initial_value, py_name):
         super().__init__()
         self.condition = condition
         self.actual_value = actual_value
@@ -541,17 +618,22 @@ class SampleIfTrue(DynamicStateful):
 
 class Initial(Stateful):
     """
-    Implements INITIAL function
+    Implements INITIAL function.
+
+    Parameters
+    ----------
+    initial_value: callable
+        Initial value.
+    py_name: str
+        Python name to identify the object.
+
+    Attributes
+    ----------
+    state: float or xarray.DataArray
+        Current state of the object, which will always be the initial_value.
+
     """
     def __init__(self, initial_value, py_name):
-        """
-
-        Parameters
-        ----------
-        initial_value: function
-        py_name: str
-          Python name to identify the object
-        """
         super().__init__()
         self.init_func = initial_value
         self.py_name = py_name
