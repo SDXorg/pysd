@@ -46,7 +46,7 @@ In addition to the aforementioned core functionality, PySD also allows users to 
 
 Despite its maturity, PySD is currently in a very active development phase, and a proof to that is that most of the extra features listed in the paragraph above were implemented in the 18 months that separate releases *v0.11.0* and *v3.0.0*.
 
-The main novelty introduced by the recent *v3.0.0* release is that the parsing process is now isolated from the building process, which opens the door to the development of additional model builders (in Python) to write the output models in any programming language. This was achieved by creating an intermediate abstract model representation (AMR)(Figure \ref{fig:ABSTRACTMODEL}) that embeds all the information contained in the original models, plus additional information such as the order of operations, in pure Python objects.
+The main novelty introduced in release *v3.0.0* is that the parsing process is now isolated from the building process, which opens the door to the development of additional model builders (in Python) to write the output models in any programming language. This has been achieved by creating an intermediate abstract model representation (AMR)(Figure \ref{fig:ABSTRACTMODEL}) that embeds all the information contained in the original models, plus additional information such as the order of operations, in pure Python objects.
 
 ![New model parsing-building logic in PySD v3.0.0. PEG acronym stands for Parsing Expression Grammar. \label{fig:ABSTRACTMODEL}](abstract_model.pdf)
 
