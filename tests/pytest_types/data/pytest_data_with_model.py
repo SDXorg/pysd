@@ -94,6 +94,17 @@ class TestPySDData:
             model.run(return_columns=["var1", "var2", "var3"]),
             expected)
 
+    def test_modify_data(self, model, expected):
+        out = model.run(params={
+            "var1": pd.Series(index=[1, 3, 7], data=[10, 20, 30]),
+            "var2": 10
+        })
+
+        assert (out["var2"] == 10).all()
+        assert (
+            out["var1"] == [10, 10, 15, 20, 22.5, 25, 27.5, 30, 30, 30, 30]
+        ).all()
+
 
 class TestPySDDataErrors:
     def model(self, data_model, data_files, shared_tmpdir):

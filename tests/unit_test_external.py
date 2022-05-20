@@ -146,19 +146,27 @@ class TestExternalMethods(unittest.TestCase):
         External._reshape test
         """
         from pysd.py_backend.external import External
-        import pandas as pd
 
         reshape = External._reshape
 
+        data0d = np.array(5)
         data1d = np.array([2, 3, 5, 6])
         data2d = np.array([[2, 3, 5, 6],
                            [1, 7, 5, 8]])
 
-        series1d = pd.Series(data1d)
-        df2d = pd.DataFrame(data2d)
+        float0d = float(data0d)
+        int0d = int(data0d)
+        series1d = xr.DataArray(data1d)
+        df2d = xr.DataArray(data2d)
 
+        shapes0d = [(1,), (1, 1)]
         shapes1d = [(4,), (4, 1, 1), (1, 1, 4), (1, 4, 1)]
         shapes2d = [(2, 4), (2, 4, 1), (1, 2, 4), (2, 1, 4)]
+
+        for shape_i in shapes0d:
+            self.assertEqual(reshape(data0d, shape_i).shape, shape_i)
+            self.assertEqual(reshape(float0d, shape_i).shape, shape_i)
+            self.assertEqual(reshape(int0d, shape_i).shape, shape_i)
 
         for shape_i in shapes1d:
             self.assertEqual(reshape(data1d, shape_i).shape, shape_i)
@@ -207,12 +215,12 @@ class TestExternalMethods(unittest.TestCase):
         interp = np.array([1., 1., 1., 3., 3.5, 4.,
                            5., 6., 7., 8., 8., 8.])
 
-        ext.interp = "hold backward"
+        ext.interp = "hold_backward"
         datac = data.copy()
         ext._fill_missing(series, datac)
         self.assertTrue(np.all(hold_back == datac))
 
-        ext.interp = "look forward"
+        ext.interp = "look_forward"
         datac = data.copy()
         ext._fill_missing(series, datac)
         self.assertTrue(np.all(look_for == datac))
@@ -257,7 +265,7 @@ class TestExternalMethods(unittest.TestCase):
             ext._resolve_file(root=root)
 
         self.assertIn(
-            "Indirect reference to file: ?input.xlsx",
+            "Indirect reference to file: '?input.xlsx'",
             str(err.exception))
 
 
@@ -294,6 +302,7 @@ class TestData(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         data.initialize()
@@ -326,6 +335,7 @@ class TestData(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         data.initialize()
@@ -355,6 +365,7 @@ class TestData(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         data.initialize()
@@ -385,6 +396,7 @@ class TestData(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         data.initialize()
@@ -415,6 +427,7 @@ class TestData(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         data.initialize()
@@ -445,6 +458,7 @@ class TestData(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         data.initialize()
@@ -456,7 +470,7 @@ class TestData(unittest.TestCase):
 
     def test_data_forward_h1d(self):
         """
-        ExtData test for 1d horizontal series look forward
+        ExtData test for 1d horizontal series look_forward
         """
         import pysd
 
@@ -465,7 +479,7 @@ class TestData(unittest.TestCase):
         time_row_or_col = "4"
         cell = "C5"
         coords = {}
-        interp = "look forward"
+        interp = "look_forward"
         py_name = "test_data_forward_h1d"
 
         data = pysd.external.ExtData(file_name=file_name,
@@ -475,6 +489,7 @@ class TestData(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         data.initialize()
@@ -486,7 +501,7 @@ class TestData(unittest.TestCase):
 
     def test_data_forward_v1d(self):
         """
-        ExtData test for 1d vertical series look forward
+        ExtData test for 1d vertical series look_forward
         """
         import pysd
 
@@ -495,7 +510,7 @@ class TestData(unittest.TestCase):
         time_row_or_col = "B"
         cell = "C5"
         coords = {}
-        interp = "look forward"
+        interp = "look_forward"
         py_name = "test_data_forward_v1d"
 
         data = pysd.external.ExtData(file_name=file_name,
@@ -505,6 +520,7 @@ class TestData(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         data.initialize()
@@ -516,7 +532,7 @@ class TestData(unittest.TestCase):
 
     def test_data_forward_hn1d(self):
         """
-        ExtData test for 1d horizontal series look forward by cell range names
+        ExtData test for 1d horizontal series look_forward by cell range names
         """
         import pysd
 
@@ -525,7 +541,7 @@ class TestData(unittest.TestCase):
         time_row_or_col = "time"
         cell = "data_1d"
         coords = {}
-        interp = "look forward"
+        interp = "look_forward"
         py_name = "test_data_forward_hn1d"
 
         data = pysd.external.ExtData(file_name=file_name,
@@ -535,6 +551,7 @@ class TestData(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         data.initialize()
@@ -546,7 +563,7 @@ class TestData(unittest.TestCase):
 
     def test_data_forward_vn1d(self):
         """
-        ExtData test for 1d vertical series look forward by cell range names
+        ExtData test for 1d vertical series look_forward by cell range names
         """
         import pysd
 
@@ -555,7 +572,7 @@ class TestData(unittest.TestCase):
         time_row_or_col = "time"
         cell = "data_1d"
         coords = {}
-        interp = "look forward"
+        interp = "look_forward"
         py_name = "test_data_forward_vn1d"
 
         data = pysd.external.ExtData(file_name=file_name,
@@ -565,6 +582,7 @@ class TestData(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         data.initialize()
@@ -576,7 +594,7 @@ class TestData(unittest.TestCase):
 
     def test_data_backward_h1d(self):
         """
-        ExtData test for 1d horizontal series hold backward
+        ExtData test for 1d horizontal series hold_backward
         """
         import pysd
 
@@ -585,7 +603,7 @@ class TestData(unittest.TestCase):
         time_row_or_col = "4"
         cell = "C5"
         coords = {}
-        interp = "hold backward"
+        interp = "hold_backward"
         py_name = "test_data_backward_h1d"
 
         data = pysd.external.ExtData(file_name=file_name,
@@ -595,6 +613,7 @@ class TestData(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         data.initialize()
@@ -606,7 +625,7 @@ class TestData(unittest.TestCase):
 
     def test_data_backward_v1d(self):
         """
-        ExtData test for 1d vertical series hold backward by cell range names
+        ExtData test for 1d vertical series hold_backward by cell range names
         """
         import pysd
 
@@ -615,7 +634,7 @@ class TestData(unittest.TestCase):
         time_row_or_col = "B"
         cell = "C5"
         coords = {}
-        interp = "hold backward"
+        interp = "hold_backward"
         py_name = "test_data_backward_v1d"
 
         data = pysd.external.ExtData(file_name=file_name,
@@ -625,6 +644,7 @@ class TestData(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         data.initialize()
@@ -636,7 +656,7 @@ class TestData(unittest.TestCase):
 
     def test_data_backward_hn1d(self):
         """
-        ExtData test for 1d horizontal series hold backward by cell range names
+        ExtData test for 1d horizontal series hold_backward by cell range names
         """
         import pysd
 
@@ -645,7 +665,7 @@ class TestData(unittest.TestCase):
         time_row_or_col = "time"
         cell = "data_1d"
         coords = {}
-        interp = "hold backward"
+        interp = "hold_backward"
         py_name = "test_data_backward_hn1d"
 
         data = pysd.external.ExtData(file_name=file_name,
@@ -655,6 +675,7 @@ class TestData(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         data.initialize()
@@ -666,7 +687,7 @@ class TestData(unittest.TestCase):
 
     def test_data_backward_vn1d(self):
         """
-        ExtData test for 1d vertical series hold backward by cell range names
+        ExtData test for 1d vertical series hold_backward by cell range names
         """
         import pysd
 
@@ -675,7 +696,7 @@ class TestData(unittest.TestCase):
         time_row_or_col = "time"
         cell = "data_1d"
         coords = {}
-        interp = "hold backward"
+        interp = "hold_backward"
         py_name = "test_data_backward_vn1d"
 
         data = pysd.external.ExtData(file_name=file_name,
@@ -685,6 +706,7 @@ class TestData(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         data.initialize()
@@ -715,6 +737,7 @@ class TestData(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         data.initialize()
@@ -726,7 +749,7 @@ class TestData(unittest.TestCase):
 
     def test_data_forward_hn2d(self):
         """
-        ExtData test for 2d vertical series look forward by cell range names
+        ExtData test for 2d vertical series look_forward by cell range names
         """
         import pysd
 
@@ -735,7 +758,7 @@ class TestData(unittest.TestCase):
         time_row_or_col = "time"
         cell = "data_2d"
         coords = {'ABC': ['A', 'B', 'C']}
-        interp = "look forward"
+        interp = "look_forward"
         py_name = "test_data_forward_hn2d"
 
         data = pysd.external.ExtData(file_name=file_name,
@@ -745,6 +768,7 @@ class TestData(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         data.initialize()
@@ -756,7 +780,7 @@ class TestData(unittest.TestCase):
 
     def test_data_backward_v2d(self):
         """
-        ExtData test for 2d vertical series hold backward
+        ExtData test for 2d vertical series hold_backward
         """
         import pysd
 
@@ -765,7 +789,7 @@ class TestData(unittest.TestCase):
         time_row_or_col = "B"
         cell = "C5"
         coords = {'ABC': ['A', 'B', 'C']}
-        interp = "hold backward"
+        interp = "hold_backward"
         py_name = "test_data_backward_v2d"
 
         data = pysd.external.ExtData(file_name=file_name,
@@ -775,6 +799,7 @@ class TestData(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         data.initialize()
@@ -798,6 +823,7 @@ class TestData(unittest.TestCase):
         cell_2 = "C8"
         coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C']}
         coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C']}
+        final_coords = {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']}
         interp = None
         py_name = "test_data_interp_h3d"
 
@@ -808,6 +834,7 @@ class TestData(unittest.TestCase):
                                      cell=cell_1,
                                      coords=coords_1,
                                      interp=interp,
+                                     final_coords=final_coords,
                                      py_name=py_name)
 
         data.add(file_name=file_name,
@@ -827,7 +854,7 @@ class TestData(unittest.TestCase):
 
     def test_data_forward_v3d(self):
         """
-        ExtData test for 3d vertical series look forward
+        ExtData test for 3d vertical series look_forward
         """
         import pysd
 
@@ -838,7 +865,8 @@ class TestData(unittest.TestCase):
         cell_2 = "F5"
         coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C']}
         coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C']}
-        interp = "look forward"
+        final_coords = {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']}
+        interp = "look_forward"
         py_name = "test_data_forward_v3d"
 
         data = pysd.external.ExtData(file_name=file_name,
@@ -848,6 +876,7 @@ class TestData(unittest.TestCase):
                                      cell=cell_1,
                                      coords=coords_1,
                                      interp=interp,
+                                     final_coords=final_coords,
                                      py_name=py_name)
 
         data.add(file_name=file_name,
@@ -867,7 +896,7 @@ class TestData(unittest.TestCase):
 
     def test_data_backward_hn3d(self):
         """
-        ExtData test for 3d horizontal series hold backward by cellrange names
+        ExtData test for 3d horizontal series hold_backward by cellrange names
         """
         import pysd
 
@@ -878,7 +907,8 @@ class TestData(unittest.TestCase):
         cell_2 = "data_2db"
         coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C']}
         coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C']}
-        interp = "hold backward"
+        final_coords = {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']}
+        interp = "hold_backward"
         py_name = "test_data_backward_hn3d"
 
         data = pysd.external.ExtData(file_name=file_name,
@@ -888,6 +918,7 @@ class TestData(unittest.TestCase):
                                      cell=cell_1,
                                      coords=coords_1,
                                      interp=interp,
+                                     final_coords=final_coords,
                                      py_name=py_name)
 
         data.add(file_name=file_name,
@@ -926,6 +957,7 @@ class TestData(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         data.initialize()
@@ -967,6 +999,7 @@ class TestLookup(unittest.TestCase):
                                        root=_root,
                                        cell=cell,
                                        coords=coords,
+                                       final_coords=coords,
                                        py_name=py_name)
 
         data.initialize()
@@ -995,6 +1028,7 @@ class TestLookup(unittest.TestCase):
                                        root=_root,
                                        cell=cell,
                                        coords=coords,
+                                       final_coords=coords,
                                        py_name=py_name)
 
         data.initialize()
@@ -1023,6 +1057,7 @@ class TestLookup(unittest.TestCase):
                                        root=_root,
                                        cell=cell,
                                        coords=coords,
+                                       final_coords=coords,
                                        py_name=py_name)
 
         data.initialize()
@@ -1051,6 +1086,7 @@ class TestLookup(unittest.TestCase):
                                        root=_root,
                                        cell=cell,
                                        coords=coords,
+                                       final_coords=coords,
                                        py_name=py_name)
 
         data.initialize()
@@ -1079,6 +1115,7 @@ class TestLookup(unittest.TestCase):
                                        root=_root,
                                        cell=cell,
                                        coords=coords,
+                                       final_coords=coords,
                                        py_name=py_name)
 
         data.initialize()
@@ -1102,6 +1139,7 @@ class TestLookup(unittest.TestCase):
         cell_2 = "data_2db"
         coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C']}
         coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C']}
+        final_coords = {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']}
         py_name = "test_lookup_vn3d"
 
         data = pysd.external.ExtLookup(file_name=file_name,
@@ -1110,6 +1148,7 @@ class TestLookup(unittest.TestCase):
                                        root=_root,
                                        cell=cell_1,
                                        coords=coords_1,
+                                       final_coords=final_coords,
                                        py_name=py_name)
 
         data.add(file_name=file_name,
@@ -1140,6 +1179,7 @@ class TestLookup(unittest.TestCase):
         cell_2 = "data_2db"
         coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C']}
         coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C']}
+        final_coords = {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']}
         py_name = "test_lookup_vn3d_shape0"
 
         data = pysd.external.ExtLookup(file_name=file_name,
@@ -1148,6 +1188,7 @@ class TestLookup(unittest.TestCase):
                                        root=_root,
                                        cell=cell_1,
                                        coords=coords_1,
+                                       final_coords=final_coords,
                                        py_name=py_name)
 
         data.add(file_name=file_name,
@@ -1184,17 +1225,19 @@ class TestLookup(unittest.TestCase):
                                        root=_root,
                                        cell=cell_1,
                                        coords=coords_1,
+                                       final_coords=coords_1,
                                        py_name=py_name)
 
         data.initialize()
 
-        all_smaller = xr.DataArray([-1, -10], {'XY': ['X', 'Y']}, ['XY'])
-        all_bigger = xr.DataArray([9, 20, 30], {'ABC': ['A', 'B', 'C']},
-                                  ['ABC'])
-        all_inside = xr.DataArray([3.5, 5.5], {'XY': ['X', 'Y']}, ['XY'])
-        mixed = xr.DataArray([1.5, 20, -30], {'ABC': ['A', 'B', 'C']}, ['ABC'])
+        coords_2 = {'XY': ['X', 'Y']}
+
+        all_smaller = xr.DataArray([-1, -10], coords_2, ['XY'])
+        all_bigger = xr.DataArray([9, 20, 30], coords_1, ['ABC'])
+        all_inside = xr.DataArray([3.5, 5.5], coords_2, ['XY'])
+        mixed = xr.DataArray([1.5, 20, -30], coords_1, ['ABC'])
         full = xr.DataArray([[1.5, -30], [-10, 2.5], [4., 5.]],
-                            {'ABC': ['A', 'B', 'C'], 'XY': ['X', 'Y']},
+                            {**coords_1, **coords_2},
                             ['ABC', 'XY'])
 
         all_smaller_out = data.data[0].reset_coords('lookup_dim', drop=True)\
@@ -1203,25 +1246,30 @@ class TestLookup(unittest.TestCase):
         all_inside_out = xr.DataArray([[0.5, -1],
                                        [-1, -0.5],
                                        [-0.75, 0]],
-                                      {'ABC': ['A', 'B', 'C'],
-                                       'XY': ['X', 'Y']},
+                                      {**coords_1, **coords_2},
                                       ['ABC', 'XY'])
-        mixed_out = xr.DataArray([0.5, 0, 1],
-                                 {'ABC': ['A', 'B', 'C']},
-                                 ['ABC'])
-        full_out = xr.DataArray([[0.5, 0],
-                                 [0, 0],
-                                 [-0.5, 0]],
-                                {'ABC': ['A', 'B', 'C'], 'XY': ['X', 'Y']},
-                                ['ABC', 'XY'])
+        mixed_out = xr.DataArray([0.5, 0, 1], coords_1, ['ABC'])
+        full_out = xr.DataArray([[0.5, 0, -0.5],
+                                 [0, 0, 0]],
+                                {**coords_2, **coords_1},
+                                ['XY', 'ABC'])
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            self.assertTrue(data(all_smaller).equals(all_smaller_out))
-            self.assertTrue(data(all_bigger).equals(all_bigger_out))
-            self.assertTrue(data(all_inside).equals(all_inside_out))
-            self.assertTrue(data(mixed).equals(mixed_out))
-            self.assertTrue(data(full).equals(full_out))
+            self.assertTrue(
+                data(
+                    all_smaller, {**coords_1, **coords_2}
+                ).equals(all_smaller_out))
+            self.assertTrue(
+                data(all_bigger, coords_1).equals(all_bigger_out))
+            self.assertTrue(
+                data(
+                    all_inside, {**coords_1, **coords_2}
+                ).equals(all_inside_out))
+            self.assertTrue(
+                data(mixed, coords_1).equals(mixed_out))
+            self.assertTrue(
+                data(full, {**coords_2, **coords_1}).equals(full_out))
 
     def test_lookup_vn3d_xarray(self):
         """
@@ -1237,6 +1285,7 @@ class TestLookup(unittest.TestCase):
         cell_2 = "data_2db"
         coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C']}
         coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C']}
+        final_coords = {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']}
         py_name = "test_lookup_vn3d_xarray"
 
         data = pysd.external.ExtLookup(file_name=file_name,
@@ -1245,6 +1294,7 @@ class TestLookup(unittest.TestCase):
                                        root=_root,
                                        cell=cell_1,
                                        coords=coords_1,
+                                       final_coords=final_coords,
                                        py_name=py_name)
 
         data.add(file_name=file_name,
@@ -1283,11 +1333,16 @@ class TestLookup(unittest.TestCase):
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            self.assertTrue(data(all_smaller).equals(all_smaller_out))
-            self.assertTrue(data(all_bigger).equals(all_bigger_out))
-            self.assertTrue(data(all_inside).equals(all_inside_out))
-            self.assertTrue(data(mixed).equals(mixed_out))
-            self.assertTrue(data(full).equals(full_out))
+            self.assertTrue(
+                data(all_smaller, final_coords).equals(all_smaller_out))
+            self.assertTrue(
+                data(all_bigger, final_coords).equals(all_bigger_out))
+            self.assertTrue(
+                data(all_inside, final_coords).equals(all_inside_out))
+            self.assertTrue(
+                data(mixed, final_coords).equals(mixed_out))
+            self.assertTrue(
+                data(full, final_coords).equals(full_out))
 
 
 class TestConstant(unittest.TestCase):
@@ -1315,6 +1370,7 @@ class TestConstant(unittest.TestCase):
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
+                                         final_coords=coords,
                                          py_name=py_name)
 
         data2 = pysd.external.ExtConstant(file_name=file_name,
@@ -1322,6 +1378,7 @@ class TestConstant(unittest.TestCase):
                                           root=_root,
                                           cell=cell2,
                                           coords=coords,
+                                          final_coords=coords,
                                           py_name=py_name)
         data.initialize()
         data2.initialize()
@@ -1347,6 +1404,7 @@ class TestConstant(unittest.TestCase):
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
+                                         final_coords=coords,
                                          py_name=py_name)
 
         data2 = pysd.external.ExtConstant(file_name=file_name,
@@ -1354,6 +1412,7 @@ class TestConstant(unittest.TestCase):
                                           root=_root,
                                           cell=cell2,
                                           coords=coords,
+                                          final_coords=coords,
                                           py_name=py_name)
         data.initialize()
         data2.initialize()
@@ -1378,6 +1437,7 @@ class TestConstant(unittest.TestCase):
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
+                                         final_coords=coords,
                                          py_name=py_name)
         data.initialize()
 
@@ -1400,6 +1460,7 @@ class TestConstant(unittest.TestCase):
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
+                                         final_coords=coords,
                                          py_name=py_name)
         data.initialize()
 
@@ -1422,6 +1483,7 @@ class TestConstant(unittest.TestCase):
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
+                                         final_coords=coords,
                                          py_name=py_name)
         data.initialize()
 
@@ -1444,6 +1506,7 @@ class TestConstant(unittest.TestCase):
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
+                                         final_coords=coords,
                                          py_name=py_name)
         data.initialize()
 
@@ -1466,6 +1529,7 @@ class TestConstant(unittest.TestCase):
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
+                                         final_coords=coords,
                                          py_name=py_name)
         data.initialize()
 
@@ -1488,6 +1552,7 @@ class TestConstant(unittest.TestCase):
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
+                                         final_coords=coords,
                                          py_name=py_name)
         data.initialize()
 
@@ -1510,6 +1575,7 @@ class TestConstant(unittest.TestCase):
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
+                                         final_coords=coords,
                                          py_name=py_name)
         data.initialize()
 
@@ -1532,6 +1598,7 @@ class TestConstant(unittest.TestCase):
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
+                                         final_coords=coords,
                                          py_name=py_name)
         data.initialize()
 
@@ -1553,6 +1620,9 @@ class TestConstant(unittest.TestCase):
         coords2 = {'ABC': ['A', 'B', 'C'],
                    'XY': ['Y'],
                    'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        final_coords = {'ABC': ['A', 'B', 'C'],
+                        'XY': ['X', 'Y'],
+                        'val': [0, 1, 2, 3, 5, 6, 7, 8]}
         py_name = "test_constant_h3d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
@@ -1560,6 +1630,7 @@ class TestConstant(unittest.TestCase):
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
+                                         final_coords=final_coords,
                                          py_name=py_name)
 
         data.add(file_name=file_name,
@@ -1587,6 +1658,9 @@ class TestConstant(unittest.TestCase):
         coords2 = {'ABC': ['A', 'B', 'C'],
                    'XY': ['Y'],
                    'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        final_coords = {'ABC': ['A', 'B', 'C'],
+                        'XY': ['X', 'Y'],
+                        'val': [0, 1, 2, 3, 5, 6, 7, 8]}
         py_name = "test_constant_v3d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
@@ -1594,6 +1668,7 @@ class TestConstant(unittest.TestCase):
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
+                                         final_coords=final_coords,
                                          py_name=py_name)
 
         data.add(file_name=file_name,
@@ -1621,6 +1696,9 @@ class TestConstant(unittest.TestCase):
         coords2 = {'ABC': ['A', 'B', 'C'],
                    'XY': ['Y'],
                    'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        final_coords = {'ABC': ['A', 'B', 'C'],
+                        'XY': ['X', 'Y'],
+                        'val': [0, 1, 2, 3, 5, 6, 7, 8]}
         py_name = "test_constant_hn3d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
@@ -1628,6 +1706,7 @@ class TestConstant(unittest.TestCase):
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
+                                         final_coords=final_coords,
                                          py_name=py_name)
 
         data.add(file_name=file_name,
@@ -1655,6 +1734,9 @@ class TestConstant(unittest.TestCase):
         coords2 = {'ABC': ['A', 'B', 'C'],
                    'XY': ['Y'],
                    'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        final_coords = {'ABC': ['A', 'B', 'C'],
+                        'XY': ['X', 'Y'],
+                        'val': [0, 1, 2, 3, 5, 6, 7, 8]}
         py_name = "test_constant_vn2d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
@@ -1662,6 +1744,7 @@ class TestConstant(unittest.TestCase):
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
+                                         final_coords=final_coords,
                                          py_name=py_name)
 
         data.add(file_name=file_name,
@@ -1752,6 +1835,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         with self.assertRaises(NotImplementedError):
@@ -1778,6 +1862,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         with self.assertRaises(FileNotFoundError):
@@ -1804,6 +1889,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         with self.assertRaises(ValueError):
@@ -1830,6 +1916,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         with self.assertRaises(AttributeError):
@@ -1852,6 +1939,7 @@ class TestWarningsErrors(unittest.TestCase):
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
+                                         final_coords=coords,
                                          py_name=py_name)
 
         with self.assertRaises(AttributeError):
@@ -1883,6 +1971,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         with warnings.catch_warnings(record=True) as ws:
@@ -1916,6 +2005,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         with warnings.catch_warnings(record=True) as ws:
@@ -1951,6 +2041,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         with warnings.catch_warnings(record=True) as ws:
@@ -1995,6 +2086,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         with warnings.catch_warnings(record=True) as ws:
@@ -2038,6 +2130,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         with self.assertRaises(ValueError):
@@ -2067,6 +2160,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         with warnings.catch_warnings(record=True) as ws:
@@ -2111,6 +2205,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         with warnings.catch_warnings(record=True) as ws:
@@ -2154,6 +2249,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         with self.assertRaises(ValueError):
@@ -2183,6 +2279,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         with warnings.catch_warnings(record=True) as ws:
@@ -2227,6 +2324,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         with warnings.catch_warnings(record=True) as ws:
@@ -2270,6 +2368,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         with self.assertRaises(ValueError):
@@ -2289,6 +2388,7 @@ class TestWarningsErrors(unittest.TestCase):
         cell_2 = "data_2db"
         coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C']}
         coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C']}
+        final_coords = {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']}
         interp = "interpolate"
         py_name = "test_data_interp_hn3dmd"
 
@@ -2301,6 +2401,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      cell=cell_1,
                                      interp=interp,
                                      coords=coords_1,
+                                     final_coords=final_coords,
                                      py_name=py_name)
 
         data.add(file_name=file_name,
@@ -2348,6 +2449,7 @@ class TestWarningsErrors(unittest.TestCase):
         cell_2 = "data_2db"
         coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C']}
         coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C']}
+        final_coords = {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']}
         interp = "raw"
         py_name = "test_data_interp_hn3dmd_raw"
 
@@ -2360,6 +2462,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      cell=cell_1,
                                      interp=interp,
                                      coords=coords_1,
+                                     final_coords=final_coords,
                                      py_name=py_name)
 
         data.add(file_name=file_name,
@@ -2395,6 +2498,7 @@ class TestWarningsErrors(unittest.TestCase):
         cell_2 = "C19"
         coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C']}
         coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C']}
+        final_coords = {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']}
         py_name = "test_lookup_hn3dmd_raise"
         pysd.external.External.missing = "raise"
 
@@ -2404,6 +2508,7 @@ class TestWarningsErrors(unittest.TestCase):
                                        root=_root,
                                        cell=cell_1,
                                        coords=coords_1,
+                                       final_coords=final_coords,
                                        py_name=py_name)
 
         data.add(file_name=file_name,
@@ -2429,6 +2534,7 @@ class TestWarningsErrors(unittest.TestCase):
         cell_2 = "C19"
         coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C']}
         coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C']}
+        final_coords = {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']}
         py_name = "test_lookup_hn3dmd_ignore"
         pysd.external.External.missing = "ignore"
 
@@ -2438,6 +2544,7 @@ class TestWarningsErrors(unittest.TestCase):
                                        root=_root,
                                        cell=cell_1,
                                        coords=coords_1,
+                                       final_coords=final_coords,
                                        py_name=py_name)
 
         data.add(file_name=file_name,
@@ -2479,6 +2586,8 @@ class TestWarningsErrors(unittest.TestCase):
                     'val': [0, 1, 2, 3, 5, 6, 7, 8]}
         coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C'],
                     'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        final_coords = {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C'],
+                        'val': [0, 1, 2, 3, 5, 6, 7, 8]}
         py_name = "test_constant_h3dm"
         pysd.external.External.missing = "warning"
 
@@ -2487,6 +2596,7 @@ class TestWarningsErrors(unittest.TestCase):
                                          root=_root,
                                          cell=cell_1,
                                          coords=coords_1,
+                                         final_coords=final_coords,
                                          py_name=py_name)
 
         data.add(file_name=file_name,
@@ -2518,6 +2628,8 @@ class TestWarningsErrors(unittest.TestCase):
                     'val': [0, 1, 2, 3, 5, 6, 7, 8]}
         coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C'],
                     'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        final_coords = {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C'],
+                        'val': [0, 1, 2, 3, 5, 6, 7, 8]}
         py_name = "test_constant_h3dm_ignore"
         pysd.external.External.missing = "ignore"
 
@@ -2526,6 +2638,7 @@ class TestWarningsErrors(unittest.TestCase):
                                          root=_root,
                                          cell=cell_1,
                                          coords=coords_1,
+                                         final_coords=final_coords,
                                          py_name=py_name)
 
         data.add(file_name=file_name,
@@ -2553,6 +2666,8 @@ class TestWarningsErrors(unittest.TestCase):
                     'val': [0, 1, 2, 3, 5, 6, 7, 8]}
         coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C'],
                     'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        final_coords = {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C'],
+                        'val': [0, 1, 2, 3, 5, 6, 7, 8]}
         py_name = "test_constant_h3dm_raise"
         pysd.external.External.missing = "raise"
 
@@ -2561,6 +2676,7 @@ class TestWarningsErrors(unittest.TestCase):
                                          root=_root,
                                          cell=cell_1,
                                          coords=coords_1,
+                                         final_coords=final_coords,
                                          py_name=py_name)
 
         data.add(file_name=file_name,
@@ -2586,6 +2702,8 @@ class TestWarningsErrors(unittest.TestCase):
                     'val': [0, 1, 2, 3, 5, 6, 7, 8]}
         coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C'],
                     'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        final_coords = {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C'],
+                        'val': [0, 1, 2, 3, 5, 6, 7, 8]}
         py_name = "test_constant_hn3dm_raise"
         pysd.external.External.missing = "raise"
 
@@ -2594,6 +2712,7 @@ class TestWarningsErrors(unittest.TestCase):
                                          root=_root,
                                          cell=cell_1,
                                          coords=coords_1,
+                                         final_coords=final_coords,
                                          py_name=py_name)
 
         data.add(file_name=file_name,
@@ -2625,6 +2744,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         with self.assertRaises(ValueError):
@@ -2651,6 +2771,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         with self.assertRaises(ValueError):
@@ -2679,6 +2800,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         with self.assertRaises(ValueError):
@@ -2706,6 +2828,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         with self.assertRaises(ValueError):
@@ -2733,6 +2856,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         with self.assertRaises(ValueError):
@@ -2760,6 +2884,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         with self.assertRaises(ValueError):
@@ -2788,6 +2913,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         with self.assertRaises(ValueError) as err:
@@ -2816,6 +2942,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         data.initialize()
@@ -2839,6 +2966,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         data.initialize()
@@ -2874,6 +3002,7 @@ class TestWarningsErrors(unittest.TestCase):
                                   cell=cell,
                                   coords=coords,
                                   interp=interp,
+                                  final_coords=coords,
                                   py_name=py_name)
 
     def test_data_h3d_interp(self):
@@ -2889,8 +3018,9 @@ class TestWarningsErrors(unittest.TestCase):
         cell_2 = "C8"
         coords_1 = {'ABC': ['A', 'B', 'C'], 'XY': ['X']}
         coords_2 = {'ABC': ['A', 'B', 'C'], 'XY': ['Y']}
+        final_coords = {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']}
         interp = None
-        interp2 = "look forward"
+        interp2 = "look_forward"
         py_name = "test_data_h3d_interp"
 
         data = pysd.external.ExtData(file_name=file_name,
@@ -2900,6 +3030,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      cell=cell_1,
                                      coords=coords_1,
                                      interp=interp,
+                                     final_coords=final_coords,
                                      py_name=py_name)
 
         with self.assertRaises(ValueError):
@@ -2923,6 +3054,7 @@ class TestWarningsErrors(unittest.TestCase):
         cell_2 = "C8"
         coords_1 = {'ABC': ['A', 'B', 'C'], 'XY': ['X']}
         coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C']}
+        final_coords = {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']}
         interp = None
         py_name = "test_data_h3d_add"
 
@@ -2933,6 +3065,7 @@ class TestWarningsErrors(unittest.TestCase):
                                      cell=cell_1,
                                      coords=coords_1,
                                      interp=interp,
+                                     final_coords=final_coords,
                                      py_name=py_name)
 
         with self.assertRaises(ValueError):
@@ -2956,6 +3089,7 @@ class TestWarningsErrors(unittest.TestCase):
         cell_2 = "C8"
         coords_1 = {'ABC': ['A', 'B', 'C'], 'XY': ['X']}
         coords_2 = {'ABC': ['A', 'B', 'C']}
+        final_coords = {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']}
         py_name = "test_lookup_h3d_add"
 
         data = pysd.external.ExtLookup(file_name=file_name,
@@ -2964,6 +3098,7 @@ class TestWarningsErrors(unittest.TestCase):
                                        root=_root,
                                        cell=cell_1,
                                        coords=coords_1,
+                                       final_coords=final_coords,
                                        py_name=py_name)
 
         with self.assertRaises(ValueError):
@@ -2989,6 +3124,8 @@ class TestWarningsErrors(unittest.TestCase):
         coords2 = {'XY': ['Y'],
                    'ABC': ['A', 'B', 'C'],
                    'val2': [0, 1, 2, 3, 5, 6, 7, 8]}
+        final_coords = {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C'],
+                        'val': [0, 1, 2, 3, 5, 6, 7, 8]}
         py_name = "test_constant_h3d_add"
 
         data = pysd.external.ExtConstant(file_name=file_name,
@@ -2996,6 +3133,7 @@ class TestWarningsErrors(unittest.TestCase):
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
+                                         final_coords=final_coords,
                                          py_name=py_name)
 
         with self.assertRaises(ValueError):
@@ -3022,6 +3160,7 @@ class TestWarningsErrors(unittest.TestCase):
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
+                                         final_coords=coords,
                                          py_name=py_name)
 
         with self.assertRaises(ValueError):
@@ -3048,6 +3187,7 @@ class TestWarningsErrors(unittest.TestCase):
                                        root=_root,
                                        cell=cell,
                                        coords=coords,
+                                       final_coords=coords,
                                        py_name=py_name)
 
         expected = xr.DataArray(
@@ -3067,6 +3207,7 @@ class TestWarningsErrors(unittest.TestCase):
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
+                                         final_coords=coords,
                                          py_name=py_name)
 
         data.initialize()
@@ -3095,6 +3236,8 @@ class DownwardCompatibility(unittest.TestCase):
                     'val': [0, 1, 2, 3, 5, 6, 7, 8]}
         coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C'],
                     'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        final_coords = {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C'],
+                        'val': [0, 1, 2, 3, 5, 6, 7, 8]}
         py_name = "test_constant_hn3dm_raise"
         pysd.external.External.missing = "keep"
 
@@ -3114,6 +3257,7 @@ class DownwardCompatibility(unittest.TestCase):
                                          root=_root,
                                          cell=cell_1,
                                          coords=coords_1,
+                                         final_coords=final_coords,
                                          py_name=py_name)
 
         data.add(file_name=file_name,
@@ -3139,6 +3283,7 @@ class DownwardCompatibility(unittest.TestCase):
         cell_2 = "C19"
         coords_1 = {'XY': ['X'], 'ABC': ['A', 'B', 'C']}
         coords_2 = {'XY': ['Y'], 'ABC': ['A', 'B', 'C']}
+        final_coords = {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']}
         py_name = "test_lookup_hn3dmd_ignore"
         pysd.external.External.missing = "keep"
 
@@ -3169,6 +3314,7 @@ class DownwardCompatibility(unittest.TestCase):
                                        root=_root,
                                        cell=cell_1,
                                        coords=coords_1,
+                                       final_coords=final_coords,
                                        py_name=py_name)
 
         data.add(file_name=file_name,
@@ -3210,6 +3356,7 @@ class DownwardCompatibility(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         data.initialize()
@@ -3245,6 +3392,7 @@ class DownwardCompatibility(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         data.initialize()
@@ -3273,6 +3421,7 @@ class DownwardCompatibility(unittest.TestCase):
                                      cell=cell,
                                      coords=coords,
                                      interp=interp,
+                                     final_coords=coords,
                                      py_name=py_name)
 
         datL = pysd.external.ExtLookup(file_name=file_name,
@@ -3281,6 +3430,7 @@ class DownwardCompatibility(unittest.TestCase):
                                        root=_root,
                                        cell=cell,
                                        coords=coords,
+                                       final_coords=coords,
                                        py_name=py_name)
         datD.initialize()
         datL.initialize()

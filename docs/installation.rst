@@ -3,8 +3,7 @@ Installation
 
 Installing via pip
 ------------------
-To install the PySD package from the Python package index into an established
-Python environment, use the pip command:
+To install the PySD package from the Python package index use the pip command:
 
 .. code-block:: bash
 
@@ -12,7 +11,7 @@ Python environment, use the pip command:
 
 Installing with conda
 ---------------------
-To install PySD with conda, using the conda-forge channel, into a conda environment, use the following command:
+To install PySD with conda, using the conda-forge channel, use the following command:
 
 .. code-block:: bash
 
@@ -20,15 +19,15 @@ To install PySD with conda, using the conda-forge channel, into a conda environm
 
 Installing from source
 ----------------------
-To install from the source, clone the project with git:
+To install from source, clone the project with git:
 
 .. code-block:: bash
 
    git clone https://github.com/JamesPHoughton/pysd.git
 
-Or download the latest version from the project webpage: https://github.com/JamesPHoughton/pysd
+or download the latest version from the project repository: https://github.com/JamesPHoughton/pysd
 
-In the source directory use the command
+In the source directory use the command:
 
 .. code-block:: bash
 
@@ -38,9 +37,9 @@ In the source directory use the command
 
 Required Dependencies
 ---------------------
-PySD was originally built on python 2.7. Hoewever, the last version requires at least **python 3.7**.
+PySD requires **Python 3.7** or above.
 
-PySD calls on the core Python data analytics stack, and a third party parsing library:
+PySD builds on the core Python data analytics stack, and the following third party libraries:
 
 * Numpy
 * Scipy
@@ -53,16 +52,16 @@ PySD calls on the core Python data analytics stack, and a third party parsing li
 * chardet
 * black
 * openpyxl
-* progressbar
+* progressbar2
 
 These modules should build automatically if you are installing via `pip`. If you are building from
-the source code, or if pip fails to load them, they can be loaded with the same `pip` syntax as
+source, or if pip fails to load them, they can be loaded with the same `pip` syntax as
 above.
 
 
 Optional Dependencies
 ---------------------
-In order to plot results from the model as shown in :doc:`basic usage <../basic_usage>`:
+In order to plot model outputs as shown in :doc:`Getting started <../getting_started>`:
 
 * Matplotlib
 
@@ -77,7 +76,7 @@ These Python libraries bring additional data analytics capabilities to the analy
 Additionally, the System Dynamics Translator utility developed by Robert Ward is useful for
 translating models from other system dynamics formats into the XMILE standard, to be read by PySD.
 
-These modules can be installed using pip with syntax similar to the above.
+These modules can be installed using pip with a syntax similar to the above.
 
 
 Additional Resources

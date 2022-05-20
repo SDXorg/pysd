@@ -11,3 +11,4 @@ tests/cover/
 tests/htmlcov/
 .idea/*
 docs/_build/*
+docs/tables/*.csv

@@ -1,0 +1,36 @@
+{UTF-8}
+incomplete var  = A FUNCTION OF( Time)
+	~
+	~		|
+
+not implemented function=
+	MY FUNC(Time)
+	~
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 1
+	~	Month
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Month
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  =
+        TIME STEP
+	~	Month [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 1
+	~	Month [0,?]
+	~	The time step for the simulation.
+	|

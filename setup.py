@@ -29,8 +29,8 @@ setup(
     ],
     install_requires=open('requirements.txt').read().strip().split('\n'),
     package_data={
-        'translation': [
-            'xmile/smile.grammar'
+        'translators': [
+            '*/parsing_grammars/*.peg'
         ]
     },
     include_package_data=True

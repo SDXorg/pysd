@@ -1,7 +1,7 @@
 Tools
 =====
 
-Some tools are given with the library.
+Some additional tools are provided with the library.
 
 Benchmarking
 ------------

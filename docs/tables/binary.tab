@@ -1,0 +1,15 @@
+Vensim	Vensim example	Xmile	Xmile example	Abstract Syntax	Python Translation	Vensim comments	Xmile comments	Python comments
+^	A ^ B	^	A ^ B	"ArithmeticStructure(['^'], (A, B))"	A**B
+"\*"	A * B	"\*"	A * B	"ArithmeticStructure(['*'], (A, B))"	A*B
+/	A / B	/	A / B	"ArithmeticStructure(['/'], (A, B))"	A/B
+		mod	A mod B	"CallStructure('modulo', (A, B))"	"pysd.functions.modulo(A, B)"
+"\+"	A + B	"\+"	A + B	"ArithmeticStructure(['+'], (A, B))"	A+B
+"\-"	A - B	"\-"	A - B	"ArithmeticStructure(['-'], (A, B))"	A-B
+=	A = B	=	A = B	"LogicStructure(['='], (A, B))"	A == B
+<>	A <> B	<>	A <> B	"LogicStructure(['<>'], (A, B))"	A != B
+<	A < B	<	A < B	"LogicStructure(['<'], (A, B))"	A < B
+>	A > B	>	A > B	"LogicStructure(['>'], (A, B))"	A > B
+>=	A >= B	>=	A >= B	"LogicStructure(['>='], (A, B))"	A >= B
+<=	A <= B	<=	A <= B	"LogicStructure(['<='], (A, B))"	A <= B
+"\:AND:"	A :AND: B	and	A and B	"LogicStructure([':AND:'], (A, B))"	"numpy.and(A, B)"
+"\:OR:"	A :OR: B	or	A or B	"LogicStructure([':OR:'], (A, B))"	"numpy.or(A, B)"

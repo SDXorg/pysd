@@ -1,5 +1,6 @@
 import warnings
 import re
+import random
 from pathlib import Path
 
 import numpy as np
@@ -50,6 +51,8 @@ class Columns():
             indicate if the output file is transposed.
 
         """
+        # in the most cases variables will be split per columns, then
+        # read the first row to have all the column names
         out = cls.read_line(file_name, encoding)
         if out is None:
             raise ValueError(
@@ -59,10 +62,16 @@ class Columns():
         transpose = False
 
         try:
-            [float(col) for col in out]
-            out = cls.read_row(file_name, encoding)
+            # if we fail converting columns to float then they are
+            # not numeric values, so current direction is okay
+            [float(col) for col in random.sample(out, min(3, len(out)))]
+            # we did not fail, read the first column to see if variables
+            # are split per rows
+            out = cls.read_col(file_name, encoding)
             transpose = True
-            [float(col) for col in out]
+            # if we still are able to transform values to float the
+            # file is not valid
+            [float(col) for col in random.sample(out, min(3, len(out)))]
         except ValueError:
             return out, transpose
         else:
@@ -91,7 +100,7 @@ class Columns():
             return None
 
     @classmethod
-    def read_row(cls, file_name, encoding=None):
+    def read_col(cls, file_name, encoding=None):
         """
         Read the firts column and return a set of it.
         """
@@ -172,12 +181,38 @@ class Data(object):
     # as Data
     # def __init__(self, data, coords, interp="interpolate"):
 
+    def set_values(self, values):
+        """Set new values from user input"""
+        self.data = xr.DataArray(
+            np.nan, self.final_coords, list(self.final_coords))
+
+        if isinstance(values, pd.Series):
+            index = list(values.index)
+            index.sort()
+            self.data = self.data.expand_dims(
+                {'time': index}, axis=0).copy()
+
+            for index, value in values.items():
+                if isinstance(values.values[0], xr.DataArray):
+                    self.data.loc[index].loc[value.coords] =\
+                        value
+                else:
+                    self.data.loc[index] = value
+        else:
+            if isinstance(values, xr.DataArray):
+                self.data.loc[values.coords] = values.values
+            else:
+                if self.final_coords:
+                    self.data.loc[:] = values
+                else:
+                    self.data = values
+
     def __call__(self, time):
         try:
             if time in self.data['time'].values:
                 outdata = self.data.sel(time=time)
             elif self.interp == "raw":
-                return np.nan
+                return self.nan
             elif time > self.data['time'].values[-1]:
                 warnings.warn(
                     self.py_name + "\n"
@@ -190,9 +225,9 @@ class Data(object):
                 outdata = self.data[0]
             elif self.interp == "interpolate":
                 outdata = self.data.interp(time=time)
-            elif self.interp == 'look forward':
+            elif self.interp == 'look_forward':
                 outdata = self.data.sel(time=time, method="backfill")
-            elif self.interp == 'hold backward':
+            elif self.interp == 'hold_backward':
                 outdata = self.data.sel(time=time, method="pad")
 
             if self.is_float:
@@ -201,28 +236,39 @@ class Data(object):
             else:
                 # Remove time coord from the DataArray
                 return outdata.reset_coords('time', drop=True)
-        except Exception as err:
+        except (TypeError, KeyError):
             if self.data is None:
                 raise ValueError(
                     self.py_name + "\n"
                     "Trying to interpolate data variable before loading"
                     " the data...")
-            else:
-                # raise any other possible error
-                raise err
+
+            # this except catch the errors when a data has been
+            # changed to a constant value by the user
+            return self.data
+        except Exception as err:
+            raise err
 
 
 class TabData(Data):
     """
-    Data from tabular file tab/cls, it could be from Vensim output.
+    Data from tabular file tab/csv, it could be from Vensim output.
     """
     def __init__(self, real_name, py_name, coords, interp="interpolate"):
         self.real_name = real_name
         self.py_name = py_name
         self.coords = coords
-        self.interp = interp
+        self.final_coords = coords
+        self.interp = interp.replace(" ", "_") if interp else None
         self.is_float = not bool(coords)
         self.data = None
+
+        if self.interp not in ["interpolate", "raw",
+                               "look_forward", "hold_backward"]:
+            raise ValueError(self.py_name + "\n"
+                             + "The interpolation method (interp) must be "
+                             + "'raw', 'interpolate', "
+                             + "'look_forward' or 'hold_backward'")
 
     def load_data(self, file_names):
         """
@@ -279,6 +325,7 @@ class TabData(Data):
 
         if not self.coords:
             # 0 dimensional data
+            self.nan = np.nan
             values = load_outputs(file_name, transpose, columns=columns)
             return xr.DataArray(
                 values.iloc[:, 0].values,
@@ -290,6 +337,7 @@ class TabData(Data):
 
         values = load_outputs(file_name, transpose, columns=columns)
 
+        self.nan = xr.DataArray(np.nan, self.coords, dims)
         out = xr.DataArray(
             np.nan,
             {'time': values.index.values, **self.coords},

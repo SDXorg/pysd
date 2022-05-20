@@ -20,11 +20,16 @@ import sphinx_rtd_theme
 
 sys.path.insert(0, os.path.abspath('../'))
 
+from docs.generate_tables import generate_tables
+
+
+# Generate tables used for documentation
+generate_tables()
 
 MOCK_MODULES = [
     'numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot', 'scipy.stats',
     'scipy.integrate', 'pandas', 'parsimonious', 'parsimonious.nodes',
-    'lxml', 'xarray', 'autopep8', 'scipy.linalg', 'parsimonious.exceptions',
+    'xarray', 'autopep8', 'scipy.linalg', 'parsimonious.exceptions',
     'scipy.stats.distributions', 'progressbar', 'black'
 ]
 
@@ -48,8 +53,14 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.napoleon',
-    'sphinx.ext.intersphinx'
+    'sphinx.ext.intersphinx',
+    "sphinx.ext.extlinks"
 ]
+
+extlinks = {
+    "issue": ("https://github.com/JamesPHoughton/pysd/issues/%s", "issue #%s"),
+    "pull": ("https://github.com/JamesPHoughton/pysd/pull/%s", "PR #%s"),
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -138,5 +149,10 @@ texinfo_documents = [
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3.7', None),
     'pysdcookbook': ('http://pysd-cookbook.readthedocs.org/en/latest/', None),
-    'pandas': ('https://pandas.pydata.org/docs/', None)
+    'pandas': ('https://pandas.pydata.org/docs/', None),
+    'xarray': ('https://docs.xarray.dev/en/stable/', None),
+    'numpy': ('https://numpy.org/doc/stable/', None)
 }
+
+# -- Options for autodoc --------------------------------------------------
+autodoc_member_order = 'bysource'

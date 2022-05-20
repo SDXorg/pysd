@@ -15,35 +15,6 @@ import xarray as xr
 import pandas as pd
 
 
-def xrmerge(*das):
-    """
-    Merges xarrays with different dimension sets.
-
-    Parameters
-    ----------
-    *das: xarray.DataArrays
-        The data arrays to merge.
-
-
-    Returns
-    -------
-    da: xarray.DataArray
-        Merged data array.
-
-    References
-    ----------
-    Thanks to @jcmgray
-    https://github.com/pydata/xarray/issues/742#issue-130753818
-
-    In the future, we may not need this as xarray may provide the merge for us.
-    """
-    da = das[0]
-    for new_da in das[1:]:
-        da = da.combine_first(new_da)
-
-    return da
-
-
 def xrsplit(array):
     """
     Split an array to a list of all the components.
@@ -69,7 +40,7 @@ def get_return_elements(return_columns, namespace):
     """
     Takes a list of return elements formatted in vensim's format
     Varname[Sub1, SUb2]
-    and returns first the model elements (in python safe language)
+    and returns first the model elements (in Python safe language)
     that need to be computed and collected, and secondly the addresses
     that each element in the return columns list translates to
 
@@ -189,12 +160,14 @@ def _add_flat(savedict, name, values):
     """
     # remove subscripts from name if given
     name = re.sub(r'\[.*\]', '', name)
+    dims = values[0].dims
+
     # split values in xarray.DataArray
     lval = [xrsplit(val) for val in values]
     for i, ar in enumerate(lval[0]):
         vals = [float(v[i]) for v in lval]
         subs = '[' + ','.join([str(ar.coords[dim].values)
-                               for dim in list(ar.coords)]) + ']'
+                               for dim in dims]) + ']'
         savedict[name+subs] = vals
 
 
@@ -330,11 +303,11 @@ def load_model_data(root, model_name):
 
     """
     Used for models split in several files.
-    Loads subscripts_dic, namespace and modules dictionaries
+    Loads subscripts and modules dictionaries
 
     Parameters
     ----------
-    root: pathlib.Path or str
+    root: pathlib.Path
         Path to the model file.
 
     model_name: str
@@ -342,10 +315,6 @@ def load_model_data(root, model_name):
 
     Returns
     -------
-    namespace: dict
-        Translation from original model element names (keys) to python safe
-        function identifiers (values).
-
     subscripts: dict
         Dictionary describing the possible dimensions of the stock's
         subscripts.
@@ -355,25 +324,15 @@ def load_model_data(root, model_name):
         corresponding variables as values.
 
     """
-    if isinstance(root, str):  # pragma: no cover
-        # backwards compatibility
-        # TODO: remove with PySD 3.0.0
-        root = Path(root)
-
     with open(root.joinpath("_subscripts_" + model_name + ".json")) as subs:
         subscripts = json.load(subs)
-
-    with open(root.joinpath("_namespace_" + model_name + ".json")) as names:
-        namespace = json.load(names)
-    with open(root.joinpath("_dependencies_" + model_name + ".json")) as deps:
-        dependencies = json.load(deps)
 
     # the _modules.json in the sketch_var folder shows to which module each
     # variable belongs
     with open(root.joinpath("modules_" + model_name, "_modules.json")) as mods:
         modules = json.load(mods)
 
-    return namespace, subscripts, dependencies, modules
+    return subscripts, modules
 
 
 def load_modules(module_name, module_content, work_dir, submodules):
@@ -393,7 +352,7 @@ def load_modules(module_name, module_content, work_dir, submodules):
         module has submodules, whereas if it is a list it means that that
         particular module/submodule is a final one.
 
-    work_dir: str
+    work_dir: pathlib.Path
         Path to the module file.
 
     submodules: list
@@ -408,11 +367,6 @@ def load_modules(module_name, module_content, work_dir, submodules):
         model file.
 
     """
-    if isinstance(work_dir, str):  # pragma: no cover
-        # backwards compatibility
-        # TODO: remove with PySD 3.0.0
-        work_dir = Path(work_dir)
-
     if isinstance(module_content, list):
         with open(work_dir.joinpath(module_name + ".py"), "r",
                   encoding="UTF-8") as mod:

@@ -6,7 +6,9 @@ normal operation.
 """
 
 import sys
-from .py_backend.statefuls import Model
+
+from pysd.py_backend.model import Model
+
 
 if sys.version_info[:2] < (3, 7):  # pragma: no cover
     raise RuntimeError(
@@ -25,12 +27,12 @@ if sys.version_info[:2] < (3, 7):  # pragma: no cover
 def read_xmile(xmile_file, data_files=None, initialize=True,
                missing_values="warning"):
     """
-    Construct a model from `.xmile` file.
+    Construct a model from a Xmile file.
 
     Parameters
     ----------
-    xmile_file : str
-        The relative path filename for a raw `.xmile` file.
+    xmile_file:  str or pathlib.Path
+        The relative path filename for a raw Xmile file.
 
     initialize: bool (optional)
         If False, the model will not be initialize when it is loaded.
@@ -51,7 +53,7 @@ def read_xmile(xmile_file, data_files=None, initialize=True,
     Returns
     -------
     model: a PySD class object
-        Elements from the python model are loaded into the PySD class
+        Elements from the Python model are loaded into the PySD class
         and ready to run
 
     Examples
@@ -59,11 +61,23 @@ def read_xmile(xmile_file, data_files=None, initialize=True,
     >>> model = read_xmile('../tests/test-models/samples/teacup/teacup.xmile')
 
     """
-    from .translation.xmile.xmile2py import translate_xmile
+    from pysd.translators.xmile.xmile_file import XmileFile
+    from pysd.builders.python.python_model_builder import ModelBuilder
 
-    py_model_file = translate_xmile(xmile_file)
+    # Read and parse Xmile file
+    xmile_file_obj = XmileFile(xmile_file)
+    xmile_file_obj.parse()
+
+    # get AbstractModel
+    abs_model = xmile_file_obj.get_abstract_model()
+
+    # build Python file
+    py_model_file = ModelBuilder(abs_model).build_model()
+
+    # load Python file
     model = load(py_model_file, data_files, initialize, missing_values)
-    model.xmile_file = xmile_file
+    model.xmile_file = str(xmile_file)
+
     return model
 
 
@@ -75,7 +89,7 @@ def read_vensim(mdl_file, data_files=None, initialize=True,
 
     Parameters
     ----------
-    mdl_file : str
+    mdl_file: str or pathlib.Path
         The relative path filename for a raw Vensim `.mdl` file.
 
     initialize: bool (optional)
@@ -86,7 +100,7 @@ def read_vensim(mdl_file, data_files=None, initialize=True,
         If given the list of files where the necessary data to run the model
         is given. Default is None.
 
-    missing_values : str ("warning", "error", "ignore", "keep") (optional)
+    missing_values: str ("warning", "error", "ignore", "keep") (optional)
         What to do with missing values. If "warning" (default)
         shows a warning message and interpolates the values.
         If "raise" raises an error. If "ignore" interpolates
@@ -96,7 +110,7 @@ def read_vensim(mdl_file, data_files=None, initialize=True,
 
     split_views: bool (optional)
         If True, the sketch is parsed to detect model elements in each
-        model view, and then translate each view in a separate python
+        model view, and then translate each view in a separate Python
         file. Setting this argument to True is recommended for large
         models split in many different views. Default is False.
 
@@ -105,18 +119,18 @@ def read_vensim(mdl_file, data_files=None, initialize=True,
         read from the model, if the encoding is not defined in the model
         file it will be set to 'UTF-8'. Default is None.
 
+    subview_sep: list
+        Characters used to separate views and subviews (e.g. [",", "."]).
+        If provided, and split_views=True, each submodule will be placed
+        inside the directory of the parent view.
+
     **kwargs: (optional)
         Additional keyword arguments for translation.
-        subview_sep: list
-            Characters used to separate views and subviews (e.g. [",", "."]).
-            If provided, and split_views=True, each submodule will be placed
-            inside the directory of the parent view.
-
 
     Returns
     -------
     model: a PySD class object
-        Elements from the python model are loaded into the PySD class
+        Elements from the Python model are loaded into the PySD class
         and ready to run
 
     Examples
@@ -124,32 +138,49 @@ def read_vensim(mdl_file, data_files=None, initialize=True,
     >>> model = read_vensim('../tests/test-models/samples/teacup/teacup.mdl')
 
     """
-    from .translation.vensim.vensim2py import translate_vensim
+    from pysd.translators.vensim.vensim_file import VensimFile
+    from pysd.builders.python.python_model_builder import ModelBuilder
+    # Read and parse Vensim file
+    ven_file = VensimFile(mdl_file, encoding=encoding)
+    ven_file.parse()
+    if split_views:
+        # split variables per views
+        subview_sep = kwargs.get("subview_sep", "")
+        ven_file.parse_sketch(subview_sep)
 
-    py_model_file = translate_vensim(mdl_file, split_views, encoding, **kwargs)
+    # get AbstractModel
+    abs_model = ven_file.get_abstract_model()
+
+    # build Python file
+    py_model_file = ModelBuilder(abs_model).build_model()
+
+    # load Python file
     model = load(py_model_file, data_files, initialize, missing_values)
     model.mdl_file = str(mdl_file)
+
     return model
 
 
 def load(py_model_file, data_files=None, initialize=True,
          missing_values="warning"):
     """
-    Load a python-converted model file.
+    Load a Python-converted model file.
 
     Parameters
     ----------
     py_model_file : str
         Filename of a model which has already been converted into a
-        python format.
+        Python format.
 
     initialize: bool (optional)
         If False, the model will not be initialize when it is loaded.
         Default is True.
 
-    data_files: list or str or None (optional)
-        If given the list of files where the necessary data to run the model
-        is given. Default is None.
+    data_files: dict or list or str or None
+        The dictionary with keys the name of file and variables to
+        load the data from there. Or the list of names or name of the
+        file to search the data in. Only works for TabData type object
+        and it is neccessary to provide it. Default is None.
 
     missing_values : str ("warning", "error", "ignore", "keep") (optional)
         What to do with missing values. If "warning" (default)

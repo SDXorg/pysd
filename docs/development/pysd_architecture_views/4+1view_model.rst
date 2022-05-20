@@ -2,6 +2,11 @@ The "4+1" Model View of Software Architecture
 =============================================
 .. _4+1 model view: https://www.cs.ubc.ca/~gregor/teaching/papers/4+1view-architecture.pdf
 
+
+.. warning::
+  This page is outdated as it was written for PySD 2.x. However, the content here could be useful for developers.
+  For PySD 3+ architecture see :doc:`Structure of the PySD module  <../../structure/structure_index>`.
+
 The `4+1 model view`_, designed by Philippe Krutchen, presents a way to describe the architecture of software systems, using multiple and concurrent views. This use of multiple views allows to address separately the concerns of the various 'stakeholders' of the architecture such as end-user, developers, systems engineers, project managers, etc.
 
 The software architecture deals with abstraction, with decomposition and composition, with style and system's esthetic. To describe a software architecture, we use a model formed by multiple views or perspectives. That model is made up of five main views: logical view, development view, process view, physical view and scenarios or user cases.

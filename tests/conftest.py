@@ -8,6 +8,12 @@ def _root():
     return Path(__file__).parent.resolve()
 
 
+@pytest.fixture(scope="session")
+def _test_models(_root):
+    # test-models directory
+    return _root.joinpath("test-models/tests")
+
+
 @pytest.fixture(scope="class")
 def shared_tmpdir(tmpdir_factory):
     # shared temporary directory for each class

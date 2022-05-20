@@ -1,5 +1,6 @@
 PySD
 ====
+
 [![Coverage Status](https://coveralls.io/repos/github/JamesPHoughton/pysd/badge.svg?branch=master)](https://coveralls.io/github/JamesPHoughton/pysd?branch=master)
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/pysd/badges/version.svg)](https://anaconda.org/conda-forge/pysd)
 [![PyPI version](https://badge.fury.io/py/pysd.svg)](https://badge.fury.io/py/pysd)
@@ -13,16 +14,14 @@ Simulating System Dynamics Models in Python
 
 This project is a simple library for running [System Dynamics](http://en.wikipedia.org/wiki/System_dynamics) models in python, with the purpose of improving integration of *Big Data* and *Machine Learning* into the SD workflow.
 
-**The current version needs to run at least Python 3.7. If you need support for Python 2, please use the release here: https://github.com/JamesPHoughton/pysd/releases/tag/LastPy2**
-
-**table2py feature was dropped in version 2.0.0, please use the release here if you want to build PySD model from a tabular file: https://github.com/JamesPHoughton/pysd/releases/tag/v1.11.0**
+**The current version needs to run at least Python 3.7.**
 
 ### Resources
+
 See the [project documentation](http://pysd.readthedocs.org/) for information about:
 
 - [Installation](http://pysd.readthedocs.org/en/latest/installation.html)
-- [Basic Usage](http://pysd.readthedocs.org/en/latest/basic_usage.html)
-- [Function Reference](http://pysd.readthedocs.org/en/latest/functions.html)
+- [Getting Started](http://pysd.readthedocs.org/en/latest/getting_started.html)
 
 For standard methods for data analysis with SD models, see the  [PySD Cookbook](https://github.com/JamesPHoughton/PySD-Cookbook), containing (for example):
 
@@ -37,7 +36,6 @@ If you use PySD in any published work, consider citing the [PySD Introductory Pa
 You can also cite the library using the [DOI provided by Zenodo](https://zenodo.org/search?page=1&size=20&q=pysd). It is recomendable to specify the used PySD version and its correspondent DOI. If you want to cite all versions you can use the generic DOI for PySD instead:
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5654824.svg)](https://doi.org/10.5281/zenodo.5654824)
-
 
 ### Why create a new SD simulation engine?
 
