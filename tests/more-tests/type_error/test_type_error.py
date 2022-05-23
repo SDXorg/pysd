@@ -1,6 +1,8 @@
-from pysd import external
+from pysd import external, Component
 
+__pysd_version__ = "3.0.0"
 _root = './'
 
-external.ExtData('input.xlsx', 'Sheet1', '5', 'B6',
-                 None, {}, [], _root, '_ext_data')
+component = Component()
+
+external.ExtData('input.xlsx', 'Sheet1', '5', 'B6')

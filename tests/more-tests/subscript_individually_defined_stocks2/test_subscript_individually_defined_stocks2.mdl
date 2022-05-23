@@ -23,9 +23,9 @@ Third Dimension Subscript:
 	~		|
 	
 Initial Values[One Dimensional Subscript,Second Dimension Subscript,Depth 1]=
-	Initial Values A ~~|
+	Initial Values A[One Dimensional Subscript,Second Dimension Subscript] ~~|
 Initial Values[One Dimensional Subscript,Second Dimension Subscript,Depth 2]=
-	Initial Values B
+	Initial Values B[One Dimensional Subscript,Second Dimension Subscript]
 	~	
 	~		|
 	

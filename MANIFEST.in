@@ -1,4 +1,4 @@
 include requirements.txt
 include README.md
 include LICENSE
-include pysd/translation/xmile/smile.grammar
+graft pysd/translators/*/parsing_grammars

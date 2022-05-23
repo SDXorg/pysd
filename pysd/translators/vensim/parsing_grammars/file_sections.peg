@@ -1,0 +1,15 @@
+# Parsing Expression Grammar: file_sections
+
+# full file
+file = encoding? _ ((macro / main) _)+
+
+# macro definition
+macro = ":MACRO:" _ name _ "(" _ (name _ ","? _)+ _ ":"? _ (name _ ","? _)* _ ")" ~r".+?(?=:END OF MACRO:)" ":END OF MACRO:"
+
+# regular expressions
+main = main_part / main_end
+main_part = !":MACRO:" ~r".+(?=:MACRO:)"
+main_end = !":MACRO:" ~r".+"
+
+# encoding
+encoding = ~r"\{[^\}]*\}"

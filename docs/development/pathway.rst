@@ -2,7 +2,7 @@ PySD Development Pathway
 ========================
 
 High priority features, bugs, and other elements of active effort are listed on the `github issue
-tracker. <https://github.com/JamesPHoughton/pysd/issues>`_ To get involved see :doc:`contributing`.
+tracker. <https://github.com/JamesPHoughton/pysd/issues>`_ To get involved see :doc:`guidelines`.
 
 
 High Priority
@@ -14,7 +14,7 @@ High Priority
 
 Medium Priority
 ---------------
-* Improve model exexution speed using cython, theano, numba, or another package
+* Improve model execution speed using cython, theano, numba, or another package
 
 
 Low Priority
@@ -42,8 +42,8 @@ Current Features
 
 * Basic XMILE and Vensim parser
 * Established library structure and data formats
-* Simulation using existing python integration tools
-* Integration with basic python Data Science functionality
+* Simulation using existing Python integration tools
+* Integration with basic Python Data Science functionality
 * Run-at-a-time parameter modification
 * Time-variant exogenous inputs
 * Extended backends for storing parameters and output values

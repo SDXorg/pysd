@@ -1,0 +1,4 @@
+Vensim	Vensim example	Xmile	Xmile example	Abstract Syntax	Python Translation	Vensim comments	Xmile comments	Python comments
+"\-"	-A	"\-"	-A	"LogicStructure(['negative'], (A,))"	-A
+"\+"	+A	"\+"	+A	A	A
+"\:NOT:"	"\:NOT: A"	not	not A	"LogicStructure([':NOT:'], (A,))"	numpy.not(A)

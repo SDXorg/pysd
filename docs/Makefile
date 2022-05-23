@@ -48,8 +48,11 @@ help:
 	@echo "  doctest    to run all doctests embedded in the documentation (if enabled)"
 	@echo "  coverage   to run coverage check of the documentation (if enabled)"
 
-clean:
+clean: clean_tables
 	rm -rf $(BUILDDIR)/*
+
+clean_tables:
+	rm -f tables/*.csv
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html

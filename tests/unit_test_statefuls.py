@@ -1,13 +1,12 @@
 import unittest
-import os
 import warnings
-
+from pathlib import Path
 
 import xarray as xr
 
-_root = os.path.dirname(__file__)
+_root = Path(__file__).parent
 
-more_tests = os.path.join(_root, "more-tests")
+more_tests = _root / "more-tests"
 
 
 class TestStateful(unittest.TestCase):
@@ -222,6 +221,7 @@ class TestStateful(unittest.TestCase):
         frcst = Forecast(forecast_input=input,
                          average_time=lambda: 3,
                          horizon=lambda: 10,
+                         initial_trend=lambda: 0,
                          py_name='forecast')
 
         frcst.initialize()
@@ -238,11 +238,13 @@ class TestStateful(unittest.TestCase):
             input_val*(1+(input_val-frcst.state)/(3*frcst.state)*10))
 
         input_val = 7
-        init_val = 6
-        frcst.initialize(init_val)
+        init_trend = 6
+
+        frcst.initialize(init_trend)
         self.assertEqual(
             frcst(),
-            input_val*(1+(input_val-init_val)/(3*init_val)*10))
+            input_val * (1+(input_val-input_val/(1+init_trend))
+                         / (3*input_val/(1+init_trend))*10))
 
     def test_initial(self):
         from pysd.py_backend.statefuls import Initial
@@ -354,9 +356,12 @@ class TestStatefulErrors(unittest.TestCase):
 
 class TestMacroMethods(unittest.TestCase):
     def test_get_elements_to_initialize(self):
-        from pysd.py_backend.statefuls import Macro
+        from pysd import read_vensim
+        from pysd.py_backend.model import Macro
 
-        macro = Macro(more_tests + "/version/test_current_version.py")
+        test_model = _root.joinpath("test-models/samples/teacup/teacup.mdl")
+        read_vensim(test_model)
+        macro = Macro(test_model.with_suffix(".py"))
 
         macro.stateful_initial_dependencies = {
             "A": {"B", "C"},

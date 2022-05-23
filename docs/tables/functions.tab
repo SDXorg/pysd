@@ -1,0 +1,38 @@
+Vensim	Vensim example	Xmile	Xmile example	Abstract Syntax	Python Translation	Vensim comments	Xmile comments	Python comments
+ABS	ABS(A)	abs(A)	abs(A)	"CallStructure('abs', (A,))"	numpy.abs(A)
+MIN	"MIN(A, B)"	min	"min(A, B)"	"CallStructure('min', (A, B))"	"numpy.minimum(A, B)"
+MAX	"MAX(A, B)"	max	"max(A, B)"	"CallStructure('max', (A, B))"	"numpy.maximum(A, B)"
+SQRT	SQRT(A)	sqrt	sqrt(A)	"CallStructure('sqrt', (A,))"	numpy.sqrt
+EXP	EXP(A)	exp	exp(A)	"CallStructure('exp', (A,))"	numpy.exp(A)
+LN	LN(A)	ln	ln(A)	"CallStructure('ln', (A,))"	numpy.log(A)
+SIN	SIN(A)	sin	sin(A)	"CallStructure('sin', (A,))"	numpy.sin(A)
+COS	COS(A)	cos	cos(A)	"CallStructure('cos', (A,))"	numpy.cos(A)
+TAN	TAN(A)	tan	tan(A)	"CallStructure('tan', (A,))"	numpy.tan(A)
+ARCSIN	ARCSIN(A)	arcsin	arcsin(A)	"CallStructure('arcsin', (A,))"	numpy.arcsin(A)
+ARCCOS	ARCCOS(A)	arccos	arccos(A)	"CallStructure('arccos', (A,))"	numpy.arccos(A)
+ARCTAN	ARCTAN(A)	arctan	arctan(A)	"CallStructure('arctan', (A,))"	numpy.arctan(A)
+INVERT MATRIX	INVERT MATRIX(A)			"CallStructure('invert_matrix', (A,))"	pysd.functions.invert_matrix(A)
+ELMCOUNT	ELMCOUNT(A)			"CallStructure('elmcount', (A,))"	len(A)
+INTEGER	INTEGER(A)	int	int(A)	"CallStructure('int', (A,))"	pysd.functions.integer(A)
+QUANTUM	"QUANTUM(A, B)"			"CallStructure('quantum', (A, B))"	"pysd.functions.quantum(A, B)"
+MODULO	"MODULO(A, B)"			"CallStructure('modulo', (A, B))"	"pysd.functions.modulo(A, B)"
+IF THEN ELSE	"IF THEN ELSE(A, B, C)"	if_then_else	"if_then_else(A, B, C)"	"CallStructure('if_then_else', (A, B))"	"pysd.functions.if_then_else(A, lambda: B, lambda: C)"
+		IF condition THEN value_true ELSE value_false	IF A THEN B ELSE C	"CallStructure('if_then_else', (A, B))"	"pysd.functions.if_then_else(A, lambda: B, lambda: C)"
+XIDZ	"XIDZ(A, B, X)"	safediv	"safediv(A, B, X)"	"CallStructure('xidz', (A, B, X))"	"pysd.functions.xidz(A, B, X)"
+ZIDZ	"ZIDZ(A, B)"	safediv	"safediv(A, B)"	"CallStructure('zidz', (A, B))"	"pysd.functions.zidz(A, B)"
+
+VMIN	VMIN(A)			"CallStructure('vmin', (A,))"	pysd.functions.vmin(A)
+VMAX	VMAX(A)			"CallStructure('vmax', (A,))"	pysd.functions.vmax(A)
+SUM	SUM(A)			"CallStructure('sum', (A,))"	pysd.functions.sum(A)
+PROD	PROD(A)			"CallStructure('prod', (A,))"	pysd.functions.prod(A)
+
+PULSE	PULSE(start, width)			"CallStructure('pulse', (start, width))"	pysd.functions.pulse(start, width=width)
+		pulse	pulse(magnitude, start)	"CallStructure('Xpulse', (start, magnitude))"	pysd.functions.pulse(start, magnitude=magnitude)		Not tested for Xmile!
+		pulse	pulse(magnitude, start, interval)	"CallStructure('Xpulse_train', (start, interval, magnitude))"	pysd.functions.pulse(start, repeat_time=interval, magnitude=magnitude)		Not tested for Xmile!
+PULSE TRAIN	PULSE TRAIN(start, width, tbetween, end)			"CallStructure('pulse_train', (start, tbetween, width, end))"	pysd.functions.pulse(start, repeat_time=tbetween, width=width, end=end)
+RAMP	RAMP(slope, start_time, end_time)	ramp	ramp(slope, start_time, end_time)	"CallStructure('ramp', (slope, start_time, end_time))"	pysd.functions.ramp(time, slope, start_time, end_time)		Not tested for Xmile!
+		ramp	ramp(slope, start_time)	"CallStructure('ramp', (slope, start_time))"	pysd.functions.ramp(time, slope, start_time)		Not tested for Xmile!
+STEP	STEP(height, step_time)	step	step(height, step_time)	"CallStructure('step', (height, step_time))"	pysd.functions.step(time, height, step_time)		Not tested for Xmile!
+GAME	GAME(A)			GameStructure(A)	A
+INITIAL	INITIAL(value)	init	init(value)	InitialStructure(value)	pysd.statefuls.Initial
+SAMPLE IF TRUE	"SAMPLE IF TRUE(condition, input, initial_value)"			"SampleIfTrueStructure(condition, input, initial_value)"	pysd.statefuls.SampleIfTrue(...)

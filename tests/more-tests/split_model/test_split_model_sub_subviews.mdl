@@ -2,63 +2,63 @@
 other stock= INTEG (
 	var tolo,
 		0)
-	~	
+	~
 	~		|
 
 interesting var 2 looked up=
 	look up definition(interesting var 2)
-	~	
+	~
 	~		|
 
 look up definition(
 	(1,0), (10,1), (50,1.5), (100,4), (1000,5), (10000,3), (100000,4))
-	~	
+	~
 	~		|
 
 var tolo=
 	55+great var
-	~	
+	~
 	~		|
 
 great var=
 	5
-	~	
+	~
 	~		|
 
 interesting var 1=
 	"variable-x"+1
-	~	
+	~
 	~		|
 
 interesting var 2=
 	interesting var 1*5
-	~	
+	~
 	~		|
 
 another var=
 	3*Stock
-	~	
+	~
 	~		|
 
 "rate-1"=
 	"var-n"
-	~	
+	~
 	~		|
 
 "var-n"=
 	5
-	~	
+	~
 	~		|
 
 "variable-x"=
-	6*another var
-	~	
+	ACTIVE INITIAL(6*another var, 1)
+	~
 	~		|
 
 Stock= INTEG (
 	"rate-1",
 		1)
-	~	
+	~
 	~		|
 
 ********************************************************
@@ -77,7 +77,7 @@ INITIAL TIME  = 0
 	~	The initial time for the simulation.
 	|
 
-SAVEPER  = 
+SAVEPER  =
         TIME STEP
 	~	Month [0,?]
 	~	The frequency with which output is stored.

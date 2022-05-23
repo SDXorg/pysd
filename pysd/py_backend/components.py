@@ -2,11 +2,47 @@
 Model components and time managing classes.
 """
 
+from warnings import warn
 import os
 import random
+import inspect
 from importlib.machinery import SourceFileLoader
 
+import numpy as np
+
 from pysd._version import __version__
+
+
+class Component(object):
+
+    def __init__(self):
+        self.namespace = {}
+        self.dependencies = {}
+
+    def add(self, name, units=None, limits=(np.nan, np.nan),
+            subscripts=None, comp_type=None, comp_subtype=None,
+            depends_on={}, other_deps={}):
+        """
+        This decorators allows assigning metadata to a function.
+        """
+        def decorator(function):
+            function.name = name
+            function.units = units
+            function.limits = limits
+            function.subscripts = subscripts
+            function.type = comp_type
+            function.subtype = comp_subtype
+            function.args = inspect.getfullargspec(function)[0]
+
+            # include component in namespace and dependencies
+            self.namespace[name] = function.__name__
+            if function.__name__ != "time":
+                self.dependencies[function.__name__] = depends_on
+                self.dependencies.update(other_deps)
+
+            return function
+
+        return decorator
 
 
 class Components(object):
@@ -44,7 +80,7 @@ class Components(object):
                 "\n\nNot able to import the model. "
                 + "This may be because the model was compiled with an "
                 + "earlier version of PySD, you can check on the top of "
-                + " the model file you are trying to load."
+                + "the model file you are trying to load."
                 + "\nThe current version of PySd is :"
                 + "\n\tPySD " + __version__ + "\n\n"
                 + "Please translate again the model with the function"
@@ -84,6 +120,8 @@ class Components(object):
 
 
 class Time(object):
+    rprec = 1e-10  # relative precission for final time and saving time
+
     def __init__(self):
         self._time = None
         self.stage = None
@@ -135,28 +173,66 @@ class Time(object):
             True if time is smaller than final time. Otherwise, returns Fase.
 
         """
-        return self._time < self.final_time()
+        return self._time + self.time_step()*self.rprec < self.final_time()
 
     def in_return(self):
         """ Check if current time should be returned """
+        prec = self.time_step() * self.rprec
+
         if self.return_timestamps is not None:
-            return self._time in self.return_timestamps
+            # this allows managing float precission error
+            if self.next_return is None:
+                return False
+            if np.isclose(self._time, self.next_return, prec):
+                self._update_next_return()
+                return True
+            else:
+                while self.next_return is not None\
+                      and self._time > self.next_return:
+                    warn(
+                        f"The returning time stamp '{self.next_return}' "
+                        "seems to not be a multiple of the time step. "
+                        "This value will not be saved in the output. "
+                        "Please, modify the returning timestamps or the "
+                        "integration time step to avoid this."
+                        )
+                    self._update_next_return()
+                return False
 
         time_delay = self._time - self._initial_time
         save_per = self.saveper()
-        prec = self.time_step() * 1e-10
         return time_delay % save_per < prec or -time_delay % save_per < prec
+
+    def round(self):
+        """ Return rounded time to outputs to avoid float precission error"""
+        return np.round(
+            self._time,
+            -int(np.log10(self.time_step()*self.rprec)))
 
     def add_return_timestamps(self, return_timestamps):
         """ Add return timestamps """
-        if return_timestamps is None or hasattr(return_timestamps, '__len__'):
-            self.return_timestamps = return_timestamps
+        if hasattr(return_timestamps, '__len__')\
+           and len(return_timestamps) > 0:
+            self.return_timestamps = list(return_timestamps)
+            self.return_timestamps.sort(reverse=True)
+            self.next_return = self.return_timestamps.pop()
+        elif isinstance(return_timestamps, (float, int)):
+            self.next_return = return_timestamps
+            self.return_timestamps = []
         else:
-            self.return_timestamps = [return_timestamps]
+            self.next_return = None
+            self.return_timestamps = None
 
     def update(self, value):
         """ Update current time value """
         self._time = value
+
+    def _update_next_return(self):
+        """ Update the next_return value """
+        if self.return_timestamps:
+            self.next_return = self.return_timestamps.pop()
+        else:
+            self.next_return = None
 
     def reset(self):
         """ Reset time value to the initial """
