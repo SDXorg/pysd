@@ -1,8 +1,34 @@
 
 What's New
 ==========
+v3.0.1 (unreleased)
+-------------------
 
-v3.0.0 (23/05/2022)
+New Features
+~~~~~~~~~~~~
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+
+- Simplify subscripts dictionaries for :py:class:`pysd.py_backend.data.TabData` objects.
+
+Documentation
+~~~~~~~~~~~~~
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+
+
+v3.0.0 (2022/05/23)
 -------------------
 
 New Features
