@@ -428,7 +428,7 @@ def load_outputs(file_name, transpose=False, columns=None, encoding=None):
                            encoding=encoding,
                            index_col=0).T
                 if columns:
-                    out = out[columns]
+                    out = out[list(columns)]
             else:
                 out = func(file_name,
                            encoding=encoding,
@@ -483,16 +483,16 @@ class ProgressBar:
     Progress bar for integration
     """
 
-    def __init__(self, maxval=None):
+    def __init__(self, max_value=None):
 
-        self.maxval = maxval
-        if self.maxval is None:
+        self.max_value = max_value
+        if self.max_value is None:
             return
 
         self.counter = 0
 
         self.bar = progressbar.ProgressBar(
-            maxval=self.maxval,
+            max_value=self.max_value,
             widgets=[
                 progressbar.ETA(),
                 " ",

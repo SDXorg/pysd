@@ -46,9 +46,9 @@ class Columns():
 
         Returns
         -------
-        out, transposed: set, bool
-            The set of the columns in the output file and a boolean flag to
-            indicate if the output file is transposed.
+        out, transposed: list, bool
+            The list of the columns in the output file and a boolean flag
+            to indicate if the output file is transposed.
 
         """
         # in the most cases variables will be split per columns, then
@@ -85,35 +85,35 @@ class Columns():
         Read the firts row and return a set of it.
         """
         if file_name.suffix.lower() == ".tab":
-            return set(pd.read_table(file_name,
-                                     nrows=0,
-                                     encoding=encoding,
-                                     dtype=str,
-                                     header=0).iloc[:, 1:])
+            return list(pd.read_table(file_name,
+                                      nrows=0,
+                                      encoding=encoding,
+                                      dtype=str,
+                                      header=0).iloc[:, 1:])
         elif file_name.suffix.lower() == ".csv":
-            return set(pd.read_csv(file_name,
-                                   nrows=0,
-                                   encoding=encoding,
-                                   dtype=str,
-                                   header=0).iloc[:, 1:])
+            return list(pd.read_csv(file_name,
+                                    nrows=0,
+                                    encoding=encoding,
+                                    dtype=str,
+                                    header=0).iloc[:, 1:])
         else:
             return None
 
     @classmethod
     def read_col(cls, file_name, encoding=None):
         """
-        Read the firts column and return a set of it.
+        Read the firts column and return a it.
         """
         if file_name.suffix.lower() == ".tab":
-            return set(pd.read_table(file_name,
-                                     usecols=[0],
-                                     encoding=encoding,
-                                     dtype=str).iloc[:, 0].to_list())
+            return list(pd.read_table(file_name,
+                                      usecols=[0],
+                                      encoding=encoding,
+                                      dtype=str).iloc[:, 0].to_list())
         elif file_name.suffix.lower() == ".csv":
-            return set(pd.read_csv(file_name,
-                                   usecols=[0],
-                                   encoding=encoding,
-                                   dtype=str).iloc[:, 0].to_list())
+            return list(pd.read_csv(file_name,
+                                    usecols=[0],
+                                    encoding=encoding,
+                                    dtype=str).iloc[:, 0].to_list())
 
     @classmethod
     def get_columns(cls, file_name, vars=None, encoding=None):

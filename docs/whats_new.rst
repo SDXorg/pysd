@@ -31,6 +31,7 @@ Internal Changes
 - Add Python 3.10 to CI pipeline and include it in the supported versions list.
 - Correct LICENSE file extension in the `setup.py`.
 - Move from `importlib`'s :py:func:`load_module` to :py:func:`exec_module`.
+- Remove warnings related to :py:data:`set` usage.
 
 
 v3.0.0 (2022/05/23)
