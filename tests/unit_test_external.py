@@ -3,15 +3,15 @@ import unittest
 import warnings
 from pathlib import Path
 
-from importlib.machinery import SourceFileLoader
+import importlib.util
 import numpy as np
 import xarray as xr
 
 _root = Path(__file__).parent
-_exp = SourceFileLoader(
-    'expected_data',
-    str(_root.joinpath('data/expected_data.py'))
-    ).load_module()
+spec = importlib.util.spec_from_file_location(
+    'expected_data', _root.joinpath('data/expected_data.py'))
+_exp = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(_exp)
 
 
 class TestExcels(unittest.TestCase):
