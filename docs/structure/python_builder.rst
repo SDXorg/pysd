@@ -7,6 +7,8 @@ The use of a one-to-one dictionary in translation means that the breadth of func
 
 In addition to translating individual commands between Vensim/XMILE and Python, PySD reworks component identifiers to be Python-safe by replacing spaces with underscores. The translator allows source identifiers to make use of alphanumeric characters, spaces, or special characteres. In order to make that possible a namespace is created, which links the original name of the variable with the Python-safe name. The namespace is also available in the PySD model class to allow users working with both original names and Python-safe names.
 
+The resulting Python code from building the model is formatted with `black` library and it is written to the same folder where the original model is.
+
 
 Main builders
 -------------
