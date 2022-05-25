@@ -17,7 +17,7 @@ setup(
     long_description_content_type='text/markdown',
     keywords=['System Dynamics', 'Vensim', 'XMILE'],
     classifiers=[
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'License :: OSI Approved :: MIT License',
         'Topic :: Scientific/Engineering :: Mathematics',
         'Topic :: Scientific/Engineering :: Information Analysis',

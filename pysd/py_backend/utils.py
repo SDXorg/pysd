@@ -460,8 +460,9 @@ def detect_encoding(filename):
 
     """
     detector = UniversalDetector()
-    for line in open(filename, 'rb').readlines():
-        detector.feed(line)
+    with open(filename, 'rb') as file:
+        for line in file.readlines():
+            detector.feed(line)
     detector.close()
     return detector.result['encoding']
 

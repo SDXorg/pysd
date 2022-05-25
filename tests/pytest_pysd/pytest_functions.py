@@ -336,12 +336,9 @@ class TestFunctions():
 
     def test_incomplete(self):
         from pysd.py_backend.functions import incomplete
-        from warnings import catch_warnings
 
-        with catch_warnings(record=True) as w:
+        with pytest.warns(RuntimeWarning, match='Call to undefined function'):
             incomplete()
-            assert len(w) == 1
-            assert 'Call to undefined function' in str(w[-1].message)
 
     def test_not_implemented_function(self):
         from pysd.py_backend.functions import not_implemented_function

@@ -710,7 +710,7 @@ class ExtData(External, Data):
             raise ValueError(self.py_name + "\n"
                              + " The interpolation method (interp) must be "
                              + "'raw', 'interpolate', "
-                             + "'look_forward' or 'hold_backward")
+                             + "'look_forward' or 'hold_backward'")
 
     def add(self, file_name, sheet, time_row_or_col, cell,
             interp, coords):
