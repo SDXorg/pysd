@@ -1,41 +1,50 @@
 import sys
+import re
 import os
+from pathlib import Path
 import shutil
 import subprocess
-from pathlib import Path
 
 import pytest
 
 import pandas as pd
 import numpy as np
 
+import pysd
 from pysd.tools.benchmarking import load_outputs, assert_frames_close
-from pysd import __version__
 
-# TODO replace test paths by fixtures and translate and run the models
-# in temporal directories
-# TODO make CLI tests run on Windows
-
-_root = Path(__file__).parent.parent
-
-test_model = os.path.join(_root, "test-models/samples/teacup/teacup.mdl")
-test_model_xmile = os.path.join(
-    _root, "test-models/samples/teacup/teacup.xmile")
-test_model_subs = os.path.join(
-    _root,
-    "test-models/tests/subscript_2d_arrays/test_subscript_2d_arrays.mdl")
-test_model_look = os.path.join(
-    _root,
-    "test-models/tests/get_lookups_subscripted_args/"
-    + "test_get_lookups_subscripted_args.mdl")
-
-out_tab_file = os.path.join(_root, "cli_output.tab")
-out_csv_file = os.path.join(_root, "cli_output.csv")
+test_model_ven = "test-models/samples/teacup/teacup.mdl"
 
 encoding_stdout = sys.stdout.encoding or "utf-8"
 encoding_stderr = sys.stderr.encoding or "utf-8"
 
 call = "python -m pysd"
+
+
+@pytest.fixture
+def out_tab(tmp_path):
+    return tmp_path.joinpath("cli_output.tab")
+
+
+@pytest.fixture
+def out_csv(tmp_path):
+    return tmp_path.joinpath("cli_output.csv")
+
+
+@pytest.fixture
+def test_model(model, _root):
+    return _root.joinpath(model)
+
+
+@pytest.fixture
+def test_copy(tmp_path, test_model):
+    """
+    Copy test folder to a temporary folder therefore we avoid creating
+    PySD model files in the original folder
+    """
+    test_folder = tmp_path.joinpath(test_model.parent.name)
+    shutil.copytree(test_model.parent, test_folder)
+    return test_folder.joinpath(test_model.name)
 
 
 def split_bash(string):
@@ -60,16 +69,11 @@ def split_bash(string):
     return spl
 
 
-@pytest.mark.skipif(
-    sys.platform.startswith("win"),
-    reason="not working on Windows"
-)
 class TestPySD():
-    """ These tests are similar to unit_test_pysd but adapted for cli """
-    def test_read_not_model(self):
+    """ These tests are similar to pytest_pysd but adapted for cli """
+    def test_read_not_model(self, _root):
 
-        model = os.path.join(
-            _root, "more-tests/not_vensim/test_not_vensim.txt")
+        model = _root.joinpath("more-tests/not_vensim/test_not_vensim.txt")
         command = f"{call} {model}"
         out = subprocess.run(split_bash(command), capture_output=True)
         stderr = out.stderr.decode(encoding_stderr)
@@ -78,10 +82,9 @@ class TestPySD():
         assert "The model file name must be a Vensim (.mdl), a Xmile "\
             "(.xmile, .xml, .stmx) or a PySD (.py) model file..." in stderr
 
-    def test_read_model_not_exists(self):
+    def test_read_model_not_exists(self, _root):
 
-        model = os.path.join(
-            _root, "more-tests/not_vensim/test_not_vensim.mdl")
+        model = _root.joinpath("more-tests/not_vensim/test_not_vensim.mdl")
         command = f"{call} {model}"
         out = subprocess.run(split_bash(command), capture_output=True)
         stderr = out.stderr.decode(encoding_stderr)
@@ -89,9 +92,9 @@ class TestPySD():
         assert f"PySD: error: when parsing {model}" in stderr
         assert "The model file does not exist..." in stderr
 
-    def test_read_not_valid_output(self):
+    def test_read_not_valid_output(self, _root):
 
-        out_xls_file = os.path.join(_root, "cli_output.xls")
+        out_xls_file = _root.joinpath("cli_output.xls")
         command = f"{call} -o {out_xls_file} {test_model}"
         out = subprocess.run(split_bash(command), capture_output=True)
         stderr = out.stderr.decode(encoding_stderr)
@@ -105,9 +108,10 @@ class TestPySD():
         command = f"{call} -R '{time_stamps}' {test_model}"
         out = subprocess.run(split_bash(command), capture_output=True)
         stderr = out.stderr.decode(encoding_stderr)
+
         assert out.returncode != 0
         assert f"PySD: error: when parsing {time_stamps}" in stderr
-        assert "The return time stamps much be separated by commas...\n"\
+        assert "The return time stamps must be separated by commas..."\
             in stderr
 
         time_stamps = "1 3 4"
@@ -116,10 +120,11 @@ class TestPySD():
         stderr = out.stderr.decode(encoding_stderr)
         assert out.returncode != 0
         assert f"PySD: error: when parsing {time_stamps}" in stderr
-        assert "The return time stamps much be separated by commas...\n"\
+        assert "The return time stamps must be separated by commas..."\
             in stderr
 
-    def test_read_not_valid_new_value(self):
+    @pytest.mark.parametrize("model", [test_model_ven])
+    def test_read_not_valid_new_value(self, test_model):
 
         new_value = "foo=[1,2,3]"
         command = f"{call} {test_model} {new_value}"
@@ -151,13 +156,13 @@ class TestPySD():
         out = subprocess.run(split_bash(command), capture_output=True)
         stdout = out.stdout.decode(encoding_stdout)
         assert out.returncode == 0
-        assert f"PySD {__version__}" in stdout
+        assert f"PySD {pysd.__version__}" in stdout
 
         command = f"{call} --version"
         out = subprocess.run(split_bash(command), capture_output=True)
         stdout = out.stdout.decode(encoding_stdout)
         assert out.returncode == 0
-        assert f"PySD {__version__}" in stdout
+        assert f"PySD {pysd.__version__}" in stdout
 
     def test_print_help(self):
 
@@ -179,263 +184,237 @@ class TestPySD():
         assert out.returncode == 0
         assert "usage: python -m pysd [" in stdout
 
-    def test_translate_file(self):
-
-        model_py = test_model.replace(".mdl", ".py")
-
-        if os.path.isfile(model_py):
-            os.remove(model_py)
-        if os.path.isfile(out_tab_file):
-            os.remove(out_tab_file)
-
-        command = f"{call} --translate {test_model}"
+    @pytest.mark.parametrize("model", [test_model_ven])
+    def test_translate_file(self, test_copy, out_tab):
+        command = f"{call} --translate {test_copy}"
         out = subprocess.run(split_bash(command), capture_output=True)
         assert out.returncode == 0
-        assert not os.path.isfile(out_tab_file)
-        assert os.path.isfile(model_py)
-        os.remove(model_py)
+        assert not out_tab.exists()
+        assert test_copy.with_suffix(".py").exists()
 
-    def test_read_vensim_split_model(self):
+    @pytest.mark.parametrize(
+        "model", ["more-tests/split_model/test_split_model.mdl"]
+    )
+    def test_read_vensim_split_model(self, test_copy):
 
-        root_dir = os.path.join(_root, "more-tests/split_model") + "/"
+        model_name = test_copy.with_suffix("").name
+        folder = test_copy.parent
+        modules_dirname = folder / ("modules_" + model_name)
 
-        model_name = "test_split_model"
-        subscript_filename = "_subscripts_" + model_name + ".json"
-        modules_filename = "_modules.json"
-        modules_dirname = "modules_" + model_name
-        model_name_mdl = root_dir + model_name + ".mdl"
-
-        command = f"{call} --translate --split-views {model_name_mdl}"
+        command = f"{call} --translate --split-views {test_copy}"
         out = subprocess.run(split_bash(command), capture_output=True)
         assert out.returncode == 0
 
         # check that _subscript_dict json file was created
-        assert os.path.isfile(root_dir + subscript_filename)
+        assert (folder / ("_subscripts_" + model_name + ".json")).exists()
 
         # check that the main model file was created
-        assert os.path.isfile(root_dir + model_name + ".py")
+        assert test_copy.with_suffix(".py").exists()
 
         # check that the modules folder was created
-        assert os.path.isdir(root_dir + modules_dirname)
-        assert os.path.isfile(root_dir + modules_dirname
-                              + "/" + modules_filename)
+        assert modules_dirname.exists()
+        assert modules_dirname.is_dir()
+        assert (modules_dirname / "_modules.json").exists()
 
         # check creation of module files
-        assert os.path.isfile(root_dir + modules_dirname + "/" + "view_1.py")
-        assert os.path.isfile(root_dir + modules_dirname + "/" + "view2.py")
-        assert os.path.isfile(root_dir + modules_dirname + "/" + "view_3.py")
+        assert (modules_dirname / "view_1.py").exists()
+        assert (modules_dirname / "view2.py").exists()
+        assert (modules_dirname / "view_3.py").exists()
 
-        # remove newly created files
-        os.remove(root_dir + model_name + ".py")
-        os.remove(root_dir + subscript_filename)
+    @pytest.mark.parametrize(
+        "model", ["more-tests/split_model/test_split_model_subviews.mdl"]
+    )
+    def test_read_vensim_split_model_subviews(self, test_copy):
 
-        # remove newly created modules folder
-        shutil.rmtree(root_dir + modules_dirname)
-
-    def test_read_vensim_split_model_subviews(self):
-        import pysd
-        from pysd.tools.benchmarking import assert_frames_close
-
-        root_dir = os.path.join(_root, "more-tests/split_model/")
-
-        model_name = "test_split_model_subviews"
-        model_name_mdl = root_dir + model_name + ".mdl"
-
-        model_split = pysd.read_vensim(
-            root_dir + model_name + ".mdl", split_views=True,
-            subview_sep=["."]
-        )
-
-        subscript_filename = "_subscripts_" + model_name + ".json"
-        modules_dirname = "modules_" + model_name
+        model_name = test_copy.with_suffix("").name
+        folder = test_copy.parent
+        modules_dirname = folder / ("modules_" + model_name)
 
         separator = "."
         command = f"{call} --translate --split-views "\
-                  f"--subview-sep={separator} {model_name_mdl}"
+                  f"--subview-sep={separator} {test_copy}"
         out = subprocess.run(split_bash(command), capture_output=True)
         assert out.returncode == 0
 
-        # check that the modules folders were created
-        assert os.path.isdir(root_dir + modules_dirname + "/view_1")
+        # check that _subscript_dict json file was created
+        assert (folder / ("_subscripts_" + model_name + ".json")).exists()
+
+        # check that the main model file was created
+        assert test_copy.with_suffix(".py").exists()
+
+        # check that the modules folder was created
+        assert modules_dirname.exists()
+        assert modules_dirname.is_dir()
+        assert (modules_dirname / "_modules.json").exists()
 
         # check creation of module files
-        assert os.path.isfile(root_dir + modules_dirname + "/view_1/" +
-                              "submodule_1.py")
-        assert os.path.isfile(root_dir + modules_dirname + "/view_1/" +
-                              "submodule_2.py")
-        assert os.path.isfile(root_dir + modules_dirname + "/view_2.py")
+        assert (modules_dirname / "view_1").exists()
+        assert (modules_dirname / "view_1").is_dir()
+        assert (modules_dirname / "view_1" / "submodule_1.py").exists()
+        assert (modules_dirname / "view_1" / "submodule_2.py").exists()
+        assert (modules_dirname / "view_2.py").exists()
 
-        # check that the results of the split model are the same than those
-        # without splitting
-        model_non_split = pysd.read_vensim(
-            root_dir + model_name + ".mdl", split_views=False
-        )
-
-        result_split = model_split.run()
-        result_non_split = model_non_split.run()
-
-        # results of a split model are the same that those of the regular
-        # model (un-split)
-        assert_frames_close(result_split, result_non_split, atol=0, rtol=0)
-
-        # remove newly created files
-        os.remove(root_dir + model_name + ".py")
-        os.remove(root_dir + subscript_filename)
-
-        # remove newly created modules folder
-        shutil.rmtree(root_dir + modules_dirname)
-
-    def test_run_return_timestamps(self):
+    @pytest.mark.parametrize("model", [test_model_ven])
+    def test_run_return_timestamps(self, out_csv, out_tab, test_copy):
 
         timestamps =\
             np.random.randint(1, 5, 5).cumsum().astype(float).astype(str)
-        command = f"{call} -o {out_csv_file} -R {','.join(timestamps)} "\
-                  f" {test_model}"
+        command = f"{call} -o {out_csv} -R {','.join(timestamps)} "\
+                  f" {test_copy}"
         out = subprocess.run(split_bash(command), capture_output=True)
         assert out.returncode == 0
-        stocks = load_outputs(out_csv_file)
+        stocks = load_outputs(out_csv)
         assert (stocks.index.values.astype(str) == timestamps).all()
-        os.remove(out_csv_file)
 
-        command = f"{call} -o {out_csv_file} -R 5 {test_model}"
+        command = f"{call} -o {out_tab} -R 5 {test_copy}"
         out = subprocess.run(split_bash(command), capture_output=True)
         assert out.returncode == 0
-        stocks = load_outputs(out_csv_file)
+        stocks = load_outputs(out_tab)
         assert (stocks.index.values == [5])
-        os.remove(out_csv_file)
 
-    def test_run_return_columns(self):
+    @pytest.mark.parametrize("model", [test_model_ven])
+    def test_run_return_columns(self, out_csv, test_copy, tmp_path):
         return_columns = ["Room Temperature", "Teacup Temperature"]
-        command = f"{call} -o {out_csv_file} -r "\
-                  f"'{', '.join(return_columns)}' "\
-                  f" {test_model}"
+        command = f"{call} -o {out_csv} -r '{', '.join(return_columns)}' "\
+                  f" {test_copy}"
 
         out = subprocess.run(split_bash(command), capture_output=True)
         assert out.returncode == 0
-        stocks = load_outputs(out_csv_file)
+        stocks = load_outputs(out_csv)
         assert set(stocks.columns) == set(return_columns)
-        os.remove(out_csv_file)
+
+        out_csv = out_csv.parent / "new_out.csv"
 
         # from txt
-        txt_file = os.path.join(_root, "return_columns.txt")
+        txt_file = tmp_path / "return_columns.txt"
         return_columns = ["Room Temperature", "Teacup Temperature"]
         with open(txt_file, "w") as file:
             file.write("\n".join(return_columns))
 
-        command = f"{call} -o {out_csv_file} -r {txt_file} {test_model}"
+        command = f"{call} -o {out_csv} -r {txt_file} {test_copy}"
 
         out = subprocess.run(split_bash(command), capture_output=True)
         assert out.returncode == 0
-        stocks = load_outputs(out_csv_file)
+        stocks = load_outputs(out_csv)
         assert set(stocks.columns) == set(return_columns)
 
-        os.remove(txt_file)
-        os.remove(out_csv_file)
+        out_csv = out_csv.parent / "new_out2.csv"
 
         return_columns = ["room_temperature", "teacup_temperature"]
-        command = f"{call} -o {out_csv_file} -r "\
+        command = f"{call} -o {out_csv} -r "\
                   f"'{', '.join(return_columns)}' "\
-                  f" {test_model}"
+                  f" {test_copy}"
 
         out = subprocess.run(split_bash(command), capture_output=True)
         assert out.returncode == 0
-        stocks = load_outputs(out_csv_file)
+        stocks = load_outputs(out_csv)
         assert set(stocks.columns) == set(return_columns)
-        os.remove(out_csv_file)
 
-    def test_model_arguments(self):
+    @pytest.mark.parametrize("model", [test_model_ven])
+    def test_model_arguments(self, out_tab, test_copy):
         # check initial time
         initial_time = 10
-        command = f"{call} -o {out_tab_file} -I {initial_time} {test_model}"
+        command = f"{call} -o {out_tab} -I {initial_time} {test_copy}"
         out = subprocess.run(split_bash(command), capture_output=True)
         assert out.returncode == 0
-        stocks = load_outputs(out_tab_file)
+        stocks = load_outputs(out_tab)
         assert stocks.index.values[0] == initial_time
-        os.remove(out_tab_file)
+
+        out_tab = out_tab.parent / "new_out.tab"
 
         # check final time
         final_time = 20
-        command = f"{call} -o {out_tab_file} -F {final_time} {test_model}"
+        command = f"{call} -o {out_tab} -F {final_time} {test_copy}"
         out = subprocess.run(split_bash(command), capture_output=True)
         assert out.returncode == 0
-        stocks = load_outputs(out_tab_file)
+        stocks = load_outputs(out_tab)
         assert stocks.index.values[-1] == final_time
-        os.remove(out_tab_file)
+
+        out_tab = out_tab.parent / "new_out2.tab"
 
         # check time step
         time_step = 10
-        command = f"{call} -o {out_tab_file} -T {time_step} {test_model}"
+        command = f"{call} -o {out_tab} -T {time_step} {test_copy}"
         out = subprocess.run(split_bash(command), capture_output=True)
         assert out.returncode == 0
-        stocks = load_outputs(out_tab_file)
+        stocks = load_outputs(out_tab)
         assert (np.diff(stocks.index.values) == time_step).all()
         assert (stocks["SAVEPER"] == time_step).all().all()
         assert (stocks["TIME STEP"] == time_step).all().all()
-        os.remove(out_tab_file)
+
+        out_tab = out_tab.parent / "new_out3.tab"
 
         # check saveper
         time_step = 5
         saveper = 10
-        command = f"{call} -o {out_tab_file} -T {time_step} "\
-                  f"-S {saveper} {test_model}"
+        command = f"{call} -o {out_tab} -T {time_step} "\
+                  f"-S {saveper} {test_copy}"
         out = subprocess.run(split_bash(command), capture_output=True)
         assert out.returncode == 0
-        stocks = load_outputs(out_tab_file)
+        stocks = load_outputs(out_tab)
         assert (np.diff(stocks.index.values) == saveper).all()
         assert (stocks["SAVEPER"] == saveper).all().all()
         assert (stocks["TIME STEP"] == time_step).all().all()
-        os.remove(out_tab_file)
+
+        out_tab = out_tab.parent / "new_out4.tab"
 
         # check all
         initial_time = 15
         time_step = 5
         saveper = 10
         final_time = 45
-        command = f"{call} -o {out_tab_file} --time-step={time_step} "\
+        command = f"{call} -o {out_tab} --time-step={time_step} "\
                   f"--saveper={saveper} --initial-time={initial_time} "\
-                  f"--final-time={final_time} {test_model}"
+                  f"--final-time={final_time} {test_copy}"
         out = subprocess.run(split_bash(command), capture_output=True)
         assert out.returncode == 0
-        stocks = load_outputs(out_tab_file)
+        stocks = load_outputs(out_tab)
         assert (np.diff(stocks.index.values) == saveper).all()
         assert stocks.index.values[0] == initial_time
         assert stocks.index.values[-1] == final_time
-        os.remove(out_tab_file)
 
-    def test_initial_conditions_tuple_pysafe_names(self):
+    @pytest.mark.parametrize("model", [test_model_ven])
+    def test_initial_conditions_tuple_pysafe_names(self, out_tab, test_copy):
         import pysd
-        model = pysd.read_vensim(test_model)
+        model = pysd.read_vensim(test_copy)
         initial_time = 3000
         return_timestamps = np.arange(initial_time, initial_time+10)
         stocks = model.run(
             initial_condition=(initial_time, {"teacup_temperature": 33}),
             return_timestamps=return_timestamps)
 
-        command = f"{call} -o {out_tab_file} -I {initial_time} -R "\
+        command = f"{call} -o {out_tab} -I {initial_time} -R "\
                   f"'{', '.join(return_timestamps.astype(str))}'"\
-                  f" {test_model.replace('.mdl', '.py')}"\
+                  f" {test_copy.with_suffix('.py')}"\
                   f" teacup_temperature:33"
 
         out = subprocess.run(split_bash(command), capture_output=True)
         assert out.returncode == 0
-        stocks2 = load_outputs(out_tab_file)
+        stocks2 = load_outputs(out_tab)
         assert_frames_close(stocks2, stocks)
-        os.remove(out_tab_file)
 
-    def test_set_constant_parameter(self):
+    @pytest.mark.parametrize(
+        "model", ["test-models/samples/teacup/teacup.xmile"]
+    )
+    def test_set_constant_parameter(self, out_tab, test_copy):
 
         value = 20
-        command = f"{call} -o {out_tab_file} -r room_temperature "\
-                  f" {test_model_xmile}"\
-                  f" room_temperature={value}"
+        command = f"{call} -o {out_tab} -r room_temperature "\
+                  f" {test_copy} room_temperature={value}"
 
         out = subprocess.run(split_bash(command), capture_output=True)
         assert out.returncode == 0
-        stocks = load_outputs(out_tab_file)
+        stocks = load_outputs(out_tab)
         assert (stocks["room_temperature"] == value).all()
-        os.remove(out_tab_file)
 
-    def test_set_timeseries_parameter_lookup(self):
+    @pytest.mark.parametrize(
+        "model",
+        [
+            "test-models/tests/get_lookups_subscripted_args/"
+            "test_get_lookups_subscripted_args.mdl"
+        ]
+    )
+    def test_set_timeseries_parameter_lookup(self, out_tab, test_copy):
 
         timeseries = np.arange(30)
         data = np.round(50 + np.random.rand(len(timeseries)).cumsum(), 4)
@@ -447,52 +426,50 @@ class TestPySD():
         timeseries_bash = "[[" + ",".join(timeseries.astype(str)) + "],["\
                           + ",".join(data.astype(str)) + "]]"
 
-        command = f"{call} -o {out_tab_file} -r lookup_1d_time "\
+        command = f"{call} -o {out_tab} -r lookup_1d_time "\
                   f"-R {','.join(timeseries.astype(str))} "\
-                  f" {test_model_look}"\
+                  f" {test_copy}"\
                   f" lookup_1d_time={timeseries_bash}"
         out = subprocess.run(split_bash(command), capture_output=True)
         assert out.returncode == 0
-        stocks = load_outputs(out_tab_file)
+        stocks = load_outputs(out_tab)
         assert (stocks["lookup_1d_time"] == temp_timeseries).all()
-        os.remove(out_tab_file)
 
-        command = f"{call} -o {out_tab_file} -r lookup_2d_time "\
+        out_tab = out_tab.parent / "new_out.tab"
+
+        command = f"{call} -o {out_tab} -r lookup_2d_time "\
                   f"-R {','.join(timeseries.astype(str))}"\
-                  f" {test_model_look}"\
+                  f" {test_copy}"\
                   f" lookup_2d_time={timeseries_bash}"
         out = subprocess.run(split_bash(command), capture_output=True)
         assert out.returncode == 0
-        stocks = load_outputs(out_tab_file)
+        stocks = load_outputs(out_tab)
         assert (stocks["lookup_2d_time[Row1]"] == temp_timeseries).all()
         assert (stocks["lookup_2d_time[Row2]"] == temp_timeseries).all()
-        os.remove(out_tab_file)
 
-    def test_export_import(self):
+    @pytest.mark.parametrize("model", [test_model_ven])
+    def test_export_import(self, out_tab, test_copy, tmp_path):
         import pysd
         from pysd.tools.benchmarking import assert_frames_close
 
-        exp_file = "teacup15.pic"
-        model = pysd.read_vensim(test_model)
+        exp_file = tmp_path / "teacup15.pic"
+        model = pysd.read_vensim(test_copy)
         stocks = model.run(return_timestamps=[0, 10, 20, 30])
         assert (stocks["INITIAL TIME"] == 0).all().all()
 
-        command = f"{call} -o {out_tab_file} -e {exp_file} -F 15 -R 0,10"\
-                  f" {test_model}"
+        command = f"{call} -o {out_tab} -e {exp_file} -F 15 -R 0,10"\
+                  f" {test_copy}"
 
-        command2 = f"{call} -o {out_tab_file} -i {exp_file} -R 20,30"\
-                   f" {test_model}"
+        command2 = f"{call} -o {out_tab} -i {exp_file} -R 20,30"\
+                   f" {test_copy}"
 
         out = subprocess.run(split_bash(command), capture_output=True)
         assert out.returncode == 0
-        stocks1 = load_outputs(out_tab_file)
+        stocks1 = load_outputs(out_tab)
 
         out = subprocess.run(split_bash(command2), capture_output=True)
         assert out.returncode == 0
-        stocks2 = load_outputs(out_tab_file)
-
-        os.remove(exp_file)
-        os.remove(out_tab_file)
+        stocks2 = load_outputs(out_tab)
 
         assert (stocks1["INITIAL TIME"] == 0).all().all()
         assert (stocks1["FINAL TIME"] == 15).all().all()
@@ -507,29 +484,29 @@ class TestPySD():
         assert_frames_close(stocks1, stocks.loc[[0, 10]])
         assert_frames_close(stocks2, stocks.loc[[20, 30]])
 
-    def test_run_model_with_data(self):
-        data_file = os.path.join(
-            _root, "test-models/tests/data_from_other_model/data.tab")
-        model_file = os.path.join(
-            _root,
+    @pytest.mark.parametrize(
+        "model",
+        [
             "test-models/tests/data_from_other_model/"
-            + "test_data_from_other_model.mdl")
+            "test_data_from_other_model.mdl"
+        ]
+    )
+    def test_run_model_with_data(self, test_copy, out_tab):
+        data_file = test_copy.parent / "data.tab"
 
-        command = f"{call} -o {out_tab_file} -D {data_file}"\
-                  f" {model_file}"
+        command = f"{call} -o {out_tab} -D {data_file}"\
+                  f" {test_copy}"
 
         out = subprocess.run(split_bash(command), capture_output=True)
         assert out.returncode == 0
-        stocks = load_outputs(out_tab_file)
-        canon = load_outputs(os.path.join(
-            _root,
-            "test-models/tests/data_from_other_model/output.tab"))
+        stocks = load_outputs(out_tab)
+        canon = load_outputs(test_copy.parent / "output.tab")
 
         assert_frames_close(stocks[canon.columns], canon)
 
         # invalid data file
-        command = f"{call} -o {out_tab_file} -D my_file.txt"\
-                  f" {model_file}"
+        command = f"{call} -o {out_tab} -D my_file.txt"\
+                  f" {test_copy}"
 
         out = subprocess.run(split_bash(command), capture_output=True)
         assert out.returncode != 0
@@ -538,8 +515,8 @@ class TestPySD():
         assert "The data file name must be .tab or .csv..." in stderr
 
         # not found data file
-        command = f"{call} -o {out_tab_file} -D my_file.tab"\
-                  f" {model_file}"
+        command = f"{call} -o {out_tab} -D my_file.tab"\
+                  f" {test_copy}"
 
         out = subprocess.run(split_bash(command), capture_output=True)
         assert out.returncode != 0
@@ -547,20 +524,17 @@ class TestPySD():
         assert "PySD: error: when parsing my_file.tab" in stderr
         assert "The data file does not exist..." in stderr
 
-    def test_save_without_name(self):
-        import re
-
-        command = f"{call} {test_model}"
-        command2 = f"{call} -o {out_tab_file} {test_model}"
+    @pytest.mark.parametrize("model", [test_model_ven])
+    def test_save_without_name(self, out_tab, test_copy, tmp_path):
+        prev_cwd = Path.cwd()
+        os.chdir(tmp_path)
+        command = f"{call} {test_copy}"
         out = subprocess.run(split_bash(command), capture_output=True)
+        os.chdir(prev_cwd)
         assert out.returncode == 0
         stdout = out.stdout.decode(encoding_stdout)
         outputs = re.findall("(?<=Data saved in ').*(?=')", stdout)[0]
-        out2 = subprocess.run(split_bash(command2), capture_output=True)
-        assert out2.returncode == 0
 
-        out, out2 = load_outputs(outputs), load_outputs(out_tab_file)
-        os.remove(outputs)
-        os.remove(out_tab_file)
-
-        assert (out - out2 == 0).all().all()
+        out = load_outputs(tmp_path / outputs)
+        out2 = pysd.read_vensim(test_copy).run()
+        assert_frames_close(out, out2)

@@ -413,7 +413,7 @@ class TestLoadOutputs():
     def test_non_valid_outputs(self, _root):
         outputs = _root.joinpath("more-tests/not_vensim/test_not_vensim.txt")
 
-        error_message = "Not able to read '%s'." % outputs
+        error_message = r"Not able to read '.*%s'\." % outputs.name
         with pytest.raises(ValueError, match=error_message):
             load_outputs(outputs)
 

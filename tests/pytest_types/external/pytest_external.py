@@ -248,7 +248,7 @@ class TestExternalMethods():
 
         ext.file = 'input2.xlsx'
 
-        error_message = "File '%s' not found." % root.joinpath('input2.xlsx')
+        error_message = r"File '.*%s' not found." % 'input2.xlsx'
         with pytest.raises(FileNotFoundError, match=error_message):
             ext._resolve_file(root=root)
 
