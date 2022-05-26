@@ -9,7 +9,6 @@ High Priority
 -------------
 * Improve running speed using numpy.arrays instead of xarray.DataArrays
 * Adding unit and full tests for Xmile translation
-* Subscripts/arrays support for Xmile models
 
 
 Medium Priority
