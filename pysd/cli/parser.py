@@ -109,7 +109,7 @@ def split_timestamps(string):
         # error
         raise parser.error(
             f'when parsing {string}'
-            '\nThe return time stamps much be separated by commas...\n'
+            '\nThe return time stamps must be separated by commas...\n'
             f'See {docs} for examples.')
 
 

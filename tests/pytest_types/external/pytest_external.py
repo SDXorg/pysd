@@ -1,24 +1,25 @@
 import sys
-import unittest
-import warnings
-from pathlib import Path
+import pytest
 
-from importlib.machinery import SourceFileLoader
+import importlib.util
 import numpy as np
 import xarray as xr
 
-_root = Path(__file__).parent
-_exp = SourceFileLoader(
-    'expected_data',
-    str(_root.joinpath('data/expected_data.py'))
-    ).load_module()
+
+@pytest.fixture(scope="session")
+def _exp(_root):
+    spec = importlib.util.spec_from_file_location(
+        'expected_data', _root.joinpath('data/expected_data.py'))
+    expected = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(expected)
+    return expected
 
 
-class TestExcels(unittest.TestCase):
+class TestExcels():
     """
     Tests for Excels class
     """
-    def test_read_clean(self):
+    def test_read_clean(self, _root):
         """
         Test for reading files with pandas
         """
@@ -30,22 +31,19 @@ class TestExcels(unittest.TestCase):
 
         # reading a file
         excel = Excels.read(file_name, sheet_name)
-        self.assertTrue(isinstance(excel, np.ndarray))
+        assert isinstance(excel, np.ndarray)
 
         # check if it is in the dictionary
-        self.assertTrue(file_name.joinpath(sheet_name) in
-                        list(Excels._Excels))
+        assert file_name.joinpath(sheet_name) in list(Excels._Excels)
 
         Excels.read(file_name, sheet_name2)
-        self.assertTrue(file_name.joinpath(sheet_name2) in
-                        list(Excels._Excels))
+        assert file_name.joinpath(sheet_name2) in list(Excels._Excels)
 
         # clean
         Excels.clean()
-        self.assertEqual(list(Excels._Excels),
-                         [])
+        assert list(Excels._Excels) == []
 
-    def test_read_clean_opyxl(self):
+    def test_read_clean_opyxl(self, _root):
         """
         Test for reading files with openpyxl
         """
@@ -56,23 +54,23 @@ class TestExcels(unittest.TestCase):
 
         # reading a file
         excel = Excels.read_opyxl(file_name)
-        self.assertTrue(isinstance(excel, Workbook))
+        assert isinstance(excel, Workbook)
 
         # check if it is in the dictionary
-        self.assertEqual(list(Excels._Excels_opyxl),
-                         [file_name])
+        assert list(Excels._Excels_opyxl) == [file_name]
 
         Excels.read_opyxl(file_name)
-        self.assertEqual(list(Excels._Excels_opyxl),
-                         [file_name])
+        assert list(Excels._Excels_opyxl) == [file_name]
 
         # clean
         Excels.clean()
-        self.assertEqual(list(Excels._Excels_opyxl),
-                         [])
+        assert list(Excels._Excels_opyxl) == []
 
-    @unittest.skipIf(sys.platform.startswith("win"), "not working on Windows")
-    def test_close_file(self):
+    @pytest.mark.skipif(
+        sys.platform.startswith("win"),
+        reason="not working on Windows"
+    )
+    def test_close_file(self, _root):
         """
         Test for checking if excel files were closed
         """
@@ -93,19 +91,19 @@ class TestExcels(unittest.TestCase):
         Excels.read(file_name, sheet_name2)
         Excels.read_opyxl(file_name)
 
-        self.assertGreater(len(p.open_files()), n_files)
+        assert len(p.open_files()) > n_files
 
         # clean
         Excels.clean()
-        self.assertEqual(len(p.open_files()), n_files)
+        assert len(p.open_files()) == n_files
 
 
-class TestExternalMethods(unittest.TestCase):
+class TestExternalMethods():
     """
     Test for simple methods of External
     """
 
-    def test_col_to_num(self):
+    def test_col_to_num(self, _root):
         """
         External._num_to_col and External._col_to_num test
         """
@@ -114,13 +112,13 @@ class TestExternalMethods(unittest.TestCase):
         col_to_num = External._col_to_num
 
         # Check col_to_num
-        self.assertEqual(col_to_num("A"), 0)
-        self.assertEqual(col_to_num("Z"), 25)
-        self.assertEqual(col_to_num("a"), col_to_num("B")-1)
-        self.assertEqual(col_to_num("Z"), col_to_num("aa")-1)
-        self.assertEqual(col_to_num("Zz"), col_to_num("AaA")-1)
+        assert col_to_num("A") == 0
+        assert col_to_num("Z") == 25
+        assert col_to_num("a") == col_to_num("B")-1
+        assert col_to_num("Z") == col_to_num("aa")-1
+        assert col_to_num("Zz") == col_to_num("AaA")-1
 
-    def test_split_excel_cell(self):
+    def test_split_excel_cell(self, _root):
         """
         External._split_excel_cell test
         """
@@ -132,16 +130,16 @@ class TestExternalMethods(unittest.TestCase):
         nocells = ["A2A", "H0", "0", "5A", "A_1", "ZZZZ1", "A"]
 
         for nocell in nocells:
-            self.assertFalse(ext._split_excel_cell(nocell))
+            assert not ext._split_excel_cell(nocell)
 
         # Cells
         cells = [(1, 0, "A2"), (573, 7, "h574"),
                  (1, 572, "Va2"), (1, 728, "ABA2")]
 
         for row, col, cell in cells:
-            self.assertEqual((row, col), ext._split_excel_cell(cell))
+            assert (row, col) == ext._split_excel_cell(cell)
 
-    def test_reshape(self):
+    def test_reshape(self, _root):
         """
         External._reshape test
         """
@@ -164,19 +162,19 @@ class TestExternalMethods(unittest.TestCase):
         shapes2d = [(2, 4), (2, 4, 1), (1, 2, 4), (2, 1, 4)]
 
         for shape_i in shapes0d:
-            self.assertEqual(reshape(data0d, shape_i).shape, shape_i)
-            self.assertEqual(reshape(float0d, shape_i).shape, shape_i)
-            self.assertEqual(reshape(int0d, shape_i).shape, shape_i)
+            assert reshape(data0d, shape_i).shape == shape_i
+            assert reshape(float0d, shape_i).shape == shape_i
+            assert reshape(int0d, shape_i).shape == shape_i
 
         for shape_i in shapes1d:
-            self.assertEqual(reshape(data1d, shape_i).shape, shape_i)
-            self.assertEqual(reshape(series1d, shape_i).shape, shape_i)
+            assert reshape(data1d, shape_i).shape == shape_i
+            assert reshape(series1d, shape_i).shape == shape_i
 
         for shape_i in shapes2d:
-            self.assertEqual(reshape(data2d, shape_i).shape, shape_i)
-            self.assertEqual(reshape(df2d, shape_i).shape, shape_i)
+            assert reshape(data2d, shape_i).shape == shape_i
+            assert reshape(df2d, shape_i).shape == shape_i
 
-    def test_series_selector(self):
+    def test_series_selector(self, _root):
         """
         External._series_selector test
         """
@@ -185,21 +183,21 @@ class TestExternalMethods(unittest.TestCase):
         ext = External('external')
 
         # row selector
-        self.assertEqual(ext._series_selector("12", "A5"), "row")
+        assert ext._series_selector("12", "A5") == "row"
 
         # column selector
-        self.assertEqual(ext._series_selector("A", "a44"), "column")
-        self.assertEqual(ext._series_selector("A", "AC44"), "column")
-        self.assertEqual(ext._series_selector("A", "Bae2"), "column")
+        assert ext._series_selector("A", "a44") == "column"
+        assert ext._series_selector("A", "AC44") == "column"
+        assert ext._series_selector("A", "Bae2") == "column"
 
         # name selector
-        self.assertEqual(ext._series_selector("Att", "a44b"), "name")
-        self.assertEqual(ext._series_selector("Adfs", "a0"), "name")
-        self.assertEqual(ext._series_selector("Ae_23", "aa_44"), "name")
-        self.assertEqual(ext._series_selector("Aeee3", "3a"), "name")
-        self.assertEqual(ext._series_selector("Aeee", "aajh2"), "name")
+        assert ext._series_selector("Att", "a44b") == "name"
+        assert ext._series_selector("Adfs", "a0") == "name"
+        assert ext._series_selector("Ae_23", "aa_44") == "name"
+        assert ext._series_selector("Aeee3", "3a") == "name"
+        assert ext._series_selector("Aeee", "aajh2") == "name"
 
-    def test_fill_missing(self):
+    def test_fill_missing(self, _root):
         from pysd.py_backend.external import External
 
         # simple casses are tested with 1 dimensional data
@@ -218,58 +216,51 @@ class TestExternalMethods(unittest.TestCase):
         ext.interp = "hold_backward"
         datac = data.copy()
         ext._fill_missing(series, datac)
-        self.assertTrue(np.all(hold_back == datac))
+        assert np.all(hold_back == datac)
 
         ext.interp = "look_forward"
         datac = data.copy()
         ext._fill_missing(series, datac)
-        self.assertTrue(np.all(look_for == datac))
+        assert np.all(look_for == datac)
 
         ext.interp = "interpolate"
         datac = data.copy()
         ext._fill_missing(series, datac)
-        self.assertTrue(np.all(interp == datac))
+        assert np.all(interp == datac)
 
-    def test_resolve_file(self):
+    def test_resolve_file(self, _root):
         """
         External._resolve_file
         """
         from pysd.py_backend.external import External
 
-        root = Path(__file__).parent
         ext = External('external')
         ext.file = 'data/input.xlsx'
-        ext._resolve_file(root=root)
+        ext._resolve_file(root=_root)
 
-        self.assertEqual(ext.file, root.joinpath('data/input.xlsx'))
+        assert ext.file == _root.joinpath('data/input.xlsx')
 
-        root = root.joinpath('data')
+        root = _root.joinpath('data')
         ext.file = 'input.xlsx'
         ext._resolve_file(root=root)
 
-        self.assertEqual(ext.file, root.joinpath('input.xlsx'))
+        assert ext.file == root.joinpath('input.xlsx')
 
         ext.file = 'input2.xlsx'
 
-        with self.assertRaises(FileNotFoundError) as err:
+        error_message = r"File '.*%s' not found." % 'input2.xlsx'
+        with pytest.raises(FileNotFoundError, match=error_message):
             ext._resolve_file(root=root)
-
-        self.assertIn(
-            "File '%s' not found." % root.joinpath('input2.xlsx'),
-            str(err.exception))
 
         # TODO in the future we may add an option to include indirect
         # references with ?. By the moment an error is raised
         ext.file = '?input.xlsx'
-        with self.assertRaises(ValueError) as err:
-            ext._resolve_file(root=root)
-
-        self.assertIn(
-            "Indirect reference to file: '?input.xlsx'",
-            str(err.exception))
+        error_message = r"Indirect reference to file: '\?input\.xlsx'"
+        with pytest.raises(ValueError, match=error_message):
+            ext._resolve_file(root=_root)
 
 
-class TestData(unittest.TestCase):
+class TestData():
     """
     Test for the full working procedure of ExtData
     class when the data is properly given in the Excel file
@@ -280,7 +271,7 @@ class TestData(unittest.TestCase):
 
     # The first two test are for length 0 series and only the retrieved data is
     # calculated as the interpolation result will be constant
-    def test_data_interp_h1d_1(self):
+    def test_data_interp_h1d_1(self, _root):
         """
         ExtData test for 1d horizontal series interpolation with len 1
         """
@@ -312,9 +303,9 @@ class TestData(unittest.TestCase):
 
         expected = xr.DataArray([5], {'time': [4]}, ['time'])
 
-        self.assertTrue(data.data.equals(expected))
+        assert data.data.equals(expected)
 
-    def test_data_interp_hn1d_1(self):
+    def test_data_interp_hn1d_1(self, _root):
         """
         ExtData test for 1d horizontal series interpolation with len 1
         """
@@ -342,9 +333,9 @@ class TestData(unittest.TestCase):
 
         expected = xr.DataArray([5], {'time': [4]}, ['time'])
 
-        self.assertTrue(data.data.equals(expected))
+        assert data.data.equals(expected)
 
-    def test_data_interp_h1d(self):
+    def test_data_interp_h1d(self, _root, _exp):
         """
         ExtData test for 1d horizontal series interpolation
         """
@@ -370,12 +361,11 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with pytest.warns(UserWarning):
             for x, y in zip(_exp.xpts, _exp.interp_1d):
-                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+                assert y == data(x), "Wrong result at X=" + str(x)
 
-    def test_data_interp_v1d(self):
+    def test_data_interp_v1d(self, _root, _exp):
         """
         ExtData test for 1d vertical series interpolation
         """
@@ -401,12 +391,11 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with pytest.warns(UserWarning):
             for x, y in zip(_exp.xpts, _exp.interp_1d):
-                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+                y == data(x), "Wrong result at X=" + str(x)
 
-    def test_data_interp_hn1d(self):
+    def test_data_interp_hn1d(self, _root, _exp):
         """
         ExtData test for 1d horizontal series interpolation by cellrange names
         """
@@ -432,12 +421,11 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with pytest.warns(UserWarning):
             for x, y in zip(_exp.xpts, _exp.interp_1d):
-                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+                y == data(x), "Wrong result at X=" + str(x)
 
-    def test_data_interp_vn1d(self):
+    def test_data_interp_vn1d(self, _root, _exp):
         """
         ExtData test for 1d vertical series interpolation by cellrange names
         """
@@ -463,12 +451,11 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with pytest.warns(UserWarning):
             for x, y in zip(_exp.xpts, _exp.interp_1d):
-                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+                assert y == data(x), "Wrong result at X=" + str(x)
 
-    def test_data_forward_h1d(self):
+    def test_data_forward_h1d(self, _root, _exp):
         """
         ExtData test for 1d horizontal series look_forward
         """
@@ -494,12 +481,11 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with pytest.warns(UserWarning):
             for x, y in zip(_exp.xpts, _exp.forward_1d):
-                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+                assert y == data(x), "Wrong result at X=" + str(x)
 
-    def test_data_forward_v1d(self):
+    def test_data_forward_v1d(self, _root, _exp):
         """
         ExtData test for 1d vertical series look_forward
         """
@@ -525,12 +511,11 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with pytest.warns(UserWarning):
             for x, y in zip(_exp.xpts, _exp.forward_1d):
-                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+                assert y == data(x), "Wrong result at X=" + str(x)
 
-    def test_data_forward_hn1d(self):
+    def test_data_forward_hn1d(self, _root, _exp):
         """
         ExtData test for 1d horizontal series look_forward by cell range names
         """
@@ -556,12 +541,11 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with pytest.warns(UserWarning):
             for x, y in zip(_exp.xpts, _exp.forward_1d):
-                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+                assert y == data(x), "Wrong result at X=" + str(x)
 
-    def test_data_forward_vn1d(self):
+    def test_data_forward_vn1d(self, _root, _exp):
         """
         ExtData test for 1d vertical series look_forward by cell range names
         """
@@ -587,12 +571,11 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with pytest.warns(UserWarning):
             for x, y in zip(_exp.xpts, _exp.forward_1d):
-                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+                assert y == data(x), "Wrong result at X=" + str(x)
 
-    def test_data_backward_h1d(self):
+    def test_data_backward_h1d(self, _root, _exp):
         """
         ExtData test for 1d horizontal series hold_backward
         """
@@ -618,12 +601,11 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with pytest.warns(UserWarning):
             for x, y in zip(_exp.xpts, _exp.backward_1d):
-                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+                assert y == data(x), "Wrong result at X=" + str(x)
 
-    def test_data_backward_v1d(self):
+    def test_data_backward_v1d(self, _root, _exp):
         """
         ExtData test for 1d vertical series hold_backward by cell range names
         """
@@ -649,12 +631,11 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with pytest.warns(UserWarning):
             for x, y in zip(_exp.xpts, _exp.backward_1d):
-                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+                assert y == data(x), "Wrong result at X=" + str(x)
 
-    def test_data_backward_hn1d(self):
+    def test_data_backward_hn1d(self, _root, _exp):
         """
         ExtData test for 1d horizontal series hold_backward by cell range names
         """
@@ -680,12 +661,11 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with pytest.warns(UserWarning):
             for x, y in zip(_exp.xpts, _exp.backward_1d):
-                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+                assert y == data(x), "Wrong result at X=" + str(x)
 
-    def test_data_backward_vn1d(self):
+    def test_data_backward_vn1d(self, _root, _exp):
         """
         ExtData test for 1d vertical series hold_backward by cell range names
         """
@@ -711,12 +691,11 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with pytest.warns(UserWarning):
             for x, y in zip(_exp.xpts, _exp.backward_1d):
-                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+                assert y == data(x), "Wrong result at X=" + str(x)
 
-    def test_data_interp_vn2d(self):
+    def test_data_interp_vn2d(self, _root, _exp):
         """
         ExtData test for 2d vertical series interpolation by cell range names
         """
@@ -741,13 +720,11 @@ class TestData(unittest.TestCase):
                                      py_name=py_name)
 
         data.initialize()
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with pytest.warns(UserWarning):
             for x, y in zip(_exp.xpts, _exp.interp_2d):
-                self.assertTrue(y.equals(data(x)),
-                                "Wrong result at X=" + str(x))
+                assert y.equals(data(x)), "Wrong result at X=" + str(x)
 
-    def test_data_forward_hn2d(self):
+    def test_data_forward_hn2d(self, _root, _exp):
         """
         ExtData test for 2d vertical series look_forward by cell range names
         """
@@ -772,13 +749,11 @@ class TestData(unittest.TestCase):
                                      py_name=py_name)
 
         data.initialize()
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with pytest.warns(UserWarning):
             for x, y in zip(_exp.xpts, _exp.forward_2d):
-                self.assertTrue(y.equals(data(x)),
-                                "Wrong result at X=" + str(x))
+                assert y.equals(data(x)), "Wrong result at X=" + str(x)
 
-    def test_data_backward_v2d(self):
+    def test_data_backward_v2d(self, _root, _exp):
         """
         ExtData test for 2d vertical series hold_backward
         """
@@ -804,13 +779,11 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with pytest.warns(UserWarning):
             for x, y in zip(_exp.xpts, _exp.backward_2d):
-                self.assertTrue(y.equals(data(x)),
-                                "Wrong result at X=" + str(x))
+                assert y.equals(data(x)), "Wrong result at X=" + str(x)
 
-    def test_data_interp_h3d(self):
+    def test_data_interp_h3d(self, _root, _exp):
         """
         ExtData test for 3d horizontal series interpolation
         """
@@ -846,13 +819,11 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with pytest.warns(UserWarning):
             for x, y in zip(_exp.xpts, _exp.interp_3d):
-                self.assertTrue(y.equals(data(x)),
-                                "Wrong result at X=" + str(x))
+                assert y.equals(data(x)), "Wrong result at X=" + str(x)
 
-    def test_data_forward_v3d(self):
+    def test_data_forward_v3d(self, _root, _exp):
         """
         ExtData test for 3d vertical series look_forward
         """
@@ -888,13 +859,11 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with pytest.warns(UserWarning):
             for x, y in zip(_exp.xpts, _exp.forward_3d):
-                self.assertTrue(y.equals(data(x)),
-                                "Wrong result at X=" + str(x))
+                assert y.equals(data(x)), "Wrong result at X=" + str(x)
 
-    def test_data_backward_hn3d(self):
+    def test_data_backward_hn3d(self, _root, _exp):
         """
         ExtData test for 3d horizontal series hold_backward by cellrange names
         """
@@ -930,13 +899,11 @@ class TestData(unittest.TestCase):
 
         data.initialize()
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with pytest.warns(UserWarning):
             for x, y in zip(_exp.xpts, _exp.backward_3d):
-                self.assertTrue(y.equals(data(x)),
-                                "Wrong result at X=" + str(x))
+                assert y.equals(data(x)), "Wrong result at X=" + str(x)
 
-    def test_data_raw_h1d(self):
+    def test_data_raw_h1d(self, _root, _exp):
         """
         ExtData test for 1d horizontal series raw
         """
@@ -968,10 +935,10 @@ class TestData(unittest.TestCase):
                 equal = np.isnan(data_x)
             else:
                 equal = y == data_x
-            self.assertTrue(equal, "Wrong result at X=" + str(x))
+            assert equal, "Wrong result at X=" + str(x)
 
 
-class TestLookup(unittest.TestCase):
+class TestLookup():
     """
     Test for the full working procedure of ExtLookup
     class when the data is properly given in the Excel file
@@ -980,7 +947,7 @@ class TestLookup(unittest.TestCase):
     test will cover all the possibilities.
     """
 
-    def test_lookup_h1d(self):
+    def test_lookup_h1d(self, _root, _exp):
         """
         ExtLookup test for 1d horizontal series
         """
@@ -1004,12 +971,11 @@ class TestLookup(unittest.TestCase):
 
         data.initialize()
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with pytest.warns(UserWarning):
             for x, y in zip(_exp.xpts, _exp.interp_1d):
-                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+                assert y == data(x), "Wrong result at X=" + str(x)
 
-    def test_lookup_v1d(self):
+    def test_lookup_v1d(self, _root, _exp):
         """
         ExtLookup test for 1d vertical series
         """
@@ -1033,12 +999,11 @@ class TestLookup(unittest.TestCase):
 
         data.initialize()
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with pytest.warns(UserWarning):
             for x, y in zip(_exp.xpts, _exp.interp_1d):
-                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+                assert y == data(x), "Wrong result at X=" + str(x)
 
-    def test_lookup_hn1d(self):
+    def test_lookup_hn1d(self, _root, _exp):
         """
         ExtLookup test for 1d horizontal series by cellrange names
         """
@@ -1062,12 +1027,11 @@ class TestLookup(unittest.TestCase):
 
         data.initialize()
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with pytest.warns(UserWarning):
             for x, y in zip(_exp.xpts, _exp.interp_1d):
-                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+                assert y == data(x), "Wrong result at X=" + str(x)
 
-    def test_lookup_vn1d(self):
+    def test_lookup_vn1d(self, _root, _exp):
         """
         ExtLookup test for 1d vertical series by cellrange names
         """
@@ -1091,12 +1055,11 @@ class TestLookup(unittest.TestCase):
 
         data.initialize()
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with pytest.warns(UserWarning):
             for x, y in zip(_exp.xpts, _exp.interp_1d):
-                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
+                assert y == data(x), "Wrong result at X=" + str(x)
 
-    def test_lookup_h2d(self):
+    def test_lookup_h2d(self, _root, _exp):
         """
         ExtLookup test for 2d horizontal series
         """
@@ -1120,13 +1083,11 @@ class TestLookup(unittest.TestCase):
 
         data.initialize()
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with pytest.warns(UserWarning):
             for x, y in zip(_exp.xpts, _exp.interp_2d):
-                self.assertTrue(y.equals(data(x)),
-                                "Wrong result at X=" + str(x))
+                assert y.equals(data(x)), "Wrong result at X=" + str(x)
 
-    def test_lookup_vn3d(self):
+    def test_lookup_vn3d(self, _root, _exp):
         """
         ExtLookup test for 3d vertical series by cellrange names
         """
@@ -1159,13 +1120,11 @@ class TestLookup(unittest.TestCase):
 
         data.initialize()
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with pytest.warns(UserWarning):
             for x, y in zip(_exp.xpts, _exp.interp_3d):
-                self.assertTrue(y.equals(data(x)),
-                                "Wrong result at X=" + str(x))
+                assert y.equals(data(x)), "Wrong result at X=" + str(x)
 
-    def test_lookup_vn3d_shape0(self):
+    def test_lookup_vn3d_shape0(self, _root, _exp):
         """
         ExtLookup test for 3d vertical series by cellrange names
         passing shape 0 xarray as argument
@@ -1199,13 +1158,12 @@ class TestLookup(unittest.TestCase):
 
         data.initialize()
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with pytest.warns(UserWarning):
             for x, y in zip(_exp.xpts, _exp.interp_3d):
-                self.assertTrue(y.equals(data(xr.DataArray(x))),
-                                "Wrong result at X=" + str(x))
+                assert y.equals(data(xr.DataArray(x))),\
+                    "Wrong result at X=" + str(x)
 
-    def test_lookup_vn2d_xarray(self):
+    def test_lookup_vn2d_xarray(self, _root):
         """
         ExtLookup test for 2d vertical series by cellrange names
         using xarray for interpolation
@@ -1254,24 +1212,18 @@ class TestLookup(unittest.TestCase):
                                 {**coords_2, **coords_1},
                                 ['XY', 'ABC'])
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            self.assertTrue(
-                data(
-                    all_smaller, {**coords_1, **coords_2}
-                ).equals(all_smaller_out))
-            self.assertTrue(
-                data(all_bigger, coords_1).equals(all_bigger_out))
-            self.assertTrue(
-                data(
-                    all_inside, {**coords_1, **coords_2}
-                ).equals(all_inside_out))
-            self.assertTrue(
-                data(mixed, coords_1).equals(mixed_out))
-            self.assertTrue(
-                data(full, {**coords_2, **coords_1}).equals(full_out))
+        with pytest.warns(UserWarning):
+            assert data(
+                all_smaller, {**coords_1, **coords_2}
+            ).equals(all_smaller_out)
+            assert data(all_bigger, coords_1).equals(all_bigger_out)
+            assert data(
+                all_inside, {**coords_1, **coords_2}
+            ).equals(all_inside_out)
+            assert data(mixed, coords_1).equals(mixed_out)
+            assert data(full, {**coords_2, **coords_1}).equals(full_out)
 
-    def test_lookup_vn3d_xarray(self):
+    def test_lookup_vn3d_xarray(self, _root):
         """
         ExtLookup test for 3d vertical series by cellrange names
         using xarray for interpolation
@@ -1331,28 +1283,22 @@ class TestLookup(unittest.TestCase):
                                 {'XY': ['X', 'Y'], 'ABC': ['A', 'B', 'C']},
                                 ['XY', 'ABC'])
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            self.assertTrue(
-                data(all_smaller, final_coords).equals(all_smaller_out))
-            self.assertTrue(
-                data(all_bigger, final_coords).equals(all_bigger_out))
-            self.assertTrue(
-                data(all_inside, final_coords).equals(all_inside_out))
-            self.assertTrue(
-                data(mixed, final_coords).equals(mixed_out))
-            self.assertTrue(
-                data(full, final_coords).equals(full_out))
+        with pytest.warns(UserWarning):
+            assert data(all_smaller, final_coords).equals(all_smaller_out)
+            assert data(all_bigger, final_coords).equals(all_bigger_out)
+            assert data(all_inside, final_coords).equals(all_inside_out)
+            assert data(mixed, final_coords).equals(mixed_out)
+            assert data(full, final_coords).equals(full_out)
 
 
-class TestConstant(unittest.TestCase):
+class TestConstant():
     """
     Test for the full working procedure of ExtConstant
     class when the data is properly given in the Excel file
     For 1D, 2D and 3D all cases are computed.
     """
 
-    def test_constant_0d(self):
+    def test_constant_0d(self, _root):
         """
         ExtConstant test for 0d data
         """
@@ -1383,10 +1329,10 @@ class TestConstant(unittest.TestCase):
         data.initialize()
         data2.initialize()
 
-        self.assertEqual(data(), -1)
-        self.assertEqual(data2(), 0)
+        assert data() == -1
+        assert data2() == 0
 
-    def test_constant_n0d(self):
+    def test_constant_n0d(self, _root):
         """
         ExtConstant test for 0d data by cellrange names
         """
@@ -1417,10 +1363,10 @@ class TestConstant(unittest.TestCase):
         data.initialize()
         data2.initialize()
 
-        self.assertEqual(data(), -1)
-        self.assertEqual(data2(), 0)
+        assert data() == -1
+        assert data2() == 0
 
-    def test_constant_h1d(self):
+    def test_constant_h1d(self, _root, _exp):
         """
         ExtConstant test for horizontal 1d data
         """
@@ -1441,9 +1387,9 @@ class TestConstant(unittest.TestCase):
                                          py_name=py_name)
         data.initialize()
 
-        self.assertTrue(data().equals(_exp.constant_1d))
+        assert data().equals(_exp.constant_1d)
 
-    def test_constant_v1d(self):
+    def test_constant_v1d(self, _root, _exp):
         """
         ExtConstant test for vertical 1d data
         """
@@ -1464,9 +1410,9 @@ class TestConstant(unittest.TestCase):
                                          py_name=py_name)
         data.initialize()
 
-        self.assertTrue(data().equals(_exp.constant_1d))
+        assert data().equals(_exp.constant_1d)
 
-    def test_constant_hn1d(self):
+    def test_constant_hn1d(self, _root, _exp):
         """
         ExtConstant test for horizontal 1d data by cellrange names
         """
@@ -1487,9 +1433,9 @@ class TestConstant(unittest.TestCase):
                                          py_name=py_name)
         data.initialize()
 
-        self.assertTrue(data().equals(_exp.constant_1d))
+        assert data().equals(_exp.constant_1d)
 
-    def test_constant_vn1d(self):
+    def test_constant_vn1d(self, _root, _exp):
         """
         ExtConstant test for vertical 1d data by cellrange names
         """
@@ -1510,9 +1456,9 @@ class TestConstant(unittest.TestCase):
                                          py_name=py_name)
         data.initialize()
 
-        self.assertTrue(data().equals(_exp.constant_1d))
+        assert data().equals(_exp.constant_1d)
 
-    def test_constant_h2d(self):
+    def test_constant_h2d(self, _root, _exp):
         """
         ExtConstant test for horizontal 2d data
         """
@@ -1533,9 +1479,9 @@ class TestConstant(unittest.TestCase):
                                          py_name=py_name)
         data.initialize()
 
-        self.assertTrue(data().equals(_exp.constant_2d))
+        assert data().equals(_exp.constant_2d)
 
-    def test_constant_v2d(self):
+    def test_constant_v2d(self, _root, _exp):
         """
         ExtConstant test for vertical 2d data
         """
@@ -1556,9 +1502,9 @@ class TestConstant(unittest.TestCase):
                                          py_name=py_name)
         data.initialize()
 
-        self.assertTrue(data().equals(_exp.constant_2d))
+        assert data().equals(_exp.constant_2d)
 
-    def test_constant_hn2d(self):
+    def test_constant_hn2d(self, _root, _exp):
         """
         ExtConstant test for horizontal 2d data by cellrange names
         """
@@ -1579,9 +1525,9 @@ class TestConstant(unittest.TestCase):
                                          py_name=py_name)
         data.initialize()
 
-        self.assertTrue(data().equals(_exp.constant_2d))
+        assert data().equals(_exp.constant_2d)
 
-    def test_constant_vn2d(self):
+    def test_constant_vn2d(self, _root, _exp):
         """
         ExtConstant test for vertical 2d data by cellrange names
         """
@@ -1602,9 +1548,9 @@ class TestConstant(unittest.TestCase):
                                          py_name=py_name)
         data.initialize()
 
-        self.assertTrue(data().equals(_exp.constant_2d))
+        assert data().equals(_exp.constant_2d)
 
-    def test_constant_h3d(self):
+    def test_constant_h3d(self, _root, _exp):
         """
         ExtConstant test for horizontal 3d data
         """
@@ -1640,9 +1586,9 @@ class TestConstant(unittest.TestCase):
 
         data.initialize()
 
-        self.assertTrue(data().equals(_exp.constant_3d))
+        assert data().equals(_exp.constant_3d)
 
-    def test_constant_v3d(self):
+    def test_constant_v3d(self, _root, _exp):
         """
         ExtConstant test for vertical 3d data
         """
@@ -1678,9 +1624,9 @@ class TestConstant(unittest.TestCase):
 
         data.initialize()
 
-        self.assertTrue(data().equals(_exp.constant_3d))
+        assert data().equals(_exp.constant_3d)
 
-    def test_constant_hn3d(self):
+    def test_constant_hn3d(self, _root, _exp):
         """
         ExtConstant test for horizontal 3d data by cellrange names
         """
@@ -1716,9 +1662,9 @@ class TestConstant(unittest.TestCase):
 
         data.initialize()
 
-        self.assertTrue(data().equals(_exp.constant_3d))
+        assert data().equals(_exp.constant_3d)
 
-    def test_constant_vn3d(self):
+    def test_constant_vn3d(self, _root, _exp):
         """
         ExtConstant test for vertical 3d data by cellrange names
         """
@@ -1754,16 +1700,16 @@ class TestConstant(unittest.TestCase):
 
         data.initialize()
 
-        self.assertTrue(data().equals(_exp.constant_3d))
+        assert data().equals(_exp.constant_3d)
 
 
-class TestSubscript(unittest.TestCase):
+class TestSubscript():
     """
     Test for the full working procedure of ExtSubscript
     class when the data is properly given in the Excel file
     """
 
-    def test_subscript_h(self):
+    def test_subscript_h(self, _root):
         """
         ExtSubscript test for horizontal subscripts
         """
@@ -1784,9 +1730,9 @@ class TestSubscript(unittest.TestCase):
                                           lastcell=lastcell,
                                           prefix=prefix)
 
-        self.assertTrue(data.subscript, expected)
+        assert data.subscript == expected
 
-    def test_subscript_v(self):
+    def test_subscript_v(self, _root):
         """
         ExtSubscript test for vertical subscripts
         """
@@ -1806,15 +1752,15 @@ class TestSubscript(unittest.TestCase):
                                           lastcell=lastcell,
                                           prefix=prefix)
 
-        self.assertTrue(data.subscript, expected)
+        assert data.subscript == expected
 
 
-class TestWarningsErrors(unittest.TestCase):
+class TestWarningsErrors():
     """
     Test for the warnings and errors of External and its subclasses
     """
 
-    def test_not_implemented_file(self):
+    def test_not_implemented_file(self, _root):
         """
         Test for not implemented file
         """
@@ -1838,10 +1784,11 @@ class TestWarningsErrors(unittest.TestCase):
                                      final_coords=coords,
                                      py_name=py_name)
 
-        with self.assertRaises(NotImplementedError):
+        error_message = r"The files with extension .ods are not implemented"
+        with pytest.raises(NotImplementedError, match=error_message):
             data.initialize()
 
-    def test_non_existent_file(self):
+    def test_non_existent_file(self, _root):
         """
         Test for non-existent file
         """
@@ -1864,11 +1811,11 @@ class TestWarningsErrors(unittest.TestCase):
                                      interp=interp,
                                      final_coords=coords,
                                      py_name=py_name)
-
-        with self.assertRaises(FileNotFoundError):
+        error_message = r"File '.*non_existent\.xls' not found\."
+        with pytest.raises(FileNotFoundError, match=error_message):
             data.initialize()
 
-    def test_non_existent_sheet_pyxl(self):
+    def test_non_existent_sheet_pyxl(self, _root):
         """
         Test for non-existent sheet with openpyxl
         """
@@ -1892,10 +1839,11 @@ class TestWarningsErrors(unittest.TestCase):
                                      final_coords=coords,
                                      py_name=py_name)
 
-        with self.assertRaises(ValueError):
+        error_message = r"The sheet doesn't exist\.\.\."
+        with pytest.raises(ValueError, match=error_message):
             data.initialize()
 
-    def test_non_existent_cellrange_name_pyxl(self):
+    def test_non_existent_cellrange_name_pyxl(self, _root):
         """
         Test for non-existent cellrange name with openpyxl
         """
@@ -1919,10 +1867,11 @@ class TestWarningsErrors(unittest.TestCase):
                                      final_coords=coords,
                                      py_name=py_name)
 
-        with self.assertRaises(AttributeError):
+        error_message = "The cell range name:\t'.*'\nDoesn't exist in"
+        with pytest.raises(AttributeError, match=error_message):
             data.initialize()
 
-    def test_non_existent_cellrange_name_in_sheet_pyxl(self):
+    def test_non_existent_cellrange_name_in_sheet_pyxl(self, _root):
         """
         Test for non-existent cellrange name with openpyxl
         """
@@ -1942,12 +1891,13 @@ class TestWarningsErrors(unittest.TestCase):
                                          final_coords=coords,
                                          py_name=py_name)
 
-        with self.assertRaises(AttributeError):
+        error_message = "The cell range name:\t'.*'\nDoesn't exist in"
+        with pytest.raises(AttributeError, match=error_message):
             data.initialize()
 
     # Following test are for ExtData class only
     # as the initialization of ExtLookup uses the same function
-    def test_data_interp_h1dm_row(self):
+    def test_data_interp_h1dm_row(self, _root):
         """
         Test for warning 1d horizontal series interpolation when series
         has missing or NaN data
@@ -1974,14 +1924,12 @@ class TestWarningsErrors(unittest.TestCase):
                                      final_coords=coords,
                                      py_name=py_name)
 
-        with warnings.catch_warnings(record=True) as ws:
+        with pytest.warns(UserWarning, match="Not able to interpolate"):
             data.initialize()
-            wu = [w for w in ws if issubclass(w.category, UserWarning)]
-            self.assertTrue("Not able to interpolate" in str(wu[-1].message))
 
-        self.assertTrue(all(np.isnan(data.data.values)))
+        assert all(np.isnan(data.data.values))
 
-    def test_data_interp_h1dm_row2(self):
+    def test_data_interp_h1dm_row2(self, _root):
         """
         Test for warning 1d horizontal series interpolation when series
         has missing or NaN data
@@ -2008,16 +1956,14 @@ class TestWarningsErrors(unittest.TestCase):
                                      final_coords=coords,
                                      py_name=py_name)
 
-        with warnings.catch_warnings(record=True) as ws:
+        with pytest.warns(UserWarning, match="Not able to interpolate"):
             data.initialize()
-            wu = [w for w in ws if issubclass(w.category, UserWarning)]
-            self.assertTrue("Not able to interpolate" in str(wu[-1].message))
 
-        self.assertFalse(any(np.isnan(data.data.loc[:, "B"].values)))
-        self.assertFalse(any(np.isnan(data.data.loc[:, "C"].values)))
-        self.assertTrue(all(np.isnan(data.data.loc[:, "D"].values)))
+        assert not any(np.isnan(data.data.loc[:, "B"].values))
+        assert not any(np.isnan(data.data.loc[:, "C"].values))
+        assert all(np.isnan(data.data.loc[:, "D"].values))
 
-    def test_data_interp_h1dm(self):
+    def test_data_interp_h1dm(self, _root, _exp):
         """
         Test for warning 1d horizontal series interpolation when series
         has missing or NaN data
@@ -2044,25 +1990,16 @@ class TestWarningsErrors(unittest.TestCase):
                                      final_coords=coords,
                                      py_name=py_name)
 
-        with warnings.catch_warnings(record=True) as ws:
+        with pytest.warns(UserWarning, match='missing'):
             data.initialize()
-            # use only user warnings
-            wu = [w for w in ws if issubclass(w.category, UserWarning)]
-            self.assertEqual(len(wu), 1)
-            self.assertIn("missing", str(wu[0].message))
 
-        with warnings.catch_warnings(record=True) as ws:
+        warn_message = r"extrapolating data (above|below) the "\
+            r"(maximum|minimum) value of the time"
+        with pytest.warns(UserWarning, match=warn_message):
             for x, y in zip(_exp.xpts, _exp.interp_1d):
-                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
-            # use only user warnings
-            wu = [w for w in ws if issubclass(w.category, UserWarning)]
-            self.assertEqual(len(wu), 2)
-            self.assertTrue("extrapolating data below the minimum value"
-                            + " of the time" in str(wu[0].message))
-            self.assertTrue("extrapolating data above the maximum value"
-                            + " of the time" in str(wu[1].message))
+                assert y == data(x), "Wrong result at X=" + str(x)
 
-    def test_data_interp_h1dm_ignore(self):
+    def test_data_interp_h1dm_ignore(self, _root, _exp):
         """
         Test ignore warning 1d horizontal series interpolation when series
         has missing or NaN data
@@ -2089,24 +2026,15 @@ class TestWarningsErrors(unittest.TestCase):
                                      final_coords=coords,
                                      py_name=py_name)
 
-        with warnings.catch_warnings(record=True) as ws:
-            data.initialize()
-            # use only user warnings
-            wu = [w for w in ws if issubclass(w.category, UserWarning)]
-            self.assertEqual(len(wu), 0)
+        data.initialize()
 
-        with warnings.catch_warnings(record=True) as ws:
+        warn_message = r"extrapolating data (above|below) the "\
+            r"(maximum|minimum) value of the time"
+        with pytest.warns(UserWarning, match=warn_message):
             for x, y in zip(_exp.xpts, _exp.interp_1d):
-                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
-            # use only user warnings
-            wu = [w for w in ws if issubclass(w.category, UserWarning)]
-            self.assertEqual(len(wu), 2)
-            self.assertTrue("extrapolating data below the minimum value"
-                            + " of the time" in str(wu[0].message))
-            self.assertTrue("extrapolating data above the maximum value"
-                            + " of the time" in str(wu[1].message))
+                assert y == data(x), "Wrong result at X=" + str(x)
 
-    def test_data_interp_h1dm_raise(self):
+    def test_data_interp_h1dm_raise(self, _root):
         """
         Test error 1d horizontal series interpolation when series
         has missing or NaN data
@@ -2133,10 +2061,11 @@ class TestWarningsErrors(unittest.TestCase):
                                      final_coords=coords,
                                      py_name=py_name)
 
-        with self.assertRaises(ValueError):
+        error_message = "Dimension value missing or non-valid"
+        with pytest.raises(ValueError, match=error_message):
             data.initialize()
 
-    def test_data_interp_v1dm(self):
+    def test_data_interp_v1dm(self, _root, _exp):
         """
         Test for warning 1d vertical series interpolation when series has
         missing or NaN data
@@ -2163,25 +2092,16 @@ class TestWarningsErrors(unittest.TestCase):
                                      final_coords=coords,
                                      py_name=py_name)
 
-        with warnings.catch_warnings(record=True) as ws:
+        with pytest.warns(UserWarning, match='missing'):
             data.initialize()
-            # use only user warnings
-            wu = [w for w in ws if issubclass(w.category, UserWarning)]
-            self.assertEqual(len(wu), 1)
-            self.assertTrue("missing" in str(wu[0].message))
 
-        with warnings.catch_warnings(record=True) as ws:
+        warn_message = r"extrapolating data (above|below) the "\
+            r"(maximum|minimum) value of the time"
+        with pytest.warns(UserWarning, match=warn_message):
             for x, y in zip(_exp.xpts, _exp.interp_1d):
-                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
-            # use only user warnings
-            wu = [w for w in ws if issubclass(w.category, UserWarning)]
-            self.assertEqual(len(wu), 2)
-            self.assertTrue("extrapolating data below the minimum value"
-                            + " of the time" in str(wu[0].message))
-            self.assertTrue("extrapolating data above the maximum value"
-                            + " of the time" in str(wu[1].message))
+                assert y == data(x), "Wrong result at X=" + str(x)
 
-    def test_data_interp_v1dm_ignore(self):
+    def test_data_interp_v1dm_ignore(self, _root, _exp):
         """
         Test ignore warning 1d vertical series interpolation when series has
         missing or NaN data
@@ -2208,24 +2128,15 @@ class TestWarningsErrors(unittest.TestCase):
                                      final_coords=coords,
                                      py_name=py_name)
 
-        with warnings.catch_warnings(record=True) as ws:
-            data.initialize()
-            # use only user warnings
-            wu = [w for w in ws if issubclass(w.category, UserWarning)]
-            self.assertEqual(len(wu), 0)
+        data.initialize()
 
-        with warnings.catch_warnings(record=True) as ws:
+        warn_message = r"extrapolating data (above|below) the "\
+            r"(maximum|minimum) value of the time"
+        with pytest.warns(UserWarning, match=warn_message):
             for x, y in zip(_exp.xpts, _exp.interp_1d):
-                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
-            # use only user warnings
-            wu = [w for w in ws if issubclass(w.category, UserWarning)]
-            self.assertEqual(len(wu), 2)
-            self.assertTrue("extrapolating data below the minimum value"
-                            + " of the time" in str(wu[0].message))
-            self.assertTrue("extrapolating data above the maximum value"
-                            + " of the time" in str(wu[1].message))
+                assert y == data(x), "Wrong result at X=" + str(x)
 
-    def test_data_interp_v1dm_raise(self):
+    def test_data_interp_v1dm_raise(self, _root):
         """
         Test error 1d vertical series interpolation when series has
         missing or NaN data
@@ -2252,10 +2163,11 @@ class TestWarningsErrors(unittest.TestCase):
                                      final_coords=coords,
                                      py_name=py_name)
 
-        with self.assertRaises(ValueError):
+        error_message = "Dimension value missing or non-valid"
+        with pytest.raises(ValueError, match=error_message):
             data.initialize()
 
-    def test_data_interp_hn1dm(self):
+    def test_data_interp_hn1dm(self, _root, _exp):
         """
         Test for warning 1d horizontal series by cellrange names
         when series has missing or NaN data
@@ -2282,25 +2194,16 @@ class TestWarningsErrors(unittest.TestCase):
                                      final_coords=coords,
                                      py_name=py_name)
 
-        with warnings.catch_warnings(record=True) as ws:
+        with pytest.warns(UserWarning, match='missing'):
             data.initialize()
-            # use only user warnings
-            wu = [w for w in ws if issubclass(w.category, UserWarning)]
-            self.assertEqual(len(wu), 1)
-            self.assertTrue("missing" in str(wu[0].message))
 
-        with warnings.catch_warnings(record=True) as ws:
+        warn_message = r"extrapolating data (above|below) the "\
+            r"(maximum|minimum) value of the time"
+        with pytest.warns(UserWarning, match=warn_message):
             for x, y in zip(_exp.xpts, _exp.interp_1d):
-                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
-            # use only user warnings
-            wu = [w for w in ws if issubclass(w.category, UserWarning)]
-            self.assertEqual(len(wu), 2)
-            self.assertTrue("extrapolating data below the minimum value"
-                            + " of the time" in str(wu[0].message))
-            self.assertTrue("extrapolating data above the maximum value"
-                            + " of the time" in str(wu[1].message))
+                assert y == data(x), "Wrong result at X=" + str(x)
 
-    def test_data_interp_hn1dm_ignore(self):
+    def test_data_interp_hn1dm_ignore(self, _root, _exp):
         """
         Test ignore warning 1d horizontal series by cellrange names
         when series has missing or NaN data
@@ -2327,24 +2230,15 @@ class TestWarningsErrors(unittest.TestCase):
                                      final_coords=coords,
                                      py_name=py_name)
 
-        with warnings.catch_warnings(record=True) as ws:
-            data.initialize()
-            # use only user warnings
-            wu = [w for w in ws if issubclass(w.category, UserWarning)]
-            self.assertEqual(len(wu), 0)
+        data.initialize()
 
-        with warnings.catch_warnings(record=True) as ws:
+        warn_message = r"extrapolating data (above|below) the "\
+            r"(maximum|minimum) value of the time"
+        with pytest.warns(UserWarning, match=warn_message):
             for x, y in zip(_exp.xpts, _exp.interp_1d):
-                self.assertEqual(y, data(x), "Wrong result at X=" + str(x))
-            # use only user warnings
-            wu = [w for w in ws if issubclass(w.category, UserWarning)]
-            self.assertEqual(len(wu), 2)
-            self.assertTrue("extrapolating data below the minimum value"
-                            + " of the time" in str(wu[0].message))
-            self.assertTrue("extrapolating data above the maximum value"
-                            + " of the time" in str(wu[1].message))
+                assert y == data(x), "Wrong result at X=" + str(x)
 
-    def test_data_interp_hn1dm_raise(self):
+    def test_data_interp_hn1dm_raise(self, _root):
         """
         Test for error 1d horizontal series by cellrange names
         when series has missing or NaN data
@@ -2371,10 +2265,11 @@ class TestWarningsErrors(unittest.TestCase):
                                      final_coords=coords,
                                      py_name=py_name)
 
-        with self.assertRaises(ValueError):
+        error_message = "Dimension value missing or non-valid"
+        with pytest.raises(ValueError, match=error_message):
             data.initialize()
 
-    def test_data_interp_hn3dmd(self):
+    def test_data_interp_hn3dmd(self, _root, _exp):
         """
         Test for warning 3d horizontal series interpolation by cellrange names
         with missing data values. More cases are tested with test-models
@@ -2411,31 +2306,16 @@ class TestWarningsErrors(unittest.TestCase):
                  interp=interp,
                  coords=coords_2)
 
-        with warnings.catch_warnings(record=True) as ws:
+        with pytest.warns(UserWarning, match='missing'):
             data.initialize()
-            # use only user warnings
-            wu = [w for w in ws if issubclass(w.category, UserWarning)]
-            self.assertEqual(len(wu), 2)
-            self.assertTrue(np.all(
-                ["missing" in str(w.message) for w in wu]
-                ))
-            self.assertTrue(np.all(
-                ["will be filled" in str(w.message) for w in wu]
-                ))
 
-        with warnings.catch_warnings(record=True) as ws:
+        warn_message = r"extrapolating data (above|below) the "\
+            r"(maximum|minimum) value of the time"
+        with pytest.warns(UserWarning, match=warn_message):
             for x, y in zip(_exp.xpts, _exp.interp_3d):
-                self.assertTrue(y.equals(data(x)),
-                                "Wrong result at X=" + str(x))
-            # use only user warnings
-            wu = [w for w in ws if issubclass(w.category, UserWarning)]
-            self.assertEqual(len(wu), 2)
-            self.assertTrue("extrapolating data below the minimum value"
-                            + " of the time" in str(wu[0].message))
-            self.assertTrue("extrapolating data above the maximum value"
-                            + " of the time" in str(wu[1].message))
+                assert y.equals(data(x)), "Wrong result at X=" + str(x)
 
-    def test_data_interp_hn3dmd_raw(self):
+    def test_data_interp_hn3dmd_raw(self, _root):
         """
         Test for warning 1d horizontal series interpolation when series
         has missing or NaN data
@@ -2472,19 +2352,10 @@ class TestWarningsErrors(unittest.TestCase):
                  interp=interp,
                  coords=coords_2)
 
-        with warnings.catch_warnings(record=True) as ws:
+        with pytest.warns(UserWarning, match='missing'):
             data.initialize()
-            # use only user warnings
-            wu = [w for w in ws if issubclass(w.category, UserWarning)]
-            self.assertEqual(len(wu), 2)
-            self.assertTrue(np.all(
-                ["missing" in str(w.message) for w in wu]
-                ))
-            self.assertTrue(np.all(
-                ["will be filled" not in str(w.message) for w in wu]
-                ))
 
-    def test_lookup_hn3dmd_raise(self):
+    def test_lookup_hn3dmd_raise(self, _root):
         """
         Test for error 3d horizontal series interpolation with missing data
         values.
@@ -2517,10 +2388,11 @@ class TestWarningsErrors(unittest.TestCase):
                  cell=cell_2,
                  coords=coords_2)
 
-        with self.assertRaises(ValueError):
+        error_message = "Data value missing or non-valid"
+        with pytest.raises(ValueError, match=error_message):
             data.initialize()
 
-    def test_lookup_hn3dmd_ignore(self):
+    def test_lookup_hn3dmd_ignore(self, _root, _exp):
         """
         Test for ignore warnings 3d horizontal series interpolation with
         missing data values.
@@ -2553,25 +2425,15 @@ class TestWarningsErrors(unittest.TestCase):
                  cell=cell_2,
                  coords=coords_2)
 
-        with warnings.catch_warnings(record=True) as ws:
-            data.initialize()
-            # use only user warnings
-            wu = [w for w in ws if issubclass(w.category, UserWarning)]
-            self.assertEqual(len(wu), 0)
+        data.initialize()
 
-        with warnings.catch_warnings(record=True) as ws:
+        warn_message = r"extrapolating data (above|below) the "\
+            r"(maximum|minimum) value of the series"
+        with pytest.warns(UserWarning, match=warn_message):
             for x, y in zip(_exp.xpts, _exp.interp_3d):
-                self.assertTrue(y.equals(data(x)),
-                                "Wrong result at X=" + str(x))
-            # use only user warnings
-            wu = [w for w in ws if issubclass(w.category, UserWarning)]
-            self.assertEqual(len(wu), 2)
-            self.assertTrue("extrapolating data below the minimum value"
-                            + " of the series" in str(wu[0].message))
-            self.assertTrue("extrapolating data above the maximum value"
-                            + " of the series" in str(wu[1].message))
+                assert y.equals(data(x)), "Wrong result at X=" + str(x)
 
-    def test_constant_h3dm(self):
+    def test_constant_h3dm(self, _root):
         """
         Test for warning in 3d horizontal series interpolation with missing
         values.
@@ -2604,16 +2466,10 @@ class TestWarningsErrors(unittest.TestCase):
                  cell=cell_2,
                  coords=coords_2)
 
-        with warnings.catch_warnings(record=True) as ws:
+        with pytest.warns(UserWarning, match='missing'):
             data.initialize()
-            # use only user warnings
-            wu = [w for w in ws if issubclass(w.category, UserWarning)]
-            self.assertEqual(len(wu), 2)
-            self.assertTrue(np.all(
-                ["missing" in str(w.message) for w in wu]
-                ))
 
-    def test_constant_h3dm_ignore(self):
+    def test_constant_h3dm_ignore(self, _root):
         """
         Test for ignore in 3d horizontal series interpolation with missing
         values.
@@ -2646,13 +2502,9 @@ class TestWarningsErrors(unittest.TestCase):
                  cell=cell_2,
                  coords=coords_2)
 
-        with warnings.catch_warnings(record=True) as ws:
-            data.initialize()
-            # use only user warnings
-            wu = [w for w in ws if issubclass(w.category, UserWarning)]
-            self.assertEqual(len(wu), 0)
+        data.initialize()
 
-    def test_constant_h3dm_raise(self):
+    def test_constant_h3dm_raise(self, _root):
         """
         Test for error 3d horizontal constants with missing values.
         """
@@ -2684,10 +2536,11 @@ class TestWarningsErrors(unittest.TestCase):
                  cell=cell_2,
                  coords=coords_2)
 
-        with self.assertRaises(ValueError):
+        error_message = "Constant value missing or non-valid"
+        with pytest.raises(ValueError, match=error_message):
             data.initialize()
 
-    def test_constant_hn3dm_raise(self):
+    def test_constant_hn3dm_raise(self, _root):
         """
         Test for error 3d horizontal constants with missing values by cellrange
         name.
@@ -2720,10 +2573,11 @@ class TestWarningsErrors(unittest.TestCase):
                  cell=cell_2,
                  coords=coords_2)
 
-        with self.assertRaises(ValueError):
+        error_message = "Constant value missing or non-valid"
+        with pytest.raises(ValueError, match=error_message):
             data.initialize()
 
-    def test_data_interp_h1d0(self):
+    def test_data_interp_h1d0(self, _root):
         """
         Test for error 1d horizontal series for len 0 series
         """
@@ -2747,10 +2601,11 @@ class TestWarningsErrors(unittest.TestCase):
                                      final_coords=coords,
                                      py_name=py_name)
 
-        with self.assertRaises(ValueError):
+        error_message = "has length 0"
+        with pytest.raises(ValueError, match=error_message):
             data.initialize()
 
-    def test_data_interp_v1d0(self):
+    def test_data_interp_v1d0(self, _root):
         """
         Test for error 1d vertical series for len 0 series
         """
@@ -2774,10 +2629,11 @@ class TestWarningsErrors(unittest.TestCase):
                                      final_coords=coords,
                                      py_name=py_name)
 
-        with self.assertRaises(ValueError):
+        error_message = "has length 0"
+        with pytest.raises(ValueError, match=error_message):
             data.initialize()
 
-    def test_data_interp_hn1d0(self):
+    def test_data_interp_hn1d0(self, _root):
         """
         Test for error in series by cellrange names
         when series has length 0
@@ -2803,10 +2659,11 @@ class TestWarningsErrors(unittest.TestCase):
                                      final_coords=coords,
                                      py_name=py_name)
 
-        with self.assertRaises(ValueError):
+        error_message = "has length 0"
+        with pytest.raises(ValueError, match=error_message):
             data.initialize()
 
-    def test_data_interp_hn1dt(self):
+    def test_data_interp_hn1dt(self, _root):
         """
         Test for error in series by cellrange names
         when series is a sheetle
@@ -2831,12 +2688,13 @@ class TestWarningsErrors(unittest.TestCase):
                                      final_coords=coords,
                                      py_name=py_name)
 
-        with self.assertRaises(ValueError):
+        error_message = "is a table and not a vector"
+        with pytest.raises(ValueError, match=error_message):
             data.initialize()
 
-    def test_data_interp_hns(self):
+    def test_data_interp_hns(self, _root):
         """
-        Test for error in data when it doen't have the same
+        Test for error in data when it doesn't have the same
         shape as the given coordinates
         """
         import pysd
@@ -2859,10 +2717,11 @@ class TestWarningsErrors(unittest.TestCase):
                                      final_coords=coords,
                                      py_name=py_name)
 
-        with self.assertRaises(ValueError):
+        error_message = "has not the same size as the given coordinates"
+        with pytest.raises(ValueError, match=error_message):
             data.initialize()
 
-    def test_data_interp_vnss(self):
+    def test_data_interp_vnss(self, _root):
         """
         Test for error in data when it doen't have the same
         shape in the first dimension as the length of series
@@ -2887,11 +2746,12 @@ class TestWarningsErrors(unittest.TestCase):
                                      final_coords=coords,
                                      py_name=py_name)
 
-        with self.assertRaises(ValueError):
+        error_message = "don't have the same length in the 1st dimension"
+        with pytest.raises(ValueError, match=error_message):
             data.initialize()
 
     # Following test are independent of the reading option
-    def test_data_interp_hnnwd(self):
+    def test_data_interp_hnnwd(self, _root):
         """
         Test for error in series when the series is not
         well defined
@@ -2916,12 +2776,10 @@ class TestWarningsErrors(unittest.TestCase):
                                      final_coords=coords,
                                      py_name=py_name)
 
-        with self.assertRaises(ValueError) as err:
+        with pytest.raises(ValueError, match="has repeated values"):
             data.initialize()
 
-        self.assertIn("has repeated values", str(err.exception))
-
-    def test_data_raw_hnnm(self):
+    def test_data_raw_hnnm(self, _root):
         """
         Test for error in series when the series is not monotonous
         """
@@ -2951,10 +2809,9 @@ class TestWarningsErrors(unittest.TestCase):
                     3: -1, 4: -1, 5: 1, 6: 1,
                     7: 0, 8: 0, 9: 0}
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with pytest.warns(UserWarning):
             for i in range(-1, 9):
-                self.assertEqual(data(i), expected[i])
+                assert data(i) == expected[i]
 
         time_row_or_col = "11"
         py_name = "test_data_interp_hnnnm2"
@@ -2975,12 +2832,11 @@ class TestWarningsErrors(unittest.TestCase):
                     3: 2, 4: 3, 5: -1, 6: -1,
                     7: 1, 8: 2, 9: 2}
 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
+        with pytest.warns(UserWarning):
             for i in range(-1, 9):
-                self.assertEqual(data(i), expected[i])
+                data(i) == expected[i]
 
-    def test_data_h3d_interpnv(self):
+    def test_data_h3d_interpnv(self, _root):
         """
         ExtData test for error when the interpolation method is not valid
         """
@@ -2994,7 +2850,9 @@ class TestWarningsErrors(unittest.TestCase):
         interp = "hold forward"
         py_name = "test_data_h3d_interpnv"
 
-        with self.assertRaises(ValueError):
+        error_message = r"The interpolation method \(interp\) must be "\
+            r"'raw', 'interpolate', 'look_forward' or 'hold_backward'"
+        with pytest.raises(ValueError, match=error_message):
             pysd.external.ExtData(file_name=file_name,
                                   sheet=sheet,
                                   time_row_or_col=time_row_or_col,
@@ -3005,7 +2863,7 @@ class TestWarningsErrors(unittest.TestCase):
                                   final_coords=coords,
                                   py_name=py_name)
 
-    def test_data_h3d_interp(self):
+    def test_data_h3d_interp(self, _root):
         """
         ExtData test for error when the interpolation method is different
         """
@@ -3033,7 +2891,9 @@ class TestWarningsErrors(unittest.TestCase):
                                      final_coords=final_coords,
                                      py_name=py_name)
 
-        with self.assertRaises(ValueError):
+        error_message = "Error matching interpolation method with "\
+            "previously defined one"
+        with pytest.raises(ValueError, match=error_message):
             data.add(file_name=file_name,
                      sheet=sheet,
                      time_row_or_col=time_row_or_col,
@@ -3041,7 +2901,7 @@ class TestWarningsErrors(unittest.TestCase):
                      coords=coords_2,
                      interp=interp2)
 
-    def test_data_h3d_add(self):
+    def test_data_h3d_add(self, _root):
         """
         ExtData test for error when add doesn't have the same dim
         """
@@ -3068,7 +2928,8 @@ class TestWarningsErrors(unittest.TestCase):
                                      final_coords=final_coords,
                                      py_name=py_name)
 
-        with self.assertRaises(ValueError):
+        error_message = "Error matching dimensions with previous data"
+        with pytest.raises(ValueError, match=error_message):
             data.add(file_name=file_name,
                      sheet=sheet,
                      time_row_or_col=time_row_or_col,
@@ -3076,7 +2937,7 @@ class TestWarningsErrors(unittest.TestCase):
                      coords=coords_2,
                      interp=interp)
 
-    def test_lookup_h3d_add(self):
+    def test_lookup_h3d_add(self, _root):
         """
         ExtLookup test for error when add doesn't have the same dim
         """
@@ -3101,14 +2962,15 @@ class TestWarningsErrors(unittest.TestCase):
                                        final_coords=final_coords,
                                        py_name=py_name)
 
-        with self.assertRaises(ValueError):
+        error_message = "Error matching dimensions with previous data"
+        with pytest.raises(ValueError, match=error_message):
             data.add(file_name=file_name,
                      sheet=sheet,
                      x_row_or_col=x_row_or_col,
                      cell=cell_2,
                      coords=coords_2)
 
-    def test_constant_h3d_add(self):
+    def test_constant_h3d_add(self, _root):
         """
         ExtConstant test for error when add doesn't have the same dim
         """
@@ -3136,13 +2998,14 @@ class TestWarningsErrors(unittest.TestCase):
                                          final_coords=final_coords,
                                          py_name=py_name)
 
-        with self.assertRaises(ValueError):
+        error_message = "Error matching dimensions with previous data"
+        with pytest.raises(ValueError, match=error_message):
             data.add(file_name=file_name,
                      sheet=sheet,
                      cell=cell2,
                      coords=coords2)
 
-    def test_constant_hns(self):
+    def test_constant_hns(self, _root):
         """
         Test for error in data when it doen't have the same
         shape as the given coordinates
@@ -3163,10 +3026,11 @@ class TestWarningsErrors(unittest.TestCase):
                                          final_coords=coords,
                                          py_name=py_name)
 
-        with self.assertRaises(ValueError):
+        error_message = 'has not the same shape as the given coordinates'
+        with pytest.raises(ValueError, match=error_message):
             data.initialize()
 
-    def text_openpyxl_str(self):
+    def text_openpyxl_str(self, _root):
         """
         Test for reading data with strings with openpyxl
         """
@@ -3197,7 +3061,7 @@ class TestWarningsErrors(unittest.TestCase):
 
         data.initialize()
 
-        self.assertTrue(data.data.equals(expected))
+        assert data.data.equals(expected)
 
         cell = "no_constant"
         sheet = "caSE anD NON V"  # test case insensitivity
@@ -3212,16 +3076,16 @@ class TestWarningsErrors(unittest.TestCase):
 
         data.initialize()
 
-        self.assertTrue(np.isnan(data.data))
+        assert np.isnan(data.data)
 
 
-class DownwardCompatibility(unittest.TestCase):
+class DownwardCompatibility():
     """
     These tests are defined to make the external objects compatible
     with SDQC library. If any change in PySD breaks these tests it
     should be checked with SDQC library and correct it.
     """
-    def test_constant_hn3dm_keep(self):
+    def test_constant_hn3dm_keep(self, _root):
         """
         Test for keep 3d horizontal constants with missing values by cellrange
         name.
@@ -3267,9 +3131,9 @@ class DownwardCompatibility(unittest.TestCase):
 
         data.initialize()
 
-        self.assertTrue(data().equals(expected))
+        assert data().equals(expected)
 
-    def test_lookup_hn3dmd_keep(self):
+    def test_lookup_hn3dmd_keep(self, _root):
         """
         Test for keep 3d horizontal series interpolation with
         missing data values.
@@ -3325,9 +3189,9 @@ class DownwardCompatibility(unittest.TestCase):
 
         data.initialize()
 
-        self.assertTrue(data.data.equals(expected))
+        assert data.data.equals(expected)
 
-    def test_data_interp_v1dm_keep(self):
+    def test_data_interp_v1dm_keep(self, _root):
         """
         Test keep 1d vertical series interpolation when series has
         missing or NaN data
@@ -3340,7 +3204,7 @@ class DownwardCompatibility(unittest.TestCase):
         cell = "C5"
         coords = {}
         interp = None
-        py_name = "test_data_interp_v1dm_ignore"
+        py_name = "test_data_interp_v1dm_keep"
 
         pysd.external.External.missing = "keep"
 
@@ -3361,9 +3225,9 @@ class DownwardCompatibility(unittest.TestCase):
 
         data.initialize()
 
-        self.assertTrue(data.data.equals(expected))
+        assert data.data.equals(expected)
 
-    def test_data_interp_hnnm_keep(self):
+    def test_data_interp_hnnm_keep(self, _root):
         """
         Test for keep in series when the series is not
         strictly monotonous
@@ -3397,9 +3261,9 @@ class DownwardCompatibility(unittest.TestCase):
 
         data.initialize()
 
-        self.assertTrue(data.data.equals(expected))
+        assert data.data.equals(expected)
 
-    def test_lookup_data_attr(self):
+    def test_lookup_data_attr(self, _root):
         """
         Test for keep in series when the series is not
         strictly monotonous
@@ -3435,5 +3299,5 @@ class DownwardCompatibility(unittest.TestCase):
         datD.initialize()
         datL.initialize()
 
-        self.assertTrue(hasattr(datD, 'time_row_or_cols'))
-        self.assertTrue(hasattr(datL, 'x_row_or_cols'))
+        assert hasattr(datD, 'time_row_or_cols')
+        assert hasattr(datL, 'x_row_or_cols')

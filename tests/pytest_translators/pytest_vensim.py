@@ -35,7 +35,6 @@ class TestVensimFile:
     def model_path(self, _root, path):
         return _root.joinpath("test-models").joinpath(path)
 
-    @pytest.mark.dependency(name="read_vensim_file")
     def test_read_vensim_file(self, model_path):
         # assert that the files don't exist in the temporary directory
         ven_file = VensimFile(model_path)
@@ -48,7 +47,6 @@ class TestVensimFile:
         assert isinstance(getattr(ven_file, "root_path"), Path)
         assert isinstance(getattr(ven_file, "model_text"), str)
 
-    @pytest.mark.dependency(depends=["read_vensim_file"])
     def test_file_split_file_sections(self, model_path):
         ven_file = VensimFile(model_path)
         ven_file.parse()

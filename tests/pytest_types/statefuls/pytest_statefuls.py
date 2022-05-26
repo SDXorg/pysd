@@ -1,19 +1,14 @@
-import unittest
-import warnings
-from pathlib import Path
+import pytest
 
 import xarray as xr
 
-_root = Path(__file__).parent
+from pysd.py_backend.statefuls import Stateful, Integ, Delay, DelayN,\
+    DelayFixed, Forecast, Initial, SampleIfTrue, Smooth, Trend
 
-more_tests = _root / "more-tests"
 
-
-class TestStateful(unittest.TestCase):
+class TestStateful():
 
     def test_integ(self):
-        from pysd.py_backend.statefuls import Integ
-
         ddt_val = 5
         init_val = 10
 
@@ -27,35 +22,32 @@ class TestStateful(unittest.TestCase):
 
         stock.initialize()
 
-        self.assertEqual(stock(), 10)
-        self.assertEqual(stock.ddt(), 5)
+        assert stock() == 10
+        assert stock.ddt() == 5
 
         dt = .1
         stock.update(stock() + dt * stock.ddt())
 
-        self.assertEqual(stock(), 10.5)
+        assert stock() == 10.5
 
         ddt_val = 43
-        self.assertEqual(stock.ddt(), 43)
+        assert stock.ddt() == 43
 
         init_val = 11
-        self.assertEqual(stock(), 10.5)
+        assert stock() == 10.5
 
         stock.initialize()
-        self.assertEqual(stock(), 11)
+        assert stock() == 11
 
         stock.initialize(30)
-        self.assertEqual(stock(), 30)
+        assert stock() == 30
 
     def test_stateful_identification(self):
-        from pysd.py_backend.statefuls import Integ, Stateful
-
         stock = Integ(lambda: 5, lambda: 7, "stock")
 
-        self.assertIsInstance(stock, Stateful)
+        assert isinstance(stock, Stateful)
 
     def test_delay(self):
-        from pysd.py_backend.statefuls import Delay, DelayN, DelayFixed
 
         delay_a = Delay(delay_input=lambda: 5,
                         delay_time=lambda: 3,
@@ -66,13 +58,13 @@ class TestStateful(unittest.TestCase):
 
         delay_a.initialize()
 
-        self.assertEqual(delay_a(), 4.234)
+        assert delay_a() == 4.234
 
-        self.assertEqual(float(delay_a.ddt()[0]), (5-4.234)*3)
+        assert float(delay_a.ddt()[0]) == (5-4.234)*3
 
         delay_a.initialize(6)
-        self.assertEqual(delay_a(), 6)
-        self.assertEqual(float(delay_a.ddt()[0]), (5-6)*3)
+        assert delay_a() == 6
+        assert float(delay_a.ddt()[0]) == (5-6)*3
 
         delay_b = DelayN(delay_input=lambda: 5,
                          delay_time=lambda: 3,
@@ -83,13 +75,13 @@ class TestStateful(unittest.TestCase):
 
         delay_b.initialize()
 
-        self.assertEqual(delay_b(), 4.234)
+        assert delay_b() == 4.234
 
-        self.assertEqual(float(delay_b.ddt()[0]), (5-4.234)*3)
+        assert float(delay_b.ddt()[0]) == (5-4.234)*3
 
         delay_b.initialize(6)
-        self.assertEqual(delay_b(), 6)
-        self.assertEqual(float(delay_b.ddt()[0]), (5-6)*3)
+        assert delay_b() == 6
+        assert float(delay_b.ddt()[0]) == (5-6)*3
 
         delay_c = DelayFixed(delay_input=lambda: 5,
                              delay_time=lambda: 3,
@@ -99,16 +91,15 @@ class TestStateful(unittest.TestCase):
 
         delay_c.initialize()
 
-        self.assertEqual(delay_c(), 4.234)
+        assert delay_c() == 4.234
 
         delay_c.initialize(6)
-        self.assertEqual(delay_c(), 6)
+        assert delay_c() == 6
 
     def test_delay_subscript(self):
         """
         Test for subscripted delay
         """
-        from pysd.py_backend.statefuls import Delay
 
         coords = {'d1': [9, 1], 'd2': [2, 4]}
         dims = ['d1', 'd2']
@@ -125,15 +116,12 @@ class TestStateful(unittest.TestCase):
 
         delay.initialize()
 
-        self.assertTrue(delay().equals(xr_initial))
+        assert delay().equals(xr_initial)
         delay_ddt = delay.ddt()[0].reset_coords('_delay', drop=True)
-        print(delay_ddt)
 
-        self.assertTrue(delay_ddt.equals((xr_input-xr_initial)*2))
+        assert delay_ddt.equals((xr_input-xr_initial)*2)
 
     def test_delay_order(self):
-        from pysd.py_backend.statefuls import Delay, DelayN, DelayFixed
-
         # order 3 to 2
         delay1 = Delay(delay_input=lambda: 10,
                        delay_time=lambda: 1,
@@ -173,46 +161,29 @@ class TestStateful(unittest.TestCase):
                             tstep=lambda: 0.5,
                             py_name='delay5')
 
-        with warnings.catch_warnings(record=True) as ws:
+        warning_message = "Delay time very small, casting delay order "\
+            "from 3 to 2"
+        with pytest.warns(UserWarning, match=warning_message):
             delay1.initialize()
-            wu = [w for w in ws if issubclass(w.category, UserWarning)]
-            self.assertEqual(len(wu), 1)
-            self.assertIn('Delay time very small, casting delay order '
-                          + 'from 3 to 2',
-                          str(wu[0].message))
 
-        with warnings.catch_warnings(record=True) as ws:
+        warning_message = "Delay time very small, casting delay order "\
+            "from 3 to 2"
+        with pytest.warns(UserWarning, match=warning_message):
             delay2.initialize()
-            wu = [w for w in ws if issubclass(w.category, UserWarning)]
-            self.assertEqual(len(wu), 1)
-            self.assertIn('Delay time very small, casting delay order '
-                          + 'from 3 to 2',
-                          str(wu[0].message))
 
-        with warnings.catch_warnings(record=True) as ws:
+        warning_message = r"Casting delay order from 1\.5 to 1"
+        with pytest.warns(UserWarning, match=warning_message):
             delay3.initialize()
-            wu = [w for w in ws if issubclass(w.category, UserWarning)]
-            self.assertEqual(len(wu), 1)
-            self.assertIn("Casting delay order from 1.5 to 1",
-                          str(wu[0].message))
 
-        with warnings.catch_warnings(record=True) as ws:
+        warning_message = r"Casting delay order from 1\.5 to 1"
+        with pytest.warns(UserWarning, match=warning_message):
             delay4.initialize()
-            wu = [w for w in ws if issubclass(w.category, UserWarning)]
-            self.assertEqual(len(wu), 1)
-            self.assertIn("Casting delay order from 1.5 to 1",
-                          str(wu[0].message))
 
-        with warnings.catch_warnings(record=True) as ws:
+        warning_message = r"Casting delay order from 1\.500000 to 2"
+        with pytest.warns(UserWarning, match=warning_message):
             delay5.initialize()
-            wu = [w for w in ws if issubclass(w.category, UserWarning)]
-            self.assertEqual(len(wu), 1)
-            self.assertIn("Casting delay order from 1.500000 to 2",
-                          str(wu[0].message))
 
     def test_forecast(self):
-        from pysd.py_backend.statefuls import Forecast
-
         input_val = 5
 
         def input():
@@ -225,29 +196,26 @@ class TestStateful(unittest.TestCase):
                          py_name='forecast')
 
         frcst.initialize()
-        self.assertEqual(frcst(), input_val)
+        assert frcst() == input_val
 
         frcst.state = frcst.state + 0.1*frcst.ddt()
         input_val = 20
-        self.assertEqual(frcst(), 220)
+        assert frcst() == 220
 
         frcst.state = frcst.state + 0.1*frcst.ddt()
         input_val = 35.5
-        self.assertEqual(
-            frcst(),
-            input_val*(1+(input_val-frcst.state)/(3*frcst.state)*10))
+        assert frcst()\
+            == input_val*(1+(input_val-frcst.state)/(3*frcst.state)*10)
 
         input_val = 7
         init_trend = 6
 
         frcst.initialize(init_trend)
-        self.assertEqual(
-            frcst(),
-            input_val * (1+(input_val-input_val/(1+init_trend))
-                         / (3*input_val/(1+init_trend))*10))
+        assert frcst()\
+            == input_val * (1+(input_val-input_val/(1+init_trend))
+                            / (3*input_val/(1+init_trend))*10)
 
     def test_initial(self):
-        from pysd.py_backend.statefuls import Initial
         a = 1
         b = 2
 
@@ -263,13 +231,13 @@ class TestStateful(unittest.TestCase):
         initial_f10 = Initial(lambda: func1(), "initial_f10")
         initial_f10.initialize()
         f1_i0 = initial_f10()
-        self.assertEqual(f1_0, f1_i0)
+        assert f1_0 == f1_i0
 
         f2_0 = func2()
         initial_f20 = Initial(func2, "initial_f20")
         initial_f20.initialize()
         f2_i0 = initial_f20()
-        self.assertEqual(f2_0, f2_i0)
+        assert f2_0 == f2_i0
 
         a = 5
         b = 6
@@ -278,21 +246,19 @@ class TestStateful(unittest.TestCase):
         # after it is called a second time
         f1_1 = func1()
         f1_i1 = initial_f10()
-        self.assertNotEqual(f1_1, f1_i1)
-        self.assertEqual(f1_i1, f1_0)
+        assert f1_1 != f1_i1
+        assert f1_i1 == f1_0
 
         f2_1 = func2()
         f2_i1 = initial_f20()
-        self.assertNotEqual(f2_1, f2_i1)
-        self.assertEqual(f2_i1, f2_0)
+        assert f2_1 != f2_i1
+        assert f2_i1 == f2_0
 
         # test change initial condition
         initial_f20.initialize(123)
-        self.assertEqual(initial_f20(), 123)
+        assert initial_f20() == 123
 
     def test_sampleiftrue(self):
-        from pysd.py_backend.statefuls import SampleIfTrue
-
         bool_v = False
 
         def condition():
@@ -304,16 +270,15 @@ class TestStateful(unittest.TestCase):
                            py_name='sampleiftrue')
 
         sif.initialize()
-        self.assertEqual(sif(), 4.234)
+        assert sif() == 4.234
 
         sif.initialize(6)
-        self.assertEqual(sif(), 6)
+        assert sif() == 6
 
         bool_v = True
-        self.assertEqual(sif(), 3)
+        assert sif() == 3
 
     def test_smooth(self):
-        from pysd.py_backend.statefuls import Smooth
         smooth = Smooth(smooth_input=lambda: 5,
                         smooth_time=lambda: 3,
                         initial_value=lambda: 4.234,
@@ -321,41 +286,36 @@ class TestStateful(unittest.TestCase):
                         py_name='smooth')
 
         smooth.initialize()
-        self.assertEqual(smooth(), 4.234)
+        assert smooth() == 4.234
 
         smooth.initialize(6)
-        self.assertEqual(smooth(), 6)
+        assert smooth() == 6
 
     def test_trend(self):
-        from pysd.py_backend.statefuls import Trend
         trend = Trend(trend_input=lambda: 5,
                       average_time=lambda: 3,
                       initial_trend=lambda: 4.234,
                       py_name='trend')
 
         trend.initialize()
-        self.assertEqual(trend(), 4.234)
+        assert trend() == 4.234
 
         trend.initialize(6)
-        self.assertEqual(round(trend(), 8), 6)
+        assert round(trend(), 8) == 6
 
 
-class TestStatefulErrors(unittest.TestCase):
+class TestStatefulErrors():
     def test_not_initialized_object(self):
-        from pysd.py_backend.statefuls import Stateful
-
         obj = Stateful()
         obj.py_name = "my_object"
-        with self.assertRaises(AttributeError) as err:
+        error_message = r"my_object\nAttempt to call stateful element"\
+            r" before it is initialized\."
+        with pytest.raises(AttributeError, match=error_message):
             obj.state
-            self.assertIn(
-                "my_object\nAttempt to call stateful element"
-                + " before it is initialized.",
-                err.args[0])
 
 
-class TestMacroMethods(unittest.TestCase):
-    def test_get_elements_to_initialize(self):
+class TestMacroMethods():
+    def test_get_elements_to_initialize(self, _root):
         from pysd import read_vensim
         from pysd.py_backend.model import Macro
 
@@ -371,10 +331,9 @@ class TestMacroMethods(unittest.TestCase):
             "E": {}
         }
 
-        self.assertEqual(macro._get_elements_to_initialize(["A"]), set())
-        self.assertEqual(macro._get_elements_to_initialize(["B"]), {"A"})
-        self.assertEqual(macro._get_elements_to_initialize(["B", "A"]), set())
-        self.assertEqual(macro._get_elements_to_initialize(["C"]), {"A", "B"})
-        self.assertEqual(macro._get_elements_to_initialize(["A", "C"]), {"B"})
-        self.assertEqual(macro._get_elements_to_initialize(
-            ["C", "E"]), {"A", "B", "D"})
+        assert macro._get_elements_to_initialize(["A"]) == set()
+        assert macro._get_elements_to_initialize(["B"]) == {"A"}
+        assert macro._get_elements_to_initialize(["B", "A"]) == set()
+        assert macro._get_elements_to_initialize(["C"]) == {"A", "B"}
+        assert macro._get_elements_to_initialize(["A", "C"]) == {"B"}
+        assert macro._get_elements_to_initialize(["C", "E"]) == {"A", "B", "D"}
