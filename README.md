@@ -9,7 +9,6 @@ PySD
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5654824.svg)](https://doi.org/10.5281/zenodo.5654824)
 [![Docs](https://readthedocs.org/projects/pysd/badge/?version=latest)](https://pysd.readthedocs.io/en/latest/?badge=latest)
 
-
 Simulating System Dynamics Models in Python
 
 This project is a simple library for running [System Dynamics](http://en.wikipedia.org/wiki/System_dynamics) models in python, with the purpose of improving integration of *Big Data* and *Machine Learning* into the SD workflow.
@@ -22,20 +21,14 @@ See the [project documentation](http://pysd.readthedocs.org/) for information ab
 
 - [Installation](http://pysd.readthedocs.org/en/latest/installation.html)
 - [Getting Started](http://pysd.readthedocs.org/en/latest/getting_started.html)
+- [Release Notes](http://pysd.readthedocs.org/en/latest/whats_new.html)
+- [Citing PySD](https://pysd.readthedocs.io/en/latest/#citing)
 
 For standard methods for data analysis with SD models, see the  [PySD Cookbook](https://github.com/JamesPHoughton/PySD-Cookbook), containing (for example):
 
 - [Model Fitting](http://nbviewer.ipython.org/github/JamesPHoughton/PySD-Cookbook/blob/master/2_1_Fitting_with_Optimization.ipynb)
 - [Surrogating model components with machine learning regressions](http://nbviewer.ipython.org/github/JamesPHoughton/PySD-Cookbook/blob/master/6_1_Surrogating_with_regression.ipynb)
 - [Multi-Scale geographic comparison of model predictions](http://nbviewer.ipython.org/github/JamesPHoughton/PySD-Cookbook/blob/master/Exploring%20models%20across%20geographic%20scales.ipynb)
-
-If you use PySD in any published work, consider citing the [PySD Introductory Paper](https://github.com/JamesPHoughton/pysd/blob/master/docs/PySD%20Intro%20Paper%20Preprint.pdf):
-
->Houghton, James; Siegel, Michael. "Advanced data analytics for system dynamics models using PySD." *Proceedings of the 33rd International Conference of the System Dynamics Society.* 2015.
-
-You can also cite the library using the [DOI provided by Zenodo](https://zenodo.org/search?page=1&size=20&q=pysd). It is recomendable to specify the used PySD version and its correspondent DOI. If you want to cite all versions you can use the generic DOI for PySD instead:
-
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5654824.svg)](https://doi.org/10.5281/zenodo.5654824)
 
 ### Why create a new SD simulation engine?
 
