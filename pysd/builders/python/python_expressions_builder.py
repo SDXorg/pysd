@@ -990,7 +990,6 @@ class TabDataBuilder(StructureBuilder):
         arguments["real_name"] = self.element.name
         arguments["py_name"] =\
             self.section.namespace.namespace[self.element.name]
-        arguments["subscripts"] = self.def_subs
         arguments["method"] = "'%s'" % self.keyword if self.keyword else None
 
         arguments["name"] = self.section.namespace.make_python_identifier(

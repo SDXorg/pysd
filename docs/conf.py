@@ -151,7 +151,8 @@ intersphinx_mapping = {
     'pysdcookbook': ('http://pysd-cookbook.readthedocs.org/en/latest/', None),
     'pandas': ('https://pandas.pydata.org/docs/', None),
     'xarray': ('https://docs.xarray.dev/en/stable/', None),
-    'numpy': ('https://numpy.org/doc/stable/', None)
+    'numpy': ('https://numpy.org/doc/stable/', None),
+    'pytest': ('https://docs.pytest.org/en/7.1.x/', None)
 }
 
 # -- Options for autodoc --------------------------------------------------

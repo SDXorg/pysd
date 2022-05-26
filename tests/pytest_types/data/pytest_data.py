@@ -9,8 +9,8 @@ from pysd.py_backend.data import Data, TabData
 @pytest.mark.filterwarnings("ignore")
 class TestDataErrors():
     # Test errors associated with Data class
-    # Several Data cases are tested in unit_test_external while some other
-    # are tested indirectly in unit_test_pysd and integration_test_vensim
+    # Several Data cases are tested in pytest_external while some other
+    # are tested indirectly in pytest_pysd and integration_test_vensim
 
     @pytest.fixture
     def data(self, value, interp):

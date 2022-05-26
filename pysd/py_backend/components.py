@@ -6,7 +6,7 @@ from warnings import warn
 import os
 import random
 import inspect
-from importlib.machinery import SourceFileLoader
+import importlib.util
 
 import numpy as np
 
@@ -73,8 +73,11 @@ class Components(object):
         module_name = os.path.splitext(py_model_file)[0]\
             + str(random.randint(0, 1000000))
         try:
-            return SourceFileLoader(
-                module_name, py_model_file).load_module()
+            spec = importlib.util.spec_from_file_location(
+                module_name, py_model_file)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            return module
         except TypeError:
             raise ImportError(
                 "\n\nNot able to import the model. "

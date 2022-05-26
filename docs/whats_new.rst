@@ -1,8 +1,42 @@
 
 What's New
 ==========
+v3.0.1 (2022/05/26)
+-------------------
 
-v3.0.0 (23/05/2022)
+New Features
+~~~~~~~~~~~~
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+
+- Simplify subscripts dictionaries for :py:class:`pysd.py_backend.data.TabData` objects.
+
+Documentation
+~~~~~~~~~~~~~
+- Improve tests/README.md.
+- Minor improvements in the documentation.
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- Add Python 3.10 to CI pipeline and include it in the supported versions list.
+- Correct LICENSE file extension in the `setup.py`.
+- Move from `importlib`'s :py:func:`load_module` to :py:func:`exec_module`.
+- Remove warnings related to :py:data:`set` usage.
+- Move all the missing test to :py:mod:`pytest`.
+- Remove warning messages from test and make test fail if there is any warning.
+
+
+v3.0.0 (2022/05/23)
 -------------------
 
 New Features
