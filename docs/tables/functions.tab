@@ -1,5 +1,5 @@
 Vensim	Vensim example	Xmile	Xmile example	Abstract Syntax	Python Translation	Vensim comments	Xmile comments	Python comments
-ABS	ABS(A)	abs(A)	abs(A)	"CallStructure('abs', (A,))"	numpy.abs(A)
+ABS	ABS(A)	abs	abs(A)	"CallStructure('abs', (A,))"	numpy.abs(A)
 MIN	"MIN(A, B)"	min	"min(A, B)"	"CallStructure('min', (A, B))"	"numpy.minimum(A, B)"
 MAX	"MAX(A, B)"	max	"max(A, B)"	"CallStructure('max', (A, B))"	"numpy.maximum(A, B)"
 SQRT	SQRT(A)	sqrt	sqrt(A)	"CallStructure('sqrt', (A,))"	numpy.sqrt
@@ -33,6 +33,9 @@ PULSE TRAIN	PULSE TRAIN(start, width, tbetween, end)			"CallStructure('pulse_tra
 RAMP	RAMP(slope, start_time, end_time)	ramp	ramp(slope, start_time, end_time)	"CallStructure('ramp', (slope, start_time, end_time))"	pysd.functions.ramp(time, slope, start_time, end_time)		Not tested for Xmile!
 		ramp	ramp(slope, start_time)	"CallStructure('ramp', (slope, start_time))"	pysd.functions.ramp(time, slope, start_time)		Not tested for Xmile!
 STEP	STEP(height, step_time)	step	step(height, step_time)	"CallStructure('step', (height, step_time))"	pysd.functions.step(time, height, step_time)		Not tested for Xmile!
+VECTOR RANK	VECTOR RANK(vec, direction)			"CallStructure('vector_rank', (vec, direction))"	vector_rank(vec, direction)
+VECTOR REORDER	VECTOR REORDER(vec, svec)			"CallStructure('vector_reorder', (vec, svec))"	vector_reorder(vec, svec)
+VECTOR SORT ORDER	VECTOR SORT ORDER(vec, direction)			"CallStructure('vector_sort_order', (vec, direction))"	vector_sort_order(vec, direction)
 GAME	GAME(A)			GameStructure(A)	A
 INITIAL	INITIAL(value)	init	init(value)	InitialStructure(value)	pysd.statefuls.Initial
 SAMPLE IF TRUE	"SAMPLE IF TRUE(condition, input, initial_value)"			"SampleIfTrueStructure(condition, input, initial_value)"	pysd.statefuls.SampleIfTrue(...)
