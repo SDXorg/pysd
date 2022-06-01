@@ -76,43 +76,43 @@ If you use PySD in any published work, consider citing the `PySD Paper (2022) <h
 
 .. code-block:: latex
 
-   Martin-Martinez, E.; Samsó, R.; Houghton, J.; Solé, J. (2022). PySD: System Dynamics Modeling in Python. Journal of Open Source Software. doi: TODO.
+   Martin-Martinez, E., Samsó, R., Houghton, J. P., & Solé, J. (2022). PySD: System Dynamics Modeling in Python. Journal of Open Source Software. To do
 
 .. code-block:: latex
 
    @article{Martin-Martinez_PySD_System_Dynamics_2022,
-      author = {Martin-Martinez, Eneko and Samsó, Roger and Houghton, James and Solé, Jordi},
+      author = {Martin-Martinez, Eneko and Samsó, Roger and Houghton, James P and Solé, Jordi},
       doi = {TODO},
       journal = {{Journal of Open Source Software}},
       title = {{PySD: System Dynamics Modeling in Python}},
       url = {https://github.com/JamesPHoughton/pysd},
       year = {2022},
       month = {6},
-      keywords: {System Dynamics, Vensim, XMILE, Python}
+      keywords = {System Dynamics, Vensim, XMILE, Python}
    }
 
 Please, also add the `PySD Introductory Paper (2015) <https://github.com/JamesPHoughton/pysd/blob/master/docs/PySD-Intro-Paper-Preprint.pdf>`_:
 
 .. code-block:: latex
 
-   Houghton, J;  Siegel, M. (2015). Advanced data analytics for system dynamics models using PySD. Proceedings of the 33rd International Conference of the System Dynamics Society. System Dynamics Society. 9781510815056. https://www.proceedings.com/28517.html
+   Houghton, J. P., & Siegel, M. (2015). Advanced data analytics for system dynamics models using PySD. Proceedings of the 33rd International Conference of the System Dynamics Society, 2, 1436–1462. ISBN: 9781510815056
 
 .. code-block:: latex
 
    @inproceedings{Houghton_PySD_2015,
-      author = {Houghton, James and Siegel, Michael},
+      author = {Houghton, James P and Siegel, Michael},
       booktitle = {{Proceedings of the 33rd International Conference of the System Dynamics Society}},
       publisher = {{System Dynamics Society}},
       title = {{Advanced data analytics for system dynamics models using PySD}},
       url = {https://www.proceedings.com/28517.html},
-      isbn = {9781510815056}
+      isbn = {9781510815056},
       volume = {2},
       pages = {1436-1462},
       eventdate = {2015-07-19/2015-07-23},
       location = {Cambridge, Massachusetts, USA},
       year = {2015},
       month = {7},
-      keywords: {System Dynamics, Vensim, Python}
+      keywords = {System Dynamics, Vensim, Python}
    }
 
 You can also cite the library using the `DOI provided by Zenodo <https://doi.org/10.5281/zenodo.5654824>`_. It is recomendable to specify the used PySD version and its correspondent DOI. If you want to cite all versions you can use the generic DOI for PySD instead:

@@ -6,12 +6,15 @@ tags:
   - Vensim
   - Stella
 authors:
-  - name: Eneko Martin-Martinez^[co-first author]
+  - name: Eneko Martin-Martinez
     orcid: 0000-0002-9213-7818
     affiliation: 1
-  - name: Roger Samsó^[co-first author]
+    equal-contrib: true
+  - name: Roger Samsó
     orcid: 0000-0003-0348-3047
     affiliation: 1
+    equal-contrib: true
+    corresponding: true
   - name: James Houghton
     orcid: #TODO
     affiliation: 2
