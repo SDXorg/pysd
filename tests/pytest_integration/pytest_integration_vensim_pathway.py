@@ -509,6 +509,10 @@ vensim_test = {
         "folder": "variable_ranges",
         "file": "test_variable_ranges.mdl"
     },
+    "vector_order": {
+        "folder": "vector_order",
+        "file": "test_vector_order.mdl"
+    },
     "xidz_zidz": {
         "folder": "xidz_zidz",
         "file": "xidz_zidz.mdl"
@@ -580,4 +584,4 @@ class TestIntegrateVensim:
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             output, canon = runner(model_path, data_files=data_path)
-        assert_frames_close(output, canon, **kwargs)
+        assert_frames_close(output, canon, verbose=True, **kwargs)

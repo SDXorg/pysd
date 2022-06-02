@@ -67,8 +67,8 @@ class ModelBuilder:
 class SectionBuilder:
     """
     SectionBuilder allows building a section of the PySD model. Each
-    section will be a file unless the model has been setted to be
-    split in modules.
+    section will be a file unless the model has been set to be split
+    in modules.
 
     Parameters
     ----------

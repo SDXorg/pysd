@@ -81,6 +81,15 @@ functionspace = {
     "zidz": (
         "zidz(%(0)s, %(1)s)",
         ("functions", "zidz")),
+    "vector_sort_order": (
+        "vector_sort_order(%(0)s, %(1)s)",
+        ("functions", "vector_sort_order")),
+    "vector_reorder": (
+        "vector_reorder(%(0)s, %(1)s)",
+        ("functions", "vector_reorder")),
+    "vector_rank": (
+        "vector_rank(%(0)s, %(1)s)",
+        ("functions", "vector_rank")),
 
     # random functions must have the shape of the component subscripts
     # most of them are shifted, scaled and truncated
