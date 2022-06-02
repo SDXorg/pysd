@@ -1,7 +1,7 @@
 
 What's New
 ==========
-v3.1.0 (unreleased)
+v3.1.0 (2022/06/02)
 -------------------
 
 New Features
@@ -28,6 +28,8 @@ Performance
 
 Internal Changes
 ~~~~~~~~~~~~~~~~
+
+- Include a template for PR.
 
 
 v3.0.1 (2022/05/26)
