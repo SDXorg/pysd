@@ -5,6 +5,7 @@ functions.py
 """
 
 import json
+from datetime import datetime
 from pathlib import Path
 from chardet.universaldetector import UniversalDetector
 
@@ -34,6 +35,24 @@ def xrsplit(array):
     if sp_list[0].shape:
         sp_list = [ssa for sa in sp_list for ssa in xrsplit(sa)]
     return sp_list
+
+
+def get_current_computer_time():
+    """
+    Returns the current machine time. Needed to mock the machine time in
+    the tests.
+
+    Parameters
+    ---------
+    None
+
+    Returns
+    -------
+    datetime.now(): datetime.datetime
+        Current machine time.
+
+    """
+    return datetime.now()
 
 
 def get_return_elements(return_columns, namespace):

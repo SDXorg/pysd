@@ -7,6 +7,7 @@ functions may be similar to the original functions given by Vensim or
 Stella, but sometimes the number or order of arguments may change.
 """
 import warnings
+from datetime import datetime
 
 import numpy as np
 import xarray as xr
@@ -22,8 +23,8 @@ def ramp(time, slope, start, finish=None):
 
     Parameters
     ----------
-    time: callable
-        Function that returns the current time.
+    time: pysd.py_backend.components.Time
+        Model time object.
     slope: float
         The slope of the ramp starting at zero at time start.
     start: float
@@ -57,8 +58,8 @@ def step(time, value, tstep):
 
     Parameters
     ----------
-    time: callable
-        Function that returns the current time.
+    time: pysd.py_backend.components.Time
+        Model time object.
     value: float
         The height of the step.
     tstep: float
@@ -82,8 +83,8 @@ def pulse(time, start, repeat_time=0, width=None, magnitude=None, end=None):
 
     Parameters
     ----------
-    time: callable
-        Function that returns the current time.
+    time: pysd.py_backend.components.Time
+        Model time object.
     start: float
         Starting time of the pulse.
     repeat_time: float (optional)
@@ -577,3 +578,120 @@ def vector_rank(vector, direction):
 
     """
     return vector_sort_order(vector, direction).argsort() + 1
+
+
+def get_time_value(time, relativeto, offset, measure):
+    """
+    Implements Vensim's GET TIME VALUE function. Warning, not all the
+    cases are implemented.
+    https://www.vensim.com/documentation/fn_get_time_value.html
+
+    Parameters
+    ----------
+    time: pysd.py_backend.components.Time
+        Model time object.
+    relativeto: int
+        The time to take as a reference:
+            - 0 for the current simulation time.
+            - 1 for the initial simulation time.
+            - 2 for the current computer clock time.
+    offset: float or xarray.DataArray
+        The difference in time, as measured in the units of Time for
+        the  model, to move before computing the value. offset is
+        ignored when relativeto is 2.
+    measure: int
+        The units or measure of time:
+            - 0 units of Time in the model (only for relativeto 0 and 1)
+            - 1 years since 1 BC (an integer, same as the normal calendar year)
+            - 2 quarter of year (1-4)
+            - 3 month of year (1-12)
+            - 4 day of month (1-31)
+            - 5 day of week (0-6 where 0 is Sunday)
+            - 6 days since Jan 1., 1 BC (year 1 BC is treated as year 0)
+            - 7 hour of day (0-23)
+            - 8 minute of hour (0-59)
+            - 9 second of minute (0-59.999999 – not an integer)
+            - 10 elapsed seconds modulo 500,000 (0-499,999)
+
+    Returns
+    -------
+    time_value: float or int
+        The resulting time value.
+
+    """
+    if relativeto == 0:
+        # Current time
+        ctime = time()
+    elif relativeto == 1:
+        # Initial time
+        # Not implemented as it doesn't work as Vensim docs say
+        # TODO check other versions or implement it as it should be?
+        raise NotImplementedError("'relativeto=1' not implemented...")
+        # ctime = time.initial_time()
+    elif relativeto == 2:
+        # Machine time
+        ctime = utils.get_current_computer_time()
+    else:
+        # Invalid value
+        raise ValueError(
+            f"Invalid argument value 'relativeto={relativeto}'. "
+            "'relativeto' must be 0, 1 or 2.")
+
+    if measure == 0:
+        # units of Time in the model (only for relativeto 0 and 1)
+        if relativeto == 2:
+            # measure=0 only supported with relativeto=0 or 1
+            raise ValueError(
+                "Invalid argument 'measure=0' with 'relativeto=2'.")
+        else:
+            return ctime + offset
+    elif measure == 1:
+        # years since 1 BC (an integer, same as the normal calendar year)
+        if relativeto == 2:
+            return ctime.year
+    elif measure == 2:
+        # quarter of year (1-4)
+        if relativeto == 2:
+            return int(1 + (ctime.month-0.5) // 3)
+    elif measure == 3:
+        # month of year (1-12)
+        if relativeto == 2:
+            return ctime.month
+    elif measure == 4:
+        # day of month (1-31)
+        if relativeto == 2:
+            return ctime.day
+    elif measure == 5:
+        # day of week (0-6 where 0 is Sunday)
+        if relativeto == 2:
+            return ctime.weekday()
+    elif measure == 6:
+        # days since Jan 1., 1 BC (year 1 BC is treated as year 0)
+        if relativeto == 2:
+            return (ctime - datetime(1, 1, 1)).days
+    elif measure == 7:
+        # hour of day (0-23)
+        if relativeto == 2:
+            return ctime.hour
+    elif measure == 8:
+        # minute of hour (0-59)
+        if relativeto == 2:
+            return ctime.minute
+    elif measure == 9:
+        # second of minute (0-59.99 – not an integer)
+        if relativeto == 2:
+            return ctime.second + 1e-6*ctime.microsecond
+    elif measure == 10:
+        # elapsed seconds modulo 500,000 (0-499,999)
+        if relativeto == 2:
+            return (ctime - datetime(1, 1, 1)).seconds % 500000
+    else:
+        raise ValueError(
+            f"Invalid argument value 'measure={measure}'. "
+            "'measure' must be 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 or 10.")
+
+    # TODO include other measures for relativeto=0
+    raise NotImplementedError(
+        f"The case 'relativeto={relativeto}' and 'measure={measure}' "
+        "is not implemented..."
+    )

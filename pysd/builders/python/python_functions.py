@@ -63,6 +63,9 @@ functionspace = {
     "Xpulse_train": (
         "pulse(__data['time'], %(0)s, repeat_time=%(1)s, magnitude=%(2)s)",
         ("functions", "pulse")),
+    "get_time_value": (
+        "get_time_value(__data['time'], %(0)s, %(1)s, %(2)s)",
+        ("functions", "get_time_value")),
     "quantum": (
         "quantum(%(0)s, %(1)s)",
         ("functions", "quantum")),

@@ -165,6 +165,10 @@ vensim_test = {
         "folder": "get_subscript_3d_arrays_xls",
         "file": "test_get_subscript_3d_arrays_xls.mdl"
     },
+    "get_time_value": {
+        "folder": "get_time_value",
+        "file": "test_get_time_value_simple.mdl"
+    },
     "get_with_missing_values_xlsx": {
         "folder": "get_with_missing_values_xlsx",
         "file": "test_get_with_missing_values_xlsx.mdl"

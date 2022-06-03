@@ -33,6 +33,7 @@ PULSE TRAIN	PULSE TRAIN(start, width, tbetween, end)			"CallStructure('pulse_tra
 RAMP	RAMP(slope, start_time, end_time)	ramp	ramp(slope, start_time, end_time)	"CallStructure('ramp', (slope, start_time, end_time))"	pysd.functions.ramp(time, slope, start_time, end_time)		Not tested for Xmile!
 		ramp	ramp(slope, start_time)	"CallStructure('ramp', (slope, start_time))"	pysd.functions.ramp(time, slope, start_time)		Not tested for Xmile!
 STEP	STEP(height, step_time)	step	step(height, step_time)	"CallStructure('step', (height, step_time))"	pysd.functions.step(time, height, step_time)		Not tested for Xmile!
+GET TIME VALUE	GET TIME VALUE(relativeto, offset, measure)			"CallStructure('get_time_value', (relativeto, offset, measure))"	pysd.functions.get_time_value(time, relativeto, offset, measure)	Not all the cases implemented!
 VECTOR RANK	VECTOR RANK(vec, direction)			"CallStructure('vector_rank', (vec, direction))"	vector_rank(vec, direction)
 VECTOR REORDER	VECTOR REORDER(vec, svec)			"CallStructure('vector_reorder', (vec, svec))"	vector_reorder(vec, svec)
 VECTOR SORT ORDER	VECTOR SORT ORDER(vec, direction)			"CallStructure('vector_sort_order', (vec, direction))"	vector_sort_order(vec, direction)
