@@ -63,6 +63,7 @@ All the basic operators are supported, this includes the ones shown in the table
 
 Moreover, the Vensim :EXCEPT: operator is also supported to manage exceptions in the subscripts. See the :ref:`Subscripts section` section.
 
+
 Functions
 ^^^^^^^^^
 The list of currentlty supported Vensim functions are detailed below:

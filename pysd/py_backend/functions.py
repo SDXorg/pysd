@@ -11,6 +11,8 @@ import warnings
 import numpy as np
 import xarray as xr
 
+from . import utils
+
 small_vensim = 1e-6  # What is considered zero according to Vensim Help
 
 
@@ -206,7 +208,7 @@ def xidz(numerator, denominator, x):
 def zidz(numerator, denominator):
     """
     This function bypasses divide-by-zero errors,
-    implementing Vensim's ZIDZ function
+    implementing Vensim's ZIDZ function.
     https://www.vensim.com/documentation/fn_zidz.htm
 
     Parameters
@@ -471,3 +473,107 @@ def invert_matrix(mat):
     # NUMPY: avoid converting to xarray, put directly the expression
     # in the model
     return xr.DataArray(np.linalg.inv(mat.values), mat.coords, mat.dims)
+
+
+def vector_sort_order(vector, direction):
+    """
+    Implements Vensim's VECTOR SORT ORDER function. Sorting is done on
+    the complete vector relative to the last subscript.
+    https://www.vensim.com/documentation/fn_vector_sort_order.html
+
+    Parameters
+    -----------
+    vector: xarray.DataArray
+        The vector to sort.
+    direction: float
+        The direction to sort the vector. If direction > 1 it will sort
+        the vector entries from smallest to biggest, otherwise from
+        biggest to smallest.
+
+    Returns
+    -------
+    vector_sorted: xarray.DataArray
+        The sorted vector.
+
+    """
+    # TODO: can direction be an array? In this case this will fail
+    if direction <= 0:
+        # NUMPY: return flip directly
+        flip = np.flip(vector.argsort(), axis=-1)
+        return xr.DataArray(flip.values, vector.coords, vector.dims)
+    return vector.argsort()
+
+
+def vector_reorder(vector, svector):
+    """
+    Implements Vensim's VECTOR REORDER function. Reordering is done on
+    the complete vector relative to the last subscript.
+    https://www.vensim.com/documentation/fn_vector_reorder.html
+
+    Parameters
+    -----------
+    vector: xarray.DataArray
+        The vector to sort.
+    svector: xarray.DataArray
+        The vector to specify the order.
+
+    Returns
+    -------
+    vector_sorted: xarray.DataArray
+        The sorted vector.
+
+    """
+    # NUMPY: Use directly numpy sort functions, no need to assign coords later
+    if len(svector.dims) > 1:
+        # TODO this may be simplified
+        new_vector = vector.copy()
+        dims = svector.dims
+        # create an empty array to hold the orderings (only last dim)
+        arr = xr.DataArray(
+            np.nan,
+            {dims[-1]: vector.coords[dims[-1]].values},
+            dims[-1:]
+        )
+        # split the ordering array in 0-dim arrays
+        svectors = utils.xrsplit(svector)
+        orders = {}
+        for sv in svectors:
+            # regrup the ordering arrays using last dimensions
+            pos = {dim: str(sv.coords[dim].values) for dim in dims[:-1]}
+            key = ";".join(pos.values())
+            if key not in orders.keys():
+                orders[key] = (pos, arr.copy())
+            orders[key][1].loc[sv.coords[dims[-1]]] = sv.values
+
+        for pos, array in orders.values():
+            # get the reordered array
+            values = [vector.loc[pos].values[int(i)] for i in array.values]
+            new_vector.loc[pos] = values
+
+        return new_vector
+
+    return vector[svector.values].assign_coords(vector.coords)
+
+
+def vector_rank(vector, direction):
+    """
+    Implements Vensim's VECTOR RANK function. Ranking is done on the
+    complete vector relative to the last subscript.
+    https://www.vensim.com/documentation/fn_vector_rank.html
+
+    Parameters
+    -----------
+    vector: xarray.DataArray
+        The vector to sort.
+    direction: float
+        The direction to sort the vector. If direction > 1 it will rank
+        the vector entries from smallest to biggest, otherwise from
+        biggest to smallest.
+
+    Returns
+    -------
+    vector_rank: xarray.DataArray
+        The rank of the vector.
+
+    """
+    return vector_sort_order(vector, direction).argsort() + 1

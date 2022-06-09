@@ -1,6 +1,37 @@
 
 What's New
 ==========
+v3.1.0 (2022/06/02)
+-------------------
+
+New Features
+~~~~~~~~~~~~
+- Add support for Vensim's `VECTOR SORT ORDER <https://www.vensim.com/documentation/fn_vector_sort_order.html>`_ (:func:`pysd.py_backend.functions.vector_sort_order`) function (:issue:`326`).
+- Add support for Vensim's `VECTOR RANK <https://www.vensim.com/documentation/fn_vector_rank.html>`_ (:func:`pysd.py_backend.functions.vector_rank`) function (:issue:`326`).
+- Add support for Vensim's `VECTOR REORDER <https://www.vensim.com/documentation/fn_vector_reorder.html>`_ (:func:`pysd.py_backend.functions.vector_reorder`) function (:issue:`326`).
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+
+Documentation
+~~~~~~~~~~~~~
+- Add the section :doc:`/development/adding_functions` with examples for developers.
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+
+- Include a template for PR.
+
+
 v3.0.1 (2022/05/26)
 -------------------
 
