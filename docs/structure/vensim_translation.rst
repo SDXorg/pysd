@@ -118,4 +118,3 @@ Planed New Functions and Features
 ---------------------------------
 - ALLOCATE BY PRIORITY
 - SHIFT IF TRUE
-- VECTOR SELECT

@@ -476,6 +476,145 @@ def invert_matrix(mat):
     return xr.DataArray(np.linalg.inv(mat.values), mat.coords, mat.dims)
 
 
+def vector_select(selection_array, expression_array, dim,
+                  missing_vals, numerical_action, error_action):
+    """
+    Implements Vensim's VECTOR SELECT function.
+    http://vensim.com/documentation/fn_vector_select.html
+
+    Parameters
+    ----------
+    selection_array: xr.DataArray
+        This specifies a selection array with a mixture of zeroes and
+        non-zero values.
+    expression_array: xarray.DataArray
+        This is the expression that elements are being selected from
+        based on the selection array.
+    dim: list of strs
+        Dimensions to apply the function over.
+    missing_vals: float
+        The value to use in the case where there are only zeroes in the
+        selection array.
+    numerical_action: int
+        The action to take:
+            - 0 It will calculate the weighted sum.
+            - 1 When values in the selection array are non-zero, this
+              will calculate the product of the
+              selection_array * expression_array.
+            - 2 The weighted minimum, for non zero values of the
+              selection array, this is minimum of
+              selection_array * expression_array.
+            - 3 The weighted maximum, for non zero values of the
+              selection array, this is maximum of
+              selection_array * expression_array.
+            - 4 For non zero values of the selection array, this is
+              the average of selection_array * expression_array.
+            - 5 When values in the selection array are non-zero,
+              this will calculate the product of the
+              expression_array ^ selection_array.
+            - 6 When values in the selection array are non-zero,
+              this will calculate the sum of the expression_array.
+              The same as the SUM function for non-zero values in
+              the selection array.
+            - 7 When values in the selection array are non-zero,
+              this will calculate the product of the expression_array.
+              The same as the PROD function for non-zero values in
+              the selection array.
+            - 8 The unweighted minimum, for non zero values of the
+              selection array, this is minimum of the expression_array.
+              The same as the VMIN function for non-zero values in
+              the selection array.
+            - 9 The unweighted maximum, for non zero values of the
+              selection array, this is maximum of expression_array.
+              The same as the VMAX function for non-zero values in
+              the selection array.
+            - 10 For non zero values of the selection array,
+              this is the average of expression_array.
+    error_action: int
+        Indicates how to treat too many or too few entries in the selection:
+            - 0 No error is raised.
+            - 1 Raise a floating point error is selection array only
+              contains zeros.
+            - 2 Raise an error if the selection array contains more
+              than one non-zero value.
+            - 3 Raise an error if all elements in selection array are
+              zero, or more than one element is non-zero
+              (this is a combination of error_action = 1 and error_action = 2).
+
+    Returns
+    -------
+    result: xarray.DataArray or float
+        The output of the numerical action.
+
+    """
+    zeros = (selection_array == 0).all(dim=dim)
+    non_zeros = (selection_array != 0).sum(dim=dim)
+
+    # Manage error actions
+    if np.any(zeros) and error_action in (1, 3):
+        raise FloatingPointError(
+            "All the values of selection_array are 0...")
+
+    if np.any(non_zeros > 1) and error_action in (2, 3):
+        raise FloatingPointError(
+            "More than one non-zero values in selection_array...")
+
+    # Manage numeric actions (array to operate)
+    # NUMPY: replace by np.where
+    if numerical_action in range(5):
+        array = xr.where(
+            selection_array == 0,
+            np.nan,
+            selection_array * expression_array
+        )
+    elif numerical_action == 5:
+        warnings.warn(
+            "Vensim's help says that numerical_action=5 computes the "
+            "product of selection_array ^ expression_array. But, in fact,"
+            " Vensim is computing the product of expression_array ^ "
+            " selection array. The output of this function behaves as "
+            "Vensim, expression_array ^ selection_array."
+        )
+        array = xr.where(
+            selection_array == 0,
+            np.nan,
+            expression_array ** selection_array
+        )
+    elif numerical_action in range(6, 11):
+        array = xr.where(
+            selection_array == 0,
+            np.nan,
+            expression_array
+        )
+    else:
+        raise ValueError(
+            f"Invalid argument value 'numerical_action={numerical_action}'. "
+            "'numerical_action' must be 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 or 10.")
+
+    # Manage numeric actions (operation)
+    # NUMPY: use the axis
+    if numerical_action in (0, 6):
+        out = array.sum(dim=dim, skipna=True)
+    elif numerical_action in (1, 5, 7):
+        out = array.prod(dim=dim, skipna=True)
+    elif numerical_action in (2, 8):
+        out = array.min(dim=dim, skipna=True)
+    elif numerical_action in (3, 9):
+        out = array.max(dim=dim, skipna=True)
+    elif numerical_action in (4, 10):
+        out = array.mean(dim=dim, skipna=True)
+
+    # Replace missin vals
+    if len(out.shape) == 0 and np.all(zeros):
+        return missing_vals
+    elif len(out.shape) == 0:
+        return float(out)
+    elif np.any(zeros):
+        out.values[zeros.values] = missing_vals
+
+    return out
+
+
 def vector_sort_order(vector, direction):
     """
     Implements Vensim's VECTOR SORT ORDER function. Sorting is done on

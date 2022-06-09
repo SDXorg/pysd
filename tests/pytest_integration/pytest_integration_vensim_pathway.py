@@ -517,6 +517,10 @@ vensim_test = {
         "folder": "vector_order",
         "file": "test_vector_order.mdl"
     },
+    "vector_select": {
+        "folder": "vector_select",
+        "file": "test_vector_select.mdl"
+    },
     "xidz_zidz": {
         "folder": "xidz_zidz",
         "file": "xidz_zidz.mdl"

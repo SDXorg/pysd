@@ -33,6 +33,10 @@ functionspace = {
     "sum": ("sum(%(0)s, dim=%(axis)s)", ("functions", "sum")),
     "vmax": ("vmax(%(0)s, dim=%(axis)s)", ("functions", "vmax")),
     "vmin": ("vmin(%(0)s, dim=%(axis)s)", ("functions", "vmin")),
+    "vector_select": (
+        "vector_select(%(0)s, %(1)s, %(axis)s, %(2)s, %(3)s, %(4)s)",
+        ("functions", "vector_select")
+    ),
 
     # functions defined in pysd.py_bakcend.functions
     "active_initial": (

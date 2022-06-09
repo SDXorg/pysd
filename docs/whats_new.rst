@@ -2,12 +2,13 @@
 What's New
 ==========
 
-v3.2.0 (unreleased)
+v3.2.0 (2022/06/10)
 -------------------
 
 New Features
 ~~~~~~~~~~~~
 - Add support for Vensim's `GET TIME VALUE <https://www.vensim.com/documentation/fn_get_time_value.html>`_ (:func:`pysd.py_backend.functions.get_time_value`) function (:issue:`332`). Not all cases have been implemented.
+- Add support for Vensim's `VECTOR SELECT <http://vensim.com/documentation/fn_vector_select.html>`_ (:func:`pysd.py_backend.functions.vector_select`) function (:issue:`266`).
 
 Breaking changes
 ~~~~~~~~~~~~~~~~

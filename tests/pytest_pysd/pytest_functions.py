@@ -7,7 +7,7 @@ import xarray as xr
 from pysd.py_backend.components import Time
 from pysd.py_backend.functions import\
     ramp, step, pulse, xidz, zidz, if_then_else, sum, prod, vmin, vmax,\
-    invert_matrix, get_time_value
+    invert_matrix, get_time_value, vector_select
 
 
 class TestInputFunctions():
@@ -438,6 +438,90 @@ class TestFunctions():
         with pytest.raises(raise_type, match=error_message):
             get_time_value(
                 lambda: 0, relativeto, np.random.randint(-100, 100), measure)
+
+    def test_vector_select(self):
+        warning_message =\
+            r"Vensim's help says that numerical_action=5 computes the "\
+            r"product of selection_array \^ expression_array\. But, in fact,"\
+            r" Vensim is computing the product of expression_array \^ "\
+            r" selection array\. The output of this function behaves as "\
+            r"Vensim, expression_array \^ selection_array\."
+
+        array = xr.DataArray([3, 10, 2], {'dim': ["A", "B", "C"]})
+        sarray = xr.DataArray([1, 0, 2], {'dim': ["A", "B", "C"]})
+
+        with pytest.warns(UserWarning, match=warning_message):
+            assert vector_select(sarray, array, ["dim"], np.nan, 5, 1)\
+                == 12
+
+        sarray = xr.DataArray([0, 0, 0], {'dim': ["A", "B", "C"]})
+        assert vector_select(sarray, array, ["dim"], 123, 0, 2) == 123
+
+    @pytest.mark.parametrize(
+        "selection_array,expression_array,dim,numerical_action,"
+        "error_action,raise_type,error_message",
+        [
+            (  # error_action=1
+                xr.DataArray([0, 0], {'dim': ["A", "B"]}),
+                xr.DataArray([1, 2], {'dim': ["A", "B"]}),
+                ["dim"],
+                0,
+                1,
+                FloatingPointError,
+                r"All the values of selection_array are 0\.\.\."
+            ),
+            (  # error_action=2
+                xr.DataArray([1, 1], {'dim': ["A", "B"]}),
+                xr.DataArray([1, 2], {'dim': ["A", "B"]}),
+                ["dim"],
+                0,
+                2,
+                FloatingPointError,
+                r"More than one non-zero values in selection_array\.\.\."
+            ),
+            (  # error_action=3a
+                xr.DataArray([0, 0], {'dim': ["A", "B"]}),
+                xr.DataArray([1, 2], {'dim': ["A", "B"]}),
+                ["dim"],
+                0,
+                3,
+                FloatingPointError,
+                r"All the values of selection_array are 0\.\.\."
+            ),
+            (  # error_action=3b
+                xr.DataArray([1, 1], {'dim': ["A", "B"]}),
+                xr.DataArray([1, 2], {'dim': ["A", "B"]}),
+                ["dim"],
+                0,
+                3,
+                FloatingPointError,
+                r"More than one non-zero values in selection_array\.\.\."
+            ),
+            (  # numerical_action=11
+                xr.DataArray([1, 1], {'dim': ["A", "B"]}),
+                xr.DataArray([1, 2], {'dim': ["A", "B"]}),
+                ["dim"],
+                11,
+                0,
+                ValueError,
+                r"Invalid argument value 'numerical_action=11'\. "
+                r"'numerical_action' must be 0, 1, 2, 3, 4, 5, 6, "
+                r"7, 8, 9 or 10\."
+            ),
+        ],
+        ids=[
+            "error_action=1", "error_action=2", "error_action=3a",
+            "error_action=3b", "numerical_action=11"
+        ]
+    )
+    def test_vector_select_errors(self, selection_array, expression_array,
+                                  dim, numerical_action, error_action,
+                                  raise_type, error_message):
+
+        with pytest.raises(raise_type, match=error_message):
+            vector_select(
+                selection_array, expression_array, dim,  0,
+                numerical_action, error_action)
 
     def test_incomplete(self):
         from pysd.py_backend.functions import incomplete
