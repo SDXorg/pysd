@@ -644,7 +644,14 @@ class CallBuilder(StructureBuilder):
         if "%(axis)s" in expression:
             # Vectorial expressions, compute the axis using dimensions
             # with ! operator
-            final_subscripts, arguments["axis"] = self._compute_axis(arguments)
+            if "%(1)s" in expression:
+                subs = self.reorder(arguments)
+                # NUMPY: following line may be avoided
+                [arguments[i].reshape(self.section.subscripts, subs, True)
+                 for i in ["0", "1"]]
+            else:
+                subs = arguments["0"].subscripts
+            final_subscripts, arguments["axis"] = self._compute_axis(subs)
 
         elif "%(size)s" in expression:
             # Random expressions, need to give the final size of the
@@ -713,14 +720,14 @@ class CallBuilder(StructureBuilder):
             subscripts=final_subscripts,
             order=0)
 
-    def _compute_axis(self, arguments: dict) -> tuple:
+    def _compute_axis(self, subscripts: dict) -> tuple:
         """
         Compute the axis to apply a vectorial function.
 
         Parameters
         ----------
-        arguments: dict
-            The dictionary of builded arguments.
+        subscripts: dict
+            The final_subscripts after reordering all the elements.
 
         Returns
         -------
@@ -731,7 +738,6 @@ class CallBuilder(StructureBuilder):
             dimensions with "!" at the end.
 
         """
-        subscripts = arguments["0"].subscripts
         axis = []
         coords = {}
         for subs in subscripts:
