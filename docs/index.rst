@@ -50,6 +50,14 @@ That reason is this: There is a whole world of computational tools being develop
 
 This approach allows SD modelers to take advantage of the most recent developments in data science, and focus our efforts on improving the part of the stack that is unique to System Dynamics modeling.
 
+
+Limitations
+-----------
+
+Currently PySD does not implement all the functions and features of Vensim and XMILE. This may mean that some models cannot be run with the Python translated version, or can only be partially run. In most cases, functions that are not implemented will be translated as :py:func:`pysd.py_backend.functions.not_implemented_function`. However, the most used functions and features are implemented in PySD and most of the models will run properly.
+
+For more information, see the sections on  :ref:`supported Vensim functions <Vensim supported functions>`, :ref:`supported Xmile functions <Xmile supported functions>`, and :ref:`supported Python builder functions <Python supported functions>`. In case you want to add any new functions, please follow the tips in the :doc:`development section <../development/development_index>`. The examples of :doc:`adding functions section <../development/adding_functions>` may help you.
+
 Additional Resources
 --------------------
 
