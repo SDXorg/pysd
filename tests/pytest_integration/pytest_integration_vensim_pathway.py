@@ -373,6 +373,10 @@ vensim_test = {
         "folder": "subscript_copy",
         "file": "test_subscript_copy2.mdl"
     },
+    "subscript_definition": {
+        "folder": "subscript_definition",
+        "file": "test_subscript_definition.mdl"
+    },
     "subscript_docs": {
         "folder": "subscript_docs",
         "file": "subscript_docs.mdl"

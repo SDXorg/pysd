@@ -1,4 +1,31 @@
 
+
+v3.2.1 (unreleased)
+-------------------
+
+New Features
+~~~~~~~~~~~~
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+- Fix bug of using subranges to define a bigger range (:issue:`335`).
+
+Documentation
+~~~~~~~~~~~~~
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+
+
 What's New
 ==========
 
