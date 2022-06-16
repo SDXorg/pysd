@@ -116,5 +116,4 @@ Vensim macros are supported. The macro content between the keywords \:MACRO: and
 
 Planed New Functions and Features
 ---------------------------------
-- ALLOCATE BY PRIORITY
 - SHIFT IF TRUE

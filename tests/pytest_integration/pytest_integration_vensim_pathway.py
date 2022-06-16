@@ -19,6 +19,10 @@ vensim_test = {
         "folder": "active_initial_circular",
         "file": "test_active_initial_circular.mdl"
     },
+    "allocate_by_priority": {
+        "folder": "allocate_by_priority",
+        "file": "test_allocate_by_priority.mdl"
+    },
     "arithmetics": {
         "folder": "arithmetics",
         "file": "test_arithmetics.mdl"

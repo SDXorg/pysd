@@ -1,10 +1,12 @@
+What's New
+==========
 
-
-v3.2.1 (unreleased)
+v3.3.0 (unreleased)
 -------------------
 
 New Features
 ~~~~~~~~~~~~
+- Add support for Vensim's `ALLOCATE BY PRIORITY <https://www.vensim.com/documentation/fn_allocate_by_priority.html>`_ (:func:`pysd.py_backend.allocation.allocate_by_priority`) function (:issue:`263`).
 
 Breaking changes
 ~~~~~~~~~~~~~~~~
@@ -24,10 +26,6 @@ Performance
 
 Internal Changes
 ~~~~~~~~~~~~~~~~
-
-
-What's New
-==========
 
 v3.2.0 (2022/06/10)
 -------------------

@@ -16,13 +16,13 @@ import numpy as np
 from pysd.py_backend.utils import compute_shape
 
 from pysd.translators.structures.abstract_expressions import\
-    AbstractSyntax, ArithmeticStructure, CallStructure, DataStructure,\
-    DelayFixedStructure, DelayStructure, DelayNStructure, ForecastStructure,\
-    GameStructure, GetConstantsStructure, GetDataStructure,\
-    GetLookupsStructure, InitialStructure, InlineLookupsStructure,\
-    IntegStructure, LogicStructure, LookupsStructure, ReferenceStructure,\
-    SampleIfTrueStructure, SmoothNStructure, SmoothStructure,\
-    SubscriptsReferenceStructure, TrendStructure
+    AbstractSyntax, AllocateByPriorityStructure, ArithmeticStructure,\
+    CallStructure, DataStructure, DelayFixedStructure, DelayStructure,\
+    DelayNStructure, ForecastStructure, GameStructure, GetConstantsStructure,\
+    GetDataStructure, GetLookupsStructure, InitialStructure,\
+    InlineLookupsStructure, IntegStructure, LogicStructure, LookupsStructure,\
+    ReferenceStructure, SampleIfTrueStructure, SmoothNStructure,\
+    SmoothStructure, SubscriptsReferenceStructure, TrendStructure
 
 from .python_functions import functionspace
 from .subscripts import SubscriptManager
@@ -191,7 +191,7 @@ class StructureBuilder:
             return {}
         elif len(arguments) == 1:
             # Only one argument
-            return arguments["0"].calls
+            return list(arguments.values())[0].calls
         else:
             # Several arguments
             return merge_dependencies(
@@ -748,6 +748,70 @@ class CallBuilder(StructureBuilder):
                 # dimensions remaining
                 coords[subs] = subscripts[subs]
         return coords, axis
+
+
+class AllocateByPriorityBuilder(StructureBuilder):
+    """Builder for allocate_by_priority function."""
+
+    def __init__(self, allocate_str: AllocateByPriorityStructure,
+                 component: object):
+        super().__init__(None, component)
+        self.arguments = {
+            "request": allocate_str.request,
+            "priority": allocate_str.priority,
+            "width": allocate_str.width,
+            "supply": allocate_str.supply
+        }
+
+    def build(self, arguments: dict) -> BuildAST:
+        """
+        Build method.
+
+        Parameters
+        ----------
+        arguments: dict
+            The dictionary of builded arguments.
+
+        Returns
+        -------
+        built_ast: BuildAST
+            The built object.
+
+        """
+        self.section.imports.add("allocation", "allocate_by_priority")
+
+        calls = self.join_calls(arguments)
+
+        # the last sub of the request must be keep last sub of request and
+        # priority
+        last_sub = list(arguments["request"].subscripts)[-1]
+        # compute the merged subscripts
+        final_subscripts = self.get_final_subscripts(arguments)
+        # remove last sub from request
+        last_sub_value = final_subscripts[last_sub]
+        del final_subscripts[last_sub]
+
+        # Update the susbcripts of width and supply
+        arguments["width"].reshape(
+            self.section.subscripts, final_subscripts, True)
+        arguments["supply"].reshape(
+            self.section.subscripts, final_subscripts, True)
+
+        # Include last sub of request in the last position and update
+        # the subscripts of request and priority
+        final_subscripts[last_sub] = last_sub_value
+        arguments["request"].reshape(
+            self.section.subscripts, final_subscripts, True)
+        arguments["priority"].reshape(
+            self.section.subscripts, final_subscripts, True)
+
+        expression = "allocate_by_priority(%(request)s, %(priority)s, "\
+                     "%(width)s, %(supply)s)"
+        return BuildAST(
+            expression=expression % arguments,
+            calls=calls,
+            subscripts=arguments["request"].subscripts,
+            order=0)
 
 
 class ExtLookupBuilder(StructureBuilder):
@@ -2025,6 +2089,7 @@ class ASTVisitor:
         ReferenceStructure: ReferenceBuilder,
         CallStructure: CallBuilder,
         GameStructure: GameBuilder,
+        AllocateByPriorityStructure: AllocateByPriorityBuilder,
         LogicStructure: OperationBuilder,
         ArithmeticStructure: OperationBuilder,
         int: NumericBuilder,
