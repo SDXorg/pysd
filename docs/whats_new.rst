@@ -1,7 +1,7 @@
 What's New
 ==========
 
-v3.3.0 (unreleased)
+v3.3.0 (2022/06/20)
 -------------------
 
 New Features
