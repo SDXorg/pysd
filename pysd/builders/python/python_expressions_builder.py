@@ -16,13 +16,14 @@ import numpy as np
 from pysd.py_backend.utils import compute_shape
 
 from pysd.translators.structures.abstract_expressions import\
-    AbstractSyntax, AllocateByPriorityStructure, ArithmeticStructure,\
-    CallStructure, DataStructure, DelayFixedStructure, DelayStructure,\
-    DelayNStructure, ForecastStructure, GameStructure, GetConstantsStructure,\
-    GetDataStructure, GetLookupsStructure, InitialStructure,\
-    InlineLookupsStructure, IntegStructure, LogicStructure, LookupsStructure,\
-    ReferenceStructure, SampleIfTrueStructure, SmoothNStructure,\
-    SmoothStructure, SubscriptsReferenceStructure, TrendStructure
+    AbstractSyntax, AllocateAvailableStructure, AllocateByPriorityStructure,\
+    ArithmeticStructure, CallStructure, DataStructure, DelayFixedStructure,\
+    DelayStructure, DelayNStructure, ForecastStructure, GameStructure,\
+    GetConstantsStructure, GetDataStructure, GetLookupsStructure,\
+    InitialStructure, InlineLookupsStructure, IntegStructure,\
+    LogicStructure, LookupsStructure, ReferenceStructure,\
+    SampleIfTrueStructure, SmoothNStructure, SmoothStructure,\
+    SubscriptsReferenceStructure, TrendStructure
 
 from .python_functions import functionspace
 from .subscripts import SubscriptManager
@@ -748,6 +749,75 @@ class CallBuilder(StructureBuilder):
                 # dimensions remaining
                 coords[subs] = subscripts[subs]
         return coords, axis
+
+
+class AllocateAvailableBuilder(StructureBuilder):
+    """Builder for allocate_available function."""
+
+    def __init__(self, allocate_str: AllocateAvailableStructure,
+                 component: object):
+        super().__init__(None, component)
+
+        pp = allocate_str.pp
+        pp_sub = self.section.subscripts.elements[pp.reference][-1:]
+        pp.subscripts.subscripts = pp.subscripts.subscripts[:-1] + pp_sub
+        self.arguments = {
+            "request": allocate_str.request,
+            "pp": pp,
+            "avail": allocate_str.avail
+        }
+
+    def build(self, arguments: dict) -> BuildAST:
+        """
+        Build method.
+
+        Parameters
+        ----------
+        arguments: dict
+            The dictionary of builded arguments.
+
+        Returns
+        -------
+        built_ast: BuildAST
+            The built object.
+
+        """
+        self.section.imports.add("allocation", "allocate_available")
+
+        calls = self.join_calls(arguments)
+
+        # the last sub of the request must be keep last sub of request and
+        # priority
+        last_sub = list(arguments["request"].subscripts)[-1]
+        pp_sub = list(arguments["pp"].subscripts)[-1]
+        # compute the merged subscripts
+        final_subscripts = self.get_final_subscripts(arguments)
+        # remove last sub from request
+        last_sub_value = final_subscripts[last_sub]
+        pp_sub_value = final_subscripts[pp_sub]
+        del final_subscripts[last_sub], final_subscripts[pp_sub]
+
+        # Update the susbcripts of avail
+        arguments["avail"].reshape(
+            self.section.subscripts, final_subscripts, True)
+
+        # Include last sub of request in the last position and update
+        # the subscripts of request
+        final_subscripts[last_sub] = last_sub_value
+        arguments["request"].reshape(
+            self.section.subscripts, final_subscripts, True)
+
+        # Include priority subscripts and update the subscripts of pp
+        final_subscripts[pp_sub] = pp_sub_value
+        arguments["pp"].reshape(
+            self.section.subscripts, final_subscripts, True)
+
+        expression = "allocate_available(%(request)s, %(pp)s, %(avail)s)"
+        return BuildAST(
+            expression=expression % arguments,
+            calls=calls,
+            subscripts=arguments["request"].subscripts,
+            order=0)
 
 
 class AllocateByPriorityBuilder(StructureBuilder):
@@ -1731,6 +1801,7 @@ class ReferenceBuilder(StructureBuilder):
                     # the reference has a subscripts which is it not
                     # applied (!) and does not appear in the definition
                     # of the variable
+                    not_mapped = True
                     for mapped in self.section.subscripts.mapping[dim]:
                         # check the mapped subscripts
                         # TODO update this and the parser to make it
@@ -1741,7 +1812,15 @@ class ReferenceBuilder(StructureBuilder):
                             # and it is not already in the variable
                             self.mapping_subscripts[mapped] =\
                                 self.section.subscripts.subscripts[mapped]
+                            not_mapped = False
                             break
+                    if not_mapped:
+                        # manage other not mapped subscripts
+                        # this is necessary for Allocate Available
+                        # where we must force the expression in the
+                        # right to have more subscripts thant the
+                        # expression in the left
+                        self.mapping_subscripts[dim] = coordinates
                 else:
                     # the subscript is in the variable definition,
                     # do not change it
@@ -2089,6 +2168,7 @@ class ASTVisitor:
         ReferenceStructure: ReferenceBuilder,
         CallStructure: CallBuilder,
         GameStructure: GameBuilder,
+        AllocateAvailableStructure: AllocateAvailableBuilder,
         AllocateByPriorityStructure: AllocateByPriorityBuilder,
         LogicStructure: OperationBuilder,
         ArithmeticStructure: OperationBuilder,

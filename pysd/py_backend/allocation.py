@@ -9,9 +9,210 @@ to compute the allocation. The algorithms are briefly explained in these
 functions docstring.
 """
 import itertools
+from math import erfc
 
-import xarray as xr
 import numpy as np
+import xarray as xr
+from scipy.optimize import fsolve
+
+
+class Priorities:
+    @classmethod
+    def get_functions(cls, array):
+        return [cls.get_function(array[i]) for i in range(array.shape[0])]
+
+    @classmethod
+    def get_function(cls, array):
+        if array[0] == 0:
+            return cls.fixed_quantity(*array[1:])
+        elif array[0] == 1:
+            return cls.rectangular(*array[1:])
+        elif array[0] == 2:
+            return cls.triangular(*array[1:])
+        elif array[0] == 3:
+            return cls.normal(*array[1:])
+        elif array[0] == 4:
+            return cls.exponential(*array[1:])
+        elif array[0] == 5:
+            return cls.constant_elasticity(*array[1:])
+        else:
+            raise ValueError("")
+
+    @staticmethod
+    def fixed_quantity(ppriority, pwidth, pextra):
+        raise NotImplementedError
+
+    @staticmethod
+    def rectangular(ppriority, pwidth, pextra):
+        """
+        The curve will be shaped as the integral of a rectangle.
+
+        Parameters
+        ----------
+        ppriority: float
+            Specifies the midpoint of the curve.
+        pwidth: float
+            Determines the speed with which the curve goes from 0 to the
+            specified quantity.
+
+        Returns
+        -------
+        priority_func: function
+            The priority function.
+
+        """
+        def priority_func(x):
+            if x < ppriority - pwidth*.5:
+                return 0
+            elif x < ppriority + pwidth*.5:
+                return (x-ppriority+pwidth*.5)/pwidth
+            else:
+                return 1
+
+        return priority_func
+
+    @staticmethod
+    def triangular(ppriority, pwidth, pextra):
+        """
+        The curve will be shaped as the integral of a triangle.
+
+        Parameters
+        ----------
+        ppriority: float
+            Specifies the midpoint of the curve.
+        pwidth: float
+            Determines the speed with which the curve goes from 0 to the
+            specified quantity.
+
+        Returns
+        -------
+        priority_func: function
+            The priority function.
+
+        """
+        def priority_func(x):
+            if x < ppriority - pwidth*.5:
+                return 0
+            elif x < ppriority:
+                return 2*(x - ppriority + pwidth*.5)**2 / pwidth**2
+            elif x < ppriority + pwidth*.5:
+                return 1 - 2*(ppriority + pwidth*.5 - x)**2 / pwidth**2
+            else:
+                return 1
+
+        return priority_func
+
+    @staticmethod
+    def normal(ppriority, pwidth, pextra):
+        """
+        The curve will be shaped as the integral of a normal distribution.
+
+        Parameters
+        ----------
+        ppriority: float
+            Specifies the midpoint of the curve (the mean of the
+            underlying distribution).
+        pwidth: float
+            Standard deviation of the underlying distribution.
+
+        Returns
+        -------
+        priority_func: function
+            The priority function.
+
+        """
+        def priority_func(x):
+            return .5*(2-erfc((x-ppriority)/(np.sqrt(2)*pwidth)))
+
+        return priority_func
+
+    @staticmethod
+    def exponential(ppriority, pwidth, pextra):
+        """
+        The curve will be shaped as the integral of an exponential
+        distribution that is symmetric around its mean
+        (0.5*exp(-ABS(x-ppriority)/pwidth) on -∞ to ∞).
+
+        Parameters
+        ----------
+        ppriority: float
+            Specifies the midpoint of the curve (the mean of the
+            underlying distribution).
+        pwidth: float
+            Multiplier on x in the underlying distribution.
+
+        Returns
+        -------
+        priority_func: function
+            The priority function.
+
+        """
+        def priority_func(x):
+            if x < ppriority:
+                return .5*np.exp((x-ppriority)/pwidth)
+            else:
+                return 1-.5*np.exp((ppriority-x)/pwidth)
+
+        return priority_func
+
+    @staticmethod
+    def constant_elasticity(ppriority, pwidth, pextra):
+        """
+        The curve will be a constant elasticity curve.
+
+        Parameters
+        ----------
+        ppriority: float
+            Specifies the midpoint of the curve (the mean of the
+            underlying distribution).
+        pwidth: float
+            Standard deviation of the underlying distribution.
+        pextra: positive float
+
+        Returns
+        -------
+        priority_func: function
+            The priority function.
+
+        """
+        raise NotImplementedError
+
+
+def _allocate_available_1d(request, pp, aval):
+    if aval >= np.sum(request):
+        return request
+
+    n_obj = len(request)
+
+    priorities = Priorities.get_functions(pp)
+    x0 = np.mean(pp[:, 1])
+
+    priority = fsolve(
+        lambda x: np.sum(
+            [(1-priorities[i](x))*request[i] for i in range(n_obj)]
+            ) - aval,
+        x0)[0]
+
+    return [(1-priorities[i](priority))*request[i] for i in range(n_obj)]
+
+
+def allocate_available(request, pp, aval):
+    if len(request.shape) == 1:
+        # NUMPY: avoid '.values' and return directly the result of the
+        # function call
+        return xr.DataArray(
+            _allocate_available_1d(
+                request.values, pp.values, aval),
+            request.coords
+        )
+
+    # NUMPY: use np.empty_like and remove '.values'
+    out = xr.zeros_like(request, dtype=float)
+    for comb in itertools.product(*[range(i) for i in aval.shape]):
+        out.values[comb] = _allocate_by_priority_1d(
+            request.values[comb], pp.values[comb], aval.values[comb])
+
+    return out
 
 
 def _allocate_by_priority_1d(request, priority, width, supply):
