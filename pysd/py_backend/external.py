@@ -118,6 +118,15 @@ class External(object):
                 self.sheet)[rows[0]:rows[1], cols[0]:cols[1]].copy()
 
             shape = data.shape
+
+            # empty cells
+            if shape[0] == 0 or shape[1] == 0:
+                raise ValueError(
+                    self.py_name + "\n"
+                    "The cells are empty.\n"
+                    + self._file_sheet
+                )
+
             # if it is a single row remove its dimension
             if shape[1] == 1:
                 data = data[:, 0]
@@ -125,9 +134,10 @@ class External(object):
                 data = data[0]
             return data
 
-        raise NotImplementedError(self.py_name + "\n"
-                                  + "The files with extension "
-                                  + ext + " are not implemented")
+        raise NotImplementedError(
+            self.py_name + "\n"
+            f"The files with extension {ext} are not implemented"
+        )
 
     def _get_data_from_file_opyxl(self, cellname):
         """
@@ -154,9 +164,11 @@ class External(object):
                        in excel.sheetnames].index(self.sheet.lower())
         except ValueError:
             # Error if it is not able to get the localSheetId
-            raise ValueError(self.py_name + "\n"
-                             + "The sheet doesn't exist...\n"
-                             + self._file_sheet)
+            raise ValueError(
+                self.py_name + "\n"
+                "The sheet doesn't exist...\n"
+                + self._file_sheet
+            )
 
         try:
             # Search for local and global names
@@ -166,6 +178,9 @@ class External(object):
             for sheet, cells in coordinates:
                 if sheet.lower() == self.sheet.lower():
                     values = excel[sheet][cells]
+                    if not values:
+                        # empty array or table
+                        raise TypeError
                     try:
                         return np.array(
                             [[i.value if not isinstance(i.value, str)
@@ -179,10 +194,17 @@ class External(object):
         except (KeyError, AttributeError):
             # key error if the cellrange doesn't exist in the file or sheet
             raise AttributeError(
-              self.py_name + "\n"
-              + "The cell range name:\t'{}'\n".format(cellname)
-              + "Doesn't exist in:\n" + self._file_sheet
-              )
+               self.py_name + "\n"
+               f"The cellrange name '{cellname}'\n"
+               "Doesn't exist in:\n" + self._file_sheet
+               )
+        except TypeError:
+            # empty cellrange
+            raise ValueError(
+               self.py_name + "\n"
+               f"The cellrange '{cellname}' is empty.\n"
+               + self._file_sheet
+               )
 
     def _get_series_data(self, series_across, series_row_or_col, cell, size):
         """
@@ -328,7 +350,8 @@ class External(object):
                 self.py_name + "\n"
                 + f"Indirect reference to file: '{self.file}'")
 
-        self.file = root.joinpath(self.file)
+        # Join path and resolve it to better print error messages
+        self.file = root.joinpath(self.file).resolve()
 
         if not self.file.is_file():
             raise FileNotFoundError(

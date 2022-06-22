@@ -7,6 +7,7 @@ functions may be similar to the original functions given by Vensim or
 Stella, but sometimes the number or order of arguments may change.
 """
 import warnings
+from datetime import datetime
 
 import numpy as np
 import xarray as xr
@@ -22,8 +23,8 @@ def ramp(time, slope, start, finish=None):
 
     Parameters
     ----------
-    time: callable
-        Function that returns the current time.
+    time: pysd.py_backend.components.Time
+        Model time object.
     slope: float
         The slope of the ramp starting at zero at time start.
     start: float
@@ -57,8 +58,8 @@ def step(time, value, tstep):
 
     Parameters
     ----------
-    time: callable
-        Function that returns the current time.
+    time: pysd.py_backend.components.Time
+        Model time object.
     value: float
         The height of the step.
     tstep: float
@@ -82,8 +83,8 @@ def pulse(time, start, repeat_time=0, width=None, magnitude=None, end=None):
 
     Parameters
     ----------
-    time: callable
-        Function that returns the current time.
+    time: pysd.py_backend.components.Time
+        Model time object.
     start: float
         Starting time of the pulse.
     repeat_time: float (optional)
@@ -499,6 +500,145 @@ def invert_matrix(mat):
     return xr.DataArray(np.linalg.inv(mat.values), mat.coords, mat.dims)
 
 
+def vector_select(selection_array, expression_array, dim,
+                  missing_vals, numerical_action, error_action):
+    """
+    Implements Vensim's VECTOR SELECT function.
+    http://vensim.com/documentation/fn_vector_select.html
+
+    Parameters
+    ----------
+    selection_array: xr.DataArray
+        This specifies a selection array with a mixture of zeroes and
+        non-zero values.
+    expression_array: xarray.DataArray
+        This is the expression that elements are being selected from
+        based on the selection array.
+    dim: list of strs
+        Dimensions to apply the function over.
+    missing_vals: float
+        The value to use in the case where there are only zeroes in the
+        selection array.
+    numerical_action: int
+        The action to take:
+            - 0 It will calculate the weighted sum.
+            - 1 When values in the selection array are non-zero, this
+              will calculate the product of the
+              selection_array * expression_array.
+            - 2 The weighted minimum, for non zero values of the
+              selection array, this is minimum of
+              selection_array * expression_array.
+            - 3 The weighted maximum, for non zero values of the
+              selection array, this is maximum of
+              selection_array * expression_array.
+            - 4 For non zero values of the selection array, this is
+              the average of selection_array * expression_array.
+            - 5 When values in the selection array are non-zero,
+              this will calculate the product of the
+              expression_array ^ selection_array.
+            - 6 When values in the selection array are non-zero,
+              this will calculate the sum of the expression_array.
+              The same as the SUM function for non-zero values in
+              the selection array.
+            - 7 When values in the selection array are non-zero,
+              this will calculate the product of the expression_array.
+              The same as the PROD function for non-zero values in
+              the selection array.
+            - 8 The unweighted minimum, for non zero values of the
+              selection array, this is minimum of the expression_array.
+              The same as the VMIN function for non-zero values in
+              the selection array.
+            - 9 The unweighted maximum, for non zero values of the
+              selection array, this is maximum of expression_array.
+              The same as the VMAX function for non-zero values in
+              the selection array.
+            - 10 For non zero values of the selection array,
+              this is the average of expression_array.
+    error_action: int
+        Indicates how to treat too many or too few entries in the selection:
+            - 0 No error is raised.
+            - 1 Raise a floating point error is selection array only
+              contains zeros.
+            - 2 Raise an error if the selection array contains more
+              than one non-zero value.
+            - 3 Raise an error if all elements in selection array are
+              zero, or more than one element is non-zero
+              (this is a combination of error_action = 1 and error_action = 2).
+
+    Returns
+    -------
+    result: xarray.DataArray or float
+        The output of the numerical action.
+
+    """
+    zeros = (selection_array == 0).all(dim=dim)
+    non_zeros = (selection_array != 0).sum(dim=dim)
+
+    # Manage error actions
+    if np.any(zeros) and error_action in (1, 3):
+        raise FloatingPointError(
+            "All the values of selection_array are 0...")
+
+    if np.any(non_zeros > 1) and error_action in (2, 3):
+        raise FloatingPointError(
+            "More than one non-zero values in selection_array...")
+
+    # Manage numeric actions (array to operate)
+    # NUMPY: replace by np.where
+    if numerical_action in range(5):
+        array = xr.where(
+            selection_array == 0,
+            np.nan,
+            selection_array * expression_array
+        )
+    elif numerical_action == 5:
+        warnings.warn(
+            "Vensim's help says that numerical_action=5 computes the "
+            "product of selection_array ^ expression_array. But, in fact,"
+            " Vensim is computing the product of expression_array ^ "
+            " selection array. The output of this function behaves as "
+            "Vensim, expression_array ^ selection_array."
+        )
+        array = xr.where(
+            selection_array == 0,
+            np.nan,
+            expression_array ** selection_array
+        )
+    elif numerical_action in range(6, 11):
+        array = xr.where(
+            selection_array == 0,
+            np.nan,
+            expression_array
+        )
+    else:
+        raise ValueError(
+            f"Invalid argument value 'numerical_action={numerical_action}'. "
+            "'numerical_action' must be 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 or 10.")
+
+    # Manage numeric actions (operation)
+    # NUMPY: use the axis
+    if numerical_action in (0, 6):
+        out = array.sum(dim=dim, skipna=True)
+    elif numerical_action in (1, 5, 7):
+        out = array.prod(dim=dim, skipna=True)
+    elif numerical_action in (2, 8):
+        out = array.min(dim=dim, skipna=True)
+    elif numerical_action in (3, 9):
+        out = array.max(dim=dim, skipna=True)
+    elif numerical_action in (4, 10):
+        out = array.mean(dim=dim, skipna=True)
+
+    # Replace missin vals
+    if len(out.shape) == 0 and np.all(zeros):
+        return missing_vals
+    elif len(out.shape) == 0:
+        return float(out)
+    elif np.any(zeros):
+        out.values[zeros.values] = missing_vals
+
+    return out
+
+
 def vector_sort_order(vector, direction):
     """
     Implements Vensim's VECTOR SORT ORDER function. Sorting is done on
@@ -601,3 +741,120 @@ def vector_rank(vector, direction):
 
     """
     return vector_sort_order(vector, direction).argsort() + 1
+
+
+def get_time_value(time, relativeto, offset, measure):
+    """
+    Implements Vensim's GET TIME VALUE function. Warning, not all the
+    cases are implemented.
+    https://www.vensim.com/documentation/fn_get_time_value.html
+
+    Parameters
+    ----------
+    time: pysd.py_backend.components.Time
+        Model time object.
+    relativeto: int
+        The time to take as a reference:
+            - 0 for the current simulation time.
+            - 1 for the initial simulation time.
+            - 2 for the current computer clock time.
+    offset: float or xarray.DataArray
+        The difference in time, as measured in the units of Time for
+        the  model, to move before computing the value. offset is
+        ignored when relativeto is 2.
+    measure: int
+        The units or measure of time:
+            - 0 units of Time in the model (only for relativeto 0 and 1)
+            - 1 years since 1 BC (an integer, same as the normal calendar year)
+            - 2 quarter of year (1-4)
+            - 3 month of year (1-12)
+            - 4 day of month (1-31)
+            - 5 day of week (0-6 where 0 is Sunday)
+            - 6 days since Jan 1., 1 BC (year 1 BC is treated as year 0)
+            - 7 hour of day (0-23)
+            - 8 minute of hour (0-59)
+            - 9 second of minute (0-59.999999 – not an integer)
+            - 10 elapsed seconds modulo 500,000 (0-499,999)
+
+    Returns
+    -------
+    time_value: float or int
+        The resulting time value.
+
+    """
+    if relativeto == 0:
+        # Current time
+        ctime = time()
+    elif relativeto == 1:
+        # Initial time
+        # Not implemented as it doesn't work as Vensim docs say
+        # TODO check other versions or implement it as it should be?
+        raise NotImplementedError("'relativeto=1' not implemented...")
+        # ctime = time.initial_time()
+    elif relativeto == 2:
+        # Machine time
+        ctime = utils.get_current_computer_time()
+    else:
+        # Invalid value
+        raise ValueError(
+            f"Invalid argument value 'relativeto={relativeto}'. "
+            "'relativeto' must be 0, 1 or 2.")
+
+    if measure == 0:
+        # units of Time in the model (only for relativeto 0 and 1)
+        if relativeto == 2:
+            # measure=0 only supported with relativeto=0 or 1
+            raise ValueError(
+                "Invalid argument 'measure=0' with 'relativeto=2'.")
+        else:
+            return ctime + offset
+    elif measure == 1:
+        # years since 1 BC (an integer, same as the normal calendar year)
+        if relativeto == 2:
+            return ctime.year
+    elif measure == 2:
+        # quarter of year (1-4)
+        if relativeto == 2:
+            return int(1 + (ctime.month-0.5) // 3)
+    elif measure == 3:
+        # month of year (1-12)
+        if relativeto == 2:
+            return ctime.month
+    elif measure == 4:
+        # day of month (1-31)
+        if relativeto == 2:
+            return ctime.day
+    elif measure == 5:
+        # day of week (0-6 where 0 is Sunday)
+        if relativeto == 2:
+            return ctime.weekday()
+    elif measure == 6:
+        # days since Jan 1., 1 BC (year 1 BC is treated as year 0)
+        if relativeto == 2:
+            return (ctime - datetime(1, 1, 1)).days
+    elif measure == 7:
+        # hour of day (0-23)
+        if relativeto == 2:
+            return ctime.hour
+    elif measure == 8:
+        # minute of hour (0-59)
+        if relativeto == 2:
+            return ctime.minute
+    elif measure == 9:
+        # second of minute (0-59.99 – not an integer)
+        if relativeto == 2:
+            return ctime.second + 1e-6*ctime.microsecond
+    elif measure == 10:
+        # elapsed seconds modulo 500,000 (0-499,999)
+        if relativeto == 2:
+            return (ctime - datetime(1, 1, 1)).seconds % 500000
+    else:
+        raise ValueError(
+            f"Invalid argument value 'measure={measure}'. "
+            "'measure' must be 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 or 10.")
+
+    # TODO include other measures for relativeto=0
+    raise NotImplementedError(
+        f"The case 'relativeto={relativeto}' and 'measure={measure}' "
+        "is not implemented..."
+    )

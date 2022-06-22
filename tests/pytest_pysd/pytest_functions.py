@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import pytest
 import numpy as np
 import xarray as xr
@@ -5,7 +7,7 @@ import xarray as xr
 from pysd.py_backend.components import Time
 from pysd.py_backend.functions import\
     ramp, step, pulse, xidz, zidz, if_then_else, sum, prod, vmin, vmax,\
-    invert_matrix
+    invert_matrix, get_time_value, vector_select
 
 
 class TestInputFunctions():
@@ -333,6 +335,193 @@ class TestFunctions():
                             - np.identity(data.shape[-1]))
                         < 1e-14
                         ).all()
+
+    @pytest.mark.parametrize(
+        "year,quarter,month,day,hour,minute,second,microsecond",
+        [
+            (2020, 1, 1, 25, 23, 45, 5, 233),
+            (2020, 1, 3, 4, 15, 10, 23, 3323),
+            (195, 2, 4, 4, 15, 10, 23, 3323),
+            (195, 2, 6, 4, 15, 10, 23, 3323),
+            (2045, 3, 7, 31, 0, 15, 55, 33233),
+            (1330, 3, 9, 30, 0, 15, 55, 33233),
+            (3000, 4, 10, 1, 13, 15, 55, 33233),
+            (1995, 4, 12, 1, 13, 15, 55, 33233),
+        ]
+    )
+    def test_get_time_value_machine(self, mocker, year, quarter, month, day,
+                                    hour, minute, second, microsecond):
+        """Test get_time_value with machine time reltiveto=2"""
+
+        mock_time = datetime(
+            year, month, day, hour, minute, second, microsecond)
+
+        mocker.patch(
+            "pysd.py_backend.utils.get_current_computer_time",
+            return_value=mock_time)
+
+        assert get_time_value(None, 2, np.random.randint(-100, 100), 1)\
+            == year
+
+        assert get_time_value(None, 2, np.random.randint(-100, 100), 2)\
+            == quarter
+
+        assert get_time_value(None, 2, np.random.randint(-100, 100), 3)\
+            == month
+
+        assert get_time_value(None, 2, np.random.randint(-100, 100), 4)\
+            == day
+
+        assert get_time_value(None, 2, np.random.randint(-100, 100), 5)\
+            == mock_time.weekday()
+
+        assert get_time_value(None, 2, np.random.randint(-100, 100), 6)\
+            == (mock_time - datetime(1, 1, 1)).days
+
+        assert get_time_value(None, 2, np.random.randint(-100, 100), 7)\
+            == hour
+
+        assert get_time_value(None, 2, np.random.randint(-100, 100), 8)\
+            == minute
+
+        assert get_time_value(None, 2, np.random.randint(-100, 100), 9)\
+            == second + 1e-6*microsecond
+
+        assert get_time_value(None, 2, np.random.randint(-100, 100), 10)\
+            == (mock_time - datetime(1, 1, 1)).seconds % 500000
+
+    @pytest.mark.parametrize(
+        "measure,relativeto,raise_type,error_message",
+        [
+            (  # relativeto=1
+                0,
+                1,
+                NotImplementedError,
+                r"'relativeto=1' not implemented\.\.\."
+            ),
+            (  # relativeto=3
+                0,
+                3,
+                ValueError,
+                r"Invalid argument value 'relativeto=3'\. "
+                r"'relativeto' must be 0, 1 or 2\."
+            ),
+            (  # measure=0;relativeto=2
+                0,
+                2,
+                ValueError,
+                r"Invalid argument 'measure=0' with 'relativeto=2'\."
+            ),
+            (  # measure=11
+                11,
+                2,
+                ValueError,
+                r"Invalid argument value 'measure=11'\. "
+                r"'measure' must be 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 or 10\."
+            ),
+            (  # relativeto=0;measure=2
+                2,
+                0,
+                NotImplementedError,
+                r"The case 'relativeto=0' and 'measure=2' "
+                r"is not implemented\.\.\."
+            ),
+        ],
+        ids=[
+            "relativeto=1", "relativeto=3", "measure=0;relativeto=2",
+            "measure=11", "relativeto=0;measure=2"
+        ]
+    )
+    def test_get_time_value_errors(self, measure, relativeto,
+                                   raise_type, error_message):
+
+        with pytest.raises(raise_type, match=error_message):
+            get_time_value(
+                lambda: 0, relativeto, np.random.randint(-100, 100), measure)
+
+    def test_vector_select(self):
+        warning_message =\
+            r"Vensim's help says that numerical_action=5 computes the "\
+            r"product of selection_array \^ expression_array\. But, in fact,"\
+            r" Vensim is computing the product of expression_array \^ "\
+            r" selection array\. The output of this function behaves as "\
+            r"Vensim, expression_array \^ selection_array\."
+
+        array = xr.DataArray([3, 10, 2], {'dim': ["A", "B", "C"]})
+        sarray = xr.DataArray([1, 0, 2], {'dim': ["A", "B", "C"]})
+
+        with pytest.warns(UserWarning, match=warning_message):
+            assert vector_select(sarray, array, ["dim"], np.nan, 5, 1)\
+                == 12
+
+        sarray = xr.DataArray([0, 0, 0], {'dim': ["A", "B", "C"]})
+        assert vector_select(sarray, array, ["dim"], 123, 0, 2) == 123
+
+    @pytest.mark.parametrize(
+        "selection_array,expression_array,dim,numerical_action,"
+        "error_action,raise_type,error_message",
+        [
+            (  # error_action=1
+                xr.DataArray([0, 0], {'dim': ["A", "B"]}),
+                xr.DataArray([1, 2], {'dim': ["A", "B"]}),
+                ["dim"],
+                0,
+                1,
+                FloatingPointError,
+                r"All the values of selection_array are 0\.\.\."
+            ),
+            (  # error_action=2
+                xr.DataArray([1, 1], {'dim': ["A", "B"]}),
+                xr.DataArray([1, 2], {'dim': ["A", "B"]}),
+                ["dim"],
+                0,
+                2,
+                FloatingPointError,
+                r"More than one non-zero values in selection_array\.\.\."
+            ),
+            (  # error_action=3a
+                xr.DataArray([0, 0], {'dim': ["A", "B"]}),
+                xr.DataArray([1, 2], {'dim': ["A", "B"]}),
+                ["dim"],
+                0,
+                3,
+                FloatingPointError,
+                r"All the values of selection_array are 0\.\.\."
+            ),
+            (  # error_action=3b
+                xr.DataArray([1, 1], {'dim': ["A", "B"]}),
+                xr.DataArray([1, 2], {'dim': ["A", "B"]}),
+                ["dim"],
+                0,
+                3,
+                FloatingPointError,
+                r"More than one non-zero values in selection_array\.\.\."
+            ),
+            (  # numerical_action=11
+                xr.DataArray([1, 1], {'dim': ["A", "B"]}),
+                xr.DataArray([1, 2], {'dim': ["A", "B"]}),
+                ["dim"],
+                11,
+                0,
+                ValueError,
+                r"Invalid argument value 'numerical_action=11'\. "
+                r"'numerical_action' must be 0, 1, 2, 3, 4, 5, 6, "
+                r"7, 8, 9 or 10\."
+            ),
+        ],
+        ids=[
+            "error_action=1", "error_action=2", "error_action=3a",
+            "error_action=3b", "numerical_action=11"
+        ]
+    )
+    def test_vector_select_errors(self, selection_array, expression_array,
+                                  dim, numerical_action, error_action,
+                                  raise_type, error_message):
+
+        with pytest.raises(raise_type, match=error_message):
+            vector_select(
+                selection_array, expression_array, dim,  0,
+                numerical_action, error_action)
 
     def test_incomplete(self):
         from pysd.py_backend.functions import incomplete

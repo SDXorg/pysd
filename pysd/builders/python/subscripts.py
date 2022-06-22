@@ -75,6 +75,29 @@ class SubscriptManager:
             self._subscripts[sub.name] =\
                 self._subscripts[sub.subscripts]
 
+        subs2visit = self.subscripts.keys()
+        while subs2visit:
+            # third loop for subscripts defined with subranges
+            updated = []
+            for dim in subs2visit:
+                if any(sub in self._subscripts
+                       for sub in self._subscripts[dim]):
+                    # a subrange name is being used to define the range
+                    # subscripts
+                    updated.append(dim)
+                    new_subs = []
+                    for sub in self._subscripts[dim]:
+                        if sub in self.subscripts:
+                            # append the subscripts of the subrange
+                            new_subs += self._subscripts[sub]
+                        else:
+                            # append the same subscript
+                            new_subs.append(sub)
+                    self._subscripts[dim] = new_subs
+            # visit again the updated ranges as there could be several
+            # levels of subranges
+            subs2visit = updated.copy()
+
     def _get_main_subscripts(self) -> dict:
         """
         Reutrns a dictionary with the main ranges as keys and their

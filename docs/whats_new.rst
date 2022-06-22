@@ -1,6 +1,61 @@
-
 What's New
 ==========
+
+v3.3.0 (2022/06/22)
+-------------------
+
+New Features
+~~~~~~~~~~~~
+- Add support for Vensim's `ALLOCATE BY PRIORITY <https://www.vensim.com/documentation/fn_allocate_by_priority.html>`_ (:func:`pysd.py_backend.allocation.allocate_by_priority`) function (:issue:`263`).
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+- Fix bug of using subranges to define a bigger range (:issue:`335`).
+
+Documentation
+~~~~~~~~~~~~~
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- Improve error messages for :class:`pysd.py_backend.External` objects.
+
+v3.2.0 (2022/06/10)
+-------------------
+
+New Features
+~~~~~~~~~~~~
+- Add support for Vensim's `GET TIME VALUE <https://www.vensim.com/documentation/fn_get_time_value.html>`_ (:func:`pysd.py_backend.functions.get_time_value`) function (:issue:`332`). Not all cases have been implemented.
+- Add support for Vensim's `VECTOR SELECT <http://vensim.com/documentation/fn_vector_select.html>`_ (:func:`pysd.py_backend.functions.vector_select`) function (:issue:`266`).
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+
+Documentation
+~~~~~~~~~~~~~
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+
+
+
 v3.1.0 (2022/06/02)
 -------------------
 

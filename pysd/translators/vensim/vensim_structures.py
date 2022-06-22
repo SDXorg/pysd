@@ -15,6 +15,7 @@ structures = {
     "with_lookup": ae.InlineLookupsStructure,
     "call": ae.CallStructure,
     "game": ae.GameStructure,
+    "allocate_by_priority": ae.AllocateByPriorityStructure,
     "get_xls_lookups": ae.GetLookupsStructure,
     "get_direct_lookups": ae.GetLookupsStructure,
     "get_xls_data": ae.GetDataStructure,

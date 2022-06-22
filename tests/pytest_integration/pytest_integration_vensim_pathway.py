@@ -19,6 +19,10 @@ vensim_test = {
         "folder": "active_initial_circular",
         "file": "test_active_initial_circular.mdl"
     },
+    "allocate_by_priority": {
+        "folder": "allocate_by_priority",
+        "file": "test_allocate_by_priority.mdl"
+    },
     "arithmetics": {
         "folder": "arithmetics",
         "file": "test_arithmetics.mdl"
@@ -164,6 +168,10 @@ vensim_test = {
     "get_subscript_3d_arrays_xls": {
         "folder": "get_subscript_3d_arrays_xls",
         "file": "test_get_subscript_3d_arrays_xls.mdl"
+    },
+    "get_time_value": {
+        "folder": "get_time_value",
+        "file": "test_get_time_value_simple.mdl"
     },
     "get_with_missing_values_xlsx": {
         "folder": "get_with_missing_values_xlsx",
@@ -369,6 +377,10 @@ vensim_test = {
         "folder": "subscript_copy",
         "file": "test_subscript_copy2.mdl"
     },
+    "subscript_definition": {
+        "folder": "subscript_definition",
+        "file": "test_subscript_definition.mdl"
+    },
     "subscript_docs": {
         "folder": "subscript_docs",
         "file": "subscript_docs.mdl"
@@ -512,6 +524,10 @@ vensim_test = {
     "vector_order": {
         "folder": "vector_order",
         "file": "test_vector_order.mdl"
+    },
+    "vector_select": {
+        "folder": "vector_select",
+        "file": "test_vector_select.mdl"
     },
     "xidz_zidz": {
         "folder": "xidz_zidz",

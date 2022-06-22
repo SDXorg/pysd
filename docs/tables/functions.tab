@@ -21,10 +21,10 @@ IF THEN ELSE	"IF THEN ELSE(A, B, C)"	if_then_else	"if_then_else(A, B, C)"	"CallS
 XIDZ	"XIDZ(A, B, X)"	safediv	"safediv(A, B, X)"	"CallStructure('xidz', (A, B, X))"	"pysd.functions.xidz(A, B, X)"
 ZIDZ	"ZIDZ(A, B)"	safediv	"safediv(A, B)"	"CallStructure('zidz', (A, B))"	"pysd.functions.zidz(A, B)"
 
-VMIN	VMIN(A)			"CallStructure('vmin', (A,))"	pysd.functions.vmin(A)
-VMAX	VMAX(A)			"CallStructure('vmax', (A,))"	pysd.functions.vmax(A)
-SUM	SUM(A)			"CallStructure('sum', (A,))"	pysd.functions.sum(A)
-PROD	PROD(A)			"CallStructure('prod', (A,))"	pysd.functions.prod(A)
+VMIN	VMIN(A[dim!])			"CallStructure('vmin', (A,))"	pysd.functions.vmin(A, ['dim!'])
+VMAX	VMAX(A[dim!])			"CallStructure('vmax', (A,))"	pysd.functions.vmax(A, ['dim!'])
+SUM	SUM(A[dim!])			"CallStructure('sum', (A,))"	pysd.functions.sum(A, ['dim!'])
+PROD	PROD(A[dim!])			"CallStructure('prod', (A,))"	pysd.functions.prod(A, ['dim!'])
 
 PULSE	PULSE(start, width)			"CallStructure('pulse', (start, width))"	pysd.functions.pulse(start, width=width)
 		pulse	pulse(magnitude, start)	"CallStructure('Xpulse', (start, magnitude))"	pysd.functions.pulse(start, magnitude=magnitude)		Not tested for Xmile!
@@ -33,9 +33,12 @@ PULSE TRAIN	PULSE TRAIN(start, width, tbetween, end)			"CallStructure('pulse_tra
 RAMP	RAMP(slope, start_time, end_time)	ramp	ramp(slope, start_time, end_time)	"CallStructure('ramp', (slope, start_time, end_time))"	pysd.functions.ramp(time, slope, start_time, end_time)		Not tested for Xmile!
 		ramp	ramp(slope, start_time)	"CallStructure('ramp', (slope, start_time))"	pysd.functions.ramp(time, slope, start_time)		Not tested for Xmile!
 STEP	STEP(height, step_time)	step	step(height, step_time)	"CallStructure('step', (height, step_time))"	pysd.functions.step(time, height, step_time)		Not tested for Xmile!
+GET TIME VALUE	GET TIME VALUE(relativeto, offset, measure)			"CallStructure('get_time_value', (relativeto, offset, measure))"	pysd.functions.get_time_value(time, relativeto, offset, measure)	Not all the cases implemented!
+VECTOR SELECT	VECTOR SELECT(sel_array[dim!], exp_array[dim!], miss_val, n_action, e_action)			"CallStructure('vector_select', (sel_array, exp_array, miss_val, n_action, e_action))"	pysd.functions.vector_select(sel_array, exp_array, ['dim!'], miss_val, n_action, e_action)
 VECTOR RANK	VECTOR RANK(vec, direction)			"CallStructure('vector_rank', (vec, direction))"	vector_rank(vec, direction)
 VECTOR REORDER	VECTOR REORDER(vec, svec)			"CallStructure('vector_reorder', (vec, svec))"	vector_reorder(vec, svec)
 VECTOR SORT ORDER	VECTOR SORT ORDER(vec, direction)			"CallStructure('vector_sort_order', (vec, direction))"	vector_sort_order(vec, direction)
 GAME	GAME(A)			GameStructure(A)	A
+ALLOCATE BY PRIORITY	"ALLOCATE BY PRIORITY(request, priority, size, width, supply)"			"AllocateByPriorityStructure(request, priority, size, width, supply)"	allocate_by_priority(request, priority, width, supply)
 INITIAL	INITIAL(value)	init	init(value)	InitialStructure(value)	pysd.statefuls.Initial
 SAMPLE IF TRUE	"SAMPLE IF TRUE(condition, input, initial_value)"			"SampleIfTrueStructure(condition, input, initial_value)"	pysd.statefuls.SampleIfTrue(...)

@@ -116,7 +116,13 @@ Vensim macros are supported. The macro content between the keywords \:MACRO: and
 
 Planed New Functions and Features
 ---------------------------------
-- ALLOCATE BY PRIORITY
-- GET TIME VALUE
-- SHIFT IF TRUE
-- VECTOR SELECT
+
+
+Discarded Functions and Features
+--------------------------------
+
+SHIFT IF TRUE
+^^^^^^^^^^^^^
+Due to the complexity of `SHIFT IF TRUE <https://www.vensim.com/documentation/fn_shift_if_true.html>`_ function and the need to mutate already computed values in another variable, the implementation of this function has been discarded for now.
+
+However, it is possible to reproduce the same behaviour using IF THEN ELSE in the stock flow. A model with a workaround to avoid SHIFT IF TRUE and make the model work with PySD is given in :issue:`265`.
