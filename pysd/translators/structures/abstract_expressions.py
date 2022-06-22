@@ -144,6 +144,39 @@ class GameStructure(AbstractSyntax):
 
 
 @dataclass
+class AllocateByPriorityStructure(AbstractSyntax):
+    """
+    Dataclass for a Allocate By Priority structure.
+
+    Parameters
+    ----------
+    request: AbstractSyntax
+        The reference to the request variable.
+    priority: AbstractSyntax
+        The reference to the priority variable.
+    size: AbstractSyntax or int
+        The size of the last dimension.
+    width: AbstractSyntax or float
+        The width between priorities.
+    supply: AbstractSyntax or float
+        The total supply.
+
+    """
+    request: AbstractSyntax
+    priority: AbstractSyntax
+    size: Union[AbstractSyntax, int]
+    width: Union[AbstractSyntax, float]
+    supply: Union[AbstractSyntax, float]
+
+    def __str__(self) -> str:  # pragma: no cover
+        return "AllocateByPriorityStructure:"\
+               "\"n\t%s,\n\t%s,\n\t%s,\n\t%s,\n\t%s" % (
+                   self.request, self.priority, self.size,
+                   self.width, self.supply
+                )
+
+
+@dataclass
 class InitialStructure(AbstractSyntax):
     """
     Dataclass for a initial structure.

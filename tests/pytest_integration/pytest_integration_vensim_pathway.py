@@ -19,6 +19,10 @@ vensim_test = {
         "folder": "active_initial_circular",
         "file": "test_active_initial_circular.mdl"
     },
+    "allocate_by_priority": {
+        "folder": "allocate_by_priority",
+        "file": "test_allocate_by_priority.mdl"
+    },
     "arithmetics": {
         "folder": "arithmetics",
         "file": "test_arithmetics.mdl"
@@ -372,6 +376,10 @@ vensim_test = {
     "subscript_copy2": {
         "folder": "subscript_copy",
         "file": "test_subscript_copy2.mdl"
+    },
+    "subscript_definition": {
+        "folder": "subscript_definition",
+        "file": "test_subscript_definition.mdl"
     },
     "subscript_docs": {
         "folder": "subscript_docs",

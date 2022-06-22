@@ -1,6 +1,32 @@
-
 What's New
 ==========
+
+v3.3.0 (2022/06/22)
+-------------------
+
+New Features
+~~~~~~~~~~~~
+- Add support for Vensim's `ALLOCATE BY PRIORITY <https://www.vensim.com/documentation/fn_allocate_by_priority.html>`_ (:func:`pysd.py_backend.allocation.allocate_by_priority`) function (:issue:`263`).
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+- Fix bug of using subranges to define a bigger range (:issue:`335`).
+
+Documentation
+~~~~~~~~~~~~~
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- Improve error messages for :class:`pysd.py_backend.External` objects.
 
 v3.2.0 (2022/06/10)
 -------------------
