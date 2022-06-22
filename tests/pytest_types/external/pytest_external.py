@@ -246,6 +246,12 @@ class TestExternalMethods():
 
         assert ext.file == root.joinpath('input.xlsx')
 
+        # assert file path is properly 'resolved'
+        ext.file = '../data/input.xlsx'
+        ext._resolve_file(root=root)
+
+        assert ext.file == root.joinpath('input.xlsx')
+
         ext.file = 'input2.xlsx'
 
         error_message = r"File '.*%s' not found." % 'input2.xlsx'
@@ -258,6 +264,46 @@ class TestExternalMethods():
         error_message = r"Indirect reference to file: '\?input\.xlsx'"
         with pytest.raises(ValueError, match=error_message):
             ext._resolve_file(root=_root)
+
+    def test_read_empty_cells_openpyxl(self, _root):
+        from pysd.py_backend.external import External
+
+        ext = External("external")
+        ext.file = "data/input.xlsx"
+        ext.sheet = "Horizontal missing"
+        ext._resolve_file(root=_root)
+
+        error_message = r"The cellrange 'empty_.*' is empty.\n"
+        with pytest.raises(ValueError, match=error_message):
+            ext._get_data_from_file_opyxl("empty_cell")
+        with pytest.raises(ValueError, match=error_message):
+            ext._get_data_from_file_opyxl("empty_array")
+        with pytest.raises(ValueError, match=error_message):
+            ext._get_data_from_file_opyxl("empty_array2")
+        with pytest.raises(ValueError, match=error_message):
+            ext._get_data_from_file_opyxl("empty_table")
+
+    def test_read_empty_cells_pandas(self, _root):
+        from pysd.py_backend.external import External
+
+        ext = External("external")
+        ext.file = "data/input.xlsx"
+        ext.sheet = "Horizontal missing"
+        ext._resolve_file(root=_root)
+
+        error_message = r"external\nThe cells are empty\.\n"
+        with pytest.raises(ValueError, match=error_message):
+            ext._get_data_from_file((100, 101), (100, 101))
+        with pytest.raises(ValueError, match=error_message):
+            ext._get_data_from_file((100, 101), (100, 140))
+        with pytest.raises(ValueError, match=error_message):
+            ext._get_data_from_file((100, 140), (100, 101))
+        with pytest.raises(ValueError, match=error_message):
+            ext._get_data_from_file((100, 140), (100, 150))
+        with pytest.raises(ValueError, match=error_message):
+            ext._get_data_from_file((2, 20), (100, 150))
+        with pytest.raises(ValueError, match=error_message):
+            ext._get_data_from_file((100, 140), (2, 20))
 
 
 class TestData():
@@ -1855,7 +1901,7 @@ class TestWarningsErrors():
         cell = "non_exixtent"
         coords = {}
         interp = None
-        py_name = "est_non_existent_cellrange_name_pyxl"
+        py_name = "test_non_existent_cellrange_name_pyxl"
 
         data = pysd.external.ExtData(file_name=file_name,
                                      sheet=sheet,
@@ -1867,7 +1913,7 @@ class TestWarningsErrors():
                                      final_coords=coords,
                                      py_name=py_name)
 
-        error_message = "The cell range name:\t'.*'\nDoesn't exist in"
+        error_message = "The cellrange name '.*'\nDoesn't exist in"
         with pytest.raises(AttributeError, match=error_message):
             data.initialize()
 
@@ -1891,7 +1937,7 @@ class TestWarningsErrors():
                                          final_coords=coords,
                                          py_name=py_name)
 
-        error_message = "The cell range name:\t'.*'\nDoesn't exist in"
+        error_message = "The cellrange name '.*'\nDoesn't exist in"
         with pytest.raises(AttributeError, match=error_message):
             data.initialize()
 

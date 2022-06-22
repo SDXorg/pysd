@@ -1,7 +1,7 @@
 What's New
 ==========
 
-v3.3.0 (2022/06/20)
+v3.3.0 (2022/06/22)
 -------------------
 
 New Features
@@ -26,6 +26,7 @@ Performance
 
 Internal Changes
 ~~~~~~~~~~~~~~~~
+- Improve error messages for :class:`pysd.py_backend.External` objects.
 
 v3.2.0 (2022/06/10)
 -------------------
