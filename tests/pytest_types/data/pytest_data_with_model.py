@@ -148,7 +148,6 @@ class TestPySDDataErrors:
         reason=r"bad scape \e")
     def test_loading_error(self, data_model, data_files, raise_type,
                            error_message, shared_tmpdir):
-        print(error_message % (data_files))
         with pytest.raises(raise_type, match=error_message % (data_files)):
             self.model(
                 data_model, data_files, shared_tmpdir)

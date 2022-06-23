@@ -252,13 +252,11 @@ def assert_frames_close(actual, expected, assertion="raise",
                 + '\n\nActual values:\n\t'\
                 + np.array2string(actual[col].values,
                                   precision=precision,
-                                  separator=', ',
-                                  suppress_small=True)\
+                                  separator=', ')\
                 + '\n\nDifference:\n\t'\
                 + np.array2string(expected[col].values-actual[col].values,
                                   precision=precision,
-                                  separator=', ',
-                                  suppress_small=True)
+                                  separator=', ')
 
     if assertion == "raise":
         raise AssertionError(assertion_details)

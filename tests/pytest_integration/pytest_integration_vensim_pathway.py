@@ -22,7 +22,7 @@ vensim_test = {
     "allocate_available": {
         "folder": "allocate_available",
         "file": "test_allocate_available.mdl",
-        "rtol": 2e-2  # TODO: find better numeric aproximation
+        "rtol": 2e-2
     },
     "allocate_by_priority": {
         "folder": "allocate_by_priority",

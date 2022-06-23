@@ -2,58 +2,221 @@
 The provided allocation functions have no direct analog in the standard
 Python data analytics stack. They are provided in a structure that makes
 it easy for the model elements to call. The functions may be similar to
-the original functions given by Vensim or Stella, but sometimes the
-number or order of arguments may change. The allocation functions may
-call a protected function or class method thatintegrates the algorithm
-to compute the allocation. The algorithms are briefly explained in these
+the original functions given by Vensim, but sometimes the number or
+order of arguments may change. The allocation functions may call a
+protected function or class method thatintegrates the algorithm to
+compute the allocation. The algorithms are briefly explained in these
 functions docstring.
+
+Note
+----
+The Allocation functions basis is explained in the Vensim documentation.
+https://www.vensim.com/documentation/allocation_overview.html
+
+Warning
+-------
+Some allocation function's results may differ from the result given by
+Vensim as optimization functions are used to solve the allocation
+problems. Those algorithms may not work in the same way or may
+have differences in the numerical error propagation.
+
 """
 import itertools
 from math import erfc
 
 import numpy as np
 import xarray as xr
-from scipy.optimize import fsolve
+from scipy.optimize import least_squares
+import portion as p
 
 
 class Priorities:
     @classmethod
-    def get_functions(cls, array):
-        return [cls.get_function(array[i]) for i in range(array.shape[0])]
+    def get_functions(cls, q0, pp, kind):
+        """
+        Get priority functions based on the demand/supply and priority profile.
+
+        Parameters
+        ----------
+        q0: numpy.array
+            values of maximum demand or supply of each component.
+            Its shape should be (n,)
+        pp: numpy.array
+            pp values array. Its shape should be (n, m).
+        kind: str ("demand" or "supply")
+            The kind of priority "demand" or "supply".
+
+        Returns
+        -------
+        functions: list of functions
+            List of allocation supply or demand function for each element.
+
+        full_allocation: function
+            Full allocation function. It is the result function of
+            addying all the functions.
+
+        def_intervals: list of tuples
+            List of (supply interval, priority interval, mean priority)
+            where the full_allocation function is extrictly monotonous
+            (injective). Givin a supply value, this is used to compute
+            the limits and starting point of the optimization problem.
+
+        """
+        if np.any(pp[:, 2] <= 0):
+            # pwidth values smaller than 0
+            raise ValueError("pwidth values must be positive.")
+
+        if kind == "demand":
+            # Get the list of priority functions and the intervals where
+            # they are strictly monotonous (injective function)
+            func_int = [
+                cls.get_function_demand(q0[i], pp[i])
+                for i in range(pp.shape[0])
+            ]
+            # In order to get the range of the full_allocation function,
+            # we need to flip the lower and the upper value, as it is a
+            # decreasing function for demand
+            int_attr = {"lower": "upper", "upper": "lower"}
+        elif kind == "supply":  # pragma: no cover
+            # Get the list of priority functions and the intervals where
+            # they are strictly monotonous (injective function)
+            func_int = [
+                cls.get_function_supply(q0[i], pp[i])
+                for i in range(pp.shape[0])
+            ]
+            # In order to get the range of the full_allocation function,
+            # we need to keep the lower and the upper value, as it is a
+            # increasing function for supply
+            int_attr = {"lower": "lower", "upper": "upper"}
+        else:
+            raise ValueError(
+                f"kind='{kind}' is not allowed. kind should be "
+                "'demand' or 'supply'.")
+
+        functions = [fi[0] for fi in func_int]
+        intervals = [fi[1] for fi in func_int]
+
+        # Join the intervals of all functions to get the intervals where
+        # the sum of the functions is strictly monotonous (injective
+        # function), therefore we can solve the minimization problem in
+        # strictly monotonous areas of the function, avoiding the crash
+        # of the algorithm
+        interval = intervals[0]
+        for i in intervals[1:]:
+            interval = interval.union(i)
+
+        # Full allocation function -> function to solve
+        def full_allocation(x): return np.sum([func(x) for func in functions])
+
+        def_intervals = []
+        for subinterval in interval:
+            # Iterate over disjoint interval sections
+            # Each interval section will be converted in supply interval
+            # and compute the starting point for the supply interval
+            # as the midpoint in the priority interval
+            def_intervals.append((
+                p.closed(
+                    full_allocation(getattr(subinterval, int_attr["lower"])),
+                    full_allocation(getattr(subinterval, int_attr["upper"]))
+                ),
+                subinterval,
+                .5*(subinterval.upper+subinterval.lower)
+            ))
+
+        return functions, full_allocation, def_intervals
 
     @classmethod
-    def get_function(cls, array):
-        if array[0] == 0:
-            return cls.fixed_quantity(*array[1:])
-        elif array[0] == 1:
-            return cls.rectangular(*array[1:])
-        elif array[0] == 2:
-            return cls.triangular(*array[1:])
-        elif array[0] == 3:
-            return cls.normal(*array[1:])
-        elif array[0] == 4:
-            return cls.exponential(*array[1:])
-        elif array[0] == 5:
-            return cls.constant_elasticity(*array[1:])
+    def get_function_demand(cls, q0, pp):
+        """
+        Get priority functions for demand based on the priority profile.
+
+        Parameters
+        ----------
+        q0: float [0, +np.inf)
+            The demand of the target.
+        pp: numpy.array
+            pp values array.
+
+        Returns
+        -------
+        priority_func: function
+            Priority function.
+        interval: portion.interval
+            The interval where the priority function is strictly monotonous.
+
+        """
+        if q0 == 0:
+            # No demand is requested return a 0 function with an empty interval
+            return lambda x: 0, p.empty()
+        if pp[0] == 0:
+            # Fixed quantity demand
+            return cls.fixed_quantity(q0, *pp[1:])
+        elif pp[0] == 1:
+            # Rectangular demand
+            return cls.rectangular(q0, *pp[1:])
+        elif pp[0] == 2:
+            # Triangular demand
+            return cls.triangular(q0, *pp[1:])
+        elif pp[0] == 3:
+            # Normal distribution demand
+            return cls.normal(q0, *pp[1:])
+        elif pp[0] == 4:
+            # Exponential distribution demand
+            return cls.exponential(q0, *pp[1:])
+        elif pp[0] == 5:
+            # Constant elasticity demand
+            return cls.constant_elasticity_demand(q0, *pp[1:])
         else:
-            raise ValueError("")
+            raise ValueError(
+                f"The priority function for pprofile={pp[0]} is not valid.")
 
-    @staticmethod
-    def fixed_quantity(ppriority, pwidth, pextra):
-        raise NotImplementedError
-
-    @staticmethod
-    def rectangular(ppriority, pwidth, pextra):
+    @classmethod
+    def get_function_supply(cls, q0, pp):
         """
-        The curve will be shaped as the integral of a rectangle.
+        Get priority functions for supply based on the priority profile.
 
         Parameters
         ----------
+        q0: float [0, +np.inf)
+            The supply of the producer.
+        pp: numpy.array
+            pp values array.
+
+        Returns
+        -------
+        priority_func: function
+            Priority function.
+        interval: portion.interval
+            The interval where the priority function is strictly monotonous.
+
+        """
+        # TODO: This function should be similar to the demand function
+        # it is neccessary for the many-to-many allocation given by
+        # the set FIND MARKET PLACE, DEMAND AT PRICE, SUPPLY AT PRICE
+        raise NotImplementedError("get_function_supply is not implemented.")
+
+    @staticmethod
+    def fixed_quantity(q0, ppriority, pwidth, pextra):
+        raise NotImplementedError(
+            "fixed_quantity priority profile is not implemented.")
+
+    @staticmethod
+    def rectangular(q0, ppriority, pwidth, pextra):
+        """
+        Demand curve for rectangular shape.
+        The supply curve will be shaped as the integral of a rectangle.
+
+        Parameters
+        ----------
+        q0: float
+            The total demand/supply of the element.
         ppriority: float
             Specifies the midpoint of the curve.
         pwidth: float
-            Determines the speed with which the curve goes from 0 to the
-            specified quantity.
+            Determines the speed with which the curve goes from 0 to
+            the specified quantity.
+        pextra: float
+            Ignore.
 
         Returns
         -------
@@ -62,27 +225,35 @@ class Priorities:
 
         """
         def priority_func(x):
-            if x < ppriority - pwidth*.5:
-                return 0
+            if x <= ppriority - pwidth*.5:
+                return q0
             elif x < ppriority + pwidth*.5:
-                return (x-ppriority+pwidth*.5)/pwidth
+                return q0*(1-(x-ppriority+pwidth*.5)/pwidth)
             else:
-                return 1
+                return 0
 
-        return priority_func
+        return (
+            priority_func,
+            p.open(ppriority - pwidth*.5, ppriority + pwidth*.5)
+        )
 
     @staticmethod
-    def triangular(ppriority, pwidth, pextra):
+    def triangular(q0, ppriority, pwidth, pextra):
         """
-        The curve will be shaped as the integral of a triangle.
+        Demand curve for triangular shape.
+        The supply curve will be shaped as the integral of a triangle.
 
         Parameters
         ----------
+        q0: float
+            The total demand/supply of the element.
         ppriority: float
             Specifies the midpoint of the curve.
         pwidth: float
             Determines the speed with which the curve goes from 0 to the
             specified quantity.
+        pextra: float
+            Ignore.
 
         Returns
         -------
@@ -91,29 +262,38 @@ class Priorities:
 
         """
         def priority_func(x):
-            if x < ppriority - pwidth*.5:
-                return 0
+            if x <= ppriority - pwidth*.5:
+                return q0
             elif x < ppriority:
-                return 2*(x - ppriority + pwidth*.5)**2 / pwidth**2
+                return q0*(1-2*(x-ppriority+pwidth*.5)**2/pwidth**2)
             elif x < ppriority + pwidth*.5:
-                return 1 - 2*(ppriority + pwidth*.5 - x)**2 / pwidth**2
+                return 2*q0*(ppriority+pwidth*.5-x)**2/pwidth**2
             else:
-                return 1
+                return 0
 
-        return priority_func
+        return (
+            priority_func,
+            p.open(ppriority - pwidth*.5, ppriority + pwidth*.5)
+        )
 
     @staticmethod
-    def normal(ppriority, pwidth, pextra):
+    def normal(q0, ppriority, pwidth, pextra):
         """
-        The curve will be shaped as the integral of a normal distribution.
+        Demand curve for normal shape.
+        The supply curve will be shaped as the integral of a normal
+        distribution.
 
         Parameters
         ----------
+        q0: float
+            The total demand/supply of the element.
         ppriority: float
             Specifies the midpoint of the curve (the mean of the
             underlying distribution).
         pwidth: float
             Standard deviation of the underlying distribution.
+        pextra: float
+            Ignore.
 
         Returns
         -------
@@ -122,24 +302,37 @@ class Priorities:
 
         """
         def priority_func(x):
-            return .5*(2-erfc((x-ppriority)/(np.sqrt(2)*pwidth)))
+            return q0*.5*(2-erfc((ppriority-x)/(np.sqrt(2)*pwidth)))
 
-        return priority_func
+        # Normal distribution CDF is stricty monotonous in (-inf, inf).
+        # However, numerically it is only in a the range ~ (-8.29*sd, 8.29*sd)
+        return (
+            priority_func,
+            p.open(
+                ppriority-8.2923611*pwidth,
+                ppriority+8.2923611*pwidth
+            )
+        )
 
     @staticmethod
-    def exponential(ppriority, pwidth, pextra):
+    def exponential(q0, ppriority, pwidth, pextra):
         """
-        The curve will be shaped as the integral of an exponential
-        distribution that is symmetric around its mean
+        Demand curve for exponential shape
+        The supply curve will be shaped as the integral of an
+        exponential distribution that is symmetric around its mean
         (0.5*exp(-ABS(x-ppriority)/pwidth) on -∞ to ∞).
 
         Parameters
         ----------
+        q0: float
+            The total demand/supply of the element.
         ppriority: float
             Specifies the midpoint of the curve (the mean of the
             underlying distribution).
         pwidth: float
             Multiplier on x in the underlying distribution.
+        pextra: float
+            Ignore.
 
         Returns
         -------
@@ -149,25 +342,37 @@ class Priorities:
         """
         def priority_func(x):
             if x < ppriority:
-                return .5*np.exp((x-ppriority)/pwidth)
+                return q0*(1-.5*np.exp((x-ppriority)/pwidth))
             else:
-                return 1-.5*np.exp((ppriority-x)/pwidth)
+                return q0*.5*np.exp((ppriority-x)/pwidth)
 
-        return priority_func
+        # Exponential distribution CDF is stricty monotonous in (-inf, inf).
+        # However, numerically it is only in a the range ~ (-36.7*sd, 36.7*sd)
+        return (
+            priority_func,
+            p.open(
+                ppriority-36.7368005696*pwidth,
+                ppriority+36.7368005696*pwidth
+            )
+        )
 
     @staticmethod
-    def constant_elasticity(ppriority, pwidth, pextra):
+    def constant_elasticity_demand(q0, ppriority, pwidth, pextra):
         """
+        Demand constant elasticity curve.
         The curve will be a constant elasticity curve.
 
         Parameters
         ----------
+        q0: float
+            The total demand/supply of the element.
         ppriority: float
             Specifies the midpoint of the curve (the mean of the
             underlying distribution).
         pwidth: float
             Standard deviation of the underlying distribution.
         pextra: positive float
+            Elasticity exponent.
 
         Returns
         -------
@@ -175,42 +380,160 @@ class Priorities:
             The priority function.
 
         """
-        raise NotImplementedError
+        raise NotImplementedError(
+            "Some results for Vensim showed some bugs when using this "
+            "priority curve. Therefore, the curve is not implemented in "
+            "PySD as it cannot be properly tested."
+        )
+
+    @staticmethod
+    def constant_elasticity_supply(ppriority, pwidth,
+                                   pextra):   # pragma: no cover
+        """
+        Supply constant elasticity curve.
+        The curve will be a constant elasticity curve.
+
+        Parameters
+        ----------
+        q0: float
+            The total demand/supply of the element.
+        ppriority: float
+            Specifies the midpoint of the curve (the mean of the
+            underlying distribution).
+        pwidth: float
+            Standard deviation of the underlying distribution.
+        pextra: positive float
+            Elasticity exponent.
+
+        Returns
+        -------
+        priority_func: function
+            The priority function.
+
+        """
+        raise NotImplementedError(
+            "Some results for Vensim showed some bugs when using this "
+            "priority curve. Therefore, the curve is not implemented in "
+            "PySD as it cannot be properly tested."
+        )
 
 
-def _allocate_available_1d(request, pp, aval):
-    if aval >= np.sum(request):
+def _allocate_available_1d(request, pp, avail):
+    """
+    This function implements the algorithm for allocate_available
+    to be passed for 1d numpy.arrays. The algorithm works as follows:
+
+    0. If supply > sum(request): return request. In the same way,
+       if supply = 0: return request*0
+    1. Based on the priority profiles and demands, the priority profiles
+       are computed. This profiles are returned with the interval where
+       each of them is strictly monotonous (or injective).
+    2. Using the intervals of injectivity the initial guess is
+       selected depending on the available supply.
+    3. The initial guess and injectivity interval are used to compute
+       the value where the sum of all priority functions is equal to
+       the avilable supply. This porcess is done using a least_squares
+       optimization function.
+    4. The output from the previous step is used to compute the supply
+       to each target.
+
+    Parameters
+    ----------
+    request: numpy.ndarray (1D)
+        The request by target. Values must be non-negative.
+    pp: numpy.ndarray (2D)
+        The priority profiles of each target.
+    avail: float
+        The available supply. Must be non-negative.
+
+    Returns
+    -------
+    out: numpy.ndarray (1D)
+        The distribution of the supply.
+
+    """
+    if avail >= np.sum(request):
         return request
+    if avail == 0:
+        return np.zeros_like(request)
 
-    n_obj = len(request)
+    priorities, full_allocation, intervals =\
+        Priorities.get_functions(request, pp, "demand")
 
-    priorities = Priorities.get_functions(pp)
-    x0 = np.mean(pp[:, 1])
+    for interval, x_interval, x0 in intervals:
+        if avail in interval:
+            break
+    priority = least_squares(
+        lambda x: full_allocation(x) - avail,
+        x0,
+        bounds=(x_interval.lower, x_interval.upper),
+        method='dogbox',
+        tr_solver='exact',
+        ).x[0]
 
-    priority = fsolve(
-        lambda x: np.sum(
-            [(1-priorities[i](x))*request[i] for i in range(n_obj)]
-            ) - aval,
-        x0)[0]
-
-    return [(1-priorities[i](priority))*request[i] for i in range(n_obj)]
+    return [allocate(priority) for allocate in priorities]
 
 
-def allocate_available(request, pp, aval):
+def allocate_available(request, pp, avail):
+    """
+    Implements Vensim's ALLOCATE AVAILABLE function.
+    https://www.vensim.com/documentation/fn_allocate_available.html
+
+    Parameters
+    -----------
+    request: xarray.DataArray
+        Request of each target. Its shape should be the one of the
+        expected output of the function, having the allocation dimension
+        in the last position.
+    pp: xarray.DataArray
+        Priority of each target. Its shape should be the same as
+        request with an extra dimension for the priority profiles
+        in the last position. See Vensim's documentation for more
+        information https://www.vensim.com/documentation/24335.html
+    avail: float or xarray.DataArray
+        The total supply available to fulfill all requests. If the
+        supply exceeds total requests, all requests are filled, but
+        none are overfilled. If you wish to conserve material you must
+        compute supply minus total allocations explicitly. Its shape,
+        should be the same of request without the last dimension.
+
+    Returns
+    -------
+    out: xarray.DataArray
+        The distribution of the supply.
+
+    Warning
+    -------
+    This function uses an optimization method for resolution and the
+    given solution could differ from the one from Vensim. Particularly,
+    when close to the boundaries of the defined priority profiles.
+
+    """
+    if np.any(request < 0):
+        raise ValueError(
+            "There are some negative request values. Ensure that "
+            "your request is always non-negative. Allocation requires "
+            f"all quantities to be positive or 0.\n{request}")
+
+    if np.any(avail < 0):
+        raise ValueError(
+            f"avail={avail} is not allowed. avail should be non-negative."
+        )
+
     if len(request.shape) == 1:
         # NUMPY: avoid '.values' and return directly the result of the
         # function call
         return xr.DataArray(
             _allocate_available_1d(
-                request.values, pp.values, aval),
+                request.values, pp.values, avail),
             request.coords
         )
 
     # NUMPY: use np.empty_like and remove '.values'
     out = xr.zeros_like(request, dtype=float)
-    for comb in itertools.product(*[range(i) for i in aval.shape]):
-        out.values[comb] = _allocate_by_priority_1d(
-            request.values[comb], pp.values[comb], aval.values[comb])
+    for comb in itertools.product(*[range(i) for i in avail.shape]):
+        out.values[comb] = _allocate_available_1d(
+            request.values[comb], pp.values[comb], avail.values[comb])
 
     return out
 
