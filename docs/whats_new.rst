@@ -26,7 +26,7 @@ Performance
 Internal Changes
 ~~~~~~~~~~~~~~~~
 - Add a class to manage priority profiles so it can be also used by the `many-to-many allocation <https://www.vensim.com/documentation/24340.html>`_.
-- Update Python test version 3.10 to 3.11.
+
 
 v3.3.0 (2022/06/22)
 -------------------
