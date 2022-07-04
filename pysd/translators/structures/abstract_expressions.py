@@ -144,6 +144,31 @@ class GameStructure(AbstractSyntax):
 
 
 @dataclass
+class AllocateAvailableStructure(AbstractSyntax):
+    """
+    Dataclass for a Allocate Available structure.
+
+    Parameters
+    ----------
+    request: AbstractSyntax
+        The reference to the request variable.
+    pp: AbstractSyntax
+        The reference to the priority variable.
+    avail: AbstractSyntax or float
+        The total available supply.
+
+    """
+    request: AbstractSyntax
+    pp: AbstractSyntax
+    avail: Union[AbstractSyntax, float]
+
+    def __str__(self) -> str:  # pragma: no cover
+        return "AllocateAvailableStructure:\n\t%s,\n\t%s,\n\t%s" % (
+            self.request, self.pp, self.avail
+        )
+
+
+@dataclass
 class AllocateByPriorityStructure(AbstractSyntax):
     """
     Dataclass for a Allocate By Priority structure.
@@ -170,7 +195,7 @@ class AllocateByPriorityStructure(AbstractSyntax):
 
     def __str__(self) -> str:  # pragma: no cover
         return "AllocateByPriorityStructure:"\
-               "\"n\t%s,\n\t%s,\n\t%s,\n\t%s,\n\t%s" % (
+               "\n\t%s,\n\t%s,\n\t%s,\n\t%s,\n\t%s" % (
                    self.request, self.priority, self.size,
                    self.width, self.supply
                 )
