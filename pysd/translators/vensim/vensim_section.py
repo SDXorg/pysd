@@ -106,7 +106,7 @@ class Section():
         """
         # parse the section to get the elements
         tree = vu.Grammar.get("section_elements").parse(self.content)
-        self.elements = SectionElementsParser(tree).entries
+        self.elements = SectionElementsVisitor(tree).entries
 
         if parse_all:
             # parse all elements
@@ -186,7 +186,7 @@ class Section():
         return list(merged.values())
 
 
-class SectionElementsParser(parsimonious.NodeVisitor):
+class SectionElementsVisitor(parsimonious.NodeVisitor):
     """
     Visit section elements to get their equation, units and documentation.
     """
