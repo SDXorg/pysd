@@ -305,6 +305,11 @@ class StructureBuilder:
                 key = list(origin_comp.subscripts_dict.keys())[0]
                 value = list(component_final_subs.values())[0]
                 origin_comp.subscripts_dict[key] += value
+                # force the same order as the final element
+                origin_comp.subscripts_dict[key] = [
+                    sub for sub in self.element.subs_dict[key]
+                    if sub in origin_comp.subscripts_dict[key]
+                ]
                 self.element.objects[name]["final_subs"] =\
                     origin_comp.subscripts_dict
             else:

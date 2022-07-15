@@ -1,5 +1,33 @@
 What's New
 ==========
+
+v3.4.1 (2022/07/15)
+-------------------
+
+New Features
+~~~~~~~~~~~~
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+- Correct bug related to the order of elements in 1D GET expressions (:issue:`343`).
+
+Documentation
+~~~~~~~~~~~~~
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- Ignore 'distutils Version classes are deprecated. Use packaging.version instead' error in tests as it is an internal error of `xarray`.
+
+
 v3.4.0 (2022/06/29)
 -------------------
 
