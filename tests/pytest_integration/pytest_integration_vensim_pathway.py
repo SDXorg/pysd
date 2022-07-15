@@ -178,6 +178,10 @@ vensim_test = {
         "folder": "get_time_value",
         "file": "test_get_time_value_simple.mdl"
     },
+    "get_values_order": {
+        "folder": "get_values_order",
+        "file": "test_get_values_order.mdl"
+    },
     "get_with_missing_values_xlsx": {
         "folder": "get_with_missing_values_xlsx",
         "file": "test_get_with_missing_values_xlsx.mdl"
