@@ -25,11 +25,11 @@ def ramp(time, slope, start, finish=None):
     ----------
     time: pysd.py_backend.components.Time
         Model time object.
-    slope: float
+    slope: float or xarray.DataArray
         The slope of the ramp starting at zero at time start.
-    start: float
+    start: float or xarray.DataArray
         Time at which the ramp begins.
-    finish: float or None (oprional)
+    finish: float or xarray.DataArray or None (oprional)
         Time at which the ramp ends. If None the ramp will never end.
         Default is None.
 
@@ -41,15 +41,15 @@ def ramp(time, slope, start, finish=None):
 
     """
     t = time()
-    if t < start:
-        return 0
+    # compute out (MIN(time, finish)-start)*slope
+    if finish is None:
+        out = t
     else:
-        if finish is None:
-            return slope * (t - start)
-        elif t > finish:
-            return slope * (finish - start)
-        else:
-            return slope * (t - start)
+        out = np.minimum(finish, t)
+    out -= start
+    out *= slope
+
+    return (t >= start)*out
 
 
 def step(time, value, tstep):
@@ -60,9 +60,9 @@ def step(time, value, tstep):
     ----------
     time: pysd.py_backend.components.Time
         Model time object.
-    value: float
+    value: float or xarray.DataArray
         The height of the step.
-    tstep: float
+    tstep: float or xarray.DataArray
         The time at and after which `result` equals `value`.
 
     Returns
@@ -73,7 +73,7 @@ def step(time, value, tstep):
         - In range [tstep, +inf]:
             returns `value`
     """
-    return value if time() >= tstep else 0
+    return (time() >= tstep)*value
 
 
 def pulse(time, start, repeat_time=0, width=None, magnitude=None, end=None):

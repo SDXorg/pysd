@@ -1,11 +1,12 @@
 What's New
 ==========
 
-v3.4.1 (2022/07/15)
+v3.5.0 (2022/07/15)
 -------------------
 
 New Features
 ~~~~~~~~~~~~
+- Add support for subscripted arguments in :py:func:`pysd.py_backend.functions.ramp` and :py:func:`pysd.py_backend.functions.step` (:issue:`344`).
 
 Breaking changes
 ~~~~~~~~~~~~~~~~
