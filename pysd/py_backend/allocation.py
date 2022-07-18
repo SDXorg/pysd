@@ -587,12 +587,17 @@ def _allocate_by_priority_1d(request, priority, width, supply):
     if supply >= np.sum(request):
         # All targets receive their request
         return request
+    elif supply == 0:
+        # No supply, all targets receive 0
+        return np.zeros_like(request)
+
     # Remove request 0 targets and order by priority
     is_0 = request == 0
     sort = (-priority[~is_0]).argsort()
     request = request[~is_0].astype(float)[sort]
     priority = priority[~is_0][sort]
     # Create the outputs array
+    out_return = np.zeros_like(is_0, dtype=float)
     out = np.zeros_like(request, dtype=float)
     # Compute the distances between target supply and next target start
     distances = np.full_like(request, np.nan, dtype=float)
@@ -629,8 +634,9 @@ def _allocate_by_priority_1d(request, priority, width, supply):
             active[out == request] = False
         supply -= dx
     # Return the distributed supply in the original order
-    # adding to it again the rquest 0 if the where removed
-    return np.insert(out[sort.argsort()], np.where(is_0)[0], 0)
+    # adding to it again the request 0 if the where removed
+    out_return[~is_0] = out[sort.argsort()]
+    return out_return
 
 
 def allocate_by_priority(request, priority, width, supply):
