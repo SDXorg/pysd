@@ -1,7 +1,7 @@
 What's New
 ==========
 
-v3.5.0 (2022/07/15)
+v3.5.0 (2022/07/18)
 -------------------
 
 New Features
@@ -16,7 +16,8 @@ Deprecations
 
 Bug fixes
 ~~~~~~~~~
-- Correct bug related to the order of elements in 1D GET expressions (:issue:`343`).
+- Fix bug related to the order of elements in 1D GET expressions (:issue:`343`).
+- Fix bug in request 0 values in allocate by priority (:issue:`345`).
 
 Documentation
 ~~~~~~~~~~~~~

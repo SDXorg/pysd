@@ -366,14 +366,50 @@ class TestAllocateByPriority():
                 7.5,
                 np.array([6, 1.5, 0]),
             ),
+            (
+                np.array([
+                    0.5, 0.0, 0.4, 0., 0.2,
+                    0.0, 0.3, 0.3, 0., 0.1,
+                    0.2, 0.0, 0.3, 0., 0.0,
+                ]),
+                np.array([
+                    0.5, 0.9, 1.0, 0.5, 0.9,
+                    0.6, 0.9, 1.0, 1., 0.5,
+                    0.9, 1.0, 0.5, 0.9, 1.
+                ]),
+                0.5,
+                1.5,
+                np.array([
+                    0.075, 0.000, 0.400, 0.000, 0.190,
+                    0.000, 0.285, 0.300, 0.000, 0.015,
+                    0.190, 0.000, 0.045, 0.000, 0.000
+                ])
+
+            ),
+            (
+                np.array([
+                    0.5, 0.0, 0.4, 0., 0.2,
+                    0.0, 0.3, 0.3, 0., 0.1,
+                    0.2, 0.0, 0.3, 0., 0.0,
+                ]),
+                np.array([
+                    0.5, 0.9, 1.0, 0.5, 0.9,
+                    0.6, 0.9, 1.0, 1., 0.5,
+                    0.9, 1.0, 0.5, 0.9, 1.
+                ]),
+                0.5,
+                0.,
+                np.zeros(15)
+
+            )
         ],
     )
     def test__allocate_by_priority_1d(self, requests, priority, width,
                                       supply, expected):
         # Test some simple cases, the complicate cases are tested with
         # a full integration test
-        assert np.all(_allocate_by_priority_1d(
-            requests, priority, width, supply) == expected)
+        assert np.all(np.isclose(_allocate_by_priority_1d(
+            requests, priority, width, supply), expected))
 
     @pytest.mark.parametrize(
         "requests,priority,width,supply,raise_type,error_message",
