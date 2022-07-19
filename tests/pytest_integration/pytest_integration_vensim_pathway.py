@@ -482,6 +482,10 @@ vensim_test = {
         "folder": "subscripted_lookups",
         "file": "test_subscripted_lookups.mdl"
     },
+    "subscripted_ramp_step": {
+        "folder": "subscripted_ramp_step",
+        "file": "test_subscripted_ramp_step.mdl"
+    },
     "subscripted_round": {
         "folder": "subscripted_round",
         "file": "test_subscripted_round.mdl"
