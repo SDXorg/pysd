@@ -14,7 +14,7 @@ import xarray as xr
 
 from . import utils
 
-small_vensim = 1e-6  # What is considered zero according to Vensim Help
+SMALL_VENSIM = 1e-6  # What is considered zero according to Vensim Help
 
 
 def ramp(time, slope, start, finish=None):
@@ -43,13 +43,11 @@ def ramp(time, slope, start, finish=None):
     t = time()
     # compute out (MIN(time, finish)-start)*slope
     if finish is None:
-        out = t
+        final = t
     else:
-        out = np.minimum(finish, t)
-    out -= start
-    out *= slope
+        final = np.minimum(finish, t)
 
-    return (t >= start)*out
+    return (t + SMALL_VENSIM > start) * slope * (final-start)
 
 
 def step(time, value, tstep):
@@ -73,7 +71,7 @@ def step(time, value, tstep):
         - In range [tstep, +inf]:
             returns `value`
     """
-    return (time() >= tstep)*value
+    return value * (time() + time.time_step()/2 > tstep)
 
 
 def pulse(time, start, repeat_time=0, width=None, magnitude=None, end=None):
@@ -115,9 +113,9 @@ def pulse(time, start, repeat_time=0, width=None, magnitude=None, end=None):
     width = .5*time.time_step() if width is None else width
     out = magnitude/time.time_step() if magnitude is not None else 1
     if repeat_time == 0:
-        return out if start - small_vensim <= t < start + width else 0
+        return out if start - SMALL_VENSIM <= t < start + width else 0
     elif start <= t and (end is None or t < end):
-        return out if (t - start + small_vensim) % repeat_time < width else 0
+        return out if (t - start + SMALL_VENSIM) % repeat_time < width else 0
     else:
         return 0
 
@@ -190,11 +188,11 @@ def xidz(numerator, denominator, x):
     """
     # NUMPY: replace DataArray by np.ndarray, xr.where -> np.where
     if isinstance(denominator, xr.DataArray):
-        return xr.where(np.abs(denominator) < small_vensim,
+        return xr.where(np.abs(denominator) < SMALL_VENSIM,
                         x,
                         numerator/denominator)
 
-    if abs(denominator) < small_vensim:
+    if abs(denominator) < SMALL_VENSIM:
         # NUMPY: neccessarry for keep the same shape always
         # if isinstance(numerator, np.ndarray):
         #    return np.full_like(numerator, x)
@@ -228,11 +226,11 @@ def zidz(numerator, denominator):
     """
     # NUMPY: replace DataArray by np.ndarray, xr.where -> np.where
     if isinstance(denominator, xr.DataArray):
-        return xr.where(np.abs(denominator) < small_vensim,
+        return xr.where(np.abs(denominator) < SMALL_VENSIM,
                         0,
                         numerator/denominator)
 
-    if abs(denominator) < small_vensim:
+    if abs(denominator) < SMALL_VENSIM:
         # NUMPY: neccessarry for keep the same shape always
         # if isinstance(denominator, np.ndarray):
         #    return np.zeros_like(denominator)
@@ -322,8 +320,8 @@ def quantum(a, b):
     """
     # NUMPY: replace xr by np
     if isinstance(b, xr.DataArray):
-        return xr.where(b < small_vensim, a, b*integer(a/b))
-    if b < small_vensim:
+        return xr.where(b < SMALL_VENSIM, a, b*integer(a/b))
+    if b < SMALL_VENSIM:
         return a
     else:
         return b*integer(a/b)

@@ -12,7 +12,7 @@ import xarray as xr
 from .functions import zidz, if_then_else
 
 
-small_vensim = 1e-6  # What is considered zero according to Vensim Help
+SMALL_VENSIM = 1e-6  # What is considered zero according to Vensim Help
 
 
 class Stateful(object):
@@ -352,11 +352,11 @@ class DelayFixed(DynamicStateful):
             warnings.warn(
                 self.py_name + '\n'
                 + 'Casting delay order from %f to %i' % (
-                    order, round(order + small_vensim)))
+                    order, round(order + SMALL_VENSIM)))
 
         # need to add a small decimal to ensure that 0.5 is rounded to 1
         # The order can only be set once
-        self.order = round(order + small_vensim)
+        self.order = round(order + SMALL_VENSIM)
 
         if init_val is None:
             init_state_value = self.init_func()
