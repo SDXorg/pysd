@@ -32,45 +32,62 @@ class StanModelBuilder:
     def __init__(self, abstract_model: AbstractModel):
         self.abstract_model = abstract_model
 
-    def create_stan_program(self, input_variable_names, output_variable_names, function_name="vensim_func"):
+    def create_stan_program(self, predictor_variable_names, outcome_variable_names, function_name="vensim_func"):
         self.code = IndentedString()
 
 
-        self.code += StanFunctionBuilder(self.abstract_model).build_function_block(input_variable_names,
-                                                                                   output_variable_names, function_name)
+        self.code += StanFunctionBuilder(self.abstract_model).build_function_block(predictor_variable_names,
+                                                                                   outcome_variable_names, function_name)
 
         self.code += "data{\n}\n"
+        # self.code += StanDataBuilder(self.abstract_model).build_block(predictor_variable_names, outcome_variable_names)
         self.code += "transformed data{\n}\n"
         self.code += "parameters{\n}\n"
-        self.code += StanTransformedParametersBuilder(self.abstract_model).build_block(input_variable_names, output_variable_names, function_name)
+        self.code += StanTransformedParametersBuilder(self.abstract_model).build_block(predictor_variable_names, outcome_variable_names, function_name)
         self.code += "model{\n}\n"
 
         self.code += "generated quantities{\n}"
 
         return self.code
+""" class StanDataBuilder:
+    def __init__(self, abstract_model: AbstractModel):
+        self.abstract_model = abstract_model
 
+    def build_block(self, predictor_variable_names, outcome_variable_names):
+        self.code = IndentedString()
+        self.code += "data {\n"
+        self.code.indent_level += 1        
+
+        self.code += f"predictor= {{{', '.join(predictor_variable_names)}}};\n"
+        self.code += f"initial_outcome = {{{', '.join(outcome_variable_names)}}};\n"
+        self.code += f"observed_outcome = {{{', '.join(outcome_variable_names)}}};\n"
+        self.code += f"times = {{{', '.join(outcome_variable_names)}}};\n"
+        self.code.indent_level -= 1
+        self.code += "}\n" """
 
 class StanTransformedParametersBuilder:
     def __init__(self, abstract_model: AbstractModel):
         self.abstract_model = abstract_model
 
-    def build_block(self, input_variable_names, output_variable_names, function_name):
+    def build_block(self, predictor_variable_names, outcome_variable_names, function_name):
         self.code = IndentedString()
         self.code += "transformed parameters {\n"
         self.code.indent_level += 1
 
         argument_variables = []
-        for var in input_variable_names:
+        for var in predictor_variable_names:
+            print(var)
             match var:
                 case str(x):
+                    print("dfsdfsdfs")
                     argument_variables.append(x)
                 case (str(type), str(var_name)):
                     argument_variables.append(var_name)
 
-        self.code += f"vector[{len(output_variable_names)}] initial_state;\n"
-        self.code += f"initial_state = {{{', '.join(output_variable_names)}}};\n"
+        self.code += f"vector[{len(outcome_variable_names)}] initial_outcome;\n"
+        self.code += f"initial_outcome = {{{', '.join(outcome_variable_names)}}};\n"
 
-        self.code += f"array[] vector integrated_result = integrate_ode_rk45({function_name}, initial_state, initial_time, times, {','.join(argument_variables)});\n"
+        self.code += f"array[] vector integrated_result = integrate_ode_rk45({function_name}, initial_outcome, initial_time, times, {','.join(argument_variables)});\n"
         self.code.indent_level -= 1
         self.code += "}\n"
 
@@ -110,7 +127,7 @@ class StanFunctionBuilder:
         for x in var_names:
             print(f"{x[0].ljust(max_length)}{x[1]}")
 
-    def build_function_block(self, input_variable_names, output_variable_names, function_name="vensim_func"):
+    def build_function_block(self, predictor_variable_names, outcome_variable_names, function_name="vensim_func"):
         self.code = IndentedString()
         self.code += "functions {\n"
         self.code.indent_level += 1
@@ -132,10 +149,10 @@ class StanFunctionBuilder:
             recursive_order_search(var_name, set())
 
         self.elements = sorted(self.elements, key=lambda x: eval_order.index(x.name.lower().replace(" ", "_")))
-        self.code += f"vector {function_name}(real time, vector state, "
+        self.code += f"vector {function_name}(real time, vector outcome, "
         argument_strings = []
         argument_variables = []
-        for var in input_variable_names:
+        for var in predictor_variable_names:
             match var:
                 case str(x):
                     argument_variables.append(x)
@@ -149,8 +166,8 @@ class StanFunctionBuilder:
         self.code += "\n"
         self.code.indent_level += 1
 
-        for index, output_variable_name in enumerate(output_variable_names, 1):
-            self.code += f"real {output_variable_name} = state[{index}];\n"
+        for index, outcome_variable_name in enumerate(outcome_variable_names, 1):
+            self.code += f"real {outcome_variable_name} = outcome[{index}];\n"
 
         self.code += "\n"
 
@@ -158,14 +175,14 @@ class StanFunctionBuilder:
             stan_varname = name_to_identifier(element.name)
             if stan_varname in argument_variables:
                 continue
-            elif stan_varname in output_variable_names:
+            elif stan_varname in outcome_variable_names:
                 stan_varname += "_dydt"
             for component in element.components:
                 self.code += f"real {stan_varname} = {ast_codegen(component.ast)};\n"
 
         self.code += "\n"
-        output_variable_names = [name + "_dydt" for name in output_variable_names]
-        self.code += f"return {{{', '.join(output_variable_names)}}};\n"
+        outcome_variable_names = [name + "_dydt" for name in outcome_variable_names]
+        self.code += f"return {{{', '.join(outcome_variable_names)}}};\n"
         self.code.indent_level -= 1
         self.code += "}\n"
 
@@ -175,3 +192,10 @@ class StanFunctionBuilder:
 
     def build_lookups(self):
         pass
+
+class StanTransformedDataBuilder:
+    def __init__(self, abstract_model: AbstractModel, function_name: str = "vensim_ode"):
+
+        self.abstract_model = abstract_model
+        self.elements = self.abstract_model.sections[0].elements
+        self.function_name = function_name
