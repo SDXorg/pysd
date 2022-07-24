@@ -12,7 +12,7 @@ am = vf.get_abstract_model()
 stan_builder = StanModelBuilder(am)
 stan_builder.print_variable_info()
 #print(stan_builder.create_stan_program([("int", "failure_count"), "repair_time"], ["battle_field", "repair_shop"])) # repair
-#print(stan_builder.create_stan_program(["Demand"], ["inventory", "Back Log"]))
+print(stan_builder.create_stan_program(["Demand"]))
 for section in am.sections:
     for element in section.elements:
         print("*" * 10)

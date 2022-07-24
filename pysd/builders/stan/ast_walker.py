@@ -85,7 +85,7 @@ class LookupCodegenWalker(BaseNodeWaler):
 
 @dataclass
 class BlockCodegenWalker(BaseNodeWaler):
-    lookup_function_names: Dict[Tuple, str] = field(default_factory=dict)
+    lookup_function_names: Dict[Tuple, str]
 
     def walk(self, ast_node) -> str:
         match ast_node:
@@ -152,4 +152,16 @@ class BlockCodegenWalker(BaseNodeWaler):
                 lookup_func_name = self.lookup_function_names[LookupCodegenWalker.get_lookup_keyname(lookups)]
                 return f"{lookup_func_name}({self.walk(argument)})"
 
+@dataclass
+class InitialValueCodeGenWalker(BlockCodegenWalker):
+    lookup_function_names: Dict[Tuple, str]
+
+    def walk(self, ast_node):
+        match ast_node:
+            case IntegStructure(flow, initial):
+                return self.walk(initial)
+            case SmoothStructure(input, smooth_time, initial, order):
+                return self.walk(initial)
+            case _:
+                return super().walk(ast_node)
 

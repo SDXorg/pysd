@@ -20,5 +20,5 @@ class IndentedString:
         return self.string
 
 
-def name_to_identifier(name: str):
+def vensim_name_to_identifier(name: str):
     return name.lower().replace(" ", "_")
