@@ -153,7 +153,8 @@ class BlockCodegenWalker(BaseNodeWaler):
                 return f"{lookup_func_name}({self.walk(argument)})"
 
 @dataclass
-class InitialValueCodeGenWalker(BlockCodegenWalker):
+class InitialValueCodegenWalker(BlockCodegenWalker):
+    variable_ast_dict: Dict[str, AbstractSyntax]
     lookup_function_names: Dict[Tuple, str]
 
     def walk(self, ast_node):
@@ -162,6 +163,71 @@ class InitialValueCodeGenWalker(BlockCodegenWalker):
                 return self.walk(initial)
             case SmoothStructure(input, smooth_time, initial, order):
                 return self.walk(initial)
+            case ReferenceStructure(reference, subscripts):
+                if reference in self.variable_ast_dict:
+                    return self.walk(self.variable_ast_dict[reference])
+                else:
+                    return super().walk(ast_node)
             case _:
                 return super().walk(ast_node)
+
+
+@dataclass
+class RNGCodegenWalker(InitialValueCodegenWalker):
+    variable_ast_dict: Dict[str, AbstractSyntax]
+    lookup_function_names: Dict[Tuple, str]
+    total_timestep: int
+
+    def walk(self, ast_node) -> str:
+        match ast_node:
+            case CallStructure(function, arguments):
+                function_name = self.walk(function)
+                match function_name:
+                    case "random_beta" | "random_binomial" | "random_binomial" | "random_exponential" | "random_gamma" | "random_normal" | "random_poisson":
+                        argument_codegen = [self.walk(argument) for argument in arguments]
+                        return self.rng_codegen(function_name, argument_codegen)
+                    case _:
+                        return super().walk(ast_node)
+
+            case IntegStructure(flow, initial):
+                raise Exception("RNG function arguments cannot contain stock variables which change with time and thus must be constant!")
+
+            case SmoothStructure(input, smooth_time, initial, order):
+                raise Exception("RNG function arguments cannot contain stock variables which change with time and thus must be constant!")
+
+            case ReferenceStructure(reference, subscripts):
+                if reference in self.variable_ast_dict:
+                    return self.walk(reference)
+                else:
+                    return super().walk(ast_node)
+
+            case ArithmeticStructure(operators, arguments):
+                # ArithmeticStructure consists of chained arithmetic expressions.
+                # We parse them one by one into a single expression
+                output_string = ""
+                last_argument_index = len(arguments) - 1
+                for index, argument in enumerate(arguments):
+                    output_string += self.walk(argument)
+                    if index < last_argument_index:
+                        output_string += " "
+                        output_string += operators[index]
+                        output_string += " "
+                return output_string
+
+            case _:
+                return super().walk(ast_node)
+
+    def rng_codegen(self, rng_type, arguments):
+        match rng_type:
+            case "random_normal":
+                lower, upper, mean, std, _ = arguments
+                return f"fmin(fmax(normal_rng({mean}, {std}), {lower}), {upper})"
+            case "random_uniform":
+                lower, upper, _ = arguments
+                return f"uniform_rng({lower}, {upper})"
+            case "random_poisson":
+                lower, upper, _lambda, offset, multiply, _ = arguments
+                return f"fmin(fmax(fma(poisson_rng({_lambda}), {multiply}, {offset}), {lower}), {upper})"
+            case _:
+                raise Exception(f"RNG function {rng_type} not implemented")
 
