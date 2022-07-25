@@ -29,6 +29,7 @@ Performance
 Internal Changes
 ~~~~~~~~~~~~~~~~
 - Ignore 'distutils Version classes are deprecated. Use packaging.version instead' error in tests as it is an internal error of `xarray`.
+- Add a warning message when a subscript range is duplicated in a variable reference.
 
 
 v3.4.0 (2022/06/29)
