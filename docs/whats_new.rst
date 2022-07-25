@@ -22,6 +22,7 @@ Bug fixes
 
 Documentation
 ~~~~~~~~~~~~~
+- Include new PySD logo.
 
 Performance
 ~~~~~~~~~~~
