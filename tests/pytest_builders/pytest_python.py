@@ -183,9 +183,7 @@ class TestStructureBuilder:
         component.section.subscripts.mapping = {
             dim: [] for dim in subscripts}
 
-        with pytest.warns(None) as record:
-            ReferenceBuilder(reference_str, component)
-        assert len(record) == 0
+        ReferenceBuilder(reference_str, component)
 
 
 class TestSubscriptManager:
