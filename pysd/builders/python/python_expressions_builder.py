@@ -1793,8 +1793,29 @@ class ReferenceBuilder(StructureBuilder):
     @subscripts.setter
     def subscripts(self, subscripts: SubscriptsReferenceStructure):
         """Get subscript dictionary from reference"""
-        self._subscripts = self.section.subscripts.make_coord_dict(
-            getattr(subscripts, "subscripts", {}))
+        ref_subs = getattr(subscripts, "subscripts", [])
+
+        self._subscripts = self.section.subscripts.make_coord_dict(ref_subs)
+
+        if len(ref_subs) != len(self._subscripts):
+            # The reference has repeated subscript ranges, this is
+            # not compatible with Python as we use dictionaries to save
+            # the subscript ranges information (duplicates a key)
+
+            # Get the original name of the reference
+            origin_ref = self.reference
+            for origin_ref2 in self.section.namespace.namespace.keys():
+                if origin_ref == origin_ref2.lower().replace(" ", "_"):
+                    origin_ref = origin_ref2
+                    break
+
+            warnings.warn(
+                "The reference to '%s' in variable '%s' has duplicated "
+                "subscript ranges. If mapping is used in one of them, "
+                "please, rewrite reference subscripts to avoid "
+                "duplicates. Otherwise, the final model may crash..."
+                % (origin_ref, self.element.name)
+            )
 
         # get the subscripts after applying the mapping if necessary
         for dim, coordinates in self._subscripts.items():
