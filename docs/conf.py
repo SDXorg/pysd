@@ -112,6 +112,11 @@ todo_include_todos = True
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'PySDdoc'
+html_logo = "images/PySD_Logo_letters.png"
+html_favicon = "images/PySD_Logo.ico"
+html_theme_options = {
+    'logo_only': True,
+}
 
 
 # -- Options for LaTeX output ---------------------------------------------
