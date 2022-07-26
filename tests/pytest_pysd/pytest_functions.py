@@ -12,22 +12,156 @@ from pysd.py_backend.functions import\
 
 class TestInputFunctions():
     def test_ramp(self):
-        assert ramp(lambda: 14, .5, 10, 18) == 2
+        t = Time()
+        t.set_control_vars(time_step=1)
 
-        assert ramp(lambda: 4, .5, 10, 18) == 0
+        t.update(4)
+        assert ramp(t, .5, 10, 18) == 0
 
-        assert ramp(lambda: 24, .5, 10, 18) == 4
+        t.update(14)
+        assert ramp(t, .5, 10, 18) == 2
 
-        assert ramp(lambda: 24, .5, 10) == 7
+        t.update(24)
+        assert ramp(t, .5, 10, 18) == 4
 
-        assert ramp(lambda: 50, .5, 10) == 20
+        assert ramp(t, .5, 10) == 7
+
+        t.update(50)
+        assert ramp(t, .5, 10) == 20
+
+        # arrays start
+        coords = {"dim1": ["A", "B"], "dim2": ["X", "Y", "Z"]}
+        start_array = xr.DataArray(
+            [[8., 7., 9.], [4., 5., 6.]],
+            coords
+        )
+
+        t.update(4)
+        assert ramp(t, .5, start_array, 18).equals(
+            xr.DataArray([[0., 0., 0.], [0., 0., 0.]], coords))
+
+        t.update(14)
+        assert ramp(t, .5, start_array, 18).equals(
+            xr.DataArray([[3., 3.5, 2.5], [5., 4.5, 4.]], coords))
+
+        t.update(24)
+        assert ramp(t, .5, start_array, 18).equals(
+            xr.DataArray([[5., 5.5, 4.5], [7., 6.5, 6.]], coords))
+
+        assert ramp(t, .5, start_array).equals(
+            xr.DataArray([[8., 8.5, 7.5], [10., 9.5, 9.]], coords))
+
+        # arrays finish
+        finish_array = xr.DataArray(
+            [[10., 15., 18.], [20., 16., 12.]],
+            coords
+        )
+
+        t.update(14)
+        assert ramp(t, .5, 10, finish_array).equals(
+            xr.DataArray([[0., 2., 2.], [2., 2., 1.]], coords))
+
+        t.update(25)
+        assert ramp(t, .5, 10, finish_array).equals(
+            xr.DataArray([[0., 2.5, 4.], [5., 3., 1.]], coords))
+
+        # arrays slope
+        slope_array = xr.DataArray(
+            [[0.5, .1, 1.], [2., -1., -0.5]],
+            coords
+        )
+
+        t.update(4)
+        assert ramp(t, slope_array, 10, 18).equals(
+            xr.DataArray([[0., 0., 0.], [0., 0., 0.]], coords))
+
+        t.update(14)
+        assert ramp(t, slope_array, 10, 18).equals(
+            xr.DataArray([[2., .4, 4.], [8., -4, -2.]], coords))
+
+        t.update(24)
+        assert ramp(t, slope_array, 10, 18).equals(
+            xr.DataArray([[4., .8, 8.], [16., -8., -4.]], coords))
+
+        t.update(50)
+        assert ramp(t, slope_array, 10).equals(
+            xr.DataArray([[20., 4., 40.], [80., -40., -20.]], coords))
+
+        # arrays all
+        t.update(4)
+        assert ramp(t, slope_array, start_array, finish_array).equals(
+            xr.DataArray([[0., 0., 0.], [0., 0., 0.]], coords))
+
+        t.update(12)
+        assert ramp(t, slope_array, start_array, finish_array).equals(
+            xr.DataArray([[1.,  0.5,  3.], [16., -7., -3.]], coords))
+
+        t.update(26)
+        assert ramp(t, slope_array, start_array, finish_array).equals(
+            xr.DataArray([[1., .8, 9.], [32., -11., -3.]], coords))
+
+        t.update(27)
+        assert ramp(t, slope_array, start_array).equals(
+            xr.DataArray([[9.5, 2., 18.], [46., -22., -10.5]], coords))
 
     def test_step(self):
-        assert step(lambda: 5, 1, 10) == 0
+        t = Time()
+        t.set_control_vars(time_step=1)
 
-        assert step(lambda: 15, 1, 10) == 1
+        t.update(5)
+        assert step(t, 1, 10) == 0
 
-        assert step(lambda: 10, 1, 10) == 1
+        t.update(10)
+        assert step(t, 1, 10) == 1
+
+        t.update(15)
+        assert step(t, 1, 10) == 1
+
+        # arrays value
+        coords = {"dim1": ["A", "B"], "dim2": ["X", "Y", "Z"]}
+        value_array = xr.DataArray(
+            [[0.5, .1, 1.], [2., -1., -0.5]],
+            coords
+        )
+
+        t.update(5)
+        assert step(t, value_array, 10).equals(
+            xr.zeros_like(value_array))
+
+        t.update(10)
+        assert step(t, value_array, 10).equals(value_array)
+
+        t.update(15)
+        assert step(t, value_array, 10).equals(value_array)
+
+        # arrays tstep
+        tstep_array = xr.DataArray(
+            [[8., 10., 6.], [20., 11., 15.]],
+            coords
+        )
+
+        t.update(5)
+        assert step(t, 1, tstep_array).equals(
+            xr.zeros_like(value_array))
+
+        t.update(10)
+        assert step(t, 1, tstep_array).equals(tstep_array <= 10)
+
+        t.update(15)
+        assert step(t, 1, tstep_array).equals(tstep_array <= 15)
+
+        # arrays all
+        t.update(5)
+        assert step(t, value_array, tstep_array).equals(
+            xr.zeros_like(value_array))
+
+        t.update(10)
+        assert step(t, value_array, tstep_array).equals(
+            value_array*(tstep_array <= 10))
+
+        t.update(15)
+        assert step(t, value_array, tstep_array).equals(
+            value_array*(tstep_array <= 15))
 
     def test_pulse(self):
         assert pulse(lambda: 0, 1, width=3) == 0

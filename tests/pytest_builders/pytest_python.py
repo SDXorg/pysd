@@ -5,7 +5,9 @@ from pysd.builders.python.subscripts import SubscriptManager
 from pysd.builders.python.python_model_builder import\
     ComponentBuilder, ElementBuilder, SectionBuilder
 from pysd.builders.python.python_expressions_builder import\
-    StructureBuilder, BuildAST
+    ReferenceBuilder, StructureBuilder, BuildAST
+from pysd.translators.structures.abstract_expressions import\
+    ReferenceStructure, SubscriptsReferenceStructure
 from pysd.translators.structures.abstract_model import\
     AbstractComponent, AbstractElement, AbstractSection, AbstractSubscriptRange
 
@@ -110,6 +112,78 @@ class TestStructureBuilder:
     def test__get_final_subscripts(self, structure_builder,
                                    arguments, expected):
         assert structure_builder.get_final_subscripts(arguments) == expected
+
+    @pytest.mark.parametrize(
+        "reference_str,origin_name,namespace,subscripts",
+        [
+            (
+                ReferenceStructure(
+                    "abc_jki",
+                    SubscriptsReferenceStructure(("dim1", "dim1", "dim3"))
+                ),
+                "Abc Jki",
+                {"hgfhd": "hgfhd", "Abc Jki": "abc_jki"},
+                {"dim1": ["A", "B", "C"],
+                 "dim2": ["A", "B", "C"], "dim3": ["A", "B", "C"]}
+            ),
+            (
+                ReferenceStructure(
+                    "abc_jki",
+                    SubscriptsReferenceStructure(("dim1", "dim1"))
+                ),
+                "abc_jki",
+                {"hgfhd": "hgfhd"},
+                {"dim1": ["A", "B", "C"], "dim2": ["A", "B", "C"]}
+            ),
+        ]
+    )
+    def test_referencebuilder_subscripts_warning(self, component,
+                                                 reference_str,
+                                                 origin_name,
+                                                 namespace, subscripts):
+        component.element.name = "My Var"
+        component.section.subscripts._subscripts = subscripts
+        component.section.subscripts.mapping = {
+            dim: [] for dim in subscripts}
+        component.section.namespace.namespace = namespace
+        warning_message =\
+            f"The reference to '{origin_name}' in variable 'My Var' has "\
+            r"duplicated subscript ranges\. If mapping is used in one "\
+            r"of them, please, rewrite reference subscripts to avoid "\
+            r"duplicates\. Otherwise, the final model may crash\.\.\."\
+
+        with pytest.warns(UserWarning, match=warning_message):
+            ReferenceBuilder(reference_str, component)
+
+    @pytest.mark.parametrize(
+        "reference_str,subscripts",
+        [
+            (
+                ReferenceStructure(
+                    "abc_jki",
+                    SubscriptsReferenceStructure(["dim1", "A", "dim3"])
+                ),
+                {"dim1": ["A", "B", "C"],
+                 "dim2": ["A", "B", "C"], "dim3": ["A", "B", "C"]}
+            ),
+            (
+                ReferenceStructure(
+                    "abc_jki",
+                    SubscriptsReferenceStructure(["A", "A"])
+                ),
+                {"dim1": ["A", "B", "C"], "dim2": ["A", "B", "C"]}
+            ),
+        ]
+    )
+    def test_referencebuilder_subscripts_nowarning(self, component,
+                                                   reference_str,
+                                                   subscripts):
+        component.element.name = "My Var"
+        component.section.subscripts._subscripts = subscripts
+        component.section.subscripts.mapping = {
+            dim: [] for dim in subscripts}
+
+        ReferenceBuilder(reference_str, component)
 
 
 class TestSubscriptManager:

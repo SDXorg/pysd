@@ -39,6 +39,7 @@ VECTOR RANK	VECTOR RANK(vec, direction)			"CallStructure('vector_rank', (vec, di
 VECTOR REORDER	VECTOR REORDER(vec, svec)			"CallStructure('vector_reorder', (vec, svec))"	vector_reorder(vec, svec)
 VECTOR SORT ORDER	VECTOR SORT ORDER(vec, direction)			"CallStructure('vector_sort_order', (vec, direction))"	vector_sort_order(vec, direction)
 GAME	GAME(A)			GameStructure(A)	A
+ALLOCATE AVAILABLE	"ALLOCATE AVAILABLE(request, pp, avail)"			"AllocateAvailableStructure(request, pp, avail)"	allocate_available(request, pp, avail)			Not all the priority profiles are included.
 ALLOCATE BY PRIORITY	"ALLOCATE BY PRIORITY(request, priority, size, width, supply)"			"AllocateByPriorityStructure(request, priority, size, width, supply)"	allocate_by_priority(request, priority, width, supply)
 INITIAL	INITIAL(value)	init	init(value)	InitialStructure(value)	pysd.statefuls.Initial
 SAMPLE IF TRUE	"SAMPLE IF TRUE(condition, input, initial_value)"			"SampleIfTrueStructure(condition, input, initial_value)"	pysd.statefuls.SampleIfTrue(...)

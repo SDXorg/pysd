@@ -30,8 +30,8 @@ from .xmile_structures import structures, parsing_ops
 
 class Element():
     """
-    Element class. This class provides the shared methods for its childs:
-    Flaux, Gf, Stock, and ControlElement.
+    Element class. This class provides the shared methods for its
+    children: Flaux, Gf, Stock, and ControlElement.
 
     Parameters
     ----------

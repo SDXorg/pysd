@@ -19,6 +19,11 @@ vensim_test = {
         "folder": "active_initial_circular",
         "file": "test_active_initial_circular.mdl"
     },
+    "allocate_available": {
+        "folder": "allocate_available",
+        "file": "test_allocate_available.mdl",
+        "rtol": 2e-2
+    },
     "allocate_by_priority": {
         "folder": "allocate_by_priority",
         "file": "test_allocate_by_priority.mdl"
@@ -172,6 +177,10 @@ vensim_test = {
     "get_time_value": {
         "folder": "get_time_value",
         "file": "test_get_time_value_simple.mdl"
+    },
+    "get_values_order": {
+        "folder": "get_values_order",
+        "file": "test_get_values_order.mdl"
     },
     "get_with_missing_values_xlsx": {
         "folder": "get_with_missing_values_xlsx",
@@ -472,6 +481,10 @@ vensim_test = {
     "subscripted_lookups": {
         "folder": "subscripted_lookups",
         "file": "test_subscripted_lookups.mdl"
+    },
+    "subscripted_ramp_step": {
+        "folder": "subscripted_ramp_step",
+        "file": "test_subscripted_ramp_step.mdl"
     },
     "subscripted_round": {
         "folder": "subscripted_round",

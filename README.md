@@ -9,7 +9,7 @@ PySD
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5654824.svg)](https://doi.org/10.5281/zenodo.5654824)
 [![Docs](https://readthedocs.org/projects/pysd/badge/?version=latest)](https://pysd.readthedocs.io/en/latest/?badge=latest)
 
-Simulating System Dynamics Models in Python
+![PySD Logo](https://raw.githubusercontent.com/JamesPHoughton/pysd/5cc4fe5dc65e6b5140a00e87a1be9d261570ee8d/docs/images/PySD_Logo_letters.svg?style=centerme)
 
 This project is a simple library for running [System Dynamics](http://en.wikipedia.org/wiki/System_dynamics) models in python, with the purpose of improving integration of *Big Data* and *Machine Learning* into the SD workflow.
 

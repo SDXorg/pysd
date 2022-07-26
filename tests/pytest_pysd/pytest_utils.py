@@ -259,7 +259,7 @@ class TestUtils():
             'Elem2': ('elem2', {})}
 
         actual = pysd.utils.make_flat_df(df, return_addresses, flatten=True)
-        print(actual.columns)
+
         # check all columns are in the DataFrame
         assert set(actual.columns) == set(expected.columns)
         # need to assert one by one as they are xarrays

@@ -45,7 +45,6 @@ class Element():
         '~' symbol.
 
     """
-
     def __init__(self, equation: str, units: str, documentation: str):
         self.equation = equation
         self.units, self.limits = self._parse_units(units)
@@ -87,14 +86,14 @@ class Element():
 
     def parse(self) -> object:
         """
-        Parse an Element object with parsimonious using the grammar given in
-        'parsing_grammars/element_object.peg' and the class
+        Parse an Element object with parsimonious using the grammar
+        given in 'parsing_grammars/element_object.peg' and the class
         ElementsComponentVisitor to visit the parsed expressions.
 
         Splits the LHS from the RHS of the equation. If the returned
-        object is a SubscriptRange, no more parsing is needed. Otherwise,
-        the RHS of the returned object (Component) should be parsed
-        to get the AbstractSyntax Tree.
+        object is a SubscriptRange, no more parsing is needed.
+        Otherwise, the RHS of the returned object (Component) should
+        be parsed to get the AbstractSyntax Tree.
 
         Returns
         -------

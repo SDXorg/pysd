@@ -6,9 +6,10 @@ from typing import List
 # used to create Python safe names with the variable reserved_words
 from keyword import kwlist
 from builtins import __dir__ as bidir
+from pysd.py_backend.allocation import __dir__ as adir
+from pysd.py_backend.cache import __dir__ as cadir
 from pysd.py_backend.components import __dir__ as cdir
 from pysd.py_backend.data import __dir__ as ddir
-from pysd.py_backend.cache import __dir__ as cadir
 from pysd.py_backend.external import __dir__ as edir
 from pysd.py_backend.functions import __dir__ as fdir
 from pysd.py_backend.statefuls import __dir__ as sdir
@@ -29,8 +30,8 @@ class NamespaceManager:
 
     """
     _reserved_words = set(
-        dir() + bidir() + cdir() + ddir() + cadir() + edir() + fdir()
-        + sdir() + udir()).union(kwlist)
+        dir() + adir() + bidir() + cadir() + cdir() + ddir() + edir()
+        + fdir() + sdir() + udir()).union(kwlist)
 
     def __init__(self, parameters: List[str] = []):
         self._used_words = self._reserved_words.copy()

@@ -1,4 +1,5 @@
 include requirements.txt
 include README.md
+include docs/images/PySD_Logo*
 include LICENSE
 graft pysd/translators/*/parsing_grammars

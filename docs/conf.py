@@ -30,7 +30,7 @@ MOCK_MODULES = [
     'numpy', 'scipy', 'matplotlib', 'matplotlib.pyplot', 'scipy.stats',
     'scipy.integrate', 'pandas', 'parsimonious', 'parsimonious.nodes',
     'xarray', 'autopep8', 'scipy.linalg', 'parsimonious.exceptions',
-    'scipy.stats.distributions', 'progressbar', 'black'
+    'scipy.stats.distributions', 'progressbar', 'black', 'scipy.optimize'
 ]
 
 for mod_name in MOCK_MODULES:
@@ -112,6 +112,11 @@ todo_include_todos = True
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'PySDdoc'
+html_logo = "images/PySD_Logo_letters.png"
+html_favicon = "images/PySD_Logo.ico"
+html_theme_options = {
+    'logo_only': True,
+}
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -152,6 +157,7 @@ intersphinx_mapping = {
     'pandas': ('https://pandas.pydata.org/docs/', None),
     'xarray': ('https://docs.xarray.dev/en/stable/', None),
     'numpy': ('https://numpy.org/doc/stable/', None),
+    'scipy': ('https://docs.scipy.org/doc/scipy/', None),
     'pytest': ('https://docs.pytest.org/en/7.1.x/', None)
 }
 

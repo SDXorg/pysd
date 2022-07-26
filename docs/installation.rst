@@ -53,6 +53,7 @@ PySD builds on the core Python data analytics stack, and the following third par
 * black
 * openpyxl
 * progressbar2
+* portion
 
 These modules should build automatically if you are installing via `pip`. If you are building from
 source, or if pip fails to load them, they can be loaded with the same `pip` syntax as

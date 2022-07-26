@@ -1,12 +1,72 @@
 What's New
 ==========
 
+v3.5.0 (2022/07/25)
+-------------------
+
+New Features
+~~~~~~~~~~~~
+- Add support for subscripted arguments in :py:func:`pysd.py_backend.functions.ramp` and :py:func:`pysd.py_backend.functions.step` (:issue:`344`).
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+- Fix bug related to the order of elements in 1D GET expressions (:issue:`343`).
+- Fix bug in request 0 values in allocate by priority (:issue:`345`).
+- Fix a numerical error in starting time of step and ramp.
+
+Documentation
+~~~~~~~~~~~~~
+- Include new PySD logo.
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- Ignore 'distutils Version classes are deprecated. Use packaging.version instead' error in tests as it is an internal error of `xarray`.
+- Add a warning message when a subscript range is duplicated in a variable reference.
+
+
+v3.4.0 (2022/06/29)
+-------------------
+
+New Features
+~~~~~~~~~~~~
+- Add support for Vensim's `ALLOCATE AVAILABLE <https://www.vensim.com/documentation/fn_allocate_available.html>`_ (:py:func:`pysd.py_backend.allocation.allocate_available`) function (:issue:`339`). Integer allocation cases have not been implemented neither the fixed quantity and constant elasticity curve priority functions.
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+
+Documentation
+~~~~~~~~~~~~~
+- Improve the documentation of the :py:mod:`pysd.py_backend.allocation` module.
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- Add a class to manage priority profiles so it can be also used by the `many-to-many allocation <https://www.vensim.com/documentation/24340.html>`_.
+
+
 v3.3.0 (2022/06/22)
 -------------------
 
 New Features
 ~~~~~~~~~~~~
-- Add support for Vensim's `ALLOCATE BY PRIORITY <https://www.vensim.com/documentation/fn_allocate_by_priority.html>`_ (:func:`pysd.py_backend.allocation.allocate_by_priority`) function (:issue:`263`).
+- Add support for Vensim's `ALLOCATE BY PRIORITY <https://www.vensim.com/documentation/fn_allocate_by_priority.html>`_ (:py:func:`pysd.py_backend.allocation.allocate_by_priority`) function (:issue:`263`).
 
 Breaking changes
 ~~~~~~~~~~~~~~~~
@@ -33,8 +93,8 @@ v3.2.0 (2022/06/10)
 
 New Features
 ~~~~~~~~~~~~
-- Add support for Vensim's `GET TIME VALUE <https://www.vensim.com/documentation/fn_get_time_value.html>`_ (:func:`pysd.py_backend.functions.get_time_value`) function (:issue:`332`). Not all cases have been implemented.
-- Add support for Vensim's `VECTOR SELECT <http://vensim.com/documentation/fn_vector_select.html>`_ (:func:`pysd.py_backend.functions.vector_select`) function (:issue:`266`).
+- Add support for Vensim's `GET TIME VALUE <https://www.vensim.com/documentation/fn_get_time_value.html>`_ (:py:func:`pysd.py_backend.functions.get_time_value`) function (:issue:`332`). Not all cases have been implemented.
+- Add support for Vensim's `VECTOR SELECT <http://vensim.com/documentation/fn_vector_select.html>`_ (:py:func:`pysd.py_backend.functions.vector_select`) function (:issue:`266`).
 
 Breaking changes
 ~~~~~~~~~~~~~~~~
@@ -61,9 +121,9 @@ v3.1.0 (2022/06/02)
 
 New Features
 ~~~~~~~~~~~~
-- Add support for Vensim's `VECTOR SORT ORDER <https://www.vensim.com/documentation/fn_vector_sort_order.html>`_ (:func:`pysd.py_backend.functions.vector_sort_order`) function (:issue:`326`).
-- Add support for Vensim's `VECTOR RANK <https://www.vensim.com/documentation/fn_vector_rank.html>`_ (:func:`pysd.py_backend.functions.vector_rank`) function (:issue:`326`).
-- Add support for Vensim's `VECTOR REORDER <https://www.vensim.com/documentation/fn_vector_reorder.html>`_ (:func:`pysd.py_backend.functions.vector_reorder`) function (:issue:`326`).
+- Add support for Vensim's `VECTOR SORT ORDER <https://www.vensim.com/documentation/fn_vector_sort_order.html>`_ (:py:func:`pysd.py_backend.functions.vector_sort_order`) function (:issue:`326`).
+- Add support for Vensim's `VECTOR RANK <https://www.vensim.com/documentation/fn_vector_rank.html>`_ (:py:func:`pysd.py_backend.functions.vector_rank`) function (:issue:`326`).
+- Add support for Vensim's `VECTOR REORDER <https://www.vensim.com/documentation/fn_vector_reorder.html>`_ (:py:func:`pysd.py_backend.functions.vector_reorder`) function (:issue:`326`).
 
 Breaking changes
 ~~~~~~~~~~~~~~~~
