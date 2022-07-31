@@ -1,7 +1,7 @@
 {UTF-8}
 Sd of Demand=
 	10
-	~
+	~	
 	~		|
 
 Inventory Adjustment Time=
@@ -11,17 +11,17 @@ Inventory Adjustment Time=
 
 Supply Line Adjustment Time=
 	3
-	~
+	~	
 	~		|
 
 Minimum Processing Time=
 	3
-	~
+	~	
 	~		|
 
 Demand=
 	RANDOM NORMAL( 0, 200, Mean of Demand, Sd of Demand, 1111)
-	~
+	~	
 	~		|
 
 Desired Delivery Delay=
@@ -45,39 +45,42 @@ Desired Shipment=
 	~	Widget/Month
 	~		|
 
-Fulfilment Ratio= 1
-	~
+Fulfilment Ratio= WITH LOOKUP (
+	Maximum Delivery Rate/Desired Shipment,
+		([(0,0)-(2,1)],(0,0),(0.5,0.5),(0.672783,0.657895),(1.04587,0.859649),(1.40061,0.942982\
+		),(2,1) ))
+	~	
 	~		|
 
 Adjustment for Inventory=
 	(Desired Inventory-Inventory)/Inventory Adjustment Time
-	~
+	~	
 	~		|
 
 Adjustment for Supply Line=
 	(Desired Supply Line-Supply Line)/Supply Line Adjustment Time
-	~
+	~	
 	~		|
 
 Back Log= INTEG (
 	BL In-BL Out,
 		100)
-	~
+	~	
 	~		|
 
 BL In=
 	Demand
-	~
+	~	
 	~		|
 
 BL Out=
 	Shipment Rate
-	~
+	~	
 	~		|
 
 Cost=
 	Underage Cost+Overage Cost
-	~
+	~	
 	~		|
 
 Deficient Amount=
@@ -87,27 +90,27 @@ Deficient Amount=
 
 Production Completion=
 	Supply Line/Lead Time
-	~
+	~	
 	~		|
 
 Demand Forecast=
-    Demand
-	~
+	SMOOTH(Demand, Forecast Period)
+	~	
 	~		|
 
 Desired Inventory=
 	Demand Forecast*Inventory Period
-	~
+	~	
 	~		|
 
 Desired Supply Line=
 	Demand Forecast*Lead Time
-	~
+	~	
 	~		|
 
 Forecast Period=
 	3
-	~
+	~	
 	~		|
 
 Inventory= INTEG (
@@ -118,53 +121,53 @@ Inventory= INTEG (
 
 Inventory Period=
 	5
-	~
+	~	
 	~		|
 
 Lead Time=
 	5
-	~
+	~	
 	~		|
 
 Mean of Demand=
 	100
-	~
+	~	
 	~		|
 
 Overage Cost=
 	(Inventory+Supply Line)* Unit Overage Cost
-	~
+	~	
 	~		|
 
 Desired Production Start=
 	Adjustment for Inventory+Adjustment for Supply Line+Demand Forecast
-	~
+	~	
 	~		|
 
 Production Start=
 	MAX(0,Desired Production Start)
-	~
+	~	
 	~		|
 
 Supply Line= INTEG (
 	Production Start-Production Completion,
 		Desired Supply Line)
-	~
+	~	
 	~		|
 
 Underage Cost=
 	Deficient Amount*Unit Underage Cost
-	~
+	~	
 	~		|
 
 Unit Overage Cost=
 	1
-	~
+	~	
 	~		|
 
 Unit Underage Cost=
 	9
-	~
+	~	
 	~		|
 
 ********************************************************
@@ -183,7 +186,7 @@ INITIAL TIME  = 0
 	~	The initial time for the simulation.
 	|
 
-SAVEPER  =
+SAVEPER  = 
         TIME STEP
 	~	Month [0,?]
 	~	The frequency with which output is stored.
@@ -299,9 +302,8 @@ Shipment Control
 1,96,95,27,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
 ///---\\\
 :L<%^E!@
-1:current.vdfx
 4:Time
-5:Supply Line
+5:Sd of Demand
 9:current
 19:90,0
 21:Shipment Control

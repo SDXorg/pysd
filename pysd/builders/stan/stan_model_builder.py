@@ -133,7 +133,6 @@ class StanTransformedParametersBuilder:
             stan_varname = vensim_name_to_identifier(element.name)
             variable_ast_dict[stan_varname] = element.components[0].ast
 
-
         for outcome_variable_name in outcome_variable_names:
             for element in self.abstract_model.sections[0].elements:
                 if vensim_name_to_identifier(element.name) == outcome_variable_name:

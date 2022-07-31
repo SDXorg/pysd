@@ -2,7 +2,7 @@ from pysd.translators.vensim.vensim_file import VensimFile
 from pysd.translators.xmile.xmile_file import XmileFile
 from pysd.builders.stan.stan_model_builder import *
 
-vf = VensimFile("vensim_models/Inventory_backup.mdl")
+vf = VensimFile("vensim_models/demand-supply.mdl")
 #vf = VensimFile("vensim_models/arithmetic.mdl")
 #vf = XmileFile("vensim_models/repair.xmile")
 vf.parse()

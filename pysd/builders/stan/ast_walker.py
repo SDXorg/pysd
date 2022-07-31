@@ -92,6 +92,9 @@ class BlockCodegenWalker(BaseNodeWaler):
             case int(x):
                 return f"{x}"
 
+            case float(x):
+                return f"{x}"
+
             case str(x):
                 return x
 
@@ -152,6 +155,9 @@ class BlockCodegenWalker(BaseNodeWaler):
                 lookup_func_name = self.lookup_function_names[LookupCodegenWalker.get_lookup_keyname(lookups)]
                 return f"{lookup_func_name}({self.walk(argument)})"
 
+            case _:
+                raise Exception("Got unknown node", ast_node)
+
 @dataclass
 class InitialValueCodegenWalker(BlockCodegenWalker):
     variable_ast_dict: Dict[str, AbstractSyntax]
@@ -168,6 +174,18 @@ class InitialValueCodegenWalker(BlockCodegenWalker):
                     return self.walk(self.variable_ast_dict[reference])
                 else:
                     return super().walk(ast_node)
+            case ArithmeticStructure(operators, arguments):
+                # ArithmeticStructure consists of chained arithmetic expressions.
+                # We parse them one by one into a single expression
+                output_string = ""
+                last_argument_index = len(arguments) - 1
+                for index, argument in enumerate(arguments):
+                    output_string += self.walk(argument)
+                    if index < last_argument_index:
+                        output_string += " "
+                        output_string += operators[index]
+                        output_string += " "
+                return output_string
             case _:
                 return super().walk(ast_node)
 
