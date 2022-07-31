@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-from typing import Union, List, Dict, Set, Iterable, Type
+from typing import Union, List, Dict, Set, Sequence
 
 from .ast_walker import *
 from .utilities import *
@@ -20,7 +20,22 @@ class StanModelBuilder:
             self.variable_ast_dict[stan_varname] = element.components[0].ast
 
 
-    def create_stan_program(self, predictor_variable_names: List[Union[str, Tuple[str, str]]], function_name="vensim_func"):
+    def create_stan_program(self, predictor_variable_names: List[Union[str, Tuple[str, str]]], outcome_variable_names: Sequence[str] = (), function_name="vensim_func"):
+        """
+
+        Parameters
+        ----------
+        predictor_variable_names: List of name of variables within the SD model that are handled by stan. The code for
+        these variables will not be generated, but instead taken from the argument of the ODE system function.
+        outcome_variable_names: Sequence of name of the variables which are the return values of the ODE function.
+        Normally this will be the flow variable for each stock. If it is not specified, it will automatically identify the
+        stock variable names and use them instead.
+        function_name: Name of the stan function to be generated. default is "vensim_func"
+
+        Returns
+        -------
+
+        """
         # Santize vensim names to stan-compliant identifiers
         sanitized_predictor_variable_names = []
         for var in predictor_variable_names:
@@ -33,7 +48,7 @@ class StanModelBuilder:
                     raise Exception("predictor_variable_names must be a list of strings and/or a tuple of the form(T, Name), where T is a string denoting the variable's stan type and Name a string denoting the variable name")
 
         predictor_variable_names = sanitized_predictor_variable_names
-        outcome_variable_names = self.get_stock_variable_stan_names()
+        outcome_variable_names = self.get_stock_variable_stan_names() if not outcome_variable_names else [vensim_name_to_identifier(name) for name in outcome_variable_names]
         if not outcome_variable_names:
             raise Exception("There are no stock variables defined in the model, hence nothing to integrate.")
 
