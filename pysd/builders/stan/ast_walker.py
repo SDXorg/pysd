@@ -18,6 +18,8 @@ class AuxNameWalker(BaseNodeWaler):
         match ast_node:
             case int():
                 return []
+            case float():
+                return []
             case ArithmeticStructure(operators, arguments):
                 return list(chain.from_iterable([self.walk(argument) for argument in arguments]))
             case ReferenceStructure(reference, subscripts):
