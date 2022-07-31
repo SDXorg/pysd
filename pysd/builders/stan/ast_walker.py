@@ -69,7 +69,7 @@ class LookupCodegenWalker(BaseNodeWaler):
 
                     self.code.indent_level += 1
                     # enter conditional body
-                    self.code += f"intercept = {y[lookup_index - 1]}\n"
+                    self.code += f"intercept = {y[lookup_index - 1]};\n"
                     self.code += f"slope = ({y[lookup_index]} - {y[lookup_index - 1]}) / ({x[lookup_index]} - {x[lookup_index - 1]});\n"
                     self.code += f"return intercept + slope * (x - {x[lookup_index - 1]});\n"
                     self.code.indent_level -= 1
