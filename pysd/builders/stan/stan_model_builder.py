@@ -27,9 +27,9 @@ class StanModelBuilder:
         ----------
         predictor_variable_names: List of name of variables within the SD model that are handled by stan. The code for
         these variables will not be generated, but instead taken from the argument of the ODE system function.
-        outcome_variable_names: Sequence of name of the variables which are the return values of the ODE function.
-        Normally this will be the flow variable for each stock. If it is not specified, it will automatically identify the
-        stock variable names and use them instead.
+        outcome_variable_names: Sequence of name of the variables which are the measured as system state.
+        Normally this will be the observed outcomes among the stock variables. If it is not specified, it will automatically
+        identify stock variable names and use them.
         function_name: Name of the stan function to be generated. default is "vensim_func"
 
         Returns
