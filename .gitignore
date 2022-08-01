@@ -12,3 +12,4 @@ tests/htmlcov/
 .idea/*
 docs/_build/*
 docs/tables/*.csv
+venv/

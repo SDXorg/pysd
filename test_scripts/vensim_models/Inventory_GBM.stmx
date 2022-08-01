@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xmile version="1.0" xmlns="http://docs.oasis-open.org/xmile/ns/XMILE/v1.0" xmlns:isee="http://iseesystems.com/XMILE">
+	<header>
+		<smile version="1.0" namespace="std, isee"/>
+		<name>Inventory_GBM</name>
+		<uuid>830452bd-02c3-47f8-b4e7-e140d931b14c</uuid>
+		<vendor>isee systems, inc.</vendor>
+		<product version="3.0" isee:build_number="2658" isee:saved_by_v1="true" lang="en">Stella Architect</product>
+	</header>
+	<sim_specs isee:sim_duration="1.3" isee:run_prefix="Run" isee:simulation_delay="0.013" isee:restore_on_start="false" method="Euler" time_units="Months" isee:instantaneous_flows="false" isee:ignore_module_errors="false" isee:loop_scores="false" isee:loop_exhaustive_allowed="1000">
+		<start>0</start>
+		<stop>100</stop>
+		<dt reciprocal="true">1024</dt>
+	</sim_specs>
+	<isee:prefs show_module_prefix="true" live_update_on_drag="true" show_restore_buttons="false" layer="model" isee:design="Deluxe Prev-Next Blue Green Pastel" isee:design_custom="false" interface_scale_ui="true" interface_max_page_width="10000" interface_max_page_height="10000" interface_min_page_width="0" interface_min_page_height="0" rerun_on_structure_change="false" saved_runs="5" keep="false" rifp="true"/>
+	<isee:multiplayer_settings include_chat="true" allow_observers="false" advance_time_increment="1" max_advance_time_in_ms="0" model_stops_when_players_drop="false" observer_start_page="home_page" enabled="false"/>
+	<isee:time_formats default_format="Builtin">
+		<isee:time_format name="Builtin" type="adaptive"/>
+	</isee:time_formats>
+	<default_format/>
+	<isee:sensi_specs_list active_index="0">
+		<isee:sensi_specs name="Sensitivity" method="sobol_sequence" runs="500">
+			<isee:variable starting_value="0" ending_value="1" type="incremental" seed="12345" name="Fulfilment_Ratio" num_samples="5"/>
+		</isee:sensi_specs>
+	</isee:sensi_specs_list>
+	<isee:optimizer_specs_list active_index="0">
+		<isee:optimizer_specs name="Optimization" method="Powell" use_additional_starts_file="false" additional_starts="0" report_interval="1" confidence_range="0"/>
+	</isee:optimizer_specs_list>
+	<isee:payoff_specs_list>
+		<isee:payoff_specs name="Payoff"/>
+	</isee:payoff_specs_list>
+	<model_units/>
+	<model>
+		<variables>
+			<stock name="Supply Line">
+				<eqn>Desired_Supply_Line</eqn>
+				<inflow>Production_Start</inflow>
+				<outflow>Production_Completion</outflow>
+			</stock>
+			<flow name="Production Start">
+				<eqn>MAX(0,  Desired_Production_Start)</eqn>
+			</flow>
+			<flow name="Production Completion">
+				<eqn>Supply_Line / Lead_Time</eqn>
+			</flow>
+			<stock name="Inventory">
+				<eqn>Desired_Inventory</eqn>
+				<inflow>Production_Completion</inflow>
+				<outflow>Shipment_Rate</outflow>
+			</stock>
+			<flow name="Shipment Rate">
+				<eqn>Desired_Shipment * Fulfilment_Ratio</eqn>
+			</flow>
+			<aux name="Desired Production Start">
+				<eqn>Adjustment_for_Inventory + Adjustment_for_Supply_Line + Demand_Forecast</eqn>
+			</aux>
+			<aux name="Adjustment for Supply Line">
+				<eqn>(Desired_Supply_Line - Supply_Line) / Supply_Line_Adjustment_Time</eqn>
+			</aux>
+			<aux name="Supply Line\nAdjustment Time">
+				<eqn>3</eqn>
+			</aux>
+			<aux name="Adjustment for Inventory">
+				<eqn>(Desired_Inventory - Inventory) / Inventory_Adjustment_Time</eqn>
+			</aux>
+			<aux name="Demand Forecast">
+				<eqn>Demand</eqn>
+			</aux>
+			<aux name="Desired Supply Line">
+				<eqn>Demand_Forecast * Lead_Time</eqn>
+			</aux>
+			<aux name="Lead Time">
+				<eqn>5</eqn>
+			</aux>
+			<aux name="Desired Inventory">
+				<eqn>Demand_Forecast * Inventory_Period</eqn>
+			</aux>
+			<aux name="Inventory Period">
+				<eqn>5</eqn>
+			</aux>
+			<aux name="Inventory Adjustment Time">
+				<eqn>3</eqn>
+			</aux>
+			<aux name="Desired Shipment">
+				<eqn>Backlog / Desired_Delivery_Delay</eqn>
+			</aux>
+			<aux name="Fulfilment Ratio">
+				<eqn>1</eqn>
+			</aux>
+			<stock name="Backlog">
+				<eqn>100</eqn>
+				<inflow>BL_In</inflow>
+				<outflow>BL_Out</outflow>
+			</stock>
+			<aux name="Desired Delivery Delay">
+				<eqn>3</eqn>
+			</aux>
+			<flow name="BL Out">
+				<eqn>Shipment_Rate</eqn>
+			</flow>
+			<flow name="BL In">
+				<eqn>Demand</eqn>
+			</flow>
+			<aux name="Mean of Demand">
+				<eqn>100</eqn>
+			</aux>
+			<stock name="Demand">
+				<eqn>Mean_of_Demand</eqn>
+				<inflow>Change_in_demand</inflow>
+			</stock>
+			<flow name="Change in demand">
+				<eqn>Demand * Volatility_of_Demand * NORMAL(0,  SQRT(DT)) / DT</eqn>
+			</flow>
+			<aux name="Volatility of Demand">
+				<eqn>0.15</eqn>
+			</aux>
+		</variables>
+		<views>
+			<style color="black" background="white" font_style="normal" font_weight="normal" text_decoration="none" text_align="center" vertical_text_align="center" font_color="black" font_family="Arial" font_size="10pt" padding="2" border_color="black" border_width="thin" border_style="none">
+				<text_box color="black" background="white" text_align="left" vertical_text_align="top" font_size="12pt"/>
+				<isee:loop_indicator color="black" background="white" text_align="left" vertical_text_align="top" font_size="12pt"/>
+				<numeric_display color="white" background="white" font_size="12pt" border_width="thin" border_style="solid" isee:transparent="false" isee:show_divider="true" isee:show_bounding_box="true" label_side="left"/>
+				<graph color="black" background="white" font_size="12pt" axis_color="#666666" grid_color="#C8C8C8" isee:graph_area_color="white" legend_position="bottom" isee:transparent="false" isee:hide_border="false" axis_title_font_style="normal" axis_title_font_weight="normal" axis_title_text_decoration="none" axis_title_text_align="center" axis_title_vertical_text_align="center" axis_title_font_color="black" axis_title_font_family="Arial" axis_title_font_size="12pt" axis_title_text_padding="2" axis_title_text_border_color="black" axis_title_text_border_width="thin" axis_title_text_border_style="none" axis_label_font_style="normal" axis_label_font_weight="normal" axis_label_text_decoration="none" axis_label_text_align="center" axis_label_vertical_text_align="center" axis_label_font_color="black" axis_label_font_family="Arial" axis_label_font_size="9pt" axis_label_text_padding="2" axis_label_text_border_color="black" axis_label_text_border_width="thin" axis_label_text_border_style="none">
+					<isee:series_styles>
+						<isee:series_style color="blue" thickness="1"/>
+						<isee:series_style color="red" thickness="1" pen_style="dot_dashed"/>
+						<isee:series_style color="fuchsia" thickness="1" pen_style="dotted"/>
+						<isee:series_style color="#008F44" thickness="1" pen_style="dashed"/>
+						<isee:series_style color="#FF7F00" thickness="1"/>
+						<isee:series_style color="#7F00FF" thickness="1" pen_style="dot_dashed"/>
+						<isee:series_style color="#0CA0FF" thickness="1" pen_style="dotted"/>
+						<isee:series_style color="lime" thickness="1" pen_style="dashed"/>
+						<isee:series_style color="#FF007F" thickness="1"/>
+						<isee:series_style color="aqua" thickness="1" pen_style="dot_dashed"/>
+						<isee:series_style color="#F586FF" thickness="1" pen_style="dotted"/>
+						<isee:series_style color="black" thickness="1" pen_style="dashed"/>
+						<isee:series_style color="#C8C8C8" thickness="1"/>
+					</isee:series_styles>
+				</graph>
+				<table color="black" background="#E0E0E0" text_align="right" font_size="12pt" orientation="vertical" wrap_text="false" isee:auto_fit="true" isee:use_alternate_row_colors="false" isee:unlimited_table_length="false" blank_column_width="80" column_width="160" interval="1" report_balances="beginning" report_flows="instantaneous" header_font_style="normal" header_font_weight="normal" header_text_decoration="none" header_text_align="center" header_vertical_text_align="center" header_font_color="black" header_font_family="Arial" header_font_size="12pt" header_text_padding="2" header_text_border_color="black" header_text_border_width="thin" header_text_border_style="none"/>
+				<button color="black" background="#E0E0E0" font_size="12pt" border_width="thin" border_style="solid" transparent="false" corner_radius="0" isee:flat="false" icon_side="top" isee:highlight_on_hover="false" isee:highlight_color="#959595"/>
+				<isee:annotation color="black" background="#E0E0E0" font_size="12pt" border_width="thin" border_style="solid" transparent="false" corner_radius="0" isee:flat="false" icon_side="top" isee:highlight_on_hover="false" isee:highlight_color="#959595" popup_corner_radius="0" popup_background_color="#FFFECF"/>
+				<slider color="#66CC66" background="#E0E0E0" font_size="12pt" num_ticks="3" label_side="top" wrap_title="true" vertical="false" isee:fancy_appearance="false" isee:show_hover_tip="when_deciding" input_expands="true" input_width="100"/>
+				<isee:dual_slider color="#66CC66" background="silver" font_size="12pt" num_ticks="3" label_side="top" wrap_title="true" isee:show_hover_tip="when_deciding" input_expands="true" input_width="100"/>
+				<isee:sim_speed_slider color="black" background="white"/>
+				<isee:time_slider color="#E95F74" background="silver"/>
+				<isee:pie_input color="black" background="white" font_size="12pt" legend_position="bottom" isee:transparent="false"/>
+				<knob color="#66CC66" background="#E0E0E0" font_size="12pt" label_side="bottom" wrap_title="true"/>
+				<numeric_input color="black" background="#E0E0E0" font_size="12pt" label_side="left" wrap_title="true" input_expands="false" input_width="100"/>
+				<switch color="black" background="#E0E0E0" font_size="12pt" label_side="top" wrap_title="true" isee:appearance="switch" isee:on_color="green"/>
+				<options color="black" background="white" appearance="radio-buttons" arrangement="vertical"/>
+				<graphical_input color="black" background="#E0E0E0" font_size="12pt" isee:show_hover_tip="true"/>
+				<group_input color="black" background="#E0E0E0" font_size="12pt"/>
+				<lamp color="black" background="white" font_size="9pt"/>
+				<gauge color="black" background="white" font_size="9pt" needle_color="#F09F72" bar_color="#EEEEEE" bar_progress_color="black" appearance="radial" num_major_ticks="11" num_minor_ticks="11" show_numeric_value="true"/>
+				<isee:spatial_map color="black" background="white" font_size="12pt"/>
+				<isee:animation_object color="black" background="white" font_size="12pt"/>
+				<isee:navigation_widget color="black" background="white" text_align="left" vertical_text_align="top" font_size="12pt" padding="6 8" border_color="#999999" border_width="thin" border_style="solid" item_spacing="6" appearance="tabs" corner_radius="4" selected_item_color="black" selected_item_background="white" item_background="#DDDDDD" transparent_bg="false"/>
+				<isee:shape color="black" background="white" text_align="left" vertical_text_align="top" font_size="12pt" border_width="thin" border_style="solid" opacity="1" transparent_background="true" corner_radius="1"/>
+				<isee:selector color="black" background="white" text_align="left" vertical_text_align="top" font_size="12pt"/>
+				<isee:iframe color="black" background="white" text_align="left" vertical_text_align="top" font_size="12pt" border_width="thin" border_style="solid"/>
+				<isee:financial_table color="black" background="#E0E0E0" text_align="right" font_size="12pt" hide_border="false" auto_fit="true" first_column_width="250" other_column_width="100" header_font_style="normal" header_font_weight="bold" header_text_decoration="none" header_text_align="center" header_vertical_text_align="center" header_font_color="black" header_font_family="Arial" header_font_size="14pt" header_text_padding="2" header_text_border_color="black" header_text_border_width="thin" header_text_border_style="none"/>
+			</style>
+			<view isee:show_pages="false" background="white" page_width="758" page_height="578" isee:page_cols="2" isee:page_rows="2" isee:popup_graphs_are_comparative="true" isee:enable_non_negative_highlights="false" type="stock_flow">
+				<style color="black" background="white" font_style="normal" font_weight="normal" text_decoration="none" text_align="center" vertical_text_align="center" font_color="black" font_family="Arial" font_size="10pt" padding="2" border_color="black" border_width="thin" border_style="none">
+					<stock color="blue" background="white" font_color="blue" font_size="9pt" label_side="top">
+						<shape type="rectangle" width="45" height="35"/>
+					</stock>
+					<flow color="blue" background="white" font_color="blue" font_size="9pt" label_side="bottom"/>
+					<isee:placeholder color="#228B22" background="white" font_color="#228B22" font_size="9pt" label_side="bottom"/>
+					<module color="blue" background="white" font_color="blue" font_size="9pt" label_side="top">
+						<shape type="rectangle" width="55" height="45"/>
+					</module>
+					<aux color="blue" background="white" font_color="blue" font_size="9pt" label_side="bottom">
+						<shape type="circle" radius="18"/>
+					</aux>
+					<group color="red" background="white" font_color="red" font_size="9pt"/>
+					<connector color="#CCCCCC" background="white" font_color="#CCCCCC" font_size="9pt" isee:thickness="1"/>
+					<text_box color="black" background="white" text_align="left" vertical_text_align="top" font_size="12pt"/>
+					<isee:loop_indicator color="black" background="white" text_align="left" vertical_text_align="top" font_size="12pt"/>
+					<numeric_display color="white" background="white" font_size="12pt" border_width="thin" border_style="solid" isee:transparent="false" isee:show_divider="true" isee:show_bounding_box="true" label_side="left"/>
+					<graph color="black" background="white" font_size="12pt" axis_color="#666666" grid_color="#C8C8C8" isee:graph_area_color="white" legend_position="bottom" isee:transparent="false" isee:hide_border="false" axis_title_font_style="normal" axis_title_font_weight="normal" axis_title_text_decoration="none" axis_title_text_align="center" axis_title_vertical_text_align="center" axis_title_font_color="black" axis_title_font_family="Arial" axis_title_font_size="12pt" axis_title_text_padding="2" axis_title_text_border_color="black" axis_title_text_border_width="thin" axis_title_text_border_style="none" axis_label_font_style="normal" axis_label_font_weight="normal" axis_label_text_decoration="none" axis_label_text_align="center" axis_label_vertical_text_align="center" axis_label_font_color="black" axis_label_font_family="Arial" axis_label_font_size="9pt" axis_label_text_padding="2" axis_label_text_border_color="black" axis_label_text_border_width="thin" axis_label_text_border_style="none">
+						<isee:series_styles>
+							<isee:series_style color="blue" thickness="1"/>
+							<isee:series_style color="red" thickness="1" pen_style="dot_dashed"/>
+							<isee:series_style color="fuchsia" thickness="1" pen_style="dotted"/>
+							<isee:series_style color="#008F44" thickness="1" pen_style="dashed"/>
+							<isee:series_style color="#FF7F00" thickness="1"/>
+							<isee:series_style color="#7F00FF" thickness="1" pen_style="dot_dashed"/>
+							<isee:series_style color="#0CA0FF" thickness="1" pen_style="dotted"/>
+							<isee:series_style color="lime" thickness="1" pen_style="dashed"/>
+							<isee:series_style color="#FF007F" thickness="1"/>
+							<isee:series_style color="aqua" thickness="1" pen_style="dot_dashed"/>
+							<isee:series_style color="#F586FF" thickness="1" pen_style="dotted"/>
+							<isee:series_style color="black" thickness="1" pen_style="dashed"/>
+							<isee:series_style color="#C8C8C8" thickness="1"/>
+						</isee:series_styles>
+					</graph>
+					<table color="black" background="#E0E0E0" text_align="right" font_size="12pt" orientation="vertical" wrap_text="false" isee:auto_fit="true" isee:use_alternate_row_colors="false" isee:unlimited_table_length="false" blank_column_width="80" column_width="160" interval="1" report_balances="beginning" report_flows="instantaneous" header_font_style="normal" header_font_weight="normal" header_text_decoration="none" header_text_align="center" header_vertical_text_align="center" header_font_color="black" header_font_family="Arial" header_font_size="12pt" header_text_padding="2" header_text_border_color="black" header_text_border_width="thin" header_text_border_style="none"/>
+				</style>
+				<stock x="235" y="121" name="Supply Line"/>
+				<flow label_side="top" x="141.25" y="121" name="Production Start">
+					<pts>
+						<pt x="58" y="121"/>
+						<pt x="212.5" y="121"/>
+					</pts>
+				</flow>
+				<flow label_side="top" x="337" y="121" name="Production Completion">
+					<pts>
+						<pt x="257.5" y="121"/>
+						<pt x="416.5" y="121"/>
+					</pts>
+				</flow>
+				<stock x="439" y="121" name="Inventory"/>
+				<flow label_side="top" x="539.75" y="120" name="Shipment Rate">
+					<pts>
+						<pt x="461.5" y="120"/>
+						<pt x="630" y="120"/>
+					</pts>
+				</flow>
+				<aux label_side="bottom" x="21.875" y="181" width="104.25" height="14" name="Desired Production Start">
+					<shape type="name_only"/>
+				</aux>
+				<connector uid="1" angle="73.0725">
+					<from>Desired_Production_Start</from>
+					<to>Production_Start</to>
+				</connector>
+				<aux x="159.375" y="234" width="113.25" height="14" name="Adjustment for Supply Line">
+					<shape type="name_only"/>
+				</aux>
+				<connector uid="2" angle="182.386">
+					<from>Adjustment_for_Supply_Line</from>
+					<to>Desired_Production_Start</to>
+				</connector>
+				<aux x="155.375" y="163" width="73.25" height="26" name="Supply Line\nAdjustment Time">
+					<shape type="name_only"/>
+				</aux>
+				<aux label_side="bottom" x="40.375" y="385" width="103.25" height="14" name="Adjustment for Inventory">
+					<shape type="name_only"/>
+				</aux>
+				<connector uid="3" angle="147.529">
+					<from>Adjustment_for_Inventory</from>
+					<to>Desired_Production_Start</to>
+				</connector>
+				<aux label_side="bottom" x="166" y="314" name="Demand Forecast"/>
+				<connector uid="4" angle="169.695">
+					<from>Demand_Forecast</from>
+					<to>Desired_Production_Start</to>
+				</connector>
+				<aux x="345" y="254" name="Desired Supply Line"/>
+				<connector uid="5" angle="292.166">
+					<from>Supply_Line</from>
+					<to>Adjustment_for_Supply_Line</to>
+				</connector>
+				<connector uid="6" angle="174.245">
+					<from>Desired_Supply_Line</from>
+					<to>Adjustment_for_Supply_Line</to>
+				</connector>
+				<connector uid="7" angle="290.266">
+					<from>Supply_Line_Adjustment_Time</from>
+					<to>Adjustment_for_Supply_Line</to>
+				</connector>
+				<connector uid="8" angle="27.2553">
+					<from>Supply_Line</from>
+					<to>Production_Completion</to>
+				</connector>
+				<aux x="367" y="184" name="Lead Time"/>
+				<connector uid="9" angle="115.866">
+					<from>Lead_Time</from>
+					<to>Production_Completion</to>
+				</connector>
+				<aux x="192" y="379" name="Desired Inventory"/>
+				<connector uid="11" angle="187.407">
+					<from>Desired_Inventory</from>
+					<to>Adjustment_for_Inventory</to>
+				</connector>
+				<connector uid="12" angle="294.376">
+					<from>Inventory</from>
+					<to>Adjustment_for_Inventory</to>
+				</connector>
+				<connector uid="13" angle="291.801">
+					<from>Demand_Forecast</from>
+					<to>Desired_Inventory</to>
+				</connector>
+				<aux x="266.5" y="400" name="Inventory Period"/>
+				<connector uid="14" angle="164.258">
+					<from>Inventory_Period</from>
+					<to>Desired_Inventory</to>
+				</connector>
+				<aux x="71" y="470" name="Inventory Adjustment Time"/>
+				<connector uid="15" angle="64.1336">
+					<from>Inventory_Adjustment_Time</from>
+					<to>Adjustment_for_Inventory</to>
+				</connector>
+				<connector uid="16" angle="18.5309">
+					<from>Demand_Forecast</from>
+					<to>Desired_Supply_Line</to>
+				</connector>
+				<connector uid="17" angle="252.553">
+					<from>Lead_Time</from>
+					<to>Desired_Supply_Line</to>
+				</connector>
+				<aux x="520.125" y="189" width="77.25" height="14" name="Desired Shipment">
+					<shape type="name_only"/>
+				</aux>
+				<connector uid="18" angle="104.036">
+					<from>Desired_Shipment</from>
+					<to>Shipment_Rate</to>
+				</connector>
+				<aux label_side="top" x="619" y="73" name="Fulfilment Ratio"/>
+				<connector uid="19" angle="210.67">
+					<from>Fulfilment_Ratio</from>
+					<to>Shipment_Rate</to>
+				</connector>
+				<stock label_side="center" x="630" y="347" name="Backlog"/>
+				<connector uid="20" angle="115.26">
+					<from>Backlog</from>
+					<to>Desired_Shipment</to>
+				</connector>
+				<aux x="535" y="257" name="Desired Delivery Delay"/>
+				<connector uid="21" angle="68.7268">
+					<from>Desired_Delivery_Delay</from>
+					<to>Desired_Shipment</to>
+				</connector>
+				<flow x="692.25" y="346" name="BL Out">
+					<pts>
+						<pt x="652.5" y="346"/>
+						<pt x="744" y="346"/>
+					</pts>
+				</flow>
+				<flow label_side="bottom" x="558.75" y="347" name="BL In">
+					<pts>
+						<pt x="498" y="347"/>
+						<pt x="607.5" y="347"/>
+					</pts>
+				</flow>
+				<aux x="385" y="455" name="Mean of Demand"/>
+				<stock x="385" y="340.5" name="Demand"/>
+				<flow label_side="bottom" x="318.25" y="340.5" name="Change in demand">
+					<pts>
+						<pt x="262" y="340.5"/>
+						<pt x="362.5" y="340.5"/>
+					</pts>
+				</flow>
+				<connector uid="22" angle="140.677">
+					<from>Demand</from>
+					<to>Change_in_demand</to>
+				</connector>
+				<aux label_side="bottom" x="342" y="386" name="Volatility of Demand"/>
+				<connector uid="23" angle="117.564">
+					<from>Volatility_of_Demand</from>
+					<to>Change_in_demand</to>
+				</connector>
+				<connector uid="24" angle="145.491">
+					<from>Demand</from>
+					<to>Demand_Forecast</to>
+				</connector>
+				<connector uid="25" angle="23.8865">
+					<from>Demand</from>
+					<to>BL_In</to>
+				</connector>
+				<connector uid="26" angle="353.584">
+					<from>Shipment_Rate</from>
+					<to>BL_Out</to>
+				</connector>
+				<stacked_container uid="27" x="813" y="616">
+					<graph width="350" height="250" comparative="true" type="time_series" show_grid="false" isee:tick_type="none" include_units_in_legend="false" plot_numbers="false" isee:label_pie_slices="false" num_x_grid_lines="0" num_y_grid_lines="0" num_x_labels="5" num_y_labels="3" isee:fill_intensity="0.1" isee:allow_zero_axis="true" left_axis_multi_scale="false" left_axis_auto_scale="true" left_include_units="true" right_axis_multi_scale="false" right_axis_auto_scale="true" right_include_units="true">
+						<plot color="red" pen_style="dot_dashed" isee:keep_zero_visible="false" pen_width="1" index="0" show_y_axis="true">
+							<entity name="Demand"/>
+							<scale min="99" max="102"/>
+						</plot>
+					</graph>
+				</stacked_container>
+			</view>
+		</views>
+	</model>
+</xmile>
+
