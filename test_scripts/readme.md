@@ -4,16 +4,20 @@
 The main contribution of this PR is inference; its benefits are estimating parameter values and calibration. Currently pysd is doing a good job in data generation conditional on parameter values but lacks modules that retrieves parameter from the generated data. This pr aims to fill the gap; Stan is a computational Bayesian statistics package, with a large eco-system, providing state of the art inference algorithms including MCMC (HMC-NUTS) and variational inference. Given the following input from users, our output is posterior samples of estimated parameters.
 
 1. dynamic model in .mdl or .xmile or .stmx format (SQ1. can we support .stmx?)
+
 2. user's classification of 
+
     a. assumed parameter: 
         a-1. time series of parameters (e.g. temperature or demand)
         a-2. fixed value of parameter (e.g. size of one franchise branch)
-    b. estimated parameters (e.g. delay time of shipment) 
+    
+    b. estimated parameter (e.g. delay time of shipment) 
         b-1. prior distribution 
         b-2. prior parameter
+        
     c. observed state (stock variables with observed data)
 
-(SQ2. don't we need input signature of driving data? e.g. demand in static approach) 
+(SQ2. might we need addition input signature for `estimated parameter`? currently we `predictor_variable_names`: List[Union[str, Tuple[str, str]]] is a, `outcome_variable_name`: Sequence[str] = () is c. also could you explain the difference of two current signature types?)
 
 Under the hood, files under `pysd/builders/stan` folder, we parse `xmile`, `mdl`, `stmx` files into one Stan code file `.stan` and pass it to Stan's state of the art MCMC infefinference engine, which serves inverse process of pysd's data generation. Stan has a large ecosystem that supports both calibration and model expansion (e.g. hierarchical regression, generalized linear). 
 
