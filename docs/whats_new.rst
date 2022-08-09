@@ -1,5 +1,29 @@
 What's New
 ==========
+v3.5.1 (2022/08/11)
+-------------------
+
+New Features
+~~~~~~~~~~~~
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+
+Documentation
+~~~~~~~~~~~~~
+
+Performance
+~~~~~~~~~~~
+- Improve the performance of reading :py:class:`pysd.py_backend.external.External` data with cellrange names by loading the data in memory with :py:mod:`pandas`. As recommended by :py:mod:`openpyxl` developers, this is a possible way of improving performance to avoid parsing all rows up each time for getting the data (`issue 1867 in openpyxl <https://foss.heptapod.net/openpyxl/openpyxl/-/issues/1867>`_).
+
+Internal Changes
+~~~~~~~~~~~~~~~~
 
 v3.5.0 (2022/07/25)
 -------------------
