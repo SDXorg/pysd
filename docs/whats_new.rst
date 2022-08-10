@@ -14,7 +14,8 @@ Deprecations
 
 Bug fixes
 ~~~~~~~~~
-- Correct bug generated when :EXCEPT: keyword is used with subscript subranges (:issue:`#352`).
+- Fix bug generated when :EXCEPT: keyword is used with subscript subranges (:issue:`352`).
+- Fix bug of precision error for :py:func:`pysd.py_backend.allocation.allocate_by_priority` (:issue:`353`).
 
 Documentation
 ~~~~~~~~~~~~~
