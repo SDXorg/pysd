@@ -14,6 +14,7 @@ Deprecations
 
 Bug fixes
 ~~~~~~~~~
+- Correct bug generated when :EXCEPT: keyword is used with subscript subranges (:issue:`#352`).
 
 Documentation
 ~~~~~~~~~~~~~

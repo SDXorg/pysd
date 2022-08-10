@@ -99,6 +99,9 @@ class SectionBuilder:
             key: self.namespace.namespace[key]
             for key in self.params
         }
+        # Import xarray if there are any subscripts defined in the section
+        if self.subscripts.subscripts:
+            self.imports.add("xarray")
 
     def build_section(self) -> None:
         """
@@ -636,8 +639,12 @@ class ElementBuilder:
 
         if expression["expr"].subscripts:
             # Assign the values of an array
-            return final_expr + "value.values[except_subs.values] = "\
-                "%(expr)s[except_subs.values]\n" % expression
+            if expression["subs"] == self.subs_dict:
+                return final_expr + "value.values[except_subs.values] = "\
+                    "%(expr)s[except_subs.values]\n" % expression
+            else:
+                return final_expr + "value.values[except_subs.values] = "\
+                    "%(expr)s[except_subs.loc[%(loc)s].values]\n" % expression
         else:
             # Assign the values of a float
             return final_expr + "value.values[except_subs.values] = "\
