@@ -624,11 +624,11 @@ def _allocate_by_priority_1d(request, priority, width, supply):
         dx = np.nanmin((dx_next_top, dx_next_start, supply))
         # Assing the supply to the targets
         out += slopes*dx
-        if dx == dx_next_start:
+        if np.isclose(dx, dx_next_start, rtol=1e-10, atol=1e-16):
             # A new target will start in the next loop
             c_i += 1
             # Active the next targetif its request is different than 0
-            active[c_i] = request[c_i] != 0
+            active[c_i] = True
         if dx == dx_next_top:
             # One or more target have reached their request
             active[out == request] = False
