@@ -41,10 +41,6 @@ class AuxNameWalker(BaseNodeWaler):
             return self.walk(ast_node.flow) + self.walk(ast_node.initial)
         elif isinstance(ast_node, InlineLookupsStructure):
             return self.walk(ast_node.lookups)
-        else:
-            raise Exception(
-                f"AST node of type {ast_node.__class__.__name__} is not supported."
-            )
 
 
 @dataclass

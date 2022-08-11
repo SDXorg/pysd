@@ -314,7 +314,6 @@ class StanFunctionBuilder:
                     recursive_order_search(child, visited)
             eval_order.append(current)
 
-        # for var_name in self.variable_dependency_graph.keys():
         for var_name in required_variables:
             recursive_order_search(var_name, set())
 
