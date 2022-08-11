@@ -68,10 +68,16 @@ class Macro(DynamicStateful):
         super().__init__()
         self.time = time
         self.time_initialization = time_initialization
+        # Initialize the cache object
         self.cache = Cache()
+        # Python name of the object (for Macros)
         self.py_name = py_name
+        # Booleans to avoid loading again external data or lookups
         self.external_loaded = False
         self.lookups_loaded = False
+        # Functions with constant cache
+        self._constant_funcs = set()
+        # Load model/macro from file and save in components
         self.components = Components(str(py_model_file), self.set_components)
 
         if __version__.split(".")[0]\
@@ -86,6 +92,7 @@ class Macro(DynamicStateful):
                 + "Please translate again the model with the function"
                 + " read_vensim or read_xmile.")
 
+        # Assing some protected attributes for easier access
         self._namespace = self.components._components.component.namespace
         self._dependencies =\
             self.components._components.component.dependencies.copy()
@@ -135,13 +142,17 @@ class Macro(DynamicStateful):
             if isinstance(getattr(self.components, name), HardcodedLookups)
         ]
 
+        # Load data files
         if data_files:
             self._get_data(data_files)
 
+        # Assign the cache type to each variable
         self._assign_cache_type()
+        # Get the initialization order of Stateful elements
         self._get_initialize_order()
 
         if return_func is not None:
+            # Assign the return value of Macros
             self.return_func = getattr(self.components, return_func)
         else:
             self.return_func = lambda: 0
@@ -297,21 +308,20 @@ class Macro(DynamicStateful):
                 self._get_full_dependencies(dep, dep_set, stateful_deps)
 
     def _add_constant_cache(self):
-        self.constant_funcs = set()
         for element, cache_type in self.cache_type.items():
             if cache_type == "run":
                 self.components._set_component(
                     element,
                     constant_cache(getattr(self.components, element))
                 )
-                self.constant_funcs.add(element)
+                self._constant_funcs.add(element)
 
     def _remove_constant_cache(self):
-        for element in self.constant_funcs:
+        for element in self._constant_funcs:
             self.components._set_component(
                 element,
                 getattr(self.components, element).function)
-        self.constant_funcs = set()
+        self._constant_funcs.clear()
 
     def _assign_cache_type(self):
         """
@@ -1149,8 +1159,11 @@ class Model(Macro):
             element: 1 for element in capture_elements["step"]
         }
         if cache_output:
+            # udate the cache type taking into account the outputs
             self._assign_cache_type()
-            self._add_constant_cache()
+
+        # add constant cache to thosa variable that are constants
+        self._add_constant_cache()
 
         # Run the model
         self.time.stage = 'Run'
