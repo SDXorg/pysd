@@ -6,7 +6,7 @@ the Stateful objects by functions.Model.initialize.
 
 import re
 import warnings
-import pandas as pd  # TODO move to openpyxl
+import pandas as pd
 import numpy as np
 import xarray as xr
 from openpyxl import load_workbook
@@ -109,9 +109,8 @@ class External(object):
             depending on the shape of the requested data
 
         """
-        # TODO move to openpyxl to avoid pandas dependency in this file.
         ext = self.file.suffix.lower()
-        if ext in ['.xls', '.xlsx']:
+        if ext in ['.xls', '.xlsx', '.xlsm']:
             # read data
             data = Excels.read(
                 self.file,
@@ -152,6 +151,8 @@ class External(object):
         -------
         data: numpy.ndarray or float
             depending on the shape of the requested data
+        shape: list
+            The shape of the data in 2D.
 
         """
         # read data
@@ -169,41 +170,37 @@ class External(object):
                 "The sheet doesn't exist...\n"
                 + self._file_sheet
             )
-
         try:
             # Search for local and global names
             cellrange = excel.defined_names.get(cellname, sheetId)\
                         or excel.defined_names.get(cellname)
-            coordinates = cellrange.destinations
-            for sheet, cells in coordinates:
-                if sheet.lower() == self.sheet.lower():
-                    values = excel[sheet][cells]
-                    if not values:
-                        # empty array or table
-                        raise TypeError
-                    try:
-                        return np.array(
-                            [[i.value if not isinstance(i.value, str)
-                              else np.nan for i in j] for j in values],
-                            dtype=float)
-                    except TypeError:
-                        return float(values.value)
+            sheet, cells = next(cellrange.destinations)
 
-            raise AttributeError
+            assert sheet.lower() == self.sheet.lower()
+            self.sheet = sheet  # case insensitivity in sheet name
 
-        except (KeyError, AttributeError):
+            # Get the cells where the cellrange is defined
+            cells = re.split(r":|\$", cells)
+            cols = [self._col_to_num(cells[1]), None]
+            rows = [int(cells[2])-1, None]
+            if len(cells) == 3:
+                # 0 dim cell range
+                cols[1] = cols[0]+1
+                rows[1] = rows[0]+1
+            else:
+                # array or table
+                cols[1] = self._col_to_num(cells[4])+1
+                rows[1] = int(cells[5])
+            # Use pandas to read the data and return its original shape
+            return self._get_data_from_file(rows, cols),\
+                [rows[1]-rows[0], cols[1]-cols[0]]
+
+        except (AttributeError, AssertionError):
             # key error if the cellrange doesn't exist in the file or sheet
             raise AttributeError(
                self.py_name + "\n"
                f"The cellrange name '{cellname}'\n"
                "Doesn't exist in:\n" + self._file_sheet
-               )
-        except TypeError:
-            # empty cellrange
-            raise ValueError(
-               self.py_name + "\n"
-               f"The cellrange '{cellname}' is empty.\n"
-               + self._file_sheet
                )
 
     def _get_series_data(self, series_across, series_row_or_col, cell, size):
@@ -265,23 +262,12 @@ class External(object):
 
         else:
             # get series data
-            series = self._get_data_from_file_opyxl(series_row_or_col)
+            series, s_shape = self._get_data_from_file_opyxl(series_row_or_col)
+
             if isinstance(series, float):
-                series = np.array([[series]])
+                series = np.array([series])
 
-            series_shape = series.shape
-
-            if series_shape[0] == 1:
-                # horizontal definition of lookup/time dimension
-                series = series[0]
-                transpose = True
-
-            elif series_shape[1] == 1:
-                # vertical definition of lookup/time dimension
-                series = series[:, 0]
-                transpose = False
-
-            else:
+            if s_shape[0] > 1 and s_shape[1] > 1:
                 # Error if the lookup/time dimension is 2D
                 raise ValueError(
                   self.py_name + "\n"
@@ -291,18 +277,23 @@ class External(object):
                   + "\t'{}'\n".format(series_row_or_col)
                   + " is a table and not a vector"
                   )
+            elif s_shape[1] != 1:
+                transpose = True
+            else:
+                transpose = False
 
             # get data
-            data = self._get_data_from_file_opyxl(cell)
+            data, d_shape = self._get_data_from_file_opyxl(cell)
 
             if isinstance(data, float):
-                data = np.array([[data]])
+                data = np.array([data])
 
             if transpose:
                 # transpose for horizontal definition of dimension
                 data = data.transpose()
+                d_shape = d_shape[1], d_shape[0]
 
-            if data.shape[0] != len(series):
+            if d_shape[0] != len(series):
                 raise ValueError(
                   self.py_name + "\n"
                   + "Dimension and data given in:\n"
@@ -312,7 +303,7 @@ class External(object):
                   + " don't have the same length in the 1st dimension"
                   )
 
-            if data.shape[1] != size:
+            if d_shape[1] != size:
                 # Given coordinates length is different than
                 # the lentgh of 2nd dimension
                 raise ValueError(
@@ -322,10 +313,6 @@ class External(object):
                   + "\tData name:\t'{}'\n".format(cell)
                   + " has not the same size as the given coordinates"
                   )
-
-            if data.shape[1] == 1:
-                # remove second dimension of data if its shape is (N, 1)
-                data = data[:, 0]
 
         return series, data
 
@@ -983,7 +970,7 @@ class ExtConstant(External):
             If data_across is "cell" the lefttop split cell value where
             the data is.
             If data_across is "name" the cell range name where the data is.
-        shape:
+        shape: list
             The shape of the data in 2D.
 
         Returns
@@ -1002,30 +989,8 @@ class ExtConstant(External):
 
         else:
             # read data from cell range name using OpenPyXL
-            data = self._get_data_from_file_opyxl(cell)
-
-            try:
-                # Remove length=1 axis
-                data_shape = data.shape
-                if data_shape[1] == 1:
-                    data = data[:, 0]
-                if data_shape[0] == 1:
-                    data = data[0]
-            except AttributeError:
-                # Data is a float, nothing to do
-                pass
-
-            # Check data dims
-            try:
-                if shape[0] == 1 and shape[1] != 1:
-                    assert shape[1] == len(data)
-                elif shape[0] != 1 and shape[1] == 1:
-                    assert shape[0] == len(data)
-                elif shape[0] == 1 and shape[1] == 1:
-                    assert isinstance(data, float)
-                else:
-                    assert tuple(shape) == data.shape
-            except AssertionError:
+            data, xl_shape = self._get_data_from_file_opyxl(cell)
+            if shape != xl_shape:
                 raise ValueError(self.py_name + "\n"
                                  + "Data given in:\n"
                                  + self._file_sheet

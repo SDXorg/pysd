@@ -1,5 +1,32 @@
 What's New
 ==========
+v3.5.1 (2022/08/11)
+-------------------
+
+New Features
+~~~~~~~~~~~~
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+- Fix bug generated when :EXCEPT: keyword is used with subscript subranges (:issue:`352`).
+- Fix bug of precision error for :py:func:`pysd.py_backend.allocation.allocate_by_priority` (:issue:`353`).
+- Fix bug of constant cache assignment.
+
+Documentation
+~~~~~~~~~~~~~
+
+Performance
+~~~~~~~~~~~
+- Improve the performance of reading :py:class:`pysd.py_backend.external.External` data with cellrange names by loading the data in memory with :py:mod:`pandas`. As recommended by :py:mod:`openpyxl` developers, this is a possible way of improving performance to avoid parsing all rows up each time for getting the data (`issue 1867 in openpyxl <https://foss.heptapod.net/openpyxl/openpyxl/-/issues/1867>`_).
+
+Internal Changes
+~~~~~~~~~~~~~~~~
 
 v3.5.0 (2022/07/25)
 -------------------

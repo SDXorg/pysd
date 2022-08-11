@@ -114,6 +114,10 @@ vensim_test = {
         "folder": "except_multiple",
         "file": "test_except_multiple.mdl"
     },
+    "except_subranges": {
+        "folder": "except_subranges",
+        "file": "test_except_subranges.mdl"
+    },
     "exp": {
         "folder": "exp",
         "file": "test_exp.mdl"

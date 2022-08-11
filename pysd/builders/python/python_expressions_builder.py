@@ -1784,7 +1784,6 @@ class ReferenceBuilder(StructureBuilder):
         self.reference = reference_str.reference
         self.subscripts = reference_str.subscripts
         self.arguments = {}
-        self.section.imports.add("xarray")
 
     @property
     def subscripts(self):
