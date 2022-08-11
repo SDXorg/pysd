@@ -2,8 +2,12 @@ from typing import Union, List, Iterable, Dict, Tuple, Any
 from itertools import chain
 from dataclasses import dataclass, field
 from .utilities import IndentedString
-from pysd.translators.structures.abstract_model import\
-    AbstractComponent, AbstractElement, AbstractModel, AbstractSection
+from pysd.translators.structures.abstract_model import (
+    AbstractComponent,
+    AbstractElement,
+    AbstractModel,
+    AbstractSection,
+)
 
 from pysd.translators.structures.abstract_expressions import *
 
@@ -20,21 +24,34 @@ class AuxNameWalker(BaseNodeWaler):
         elif isinstance(ast_node, float):
             return []
         elif isinstance(ast_node, ArithmeticStructure):
-            return list(chain.from_iterable([self.walk(argument) for argument in ast_node.arguments]))
+            return list(
+                chain.from_iterable(
+                    [self.walk(argument) for argument in ast_node.arguments]
+                )
+            )
         elif isinstance(ast_node, ReferenceStructure):
             return [ast_node.reference]
         elif isinstance(ast_node, CallStructure):
-            return list(chain.from_iterable([self.walk(argument) for argument in ast_node.arguments]))
+            return list(
+                chain.from_iterable(
+                    [self.walk(argument) for argument in ast_node.arguments]
+                )
+            )
         elif isinstance(ast_node, IntegStructure):
             return self.walk(ast_node.flow) + self.walk(ast_node.initial)
         elif isinstance(ast_node, InlineLookupsStructure):
             return self.walk(ast_node.lookups)
         else:
-            raise Exception(f"AST node of type {ast_node.__class__.__name__} is not supported.")
+            raise Exception(
+                f"AST node of type {ast_node.__class__.__name__} is not supported."
+            )
+
 
 @dataclass
 class LookupCodegenWalker(BaseNodeWaler):
-    generated_lookup_function_names: Dict[Tuple, str] = field(default_factory=dict)
+    generated_lookup_function_names: Dict[Tuple, str] = field(
+        default_factory=dict
+    )
     # This dict holds the generated function names of each individual lookup function.
     # Key is x + y + x_limits + y_limits, value is function name
     n_lookups = 0
@@ -42,16 +59,25 @@ class LookupCodegenWalker(BaseNodeWaler):
 
     @staticmethod
     def get_lookup_keyname(lookup_node: LookupsStructure):
-        return lookup_node.x + lookup_node.y + lookup_node.x_limits + lookup_node.y_limits
+        return (
+            lookup_node.x
+            + lookup_node.y
+            + lookup_node.x_limits
+            + lookup_node.y_limits
+        )
 
     def walk(self, ast_node) -> None:
         if isinstance(ast_node, InlineLookupsStructure):
             self.walk(ast_node.lookups)
         elif isinstance(ast_node, LookupsStructure):
-            assert ast_node.type == "interpolate", "Type of Lookup must be 'interpolate'"
+            assert (
+                ast_node.type == "interpolate"
+            ), "Type of Lookup must be 'interpolate'"
             identifier_key = LookupCodegenWalker.get_lookup_keyname(ast_node)
             function_name = f"lookupFunc_{self.n_lookups}"
-            self.generated_lookup_function_names[identifier_key] = function_name
+            self.generated_lookup_function_names[
+                identifier_key
+            ] = function_name
             self.n_lookups += 1
             self.code += f"real {function_name}(real x){{\n"
             self.code.indent_level += 1
@@ -122,17 +148,25 @@ class BlockCodegenWalker(BaseNodeWaler):
             elif function_name == "max":
                 function_name = "fmax"
             elif function_name == "xidz":
-                assert len(ast_node.arguments) == 3, "number of arguments for xidz must be 3"
+                assert (
+                    len(ast_node.arguments) == 3
+                ), "number of arguments for xidz must be 3"
                 arg1 = self.walk(ast_node.arguments[0])
                 arg2 = self.walk(ast_node.arguments[1])
                 arg3 = self.walk(ast_node.arguments[2])
-                output_string += f" (fabs({arg2}) <= 1e-6) ? {arg3} : ({arg1}) / ({arg2})"
+                output_string += (
+                    f" (fabs({arg2}) <= 1e-6) ? {arg3} : ({arg1}) / ({arg2})"
+                )
                 return output_string
             elif function_name == "zidz":
-                assert len(ast_node.arguments) == 2, "number of arguments for zidz must be 2"
+                assert (
+                    len(ast_node.arguments) == 2
+                ), "number of arguments for zidz must be 2"
                 arg1 = self.walk(ast_node.arguments[0])
                 arg2 = self.walk(ast_node.arguments[1])
-                output_string += f" (fabs({arg2}) <= 1e-6) ? 0 : ({arg1}) / ({arg2})"
+                output_string += (
+                    f" (fabs({arg2}) <= 1e-6) ? 0 : ({arg1}) / ({arg2})"
+                )
                 return output_string
             elif function_name == "ln":
                 # natural log in stan is just log
@@ -140,7 +174,9 @@ class BlockCodegenWalker(BaseNodeWaler):
 
             output_string += function_name
             output_string += "("
-            output_string += ",".join([self.walk(argument) for argument in ast_node.arguments])
+            output_string += ",".join(
+                [self.walk(argument) for argument in ast_node.arguments]
+            )
             output_string += ")"
 
             return output_string
@@ -149,11 +185,14 @@ class BlockCodegenWalker(BaseNodeWaler):
             return self.walk(ast_node.flow)
 
         elif isinstance(ast_node, InlineLookupsStructure):
-            lookup_func_name = self.lookup_function_names[LookupCodegenWalker.get_lookup_keyname(ast_node.lookups)]
+            lookup_func_name = self.lookup_function_names[
+                LookupCodegenWalker.get_lookup_keyname(ast_node.lookups)
+            ]
             return f"{lookup_func_name}({self.walk(ast_node.argument)})"
 
         else:
             raise Exception("Got unknown node", ast_node)
+
 
 @dataclass
 class InitialValueCodegenWalker(BlockCodegenWalker):
@@ -198,17 +237,31 @@ class RNGCodegenWalker(InitialValueCodegenWalker):
     def walk(self, ast_node) -> str:
         if isinstance(ast_node, CallStructure):
             function_name = self.walk(ast_node.function)
-            if function_name in ("random_beta" , "random_binomial" , "random_binomial" , "random_exponential" , "random_gamma" , "random_normal" , "random_poisson"):
-                argument_codegen = [self.walk(argument) for argument in ast_node.arguments]
+            if function_name in (
+                "random_beta",
+                "random_binomial",
+                "random_binomial",
+                "random_exponential",
+                "random_gamma",
+                "random_normal",
+                "random_poisson",
+            ):
+                argument_codegen = [
+                    self.walk(argument) for argument in ast_node.arguments
+                ]
                 return self.rng_codegen(function_name, argument_codegen)
             else:
                 return super().walk(ast_node)
 
         elif isinstance(ast_node, IntegStructure):
-            raise Exception("RNG function arguments cannot contain stock variables which change with time and thus must be constant!")
+            raise Exception(
+                "RNG function arguments cannot contain stock variables which change with time and thus must be constant!"
+            )
 
         elif isinstance(ast_node, SmoothStructure):
-            raise Exception("RNG function arguments cannot contain stock variables which change with time and thus must be constant!")
+            raise Exception(
+                "RNG function arguments cannot contain stock variables which change with time and thus must be constant!"
+            )
 
         elif isinstance(ast_node, ReferenceStructure):
             if ast_node.reference in self.variable_ast_dict:
@@ -244,4 +297,3 @@ class RNGCodegenWalker(InitialValueCodegenWalker):
             return f"fmin(fmax(fma(poisson_rng({_lambda}), {multiply}, {offset}), {lower}), {upper})"
         else:
             raise Exception(f"RNG function {rng_type} not implemented")
-

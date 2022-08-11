@@ -4,8 +4,12 @@ from typing import Union, List, Dict, Set, Sequence
 
 from .ast_walker import *
 from .utilities import *
-from pysd.translators.structures.abstract_model import\
-    AbstractComponent, AbstractElement, AbstractModel, AbstractSection
+from pysd.translators.structures.abstract_model import (
+    AbstractComponent,
+    AbstractElement,
+    AbstractModel,
+    AbstractSection,
+)
 
 
 class StanModelBuilder:
@@ -13,14 +17,22 @@ class StanModelBuilder:
         self.abstract_model = abstract_model
 
         self.variable_ast_dict: Dict[str, AbstractSyntax] = {}
-        assert len(self.abstract_model.sections) == 1, "Number of sections in AbstractModel must be 1."
+        assert (
+            len(self.abstract_model.sections) == 1
+        ), "Number of sections in AbstractModel must be 1."
         for element in self.abstract_model.sections[0].elements:
             stan_varname = vensim_name_to_identifier(element.name)
-            assert len(element.components) == 1, f"Number of components in AbstractElement must be 1, but {element.name} has {len(element.components)}"
+            assert (
+                len(element.components) == 1
+            ), f"Number of components in AbstractElement must be 1, but {element.name} has {len(element.components)}"
             self.variable_ast_dict[stan_varname] = element.components[0].ast
 
-
-    def create_stan_program(self, predictor_variable_names: List[Union[str, Tuple[str, str]]], outcome_variable_names: Sequence[str] = (), function_name="vensim_func"):
+    def create_stan_program(
+        self,
+        predictor_variable_names: List[Union[str, Tuple[str, str]]],
+        outcome_variable_names: Sequence[str] = (),
+        function_name="vensim_func",
+    ):
         """
 
         Parameters
@@ -40,29 +52,53 @@ class StanModelBuilder:
         sanitized_predictor_variable_names = []
         for var in predictor_variable_names:
             if isinstance(var, str):
-                sanitized_predictor_variable_names.append(vensim_name_to_identifier(var))
+                sanitized_predictor_variable_names.append(
+                    vensim_name_to_identifier(var)
+                )
             elif isinstance(var, tuple):
                 var_name = var[1]
-                sanitized_predictor_variable_names.append((type, vensim_name_to_identifier(var_name)))
+                sanitized_predictor_variable_names.append(
+                    (type, vensim_name_to_identifier(var_name))
+                )
             else:
-                raise Exception("predictor_variable_names must be a list consisting of: strings and/or a tuple of the form(T, Name), where T is a string denoting the variable's stan type and Name a string denoting the variable name")
+                raise Exception(
+                    "predictor_variable_names must be a list consisting of: strings and/or a tuple of the form(T, Name), where T is a string denoting the variable's stan type and Name a string denoting the variable name"
+                )
 
         predictor_variable_names = sanitized_predictor_variable_names
-        outcome_variable_names = self.get_stock_variable_stan_names() if not outcome_variable_names else [vensim_name_to_identifier(name) for name in outcome_variable_names]
+        outcome_variable_names = (
+            self.get_stock_variable_stan_names()
+            if not outcome_variable_names
+            else [
+                vensim_name_to_identifier(name)
+                for name in outcome_variable_names
+            ]
+        )
         if not outcome_variable_names:
-            raise Exception("There are no stock variables defined in the model, hence nothing to integrate.")
+            raise Exception(
+                "There are no stock variables defined in the model, hence nothing to integrate."
+            )
 
         self.code = IndentedString()
 
         function_block_builder = StanFunctionBuilder(self.abstract_model)
 
-        self.code += function_block_builder.build_function_block(predictor_variable_names, outcome_variable_names, function_name)
+        self.code += function_block_builder.build_function_block(
+            predictor_variable_names, outcome_variable_names, function_name
+        )
 
         self.code += "data{\n}\n"
         # self.code += StanDataBuilder(self.abstract_model).build_block(predictor_variable_names, outcome_variable_names)
         self.code += "transformed data{\n}\n"
         self.code += "parameters{\n}\n"
-        self.code += StanTransformedParametersBuilder(self.abstract_model).build_block(predictor_variable_names, outcome_variable_names, function_block_builder.lookup_builder_walker.generated_lookup_function_names, function_name)
+        self.code += StanTransformedParametersBuilder(
+            self.abstract_model
+        ).build_block(
+            predictor_variable_names,
+            outcome_variable_names,
+            function_block_builder.lookup_builder_walker.generated_lookup_function_names,
+            function_name,
+        )
         self.code += "model{\n}\n"
 
         self.code += "generated quantities{\n}"
@@ -79,14 +115,28 @@ class StanModelBuilder:
                     is_stock = True
                     break
 
-            var_names.append((element.name, vensim_name_to_identifier(element.name), is_stock))
+            var_names.append(
+                (
+                    element.name,
+                    vensim_name_to_identifier(element.name),
+                    is_stock,
+                )
+            )
             max_length = max(max_length, len(element.name) + 1)
 
-        header = 'original name'.ljust(max_length) + "stan variable name".ljust(max_length) + "is stock"
+        header = (
+            "original name".ljust(max_length)
+            + "stan variable name".ljust(max_length)
+            + "is stock"
+        )
         print(header)
         print("-" * len(header))
         for x in var_names:
-            print(x[0].ljust(max_length) + x[1].ljust(max_length) + ("V" if x[2] else ""))
+            print(
+                x[0].ljust(max_length)
+                + x[1].ljust(max_length)
+                + ("V" if x[2] else "")
+            )
 
     def get_stock_variable_stan_names(self) -> List[str]:
         """
@@ -99,10 +149,13 @@ class StanModelBuilder:
         for element in self.abstract_model.sections[0].elements:
             for component in element.components:
                 if isinstance(component.ast, IntegStructure):
-                    stock_varible_names.append(vensim_name_to_identifier(element.name))
+                    stock_varible_names.append(
+                        vensim_name_to_identifier(element.name)
+                    )
                     break
 
         return stock_varible_names
+
 
 # class StanDataBuilder:
 #     def __init__(self, abstract_model: AbstractModel):
@@ -130,7 +183,13 @@ class StanTransformedParametersBuilder:
     def __init__(self, abstract_model: AbstractModel):
         self.abstract_model = abstract_model
 
-    def build_block(self, predictor_variable_names, outcome_variable_names, lookup_function_dict, function_name):
+    def build_block(
+        self,
+        predictor_variable_names,
+        outcome_variable_names,
+        lookup_function_dict,
+        function_name,
+    ):
         self.code = IndentedString()
         self.code += "transformed parameters {\n"
         self.code.indent_level += 1
@@ -150,9 +209,14 @@ class StanTransformedParametersBuilder:
 
         for outcome_variable_name in outcome_variable_names:
             for element in self.abstract_model.sections[0].elements:
-                if vensim_name_to_identifier(element.name) == outcome_variable_name:
+                if (
+                    vensim_name_to_identifier(element.name)
+                    == outcome_variable_name
+                ):
                     component = element.components[0]
-                    assert isinstance(component.ast, IntegStructure), "Output variable component must be an INTEG."
+                    assert isinstance(
+                        component.ast, IntegStructure
+                    ), "Output variable component must be an INTEG."
                     self.code += f"real {outcome_variable_name}_initial = {InitialValueCodegenWalker(lookup_function_dict, variable_ast_dict).walk(component.ast)};\n"
                     break
 
@@ -166,13 +230,19 @@ class StanTransformedParametersBuilder:
 
 
 class StanFunctionBuilder:
-    def __init__(self, abstract_model: AbstractModel, function_name: str = "vensim_ode"):
+    def __init__(
+        self, abstract_model: AbstractModel, function_name: str = "vensim_ode"
+    ):
 
         self.abstract_model = abstract_model
         self.elements = self.abstract_model.sections[0].elements
         self.ode_function_name = function_name
         self.lookup_builder_walker = LookupCodegenWalker()
-        self.variable_dependency_graph: Dict[str, Set] = {}  # in order to evaluate 'key' variable, we need 'element' variables
+        self.variable_dependency_graph: Dict[
+            str, Set
+        ] = (
+            {}
+        )  # in order to evaluate 'key' variable, we need 'element' variables
         self.code = IndentedString()
 
     def _create_dependency_graph(self):
@@ -181,15 +251,24 @@ class StanFunctionBuilder:
         for element in self.elements:
             for component in element.components:
                 if element.name not in self.variable_dependency_graph:
-                    self.variable_dependency_graph[vensim_name_to_identifier(element.name)] = set()
+                    self.variable_dependency_graph[
+                        vensim_name_to_identifier(element.name)
+                    ] = set()
 
                 dependent_aux_names = walker.walk(component.ast)
                 if dependent_aux_names:
-                    self.variable_dependency_graph[vensim_name_to_identifier(element.name)].update(dependent_aux_names)
+                    self.variable_dependency_graph[
+                        vensim_name_to_identifier(element.name)
+                    ].update(dependent_aux_names)
 
         return self.variable_dependency_graph
 
-    def build_function_block(self, predictor_variable_names: List[Tuple[str, str]], outcome_variable_names: List[str], function_name: str ="vensim_func"):
+    def build_function_block(
+        self,
+        predictor_variable_names: List[Tuple[str, str]],
+        outcome_variable_names: List[str],
+        function_name: str = "vensim_func",
+    ):
         self.code = IndentedString()
         self.code += "functions {\n"
 
@@ -219,6 +298,7 @@ class StanFunctionBuilder:
             required_variables |= self.variable_dependency_graph[variable]
 
         eval_order = []
+
         def recursive_order_search(current, visited):
             # if current in visited:
             #     return
@@ -226,25 +306,35 @@ class StanFunctionBuilder:
             # if current in eval_order:
             #     return
             for child in self.variable_dependency_graph[current]:
-                if child == current: continue
-                if child in outcome_variable_names: continue
+                if child == current:
+                    continue
+                if child in outcome_variable_names:
+                    continue
                 if child not in visited:
                     recursive_order_search(child, visited)
             eval_order.append(current)
 
-        #for var_name in self.variable_dependency_graph.keys():
+        # for var_name in self.variable_dependency_graph.keys():
         for var_name in required_variables:
             recursive_order_search(var_name, set())
 
-        self.elements = [element for element in self.elements if vensim_name_to_identifier(element.name) in required_variables]
-        self.elements = sorted(self.elements, key=lambda x: eval_order.index(vensim_name_to_identifier(x.name)))
-
+        self.elements = [
+            element
+            for element in self.elements
+            if vensim_name_to_identifier(element.name) in required_variables
+        ]
+        self.elements = sorted(
+            self.elements,
+            key=lambda x: eval_order.index(vensim_name_to_identifier(x.name)),
+        )
 
         #################
         # Create function declaration
         self.code += f"vector {function_name}(real time, vector outcome, "
         argument_strings = []
-        argument_variables = []  # this list holds the names of the argument variables
+        argument_variables = (
+            []
+        )  # this list holds the names of the argument variables
         for var in predictor_variable_names:
             if isinstance(var, str):
                 argument_variables.append(var)
@@ -261,12 +351,16 @@ class StanFunctionBuilder:
         self.code.indent_level += 1
         # Enter function body
 
-        for index, outcome_variable_name in enumerate(outcome_variable_names, 1):
+        for index, outcome_variable_name in enumerate(
+            outcome_variable_names, 1
+        ):
             self.code += f"real {outcome_variable_name} = outcome[{index}];\n"
 
         self.code += "\n"
 
-        codegen_walker = BlockCodegenWalker(self.lookup_builder_walker.generated_lookup_function_names)
+        codegen_walker = BlockCodegenWalker(
+            self.lookup_builder_walker.generated_lookup_function_names
+        )
         for element in self.elements:
             stan_varname = vensim_name_to_identifier(element.name)
             if stan_varname in argument_variables:
@@ -281,7 +375,9 @@ class StanFunctionBuilder:
         self.code += "\n"
 
         # Generate code for returning outcomes of interest
-        outcome_variable_names = [name + "_dydt" for name in outcome_variable_names]
+        outcome_variable_names = [
+            name + "_dydt" for name in outcome_variable_names
+        ]
         self.code += f"return {{{', '.join(outcome_variable_names)}}};\n"
         self.code.indent_level -= 1
         # Exit function body
@@ -299,7 +395,9 @@ class StanFunctionBuilder:
 
 
 class StanTransformedDataBuilder:
-    def __init__(self, abstract_model: AbstractModel, function_name: str = "vensim_ode"):
+    def __init__(
+        self, abstract_model: AbstractModel, function_name: str = "vensim_ode"
+    ):
 
         self.abstract_model = abstract_model
         self.elements = self.abstract_model.sections[0].elements
