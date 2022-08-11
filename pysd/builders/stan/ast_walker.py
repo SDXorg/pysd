@@ -1,4 +1,4 @@
-from typing import Union, List, Iterable, Dict, Tuple
+from typing import Union, List, Iterable, Dict, Tuple, Any
 from itertools import chain
 from dataclasses import dataclass, field
 from .utilities import IndentedString
@@ -15,21 +15,22 @@ class BaseNodeWaler:
 
 class AuxNameWalker(BaseNodeWaler):
     def walk(self, ast_node) -> List[str]:
-        match ast_node:
-            case int():
-                return []
-            case float():
-                return []
-            case ArithmeticStructure(operators, arguments):
-                return list(chain.from_iterable([self.walk(argument) for argument in arguments]))
-            case ReferenceStructure(reference, subscripts):
-                return [ast_node.reference]
-            case CallStructure(function, arguments):
-                return list(chain.from_iterable([self.walk(argument) for argument in arguments]))
-            case IntegStructure(flow, initial):
-                return self.walk(flow) + self.walk(initial)
-            case InlineLookupsStructure(argument, lookups):
-                return self.walk(lookups)
+        if isinstance(ast_node, int):
+            return []
+        elif isinstance(ast_node, float):
+            return []
+        elif isinstance(ast_node, ArithmeticStructure):
+            return list(chain.from_iterable([self.walk(argument) for argument in ast_node.arguments]))
+        elif isinstance(ast_node, ReferenceStructure):
+            return [ast_node.reference]
+        elif isinstance(ast_node, CallStructure):
+            return list(chain.from_iterable([self.walk(argument) for argument in ast_node.arguments]))
+        elif isinstance(ast_node, IntegStructure):
+            return self.walk(ast_node.flow) + self.walk(ast_node.initial)
+        elif isinstance(ast_node, InlineLookupsStructure):
+            return self.walk(ast_node.lookups)
+        else:
+            raise Exception(f"AST node of type {ast_node.__class__.__name__} is not supported.")
 
 @dataclass
 class LookupCodegenWalker(BaseNodeWaler):
@@ -44,45 +45,43 @@ class LookupCodegenWalker(BaseNodeWaler):
         return lookup_node.x + lookup_node.y + lookup_node.x_limits + lookup_node.y_limits
 
     def walk(self, ast_node) -> None:
-        match ast_node:
-            case InlineLookupsStructure(argument, lookups):
-                self.walk(lookups)
-            case LookupsStructure(x, y, x_limits, y_limits, type):
-                assert type == "interpolate", "Type of Lookup must be 'interpolate'"
-                identifier_key = LookupCodegenWalker.get_lookup_keyname(ast_node)
-                function_name = f"lookupFunc_{self.n_lookups}"
-                self.generated_lookup_function_names[identifier_key] = function_name
-                self.n_lookups += 1
-                self.code += f"real {function_name}(real x){{\n"
+        if isinstance(ast_node, InlineLookupsStructure):
+            self.walk(ast_node.lookups)
+        elif isinstance(ast_node, LookupsStructure):
+            assert ast_node.type == "interpolate", "Type of Lookup must be 'interpolate'"
+            identifier_key = LookupCodegenWalker.get_lookup_keyname(ast_node)
+            function_name = f"lookupFunc_{self.n_lookups}"
+            self.generated_lookup_function_names[identifier_key] = function_name
+            self.n_lookups += 1
+            self.code += f"real {function_name}(real x){{\n"
+            self.code.indent_level += 1
+            # Enter function body
+            self.code += f"# x {ast_node.x_limits} = {ast_node.x}\n"
+            self.code += f"# y {ast_node.y_limits} = {ast_node.y}\n"
+            self.code += "real slope;\n"
+            self.code += "real intercept;\n\n"
+            n_intervals = len(ast_node.x)
+            for lookup_index in range(n_intervals):
+                if lookup_index == 0:
+                    continue
+                if lookup_index == 1:
+                    self.code += f"if(x <= {ast_node.x[lookup_index]})\n"
+                else:
+                    self.code += f"else if(x <= {ast_node.x[lookup_index]})\n"
+
                 self.code.indent_level += 1
-                # Enter function body
-                self.code += f"# x {x_limits} = {x}\n"
-                self.code += f"# y {y_limits} = {y}\n"
-                self.code += "real slope;\n"
-                self.code += "real intercept;\n\n"
-                n_intervals = len(x)
-                for lookup_index in range(n_intervals):
-                    if lookup_index == 0:
-                        continue
-                    if lookup_index == 1:
-                        self.code += f"if(x <= {x[lookup_index]})\n"
-                    else:
-                        self.code += f"else if(x <= {x[lookup_index]})\n"
-
-                    self.code.indent_level += 1
-                    # enter conditional body
-                    self.code += f"intercept = {y[lookup_index - 1]};\n"
-                    self.code += f"slope = ({y[lookup_index]} - {y[lookup_index - 1]}) / ({x[lookup_index]} - {x[lookup_index - 1]});\n"
-                    self.code += f"return intercept + slope * (x - {x[lookup_index - 1]});\n"
-                    self.code.indent_level -= 1
-                    # exit conditional body
-
+                # enter conditional body
+                self.code += f"intercept = {ast_node.y[lookup_index - 1]};\n"
+                self.code += f"slope = ({ast_node.y[lookup_index]} - {ast_node.y[lookup_index - 1]}) / ({ast_node.x[lookup_index]} - {ast_node.x[lookup_index - 1]});\n"
+                self.code += f"return intercept + slope * (x - {ast_node.x[lookup_index - 1]});\n"
                 self.code.indent_level -= 1
-                # exit function body
-                self.code += "}\n\n"
+                # exit conditional body
 
-            case _:
-                return None
+            self.code.indent_level -= 1
+            # exit function body
+            self.code += "}\n\n"
+        else:
+            return None
 
 
 @dataclass
@@ -90,75 +89,71 @@ class BlockCodegenWalker(BaseNodeWaler):
     lookup_function_names: Dict[Tuple, str]
 
     def walk(self, ast_node) -> str:
-        match ast_node:
-            case int(x):
-                return f"{x}"
 
-            case float(x):
-                return f"{x}"
+        if isinstance(ast_node, int):
+            return f"{ast_node}"
+        elif isinstance(ast_node, float):
+            return f"{ast_node}"
+        elif isinstance(ast_node, str):
+            return ast_node
+        elif isinstance(ast_node, ArithmeticStructure):
+            # ArithmeticStructure consists of chained arithmetic expressions.
+            # We parse them one by one into a single expression
+            output_string = ""
+            last_argument_index = len(ast_node.arguments) - 1
+            for index, argument in enumerate(ast_node.arguments):
+                output_string += self.walk(argument)
+                if index < last_argument_index:
+                    output_string += " "
+                    output_string += ast_node.operators[index]
+                    output_string += " "
+            return output_string
 
-            case str(x):
-                return x
+        elif isinstance(ast_node, ReferenceStructure):
+            # ReferenceSTructure denotes invoking the value of another variable
+            # Subscripts are ignored for now
+            return ast_node.reference
 
-            case ArithmeticStructure(operators, arguments):
-                # ArithmeticStructure consists of chained arithmetic expressions.
-                # We parse them one by one into a single expression
-                output_string = ""
-                last_argument_index = len(arguments) - 1
-                for index, argument in enumerate(arguments):
-                    output_string += self.walk(argument)
-                    if index < last_argument_index:
-                        output_string += " "
-                        output_string += operators[index]
-                        output_string += " "
+        elif isinstance(ast_node, CallStructure):
+            output_string = ""
+            function_name = self.walk(ast_node.function)
+            if function_name == "min":
+                function_name = "fmin"
+            elif function_name == "max":
+                function_name = "fmax"
+            elif function_name == "xidz":
+                assert len(ast_node.arguments) == 3, "number of arguments for xidz must be 3"
+                arg1 = self.walk(ast_node.arguments[0])
+                arg2 = self.walk(ast_node.arguments[1])
+                arg3 = self.walk(ast_node.arguments[2])
+                output_string += f" (fabs({arg2}) <= 1e-6) ? {arg3} : ({arg1}) / ({arg2})"
                 return output_string
-
-            case ReferenceStructure(reference, subscripts):
-                # ReferenceSTructure denotes invoking the value of another variable
-                # Subscripts are ignored for now
-                return reference
-
-            case CallStructure(function, arguments):
-                output_string = ""
-                function_name = self.walk(function)
-                match function_name:
-                    case "min":
-                        function_name = "fmin"
-                    case "max":
-                        function_name = "fmax"
-                    case "xidz":
-                        assert len(arguments) == 3, "number of arguments for xidz must be 3"
-                        arg1 = self.walk(arguments[0])
-                        arg2 = self.walk(arguments[1])
-                        arg3 = self.walk(arguments[2])
-                        output_string += f" (fabs({arg2}) <= 1e-6) ? {arg3} : ({arg1}) / ({arg2})"
-                        return output_string
-                    case "zidz":
-                        assert len(arguments) == 2, "number of arguments for zidz must be 2"
-                        arg1 = self.walk(arguments[0])
-                        arg2 = self.walk(arguments[1])
-                        output_string += f" (fabs({arg2}) <= 1e-6) ? 0 : ({arg1}) / ({arg2})"
-                        return output_string
-                    case "ln":
-                        # natural log in stan is just log
-                        function_name = "log"
-
-                output_string += function_name
-                output_string += "("
-                output_string += ",".join([self.walk(argument) for argument in arguments])
-                output_string += ")"
-
+            elif function_name == "zidz":
+                assert len(ast_node.arguments) == 2, "number of arguments for zidz must be 2"
+                arg1 = self.walk(ast_node.arguments[0])
+                arg2 = self.walk(ast_node.arguments[1])
+                output_string += f" (fabs({arg2}) <= 1e-6) ? 0 : ({arg1}) / ({arg2})"
                 return output_string
+            elif function_name == "ln":
+                # natural log in stan is just log
+                function_name = "log"
 
-            case IntegStructure(flow, initial):
-                return self.walk(flow)
+            output_string += function_name
+            output_string += "("
+            output_string += ",".join([self.walk(argument) for argument in ast_node.arguments])
+            output_string += ")"
 
-            case InlineLookupsStructure(argument, lookups):
-                lookup_func_name = self.lookup_function_names[LookupCodegenWalker.get_lookup_keyname(lookups)]
-                return f"{lookup_func_name}({self.walk(argument)})"
+            return output_string
 
-            case _:
-                raise Exception("Got unknown node", ast_node)
+        elif isinstance(ast_node, IntegStructure):
+            return self.walk(ast_node.flow)
+
+        elif isinstance(ast_node, InlineLookupsStructure):
+            lookup_func_name = self.lookup_function_names[LookupCodegenWalker.get_lookup_keyname(ast_node.lookups)]
+            return f"{lookup_func_name}({self.walk(ast_node.argument)})"
+
+        else:
+            raise Exception("Got unknown node", ast_node)
 
 @dataclass
 class InitialValueCodegenWalker(BlockCodegenWalker):
@@ -166,30 +161,32 @@ class InitialValueCodegenWalker(BlockCodegenWalker):
     lookup_function_names: Dict[Tuple, str]
 
     def walk(self, ast_node):
-        match ast_node:
-            case IntegStructure(flow, initial):
-                return self.walk(initial)
-            case SmoothStructure(input, smooth_time, initial, order):
-                return self.walk(initial)
-            case ReferenceStructure(reference, subscripts):
-                if reference in self.variable_ast_dict:
-                    return self.walk(self.variable_ast_dict[reference])
-                else:
-                    return super().walk(ast_node)
-            case ArithmeticStructure(operators, arguments):
-                # ArithmeticStructure consists of chained arithmetic expressions.
-                # We parse them one by one into a single expression
-                output_string = ""
-                last_argument_index = len(arguments) - 1
-                for index, argument in enumerate(arguments):
-                    output_string += self.walk(argument)
-                    if index < last_argument_index:
-                        output_string += " "
-                        output_string += operators[index]
-                        output_string += " "
-                return output_string
-            case _:
+        if isinstance(ast_node, IntegStructure):
+            return self.walk(ast_node.initial)
+
+        elif isinstance(ast_node, SmoothStructure):
+            return self.walk(ast_node.initial)
+
+        elif isinstance(ast_node, ReferenceStructure):
+            if ast_node.reference in self.variable_ast_dict:
+                return self.walk(self.variable_ast_dict[ast_node.reference])
+            else:
                 return super().walk(ast_node)
+
+        elif isinstance(ast_node, ArithmeticStructure):
+            # ArithmeticStructure consists of chained arithmetic expressions.
+            # We parse them one by one into a single expression
+            output_string = ""
+            last_argument_index = len(ast_node.arguments) - 1
+            for index, argument in enumerate(ast_node.arguments):
+                output_string += self.walk(argument)
+                if index < last_argument_index:
+                    output_string += " "
+                    output_string += ast_node.operators[index]
+                    output_string += " "
+            return output_string
+        else:
+            return super().walk(ast_node)
 
 
 @dataclass
@@ -199,55 +196,52 @@ class RNGCodegenWalker(InitialValueCodegenWalker):
     total_timestep: int
 
     def walk(self, ast_node) -> str:
-        match ast_node:
-            case CallStructure(function, arguments):
-                function_name = self.walk(function)
-                match function_name:
-                    case "random_beta" | "random_binomial" | "random_binomial" | "random_exponential" | "random_gamma" | "random_normal" | "random_poisson":
-                        argument_codegen = [self.walk(argument) for argument in arguments]
-                        return self.rng_codegen(function_name, argument_codegen)
-                    case _:
-                        return super().walk(ast_node)
-
-            case IntegStructure(flow, initial):
-                raise Exception("RNG function arguments cannot contain stock variables which change with time and thus must be constant!")
-
-            case SmoothStructure(input, smooth_time, initial, order):
-                raise Exception("RNG function arguments cannot contain stock variables which change with time and thus must be constant!")
-
-            case ReferenceStructure(reference, subscripts):
-                if reference in self.variable_ast_dict:
-                    return self.walk(reference)
-                else:
-                    return super().walk(ast_node)
-
-            case ArithmeticStructure(operators, arguments):
-                # ArithmeticStructure consists of chained arithmetic expressions.
-                # We parse them one by one into a single expression
-                output_string = ""
-                last_argument_index = len(arguments) - 1
-                for index, argument in enumerate(arguments):
-                    output_string += self.walk(argument)
-                    if index < last_argument_index:
-                        output_string += " "
-                        output_string += operators[index]
-                        output_string += " "
-                return output_string
-
-            case _:
+        if isinstance(ast_node, CallStructure):
+            function_name = self.walk(ast_node.function)
+            if function_name in ("random_beta" , "random_binomial" , "random_binomial" , "random_exponential" , "random_gamma" , "random_normal" , "random_poisson"):
+                argument_codegen = [self.walk(argument) for argument in ast_node.arguments]
+                return self.rng_codegen(function_name, argument_codegen)
+            else:
                 return super().walk(ast_node)
 
-    def rng_codegen(self, rng_type, arguments):
-        match rng_type:
-            case "random_normal":
-                lower, upper, mean, std, _ = arguments
-                return f"fmin(fmax(normal_rng({mean}, {std}), {lower}), {upper})"
-            case "random_uniform":
-                lower, upper, _ = arguments
-                return f"uniform_rng({lower}, {upper})"
-            case "random_poisson":
-                lower, upper, _lambda, offset, multiply, _ = arguments
-                return f"fmin(fmax(fma(poisson_rng({_lambda}), {multiply}, {offset}), {lower}), {upper})"
-            case _:
-                raise Exception(f"RNG function {rng_type} not implemented")
+        elif isinstance(ast_node, IntegStructure):
+            raise Exception("RNG function arguments cannot contain stock variables which change with time and thus must be constant!")
+
+        elif isinstance(ast_node, SmoothStructure):
+            raise Exception("RNG function arguments cannot contain stock variables which change with time and thus must be constant!")
+
+        elif isinstance(ast_node, ReferenceStructure):
+            if ast_node.reference in self.variable_ast_dict:
+                return self.walk(ast_node.reference)
+            else:
+                return super().walk(ast_node)
+
+        elif isinstance(ast_node, ArithmeticStructure):
+            # ArithmeticStructure consists of chained arithmetic expressions.
+            # We parse them one by one into a single expression
+            output_string = ""
+            last_argument_index = len(ast_node.arguments) - 1
+            for index, argument in enumerate(ast_node.arguments):
+                output_string += self.walk(argument)
+                if index < last_argument_index:
+                    output_string += " "
+                    output_string += ast_node.operators[index]
+                    output_string += " "
+            return output_string
+
+        else:
+            return super().walk(ast_node)
+
+    def rng_codegen(self, rng_type: str, arguments: List[Any]):
+        if rng_type == "random_normal":
+            lower, upper, mean, std, _ = arguments
+            return f"fmin(fmax(normal_rng({mean}, {std}), {lower}), {upper})"
+        elif rng_type == "random_uniform":
+            lower, upper, _ = arguments
+            return f"uniform_rng({lower}, {upper})"
+        elif rng_type == "random_poisson":
+            lower, upper, _lambda, offset, multiply, _ = arguments
+            return f"fmin(fmax(fma(poisson_rng({_lambda}), {multiply}, {offset}), {lower}), {upper})"
+        else:
+            raise Exception(f"RNG function {rng_type} not implemented")
 

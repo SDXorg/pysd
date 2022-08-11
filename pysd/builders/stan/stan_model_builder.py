@@ -39,13 +39,13 @@ class StanModelBuilder:
         # Santize vensim names to stan-compliant identifiers
         sanitized_predictor_variable_names = []
         for var in predictor_variable_names:
-            match var:
-                case str(x):
-                    sanitized_predictor_variable_names.append(vensim_name_to_identifier(x))
-                case (str(type), str(var_name)):
-                    sanitized_predictor_variable_names.append((type, vensim_name_to_identifier(var_name)))
-                case _:
-                    raise Exception("predictor_variable_names must be a list of strings and/or a tuple of the form(T, Name), where T is a string denoting the variable's stan type and Name a string denoting the variable name")
+            if isinstance(var, str):
+                sanitized_predictor_variable_names.append(vensim_name_to_identifier(var))
+            elif isinstance(var, tuple):
+                var_name = var[1]
+                sanitized_predictor_variable_names.append((type, vensim_name_to_identifier(var_name)))
+            else:
+                raise Exception("predictor_variable_names must be a list consisting of: strings and/or a tuple of the form(T, Name), where T is a string denoting the variable's stan type and Name a string denoting the variable name")
 
         predictor_variable_names = sanitized_predictor_variable_names
         outcome_variable_names = self.get_stock_variable_stan_names() if not outcome_variable_names else [vensim_name_to_identifier(name) for name in outcome_variable_names]
@@ -104,21 +104,21 @@ class StanModelBuilder:
 
         return stock_varible_names
 
-""" class StanDataBuilder:
-    def __init__(self, abstract_model: AbstractModel):
-        self.abstract_model = abstract_model
-
-    def build_block(self, predictor_variable_names, outcome_variable_names):
-        self.code = IndentedString()
-        self.code += "data {\n"
-        self.code.indent_level += 1        
-
-        self.code += f"predictor= {{{', '.join(predictor_variable_names)}}};\n"
-        self.code += f"initial_outcome = {{{', '.join(outcome_variable_names)}}};\n"
-        self.code += f"observed_outcome = {{{', '.join(outcome_variable_names)}}};\n"
-        self.code += f"times = {{{', '.join(outcome_variable_names)}}};\n"
-        self.code.indent_level -= 1
-        self.code += "}\n" """
+# class StanDataBuilder:
+#     def __init__(self, abstract_model: AbstractModel):
+#         self.abstract_model = abstract_model
+#
+#     def build_block(self, predictor_variable_names, outcome_variable_names):
+#         self.code = IndentedString()
+#         self.code += "data {\n"
+#         self.code.indent_level += 1
+#
+#         self.code += f"predictor= {{{', '.join(predictor_variable_names)}}};\n"
+#         self.code += f"initial_outcome = {{{', '.join(outcome_variable_names)}}};\n"
+#         self.code += f"observed_outcome = {{{', '.join(outcome_variable_names)}}};\n"
+#         self.code += f"times = {{{', '.join(outcome_variable_names)}}};\n"
+#         self.code.indent_level -= 1
+#         self.code += "}\n"
 
 
 class StanTransformedDataBuilder:
@@ -137,11 +137,11 @@ class StanTransformedParametersBuilder:
 
         argument_variables = []
         for var in predictor_variable_names:
-            match var:
-                case str(x):
-                    argument_variables.append(x)
-                case (str(type), str(var_name)):
-                    argument_variables.append(var_name)
+            if isinstance(var, str):
+                argument_variables.append(var)
+            elif isinstance(var, tuple):
+                var_name = var[1]
+                argument_variables.append(var_name)
 
         variable_ast_dict: Dict[str, AbstractSyntax] = {}
         for element in self.abstract_model.sections[0].elements:
@@ -218,9 +218,6 @@ class StanFunctionBuilder:
                 bfs_stack.append(next_var)
             required_variables |= self.variable_dependency_graph[variable]
 
-        #print(self.variable_dependency_graph)
-        #print("rv:", required_variables)
-
         eval_order = []
         def recursive_order_search(current, visited):
             # if current in visited:
@@ -249,13 +246,13 @@ class StanFunctionBuilder:
         argument_strings = []
         argument_variables = []  # this list holds the names of the argument variables
         for var in predictor_variable_names:
-            match var:
-                case str(x):
-                    argument_variables.append(x)
-                    argument_strings.append("real " + x)
-                case (str(type), str(var_name)):
-                    argument_variables.append(var_name)
-                    argument_strings.append(f"{type} {var_name}")
+            if isinstance(var, str):
+                argument_variables.append(var)
+                argument_strings.append("real " + var)
+            elif isinstance(var, type):
+                var_type, var_name = var
+                argument_variables.append(var_name)
+                argument_strings.append(f"{var_type} {var_name}")
 
         self.code += ", ".join(argument_strings)
         self.code += "){"
