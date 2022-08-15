@@ -35,7 +35,7 @@ complementary tests in the corresponding `pytest_*.py` file.
 
 .. note::
   If your changes correct some existing bug related to the translation or running
-  of a Vensim (or Xmile) model. You should add a new test in the `test suite repo <https://github.com/SDXorg/test-models>`_ reproducing the solved bug and addthe necessary lines in `pytest_integration/pytest_integration_test_vensim_pathway.py` (or `pytest_integration/pytest_integration_test_xmile_pathway.py`) to run the new test. Then, it is encoraged to add also unit test in `pytest_translators` reproducing the translation of the new function and test of the workflow in
+  of a Vensim (or Xmile) model. You should add a new test in the `test suite repo <https://github.com/SDXorg/test-models>`_ reproducing the solved bug and addthe necessary lines in `pytest_integration/pytest_integration_test_vensim_pathway.py` (or `pytest_integration/pytest_integration_test_xmile_pathway.py`) to run the new test. Then, it is encouraged to add also unit test in `pytest_translators` reproducing the translation of the new function and test of the workflow in
   `pytest_types/functions/pytest_functions.py` (or `pytest_types/statefuls/pytest_statefuls.py`).
 
 Speed Tests

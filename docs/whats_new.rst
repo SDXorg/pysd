@@ -18,6 +18,7 @@ Bug fixes
 
 Documentation
 ~~~~~~~~~~~~~
+- Correct typos.
 
 Performance
 ~~~~~~~~~~~
