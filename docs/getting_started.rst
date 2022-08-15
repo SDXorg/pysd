@@ -239,7 +239,7 @@ There are times when we may choose to overwrite a stock with a constant value (i
 
 Querying current values
 -----------------------
-We can easily access the current value of a model component using curly brackets. For instance, to find the temperature of the teacup, we simply call::
+We can easily access the current value of a model component using square brackets. For instance, to find the temperature of the teacup, we simply call::
 
    >>> model['Teacup Temperature']
 

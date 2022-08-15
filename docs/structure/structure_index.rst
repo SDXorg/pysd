@@ -21,11 +21,11 @@ Translation
    xmile_translation
    abstract_model
 
-PySD currentlty supports translation :doc:`from Vensim <vensim_translation>` amb :doc:`from Xmile <xmile_translation>`.
+PySD currentlty supports translation :doc:`from Vensim <vensim_translation>` and :doc:`from Xmile <xmile_translation>`.
 
 PySD can import models in Vensim's \*.mdl file format and in XMILE format (\*.xml, \*.xmile, or \*.stmx file). `Parsimonious <https://github.com/erikrose/parsimonious>`_ is the Parsing Expression Grammar `(PEG) <https://en.wikipedia.org/wiki/Parsing_expression_grammar>`_ parser library used in PySD to parse the original models and construct an abstract syntax tree. The translators then crawl the tree, using a set of classes to define the :doc:`Abstract Model <abstract_model>`.
 
-When parsing the expressions of any language, the order of operations must be taken into account. The order is shown in the following table and is used to create :py:class:`ArithmeticStructure` and :py:class:`LogicalStructure` objects correctly. The following expression :py:data:`1+2*3-5`` will be translated to::
+When parsing the expressions of any language, the order of operations must be taken into account. The order is shown in the following table and is used to create :py:class:`ArithmeticStructure` and :py:class:`LogicalStructure` objects correctly. The following expression :py:data:`1+2*3-5` will be translated to::
 
    ArithmeticStructure(operators=['+', '-'], arguments=(1, ArithmeticStructure(operators=['*'], arguments=(2, 3)), 5))
 
