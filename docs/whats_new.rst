@@ -1,5 +1,30 @@
 What's New
 ==========
+v3.5.2 (2022/08/15)
+-------------------
+
+New Features
+~~~~~~~~~~~~
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+- Make sketch's _font_size_ optional.
+
+Documentation
+~~~~~~~~~~~~~
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+
 v3.5.1 (2022/08/11)
 -------------------
 
