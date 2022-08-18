@@ -222,7 +222,7 @@ class StanTransformedParametersBuilder:
 
         self.code += f"vector[{len(outcome_variable_names)}] initial_outcome = {{{', '.join([x + '_initial' for x in outcome_variable_names])}}};\n"
 
-        self.code += f"array[] vector integrated_result = integrate_ode_rk45({function_name}, initial_outcome, initial_time, times, {','.join(argument_variables)});\n"
+        self.code += f"vector[{len(outcome_variable_names)}] integrated_result[T] = integrate_ode_rk45({function_name}, initial_outcome, initial_time, times, {','.join(argument_variables)});\n"
         self.code.indent_level -= 1
         self.code += "}\n"
 
