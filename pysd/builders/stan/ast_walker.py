@@ -140,9 +140,9 @@ class BlockCodegenWalker(BaseNodeWaler):
             output_string = ""
             function_name = self.walk(ast_node.function)
             if function_name == "min":
-                function_name = "fmin"
+                function_name = "min"
             elif function_name == "max":
-                function_name = "fmax"
+                function_name = "max"
             elif function_name == "xidz":
                 assert (
                     len(ast_node.arguments) == 3
@@ -151,7 +151,7 @@ class BlockCodegenWalker(BaseNodeWaler):
                 arg2 = self.walk(ast_node.arguments[1])
                 arg3 = self.walk(ast_node.arguments[2])
                 output_string += (
-                    f" (fabs({arg2}) <= 1e-6) ? {arg3} : ({arg1}) / ({arg2})"
+                    f" (abs({arg2}) <= 1e-6) ? {arg3} : ({arg1}) / ({arg2})"
                 )
                 return output_string
             elif function_name == "zidz":
@@ -161,7 +161,7 @@ class BlockCodegenWalker(BaseNodeWaler):
                 arg1 = self.walk(ast_node.arguments[0])
                 arg2 = self.walk(ast_node.arguments[1])
                 output_string += (
-                    f" (fabs({arg2}) <= 1e-6) ? 0 : ({arg1}) / ({arg2})"
+                    f" (abs({arg2}) <= 1e-6) ? 0 : ({arg1}) / ({arg2})"
                 )
                 return output_string
             elif function_name == "ln":
@@ -284,12 +284,12 @@ class RNGCodegenWalker(InitialValueCodegenWalker):
     def rng_codegen(self, rng_type: str, arguments: List[Any]):
         if rng_type == "random_normal":
             lower, upper, mean, std, _ = arguments
-            return f"fmin(fmax(normal_rng({mean}, {std}), {lower}), {upper})"
+            return f"min(max(normal_rng({mean}, {std}), {lower}), {upper})"
         elif rng_type == "random_uniform":
             lower, upper, _ = arguments
             return f"uniform_rng({lower}, {upper})"
         elif rng_type == "random_poisson":
             lower, upper, _lambda, offset, multiply, _ = arguments
-            return f"fmin(fmax(fma(poisson_rng({_lambda}), {multiply}, {offset}), {lower}), {upper})"
+            return f"min(max(fma(poisson_rng({_lambda}), {multiply}, {offset}), {lower}), {upper})"
         else:
             raise Exception(f"RNG function {rng_type} not implemented")

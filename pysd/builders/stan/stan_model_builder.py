@@ -350,6 +350,10 @@ class StanFunctionBuilder:
         self.code.indent_level += 1
         # Enter function body
 
+        self.code += f"vector[{len(outcome_variable_names)}] dydt;  # Return vector of the ODE function\n"
+        self.code += "\n"
+
+        self.code += "# State variables\n"
         for index, outcome_variable_name in enumerate(
             outcome_variable_names, 1
         ):
@@ -377,7 +381,14 @@ class StanFunctionBuilder:
         outcome_variable_names = [
             name + "_dydt" for name in outcome_variable_names
         ]
-        self.code += f"return {{{', '.join(outcome_variable_names)}}};\n"
+        for index, outcome_variable_name in enumerate(
+            outcome_variable_names, 1
+        ):
+            self.code += f"dydt[{index}] = {outcome_variable_name};\n"
+
+        self.code += "\n"
+        self.code += "return dydt;\n"
+
         self.code.indent_level -= 1
         # Exit function body
         self.code += "}\n"
