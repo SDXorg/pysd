@@ -10,3 +10,6 @@ openpyxl
 scipy
 progressbar2
 portion
+cmdstanpy
+IPython
+arviz
