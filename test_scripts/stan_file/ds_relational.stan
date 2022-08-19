@@ -48,32 +48,44 @@ functions {
     }
 
     # Begin ODE declaration
-    vector vensim_func(real time, vector outcome,     real customer_order_rate, real inventory_coverage, real manufacturing_cycle_time, real time_to_average_order_rate, real wip_adjustment_time    ){
+    vector vensim_func(real time, vector outcome,     real[] customer_order_rate, real inventory_coverage, real manufacturing_cycle_time, real time_to_average_order_rate, real wip_adjustment_time    ){
+        vector[2] dydt;  # Return vector of the ODE function
+
+        // State variables
         real work_in_process_inventory = outcome[1];
         real inventory = outcome[2];
-
+       
+        
+        // est param
+        real minimum_order_processing_time = 2; // issue 16
         real inventory_adjustment_time = 8;
-        real safety_stock_coverage = 2;
-        real minimum_order_processing_time = 2;
-        real desired_inventory_coverage = minimum_order_processing_time + safety_stock_coverage;
+        
+        // relations
         real change_in_exp_orders = customer_order_rate - expected_order_rate / time_to_average_order_rate;
         real expected_order_rate = change_in_exp_orders;
+        real safety_stock_coverage = 2;
+
+        real desired_inventory_coverage = minimum_order_processing_time + safety_stock_coverage;
         real desired_inventory = desired_inventory_coverage * expected_order_rate;
+        real production_rate = work_in_process_inventory / manufacturing_cycle_time;
+
         real production_adjustment_from_inventory = desired_inventory - inventory / inventory_adjustment_time;
-        real desired_production = fmax(0,expected_order_rate + production_adjustment_from_inventory);
+        real desired_production = max(0,expected_order_rate + production_adjustment_from_inventory);
         real desired_wip = manufacturing_cycle_time * desired_production;
-        real maximum_shipment_rate = inventory / minimum_order_processing_time;
         real desired_shipment_rate = customer_order_rate;
+        real maximum_shipment_rate = inventory / minimum_order_processing_time;
         real order_fulfillment_ratio = table_for_order_fulfillment(maximum_shipment_rate / desired_shipment_rate);
         real shipment_rate = desired_shipment_rate * order_fulfillment_ratio;
+        real inventory_dydt = production_rate - shipment_rate;
         real adjustment_for_wip = desired_wip - work_in_process_inventory / wip_adjustment_time;
         real desired_production_start_rate = desired_production + adjustment_for_wip;
-        real production_start_rate = fmax(0,desired_production_start_rate);
-        real production_rate = work_in_process_inventory / manufacturing_cycle_time;
-        real inventory_dydt = production_rate - shipment_rate;
+        real production_start_rate = max(0,desired_production_start_rate);
         real work_in_process_inventory_dydt = production_start_rate - production_rate;
 
-        return {work_in_process_inventory_dydt, inventory_dydt};
+        dydt[1] = work_in_process_inventory_dydt;
+        dydt[2] = inventory_dydt;
+
+        return dydt;
     }
 }
 
