@@ -51,7 +51,7 @@ class LookupCodegenWalker(BaseNodeWaler):
     # This dict holds the generated function names of each individual lookup function.
     # Key is x + y + x_limits + y_limits, value is function name
     n_lookups = 0
-    code = IndentedString(indent_level=1)
+    code = IndentedString()
 
     @staticmethod
     def get_lookup_keyname(lookup_node: LookupsStructure):

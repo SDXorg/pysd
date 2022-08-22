@@ -156,29 +156,6 @@ class StanModelBuilder:
 
         return stock_varible_names
 
-
-# class StanDataBuilder:
-#     def __init__(self, abstract_model: AbstractModel):
-#         self.abstract_model = abstract_model
-#
-#     def build_block(self, predictor_variable_names, outcome_variable_names):
-#         self.code = IndentedString()
-#         self.code += "data {\n"
-#         self.code.indent_level += 1
-#
-#         self.code += f"predictor= {{{', '.join(predictor_variable_names)}}};\n"
-#         self.code += f"initial_outcome = {{{', '.join(outcome_variable_names)}}};\n"
-#         self.code += f"observed_outcome = {{{', '.join(outcome_variable_names)}}};\n"
-#         self.code += f"times = {{{', '.join(outcome_variable_names)}}};\n"
-#         self.code.indent_level -= 1
-#         self.code += "}\n"
-
-
-class StanTransformedDataBuilder:
-    def __init__(self, abstract_model: AbstractModel):
-        self.abstract_model = abstract_model
-
-
 class StanTransformedParametersBuilder:
     def __init__(self, abstract_model: AbstractModel):
         self.abstract_model = abstract_model
@@ -222,7 +199,7 @@ class StanTransformedParametersBuilder:
 
         self.code += f"vector[{len(outcome_variable_names)}] initial_outcome = {{{', '.join([x + '_initial' for x in outcome_variable_names])}}};\n"
 
-        self.code += f"vector[{len(outcome_variable_names)}] integrated_result[T] = integrate_ode_rk45({function_name}, initial_outcome, initial_time, times, {','.join(argument_variables)});\n"
+        self.code += f"vector[{len(outcome_variable_names)}] integrated_result[T] = ode_rk45({function_name}, initial_outcome, initial_time, times, {','.join(argument_variables)});\n"
         self.code.indent_level -= 1
         self.code += "}\n"
 
@@ -263,14 +240,13 @@ class StanFunctionBuilder:
 
         return self.variable_dependency_graph
 
-    def build_function_block(
+    def build_functions(
         self,
         predictor_variable_names: List[Tuple[str, str]],
         outcome_variable_names: List[str],
         function_name: str = "vensim_func",
     ):
         self.code = IndentedString()
-        self.code += "functions {\n"
 
         # Build the lookup functions
         self.build_lookups()
@@ -279,9 +255,7 @@ class StanFunctionBuilder:
             self.code += lookup_functions_code
             self.code += "\n\n"
 
-        self.code.indent_level += 1
         self.code += "# Begin ODE declaration\n"
-        # Enter function block
         self._create_dependency_graph()
 
         # Identify the minimum number of variables needed for calculating outcomes
@@ -393,9 +367,6 @@ class StanFunctionBuilder:
         # Exit function body
         self.code += "}\n"
 
-        self.code.indent_level -= 1
-        # Exit function block
-        self.code += "}\n"
         return str(self.code)
 
     def build_lookups(self):
@@ -404,11 +375,3 @@ class StanFunctionBuilder:
                 self.lookup_builder_walker.walk(component.ast)
 
 
-class StanTransformedDataBuilder:
-    def __init__(
-        self, abstract_model: AbstractModel, function_name: str = "vensim_ode"
-    ):
-
-        self.abstract_model = abstract_model
-        self.elements = self.abstract_model.sections[0].elements
-        self.function_name = function_name
