@@ -1,4 +1,5 @@
 functions {
+   
     real lookupFunc_0(real x){
         # x (0, 2) = (0.0, 0.2, 0.4, 0.6, 0.8, 1.0, 1.2, 1.4, 1.6, 1.8, 2.0)
         # y (0, 1) = (0.0, 0.2, 0.4, 0.58, 0.73, 0.85, 0.93, 0.97, 0.99, 1.0, 1.0)
@@ -47,23 +48,32 @@ functions {
             return intercept + slope * (x - 1.8);
     }
 
+    theta, x originally real -> real[]; inside vensim_func
+    - cycle o,x
+    - integration
     # Begin ODE declaration
-    vector vensim_func(real time, vector outcome,     real[] customer_order_rate, real inventory_coverage, real manufacturing_cycle_time, real time_to_average_order_rate, real wip_adjustment_time    ){
+    vector vensim_func(real time, vector outcome,     
+            real[] minimum_order_processing_time, real inventory_adjustment_time,
+            real[] customer_order_rate){
+
         vector[2] dydt;  # Return vector of the ODE function
 
         // State variables
         real work_in_process_inventory = outcome[1];
         real inventory = outcome[2];
-       
         
-        // est param
-        real minimum_order_processing_time = 2; // issue 16
-        real inventory_adjustment_time = 8;
-        
-        // relations
-        real change_in_exp_orders = customer_order_rate - expected_order_rate / time_to_average_order_rate;
-        real expected_order_rate = change_in_exp_orders;
+        // `ass_param` (users should supply `ass_param` with vector (not scalar) from data block
+        //real minimum_order_processing_time = 2; // SHOULD NOT BE DECLARED issue 16
+        //real inventory_adjustment_time = 8;     // SHOULD NOT BE DECLARED issue 16
+        real inventory_coverage = 2;
+        real manufacturing_cycle_time = 8;
         real safety_stock_coverage = 2;
+        real time_to_average_order_rate = 8;
+        real wip_adjustment_time = 8;
+
+        // relations
+        real change_in_exp_orders = customer_order_rate[t] - expected_order_rate / time_to_average_order_rate;
+        real expected_order_rate = change_in_exp_orders;
 
         real desired_inventory_coverage = minimum_order_processing_time + safety_stock_coverage;
         real desired_inventory = desired_inventory_coverage * expected_order_rate;
