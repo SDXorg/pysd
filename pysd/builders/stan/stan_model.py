@@ -2,7 +2,7 @@ from typing import List, Set, Type, Tuple
 from numbers import Number
 from dataclasses import dataclass, field
 import ast, os, pathlib, warnings, glob
-from .stan_model_builder import *
+from .stan_block_builder import *
 from .utilities import vensim_name_to_identifier
 from pysd.translators.structures.abstract_expressions import *
 
@@ -37,7 +37,11 @@ class VensimModelContext:
         self.variable_names = set()
         self.stock_variable_names = set()
 
+        # Some basic checks to make sure the AM is compatible
+        assert len(abstract_model.sections) == 1, "Number of sections in AbstractModel must be 1."
+
         for element in abstract_model.sections[0].elements:
+            assert len(element.components) == 1, f"Number of components in AbstractElement must be 1, but {element.name} has {len(element.components)}"
             self.variable_names.add(vensim_name_to_identifier(element.name))
 
         for element in abstract_model.sections[0].elements:
@@ -46,11 +50,31 @@ class VensimModelContext:
                     self.stock_variable_names.add(vensim_name_to_identifier(element.name))
                     break
 
+    def print_variable_info(self, abstract_model):
+        var_names = []
+        max_length = len("original name") + 1
+        for element in abstract_model.sections[0].elements:
+            is_stock = False
+            for component in element.components:
+                if isinstance(component.ast, IntegStructure):
+                    is_stock = True
+                    break
+
+            var_names.append((element.name, vensim_name_to_identifier(element.name), is_stock,))
+            max_length = max(max_length, len(element.name) + 1)
+
+        header = ("original name".ljust(max_length) + "stan variable name".ljust(max_length) + "is stock")
+        print(header)
+        print("-" * len(header))
+        for x in var_names:
+            print(x[0].ljust(max_length) + x[1].ljust(max_length) + ("V" if x[2] else ""))
+
 
 class StanVensimModel:
-    def __init__(self, model_name: str, abstract_model, integration_times: Iterable[Number]):
+    def __init__(self, model_name: str, abstract_model, initial_time: float, integration_times: Iterable[Number]):
         self.abstract_model = abstract_model
         self.model_name = model_name
+        self.initial_time = float(initial_time)
         self.integration_times = integration_times
         self.stan_model_context = StanModelContext()
         self.vensim_model_context = VensimModelContext(self.abstract_model)
@@ -95,20 +119,17 @@ class StanVensimModel:
             f.write(StanDataBuilder().build_block())
             f.write("\n")
 
-            f.write(StanTransformedDataBuilder(self.integration_times).build_block())
-            f.write("\n")
-
-            f.write(StanParametersBuilder(self.stan_model_context.sample_statements).build_block())
+            f.write(StanTransformedDataBuilder(self.initial_time, self.integration_times).build_block())
             f.write("\n")
 
             transformed_params_builder = StanTransformedParametersBuilder(self.abstract_model)
-            f.write("\n")
-
-
             f.write(transformed_params_builder.build_block(self.stan_model_context.exposed_parameters,
                                                            self.vensim_model_context.stock_variable_names,
                                                            self.function_builder.get_generated_lookups_dict(),
                                                            self.function_builder.ode_function_name))
+            f.write("\n")
+
+            f.write(StanParametersBuilder(self.stan_model_context.sample_statements).build_block())
             f.write("\n")
 
             f.write(StanModelBuilder(self.stan_model_context.sample_statements).build_block())

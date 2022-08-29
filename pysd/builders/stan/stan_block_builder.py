@@ -15,150 +15,6 @@ if TYPE_CHECKING:
     from .stan_model import SamplingStatement
 
 
-class StanModelBuilder:
-    def __init__(self, abstract_model: AbstractModel):
-        self.abstract_model = abstract_model
-
-        self.variable_ast_dict: Dict[str, AbstractSyntax] = {}
-        assert (
-            len(self.abstract_model.sections) == 1
-        ), "Number of sections in AbstractModel must be 1."
-        for element in self.abstract_model.sections[0].elements:
-            stan_varname = vensim_name_to_identifier(element.name)
-            assert (
-                len(element.components) == 1
-            ), f"Number of components in AbstractElement must be 1, but {element.name} has {len(element.components)}"
-            self.variable_ast_dict[stan_varname] = element.components[0].ast
-
-    def create_stan_program(
-        self,
-        predictor_variable_names: List[Union[str, Tuple[str, str]]],
-        outcome_variable_names: Sequence[str] = (),
-        function_name="vensim_func",
-    ):
-        """
-
-        Parameters
-        ----------
-        predictor_variable_names: List of name of variables within the SD model that are handled by stan. The code for
-        these variables will not be generated, but instead taken from the argument of the ODE system function.
-        outcome_variable_names: Sequence of name of the variables which are the measured as system state.
-        Normally this will be the observed outcomes among the stock variables. If it is not specified, it will automatically
-        identify stock variable names and use them.
-        function_name: Name of the stan function to be generated. default is "vensim_func"
-
-        Returns
-        -------
-
-        """
-        # Santize vensim names to stan-compliant identifiers
-        sanitized_predictor_variable_names = []
-        for var in predictor_variable_names:
-            if isinstance(var, str):
-                sanitized_predictor_variable_names.append(
-                    vensim_name_to_identifier(var)
-                )
-            elif isinstance(var, tuple):
-                var_name = var[1]
-                sanitized_predictor_variable_names.append(
-                    (type, vensim_name_to_identifier(var_name))
-                )
-            else:
-                raise Exception(
-                    "predictor_variable_names must be a list consisting of: strings and/or a tuple of the form(T, Name), where T is a string denoting the variable's stan type and Name a string denoting the variable name"
-                )
-
-        predictor_variable_names = sanitized_predictor_variable_names
-        outcome_variable_names = (
-            self.get_stock_variable_stan_names()
-            if not outcome_variable_names
-            else [
-                vensim_name_to_identifier(name)
-                for name in outcome_variable_names
-            ]
-        )
-        if not outcome_variable_names:
-            raise Exception(
-                "There are no stock variables defined in the model, hence nothing to integrate."
-            )
-
-        self.code = IndentedString()
-
-        function_block_builder = StanFunctionBuilder(self.abstract_model)
-
-        self.code += function_block_builder.build_function_block(
-            predictor_variable_names, outcome_variable_names, function_name
-        )
-
-        self.code += "data{\n}\n"
-        # self.code += StanDataBuilder(self.abstract_model).build_block(predictor_variable_names, outcome_variable_names)
-        self.code += "transformed data{\n}\n"
-        self.code += "parameters{\n}\n"
-        self.code += StanTransformedParametersBuilder(
-            self.abstract_model
-        ).build_block(
-            predictor_variable_names,
-            outcome_variable_names,
-            function_block_builder.get_generated_lookups_dict(),
-            function_name,
-        )
-        self.code += "model{\n}\n"
-
-        self.code += "generated quantities{\n}"
-
-        return self.code
-
-    def print_variable_info(self):
-        var_names = []
-        max_length = len("original name") + 1
-        for element in self.abstract_model.sections[0].elements:
-            is_stock = False
-            for component in element.components:
-                if isinstance(component.ast, IntegStructure):
-                    is_stock = True
-                    break
-
-            var_names.append(
-                (
-                    element.name,
-                    vensim_name_to_identifier(element.name),
-                    is_stock,
-                )
-            )
-            max_length = max(max_length, len(element.name) + 1)
-
-        header = (
-            "original name".ljust(max_length)
-            + "stan variable name".ljust(max_length)
-            + "is stock"
-        )
-        print(header)
-        print("-" * len(header))
-        for x in var_names:
-            print(
-                x[0].ljust(max_length)
-                + x[1].ljust(max_length)
-                + ("V" if x[2] else "")
-            )
-
-    def get_stock_variable_stan_names(self) -> List[str]:
-        """
-        Iterate through the AST and find stock variables
-        Returns
-        -------
-
-        """
-        stock_varible_names = []
-        for element in self.abstract_model.sections[0].elements:
-            for component in element.components:
-                if isinstance(component.ast, IntegStructure):
-                    stock_varible_names.append(
-                        vensim_name_to_identifier(element.name)
-                    )
-                    break
-
-        return stock_varible_names
-
 class StanTransformedParametersBuilder:
     def __init__(self, abstract_model: AbstractModel):
         self.abstract_model = abstract_model
@@ -244,8 +100,10 @@ class StanDataBuilder:
         code += "}\n"
         return code.string
 
+
 class StanTransformedDataBuilder:
-    def __init__(self, integration_times: Iterable[Number]):
+    def __init__(self, initial_time, integration_times: Iterable[Number]):
+        self.initial_time = initial_time
         self.integration_times = integration_times
 
     def build_block(self) -> str:
@@ -253,8 +111,9 @@ class StanTransformedDataBuilder:
         code = IndentedString()
         code += "transformed data{\n"
         code.indent_level += 1
+        code += f"real initial_time = {self.initial_time};\n"
         code += f"int T = {T};\n"
-        code += f"array[T] real times = {{{', '.join([str(x) for x in self.integration_times])}}}"
+        code += f"array[T] real times = {{{', '.join([str(x) for x in self.integration_times])}}}\n"
         code.indent_level -= 1
         code += "}\n"
         return code.string
