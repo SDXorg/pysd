@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
-from typing import Union, List, Dict, Set, Sequence
-
+from typing import Union, List, Dict, Set, Sequence, Iterable
+from numbers import Number
 from .ast_walker import *
 from .utilities import *
 from pysd.translators.structures.abstract_model import (
@@ -10,6 +10,9 @@ from pysd.translators.structures.abstract_model import (
     AbstractModel,
     AbstractSection,
 )
+from typing import TYPE_CHECKING
+if TYPE_CHECKING:
+    from .stan_model import SamplingStatement
 
 
 class StanModelBuilder:
@@ -96,7 +99,7 @@ class StanModelBuilder:
         ).build_block(
             predictor_variable_names,
             outcome_variable_names,
-            function_block_builder.lookup_builder_walker.generated_lookup_function_names,
+            function_block_builder.get_generated_lookups_dict(),
             function_name,
         )
         self.code += "model{\n}\n"
@@ -184,6 +187,7 @@ class StanTransformedParametersBuilder:
             stan_varname = vensim_name_to_identifier(element.name)
             variable_ast_dict[stan_varname] = element.components[0].ast
 
+        self.code += "# Initial ODE values\n"
         for outcome_variable_name in outcome_variable_names:
             for element in self.abstract_model.sections[0].elements:
                 if (
@@ -197,13 +201,79 @@ class StanTransformedParametersBuilder:
                     self.code += f"real {outcome_variable_name}_initial = {InitialValueCodegenWalker(lookup_function_dict, variable_ast_dict).walk(component.ast)};\n"
                     break
 
-        self.code += f"vector[{len(outcome_variable_names)}] initial_outcome = {{{', '.join([x + '_initial' for x in outcome_variable_names])}}};\n"
+        self.code += "\n"
+        self.code += f"vector[{len(outcome_variable_names)}] initial_outcome;  # Initial ODE state vector\n"
+        for index, name in enumerate(outcome_variable_names, 1):
+            self.code += f"initial_outcome[{index}] = {name};\n"
 
-        self.code += f"vector[{len(outcome_variable_names)}] integrated_result[T] = ode_rk45({function_name}, initial_outcome, initial_time, times, {','.join(argument_variables)});\n"
+        self.code += "\n"
+
+        self.code += f"vector[{len(outcome_variable_names)}] integrated_result[T] = ode_rk45({function_name}, initial_outcome, initial_time, times, {', '.join(argument_variables)});\n"
         self.code.indent_level -= 1
         self.code += "}\n"
 
         return str(self.code)
+
+
+class StanParametersBuilder:
+    def __init__(self, sampling_statements: Iterable["SamplingStatement"]):
+        self.sampling_statements = sampling_statements
+
+    def build_block(self):
+        code = IndentedString()
+        code += "parameters{\n"
+        code.indent_level += 1  # Enter parameters block
+
+        for statement in self.sampling_statements:
+            code += f"real {statement.lhs_name};\n"
+
+        code.indent_level -= 1  # Exit parameters block
+        code += "}\n"
+        return code.string
+
+
+class StanDataBuilder:
+    def __init__(self):
+        pass
+
+    def build_block(self):
+        code = IndentedString()
+        code += "data{\n"
+        code.indent_level += 1
+        code.indent_level -= 1
+        code += "}\n"
+        return code.string
+
+class StanTransformedDataBuilder:
+    def __init__(self, integration_times: Iterable[Number]):
+        self.integration_times = integration_times
+
+    def build_block(self) -> str:
+        T = len(self.integration_times)
+        code = IndentedString()
+        code += "transformed data{\n"
+        code.indent_level += 1
+        code += f"int T = {T};\n"
+        code += f"array[T] real times = {{{', '.join([str(x) for x in self.integration_times])}}}"
+        code.indent_level -= 1
+        code += "}\n"
+        return code.string
+
+
+class StanModelBuilder:
+    def __init__(self, sampling_statements: Iterable["SamplingStatement"]):
+        self.sampling_statements = sampling_statements
+
+    def build_block(self):
+        code = IndentedString()
+        code += "model{\n"
+        code.indent_level += 1
+        for statement in self.sampling_statements:
+            code += f"{statement.lhs_name} ~ {statement.distribution_type}({', '.join([str(arg) for arg in statement.distribution_args])});\n"
+
+        code.indent_level -= 1
+        code += "}\n"
+        return str(code)
 
 
 class StanFunctionBuilder:
@@ -221,6 +291,9 @@ class StanFunctionBuilder:
             {}
         )  # in order to evaluate 'key' variable, we need 'element' variables
         self.code = IndentedString()
+
+    def get_generated_lookups_dict(self):
+        return self.lookup_builder_walker.generated_lookup_function_names
 
     def _create_dependency_graph(self):
         self.variable_dependency_graph = {}
@@ -242,8 +315,8 @@ class StanFunctionBuilder:
 
     def build_functions(
         self,
-        predictor_variable_names: List[Tuple[str, str]],
-        outcome_variable_names: List[str],
+        predictor_variable_names: Iterable[Tuple[str, str]],
+        outcome_variable_names: Iterable[str],
         function_name: str = "vensim_func",
     ):
         self.code = IndentedString()
@@ -312,7 +385,7 @@ class StanFunctionBuilder:
             if isinstance(var, str):
                 argument_variables.append(var)
                 argument_strings.append("real " + var)
-            elif isinstance(var, type):
+            elif isinstance(var, tuple):
                 var_type, var_name = var
                 argument_variables.append(var_name)
                 argument_strings.append(f"{var_type} {var_name}")

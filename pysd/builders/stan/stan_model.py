@@ -1,15 +1,22 @@
-from typing import List, Set, Type
+from typing import List, Set, Type, Tuple
+from numbers import Number
 from dataclasses import dataclass, field
 import ast, os, pathlib, warnings, glob
-from .stan_model_builder import StanFunctionBuilder
+from .stan_model_builder import *
 from .utilities import vensim_name_to_identifier
+from pysd.translators.structures.abstract_expressions import *
 
-@dataclass
+
 class SamplingStatement:
     lhs_name: str
     distribution_type: str
-    distribution_return_type: Type = field(init=False)
-    distribution_args: List[str]
+    distribution_return_type: Type
+    distribution_args: Tuple[str]
+
+    def __init__(self, lhs_name, distribution_type, *distribution_args):
+        self.lhs_name = lhs_name
+        self.distribution_type = distribution_type
+        self.distribution_args = distribution_args
 
     def __post_init__(self):
         if self.distribution_type in ("bernoulli", "binomial", "beta_binomial", "neg_binomial", "poisson"):
@@ -22,21 +29,29 @@ class SamplingStatement:
 @dataclass
 class StanModelContext:
     sample_statements: List[SamplingStatement] = field(default_factory=list)
-    exposed_parameters: Set[str] = field(default_factory=list)
+    exposed_parameters: Set[str] = field(default_factory=set)
 
 
 class VensimModelContext:
     def __init__(self, abstract_model):
-
         self.variable_names = set()
+        self.stock_variable_names = set()
+
         for element in abstract_model.sections[0].elements:
             self.variable_names.add(vensim_name_to_identifier(element.name))
 
+        for element in abstract_model.sections[0].elements:
+            for component in element.components:
+                if isinstance(component.ast, IntegStructure):
+                    self.stock_variable_names.add(vensim_name_to_identifier(element.name))
+                    break
+
 
 class StanVensimModel:
-    def __init__(self, model_name: str, abstract_model):
+    def __init__(self, model_name: str, abstract_model, integration_times: Iterable[Number]):
         self.abstract_model = abstract_model
         self.model_name = model_name
+        self.integration_times = integration_times
         self.stan_model_context = StanModelContext()
         self.vensim_model_context = VensimModelContext(self.abstract_model)
 
@@ -48,6 +63,7 @@ class StanVensimModel:
                 used_variable_names = [node.id for node in ast.walk(ast.parse(arg)) if isinstance(node, ast.Name)]
                 self.stan_model_context.exposed_parameters.update(used_variable_names)
 
+        self.stan_model_context.exposed_parameters.add(variable_name)
         self.stan_model_context.sample_statements.append(SamplingStatement(variable_name, distribution_type, *args))
 
 
@@ -68,9 +84,34 @@ class StanVensimModel:
 
 
         with open(os.path.join(os.getcwd(), f"{self.model_name}_functions.stan"), "w") as f:
-            function_builder = StanFunctionBuilder(self.abstract_model)
-            f.write(function_builder.build_functions())
+            self.function_builder = StanFunctionBuilder(self.abstract_model)
+            f.write(self.function_builder.build_functions(self.stan_model_context.exposed_parameters, self.vensim_model_context.stock_variable_names))
 
-    def data2draws(self):
-        pass
+    def data2draws(self, data_file_path: str):
+        with open(os.path.join(os.getcwd(), f"{self.model_name}_data2draws.stan"), "w") as f:
+            # Include the function
+            f.write(f"#include {self.model_name}_functions.stan\n\n")
+
+            f.write(StanDataBuilder().build_block())
+            f.write("\n")
+
+            f.write(StanTransformedDataBuilder(self.integration_times).build_block())
+            f.write("\n")
+
+            f.write(StanParametersBuilder(self.stan_model_context.sample_statements).build_block())
+            f.write("\n")
+
+            transformed_params_builder = StanTransformedParametersBuilder(self.abstract_model)
+            f.write("\n")
+
+
+            f.write(transformed_params_builder.build_block(self.stan_model_context.exposed_parameters,
+                                                           self.vensim_model_context.stock_variable_names,
+                                                           self.function_builder.get_generated_lookups_dict(),
+                                                           self.function_builder.ode_function_name))
+            f.write("\n")
+
+            f.write(StanModelBuilder(self.stan_model_context.sample_statements).build_block())
+            f.write("\n")
+
 
