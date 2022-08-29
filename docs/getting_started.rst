@@ -152,9 +152,9 @@ If the measured data that we are comparing with our model comes in at irregular 
 
 Retrieving a flat DataFrame
 ---------------------------
-The subscripted variables, in general, will be returned as :py:class:`xarray.DataArray` in the output :py:class:`pandas.DataFrame`. To get a flat dataframe, set `flatten=True` when calling the :py:meth:`.run` method::
+The subscripted variables, in general, will be returned as :py:class:`xarray.DataArray` in the output :py:class:`pandas.DataFrame`. To get a flat dataframe, set `flatten_output=True` when calling the :py:meth:`.run` method::
 
-   >>> model.run(flatten=True)
+   >>> model.run(flatten_output=True)
 
 Setting parameter values
 ------------------------
