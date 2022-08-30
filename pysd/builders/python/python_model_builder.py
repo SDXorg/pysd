@@ -5,6 +5,7 @@ with PySD Model class. Each Abstract level has its own Builder. However,
 the user is only required to create a ModelBuilder object using the
 AbstractModel and call the `build_model` method.
 """
+from warnings import warn
 import textwrap
 import black
 import json
@@ -12,7 +13,8 @@ from pathlib import Path
 from typing import Union
 
 from pysd.translators.structures.abstract_model import\
-    AbstractComponent, AbstractElement, AbstractModel, AbstractSection
+    AbstractComponent, AbstractElement, AbstractControlElement,\
+    AbstractModel, AbstractSection
 
 from . import python_expressions_builder as vs
 from .namespace import NamespaceManager
@@ -142,34 +144,88 @@ class SectionBuilder:
             view_content = {
                 self.namespace.cleanspace[var] for var in view_content
             }
-            # Get subview elements
-            subview_elems = [
-                element for element in self.elements_remaining
-                if element.identifier in view_content
+
+            # Get subview elements (ordered)
+            subview_elems = sorted(
+                [
+                    element for element in self.elements_remaining
+                    if element.identifier in view_content
+                    and not element.control_var
+                ],
+                key=lambda x: x.identifier)
+
+            # Get the names of the elements and include their
+            # information in the elements_added dictionary
+            subview_elems_names = [
+                element.identifier for element in subview_elems
             ]
+            view_path = ".".join(view_name.parts[1:])
+            self.elements_added.update({
+                var: view_path for var in subview_elems_names
+            })
+
+            if len(view_content) != len(subview_elems_names):
+                # Some elements from the view where not added
+                for var in view_content.difference(subview_elems_names):
+                    original_name = self.namespace.get_original_name(var)
+                    if var in self.elements_added:
+                        # Element already added in another view
+                        warn(
+                            f"Variable '{original_name}' is declared as "
+                            f"a workbench variable in '{view_path}' but "
+                            "it has been already added in "
+                            f"'{self.elements_added[var]}'."
+                        )
+                    else:
+                        # Element is a control variable
+                        warn(
+                            f"Control variable '{original_name}' is "
+                            "declared as a workbench variable in "
+                            f"'{view_path}'. As it is a control "
+                            "variable, this declaration will be ignored "
+                            "and added to the main module only."
+                        )
+
             # Remove elements from remaining ones
             [
                 self.elements_remaining.remove(element)
                 for element in subview_elems
             ]
-            # Build the module
-            self._build_separate_module(subview_elems, view_name, wdir)
-            return sorted(view_content)
+
+            if subview_elems:
+                # Build the module (only when they are variables)
+                self._build_separate_module(subview_elems, view_name, wdir)
+
+            return list(subview_elems_names)
         else:
             # The current view has subviews
-            wdir = wdir.joinpath(view_name)
-            wdir.mkdir(exist_ok=True)
-            return {
-                subview_name:
-                self._process_views_tree(subview_name, subview_content, wdir)
+            (wdir / view_name).mkdir(exist_ok=True)
+            subviews = {
+                subview_name: self._process_views_tree(
+                    view_name / subview_name, subview_content, wdir)
                 for subview_name, subview_content in view_content.items()
+            }
+            # Avoid includying empty views to the dictionary
+            return {
+                subview_name: subview_content
+                for subview_name, subview_content in subviews.items()
+                if subview_content
             }
 
     def _build_modular(self, elements_per_view: dict) -> None:
         """ Build modular section """
         self.elements_remaining = self.elements.copy()
+        self.elements_added = {}
         elements_per_view = self._process_views_tree(
-            "modules_" + self.model_name, elements_per_view, self.root)
+            Path("modules_" + self.model_name), elements_per_view, self.root)
+
+        for element in self.elements_remaining:
+            if not element.control_var:
+                warn(
+                    f"Variable '{element.name}' is not declared as a "
+                    "workbench variable in any view. It will be added to "
+                    "the main module."
+                )
         # Building main file using the build function
         self._build_main_module(self.elements_remaining)
 
@@ -211,7 +267,7 @@ class SectionBuilder:
         Translated using PySD version %(version)s
         """
         ''' % {
-            "module_name": module_name,
+            "module_name": ".".join(module_name.parts[1:]),
             "version": __version__,
         })
         funcs = self._generate_functions(elements)
@@ -219,7 +275,7 @@ class SectionBuilder:
         text = black.format_file_contents(
             text, fast=True, mode=black.FileMode())
 
-        outfile_name = module_dir.joinpath(module_name + ".py")
+        outfile_name = module_dir / module_name.with_suffix(".py")
 
         with outfile_name.open("w", encoding="UTF-8") as out:
             out.write(text)
@@ -478,6 +534,7 @@ class ElementBuilder:
     def __init__(self, abstract_element: AbstractElement,
                  section: SectionBuilder):
         self.__dict__ = abstract_element.__dict__.copy()
+        self.control_var = isinstance(abstract_element, AbstractControlElement)
         # Set element type and subtype to None
         self.type = None
         self.subtype = None

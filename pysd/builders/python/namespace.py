@@ -173,3 +173,24 @@ class NamespaceManager:
             self.cleanspace[clean_s] = identifier
 
         return identifier
+
+    def get_original_name(self, identifier):
+        """
+        Search for the original name of a variable's Python identifier.
+
+        Parameters
+        ----------
+        identifier: str
+            It should be a value in the namespace.
+
+        Rerturns
+        --------
+        original_name: str
+            The original name of the variable.
+
+        """
+        for key, value in self.namespace.items():
+            if value == identifier:
+                return key
+
+        raise ValueError(f"'{identifier}' not found in the namespace.")
