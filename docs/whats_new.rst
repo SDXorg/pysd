@@ -1,5 +1,34 @@
 What's New
 ==========
+v3.6.0 (2022/08/31)
+-------------------
+
+New Features
+~~~~~~~~~~~~
+- Include warning messages when a variable is defined in more than one view, when a control variable appears in a view or when a variable doesn't appear in any view as a `workbench variable` (:issue:`357`).
+- Force variables in a module to be saved alphabetically for being able to compare differences between versions (only for the models that are split by views).
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+- Classify control variables in the main file always (:issue:`357`).
+
+Documentation
+~~~~~~~~~~~~~
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- Include :py:class:`pysd.translators.structures.abstract_model.AbstractControlElement` child of :py:class:`pysd.translators.structures.abstract_model.AbstractElement` to differentiate the control variables.
+
+
 v3.5.2 (2022/08/15)
 -------------------
 
@@ -14,7 +43,7 @@ Deprecations
 
 Bug fixes
 ~~~~~~~~~
-- Make sketch's _font_size_ optional.
+- Make sketch's `font_size` optional.
 
 Documentation
 ~~~~~~~~~~~~~
