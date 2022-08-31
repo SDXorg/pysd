@@ -78,8 +78,8 @@ class LookupCodegenWalker(BaseNodeWaler):
             self.code += f"real {function_name}(real x){{\n"
             self.code.indent_level += 1
             # Enter function body
-            self.code += f"# x {ast_node.x_limits} = {ast_node.x}\n"
-            self.code += f"# y {ast_node.y_limits} = {ast_node.y}\n"
+            self.code += f"// x {ast_node.x_limits} = {ast_node.x}\n"
+            self.code += f"// y {ast_node.y_limits} = {ast_node.y}\n"
             self.code += "real slope;\n"
             self.code += "real intercept;\n\n"
             n_intervals = len(ast_node.x)
@@ -87,9 +87,9 @@ class LookupCodegenWalker(BaseNodeWaler):
                 if lookup_index == 0:
                     continue
                 if lookup_index == 1:
-                    self.code += f"if(x <= {ast_node.x[lookup_index]})\n"
+                    self.code += f"if(x <= {ast_node.x[lookup_index]}){{\n"
                 else:
-                    self.code += f"else if(x <= {ast_node.x[lookup_index]})\n"
+                    self.code += f"else if(x <= {ast_node.x[lookup_index]}){{\n"
 
                 self.code.indent_level += 1
                 # enter conditional body
@@ -98,6 +98,17 @@ class LookupCodegenWalker(BaseNodeWaler):
                 self.code += f"return intercept + slope * (x - {ast_node.x[lookup_index - 1]});\n"
                 self.code.indent_level -= 1
                 # exit conditional body
+                self.code += "}\n"
+
+            # Handle out-of-bounds input
+            self.code += "else{\n"
+            self.code.indent_level += 1
+            self.code += f'reject("{function_name}: input value ", x, " is out of bounds!");\n'
+            self.code.indent_level -= 1
+            self.code += "}\n"
+
+            # Return nan just to make it return a value.
+            self.code += "return not_a_number();\n"
 
             self.code.indent_level -= 1
             # exit function body
@@ -140,9 +151,9 @@ class BlockCodegenWalker(BaseNodeWaler):
             output_string = ""
             function_name = self.walk(ast_node.function)
             if function_name == "min":
-                function_name = "min"
+                function_name = "fmin"
             elif function_name == "max":
-                function_name = "max"
+                function_name = "fmax"
             elif function_name == "xidz":
                 assert (
                     len(ast_node.arguments) == 3
@@ -170,7 +181,7 @@ class BlockCodegenWalker(BaseNodeWaler):
 
             output_string += function_name
             output_string += "("
-            output_string += ",".join(
+            output_string += ", ".join(
                 [self.walk(argument) for argument in ast_node.arguments]
             )
             output_string += ")"
@@ -284,12 +295,12 @@ class RNGCodegenWalker(InitialValueCodegenWalker):
     def rng_codegen(self, rng_type: str, arguments: List[Any]):
         if rng_type == "random_normal":
             lower, upper, mean, std, _ = arguments
-            return f"min(max(normal_rng({mean}, {std}), {lower}), {upper})"
+            return f"fmin(fmax(normal_rng({mean}, {std}), {lower}), {upper})"
         elif rng_type == "random_uniform":
             lower, upper, _ = arguments
             return f"uniform_rng({lower}, {upper})"
         elif rng_type == "random_poisson":
             lower, upper, _lambda, offset, multiply, _ = arguments
-            return f"min(max(fma(poisson_rng({_lambda}), {multiply}, {offset}), {lower}), {upper})"
+            return f"fmin(fmax(fma(poisson_rng({_lambda}), {multiply}, {offset}), {lower}), {upper})"
         else:
             raise Exception(f"RNG function {rng_type} not implemented")
