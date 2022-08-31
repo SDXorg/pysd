@@ -85,9 +85,12 @@ class StanVensimModel:
                 # If the distribution argument is an expression, parse the dependant variables
                 # We're using the python parser here, which might be problematic
                 used_variable_names = [node.id for node in ast.walk(ast.parse(arg)) if isinstance(node, ast.Name)]
-                self.stan_model_context.exposed_parameters.update(used_variable_names)
+                for name in used_variable_names:
+                    if name in self.vensim_model_context.variable_names:
+                        self.stan_model_context.exposed_parameters.update(used_variable_names)
 
-        self.stan_model_context.exposed_parameters.add(variable_name)
+        if variable_name in self.vensim_model_context.variable_names:
+            self.stan_model_context.exposed_parameters.add(variable_name)
         self.stan_model_context.sample_statements.append(SamplingStatement(variable_name, distribution_type, *args))
 
 

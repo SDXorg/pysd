@@ -9,6 +9,7 @@ am = vf.get_abstract_model()
 model = StanVensimModel("ds_white_sterman", am, 0.0, list(range(0, 10)))
 model.set_prior("inventory_adjustment_time", "normal", 0, 1)
 model.set_prior("minimum_order_processing_time", "normal", 0, 1)
+model.set_prior("alpha", "normal", 0, 1)
 
 print(model.vensim_model_context.variable_names)
 
