@@ -1,11 +1,9 @@
 from typing import List, Set, Type, Tuple
-from numbers import Number
-from dataclasses import dataclass, field
-import ast, os, pathlib, warnings, glob, re
+import ast, glob, re
 from .stan_block_builder import *
 from .utilities import vensim_name_to_identifier
 from pysd.translators.structures.abstract_expressions import *
-
+import cmdstanpy
 
 class SamplingStatement:
     lhs_name: str
@@ -129,14 +127,14 @@ class StanVensimModel:
             if input(f"{self.model_name}_functions.stan already exists in the current working directory. Overwrite? (Y/N):").lower() != "y":
                 raise Exception("Code generation aborted by user")
 
-
-
         with open(os.path.join(os.getcwd(), f"{self.model_name}_functions.stan"), "w") as f:
             self.function_builder = StanFunctionBuilder(self.abstract_model)
             f.write(self.function_builder.build_functions(self.stan_model_context.exposed_parameters, self.vensim_model_context.stock_variable_names))
+            print(self.function_builder.get_generated_lookups_dict())
 
     def data2draws(self, data_file_path: str):
-        with open(os.path.join(os.getcwd(), f"{self.model_name}_data2draws.stan"), "w") as f:
+        stan_model_path= os.path.join(os.getcwd(), f"{self.model_name}_data2draws.stan")
+        with open(stan_model_path, "w") as f:
             # Include the function
             f.write("functions{\n")
             f.write(f"    #include {self.model_name}_functions.stan\n")
@@ -169,4 +167,6 @@ class StanVensimModel:
             f.write(StanModelBuilder(self.stan_model_context.sample_statements).build_block())
             f.write("\n")
 
+        stan_model = cmdstanpy.CmdStanModel(stan_file=stan_model_path)
+        return stan_model
 

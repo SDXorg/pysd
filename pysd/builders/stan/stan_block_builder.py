@@ -310,6 +310,6 @@ class StanFunctionBuilder:
     def build_lookups(self):
         for element in self.elements:
             for component in element.components:
-                self.lookup_builder_walker.walk(component.ast)
+                self.lookup_builder_walker.walk(component.ast, vensim_name_to_identifier(element.name))
 
 

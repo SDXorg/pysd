@@ -45,7 +45,7 @@ class AuxNameWalker(BaseNodeWaler):
 
 @dataclass
 class LookupCodegenWalker(BaseNodeWaler):
-    generated_lookup_function_names: Dict[Tuple, str] = field(
+    generated_lookup_function_names: Dict[str, str] = field(
         default_factory=dict
     )
     # This dict holds the generated function names of each individual lookup function.
@@ -62,17 +62,16 @@ class LookupCodegenWalker(BaseNodeWaler):
             + lookup_node.y_limits
         )
 
-    def walk(self, ast_node) -> None:
+    def walk(self, ast_node, node_name: str) -> None:
         if isinstance(ast_node, InlineLookupsStructure):
-            self.walk(ast_node.lookups)
+            self.walk(ast_node.lookups, node_name)
         elif isinstance(ast_node, LookupsStructure):
             assert (
                 ast_node.type == "interpolate"
             ), "Type of Lookup must be 'interpolate'"
-            identifier_key = LookupCodegenWalker.get_lookup_keyname(ast_node)
-            function_name = f"lookupFunc_{self.n_lookups}"
+            function_name = f"lookupFunc__{node_name}"
             self.generated_lookup_function_names[
-                identifier_key
+                node_name
             ] = function_name
             self.n_lookups += 1
             self.code += f"real {function_name}(real x){{\n"
@@ -101,14 +100,7 @@ class LookupCodegenWalker(BaseNodeWaler):
                 self.code += "}\n"
 
             # Handle out-of-bounds input
-            self.code += "else{\n"
-            self.code.indent_level += 1
-            self.code += f'reject("{function_name}: input value ", x, " is out of bounds!");\n'
-            self.code.indent_level -= 1
-            self.code += "}\n"
-
-            # Return nan just to make it return a value.
-            self.code += "return not_a_number();\n"
+            self.code += f"return {ast_node.y[-1]};\n"
 
             self.code.indent_level -= 1
             # exit function body
@@ -119,7 +111,7 @@ class LookupCodegenWalker(BaseNodeWaler):
 
 @dataclass
 class BlockCodegenWalker(BaseNodeWaler):
-    lookup_function_names: Dict[Tuple, str]
+    lookup_function_names: Dict[str, str]
 
     def walk(self, ast_node) -> str:
 
@@ -143,8 +135,10 @@ class BlockCodegenWalker(BaseNodeWaler):
             return output_string
 
         elif isinstance(ast_node, ReferenceStructure):
-            # ReferenceSTructure denotes invoking the value of another variable
+            # ReferenceStructure denotes invoking the value of another variable
             # Subscripts are ignored for now
+            if ast_node.reference in self.lookup_function_names:
+                return self.lookup_function_names[ast_node.reference]
             return ast_node.reference
 
         elif isinstance(ast_node, CallStructure):
@@ -204,7 +198,7 @@ class BlockCodegenWalker(BaseNodeWaler):
 @dataclass
 class InitialValueCodegenWalker(BlockCodegenWalker):
     variable_ast_dict: Dict[str, AbstractSyntax]
-    lookup_function_names: Dict[Tuple, str]
+    lookup_function_names: Dict[Union[str, Tuple], str]
 
     def walk(self, ast_node):
         if isinstance(ast_node, IntegStructure):
