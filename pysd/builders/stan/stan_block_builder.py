@@ -131,8 +131,6 @@ class StanDataBuilder:
         code += "data{\n"
         code.indent_level += 1
 
-        code += "int <lower = 1> n_obs_state;\n"
-
         for key, val in data_dict.items():
             if isinstance(val, int):
                 code += f"int {key};\n"

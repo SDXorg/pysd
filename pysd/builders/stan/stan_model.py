@@ -140,7 +140,7 @@ class StanVensimModel:
             self.function_builder = StanFunctionBuilder(self.abstract_model)
             f.write(self.function_builder.build_functions(self.stan_model_context.exposed_parameters, self.vensim_model_context.stock_variable_names))
 
-    def data2draws(self, data_dir: Dict):
+    def data2draws(self, data_dict: Dict):
         stan_model_path= os.path.join(self.stan_model_dir, f"{self.model_name}_data2draws.stan")
         with open(stan_model_path, "w") as f:
             # Include the function
@@ -148,13 +148,13 @@ class StanVensimModel:
             f.write(f"    #include {self.model_name}_functions.stan\n")
             f.write("}\n\n")
 
-            f.write(StanDataBuilder().build_block())
+            f.write(StanDataBuilder().build_block(data_dict))
             f.write("\n")
 
             f.write(StanTransformedDataBuilder(self.initial_time, self.integration_times).build_block())
             f.write("\n")
 
-            f.write(StanParametersBuilder(self.stan_model_context.sample_statements).build_block(tuple(data_dir.keys())))
+            f.write(StanParametersBuilder(self.stan_model_context.sample_statements).build_block(tuple(data_dict.keys())))
             f.write("\n")
 
             transformed_params_builder = StanTransformedParametersBuilder(self.abstract_model)
