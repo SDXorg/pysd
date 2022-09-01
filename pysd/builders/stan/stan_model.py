@@ -101,26 +101,54 @@ class StanVensimModel:
         -------
 
         """
-        if glob.glob(os.path.join(os.getcwd(), f"{self.model_name}_functions.stan")):
+        if glob.glob(os.path.join(os.getcwd(), "stan_file", f"{self.model_name}_functions.stan")):
             if input(f"{self.model_name}_functions.stan already exists in the current working directory. Overwrite? (Y/N):").lower() != "y":
                 raise Exception("Code generation aborted by user")
 
 
 
-        with open(os.path.join(os.getcwd(), f"{self.model_name}_functions.stan"), "w") as f:
+        with open(os.path.join(os.getcwd(), "stan_file", f"{self.model_name}_functions.stan"), "w") as f:
             self.function_builder = StanFunctionBuilder(self.abstract_model)
             f.write(self.function_builder.build_functions(self.stan_model_context.exposed_parameters, self.vensim_model_context.stock_variable_names))
 
     def data2draws(self, data_file_path: str):
-        with open(os.path.join(os.getcwd(), f"{self.model_name}_data2draws.stan"), "w") as f:
+        with open(os.path.join(os.getcwd(), "stan_file", f"{self.model_name}_data2draws.stan"), "w") as f:
             # Include the function
+            f.write("functions{")
+            f.write("\n")
             f.write(f"#include {self.model_name}_functions.stan\n\n")
-
+            f.write("}")
+            f.write("\n")
             f.write(StanDataBuilder().build_block())
             f.write("\n")
-
             f.write(StanTransformedDataBuilder(self.initial_time, self.integration_times).build_block())
             f.write("\n")
+            f.write(StanParametersBuilder(self.stan_model_context.sample_statements).build_block())
+            f.write("\n")
+            transformed_params_builder = StanTransformedParametersBuilder(self.abstract_model)
+            f.write(transformed_params_builder.build_block(self.stan_model_context.exposed_parameters,
+                                                           self.vensim_model_context.stock_variable_names,
+                                                           self.function_builder.get_generated_lookups_dict(),
+                                                           self.function_builder.ode_function_name))
+            f.write("\n")
+
+            f.write(StanModelBuilder(self.stan_model_context.sample_statements).build_block())
+            f.write("\n")
+
+
+    def draws2data(self, data_file_path: str):
+        with open(os.path.join(os.getcwd(), "stan_file", f"{self.model_name}_draws2data.stan"), "w") as f:
+            # Include the function
+            f.write("functions{")
+            f.write("\n")
+            f.write(f"#include {self.model_name}_functions.stan\n")
+            f.write("}")
+            f.write("\n")
+            f.write(StanDataBuilder().build_block())
+            f.write("\n")
+            f.write(StanTransformedDataBuilder(self.initial_time, self.integration_times).build_block())
+            f.write("\n")
+  
 
             transformed_params_builder = StanTransformedParametersBuilder(self.abstract_model)
             f.write(transformed_params_builder.build_block(self.stan_model_context.exposed_parameters,
@@ -129,10 +157,5 @@ class StanVensimModel:
                                                            self.function_builder.ode_function_name))
             f.write("\n")
 
-            f.write(StanParametersBuilder(self.stan_model_context.sample_statements).build_block())
-            f.write("\n")
-
-            f.write(StanModelBuilder(self.stan_model_context.sample_statements).build_block())
-            f.write("\n")
-
+            f.write(StanGeneratedQuantitiesBuilder(self.stan_model_context.sample_statements).build_block())
 
