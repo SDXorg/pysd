@@ -86,12 +86,14 @@ class StanParametersBuilder:
     def __init__(self, sampling_statements: Iterable["SamplingStatement"]):
         self.sampling_statements = sampling_statements
 
-    def build_block(self):
+    def build_block(self, data_variable_names: Tuple[str]):
         code = IndentedString()
         code += "parameters{\n"
         code.indent_level += 1  # Enter parameters block
 
         for statement in self.sampling_statements:
+            if statement.lhs_name in data_variable_names:
+                continue
             code += f"real {statement.lhs_name};\n"
 
         code.indent_level -= 1  # Exit parameters block
@@ -103,11 +105,42 @@ class StanDataBuilder:
     def __init__(self):
         pass
 
-    def build_block(self):
+    def get_dims(self, obj):
+        try:
+            iter(obj)
+        except:
+            return None
+        else:
+            dim = len(obj)
+            inner_dim = self.get_dims(obj[0])
+            if inner_dim:
+                return [dim] + inner_dim
+            else:
+                return [dim]
+
+    def build_block(self, data_dict: Dict):
         code = IndentedString()
         code += "data{\n"
         code.indent_level += 1
+
         code += "int <lower = 1> n_obs_state;\n"
+
+        for key, val in data_dict.items():
+            if isinstance(val, int):
+                code += f"int {key};\n"
+            elif isinstance(val, float):
+                code += f"real {key};\n"
+            else:
+                # Multidimensional data
+                dims = self.get_dims(val)
+                if not dims:
+                    raise Exception(f"Can't automatically process data variable {key}.")
+                elif len(dims) == 1:
+                    code += f"vector[{dims[0]}] {key};\n"
+                else:
+                    raise Exception("Multidimensional data not implemented")
+
+
         code.indent_level -= 1
         code += "}\n"
         return code.string

@@ -10,12 +10,16 @@ class SamplingStatement:
     distribution_type: str
     distribution_return_type: Type
     distribution_args: Tuple[str]
+    lower: float
+    upper: float
     init_state: bool
 
-    def __init__(self, lhs_name, distribution_type, *distribution_args, init_state=False):
+    def __init__(self, lhs_name, distribution_type, *distribution_args, lower=float("-inf"), upper=float("inf"), init_state=False):
         self.lhs_name = lhs_name
         self.distribution_type = distribution_type
         self.distribution_args = distribution_args
+        self.lower = lower
+        self.upper = upper
         self.init_state = init_state
 
     def __post_init__(self):
@@ -92,12 +96,12 @@ class StanVensimModel:
         print("*" * 10)
         print("- Stan model information:")
 
-    def set_prior(self, variable_name: str, distribution_type: str, *args, init_state=False):
+    def set_prior(self, variable_name: str, distribution_type: str, *args, lower=float("-inf"), upper=float("inf"), init_state=False):
         if init_state:
             # This means the initial value of the ODE state variable.
             if variable_name not in self.vensim_model_context.stock_variable_names:
                 raise Exception("init_state may be set to True only for stock variables.")
-            self.stan_model_context.sample_statements.append(SamplingStatement(f"{variable_name}_init", distribution_type, *args, init_state=init_state))
+            self.stan_model_context.sample_statements.append(SamplingStatement(f"{variable_name}_init", distribution_type, *args, lower=lower, upper=upper, init_state=init_state))
         else:
             for arg in args:
                 if isinstance(arg, str):
@@ -110,7 +114,7 @@ class StanVensimModel:
 
             if variable_name in self.vensim_model_context.variable_names:
                 self.stan_model_context.exposed_parameters.add(variable_name)
-            self.stan_model_context.sample_statements.append(SamplingStatement(variable_name, distribution_type, *args, init_state=init_state))
+            self.stan_model_context.sample_statements.append(SamplingStatement(variable_name, distribution_type, *args, lower=lower, upper=upper, init_state=init_state))
 
 
     def build_stan_functions(self):
@@ -130,21 +134,24 @@ class StanVensimModel:
         with open(os.path.join(os.getcwd(), f"{self.model_name}_functions.stan"), "w") as f:
             self.function_builder = StanFunctionBuilder(self.abstract_model)
             f.write(self.function_builder.build_functions(self.stan_model_context.exposed_parameters, self.vensim_model_context.stock_variable_names))
-            print(self.function_builder.get_generated_lookups_dict())
 
-    def data2draws(self, data_file_path: str):
+    def data2draws(self, data_dir: Dict):
         stan_model_path= os.path.join(os.getcwd(), f"{self.model_name}_data2draws.stan")
         with open(stan_model_path, "w") as f:
             # Include the function
             f.write("functions{\n")
             f.write(f"    #include {self.model_name}_functions.stan\n")
             f.write("}\n\n")
+
             f.write(StanDataBuilder().build_block())
             f.write("\n")
+
             f.write(StanTransformedDataBuilder(self.initial_time, self.integration_times).build_block())
             f.write("\n")
-            f.write(StanParametersBuilder(self.stan_model_context.sample_statements).build_block())
+
+            f.write(StanParametersBuilder(self.stan_model_context.sample_statements).build_block(tuple(data_dir.keys())))
             f.write("\n")
+
             transformed_params_builder = StanTransformedParametersBuilder(self.abstract_model)
             # Find sampling statements for init
             stock_initials = {}
@@ -158,8 +165,11 @@ class StanVensimModel:
                                                            self.function_builder.get_generated_lookups_dict(),
                                                            self.function_builder.ode_function_name,
                                                            stock_initials))
+            f.write("\n")
+
             f.write(StanModelBuilder(self.stan_model_context.sample_statements).build_block())                                               
             f.write("\n")
+
         stan_model = cmdstanpy.CmdStanModel(stan_file=stan_model_path)
         return stan_model
 
