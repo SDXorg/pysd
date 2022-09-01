@@ -45,7 +45,7 @@ class AuxNameWalker(BaseNodeWaler):
 
 @dataclass
 class LookupCodegenWalker(BaseNodeWaler):
-    generated_lookup_function_names: Dict[Tuple, str] = field(
+    generated_lookup_function_names: Dict[str, str] = field(
         default_factory=dict
     )
     # This dict holds the generated function names of each individual lookup function.
@@ -62,24 +62,23 @@ class LookupCodegenWalker(BaseNodeWaler):
             + lookup_node.y_limits
         )
 
-    def walk(self, ast_node) -> None:
+    def walk(self, ast_node, node_name: str) -> None:
         if isinstance(ast_node, InlineLookupsStructure):
-            self.walk(ast_node.lookups)
+            self.walk(ast_node.lookups, node_name)
         elif isinstance(ast_node, LookupsStructure):
             assert (
                 ast_node.type == "interpolate"
             ), "Type of Lookup must be 'interpolate'"
-            identifier_key = LookupCodegenWalker.get_lookup_keyname(ast_node)
-            function_name = f"lookupFunc_{self.n_lookups}"
+            function_name = f"lookupFunc__{node_name}"
             self.generated_lookup_function_names[
-                identifier_key
+                node_name
             ] = function_name
             self.n_lookups += 1
             self.code += f"real {function_name}(real x){{\n"
             self.code.indent_level += 1
             # Enter function body
-            self.code += f"# x {ast_node.x_limits} = {ast_node.x}\n"
-            self.code += f"# y {ast_node.y_limits} = {ast_node.y}\n"
+            self.code += f"// x {ast_node.x_limits} = {ast_node.x}\n"
+            self.code += f"// y {ast_node.y_limits} = {ast_node.y}\n"
             self.code += "real slope;\n"
             self.code += "real intercept;\n\n"
             n_intervals = len(ast_node.x)
@@ -87,9 +86,9 @@ class LookupCodegenWalker(BaseNodeWaler):
                 if lookup_index == 0:
                     continue
                 if lookup_index == 1:
-                    self.code += f"if(x <= {ast_node.x[lookup_index]})\n"
+                    self.code += f"if(x <= {ast_node.x[lookup_index]}){{\n"
                 else:
-                    self.code += f"else if(x <= {ast_node.x[lookup_index]})\n"
+                    self.code += f"else if(x <= {ast_node.x[lookup_index]}){{\n"
 
                 self.code.indent_level += 1
                 # enter conditional body
@@ -98,6 +97,10 @@ class LookupCodegenWalker(BaseNodeWaler):
                 self.code += f"return intercept + slope * (x - {ast_node.x[lookup_index - 1]});\n"
                 self.code.indent_level -= 1
                 # exit conditional body
+                self.code += "}\n"
+
+            # Handle out-of-bounds input
+            self.code += f"return {ast_node.y[-1]};\n"
 
             self.code.indent_level -= 1
             # exit function body
@@ -108,7 +111,7 @@ class LookupCodegenWalker(BaseNodeWaler):
 
 @dataclass
 class BlockCodegenWalker(BaseNodeWaler):
-    lookup_function_names: Dict[Tuple, str]
+    lookup_function_names: Dict[str, str]
 
     def walk(self, ast_node) -> str:
 
@@ -132,17 +135,19 @@ class BlockCodegenWalker(BaseNodeWaler):
             return output_string
 
         elif isinstance(ast_node, ReferenceStructure):
-            # ReferenceSTructure denotes invoking the value of another variable
+            # ReferenceStructure denotes invoking the value of another variable
             # Subscripts are ignored for now
+            if ast_node.reference in self.lookup_function_names:
+                return self.lookup_function_names[ast_node.reference]
             return ast_node.reference
 
         elif isinstance(ast_node, CallStructure):
             output_string = ""
             function_name = self.walk(ast_node.function)
             if function_name == "min":
-                function_name = "min"
+                function_name = "fmin"
             elif function_name == "max":
-                function_name = "max"
+                function_name = "fmax"
             elif function_name == "xidz":
                 assert (
                     len(ast_node.arguments) == 3
@@ -170,7 +175,7 @@ class BlockCodegenWalker(BaseNodeWaler):
 
             output_string += function_name
             output_string += "("
-            output_string += ",".join(
+            output_string += ", ".join(
                 [self.walk(argument) for argument in ast_node.arguments]
             )
             output_string += ")"
@@ -193,7 +198,7 @@ class BlockCodegenWalker(BaseNodeWaler):
 @dataclass
 class InitialValueCodegenWalker(BlockCodegenWalker):
     variable_ast_dict: Dict[str, AbstractSyntax]
-    lookup_function_names: Dict[Tuple, str]
+    lookup_function_names: Dict[Union[str, Tuple], str]
 
     def walk(self, ast_node):
         if isinstance(ast_node, IntegStructure):
@@ -284,12 +289,12 @@ class RNGCodegenWalker(InitialValueCodegenWalker):
     def rng_codegen(self, rng_type: str, arguments: List[Any]):
         if rng_type == "random_normal":
             lower, upper, mean, std, _ = arguments
-            return f"min(max(normal_rng({mean}, {std}), {lower}), {upper})"
+            return f"fmin(fmax(normal_rng({mean}, {std}), {lower}), {upper})"
         elif rng_type == "random_uniform":
             lower, upper, _ = arguments
             return f"uniform_rng({lower}, {upper})"
         elif rng_type == "random_poisson":
             lower, upper, _lambda, offset, multiply, _ = arguments
-            return f"min(max(fma(poisson_rng({_lambda}), {multiply}, {offset}), {lower}), {upper})"
+            return f"fmin(fmax(fma(poisson_rng({_lambda}), {multiply}, {offset}), {lower}), {upper})"
         else:
             raise Exception(f"RNG function {rng_type} not implemented")

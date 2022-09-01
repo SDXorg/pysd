@@ -25,6 +25,7 @@ class StanTransformedParametersBuilder:
         outcome_variable_names,
         lookup_function_dict,
         function_name,
+        stock_initial_values: Dict[str, str]
     ):
         self.code = IndentedString()
         self.code += "transformed parameters {\n"
@@ -43,8 +44,10 @@ class StanTransformedParametersBuilder:
             stan_varname = vensim_name_to_identifier(element.name)
             variable_ast_dict[stan_varname] = element.components[0].ast
 
-        self.code += "# Initial ODE values\n"
+        self.code += "// Initial ODE values\n"
         for outcome_variable_name in outcome_variable_names:
+            if outcome_variable_name in stock_initial_values:
+                continue
             for element in self.abstract_model.sections[0].elements:
                 if (
                     vensim_name_to_identifier(element.name)
@@ -54,17 +57,25 @@ class StanTransformedParametersBuilder:
                     assert isinstance(
                         component.ast, IntegStructure
                     ), "Output variable component must be an INTEG."
-                    self.code += f"real {outcome_variable_name}_initial = {InitialValueCodegenWalker(lookup_function_dict, variable_ast_dict).walk(component.ast)};\n"
+                    self.code += f"real {outcome_variable_name}_init = {InitialValueCodegenWalker(lookup_function_dict, variable_ast_dict).walk(component.ast)};\n"
                     break
 
         self.code += "\n"
-        self.code += f"vector[{len(outcome_variable_names)}] initial_outcome;  # Initial ODE state vector\n"
+        self.code += f"vector[{len(outcome_variable_names)}] initial_outcome;  // Initial ODE state vector\n"
         for index, name in enumerate(outcome_variable_names, 1):
-            self.code += f"initial_outcome[{index}] = {name}_initial;\n"
+
+            if name in stock_initial_values:
+                self.code += f"initial_outcome[{index}] = {stock_initial_values[name]};  // Defined within stan\n"
+            else:
+                self.code += f"initial_outcome[{index}] = {name}_init;\n"
 
         self.code += "\n"
 
         self.code += f"vector[{len(outcome_variable_names)}] integrated_result[n_t] = ode_rk45({function_name}, initial_outcome, initial_time, times, {', '.join(argument_variables)});\n"
+
+        for index, name in enumerate(outcome_variable_names, 1):
+            self.code += f"array[n_t] real {name} = integrated_result[:, {index}];\n"
+
         self.code.indent_level -= 1
         self.code += "}\n"
 
@@ -115,6 +126,7 @@ class StanTransformedDataBuilder:
         code += f"real initial_time = {self.initial_time};\n"
         code += f"int n_t = {n_t};\n"
         code += f"array[n_t] real times = {{{', '.join([str(x) for x in self.integration_times])}}};\n"
+
         code.indent_level -= 1
         code += "}\n"
         return code.string
@@ -154,7 +166,7 @@ class StanGeneratedQuantitiesBuilder:
     
 class StanFunctionBuilder:
     def __init__(
-        self, abstract_model: AbstractModel, function_name: str = "vensim_func"
+        self, abstract_model: AbstractModel, function_name: str = "vensim_ode_func"
     ):
 
         self.abstract_model = abstract_model
@@ -193,7 +205,7 @@ class StanFunctionBuilder:
         self,
         predictor_variable_names: Iterable[Tuple[str, str]],
         outcome_variable_names: Iterable[str],
-        function_name: str = "vensim_func",
+        function_name: str = "vensim_ode_func",
     ):
         self.code = IndentedString()
 
@@ -204,7 +216,7 @@ class StanFunctionBuilder:
             self.code += lookup_functions_code
             self.code += "\n\n"
 
-        self.code += "# Begin ODE declaration\n"
+        self.code += "// Begin ODE declaration\n"
         self._create_dependency_graph()
 
         # Identify the minimum number of variables needed for calculating outcomes
@@ -223,11 +235,7 @@ class StanFunctionBuilder:
         eval_order = []
 
         def recursive_order_search(current, visited):
-            # if current in visited:
-            #     return
             visited.add(current)
-            # if current in eval_order:
-            #     return
             for child in self.variable_dependency_graph[current]:
                 if child == current:
                     continue
@@ -273,10 +281,10 @@ class StanFunctionBuilder:
         self.code.indent_level += 1
         # Enter function body
 
-        self.code += f"vector[{len(outcome_variable_names)}] dydt;  # Return vector of the ODE function\n"
+        self.code += f"vector[{len(outcome_variable_names)}] dydt;  // Return vector of the ODE function\n"
         self.code += "\n"
 
-        self.code += "# State variables\n"
+        self.code += "// State variables\n"
         for index, outcome_variable_name in enumerate(
             outcome_variable_names, 1
         ):
@@ -321,6 +329,6 @@ class StanFunctionBuilder:
     def build_lookups(self):
         for element in self.elements:
             for component in element.components:
-                self.lookup_builder_walker.walk(component.ast)
+                self.lookup_builder_walker.walk(component.ast, vensim_name_to_identifier(element.name))
 
 
