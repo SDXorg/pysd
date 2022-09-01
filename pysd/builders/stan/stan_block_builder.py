@@ -94,7 +94,15 @@ class StanParametersBuilder:
         for statement in self.sampling_statements:
             if statement.lhs_name in data_variable_names:
                 continue
-            code += f"real {statement.lhs_name};\n"
+
+            if statement.lower > float("-inf") and statement.upper < float("inf"):
+                code += f"real<lower={statement.lower}, upper={statement.upper}> {statement.lhs_name};\n"
+            elif statement.lower > float("-inf"):
+                code += f"real<lower={statement.lower}> {statement.lhs_name};\n"
+            elif statement.upper < float("inf"):
+                code += f"real<upper={statement.upper}> {statement.lhs_name};\n"
+            else:
+                code += f"real {statement.lhs_name};\n"
 
         code.indent_level -= 1  # Exit parameters block
         code += "}\n"

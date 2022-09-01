@@ -11,13 +11,13 @@ model.print_info()
 
 model.set_prior("inventory_adjustment_time", "normal", 0, 1)
 model.set_prior("minimum_order_processing_time", "normal", 0, 1)
-model.set_prior("alpha", "normal", 0, 1)
+model.set_prior("alpha", "normal", 0, 1, lower=0.0)
 model.set_prior("inventory", "normal", 0, 1, init_state=True)
 
 print(model.vensim_model_context.variable_names)
 
 model.build_stan_functions()
 
-cmdstan_model = model.data2draws("")
+cmdstan_model = model.data2draws({})
 result = cmdstan_model.sample()
 result.summary()

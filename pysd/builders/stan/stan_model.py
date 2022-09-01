@@ -1,3 +1,4 @@
+import os
 from typing import List, Set, Type, Tuple
 import ast, glob, re
 from .stan_block_builder import *
@@ -85,6 +86,10 @@ class StanVensimModel:
         if initial_time in integration_times:
             raise Exception("initial_time shouldn't be present in integration_times")
 
+        self.stan_model_dir = os.path.join(os.getcwd(), "stan_files")
+        if not os.path.exists(self.stan_model_dir):
+            os.mkdir(self.stan_model_dir)
+
         self.init_variable_regex = re.compile(".+?(?=_init$)")
         # This regex is to match all preceding characters that come before '_init' at the end of the string.
         # So something like stock_var_init_init would match into stock_var_init.
@@ -127,16 +132,16 @@ class StanVensimModel:
         -------
 
         """
-        if glob.glob(os.path.join(os.getcwd(), "stan_file", f"{self.model_name}_functions.stan")):
+        if glob.glob(os.path.join(self.stan_model_dir, f"{self.model_name}_functions.stan")):
             if input(f"{self.model_name}_functions.stan already exists in the current working directory. Overwrite? (Y/N):").lower() != "y":
                 raise Exception("Code generation aborted by user")
 
-        with open(os.path.join(os.getcwd(), f"{self.model_name}_functions.stan"), "w") as f:
+        with open(os.path.join(self.stan_model_dir, f"{self.model_name}_functions.stan"), "w") as f:
             self.function_builder = StanFunctionBuilder(self.abstract_model)
             f.write(self.function_builder.build_functions(self.stan_model_context.exposed_parameters, self.vensim_model_context.stock_variable_names))
 
     def data2draws(self, data_dir: Dict):
-        stan_model_path= os.path.join(os.getcwd(), f"{self.model_name}_data2draws.stan")
+        stan_model_path= os.path.join(self.stan_model_dir, f"{self.model_name}_data2draws.stan")
         with open(stan_model_path, "w") as f:
             # Include the function
             f.write("functions{\n")
@@ -173,8 +178,9 @@ class StanVensimModel:
         stan_model = cmdstanpy.CmdStanModel(stan_file=stan_model_path)
         return stan_model
 
-    def draws2data(self, data_file_path: str):
-        with open(os.path.join(os.getcwd(), "stan_file", f"{self.model_name}_draws2data.stan"), "w") as f:
+    def draws2data(self):
+        stan_model_path = os.path.join(self.stan_model_dir, f"{self.model_name}_draws2data.stan")
+        with open(stan_model_path, "w") as f:
             # Include the function
             f.write("functions{")
             f.write("\n")
@@ -197,8 +203,9 @@ class StanVensimModel:
 
             f.write(StanGeneratedQuantitiesBuilder(self.stan_model_context.sample_statements).build_block())
 
-         stan_model = cmdstanpy.CmdStanModel(stan_file=stan_model_path)
-         return stan_model
+        stan_model = cmdstanpy.CmdStanModel(stan_file=stan_model_path)
+
+        return stan_model
 
 
 
