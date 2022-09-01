@@ -63,6 +63,7 @@ class StanTransformedParametersBuilder:
         self.code += "\n"
         self.code += f"vector[{len(outcome_variable_names)}] initial_outcome;  // Initial ODE state vector\n"
         for index, name in enumerate(outcome_variable_names, 1):
+
             if name in stock_initial_values:
                 self.code += f"initial_outcome[{index}] = {stock_initial_values[name]};  // Defined within stan\n"
             else:
@@ -70,10 +71,10 @@ class StanTransformedParametersBuilder:
 
         self.code += "\n"
 
-        self.code += f"vector[{len(outcome_variable_names)}] integrated_result[T] = ode_rk45({function_name}, initial_outcome, initial_time, times, {', '.join(argument_variables)});\n"
+        self.code += f"vector[{len(outcome_variable_names)}] integrated_result[n_t] = ode_rk45({function_name}, initial_outcome, initial_time, times, {', '.join(argument_variables)});\n"
 
         for index, name in enumerate(outcome_variable_names, 1):
-            self.code += f"array[T] real {name} = integrated_result[:, {index}];\n"
+            self.code += f"array[n_t] real {name} = integrated_result[:, {index}];\n"
 
         self.code.indent_level -= 1
         self.code += "}\n"
@@ -106,6 +107,7 @@ class StanDataBuilder:
         code = IndentedString()
         code += "data{\n"
         code.indent_level += 1
+        code += "int <lower = 1> n_obs_state;\n"
         code.indent_level -= 1
         code += "}\n"
         return code.string
@@ -117,13 +119,14 @@ class StanTransformedDataBuilder:
         self.integration_times = integration_times
 
     def build_block(self) -> str:
-        T = len(self.integration_times)
+        n_t = len(self.integration_times)
         code = IndentedString()
         code += "transformed data{\n"
         code.indent_level += 1
         code += f"real initial_time = {self.initial_time};\n"
-        code += f"int T = {T};\n"
-        code += f"array[T] real times = {{{', '.join([str(x) for x in self.integration_times])}}};\n"
+        code += f"int n_t = {n_t};\n"
+        code += f"array[n_t] real times = {{{', '.join([str(x) for x in self.integration_times])}}};\n"
+
         code.indent_level -= 1
         code += "}\n"
         return code.string
@@ -144,7 +147,23 @@ class StanModelBuilder:
         code += "}\n"
         return str(code)
 
+    
+class StanGeneratedQuantitiesBuilder:
+    def __init__(self, sampling_statements: Iterable["SamplingStatement"]):
+        self.sampling_statements = sampling_statements
 
+    def build_block(self):
+        code = IndentedString()
+        code += "generated quantities{\n"
+        code.indent_level += 1
+        for statement in self.sampling_statements:
+            code += f"{statement.lhs_name}_tilde ~ {statement.distribution_type}({', '.join([str(arg) for arg in statement.distribution_args])});\n"
+
+        code.indent_level -= 1
+        code += "}\n"
+        return str(code)
+
+    
 class StanFunctionBuilder:
     def __init__(
         self, abstract_model: AbstractModel, function_name: str = "vensim_ode_func"
