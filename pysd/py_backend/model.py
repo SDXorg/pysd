@@ -8,11 +8,13 @@ a separate file).
 import warnings
 import inspect
 import pickle
+import time as t
 from typing import Union
 
 import numpy as np
 import xarray as xr
 import pandas as pd
+import netCDF4 as nc
 
 from . import utils
 from .statefuls import DynamicStateful, Stateful
@@ -1035,7 +1037,7 @@ class Model(Macro):
     def run(self, params=None, return_columns=None, return_timestamps=None,
             initial_condition='original', final_time=None, time_step=None,
             saveper=None, reload=False, progress=False, flatten_output=True,
-            cache_output=True):
+            cache_output=True, output_file=None):
         """
         Simulate the model's behavior over time.
         Return a pandas dataframe with timestamps as rows,
@@ -1169,6 +1171,11 @@ class Model(Macro):
         self.time.stage = 'Run'
         # need to clean cache to remove the values from active_initial
         self.clean_caches()
+
+        if output_file:
+            self._integrate_binary_output(capture_elements['step'], out_file=output_file)
+            print(f"Resulsts stored in {output_file}")
+            return None
 
         res = self._integrate(capture_elements['step'])
 
@@ -1699,6 +1706,112 @@ class Model(Macro):
         # of appending data. See previous TODO.
         del outputs["time"]
         return outputs
+
+    def _integrate_binary_output(self, capture_elements, out_file):
+        """
+        Performs euler integration and stores the results in netCDF4 file.
+
+        Parameters
+        ----------
+        capture_elements: set
+            Which model elements to capture - uses pysafe names.
+        out_file: str or pathlib.Path
+
+        Returns
+        -------
+        nothing
+
+        """
+
+        if self.progress:
+            # initialize progress bar
+            progressbar = utils.ProgressBar(
+                int((self.time.final_time()-self.time())/self.time.time_step())
+            )
+        else:
+            # when None is used the update will do nothing
+            progressbar = utils.ProgressBar(None)
+
+
+        with nc.Dataset(out_file, "w") as ds:
+            # generating global attributes
+            ds.description = "Results for simulation run on" \
+            f"{t.ctime(t.time())} using PySD version {__version__}"
+            ds.model_file = self.py_model_file
+            ds.timestep = "{}".format(self.components.time_step())
+            ds.initial_time = "{}".format(self.components.initial_time())
+            ds.final_time = "{}".format(self.components.final_time())
+
+            # creating variables for all model dimensions
+            for dim_name,coords in self.subscripts.items():
+                coords = np.array(coords)
+                # create dimension
+                ds.createDimension(dim_name, len(coords))
+                # length of the longest string in the coords
+                max_str_len = len(max(coords, key=len))
+                # create variable (TODO: check if the type could be defined otherwise)
+                var = ds.createVariable(dim_name,
+                                        f"S{max_str_len}",
+                                        (dim_name,))
+                # assigning values to variable
+                var[:] = coords
+
+            # creating the time dimension and variable
+            times = np.arange(self.components.initial_time(),
+                              self.components.final_time(),
+                              self.components.saveper()
+                              )
+            ds.createDimension("time", len(times))
+            time = ds.createVariable("time", "f8", ("time",))
+            time[:] = times
+
+            step = 0
+            while self.time.in_bounds():
+                if self.time.in_return():
+                    for key in capture_elements:
+                        comp = getattr(self.components, key)
+                        comp_vals = comp()
+
+                        if step == 0:
+                            dims = ("time",) + tuple(comp.subscripts) \
+                                if isinstance(comp_vals, (xr.DataArray, np.ndarray)) \
+                                else ("time",)
+
+                            ds.createVariable(key, "f8", dims)
+
+                            ds[key].units = self.doc.loc[
+                                self.doc["Py Name"] == key,
+                                "Units"].values[0] or "Missing"
+                            ds[key].description = self.doc.loc[
+                                self.doc["Py Name"] == key,
+                                "Comment"].values[0] or "Missing"
+
+                        try:
+                            if isinstance(comp_vals, xr.DataArray):
+                                ds[key][step, :] = comp_vals.values
+                            elif isinstance(comp_vals, np.ndarray):
+                                ds[key][step, :] = comp_vals
+                            else:
+                                ds[key][step] = comp_vals
+                        except:
+                            print(key)
+
+
+                self._euler_step(self.time.time_step())
+                self.time.update(self.time()+self.time.time_step())
+                self.clean_caches()
+                progressbar.update()
+                step += 1
+
+            # TODO check this bit from the other method
+            # need to add one more time step, because we run only the state
+            # updates in the previous loop and thus may be one short.
+            #if self.time.in_return():
+            #    outputs.at[self.time.round()] = [getattr(self.components, key)()
+            #                                     for key in capture_elements]
+        progressbar.finish()
+
+
 
     def _add_run_elements(self, df, capture_elements):
         """

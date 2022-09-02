@@ -1,6 +1,7 @@
 pandas
 parsimonious
 xarray
+netCDF4
 xlrd
 lxml
 regex
