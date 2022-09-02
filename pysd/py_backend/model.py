@@ -1172,21 +1172,20 @@ class Model(Macro):
         # need to clean cache to remove the values from active_initial
         self.clean_caches()
 
-        if output_file:
-            self._integrate_binary_output(capture_elements['step'], out_file=output_file)
-            print(f"Resulsts stored in {output_file}")
-            return None
-
-        res = self._integrate(capture_elements['step'])
+        out_obj = self._integrate(capture_elements['step'], output_file)
 
         del self._dependencies["OUTPUTS"]
 
-        self._add_run_elements(res, capture_elements['run'])
+        out_obj.add_run_elements(self, capture_elements['run'])
+
         self._remove_constant_cache()
 
-        return_df = utils.make_flat_df(res, return_addresses, flatten_output)
+        if output_file:
+            out_obj.handler.ds.close()
+            return None
 
-        return return_df
+        return utils.make_flat_df(out_obj.handler.ds, return_addresses, flatten_output)
+
 
     def select_submodel(self, vars=[], modules=[], exogenous_components={}):
         """
@@ -1654,60 +1653,8 @@ class Model(Macro):
         """
         self.state = self.state + self.ddt() * dt
 
-    def _integrate(self, capture_elements):
-        """
-        Performs euler integration.
 
-        Parameters
-        ----------
-        capture_elements: set
-            Which model elements to capture - uses pysafe names.
-
-        Returns
-        -------
-        outputs: pandas.DataFrame
-            Output capture_elements data.
-
-        """
-        # necessary to have always a non-xaray object for appending objects
-        # to the DataFrame time will always be a model element and not saved
-        # TODO: find a better way of saving outputs
-        capture_elements.add("time")
-        outputs = pd.DataFrame(columns=capture_elements)
-
-        if self.progress:
-            # initialize progress bar
-            progressbar = utils.ProgressBar(
-                int((self.time.final_time()-self.time())/self.time.time_step())
-            )
-        else:
-            # when None is used the update will do nothing
-            progressbar = utils.ProgressBar(None)
-
-        while self.time.in_bounds():
-            if self.time.in_return():
-                outputs.at[self.time.round()] = [
-                    getattr(self.components, key)()
-                    for key in capture_elements]
-            self._euler_step(self.time.time_step())
-            self.time.update(self.time()+self.time.time_step())
-            self.clean_caches()
-            progressbar.update()
-
-        # need to add one more time step, because we run only the state
-        # updates in the previous loop and thus may be one short.
-        if self.time.in_return():
-            outputs.at[self.time.round()] = [getattr(self.components, key)()
-                                             for key in capture_elements]
-
-        progressbar.finish()
-
-        # delete time column as it was created only for avoiding errors
-        # of appending data. See previous TODO.
-        del outputs["time"]
-        return outputs
-
-    def _integrate_binary_output(self, capture_elements, out_file):
+    def _integrate(self, capture_elements, out_file):
         """
         Performs euler integration and stores the results in netCDF4 file.
 
@@ -1722,6 +1669,9 @@ class Model(Macro):
         nothing
 
         """
+        # instantiating output object
+        output = ModelOutput(capture_elements, out_file)
+        output.initialize(self)
 
         if self.progress:
             # initialize progress bar
@@ -1732,104 +1682,239 @@ class Model(Macro):
             # when None is used the update will do nothing
             progressbar = utils.ProgressBar(None)
 
-
-        with nc.Dataset(out_file, "w") as ds:
-            # generating global attributes
-            ds.description = "Results for simulation run on" \
-            f"{t.ctime(t.time())} using PySD version {__version__}"
-            ds.model_file = self.py_model_file
-            ds.timestep = "{}".format(self.components.time_step())
-            ds.initial_time = "{}".format(self.components.initial_time())
-            ds.final_time = "{}".format(self.components.final_time())
-
-            # creating variables for all model dimensions
-            for dim_name,coords in self.subscripts.items():
-                coords = np.array(coords)
-                # create dimension
-                ds.createDimension(dim_name, len(coords))
-                # length of the longest string in the coords
-                max_str_len = len(max(coords, key=len))
-                # create variable (TODO: check if the type could be defined otherwise)
-                var = ds.createVariable(dim_name,
-                                        f"S{max_str_len}",
-                                        (dim_name,))
-                # assigning values to variable
-                var[:] = coords
-
-            # creating the time dimension and variable
-            times = np.arange(self.components.initial_time(),
-                              self.components.final_time(),
-                              self.components.saveper()
-                              )
-            ds.createDimension("time", len(times))
-            time = ds.createVariable("time", "f8", ("time",))
-            time[:] = times
-
-            step = 0
-            while self.time.in_bounds():
-                if self.time.in_return():
-                    for key in capture_elements:
-                        comp = getattr(self.components, key)
-                        comp_vals = comp()
-
-                        if step == 0:
-                            dims = ("time",) + tuple(comp.subscripts) \
-                                if isinstance(comp_vals, (xr.DataArray, np.ndarray)) \
-                                else ("time",)
-
-                            ds.createVariable(key, "f8", dims)
-
-                            ds[key].units = self.doc.loc[
-                                self.doc["Py Name"] == key,
-                                "Units"].values[0] or "Missing"
-                            ds[key].description = self.doc.loc[
-                                self.doc["Py Name"] == key,
-                                "Comment"].values[0] or "Missing"
-
-                        try:
-                            if isinstance(comp_vals, xr.DataArray):
-                                ds[key][step, :] = comp_vals.values
-                            elif isinstance(comp_vals, np.ndarray):
-                                ds[key][step, :] = comp_vals
-                            else:
-                                ds[key][step] = comp_vals
-                        except:
-                            print(key)
-
+        while self.time.in_bounds():
+            if self.time.in_return():
+                output.update(self)
 
                 self._euler_step(self.time.time_step())
                 self.time.update(self.time()+self.time.time_step())
                 self.clean_caches()
                 progressbar.update()
-                step += 1
 
-            # TODO check this bit from the other method
-            # need to add one more time step, because we run only the state
-            # updates in the previous loop and thus may be one short.
-            #if self.time.in_return():
-            #    outputs.at[self.time.round()] = [getattr(self.components, key)()
-            #                                     for key in capture_elements]
+        # need to add one more time step, because we run only the state
+        # updates in the previous loop and thus may be one short.
+        if self.time.in_return():
+            output.update(self)
+
         progressbar.finish()
 
+        output.postprocess()
+        return output
 
 
-    def _add_run_elements(self, df, capture_elements):
+class OutputHandler(object):
+    pass
+
+class DatasetHandler(OutputHandler):
+
+    def __init__(self, out_file):
+        self.out_file = out_file
+        self.step = 0
+        self.ds = None
+
+    def initialize(self, model, capture_elements):
+        """
+        Creates a netCDF4 dataset and adds model dimensions and variables
+        present in the capture elements to it.
+
+        Parameters
+        ----------
+        capture_elements: set
+            Which model elements to capture - uses pysafe names.
+        out_file: str or pathlib.Path
+            Path to the file where the results will be written.
+        Returns
+        -------
+        ds: netCDF4.Dataset
+            Initialized Dataset.
+
+        """
+        self.ds = nc.Dataset(self.out_file, "w")
+            # generating global attributes
+        self.ds.description = "Results for simulation run on" \
+        f"{t.ctime(t.time())} using PySD version {__version__}"
+        self.ds.model_file = model.py_model_file
+        self.ds.timestep = "{}".format(model.components.time_step())
+        self.ds.initial_time = "{}".format(model.components.initial_time())
+        self.ds.final_time = "{}".format(model.components.final_time())
+
+        # creating variables for all model dimensions
+        for dim_name,coords in model.subscripts.items():
+            coords = np.array(coords)
+            # create dimension
+            self.ds.createDimension(dim_name, len(coords))
+            # length of the longest string in the coords
+            max_str_len = len(max(coords, key=len))
+            # create variable (TODO: check if the type could be defined
+            # otherwise)
+            var = self.ds.createVariable(dim_name,
+                                    f"S{max_str_len}",
+                                    (dim_name,))
+            # assigning values to variable
+            var[:] = coords
+
+        # creating the time dimension as unlimited
+        self.ds.createDimension("time", None)
+
+        # creating variables in capture_elements
+        self.__create_ds_vars(model, capture_elements)
+
+    def update(self, model, capture_elements):
+
+        for key in capture_elements:
+            comp = getattr(model.components, key)
+            comp_vals = comp()
+            if isinstance(comp_vals, xr.DataArray):
+                self.ds[key][self.step, :] = comp_vals.values
+            elif isinstance(comp_vals, np.ndarray):
+                self.ds[key][self.step, :] = comp_vals
+            else:
+                self.ds[key][self.step] = comp_vals
+
+        self.step += 1
+
+    def postprocess(self):
+        print(f"Resulsts stored in {self.out_file}")
+
+    def add_run_elements(self, model, run_elements):
         """
         Adds constant elements to a dataframe.
-
         Parameters
         ----------
         df: pandas.DataFrame
             Dataframe to add elements.
-
-        capture_elements: list
+        run_elements: list
             List of constant elements
-
         Returns
         -------
         None
+        """
+        # creating variables in capture_elements
+        # TODO we are looping through all capture elements twice. This
+        # could be avoided
+        self.__create_ds_vars(model, run_elements)
+
+        for key in run_elements:
+            comp = getattr(model.components, key)
+            comp_vals = comp()
+            for num,_ in enumerate(self.ds["time"][:]):
+                if isinstance(comp_vals, xr.DataArray):
+                    self.ds[key][num, :] = comp_vals.values
+                elif isinstance(comp_vals, np.ndarray):
+                    self.ds[key][num, :] = comp_vals
+                else:
+                    self.ds[key][num] = comp_vals
+
+    def __create_ds_vars(self, model, capture_elements):
+        """
+        Create new variables in a netCDF4 Dataset from the capture_elements.
+
+        Parameters
+        ----------
+        ds: netCDF4.Dataset
+            Dataset in which to write the new variables.
+        capture_elements: set
+            Which model elements to capture - uses pysafe names.
+
+        Returns
+        -------
+        ds: netCDF4.Dataset
+            Updated Dataset.
 
         """
-        nt = len(df.index.values)
+
+        for key in capture_elements:
+            comp = getattr(model.components, key)
+            comp_vals = comp()
+
+            dims = ("time",) + tuple(comp.subscripts) \
+                    if isinstance(comp_vals, (xr.DataArray, np.ndarray)) \
+                    else ("time",)
+
+            self.ds.createVariable(key, "f8", dims)
+
+            # adding units and description as metadata for each var
+            self.ds[key].units = model.doc.loc[
+                        model.doc["Py Name"] == key,
+                        "Units"].values[0] or "Missing"
+            self.ds[key].description = model.doc.loc[
+                        model.doc["Py Name"] == key,
+                        "Comment"].values[0] or "Missing"
+
+
+
+class DataFrameHandler(OutputHandler):
+
+    def __init__(self):
+        self.ds = None
+
+    def initialize(self, model, capture_elements):
+        """
+        Creates a pandas DataFrame and adds model variables as columns
+
+        Parameters
+        ----------
+        capture_elements: set
+            Which model elements to capture - uses pysafe names.
+
+        Returns
+        -------
+        df: pandas.DataFrame
+            Initialized Dataset.
+
+        """
+        self.ds =  pd.DataFrame(columns=capture_elements)
+
+
+    def update(self, model, capture_elements):
+
+        self.ds.at[model.time.round()] = [
+            getattr(model.components, key)()
+            for key in capture_elements]
+
+    def postprocess(self):
+        # delete time column as it was created only for avoiding errors
+        # of appending data. See previous TODO.
+        del self.ds["time"]
+
+    def add_run_elements(self, model, capture_elements):
+        """
+        Adds constant elements to a dataframe.
+        Parameters
+        ----------
+        df: pandas.DataFrame
+            Dataframe to add elements.
+        capture_elements: list
+            List of constant elements
+        Returns
+        -------
+        None
+        """
+        nx = len(self.ds.index)
         for element in capture_elements:
-            df[element] = [getattr(self.components, element)()] * nt
+            self.ds[element] = [getattr(model.components, element)()] * nx
+
+class ModelOutput():
+
+    def __init__(self, capture_elements, out_file=None):
+
+        if out_file:
+            self.handler = DatasetHandler(out_file)
+        else:
+            self.handler = DataFrameHandler()
+
+        capture_elements.add("time")
+        self.capture_elements = capture_elements
+
+    def initialize(self, model):
+        self.handler.initialize(model, self.capture_elements)
+
+    def update(self, model):
+        self.handler.update(model, self.capture_elements)
+
+    def postprocess(self):
+        self.handler.postprocess()
+
+    def add_run_elements(self, model, run_elements):
+        self.handler.add_run_elements(model, run_elements)
+
