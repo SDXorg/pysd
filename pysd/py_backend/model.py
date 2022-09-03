@@ -5,7 +5,6 @@ Several methods and propierties are inherited from Macro class, which
 allows integrating a model or a Macro expression (set of functions in
 a separate file).
 """
-from io import UnsupportedOperation
 import warnings
 import inspect
 import pickle
@@ -1184,7 +1183,7 @@ class Model(Macro):
                         "Paths must be strings or pathlib Path objects.")
 
             if ext not in ModelOutput.valid_output_files:
-                raise UnsupportedOperation(
+                raise ValueError(
                         f"Unsupported output file format {ext}")
 
         # add constant cache to thosa variable that are constants
@@ -2029,7 +2028,7 @@ class ModelOutput():
             if out_file.suffix == ".nc":
                 self.handler = DatasetHandler(out_file)
             else:
-                raise UnsupportedOperation(
+                raise ValueError(
                     f"Unsupported output file format {out_file.suffix}")
         else:
             self.handler = DataFrameHandler()
