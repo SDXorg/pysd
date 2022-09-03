@@ -712,12 +712,11 @@ class Macro(DynamicStateful):
         >>> br = pandas.Series(index=range(30), values=np.sin(range(30))
         >>> model.set_components({'birth_rate': br})
 
-
         """
-        # TODO: allow the params argument to take a pandas dataframe, where
+        #  TODO: allow the params argument to take a pandas dataframe, where
         # column names are variable names. However some variables may be
         # constant or have no values for some index. This should be processed.
-        # TODO: make this compatible with loading outputs from other files
+        #  TODO: make this compatible with loading outputs from other files
 
         for key, value in params.items():
             func_name = utils.get_key_and_value_by_insensitive_key_or_value(
@@ -1207,7 +1206,6 @@ class Model(Macro):
 
         return output.postprocess(return_addresses=return_addresses,
                                   flatten=flatten_output)
-
 
     def select_submodel(self, vars=[], modules=[], exogenous_components={}):
         """
@@ -1716,22 +1714,24 @@ class Model(Macro):
 
         progressbar.finish()
 
-class OutputHandler(object):
+
+class OutputHandler():
     """
     Interface for the different output handlers.
     """
 
-    def initialize(self):
+    def initialize(self, model, capture_elements):
         pass
 
-    def update(self):
+    def update(self, model, capture_elements):
         pass
 
-    def postprocess(self):
+    def postprocess(self, **kwargs):
         pass
 
-    def add_run_elements(self):
+    def add_run_elements(self, model, capture_elements):
         pass
+
 
 class DatasetHandler(OutputHandler):
     """
@@ -1791,8 +1791,6 @@ class DatasetHandler(OutputHandler):
         # creating variables in capture_elements
         self.__create_ds_vars(model, capture_elements)
 
-        return None
-
     def update(self, model, capture_elements):
         """
         Writes values of variables in capture_elements in the netCDF4 Dataset.
@@ -1808,7 +1806,6 @@ class DatasetHandler(OutputHandler):
         -------
         None
         """
-
         for key in capture_elements:
             comp = getattr(model.components, key)
             comp_vals = comp()
@@ -1821,13 +1818,10 @@ class DatasetHandler(OutputHandler):
 
         self.step += 1
 
-        return None
-
     def postprocess(self, **kwargs):
         """
         Closes netCDF4 Dataset.
         """
-
         self.ds.close()
 
         if kwargs.get("flatten"):
@@ -1835,16 +1829,14 @@ class DatasetHandler(OutputHandler):
 
         print(f"Results stored in {self.out_file}")
 
-        return None
-
-    def add_run_elements(self, model, run_elements):
+    def add_run_elements(self, model, capture_elements):
         """
         Adds constant elements to netCDF4 Dataset.
         Parameters
         ----------
         model: pysd.Model
             PySD Model object
-        run_elements: list
+        capture_elements: list
             List of constant elements
         Returns
         -------
@@ -1853,9 +1845,9 @@ class DatasetHandler(OutputHandler):
         # creating variables in capture_elements
         # TODO we are looping through all capture elements twice. This
         # could be avoided
-        self.__create_ds_vars(model, run_elements)
+        self.__create_ds_vars(model, capture_elements)
 
-        for key in run_elements:
+        for key in capture_elements:
             comp = getattr(model.components, key)
             comp_vals = comp()
             try:
@@ -1869,12 +1861,11 @@ class DatasetHandler(OutputHandler):
                             self.ds[key][num, :] = comp_vals
                     else:
                         self.ds[key][num] = comp_vals
-            except Exception as e:
+            except ValueError:
                 warnings.warn(f"The dimensions of {key} in the results "
                               "do not match the declared dimensions for this "
                               "variable. The resulting values will not be "
                               "included in the results file.")
-        return None
 
     def __create_ds_vars(self, model, capture_elements):
         """
@@ -1915,7 +1906,6 @@ class DatasetHandler(OutputHandler):
                         model.doc["Py Name"] == key,
                         "Comment"].values[0] or "Missing"
 
-        return None
 
 class DataFrameHandler(OutputHandler):
     """
@@ -1965,8 +1955,6 @@ class DataFrameHandler(OutputHandler):
             getattr(model.components, key)()
             for key in capture_elements]
 
-        return None
-
     def postprocess(self, **kwargs):
         """
         Delete time column from the pandas DataFrame and flatten xarrays if
@@ -2004,7 +1992,6 @@ class DataFrameHandler(OutputHandler):
         for element in capture_elements:
             self.ds[element] = [getattr(model.components, element)()] * nx
 
-        return None
 
 class ModelOutput():
     """
@@ -2045,9 +2032,7 @@ class ModelOutput():
         self.handler.update(model, self.capture_elements)
 
     def postprocess(self, **kwargs):
-        processed = self.handler.postprocess(**kwargs)
-        return processed
+        return self.handler.postprocess(**kwargs)
 
     def add_run_elements(self, model, run_elements):
         self.handler.add_run_elements(model, run_elements)
-
