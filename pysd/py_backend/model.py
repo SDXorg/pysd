@@ -5,10 +5,12 @@ Several methods and propierties are inherited from Macro class, which
 allows integrating a model or a Macro expression (set of functions in
 a separate file).
 """
+from io import UnsupportedOperation
 import warnings
 import inspect
 import pickle
 import time as t
+from pathlib import Path
 from typing import Union
 
 import numpy as np
@@ -1108,6 +1110,11 @@ class Model(Macro):
            recommended to activate this feature, if time step << saveper
            it is recommended to deactivate it. Default is True.
 
+        output_file: str, pathlib.Path or None (optional)
+           Path of the file in which to save simulation results.
+           For now, only netCDF4 files (.nc) are supported.
+
+
         Examples
         --------
         >>> model.run(params={'exogenous_constant': 42})
@@ -1164,6 +1171,21 @@ class Model(Macro):
         if cache_output:
             # udate the cache type taking into account the outputs
             self._assign_cache_type()
+
+        # check validitty of output_file
+        if output_file:
+            if isinstance(output_file, str):
+                output_file = Path(output_file)
+                ext = output_file.suffix
+            elif isinstance(output_file, Path):
+                ext = output_file.suffix
+            else:
+                raise TypeError(
+                        "Paths must be strings or pathlib Path objects.")
+
+            if ext not in ModelOutput.valid_output_files:
+                raise UnsupportedOperation(
+                        f"Unsupported output file format {ext}")
 
         # add constant cache to thosa variable that are constants
         self._add_constant_cache()
@@ -1999,11 +2021,16 @@ class ModelOutput():
     out_file: str or pathlib.Path
         Path to the file where the results will be written.
     """
+    valid_output_files = [".nc"]
 
     def __init__(self, model, capture_elements, out_file=None):
 
         if out_file:
-            self.handler = DatasetHandler(out_file)
+            if out_file.suffix == ".nc":
+                self.handler = DatasetHandler(out_file)
+            else:
+                raise UnsupportedOperation(
+                    f"Unsupported output file format {out_file.suffix}")
         else:
             self.handler = DataFrameHandler()
 
