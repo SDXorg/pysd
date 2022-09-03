@@ -1,6 +1,7 @@
 pandas
 parsimonious
 xarray
+h5py
 netCDF4
 xlrd
 lxml
