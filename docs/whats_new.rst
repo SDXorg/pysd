@@ -1,5 +1,30 @@
 What's New
 ==========
+v3.6.1 (2022/09/05)
+-------------------
+
+New Features
+~~~~~~~~~~~~
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+
+Documentation
+~~~~~~~~~~~~~
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- Set :py:mod:`parsimonius` requirement to 0.9.0 to avoid a breaking-change in the newest version. Pending to update PySD to run it with :py:mod:`parsimonious` 0.10.0.
+
 v3.6.0 (2022/08/31)
 -------------------
 
