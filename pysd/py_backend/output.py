@@ -9,6 +9,8 @@ import abc
 import warnings
 import time as t
 
+from csv import QUOTE_NONE
+
 import numpy as np
 import xarray as xr
 import pandas as pd
@@ -33,7 +35,7 @@ class ModelOutput():
     out_file: str or pathlib.Path
         Path to the file where the results will be written.
     """
-    valid_output_files = [".nc"]
+    valid_output_files = [".nc", ".csv", ".tab"]
 
     def __init__(self, model, capture_elements, out_file=None):
 
@@ -49,9 +51,9 @@ class ModelOutput():
         if out_file:
             if out_file.suffix == ".nc":
                 return DatasetHandler(out_file)
-            raise ValueError(
-                    f"Unsupported output file format {out_file.suffix}")
-        return DataFrameHandler()
+        # when the users expects a csv or tab output file, it defaults to the
+        # DataFrame path
+        return DataFrameHandler(out_file)
 
     def initialize(self, model):
         """ Delegating the creation of the results object and its elements to
@@ -307,8 +309,9 @@ class DataFrameHandler(OutputHandlerInterface):
     """
     Manages simulation results stored as pandas DataFrame.
     """
-    def __init__(self):
+    def __init__(self, out_file):
         self.ds = None
+        self.output_file = out_file
 
     def initialize(self, model, capture_elements):
         """
@@ -363,9 +366,45 @@ class DataFrameHandler(OutputHandlerInterface):
         # of appending data. See previous TODO.
         del self.ds["time"]
 
-        return utils.make_flat_df(self.ds,
-                                  kwargs["return_addresses"],
-                                  kwargs["flatten"])
+        # enforce flattening if df is to be saved to csv or tab file
+        flatten = True if self.output_file else kwargs.get("flatten", None)
+
+        df = utils.make_flat_df(self.ds,
+                                kwargs["return_addresses"],
+                                flatten)
+        if self.output_file:
+            self.__save_to_file(df)
+
+        return df
+
+    def __save_to_file(self, output):
+        """
+        Saves models output.
+
+        Paramters
+        ---------
+        output: pandas.DataFrame
+
+        options: argparse.Namespace
+
+        Returns
+        -------
+        None
+
+        """
+
+        if self.output_file.suffix == ".tab":
+            sep = "\t"
+        else:
+            sep = ","
+
+        # QUOTE_NONE used to print the csv/tab files as vensim does with special
+        # characterse, e.g.: "my-var"[Dimension]
+        output.to_csv(
+            self.output_file, sep, index_label="Time", quoting=QUOTE_NONE
+            )
+
+        print(f"Data saved in '{self.output_file}'")
 
     def add_run_elements(self, model, capture_elements):
         """

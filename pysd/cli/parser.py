@@ -29,10 +29,11 @@ def check_output(string):
     Checks that out put file ends with .tab or .csv
 
     """
-    if not string.endswith('.tab') and not string.endswith('.csv'):
+    if not string.endswith('.tab') and not string.endswith('.csv') and not \
+         string.endswith('.nc'):
         parser.error(
             f'when parsing {string}'
-            '\nThe output file name must be .tab or .csv...')
+            '\nThe output file name must be .tab, .csv or .nc...')
 
     return string
 

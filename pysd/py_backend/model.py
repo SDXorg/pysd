@@ -1120,6 +1120,8 @@ class Model(Macro):
         >>> model.run(return_timestamps=[1, 2, 3, 4, 10])
         >>> model.run(return_timestamps=10)
         >>> model.run(return_timestamps=np.linspace(1, 10, 20))
+        >>> model.run(output_file="results.nc")
+
 
         See Also
         --------
@@ -1206,8 +1208,8 @@ class Model(Macro):
 
         self._remove_constant_cache()
 
-        return output.postprocess(return_addresses=return_addresses,
-                                  flatten=flatten_output)
+        return output.postprocess(
+            return_addresses=return_addresses, flatten=flatten_output)
 
     def select_submodel(self, vars=[], modules=[], exogenous_components={}):
         """
