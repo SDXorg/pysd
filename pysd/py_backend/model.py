@@ -1161,6 +1161,7 @@ class Model(Macro):
         # create a dictionary splitting run cached and others
         capture_elements = self._split_capture_elements(capture_elements)
 
+
         # include outputs in cache if needed
         self._dependencies["OUTPUTS"] = {
             element: 1 for element in capture_elements["step"]
@@ -1170,20 +1171,21 @@ class Model(Macro):
             # udate the cache type taking into account the outputs
             self._assign_cache_type()
 
-        # check validitty of output_file
+        # check validitty of output_file. This could be done inside the
+        # ModelOutput class, but it feels too late
         if output_file:
-            if isinstance(output_file, str):
-                output_file = Path(output_file)
-                ext = output_file.suffix
-            elif isinstance(output_file, Path):
-                ext = output_file.suffix
-            else:
+            if not isinstance(output_file, (str, Path)):
                 raise TypeError(
                         "Paths must be strings or pathlib Path objects.")
 
-            if ext not in ModelOutput.valid_output_files:
+            if isinstance(output_file, str):
+                output_file = Path(output_file)
+
+            file_extension = output_file.suffix
+
+            if file_extension not in ModelOutput.valid_output_files:
                 raise ValueError(
-                        f"Unsupported output file format {ext}")
+                        f"Unsupported output file format {file_extension}")
 
         # add constant cache to thosa variable that are constants
         self._add_constant_cache()

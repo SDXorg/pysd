@@ -145,6 +145,7 @@ class DatasetHandler(OutputHandlerInterface):
 
         """
         self.ds = nc.Dataset(self.out_file, "w")
+
         # defining global attributes
         self.ds.description = "Results for simulation run on" \
             f"{t.ctime(t.time())} using PySD version {__version__}"
@@ -163,9 +164,8 @@ class DatasetHandler(OutputHandlerInterface):
 
             # create variable
             # TODO: check if the type could be defined otherwise)
-            var = self.ds.createVariable(dim_name,
-                f"S{max_str_len}",
-                (dim_name,))
+            var = self.ds.createVariable(dim_name, f"S{max_str_len}",
+                  (dim_name,))
             # assigning values to variable
             var[:] = coords
 
@@ -191,14 +191,33 @@ class DatasetHandler(OutputHandlerInterface):
         None
         """
         for key in capture_elements:
+
             comp = getattr(model.components, key)
             comp_vals = comp()
-            if isinstance(comp_vals, xr.DataArray):
-                self.ds[key][self.step, :] = comp_vals.values
-            elif isinstance(comp_vals, np.ndarray):
-                self.ds[key][self.step, :] = comp_vals
+
+            if "time" in self.ds[key].dimensions:
+                if isinstance(comp_vals, xr.DataArray):
+                    self.ds[key][self.step, :] = comp_vals.values
+                elif isinstance(comp_vals, np.ndarray):
+                    self.ds[key][self.step, :] = comp_vals
+                else:
+                    self.ds[key][self.step] = comp_vals
             else:
-                self.ds[key][self.step] = comp_vals
+                try: # this issue can arise with external objects
+                    if isinstance(comp_vals, xr.DataArray):
+                        self.ds[key][:] = comp_vals.values
+                    elif isinstance(comp_vals, np.ndarray):
+                        if comp_vals.size == 1:
+                            self.ds[key][:] = comp_vals
+                        else:
+                            self.ds[key][:] = comp_vals
+                    else:
+                        self.ds[key][:] = comp_vals
+                except ValueError:
+                    warnings.warn(f"The dimensions of {key} in the results "
+                    "do not match the declared dimensions for this "
+                    "variable. The resulting values will not be "
+                    "included in the results file.")
 
         self.step += 1
 
@@ -210,6 +229,8 @@ class DatasetHandler(OutputHandlerInterface):
         -------
         None
         """
+
+        # close Dataset
         self.ds.close()
 
         if kwargs.get("flatten"):
@@ -235,29 +256,11 @@ class DatasetHandler(OutputHandlerInterface):
         # creating variables in capture_elements
         # TODO we are looping through all capture elements twice. This
         # could be avoided
-        self.__create_ds_vars(model, capture_elements)
+        self.__create_ds_vars(model, capture_elements, add_time=False)
 
-        for key in capture_elements:
-            comp = getattr(model.components, key)
-            comp_vals = comp()
-            try:
-                for num, _ in enumerate(self.ds["time"][:]):
-                    if isinstance(comp_vals, xr.DataArray):
-                        self.ds[key][num, :] = comp_vals.values
-                    elif isinstance(comp_vals, np.ndarray):
-                        if comp_vals.size == 1:
-                            self.ds[key][num] = comp_vals
-                        else:
-                            self.ds[key][num, :] = comp_vals
-                    else:
-                        self.ds[key][num] = comp_vals
-            except ValueError:
-                warnings.warn(f"The dimensions of {key} in the results "
-                              "do not match the declared dimensions for this "
-                              "variable. The resulting values will not be "
-                              "included in the results file.")
+        self.update(model, capture_elements)
 
-    def __create_ds_vars(self, model, capture_elements):
+    def __create_ds_vars(self, model, capture_elements, add_time=True):
         """
         Create new variables in a netCDF4 Dataset from the capture_elements.
 
@@ -267,6 +270,8 @@ class DatasetHandler(OutputHandlerInterface):
             PySD Model object
         capture_elements: set
             Which model elements to capture - uses pysafe names.
+        add_time: bool
+            Whether to add a time as the first dimension for the variables.
 
         Returns
         -------
@@ -278,15 +283,16 @@ class DatasetHandler(OutputHandlerInterface):
             comp = getattr(model.components, key)
             comp_vals = comp()
 
+            dims = ()
+
             if isinstance(comp_vals, (xr.DataArray, np.ndarray)):
                 if comp.subscripts:
-                    dims = ("time",) + tuple(comp.subscripts)
-                else:
-                    dims = ("time",)
-            else:
-                dims = ("time",)
+                    dims = tuple(comp.subscripts)
 
-            self.ds.createVariable(key, "f8", dims)
+            if add_time:
+                dims = ("time",) + dims
+
+            self.ds.createVariable(key, "f8", dims, compression="zlib")
 
             # adding units and description as metadata for each var
             self.ds[key].units = model.doc.loc[
