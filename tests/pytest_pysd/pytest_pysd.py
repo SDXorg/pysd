@@ -8,6 +8,8 @@ import xarray as xr
 import netCDF4 as nc
 
 from pysd.tools.benchmarking import assert_frames_close
+from pysd.py_backend.output import OutputHandlerInterface, DatasetHandler, \
+    DataFrameHandler, ModelOutput
 
 import pysd
 
@@ -24,12 +26,14 @@ test_model_look = _root.joinpath(
     + "test_get_lookups_subscripted_args.mdl")
 test_model_data = _root.joinpath(
     "test-models/tests/get_data_args_3d_xls/test_get_data_args_3d_xls.mdl")
-
+test_model_constants = _root.joinpath(
+    "test-models/tests/get_constants_subranges/"
+    "test_get_constants_subranges.mdl"
+)
 more_tests = _root.joinpath("more-tests/")
 
 test_model_constant_pipe = more_tests.joinpath(
     "constant_pipeline/test_constant_pipeline.mdl")
-
 
 class TestPySD():
 
@@ -1684,9 +1688,6 @@ class TestExportImport():
 class TestOutputs():
 
     def test_output_handler_interface(self):
-        from pysd.py_backend.output import OutputHandlerInterface, \
-         DatasetHandler, DataFrameHandler, ModelOutput
-
         # when the class does not inherit from OutputHandlerInterface, it must
         # implement all the interface to be a subclass of
         # OutputHandlerInterface.
@@ -1717,7 +1718,6 @@ class TestOutputs():
         # considered a subclass, because it follows the interface
         assert issubclass(ThatFollowsInterface, OutputHandlerInterface)
 
-
         class IncompleteHandler:
             """
             Class that does not follow the full interface
@@ -1734,8 +1734,7 @@ class TestOutputs():
 
         # It does not inherit from OutputHandlerInterface and does not fulfill
         # its interface
-        assert issubclass(IncompleteHandler, OutputHandlerInterface) == False
-
+        assert not issubclass(IncompleteHandler, OutputHandlerInterface)
 
         class EmptyHandler(OutputHandlerInterface):
             """
@@ -1769,7 +1768,6 @@ class TestOutputs():
             EmptyHandler.add_run_elements(
                 EmptyHandler, "model", "capture")
 
-
     def test_output_with_dimensions(self, shared_tmpdir):
         model = pysd.read_vensim(test_model_look)
         model.progress = False
@@ -1781,8 +1779,9 @@ class TestOutputs():
             model.run(output_file=out_file)
 
         with nc.Dataset(out_file, "r")as ds:
-            assert ds.ncattrs() == ['description', 'model_file', 'timestep',
-             'initial_time', 'final_time']
+            assert ds.ncattrs() == [
+                'description', 'model_file', 'timestep', 'initial_time',
+                'final_time']
             assert list(ds.dimensions.keys()) == ["Rows", "Dim", "time"]
             # dimensions are stored as variables
             assert ds["Rows"][:].size == 2
@@ -1797,3 +1796,207 @@ class TestOutputs():
             assert ds["d2d"].description == "Missing"
             assert ds["d2d"].units == "Missing"
 
+        # test cache run variables with dimensions
+        model2 = pysd.read_vensim(test_model_constants)
+        model2.progress = False
+
+        out_file2 = shared_tmpdir.joinpath("results2.nc")
+
+        with catch_warnings(record=True) as w:
+            simplefilter("always")
+            model2.run(output_file=out_file2)
+
+        with nc.Dataset(out_file2, "r")as ds:
+            assert "constant" in list(ds.variables.keys())
+            assert ds["constant"].dimensions == ("dim1",)
+
+    def test_make_flat_df(self):
+
+        df = pd.DataFrame(index=[1], columns=['elem1'])
+        df.at[1] = [xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                                 {'Dim1': ['A', 'B', 'C'],
+                                  'Dim2': ['D', 'E', 'F']},
+                                 dims=['Dim1', 'Dim2'])]
+
+        expected = pd.DataFrame(index=[1], data={'Elem1[B,F]': 6.})
+
+        return_addresses = {
+            'Elem1[B,F]': ('elem1', {'Dim1': ['B'], 'Dim2': ['F']})}
+
+        actual = DataFrameHandler.make_flat_df(df, return_addresses)
+
+        # check all columns are in the DataFrame
+        assert set(actual.columns) == set(expected.columns)
+        assert_frames_close(actual, expected, rtol=1e-8, atol=1e-8)
+
+    def test_make_flat_df_0dxarray(self):
+
+        df = pd.DataFrame(index=[1], columns=['elem1'])
+        df.at[1] = [xr.DataArray(5)]
+
+        expected = pd.DataFrame(index=[1], data={'Elem1': 5.})
+
+        return_addresses = {'Elem1': ('elem1', {})}
+
+        actual = DataFrameHandler.make_flat_df(df, return_addresses, flatten=True)
+
+        # check all columns are in the DataFrame
+        assert set(actual.columns) == set(expected.columns)
+        assert_frames_close(actual, expected, rtol=1e-8, atol=1e-8)
+
+    def test_make_flat_df_nosubs(self):
+
+        df = pd.DataFrame(index=[1], columns=['elem1', 'elem2'])
+        df.at[1] = [25, 13]
+
+        expected = pd.DataFrame(index=[1], columns=['Elem1', 'Elem2'])
+        expected.at[1] = [25, 13]
+
+        return_addresses = {'Elem1': ('elem1', {}),
+                            'Elem2': ('elem2', {})}
+
+        actual = DataFrameHandler.make_flat_df(df, return_addresses)
+
+        # check all columns are in the DataFrame
+        assert set(actual.columns) == set(expected.columns)
+        assert all(actual['Elem1'] == expected['Elem1'])
+        assert all(actual['Elem2'] == expected['Elem2'])
+
+    def test_make_flat_df_return_array(self):
+        """ There could be cases where we want to
+        return a whole section of an array - ie, by passing in only part of
+        the simulation dictionary. in this case, we can't force to float..."""
+
+        df = pd.DataFrame(index=[1], columns=['elem1', 'elem2'])
+        df.at[1] = [xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                                 {'Dim1': ['A', 'B', 'C'],
+                                  'Dim2': ['D', 'E', 'F']},
+                                 dims=['Dim1', 'Dim2']),
+                    xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                                 {'Dim1': ['A', 'B', 'C'],
+                                  'Dim2': ['D', 'E', 'F']},
+                                 dims=['Dim1', 'Dim2'])]
+
+        expected = pd.DataFrame(index=[1], columns=['Elem1[A, Dim2]', 'Elem2'])
+        expected.at[1] = [xr.DataArray([[1, 2, 3]],
+                                       {'Dim1': ['A'],
+                                        'Dim2': ['D', 'E', 'F']},
+                                       dims=['Dim1', 'Dim2']),
+                          xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                                       {'Dim1': ['A', 'B', 'C'],
+                                        'Dim2': ['D', 'E', 'F']},
+                                       dims=['Dim1', 'Dim2'])]
+
+        return_addresses = {
+            'Elem1[A, Dim2]': ('elem1', {'Dim1': ['A'],
+                                         'Dim2': ['D', 'E', 'F']}),
+            'Elem2': ('elem2', {})}
+
+        actual = DataFrameHandler.make_flat_df(df, return_addresses)
+
+        # check all columns are in the DataFrame
+        assert set(actual.columns) == set(expected.columns)
+        # need to assert one by one as they are xarrays
+        assert actual.loc[1, 'Elem1[A, Dim2]'].equals(
+                expected.loc[1, 'Elem1[A, Dim2]'])
+        assert actual.loc[1, 'Elem2'].equals(expected.loc[1, 'Elem2'])
+
+    def test_make_flat_df_flatten(self):
+
+        df = pd.DataFrame(index=[1], columns=['elem1', 'elem2'])
+        df.at[1] = [xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                                 {'Dim1': ['A', 'B', 'C'],
+                                  'Dim2': ['D', 'E', 'F']},
+                                 dims=['Dim1', 'Dim2']),
+                    xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                                 {'Dim1': ['A', 'B', 'C'],
+                                  'Dim2': ['D', 'E', 'F']},
+                                 dims=['Dim1', 'Dim2'])]
+
+        expected = pd.DataFrame(index=[1], columns=[
+            'Elem1[A,D]',
+            'Elem1[A,E]',
+            'Elem1[A,F]',
+            'Elem2[A,D]',
+            'Elem2[A,E]',
+            'Elem2[A,F]',
+            'Elem2[B,D]',
+            'Elem2[B,E]',
+            'Elem2[B,F]',
+            'Elem2[C,D]',
+            'Elem2[C,E]',
+            'Elem2[C,F]'])
+
+        expected.at[1] = [1, 2, 3, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+        return_addresses = {
+            'Elem1[A,Dim2]': ('elem1', {'Dim1': ['A'],
+                                        'Dim2': ['D', 'E', 'F']}),
+            'Elem2': ('elem2', {})}
+
+        actual = DataFrameHandler.make_flat_df(df, return_addresses, flatten=True)
+
+        # check all columns are in the DataFrame
+        assert set(actual.columns) == set(expected.columns)
+        # need to assert one by one as they are xarrays
+        for col in set(expected.columns):
+            assert actual.loc[:, col].values == expected.loc[:, col].values
+
+    def test_make_flat_df_flatten_transposed(self):
+
+        df = pd.DataFrame(index=[1], columns=['elem2'])
+        df.at[1] = [
+            xr.DataArray(
+                [[1, 4, 7], [2, 5, 8], [3, 6, 9]],
+                {'Dim2': ['D', 'E', 'F'], 'Dim1': ['A', 'B', 'C']},
+                ['Dim2', 'Dim1']
+            ).transpose("Dim1", "Dim2")
+        ]
+
+        expected = pd.DataFrame(index=[1], columns=[
+            'Elem2[A,D]',
+            'Elem2[A,E]',
+            'Elem2[A,F]',
+            'Elem2[B,D]',
+            'Elem2[B,E]',
+            'Elem2[B,F]',
+            'Elem2[C,D]',
+            'Elem2[C,E]',
+            'Elem2[C,F]'])
+
+        expected.at[1] = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+        return_addresses = {
+            'Elem2': ('elem2', {})}
+
+        actual = DataFrameHandler.make_flat_df(df, return_addresses, flatten=True)
+
+        # check all columns are in the DataFrame
+        assert set(actual.columns) == set(expected.columns)
+        # need to assert one by one as they are xarrays
+        for col in set(expected.columns):
+            assert actual.loc[:, col].values == expected.loc[:, col].values
+
+    def test_make_flat_df_times(self):
+
+        df = pd.DataFrame(index=[1, 2], columns=['elem1'])
+        df['elem1'] = [xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                                    {'Dim1': ['A', 'B', 'C'],
+                                    'Dim2': ['D', 'E', 'F']},
+                                    dims=['Dim1', 'Dim2']),
+                       xr.DataArray([[2, 4, 6], [8, 10, 12], [14, 16, 19]],
+                                    {'Dim1': ['A', 'B', 'C'],
+                                     'Dim2': ['D', 'E', 'F']},
+                                    dims=['Dim1', 'Dim2'])]
+
+        expected = pd.DataFrame([{'Elem1[B,F]': 6}, {'Elem1[B,F]': 12}])
+        expected.index = [1, 2]
+
+        return_addresses = {'Elem1[B,F]': ('elem1', {'Dim1': ['B'],
+                                                     'Dim2': ['F']})}
+        actual = DataFrameHandler.make_flat_df(df, return_addresses)
+
+        # check all columns are in the DataFrame
+        assert set(actual.columns) == set(expected.columns)
+        assert set(actual.index) == set(expected.index)
+        assert all(actual['Elem1[B,F]'] == expected['Elem1[B,F]'])

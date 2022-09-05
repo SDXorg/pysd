@@ -11,6 +11,8 @@ import time as t
 
 from csv import QUOTE_NONE
 
+import regex as re
+
 import numpy as np
 import xarray as xr
 import pandas as pd
@@ -18,7 +20,7 @@ import netCDF4 as nc
 
 from pysd._version import __version__
 
-from . import utils
+from . utils import xrsplit
 
 
 class ModelOutput():
@@ -169,8 +171,8 @@ class DatasetHandler(OutputHandlerInterface):
 
             # create variable
             # TODO: check if the type could be defined otherwise)
-            var = self.ds.createVariable(dim_name, f"S{max_str_len}",
-                  (dim_name,))
+            var = self.ds.createVariable(
+                dim_name, f"S{max_str_len}", (dim_name,))
             # assigning values to variable
             var[:] = coords
 
@@ -208,7 +210,7 @@ class DatasetHandler(OutputHandlerInterface):
                 else:
                     self.ds[key][self.step] = comp_vals
             else:
-                try: # this issue can arise with external objects
+                try:  # this issue can arise with external objects
                     if isinstance(comp_vals, xr.DataArray):
                         self.ds[key][:] = comp_vals.values
                     elif isinstance(comp_vals, np.ndarray):
@@ -219,10 +221,11 @@ class DatasetHandler(OutputHandlerInterface):
                     else:
                         self.ds[key][:] = comp_vals
                 except ValueError:
-                    warnings.warn(f"The dimensions of {key} in the results "
-                    "do not match the declared dimensions for this "
-                    "variable. The resulting values will not be "
-                    "included in the results file.")
+                    warnings.warn(
+                        f"The dimensions of {key} in the results "
+                        "do not match the declared dimensions for this "
+                        "variable. The resulting values will not be "
+                        "included in the results file.")
 
         self.step += 1
 
@@ -332,7 +335,7 @@ class DataFrameHandler(OutputHandlerInterface):
         None
 
         """
-        self.ds =  pd.DataFrame(columns=capture_elements)
+        self.ds = pd.DataFrame(columns=capture_elements)
 
     def update(self, model, capture_elements):
         """
@@ -372,9 +375,9 @@ class DataFrameHandler(OutputHandlerInterface):
         # enforce flattening if df is to be saved to csv or tab file
         flatten = True if self.output_file else kwargs.get("flatten", None)
 
-        df = utils.make_flat_df(self.ds,
-                                kwargs["return_addresses"],
-                                flatten)
+        df = DataFrameHandler.make_flat_df(
+            self.ds, kwargs["return_addresses"], flatten
+            )
         if self.output_file:
             self.__save_to_file(df)
 
@@ -401,8 +404,8 @@ class DataFrameHandler(OutputHandlerInterface):
         else:
             sep = ","
 
-        # QUOTE_NONE used to print the csv/tab files as vensim does with special
-        # characterse, e.g.: "my-var"[Dimension]
+        # QUOTE_NONE used to print the csv/tab files as vensim does with
+        # special characterse, e.g.: "my-var"[Dimension]
         output.to_csv(
             self.output_file, sep, index_label="Time", quoting=QUOTE_NONE
             )
@@ -427,3 +430,90 @@ class DataFrameHandler(OutputHandlerInterface):
         nx = len(self.ds.index)
         for element in capture_elements:
             self.ds[element] = [getattr(model.components, element)()] * nx
+
+    @staticmethod
+    def make_flat_df(df, return_addresses, flatten=False):
+        """
+        Takes a dataframe from the outputs of the integration processes,
+        renames the columns as the given return_adresses and splits xarrays
+        if needed.
+
+        Parameters
+        ----------
+        df: pandas.DataFrame
+            Dataframe to process.
+
+        return_addresses: dict
+            Keys will be column names of the resulting dataframe, and are what the
+            user passed in as 'return_columns'. Values are a tuple:
+            (py_name, {coords dictionary}) which tells us where to look for the
+            value to put in that specific column.
+
+        flatten: bool (optional)
+                If True, once the output dataframe has been formatted will
+                split the xarrays in new columns following vensim's naming
+                to make a totally flat output. Default is False.
+
+        Returns
+        -------
+        new_df: pandas.DataFrame
+            Formatted dataframe.
+
+        """
+        new_df = {}
+        for real_name, (pyname, address) in return_addresses.items():
+            if address:
+                # subset the specific address
+                values = [x.loc[address] for x in df[pyname].values]
+            else:
+                # get the full column
+                values = df[pyname].to_list()
+
+            is_dataarray = len(values) != 0 and isinstance(
+                values[0], xr.DataArray)
+
+            if is_dataarray and values[0].size == 1:
+                # some elements are returned as 0-d arrays, convert
+                # them to float
+                values = [float(x) for x in values]
+                is_dataarray = False
+
+            if flatten and is_dataarray:
+                DataFrameHandler.__add_flat(new_df, real_name, values)
+            else:
+                new_df[real_name] = values
+
+        return pd.DataFrame(index=df.index, data=new_df)
+
+    @staticmethod
+    def __add_flat(savedict, name, values):
+        """
+        Add float lists from a list of xarrays to a provided dictionary.
+
+        Parameters
+        ----------
+        savedict: dict
+            Dictionary to save the data on.
+
+        name: str
+            The base name of the variable to save the data.
+
+        values: list
+            List of xarrays to convert to split in floats.
+
+        Returns
+        -------
+        None
+
+        """
+        # remove subscripts from name if given
+        name = re.sub(r'\[.*\]', '', name)
+        dims = values[0].dims
+
+        # split values in xarray.DataArray
+        lval = [xrsplit(val) for val in values]
+        for i, ar in enumerate(lval[0]):
+            vals = [float(v[i]) for v in lval]
+            subs = '[' + ','.join([str(ar.coords[dim].values)
+                                   for dim in dims]) + ']'
+            savedict[name+subs] = vals
