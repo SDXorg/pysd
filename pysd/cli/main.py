@@ -2,10 +2,7 @@ import sys
 import os
 from pathlib import Path
 
-from csv import QUOTE_NONE
 from datetime import datetime
-
-from .parser import parser
 
 import pysd
 from pysd.translators.vensim.vensim_utils import supported_extensions as\
@@ -13,6 +10,7 @@ from pysd.translators.vensim.vensim_utils import supported_extensions as\
 from pysd.translators.xmile.xmile_utils import supported_extensions as\
     xmile_extensions
 
+from .parser import parser
 
 def main(args):
     """
@@ -41,12 +39,17 @@ def main(args):
 
     model.initialize()
 
-    output = model.run(**create_configuration(model, options))
+    if not options.output_file:
+        options.output_file = os.path.splitext(os.path.basename(
+            options.model_file
+            ))[0]\
+                + datetime.now().strftime("_output_%Y_%m_%d-%H_%M_%S_%f.tab")
+
+    model.run(**create_configuration(model, options))
 
     if options.export_file:
         model.export(options.export_file)
 
-    save(output, options)
     print("\nFinished!")
     sys.exit()
 
@@ -133,45 +136,11 @@ def create_configuration(model, options):
         "time_step": options.time_step,
         "saveper": options.saveper,
         "flatten_output": True,  # need to return totally flat DF
-        "return_timestamps": options.return_timestamps  # given or None
+        "return_timestamps": options.return_timestamps,  # given or None,
+        "output_file": options.output_file
     }
 
     if options.import_file:
         conf_dict["initial_condition"] = options.import_file
 
     return conf_dict
-
-
-def save(output, options):
-    """
-    Saves models output.
-
-    Paramters
-    ---------
-    output: pandas.DataFrame
-
-    options: argparse.Namespace
-
-    Returns
-    -------
-    None
-
-    """
-    if options.output_file:
-        output_file = options.output_file
-    else:
-        output_file = os.path.splitext(os.path.basename(
-            options.model_file
-            ))[0]\
-                + datetime.now().strftime("_output_%Y_%m_%d-%H_%M_%S_%f.tab")
-
-    if output_file.endswith(".tab"):
-        sep = "\t"
-    else:
-        sep = ","
-
-    # QUOTE_NONE used to print the csv/tab files af vensim does with special
-    # characterse, e.g.: "my-var"[Dimension]
-    output.to_csv(output_file, sep, index_label="Time", quoting=QUOTE_NONE)
-
-    print(f"Data saved in '{output_file}'")

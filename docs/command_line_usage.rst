@@ -26,11 +26,11 @@ In order to set the output file path, the *-o/--output-file* argument can be use
     python -m pysd -o my_output_file.csv Teacup.mdl
 
 .. note::
-    The output file can be a *.csv* or *.tab*.
+    The output file format may be *.csv*, *.tab* or *.nc*.
 
 .. note::
-    If *-o/--output-file* is not given, the output will be saved in a file
-    that starts with the model file name followed by a time stamp to avoid
+    If *-o/--output-file* is not given, the output will be saved in a *.tab*
+    file that starts with the model file name followed by a time stamp to avoid
     overwritting files.
 
 Activate progress bar
