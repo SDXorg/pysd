@@ -99,6 +99,7 @@ class OutputHandlerInterface(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
     def update(self, model, capture_elements):
         """
         Update the results object at each iteration at which resutls are
@@ -106,12 +107,14 @@ class OutputHandlerInterface(metaclass=abc.ABCMeta):
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
     def postprocess(self, **kwargs):
         """
         Perform different tasks at the time of returning the results object.
         """
         raise NotImplementedError
 
+    @abc.abstractmethod
     def add_run_elements(self, model, capture_elements):
         """
         Add elements with run cache to the results object.

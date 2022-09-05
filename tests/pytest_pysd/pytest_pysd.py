@@ -1680,3 +1680,120 @@ class TestExportImport():
 
             assert_frames_close(stocks2, stocks)
 
+
+class TestOutputs():
+
+    def test_output_handler_interface(self):
+        from pysd.py_backend.output import OutputHandlerInterface, \
+         DatasetHandler, DataFrameHandler, ModelOutput
+
+        # when the class does not inherit from OutputHandlerInterface, it must
+        # implement all the interface to be a subclass of
+        # OutputHandlerInterface.
+        # Add any additional Handler here.
+        assert issubclass(DatasetHandler, OutputHandlerInterface)
+        assert issubclass(DataFrameHandler, OutputHandlerInterface)
+        assert issubclass(ModelOutput, OutputHandlerInterface)
+
+        class ThatFollowsInterface:
+            """
+            This class does not inherit from OutputHandlerInterface, but it
+            overrides all its methods (it follows the interface).
+            """
+
+            def initialize(self, model, capture_elements):
+                pass
+
+            def update(self, model, capture_elements):
+                pass
+
+            def postprocess(self, **kwargs):
+                pass
+
+            def add_run_elements(self, capture_elemetns):
+                pass
+
+        # eventhough it does not inherit from OutputHandlerInterface, it is
+        # considered a subclass, because it follows the interface
+        assert issubclass(ThatFollowsInterface, OutputHandlerInterface)
+
+
+        class IncompleteHandler:
+            """
+            Class that does not follow the full interface
+            (add_run_elements is missing).
+            """
+            def initialize(self, model, capture_elements):
+                pass
+
+            def update(self, model, capture_elements):
+                pass
+
+            def postprocess(self, **kwargs):
+                pass
+
+        # It does not inherit from OutputHandlerInterface and does not fulfill
+        # its interface
+        assert issubclass(IncompleteHandler, OutputHandlerInterface) == False
+
+
+        class EmptyHandler(OutputHandlerInterface):
+            """
+            When the class DOES inherit from OutputHandlerInterface, but does
+            not override all its abstract methods, then it cannot be
+            instantiated
+            """
+            pass
+
+        # it is a subclass because it inherits from it
+        assert issubclass(EmptyHandler, OutputHandlerInterface)
+
+        # it cannot be instantiated because it does not override all abstract
+        # methods
+        with pytest.raises(TypeError):
+            empty = EmptyHandler()
+
+        # calling methods that are not overriden returns NotImplementedError
+        # this should never happen, because these methods are instance methods,
+        # therefore the class needs to be instantiated first
+        with pytest.raises(NotImplementedError):
+            EmptyHandler.initialize(EmptyHandler, "model", "capture")
+
+        with pytest.raises(NotImplementedError):
+            EmptyHandler.update(EmptyHandler, "model", "capture")
+
+        with pytest.raises(NotImplementedError):
+            EmptyHandler.postprocess(EmptyHandler)
+
+        with pytest.raises(NotImplementedError):
+            EmptyHandler.add_run_elements(
+                EmptyHandler, "model", "capture")
+
+
+    def test_output_with_dimensions(self, shared_tmpdir):
+        model = pysd.read_vensim(test_model_look)
+        model.progress = False
+
+        out_file = shared_tmpdir.joinpath("results.nc")
+
+        with catch_warnings(record=True) as w:
+            simplefilter("always")
+            model.run(output_file=out_file)
+
+        with nc.Dataset(out_file, "r")as ds:
+            assert ds.ncattrs() == ['description', 'model_file', 'timestep',
+             'initial_time', 'final_time']
+            assert list(ds.dimensions.keys()) == ["Rows", "Dim", "time"]
+            # dimensions are stored as variables
+            assert ds["Rows"][:].size == 2
+            assert "Rows" in ds.variables.keys()
+            assert "time" in ds.variables.keys()
+            # scalars do not have the time dimension
+            assert ds["initial_time"][:].size == 1
+            # cache step variables have the "time" dimension
+            assert ds["lookup_1d_time"].dimensions == ("time",)
+
+            assert ds["d2d"].dimensions == ("time", "Rows", "Dim")
+            assert ds["d2d"].description == "Missing"
+            assert ds["d2d"].units == "Missing"
+
