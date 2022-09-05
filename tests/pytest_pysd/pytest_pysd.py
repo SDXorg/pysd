@@ -1195,11 +1195,11 @@ class TestPySD():
 
     def test__integrate(self, shared_tmpdir):
         from pysd.py_backend.model import ModelOutput
-        # Todo: think through a stronger test here...
+        # TODO: think through a stronger test here...
         model = pysd.read_vensim(test_model)
         model.progress = False
         model.time.add_return_timestamps(list(range(0, 5, 2)))
-        capture_elements={'teacup_temperature'}
+        capture_elements = {'teacup_temperature'}
 
         out = ModelOutput(model, capture_elements, None)
         model._integrate(out)
