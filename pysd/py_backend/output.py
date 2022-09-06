@@ -300,12 +300,9 @@ class DatasetHandler(OutputHandlerInterface):
             self.ds.createVariable(key, "f8", dims, compression="zlib")
 
             # adding units and description as metadata for each var
-            self.ds[key].units = model.doc.loc[
-                        model.doc["Py Name"] == key,
-                        "Units"].values[0] or "Missing"
-            self.ds[key].description = model.doc.loc[
-                        model.doc["Py Name"] == key,
-                        "Comment"].values[0] or "Missing"
+            for col in model.doc.columns:
+                setattr(self.ds[key], col, model.doc.loc[
+                    model.doc["Py Name"] == key, col].values[0] or "Missing")
 
 
 class DataFrameHandler(OutputHandlerInterface):
