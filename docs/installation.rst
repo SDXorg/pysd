@@ -46,6 +46,7 @@ PySD builds on the core Python data analytics stack, and the following third par
 * Pandas
 * Parsimonious
 * xarray
+* netCDF4
 * xlrd
 * lxml
 * regex
