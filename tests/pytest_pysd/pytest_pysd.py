@@ -1796,8 +1796,8 @@ class TestOutputs():
             assert ds["lookup_1d_time"].dimensions == ("time",)
 
             assert ds["d2d"].dimensions == ("time", "Rows", "Dim")
-            assert ds["d2d"].description == "Missing"
-            assert ds["d2d"].units == "Missing"
+            assert ds["d2d"].Comment == "Missing"
+            assert ds["d2d"].Units == "Missing"
 
         # test cache run variables with dimensions
         model2 = pysd.read_vensim(test_model_constants)
@@ -1831,6 +1831,7 @@ class TestOutputs():
             assert ds["One Dimensional Subscript"][:].dtype == "O"
             assert np.allclose(
                 ds["stock_a"][-1, :].data, np.array([1.0, 2.0, 3.0]))
+            assert set(model.doc.columns) == set(ds["stock_a"].ncattrs())
 
     def test_make_flat_df(self):
 
