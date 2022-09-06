@@ -14,6 +14,7 @@ Deprecations
 
 Bug fixes
 ~~~~~~~~~
+- Fix bug when a WITH LOOKUPS argument has subscripts.
 
 Documentation
 ~~~~~~~~~~~~~
