@@ -1769,11 +1769,21 @@ class InlineLookupsBuilder(StructureBuilder):
             separator=",",
             threshold=len(self.lookups.y)
         )
-        return BuildAST(
-            expression="np.interp(%(value)s, %(x)s, %(y)s)" % arguments,
-            calls=arguments["value"].calls,
-            subscripts=arguments["value"].subscripts,
-            order=0)
+        if arguments["value"].subscripts:
+            subs = arguments["value"].subscripts
+            expression = "np.interp(%(value)s, %(x)s, %(y)s)" % arguments
+            return BuildAST(
+                expression="xr.DataArray(%s, %s, %s)" % (
+                    expression, subs, list(subs)),
+                calls=arguments["value"].calls,
+                subscripts=subs,
+                order=0)
+        else:
+            return BuildAST(
+                expression="np.interp(%(value)s, %(x)s, %(y)s)" % arguments,
+                calls=arguments["value"].calls,
+                subscripts={},
+                order=0)
 
 
 class ReferenceBuilder(StructureBuilder):
