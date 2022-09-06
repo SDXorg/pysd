@@ -19,5 +19,5 @@ print(model.vensim_model_context.variable_names)
 model.build_stan_functions()
 
 cmdstan_model = model.data2draws({})
-result = cmdstan_model.sample()
-result.summary()
+#result = cmdstan_model.sample()
+#result.summary()

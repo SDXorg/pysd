@@ -12,7 +12,7 @@ from pysd.translators.structures.abstract_model import (
 )
 from typing import TYPE_CHECKING
 if TYPE_CHECKING:
-    from .stan_model import SamplingStatement
+    from .stan_model import StanModelContext, VensimModelContext
 
 
 class StanTransformedParametersBuilder:
@@ -57,7 +57,7 @@ class StanTransformedParametersBuilder:
                     assert isinstance(
                         component.ast, IntegStructure
                     ), "Output variable component must be an INTEG."
-                    self.code += f"real {outcome_variable_name}_init = {InitialValueCodegenWalker(lookup_function_dict, variable_ast_dict).walk(component.ast)};\n"
+                    self.code += f"real {outcome_variable_name}__init = {InitialValueCodegenWalker(lookup_function_dict, variable_ast_dict).walk(component.ast)};\n"
                     break
 
         self.code += "\n"
@@ -67,11 +67,15 @@ class StanTransformedParametersBuilder:
             if name in stock_initial_values:
                 self.code += f"initial_outcome[{index}] = {stock_initial_values[name]};  // Defined within stan\n"
             else:
-                self.code += f"initial_outcome[{index}] = {name}_init;\n"
+                self.code += f"initial_outcome[{index}] = {name}__init;\n"
 
         self.code += "\n"
 
-        self.code += f"vector[{len(outcome_variable_names)}] integrated_result[n_t] = ode_rk45({function_name}, initial_outcome, initial_time, times, {', '.join(argument_variables)});\n"
+        ode_solver_code = f"vector[{len(outcome_variable_names)}] integrated_result[n_t] = ode_rk45({function_name}, initial_outcome, initial_time, times"
+        if len(argument_variables) > 0:
+            ode_solver_code += ", " + f"{', '.join(argument_variables)}"
+
+        self.code += ode_solver_code + ");\n"
 
         for index, name in enumerate(outcome_variable_names, 1):
             self.code += f"array[n_t] real {name} = integrated_result[:, {index}];\n"
@@ -83,26 +87,32 @@ class StanTransformedParametersBuilder:
 
 
 class StanParametersBuilder:
-    def __init__(self, sampling_statements: Iterable["SamplingStatement"]):
-        self.sampling_statements = sampling_statements
+    def __init__(self, stan_model_context: "StanModelContext"):
+        self.stan_model_context = stan_model_context
 
     def build_block(self, data_variable_names: Tuple[str]):
         code = IndentedString()
         code += "parameters{\n"
         code.indent_level += 1  # Enter parameters block
 
-        for statement in self.sampling_statements:
-            if statement.lhs_name in data_variable_names:
-                continue
+        added_parameters = set()
 
-            if statement.lower > float("-inf") and statement.upper < float("inf"):
-                code += f"real<lower={statement.lower}, upper={statement.upper}> {statement.lhs_name};\n"
-            elif statement.lower > float("-inf"):
-                code += f"real<lower={statement.lower}> {statement.lhs_name};\n"
-            elif statement.upper < float("inf"):
-                code += f"real<upper={statement.upper}> {statement.lhs_name};\n"
-            else:
-                code += f"real {statement.lhs_name};\n"
+        for statement in self.stan_model_context.sample_statements:
+            for lhs_variable in statement.lhs_variables:
+                if lhs_variable in data_variable_names:
+                    continue
+                if lhs_variable in added_parameters:
+                    continue
+                if statement.lower > float("-inf") and statement.upper < float("inf"):
+                    code += f"real<lower={statement.lower}, upper={statement.upper}> {lhs_variable};\n"
+                elif statement.lower > float("-inf"):
+                    code += f"real<lower={statement.lower}> {lhs_variable};\n"
+                elif statement.upper < float("inf"):
+                    code += f"real<upper={statement.upper}> {lhs_variable};\n"
+                else:
+                    code += f"real {lhs_variable};\n"
+
+                added_parameters.add(lhs_variable)
 
         code.indent_level -= 1  # Exit parameters block
         code += "}\n"
@@ -143,8 +153,10 @@ class StanDataBuilder:
                     raise Exception(f"Can't automatically process data variable {key}.")
                 elif len(dims) == 1:
                     code += f"vector[{dims[0]}] {key};\n"
+                elif len(dims) == 2:
+                    code += f"array[{dims[0]}] vector[{dims[1]}] {key};\n"
                 else:
-                    raise Exception("Multidimensional data not implemented")
+                    raise Exception("Multidimensional data with dimensions higher than 3 not implemented")
 
 
         code.indent_level -= 1
@@ -153,18 +165,17 @@ class StanDataBuilder:
 
 
 class StanTransformedDataBuilder:
-    def __init__(self, initial_time, integration_times: Iterable[Number]):
-        self.initial_time = initial_time
-        self.integration_times = integration_times
+    def __init__(self, stan_model_context: "StanModelContext"):
+        self.stan_model_context = stan_model_context
 
     def build_block(self) -> str:
-        n_t = len(self.integration_times)
+        n_t = len(self.stan_model_context.integration_times)
         code = IndentedString()
         code += "transformed data{\n"
         code.indent_level += 1
-        code += f"real initial_time = {self.initial_time};\n"
+        code += f"real initial_time = {self.stan_model_context.initial_time};\n"
         code += f"int n_t = {n_t};\n"
-        code += f"array[n_t] real times = {{{', '.join([str(x) for x in self.integration_times])}}};\n"
+        code += f"array[n_t] real times = {{{', '.join([str(x) for x in self.stan_model_context.integration_times])}}};\n"
 
         code.indent_level -= 1
         code += "}\n"
@@ -180,7 +191,7 @@ class StanModelBuilder:
         code += "model{\n"
         code.indent_level += 1
         for statement in self.sampling_statements:
-            code += f"{statement.lhs_name} ~ {statement.distribution_type}({', '.join([str(arg) for arg in statement.distribution_args])});\n"
+            code += f"{statement.lhs_expr} ~ {statement.distribution_type}({', '.join([str(arg) for arg in statement.distribution_args])});\n"
 
         code.indent_level -= 1
         code += "}\n"
@@ -196,11 +207,61 @@ class StanGeneratedQuantitiesBuilder:
         code += "generated quantities{\n"
         code.indent_level += 1
         for statement in self.sampling_statements:
-            code += f"{statement.lhs_name}_tilde ~ {statement.distribution_type}({', '.join([str(arg) for arg in statement.distribution_args])});\n"
+            code += f"{statement.lhs_expr}_tilde ~ {statement.distribution_type}({', '.join([str(arg) for arg in statement.distribution_args])});\n"
 
         code.indent_level -= 1
         code += "}\n"
         return str(code)
+
+
+class Draws2DataStanGQBuilder:
+    def __init__(self, stan_model_context: "StanModelContext", vensim_model_context: "VensimModelContext", function_name: str, data_dict: Dict):
+        self.stan_model_context = stan_model_context
+        self.vensim_model_context = vensim_model_context
+        self.function_name = function_name
+        self.data_dict = data_dict
+
+
+    def build_block(self):
+        self.code = IndentedString()
+        self.code += "generated quantities{\n"
+        self.code.indent_level += 1
+
+        self.code.indent_level -= 1
+        self.code += "}\n"
+
+        return str(self.code)
+
+
+    def build_rng_functions(self):
+        ignored_variables = set(self.data_dict.keys()).union(set(self.vensim_model_context.stock_variable_names))
+        stmt_sorter = StatementTopoSort(self.stan_model_context, ignored_variables)
+        for sampling_statement in self.stan_model_context.sample_statements:
+            for lhs_var in sampling_statement.lhs_variables:
+                stmt_sorter.add_stmt(lhs_var, sampling_statement.rhs_variables)
+
+        param_draw_order = stmt_sorter.sort()
+        statements = self.stan_model_context.sample_statements.copy()
+
+        processed_statements = set()
+
+        for param_name in param_draw_order:
+            if param_name in ignored_variables:
+                continue
+            for statement in statements:
+                if statement in processed_statements:
+                    continue
+                if param_name in statement.lhs_variables:
+                    if statement.init_state:
+                        param_name = param_name + "__init"
+                    self.code += f"real {param_name}_tilde = {statement.distribution_type}_rng({', '.join(statement.distribution_args)})"
+
+                    processed_statements.add(statement)
+
+
+
+
+
 
     
 class StanFunctionBuilder:
@@ -242,7 +303,7 @@ class StanFunctionBuilder:
 
     def build_functions(
         self,
-        predictor_variable_names: Iterable[Tuple[str, str]],
+        predictor_variable_names: Set[str],
         outcome_variable_names: Iterable[str],
         function_name: str = "vensim_ode_func",
     ):
@@ -299,11 +360,13 @@ class StanFunctionBuilder:
 
         #################
         # Create function declaration
-        self.code += f"vector {function_name}(real time, vector outcome, "
+        self.code += f"vector {function_name}(real time, vector outcome"
         argument_strings = []
         argument_variables = (
             []
         )  # this list holds the names of the argument variables
+        if(len(predictor_variable_names) > 0):
+            self.code += ", "
         for var in predictor_variable_names:
             if isinstance(var, str):
                 argument_variables.append(var)
@@ -369,5 +432,4 @@ class StanFunctionBuilder:
         for element in self.elements:
             for component in element.components:
                 self.lookup_builder_walker.walk(component.ast, vensim_name_to_identifier(element.name))
-
 

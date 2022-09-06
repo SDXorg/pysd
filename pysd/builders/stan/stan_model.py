@@ -7,7 +7,9 @@ from pysd.translators.structures.abstract_expressions import *
 import cmdstanpy
 
 class SamplingStatement:
-    lhs_name: str
+    lhs_expr: str
+    lhs_variables: Set[str]
+    rhs_variables: Set[str]
     distribution_type: str
     distribution_return_type: Type
     distribution_args: Tuple[str]
@@ -15,10 +17,14 @@ class SamplingStatement:
     upper: float
     init_state: bool
 
-    def __init__(self, lhs_name, distribution_type, *distribution_args, lower=float("-inf"), upper=float("inf"), init_state=False):
-        self.lhs_name = lhs_name
+    def __init__(self, lhs_expr, distribution_type, *distribution_args, lower=float("-inf"), upper=float("inf"), init_state=False):
+        self.lhs_expr = lhs_expr
+        self.lhs_variables = set()
+        self.lhs_variables.update([node.id for node in ast.walk(ast.parse(lhs_expr)) if isinstance(node, ast.Name)])
         self.distribution_type = distribution_type
         self.distribution_args = distribution_args
+        self.rhs_variables = set()
+        self.rhs_variables.update([node.id for arg in self.distribution_args for node in ast.walk(ast.parse(str(arg))) if isinstance(node, ast.Name)])
         self.lower = lower
         self.upper = upper
         self.init_state = init_state
@@ -33,6 +39,8 @@ class SamplingStatement:
 
 @dataclass
 class StanModelContext:
+    initial_time: float
+    integration_times: Iterable[float]
     sample_statements: List[SamplingStatement] = field(default_factory=list)
     exposed_parameters: Set[str] = field(default_factory=set)
 
@@ -81,7 +89,7 @@ class StanVensimModel:
         self.model_name = model_name
         self.initial_time = float(initial_time)
         self.integration_times = integration_times
-        self.stan_model_context = StanModelContext()
+        self.stan_model_context = StanModelContext(initial_time, integration_times)
         self.vensim_model_context = VensimModelContext(self.abstract_model)
         if initial_time in integration_times:
             raise Exception("initial_time shouldn't be present in integration_times")
@@ -90,9 +98,9 @@ class StanVensimModel:
         if not os.path.exists(self.stan_model_dir):
             os.mkdir(self.stan_model_dir)
 
-        self.init_variable_regex = re.compile(".+?(?=_init$)")
-        # This regex is to match all preceding characters that come before '_init' at the end of the string.
-        # So something like stock_var_init_init would match into stock_var_init.
+        self.init_variable_regex = re.compile(".+?(?=__init$)")
+        # This regex is to match all preceding characters that come before '__init' at the end of the string.
+        # So something like stock_var_init__init would match into stock_var__init.
         # This is used to parse out the corresponding stock names for init parameters.
 
     def print_info(self):
@@ -112,12 +120,12 @@ class StanVensimModel:
                 if isinstance(arg, str):
                     # If the distribution argument is an expression, parse the dependant variables
                     # We're using the python parser here, which might be problematic
-                    used_variable_names = [node.id for node in ast.walk(ast.parse(arg)) if isinstance(node, ast.Name)]
+                    used_variable_names = [node.id.strip() for node in ast.walk(ast.parse(arg)) if isinstance(node, ast.Name)]
                     for name in used_variable_names:
-                        if name in self.vensim_model_context.variable_names:
+                        if name in self.vensim_model_context.variable_names and name not in self.vensim_model_context.stock_variable_names:
                             self.stan_model_context.exposed_parameters.update(used_variable_names)
 
-            if variable_name in self.vensim_model_context.variable_names:
+            if variable_name in self.vensim_model_context.variable_names and variable_name not in self.vensim_model_context.stock_variable_names:
                 self.stan_model_context.exposed_parameters.add(variable_name)
             self.stan_model_context.sample_statements.append(SamplingStatement(variable_name, distribution_type, *args, lower=lower, upper=upper, init_state=init_state))
 
@@ -141,44 +149,16 @@ class StanVensimModel:
             f.write(self.function_builder.build_functions(self.stan_model_context.exposed_parameters, self.vensim_model_context.stock_variable_names))
 
     def data2draws(self, data_dict: Dict):
-        stan_model_path= os.path.join(self.stan_model_dir, f"{self.model_name}_data2draws.stan")
+        stan_model_path = os.path.join(self.stan_model_dir, f"{self.model_name}_data2draws.stan")
         with open(stan_model_path, "w") as f:
-            # Include the function
-            f.write("functions{\n")
-            f.write(f"    #include {self.model_name}_functions.stan\n")
-            f.write("}\n\n")
-
-            f.write(StanDataBuilder().build_block(data_dict))
-            f.write("\n")
-
-            f.write(StanTransformedDataBuilder(self.initial_time, self.integration_times).build_block())
-            f.write("\n")
-
-            f.write(StanParametersBuilder(self.stan_model_context.sample_statements).build_block(tuple(data_dict.keys())))
-            f.write("\n")
-
-            transformed_params_builder = StanTransformedParametersBuilder(self.abstract_model)
-            # Find sampling statements for init
-            stock_initials = {}
-            for statement in self.stan_model_context.sample_statements:
-                if statement.init_state:
-                    stock_variable_name = self.init_variable_regex.findall(statement.lhs_name)[0]
-                    stock_initials[stock_variable_name] = statement.lhs_name
-
-            f.write(transformed_params_builder.build_block(self.stan_model_context.exposed_parameters,
-                                                           self.vensim_model_context.stock_variable_names,
-                                                           self.function_builder.get_generated_lookups_dict(),
-                                                           self.function_builder.ode_function_name,
-                                                           stock_initials))
-            f.write("\n")
-
-            f.write(StanModelBuilder(self.stan_model_context.sample_statements).build_block())                                               
-            f.write("\n")
+            builder = Draws2DataStanGQBuilder(self.stan_model_context, self.vensim_model_context,
+                                              self.function_builder.ode_function_name, data_dict)
+            f.write(builder.build_block())
 
         stan_model = cmdstanpy.CmdStanModel(stan_file=stan_model_path)
         return stan_model
 
-    def draws2data(self):
+    def draws2data(self, data_dict: Dict):
         stan_model_path = os.path.join(self.stan_model_dir, f"{self.model_name}_draws2data.stan")
         with open(stan_model_path, "w") as f:
             # Include the function
@@ -187,19 +167,24 @@ class StanVensimModel:
             f.write(f"#include {self.model_name}_functions.stan\n")
             f.write("}")
             f.write("\n")
-            f.write(StanDataBuilder().build_block())
-            f.write("\n")
-            f.write(StanTransformedDataBuilder(self.initial_time, self.integration_times).build_block())
-            f.write("\n")
-  
 
+            f.write(StanDataBuilder().build_block(data_dict))
+            f.write("\n")
+            f.write(StanTransformedDataBuilder(self.stan_model_context).build_block())
+            f.write("\n")
+
+            stock_initials = {}
+            for statement in self.stan_model_context.sample_statements:
+                if statement.init_state:
+                    stock_variable_name = self.init_variable_regex.findall(statement.lhs_expr)[0]
+                    stock_initials[stock_variable_name] = statement.lhs_expr
             transformed_params_builder = StanTransformedParametersBuilder(self.abstract_model)
             f.write(transformed_params_builder.build_block(self.stan_model_context.exposed_parameters,
                                                            self.vensim_model_context.stock_variable_names,
                                                            self.function_builder.get_generated_lookups_dict(),
-                                                           self.function_builder.ode_function_name))
+                                                           self.function_builder.ode_function_name,
+                                                           stock_initials))
             f.write("\n")
-
 
             f.write(StanGeneratedQuantitiesBuilder(self.stan_model_context.sample_statements).build_block())
 
