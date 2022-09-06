@@ -1,5 +1,31 @@
 What's New
 ==========
+v3.7.0 (to be released)
+-------------------
+
+New Features
+~~~~~~~~~~~~
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+
+Documentation
+~~~~~~~~~~~~~
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- Make PySD work with :py:mod:`parsimonius` 0.10.0.
+
+
 v3.6.1 (2022/09/05)
 -------------------
 
