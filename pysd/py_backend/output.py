@@ -157,9 +157,9 @@ class DatasetHandler(OutputHandlerInterface):
         self.ds.description = "Results for simulation run on" \
             f"{t.ctime(t.time())} using PySD version {__version__}"
         self.ds.model_file = model.py_model_file
-        self.ds.timestep = f"{model.components.time_step()}"
-        self.ds.initial_time = f"{model.components.initial_time()}"
-        self.ds.final_time = f"{model.components.final_time()}"
+        self.ds.timestep = f"{model.time.time_step()}"
+        self.ds.initial_time = f"{model.time.initial_time()}"
+        self.ds.final_time = f"{model.time.final_time()}"
 
         # creating variables for all model dimensions
         for dim_name, coords in model.subscripts.items():
@@ -240,9 +240,6 @@ class DatasetHandler(OutputHandlerInterface):
 
         # close Dataset
         self.ds.close()
-
-        if kwargs.get("flatten"):
-            warnings.warn("DataArrays stored in netCDF4 will not be flattened")
 
         print(f"Results stored in {self.out_file}")
 
@@ -444,8 +441,8 @@ class DataFrameHandler(OutputHandlerInterface):
             Dataframe to process.
 
         return_addresses: dict
-            Keys will be column names of the resulting dataframe, and are what the
-            user passed in as 'return_columns'. Values are a tuple:
+            Keys will be column names of the resulting dataframe, and are what
+            the user passed in as 'return_columns'. Values are a tuple:
             (py_name, {coords dictionary}) which tells us where to look for the
             value to put in that specific column.
 
