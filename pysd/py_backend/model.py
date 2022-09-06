@@ -1100,6 +1100,8 @@ class Model(Macro):
             If True, once the output dataframe has been formatted will
             split the xarrays in new columns following Vensim's naming
             to make a totally flat output. Default is True.
+            This argument will be ignored when passing a netCDF4 file
+            path in the output_file argument.
 
         cache_output: bool (optional)
            If True, the number of calls of outputs variables will be increased

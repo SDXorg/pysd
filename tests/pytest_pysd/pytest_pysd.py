@@ -34,6 +34,9 @@ more_tests = _root.joinpath("more-tests/")
 
 test_model_constant_pipe = more_tests.joinpath(
     "constant_pipeline/test_constant_pipeline.mdl")
+test_model_numeric_coords = more_tests.joinpath(
+    "numeric_subscripts/test_subscript_1d_arrays.mdl"
+)
 
 class TestPySD():
 
@@ -1806,9 +1809,28 @@ class TestOutputs():
             simplefilter("always")
             model2.run(output_file=out_file2)
 
-        with nc.Dataset(out_file2, "r")as ds:
+        with nc.Dataset(out_file2, "r") as ds:
             assert "constant" in list(ds.variables.keys())
             assert ds["constant"].dimensions == ("dim1",)
+            assert ds["dim1"][:].data.dtype == "S1"
+
+        # dimension with numeric coords
+        model3 = pysd.read_vensim(test_model_numeric_coords)
+        model3.progress = False
+
+        out_file3 = shared_tmpdir.joinpath("results3.nc")
+
+        with catch_warnings(record=True) as w:
+            simplefilter("always")
+            model3.run(output_file=out_file3)
+
+        with nc.Dataset(out_file3, "r")as ds:
+            assert np.array_equal(
+                ds["time"][:].data, np.arange(0.0, 101.0, 1.0))
+            # coordinates get dtype=object when their length is different
+            assert ds["One Dimensional Subscript"][:].dtype == "O"
+            assert np.allclose(
+                ds["stock_a"][-1, :].data, np.array([1.0, 2.0, 3.0]))
 
     def test_make_flat_df(self):
 
@@ -1838,7 +1860,8 @@ class TestOutputs():
 
         return_addresses = {'Elem1': ('elem1', {})}
 
-        actual = DataFrameHandler.make_flat_df(df, return_addresses, flatten=True)
+        actual = DataFrameHandler.make_flat_df(
+            df, return_addresses, flatten=True)
 
         # check all columns are in the DataFrame
         assert set(actual.columns) == set(expected.columns)
@@ -1934,7 +1957,8 @@ class TestOutputs():
                                         'Dim2': ['D', 'E', 'F']}),
             'Elem2': ('elem2', {})}
 
-        actual = DataFrameHandler.make_flat_df(df, return_addresses, flatten=True)
+        actual = DataFrameHandler.make_flat_df(
+            df, return_addresses, flatten=True)
 
         # check all columns are in the DataFrame
         assert set(actual.columns) == set(expected.columns)
@@ -1969,7 +1993,8 @@ class TestOutputs():
         return_addresses = {
             'Elem2': ('elem2', {})}
 
-        actual = DataFrameHandler.make_flat_df(df, return_addresses, flatten=True)
+        actual = DataFrameHandler.make_flat_df(
+            df, return_addresses, flatten=True)
 
         # check all columns are in the DataFrame
         assert set(actual.columns) == set(expected.columns)
