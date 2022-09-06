@@ -156,6 +156,18 @@ The subscripted variables, in general, will be returned as :py:class:`xarray.Dat
 
    >>> model.run(flatten_output=True)
 
+
+Storing simulation results on a file
+------------------------------------
+Simulation results can be stored as *.csv*, *.tab* or *.nc* (netCDF4) files by defining the desired output file path in the `output_file` argument, when calling the :py:meth:`.run` method::
+
+   >>> model.run(output_file="results.nc")
+
+If the `output_file` is not set, the :py:meth:`.run` method will return a :py:class:`pandas.DataFrame`.
+
+For most cases, the *.tab* file format is the safest choice. It is preferable over the *.csv* format when the model includes subscripted variables. The *.nc* format is recommended for large models, and when the user wants to keep metadata such as variable units and description.
+
+
 Setting parameter values
 ------------------------
 In some situations we may want to modify the parameters of the model to investigate its behavior under different assumptions. There are several ways to do this in PySD, but the :py:meth:`.run` method gives us a convenient method in the `params` keyword argument.
@@ -174,7 +186,7 @@ If the parameter value to change is a subscripted variable (vector, matrix...), 
 
    >>> model.run(params={'Subscripted var': 0})
 
-A partial :py:class:`xarray.DataArray` can be used. For example a new variable with ‘dim2’ but not ‘dim2’. In that case, the result will be repeated in the remaining dimensions::
+A partial :py:class:`xarray.DataArray` can be used. For example a new variable with ‘dim2’ but not ‘dim1’. In that case, the result will be repeated in the remaining dimensions::
 
    >>> import xarray as xr
    >>> new_value = xr.DataArray([1, 5], {'dim2': [1, 2]}, ['dim2'])
