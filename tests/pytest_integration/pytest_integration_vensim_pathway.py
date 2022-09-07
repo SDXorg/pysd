@@ -546,6 +546,10 @@ vensim_test = {
         "folder": "vector_select",
         "file": "test_vector_select.mdl"
     },
+    "with_lookup": {
+        "folder": "with_lookup",
+        "file": "test_with_lookup.mdl"
+    },
     "xidz_zidz": {
         "folder": "xidz_zidz",
         "file": "xidz_zidz.mdl"
