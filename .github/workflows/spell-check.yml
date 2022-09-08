@@ -1,6 +1,0 @@
-name: Codespell with annotations
-uses: codespell-project/actions-codespell@master
-
-on:
-  push:
-  pull_request:
