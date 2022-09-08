@@ -3,7 +3,7 @@ Reporting bugs
 
 Before reporting any bug, please make sure that you are using the latest version of PySD. You can get the version number by running `python -m pysd -v` on the command line.
 
-All bugs must be reported in the project's `issue tracker on github <https://github.com/JamesPHoughton/pysd/issues>`_.
+All bugs must be reported in the project's `issue tracker on github <https://github.com/SDXorg/pysd/issues>`_.
 
 .. note::
   Not all the features and functions are implemented. If you are in trouble while translating or running a Vensim or Xmile model check the :ref:`Vensim supported functions <Vensim supported functions>` or :ref:`Xmile supported functions <Xmile supported functions>` and consider that when openning a new issue.

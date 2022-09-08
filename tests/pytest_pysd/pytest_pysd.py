@@ -94,7 +94,7 @@ class TestPySD():
         assert stocks.notnull().all().all()
 
     def test_run_return_timestamps(self):
-        """Addresses https://github.com/JamesPHoughton/pysd/issues/17"""
+        """Addresses https://github.com/SDXorg/pysd/issues/17"""
 
         model = pysd.read_vensim(test_model)
         timestamps = np.random.randint(1, 5, 5).cumsum()
@@ -168,7 +168,7 @@ class TestPySD():
         assert list(return_timestamps) == list(stocks.index)
 
     def test_run_return_columns_original_names(self):
-        """Addresses https://github.com/JamesPHoughton/pysd/issues/26
+        """Addresses https://github.com/SDXorg/pysd/issues/26
         - Also checks that columns are returned in the correct order"""
 
         model = pysd.read_vensim(test_model)
@@ -186,7 +186,7 @@ class TestPySD():
             == {'Teacup Temperature', 'Heat Loss to Room'}
 
     def test_run_reload(self):
-        """ Addresses https://github.com/JamesPHoughton/pysd/issues/99"""
+        """ Addresses https://github.com/SDXorg/pysd/issues/99"""
 
         model = pysd.read_vensim(test_model)
 
@@ -200,7 +200,7 @@ class TestPySD():
         assert (result1 == result2).all().all()
 
     def test_run_return_columns_pysafe_names(self):
-        """Addresses https://github.com/JamesPHoughton/pysd/issues/26"""
+        """Addresses https://github.com/SDXorg/pysd/issues/26"""
 
         model = pysd.read_vensim(test_model)
         return_columns = ["room_temperature", "teacup_temperature"]
@@ -225,7 +225,7 @@ class TestPySD():
         assert stocks["Teacup Temperature"].iloc[0] == 33
 
     def test_initial_conditions_tuple_original_names(self):
-        """ Responds to https://github.com/JamesPHoughton/pysd/issues/77"""
+        """ Responds to https://github.com/SDXorg/pysd/issues/77"""
 
         model = pysd.read_vensim(test_model)
         stocks = model.run(
@@ -262,7 +262,7 @@ class TestPySD():
 
     def test_set_constant_parameter(self):
         """ In response to:
-        re: https://github.com/JamesPHoughton/pysd/issues/5"""
+        re: https://github.com/SDXorg/pysd/issues/5"""
 
         model = pysd.read_vensim(test_model)
         model.set_components({"room_temperature": 20})
@@ -322,7 +322,7 @@ class TestPySD():
         assert model.components.room_temperature() == 70
 
     def test_set_components_warnings(self):
-        """Addresses https://github.com/JamesPHoughton/pysd/issues/80"""
+        """Addresses https://github.com/SDXorg/pysd/issues/80"""
 
         model = pysd.read_vensim(test_model)
         with catch_warnings(record=True) as w:
@@ -1210,7 +1210,7 @@ class TestPySD():
 
     def test_default_returns_with_lookups(self):
         """
-        Addresses https://github.com/JamesPHoughton/pysd/issues/114
+        Addresses https://github.com/SDXorg/pysd/issues/114
         The default settings should skip model elements with no particular
         return value
         """
@@ -1222,13 +1222,13 @@ class TestPySD():
             <= set(ret.columns.values)
 
     def test_py_model_file(self):
-        """Addresses https://github.com/JamesPHoughton/pysd/issues/86"""
+        """Addresses https://github.com/SDXorg/pysd/issues/86"""
 
         model = pysd.read_vensim(test_model)
         assert model.py_model_file == str(test_model.with_suffix(".py"))
 
     def test_mdl_file(self):
-        """Relates to https://github.com/JamesPHoughton/pysd/issues/86"""
+        """Relates to https://github.com/SDXorg/pysd/issues/86"""
 
         model = pysd.read_vensim(test_model)
         assert model.mdl_file == str(test_model)
@@ -1246,7 +1246,7 @@ class TestModelInteraction():
         attributes
 
         This test responds to issue:
-        https://github.com/JamesPHoughton/pysd/issues/23
+        https://github.com/SDXorg/pysd/issues/23
 
         """
 
@@ -1266,7 +1266,7 @@ class TestModelInteraction():
         Need to check that if we instantiate two copies of the same model,
         changes to one copy do not influence the other copy.
 
-        Checks for issue: https://github.com/JamesPHoughton/pysd/issues/108
+        Checks for issue: https://github.com/SDXorg/pysd/issues/108
         that time is not shared between the two models
 
         """

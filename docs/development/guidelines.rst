@@ -25,7 +25,7 @@ of the `/tests/` directory.
 
 In order to run all the tests :py:mod:`pytest` should be used.
 A `Makefile` is given to run easier the tests with :py:mod:`pytest`, check
-`tests/README <https://github.com/JamesPHoughton/pysd/tree/master/tests/README.md>`_
+`tests/README <https://github.com/SDXorg/pysd/tree/master/tests/README.md>`_
 for more information.
 
 These tests run quickly and should be executed when any changes are made to ensure

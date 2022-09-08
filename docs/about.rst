@@ -1,6 +1,13 @@
 About the Project
 =================
 
+PySD was originally developed by `James P Houghton <https://github.com/JamesPHoughton>`_ in 2014 as a software to translate Vensim to Python and... @James?
+
+Since the creation of the library many people have contributed to the project by reporting and fixing bugs and adding new features. These contributions are listed in the `contributions section of the GitHub repository <https://github.com/SDXorg/pysd/graphs/contributors>`_.
+
+Some of the big changes that have allowed PySD to get to where you are now are the development of an XMILE to Python code translator in YEAR by ALEXPREY? and the restructuring of the translation and model building through an Abstract Syntax by `Eneko Martin-Martinez <https://github.com/enekomartinmartinez>`_ in 2022.
+
+`sdCloud.io <http://sdcloud.io>`_ development team have made great contributions to XMILE support and have integratined PySD into their cloud-based model simulation environment.
 
 Motivation: The (coming of) age of Big Data
 -------------------------------------------
@@ -28,5 +35,3 @@ A third category of tools imports the models created by traditional tools to per
 The central paradigm of PySD is that it is more efficient to bring the mature capabilities of system dynamics into an environment in use for active development in data science, than to attempt to bring each new development in inference and machine learning into the system dynamics enclave.
 
 PySD reads a model file – the product of a modeling program such as Vensim or Stella/iThink – and cross compiles it into Python, providing a simulation engine that can run these models natively in the Python environment. It is not a substitute for these tools, and cannot be used to replace a visual model construction environment.
-
-

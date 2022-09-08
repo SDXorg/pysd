@@ -4,20 +4,25 @@ PySD
 
 |made-with-sphinx-doc|
 |DOI|
+|Maintained|
 |PyPI license|
 |conda package|
 |PyPI package|
 |PyPI status|
 |PyPI pyversions|
+|Contributions|
 
 .. |made-with-sphinx-doc| image:: https://img.shields.io/badge/Made%20with-Sphinx-1f425f.svg
    :target: https://www.sphinx-doc.org/
+
+.. |Maintained| image:: https://img.shields.io/badge/Maintained-Yes-brightgreen.svg
+   :target: https://github.com/SDXorg/pysd/pulse
 
 .. |docs| image:: https://readthedocs.org/projects/pysd/badge/?version=latest
    :target: https://pysd.readthedocs.io/en/latest/?badge=latest
 
 .. |PyPI license| image:: https://img.shields.io/pypi/l/sdqc.svg
-   :target: https://github.com/JamesPHoughton/pysd/blob/master/LICENSE
+   :target: https://github.com/SDXorg/pysd/blob/master/LICENSE
 
 .. |PyPI package| image:: https://badge.fury.io/py/pysd.svg
     :target: https://badge.fury.io/py/pysd
@@ -33,6 +38,9 @@ PySD
 
 .. |DOI| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.5654824.svg
    :target: https://doi.org/10.5281/zenodo.5654824
+
+.. |Contributions| image:: https://img.shields.io/badge/contributions-welcome-blue.svg
+   :target: https://pysd.readthedocs.io/en/latest/development/development_index.html
 
 This project is a simple library for running System Dynamics models in Python, with the purpose of improving integration of Big Data and Machine Learning into the SD workflow.
 
@@ -63,7 +71,11 @@ The cookbook includes models, sample data, and code in the form of iPython noteb
 
 Contributing
 ^^^^^^^^^^^^
-The code for this package is available at: https://github.com/JamesPHoughton/pysd
+|Contributions|
+
+PySD is currently a community-maintained project, any contribution is welcome.
+
+The code for this package is available at: https://github.com/SDXorg/pysd
 
 If you find a bug, or are interested in a particular feature, see :doc:`reporting bugs <../reporting_bugs>`.
 
@@ -72,7 +84,7 @@ listed above.
 
 Citing
 ^^^^^^
-If you use PySD in any published work, consider citing the `PySD Introductory Paper <https://github.com/JamesPHoughton/pysd/blob/master/docs/PySD%20Intro%20Paper%20Preprint.pdf>`_::
+If you use PySD in any published work, consider citing the `PySD Introductory Paper <https://github.com/SDXorg/pysd/blob/master/docs/PySD%20Intro%20Paper%20Preprint.pdf>`_::
 
    Houghton, James; Siegel, Michael. "Advanced data analytics for system dynamics models using PySD." *Proceedings of the 33rd International Conference of the System Dynamics Society.* 2015.
 

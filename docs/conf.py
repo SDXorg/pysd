@@ -58,8 +58,8 @@ extensions = [
 ]
 
 extlinks = {
-    "issue": ("https://github.com/JamesPHoughton/pysd/issues/%s", "issue #%s"),
-    "pull": ("https://github.com/JamesPHoughton/pysd/pull/%s", "PR #%s"),
+    "issue": ("https://github.com/SDXorg/pysd/issues/%s", "issue #%s"),
+    "pull": ("https://github.com/SDXorg/pysd/pull/%s", "PR #%s"),
 }
 
 # Add any paths that contain templates here, relative to this directory.
@@ -74,8 +74,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'PySD'
-copyright = '2016, James Houghton'
-author = 'James Houghton'
+copyright = '2022, PySD contributors'
+author = 'PySD contributors'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -128,7 +128,7 @@ latex_elements = {}
 # author, documentclass [howto, manual, or own class]).
 latex_documents = [
   (master_doc, 'PySD.tex', 'PySD Documentation',
-   'James Houghton', 'manual'),
+   'PySD contributors', 'manual'),
 ]
 
 # -- Options for manual page output ---------------------------------------
