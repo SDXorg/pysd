@@ -712,10 +712,10 @@ class Macro(DynamicStateful):
         >>> model.set_components({'birth_rate': br})
 
         """
-        #  TODO: allow the params argument to take a pandas dataframe, where
+        # TODO: allow the params argument to take a pandas dataframe, where
         # column names are variable names. However some variables may be
         # constant or have no values for some index. This should be processed.
-        #  TODO: make this compatible with loading outputs from other files
+        # TODO: make this compatible with loading outputs from other files
 
         for key, value in params.items():
             func_name = utils.get_key_and_value_by_insensitive_key_or_value(

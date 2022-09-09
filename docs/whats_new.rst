@@ -5,6 +5,8 @@ v3.7.0 (to be released)
 
 New Features
 ~~~~~~~~~~~~
+- Simulation results can now be stored as netCDF4 files (:issue:`355`). (`@rogersamso <https://github.com/rogersamso>`_)
+- The CLI also accepts netCDF4 file paths after the -o argument. (`@rogersamso <https://github.com/rogersamso>`_)
 
 Breaking changes
 ~~~~~~~~~~~~~~~~
@@ -14,17 +16,20 @@ Deprecations
 
 Bug fixes
 ~~~~~~~~~
-- Fix bug when a WITH LOOKUPS argument has subscripts.
+- Fix bug when a WITH LOOKUPS argument has subscripts. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 Documentation
 ~~~~~~~~~~~~~
+- Adds Storing simulation results on a file section in the getting started page. (`@rogersamso <https://github.com/rogersamso>`_)
 
 Performance
 ~~~~~~~~~~~
+- Exporting outputs as netCDF4 is much faster than exporting a pandas DataFrame, especially for large models. (`@rogersamso <https://github.com/rogersamso>`_)
 
 Internal Changes
 ~~~~~~~~~~~~~~~~
-- Make PySD work with :py:mod:`parsimonius` 0.10.0.
+- Make PySD work with :py:mod:`parsimonius` 0.10.0. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Add netCDF4 and hdf5 dependencies. (`@rogersamso <https://github.com/rogersamso>`_)
 
 
 v3.6.1 (2022/09/05)
