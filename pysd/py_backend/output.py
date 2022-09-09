@@ -164,9 +164,11 @@ class DatasetHandler(OutputHandlerInterface):
         self.ds.description = "Results for simulation run on " \
             f"{t.ctime(t.time())} using PySD version {__version__}"
         self.ds.model_file = model.py_model_file or model.mdl_file
-        self.ds.timestep = f"{model.time.time_step()}"
+        self.ds.timestep = f"{model.time.time_step()}" if model.cache_type[
+            "time_step"] == "run" else "Variable"
         self.ds.initial_time = f"{model.time.initial_time()}"
-        self.ds.final_time = f"{model.time.final_time()}"
+        self.ds.final_time = f"{model.time.final_time()}" if model.cache_type[
+            "final_time"] == "run" else "Variable"
 
         # creating variables for all model dimensions
         for dim_name, coords in model.subscripts.items():
