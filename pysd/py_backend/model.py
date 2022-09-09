@@ -1112,7 +1112,7 @@ class Model(Macro):
 
         output_file: str, pathlib.Path or None (optional)
            Path of the file in which to save simulation results.
-           For now, only netCDF4 files (.nc) are supported.
+           Currently, csv, tab and nc (netCDF4) files are supported.
 
 
         Examples
