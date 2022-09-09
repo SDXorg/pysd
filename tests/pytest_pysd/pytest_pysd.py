@@ -30,6 +30,10 @@ test_model_constants = _root.joinpath(
     "test-models/tests/get_constants_subranges/"
     "test_get_constants_subranges.mdl"
 )
+test_variable_step = _root.joinpath(
+    "test-models/tests/control_vars/"
+    "test_control_vars.mdl"
+)
 more_tests = _root.joinpath("more-tests/")
 
 test_model_constant_pipe = more_tests.joinpath(
@@ -1832,6 +1836,15 @@ class TestOutputs():
             assert np.allclose(
                 ds["stock_a"][-1, :].data, np.array([1.0, 2.0, 3.0]))
             assert set(model.doc.columns) == set(ds["stock_a"].ncattrs())
+
+    def test_variable_time_step(self, shared_tmpdir):
+        model = pysd.read_vensim(test_variable_step)
+        capture_elements = set()
+        results = shared_tmpdir.joinpath("results.nc")
+        output = ModelOutput(model, capture_elements, results)
+        dataset = output.handler.ds
+        assert dataset.timestep == "Variable"
+        assert dataset.final_time == "Variable"
 
     def test_dataset_handler_step_setter(self, shared_tmpdir):
         model = pysd.read_vensim(test_model_look)
