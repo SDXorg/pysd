@@ -131,8 +131,15 @@ class DatasetHandler(OutputHandlerInterface):
 
     def __init__(self, out_file):
         self.out_file = out_file
-        self.step = 0
         self.ds = None
+        self._step = 0
+
+    @property
+    def step(self):
+        return self._step
+
+    def __update_step(self):
+        self._step = self.step + 1
 
     def initialize(self, model, capture_elements):
         """
@@ -154,9 +161,9 @@ class DatasetHandler(OutputHandlerInterface):
         self.ds = nc.Dataset(self.out_file, "w")
 
         # defining global attributes
-        self.ds.description = "Results for simulation run on" \
+        self.ds.description = "Results for simulation run on " \
             f"{t.ctime(t.time())} using PySD version {__version__}"
-        self.ds.model_file = model.py_model_file
+        self.ds.model_file = model.py_model_file or model.mdl_file
         self.ds.timestep = f"{model.time.time_step()}"
         self.ds.initial_time = f"{model.time.initial_time()}"
         self.ds.final_time = f"{model.time.final_time()}"
@@ -166,20 +173,21 @@ class DatasetHandler(OutputHandlerInterface):
             coords = np.array(coords)
             # create dimension
             self.ds.createDimension(dim_name, len(coords))
+
             # length of the longest string in the coords
             max_str_len = len(max(coords, key=len))
 
-            # create variable
-            # TODO: check if the type could be defined otherwise)
+            # create variable for the dimension
             var = self.ds.createVariable(
                 dim_name, f"S{max_str_len}", (dim_name,))
-            # assigning values to variable
+
+            # assigning coords to dimension
             var[:] = coords
 
         # creating the time dimension as unlimited
         self.ds.createDimension("time", None)
 
-        # creating variables in capture_elements
+        # creating variables
         self.__create_ds_vars(model, capture_elements)
 
     def update(self, model, capture_elements):
@@ -199,27 +207,19 @@ class DatasetHandler(OutputHandlerInterface):
         """
         for key in capture_elements:
 
-            comp = getattr(model.components, key)
-            comp_vals = comp()
+            comp = model[key]
 
             if "time" in self.ds[key].dimensions:
-                if isinstance(comp_vals, xr.DataArray):
-                    self.ds[key][self.step, :] = comp_vals.values
-                elif isinstance(comp_vals, np.ndarray):
-                    self.ds[key][self.step, :] = comp_vals
+                if isinstance(comp, xr.DataArray):
+                    self.ds[key][self.step, :] = comp.values
                 else:
-                    self.ds[key][self.step] = comp_vals
+                    self.ds[key][self.step] = comp
             else:
                 try:  # this issue can arise with external objects
-                    if isinstance(comp_vals, xr.DataArray):
-                        self.ds[key][:] = comp_vals.values
-                    elif isinstance(comp_vals, np.ndarray):
-                        if comp_vals.size == 1:
-                            self.ds[key][:] = comp_vals
-                        else:
-                            self.ds[key][:] = comp_vals
+                    if isinstance(comp, xr.DataArray):
+                        self.ds[key][:] = comp.values
                     else:
-                        self.ds[key][:] = comp_vals
+                        self.ds[key][:] = comp
                 except ValueError:
                     warnings.warn(
                         f"The dimensions of {key} in the results "
@@ -227,7 +227,7 @@ class DatasetHandler(OutputHandlerInterface):
                         "variable. The resulting values will not be "
                         "included in the results file.")
 
-        self.step += 1
+        self.__update_step()
 
     def postprocess(self, **kwargs):
         """
@@ -259,13 +259,11 @@ class DatasetHandler(OutputHandlerInterface):
         None
         """
         # creating variables in capture_elements
-        # TODO we are looping through all capture elements twice. This
-        # could be avoided
-        self.__create_ds_vars(model, capture_elements, add_time=False)
+        self.__create_ds_vars(model, capture_elements, time_dim=False)
 
         self.update(model, capture_elements)
 
-    def __create_ds_vars(self, model, capture_elements, add_time=True):
+    def __create_ds_vars(self, model, capture_elements, time_dim=True):
         """
         Create new variables in a netCDF4 Dataset from the capture_elements.
 
@@ -275,34 +273,34 @@ class DatasetHandler(OutputHandlerInterface):
             PySD Model object
         capture_elements: set
             Which model elements to capture - uses pysafe names.
-        add_time: bool
-            Whether to add a time as the first dimension for the variables.
+        time_dim: bool
+            Whether to add time as the first dimension for the variable.
 
         Returns
         -------
         None
 
         """
-
         for key in capture_elements:
-            comp = getattr(model.components, key)
-            comp_vals = comp()
+            comp = model[key]
 
             dims = ()
 
-            if isinstance(comp_vals, (xr.DataArray, np.ndarray)):
-                if comp.subscripts:
-                    dims = tuple(comp.subscripts)
+            if isinstance(comp, xr.DataArray):
+                dims = tuple(comp.dims)
 
-            if add_time:
+            if time_dim:
                 dims = ("time",) + dims
 
-            self.ds.createVariable(key, "f8", dims, compression="zlib")
+            var = self.ds.createVariable(key, "f8", dims, compression="zlib")
 
-            # adding units and description as metadata for each var
+            # adding metadata for each var from the model.doc
             for col in model.doc.columns:
-                setattr(self.ds[key], col, model.doc.loc[
-                    model.doc["Py Name"] == key, col].values[0] or "Missing")
+                var.setncattr(
+                    col,
+                    model.doc.loc[model.doc["Py Name"] == key, col].values[0] \
+                        or "Missing"
+                    )
 
 
 class DataFrameHandler(OutputHandlerInterface):
