@@ -300,8 +300,8 @@ class DatasetHandler(OutputHandlerInterface):
             for col in model.doc.columns:
                 var.setncattr(
                     col,
-                    model.doc.loc[model.doc["Py Name"] == key, col].values[0] \
-                        or "Missing"
+                    model.doc.loc[model.doc["Py Name"] == key, col].values[0]
+                    or "Missing"
                     )
 
 
