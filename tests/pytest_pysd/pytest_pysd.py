@@ -1833,6 +1833,21 @@ class TestOutputs():
                 ds["stock_a"][-1, :].data, np.array([1.0, 2.0, 3.0]))
             assert set(model.doc.columns) == set(ds["stock_a"].ncattrs())
 
+    def test_dataset_handler_step_setter(self, shared_tmpdir):
+        model = pysd.read_vensim(test_model_look)
+        capture_elements = set()
+        results = shared_tmpdir.joinpath("results.nc")
+        output = ModelOutput(model, capture_elements, results)
+
+        # Dataset handler step cannot be modified from the outside
+        with pytest.raises(AttributeError):
+            output.handler.step = 5
+
+        with pytest.raises(AttributeError):
+            output.handler.__update_step()
+
+        assert output.handler.step == 0
+
     def test_make_flat_df(self):
 
         df = pd.DataFrame(index=[1], columns=['elem1'])
