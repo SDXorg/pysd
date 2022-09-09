@@ -1,8 +1,8 @@
 pandas
 parsimonious
 xarray
-h5py
-netCDF4<=1.5
+netCDF4==1.5; sys_platform == 'win'
+netCDF4==1.6; sys_platform != 'win'
 xlrd
 lxml
 regex
