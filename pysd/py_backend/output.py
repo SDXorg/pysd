@@ -268,6 +268,7 @@ class DatasetHandler(OutputHandlerInterface):
     def __create_ds_vars(self, model, capture_elements, time_dim=True):
         """
         Create new variables in a netCDF4 Dataset from the capture_elements.
+        Data is zlib compressed by default for netCDF4 1.6.0 and above.
 
         Parameters
         ----------
@@ -283,6 +284,12 @@ class DatasetHandler(OutputHandlerInterface):
         None
 
         """
+        if tuple(nc.__version__.split(".")) >= ('1', '6', '0'):
+            var_ = lambda key, dims: self.ds.createVariable(
+                key, "f8", dims, compression="zlib")
+        else:
+            var_ = lambda key, dims: self.ds.createVariable(key, "f8", dims)
+
         for key in capture_elements:
             comp = model[key]
 
@@ -294,7 +301,7 @@ class DatasetHandler(OutputHandlerInterface):
             if time_dim:
                 dims = ("time",) + dims
 
-            var = self.ds.createVariable(key, "f8", dims, compression="zlib")
+            var = var_(key, dims)
 
             # adding metadata for each var from the model.doc
             for col in model.doc.columns:
