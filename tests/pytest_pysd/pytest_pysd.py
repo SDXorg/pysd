@@ -34,13 +34,16 @@ test_variable_step = _root.joinpath(
     "test-models/tests/control_vars/"
     "test_control_vars.mdl"
 )
+test_model_numeric_coords = _root.joinpath(
+    "test-models/tests/subscript_1d_arrays/"
+    "test_subscript_1d_arrays.mdl"
+)
+
 more_tests = _root.joinpath("more-tests/")
 
 test_model_constant_pipe = more_tests.joinpath(
     "constant_pipeline/test_constant_pipeline.mdl")
-test_model_numeric_coords = more_tests.joinpath(
-    "numeric_subscripts/test_subscript_1d_arrays.mdl"
-)
+
 
 class TestPySD():
 
