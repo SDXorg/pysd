@@ -94,7 +94,7 @@ class OutputHandlerInterface(metaclass=abc.ABCMeta):
         """
         handler = self.process_output(out_file)
 
-        if handler is not None: # the handler can write the out_file type.
+        if handler is not None:  # the handler can write the out_file type.
             return handler
         else:
             return self._next.handle(out_file)
@@ -352,11 +352,10 @@ class DatasetHandler(OutputHandlerInterface):
         None
 
         """
+        kwargs = dict()
+
         if tuple(nc.__version__.split(".")) >= ('1', '6', '0'):
-            var_ = lambda key, dims: self.ds.createVariable(
-                key, "f8", dims, compression="zlib")
-        else:
-            var_ = lambda key, dims: self.ds.createVariable(key, "f8", dims)
+            kwargs.update({"compression": "zlib"})
 
         for key in capture_elements:
             comp = model[key]
@@ -369,7 +368,7 @@ class DatasetHandler(OutputHandlerInterface):
             if time_dim:
                 dims = ("time",) + dims
 
-            var = var_(key, dims)
+            var = self.ds.createVariable(key, "f8", dims, **kwargs)
 
             # adding metadata for each var from the model.doc
             for col in model.doc.columns:
