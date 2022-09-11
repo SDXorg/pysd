@@ -41,21 +41,14 @@ class ModelOutput():
 
     def __init__(self, model, capture_elements, out_file=None):
 
-        self.handler = self.__handle(out_file)
+        # Add any other handlers that you write here, in the order you
+        # want them to run (DataFrameHandler runs first)
+        self.handler = DataFrameHandler(DatasetHandler(None)).process_output(out_file)
 
         capture_elements.add("time")
         self.capture_elements = capture_elements
 
         self.initialize(model)
-
-    def __handle(self, out_file):
-        # TODO improve the handler to avoid if then else statements
-        if out_file:
-            if out_file.suffix == ".nc":
-                return DatasetHandler(out_file)
-        # when the users expects a csv or tab output file, it defaults to the
-        # DataFrame path
-        return DataFrameHandler(out_file)
 
     def initialize(self, model):
         """ Delegating the creation of the results object and its elements to
@@ -82,9 +75,14 @@ class OutputHandlerInterface(metaclass=abc.ABCMeta):
     """
     Interface for the creation of different output type handlers.
     """
+    def __init__(self, next=None):
+        self._next = next
+
     @classmethod
     def __subclasshook__(cls, subclass):
-        return (hasattr(subclass, 'initialize') and
+        return (hasattr(subclass, 'process_output') and
+                callable(subclass.process_output) and
+                hasattr(subclass, 'initialize') and
                 callable(subclass.initialize) and
                 hasattr(subclass, 'update') and
                 callable(subclass.update) and
@@ -93,6 +91,13 @@ class OutputHandlerInterface(metaclass=abc.ABCMeta):
                 hasattr(subclass, 'add_run_elements') and
                 callable(subclass.add_run_elements) or
                 NotImplemented)
+
+    @abc.abstractmethod
+    def process_output(self, out_file):
+        """
+        If concrete handler can process out_file, returns True, else False.
+        """
+        raise NotImplementedError
 
     @abc.abstractmethod
     def initialize(self, model, capture_elements):
@@ -129,8 +134,9 @@ class DatasetHandler(OutputHandlerInterface):
     Manages simulation results stored as netCDF4 Dataset.
     """
 
-    def __init__(self, out_file):
-        self.out_file = out_file
+    def __init__(self, next):
+        super().__init__(next)
+        self.out_file = None
         self.ds = None
         self._step = 0
 
@@ -140,6 +146,28 @@ class DatasetHandler(OutputHandlerInterface):
 
     def __update_step(self):
         self._step = self.step + 1
+
+    def process_output(self, out_file):
+        """
+        If out_file can be handled by this concrete handler it returns True,
+        else False.
+
+        Parameters
+        ----------
+        out_file: str or pathlib.Path
+            Path to the file where the results will be written.
+
+        Returns
+        -------
+        bool
+
+        """
+        if out_file:
+            if out_file.suffix == ".nc":
+                self.out_file = out_file
+                return self
+        elif self._next is not None:
+            return self._next.process_output(out_file)
 
     def initialize(self, model, capture_elements):
         """
@@ -316,9 +344,32 @@ class DataFrameHandler(OutputHandlerInterface):
     """
     Manages simulation results stored as pandas DataFrame.
     """
-    def __init__(self, out_file):
+    def __init__(self, next):
+        super().__init__(next)
         self.ds = None
-        self.output_file = out_file
+        self.output_file = None
+
+    def process_output(self, out_file):
+        """
+        If this handler can process out_file, it returns True, else False.
+
+        Parameters
+        ----------
+        out_file: str or pathlib.Path
+            Path to the file where the results will be written.
+
+        Returns
+        -------
+        bool
+
+        """
+        self.out_file = out_file
+        if not out_file:
+            return self
+        if out_file.suffix in [".csv", ".tab"]:
+            return self
+        elif self._next is not None:
+            return self._next.process_output(out_file)
 
     def initialize(self, model, capture_elements):
         """
