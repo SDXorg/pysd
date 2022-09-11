@@ -250,7 +250,8 @@ class DatasetHandler(OutputHandlerInterface):
 
     def update(self, model, capture_elements):
         """
-        Writes values of variables in capture_elements in the netCDF4 Dataset.
+        Writes values of cache step variables from the capture_elements set
+        in the netCDF4 Dataset.
 
         Parameters
         ----------
@@ -267,25 +268,38 @@ class DatasetHandler(OutputHandlerInterface):
 
             comp = model[key]
 
-            if "time" in self.ds[key].dimensions:
-                if isinstance(comp, xr.DataArray):
-                    self.ds[key][self.step, :] = comp.values
-                else:
-                    self.ds[key][self.step] = comp
+            if isinstance(comp, xr.DataArray):
+                self.ds[key][self.step, :] = comp.values
             else:
-                try:  # this issue can arise with external objects
-                    if isinstance(comp, xr.DataArray):
-                        self.ds[key][:] = comp.values
-                    else:
-                        self.ds[key][:] = comp
-                except ValueError:
-                    warnings.warn(
-                        f"The dimensions of {key} in the results "
-                        "do not match the declared dimensions for this "
-                        "variable. The resulting values will not be "
-                        "included in the results file.")
+                self.ds[key][self.step] = comp
 
         self.__update_step()
+
+    def __update_run_elements(self, model, capture_elements):
+        """
+        Writes values of cache run elements from the cature_elements set
+        in the netCDF4 Dataset.
+        Cache run elements do not have the time dimension.
+
+        Parameters
+        ----------
+        model: pysd.Model
+            PySD Model object
+        capture_elements: set
+            Which model elements to capture - uses pysafe names.
+
+        Returns
+        -------
+        None
+        """
+        for key in capture_elements:
+
+            comp = model[key]
+
+            if isinstance(comp, xr.DataArray):
+                self.ds[key][:] = comp.values
+            else:
+                self.ds[key][:] = comp
 
     def postprocess(self, **kwargs):
         """
@@ -317,7 +331,7 @@ class DatasetHandler(OutputHandlerInterface):
         # creating variables in capture_elements
         self.__create_ds_vars(model, capture_elements, time_dim=False)
 
-        self.update(model, capture_elements)
+        self.__update_run_elements(model, capture_elements)
 
     def __create_ds_vars(self, model, capture_elements, time_dim=True):
         """
