@@ -1704,13 +1704,14 @@ class TestOutputs():
         # Add any additional Handler here.
         assert issubclass(DatasetHandler, OutputHandlerInterface)
         assert issubclass(DataFrameHandler, OutputHandlerInterface)
-        assert issubclass(ModelOutput, OutputHandlerInterface)
 
         class ThatFollowsInterface:
             """
             This class does not inherit from OutputHandlerInterface, but it
             overrides all its methods (it follows the interface).
             """
+            def process_output(self, out_file):
+                pass
 
             def initialize(self, model, capture_elements):
                 pass

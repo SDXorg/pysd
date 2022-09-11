@@ -43,7 +43,7 @@ class ModelOutput():
 
         # Add any other handlers that you write here, in the order you
         # want them to run (DataFrameHandler runs first)
-        self.handler = DataFrameHandler(DatasetHandler(None)).process_output(out_file)
+        self.handler = DataFrameHandler(DatasetHandler(None)).handle(out_file)
 
         capture_elements.add("time")
         self.capture_elements = capture_elements
@@ -73,10 +73,31 @@ class ModelOutput():
 
 class OutputHandlerInterface(metaclass=abc.ABCMeta):
     """
-    Interface for the creation of different output type handlers.
+    Interface for the creation of different output handlers.
     """
     def __init__(self, next=None):
         self._next = next
+
+    def handle(self, out_file):
+        """
+        If the concrete handler can write on the output file type passed by the
+        user, it returns the handler itself, else it goes to the next handler.
+
+        Parameters
+        ----------
+        out_file: str or pathlib.Path
+            Path to the file where the results will be written.
+
+        Returns
+        -------
+        handler
+        """
+        handler = self.process_output(out_file)
+
+        if handler is not None: # the handler can write the out_file type.
+            return handler
+        else:
+            return self._next.handle(out_file)
 
     @classmethod
     def __subclasshook__(cls, subclass):
@@ -95,7 +116,8 @@ class OutputHandlerInterface(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def process_output(self, out_file):
         """
-        If concrete handler can process out_file, returns True, else False.
+        If concrete handler can process out_file, returns it, else returns
+        None.
         """
         raise NotImplementedError
 
@@ -142,15 +164,22 @@ class DatasetHandler(OutputHandlerInterface):
 
     @property
     def step(self):
+        """
+        Used as time index for the output Dataset. Increases by one at each
+        iteration.
+        """
         return self._step
 
     def __update_step(self):
+        """
+        Increases the _step attribute by 1 at each model iteration.
+        """
         self._step = self.step + 1
 
     def process_output(self, out_file):
         """
-        If out_file can be handled by this concrete handler it returns True,
-        else False.
+        If out_file can be handled by this concrete handler, it returns the
+        handler instance, else it returns None.
 
         Parameters
         ----------
@@ -159,15 +188,14 @@ class DatasetHandler(OutputHandlerInterface):
 
         Returns
         -------
-        bool
+        None or DatasetHandler instance
 
         """
         if out_file:
             if out_file.suffix == ".nc":
                 self.out_file = out_file
                 return self
-        elif self._next is not None:
-            return self._next.process_output(out_file)
+        return None
 
     def initialize(self, model, capture_elements):
         """
@@ -267,8 +295,6 @@ class DatasetHandler(OutputHandlerInterface):
         -------
         None
         """
-
-        # close Dataset
         self.ds.close()
 
         print(f"Results stored in {self.out_file}")
@@ -347,11 +373,13 @@ class DataFrameHandler(OutputHandlerInterface):
     def __init__(self, next):
         super().__init__(next)
         self.ds = None
-        self.output_file = None
+        self.out_file = None
 
     def process_output(self, out_file):
         """
         If this handler can process out_file, it returns True, else False.
+        DataFrameHandler handles outputs to be saved as *.csv or *.tab files,
+        and is the default handler when no output file is passed by the user.
 
         Parameters
         ----------
@@ -360,16 +388,18 @@ class DataFrameHandler(OutputHandlerInterface):
 
         Returns
         -------
-        bool
+        None or DataFrameHandler instance
 
         """
         self.out_file = out_file
+
         if not out_file:
             return self
+
         if out_file.suffix in [".csv", ".tab"]:
             return self
-        elif self._next is not None:
-            return self._next.process_output(out_file)
+
+        return None
 
     def initialize(self, model, capture_elements):
         """
@@ -425,12 +455,12 @@ class DataFrameHandler(OutputHandlerInterface):
         del self.ds["time"]
 
         # enforce flattening if df is to be saved to csv or tab file
-        flatten = True if self.output_file else kwargs.get("flatten", None)
+        flatten = True if self.out_file else kwargs.get("flatten", None)
 
         df = DataFrameHandler.make_flat_df(
             self.ds, kwargs["return_addresses"], flatten
             )
-        if self.output_file:
+        if self.out_file:
             self.__save_to_file(df)
 
         return df
@@ -451,7 +481,7 @@ class DataFrameHandler(OutputHandlerInterface):
 
         """
 
-        if self.output_file.suffix == ".tab":
+        if self.out_file.suffix == ".tab":
             sep = "\t"
         else:
             sep = ","
@@ -459,10 +489,10 @@ class DataFrameHandler(OutputHandlerInterface):
         # QUOTE_NONE used to print the csv/tab files as vensim does with
         # special characterse, e.g.: "my-var"[Dimension]
         output.to_csv(
-            self.output_file, sep, index_label="Time", quoting=QUOTE_NONE
+            self.out_file, sep, index_label="Time", quoting=QUOTE_NONE
             )
 
-        print(f"Data saved in '{self.output_file}'")
+        print(f"Data saved in '{self.out_file}'")
 
     def add_run_elements(self, model, capture_elements):
         """
