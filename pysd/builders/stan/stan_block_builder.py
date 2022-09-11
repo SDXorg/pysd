@@ -1,4 +1,5 @@
 import os
+import itertools
 from pathlib import Path
 from typing import Union, List, Dict, Set, Sequence, Iterable
 from numbers import Number
@@ -16,10 +17,23 @@ if TYPE_CHECKING:
 
 
 class StanTransformedParametersBuilder:
-    def __init__(self, abstract_model: AbstractModel):
-        self.abstract_model = abstract_model
+    def __init__(self, stan_model_context, vensim_model_context):
+        self.stan_model_context = stan_model_context
+        self.vensim_model_context = vensim_model_context
+        self.abstract_model = self.vensim_model_context.abstract_model
 
-    def build_block(
+    def build_block(self, predictor_variable_names, outcome_variable_names, lookup_function_dict, function_name, stock_initial_values: Dict[str, str]):
+        self.code = IndentedString()
+        self.code += "transformed parameters {\n"
+        self.code.indent_level += 1
+        self.write_block(predictor_variable_names, outcome_variable_names, lookup_function_dict, function_name, stock_initial_values)
+        self.code.indent_level -= 1
+        self.code += "}\n"
+
+        return str(self.code)
+
+
+    def write_block(
         self,
         predictor_variable_names,
         outcome_variable_names,
@@ -27,10 +41,6 @@ class StanTransformedParametersBuilder:
         function_name,
         stock_initial_values: Dict[str, str]
     ):
-        self.code = IndentedString()
-        self.code += "transformed parameters {\n"
-        self.code.indent_level += 1
-
         argument_variables = []
         for var in predictor_variable_names:
             if isinstance(var, str):
@@ -43,6 +53,11 @@ class StanTransformedParametersBuilder:
         for element in self.abstract_model.sections[0].elements:
             stan_varname = vensim_name_to_identifier(element.name)
             variable_ast_dict[stan_varname] = element.components[0].ast
+
+        # Create variables defined through assignment
+        for statement in self.stan_model_context.sample_statements:
+            if statement.distribution_type == statement.assignment_dist:
+                self. code += f"real {statement.lhs_expr} = {''.join(statement.distribution_args)};\n"
 
         self.code += "// Initial ODE values\n"
         for outcome_variable_name in outcome_variable_names:
@@ -80,17 +95,14 @@ class StanTransformedParametersBuilder:
         for index, name in enumerate(outcome_variable_names, 1):
             self.code += f"array[n_t] real {name} = integrated_result[:, {index}];\n"
 
-        self.code.indent_level -= 1
-        self.code += "}\n"
-
-        return str(self.code)
-
 
 class StanParametersBuilder:
-    def __init__(self, stan_model_context: "StanModelContext"):
+    def __init__(self, stan_model_context: "StanModelContext", vensim_model_context: "VensimModelContext"):
         self.stan_model_context = stan_model_context
+        self.vensim_model_context = vensim_model_context
 
-    def build_block(self, data_variable_names: Tuple[str]):
+    def build_block(self):
+        data_variable_names = tuple(self.stan_model_context.stan_data.keys())
         code = IndentedString()
         code += "parameters{\n"
         code.indent_level += 1  # Enter parameters block
@@ -98,10 +110,12 @@ class StanParametersBuilder:
         added_parameters = set()
 
         for statement in self.stan_model_context.sample_statements:
-            for lhs_variable in statement.lhs_variables:
+            for lhs_variable in statement.lhs_variable:
                 if lhs_variable in data_variable_names:
                     continue
                 if lhs_variable in added_parameters:
+                    continue
+                if statement.distribution_type == statement.assignment_dist:
                     continue
                 if statement.lower > float("-inf") and statement.upper < float("inf"):
                     code += f"real<lower={statement.lower}, upper={statement.upper}> {lhs_variable};\n"
@@ -120,44 +134,16 @@ class StanParametersBuilder:
 
 
 class StanDataBuilder:
-    def __init__(self):
-        pass
+    def __init__(self, stan_model_context: "StanModelContext"):
+        self.stan_model_context = stan_model_context
 
-    def get_dims(self, obj):
-        try:
-            iter(obj)
-        except:
-            return None
-        else:
-            dim = len(obj)
-            inner_dim = self.get_dims(obj[0])
-            if inner_dim:
-                return [dim] + inner_dim
-            else:
-                return [dim]
-
-    def build_block(self, data_dict: Dict):
+    def build_block(self):
         code = IndentedString()
         code += "data{\n"
         code.indent_level += 1
 
-        for key, val in data_dict.items():
-            if isinstance(val, int):
-                code += f"int {key};\n"
-            elif isinstance(val, float):
-                code += f"real {key};\n"
-            else:
-                # Multidimensional data
-                dims = self.get_dims(val)
-                if not dims:
-                    raise Exception(f"Can't automatically process data variable {key}.")
-                elif len(dims) == 1:
-                    code += f"vector[{dims[0]}] {key};\n"
-                elif len(dims) == 2:
-                    code += f"array[{dims[0]}] vector[{dims[1]}] {key};\n"
-                else:
-                    raise Exception("Multidimensional data with dimensions higher than 3 not implemented")
-
+        for _, entry in self.stan_model_context.stan_data.items():
+            code += f"{entry.stan_type} {entry.data_name};\n"
 
         code.indent_level -= 1
         code += "}\n"
@@ -174,7 +160,6 @@ class StanTransformedDataBuilder:
         code += "transformed data{\n"
         code.indent_level += 1
         code += f"real initial_time = {self.stan_model_context.initial_time};\n"
-        code += f"int n_t = {n_t};\n"
         code += f"array[n_t] real times = {{{', '.join([str(x) for x in self.stan_model_context.integration_times])}}};\n"
 
         code.indent_level -= 1
@@ -183,15 +168,16 @@ class StanTransformedDataBuilder:
 
 
 class StanModelBuilder:
-    def __init__(self, sampling_statements: Iterable["SamplingStatement"]):
-        self.sampling_statements = sampling_statements
+    def __init__(self, stan_model_context: "StanModelContext"):
+        self.stan_model_context = stan_model_context
 
     def build_block(self):
         code = IndentedString()
         code += "model{\n"
         code.indent_level += 1
-        for statement in self.sampling_statements:
-            code += f"{statement.lhs_expr} ~ {statement.distribution_type}({', '.join([str(arg) for arg in statement.distribution_args])});\n"
+        for statement in self.stan_model_context.sampling_statements:
+            if statement.distribution_type != statement.assignment_dist:
+                code += f"{statement.lhs_expr} ~ {statement.distribution_type}({', '.join([str(arg) for arg in statement.distribution_args])});\n"
 
         code.indent_level -= 1
         code += "}\n"
@@ -207,7 +193,7 @@ class StanGeneratedQuantitiesBuilder:
         code += "generated quantities{\n"
         code.indent_level += 1
         for statement in self.sampling_statements:
-            code += f"{statement.lhs_expr}_tilde ~ {statement.distribution_type}({', '.join([str(arg) for arg in statement.distribution_args])});\n"
+            code += f"real {statement.lhs_expr} ~ {statement.distribution_type}({', '.join([str(arg) for arg in statement.distribution_args])});\n"
 
         code.indent_level -= 1
         code += "}\n"
@@ -215,30 +201,43 @@ class StanGeneratedQuantitiesBuilder:
 
 
 class Draws2DataStanGQBuilder:
-    def __init__(self, stan_model_context: "StanModelContext", vensim_model_context: "VensimModelContext", function_name: str, data_dict: Dict):
+    def __init__(self, stan_model_context: "StanModelContext", vensim_model_context: "VensimModelContext", function_name: str):
         self.stan_model_context = stan_model_context
         self.vensim_model_context = vensim_model_context
         self.function_name = function_name
-        self.data_dict = data_dict
 
 
-    def build_block(self):
+    def build_block(self, transformed_parameters_code: str = ""):
         self.code = IndentedString()
         self.code += "generated quantities{\n"
         self.code.indent_level += 1
-
+        self.build_rng_functions()
+        self.code += "\n"
+        self.code.add_raw(transformed_parameters_code, ignore_indent=True)
+        self.code += "\n"
+        self.build_data_rng_functions()
         self.code.indent_level -= 1
         self.code += "}\n"
 
         return str(self.code)
 
+    def build_data_rng_functions(self):
+        for statement in self.stan_model_context.sample_statements:
+            if statement.lhs_variable in self.stan_model_context.stan_data:
+                param_name = statement.lhs_expr
+                stan_type = self.stan_model_context.stan_data[param_name].stan_type
+                if stan_type.startswith("vector"):
+                    self.code += f"{stan_type} {param_name} = to_vector({statement.distribution_type}_rng({', '.join(statement.distribution_args)}));\n"
+                else:
+                    self.code += f"{stan_type} {param_name} = {statement.distribution_type}_rng({', '.join(statement.distribution_args)});\n"
+
+
 
     def build_rng_functions(self):
-        ignored_variables = set(self.data_dict.keys()).union(set(self.vensim_model_context.stock_variable_names))
-        stmt_sorter = StatementTopoSort(self.stan_model_context, ignored_variables)
+        ignored_variables = set(self.stan_model_context.stan_data.keys()).union(set(self.vensim_model_context.stock_variable_names))
+        stmt_sorter = StatementTopoSort(ignored_variables)
         for sampling_statement in self.stan_model_context.sample_statements:
-            for lhs_var in sampling_statement.lhs_variables:
-                stmt_sorter.add_stmt(lhs_var, sampling_statement.rhs_variables)
+            stmt_sorter.add_stmt(sampling_statement.lhs_variable, sampling_statement.rhs_variables)
 
         param_draw_order = stmt_sorter.sort()
         statements = self.stan_model_context.sample_statements.copy()
@@ -251,19 +250,38 @@ class Draws2DataStanGQBuilder:
             for statement in statements:
                 if statement in processed_statements:
                     continue
-                if param_name in statement.lhs_variables:
+                if param_name == statement.lhs_variable:
                     if statement.init_state:
                         param_name = param_name + "__init"
-                    self.code += f"real {param_name}_tilde = {statement.distribution_type}_rng({', '.join(statement.distribution_args)})"
+
+                    self.code += f"real {param_name} = {statement.distribution_type}_rng({', '.join(statement.distribution_args)});\n"
 
                     processed_statements.add(statement)
 
 
+class Draws2DataStanDataBuilder(StanDataBuilder):
+    def __init__(self, stan_model_context, vensim_model_context):
+        self.stan_model_context = stan_model_context
+        self.vensim_model_context = vensim_model_context
+        super(Draws2DataStanDataBuilder, self).__init__(self.stan_model_context)
+
+    def build_block(self):
+        stan_params = [stmt.lhs_variable for stmt in self.stan_model_context.sample_statements]
+        print(stan_params)
+        code = IndentedString()
+        code += "data{\n"
+        code.indent_level += 1
+
+        for _, entry in self.stan_model_context.stan_data.items():
+            if entry.data_name in stan_params:
+                continue
+            code += f"{entry.stan_type} {entry.data_name};\n"
+
+        code.indent_level -= 1
+        code += "}\n"
+        return code.string
 
 
-
-
-    
 class StanFunctionBuilder:
     def __init__(
         self, abstract_model: AbstractModel, function_name: str = "vensim_ode_func"

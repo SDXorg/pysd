@@ -8,7 +8,7 @@ import cmdstanpy
 
 class SamplingStatement:
     lhs_expr: str
-    lhs_variables: Set[str]
+    lhs_variable: str
     rhs_variables: Set[str]
     distribution_type: str
     distribution_return_type: Type
@@ -19,15 +19,17 @@ class SamplingStatement:
 
     def __init__(self, lhs_expr, distribution_type, *distribution_args, lower=float("-inf"), upper=float("inf"), init_state=False):
         self.lhs_expr = lhs_expr
-        self.lhs_variables = set()
-        self.lhs_variables.update([node.id for node in ast.walk(ast.parse(lhs_expr)) if isinstance(node, ast.Name)])
+        lhs_variables = [node.id for node in ast.walk(ast.parse(lhs_expr)) if isinstance(node, ast.Name)]
+        assert len(lhs_variables) == 1, "The LHS expression for prior specification must contain just 1 parameter name"
+        self.lhs_variable = lhs_variables[0]
         self.distribution_type = distribution_type
-        self.distribution_args = distribution_args
+        self.distribution_args = tuple(str(x) for x in distribution_args)
         self.rhs_variables = set()
         self.rhs_variables.update([node.id for arg in self.distribution_args for node in ast.walk(ast.parse(str(arg))) if isinstance(node, ast.Name)])
         self.lower = lower
         self.upper = upper
         self.init_state = init_state
+        self.assignment_dist = "assignment"
 
     def __post_init__(self):
         if self.distribution_type in ("bernoulli", "binomial", "beta_binomial", "neg_binomial", "poisson"):
@@ -38,17 +40,53 @@ class SamplingStatement:
 
 
 @dataclass
+class StanDataEntry:
+    data_name: str
+    stan_type: str
+
+@dataclass
 class StanModelContext:
     initial_time: float
     integration_times: Iterable[float]
+    stan_data: Dict[str, StanDataEntry] = field(default_factory=dict)
     sample_statements: List[SamplingStatement] = field(default_factory=list)
     exposed_parameters: Set[str] = field(default_factory=set)
+
+    def identify_stan_data_types(self, data_dict):
+        def get_dims(obj):
+            try:
+                iter(obj)
+            except:
+                return None
+            else:
+                dim = len(obj)
+                inner_dim = get_dims(obj[0])
+                if inner_dim:
+                    return [dim] + inner_dim
+                else:
+                    return [dim]
+
+        for key, val in data_dict.items():
+            if isinstance(val, int):
+                self.stan_data[key] = StanDataEntry(key, "int")
+            elif isinstance(val, float):
+                self.stan_data[key] = StanDataEntry(key, "real")
+            else:
+                # Multidimensional data
+                dims = get_dims(val)
+                if not dims:
+                    raise Exception(f"Can't process data entry {key}.")
+                elif len(dims) == 1:
+                    self.stan_data[key] = StanDataEntry(key, f"vector[{dims[0]}]")
+                elif len(dims) == 2:
+                    self.stan_data[key] = StanDataEntry(key, f"array[{dims[0]}] vector[{dims[1]}]")
 
 
 class VensimModelContext:
     def __init__(self, abstract_model):
         self.variable_names = set()
         self.stock_variable_names = set()
+        self.abstract_model = abstract_model
 
         # Some basic checks to make sure the AM is compatible
         assert len(abstract_model.sections) == 1, "Number of sections in AbstractModel must be 1."
@@ -84,12 +122,14 @@ class VensimModelContext:
 
 
 class StanVensimModel:
-    def __init__(self, model_name: str, abstract_model, initial_time: float, integration_times: Iterable[Number]):
+    def __init__(self, model_name: str, abstract_model, initial_time: float, integration_times: Iterable[Number], data_dict={}):
         self.abstract_model = abstract_model
         self.model_name = model_name
         self.initial_time = float(initial_time)
         self.integration_times = integration_times
         self.stan_model_context = StanModelContext(initial_time, integration_times)
+        self.stan_model_context.identify_stan_data_types(data_dict)
+        self.data_dict = data_dict
         self.vensim_model_context = VensimModelContext(self.abstract_model)
         if initial_time in integration_times:
             raise Exception("initial_time shouldn't be present in integration_times")
@@ -148,17 +188,44 @@ class StanVensimModel:
             self.function_builder = StanFunctionBuilder(self.abstract_model)
             f.write(self.function_builder.build_functions(self.stan_model_context.exposed_parameters, self.vensim_model_context.stock_variable_names))
 
-    def data2draws(self, data_dict: Dict):
+    def data2draws(self):
         stan_model_path = os.path.join(self.stan_model_dir, f"{self.model_name}_data2draws.stan")
         with open(stan_model_path, "w") as f:
-            builder = Draws2DataStanGQBuilder(self.stan_model_context, self.vensim_model_context,
-                                              self.function_builder.ode_function_name, data_dict)
-            f.write(builder.build_block())
+            # Include the function
+            f.write("functions{\n")
+            f.write(f"    #include {self.model_name}_functions.stan\n")
+            f.write("}\n\n")
+
+            f.write(StanDataBuilder(self.stan_model_context).build_block())
+            f.write("\n")
+
+            f.write(StanTransformedDataBuilder(self.stan_model_context).build_block())
+            f.write("\n")
+
+            f.write(StanParametersBuilder(self.stan_model_context, self.vensim_model_context).build_block())
+            f.write("\n")
+
+            transformed_params_builder = StanTransformedParametersBuilder(self.stan_model_context, self.vensim_model_context)
+            # Find sampling statements for init
+            stock_initials = {}
+            for statement in self.stan_model_context.sample_statements:
+                if statement.init_state:
+                    stock_initials[statement.lhs_variable] = statement.lhs_variable + "__init"
+
+            f.write(transformed_params_builder.build_block(self.stan_model_context.exposed_parameters,
+                                                           self.vensim_model_context.stock_variable_names,
+                                                           self.function_builder.get_generated_lookups_dict(),
+                                                           self.function_builder.ode_function_name,
+                                                           stock_initials))
+            f.write("\n")
+
+            f.write(StanModelBuilder(self.stan_model_context).build_block())
+            f.write("\n")
 
         stan_model = cmdstanpy.CmdStanModel(stan_file=stan_model_path)
         return stan_model
 
-    def draws2data(self, data_dict: Dict):
+    def draws2data(self):
         stan_model_path = os.path.join(self.stan_model_dir, f"{self.model_name}_draws2data.stan")
         with open(stan_model_path, "w") as f:
             # Include the function
@@ -168,7 +235,7 @@ class StanVensimModel:
             f.write("}")
             f.write("\n")
 
-            f.write(StanDataBuilder().build_block(data_dict))
+            f.write(Draws2DataStanDataBuilder(self.stan_model_context, self.vensim_model_context).build_block())
             f.write("\n")
             f.write(StanTransformedDataBuilder(self.stan_model_context).build_block())
             f.write("\n")
@@ -176,17 +243,22 @@ class StanVensimModel:
             stock_initials = {}
             for statement in self.stan_model_context.sample_statements:
                 if statement.init_state:
-                    stock_variable_name = self.init_variable_regex.findall(statement.lhs_expr)[0]
-                    stock_initials[stock_variable_name] = statement.lhs_expr
-            transformed_params_builder = StanTransformedParametersBuilder(self.abstract_model)
-            f.write(transformed_params_builder.build_block(self.stan_model_context.exposed_parameters,
-                                                           self.vensim_model_context.stock_variable_names,
-                                                           self.function_builder.get_generated_lookups_dict(),
-                                                           self.function_builder.ode_function_name,
-                                                           stock_initials))
+                    stock_variable_name = statement.lhs_variable
+                    stock_initials[stock_variable_name] = stock_variable_name
+
+                #f.write(f"real {stock_initials[stock_variable_name]} = {statement.distribution_type}_rng({', '.join([str(arg) for arg in statement.distribution_args])});\n")
+
+            transformed_params_builder = StanTransformedParametersBuilder(self.stan_model_context, self.vensim_model_context)
+            transformed_params_builder.code = IndentedString(indent_level=1)
+            transformed_params_builder.write_block(self.stan_model_context.exposed_parameters,
+                                                       self.vensim_model_context.stock_variable_names,
+                                                       self.function_builder.get_generated_lookups_dict(),
+                                                       self.function_builder.ode_function_name,
+                                                       stock_initials)
             f.write("\n")
 
-            f.write(StanGeneratedQuantitiesBuilder(self.stan_model_context.sample_statements).build_block())
+            f.write(Draws2DataStanGQBuilder(self.stan_model_context, self.vensim_model_context,
+                                            self.function_builder.ode_function_name).build_block(transformed_parameters_code=str(transformed_params_builder.code)))
 
         stan_model = cmdstanpy.CmdStanModel(stan_file=stan_model_path)
 
