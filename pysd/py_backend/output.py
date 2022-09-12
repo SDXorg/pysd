@@ -195,7 +195,6 @@ class DatasetHandler(OutputHandlerInterface):
             if out_file.suffix == ".nc":
                 self.out_file = out_file
                 return self
-        return None
 
     def initialize(self, model, capture_elements):
         """
@@ -412,8 +411,6 @@ class DataFrameHandler(OutputHandlerInterface):
         if out_file.suffix in [".csv", ".tab"]:
             return self
 
-        return None
-
     def initialize(self, model, capture_elements):
         """
         Creates a pandas DataFrame and adds model variables as columns.
@@ -498,12 +495,12 @@ class DataFrameHandler(OutputHandlerInterface):
             sep = "\t"
         else:
             sep = ","
+            output.columns = [col.replace(",", ";") for col in output.columns]
 
         # QUOTE_NONE used to print the csv/tab files as vensim does with
         # special characterse, e.g.: "my-var"[Dimension]
         output.to_csv(
-            self.out_file, sep, index_label="Time", quoting=QUOTE_NONE
-            )
+            self.out_file, sep, index_label="Time", quoting=QUOTE_NONE)
 
         print(f"Data saved in '{self.out_file}'")
 
