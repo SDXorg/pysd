@@ -161,11 +161,14 @@ Storing simulation results on a file
 ------------------------------------
 Simulation results can be stored as *.csv*, *.tab* or *.nc* (netCDF4) files by defining the desired output file path in the `output_file` argument, when calling the :py:meth:`.run` method::
 
-   >>> model.run(output_file="results.nc")
+   >>> model.run(output_file="results.tab")
 
 If the `output_file` is not set, the :py:meth:`.run` method will return a :py:class:`pandas.DataFrame`.
 
 For most cases, the *.tab* file format is the safest choice. It is preferable over the *.csv* format when the model includes subscripted variables. The *.nc* format is recommended for large models, and when the user wants to keep metadata such as variable units and description.
+
+.. warning::
+   *.nc* files require :py:mod:`netcdf4` library which is an optional requirement and thus not installed automatically with the package. We recommend using :py:mod:`netcdf4` 1.6.0 or bigger, however, it will also work with :py:mod:`netcdf4` 1.5.0 or bigger.
 
 
 Setting parameter values
