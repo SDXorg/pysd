@@ -25,9 +25,9 @@ See the [project documentation](http://pysd.readthedocs.org/) for information ab
 
 For standard methods for data analysis with SD models, see the  [PySD Cookbook](https://github.com/SDXorg/PySD-Cookbook), containing (for example):
 
-- [Model Fitting](http://nbviewer.ipython.org/github/SDXorg/PySD-Cookbook/blob/master/2_1_Fitting_with_Optimization.ipynb)
-- [Surrogating model components with machine learning regressions](http://nbviewer.ipython.org/github/SDXorg/PySD-Cookbook/blob/master/6_1_Surrogating_with_regression.ipynb)
-- [Multi-Scale geographic comparison of model predictions](http://nbviewer.ipython.org/github/SDXorg/PySD-Cookbook/blob/master/Exploring%20models%20across%20geographic%20scales.ipynb)
+- [Model Fitting](http://nbviewer.ipython.org/github/SDXorg/PySD-Cookbook/blob/master/source/analyses/fitting/Fitting_with_Optimization.ipynb)
+- [Surrogating model components with machine learning regressions](http://nbviewer.ipython.org/github/SDXorg/PySD-Cookbook/blob/master/source/analyses/surrogating_functions/Surrogating_with_regression.ipynb)
+- [Multi-Scale geographic comparison of model predictions](http://nbviewer.ipython.org/github/SDXorg/PySD-Cookbook/blob/master/source/analyses/geo/Exploring_models_across_geographic_scales.ipynb)
 
 If you use PySD in any published work, consider citing the [PySD Introductory Paper](https://github.com/SDXorg/pysd/blob/master/docs/PySD%20Intro%20Paper%20Preprint.pdf):
 
