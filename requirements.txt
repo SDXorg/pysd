@@ -1,8 +1,6 @@
 pandas
 parsimonious
 xarray
-netCDF4==1.5; platform_system == 'Windows' and python_version == "3.7"
-netCDF4==1.6; platform_system != 'Windows' or python_version != "3.7"
 xlrd
 lxml
 regex

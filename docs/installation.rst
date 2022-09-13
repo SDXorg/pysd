@@ -46,7 +46,6 @@ PySD builds on the core Python data analytics stack, and the following third par
 * Pandas
 * Parsimonious
 * xarray
-* netCDF4
 * xlrd
 * lxml
 * regex
@@ -66,6 +65,10 @@ Optional Dependencies
 In order to plot model outputs as shown in :doc:`Getting started <../getting_started>`:
 
 * Matplotlib
+
+In order to be able to export data to netCDF (*.nc*) files:
+
+* netCDF4
 
 
 These Python libraries bring additional data analytics capabilities to the analysis of SD models:

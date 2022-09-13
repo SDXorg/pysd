@@ -6,7 +6,6 @@ The OutputHandlerInterface class is an interface for the creation of handlers
 for other output object types.
 """
 import abc
-import warnings
 import time as t
 
 from csv import QUOTE_NONE
@@ -16,7 +15,6 @@ import regex as re
 import numpy as np
 import xarray as xr
 import pandas as pd
-import netCDF4 as nc
 
 from pysd._version import __version__
 
@@ -25,8 +23,8 @@ from . utils import xrsplit
 
 class ModelOutput():
     """
-    Handles different types of outputs by dispatchinging the tasks to adequate
-    object handlers.
+    Handles different types of outputs by dispatchinging the tasks
+    to adequate object handlers.
 
     Parameters
     ----------
@@ -36,6 +34,7 @@ class ModelOutput():
         Which model elements to capture - uses pysafe names.
     out_file: str or pathlib.Path
         Path to the file where the results will be written.
+
     """
     valid_output_files = [".nc", ".csv", ".tab"]
 
@@ -91,6 +90,7 @@ class OutputHandlerInterface(metaclass=abc.ABCMeta):
         Returns
         -------
         handler
+
         """
         handler = self.process_output(out_file)
 
@@ -161,6 +161,7 @@ class DatasetHandler(OutputHandlerInterface):
         self.out_file = None
         self.ds = None
         self._step = 0
+        self.nc = __import__("netCDF4")
 
     @property
     def step(self):
@@ -213,7 +214,7 @@ class DatasetHandler(OutputHandlerInterface):
         None
 
         """
-        self.ds = nc.Dataset(self.out_file, "w")
+        self.ds = self.nc.Dataset(self.out_file, "w")
 
         # defining global attributes
         self.ds.description = "Results for simulation run on " \
@@ -230,20 +231,16 @@ class DatasetHandler(OutputHandlerInterface):
             coords = np.array(coords)
             # create dimension
             self.ds.createDimension(dim_name, len(coords))
-
             # length of the longest string in the coords
             max_str_len = len(max(coords, key=len))
-
             # create variable for the dimension
             var = self.ds.createVariable(
                 dim_name, f"S{max_str_len}", (dim_name,))
-
             # assigning coords to dimension
             var[:] = coords
 
         # creating the time dimension as unlimited
         self.ds.createDimension("time", None)
-
         # creating variables
         self.__create_ds_vars(model, capture_elements)
 
@@ -262,11 +259,10 @@ class DatasetHandler(OutputHandlerInterface):
         Returns
         -------
         None
+
         """
         for key in capture_elements:
-
             comp = model[key]
-
             if isinstance(comp, xr.DataArray):
                 self.ds[key][self.step, :] = comp.values
             else:
@@ -290,11 +286,10 @@ class DatasetHandler(OutputHandlerInterface):
         Returns
         -------
         None
+
         """
         for key in capture_elements:
-
             comp = model[key]
-
             if isinstance(comp, xr.DataArray):
                 self.ds[key][:] = comp.values
             else:
@@ -309,7 +304,6 @@ class DatasetHandler(OutputHandlerInterface):
         None
         """
         self.ds.close()
-
         print(f"Results stored in {self.out_file}")
 
     def add_run_elements(self, model, capture_elements):
@@ -326,10 +320,10 @@ class DatasetHandler(OutputHandlerInterface):
         Returns
         -------
         None
+
         """
         # creating variables in capture_elements
         self.__create_ds_vars(model, capture_elements, time_dim=False)
-
         self.__update_run_elements(model, capture_elements)
 
     def __create_ds_vars(self, model, capture_elements, time_dim=True):
@@ -353,22 +347,19 @@ class DatasetHandler(OutputHandlerInterface):
         """
         kwargs = dict()
 
-        if tuple(nc.__version__.split(".")) >= ('1', '6', '0'):
-            kwargs.update({"compression": "zlib"})
+        if tuple(self.nc.__version__.split(".")) >= ('1', '6', '0'):
+            kwargs["compression"] = "zlib"
 
         for key in capture_elements:
             comp = model[key]
 
-            dims = ()
-
+            dims = tuple()
             if isinstance(comp, xr.DataArray):
                 dims = tuple(comp.dims)
-
             if time_dim:
                 dims = ("time",) + dims
 
             var = self.ds.createVariable(key, "f8", dims, **kwargs)
-
             # adding metadata for each var from the model.doc
             for col in model.doc.columns:
                 var.setncattr(
@@ -444,8 +435,8 @@ class DataFrameHandler(OutputHandlerInterface):
         Returns
         -------
         None
-        """
 
+        """
         self.ds.at[model.time.round()] = [
             getattr(model.components, key)()
             for key in capture_elements]
@@ -459,6 +450,7 @@ class DataFrameHandler(OutputHandlerInterface):
         -------
         ds: pandas.DataFrame
             Simulation results stored as a pandas DataFrame.
+
         """
         # delete time column as it was created only for avoiding errors
         # of appending data. See previous TODO.
@@ -490,7 +482,6 @@ class DataFrameHandler(OutputHandlerInterface):
         None
 
         """
-
         if self.out_file.suffix == ".tab":
             sep = "\t"
         else:
@@ -518,6 +509,7 @@ class DataFrameHandler(OutputHandlerInterface):
         Returns
         -------
         None
+
         """
         nx = len(self.ds.index)
         for element in capture_elements:
