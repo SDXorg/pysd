@@ -9,7 +9,6 @@ from datetime import datetime
 from pathlib import Path
 from chardet.universaldetector import UniversalDetector
 
-import regex as re
 import progressbar
 import numpy as np
 import xarray as xr
@@ -102,92 +101,6 @@ def get_return_elements(return_columns, namespace):
         return_addresses[col] = (py_name, address)
 
     return list(capture_elements), return_addresses
-
-
-def make_flat_df(df, return_addresses, flatten=False):
-    """
-    Takes a dataframe from the outputs of the integration processes,
-    renames the columns as the given return_adresses and splits xarrays
-    if needed.
-
-    Parameters
-    ----------
-    df: Pandas.DataFrame
-        Output from the integration.
-
-    return_addresses: dict
-        Keys will be column names of the resulting dataframe, and are what the
-        user passed in as 'return_columns'. Values are a tuple:
-        (py_name, {coords dictionary}) which tells us where to look for the
-        value to put in that specific column.
-
-    flatten: bool (optional)
-            If True, once the output dataframe has been formatted will
-            split the xarrays in new columns following vensim's naming
-            to make a totally flat output. Default is False.
-
-    Returns
-    -------
-    new_df: pandas.DataFrame
-        Formatted dataframe.
-
-    """
-    new_df = {}
-    for real_name, (pyname, address) in return_addresses.items():
-        if address:
-            # subset the specific address
-            values = [x.loc[address] for x in df[pyname].values]
-        else:
-            # get the full column
-            values = df[pyname].to_list()
-
-        is_dataarray = len(values) != 0 and isinstance(values[0], xr.DataArray)
-
-        if is_dataarray and values[0].size == 1:
-            # some elements are returned as 0-d arrays, convert
-            # them to float
-            values = [float(x) for x in values]
-            is_dataarray = False
-
-        if flatten and is_dataarray:
-            _add_flat(new_df, real_name, values)
-        else:
-            new_df[real_name] = values
-
-    return pd.DataFrame(index=df.index, data=new_df)
-
-
-def _add_flat(savedict, name, values):
-    """
-    Add float lists from a list of xarrays to a provided dictionary.
-
-    Parameters
-    ----------
-    savedict: dict
-        Dictionary to save the data on.
-
-    name: str
-        The base name of the variable to save the data.
-
-    values: list
-        List of xarrays to convert to split in floats.
-
-    Returns
-    -------
-    None
-
-    """
-    # remove subscripts from name if given
-    name = re.sub(r'\[.*\]', '', name)
-    dims = values[0].dims
-
-    # split values in xarray.DataArray
-    lval = [xrsplit(val) for val in values]
-    for i, ar in enumerate(lval[0]):
-        vals = [float(v[i]) for v in lval]
-        subs = '[' + ','.join([str(ar.coords[dim].values)
-                               for dim in dims]) + ']'
-        savedict[name+subs] = vals
 
 
 def compute_shape(coords, reshape_len=None, py_name=""):

@@ -5,6 +5,7 @@ import pytest
 import pandas as pd
 import numpy as np
 import xarray as xr
+import netCDF4 as nc
 
 from pysd.tools.benchmarking import assert_frames_close
 
@@ -23,6 +24,7 @@ test_model_look = _root.joinpath(
     + "test_get_lookups_subscripted_args.mdl")
 test_model_data = _root.joinpath(
     "test-models/tests/get_data_args_3d_xls/test_get_data_args_3d_xls.mdl")
+
 
 more_tests = _root.joinpath("more-tests/")
 
@@ -206,6 +208,20 @@ class TestPySD():
         return_columns = ["room_temperature", "teacup_temperature"]
         result = model.run(return_columns=return_columns)
         assert set(result.columns) == set(return_columns)
+
+    def test_run_output_file(self):
+
+        model = pysd.read_vensim(test_model)
+        model.progress = False
+
+        error_message = "Paths must be strings or pathlib Path objects."
+        with pytest.raises(TypeError, match=error_message):
+            model.run(output_file=1234)
+
+        error_message = "Unsupported output file format .txt"
+        with pytest.raises(ValueError, match=error_message):
+            model.run(output_file="file.txt")
+
 
     def test_initial_conditions_invalid(self):
         model = pysd.read_vensim(test_model)
@@ -1178,15 +1194,35 @@ class TestPySD():
         data = model3.get_series_data('_ext_data_data_backward')
         assert data.equals(data_exp)
 
-    def test__integrate(self):
-        # Todo: think through a stronger test here...
+    def test__integrate(self, shared_tmpdir):
+        from pysd.py_backend.model import ModelOutput
+        # TODO: think through a stronger test here...
         model = pysd.read_vensim(test_model)
         model.progress = False
         model.time.add_return_timestamps(list(range(0, 5, 2)))
-        res = model._integrate(capture_elements={'teacup_temperature'})
+        capture_elements = {'teacup_temperature'}
+
+        out = ModelOutput(model, capture_elements, None)
+        model._integrate(out)
+        res = out.handler.ds
         assert isinstance(res, pd.DataFrame)
         assert 'teacup_temperature' in res
         assert all(res.index.values == list(range(0, 5, 2)))
+
+        model = pysd.read_vensim(test_model)
+        model.progress = False
+        model.time.add_return_timestamps(list(range(0, 5, 2)))
+        out = ModelOutput(model,
+                          capture_elements,
+                          shared_tmpdir.joinpath("output.nc"))
+        model._integrate(out)
+        res = out.handler.ds
+        assert isinstance(res, nc.Dataset)
+        assert 'teacup_temperature' in res.variables
+        with catch_warnings(record=True) as w:
+            simplefilter("always")
+            assert np.array_equal(res["time"][:].data, np.arange(0, 5, 2))
+        res.close()
 
     def test_default_returns_with_construction_functions(self):
         """

@@ -66,6 +66,10 @@ In order to plot model outputs as shown in :doc:`Getting started <../getting_sta
 
 * Matplotlib
 
+In order to be able to export data to netCDF (*.nc*) files:
+
+* netCDF4
+
 
 These Python libraries bring additional data analytics capabilities to the analysis of SD models:
 
