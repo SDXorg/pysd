@@ -5,7 +5,7 @@ v3.7.0 (to be released)
 
 New Features
 ~~~~~~~~~~~~
-- Simulation results can now be stored as netCDF4 files (:issue:`355`). (`@rogersamso <https://github.com/rogersamso>`_)
+- Simulation results can now be stored as netCDF4 files. (`@rogersamso <https://github.com/rogersamso>`_)
 - The CLI also accepts netCDF4 file paths after the -o argument. (`@rogersamso <https://github.com/rogersamso>`_)
 
 Breaking changes
@@ -20,7 +20,9 @@ Bug fixes
 
 Documentation
 ~~~~~~~~~~~~~
-- Adds Storing simulation results on a file section in the getting started page. (`@rogersamso <https://github.com/rogersamso>`_)
+- Add `Storing simulation results on a file` section in the :doc:`getting_started` page. (`@rogersamso <https://github.com/rogersamso>`_)
+- Include cookbook information in the :doc:`getting_started` page. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Include an introduction of main historical changes in the :doc:`about` page. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 Performance
 ~~~~~~~~~~~
@@ -29,8 +31,11 @@ Performance
 Internal Changes
 ~~~~~~~~~~~~~~~~
 - Make PySD work with :py:mod:`parsimonius` 0.10.0. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
-- Add netCDF4 and hdf5 dependencies. (`@rogersamso <https://github.com/rogersamso>`_)
-
+- Add netCDF4 as a dependency for tests. (`@rogersamso <https://github.com/rogersamso>`_)
+- Include lychee-action in the GHA workflow to check the links. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Update License. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Include `Maintained? Yes` and `Contributions welcome` badges. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Update links to the new repository location. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 v3.6.1 (2022/09/05)
 -------------------
