@@ -17,6 +17,8 @@ Deprecations
 Bug fixes
 ~~~~~~~~~
 - Fix bug when a WITH LOOKUPS argument has subscripts. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Fix bug of exportig csv files with multiple subscripts variables. (`@rogersamso <https://github.com/rogersamso>`_)
+- Fix bug of missing dimensions in variables defined with not all the subscripts of a range (:issue:`364`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 Documentation
 ~~~~~~~~~~~~~

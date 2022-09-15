@@ -314,6 +314,10 @@ vensim_test = {
         "folder": "parentheses",
         "file": "test_parens.mdl"
     },
+    "partial_range_definitions": {
+        "folder": "partial_range_definitions",
+        "file": "test_partial_range_definitions.mdl"
+    },
     "reference_capitalization": {
         "folder": "reference_capitalization",
         "file": "test_reference_capitalization.mdl"

@@ -31,6 +31,10 @@ test_variable_step = _root.joinpath(
     "test-models/tests/control_vars/"
     "test_control_vars.mdl"
 )
+test_partial_definitions = _root.joinpath(
+    "test-models/tests/partial_range_definitions/"
+    "test_partial_range_definitions.mdl"
+)
 
 
 class TestOutput():
@@ -99,7 +103,7 @@ class TestOutput():
         # it cannot be instantiated because it does not override all abstract
         # methods
         with pytest.raises(TypeError):
-            empty = EmptyHandler()
+            EmptyHandler()
 
         # calling methods that are not overriden returns NotImplementedError
         # this should never happen, because these methods are instance methods,
@@ -233,6 +237,27 @@ class TestOutput():
         assert ds["final_time"].dims == ("time",)
 
         assert np.unique(ds["time_step"]).size == 2
+
+    def test_output_nc2(self, shared_tmpdir):
+        # dimension with numeric coords
+        with catch_warnings(record=True) as w:
+            simplefilter("always")
+            model5 = pysd.read_vensim(test_partial_definitions)
+        model5.progress = False
+
+        out_file5 = shared_tmpdir.joinpath("results5.nc")
+
+        with catch_warnings(record=True) as w:
+            simplefilter("always")
+            model5.run(output_file=out_file5)
+
+        # using xarray instead of netCDF4 to load the dataset
+
+        with catch_warnings(record=True) as w:
+            simplefilter("always")
+            ds = xr.open_dataset(out_file5, engine="netcdf4")
+
+        print(ds)
 
     @pytest.mark.parametrize("fmt,sep", [("csv", ","), ("tab", "\t")])
     def test_output_csv(self, fmt, sep, capsys, shared_tmpdir):
