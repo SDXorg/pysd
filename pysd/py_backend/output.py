@@ -362,6 +362,9 @@ class DatasetHandler(OutputHandlerInterface):
             var = self.ds.createVariable(key, "f8", dims, **kwargs)
             # adding metadata for each var from the model.doc
             for col in model.doc.columns:
+                if col in ["Subscripts", "Limits"]:
+                    # pass those that cannot be saved as attributes
+                    continue
                 var.setncattr(
                     col,
                     model.doc.loc[model.doc["Py Name"] == key, col].values[0]
