@@ -1,5 +1,4 @@
 from pathlib import Path
-import shutil
 
 import pytest
 import numpy as np
@@ -10,8 +9,6 @@ import netCDF4 as nc
 from pysd.tools.benchmarking import assert_frames_close
 from pysd.py_backend.output import OutputHandlerInterface, DatasetHandler, \
     DataFrameHandler, ModelOutput
-
-import pysd
 
 
 test_model_look = Path(
@@ -34,18 +31,6 @@ test_partial_definitions = Path(
     "test-models/tests/partial_range_definitions/"
     "test_partial_range_definitions.mdl"
 )
-
-
-@pytest.fixture
-@pytest.mark.filterwarnings("ignore")
-def model(_root, tmp_path, model_path):
-    """
-    Copy model to the tmp_path and translate it
-    """
-
-    target = tmp_path / model_path.parent
-    shutil.copytree(_root / model_path.parent, target)
-    return pysd.read_vensim(target / model_path.name)
 
 
 class TestOutput():
@@ -134,6 +119,16 @@ class TestOutput():
         with pytest.raises(NotImplementedError):
             EmptyHandler.add_run_elements(
                 EmptyHandler, "model", "capture")
+
+    @pytest.mark.parametrize("model_path", [test_model_look])
+    def test_invalid_output_file(self, model):
+        error_message = "Paths must be strings or pathlib Path objects."
+        with pytest.raises(TypeError, match=error_message):
+            model.run(output_file=1234)
+
+        error_message = "Unsupported output file format .txt"
+        with pytest.raises(ValueError, match=error_message):
+            model.run(output_file="file.txt")
 
     @pytest.mark.parametrize(
         "model_path,dims,values",
