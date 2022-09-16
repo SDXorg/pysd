@@ -485,7 +485,7 @@ class Macro(DynamicStateful):
 
         Parameters
         ----------
-        file_name: str
+        file_name: str or pathlib.Path
           Name of the file to export the values.
 
         """
@@ -512,7 +512,7 @@ class Macro(DynamicStateful):
 
         Parameters
         ----------
-        file_name: str
+        file_name: str or pathlib.Path
           Name of the file to import the values from.
 
         """
@@ -781,8 +781,8 @@ class Macro(DynamicStateful):
 
             # this won't handle other statefuls...
             if '_integ_' + func_name in dir(self.components):
-                warnings.warn("Replacing the equation of stock"
-                              + "{} with params".format(key),
+                warnings.warn("Replacing the equation of stock "
+                              "'{}' with params...".format(key),
                               stacklevel=2)
 
             new_function.__name__ = func_name
@@ -1134,8 +1134,6 @@ class Model(Macro):
         if reload:
             self.reload()
 
-        self.progress = progress
-
         self.time.add_return_timestamps(return_timestamps)
         if self.time.return_timestamps is not None and not final_time:
             # if not final time given the model will end in the list
@@ -1155,6 +1153,18 @@ class Model(Macro):
         self._assign_cache_type()
 
         self.set_initial_condition(initial_condition)
+
+        # set progressbar
+        if progress and (self.cache_type["final_time"] == "step" or
+                         self.cache_type["time_step"] == "step"):
+            warnings.warn(
+                "The progressbar is not compatible with dynamic "
+                "final time or time step. Both variables must be "
+                "constants to prompt progress."
+            )
+            progress = False
+
+        self.progress = progress
 
         if return_columns is None or isinstance(return_columns, str):
             return_columns = self._default_return_columns(return_columns)
@@ -1625,7 +1635,7 @@ class Model(Macro):
 
         Parameters
         ----------
-        initial_condition : str or (float, dict)
+        initial_condition : str or (float, dict) or pathlib.Path
             The starting time, and the state of the system (the values of
             all the stocks) at that starting time. 'original' or 'o'uses
             model-file specified initial condition. 'current' or 'c' uses
@@ -1647,19 +1657,21 @@ class Model(Macro):
         model.set_initial_value()
 
         """
+        if isinstance(initial_condition, str)\
+           and initial_condition.lower() not in ["original", "o",
+                                                 "current", "c"]:
+            initial_condition = Path(initial_condition)
 
         if isinstance(initial_condition, tuple):
             self.initialize()
             self.set_initial_value(*initial_condition)
+        elif isinstance(initial_condition, Path):
+            self.import_pickle(initial_condition)
         elif isinstance(initial_condition, str):
             if initial_condition.lower() in ["original", "o"]:
                 self.time.set_control_vars(
                     initial_time=self.components._control_vars["initial_time"])
                 self.initialize()
-            elif initial_condition.lower() in ["current", "c"]:
-                pass
-            else:
-                self.import_pickle(initial_condition)
         else:
             raise TypeError(
                 "Invalid initial conditions. "

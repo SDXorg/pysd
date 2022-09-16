@@ -17,6 +17,9 @@ Deprecations
 Bug fixes
 ~~~~~~~~~
 - Fix bug when a WITH LOOKUPS argument has subscripts. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Fix bug of exportig csv files with multiple subscripts variables. (`@rogersamso <https://github.com/rogersamso>`_)
+- Fix bug of missing dimensions in variables defined with not all the subscripts of a range (:issue:`364`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Fix bug when running a model with variable final time or time step and progressbar (:issue:`361`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 Documentation
 ~~~~~~~~~~~~~
@@ -31,7 +34,9 @@ Performance
 Internal Changes
 ~~~~~~~~~~~~~~~~
 - Make PySD work with :py:mod:`parsimonius` 0.10.0. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
-- Add netCDF4 as a dependency for tests. (`@rogersamso <https://github.com/rogersamso>`_)
+- Add netCDF4 dependency for tests. (`@rogersamso <https://github.com/rogersamso>`_)
+- Improve warning message when replacing a stock with a parameter.  (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Include more pytest parametrizations in some test and make them translate the models in temporary directories.  (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 - Include lychee-action in the GHA workflow to check the links. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 - Update License. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 - Include `Maintained? Yes` and `Contributions welcome` badges. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
