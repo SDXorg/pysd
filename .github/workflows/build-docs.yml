@@ -1,0 +1,27 @@
+
+# Build html docs. Any warning building the docs will produce an error.
+
+name: Build docs
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: '3.7'
+      - name: Install dependencies
+        run: |
+          pip install .
+          pip install -r docs/requirements.txt
+      - name: Test build html
+        run: |
+          cd docs
+          make html SPHINXOPTS="-W"

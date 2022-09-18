@@ -1,6 +1,6 @@
 What's New
 ==========
-v3.7.0 (to be released)
+v3.7.0 (2022/09/xx)
 -------------------
 
 New Features
@@ -43,6 +43,7 @@ Internal Changes
 - Update links to the new repository location. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 - Reduce relative precission from 1e-10 to 1e-5 to compute the saving times and final time. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 - Add convergence tests for euler integration method. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Include build docs check in the GHA workflow to avoid warnings with sphinx. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 v3.6.1 (2022/09/05)
 -------------------
