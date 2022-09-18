@@ -41,6 +41,7 @@ Internal Changes
 - Update License. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 - Include `Maintained? Yes` and `Contributions welcome` badges. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 - Update links to the new repository location. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Reduce relative precission from 1e-10 to 1e-5 to compute the saving times and final time. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 v3.6.1 (2022/09/05)
 -------------------

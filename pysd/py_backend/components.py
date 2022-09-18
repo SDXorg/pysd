@@ -123,7 +123,7 @@ class Components(object):
 
 
 class Time(object):
-    rprec = 1e-10  # relative precission for final time and saving time
+    rprec = 1e-5  # relative precission for final time and saving time
 
     def __init__(self):
         self._time = None
