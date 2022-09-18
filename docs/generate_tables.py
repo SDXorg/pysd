@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pandas as pd
 
+
 def generate(table, columns, output):
     """Generate markdown table."""
     # select only the given columns
