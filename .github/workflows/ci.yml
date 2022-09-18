@@ -25,9 +25,10 @@ jobs:
           pip install -r tests/requirements.txt
           pip install -e .
       - name: Test and coverage
-        run: python -m pytest tests/ --cov=pysd
+        run: pytest tests/ --cov=pysd
       - name: Coveralls
         if: ${{ matrix.python-version == 3.7 && matrix.os == 'ubuntu-latest' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: coveralls --service=github
+
