@@ -3,7 +3,7 @@ from pysd.translators.vensim.vensim_file import VensimFile
 from pysd.translators.xmile.xmile_file import XmileFile
 import pandas as pd
 obs_stock_df = pd.read_csv('data/hudson-bay-lynx-hare.csv')
-vf = VensimFile("vensim_models/prey-predator.mdl")
+vf = VensimFile("vensim_models/prey-predator/prey-predator.mdl")
 vf.parse()
 am = vf.get_abstract_model()
 
@@ -33,7 +33,7 @@ premodel.set_prior("sigma", "normal", 0, 1)
 premodel.set_prior("predator_obs", "lognormal", "predator", "sigma")
 premodel.set_prior("prey_obs", "lognormal", "prey", "sigma")
 premodel.build_stan_functions()
-premodel.draws2data()
+premodel.stanify_draws2data()
 #print(premodel.vensim_model_context.variable_names)
 
 

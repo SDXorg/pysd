@@ -188,7 +188,7 @@ class StanVensimModel:
             self.function_builder = StanFunctionBuilder(self.abstract_model)
             f.write(self.function_builder.build_functions(self.stan_model_context.exposed_parameters, self.vensim_model_context.stock_variable_names))
 
-    def data2draws(self):
+    def stanify_data2draws(self):
         stan_model_path = os.path.join(self.stan_model_dir, f"{self.model_name}_data2draws.stan")
         with open(stan_model_path, "w") as f:
             # Include the function
@@ -225,7 +225,7 @@ class StanVensimModel:
         stan_model = cmdstanpy.CmdStanModel(stan_file=stan_model_path)
         return stan_model
 
-    def draws2data(self):
+    def stanify_draws2data(self):
         stan_model_path = os.path.join(self.stan_model_dir, f"{self.model_name}_draws2data.stan")
         with open(stan_model_path, "w") as f:
             # Include the function

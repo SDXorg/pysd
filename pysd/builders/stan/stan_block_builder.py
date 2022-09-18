@@ -110,23 +110,22 @@ class StanParametersBuilder:
         added_parameters = set()
 
         for statement in self.stan_model_context.sample_statements:
-            for lhs_variable in statement.lhs_variable:
-                if lhs_variable in data_variable_names:
-                    continue
-                if lhs_variable in added_parameters:
-                    continue
-                if statement.distribution_type == statement.assignment_dist:
-                    continue
-                if statement.lower > float("-inf") and statement.upper < float("inf"):
-                    code += f"real<lower={statement.lower}, upper={statement.upper}> {lhs_variable};\n"
-                elif statement.lower > float("-inf"):
-                    code += f"real<lower={statement.lower}> {lhs_variable};\n"
-                elif statement.upper < float("inf"):
-                    code += f"real<upper={statement.upper}> {lhs_variable};\n"
-                else:
-                    code += f"real {lhs_variable};\n"
+            if statement.lhs_variable in data_variable_names:
+                continue
+            if statement.lhs_variable in added_parameters:
+                continue
+            if statement.distribution_type == statement.assignment_dist:
+                continue
+            if statement.lower > float("-inf") and statement.upper < float("inf"):
+                code += f"real<lower={statement.lower}, upper={statement.upper}> {statement.lhs_variable};\n"
+            elif statement.lower > float("-inf"):
+                code += f"real<lower={statement.lower}> {statement.lhs_variable};\n"
+            elif statement.upper < float("inf"):
+                code += f"real<upper={statement.upper}> {statement.lhs_variable};\n"
+            else:
+                code += f"real {statement.lhs_variable};\n"
 
-                added_parameters.add(lhs_variable)
+            added_parameters.add(statement.lhs_variable)
 
         code.indent_level -= 1  # Exit parameters block
         code += "}\n"
@@ -175,7 +174,7 @@ class StanModelBuilder:
         code = IndentedString()
         code += "model{\n"
         code.indent_level += 1
-        for statement in self.stan_model_context.sampling_statements:
+        for statement in self.stan_model_context.sample_statements:
             if statement.distribution_type != statement.assignment_dist:
                 code += f"{statement.lhs_expr} ~ {statement.distribution_type}({', '.join([str(arg) for arg in statement.distribution_args])});\n"
 
@@ -236,8 +235,8 @@ class Draws2DataStanGQBuilder:
     def build_rng_functions(self):
         ignored_variables = set(self.stan_model_context.stan_data.keys()).union(set(self.vensim_model_context.stock_variable_names))
         stmt_sorter = StatementTopoSort(ignored_variables)
-        for sampling_statement in self.stan_model_context.sample_statements:
-            stmt_sorter.add_stmt(sampling_statement.lhs_variable, sampling_statement.rhs_variables)
+        for sample_statements in self.stan_model_context.sample_statements:
+            stmt_sorter.add_stmt(sample_statements.lhs_variable, sample_statements.rhs_variables)
 
         param_draw_order = stmt_sorter.sort()
         statements = self.stan_model_context.sample_statements.copy()
