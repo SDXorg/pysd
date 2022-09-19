@@ -20,7 +20,8 @@ import parsimonious
 import numpy as np
 
 from ..structures.abstract_model import\
-    AbstractElement, AbstractLookup, AbstractComponent, AbstractSubscriptRange
+    AbstractElement, AbstractControlElement,\
+    AbstractLookup, AbstractComponent, AbstractSubscriptRange
 
 from ..structures.abstract_expressions import AbstractSyntax
 
@@ -467,11 +468,15 @@ class ControlElement(Element):
           with the Abstract Syntax Tree of the expression.
 
         """
-        ae = self._get_empty_abstract_element()
-        ae.components.append(AbstractComponent(
-            subscripts=([], []),
-            ast=self.ast))
-        return ae
+        return AbstractControlElement(
+            name=self.name,
+            units=self.units,
+            limits=self.limits,
+            documentation=self.documentation,
+            components=[
+                AbstractComponent(subscripts=([], []), ast=self.ast)
+            ]
+        )
 
 
 class SubscriptRange():

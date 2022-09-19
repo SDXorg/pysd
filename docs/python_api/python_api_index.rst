@@ -23,7 +23,7 @@ The model loading information can be found in :doc:`model_loading` and consists 
    * - :py:func:`pysd.read_xmile`
      - Translates a Xmile file to Python and returns a :py:class:`Model` object.
    * - :py:func:`pysd.load`
-     - Loads a transtaled Python file and returns a :py:class:`Model` object.
+     - Loads a translated Python file and returns a :py:class:`Model` object.
 
 The Model and Macro classes information ad public methods and attributes can be found in :doc:`model_class`.
 

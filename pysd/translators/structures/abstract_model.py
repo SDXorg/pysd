@@ -238,6 +238,37 @@ class AbstractElement:
 
 
 @dataclass
+class AbstractControlElement(AbstractElement):
+    """
+    Dataclass for a control element. This class is a child of
+    AbstractElement and has the same attributes.
+
+    Parameters
+    ----------
+    name: str
+        The name of the element.
+    components: list
+        The list of AbstractComponents that define this element.
+    units: str (optional)
+        The units of the element. '' by default.
+    limits: tuple (optional)
+        The limits of the element. (None, None) by default.
+    units: str (optional)
+        The documentation of the element. '' by default.
+
+    """
+    name: str
+    components: List[AbstractComponent]
+    units: str = ""
+    limits: tuple = (None, None)
+    documentation: str = ""
+
+    def __str__(self) -> str:  # pragma: no cover
+        return "AbstractControlElement:\t%s (%s, %s)\n%s\n" % (
+            self.name, self.units, self.limits, self.documentation)
+
+
+@dataclass
 class AbstractSubscriptRange:
     """
     Dataclass for a subscript range.

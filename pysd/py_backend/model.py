@@ -8,11 +8,14 @@ a separate file).
 import warnings
 import inspect
 import pickle
+from pathlib import Path
 from typing import Union
 
 import numpy as np
 import xarray as xr
 import pandas as pd
+
+from pysd._version import __version__
 
 from . import utils
 from .statefuls import DynamicStateful, Stateful
@@ -21,8 +24,7 @@ from .cache import Cache, constant_cache
 from .data import TabData
 from .lookups import HardcodedLookups
 from .components import Components, Time
-
-from pysd._version import __version__
+from .output import ModelOutput
 
 
 class Macro(DynamicStateful):
@@ -483,7 +485,7 @@ class Macro(DynamicStateful):
 
         Parameters
         ----------
-        file_name: str
+        file_name: str or pathlib.Path
           Name of the file to export the values.
 
         """
@@ -510,7 +512,7 @@ class Macro(DynamicStateful):
 
         Parameters
         ----------
-        file_name: str
+        file_name: str or pathlib.Path
           Name of the file to import the values from.
 
         """
@@ -709,7 +711,6 @@ class Macro(DynamicStateful):
         >>> br = pandas.Series(index=range(30), values=np.sin(range(30))
         >>> model.set_components({'birth_rate': br})
 
-
         """
         # TODO: allow the params argument to take a pandas dataframe, where
         # column names are variable names. However some variables may be
@@ -780,8 +781,8 @@ class Macro(DynamicStateful):
 
             # this won't handle other statefuls...
             if '_integ_' + func_name in dir(self.components):
-                warnings.warn("Replacing the equation of stock"
-                              + "{} with params".format(key),
+                warnings.warn("Replacing the equation of stock "
+                              "'{}' with params...".format(key),
                               stacklevel=2)
 
             new_function.__name__ = func_name
@@ -1023,6 +1024,7 @@ class Model(Macro):
         self.time.set_control_vars(**self.components._control_vars)
         self.data_files = data_files
         self.missing_values = missing_values
+        self.progress = None
         if initialize:
             self.initialize()
 
@@ -1035,7 +1037,7 @@ class Model(Macro):
     def run(self, params=None, return_columns=None, return_timestamps=None,
             initial_condition='original', final_time=None, time_step=None,
             saveper=None, reload=False, progress=False, flatten_output=True,
-            cache_output=True):
+            cache_output=True, output_file=None):
         """
         Simulate the model's behavior over time.
         Return a pandas dataframe with timestamps as rows,
@@ -1098,6 +1100,8 @@ class Model(Macro):
             If True, once the output dataframe has been formatted will
             split the xarrays in new columns following Vensim's naming
             to make a totally flat output. Default is True.
+            This argument will be ignored when passing a netCDF4 file
+            path in the output_file argument.
 
         cache_output: bool (optional)
            If True, the number of calls of outputs variables will be increased
@@ -1106,6 +1110,11 @@ class Model(Macro):
            recommended to activate this feature, if time step << saveper
            it is recommended to deactivate it. Default is True.
 
+        output_file: str, pathlib.Path or None (optional)
+           Path of the file in which to save simulation results.
+           Currently, csv, tab and nc (netCDF4) files are supported.
+
+
         Examples
         --------
         >>> model.run(params={'exogenous_constant': 42})
@@ -1113,6 +1122,8 @@ class Model(Macro):
         >>> model.run(return_timestamps=[1, 2, 3, 4, 10])
         >>> model.run(return_timestamps=10)
         >>> model.run(return_timestamps=np.linspace(1, 10, 20))
+        >>> model.run(output_file="results.nc")
+
 
         See Also
         --------
@@ -1122,8 +1133,6 @@ class Model(Macro):
         """
         if reload:
             self.reload()
-
-        self.progress = progress
 
         self.time.add_return_timestamps(return_timestamps)
         if self.time.return_timestamps is not None and not final_time:
@@ -1145,6 +1154,18 @@ class Model(Macro):
 
         self.set_initial_condition(initial_condition)
 
+        # set progressbar
+        if progress and (self.cache_type["final_time"] == "step" or
+                         self.cache_type["time_step"] == "step"):
+            warnings.warn(
+                "The progressbar is not compatible with dynamic "
+                "final time or time step. Both variables must be "
+                "constants to prompt progress."
+            )
+            progress = False
+
+        self.progress = progress
+
         if return_columns is None or isinstance(return_columns, str):
             return_columns = self._default_return_columns(return_columns)
 
@@ -1154,13 +1175,31 @@ class Model(Macro):
         # create a dictionary splitting run cached and others
         capture_elements = self._split_capture_elements(capture_elements)
 
+
         # include outputs in cache if needed
         self._dependencies["OUTPUTS"] = {
             element: 1 for element in capture_elements["step"]
         }
+
         if cache_output:
             # udate the cache type taking into account the outputs
             self._assign_cache_type()
+
+        # check validitty of output_file. This could be done inside the
+        # ModelOutput class, but it feels too late
+        if output_file:
+            if not isinstance(output_file, (str, Path)):
+                raise TypeError(
+                        "Paths must be strings or pathlib Path objects.")
+
+            if isinstance(output_file, str):
+                output_file = Path(output_file)
+
+            file_extension = output_file.suffix
+
+            if file_extension not in ModelOutput.valid_output_files:
+                raise ValueError(
+                        f"Unsupported output file format {file_extension}")
 
         # add constant cache to thosa variable that are constants
         self._add_constant_cache()
@@ -1170,16 +1209,19 @@ class Model(Macro):
         # need to clean cache to remove the values from active_initial
         self.clean_caches()
 
-        res = self._integrate(capture_elements['step'])
+        # instantiating output object
+        output = ModelOutput(self, capture_elements['step'], output_file)
+
+        self._integrate(output)
 
         del self._dependencies["OUTPUTS"]
 
-        self._add_run_elements(res, capture_elements['run'])
+        output.add_run_elements(self, capture_elements['run'])
+
         self._remove_constant_cache()
 
-        return_df = utils.make_flat_df(res, return_addresses, flatten_output)
-
-        return return_df
+        return output.postprocess(
+            return_addresses=return_addresses, flatten=flatten_output)
 
     def select_submodel(self, vars=[], modules=[], exogenous_components={}):
         """
@@ -1593,7 +1635,7 @@ class Model(Macro):
 
         Parameters
         ----------
-        initial_condition : str or (float, dict)
+        initial_condition : str or (float, dict) or pathlib.Path
             The starting time, and the state of the system (the values of
             all the stocks) at that starting time. 'original' or 'o'uses
             model-file specified initial condition. 'current' or 'c' uses
@@ -1615,19 +1657,21 @@ class Model(Macro):
         model.set_initial_value()
 
         """
+        if isinstance(initial_condition, str)\
+           and initial_condition.lower() not in ["original", "o",
+                                                 "current", "c"]:
+            initial_condition = Path(initial_condition)
 
         if isinstance(initial_condition, tuple):
             self.initialize()
             self.set_initial_value(*initial_condition)
+        elif isinstance(initial_condition, Path):
+            self.import_pickle(initial_condition)
         elif isinstance(initial_condition, str):
             if initial_condition.lower() in ["original", "o"]:
                 self.time.set_control_vars(
                     initial_time=self.components._control_vars["initial_time"])
                 self.initialize()
-            elif initial_condition.lower() in ["current", "c"]:
-                pass
-            else:
-                self.import_pickle(initial_condition)
         else:
             raise TypeError(
                 "Invalid initial conditions. "
@@ -1647,26 +1691,19 @@ class Model(Macro):
         """
         self.state = self.state + self.ddt() * dt
 
-    def _integrate(self, capture_elements):
+    def _integrate(self, out_obj):
         """
-        Performs euler integration.
+        Performs euler integration and writes results to the out_obj.
 
         Parameters
         ----------
-        capture_elements: set
-            Which model elements to capture - uses pysafe names.
+        out_obj: pysd.ModelOutput
 
         Returns
         -------
-        outputs: pandas.DataFrame
-            Output capture_elements data.
+        None
 
         """
-        # necessary to have always a non-xaray object for appending objects
-        # to the DataFrame time will always be a model element and not saved
-        # TODO: find a better way of saving outputs
-        capture_elements.add("time")
-        outputs = pd.DataFrame(columns=capture_elements)
 
         if self.progress:
             # initialize progress bar
@@ -1677,11 +1714,11 @@ class Model(Macro):
             # when None is used the update will do nothing
             progressbar = utils.ProgressBar(None)
 
+        # performs the time stepping
         while self.time.in_bounds():
             if self.time.in_return():
-                outputs.at[self.time.round()] = [
-                    getattr(self.components, key)()
-                    for key in capture_elements]
+                out_obj.update(self)
+
             self._euler_step(self.time.time_step())
             self.time.update(self.time()+self.time.time_step())
             self.clean_caches()
@@ -1690,33 +1727,6 @@ class Model(Macro):
         # need to add one more time step, because we run only the state
         # updates in the previous loop and thus may be one short.
         if self.time.in_return():
-            outputs.at[self.time.round()] = [getattr(self.components, key)()
-                                             for key in capture_elements]
+            out_obj.update(self)
 
         progressbar.finish()
-
-        # delete time column as it was created only for avoiding errors
-        # of appending data. See previous TODO.
-        del outputs["time"]
-        return outputs
-
-    def _add_run_elements(self, df, capture_elements):
-        """
-        Adds constant elements to a dataframe.
-
-        Parameters
-        ----------
-        df: pandas.DataFrame
-            Dataframe to add elements.
-
-        capture_elements: list
-            List of constant elements
-
-        Returns
-        -------
-        None
-
-        """
-        nt = len(df.index.values)
-        for element in capture_elements:
-            df[element] = [getattr(self.components, element)()] * nt

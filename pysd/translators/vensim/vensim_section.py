@@ -10,7 +10,8 @@ from typing import List, Union
 from pathlib import Path
 import parsimonious
 
-from ..structures.abstract_model import AbstractElement, AbstractSection
+from ..structures.abstract_model import\
+    AbstractElement, AbstractControlElement, AbstractSection
 
 from . import vensim_utils as vu
 from .vensim_element import Element, SubscriptRange, Component
@@ -160,15 +161,21 @@ class Section():
 
     def _merge_components(self) -> List[AbstractElement]:
         """Merge model components by their name."""
+        control_vars = ["initial_time", "final_time", "time_step", "saveper"]
         merged = {}
         for component in self.components:
             # get a safe name to merge (case and white/underscore sensitivity)
             name = component.name.lower().replace(" ", "_")
             if name not in merged:
                 # create new element if it is the first component
-                merged[name] = AbstractElement(
-                    name=component.name,
-                    components=[])
+                if name in control_vars:
+                    merged[name] = AbstractControlElement(
+                        name=component.name,
+                        components=[])
+                else:
+                    merged[name] = AbstractElement(
+                        name=component.name,
+                        components=[])
 
             if component.units:
                 # add units to element data
