@@ -47,7 +47,7 @@ The main functional elements of PySD are 1) a set of parsing expression grammars
 
 In addition to the aforementioned core functionality, PySD also allows users to import model inputs from external sources (from spreadsheet files), modify model variables at runtime, split models into any number of modules and submodules (corresponding to Vensim&#174; views), isolate parts of a model to be run individually, store intermediate simulation results and resume the simulation from that particular state, and run models using PySD alone (without Stella&#174; or Vensim&#174;). All these features are made available to the user through a command-line interface.
 
-Despite its maturity, PySD is currently in a very active development phase, and a proof to that is that most of the extra features listed in the paragraph above were implemented in the 20 months that separate releases *v0.11.0* and *v3.5.0*.
+Despite its maturity, PySD is currently in a very active development phase, and a proof to that is that most of the extra features listed in the paragraph above were implemented in the 21 months that separate releases *v0.11.0* and *v3.7.0*.
 
 The main novelty introduced in release *v3.0.0* is that the parsing process is now isolated from the building process, which opens the door to the development of additional model builders (in Python) to write the output models in any programming language. This has been achieved by creating an intermediate abstract model representation (AMR), as shown in Figure \ref{fig:ABSTRACTMODEL}, that embeds all the information contained in the original models, plus additional information such as the order of operations, in pure Python objects.
 
