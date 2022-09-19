@@ -306,7 +306,7 @@ class TestOutput():
 
     @pytest.mark.parametrize("model_path", [test_model_look])
     def test_dataset_handler_step_setter(self, tmp_path, model):
-        capture_elements = set()
+        capture_elements = []
         results = tmp_path.joinpath("results.nc")
         output = ModelOutput(model, capture_elements, results)
 
@@ -322,10 +322,10 @@ class TestOutput():
     def test_make_flat_df(self):
 
         df = pd.DataFrame(index=[1], columns=['elem1'])
-        df.at[1] = [xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                                 {'Dim1': ['A', 'B', 'C'],
-                                  'Dim2': ['D', 'E', 'F']},
-                                 dims=['Dim1', 'Dim2'])]
+        df.loc[1] = [xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                                  {'Dim1': ['A', 'B', 'C'],
+                                   'Dim2': ['D', 'E', 'F']},
+                                  dims=['Dim1', 'Dim2'])]
 
         expected = pd.DataFrame(index=[1], data={'Elem1[B,F]': 6.})
 
@@ -341,7 +341,7 @@ class TestOutput():
     def test_make_flat_df_0dxarray(self):
 
         df = pd.DataFrame(index=[1], columns=['elem1'])
-        df.at[1] = [xr.DataArray(5)]
+        df.loc[1] = [xr.DataArray(5)]
 
         expected = pd.DataFrame(index=[1], data={'Elem1': 5.})
 
@@ -357,10 +357,10 @@ class TestOutput():
     def test_make_flat_df_nosubs(self):
 
         df = pd.DataFrame(index=[1], columns=['elem1', 'elem2'])
-        df.at[1] = [25, 13]
+        df.loc[1] = [25, 13]
 
         expected = pd.DataFrame(index=[1], columns=['Elem1', 'Elem2'])
-        expected.at[1] = [25, 13]
+        expected.loc[1] = [25, 13]
 
         return_addresses = {'Elem1': ('elem1', {}),
                             'Elem2': ('elem2', {})}
@@ -378,24 +378,24 @@ class TestOutput():
         the simulation dictionary. in this case, we can't force to float..."""
 
         df = pd.DataFrame(index=[1], columns=['elem1', 'elem2'])
-        df.at[1] = [xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                                 {'Dim1': ['A', 'B', 'C'],
-                                  'Dim2': ['D', 'E', 'F']},
-                                 dims=['Dim1', 'Dim2']),
-                    xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                                 {'Dim1': ['A', 'B', 'C'],
-                                  'Dim2': ['D', 'E', 'F']},
-                                 dims=['Dim1', 'Dim2'])]
+        df.loc[1] = [xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                                  {'Dim1': ['A', 'B', 'C'],
+                                   'Dim2': ['D', 'E', 'F']},
+                                  dims=['Dim1', 'Dim2']),
+                     xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                                  {'Dim1': ['A', 'B', 'C'],
+                                   'Dim2': ['D', 'E', 'F']},
+                                  dims=['Dim1', 'Dim2'])]
 
         expected = pd.DataFrame(index=[1], columns=['Elem1[A, Dim2]', 'Elem2'])
-        expected.at[1] = [xr.DataArray([[1, 2, 3]],
-                                       {'Dim1': ['A'],
-                                        'Dim2': ['D', 'E', 'F']},
-                                       dims=['Dim1', 'Dim2']),
-                          xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                                       {'Dim1': ['A', 'B', 'C'],
-                                        'Dim2': ['D', 'E', 'F']},
-                                       dims=['Dim1', 'Dim2'])]
+        expected.loc[1] = [xr.DataArray([[1, 2, 3]],
+                                        {'Dim1': ['A'],
+                                         'Dim2': ['D', 'E', 'F']},
+                                        dims=['Dim1', 'Dim2']),
+                           xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                                        {'Dim1': ['A', 'B', 'C'],
+                                         'Dim2': ['D', 'E', 'F']},
+                                        dims=['Dim1', 'Dim2'])]
 
         return_addresses = {
             'Elem1[A, Dim2]': ('elem1', {'Dim1': ['A'],
@@ -414,14 +414,14 @@ class TestOutput():
     def test_make_flat_df_flatten(self):
 
         df = pd.DataFrame(index=[1], columns=['elem1', 'elem2'])
-        df.at[1] = [xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                                 {'Dim1': ['A', 'B', 'C'],
-                                  'Dim2': ['D', 'E', 'F']},
-                                 dims=['Dim1', 'Dim2']),
-                    xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
-                                 {'Dim1': ['A', 'B', 'C'],
-                                  'Dim2': ['D', 'E', 'F']},
-                                 dims=['Dim1', 'Dim2'])]
+        df.loc[1] = [xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                                  {'Dim1': ['A', 'B', 'C'],
+                                   'Dim2': ['D', 'E', 'F']},
+                                  dims=['Dim1', 'Dim2']),
+                     xr.DataArray([[1, 2, 3], [4, 5, 6], [7, 8, 9]],
+                                  {'Dim1': ['A', 'B', 'C'],
+                                   'Dim2': ['D', 'E', 'F']},
+                                  dims=['Dim1', 'Dim2'])]
 
         expected = pd.DataFrame(index=[1], columns=[
             'Elem1[A,D]',
@@ -437,7 +437,7 @@ class TestOutput():
             'Elem2[C,E]',
             'Elem2[C,F]'])
 
-        expected.at[1] = [1, 2, 3, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+        expected.loc[1] = [1, 2, 3, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 
         return_addresses = {
             'Elem1[A,Dim2]': ('elem1', {'Dim1': ['A'],
@@ -456,7 +456,7 @@ class TestOutput():
     def test_make_flat_df_flatten_transposed(self):
 
         df = pd.DataFrame(index=[1], columns=['elem2'])
-        df.at[1] = [
+        df.loc[1] = [
             xr.DataArray(
                 [[1, 4, 7], [2, 5, 8], [3, 6, 9]],
                 {'Dim2': ['D', 'E', 'F'], 'Dim1': ['A', 'B', 'C']},
@@ -475,7 +475,7 @@ class TestOutput():
             'Elem2[C,E]',
             'Elem2[C,F]'])
 
-        expected.at[1] = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        expected.loc[1] = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 
         return_addresses = {
             'Elem2': ('elem2', {})}

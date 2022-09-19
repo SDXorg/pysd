@@ -1175,7 +1175,6 @@ class Model(Macro):
         # create a dictionary splitting run cached and others
         capture_elements = self._split_capture_elements(capture_elements)
 
-
         # include outputs in cache if needed
         self._dependencies["OUTPUTS"] = {
             element: 1 for element in capture_elements["step"]
@@ -1622,11 +1621,11 @@ class Model(Macro):
         Returns
         -------
         capture_dict: dict
-            Dictionary of sets with keywords step and run.
+            Dictionary of list with keywords step and run.
 
         """
-        capture_dict = {'step': set(), 'run': set(), None: set()}
-        [capture_dict[self.cache_type[element]].add(element)
+        capture_dict = {'step': [], 'run': [], None: []}
+        [capture_dict[self.cache_type[element]].append(element)
          for element in capture_elements]
         return capture_dict
 
