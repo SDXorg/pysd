@@ -66,7 +66,7 @@ def harmonic_speed(t, x0, k, m):
 )
 class TestEulerConvergence:
     """
-    Test for splitting Vensim views in modules and submodules
+    Tests for Euler integration method convergence.
     """
     # Number of points to compute the tests
     n_points_lte = 30
@@ -74,7 +74,7 @@ class TestEulerConvergence:
     def test_local_truncation_error(self, model, f, f2, stocks, arguments,
                                     integration_frame, ts_log, ts_rmse):
         """
-        Test the locat truncation error (LTE).
+        Test the local truncation error (LTE).
         LTE = y_1 - y(t_0+h) = 0.5*h**2*y''(x) for x in [t_0, t_0+h]
 
         where y_1 = y(t_0) + h*f(t_0, y(t_0)) and
@@ -149,16 +149,14 @@ class TestEulerConvergence:
                 f"The LTE is bigger than the expected one ({ic}) h={h},"\
                 f"\n{np.abs(x_expect - x_euler)} !<=  {np.abs(error)}, "
 
-    def test_root_mean_squared_error(self, model, f, f2, stocks, arguments,
-                                     integration_frame, ts_log, ts_rmse):
+    def test_root_mean_square_error(self, model, f, f2, stocks, arguments,
+                                    integration_frame, ts_log, ts_rmse):
         """
-        Test the locat truncation error (LTE).
-        LTE = y_1 - y(t_0+h) = 0.5*h**2*y''(x) for x in [t_0, t_0+h]
+        Test the root-mean-square error (RMSE).
+        RMSE = SQRT(MEAN(y_i-y(t_0+h*i)))
 
-        where y_1 = y(t_0) + h*f(t_0, y(t_0)) and
-
-        Generates n_points_lte in the given integration frame and test the
-        convergence with logarithmically uniform split time_steps.
+        Integrates the given model with different time steps and checks
+        that the RMSE decreases when the time step decreases.
 
         Parameter
         ---------
@@ -208,6 +206,6 @@ class TestEulerConvergence:
             # Compute the RMSE for each stock
             rmse.append(np.sqrt(((x_euler-expected_values)**2).mean()))
 
-        # Assert that the RMSE decreasses for all stocks while
+        # Assert that the RMSE decreases for all stocks while
         # decreasing the time step
         assert np.all(np.diff(rmse, axis=0) < 0)
