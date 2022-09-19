@@ -9,36 +9,49 @@ import pandas as pd
 from pysd.py_backend.utils import xrsplit
 from pathlib import Path
 import warnings
+from typing import Union, Optional
 
-def load_nc_file(ncfile):
+ChunkTypes = Union[str, int, dict]
+
+def load_nc_file(ncfile: Union[str, Path],
+                 chunks: Optional[ChunkTypes]={}) -> xr.Dataset:
     """
     Loads netCDF file into xarray Dataset.
 
     Parameters
     ----------
-    ncfile: str
+    ncfile: str or pathlib.Path
         Path to the netCDF file to process.
+    chunks: int, dict, auto or None (optional)
+        chunks argument from the xarray.load_dataset method.
+        Used to load the dataset into dask arrays. The default
+        value of this argument will load the dataset with dask
+        using engine preferred chunks if exposed by the backend,
+        otherwise with a single chunk for all arrays. See dask
+        chunking for more details.
 
     Returns
     -------
     xarray.Dataset
 
     """
-    if isinstance(ncfile, (str, Path)):
-        if isinstance(ncfile, str):
-            ncfile = Path(ncfile)
-        if not ncfile.is_file():
-            raise FileNotFoundError(f"{ncfile} could not be found.")
-        if not ncfile.suffix == ".nc":
-            raise TypeError("Input file must have nc extension.")
-    else:
+    if not isinstance(ncfile, (str, Path)):
         raise TypeError(f"Invalid file path type: {type(ncfile)}.\n"
                         "Please provide string or pathlib Path")
 
-    # open netCDF file
-    return xr.open_dataset(ncfile)
+    if isinstance(ncfile, str):
+        ncfile = Path(ncfile)
 
-def _validate_ds_subset(ds, subset):
+    if not ncfile.is_file():
+        raise FileNotFoundError(f"{ncfile} could not be found.")
+
+    if not ncfile.suffix == ".nc":
+        raise TypeError("Input file must have nc extension.")
+
+    # open netCDF file
+    return xr.open_dataset(ncfile, engine="netcdf4", chunks=chunks)
+
+def _validate_ds_subset(ds: xr.Dataset, subset: list) -> list:
     """
     If subset = None, it returns a list with all variables in the ds Dataset.
     Else, if vars in subset are present in ds, it returns them, else it warns
@@ -46,31 +59,24 @@ def _validate_ds_subset(ds, subset):
 
     Parameters
     ----------
-    ds: xarray.Dataset
-
     subset: list
-        Subset of variable names in the dataset.
+        Subset of variable names in the xarray Dataset.
 
-    Returns
-    -------
-    new_subset:
     """
     # process subset list
     if not subset: # use all names
         new_subset = [name for name  in ds.data_vars.keys()]
     else:
-        if not isinstance(subset, list):
+        if not isinstance(subset, list) or \
+             not all(map(lambda x: isinstance(x, str), subset)):
             raise TypeError("Subset argument must be a list of strings.")
-        else:
-            if not all(map(lambda x: isinstance(x, str), subset)):
-                raise TypeError("subset argument must be a list of strings.")
 
         new_subset = [name if name in ds.data_vars.keys()
                       else warnings.warn(f"{name} not in Dataset.")
                       for name in subset]
     return new_subset
 
-def _ds_var_to_dict_item(savedict, ds, name):
+def _ds_var_to_dict_item(savedict: dict, ds: xr.Dataset, name: str) -> None:
     """
     Convert xarray Dataset variable to dict items for each combination of
     dimensions.
@@ -96,11 +102,13 @@ def _ds_var_to_dict_item(savedict, ds, name):
         savedict[name] = da.values.tolist()
     else:
         for elem in xrsplit(da):
-            coords = {dim: str(elem.coords[dim].values) for dim in dims if dim != "time"}
+            coords = {dim: str(elem.coords[dim].values)
+                      for dim in dims if dim != "time"
+                      }
             subs = "[" + ",".join(coords.values()) + "]"
             savedict[name + subs] = da.loc[coords].values
 
-def _dict_to_df(savedict, time_in_row):
+def _dict_to_df(savedict: dict, time_in_row: bool) -> pd.DataFrame:
     """
     Convert a dict to a pandas Dataframe.
 
@@ -109,12 +117,7 @@ def _dict_to_df(savedict, time_in_row):
     savedict: dict
         Dictionary to convert to pandas DataFrame.
     time_in_row: bool
-        Whether time increases along a columns or a row.
-
-    Returns
-    -------
-    df: pandas.DataFrame
-        Resulting DataFrame.
+        Whether time increases along a column or a row.
 
     """
     # process time_in_row argument
@@ -128,7 +131,7 @@ def _dict_to_df(savedict, time_in_row):
 
     return df
 
-def df_to_csv(df, outfile):
+def df_to_csv(df: pd.DataFrame, outfile: Union[str, Path]) -> None:
     """
     Store pandas DataFrame into csv or tab file.
 
@@ -165,7 +168,10 @@ def df_to_csv(df, outfile):
     df.to_csv(outfile, sep, index_label="Time", quoting=QUOTE_NONE,
               escapechar="\\")
 
-def ds_to_df(ds, subset=None, time_in_row=False):
+def ds_to_df(ds: xr.Dataset,
+             subset: Optional[list]=None,
+             time_in_row: Optional[bool]=False
+             ) -> pd.DataFrame:
     """
     Convert xarray.Dataset into a pandas DataFrame.
 
@@ -193,7 +199,11 @@ def ds_to_df(ds, subset=None, time_in_row=False):
 
     return _dict_to_df(savedict, time_in_row)
 
-def nc_to_df(ncfile, subset=None, time_in_row=False):
+def nc_to_df(ncfile: Union[str, Path],
+             subset: Optional[list]=None,
+             time_in_row: Optional[bool]=False,
+             chunks: Optional[ChunkTypes]={}
+             ) -> pd.DataFrame:
     """
     Convert netCDF file contents into a pandas DataFrame.
 
@@ -206,6 +216,13 @@ def nc_to_df(ncfile, subset=None, time_in_row=False):
     time_in_row: bool
         Whether time increases along row.
         Default is False.
+    chunks: int, dict, auto or None (optional)
+        chunks argument from the xarray.load_dataset method.
+        Used to load the dataset into dask arrays. The default
+        value of this argument will load the dataset with dask
+        using engine preferred chunks if exposed by the backend,
+        otherwise with a single chunk for all arrays. See dask
+        chunking for more details.
 
     Returns
     -------
@@ -213,11 +230,16 @@ def nc_to_df(ncfile, subset=None, time_in_row=False):
         Dataframe with all colums specified in subset.
 
     """
-    ds = load_nc_file(ncfile)
+    ds = load_nc_file(ncfile, chunks=chunks)
 
     return ds_to_df(ds, subset, time_in_row)
 
-def nc_to_csv(ncfile, outfile="result.tab", subset=None, time_in_row=False):
+def nc_to_csv(ncfile: Union[str, Path],
+              outfile: Optional[Union[str, Path]]="result.tab",
+              subset: Optional[list]=None,
+              time_in_row: Optional[bool]=False,
+              chunks: Optional[ChunkTypes]={}
+              ) -> pd.DataFrame:
     """
     Convert netCDF file contents into comma or tab separated file.
 
@@ -232,6 +254,13 @@ def nc_to_csv(ncfile, outfile="result.tab", subset=None, time_in_row=False):
     time_in_row: bool
         Whether time increases along row.
         Default is False.
+    chunks: int, dict, auto or None (optional)
+        chunks argument from the xarray.load_dataset method.
+        Used to load the dataset into dask arrays. The default
+        value of this argument will load the dataset with dask
+        using engine preferred chunks if exposed by the backend,
+        otherwise with a single chunk for all arrays. See dask
+        chunking for more details.
 
     Returns
     -------
@@ -239,7 +268,7 @@ def nc_to_csv(ncfile, outfile="result.tab", subset=None, time_in_row=False):
         Dataframe with all colums specified in subset.
 
     """
-    df = nc_to_df(ncfile, subset, time_in_row)
+    df = nc_to_df(ncfile, subset, time_in_row, chunks)
 
     df_to_csv(df, outfile)
 
