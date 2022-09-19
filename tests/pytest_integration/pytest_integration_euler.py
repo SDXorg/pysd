@@ -153,7 +153,7 @@ class TestEulerConvergence:
                                     integration_frame, ts_log, ts_rmse):
         """
         Test the root-mean-square error (RMSE).
-        RMSE = SQRT(MEAN(y_i-y(t_0+h*i)))
+        RMSE = SQRT(MEAN((y_i-y(t_0+h*i))^2))
 
         Integrates the given model with different time steps and checks
         that the RMSE decreases when the time step decreases.
