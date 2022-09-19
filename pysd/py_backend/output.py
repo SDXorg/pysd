@@ -44,8 +44,7 @@ class ModelOutput():
         # want them to run (DataFrameHandler runs first)
         self.handler = DataFrameHandler(DatasetHandler(None)).handle(out_file)
 
-        capture_elements.append("time")
-        self.capture_elements = capture_elements
+        self.capture_elements = capture_elements + ["time"]
 
         self.initialize(model)
 
