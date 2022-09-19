@@ -123,7 +123,7 @@ class Components(object):
 
 
 class Time(object):
-    rprec = 1e-5  # relative precission for final time and saving time
+    rprec = 1e-5  # relative precision for final time and saving time
 
     def __init__(self):
         self._time = None
@@ -183,7 +183,7 @@ class Time(object):
         prec = self.time_step() * self.rprec
 
         if self.return_timestamps is not None:
-            # this allows managing float precission error
+            # this allows managing float precision error
             if self.next_return is None:
                 return False
             if np.isclose(self._time, self.next_return, prec):
@@ -207,7 +207,7 @@ class Time(object):
         return time_delay % save_per < prec or -time_delay % save_per < prec
 
     def round(self):
-        """ Return rounded time to outputs to avoid float precission error"""
+        """ Return rounded time to outputs to avoid float precision error"""
         return np.round(
             self._time,
             -int(np.log10(self.time_step()*self.rprec)))
