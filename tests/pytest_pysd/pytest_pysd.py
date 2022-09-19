@@ -109,7 +109,7 @@ class TestPySD():
 
     @pytest.mark.parametrize("model_path", [test_model])
     def test_run_return_timestamps(self, model):
-        """Addresses https://github.com/JamesPHoughton/pysd/issues/17"""
+        """Addresses https://github.com/SDXorg/pysd/issues/17"""
         timestamps = np.random.randint(1, 5, 5).cumsum()
         stocks = model.run(return_timestamps=timestamps)
         assert (stocks.index.values == timestamps).all()
@@ -183,7 +183,7 @@ class TestPySD():
     @pytest.mark.parametrize("model_path", [test_model])
     def test_run_return_columns_original_names(self, model):
         """
-        Addresses https://github.com/JamesPHoughton/pysd/issues/26
+        Addresses https://github.com/SDXorg/pysd/issues/26
         - Also checks that columns are returned in the correct order
         """
         return_columns = ["Room Temperature", "Teacup Temperature"]
@@ -201,7 +201,7 @@ class TestPySD():
 
     @pytest.mark.parametrize("model_path", [test_model])
     def test_run_reload(self, model):
-        """Addresses https://github.com/JamesPHoughton/pysd/issues/99"""
+        """Addresses https://github.com/SDXorg/pysd/issues/99"""
         result0 = model.run()
         result1 = model.run(params={"Room Temperature": 1000})
         result2 = model.run()
@@ -213,7 +213,7 @@ class TestPySD():
 
     @pytest.mark.parametrize("model_path", [test_model])
     def test_run_return_columns_pysafe_names(self, model):
-        """Addresses https://github.com/JamesPHoughton/pysd/issues/26"""
+        """Addresses https://github.com/SDXorg/pysd/issues/26"""
         return_columns = ["room_temperature", "teacup_temperature"]
         result = model.run(return_columns=return_columns)
         assert set(result.columns) == set(return_columns)
@@ -237,7 +237,7 @@ class TestPySD():
 
     @pytest.mark.parametrize("model_path", [test_model])
     def test_initial_conditions_tuple_original_names(self, model):
-        """ Responds to https://github.com/JamesPHoughton/pysd/issues/77"""
+        """ Responds to https://github.com/SDXorg/pysd/issues/77"""
         stocks = model.run(
             initial_condition=(3000, {"Teacup Temperature": 33}),
             return_timestamps=list(range(3000, 3010)),
@@ -270,8 +270,7 @@ class TestPySD():
 
     @pytest.mark.parametrize("model_path", [test_model])
     def test_set_constant_parameter(self, model):
-        """ In response to:
-        re: https://github.com/JamesPHoughton/pysd/issues/5"""
+        """Responds to https://github.com/SDXorg/pysd/issues/5"""
         model.set_components({"room_temperature": 20})
         assert model.components.room_temperature() == 20
 
@@ -330,7 +329,7 @@ class TestPySD():
 
     @pytest.mark.parametrize("model_path", [test_model])
     def test_set_components_warnings(self, model):
-        """Addresses https://github.com/JamesPHoughton/pysd/issues/80"""
+        """Addresses https://github.com/SDXorg/pysd/issues/80"""
         warn_message = r"Replacing the equation of stock "\
                        r"'Teacup Temperature' with params\.\.\."
         with pytest.warns(UserWarning, match=warn_message):
@@ -1258,7 +1257,7 @@ class TestPySD():
         [Path("test-models/tests/lookups/test_lookups.mdl")])
     def test_default_returns_with_lookups(self, model):
         """
-        Addresses https://github.com/JamesPHoughton/pysd/issues/114
+        Addresses https://github.com/SDXorg/pysd/issues/114
         The default settings should skip model elements with no particular
         return value
         """
@@ -1268,7 +1267,7 @@ class TestPySD():
 
     @pytest.mark.parametrize("model_path", [test_model])
     def test_files(self, model, model_path, tmp_path):
-        """Addresses https://github.com/JamesPHoughton/pysd/issues/86"""
+        """Addresses https://github.com/SDXorg/pysd/issues/86"""
 
         # Path from where the model is translated
         path = tmp_path / model_path.parent.name / model_path.name
@@ -1291,7 +1290,7 @@ class TestModelInteraction():
         attributes
 
         This test responds to issue:
-        https://github.com/JamesPHoughton/pysd/issues/23
+        https://github.com/SDXorg/pysd/issues/23
 
         """
 
@@ -1311,7 +1310,7 @@ class TestModelInteraction():
         Need to check that if we instantiate two copies of the same model,
         changes to one copy do not influence the other copy.
 
-        Checks for issue: https://github.com/JamesPHoughton/pysd/issues/108
+        Checks for issue: https://github.com/SDXorg/pysd/issues/108
         that time is not shared between the two models
 
         """

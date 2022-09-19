@@ -1,6 +1,14 @@
 Getting Started
 ===============
 
+.. note::
+   A cookbook of simple recipes for advanced data analytics using PySD is available at:
+   http://pysd-cookbook.readthedocs.org/
+
+   The cookbook includes models, sample data, and code in the form of iPython notebooks that demonstrate a variety of data integration and analysis tasks.
+   These models can be executed on your local machine, and modified to suit your particular analysis requirements.
+
+
 Importing a model and getting started
 -------------------------------------
 To begin, we must first load the PySD module, and use it to import a model file::

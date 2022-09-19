@@ -1,17 +1,18 @@
 PySD
 ====
-
-[![Coverage Status](https://coveralls.io/repos/github/JamesPHoughton/pysd/badge.svg?branch=master)](https://coveralls.io/github/JamesPHoughton/pysd?branch=master)
+[![Maintained](https://img.shields.io/badge/Maintained-Yes-brightgreen.svg)](https://github.com/SDXorg/pysd/pulse)
+[![Coverage Status](https://coveralls.io/repos/github/SDXorg/pysd/badge.svg?branch=master)](https://coveralls.io/github/SDXorg/pysd?branch=master)
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/pysd/badges/version.svg)](https://anaconda.org/conda-forge/pysd)
 [![PyPI version](https://badge.fury.io/py/pysd.svg)](https://badge.fury.io/py/pysd)
 [![PyPI status](https://img.shields.io/pypi/status/pysd.svg)](https://pypi.python.org/pypi/pysd/)
 [![Py version](https://img.shields.io/pypi/pyversions/pysd.svg)](https://pypi.python.org/pypi/pysd/)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5654824.svg)](https://doi.org/10.5281/zenodo.5654824)
+[![Contributions](https://img.shields.io/badge/contributions-welcome-blue.svg)](https://pysd.readthedocs.io/en/latest/development/development_index.html)
 [![Docs](https://readthedocs.org/projects/pysd/badge/?version=latest)](https://pysd.readthedocs.io/en/latest/?badge=latest)
 
-![PySD Logo](https://raw.githubusercontent.com/JamesPHoughton/pysd/5cc4fe5dc65e6b5140a00e87a1be9d261570ee8d/docs/images/PySD_Logo_letters.svg?style=centerme)
+![PySD Logo](https://raw.githubusercontent.com/SDXorg/pysd/5cc4fe5dc65e6b5140a00e87a1be9d261570ee8d/docs/images/PySD_Logo_letters.svg?style=centerme)
 
-This project is a simple library for running [System Dynamics](http://en.wikipedia.org/wiki/System_dynamics) models in python, with the purpose of improving integration of *Big Data* and *Machine Learning* into the SD workflow.
+This project is a library for running [System Dynamics](http://en.wikipedia.org/wiki/System_dynamics) models in Python, with the purpose of improving integration of *Big Data* and *Machine Learning* into the SD workflow.
 
 **The current version needs to run at least Python 3.7.**
 
@@ -22,13 +23,13 @@ See the [project documentation](http://pysd.readthedocs.org/) for information ab
 - [Installation](http://pysd.readthedocs.org/en/latest/installation.html)
 - [Getting Started](http://pysd.readthedocs.org/en/latest/getting_started.html)
 
-For standard methods for data analysis with SD models, see the  [PySD Cookbook](https://github.com/JamesPHoughton/PySD-Cookbook), containing (for example):
+For standard methods for data analysis with SD models, see the  [PySD Cookbook](https://github.com/SDXorg/PySD-Cookbook), containing (for example):
 
-- [Model Fitting](http://nbviewer.ipython.org/github/JamesPHoughton/PySD-Cookbook/blob/master/2_1_Fitting_with_Optimization.ipynb)
-- [Surrogating model components with machine learning regressions](http://nbviewer.ipython.org/github/JamesPHoughton/PySD-Cookbook/blob/master/6_1_Surrogating_with_regression.ipynb)
-- [Multi-Scale geographic comparison of model predictions](http://nbviewer.ipython.org/github/JamesPHoughton/PySD-Cookbook/blob/master/Exploring%20models%20across%20geographic%20scales.ipynb)
+- [Model Fitting](http://nbviewer.ipython.org/github/SDXorg/PySD-Cookbook/blob/master/source/analyses/fitting/Fitting_with_Optimization.ipynb)
+- [Surrogating model components with machine learning regressions](http://nbviewer.ipython.org/github/SDXorg/PySD-Cookbook/blob/master/source/analyses/surrogating_functions/Surrogating_with_regression.ipynb)
+- [Multi-Scale geographic comparison of model predictions](http://nbviewer.ipython.org/github/SDXorg/PySD-Cookbook/blob/master/source/analyses/geo/Exploring_models_across_geographic_scales.ipynb)
 
-If you use PySD in any published work, consider citing the [PySD Introductory Paper](https://github.com/JamesPHoughton/pysd/blob/master/docs/PySD%20Intro%20Paper%20Preprint.pdf):
+If you use PySD in any published work, consider citing the [PySD Introductory Paper](https://github.com/SDXorg/pysd/blob/master/docs/PySD%20Intro%20Paper%20Preprint.pdf):
 
 >Houghton, James; Siegel, Michael. "Advanced data analytics for system dynamics models using PySD." *Proceedings of the 33rd International Conference of the System Dynamics Society.* 2015.
 
@@ -50,19 +51,17 @@ If you'd like to work with this repository directly, you'll need to use a recurs
 
 The command should be something like:
 ```shell
-git clone --recursive https://github.com/JamesPHoughton/pysd.git
+git clone --recursive https://github.com/SDXorg/pysd.git
 ```
 
 ### Extensions
 
 You can use PySD in [R](https://www.r-project.org/) via the [PySD2R](https://github.com/JimDuggan/pysd2r) package, also available on [cran](https://CRAN.R-project.org/package=pysd2r).
 
-### Contributors
+### Contributing
 
-Many people have contributed to developing this project - by
-[submitting code](https://github.com/JamesPHoughton/pysd/graphs/contributors), bug reports, and advice.
+PySD is currently a community-maintained project, any contribution is welcome.
 
-Special thanks to the [sdCloud.io](http://sdcloud.io) development team, who have
-made great contributions to XMILE support, and for integrating PySD into their cloud-based model simulation environment.
+Many people have contributed to developing this project - by [submitting code](https://github.com/SDXorg/pysd/graphs/contributors), bug reports, and advice. Main historic changes in PySD are described in the [About PySD section](https://pysd.readthedocs.io/en/latest/about.html). The [Developer Documentation](https://pysd.readthedocs.io/en/latest/development/development_index.html) could help new developers.
 
-Extra special thanks to [@enekomartinmartinez](https://github.com/enekomartinmartinez) for dramatically pushing forward subscript capabilities (and many other attributes).
+The code for this package is available at: https://github.com/SDXorg/pysd

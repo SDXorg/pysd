@@ -2,7 +2,7 @@ PySD Development Pathway
 ========================
 
 High priority features, bugs, and other elements of active effort are listed on the `github issue
-tracker. <https://github.com/JamesPHoughton/pysd/issues>`_ To get involved see :doc:`guidelines`.
+tracker. <https://github.com/SDXorg/pysd/issues>`_ To get involved see :doc:`guidelines`.
 
 
 High Priority

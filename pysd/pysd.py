@@ -20,7 +20,7 @@ if sys.version_info[:2] < (3, 7):  # pragma: no cover
         + "."
         + "\nPlease update your Python version or use the last "
         + " supported version:\n\t"
-        + "https://github.com/JamesPHoughton/pysd/releases/tag/LastPy2"
+        + "https://github.com/SDXorg/pysd/releases/tag/LastPy2"
     )
 
 
