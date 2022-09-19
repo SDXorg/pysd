@@ -13,14 +13,14 @@ from pysd.py_backend.model import Model
 if sys.version_info[:2] < (3, 7):  # pragma: no cover
     raise RuntimeError(
         "\n\n"
-        + "Your Python version is not longer supported by PySD.\n"
+        + "Your Python version is no longer supported by PySD.\n"
         + "The current version needs to run at least Python 3.7."
         + " You are running:\n\tPython "
         + sys.version
         + "."
         + "\nPlease update your Python version or use the last "
         + " supported version:\n\t"
-        + "https://github.com/JamesPHoughton/pysd/releases/tag/LastPy2"
+        + "https://github.com/SDXorg/pysd/releases/tag/LastPy2"
     )
 
 

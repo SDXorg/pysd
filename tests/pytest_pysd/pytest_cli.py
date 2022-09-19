@@ -100,7 +100,7 @@ class TestPySD():
         stderr = out.stderr.decode(encoding_stderr)
         assert out.returncode != 0
         assert f"PySD: error: when parsing {out_xls_file}" in stderr
-        assert "The output file name must be .tab or .csv..." in stderr
+        assert "The output file name must be .tab, .csv or .nc..." in stderr
 
     def test_read_not_valid_time_stamps(self):
 

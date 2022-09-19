@@ -29,7 +29,7 @@ subscript_copy = name _ "<->" _ name_mapping
 
 # Subscript mapping
 subscript_mapping_list = "->" _ subscript_mapping _ ("," _ subscript_mapping _)*
-subscript_mapping = (_ name_mapping _) / (_ "(" _ name_mapping _ ":" _ index_list _")" )
+subscript_mapping = (_ name_mapping _) / (_ "(" _ name_mapping _ ":" _ index_list _ ")" )
 name_mapping = basic_id / escape_group
 
 # Subscript except match
