@@ -77,10 +77,9 @@ PySD is currently a community-maintained project, any contribution is welcome.
 
 The code for this package is available at: https://github.com/SDXorg/pysd
 
-If you find a bug, or are interested in a particular feature, see :doc:`reporting bugs <../reporting_bugs>`.
+If you find any bug, or are interested in a particular feature, see :doc:`reporting bugs <../reporting_bugs>`.
 
-If you are interested in contributing to the development of PySD, see the :doc:`developer documentation <../development/development_index>`
-listed above.
+If you are interested in contributing to the development of PySD, see the :doc:`developer documentation <../development/development_index>` listed above.
 
 Citing
 ^^^^^^

@@ -1,18 +1,18 @@
 About the Project
 =================
 
-PySD was originally developed by `James P Houghton <https://github.com/JamesPHoughton>`_ in 2014 as a software to translate Vensim to Python. The original goal for translating SD models into Python was to be able to take advantage of all the tools available in Python and thus be able to solve a lot of problems that Vensim itself does not allow.
+PySD was created in 2014 by `James P Houghton <https://github.com/JamesPHoughton>`_ to translate Vensim models to Python. The original goal for translating SD models into Python was to be able to take advantage of all the tools available in Python and thus to extent what is possible using Vensim.
 
-Since the creation of the library many people have contributed to the project by reporting and fixing bugs and adding new features. These contributions are listed in the `contributions section of the GitHub repository <https://github.com/SDXorg/pysd/graphs/contributors>`_.
+Since the creation of the library, many people have contributed to the project by reporting and fixing bugs and adding new features. These contributions are listed in the `contributions section of the GitHub repository <https://github.com/SDXorg/pysd/graphs/contributors>`_.
 
-Some of the big changes that have allowed PySD to get to where you are now are the development of an XMILE to Python code translator in 2017 by `Alex Prey <https://github.com/alexprey>`_ and the restructuring of the translation and model building through an Abstract Syntax by `Eneko Martin-Martinez <https://github.com/enekomartinmartinez>`_ in 2022.
+Some of the big changes that have allowed PySD to get to its current state are the development of an XMILE to Python translator in 2017 by `Alex Prey <https://github.com/alexprey>`_ and the restructuring of the translation and model building through an Abstract Syntax by `Eneko Martin-Martinez <https://github.com/enekomartinmartinez>`_ in 2022.
 
-Some other contributions  until release 3.0.0 are:
+Some other contributions until release 3.0.0 were:
 
-- `Julien Malard-Adam <https://github.com/julienmalard>`_ has added unicode support for the Vensim parser.
-- `sdCloud.io <http://sdcloud.io>`_ development team have made great contributions to XMILE support and have integrated PySD into their cloud-based model simulation environment.
-- `Eneko Martin-Martinez <https://github.com/enekomartinmartinez>`_ has pushed forward the subscripts capabilities for both Vensim and XMILE and has included support for several Vensim functions and improved the performance.
-- `Roger Samsó <https://github.com/rogersamso>`_ has included a sketch parser for Vensim model and has added the option to split a Vensim model per view based on the sketch information.
+- `Julien Malard-Adam <https://github.com/julienmalard>`_ added unicode support for the Vensim parser.
+- `sdCloud.io <http://sdcloud.io>`_ development team made great contributions to improve XMILE support and integrated PySD into their cloud-based model simulation environment.
+- `Eneko Martin-Martinez <https://github.com/enekomartinmartinez>`_ pushed forward the subscripts capabilities for both Vensim and XMILE and included support for several Vensim functions and improved the performance.
+- `Roger Samsó <https://github.com/rogersamso>`_ included a parser for the Vensim sketch and added the option to split a Vensim model per view based on the sketch information.
 
 The changes made since release 3.0.0 are tracked in the :doc:`whats_new` section.
 
