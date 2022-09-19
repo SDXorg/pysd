@@ -1211,7 +1211,7 @@ class TestPySD():
         from pysd.py_backend.model import ModelOutput
         # TODO: think through a stronger test here...
         model.time.add_return_timestamps(list(range(0, 5, 2)))
-        capture_elements = {'teacup_temperature'}
+        capture_elements = ['teacup_temperature']
 
         out = ModelOutput(model, capture_elements, None)
         model._integrate(out)
