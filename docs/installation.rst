@@ -23,9 +23,9 @@ To install from source, clone the project with git:
 
 .. code-block:: bash
 
-   git clone https://github.com/JamesPHoughton/pysd.git
+   git clone https://github.com/SDXorg/pysd.git
 
-or download the latest version from the project repository: https://github.com/JamesPHoughton/pysd
+or download the latest version from the project repository: https://github.com/SDXorg/pysd
 
 In the source directory use the command:
 
@@ -86,5 +86,5 @@ These modules can be installed using pip with a syntax similar to the above.
 
 Additional Resources
 --------------------
-The `PySD Cookbook <https://github.com/JamesPHoughton/PySD-Cookbook>`_ contains recipes that can help you get set up with PySD.
+The `PySD Cookbook <https://github.com/SDXorg/PySD-Cookbook>`_ contains recipes that can help you get set up with PySD.
 
