@@ -34,7 +34,7 @@ flow_arrow =  flow_arrow_code "," anything
 other_objects = other_objects_code "," anything
 
 # fonts
-font_properties = font_name? "|" font_size "|" font_style? "|" color
+font_properties = font_name? "|" font_size? "|" font_style? "|" color
 font_style =  "B" / "I" / "U" / "S" / "V"  # italics, bold, underline, etc
 font_size =  ~r"\d+"  # this needs to be made a regex to match any font
 font_name = ~r"(?<=,)[^\|\d]+(?=\|)"

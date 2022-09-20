@@ -1712,15 +1712,15 @@ class LookupsBuilder(StructureBuilder):
 
             arguments["name"] = self.section.namespace.make_python_identifier(
                 self.element.identifier, prefix="_hardcodedlookup")
-
-            arguments["final_subs"] = self.element.subs_dict
+            arguments["final_subs"] = "%(final_subs)s"
 
             self.element.objects["hardcoded_lookups"] = {
                 "name": arguments["name"],
                 "expression": "%(name)s = HardcodedLookups(%(x)s, %(y)s, "
                               "%(subscripts)s, '%(interp)s', "
                               "%(final_subs)s, '%(name)s')"
-                              % arguments
+                              % arguments,
+                "final_subs": self.element.subs_dict
             }
 
             return BuildAST(
@@ -1769,11 +1769,21 @@ class InlineLookupsBuilder(StructureBuilder):
             separator=",",
             threshold=len(self.lookups.y)
         )
-        return BuildAST(
-            expression="np.interp(%(value)s, %(x)s, %(y)s)" % arguments,
-            calls=arguments["value"].calls,
-            subscripts=arguments["value"].subscripts,
-            order=0)
+        if arguments["value"].subscripts:
+            subs = arguments["value"].subscripts
+            expression = "np.interp(%(value)s, %(x)s, %(y)s)" % arguments
+            return BuildAST(
+                expression="xr.DataArray(%s, %s, %s)" % (
+                    expression, subs, list(subs)),
+                calls=arguments["value"].calls,
+                subscripts=subs,
+                order=0)
+        else:
+            return BuildAST(
+                expression="np.interp(%(value)s, %(x)s, %(y)s)" % arguments,
+                calls=arguments["value"].calls,
+                subscripts={},
+                order=0)
 
 
 class ReferenceBuilder(StructureBuilder):
@@ -1784,7 +1794,6 @@ class ReferenceBuilder(StructureBuilder):
         self.reference = reference_str.reference
         self.subscripts = reference_str.subscripts
         self.arguments = {}
-        self.section.imports.add("xarray")
 
     @property
     def subscripts(self):

@@ -114,6 +114,10 @@ vensim_test = {
         "folder": "except_multiple",
         "file": "test_except_multiple.mdl"
     },
+    "except_subranges": {
+        "folder": "except_subranges",
+        "file": "test_except_subranges.mdl"
+    },
     "exp": {
         "folder": "exp",
         "file": "test_exp.mdl"
@@ -309,6 +313,10 @@ vensim_test = {
     "parentheses": {
         "folder": "parentheses",
         "file": "test_parens.mdl"
+    },
+    "partial_range_definitions": {
+        "folder": "partial_range_definitions",
+        "file": "test_partial_range_definitions.mdl"
     },
     "reference_capitalization": {
         "folder": "reference_capitalization",
@@ -541,6 +549,10 @@ vensim_test = {
     "vector_select": {
         "folder": "vector_select",
         "file": "test_vector_select.mdl"
+    },
+    "with_lookup": {
+        "folder": "with_lookup",
+        "file": "test_with_lookup.mdl"
     },
     "xidz_zidz": {
         "folder": "xidz_zidz",

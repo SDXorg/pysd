@@ -265,6 +265,10 @@ class TestExternalMethods():
         with pytest.raises(ValueError, match=error_message):
             ext._resolve_file(root=_root)
 
+    @pytest.mark.skipif(
+        sys.platform.startswith("win"),
+        reason="not working on Windows"
+    )
     def test_read_empty_cells_openpyxl(self, _root):
         from pysd.py_backend.external import External
 
@@ -273,7 +277,8 @@ class TestExternalMethods():
         ext.sheet = "Horizontal missing"
         ext._resolve_file(root=_root)
 
-        error_message = r"The cellrange 'empty_.*' is empty.\n"
+        error_message = r"external\nThe cells are empty\.\n"\
+            + ext._file_sheet
         with pytest.raises(ValueError, match=error_message):
             ext._get_data_from_file_opyxl("empty_cell")
         with pytest.raises(ValueError, match=error_message):

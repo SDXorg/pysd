@@ -1,6 +1,7 @@
 import pytest
 from pathlib import Path
 
+from pysd.builders.python.namespace import NamespaceManager
 from pysd.builders.python.subscripts import SubscriptManager
 from pysd.builders.python.python_model_builder import\
     ComponentBuilder, ElementBuilder, SectionBuilder
@@ -201,3 +202,52 @@ class TestSubscriptManager:
     def test_invalid_subscripts(self, arguments, raise_type, error_message):
         with pytest.raises(raise_type, match=error_message):
             SubscriptManager(*arguments)
+
+
+class TestNamespaceManager:
+
+    @pytest.fixture
+    def namespace(self, elements):
+        ns = NamespaceManager()
+        [ns.add_to_namespace(element) for element in elements]
+        return ns
+
+    @pytest.mark.parametrize(
+        "identifier,elements,raise_type,error_message",
+        [
+            (  # invalid definition
+                'my_value',
+                ["your_value"],
+                ValueError,
+                r"'my_value' not found in the namespace\."
+            ),
+            (  # invalid definition
+                'my_value',
+                ["your_value", "my_value2"],
+                ValueError,
+                r"'my_value' not found in the namespace\."
+            ),
+        ]
+    )
+    def test_get_original_name_invalid_identifier(self, identifier, namespace,
+                                                  raise_type, error_message):
+        with pytest.raises(raise_type, match=error_message):
+            namespace.get_original_name(identifier)
+
+    @pytest.mark.parametrize(
+        "identifier,elements,expected",
+        [
+            (  # invalid definition
+                'my_value',
+                ["my_value"],
+                "my_value"
+            ),
+            (  # invalid definition
+                'my_value',
+                ["your_value", "My Value"],
+                "My Value"
+            ),
+        ]
+    )
+    def test_get_original_name(self, identifier, namespace, expected):
+        assert namespace.get_original_name(identifier) == expected

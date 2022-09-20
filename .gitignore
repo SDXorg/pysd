@@ -13,3 +13,4 @@ tests/htmlcov/
 docs/_build/*
 docs/tables/*.csv
 venv/
+tests/.coverage*
