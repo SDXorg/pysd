@@ -1,5 +1,30 @@
 What's New
 ==========
+v3.7.1 (2022/09/19)
+-------------------
+
+New Features
+~~~~~~~~~~~~
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+- Fix bugs with :py:class:`pandas.DataFrame` 1.5.0 (:issue:`366`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+
+Documentation
+~~~~~~~~~~~~~
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+
 v3.7.0 (2022/09/19)
 -------------------
 

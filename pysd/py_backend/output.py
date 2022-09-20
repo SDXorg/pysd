@@ -30,7 +30,7 @@ class ModelOutput():
     ----------
     model: pysd.Model
         PySD Model object
-    capture_elements: set
+    capture_elements: list
         Which model elements to capture - uses pysafe names.
     out_file: str or pathlib.Path
         Path to the file where the results will be written.
@@ -44,8 +44,7 @@ class ModelOutput():
         # want them to run (DataFrameHandler runs first)
         self.handler = DataFrameHandler(DatasetHandler(None)).handle(out_file)
 
-        capture_elements.add("time")
-        self.capture_elements = capture_elements
+        self.capture_elements = capture_elements + ["time"]
 
         self.initialize(model)
 
@@ -206,7 +205,7 @@ class DatasetHandler(OutputHandlerInterface):
         ----------
         model: pysd.Model
             PySD Model object
-        capture_elements: set
+        capture_elements: list
             Which model elements to capture - uses pysafe names.
 
         Returns
@@ -246,14 +245,14 @@ class DatasetHandler(OutputHandlerInterface):
 
     def update(self, model, capture_elements):
         """
-        Writes values of cache step variables from the capture_elements set
-        in the netCDF4 Dataset.
+        Writes values of cache step variables from the capture_elements
+        list in the netCDF4 Dataset.
 
         Parameters
         ----------
         model: pysd.Model
             PySD Model object
-        capture_elements: set
+        capture_elements: list
             Which model elements to capture - uses pysafe names.
 
         Returns
@@ -280,7 +279,7 @@ class DatasetHandler(OutputHandlerInterface):
         ----------
         model: pysd.Model
             PySD Model object
-        capture_elements: set
+        capture_elements: list
             Which model elements to capture - uses pysafe names.
 
         Returns
@@ -335,7 +334,7 @@ class DatasetHandler(OutputHandlerInterface):
         ----------
         model: pysd.Model
             PySD Model object
-        capture_elements: set
+        capture_elements: list
             Which model elements to capture - uses pysafe names.
         time_dim: bool
             Whether to add time as the first dimension for the variable.
@@ -413,7 +412,7 @@ class DataFrameHandler(OutputHandlerInterface):
         ----------
         model: pysd.Model
             PySD Model object
-        capture_elements: set
+        capture_elements: list
             Which model elements to capture - uses pysafe names.
 
         Returns
@@ -432,7 +431,7 @@ class DataFrameHandler(OutputHandlerInterface):
         ----------
         model: pysd.Model
             PySD Model object
-        capture_elements: set
+        capture_elements: list
             Which model elements to capture - uses pysafe names.
 
         Returns
@@ -440,7 +439,7 @@ class DataFrameHandler(OutputHandlerInterface):
         None
 
         """
-        self.ds.at[model.time.round()] = [
+        self.ds.loc[model.time.round()] = [
             getattr(model.components, key)()
             for key in capture_elements]
 
@@ -506,7 +505,7 @@ class DataFrameHandler(OutputHandlerInterface):
         ----------
         model: pysd.Model
             PySD Model object
-        capture_elements: set
+        capture_elements: list
             Which model elements to capture - uses pysafe names.
 
         Returns
