@@ -48,7 +48,7 @@ class NCFile():
 
         Parameters
         ----------
-        outfile: str
+        outfile: str or pathlib.Path
             Path to the output file.
         subset: list
             List of variables to export from the netCDF.
@@ -63,6 +63,17 @@ class NCFile():
             Dataframe with all colums specified in subset.
 
         """
+        if isinstance(outfile, str):
+            outfile = Path(outfile)
+
+        out_fmt = outfile.suffix
+
+        if out_fmt not in NCFile.valid_export_file_types:
+            raise TypeError("Invalid output file format {out_fmt}\n"
+                            "Supported formats are csv and tab.")
+
+        outfile.parent. mkdir(parents=True, exist_ok=True)
+
         df = self.to_df(subset=subset, time_in_row=time_in_row)
 
         NCFile.df_to_csv(df, outfile)
@@ -305,7 +316,7 @@ class NCFile():
         return df
 
     @staticmethod
-    def df_to_csv(df: pd.DataFrame, outfile: Union[str, Path]) -> None:
+    def df_to_csv(df: pd.DataFrame, outfile: Path) -> None:
         """
         Store pandas DataFrame into csv or tab file.
 
@@ -321,26 +332,18 @@ class NCFile():
         None
         """
         # process output file path
-        if isinstance(outfile, str):
-            outfile = Path(outfile)
-
-        out_fmt = outfile.suffix
-        if out_fmt not in NCFile.valid_export_file_types:
-            raise TypeError("Invalid output file format {out_fmt}\n"
-                            "Supported formats are csv and tab.")
-
-        outfile.parent. mkdir(parents=True, exist_ok=True)
-
         if outfile.suffix == ".csv":
             sep = ","
-        elif outfile.suffix == ".tab":
-            sep = "\t"
+            df.columns = [col.replace(",", ";") for col in df.columns]
         else:
-            raise ValueError("Wrong export file type.")
+            sep = "\t"
 
-        df.to_csv(outfile, sep=sep, index_label="Time",
-                  quoting=QUOTE_NONE,
-                  escapechar="\\")
+        # QUOTE_NONE used to print the csv/tab files as vensim does with
+        # special characterse, e.g.: "my-var"[Dimension]
+        df.to_csv(outfile, sep=sep, index_label="Time", quoting=QUOTE_NONE)
+
+        print(f"Data saved in '{outfile}'")
+
 
     @staticmethod
     def ds_to_df(ds: xr.Dataset,
