@@ -2,14 +2,16 @@
 Tools for importing and converting netCDF files generated from simulations run
 using PySD.
 """
+import itertools
+import warnings
 
+from pathlib import Path
 from csv import QUOTE_NONE
+from typing import Union, Optional
+
 import xarray as xr
 import pandas as pd
-from pathlib import Path
-import warnings
-from typing import Union, Optional
-import itertools
+
 
 class NCFile():
     """
@@ -56,33 +58,20 @@ class NCFile():
             Whether time increases along row.
             Default is False.
 
-
         Returns
         -------
         df: pandas.DataFrame
             Dataframe with all colums specified in subset.
 
         """
-        if isinstance(outfile, str):
-            outfile = Path(outfile)
+        df = self.to_df(subset=subset)
 
-        out_fmt = outfile.suffix
-
-        if out_fmt not in NCFile.valid_export_file_types:
-            raise TypeError("Invalid output file format {out_fmt}\n"
-                            "Supported formats are csv and tab.")
-
-        outfile.parent. mkdir(parents=True, exist_ok=True)
-
-        df = self.to_df(subset=subset, time_in_row=time_in_row)
-
-        NCFile.df_to_csv(df, outfile)
+        NCFile.df_to_csv(df, outfile, time_in_row)
 
         return df
 
     def to_df(self,
               subset: Optional[list]=None,
-              time_in_row: Optional[bool]=False,
               ) -> pd.DataFrame:
         """
         Wrapper to ds_to_df static method. Convert xarray.Dataset into a
@@ -92,8 +81,6 @@ class NCFile():
         ----------
         subset: list
             List of variables to export from the Dataset.
-        time_in_row: bool
-            Whether time increases along row. Default is False.
 
         Returns
         -------
@@ -101,7 +88,7 @@ class NCFile():
             Dataframe with all colums specified in subset.
         """
 
-        return NCFile.ds_to_df(self.ds, subset, time_in_row, self.parallel)
+        return NCFile.ds_to_df(self.ds, subset, self.parallel)
 
     def open_nc(self) -> xr.Dataset:
         """
@@ -114,7 +101,6 @@ class NCFile():
         xarray.Dataset
 
         """
-
         if self.parallel:
             return xr.open_dataset(self.ncfile, engine="netcdf4", chunks=-1)
 
@@ -138,7 +124,7 @@ class NCFile():
             raise FileNotFoundError(f"{nc_path} could not be found.")
 
         if not nc_path.suffix == ".nc":
-            raise TypeError("Input file must have nc extension.")
+            raise ValueError("Input file must have nc extension.")
 
         return nc_path
 
@@ -146,8 +132,8 @@ class NCFile():
     def _validate_ds_subset(ds: xr.Dataset, subset: list) -> list:
         """
         If subset=None, it returns a list with all variable names in the ds.
-        If var names in subset are present in ds, it returns them, else it warns
-        the user.
+        If var names in subset are present in ds, it returns them, else it
+        warns the user.
 
         Parameters
         ----------
@@ -155,8 +141,9 @@ class NCFile():
             Subset of variable names in the xarray Dataset.
 
         """
-        # process subset list
-        if not subset: # use all names
+        # use all variable names except for those of dimensions
+        # this excludes time, which is a variable too.
+        if not subset:
             new_subset = [name for name in ds.data_vars.keys()]
         else:
             if not isinstance(subset, list) or \
@@ -171,8 +158,13 @@ class NCFile():
                     warnings.warn(f"{name} not in Dataset.")
 
             if not new_subset:
-                raise ValueError("None of the elements of the subset are present"
-                                 "in the Dataset.")
+                raise ValueError("None of the elements of the subset are "
+                                 "present in the Dataset.")
+
+        # adding time in the final subset
+        if "time" not in new_subset:
+            new_subset.append("time")
+
         return new_subset
 
     @staticmethod
@@ -200,9 +192,12 @@ class NCFile():
         indexed data as the second index.
 
         """
-        name = da.attrs["Py Name"]
+        name = da.name
         idx = dict(zip(dims, coords))
-        subs = "[" + ",".join(coords) + "]"
+        subs = ""
+
+        if coords:
+            subs = "[" + ",".join(map(lambda x: str(x), coords)) + "]"
 
         return name + subs, da.loc[idx].values
 
@@ -261,7 +256,6 @@ class NCFile():
 
     @staticmethod
     def da_to_dict_delayed(da: xr.DataArray, index_dim: str) -> dict:
-
         """
         Same as da_to_dict, but using dask delayed and compute.
         This function runs much faster when da is a dask array (chunked).
@@ -278,6 +272,14 @@ class NCFile():
             indexing (the indexed data will be an array along this dimension).
 
         """
+        namespace = dir()
+        if not all(
+             map(lambda x: x in namespace, [
+                "delayed", "compute", "ProgressBar"]
+                )):
+            from dask import delayed, compute
+            from dask.diagnostics import ProgressBar
+
         dims, coords = NCFile._get_da_dims_coords(da, index_dim)
 
         l = []
@@ -292,7 +294,7 @@ class NCFile():
         return dict(res)
 
     @staticmethod
-    def dict_to_df(d: dict, time_in_row: bool) -> pd.DataFrame:
+    def dict_to_df(d: dict) -> pd.DataFrame:
         """
         Convert a dict to a pandas Dataframe.
 
@@ -300,23 +302,17 @@ class NCFile():
         ----------
         d: dict
             Dictionary to convert to pandas DataFrame.
-        time_in_row: bool
-            Whether time increases along a column or a row.
 
         """
-        # process time_in_row argument
-        if not isinstance(time_in_row, bool):
-            raise ValueError("time_in_row argument takes boolen values.")
+        if "time" not in d:
+            raise KeyError("Missing time key.")
 
-        df = pd.DataFrame(d)
-
-        if time_in_row:
-            df = df.transpose()
-
-        return df
+        return pd.DataFrame(d).set_index('time')
 
     @staticmethod
-    def df_to_csv(df: pd.DataFrame, outfile: Path) -> None:
+    def df_to_csv(df: pd.DataFrame, outfile: Path,
+                  time_in_row: Optional[bool]=False
+                  ) -> None:
         """
         Store pandas DataFrame into csv or tab file.
 
@@ -324,13 +320,29 @@ class NCFile():
         ----------
         df: pandas.DataFrame
             DataFrame to save as csv or tab file.
-        outfile: pathlib.Path
+        outfile: str or pathlib.Path
             Path of the output file.
+        time_in_row: bool
+            Whether time increases along a column or a row.
 
         Returns
         -------
         None
         """
+        if isinstance(outfile, str):
+            outfile = Path(outfile)
+
+        out_fmt = outfile.suffix
+
+        if out_fmt not in NCFile.valid_export_file_types:
+            raise TypeError("Invalid output file format {out_fmt}\n"
+                            "Supported formats are csv and tab.")
+
+        outfile.parent. mkdir(parents=True, exist_ok=True)
+
+        if not isinstance(time_in_row, bool):
+            raise ValueError("time_in_row argument takes boolen values.")
+
         # process output file path
         if outfile.suffix == ".csv":
             sep = ","
@@ -338,17 +350,18 @@ class NCFile():
         else:
             sep = "\t"
 
+        if time_in_row:
+            df = df.transpose()
+
         # QUOTE_NONE used to print the csv/tab files as vensim does with
         # special characterse, e.g.: "my-var"[Dimension]
         df.to_csv(outfile, sep=sep, index_label="Time", quoting=QUOTE_NONE)
 
         print(f"Data saved in '{outfile}'")
 
-
     @staticmethod
     def ds_to_df(ds: xr.Dataset,
                  subset: Optional[list]=None,
-                 time_in_row: Optional[bool]=False,
                  parallel: Optional[bool]=False,
                  index_dim: Optional[str]="time"
                  ) -> pd.DataFrame:
@@ -361,13 +374,10 @@ class NCFile():
             Dataset object.
         subset: list
             List of variables to export from the Dataset.
-        time_in_row: bool
-            Whether time increases along row. Default is False.
         parallel: bool
             When True, DataArrays are processed in parallel using dask delayed.
-            Dask is not included as a requirement for pysd, hence it must be
-            installed separately. Setting parallel=True is highly recommended
-            when DataArrays are large and multidimensional.
+            Setting parallel=True is highly recommended when DataArrays are
+            large and multidimensional.
         index_dim: str
             Name of dimensions to use as index of the resulting DataFrame
             (usually "time").
@@ -383,10 +393,6 @@ class NCFile():
         savedict = {}
 
         if parallel:
-            global delayed, compute, ProgressBar
-            from dask import delayed, compute
-            from dask.diagnostics import ProgressBar
-
             for name in subset:
                 print(f"\nProcessing variable {name}")
                 da = ds[name]
@@ -406,7 +412,7 @@ class NCFile():
                 else:
                     savedict.update({name: da.values.tolist()})
 
-        return NCFile.dict_to_df(savedict, time_in_row)
+        return NCFile.dict_to_df(savedict)
 
 
 
