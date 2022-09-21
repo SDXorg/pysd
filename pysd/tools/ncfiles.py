@@ -5,6 +5,7 @@ using PySD.
 
 from csv import QUOTE_NONE
 from lib2to3.pgen2.token import OP
+from tkinter.ttk import Progressbar
 import xarray as xr
 import pandas as pd
 from pathlib import Path
@@ -12,27 +13,29 @@ import warnings
 from typing import Union, Optional
 import itertools
 
-TypeChunks = Union[int, dict, str]
 
-def load_nc_file(ncfile: Union[str, Path],
-                 chunks: Optional[TypeChunks]=None) -> xr.Dataset:
+def open_nc_file(ncfile: Union[str, Path],
+                 parallel: Optional[bool]=False) -> xr.Dataset:
     """
-    Loads netCDF file into xarray Dataset.
+    Loads netCDF file into xarray Dataset. It's basically a wrapper to
+    xr.open_dataset to simplify the interface for pysd use case (loading
+    simulation results).
 
     Parameters
     ----------
     ncfile: str or pathlib.Path
         Path to the netCDF file to process.
-    chunks: int, dict, str, None (optional)
-        Check xarray.open_dataset for potential values for this argument.
-        Frequent values are -1, to load each DataArray in a single chunk, or
-        None, to not use dask array. Using chunks requires installing dask.
+    parallel: bool
+        When True, the Dataset is opened using chunks=-1 (see xarray
+        documentation for details), and when it's False, chunks=None.
 
     Returns
     -------
     xarray.Dataset
 
     """
+
+    # we run all these checks because xarrays Exceptions are not very clear.
     if not isinstance(ncfile, (str, Path)):
         raise TypeError(f"Invalid file path type: {type(ncfile)}.\n"
                         "Please provide string or pathlib Path")
@@ -46,15 +49,15 @@ def load_nc_file(ncfile: Union[str, Path],
     if not ncfile.suffix == ".nc":
         raise TypeError("Input file must have nc extension.")
 
-    if chunks:
-        return xr.open_dataset(ncfile, engine="netcdf4", chunks=chunks)
+    if parallel:
+        return xr.open_dataset(ncfile, engine="netcdf4", chunks=-1)
 
     return xr.open_dataset(ncfile, engine="netcdf4")
 
 def _validate_ds_subset(ds: xr.Dataset, subset: list) -> list:
     """
-    If subset = None, it returns a list with all variables in the ds Dataset.
-    Else, if vars in subset are present in ds, it returns them, else it warns
+    If subset=None, it returns a list with all variable names in the ds.
+    If var names in subset are present in ds, it returns them, else it warns
     the user.
 
     Parameters
@@ -65,25 +68,33 @@ def _validate_ds_subset(ds: xr.Dataset, subset: list) -> list:
     """
     # process subset list
     if not subset: # use all names
-        new_subset = [name for name  in ds.data_vars.keys()]
+        new_subset = [name for name in ds.data_vars.keys()]
     else:
         if not isinstance(subset, list) or \
              not all(map(lambda x: isinstance(x, str), subset)):
             raise TypeError("Subset argument must be a list of strings.")
 
-        new_subset = [name if name in ds.data_vars.keys()
-                      else warnings.warn(f"{name} not in Dataset.")
-                      for name in subset]
+        new_subset =[]
+        for name in subset:
+            if name in ds.data_vars.keys():
+                new_subset.append(name)
+            else:
+                warnings.warn(f"{name} not in Dataset.")
+
+        if not new_subset:
+            raise ValueError("None of the elements of the subset are present"
+                             "in the Dataset.")
     return new_subset
 
-def _time_dim_from_da(da: xr.DataArray,
-                      dims: list,
-                      coords: tuple
-                      ) -> tuple:
+def _index_da_by_coord_labels(da: xr.DataArray,
+                              dims: list,
+                              coords: tuple
+                              ) -> tuple:
     """
-    Function to extract all values along the time dimension with fixed
-    coordinates for the other dimensions as defined in coords.
-
+    Function to generate variable names, combining the actual name
+    with the coordinate names between brackets and separated by commas,
+    and to index the DataArray by the coordinate names specified in
+    the coords argument.
 
     Parameters
     ----------
@@ -97,7 +108,7 @@ def _time_dim_from_da(da: xr.DataArray,
     Returns
     -------
     A tuple consisting of the string
-    var_name[dim1_coord, dim2_coord, ....] in the first index, and the
+    var_name[dim_1_coord_j, ..., dim_n_coord_k] in the first index, and the
     indexed data as the second index.
 
     """
@@ -106,44 +117,67 @@ def _time_dim_from_da(da: xr.DataArray,
     subs = "[" + ",".join(coords) + "]"
     return name + subs, da.loc[idx].values
 
-def split_data_array(da):
+def _get_da_dims_coords(da: xr.DataArray, exclude_dims: list=[]) -> tuple:
+    """
+    Returns the dimension names and coordinate labels in two separate lists.
+    If a dimension name is in the exclude_dims lists, the returned dims and
+    coords will not include it.
 
-    if not da.dims:
-        savedict = {}
-        name = da.attrs["Py Name"]
-        savedict[name] = da.values.tolist()
-    else:
-        dims, coords = [], []
-        [(dims.append(dim), coords.append(da.coords[dim].values))
-         for dim in da.dims if dim != "time"]
+    Parameters
+    ----------
+    exclude_dims: list
+        List with the names of dimensions to exclude.
 
-        l = []
-        for coords_prod in itertools.product(*coords):
-            l.append(_time_dim_from_da(da, dims, coords_prod))
-        savedict = dict(l)
+    Returns
+    -------
+    dims: list
+        List containing the names of the DataArray dimensions.
+    coords: list
+        List of lists of coordinates for each dimension.
 
-    return savedict
+    """
+    dims, coords = [], []
 
-def split_data_array_parallel(da):
+    for dim in da.dims:
+        if dim not in exclude_dims:
+            dims.append(dim)
+            coords.append(da.coords[dim].values)
 
-    if not da.dims:
-        savedict = {}
-        name = da.attrs["Py Name"]
-        savedict[name] = da.values.tolist()
-    else:
-        dims, coords = [], []
-        [(dims.append(dim), coords.append(da.coords[dim].values))
-         for dim in da.dims if dim != "time"]
+    return dims, coords
 
-        l = []
-        for coords_prod in itertools.product(*coords):
-            x = delayed(_time_dim_from_da)(da, dims, coords_prod)
-            l.append(x)
+def split_da(da: xr.DataArray) -> dict:
+    """
+    Splits a DataArray into a dictionary, with keys equal to the name of
+    the variable plus all combinations of the cartesian product of
+    coordinates within brackets, and values equal to the data corresponding
+    to those coordinates.
+    """
+    dims, coords = _get_da_dims_coords(da, exclude_dims=["time"])
 
+    l = []
+    for coords_prod in itertools.product(*coords):
+        l.append(_index_da_by_coord_labels(da, dims, coords_prod))
+
+    return dict(l)
+
+def split_da_delayed(da: xr.DataArray) -> dict:
+
+    """
+    Same as split_da, but using dask delayed and compute.
+    This function runs much faster when da is a dask array (chunked).
+    """
+
+    dims, coords = _get_da_dims_coords(da, exclude_dims=["time"])
+
+    l = []
+    for coords_prod in itertools.product(*coords):
+        x = delayed(_index_da_by_coord_labels)(da, dims, coords_prod)
+        l.append(x)
+
+    with ProgressBar():
         res = compute(*l)
-        savedict = dict(res)
 
-    return savedict
+    return dict(res)
 
 def _dict_to_df(savedict: dict, time_in_row: bool) -> pd.DataFrame:
     """
@@ -219,10 +253,14 @@ def ds_to_df(ds: xr.Dataset,
     ds: xarray.Dataset
         Dataset object.
     subset: list
-        List of variables to export from the netCDF.
+        List of variables to export from the Dataset.
     time_in_row: bool
-        Whether time increases along row.
-        Default is False.
+        Whether time increases along row. Default is False.
+    parallel: bool
+        When True, DataArrays are processed in parallel using dask delayed.
+        Dask is not included as a requirement for pysd, hence it must be
+        installed separately. Setting parallel=True is highly recommended
+        when DataArrays are large and multidimensional.
 
     Returns
     -------
@@ -235,21 +273,33 @@ def ds_to_df(ds: xr.Dataset,
     savedict = {}
 
     if parallel:
-        global delayed, compute
+        global delayed, compute, ProgressBar
         from dask import delayed, compute
+        from dask.diagnostics import ProgressBar
 
         for name in subset:
-            savedict.update(split_data_array_parallel(ds[name]))
+            print(f"\nProcessing variable {name}")
+            da = ds[name]
+
+            if da.dims:
+                savedict.update(split_da_delayed(da))
+            else:
+                savedict.update({name: da.values.tolist()})
     else:
         for name in subset:
-            savedict.update(split_data_array(ds[name]))
+            print(f"\nProcessing variable {name}")
+            da = ds[name]
+
+            if da.dims:
+                savedict.update(split_da(da))
+            else:
+                savedict.update({name: da.values.tolist()})
 
     return _dict_to_df(savedict, time_in_row)
 
 def nc_to_df(ncfile: Union[str, Path],
              subset: Optional[list]=None,
              time_in_row: Optional[bool]=False,
-             chunks: Optional[TypeChunks]=None,
              parallel: Optional[bool]=False
              ) -> pd.DataFrame:
     """
@@ -264,15 +314,13 @@ def nc_to_df(ncfile: Union[str, Path],
     time_in_row: bool
         Whether time increases along row.
         Default is False.
-    chunks: int, dict, str, None (optional)
-        Check xarray.open_dataset for potential values for this argument.
-        Frequent values are -1, to load each DataArray in a single chunk, or
-        None, to not use dask array. Using chunks requires installing dask.
     parallel: bool
-        When True, DataArrays are processed in parallel using dask. Dask is
-        not included as a requiremetn for pysd, hence must be installed
-        separately. Setting parallel=True is highly recommended for large
-        multidimensional DataArrays.
+        When True, the Dataset is opened using chunks=-1 (see xarray
+        documentation for details) and DataArrays are processed in parallel
+        using dask delayed. Dask is not included as a requirement for pysd,
+        hence it must be installed separately. Setting parallel=True is
+        highly recommended when the Dataset contains large multidimensional
+        DataArrays.
 
     Returns
     -------
@@ -281,7 +329,7 @@ def nc_to_df(ncfile: Union[str, Path],
 
     """
 
-    ds = load_nc_file(ncfile, chunks)
+    ds = open_nc_file(ncfile, parallel)
 
     return ds_to_df(ds, subset, time_in_row, parallel)
 
@@ -289,7 +337,6 @@ def nc_to_csv(ncfile: Union[str, Path],
               outfile: Optional[Union[str, Path]]="result.tab",
               subset: Optional[list]=None,
               time_in_row: Optional[bool]=False,
-              chunks: Optional[TypeChunks]=None,
               parallel: Optional[bool]=False
               ) -> pd.DataFrame:
     """
@@ -306,15 +353,13 @@ def nc_to_csv(ncfile: Union[str, Path],
     time_in_row: bool
         Whether time increases along row.
         Default is False.
-    chunks: int, dict, str, None (optional)
-        Check xarray.open_dataset for potential values for this argument.
-        Frequent values are -1, to load each DataArray in a single chunk, or
-        None, to not use dask array. Using chunks requires installing dask.
     parallel: bool
-        When True, DataArrays are processed in parallel using dask. Dask is
-        not included as a requiremetn for pysd, hence must be installed
-        separately. Setting parallel=True is highly recommended for large
-        multidimensional DataArrays.
+        When True, the Dataset is opened using chunks=-1 (see xarray
+        documentation for details) and DataArrays are processed in parallel
+        using dask delayed. Dask is not included as a requirement for pysd,
+        hence it must be installed separately. Setting parallel=True is
+        highly recommended when the Dataset contains large multidimensional
+        DataArrays.
 
     Returns
     -------
@@ -323,7 +368,7 @@ def nc_to_csv(ncfile: Union[str, Path],
 
     """
     df = nc_to_df(ncfile, subset=subset, time_in_row=time_in_row,
-                  chunks=chunks, parallel=parallel
+                  parallel=parallel
                   )
 
     df_to_csv(df, outfile)
