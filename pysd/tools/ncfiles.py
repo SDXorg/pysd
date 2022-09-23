@@ -141,8 +141,7 @@ class NCFile():
             Subset of variable names in the xarray Dataset.
 
         """
-        # use all variable names except for those of dimensions
-        # this excludes time, which is a variable too.
+        # use all variable names
         if not subset:
             new_subset = [name for name in ds.data_vars.keys()]
         else:
@@ -194,10 +193,7 @@ class NCFile():
         """
         name = da.name
         idx = dict(zip(dims, coords))
-        subs = ""
-
-        if coords:
-            subs = "[" + ",".join(map(lambda x: str(x), coords)) + "]"
+        subs = "[" + ",".join(map(lambda x: str(x), coords)) + "]"
 
         return name + subs, da.loc[idx].values
 
@@ -396,21 +392,23 @@ class NCFile():
             for name in subset:
                 print(f"\nProcessing variable {name}")
                 da = ds[name]
+                dims = da.dims
 
-                if da.dims:
+                if not dims or dims == (index_dim,):
+                    savedict.update({name: da.values.tolist()})
+                else:
                     savedict.update(
                         NCFile.da_to_dict_delayed(da, index_dim))
-                else:
-                    savedict.update({name: da.values.tolist()})
         else:
             for name in subset:
                 print(f"\nProcessing variable {name}")
                 da = ds[name]
+                dims = da.dims
 
-                if da.dims:
-                    savedict.update(NCFile.da_to_dict(da, index_dim))
-                else:
+                if not dims or dims == (index_dim,):
                     savedict.update({name: da.values.tolist()})
+                else:
+                    savedict.update(NCFile.da_to_dict(da, index_dim))
 
         return NCFile.dict_to_df(savedict)
 
