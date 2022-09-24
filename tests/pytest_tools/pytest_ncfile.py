@@ -196,7 +196,6 @@ class TestNCFile():
             (".tab", False, True),
             (".tab", False, False)
             ])
-    @pytest.mark.filterwarnings("ignore")
     def test_to_csv(
          self, shared_tmpdir, nc_file, outfmt, time_in_row, parallel):
         obj = NCFile(nc_file, parallel=parallel)
