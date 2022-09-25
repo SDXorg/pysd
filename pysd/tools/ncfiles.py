@@ -258,6 +258,9 @@ class NCFile():
 
         dims, coords = NCFile._get_da_dims_coords(da, index_dim)
 
+        # loading data into memory for faster indexing
+        da.load()
+
         l = []
         for coords_prod in itertools.product(*coords):
             x = delayed(
