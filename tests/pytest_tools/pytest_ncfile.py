@@ -176,14 +176,14 @@ class TestNCFile():
             assert all(df.index == expected[0])
             assert all(df["col1"] == expected[1])
 
-    def test_df_to_csv_errors(self, nc_file):
+    def test_df_to_text_file_errors(self, nc_file):
 
         with pytest.raises(TypeError):
-            NCFile.df_to_csv(None, str(nc_file), time_in_row=False)
+            NCFile.df_to_text_file(None, str(nc_file), time_in_row=False)
 
         csv_path = nc_file.parent / (nc_file.name + '.csv')
         with pytest.raises(ValueError):
-            NCFile.df_to_csv(None, csv_path, time_in_row="False")
+            NCFile.df_to_text_file(None, csv_path, time_in_row="False")
 
     @pytest.mark.parametrize(
         "outfmt,time_in_row,parallel", [
@@ -196,14 +196,14 @@ class TestNCFile():
             (".tab", False, True),
             (".tab", False, False)
             ])
-    def test_to_csv(
+    def test_to_text_file(
          self, shared_tmpdir, nc_file, outfmt, time_in_row, parallel):
         obj = NCFile(nc_file, parallel=parallel)
         assert obj.ncfile == nc_file
         assert isinstance(obj.ds, xr.Dataset)
 
         outfile = shared_tmpdir / f"data_from_nc{outfmt}"
-        obj.to_csv(outfile, time_in_row=time_in_row)
+        obj.to_text_file(outfile, time_in_row=time_in_row)
         assert outfile.is_file()
 
     def test_ds_to_df(self, sample_dataset):

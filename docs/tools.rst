@@ -17,10 +17,10 @@ The :py:class:`pysd.tools.ncfiles.NCFile` allows loading netCDF files generated 
 
 Once the Dataset is loaded, a subset (or all) of the data_vars can be exported into:
 
-* A :py:class:`pandas:DataFrame`, using the :py:meth:`pysd.tools.ncfiles.NCFile.to_df` method
-* A `*.csv` or `*.tab` files, using the the :py:meth:`pysd.tools.ncfiles.NCFile.to_csv` method
+* A :py:class:`pandas.DataFrame`, using the :py:meth:`pysd.tools.ncfiles.NCFile.to_df` method
+* A `*.csv` or `*.tab` files, using the the :py:meth:`pysd.tools.ncfiles.NCFile.to_text_file` method
 
-Altnatively, to get further control of the chunking, users can load the :py:class:`xarray.Dataset` using :py:meth:`xarray.open_dataset` and then use the :py:meth:`pysd.tools.ncfiles.NCFile.ds_to_df` or :py:meth:`pysd.tools.ncfiles.NCFile.df_to_csv` static methods.
+Alternatively, to get further control of the chunking, users can load the :py:class:`xarray.Dataset` using :py:meth:`xarray.open_dataset` and then use the :py:meth:`pysd.tools.ncfiles.NCFile.ds_to_df` or :py:meth:`pysd.tools.ncfiles.NCFile.df_to_text_file` static methods.
 
 .. automodule:: pysd.tools.ncfiles
    :members:

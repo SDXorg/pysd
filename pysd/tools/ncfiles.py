@@ -21,7 +21,7 @@ class NCFile():
     ----------
     ncfile: str or pathlib.Path
         Path to the netCDF file to process.
-    parallel: bool
+    parallel: bool (optional)
         When True, the Dataset is opened using chunks=-1 (see xarray
         documentation for details) and DataArrays are processed in parallel
         using dask delayed. Dask is not included as a requirement for pysd,
@@ -33,28 +33,30 @@ class NCFile():
 
     valid_export_file_types = [".csv", ".tab"]
 
-    def __init__(self, filename: Union[str, Path],
-                 parallel: bool=False) -> None:
+    def __init__(self,
+                 filename: Union[str, Path],
+                 parallel: Optional[bool]=False) -> None:
 
         self.ncfile = NCFile._validate_nc_path(filename)
         self.parallel = parallel
         self.ds = self.open_nc()
 
-    def to_csv(self,
-               outfile: Optional[Union[str, Path]]="result.tab",
-               subset: Optional[list]=None,
-               time_in_row: Optional[bool]=False,
-               ) -> pd.DataFrame:
+    def to_text_file(self,
+                     outfile: Optional[Union[str, Path]]="result.tab",
+                     subset: Optional[list]=None,
+                     time_in_row: Optional[bool]=False,
+                     ) -> pd.DataFrame:
         """
-        Convert netCDF file contents into comma or tab separated file.
+        Convert netCDF file contents into comma separated or tab delimited
+        file.
 
         Parameters
         ----------
-        outfile: str or pathlib.Path
+        outfile: str or pathlib.Path (optional)
             Path to the output file.
-        subset: list
+        subset: list (optional)
             List of variables to export from the netCDF.
-        time_in_row: bool
+        time_in_row: bool (optional)
             Whether time increases along row.
             Default is False.
 
@@ -66,7 +68,7 @@ class NCFile():
         """
         df = self.to_df(subset=subset)
 
-        NCFile.df_to_csv(df, outfile, time_in_row)
+        NCFile.df_to_text_file(df, outfile, time_in_row)
 
         return df
 
@@ -79,7 +81,7 @@ class NCFile():
 
         Parameters
         ----------
-        subset: list
+        subset: list (optional)
             List of variables to export from the Dataset.
 
         Returns
@@ -119,13 +121,13 @@ class NCFile():
         ----------
         ds: xarray.Dataset
             Dataset object.
-        subset: list
+        subset: list (optional)
             List of variables to export from the Dataset.
-        parallel: bool
+        parallel: bool (optional)
             When True, DataArrays are processed in parallel using dask delayed.
             Setting parallel=True is highly recommended when DataArrays are
             large and multidimensional.
-        index_dim: str
+        index_dim: str (optional)
             Name of dimensions to use as index of the resulting DataFrame
             (usually "time").
 
@@ -157,9 +159,9 @@ class NCFile():
         return NCFile.dict_to_df(savedict)
 
     @staticmethod
-    def df_to_csv(df: pd.DataFrame, outfile: Path,
-                  time_in_row: Optional[bool]=False
-                  ) -> None:
+    def df_to_text_file(df: pd.DataFrame, outfile: Path,
+                        time_in_row: Optional[bool]=False
+                        ) -> None:
         """
         Store pandas DataFrame into csv or tab file.
 
@@ -169,7 +171,7 @@ class NCFile():
             DataFrame to save as csv or tab file.
         outfile: str or pathlib.Path
             Path of the output file.
-        time_in_row: bool
+        time_in_row: bool (optional)
             Whether time increases along a column or a row.
 
         Returns
@@ -407,6 +409,3 @@ class NCFile():
                 coords.append(da.coords[dim].values)
 
         return dims, coords
-
-
-

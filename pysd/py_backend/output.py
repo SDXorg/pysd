@@ -466,7 +466,7 @@ class DataFrameHandler(OutputHandlerInterface):
             self.ds, kwargs["return_addresses"], flatten
             )
         if self.out_file:
-            NCFile.df_to_csv(df, self.out_file)
+            NCFile.df_to_text_file(df, self.out_file)
 
         return df
 
