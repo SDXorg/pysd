@@ -175,6 +175,9 @@ If the `output_file` is not set, the :py:meth:`.run` method will return a :py:cl
 
 For most cases, the *.tab* file format is the safest choice. It is preferable over the *.csv* format when the model includes subscripted variables. The *.nc* format is recommended for large models, and when the user wants to keep metadata such as variable units and description.
 
+.. note::
+   PySD includes helper functions to export *.nc* file contents to *.csv* or *.tab* files. See :doc:`Exporting netCDF data_vars to csv or tab <./tools>` for further details.
+
 .. warning::
    *.nc* files require :py:mod:`netcdf4` library which is an optional requirement and thus not installed automatically with the package. We recommend using :py:mod:`netcdf4` 1.6.0 or above, however, it will also work with :py:mod:`netcdf4` 1.5.0 or above.
 

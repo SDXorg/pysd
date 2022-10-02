@@ -17,6 +17,7 @@ import xarray as xr
 import pandas as pd
 
 from pysd._version import __version__
+from pysd.tools.ncfiles import NCFile
 
 from . utils import xrsplit
 
@@ -465,37 +466,9 @@ class DataFrameHandler(OutputHandlerInterface):
             self.ds, kwargs["return_addresses"], flatten
             )
         if self.out_file:
-            self.__save_to_file(df)
+            NCFile.df_to_text_file(df, self.out_file)
 
         return df
-
-    def __save_to_file(self, output):
-        """
-        Saves models output.
-
-        Paramters
-        ---------
-        output: pandas.DataFrame
-
-        options: argparse.Namespace
-
-        Returns
-        -------
-        None
-
-        """
-        if self.out_file.suffix == ".tab":
-            sep = "\t"
-        else:
-            sep = ","
-            output.columns = [col.replace(",", ";") for col in output.columns]
-
-        # QUOTE_NONE used to print the csv/tab files as vensim does with
-        # special characterse, e.g.: "my-var"[Dimension]
-        output.to_csv(
-            self.out_file, sep, index_label="Time", quoting=QUOTE_NONE)
-
-        print(f"Data saved in '{self.out_file}'")
 
     def add_run_elements(self, model, capture_elements):
         """

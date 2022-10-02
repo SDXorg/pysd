@@ -22,9 +22,9 @@ def _test_models(_root):
 
 
 @pytest.fixture(scope="class")
-def shared_tmpdir(tmpdir_factory):
+def shared_tmpdir(tmp_path_factory):
     # shared temporary directory for each class
-    return Path(tmpdir_factory.mktemp("shared"))
+    return tmp_path_factory.mktemp("shared")
 
 
 @pytest.fixture
