@@ -1,5 +1,31 @@
 What's New
 ==========
+v3.8.0 (2022/10/01)
+-------------------
+
+New Features
+~~~~~~~~~~~~
+- Adds ncfile.py module with helper functions to export a subset or all of the data_vars in netCDF files generated with PySD to :py:class:`pandas.DataFrame`, csv or tab files. (`@rogersamso <https://github.com/rogersamso>`_)
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+
+Documentation
+~~~~~~~~~~~~~
+- Updates the :doc:`getting_started` page with instructions on how to use the new helper functions for netCDF files. (`@rogersamso <https://github.com/rogersamso>`_)
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+
 v3.7.1 (2022/09/19)
 -------------------
 
