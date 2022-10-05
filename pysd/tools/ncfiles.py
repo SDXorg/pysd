@@ -227,6 +227,8 @@ class NCFile():
         dims, coords = NCFile._get_da_dims_coords(da, index_dim)
 
         l = []
+        # TODO: try to achieve the same as itertools.product with
+        # xr.DataArray.stack
         for coords_prod in itertools.product(*coords):
             l.append(NCFile._index_da_by_coord_labels(da, dims, coords_prod))
 
@@ -264,6 +266,8 @@ class NCFile():
         da.load()
 
         l = []
+        # TODO: try to achieve the same as itertools.product with
+        # xr.DataArray.stack
         for coords_prod in itertools.product(*coords):
             x = delayed(
                 NCFile._index_da_by_coord_labels)(da, dims, coords_prod)

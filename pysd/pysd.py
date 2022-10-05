@@ -42,7 +42,7 @@ def read_xmile(xmile_file, data_files=None, initialize=True,
         If given the list of files where the necessary data to run the model
         is given. Default is None.
 
-    missing_values : str ("warning", "error", "ignore", "keep") (optional)
+    missing_values: str ("warning", "error", "ignore", "keep") (optional)
         What to do with missing values. If "warning" (default)
         shows a warning message and interpolates the values.
         If "raise" raises an error. If "ignore" interpolates

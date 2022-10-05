@@ -5,6 +5,7 @@ Several methods and propierties are inherited from Macro class, which
 allows integrating a model or a Macro expression (set of functions in
 a separate file).
 """
+import time
 import warnings
 import inspect
 import pickle
@@ -19,7 +20,8 @@ from pysd._version import __version__
 
 from . import utils
 from .statefuls import DynamicStateful, Stateful
-from .external import External, Excels
+from .external import External, Excels, ExtLookup, ExtData
+
 from .cache import Cache, constant_cache
 from .data import TabData
 from .lookups import HardcodedLookups
@@ -57,8 +59,8 @@ class Macro(DynamicStateful):
         Time to set at the begginning of the Macro. Default is None.
     data_files: dict or list or str or None
         The dictionary with keys the name of file and variables to
-        load the data from there. Or the list of names or name of the
-        file to search the data in. Only works for TabData type object
+        load the data from. Or the list of names or name of the file
+        to search the data in. Only works for TabData type object
         and it is neccessary to provide it. Default is None.
     py_name: str or None
         The name of the Macro object. Default is None.
@@ -453,13 +455,7 @@ class Macro(DynamicStateful):
 
         if not self.external_loaded:
             # Initialize external elements
-            for element in self._external_elements:
-                element.initialize()
-
-            # Remove Excel data from memory
-            Excels.clean()
-
-            self.external_loaded = True
+            self.initialize_external_data()
 
         # Initialize stateful objects
         for element_name in self.initialize_order:
@@ -531,6 +527,297 @@ class Macro(DynamicStateful):
 
         self.set_stateful(stateful_dict)
         self.time.set_control_vars(initial_time=time)
+
+    def initialize_external_data(self, externals=None):
+
+        """
+        Initializes external data.
+
+        If a path to a netCDF file containing serialized values of some or
+        all of the model external data is passed in the external argument,
+        those will be loaded from the file.
+
+        To get the full performance gain of loading the externals from a netCDF
+        file, the model should be loaded with initialize=False first.
+
+        Parameters
+        ----------
+        externals: str or pathlib.Path (optional)
+            Path to the netCDF file that contains the model external objects.
+
+        Returns
+        -------
+        None
+
+        """
+
+        if not externals:
+            for ext in self._external_elements:
+                ext.initialize()
+
+            # Remove Excel data from memory
+            Excels.clean()
+
+            self.external_loaded = True
+
+            return
+
+        externals = Path(externals)
+
+        if not externals.is_file():
+            raise FileNotFoundError(f"Invalid file path ({str(externals)})")
+
+        ds = xr.open_dataset(externals)
+
+        for ext in self._external_elements:
+            py_name = ext.py_name
+
+            if py_name in ds.data_vars.keys():
+                da = ds.data_vars[py_name]
+                dimensions = ext.final_coords
+
+                if isinstance(ext, ExtData):
+                    time_dim = [dim for dim in da.dims if dim.startswith(
+                        "time_#")][0]
+                    da = da.rename({time_dim: "time"})
+                    da = da.loc[dimensions]
+                elif isinstance(ext, ExtLookup):
+                    lookup_dim = [dim for dim in da.dims if dim.startswith(
+                        "lookup_dim_#")][0]
+                    da = da.rename({lookup_dim: "lookup_dim"})
+                    da = da.loc[dimensions]
+                else: #  ExtConstant
+                    if dimensions:
+                        da = da.loc[dimensions]
+
+                if da.dims:
+                    ext.data = da
+                else:
+                    ext.data = float(da.data)
+
+            else:
+                ext.initialize()
+
+        Excels.clean()
+
+        self.external_loaded = True
+
+    def serialize_externals(self, export_path="externals.nc",
+                            include_externals="all", exclude_externals=None):
+        """
+        Stores a netCDF file with the data and metadata for all model external
+        objects.
+
+        This method is useful for models with lots of external inputs, which
+        are slow to load into memory. Once exported, the resulting netCDF file
+        can be passed as argument to the initialize_external_data method.
+
+        Names of variables should be those in the model (python safe,
+        without the _ext_type_ string in front).
+
+        Parameters
+        ----------
+        export_path: str or pathlib.Path (optional)
+            Path of the resulting *.nc* file.
+        include_externals: list or str (optional)
+            External objects to export to netCDF.
+            If 'all', then all externals are exported to the *.nc* file.
+            The argument also accepts a list containing spreadsheet file names,
+            external variable names or a combination of both. If a spreadsheet
+            file path is passed, all external objects defined in it will be
+            included in the *.nc* file. Spreadsheet tab names are not currently
+            supported, because the same may be used in different files.
+            Better customisation can be achieved by combining the
+            include_externals and exclude_externals (see description below)
+            arguments.
+        exclude_externals: list or None (optional)
+            Exclude external objects from being included in the exported nc
+            file. It accepts either variable names, spreadsheet files or a
+            combination of both.
+
+        Returns
+        -------
+        None
+
+        """
+        data = {}
+        metadata = {}
+
+        lookup_dims = utils.UniqueDims("lookup_dim")
+        data_dims = utils.UniqueDims("time")
+
+        if isinstance(export_path, str):
+            export_path = Path(export_path)
+
+        if not include_externals:
+            raise ValueError("include_externals argument must not be None.")
+
+        if include_externals != "all":
+            if not isinstance(include_externals, list):
+                raise ValueError("include_externals must be 'all', or a list.")
+
+        if exclude_externals:
+            if not isinstance(exclude_externals, list):
+                raise TypeError("exclude_externals must be a list")
+
+        if include_externals == "all" and not exclude_externals:
+            for ext in self._external_elements:
+                real_py_name = self.__get_varname_from_ext_name(ext.py_name)
+
+                self.__include_for_serialization(
+                    ext, real_py_name, data, metadata, lookup_dims, data_dims)
+
+        elif include_externals == "all" and exclude_externals:
+            for ext in self._external_elements:
+                real_py_name = self.__get_varname_from_ext_name(ext.py_name)
+                if real_py_name not in exclude_externals and \
+                     not any(
+                        map(lambda x: str(x) in exclude_externals, ext.files)):
+
+                    self.__include_for_serialization(ext, real_py_name, data,
+                                                     metadata, lookup_dims,
+                                                     data_dims)
+
+        elif include_externals != "all" and not exclude_externals:
+            for ext in self._external_elements:
+                real_py_name = self.__get_varname_from_ext_name(ext.py_name)
+                if real_py_name in include_externals or \
+                     any(
+                        map(lambda x: str(x) in include_externals, ext.files)):
+
+                    self.__include_for_serialization(ext, real_py_name, data,
+                                                     metadata, lookup_dims,
+                                                     data_dims)
+
+        else:
+            for ext in self._external_elements:
+                real_py_name = self.__get_varname_from_ext_name(ext.py_name)
+                if (real_py_name in include_externals or
+                     any(map(lambda x: str(x) in include_externals, ext.files))
+                     ) and real_py_name not in exclude_externals and \
+                     not any(
+                        map(lambda x: str(x) in exclude_externals, ext.files)):
+                    self.__include_for_serialization(ext, real_py_name, data,
+                                                     metadata, lookup_dims,
+                                                     data_dims)
+
+        # create description to be used as global attribute of the dataset
+        description = {"description": f"External objects for " \
+                       f"{self.py_model_file} exported on " \
+                       f"{time.ctime(time.time())} using PySD version " \
+                       f"{__version__}"}
+
+        # create Dataset
+        ds = xr.Dataset(data_vars=data, attrs=description)
+
+        # add data_vars attributes
+        for key, values in metadata.items():
+            ds[key].attrs = values
+
+        ds.to_netcdf(export_path)
+
+    def __include_for_serialization(self, ext, py_name_clean, data, metadata,
+                                    lookup_dims, data_dims):
+        """
+        Initialize the external object and get the data and metadata for
+        inclusion in the netCDF.
+
+        This function updates the metadata dict with the metadata corresponding
+        to each external object, which is collected from model.doc. It also
+        updates the data dict, with the data from the external object (ext).
+
+        It renames the "time" dimension of ExtData types by appending _#
+        followed by a unique number at the end of it. For large models, this
+        prevents having an unnecessary large time dimension, which then causes
+        all ExtData objects to have many nans when stored in a xarray Dataset.
+        It does the same for the "lookup_dim" of all ExtLookup objects.
+
+        NOTE: Though subscripts can be read from Excel, they are hardcoded
+        during the model building process. Therefore they will not be
+        serialized.
+
+        Parameters
+        ----------
+        ext: pysd.py_backend.externals.External
+            External object. It can be any of the External subclasses
+            (ExtConstant, ExtData, ExtLookup)
+        py_name_clean: str
+            Name of the variable without _ext_[constant|data|lookup] prefix.
+        data: dict
+            Collects all the data for each external, which is later used to
+            build the xarray Dataset.
+        metadata: dict
+            Collects the metadata for each external, which is later included
+            as data_vars attributes in the xarray Dataset.
+        lookup_dims: utils.UniqueDims
+            UniqueDims object for "lookup_dim" dimension.
+        data_dims: utils.UniqueDims
+            UniqueDims object for "time" dimension.
+
+        Returns
+        -------
+        None
+
+        """
+        py_name = ext.py_name
+
+        ext.initialize()
+
+        # collecting variable metadata from model.doc
+        var_meta = {col: self.doc.loc[
+            self.doc["Py Name"] == py_name_clean, col].values[0] or \
+                "Missing" for col in self.doc.columns}
+        var_meta["files"] = ";".join(ext.files)
+        var_meta["sheets"] = ";".join(ext.sheets)
+        var_meta["cells"] = ";".join(ext.cells)
+        # TODO: add also time_row_or_cols
+
+
+        da = ext.data
+
+        # renaming shared dims by all ExtData ("time") and ExtLookup
+        # ("lookup_dim") external objects
+        if isinstance(ext, ExtData):
+            new_name = data_dims.name_new_dim(
+                da.coords["time"].values)
+            da = da.rename({"time": new_name})
+        if isinstance(ext, ExtLookup):
+            new_name = lookup_dims.name_new_dim(
+                da.coords["lookup_dim"].values)
+            da = da.rename({"lookup_dim": new_name})
+
+        metadata.update({py_name: var_meta})
+        data.update({py_name: da})
+
+        print(f"Finished processing variable {py_name_clean}.")
+
+    def __get_varname_from_ext_name(self, varname):
+        """
+        Returns the name of the variable that depends on the external object
+        named varname. If that is not possible (see warning in the code to
+        understand when that may happen), it gets the name by removing the
+        _ext_[constant|data|lookup] prefix from the varname.
+
+        Parameters
+        ----------
+        varname: str
+            Variable name to which the External object is assigned.
+
+        Returns
+        -------
+        var: str
+            Name of the variable that calls the variable with name varname.
+        """
+        for var, deps in self._dependencies.items():
+            for _, ext_name in deps.items():
+                if varname == ext_name:
+                    return var
+
+        warnings.warn(f"No variable depends upon {varname}. This is likely "
+                      f"due to the fact that {varname} is defined using a mix "
+                      "of DATA and CONSTANT. Though Vensim allows it, it is "
+                      "not recommended.")
+        return "_".join(varname.split("_")[3:])
 
     def get_args(self, param):
         """
