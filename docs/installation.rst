@@ -66,9 +66,16 @@ In order to plot model outputs as shown in :doc:`Getting started <../getting_sta
 
 * Matplotlib
 
-In order to be able to export data to netCDF (*.nc*) files:
+To export data to netCDF (*.nc*) files:
 
 * netCDF4
+* importlib-metadata==2.0 (only for Python 3.7)
+
+To export netCDF data to comma or tab separated files with parallel processing:
+
+* dask[array]
+* dask[diagnostics]
+* dask[distributed]
 
 
 These Python libraries bring additional data analytics capabilities to the analysis of SD models:
