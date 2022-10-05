@@ -7,7 +7,7 @@ import xarray as xr
 from pysd.tools.benchmarking import assert_frames_close
 import pysd
 from pysd.py_backend.utils import compute_shape, rearrange, load_outputs,\
-    ProgressBar
+    ProgressBar, UniqueDims
 
 
 class TestUtils():
@@ -217,6 +217,22 @@ class TestUtils():
 
         assert rearrange(None, ['d2'], _subscript_dict) is None
 
+    @pytest.mark.parametrize("dim_name,inputs,expected",
+    [
+        ("dim1", [[1, 2, 3], [1, 2, 3]], [("dim1_#1", [1, 2, 3])]),
+        ("dim2", [[1, 2, 3], [2, 3], [3], [1, 2, 3, 4]],
+        [("dim2_#1", [1, 2, 3]), ("dim2_#2", [2, 3]), ("dim2_#3", [3]),
+        ("dim2_#4", [1, 2, 3, 4])]),
+    ]
+    )
+    def test_unique_dims_in_dataset(self, dim_name, inputs, expected):
+
+        unique_dims = UniqueDims(dim_name)
+
+        for coords in inputs:
+            unique_dims.name_new_dim(coords)
+
+        assert unique_dims.unique_dims == expected
 
 class TestLoadOutputs():
     def test_non_valid_outputs(self, _root):

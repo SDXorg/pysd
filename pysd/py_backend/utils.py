@@ -15,6 +15,59 @@ import xarray as xr
 import pandas as pd
 
 
+class UniqueDims():
+    """
+    Helper class to create unique dimension names for data_vars with the
+    same dimension name but different coords in xarray Datasets.
+    """
+    def __init__(self, original_dim_name):
+        self.dim_prefix = original_dim_name + "_#"
+        self.unique_dims = []
+        self.num = 1
+
+    def name_new_dim(self, coords):
+        """
+        Returns either a new name (original_dim_name + _# + num) if the coords
+        list is not in unique_dims, or the preexisting dimension name if it is.
+        Parameters
+        ----------
+        coords: list
+            List of coordinates of a dimension.
+
+        Returns
+        -------
+        Updated name of the original dimension.
+        """
+        if self.is_new(coords):
+            new_dim_name = self.dim_prefix + str(self.num)
+            self.unique_dims.append((new_dim_name, coords))
+            self.num +=1
+            return new_dim_name
+        else:
+            for y in self.unique_dims:
+                if np.array_equal(coords, y[1]):
+                    return y[0]
+
+    def is_new(self, coords):
+        """
+        Checks if coords is already in the unique_dims list or not.
+
+        Parameters
+        ----------
+        coords: list
+            List of coordinates of a dimension.
+
+        Returns
+        -------
+        bool
+        """
+        if not any(
+             map(lambda y: np.array_equal(y[1], coords),
+                 self.unique_dims)):
+            return True
+        return False
+
+
 def xrsplit(array):
     """
     Split an array to a list of all the components.

@@ -749,7 +749,7 @@ class ExtData(External, Data):
         Initialize all elements and create the self.data xarray.DataArray
         """
         if len(self.coordss) == 1:
-            # Just loag one value (no add)
+            # Just load one value (no add)
             for self.file, self.sheet, self.x_row_or_col,\
                 self.cell, self.coords\
                 in zip(self.files, self.sheets, self.time_row_or_cols,
