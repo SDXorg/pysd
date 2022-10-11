@@ -179,7 +179,7 @@ For most cases, the *.tab* file format is the safest choice. It is preferable ov
    PySD includes helper functions to export *.nc* file contents to *.csv* or *.tab* files. See :doc:`Exporting netCDF data_vars to csv or tab <./tools>` for further details.
 
 .. warning::
-   *.nc* files require :py:mod:`netcdf4` library which is an optional requirement and thus not installed automatically with the package. We recommend using :py:mod:`netcdf4` 1.6.0 or above, however, it will also work with :py:mod:`netcdf4` 1.5.0 or above.
+   *.nc* files require :py:mod:`netCDF4` library which is an optional requirement and thus not installed automatically with the package. We recommend using :py:mod:`netCDF4` 1.6.0 or above, however, it will also work with :py:mod:`netCDF4` 1.5.0 or above.
 
 
 Setting parameter values
