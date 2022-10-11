@@ -125,3 +125,63 @@ In order to preview the needed exogenous variables, the :py:meth:`.get_dependenc
 
 .. automethod:: pysd.py_backend.model.Model.get_dependencies
    :noindex:
+
+
+Initializing external data from netCDF file
+-------------------------------------------
+
+IO operations are expensive, especially when reading non-binary files. This makes the model initialization process slow when lots of datasets need to be read from spreadhseet files.
+
+From PySD 3.8, users can export a subset or all model external data to a netCDF file, and use this file for subsequent model initializations.
+
+Supose we have a model (*my_model.mdl*) that loads *param_1* from *parameters_1.xls*, *param_2* from *parameters_2.xls*, and *policy_1* and *policy_2* from *scenario.xls*. Imagine we want to test different policy configurations, by changing the values of *policy_1* and *policy_2*, while keeping all other parameters unchanged.
+In this case, we might want to export the external objects that we do not intend to modify (*param_1* and *param_2*) to a netCDF file, so that they are initialized instantaneously:
+
+The code below shows how this can be achieved::
+
+    import pysd
+    model = pysd.read_vensim("my_model.mdl", initialize=False)
+    model.serialize_externals(export_path="parameters.nc",
+                              include_externals="all",
+                              exclude_externals=["scenario.xls"])
+
+
+This will export only the external data defined in *parameters_1.xls* and *parameters_2.xls* to the *parameters.xls* file. A good thing of this is that the resulting netCDF file will include all the metadata defined in the model for such variable (description, units, etc.)
+
+Note that the exact same result could have been achieved with::
+
+    import pysd
+
+    model = pysd.read_vensim("my_model.mdl", initialize=False)
+    model.serialize_externals(export_path="parameters.nc",
+                              include_externals="all",
+                              exclude_externals=["policy_1", "policy_2"])
+
+Or even::
+
+    import pysd
+
+    model = pysd.read_vensim("my_model.mdl", initialize=False)
+    model.serialize_externals(export_path="parameters.nc",
+                              include_externals=["parameters_1.xls",
+                                                 "parameters_2.xls"],
+                              exclude_externals=None)
+
+Or we could have also combined variable names and spreadhseet files in the **include_externals** arugment, the **exclude_externals** argument or both::
+
+    import pysd
+
+    model = pysd.read_vensim("my_model.mdl", initialize=False)
+    model.serialize_externals(export_path="parameters.nc",
+                              include_externals=["param_1", "parameters_2.xls"],
+                              exclude_externals=None)
+
+
+Then, to run a simulation loading the external objects stored in *parameters.nc*, we write::
+
+    import pysd
+
+    model = pysd.read_vensim("my_model.mdl", initialize=False)
+    model.initialize_external_data(externals="parameters.nc")
+
+And from here we could run the model normally with :py:meth:`pysd.py_backend.Model.run`.

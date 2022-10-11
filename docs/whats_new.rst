@@ -6,6 +6,7 @@ v3.8.0 (2022/10/01)
 New Features
 ~~~~~~~~~~~~
 - Adds ncfile.py module with helper functions to export a subset or all of the data_vars in netCDF files generated with PySD to :py:class:`pandas.DataFrame`, csv or tab files. (`@rogersamso <https://github.com/rogersamso>`_)
+- Adds possibility to initialize and export a subset or all external objects to netCDF, and then initialize the external objects from the file. (`@rogersamso <https://github.com/rogersamso>`_)
 
 Breaking changes
 ~~~~~~~~~~~~~~~~
@@ -19,12 +20,16 @@ Bug fixes
 Documentation
 ~~~~~~~~~~~~~
 - Updates the :doc:`getting_started` page with instructions on how to use the new helper functions for netCDF files. (`@rogersamso <https://github.com/rogersamso>`_)
+- Updates the :doc:`advanced_usage` page with instructions on how to export externals to netCDF and initialize a model from it. (`@rogersamso <https://github.com/rogersamso>`_)
 
 Performance
 ~~~~~~~~~~~
+- Initializing external objects from netCDF file is much faster than reading from spreadsheet files.(`@rogersamso <https://github.com/rogersamso>`_)
 
 Internal Changes
 ~~~~~~~~~~~~~~~~
+- Adds the :py:meth:`pysd.py_backend.model.Macro.serialize_externals` and :py:meth:`pysd.py_backend.model.Macro.initialize_external_data` methods, and a few other private methods.(`@rogersamso <https://github.com/rogersamso>`_)
+- Adds the :py:class:`pysd.py_backend.utils.UniqueDims` class for renaming model dimensions with unique names.(`@rogersamso <https://github.com/rogersamso>`_)
 
 v3.7.1 (2022/09/19)
 -------------------
