@@ -235,6 +235,13 @@ class TestUtils():
         for coords, ret in zip(inputs, expected_return):
             assert unique_dims.name_new_dim(dim_name, coords) == ret
 
+        error_msg = "This object is configured to process dimension "\
+                  + f"{dim_name} and it's being passed a dimension named "\
+                  + "wrong_dim_name"
+
+        with pytest.raises(ValueError, match=error_msg):
+            unique_dims.name_new_dim("wrong_dim_name", coords)
+
         assert unique_dims.unique_dims == expected_unique
 
 class TestLoadOutputs():
