@@ -9,3 +9,4 @@ netCDF4==1.6; platform_system != 'Windows' or python_version != "3.7"
 dask[array]
 dask[diagnostics]
 dask[distributed]
+importlib-metadata==2.0; python_version == "3.7"
