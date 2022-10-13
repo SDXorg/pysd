@@ -654,7 +654,7 @@ class Macro(DynamicStateful):
 
         if include_externals != "all":
             if not isinstance(include_externals, list):
-                raise ValueError("include_externals must be 'all', or a list.")
+                raise TypeError("include_externals must be 'all', or a list.")
 
         if exclude_externals:
             if not isinstance(exclude_externals, list):

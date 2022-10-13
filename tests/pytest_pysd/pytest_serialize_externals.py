@@ -1,5 +1,6 @@
 import re
 from xml.dom import UserDataHandler
+from xml.etree.ElementInclude import include
 import pytest
 
 from pathlib import Path
@@ -164,6 +165,7 @@ class TestSerialization():
         assert np.testing.assert_array_equal(
             model_re["_ext_constant_const_var_2"].data,
             model["_ext_constant_const_var_2"].data) is None
+        # this one has nans when initializing from excel
         assert np.testing.assert_array_equal(
             model_re["_ext_constant_const_var_3"].data,
             model["_ext_constant_const_var_3"].data) is None
@@ -270,7 +272,7 @@ class TestSerialization():
         model_path = Path(model.py_model_file)
         externals_path = model_path.with_suffix(".nc")
 
-        model.serialize_externals(export_path=externals_path,
+        model.serialize_externals(export_path=str(externals_path),
                                   include_externals=include,
                                   exclude_externals=exclude)
 
@@ -298,6 +300,8 @@ class TestSerialization():
         model_re = pysd.load(py_model, initialize=False)
         model_re.initialize_external_data(ext_path)
 
+        assert model["adimensional_const"] == model_re["adimensional_const"]
+
         # the reinitialized model will have nans, because the final_coords is
         # not consistent with the actual coords of the variable
         assert np.array_equal(model["_ext_constant_var_only_women"].data,
@@ -306,3 +310,25 @@ class TestSerialization():
         assert getattr(
             model.components,
             "_ext_constant_var_only_women").final_coords["dim2"] == ["female"]
+
+    @pytest.mark.parametrize("model_path", [subscript_ext])
+    def test_exceptions(self, model):
+
+        # not including any externals should fail
+        with pytest.raises(ValueError):
+            model.serialize_externals(export_path="externals.nc",
+                                      include_externals=None)
+
+        # include externals must be "all" or list
+        with pytest.raises(TypeError):
+            model.serialize_externals(export_path="externals.nc",
+                                      include_externals="hello_world")
+
+        # exclude externals must be a list
+        with pytest.raises(TypeError):
+            model.serialize_externals(export_path="externals.nc",
+                                      include_externals="all",
+                                      exclude_externals="hello_world")
+        # externals file not found
+        with pytest.raises(FileNotFoundError):
+            model.initialize_external_data(externals="missing_file.nc")
