@@ -1,4 +1,14 @@
 {UTF-8}
+adimensional const=
+	GET DIRECT CONSTANTS( 'inputs.xls' , 'tab1' , 'B11' )
+	~	
+	~		|
+
+var2[dim, female]=
+	var only women[dim,female]* var[dim,female] * adimensional const
+	~	
+	~		|
+
 dim:
 	a, b, c
 	~	
@@ -19,11 +29,6 @@ var only women[dim, female]=
 	~	
 	~		|
 
-var2[dim, female]=
-	var only women[dim,female]* var[dim,female]
-	~	
-	~		|
-
 ********************************************************
 	.Control
 ********************************************************~
@@ -41,7 +46,7 @@ INITIAL TIME  = 0
 	|
 
 SAVEPER  = 
-        TIME STEP 
+        TIME STEP
 	~	Month [0,?]
 	~	The frequency with which output is stored.
 	|
@@ -60,6 +65,8 @@ $192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,1
 10,3,var2,523,243,16,11,8,3,0,0,0,0,0,0
 1,4,2,3,0,0,0,0,0,64,0,-1--1--1,,1|(342,283)|
 1,5,1,3,0,0,0,0,0,64,0,-1--1--1,,1|(338,176)|
+10,6,adimensional const,368,479,59,11,8,3,0,0,0,0,0,0
+1,7,6,3,0,0,0,0,0,128,0,-1--1--1,,1|(441,366)|
 ///---\\\
 :L<%^E!@
 1:Current.vdf
@@ -69,7 +76,7 @@ $192-192-192,0,Times New Roman|12||0-0-0|0-0-0|0-0-255|-1--1--1|-1--1--1|96,96,1
 27:0,
 34:0,
 4:Time
-5:var only women[dim,dim2]
+5:adimensional const
 35:Date
 36:YYYY-MM-DD
 37:2000

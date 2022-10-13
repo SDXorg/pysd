@@ -263,7 +263,7 @@ class SubscriptManager:
                         element: str = "") -> List[str]:
         """
         This is for assisting when building xrmerge. From a list of subscript
-        lists returns the final subscript list after mergin. Necessary when
+        lists returns the final subscript list after merging. Necessary when
         merging variables with subscripts comming from different definitions.
 
         Parameters
