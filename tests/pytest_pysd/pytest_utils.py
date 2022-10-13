@@ -217,22 +217,25 @@ class TestUtils():
 
         assert rearrange(None, ['d2'], _subscript_dict) is None
 
-    @pytest.mark.parametrize("dim_name,inputs,expected",
+    @pytest.mark.parametrize("dim_name,inputs,expected_unique,expected_return",
     [
-        ("dim1", [[1, 2, 3], [1, 2, 3]], [("dim1_#1", [1, 2, 3])]),
-        ("dim2", [[1, 2, 3], [2, 3], [3], [1, 2, 3, 4]],
+        ("dim1", [[1, 2, 3], [1, 2, 3]], [("dim1_#1", [1, 2, 3])],
+        ["dim1_#1", "dim1_#1"]),
+        ("dim2", [[1, 2, 3], [2, 3], [3], [1, 2, 3, 4], [1, 2, 3]],
         [("dim2_#1", [1, 2, 3]), ("dim2_#2", [2, 3]), ("dim2_#3", [3]),
-        ("dim2_#4", [1, 2, 3, 4])]),
+        ("dim2_#4", [1, 2, 3, 4])],
+        ["dim2_#1", "dim2_#2", "dim2_#3", "dim2_#4", "dim2_#1"]),
     ]
     )
-    def test_unique_dims_in_dataset(self, dim_name, inputs, expected):
+    def test_unique_dims_in_dataset(self, dim_name, inputs, expected_unique,
+                                    expected_return):
 
         unique_dims = UniqueDims(dim_name)
 
-        for coords in inputs:
-            unique_dims.name_new_dim(coords)
+        for coords, ret in zip(inputs, expected_return):
+            assert unique_dims.name_new_dim(dim_name, coords) == ret
 
-        assert unique_dims.unique_dims == expected
+        assert unique_dims.unique_dims == expected_unique
 
 class TestLoadOutputs():
     def test_non_valid_outputs(self, _root):

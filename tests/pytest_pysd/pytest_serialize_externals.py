@@ -1,4 +1,5 @@
 import re
+from xml.dom import UserDataHandler
 import pytest
 
 from pathlib import Path
@@ -9,12 +10,20 @@ import pysd
 
 data_ext = Path(
     "test-models/tests/get_data_args_3d_xls/test_get_data_args_3d_xls.mdl")
-constant_ext = Path("test-models/tests/get_constants_subranges/test_get_constants_subranges.mdl")
-lookup_ext = Path("test-models/tests/get_lookups_data_3d_xls/test_get_lookups_data_3d_xls.mdl")
-lookup_subranges = Path("test-models/tests/get_lookups_subset/test_get_lookups_subset.mdl")
-mixed_definitions =Path("test-models/tests/get_mixed_definitions/test_get_mixed_definitions.mdl")
-subscript_ext = Path("test-models/tests/get_subscript_3d_arrays_xls/test_get_subscript_3d_arrays_xls.mdl")
-multiple_excels = Path("more-tests/externals_multiple_files/test_externals_multiple_files.mdl")
+constant_ext = Path("test-models/tests/get_constants_subranges/"
+                    "test_get_constants_subranges.mdl")
+lookup_ext = Path("test-models/tests/get_lookups_data_3d_xls/"
+                  "test_get_lookups_data_3d_xls.mdl")
+lookup_subranges = Path("test-models/tests/get_lookups_subset/"
+                        "test_get_lookups_subset.mdl")
+mixed_definitions =Path("test-models/tests/get_mixed_definitions/"
+                        "test_get_mixed_definitions.mdl")
+subscript_ext = Path("test-models/tests/get_subscript_3d_arrays_xls/"
+                     "test_get_subscript_3d_arrays_xls.mdl")
+multiple_excels = Path("more-tests/externals_multiple_files/"
+                       "test_externals_multiple_files.mdl")
+incomplete_constant_def = Path("more-tests/incomplete_dims/" \
+                               "get_incomplete_dims.mdl")
 
 class TestSerialization():
 
@@ -34,9 +43,10 @@ class TestSerialization():
         assert np.allclose(
             ds.data_vars["_ext_data_data_forward"].loc[
                 {"time_#1": 10.0}].data,
-                np.array([[10., 5.], [-5., 1.]]))
+                np.array([[10., 5.], [-5., 1.]]), equal_nan=True)
         assert np.allclose(ds.coords["time_#1"].values,
-                           np.array([ 0.,  5., 10., 15., 20., 25., 30.]))
+                           np.array([ 0.,  5., 10., 15., 20., 25., 30.]),
+                           equal_nan=True)
         assert "description" in ds.attrs.keys()
         assert all(map(
             lambda x: x in ds.data_vars["_ext_data_data_forward"].attrs.keys(),
@@ -80,7 +90,6 @@ class TestSerialization():
                     model._dependencies[var]["__external__"]: var for \
                          var in include}
 
-
         model.serialize_externals(export_path=externals_path,
                                   include_externals=include,
                                   exclude_externals=exclude)
@@ -96,8 +105,8 @@ class TestSerialization():
         # the values in the dataset are the same than in the model
         assert all(np.allclose(
             ds.data_vars[py_name].values,
-            getattr(model.components, py_name).data.values) for \
-                py_name in varnames_included.keys())
+            getattr(model.components, py_name).data.values, equal_nan=True) \
+                for py_name in varnames_included.keys())
 
         model = pysd.load(model_path, initialize=False)
         model.initialize_external_data(externals=externals_path)
@@ -106,8 +115,8 @@ class TestSerialization():
         # reinitialized
         assert all(np.allclose(
             ds.data_vars[py_name].values,
-            getattr(model.components, py_name).data.values) for \
-                py_name in varnames_included.keys())
+            getattr(model.components, py_name).data.values, equal_nan=True) \
+                for py_name in varnames_included.keys())
 
 
     @pytest.mark.parametrize("model_path", [mixed_definitions])
@@ -127,13 +136,15 @@ class TestSerialization():
                                       exclude_externals=None)
 
         ds = xr.open_dataset(externals_path)
+
         assert list(ds.coords) == [
             'dim', 'adim', 'Type', 'DimAB', 'time_#1', 'time_#2']
         assert ds.data_vars["_ext_constant_const_var_1"].dims == (
             'dim',)
 
-        # There will be nans stored in the dataset if the dimension is
+        # There will be nans stored in the dataset if the dimension
         # does not have values in all dimensions (incomplete definition)
+        assert any(ds.data_vars["_ext_constant_const_var_1"].isnull())
         assert all(
             model["_ext_constant_const_var_1"].data == \
                 ds.data_vars["_ext_constant_const_var_1"].dropna(
@@ -145,10 +156,11 @@ class TestSerialization():
         assert model_re.external_loaded == True
 
         # Once the model is re initialized loading external data, it should not
-        # have the nans that are in the dataset
+        # have the nans that are in the dataset, even if it is an incompletely
+        # defined index
         assert np.testing.assert_array_equal(
             model_re["_ext_constant_const_var_1"].data,
-            model["_ext_constant_const_var_1"].data)is None
+            model["_ext_constant_const_var_1"].data) is None
         assert np.testing.assert_array_equal(
             model_re["_ext_constant_const_var_2"].data,
             model["_ext_constant_const_var_2"].data) is None
@@ -171,6 +183,8 @@ class TestSerialization():
             model_re.get_series_data("_ext_data_variable").data,
             model.get_series_data("_ext_data_variable").data) is None
 
+        # check that the time coordinates are the same in the ds than in the
+        # model
         assert np.testing.assert_array_equal(
             ds.data_vars["_ext_data_variable"].coords["time_#2"],
             model_re.get_series_data("_ext_data_variable").coords["time"]) \
@@ -215,9 +229,6 @@ class TestSerialization():
         assert model_re.get_series_data("_ext_data_variable").dims == \
             model.get_series_data("_ext_data_variable").dims
 
-        with pytest.warns(UserWarning):
-            model.run()
-
     @pytest.mark.parametrize("model_path", [subscript_ext])
     def test_serialize_ext_subscript(self, model, tmp_path):
 
@@ -254,10 +265,8 @@ class TestSerialization():
     )
     def test_serialize_combine_vars_and_excels(self, model, include, exclude,
                                                included, excluded):
-        # TODO the case where only one, several or all variable
-        # names are included, and also if any variable is excluded is already
-        # tested.
-        # This test should combine variable names an excel sheets.
+
+        # This test combines variable names an excel sheets.
         model_path = Path(model.py_model_file)
         externals_path = model_path.with_suffix(".nc")
 
@@ -270,4 +279,30 @@ class TestSerialization():
         assert all(x in ds.data_vars.keys() for x in included)
         assert not any(x in ds.data_vars.keys() for x in excluded)
 
-        
+    @pytest.mark.xfail(reason="final coords should not be equal to coords")
+    # @pytest.mark.parametrize("model_path", [incomplete_constant_def])
+    def test_incomplete_constant_definition(self, _root, tmp_path):
+
+        # TODO use the fixture to define the paths taking into accont that
+        # loading the model produces a warning
+
+        model_path = _root.joinpath(str(incomplete_constant_def))
+        ext_path = tmp_path.joinpath("externals.nc")
+        py_model = model_path.with_suffix(".py")
+
+        with pytest.warns(UserWarning):
+            model = pysd.read_vensim(model_path, intiialize=False)
+
+        model.serialize_externals(ext_path, include_externals="all")
+
+        model_re = pysd.load(py_model, initialize=False)
+        model_re.initialize_external_data(ext_path)
+
+        # the reinitialized model will have nans, because the final_coords is
+        # not consistent with the actual coords of the variable
+        assert np.array_equal(model["_ext_constant_var_only_women"].data,
+               model_re["_ext_constant_var_only_women"].data, equal_nan=True)
+
+        assert getattr(
+            model.components,
+            "_ext_constant_var_only_women").final_coords["dim2"] == ["female"]

@@ -778,12 +778,11 @@ class Macro(DynamicStateful):
         # renaming shared dims by all ExtData ("time") and ExtLookup
         # ("lookup_dim") external objects
         if isinstance(ext, ExtData):
-            new_name = data_dims.name_new_dim(
-                da.coords["time"].values)
+            new_name = data_dims.name_new_dim("time", da.coords["time"].values)
             da = da.rename({"time": new_name})
         if isinstance(ext, ExtLookup):
-            new_name = lookup_dims.name_new_dim(
-                da.coords["lookup_dim"].values)
+            new_name = lookup_dims.name_new_dim("lookup_dim",
+                                                da.coords["lookup_dim"].values)
             da = da.rename({"lookup_dim": new_name})
 
         metadata.update({py_name: var_meta})
