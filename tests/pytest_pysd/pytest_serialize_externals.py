@@ -147,10 +147,9 @@ class TestSerialization():
         # There will be nans stored in the dataset if the dimension
         # does not have values in all dimensions (incomplete definition)
         assert any(ds.data_vars["_ext_constant_const_var_1"].isnull())
-        assert all(
-            model["_ext_constant_const_var_1"].data
-            == ds.data_vars["_ext_constant_const_var_1"].dropna(
-                "dim", how="all").data)
+        np.testing.assert_array_equal(
+            model["_ext_constant_const_var_1"].data,
+            ds.data_vars["_ext_constant_const_var_1"].data)
 
         # re stands for reinitialized loading from external data file
         model_re = pysd.load(model_path, initialize=False)
@@ -160,59 +159,59 @@ class TestSerialization():
         # Once the model is re initialized loading external data, it should not
         # have the nans that are in the dataset, even if it is an incompletely
         # defined index
-        assert np.testing.assert_array_equal(
+        np.testing.assert_array_equal(
             model_re["_ext_constant_const_var_1"].data,
-            model["_ext_constant_const_var_1"].data) is None
-        assert np.testing.assert_array_equal(
+            model["_ext_constant_const_var_1"].data)
+        np.testing.assert_array_equal(
             model_re["_ext_constant_const_var_2"].data,
-            model["_ext_constant_const_var_2"].data) is None
+            model["_ext_constant_const_var_2"].data)
         # this one has nans when initializing from excel
-        assert np.testing.assert_array_equal(
+        np.testing.assert_array_equal(
             model_re["_ext_constant_const_var_3"].data,
-            model["_ext_constant_const_var_3"].data) is None
-        assert np.testing.assert_array_equal(
+            model["_ext_constant_const_var_3"].data)
+        np.testing.assert_array_equal(
             model_re["_ext_constant_variable"].data,
-            model["_ext_constant_variable"].data) is None
-        assert np.testing.assert_array_equal(
+            model["_ext_constant_variable"].data)
+        np.testing.assert_array_equal(
             model_re.get_series_data("_ext_data_data_var_1").data,
-            model.get_series_data("_ext_data_data_var_1").data) is None
-        assert np.testing.assert_array_equal(
+            model.get_series_data("_ext_data_data_var_1").data)
+        np.testing.assert_array_equal(
             model_re.get_series_data("_ext_data_data_var_2").data,
-            model.get_series_data("_ext_data_data_var_2").data) is None
-        assert np.testing.assert_array_equal(
+            model.get_series_data("_ext_data_data_var_2").data)
+        np.testing.assert_array_equal(
             model_re.get_series_data("_ext_data_data_var_3").data,
-            model.get_series_data("_ext_data_data_var_3").data) is None
-        assert np.testing.assert_array_equal(
+            model.get_series_data("_ext_data_data_var_3").data)
+        np.testing.assert_array_equal(
             model_re.get_series_data("_ext_data_variable").data,
-            model.get_series_data("_ext_data_variable").data) is None
-
+            model.get_series_data("_ext_data_variable").data)
+        np.testing.assert_array_equal(
+            model_re.get_series_data("_ext_data_variable").data,
+            model.get_series_data("_ext_data_variable").data)
         # check that the time coordinates are the same in the ds than in the
         # model
-        assert np.testing.assert_array_equal(
+        np.testing.assert_array_equal(
             ds.data_vars["_ext_data_variable"].coords["time_#2"],
             model_re.get_series_data("_ext_data_variable").coords["time"]
-            ) is None
+            )
 
         # data interpolation
-        assert np.testing.assert_array_equal(
+        np.testing.assert_array_equal(
             getattr(model_re.components, "_ext_data_data_var_3")(1.5).data,
             getattr(model.components, "_ext_data_data_var_3")(1.5).data
-            ) is None
-        assert np.testing.assert_array_equal(
+            )
+        np.testing.assert_array_equal(
             getattr(model_re.components, "_ext_data_variable")(5.5).data,
-            getattr(model.components, "_ext_data_variable")(5.5).data) is None
+            getattr(model.components, "_ext_data_variable")(5.5).data)
 
         warn_message = r"extrapolating data (above|below) the "\
             r"(maximum|minimum) value of the time"
         with pytest.warns(UserWarning, match=warn_message):
-            assert np.testing.assert_array_equal(
+            np.testing.assert_array_equal(
                 getattr(model_re.components, "_ext_data_variable")(25).data,
-                getattr(model.components, "_ext_data_variable")(25).data) \
-                    is None
-            assert np.testing.assert_array_equal(
+                getattr(model.components, "_ext_data_variable")(25).data)
+            np.testing.assert_array_equal(
                 getattr(model_re.components, "_ext_data_variable")(-1).data,
-                getattr(model.components, "_ext_data_variable")(-1).data
-                ) is None
+                getattr(model.components, "_ext_data_variable")(-1).data)
 
         # they should also have the same dimension names
         assert model_re["_ext_constant_const_var_1"].dims == \
@@ -317,8 +316,9 @@ class TestSerialization():
 
         # the reinitialized model will have nans, because the final_coords is
         # not consistent with the actual coords of the variable
-        assert np.array_equal(model["_ext_constant_var_only_women"].data,
-               model_re["_ext_constant_var_only_women"].data, equal_nan=True)
+        np.testing.assert_array_equal(
+            model["_ext_constant_var_only_women"].data,
+            model_re["_ext_constant_var_only_women"].data)
 
         assert getattr(
             model.components,
