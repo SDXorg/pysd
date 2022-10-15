@@ -267,6 +267,11 @@ class TestSerialization():
                 []
             ),
             (
+                multiple_excels, ["input.xls", ], None,
+                ["_ext_lookup_lookup_function"],
+                []
+            ),
+            (
                 multiple_excels, ["input.xls", "input2.xls"], None,
                 ["_ext_data_data_function_table",
                  "_ext_lookup_lookup_function"],

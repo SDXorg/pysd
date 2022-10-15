@@ -586,7 +586,7 @@ class Macro(DynamicStateful):
                         "lookup_dim_#")][0]
                     da = da.rename({lookup_dim: "lookup_dim"})
                     da = da.loc[dimensions]
-                else: #  ExtConstant
+                else:  # ExtConstant
                     if dimensions:
                         da = da.loc[dimensions]
 
@@ -652,60 +652,63 @@ class Macro(DynamicStateful):
         if not include_externals:
             raise ValueError("include_externals argument must not be None.")
 
+        # TODO include also checking the original name
+        externals_dict = {
+            "py_name": [], "py_var_name": [], "file": [], "ext": []}
+        for ext in self._external_elements:
+            externals_dict["py_name"].append(ext.py_name)
+            externals_dict["py_var_name"].append(
+                self.__get_varname_from_ext_name(ext.py_name))
+            externals_dict["file"].append(set(ext.files))
+            externals_dict["ext"].append(ext)
+        exts_df = pd.DataFrame(data=externals_dict)
+
         if include_externals != "all":
-            if not isinstance(include_externals, list):
-                raise TypeError("include_externals must be 'all', or a list.")
+            if not isinstance(include_externals, (list, set)):
+                raise TypeError(
+                    "include_externals must be 'all', or a list, or a set.")
+
+            # subset only to the externals to include
+            exts_df = exts_df[[
+                name in include_externals
+                or var_name in include_externals
+                or bool(file.intersection(include_externals))
+                for name, var_name, file
+                in zip(
+                    externals_dict["py_name"],
+                    externals_dict["py_var_name"],
+                    externals_dict["file"]
+                )
+            ]]
 
         if exclude_externals:
-            if not isinstance(exclude_externals, list):
-                raise TypeError("exclude_externals must be a list")
+            if not isinstance(exclude_externals, (list, set)):
+                raise TypeError("exclude_externals must be a list or a set.")
 
-        if include_externals == "all" and not exclude_externals:
-            for ext in self._external_elements:
-                real_py_name = self.__get_varname_from_ext_name(ext.py_name)
+            # subset only to the externals to include
+            exts_df = exts_df[[
+                name not in exclude_externals
+                and var_name not in exclude_externals
+                and not bool(file.intersection(exclude_externals))
+                for name, var_name, file
+                in zip(
+                    externals_dict["py_name"],
+                    externals_dict["py_var_name"],
+                    externals_dict["file"]
+                )
+            ]]
 
-                self.__include_for_serialization(
-                    ext, real_py_name, data, metadata, lookup_dims, data_dims)
-
-        elif include_externals == "all" and exclude_externals:
-            for ext in self._external_elements:
-                real_py_name = self.__get_varname_from_ext_name(ext.py_name)
-                if real_py_name not in exclude_externals and \
-                     not any(
-                        map(lambda x: str(x) in exclude_externals, ext.files)):
-
-                    self.__include_for_serialization(ext, real_py_name, data,
-                                                     metadata, lookup_dims,
-                                                     data_dims)
-
-        elif include_externals != "all" and not exclude_externals:
-            for ext in self._external_elements:
-                real_py_name = self.__get_varname_from_ext_name(ext.py_name)
-                if real_py_name in include_externals or \
-                     any(
-                        map(lambda x: str(x) in include_externals, ext.files)):
-
-                    self.__include_for_serialization(ext, real_py_name, data,
-                                                     metadata, lookup_dims,
-                                                     data_dims)
-
-        else:
-            for ext in self._external_elements:
-                real_py_name = self.__get_varname_from_ext_name(ext.py_name)
-                if (real_py_name in include_externals or
-                     any(map(lambda x: str(x) in include_externals, ext.files))
-                     ) and real_py_name not in exclude_externals and \
-                     not any(
-                        map(lambda x: str(x) in exclude_externals, ext.files)):
-                    self.__include_for_serialization(ext, real_py_name, data,
-                                                     metadata, lookup_dims,
-                                                     data_dims)
+        for _, (ext, var_name) in exts_df[["ext", "py_var_name"]].iterrows():
+            self.__include_for_serialization(
+                ext, var_name, data, metadata, lookup_dims, data_dims
+            )
 
         # create description to be used as global attribute of the dataset
-        description = {"description": f"External objects for " \
-                       f"{self.py_model_file} exported on " \
-                       f"{time.ctime(time.time())} using PySD version " \
-                       f"{__version__}"}
+        description = {
+            "description": f"External objects for {self.py_model_file} "
+                           f"exported on {time.ctime(time.time())} "
+                           f"using PySD version {__version__}"
+        }
 
         # create Dataset
         ds = xr.Dataset(data_vars=data, attrs=description)
@@ -763,15 +766,17 @@ class Macro(DynamicStateful):
 
         ext.initialize()
 
-        # collecting variable metadata from model.doc
-        var_meta = {col: self.doc.loc[
-            self.doc["Py Name"] == py_name_clean, col].values[0] or \
-                "Missing" for col in self.doc.columns}
+        # collecting variable metadata from model._doc
+        var_meta = {
+            col:
+            self._doc.loc[self._doc["Py Name"] == py_name_clean, col].values[0]
+            or "Missing"
+            for col in self._doc.columns
+        }
         var_meta["files"] = ";".join(ext.files)
         var_meta["sheets"] = ";".join(ext.sheets)
         var_meta["cells"] = ";".join(ext.cells)
         # TODO: add also time_row_or_cols
-
 
         da = ext.data
 
@@ -806,16 +811,19 @@ class Macro(DynamicStateful):
         -------
         var: str
             Name of the variable that calls the variable with name varname.
+
         """
         for var, deps in self._dependencies.items():
             for _, ext_name in deps.items():
                 if varname == ext_name:
                     return var
 
-        warnings.warn(f"No variable depends upon {varname}. This is likely "
-                      f"due to the fact that {varname} is defined using a mix "
-                      "of DATA and CONSTANT. Though Vensim allows it, it is "
-                      "not recommended.")
+        warnings.warn(
+            f"No variable depends upon {varname}. This is likely due "
+            f"to the fact that {varname} is defined using a mix of "
+            "DATA and CONSTANT. Though Vensim allows it, it is "
+            "not recommended."
+        )
         return "_".join(varname.split("_")[3:])
 
     def get_args(self, param):
