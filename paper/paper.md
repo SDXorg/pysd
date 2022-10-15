@@ -22,11 +22,11 @@ authors:
     orcid: 0000-0002-2371-1652
     affiliation: "1, 3"
 affiliations:
- - name: Centre for Ecological Research and Forestry Applications (CREAF)
+ - name: CREAF, Centre de Recerca Ecològica i Aplicacions Forestals, E08193 Bellaterra (Cerdanyola del Vallès), Catalonia, Spain
    index: 1
- - name: Computational Social Science Lab, University of Pennsylvania
+ - name: Computational Social Science Lab, University of Pennsylvania, Philadelphia PA, 19104, United States of America
    index: 2
- - name: Department of Earth and Ocean Dynamics, Faculty of Earth Sciences, University of Barcelona
+ - name: Departament de Dinàmica de la Terra i l'Oceà, Universitat de Barcelona (UB) E08007, Catalonia, Spain
    index: 3
 date: 20 January 2022
 bibliography: paper.bib
