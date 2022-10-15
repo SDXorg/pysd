@@ -756,8 +756,6 @@ class Macro(DynamicStateful):
         None
 
         """
-        py_name = ext.py_name
-
         ext.initialize()
 
         # collecting variable metadata from model._doc
@@ -784,8 +782,8 @@ class Macro(DynamicStateful):
                                                 da.coords["lookup_dim"].values)
             da = da.rename({"lookup_dim": new_name})
 
-        metadata.update({py_name: var_meta})
-        data.update({py_name: da})
+        metadata.update({ext.py_name: var_meta})
+        data.update({ext.py_name: da})
 
         print(f"Finished processing variable {py_name_clean}.")
 
