@@ -218,9 +218,10 @@ def rearrange(data, dims, coords):
             return xr.DataArray(data=data.values, coords=coords, dims=dims)
         elif np.prod(shape) < np.prod(data.shape):
             # Allows subscripting a subrange
-            return data.rename(
-                {dim: new_dim for dim, new_dim in zip(data.dims, dims)}
-            ).loc[coords]
+            return data.rename({
+                dim: new_dim for dim, new_dim in zip(data.dims, dims)
+                if dim != new_dim
+            }).loc[coords]
 
         # The coordinates are expanded or transposed
         return xr.DataArray(0, coords, dims) + data
