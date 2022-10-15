@@ -279,7 +279,8 @@ class StructureBuilder:
                                  component_final_subs: dict) -> None:
         """
         Update the object subscripts. Needed for those objects that
-        use 'add' method to load several components at once.
+        use 'add' method to load several components at once and mixed
+        definitions are used.
 
         Parameters
         ----------
@@ -295,39 +296,8 @@ class StructureBuilder:
         """
         # Get the component used to define the object first time
         origin_comp = self.element.objects[name]["component"]
-        if isinstance(origin_comp.subscripts_dict, dict):
-            # The original component subscript dictionary is a dict
-            if len(list(origin_comp.subscripts_dict)) == 1:
-                # If the subscript dict has only one dimension
-                # all the components can be loaded in 1D array directly
-                # with the same length as the given by the sum of the
-                # components
-                key = list(origin_comp.subscripts_dict.keys())[0]
-                value = list(component_final_subs.values())[0]
-                origin_comp.subscripts_dict[key] += value
-                # force the same order as the final element
-                origin_comp.subscripts_dict[key] = [
-                    sub for sub in self.element.subs_dict[key]
-                    if sub in origin_comp.subscripts_dict[key]
-                ]
-                self.element.objects[name]["final_subs"] =\
-                    origin_comp.subscripts_dict
-            else:
-                # If the subscripts dict has several dimensions, then
-                # a multi-dimensional array needs to be computed,
-                # in some cases, when mixed definitions are used in an
-                # element (e.g. GET DIRECT CONSTANTS and regular constants),
-                # this array can have some empty subarrays, therefore a
-                # list should be created and manage the loaded data
-                # with manage_multi_def in the element building
-                origin_comp.subscripts_dict = [origin_comp.subscripts_dict]
-                self.element.objects[name]["final_subs"] =\
-                    self.element.subs_dict
-        if isinstance(origin_comp.subscripts_dict, list):
-            # The original component subscript dictionary is a list
-            # (this happens when other components have already been
-            # added with 'add' method)
-            origin_comp.subscripts_dict.append(component_final_subs)
+        # The original component subscript dictionary is a list
+        origin_comp.subscripts_dict.append(component_final_subs)
 
 
 class OperationBuilder(StructureBuilder):
@@ -939,8 +909,10 @@ class ExtLookupBuilder(StructureBuilder):
 
             arguments["name"] = self.section.namespace.make_python_identifier(
                 self.element.identifier, prefix="_ext_lookup")
-            arguments["final_subs"] = "%(final_subs)s"
-            self.component.subscripts_dict = final_subs
+            arguments["final_subs"] =\
+                self.section.subscripts.simplify_subscript_input(
+                    self.element.subs_dict)[1]
+            self.component.subscripts_dict = [final_subs]
 
             self.element.objects["ext_lookups"] = {
                 "name": arguments["name"],
@@ -1013,8 +985,10 @@ class ExtDataBuilder(StructureBuilder):
 
             arguments["name"] = self.section.namespace.make_python_identifier(
                 self.element.identifier, prefix="_ext_data")
-            arguments["final_subs"] = "%(final_subs)s"
-            self.component.subscripts_dict = final_subs
+            arguments["final_subs"] =\
+                self.section.subscripts.simplify_subscript_input(
+                    self.element.subs_dict)[1]
+            self.component.subscripts_dict = [final_subs]
 
             self.element.objects["ext_data"] = {
                 "name": arguments["name"],
@@ -1085,8 +1059,10 @@ class ExtConstantBuilder(StructureBuilder):
 
             arguments["name"] = self.section.namespace.make_python_identifier(
                 self.element.identifier, prefix="_ext_constant")
-            arguments["final_subs"] = "%(final_subs)s"
-            self.component.subscripts_dict = final_subs
+            arguments["final_subs"] =\
+                self.section.subscripts.simplify_subscript_input(
+                    self.element.subs_dict)[1]
+            self.component.subscripts_dict = [final_subs]
 
             self.element.objects["constants"] = {
                 "name": arguments["name"],
@@ -1712,7 +1688,9 @@ class LookupsBuilder(StructureBuilder):
 
             arguments["name"] = self.section.namespace.make_python_identifier(
                 self.element.identifier, prefix="_hardcodedlookup")
-            arguments["final_subs"] = "%(final_subs)s"
+            arguments["final_subs"] =\
+                self.section.subscripts.simplify_subscript_input(
+                    self.element.subs_dict)[1]
 
             self.element.objects["hardcoded_lookups"] = {
                 "name": arguments["name"],
