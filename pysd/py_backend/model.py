@@ -652,16 +652,18 @@ class Macro(DynamicStateful):
         if not include_externals:
             raise ValueError("include_externals argument must not be None.")
 
+        # Generate a Dataframe to make simpler the search of external
+        # objects to include
         # TODO include also checking the original name
-        externals_dict = {
-            "py_name": [], "py_var_name": [], "file": [], "ext": []}
+        py_names = []
+        externals_dict = {"py_var_name": [], "file": [], "ext": []}
         for ext in self._external_elements:
-            externals_dict["py_name"].append(ext.py_name)
+            py_names.append(ext.py_name)
             externals_dict["py_var_name"].append(
                 self.__get_varname_from_ext_name(ext.py_name))
             externals_dict["file"].append(set(ext.files))
             externals_dict["ext"].append(ext)
-        exts_df = pd.DataFrame(data=externals_dict)
+        exts_df = pd.DataFrame(index=py_names, data=externals_dict)
 
         if include_externals != "all":
             if not isinstance(include_externals, (list, set)):
@@ -673,12 +675,8 @@ class Macro(DynamicStateful):
                 name in include_externals
                 or var_name in include_externals
                 or bool(file.intersection(include_externals))
-                for name, var_name, file
-                in zip(
-                    externals_dict["py_name"],
-                    externals_dict["py_var_name"],
-                    externals_dict["file"]
-                )
+                for name, (var_name, file)
+                in exts_df[["py_var_name", "file"]].iterrows()
             ]]
 
         if exclude_externals:
@@ -690,12 +688,8 @@ class Macro(DynamicStateful):
                 name not in exclude_externals
                 and var_name not in exclude_externals
                 and not bool(file.intersection(exclude_externals))
-                for name, var_name, file
-                in zip(
-                    externals_dict["py_name"],
-                    externals_dict["py_var_name"],
-                    externals_dict["file"]
-                )
+                for name, (var_name, file)
+                in exts_df[["py_var_name", "file"]].iterrows()
             ]]
 
         for _, (ext, var_name) in exts_df[["ext", "py_var_name"]].iterrows():
