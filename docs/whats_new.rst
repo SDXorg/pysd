@@ -30,6 +30,7 @@ Internal Changes
 ~~~~~~~~~~~~~~~~
 - Adds the :py:meth:`pysd.py_backend.model.Macro.serialize_externals` and :py:meth:`pysd.py_backend.model.Macro.initialize_external_data` methods, and a few other private methods.(`@rogersamso <https://github.com/rogersamso>`_)
 - Adds the :py:class:`pysd.py_backend.utils.UniqueDims` class for renaming model dimensions with unique names.(`@rogersamso <https://github.com/rogersamso>`_)
+- Force :py:meth:`pysd.py_backend.external.External` objects to always have the full element dimensions, missing dimensions are filled with `numpy.nan`. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 v3.7.1 (2022/09/19)
 -------------------
