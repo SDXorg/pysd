@@ -638,12 +638,7 @@ class ElementBuilder:
             self.expression = "value"
         else:
             self.pre_expression = ""
-            # NUMPY: reshape to the final shape if needed
-            # include full subscript range for objects defined with a
-            # partial range (issue #363)
-            for value in self.objects.values():
-                if value["expression"] is not None and "final_subs" in value:
-                    value["final_subs"] = self.subs_dict
+            # NUMPY: reshape to the final shape if needed)
             # expressions[0]["expr"].reshape(self.section.subscripts, {})
             if not expressions[0]["expr"].subscripts and self.subscripts:
                 # Updimension the return value to an array
@@ -727,13 +722,7 @@ class ElementBuilder:
 
         # Get the objects to create as string
         objects = "\n\n".join([
-            value["expression"] % {
-                "final_subs":
-                self.section.subscripts.simplify_subscript_input(
-                    value.get("final_subs", {}))[1]
-            }   # Replace the final subs in the objects that merge
-                # several components
-            for value in self.objects.values()
+            value["expression"] for value in self.objects.values()
             if value["expression"] is not None
         ])
 
