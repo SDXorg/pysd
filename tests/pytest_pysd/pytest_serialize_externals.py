@@ -1,6 +1,3 @@
-import re
-from xml.dom import UserDataHandler
-from xml.etree.ElementInclude import include
 import pytest
 
 from pathlib import Path
@@ -17,14 +14,15 @@ lookup_ext = Path("test-models/tests/get_lookups_data_3d_xls/"
                   "test_get_lookups_data_3d_xls.mdl")
 lookup_subranges = Path("test-models/tests/get_lookups_subset/"
                         "test_get_lookups_subset.mdl")
-mixed_definitions =Path("test-models/tests/get_mixed_definitions/"
-                        "test_get_mixed_definitions.mdl")
+mixed_definitions = Path("test-models/tests/get_mixed_definitions/"
+                         "test_get_mixed_definitions.mdl")
 subscript_ext = Path("test-models/tests/get_subscript_3d_arrays_xls/"
                      "test_get_subscript_3d_arrays_xls.mdl")
 multiple_excels = Path("more-tests/externals_multiple_files/"
                        "test_externals_multiple_files.mdl")
-incomplete_constant_def = Path("more-tests/incomplete_dims/" \
+incomplete_constant_def = Path("more-tests/incomplete_dims/"
                                "get_incomplete_dims.mdl")
+
 
 class TestSerialization():
 
@@ -44,9 +42,9 @@ class TestSerialization():
         assert np.allclose(
             ds.data_vars["_ext_data_data_forward"].loc[
                 {"time_#1": 10.0}].data,
-                np.array([[10., 5.], [-5., 1.]]), equal_nan=True)
+            np.array([[10., 5.], [-5., 1.]]), equal_nan=True)
         assert np.allclose(ds.coords["time_#1"].values,
-                           np.array([ 0.,  5., 10., 15., 20., 25., 30.]),
+                           np.array([0.,  5., 10., 15., 20., 25., 30.]),
                            equal_nan=True)
         assert "description" in ds.attrs.keys()
         assert all(map(
@@ -55,15 +53,16 @@ class TestSerialization():
 
     @pytest.mark.parametrize(
         "model_path,include,exclude",
-        [(data_ext, ["data_forward"], None),
-         (data_ext, "all", ["data_backward"]),
-         (lookup_ext, ["lookup_function"], None),
-         (lookup_subranges, "all", None),
-         (constant_ext,["constant"], None),
-         ],
+        [
+            (data_ext, ["data_forward"], None),
+            (data_ext, "all", ["data_backward"]),
+            (lookup_ext, ["lookup_function"], None),
+            (lookup_subranges, "all", None),
+            (constant_ext, ["constant"], None),
+        ],
         ids=["data", "data_exclude", "lookup", "lookup_subranges", "constant"])
-    def test_serialize_externals_different_types(
-        self, model, include, exclude):
+    def test_serialize_externals_different_types(self, model,
+                                                 include, exclude):
 
         # external subscripts are not included because they are hardcoded in
         # the Python model.
@@ -73,23 +72,26 @@ class TestSerialization():
         if include == "all":
             if exclude:
                 varnames_included = {
-                    ext.py_name: "_".join(ext.py_name.split("_")[3:]) for \
-                        ext in model._external_elements if \
-                            not "_".join(ext.py_name.split("_")[3:]) in exclude
-                            }
+                    ext.py_name: "_".join(ext.py_name.split("_")[3:])
+                    for ext in model._external_elements
+                    if not "_".join(ext.py_name.split("_")[3:]) in exclude
+                }
             else:
                 varnames_included = {
-                    ext.py_name: "_".join(ext.py_name.split("_")[3:]) for \
-                        ext in model._external_elements}
+                    ext.py_name: "_".join(ext.py_name.split("_")[3:])
+                    for ext in model._external_elements
+                }
         else:
             if exclude:
                 varnames_included = {
-                    model._dependencies[var]["__external__"]: var for \
-                        var in include if var not in exclude}
+                    model._dependencies[var]["__external__"]: var
+                    for var in include if var not in exclude
+                }
             else:
                 varnames_included = {
-                    model._dependencies[var]["__external__"]: var for \
-                         var in include}
+                    model._dependencies[var]["__external__"]: var
+                    for var in include
+                }
 
         model.serialize_externals(export_path=externals_path,
                                   include_externals=include,
@@ -106,7 +108,7 @@ class TestSerialization():
         # the values in the dataset are the same than in the model
         assert all(np.allclose(
             ds.data_vars[py_name].values,
-            getattr(model.components, py_name).data.values, equal_nan=True) \
+            getattr(model.components, py_name).data.values, equal_nan=True)
                 for py_name in varnames_included.keys())
 
         model = pysd.load(model_path, initialize=False)
@@ -116,9 +118,8 @@ class TestSerialization():
         # reinitialized
         assert all(np.allclose(
             ds.data_vars[py_name].values,
-            getattr(model.components, py_name).data.values, equal_nan=True) \
+            getattr(model.components, py_name).data.values, equal_nan=True)
                 for py_name in varnames_included.keys())
-
 
     @pytest.mark.parametrize("model_path", [mixed_definitions])
     def test_serialize_mixed_definitions(self, model):
@@ -147,14 +148,14 @@ class TestSerialization():
         # does not have values in all dimensions (incomplete definition)
         assert any(ds.data_vars["_ext_constant_const_var_1"].isnull())
         assert all(
-            model["_ext_constant_const_var_1"].data == \
-                ds.data_vars["_ext_constant_const_var_1"].dropna(
-                    "dim", how="all").data)
+            model["_ext_constant_const_var_1"].data
+            == ds.data_vars["_ext_constant_const_var_1"].dropna(
+                "dim", how="all").data)
 
         # re stands for reinitialized loading from external data file
         model_re = pysd.load(model_path, initialize=False)
         model_re.initialize_external_data(externals=externals_path)
-        assert model_re.external_loaded == True
+        assert model_re.external_loaded
 
         # Once the model is re initialized loading external data, it should not
         # have the nans that are in the dataset, even if it is an incompletely
@@ -189,14 +190,14 @@ class TestSerialization():
         # model
         assert np.testing.assert_array_equal(
             ds.data_vars["_ext_data_variable"].coords["time_#2"],
-            model_re.get_series_data("_ext_data_variable").coords["time"]) \
-                is None
+            model_re.get_series_data("_ext_data_variable").coords["time"]
+            ) is None
 
         # data interpolation
         assert np.testing.assert_array_equal(
             getattr(model_re.components, "_ext_data_data_var_3")(1.5).data,
-            getattr(model.components, "_ext_data_data_var_3")(1.5).data) \
-                is None
+            getattr(model.components, "_ext_data_data_var_3")(1.5).data
+            ) is None
         assert np.testing.assert_array_equal(
             getattr(model_re.components, "_ext_data_variable")(5.5).data,
             getattr(model.components, "_ext_data_variable")(5.5).data) is None
@@ -210,8 +211,8 @@ class TestSerialization():
                     is None
             assert np.testing.assert_array_equal(
                 getattr(model_re.components, "_ext_data_variable")(-1).data,
-                getattr(model.components, "_ext_data_variable")(-1).data) \
-                    is None
+                getattr(model.components, "_ext_data_variable")(-1).data
+                ) is None
 
         # they should also have the same dimension names
         assert model_re["_ext_constant_const_var_1"].dims == \
@@ -249,20 +250,34 @@ class TestSerialization():
     @pytest.mark.parametrize(
         "model_path,include,exclude,included,excluded",
         [
-         (multiple_excels, "all", ["input2.xls"],
-         ["_ext_lookup_lookup_function"],
-           ["_ext_data_data_function_table"]),
-         (multiple_excels, "all", ["input.xls"],
-         ["_ext_data_data_function_table"], ["_ext_lookup_lookup_function"]),
-         (multiple_excels, "all", None,
-         ["_ext_data_data_function_table", "_ext_lookup_lookup_function"], []
-         ),
-         (multiple_excels, ["input.xls", "input2.xls"], None,
-         ["_ext_data_data_function_table", "_ext_lookup_lookup_function"], []
-         ),
-         (multiple_excels, ["input.xls", "data_function_table"], None,
-         ["_ext_data_data_function_table", "_ext_lookup_lookup_function"], []
-         ),
+            (
+                multiple_excels, "all", ["input2.xls"],
+                ["_ext_lookup_lookup_function"],
+                ["_ext_data_data_function_table"]
+            ),
+            (
+                multiple_excels, "all", ["input.xls"],
+                ["_ext_data_data_function_table"],
+                ["_ext_lookup_lookup_function"]
+            ),
+            (
+                multiple_excels, "all", None,
+                ["_ext_data_data_function_table",
+                 "_ext_lookup_lookup_function"],
+                []
+            ),
+            (
+                multiple_excels, ["input.xls", "input2.xls"], None,
+                ["_ext_data_data_function_table",
+                 "_ext_lookup_lookup_function"],
+                []
+            ),
+            (
+                multiple_excels, ["input.xls", "data_function_table"], None,
+                ["_ext_data_data_function_table",
+                 "_ext_lookup_lookup_function"],
+                []
+            ),
          ]
     )
     def test_serialize_combine_vars_and_excels(self, model, include, exclude,
@@ -281,19 +296,12 @@ class TestSerialization():
         assert all(x in ds.data_vars.keys() for x in included)
         assert not any(x in ds.data_vars.keys() for x in excluded)
 
-    @pytest.mark.xfail(reason="final coords should not be equal to coords")
-    # @pytest.mark.parametrize("model_path", [incomplete_constant_def])
-    def test_incomplete_constant_definition(self, _root, tmp_path):
+    @pytest.mark.parametrize("model_path", [incomplete_constant_def])
+    @pytest.mark.filterwarnings("ignore")
+    def test_incomplete_constant_definition(self, model):
 
-        # TODO use the fixture to define the paths taking into accont that
-        # loading the model produces a warning
-
-        model_path = _root.joinpath(str(incomplete_constant_def))
-        ext_path = tmp_path.joinpath("externals.nc")
-        py_model = model_path.with_suffix(".py")
-
-        with pytest.warns(UserWarning):
-            model = pysd.read_vensim(model_path, intiialize=False)
+        py_model = Path(model.py_model_file)
+        ext_path = py_model.parent / "externals.nc"
 
         model.serialize_externals(ext_path, include_externals="all")
 
@@ -309,7 +317,8 @@ class TestSerialization():
 
         assert getattr(
             model.components,
-            "_ext_constant_var_only_women").final_coords["dim2"] == ["female"]
+            "_ext_constant_var_only_women").final_coords["dim2"]\
+            == ["female", "male"]
 
     @pytest.mark.parametrize("model_path", [subscript_ext])
     def test_exceptions(self, model):

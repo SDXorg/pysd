@@ -748,7 +748,7 @@ class ExtData(External, Data):
         """
         Initialize all elements and create the self.data xarray.DataArray
         """
-        if len(self.coordss) == 1:
+        if not self.coordss[0]:
             # Just load one value (no add)
             for self.file, self.sheet, self.x_row_or_col,\
                 self.cell, self.coords\
@@ -817,7 +817,7 @@ class ExtLookup(External, Lookups):
         """
         Initialize all elements and create the self.data xarray.DataArray
         """
-        if len(self.coordss) == 1:
+        if not self.coordss[0]:
             # Just loag one value (no add)
             for self.file, self.sheet, self.x_row_or_col,\
                 self.cell, self.coords\
@@ -882,7 +882,7 @@ class ExtConstant(External):
         """
         Initialize all elements and create the self.data xarray.DataArray
         """
-        if len(self.coordss) == 1:
+        if not self.coordss[0]:
             # Just loag one value (no add)
             for self.file, self.sheet, self.transpose, self.cell, self.coords\
                 in zip(self.files, self.sheets, self.transposes,
