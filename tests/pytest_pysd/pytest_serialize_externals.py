@@ -18,10 +18,11 @@ mixed_definitions = Path("test-models/tests/get_mixed_definitions/"
                          "test_get_mixed_definitions.mdl")
 subscript_ext = Path("test-models/tests/get_subscript_3d_arrays_xls/"
                      "test_get_subscript_3d_arrays_xls.mdl")
-multiple_excels = Path("more-tests/externals_multiple_files/"
-                       "test_externals_multiple_files.mdl")
-incomplete_constant_def = Path("more-tests/incomplete_dims/"
-                               "get_incomplete_dims.mdl")
+multiple_excels = Path("test-models/tests/get_lookups_data_3d_xls/"
+                       "test_get_lookups_data_3d_xls.mdl")
+incomplete_constant_def = Path("test-models/tests/"
+                               "get_constants_incomplete_subscript/"
+                               "test_get_constants_incomplete_subscript.mdl")
 
 
 class TestSerialization():
