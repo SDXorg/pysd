@@ -6,7 +6,7 @@
 [![PyPI version](https://badge.fury.io/py/pysd.svg)](https://badge.fury.io/py/pysd)
 [![PyPI status](https://img.shields.io/pypi/status/pysd.svg)](https://pypi.python.org/pypi/pysd/)
 [![Py version](https://img.shields.io/pypi/pyversions/pysd.svg)](https://pypi.python.org/pypi/pysd/)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5654824.svg)](https://doi.org/10.5281/zenodo.5654824)
+[![JOSS](https://joss.theoj.org/papers/10.21105/joss.04329/status.svg)](https://doi.org/10.21105/joss.04329)
 [![Contributions](https://img.shields.io/badge/contributions-welcome-blue.svg)](https://pysd.readthedocs.io/en/latest/development/development_index.html)
 [![Docs](https://readthedocs.org/projects/pysd/badge/?version=latest)](https://pysd.readthedocs.io/en/latest/?badge=latest)
 
@@ -44,6 +44,7 @@ This approach allows SD modelers to take advantage of the most recent developmen
 If you'd like to work with this repository directly, you'll need to use a recursive git checkout in order to properly load the test suite (sorry..)
 
 The command should be something like:
+
 ```shell
 git clone --recursive https://github.com/SDXorg/pysd.git
 ```

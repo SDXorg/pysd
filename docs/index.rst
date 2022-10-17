@@ -3,7 +3,7 @@ PySD
 *Simulating System Dynamics Models in Python*
 
 |made-with-sphinx-doc|
-|DOI|
+|JOSS|
 |Maintained|
 |PyPI license|
 |conda package|
@@ -35,6 +35,9 @@ PySD
 
 .. |conda package| image:: https://anaconda.org/conda-forge/pysd/badges/version.svg
    :target: https://anaconda.org/conda-forge/pysd
+
+.. |JOSS| image:: https://joss.theoj.org/papers/10.21105/joss.04329/status.svg
+   :target: https://doi.org/10.21105/joss.04329
 
 .. |DOI| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.5654824.svg
    :target: https://doi.org/10.5281/zenodo.5654824
@@ -91,23 +94,27 @@ If you are interested in contributing to the development of PySD, see the :doc:`
 
 Citing
 ^^^^^^
-If you use PySD in any published work, consider citing the `PySD Paper (2022) <https://github.com/SDXorg/pysd>`_:
+If you use PySD in any published work, consider citing the `PySD Paper (2022) <https://doi.org/10.21105/joss.04329>`_:
+
+|JOSS|
 
 .. code-block:: latex
 
-   Martin-Martinez, E., Samsó, R., Houghton, J. P., & Solé, J. (2022). PySD: System Dynamics Modeling in Python. Journal of Open Source Software. To do
+   Martin-Martinez et al., (2022). PySD: System Dynamics Modeling in Python. Journal of Open Source Software, 7(78), 4329, https://doi.org/10.21105/joss.04329
 
 .. code-block:: latex
 
-   @article{Martin-Martinez_PySD_System_Dynamics_2022,
-      author = {Martin-Martinez, Eneko and Samsó, Roger and Houghton, James P and Solé, Jordi},
-      doi = {TODO},
-      journal = {{Journal of Open Source Software}},
-      title = {{PySD: System Dynamics Modeling in Python}},
-      url = {https://github.com/SDXorg/pysd},
+   @article{Martin-Martinez2022,
+      doi = {10.21105/joss.04329},
+      url = {https://doi.org/10.21105/joss.04329},
       year = {2022},
-      month = {6},
-      keywords = {System Dynamics, Vensim, XMILE, Python}
+      publisher = {The Open Journal},
+      volume = {7},
+      number = {78},
+      pages = {4329},
+      author = {Eneko Martin-Martinez and Roger Samsó and James Houghton and Jordi Solé},
+      title = {PySD: System Dynamics Modeling in Python},
+      journal = {Journal of Open Source Software}
    }
 
 Please, also add the `PySD Introductory Paper (2015) <https://github.com/SDXorg/pysd/blob/master/docs/PySD-Intro-Paper-Preprint.pdf>`_:
