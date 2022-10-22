@@ -1,0 +1,98 @@
+cff-version: 1.2.0
+title: 'PySD: System Dynamics Modeling in Python'
+message: 'If you use this software, please cite it as below.'
+type: software
+authors:
+  - given-names: Eneko
+    family-names: Martin-Martinez
+    email: eneko.martin.martinez@gmail.com
+    affiliation: >-
+      Centre for Ecological Research and Forestry
+      Applications (CREAF)
+    orcid: 'https://orcid.org/0000-0002-9213-7818'
+  - given-names: Roger
+    family-names: Samsó
+    affiliation: >-
+      Centre for Ecological Research and Forestry
+      Applications (CREAF)
+    orcid: 'https://orcid.org/0000-0003-0348-3047'
+  - family-names: Houghton
+    given-names: James
+    affiliation: >-
+      Computational Social Science Lab, University of
+      Pennsylvania
+    email: james.p.houghton@gmail.com
+  - given-names: Jordi
+    family-names: Solé
+    orcid: 'https://orcid.org/0000-0002-2371-1652'
+    affiliation: >-
+      Centre for Ecological Research and Forestry
+      Applications (CREAF);
+      Department of Earth and Ocean Dynamics,
+      Faculty of Earth Sciences,
+      University of Barcelona
+version: 3.0.1
+doi: 10.5281/zenodo.6583528
+date-released: 2022-05-26
+journal: "Journal of Open Source Software"
+keywords:
+  - System Dynamics
+  - Vensim
+  - XMILE
+  - Python
+license: MIT
+repository: "https://github.com/JamesPHoughton/pysd"
+url: "https://github.com/JamesPHoughton/pysd"
+year: 2022
+month: 6
+references:
+  - type: conference-paper
+    scope: Cite alos the PySD introductory paper (conference-paper)
+    authors:
+    - family-names: Houghton
+      given-names: James
+    - family-names: Siegel
+      given-names: Michael
+    title: "Advanced data analytics for system dynamics models using PySD."
+    year: 2015
+    publisher: "System Dynamics Society"
+    journal: "33rd International Conference of the System Dynamics Society 2015"
+    isbn: 9781510815056
+    url: "https://github.com/JamesPHoughton/pysd/blob/master/docs/PySD%20Intro%20Paper%20Preprint.pdf"
+
+preferred-citation:
+  type: article
+  authors:
+    - given-names: Eneko
+      family-names: Martin-Martinez
+      email: eneko.martin.martinez@gmail.com
+      affiliation: >-
+        Centre for Ecological Research and Forestry
+        Applications (CREAF)
+      orcid: 'https://orcid.org/0000-0002-9213-7818'
+    - given-names: Roger
+      family-names: Samsó
+      affiliation: >-
+        Centre for Ecological Research and Forestry
+        Applications (CREAF)
+      orcid: 'https://orcid.org/0000-0003-0348-3047'
+    - family-names: Houghton
+      given-names: James
+      affiliation: >-
+        Computational Social Science Lab, University of
+        Pennsylvania
+      email: james.p.houghton@gmail.com
+    - given-names: Jordi
+      family-names: Solé
+      orcid: 'https://orcid.org/0000-0002-2371-1652'
+      affiliation: >-
+        Centre for Ecological Research and Forestry
+        Applications (CREAF);
+        Department of Earth and Ocean Dynamics,
+        Faculty of Earth Sciences,
+        University of Barcelona
+  doi: 10.5281/zenodo.6583528
+  title: 'PySD: System Dynamics Modeling in Python'
+  journal: "Journal of Open Source Software"
+  year: 2022
+  url: "https://github.com/JamesPHoughton/pysd"

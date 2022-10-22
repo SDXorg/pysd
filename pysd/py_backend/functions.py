@@ -268,6 +268,19 @@ def active_initial(stage, expr, init_val):
 
 
 def incomplete(*args):
+    """
+    Implements an incomplete functions.
+    Prompts a RuntimeWarning.
+
+    Parameters
+    ----------
+    *args: arguments
+
+    Returns
+    -------
+    numpy.nan
+
+    """
     warnings.warn(
         'Call to undefined function, calling dependencies and returning NaN',
         RuntimeWarning, stacklevel=2)
@@ -276,6 +289,17 @@ def incomplete(*args):
 
 
 def not_implemented_function(*args):
+    """
+    Implements a not implemented functions.
+    Raises a NotImplementedError if it is called.
+
+    Parameters
+    ----------
+    *args: arguments
+        The first argument must be the name of the function as str to
+        properly print the error message.
+
+    """
     raise NotImplementedError(f"Not implemented function '{args[0]}'")
 
 

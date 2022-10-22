@@ -1,12 +1,12 @@
-PySD
-====
+# PySD
+
 [![Maintained](https://img.shields.io/badge/Maintained-Yes-brightgreen.svg)](https://github.com/SDXorg/pysd/pulse)
 [![Coverage Status](https://coveralls.io/repos/github/SDXorg/pysd/badge.svg?branch=master)](https://coveralls.io/github/SDXorg/pysd?branch=master)
 [![Anaconda-Server Badge](https://anaconda.org/conda-forge/pysd/badges/version.svg)](https://anaconda.org/conda-forge/pysd)
 [![PyPI version](https://badge.fury.io/py/pysd.svg)](https://badge.fury.io/py/pysd)
 [![PyPI status](https://img.shields.io/pypi/status/pysd.svg)](https://pypi.python.org/pypi/pysd/)
 [![Py version](https://img.shields.io/pypi/pyversions/pysd.svg)](https://pypi.python.org/pypi/pysd/)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5654824.svg)](https://doi.org/10.5281/zenodo.5654824)
+[![JOSS](https://joss.theoj.org/papers/10.21105/joss.04329/status.svg)](https://doi.org/10.21105/joss.04329)
 [![Contributions](https://img.shields.io/badge/contributions-welcome-blue.svg)](https://pysd.readthedocs.io/en/latest/development/development_index.html)
 [![Docs](https://readthedocs.org/projects/pysd/badge/?version=latest)](https://pysd.readthedocs.io/en/latest/?badge=latest)
 
@@ -16,12 +16,14 @@ This project is a library for running [System Dynamics](http://en.wikipedia.org/
 
 **The current version needs to run at least Python 3.7.**
 
-### Resources
+## Resources
 
 See the [project documentation](http://pysd.readthedocs.org/) for information about:
 
 - [Installation](http://pysd.readthedocs.org/en/latest/installation.html)
 - [Getting Started](http://pysd.readthedocs.org/en/latest/getting_started.html)
+- [Release Notes](http://pysd.readthedocs.org/en/latest/whats_new.html)
+- [Citing PySD](https://pysd.readthedocs.io/en/latest/#citing)
 
 For standard methods for data analysis with SD models, see the  [PySD Cookbook](https://github.com/SDXorg/PySD-Cookbook), containing (for example):
 
@@ -29,15 +31,7 @@ For standard methods for data analysis with SD models, see the  [PySD Cookbook](
 - [Surrogating model components with machine learning regressions](http://nbviewer.ipython.org/github/SDXorg/PySD-Cookbook/blob/master/source/analyses/surrogating_functions/Surrogating_with_regression.ipynb)
 - [Multi-Scale geographic comparison of model predictions](http://nbviewer.ipython.org/github/SDXorg/PySD-Cookbook/blob/master/source/analyses/geo/Exploring_models_across_geographic_scales.ipynb)
 
-If you use PySD in any published work, consider citing the [PySD Introductory Paper](https://github.com/SDXorg/pysd/blob/master/docs/PySD%20Intro%20Paper%20Preprint.pdf):
-
->Houghton, James; Siegel, Michael. "Advanced data analytics for system dynamics models using PySD." *Proceedings of the 33rd International Conference of the System Dynamics Society.* 2015.
-
-You can also cite the library using the [DOI provided by Zenodo](https://zenodo.org/search?page=1&size=20&q=pysd). It is recomendable to specify the used PySD version and its correspondent DOI. If you want to cite all versions you can use the generic DOI for PySD instead:
-
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5654824.svg)](https://doi.org/10.5281/zenodo.5654824)
-
-### Why create a new SD simulation engine?
+## Why create a new SD simulation engine?
 
 There are a number of great SD programs out there ([Vensim](http://vensim.com/), [iThink](http://www.iseesystems.com/Softwares/Business/ithinkSoftware.aspx), [AnyLogic](http://www.anylogic.com/system-dynamics), [Insight Maker](http://insightmaker.com/), and [others](http://en.wikipedia.org/wiki/List_of_system_dynamics_software)). In order not to waste our effort, or fall victim to the [Not-Invented-Here](http://en.wikipedia.org/wiki/Not_invented_here) fallacy, we should have a very good reason for starting a new project.
 
@@ -45,20 +39,21 @@ That reason is this: There is a whole world of computational tools being develop
 
 This approach allows SD modelers to take advantage of the most recent developments in data science, and focus our efforts on improving the part of the stack that is unique to System Dynamics modeling.
 
-### Cloning this repository
+## Cloning this repository
 
 If you'd like to work with this repository directly, you'll need to use a recursive git checkout in order to properly load the test suite (sorry..)
 
 The command should be something like:
+
 ```shell
 git clone --recursive https://github.com/SDXorg/pysd.git
 ```
 
-### Extensions
+## Extensions
 
 You can use PySD in [R](https://www.r-project.org/) via the [PySD2R](https://github.com/JimDuggan/pysd2r) package, also available on [cran](https://CRAN.R-project.org/package=pysd2r).
 
-### Contributing
+## Contributing
 
 PySD is currently a community-maintained project, any contribution is welcome.
 
