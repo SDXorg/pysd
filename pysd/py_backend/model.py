@@ -570,32 +570,26 @@ class Macro(DynamicStateful):
         ds = xr.open_dataset(externals)
 
         for ext in self._external_elements:
-            py_name = ext.py_name
-
-            if py_name in ds.data_vars.keys():
-                da = ds.data_vars[py_name]
-                dimensions = ext.final_coords
-
+            if ext.py_name in ds.data_vars.keys():
+                # Initialize external from nc file
+                da = ds.data_vars[ext.py_name]
                 if isinstance(ext, ExtData):
+                    # Rename again time dimension
                     time_dim = [dim for dim in da.dims if dim.startswith(
                         "time_#")][0]
                     da = da.rename({time_dim: "time"})
-                    da = da.loc[dimensions]
                 elif isinstance(ext, ExtLookup):
+                    # Rename again lookup_dim dimension
                     lookup_dim = [dim for dim in da.dims if dim.startswith(
                         "lookup_dim_#")][0]
                     da = da.rename({lookup_dim: "lookup_dim"})
-                    da = da.loc[dimensions]
-                else:  # ExtConstant
-                    if dimensions:
-                        da = da.loc[dimensions]
-
+                # Assign the value
                 if da.dims:
                     ext.data = da
                 else:
                     ext.data = float(da.data)
-
             else:
+                # Initialize external from original file
                 ext.initialize()
 
         Excels.clean()
@@ -772,7 +766,7 @@ class Macro(DynamicStateful):
 
         da = ext.data
 
-        # renaming shared dims by all ExtData ("time") and ExtLookup
+        # Renaming shared dims by all ExtData ("time") and ExtLookup
         # ("lookup_dim") external objects
         if isinstance(ext, ExtData):
             new_name = data_dims.name_new_dim("time", da.coords["time"].values)
@@ -785,6 +779,7 @@ class Macro(DynamicStateful):
         metadata.update({ext.py_name: var_meta})
         data.update({ext.py_name: da})
 
+        # TODO use a logger
         print(f"Finished processing variable {py_name_clean}.")
 
     def __get_varname_from_ext_name(self, varname):
