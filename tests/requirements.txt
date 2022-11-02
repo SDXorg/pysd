@@ -1,6 +1,7 @@
 pytest
 pytest-cov
 pytest-mock
+pytest-xdist
 coverage
 coveralls
 psutil

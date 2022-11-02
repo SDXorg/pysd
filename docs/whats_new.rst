@@ -37,6 +37,7 @@ Internal Changes
 - Add `dependabot <https://docs.github.com/en/code-security/dependabot/working-with-dependabot/keeping-your-actions-up-to-date-with-dependabot>`_ configuration for GitHub Actions updates. (`@EwoutH <https://github.com/EwoutH>`_)
 - Include new error messages for initialization of :py:class:`pysd.py_backend.lookups.HardcodedLookups` (:issue:`376`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 - Include new warning message when a translated variable has several types or subtypes. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Set CI test to run in parallel in 2 cores. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 v3.7.1 (2022/09/19)
 -------------------
