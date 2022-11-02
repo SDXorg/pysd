@@ -1,6 +1,6 @@
 What's New
 ==========
-v3.8.0 (2022/10/01)
+v3.8.0 (2022/11/03)
 -------------------
 
 New Features
@@ -13,14 +13,17 @@ Breaking changes
 
 Deprecations
 ~~~~~~~~~~~~
+- Deprecate :py:meth:`pysd.py_backend.model.Model._get_dependencies` replacing it with :py:meth:`pysd.py_backend.model.Model.get_dependencies`. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 Bug fixes
 ~~~~~~~~~
+- Include new class :py:class:`pysd.py_backend.utils.Dependencies` to return by :py:meth:`pysd.py_backend.model.Model.get_dependencies` (:issue:`379`). (`@lionel42 <https://github.com/lionel42>`_)
 
 Documentation
 ~~~~~~~~~~~~~
 - Updates the :doc:`getting_started` page with instructions on how to use the new helper functions for netCDF files. (`@rogersamso <https://github.com/rogersamso>`_)
 - Updates the :doc:`advanced_usage` page with instructions on how to export externals to netCDF and initialize a model from it. (`@rogersamso <https://github.com/rogersamso>`_)
+- Update citation information to include the new paper published in JOSS. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 Performance
 ~~~~~~~~~~~
@@ -30,7 +33,10 @@ Internal Changes
 ~~~~~~~~~~~~~~~~
 - Adds the :py:meth:`pysd.py_backend.model.Macro.serialize_externals` and :py:meth:`pysd.py_backend.model.Macro.initialize_external_data` methods, and a few other private methods.(`@rogersamso <https://github.com/rogersamso>`_)
 - Adds the :py:class:`pysd.py_backend.utils.UniqueDims` class for renaming model dimensions with unique names.(`@rogersamso <https://github.com/rogersamso>`_)
-- Force :py:meth:`pysd.py_backend.external.External` objects to always have the full element dimensions, missing dimensions are filled with `numpy.nan`. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Force :py:class:`pysd.py_backend.external.External` objects to always have the full element dimensions, missing dimensions are filled with `numpy.nan`. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Add `dependabot <https://docs.github.com/en/code-security/dependabot/working-with-dependabot/keeping-your-actions-up-to-date-with-dependabot>`_ configuration for GitHub Actions updates. (`@EwoutH <https://github.com/EwoutH>`_)
+- Include new error messages for initialization of :py:class:`pysd.py_backend.lookups.HardcodedLookups` (:issue:`376`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Include new warning message when a translated variable has several types or subtypes. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 v3.7.1 (2022/09/19)
 -------------------

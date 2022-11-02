@@ -144,7 +144,18 @@ class HardcodedLookups(Lookups):
         if len(self.values) == 1:
             # Just loag one value (no add)
             for x, y, coords in self.values:
-                y = np.array(y).reshape((len(x),) + (1,)*len(coords))
+                if len(x) != len(set(x)):
+                    raise ValueError(
+                        self.py_name + "\n"
+                        "x dimension has repeated values..."
+                    )
+                try:
+                    y = np.array(y).reshape((len(x),) + (1,)*len(coords))
+                except ValueError:
+                    raise ValueError(
+                        self.py_name + "\n"
+                        "x and y dimensions have different length..."
+                    )
                 self.data = xr.DataArray(
                     np.tile(y, [1] + utils.compute_shape(coords)),
                     {"lookup_dim": x, **coords},

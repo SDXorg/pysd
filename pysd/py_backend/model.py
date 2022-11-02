@@ -806,8 +806,8 @@ class Macro(DynamicStateful):
                     return var
 
         warnings.warn(
-            f"No variable depends upon {varname}. This is likely due "
-            f"to the fact that {varname} is defined using a mix of "
+            f"No variable depends upon '{varname}'. This is likely due "
+            f"to the fact that '{varname}' is defined using a mix of "
             "DATA and CONSTANT. Though Vensim allows it, it is "
             "not recommended."
         )
@@ -1568,18 +1568,18 @@ class Model(Macro):
         UserWarning: Selecting submodel, to run the full model again use model.reload()
 
         """
-        c_vars, d_vars, s_deps = self._get_dependencies(vars, modules)
+        deps = self.get_dependencies(vars, modules)
         warnings.warn(
             "Selecting submodel, "
             "to run the full model again use model.reload()")
 
         # get set of all dependencies and all variables to select
-        all_deps = d_vars["initial"].copy()
-        all_deps.update(d_vars["step"])
-        all_deps.update(d_vars["lookup"])
+        all_deps = deps.d_deps["initial"].copy()
+        all_deps.update(deps.d_deps["step"])
+        all_deps.update(deps.d_deps["lookup"])
 
         all_vars = all_deps.copy()
-        all_vars.update(c_vars)
+        all_vars.update(deps.c_vars)
 
         # clean dependendies and namespace dictionaries, and remove
         # the rows from the documentation
@@ -1593,27 +1593,27 @@ class Model(Macro):
                 )
 
         for py_name in self._dependencies.copy().keys():
-            if py_name.startswith("_") and py_name not in s_deps:
+            if py_name.startswith("_") and py_name not in deps.s_deps:
                 del self._dependencies[py_name]
 
         # remove active initial from s_deps as they are "fake" objects
         # in dependencies
-        s_deps = {
-            dep for dep in s_deps if not dep.startswith("_active_initial")
+        deps.s_deps = {
+            dep for dep in deps.s_deps if not dep.startswith("_active_initial")
         }
 
         # reassing the dictionary and lists of needed stateful objects
         self._stateful_elements = {
             name: getattr(self.components, name)
-            for name in s_deps
+            for name in deps.s_deps
             if isinstance(getattr(self.components, name), Stateful)
         }
         self._dynamicstateful_elements = [
-            getattr(self.components, name) for name in s_deps
+            getattr(self.components, name) for name in deps.s_deps
             if isinstance(getattr(self.components, name), DynamicStateful)
         ]
         self._macro_elements = [
-            getattr(self.components, name) for name in s_deps
+            getattr(self.components, name) for name in deps.s_deps
             if isinstance(getattr(self.components, name), Macro)
         ]
 
@@ -1673,8 +1673,8 @@ class Model(Macro):
 
         Returns
         -------
-        dependencies: set
-            Set of dependencies nedded to run vars.
+        dependencies: pysd.py_backend.utils.Dependencies
+            Dependencies data object.
 
         Notes
         -----
@@ -1683,15 +1683,15 @@ class Model(Macro):
 
         Examples
         --------
-        >>> model.get_dependencies(
-        ...     vars=["Room Temperature", "Teacup temperature"])
+        >>> print(model.get_dependencies(
+        ...     vars=["Room Temperature", "Teacup temperature"]))
         Selected variables (total 1):
             room_temperature, teacup_temperature
         Stateful objects integrated with the selected variables (total 1):
             _integ_teacup_temperature
 
-        >>> model.get_dependencies(
-        ...     modules=["view_1", "view_2/subview_1"])
+        >>> print(model.get_dependencies(
+        ...     modules=["view_1", "view_2/subview_1"]))
         Selected variables (total 4):
             var1, var2, stock1, delay1
         Dependencies for initialization only (total 1):
@@ -1701,9 +1701,9 @@ class Model(Macro):
         Stateful objects integrated with the selected variables (total 1):
             _integ_stock1, _delay_fixed_delay1
 
-        >>> model.get_dependencies(
+        >>> print(model.get_dependencies(
         ...     vars=["stock3"],
-        ...     modules=["view_1", "view_2/subview_1"])
+        ...     modules=["view_1", "view_2/subview_1"]))
         Selected variables (total 4):
             var1, var2, stock1, stock3, delay1
         Dependencies for initialization only (total 1):
@@ -1712,95 +1712,46 @@ class Model(Macro):
             _integ_stock1, _integ_stock3, _delay_fixed_delay1
 
         """
-        c_vars, d_vars, s_deps = self._get_dependencies(vars, modules)
-
-        text = utils.print_objects_format(c_vars, "Selected variables")
-
-        if d_vars["initial"]:
-            text += utils.print_objects_format(
-                d_vars["initial"],
-                "\nDependencies for initialization only")
-        if d_vars["step"]:
-            text += utils.print_objects_format(
-                d_vars["step"],
-                "\nDependencies that may change over time")
-        if d_vars["lookup"]:
-            text += utils.print_objects_format(
-                d_vars["lookup"],
-                "\nLookup table dependencies")
-
-        text += utils.print_objects_format(
-            s_deps,
-            "\nStateful objects integrated with the selected variables")
-
-        print(text)
-
-    def _get_dependencies(self, vars=[], modules=[]):
-        """
-        Get the dependencies of a set of variables or modules.
-
-        Parameters
-        ----------
-        vars: set or list of strings (optional)
-            Variables to get the dependencies from.
-            It can be an empty list if the dependencies are computed only
-            using modules. Default is an empty list.
-        modules: set or list of strings (optional)
-            Modules to get the dependencies from.
-            It can be an empty list if the dependencies are computed only
-            using variables. Default is an empty list. Can select a full
-            module or a submodule by passing the path without the .py, e.g.:
-            "view_1/submodule1".
-
-        Returns
-        -------
-        c_vars: set
-            Set of all selected model variables.
-        d_deps: dict of sets
-            Dictionary of dependencies nedded to run vars and modules.
-        s_deps: set
-            Set of stateful objects to update when integrating selected
-            model variables.
-
-        """
-        def check_dep(dependencies, initial=False):
-            for dep in dependencies:
-                if dep in c_vars or dep.startswith("__"):
+        def check_dep(deps_obj, deps, initial=False):
+            for dep in deps:
+                if dep in deps_obj.c_vars or dep.startswith("__"):
                     pass
                 elif dep.startswith("_"):
-                    s_deps.add(dep)
+                    deps_obj.s_deps.add(dep)
                     dep = self._dependencies[dep]
-                    check_dep(dep["initial"], True)
-                    check_dep(dep["step"])
+                    check_dep(deps_obj, dep["initial"], True)
+                    check_dep(deps_obj, dep["step"])
                 else:
-                    if initial and dep not in d_deps["step"]\
-                       and dep not in d_deps["lookup"]:
-                        d_deps["initial"].add(dep)
+                    if initial and dep not in deps_obj.d_deps["step"]\
+                       and dep not in deps_obj.d_deps["lookup"]:
+                        deps_obj.d_deps["initial"].add(dep)
                     else:
-                        if dep in d_deps["initial"]:
-                            d_deps["initial"].remove(dep)
+                        if dep in deps_obj.d_deps["initial"]:
+                            deps_obj.d_deps["initial"].remove(dep)
                         if self.get_args(dep):
-                            d_deps["lookup"].add(dep)
+                            deps_obj.d_deps["lookup"].add(dep)
                         else:
-                            d_deps["step"].add(dep)
+                            deps_obj.d_deps["step"].add(dep)
 
-        d_deps = {"initial": set(), "step": set(), "lookup": set()}
-        s_deps = set()
-        c_vars = {"time", "time_step", "initial_time", "final_time", "saveper"}
+        dependencies = utils.Dependencies(
+            {"time", "time_step", "initial_time", "final_time", "saveper"},
+            {"initial": set(), "step": set(), "lookup": set()},
+            set()
+        )
         for var in vars:
             py_name = utils.get_key_and_value_by_insensitive_key_or_value(
                     var,
                     self._namespace)[1]
-            c_vars.add(py_name)
+            dependencies.c_vars.add(py_name)
         for module in modules:
-            c_vars.update(self.get_vars_in_module(module))
+            dependencies.c_vars.update(self.get_vars_in_module(module))
 
-        for var in c_vars:
+        for var in dependencies.c_vars:
             if var == "time":
                 continue
-            check_dep(self._dependencies[var])
+            check_dep(dependencies, self._dependencies[var])
 
-        return c_vars, d_deps, s_deps
+        return dependencies
 
     def get_vars_in_module(self, module):
         """
