@@ -3,7 +3,7 @@ import pytest
 import xarray as xr
 import pandas as pd
 
-from pysd.py_backend.lookups import Lookups
+from pysd.py_backend.lookups import Lookups, HardcodedLookups
 
 
 @pytest.mark.parametrize(
@@ -103,3 +103,38 @@ class TestLookupsSetValues():
             assert lookups.data == expected
         else:
             assert lookups.data.equals(expected)
+
+
+@pytest.mark.parametrize(
+    "x,y,error_type,error_message",
+    [
+        (  # repeated
+            [1, 2, 2, 3, 4],
+            [10, 20, 20, 30, 40],
+            ValueError,
+            r"my_look\nx dimension has repeated values..."
+        ),
+        (  # diff-len1
+            [1, 2, 3, 4],
+            [10, 20, 20, 30, 40],
+            ValueError,
+            r"my_look\nx and y dimensions have different length..."
+        ),
+        (  # diff-len2
+            [1, 2, 3, 4],
+            [10, 30, 40],
+            ValueError,
+            r"my_look\nx and y dimensions have different length..."
+        ),
+    ],
+    ids=[
+        "repeated", "diff-len1", "diff-len2"
+    ]
+)
+class TestLookupsError():
+
+    def test_hardcoded_lookups_error(self, x, y, error_type, error_message):
+        hl = HardcodedLookups(x, y, {}, None, {}, "my_look")
+
+        with pytest.raises(error_type, match=error_message):
+            hl.initialize()

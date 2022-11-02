@@ -8,6 +8,8 @@ import json
 from datetime import datetime
 from pathlib import Path
 from chardet.universaldetector import UniversalDetector
+from dataclasses import dataclass
+from typing import Dict, Set
 
 import progressbar
 import numpy as np
@@ -410,6 +412,49 @@ def print_objects_format(object_set, text):
         "objs": ", ".join(object_set)
     }
     return text
+
+
+@dataclass
+class Dependencies():
+    """
+    Representation of variables dependencies.
+
+    Parameters
+    ----------
+    c_vars: set
+        Set of all selected model variables.
+    d_deps: dict
+        Dictionary of dependencies needed to run vars and modules.
+    s_deps: set
+        Set of stateful objects to update when integrating selected
+        model variables.
+
+    """
+    c_vars: Set[str]
+    d_deps: Dict[str, set]
+    s_deps: Set[str]
+
+    def __str__(self):
+        text = print_objects_format(self.c_vars, "Selected variables")
+
+        if self.d_deps["initial"]:
+            text += print_objects_format(
+                self.d_deps["initial"],
+                "\nDependencies for initialization only")
+        if self.d_deps["step"]:
+            text += print_objects_format(
+                self.d_deps["step"],
+                "\nDependencies that may change over time")
+        if self.d_deps["lookup"]:
+            text += print_objects_format(
+                self.d_deps["lookup"],
+                "\nLookup table dependencies")
+
+        text += print_objects_format(
+            self.s_deps,
+            "\nStateful objects integrated with the selected variables")
+
+        return text
 
 
 class ProgressBar:

@@ -87,38 +87,38 @@ class TestSubmodel:
                                n_deps, dep_vars):
 
         # get selected vars and dependencies in sets and dictionary
-        out = model._get_dependencies(vars=variables, modules=modules)
-        assert len(out[0]) == n_deps[0]
-        assert len(out[1]["initial"]) == n_deps[1]
-        assert len(out[1]["step"]) == n_deps[2]
-        assert len(out[1]["lookup"]) == n_deps[3]
-        assert len(out[2]) == n_deps[4]
+        out = model.get_dependencies(vars=variables, modules=modules)
+        assert len(out.c_vars) == n_deps[0]
+        assert len(out.d_deps["initial"]) == n_deps[1]
+        assert len(out.d_deps["step"]) == n_deps[2]
+        assert len(out.d_deps["lookup"]) == n_deps[3]
+        assert len(out.s_deps) == n_deps[4]
 
-        assert self.common_vars.issubset(out[0])
+        assert self.common_vars.issubset(out.c_vars)
 
     def test_get_dependencies(self, capsys, model, variables, modules,
                               n_deps, dep_vars):
         # get the dependencies information of the selected variables and
-        # modules by stdout
-        model.get_dependencies(vars=variables, modules=modules)
+        # modules as string
+        deps = model.get_dependencies(vars=variables, modules=modules)
 
-        captured = capsys.readouterr()  # capture stdout
+        print_message = deps.__str__()
 
         for n, message in zip(n_deps, self.messages):
             if n != 0:
                 # check the message with the number of dependencies of
                 # each type
-                assert message + " (total %s):\n" % n in captured.out
+                assert message + " (total %s):\n" % n in print_message
             else:
                 # if not dependencies not message should be printed
-                assert message not in captured.out
+                assert message not in print_message
 
         # assert _integ_stock is in the message as the included stateful object
-        assert "_integ_stock" in captured.out
+        assert "_integ_stock" in print_message
 
         # assert all dependencies of the submodel are in the message
         for var in dep_vars:
-            assert var in captured.out
+            assert var in print_message
 
     def test_select_submodel(self, model, variables, modules,
                              n_deps, dep_vars):

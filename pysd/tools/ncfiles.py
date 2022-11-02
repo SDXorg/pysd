@@ -35,16 +35,16 @@ class NCFile():
 
     def __init__(self,
                  filename: Union[str, Path],
-                 parallel: Optional[bool]=False) -> None:
+                 parallel: Optional[bool] = False) -> None:
 
         self.ncfile = NCFile._validate_nc_path(filename)
         self.parallel = parallel
         self.ds = self.open_nc()
 
     def to_text_file(self,
-                     outfile: Optional[Union[str, Path]]="result.tab",
-                     subset: Optional[list]=None,
-                     time_in_row: Optional[bool]=False,
+                     outfile: Optional[Union[str, Path]] = "result.tab",
+                     subset: Optional[list] = None,
+                     time_in_row: Optional[bool] = False,
                      ) -> pd.DataFrame:
         """
         Convert netCDF file contents into comma separated or tab delimited
@@ -73,7 +73,7 @@ class NCFile():
         return df
 
     def to_df(self,
-              subset: Optional[list]=None,
+              subset: Optional[list] = None,
               ) -> pd.DataFrame:
         """
         Wrapper to ds_to_df static method. Convert xarray.Dataset into a
@@ -110,9 +110,9 @@ class NCFile():
 
     @staticmethod
     def ds_to_df(ds: xr.Dataset,
-                 subset: Optional[list]=None,
-                 parallel: Optional[bool]=False,
-                 index_dim: Optional[str]="time"
+                 subset: Optional[list] = None,
+                 parallel: Optional[bool] = False,
+                 index_dim: Optional[str] = "time"
                  ) -> pd.DataFrame:
         """
         Convert xarray.Dataset into a pandas DataFrame.
@@ -160,7 +160,7 @@ class NCFile():
 
     @staticmethod
     def df_to_text_file(df: pd.DataFrame, outfile: Path,
-                        time_in_row: Optional[bool]=False
+                        time_in_row: Optional[bool] = False
                         ) -> None:
         """
         Store pandas DataFrame into csv or tab file.
@@ -178,8 +178,7 @@ class NCFile():
         -------
         None
         """
-        if isinstance(outfile, str):
-            outfile = Path(outfile)
+        outfile = Path(outfile)
 
         out_fmt = outfile.suffix
 
@@ -226,13 +225,15 @@ class NCFile():
         """
         dims, coords = NCFile._get_da_dims_coords(da, index_dim)
 
-        l = []
+        indexes = []
         # TODO: try to achieve the same as itertools.product with
         # xr.DataArray.stack
         for coords_prod in itertools.product(*coords):
-            l.append(NCFile._index_da_by_coord_labels(da, dims, coords_prod))
+            indexes.append(
+                NCFile._index_da_by_coord_labels(da, dims, coords_prod)
+            )
 
-        return dict(l)
+        return dict(indexes)
 
     @staticmethod
     def da_to_dict_delayed(da: xr.DataArray, index_dim: str) -> dict:
@@ -265,16 +266,17 @@ class NCFile():
         # loading data into memory for faster indexing
         da.load()
 
-        l = []
+        indexes = []
         # TODO: try to achieve the same as itertools.product with
         # xr.DataArray.stack
         for coords_prod in itertools.product(*coords):
             x = delayed(
-                NCFile._index_da_by_coord_labels)(da, dims, coords_prod)
-            l.append(x)
+                NCFile._index_da_by_coord_labels
+            )(da, dims, coords_prod)
+            indexes.append(x)
 
         with ProgressBar():
-            res = compute(*l)
+            res = compute(*indexes)
 
         return dict(res)
 
@@ -305,8 +307,7 @@ class NCFile():
             raise TypeError(f"Invalid file path type: {type(nc_path)}.\n"
                             "Please provide string or pathlib Path")
 
-        if isinstance(nc_path, str):
-            nc_path = Path(nc_path)
+        nc_path = Path(nc_path)
 
         if not nc_path.is_file():
             raise FileNotFoundError(f"{nc_path} could not be found.")
@@ -337,7 +338,7 @@ class NCFile():
                  not all(map(lambda x: isinstance(x, str), subset)):
                 raise TypeError("Subset argument must be a list of strings.")
 
-            new_subset =[]
+            new_subset = []
             for name in subset:
                 if name in ds.data_vars.keys():
                     new_subset.append(name)
@@ -355,8 +356,8 @@ class NCFile():
         return new_subset
 
     @staticmethod
-    def _index_da_by_coord_labels(
-         da: xr.DataArray, dims: list, coords: tuple) -> tuple:
+    def _index_da_by_coord_labels(da: xr.DataArray, dims: list,
+                                  coords: tuple) -> tuple:
         """
         Generates variable names, combining the actual name of the variable
         with the coordinate names between brackets and separated by commas,
@@ -388,9 +389,9 @@ class NCFile():
     @staticmethod
     def _get_da_dims_coords(da: xr.DataArray, exclude_dim: str) -> tuple:
         """
-        Returns the dimension names and coordinate labels in two separate lists.
-        If a dimension name is in the exclude_dims list, the returned dims and
-        coords will not include it.
+        Returns the dimension names and coordinate labels in two
+        separate lists. If a dimension name is in the exclude_dims
+        list, the returned dims and coords will not include it.
 
         Parameters
         ----------

@@ -62,6 +62,7 @@ class TestSerialization():
             (constant_ext, ["constant"], None),
         ],
         ids=["data", "data_exclude", "lookup", "lookup_subranges", "constant"])
+    @pytest.mark.filterwarnings("ignore")
     def test_serialize_externals_different_types(self, model,
                                                  include, exclude):
 
@@ -123,16 +124,17 @@ class TestSerialization():
                 for py_name in varnames_included.keys())
 
     @pytest.mark.parametrize("model_path", [mixed_definitions])
+    @pytest.mark.filterwarnings("ignore")
     def test_serialize_mixed_definitions(self, model):
 
         model_path = Path(model.py_model_file)
         externals_path = model_path.with_suffix(".nc")
 
         varname = "_ext_constant_variable"
-        warn_message = f"No variable depends upon {varname}. This is likely " \
-                       f"due to the fact that {varname} is defined using a " \
-                       "mix of DATA and CONSTANT. Though Vensim allows it, " \
-                       "it is not recommended."
+        warn_message =\
+            f"No variable depends upon '{varname}'. This is likely due to"\
+            f" the fact that '{varname}' is defined using a mix of DATA"\
+            " and CONSTANT. Though Vensim allows it, it is not recommended."
         with pytest.warns(UserWarning, match=warn_message):
             model.serialize_externals(export_path=externals_path,
                                       include_externals="all",
