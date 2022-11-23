@@ -108,13 +108,13 @@ class CallStructure(AbstractSyntax):
 
     Parameters
     ----------
-    function: str or ReferenceStructure
-        The name or the reference of the callable.
+    function: ReferenceStructure
+        The reference of the callable.
     arguments: tuple
         The list of arguments used for calling the function.
 
     """
-    function: Union[str, ReferenceStructure]
+    function: ReferenceStructure
     arguments: tuple
 
     def __str__(self) -> str:  # pragma: no cover
