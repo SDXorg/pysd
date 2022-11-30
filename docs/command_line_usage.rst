@@ -58,7 +58,15 @@ In order to split the Vensim model views in different files, as explained in :do
 
 .. code-block:: text
 
-    python -m pysd --split-views many_views_model.mdl
+    python -m pysd many_views_model.mdl --split-views
+
+The previous code will put each model view in a separate Python module. Additionally, if the names of the views include the concepts of subsubmodules (e.g., ENERGY-transformation.efficiency_improvement), the *--subview-sep* (subview separators) argument may be used to further classify the model equations:
+
+.. code-block:: text
+
+    python -m pysd many_views_and_subviews_model.mdl --split-views --subview-sep - .
+
+Note that the separators must be passed in the order in which they appear in the view name.
 
 
 Outputting various run information

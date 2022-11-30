@@ -12,6 +12,7 @@ import numpy as np
 
 import pysd
 from pysd.tools.benchmarking import load_outputs, assert_frames_close
+from pysd.cli.parser import parser
 
 test_model_ven = "test-models/samples/teacup/teacup.mdl"
 
@@ -253,6 +254,30 @@ class TestPySD():
         assert (modules_dirname / "view_1" / "submodule_1.py").exists()
         assert (modules_dirname / "view_1" / "submodule_2.py").exists()
         assert (modules_dirname / "view_2.py").exists()
+
+    @pytest.mark.parametrize(
+        "model", ["more-tests/split_model/test_split_model_subviews.mdl"]
+    )
+    @pytest.mark.parametrize(
+        "separators,expected",
+        [
+            ([], []),
+            (['--subview-sep', '-'], ["-"]),
+            (['--subview-sep', '-', ","], ["-", ","]),
+            (['--subview-sep', '.', "-"], [".", "-"])
+
+        ])
+    def test_read_vensim_split_model_subviews_hyphen(self, test_copy,
+                                                     separators, expected):
+        """
+        Test that several arguments to the subview-sep option are correctly
+        parsed, and particularly when passing a hyphen.
+        """
+        mdl_path = str(test_copy)
+        args = [mdl_path, '--translate', '--split-views'] + separators
+
+        options = parser.parse_args(args)
+        options.subview_sep = expected
 
     @pytest.mark.parametrize("model", [test_model_ven])
     def test_run_return_timestamps(self, out_csv, out_tab, test_copy):
