@@ -4,7 +4,9 @@ import shutil
 from pathlib import Path
 import numpy as np
 
+
 import pysd
+from pysd.translators.vensim.vensim_file import VensimFile
 
 
 @pytest.fixture(scope="class")
@@ -228,3 +230,76 @@ class TestGetVarsInModuleErrors:
         # assert raises are produced
         with pytest.raises(raise_type, match=error_message):
             model.get_vars_in_module(module)
+
+
+@pytest.mark.parametrize(
+    "views,expected,warns",
+    [
+        ([{"energy": {"energy_sub": {"energy_sub_sub1": {"var1", "var2"}}}},
+          {"energy": {"energy_sub": {"energy_sub_sub2": {"var3", "var4"}}}},
+          {"energy": {"energy_sub": {"var5", "var6"}}}
+          ],
+         {"energy": {"energy_sub": {"energy_sub_sub1": {"var1", "var2"},
+                                    "energy_sub_sub2": {"var3", "var4"},
+                                    "main": {"var5", "var6"}
+                                    }
+                     }
+          },
+         False
+         ),
+        ([{"energy": {"energy_sub": {"var5", "var6"}}},
+          {"energy": {"energy_sub": {"energy_sub_sub1": {"var1", "var2"}}}},
+          {"energy": {"energy_sub": {"energy_sub_sub2": {"var3", "var4"}}}},
+          ],
+         {"energy": {"energy_sub": {"main": {"var5", "var6"},
+                                    "energy_sub_sub1": {"var1", "var2"},
+                                    "energy_sub_sub2": {"var3", "var4"},
+
+                                    }
+                     }
+          },
+         False
+         ),
+        ([{"economy": {"varx", "vary"}},
+          {"energy": {"energy_sub": {"var5", "var6"}}},
+          {"energy": {"energy_sub": {"var7", "var8"}}},
+          {"energy": {"energy_sub": {"energy_sub_sub1": {"var1", "var2"}}}},
+          {"energy": {"energy_sub": {"energy_sub_sub2": {"var3", "var4"}}}},
+          ],
+         {"economy": {"varx", "vary"},
+          "energy": {"energy_sub": {"main": {"var5", "var6", "var7", "var8"},
+                                    "energy_sub_sub1": {"var1", "var2"},
+                                    "energy_sub_sub2": {"var3", "var4"},
+                                    }
+                     }
+          },
+         True
+         ),
+        ([{"energy": {"var1", "var2"}},
+          {"energy": {"energy_sub": {"energy_sub_sub": {"var3", "var4"}}}},
+          {"energy": {"energy_sub": {"var5", "var6"}}}
+          ],
+         {"energy": {"main": {"var1", "var2"},
+                     "energy_sub": {"energy_sub_sub": {"var3", "var4"},
+                                    "main": {"var5", "var6"}
+                                    }
+                     }
+          },
+         False
+         ),
+    ]
+)
+def test_merge_nested_dicts(views, expected, warns):
+
+    original_dict = {}
+    warning_msg = "Two views with same names but different separators where " \
+                  "identified. They will be joined in a single module"
+    if warns:
+        with pytest.warns(UserWarning, match=warning_msg):
+            for view in views:
+                VensimFile._merge_nested_dicts(original_dict, view)
+    else:
+        for view in views:
+            VensimFile._merge_nested_dicts(original_dict, view)
+
+    assert original_dict == expected
