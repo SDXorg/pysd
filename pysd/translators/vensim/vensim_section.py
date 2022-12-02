@@ -14,7 +14,8 @@ from ..structures.abstract_model import\
     AbstractElement, AbstractControlElement, AbstractSection
 
 from . import vensim_utils as vu
-from .vensim_element import Element, SubscriptRange, Component
+from .vensim_element import Element, SubscriptRange, Component,\
+                            Constraint, TestInput
 
 
 class Section():
@@ -66,6 +67,8 @@ class Section():
         self.split = split
         self.views_dict = views_dict
         self.elements = None
+        self.components = None
+        self.subscripts = None
 
     def __str__(self):  # pragma: no cover
         return "\nSection: %s\n" % self.name
@@ -113,7 +116,7 @@ class Section():
             # parse all elements
             self.elements = [element.parse() for element in self.elements]
 
-            # split subscript from other components
+            # split subscripts and reality checks from other components
             self.subscripts = [
                 element for element in self.elements
                 if isinstance(element, SubscriptRange)
@@ -122,11 +125,22 @@ class Section():
                 element for element in self.elements
                 if isinstance(element, Component)
             ]
+            self.constraints = [
+                element for element in self.elements
+                if isinstance(element, Constraint)
+            ]
+            self.test_inputs = [
+                element for element in self.elements
+                if isinstance(element, TestInput)
+            ]
 
             # reorder element list for better printing
-            self.elements = self.subscripts + self.components
+            self.elements = self.subscripts + self.components\
+                + self.constraints + self.test_inputs
 
             [component.parse() for component in self.components]
+            [component.parse() for component in self.constraints]
+            [component.parse() for component in self.test_inputs]
 
     def get_abstract_section(self) -> AbstractSection:
         """
@@ -155,6 +169,12 @@ class Section():
                 for subs_range in self.subscripts
             ],
             elements=self._merge_components(),
+            constraints=[
+                constraint.get_abstract_component()
+                for constraint in self.constraints],
+            test_inputs=[
+                test_input.get_abstract_component()
+                for test_input in self.test_inputs],
             split=self.split,
             views_dict=self.views_dict
         )

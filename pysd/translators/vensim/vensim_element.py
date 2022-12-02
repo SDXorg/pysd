@@ -11,17 +11,24 @@ object will be returned. There are 4 components types:
 Lookup components have their own parser for the RHS of the expression,
 while the other 3 components share the same parser. The final result
 from a parsed component can be exported to an AbstractComponent object
-in order to build a model in other programming languages.
+in order to build a model in other programming languages. Two more
+element-like objects could be defined, which are only used for testing:
+
+- Constraint: constraint for Reality check, defined with ':THE CONDITION:'
+- TestInput: inputs for testing, defined with ':TEST INPUT:'
+
 """
 import re
 from typing import Union, Tuple, List
 import warnings
+
 import parsimonious
 import numpy as np
 
 from ..structures.abstract_model import\
     AbstractData, AbstractLookup, AbstractComponent,\
-    AbstractUnchangeableConstant, AbstractSubscriptRange
+    AbstractUnchangeableConstant, AbstractSubscriptRange,\
+    AbstractConstraint, AbstractTestInput
 
 from . import vensim_utils as vu
 from .vensim_structures import structures, parsing_ops
@@ -206,6 +213,16 @@ class ElementsComponentVisitor(parsimonious.NodeVisitor):
             prefix_start + str(i) for i in range(num_start, num_end + 1)
             ]
 
+    def visit_constraint_definition(self, n, vc):
+        self.component = Constraint(self.name,
+                                    self.subscripts,
+                                    self.expression)
+
+    def visit_test_inputs_definition(self, n, vc):
+        self.component = TestInput(self.name,
+                                   self.subscripts,
+                                   self.expression)
+
     def visit_name(self, n, vc):
         self.name = vc[0].strip()
 
@@ -273,7 +290,47 @@ class SubscriptRange():
         )
 
 
-class Component():
+class GenericComponent():
+    """
+    Class to define common methods for Components, Constraints and TestInputs.
+    """
+    def __init__(self, name: str, subscripts: Tuple[list, list],
+                 expression: str):
+        self.name = name
+        self.subscripts = subscripts
+        self.expression = expression
+        self.lookup = False
+        self.ast = None
+        self._kind = None
+
+    def __str__(self):  # pragma: no cover
+        text = "\n%s definition: %s" % (self._kind, self.name)
+        text += "\nSubscrips: %s" % repr(self.subscripts[0])\
+            if self.subscripts[0] else ""
+        text += "  EXCEPT  %s" % repr(self.subscripts[1])\
+            if self.subscripts[1] else ""
+        text += "\n\t%s" % self._expression
+        return text
+
+    @property
+    def _expression(self):  # pragma: no cover
+        if hasattr(self, "ast"):
+            return str(self.ast).replace("\n", "\n\t")
+        else:
+            return self.expression.replace("\n", "\n\t")
+
+    @property
+    def _verbose(self) -> str:  # pragma: no cover
+        """Get component information."""
+        return self.__str__()
+
+    @property
+    def verbose(self):  # pragma: no cover
+        """Print component information to standard output."""
+        print(self._verbose)
+
+
+class Component(GenericComponent):
     """
     Model component defined by "name = expr" in Vensim.
 
@@ -296,36 +353,7 @@ class Component():
 
     def __init__(self, name: str, subscripts: Tuple[list, list],
                  expression: str):
-        self.name = name
-        self.subscripts = subscripts
-        self.expression = expression
-
-    def __str__(self):  # pragma: no cover
-        text = "\n%s definition: %s" % (self._kind, self.name)
-        text += "\nSubscrips: %s" % repr(self.subscripts[0])\
-            if self.subscripts[0] else ""
-        text += "  EXCEPT  %s" % repr(self.subscripts[1])\
-            if self.subscripts[1] else ""
-        text += "\n\t%s" % self._expression
-        return text
-
-    @property
-    def _expression(self):  # pragma: no cover
-        if hasattr(self, "ast"):
-            return str(self.ast).replace("\n", "\n\t")
-
-        else:
-            return self.expression.replace("\n", "\n\t")
-
-    @property
-    def _verbose(self) -> str:  # pragma: no cover
-        """Get component information."""
-        return self.__str__()
-
-    @property
-    def verbose(self):  # pragma: no cover
-        """Print component information to standard output."""
-        print(self._verbose)
+        super().__init__(name, subscripts, expression)
 
     def parse(self) -> None:
         """
@@ -339,8 +367,6 @@ class Component():
 
         if isinstance(self.ast, structures["get_xls_lookups"]):
             self.lookup = True
-        else:
-            self.lookup = False
 
     def get_abstract_component(self) -> Union[AbstractComponent,
                                               AbstractLookup]:
@@ -525,6 +551,84 @@ class Data(Component):
         """
         return AbstractData(
             subscripts=self.subscripts, ast=self.ast, keyword=self.keyword)
+
+
+class Constraint(GenericComponent):
+    """
+    Constraint definition, defined by :THE CONDITION: in Vensim.
+    """
+
+    def __init__(self, name: str, subscripts: Tuple[list, list],
+                 expression: str):
+        super().__init__(name, subscripts, expression)
+
+    def __str__(self):
+        return "\nConstraint definition:  %s\n\t%s\n\t%s\n" % (
+            self.name,
+            self.subscripts,
+            "%s" % (self.expression)
+            )
+
+    def parse(self):
+        # It doesn't really parse anything, it assigns the matched expression
+        # to the ast attribute
+        warnings.warn("':CONSTRAINT:' detected. The expression content "
+                      "is not parsed and will be ignored.")
+        self.ast = self.expression
+
+    def get_abstract_component(self) -> AbstractConstraint:
+        """
+        Get Abstract Component used for building. This method is
+        automatically called by Sections's get_abstract_section method.
+
+        Returns
+        -------
+        AbstractComponent: AbstractConstraint
+          Abstract Component object that can be used for building
+          the model in another language.
+
+        """
+        return AbstractConstraint(name=self.name, subscripts=self.subscripts,
+                                  expression=self.ast)
+
+
+class TestInput(GenericComponent):
+    """
+    Test Inputs definition, defined by :TEST INPUT: in Vensim.
+    """
+
+    def __init__(self, name: str, subscripts: Tuple[list, list],
+                 expression: str):
+        super().__init__(name, subscripts, expression)
+
+    def __str__(self):
+        return "\nTest Inputs definition:  %s\n\t%s\n\t%s\n" % (
+            self.name,
+            self.subscripts,
+            "%s" % (self.expression)
+            )
+
+    def parse(self):
+        # It doesn't really parse anything, it assigns the matched expression
+        # to the ast attribute
+        warnings.warn("':TEST INPUT:' detected. The expression content "
+                      "is not parsed and will be ignored.")
+        self.ast = self.expression
+
+    def get_abstract_component(self) -> AbstractTestInput:
+        """
+        Get Abstract Component used for building. This method is
+        automatically called by Sections's get_abstract_section method.
+
+        Returns
+        -------
+        AbstractComponent: AbstractTestInput
+          Abstract Component object that can be used for building
+          the model in another language.
+
+        """
+        return AbstractTestInput(name=self.name, subscripts=self.subscripts,
+                                 expression=self.ast)
 
 
 class LookupsVisitor(parsimonious.NodeVisitor):
