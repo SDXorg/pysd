@@ -23,7 +23,7 @@ class TestStructureBuilder:
         return SectionBuilder(
             AbstractSection(
                 "main", Path("here"), "__main__",
-                [], [], tuple(), tuple(), False, None
+                [], [], tuple(), tuple(), [], [], False, None
             ))
 
     @pytest.fixture
