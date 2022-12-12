@@ -562,7 +562,7 @@ class Constraint(GenericComponent):
                  expression: str):
         super().__init__(name, subscripts, expression)
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return "\nConstraint definition:  %s\n\t%s\n\t%s\n" % (
             self.name,
             self.subscripts,
@@ -601,7 +601,7 @@ class TestInput(GenericComponent):
                  expression: str):
         super().__init__(name, subscripts, expression)
 
-    def __str__(self):
+    def __str__(self):  # pragma: no cover
         return "\nTest Inputs definition:  %s\n\t%s\n\t%s\n" % (
             self.name,
             self.subscripts,

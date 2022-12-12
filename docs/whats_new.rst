@@ -1,5 +1,30 @@
 What's New
 ==========
+v3.9.0 (2022/12/15)
+-------------------
+
+New Features
+~~~~~~~~~~~~
+- Parses and ignores reality check functions during translation of Vensim models. (`@rogersamso <https://github.com/rogersamso>`_)
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Documentation
+~~~~~~~~~~~~~
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- The element_object.peg grammar has been modified to be able to parse reality check elements. (`@rogersamso <https://github.com/rogersamso>`_)
+- Constraint and TestInputs classes have been added, which inherit from the also newly created GenericComponent, which include the parse and get_abstract_component methods. (`@rogersamso <https://github.com/rogersamso>`_) and (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- The AbstractSection class now has two extra attributes (constraints and input_tests), which hold the AbstractConstraint and AbstractTestInputs objects. (`@rogersamso <https://github.com/rogersamso>`_)
+
 v3.8.0 (2022/11/03)
 -------------------
 
