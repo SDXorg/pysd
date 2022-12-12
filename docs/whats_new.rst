@@ -21,9 +21,9 @@ Performance
 
 Internal Changes
 ~~~~~~~~~~~~~~~~
-- The element_object.peg grammar has been modified to be able to parse reality check elements. (`@rogersamso <https://github.com/rogersamso>`_)
-- Constraint and TestInputs classes have been added, which inherit from the also newly created GenericComponent, which include the parse and get_abstract_component methods. (`@rogersamso <https://github.com/rogersamso>`_) and (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
-- The AbstractSection class now has two extra attributes (constraints and input_tests), which hold the AbstractConstraint and AbstractTestInputs objects. (`@rogersamso <https://github.com/rogersamso>`_)
+- The `pysd/translators/vensim/parsing_grammars/element_object.peg` grammar has been modified to be able to parse reality check elements. (`@rogersamso <https://github.com/rogersamso>`_)
+- :py:class:`pysd.translators.vensim.vensim_element.Constraint`  and :py:class:`pysd.translators.vensim.vensim_element.TestInputs` classes have been added, which inherit from the also newly created :py:class:`pysd.translators.vensim.vensim_element.GenericComponent`, which include the :py:meth:`parse` and :py:meth:`get_abstract_component` methods. (`@rogersamso <https://github.com/rogersamso>`_ and `@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- The :py:class:`pysd.translators.structures.abstract_model.AbstractSection` class now has two extra attributes (:py:data:`constraints` and :py:data:`input_tests`), which hold the :py:class:`pysd.translators.structures.abstract_model.AbstractConstraint` and :py:class:`pysd.translators.structures.abstract_model.AbstractTestInputs` objects. (`@rogersamso <https://github.com/rogersamso>`_)
 
 v3.8.0 (2022/11/03)
 -------------------
