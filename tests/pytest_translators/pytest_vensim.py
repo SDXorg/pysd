@@ -151,7 +151,9 @@ class TestElements:
 class TestRealityChecks:
 
     @pytest.mark.parametrize(
-        "model_path", ["more-tests/constraints/test_constraints.mdl"]
+        "model_path",
+        ["test-models/tests/reality_checks/test_reality_checks.mdl"
+         ]
     )
     def test_reality_checks(self, model_path, _root):
 
