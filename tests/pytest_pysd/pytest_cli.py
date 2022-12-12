@@ -563,3 +563,71 @@ class TestPySD():
         out = load_outputs(tmp_path / outputs)
         out2 = pysd.read_vensim(test_copy).run()
         assert_frames_close(out, out2)
+
+
+@pytest.mark.parametrize(
+        "model", ["more-tests/split_model/test_split_model_sub_subviews.mdl"]
+    )
+class TestCLI():
+    """To test the CLI, ordering arguments differently"""
+
+    @pytest.mark.parametrize(
+        "cli_args,expected",
+        [(['-I=1.0', '--final-time=101',
+           '--split-views', '--subview-sep', '-', '.'],
+          {"new_values": {"param": {"another var": 2.0},
+                          "initial": {"Stock": -1.1}},
+           "initial_time": 1.0,
+           "final_time": 101,
+           "split_views": True,
+           "subview_sep": ["-", "."]
+           }
+          ),
+         (['--subview-sep', '-', '.', '-I=1.0', '--final-time=101',
+           '--split-views'],
+          {"new_values": {"param": {"another var": 2.0},
+                          "initial": {"Stock": -1.1}},
+           "initial_time": 1.0,
+           "final_time": 101,
+           "split_views": True,
+           "subview_sep": ["-", "."]
+           }
+          )
+         ],
+        ids=["subview_sep_last", "subview_sep_first"]
+        )
+    def test_cli_arguments_parsing(self, test_copy, cli_args, expected):
+
+        mdl_path = str(test_copy)
+
+        positional_args = [mdl_path, 'another var=2', 'Stock:-1.1']
+
+        # putting positional arguments at the begining
+        positionals_first = positional_args + cli_args
+        parsed = parser.parse_args(positionals_first)
+
+        for arg in expected:
+            assert expected[arg] == getattr(parsed, arg)
+
+    @pytest.mark.xfail(
+        reason="Passing positional arguments after nargs argument")
+    @pytest.mark.parametrize(
+        "cli_args,expected",
+        [(['--split-views', '--subview-sep', '-', '.'],
+          {"split_views": True, "subview_sep": ["-", "."]}
+          ),
+         (['another var=2', 'Stock:-1.1'],
+          {"new_values": {"param": {"another var": 2.0},
+                          "initial": {"Stock": -1.1}}}
+          )
+         ]
+    )
+    def test_positional_arguments_after_subview_sep(elf, test_copy, cli_args,
+                                                    expected):
+
+        mdl_path = str(test_copy)
+
+        # putting positional arguments after the subview_sep argument
+        positionals_last = cli_args + [mdl_path]
+
+        parsed = parser.parse_args(positionals_last)

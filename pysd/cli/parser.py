@@ -2,6 +2,7 @@
 cmdline parser
 """
 import os
+import re
 from ast import literal_eval
 import numpy as np
 import pandas as pd
@@ -132,8 +133,8 @@ def split_vars(string):
             var, value = string.split(':')
             type = 'initial'
 
-        if value.strip().isnumeric():
-            # value is float
+        if re.match(r"^[+-]?(\d*\.)?\d+$", value.strip()):
+            # value is a number
             return {var.strip(): (type, float(value))}
 
         # value is series
@@ -275,9 +276,10 @@ trans_arguments.add_argument(
     '--subview-sep', dest='subview_sep',
     action='store', nargs="*", default=[],
     metavar='separator_1 separator_2',
-    help='further division of views split in subviews, by identifying the '
+    help='further division of views into subviews, by identifying the '
          'separator string in the view name, only availabe if --split-views'
-         ' is used')
+         ' is used. Passing positional arguments after this argument will'
+         ' not work')
 
 
 #######################
@@ -307,17 +309,17 @@ parser.add_argument('model_file', metavar='model_file', type=check_model,
 parser.add_argument('new_values',
                     metavar='variable=new_value', type=split_vars,
                     nargs='*', action=SplitVarsAction,
-                    help='redefine the value of variable with new value.'
-                    'variable must be a model component, new_value can be a '
-                    'float or a a list of two list')
+                    help='redefine the value of variable with new value. '
+                    'variable must be a model component, new_value may be a '
+                    'float or a list of two lists')
 
-# The destionation new_values2 will never used as the previous argument
+# The destination new_values2 will never be used as the previous argument
 # is given also with nargs='*'. Nevertheless, the following variable
 # is declared for documentation
 parser.add_argument('new_values2',
                     metavar='variable:initial_value', type=split_vars,
                     nargs='*', action=SplitVarsAction,
-                    help='redefine the initial value of variable.'
+                    help='redefine the initial value of variable. '
                     'variable must be a model stateful element, initial_value'
                     ' must be a float')
 

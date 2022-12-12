@@ -66,7 +66,7 @@ The previous code will put each model view in a separate Python module. Addition
 
     python -m pysd many_views_and_subviews_model.mdl --split-views --subview-sep - .
 
-Note that the separators must be passed in the order in which they appear in the view name.
+Note that passing any positional argument right after the *--subview-sep* argument will raise an error, so it is recommended to pass this argument as the last one.
 
 
 Outputting various run information
@@ -110,7 +110,7 @@ modified using the *-I/--initial_time*, *-F/--final-time*, *-T/--time-step* and 
 
 .. code-block:: text
 
-    python -m pysd -I 2005 --final-time=2010 --time-step=1 Teacup.mdl
+    python -m pysd -I=2005 --final-time=2010 --time-step=1 Teacup.mdl
 
 will set the initial time to 2005, the final time to 2010 and the time step to 1.
 
