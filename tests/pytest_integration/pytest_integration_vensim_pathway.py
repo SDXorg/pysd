@@ -318,6 +318,10 @@ vensim_test = {
         "folder": "partial_range_definitions",
         "file": "test_partial_range_definitions.mdl"
     },
+    "reality_checks": {
+        "folder": "reality_checks",
+        "file": "test_reality_checks.mdl"
+    },
     "reference_capitalization": {
         "folder": "reference_capitalization",
         "file": "test_reference_capitalization.mdl"
