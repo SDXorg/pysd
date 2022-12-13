@@ -185,7 +185,7 @@ parser.add_argument(
 parser.add_argument(
     '-o', '--output-file', dest='output_file',
     type=check_output, metavar='FILE',
-    help='output file to save run outputs (.tab or .csv)')
+    help='output file to save run outputs (.tab, .csv or .nc)')
 
 parser.add_argument(
     '-p', '--progress', dest='progress',
