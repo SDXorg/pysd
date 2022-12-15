@@ -275,7 +275,7 @@ trans_arguments.add_argument(
 trans_arguments.add_argument(
     '--subview-sep', dest='subview_sep',
     action='store', nargs="*", default=[],
-    metavar='separator_1 separator_2',
+    metavar='separator_1 separator_2 ... separator_n',
     help='further division of views into subviews, by identifying the '
          'separator string in the view name, only availabe if --split-views'
          ' is used. Passing positional arguments after this argument will'
