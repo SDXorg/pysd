@@ -1,6 +1,6 @@
 Adding new functions
 ====================
-In this section you may found some helpful examples for adding a new function to the PySD Python builder. Before starting adding any new feature or fuction, please, make sure that no one is working on it. Search if any open issue exists with the feature you want to work on or open a new one if it does not exist. Then, claim that you are working on it.
+In this section you may find some helpful examples for adding a new function to the PySD Python builder. Before starting adding any new feature or function, please, make sure that no one is working on it. Search if any open issue exists with the feature you want to work on or open a new one if it does not exist. Then, claim that you are working on it.
 
 Adding a hardcoded function
 ---------------------------

@@ -430,7 +430,7 @@ class TestAllocateByPriority():
                 0,
                 5,
                 ValueError,
-                r"width=0 is not allowed\. width should be greater than 0\."
+                r"width=0 \n is not allowed\. width must be greater than 0\."
             ),
             (  # negative width
                 xr.DataArray([6, 3, 3], {'dim': ["A", "B", "C"]}),
@@ -438,7 +438,7 @@ class TestAllocateByPriority():
                 -3,
                 7.5,
                 ValueError,
-                r"width=-3 is not allowed\. width should be greater than 0\."
+                r"width=-3 \n is not allowed\. width must be greater than 0\."
             ),
             (  # negative supply
                 xr.DataArray([6, 3, 3], {'dim': ["A", "B", "C"]}),
@@ -446,8 +446,8 @@ class TestAllocateByPriority():
                 3,
                 -7.5,
                 ValueError,
-                r"supply=-7\.5 is not allowed\. "
-                r"supply should be non-negative\."
+                r"supply=-7\.5 \n is not allowed\. "
+                r"supply must not be negative\."
             ),
         ],
     )
