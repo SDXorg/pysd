@@ -130,7 +130,7 @@ class BuildAST:
     def lower_order(self, new_order: int) -> None:
         """
         Lower the order to maintain the correct order in arithmetic
-        operations. If the requestes order is smaller than the current
+        operations. If the requested order is smaller than the current
         order parenthesis will be added to the expression to lower its
         order to 0.
 
@@ -411,7 +411,7 @@ class GameBuilder(StructureBuilder):
 
         """
         # Game calls are ignored as we have no support for a similar
-        # feature, we simpli return the content inside the GAME call
+        # feature, we simply return the content inside the GAME call
         return arguments["expr"]
 
 

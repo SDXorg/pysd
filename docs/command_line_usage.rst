@@ -58,7 +58,15 @@ In order to split the Vensim model views in different files, as explained in :do
 
 .. code-block:: text
 
-    python -m pysd --split-views many_views_model.mdl
+    python -m pysd many_views_model.mdl --split-views
+
+The previous code will put each model view in a separate Python module. Additionally, if the names of the views include the concepts of subsubmodules (e.g., ENERGY-transformation.efficiency_improvement), the *--subview-sep* (subview separators) argument may be used to further classify the model equations:
+
+.. code-block:: text
+
+    python -m pysd many_views_and_subviews_model.mdl --split-views --subview-sep - .
+
+Note that passing any positional argument right after the *--subview-sep* argument will raise an error, so it is recommended to pass this argument as the last one.
 
 
 Outputting various run information
@@ -102,7 +110,7 @@ modified using the *-I/--initial_time*, *-F/--final-time*, *-T/--time-step* and 
 
 .. code-block:: text
 
-    python -m pysd -I 2005 --final-time=2010 --time-step=1 Teacup.mdl
+    python -m pysd -I=2005 --final-time=2010 --time-step=1 Teacup.mdl
 
 will set the initial time to 2005, the final time to 2010 and the time step to 1.
 

@@ -12,6 +12,7 @@ from pysd.translators.xmile.xmile_utils import supported_extensions as\
 
 from .parser import parser
 
+
 def main(args):
     """
     Main function. Reads user arguments, loads the models,

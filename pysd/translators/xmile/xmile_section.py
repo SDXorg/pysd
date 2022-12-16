@@ -250,6 +250,8 @@ class Section():
                 element.get_abstract_element()
                 for element in self.components
             ],
+            constraints=[],
+            test_inputs=[],
             split=self.split,
             views_dict=self.views_dict
         )

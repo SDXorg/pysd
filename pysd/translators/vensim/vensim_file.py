@@ -216,7 +216,7 @@ class VensimFile():
                     nested_dict = {item: nested_dict}
                 # merging the new nested_dict into the views_dict, preserving
                 # repeated keys
-                self._merge_nested_dicts(views_dict, nested_dict)
+                VensimFile._merge_nested_dicts(views_dict, nested_dict)
         else:
             # view names do not have separators or separator characters
             # not provided
@@ -276,16 +276,17 @@ class VensimFile():
             ).lstrip("0123456789")
             for name in args]
 
-    def _merge_nested_dicts(self, original_dict, dict_to_merge):
+    @staticmethod
+    def _merge_nested_dicts(original, to_merge):
         """
         Merge dictionaries recursively, preserving common keys.
 
         Parameters
         ----------
-        original_dict: dict
+        original: dict
             Dictionary onto which the merge is executed.
 
-        dict_to_merge: dict
+        to_merge: dict or set
             Dictionary to be merged to the original_dict.
 
         Returns
@@ -293,12 +294,23 @@ class VensimFile():
         None
 
         """
-        for key, value in dict_to_merge.items():
-            if (key in original_dict and isinstance(original_dict[key], dict)
-                    and isinstance(value, Mapping)):
-                self._merge_nested_dicts(original_dict[key], value)
+        if isinstance(to_merge, Mapping):
+            for key, value in to_merge.items():
+                if key in original:
+                    if isinstance(original[key], set):
+                        # convert it into a dict
+                        original[key] = {"main": original[key]}
+                    VensimFile._merge_nested_dicts(original[key], value)
+                else:
+                    original[key] = value
+        else:  # it's a set
+            if "main" not in original:
+                original["main"] = to_merge
             else:
-                original_dict[key] = value
+                original["main"].update(to_merge)
+                warnings.warn("Two views with same names but different "
+                              "separators where identified. They will be "
+                              "joined in a single module")
 
 
 class FileSectionsVisitor(parsimonious.NodeVisitor):

@@ -33,7 +33,7 @@ While something like :py:data:`1<5 and 5>3`::
 
    LogicStructure(operators=[':AND:'], arguments=(LogicStructure(operators=['<'], arguments=(1, 5)), LogicStructure(operators=['>'], arguments=(5, 3))))
 
-The parenthesis also affects same order operatos, for example :py:data:`1+2-3` is translated to::
+The parenthesis also affects same order operators, for example :py:data:`1+2-3` is translated to::
 
    ArithmeticStructure(operators=['+', '-'], arguments=(1, 2, 3))
 
