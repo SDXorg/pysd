@@ -1854,7 +1854,11 @@ class ReferenceBuilder(StructureBuilder):
             The built object.
 
         """
-        if self.reference not in self.section.namespace.cleanspace:
+
+        if (
+            self.reference not in self.section.namespace.cleanspace
+            and self.reference not in self.section.namespace.namespace
+        ):
             # Manage references to subscripts (subscripts used as variables)
             expression, subscripts =\
                 self.section.subscripts.subscript2num[self.reference]
@@ -1871,7 +1875,13 @@ class ReferenceBuilder(StructureBuilder):
                 subscripts=subscripts,
                 order=0)
 
-        reference = self.section.namespace.cleanspace[self.reference]
+        # Read the reference from the cleanspace or in te namespace if not found
+        if self.reference in self.section.namespace.cleanspace:
+            reference = self.section.namespace.cleanspace[self.reference]
+        elif self.reference in self.section.namespace.namespace:
+            reference = self.section.namespace.namespace[self.reference]
+        else:
+            raise ValueError(f"Reference '{self.reference}' not found")
 
         expression = reference + "()"
 
