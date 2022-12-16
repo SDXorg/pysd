@@ -2,6 +2,7 @@
 cmdline parser
 """
 import os
+import re
 from ast import literal_eval
 import numpy as np
 import pandas as pd
@@ -113,15 +114,6 @@ def split_timestamps(string):
             f'See {docs} for examples.')
 
 
-def split_subview_sep(string):
-    """
-    Splits the subview separators
-    --subview-sep ' - ,.' -> [' - ', '.']
-
-    """
-    return string.split(",")
-
-
 def split_vars(string):
     """
     Splits the arguments from new_values.
@@ -141,8 +133,8 @@ def split_vars(string):
             var, value = string.split(':')
             type = 'initial'
 
-        if value.strip().isnumeric():
-            # value is float
+        if re.match(r"^[+-]?(\d*\.)?\d+$", value.strip()):
+            # value is a number
             return {var.strip(): (type, float(value))}
 
         # value is series
@@ -193,7 +185,7 @@ parser.add_argument(
 parser.add_argument(
     '-o', '--output-file', dest='output_file',
     type=check_output, metavar='FILE',
-    help='output file to save run outputs (.tab or .csv)')
+    help='output file to save run outputs (.tab, .csv or .nc)')
 
 parser.add_argument(
     '-p', '--progress', dest='progress',
@@ -282,11 +274,12 @@ trans_arguments.add_argument(
 
 trans_arguments.add_argument(
     '--subview-sep', dest='subview_sep',
-    action='store', type=split_subview_sep, default=[],
-    metavar='\'STRING1,STRING2,..,STRINGN\'',
-    help='further division of views split in subviews, by identifying the'
+    action='store', nargs="*", default=[],
+    metavar='separator_1 separator_2 ... separator_n',
+    help='further division of views into subviews, by identifying the '
          'separator string in the view name, only availabe if --split-views'
-         ' is used')
+         ' is used. Passing positional arguments after this argument will'
+         ' not work')
 
 
 #######################
@@ -316,17 +309,17 @@ parser.add_argument('model_file', metavar='model_file', type=check_model,
 parser.add_argument('new_values',
                     metavar='variable=new_value', type=split_vars,
                     nargs='*', action=SplitVarsAction,
-                    help='redefine the value of variable with new value.'
-                    'variable must be a model component, new_value can be a '
-                    'float or a a list of two list')
+                    help='redefine the value of variable with new value. '
+                    'variable must be a model component, new_value may be a '
+                    'float or a list of two lists')
 
-# The destionation new_values2 will never used as the previous argument
+# The destination new_values2 will never be used as the previous argument
 # is given also with nargs='*'. Nevertheless, the following variable
 # is declared for documentation
 parser.add_argument('new_values2',
                     metavar='variable:initial_value', type=split_vars,
                     nargs='*', action=SplitVarsAction,
-                    help='redefine the initial value of variable.'
+                    help='redefine the initial value of variable. '
                     'variable must be a model stateful element, initial_value'
                     ' must be a float')
 

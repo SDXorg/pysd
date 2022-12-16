@@ -2,6 +2,8 @@ import pytest
 from pathlib import Path
 from parsimonious import VisitationError
 
+import pysd
+
 from pysd.translators.vensim.vensim_file import VensimFile
 from pysd.translators.vensim.vensim_element import Element
 
@@ -144,3 +146,25 @@ class TestElements:
         # parse the mapping
         out = element.parse()
         assert out.mapping == mapping
+
+
+class TestRealityChecks:
+
+    @pytest.mark.parametrize(
+        "model_path",
+        ["test-models/tests/reality_checks/test_reality_checks.mdl"
+         ]
+    )
+    def test_reality_checks(self, model_path, _root):
+
+        with pytest.warns(UserWarning) as ws:
+            model = pysd.read_vensim(_root.joinpath(model_path),
+                                     initialize=False)
+
+        assert "':CONSTRAINT:' detected" in str(ws[0].message)
+        assert "':CONSTRAINT:' detected" in str(ws[1].message)
+        assert "':TEST INPUT:' detected" in str(ws[2].message)
+
+        assert "no_productivity_no_output" not in model._namespace
+        assert "no_workers_no_output" not in model._namespace
+        assert "productivity_to_zero" not in model._namespace

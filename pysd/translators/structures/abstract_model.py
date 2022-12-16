@@ -313,9 +313,58 @@ class AbstractSubscriptRange:
 
 
 @dataclass
+class AbstractConstraint:
+    """
+    Dataclass for a constraint
+
+    Parameters
+    ----------
+    name: str
+        Name of the constraint variable.
+    subscripts: list or str or dict
+        The subscripts as a list of strings for a regular definition,
+        str for a copy definition and as a dict for a GET XLS/DIRECT
+        definition.
+    expression: str
+        Unparsed constraint expression.
+    """
+
+    name: str
+    subscripts: Union[list, str, dict]
+    expression: str
+
+    def __str__(self) -> str:  # pragma: no cover
+        raise NotImplementedError()
+
+
+@dataclass
+class AbstractTestInput:
+    """
+    Dataclass for a test inputs
+
+    Parameters
+    ----------
+    name: str
+        Name of the test inputs variable.
+    subscripts: list or str or dict
+        The subscripts as a list of strings for a regular definition,
+        str for a copy definition and as a dict for a GET XLS/DIRECT
+        definition.
+    expression: str
+        Unparsed test inputs expression.
+    """
+    name: str
+    subscripts: Union[list, str, dict]
+    expression: str
+
+    def __str__(self) -> str:  # pragma: no cover
+        raise NotImplementedError()
+
+
+@dataclass
 class AbstractSection:
     """
-    Dataclass for an element.
+    Dataclass for a section.
 
     Parameters
     ----------
@@ -336,6 +385,10 @@ class AbstractSection:
         Tuple of AbstractSubscriptRanges that are defined in the section.
     elements: tuple
         Tuple of AbstractElements that are defined in the section.
+    constraints: tuple
+        Tuple of AbstractConstraints that are defined in the section.
+    test_inputs: tuple
+        Tuple of TestInputs that are defined in the section.
     split: bool
         If split is True the created section will split the variables
         depending on the views_dict.
@@ -351,6 +404,8 @@ class AbstractSection:
     returns: List[str]
     subscripts: Tuple[AbstractSubscriptRange]
     elements: Tuple[AbstractElement]
+    constraints: Tuple[AbstractConstraint]
+    test_inputs: Tuple[AbstractTestInput]
     split: bool
     views_dict: Union[dict, None]
 
@@ -390,7 +445,7 @@ class AbstractSection:
 @dataclass
 class AbstractModel:
     """
-    Dataclass for an element.
+    Dataclass for a model.
 
     Parameters
     ----------

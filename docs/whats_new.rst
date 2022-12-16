@@ -1,5 +1,38 @@
 What's New
 ==========
+v3.9.0 (2022/12/15)
+-------------------
+
+New Features
+~~~~~~~~~~~~
+- Parses and ignores reality check functions during translation of Vensim models. (`@rogersamso <https://github.com/rogersamso>`_)
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+- Fix issue with the classification of variables in modules and submodules (:issue:`388`). When a model had a view with 3 sublevels (e.g. energy-transformation.losses) but another view was defined with only two of them (e.g. energy-transformation), the variables in the second view were placed in the main model file. Now, if this happens, the variables in the second view will be placed in a main.py file (i.e. energy/transformation/main.py). (`@rogersamso <https://github.com/rogersamso>`_)
+- Fix bug on the CLI when passing a hyphen as first value to the *--subview-sep* argument (:issue:`388`). (`@rogersamso <https://github.com/rogersamso>`_)
+- Fix bug on the CLI when parsing initial conditions (:issue:`395`). (`@rogersamso <https://github.com/rogersamso>`_)
+
+Documentation
+~~~~~~~~~~~~~
+- The `Splitting Vensim views in different files` section in :doc:`command_line_usage` has been updated to include an example of the usage of the *--subview-sep* CLI argument. (`@rogersamso <https://github.com/rogersamso>`_)
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- The :py:meth:`_merge_nested_dicts` method from the :py:class:`pysd.translators.vensim.vensim_file.VensimFile` class has been made a static method, as it does not need to access any attribute of the instance, and it does facilitate unit testing. (`@rogersamso <https://github.com/rogersamso>`_)
+- The `pysd/translators/vensim/parsing_grammars/element_object.peg` grammar has been modified to be able to parse reality check elements. (`@rogersamso <https://github.com/rogersamso>`_)
+- :py:class:`pysd.translators.vensim.vensim_element.Constraint`  and :py:class:`pysd.translators.vensim.vensim_element.TestInputs` classes have been added, which inherit from the also newly created :py:class:`pysd.translators.vensim.vensim_element.GenericComponent`, which include the :py:meth:`parse` and :py:meth:`get_abstract_component` methods. (`@rogersamso <https://github.com/rogersamso>`_ and `@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- The :py:class:`pysd.translators.structures.abstract_model.AbstractSection` class now has two extra attributes (:py:data:`constraints` and :py:data:`input_tests`), which hold the :py:class:`pysd.translators.structures.abstract_model.AbstractConstraint` and :py:class:`pysd.translators.structures.abstract_model.AbstractTestInputs` objects. (`@rogersamso <https://github.com/rogersamso>`_)
+
 v3.8.0 (2022/11/03)
 -------------------
 

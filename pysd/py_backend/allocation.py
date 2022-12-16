@@ -682,13 +682,11 @@ def allocate_by_priority(request, priority, width, supply):
 
     if np.any(width <= 0):
         raise ValueError(
-            f"width={width} is not allowed. width should be greater than 0."
-        )
+            f"width={width} \n is not allowed. width must be greater than 0.")
 
     if np.any(supply < 0):
         raise ValueError(
-            f"supply={supply} is not allowed. supply should be non-negative."
-        )
+            f"supply={supply} \n is not allowed. supply must not be negative.")
 
     if len(request.shape) == 1:
         # NUMPY: avoid '.values' and return directly the result of the
