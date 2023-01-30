@@ -5,6 +5,7 @@ MAX	"MAX(A, B)"	max	"max(A, B)"	"CallStructure('max', (A, B))"	"numpy.maximum(A,
 SQRT	SQRT(A)	sqrt	sqrt(A)	"CallStructure('sqrt', (A,))"	numpy.sqrt
 EXP	EXP(A)	exp	exp(A)	"CallStructure('exp', (A,))"	numpy.exp(A)
 LN	LN(A)	ln	ln(A)	"CallStructure('ln', (A,))"	numpy.log(A)
+		pi	pi()	"CallStructure('pi', (,))"	numpy.py
 SIN	SIN(A)	sin	sin(A)	"CallStructure('sin', (A,))"	numpy.sin(A)
 COS	COS(A)	cos	cos(A)	"CallStructure('cos', (A,))"	numpy.cos(A)
 TAN	TAN(A)	tan	tan(A)	"CallStructure('tan', (A,))"	numpy.tan(A)
