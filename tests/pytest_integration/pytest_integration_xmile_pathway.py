@@ -143,6 +143,10 @@ xmile_test = {
         "folder": "parentheses",
         "file": "test_parens.xmile"
     },
+    "pi": {
+        "folder": "pi",
+        "file": "test_pi.xmile"
+    },
     "reference_capitalization": {
         "folder": "reference_capitalization",
         "file": "test_reference_capitalization.xmile"
