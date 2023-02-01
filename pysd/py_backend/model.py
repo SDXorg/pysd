@@ -325,6 +325,9 @@ class Macro(DynamicStateful):
             self.components._set_component(
                 element,
                 getattr(self.components, element).function)
+            # remove attributes added with constant cache
+            delattr(getattr(self.components, element), 'function')
+            delattr(getattr(self.components, element), 'value')
         self._constant_funcs.clear()
 
     def _assign_cache_type(self):
@@ -1066,9 +1069,11 @@ class Macro(DynamicStateful):
                               "'{}' with params...".format(key),
                               stacklevel=2)
 
+            # copy attributes from the original object to proper working
+            # of internal functions
             new_function.__name__ = func_name
-            if dims:
-                new_function.dims = dims
+            new_function.__dict__.update(getattr(func, "__dict__", {}))
+            # set the new function
             self.components._set_component(func_name, new_function)
             if func_name in self.cache.cached_funcs:
                 self.cache.cached_funcs.remove(func_name)
