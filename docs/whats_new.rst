@@ -17,6 +17,7 @@ Deprecations
 Bug fixes
 ~~~~~~~~~
 - Set :py:mod:`numpy` <1.24 to avoid errors with least squares equation in :py:func:`pysd.py_backend.allocation.allocate_available`. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Keep the attributes of a component when using :py:meth:`pysd.py_backend.model.Macro.set_components` to avoid losing coords or arguments information. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 Documentation
 ~~~~~~~~~~~~~
