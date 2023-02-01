@@ -271,22 +271,28 @@ class TestPySD():
     @pytest.mark.parametrize("model_path", [test_model])
     def test_set_constant_parameter(self, model):
         """Responds to https://github.com/SDXorg/pysd/issues/5"""
+        attr = model.components.room_temperature.__dict__.copy()
         model.set_components({"room_temperature": 20})
         assert model.components.room_temperature() == 20
+        assert attr == model.components.room_temperature.__dict__
 
         model.run(params={"room_temperature": 70})
         assert model.components.room_temperature() == 70
+        assert attr == model.components.room_temperature.__dict__
 
         with pytest.raises(NameError):
             model.set_components({'not_a_var': 20})
 
     @pytest.mark.parametrize("model_path", [test_model])
     def test_set_constant_parameter_inline(self, model):
+        attr = model.components.room_temperature.__dict__.copy()
         model.components.room_temperature = 20
         assert model.components.room_temperature() == 20
+        assert attr == model.components.room_temperature.__dict__
 
         model.run(params={"room_temperature": 70})
         assert model.components.room_temperature() == 70
+        assert attr == model.components.room_temperature.__dict__
 
         with pytest.raises(NameError):
             model.components.not_a_var = 20
@@ -359,6 +365,7 @@ class TestPySD():
         res = model.run(
             return_columns=["Initial Values"], flatten_output=False)
         assert output.equals(res["Initial Values"].iloc[0])
+        assert model.get_coords("Initial Values") == (coords, dims)
 
     @pytest.mark.parametrize("model_path", [test_model_subs])
     def test_set_subscripted_value_with_partial_xarray(self, model):

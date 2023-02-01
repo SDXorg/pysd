@@ -1,5 +1,36 @@
 What's New
 ==========
+
+v3.9.1 (2023/02/xx)
+-------------------
+
+New Features
+~~~~~~~~~~~~
+- Add :py:const:`numpy.py` as translation for the call to the function `PI()`. (`@lionel42 <https://github.com/lionel42>`_)
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+- Set :py:mod:`numpy` <1.24 to avoid errors with least squares equation in :py:func:`pysd.py_backend.allocation.allocate_available`. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Keep the attributes of a component when using :py:meth:`pysd.py_backend.model.Macro.set_components` to avoid losing coords or arguments information. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Set :py:mod:`openpyxl` <3.1 to avoid errors due to non-backwards compatible changes. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+
+Documentation
+~~~~~~~~~~~~~
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- Run test for Python 3.11 with ubuntu-latest (hdf5-headers need to be installed using apt manager). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+
+
 v3.9.0 (2022/12/15)
 -------------------
 
