@@ -642,6 +642,7 @@ class CallBuilder(StructureBuilder):
                     self.def_subs)[1]
                 expression = f"xr.DataArray({expression}, {subs}, "\
                     f"{list(self.def_subs)})"
+            calls["time"] = 1
 
         elif self.function == "active_initial":
             # Ee need to ensure that active initial outputs are always the
