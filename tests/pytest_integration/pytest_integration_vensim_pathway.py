@@ -522,6 +522,10 @@ vensim_test = {
         "folder": "subset_duplicated_coord",
         "file": "test_subset_duplicated_coord.mdl"
     },
+    "tabbed_arrays": {
+        "folder": "tabbed_arrays",
+        "file": "tabbed_arrays.mdl"
+    },
     "time": {
         "folder": "time",
         "file": "test_time.mdl"

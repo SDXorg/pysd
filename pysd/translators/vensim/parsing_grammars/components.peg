@@ -1,6 +1,6 @@
 # Parsing Expression Grammar: components
 
-expr_type = array / final_expr
+expr_type = tabbed_array_call / array / final_expr
 
 final_expr = logic_expr (_ logic_oper _ logic_expr)*  # logic operators (:and:, :or:)
 logic_expr = not_oper? _ comp_expr  # :not: operator
@@ -13,6 +13,8 @@ expr = lookup_with_def / call / parens / number / reference / nan
 
 lookup_with_def = ~r"(WITH\ LOOKUP)"I _ "(" _ final_expr _ "," _ "(" _  limits?  ( _ "(" _ raw_number _ "," _ raw_number _ ")" _ ","? _ )+ _ ")" _ ")"
 
+tabbed_array_call = "TABBED ARRAY" _ "(" _ array_tabbed _ ")"
+
 nan = ":NA:"
 
 arguments = ((string / final_expr) _ ","? _)*
@@ -24,6 +26,8 @@ reference = (name _ subscript_list) / name  # check first for subscript
 subscript_list = "[" _ (name _ "!"? _ ","? _)+ _ "]"
 
 array = (raw_number _ ("," / ";")? _)+ !~r"."  # negative lookahead for
+
+array_tabbed = ( raw_number _ )+
 
 logic_oper = ~r"(%(logic_ops)s)"IU
 not_oper = ~r"(%(not_ops)s)"IU
