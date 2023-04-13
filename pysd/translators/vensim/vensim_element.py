@@ -777,6 +777,12 @@ class EquationVisitor(parsimonious.NodeVisitor):
         else:
             return self.add_element(eval(n.text))
 
+    def visit_tabbed_array_call(self, n, vc):
+        return self.add_element(np.array(vc[4], dtype=float))
+
+    def visit_array_tabbed(self, n, vc):
+        return n.text.strip().split()
+
     def visit_subscript_list(self, n, vc):
         subs = [x.strip() for x in vc[2].split(",")]
         self.subs = structures["subscripts_ref"](subs)
