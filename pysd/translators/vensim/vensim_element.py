@@ -223,12 +223,6 @@ class ElementsComponentVisitor(parsimonious.NodeVisitor):
                                    self.subscripts,
                                    self.expression)
 
-    def visit_tabbed_array_definition(self, n, vc):
-        self.component = Component(
-            self.name,
-            (self.subscripts, self.subscripts_except_groups),
-            self.expression)
-
     def visit_name(self, n, vc):
         self.name = vc[0].strip()
 
@@ -783,9 +777,11 @@ class EquationVisitor(parsimonious.NodeVisitor):
         else:
             return self.add_element(eval(n.text))
 
-    def visit_tabbed_array(self, n, vc):
-        return self.add_element(np.array(n.text[1:-1].strip().split(" "),
-                                         dtype=float))
+    def visit_tabbed_array_call(self, n, vc):
+        return self.add_element(np.array(vc[4], dtype=float))
+
+    def visit_array_tabbed(self, n, vc):
+        return n.text.strip().split()
 
     def visit_subscript_list(self, n, vc):
         subs = [x.strip() for x in vc[2].split(",")]
