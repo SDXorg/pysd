@@ -1,5 +1,29 @@
 What's New
 ==========
+v3.10.0 (2023/??/??)
+--------------------
+New Features
+~~~~~~~~~~~~
+- Parse TABBED ARRAYS Vensim function (`@rogersamso <https://github.com/rogersamso>`_)
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+
+Documentation
+~~~~~~~~~~~~~
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- Add a weekly scheduled run to all CI workflows, which run each Monday at 06:00 UTC (`@EwoutH <https://github.com/EwoutH>`_)
 
 v3.9.1 (2023/03/11)
 -------------------
