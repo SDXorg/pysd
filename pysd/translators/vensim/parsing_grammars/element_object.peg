@@ -1,6 +1,6 @@
 # Parsing Expression Grammar: element_object
 
-entry = constraint_definition / test_inputs_definition / unchangeable_constant / component /  data_definition / subscript_definition / lookup_definition / subscript_copy
+entry = constraint_definition / test_inputs_definition / unchangeable_constant / component / data_definition / subscript_definition / lookup_definition / subscript_copy
 
 # Regular component definition "="
 component = name _ subscript_component? _ "=" _ expression
@@ -10,6 +10,7 @@ unchangeable_constant = name _ subscript_component? _ "==" _ expression
 
 # Lookup definition "()", uses lookahead assertion to capture whole group
 lookup_definition = name _ subscript_component? &"(" _ expression
+
 
 # Data type definition ":=" or empty with keyword
 data_definition = component_data_definition / empty_data_definition
