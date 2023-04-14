@@ -656,6 +656,10 @@ class CallBuilder(StructureBuilder):
             }
 
             calls = {name: 1}
+
+        elif self.function == "elmcount":
+            final_subscripts = []
+
         else:
             final_subscripts = self.reorder(arguments)
             if self.function == "xidz" and final_subscripts:
