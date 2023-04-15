@@ -14,6 +14,7 @@ Deprecations
 
 Bug fixes
 ~~~~~~~~~
+- Set the final_subscripts to an empty list for ELMCOUNT function in :py:meth:`pysd.builders.python_exressions_builder.CallBuilder.build_function_call` (`@rogersamso <https://github.com/rogersamso>`_)
 
 Documentation
 ~~~~~~~~~~~~~
