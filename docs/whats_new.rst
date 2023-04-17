@@ -14,6 +14,8 @@ Deprecations
 
 Bug fixes
 ~~~~~~~~~
+- Set the final_subscripts to an empty dictionary for ELMCOUNT function in :py:meth:`pysd.builders.python_exressions_builder.CallBuilder.build_function_call` (`@rogersamso <https://github.com/rogersamso>`_)
+- Define comp_subtype of Unchangeable tabbed arrays as Unchangeable. This is done in :py:meth:`pysd.builders.python.python_expressions_builder.ArrayBuilder.build` (`@rogersamso <https://github.com/rogersamso>`_)
 
 Documentation
 ~~~~~~~~~~~~~

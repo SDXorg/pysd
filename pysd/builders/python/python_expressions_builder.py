@@ -656,6 +656,10 @@ class CallBuilder(StructureBuilder):
             }
 
             calls = {name: 1}
+
+        elif self.function == "elmcount":
+            final_subscripts = {}
+
         else:
             final_subscripts = self.reorder(arguments)
             if self.function == "xidz" and final_subscripts:
@@ -1999,7 +2003,7 @@ class ArrayBuilder(StructureBuilder):
             threshold=np.prod(self.value.shape)
         )
         self.component.type = "Constant"
-        self.component.subtype = "Normal"
+        self.component.subtype = self.component.subtype or "Normal"
 
         final_subs, subscripts_out =\
             self.section.subscripts.simplify_subscript_input(
