@@ -87,7 +87,7 @@ class AbstractUnchangeableConstant(AbstractComponent):
     subtype: str = "Unchangeable"
 
     def __str__(self) -> str:  # pragma: no cover
-        return "AbstractLookup %s\n" % (
+        return "AbstractUnchangeableConstant %s\n" % (
             "%s" % repr(list(self.subscripts)) if self.subscripts else "")
 
 
