@@ -360,12 +360,16 @@ class TabData(Data):
                     axis=tuple(range(1, len(coords)+1))
                 )
 
-        else:
-            ds = xr.open_dataset(file_name)
+            return out
 
-            if self.py_name in ds:
-                out = ds[self.py_name]
-            else:
-                return None
+        ds = xr.open_dataset(file_name)
 
-        return out
+        if self.py_name in ds:
+            data = ds[self.py_name]
+
+            if (
+                "time" in data.dims
+                and list(self.coords).sort() == list(data.dims[1:]).sort()
+            ):
+                return data
+        return None

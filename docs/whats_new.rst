@@ -5,6 +5,7 @@ v3.10.0 (2023/??/??)
 New Features
 ~~~~~~~~~~~~
 - Parse TABBED ARRAYS Vensim function (`@rogersamso <https://github.com/rogersamso>`_)
+- Add possibility to pass data_files in netCDF format (`@rogersamso <https://github.com/rogersamso>`_)
 
 Breaking changes
 ~~~~~~~~~~~~~~~~
