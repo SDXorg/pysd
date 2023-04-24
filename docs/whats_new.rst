@@ -5,6 +5,7 @@ v3.10.0 (2023/??/??)
 New Features
 ~~~~~~~~~~~~
 - Parse TABBED ARRAYS Vensim function (`@rogersamso <https://github.com/rogersamso>`_)
+- Add support for Vensim's `POWER <https://www.vensim.com/documentation/fn_power.html>`_ function (`@rogersamso <https://github.com/rogersamso>`_)
 
 Breaking changes
 ~~~~~~~~~~~~~~~~
