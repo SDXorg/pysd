@@ -7,6 +7,7 @@ functionspace = {
     # directly build numpy based functions
     "pi": ("np.pi", ("numpy",)),
     "abs": ("np.abs(%(0)s)", ("numpy",)),
+    "power": ("np.power(%(0)s,%(1)s)", ("numpy",)),
     "min": ("np.minimum(%(0)s, %(1)s)", ("numpy",)),
     "max": ("np.maximum(%(0)s, %(1)s)", ("numpy",)),
     "exp": ("np.exp(%(0)s)", ("numpy",)),
