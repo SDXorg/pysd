@@ -62,10 +62,10 @@ def check_data_file(string):
     """
     Check that data file is a tab or csv file and that exists.
     """
-    if not string.endswith('.tab') and not string.endswith('.csv'):
+    if not string.endswith(('.tab', '.csv', '.nc')):
         parser.error(
             f'when parsing {string}'
-            '\nThe data file name must be .tab or .csv...')
+            '\nThe data file name must be .tab, .csv or .nc...')
     elif not os.path.isfile(string):
         parser.error(
             f'when parsing {string}'

@@ -537,7 +537,7 @@ class TestPySD():
         assert out.returncode != 0
         stderr = out.stderr.decode(encoding_stderr)
         assert "PySD: error: when parsing my_file.txt" in stderr
-        assert "The data file name must be .tab or .csv..." in stderr
+        assert "The data file name must be .tab, .csv or .nc..." in stderr
 
         # not found data file
         command = f"{call} -o {out_tab} -D my_file.tab"\
