@@ -276,7 +276,7 @@ class TabData(Data):
 
         Parameters
         ----------
-        file_names: list or str
+        file_names: list or str or pathlib.Path
             Name of the files to search the variable in.
 
         Returns
@@ -289,7 +289,7 @@ class TabData(Data):
             file_names = [file_names]
 
         for file_name in file_names:
-            self.data = self._load_data(file_name)
+            self.data = self._load_data(Path(file_name))
             if self.data is not None:
                 break
 
@@ -305,7 +305,7 @@ class TabData(Data):
 
         Parameters
         ----------
-        file_name: str
+        file_name: pathlib.Path
             Name of the file to search the variable in.
 
         Returns
@@ -316,10 +316,6 @@ class TabData(Data):
         """
         # TODO inlcude missing values managment as External objects
         # get columns to load variable
-
-        if isinstance(file_name, str):
-            file_name = Path(file_name)
-
         if file_name.suffix in [".csv", ".tab"]:
 
             columns, transpose = Columns.get_columns(
@@ -372,4 +368,3 @@ class TabData(Data):
                 and list(self.coords).sort() == list(data.dims[1:]).sort()
             ):
                 return data
-        return None
