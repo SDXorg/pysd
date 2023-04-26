@@ -318,6 +318,10 @@ vensim_test = {
         "folder": "partial_range_definitions",
         "file": "test_partial_range_definitions.mdl"
     },
+    "power": {
+        "folder": "power",
+        "file": "power.mdl"
+    },
     "reality_checks": {
         "folder": "reality_checks",
         "file": "test_reality_checks.mdl"
