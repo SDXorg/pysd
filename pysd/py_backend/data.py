@@ -21,8 +21,7 @@ class Columns():
         """
         Read the columns from the data file or return the previously read ones
         """
-        if isinstance(file_name, str):
-            file_name = Path(file_name)
+        file_name = Path(file_name)
         if file_name in cls._files:
             return cls._files[file_name]
         else:
