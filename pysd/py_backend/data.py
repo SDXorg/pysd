@@ -361,9 +361,13 @@ class TabData(Data):
 
         if self.py_name in ds:
             data = ds[self.py_name]
+            ds.close()
 
             if (
                 "time" in data.dims
                 and list(self.coords).sort() == list(data.dims[1:]).sort()
             ):
                 return data
+
+        ds.close()
+        return None

@@ -61,6 +61,15 @@ times = np.arange(11)
             )
 
         ),
+        (  # two_files_netcdf
+            ["data1.nc",
+             "all_data.nc"],
+            pd.DataFrame(
+                index=times,
+                data={'var1': -times, "var2": 2*times, "var3": -3*times}
+            )
+
+        ),
         (  # two_files_mix
             ["data3.tab",
              "all_data.nc"],
@@ -87,8 +96,8 @@ times = np.arange(11)
         )
 
     ],
-    ids=["one_file_tab", "one_file_netcdf", "two_files_tab", "two_files_mix",
-         "transposed_file", "dict_file"]
+    ids=["one_file_tab", "one_file_netcdf", "two_files_tab",
+         "two_files_netcdf", "two_files_mix", "transposed_file", "dict_file"]
 )
 class TestPySDData:
 
