@@ -21,8 +21,7 @@ class Columns():
         """
         Read the columns from the data file or return the previously read ones
         """
-        if isinstance(file_name, str):
-            file_name = Path(file_name)
+        file_name = Path(file_name)
         if file_name in cls._files:
             return cls._files[file_name]
         else:
@@ -276,7 +275,7 @@ class TabData(Data):
 
         Parameters
         ----------
-        file_names: list or str
+        file_names: list or str or pathlib.Path
             Name of the files to search the variable in.
 
         Returns
@@ -289,7 +288,7 @@ class TabData(Data):
             file_names = [file_names]
 
         for file_name in file_names:
-            self.data = self._load_data(file_name)
+            self.data = self._load_data(Path(file_name))
             if self.data is not None:
                 break
 
@@ -305,7 +304,7 @@ class TabData(Data):
 
         Parameters
         ----------
-        file_name: str
+        file_name: pathlib.Path
             Name of the file to search the variable in.
 
         Returns
@@ -316,41 +315,59 @@ class TabData(Data):
         """
         # TODO inlcude missing values managment as External objects
         # get columns to load variable
-        columns, transpose = Columns.get_columns(
-            file_name, vars=[self.real_name, self.py_name])
+        if file_name.suffix in [".csv", ".tab"]:
 
-        if not columns:
-            # the variable is not in the passed file
-            return None
+            columns, transpose = Columns.get_columns(
+                file_name, vars=[self.real_name, self.py_name])
 
-        if not self.coords:
-            # 0 dimensional data
-            self.nan = np.nan
+            if not columns:
+                # the variable is not in the passed file
+                return None
+
+            if not self.coords:
+                # 0 dimensional data
+                self.nan = np.nan
+                values = load_outputs(file_name, transpose, columns=columns)
+                return xr.DataArray(
+                    values.iloc[:, 0].values,
+                    {'time': values.index.values},
+                    ['time'])
+
+            # subscripted data
+            dims = list(self.coords)
+
             values = load_outputs(file_name, transpose, columns=columns)
-            return xr.DataArray(
-                values.iloc[:, 0].values,
-                {'time': values.index.values},
-                ['time'])
 
-        # subscripted data
-        dims = list(self.coords)
+            self.nan = xr.DataArray(np.nan, self.coords, dims)
+            out = xr.DataArray(
+                np.nan,
+                {'time': values.index.values, **self.coords},
+                ['time'] + dims)
 
-        values = load_outputs(file_name, transpose, columns=columns)
+            for column in values.columns:
+                coords = {
+                    dim: [coord]
+                    for (dim, coord)
+                    in zip(dims, re.split(r'\[|\]|\s*,\s*', column)[1:-1])
+                }
+                out.loc[coords] = np.expand_dims(
+                    values[column].values,
+                    axis=tuple(range(1, len(coords)+1))
+                )
 
-        self.nan = xr.DataArray(np.nan, self.coords, dims)
-        out = xr.DataArray(
-            np.nan,
-            {'time': values.index.values, **self.coords},
-            ['time'] + dims)
+            return out
 
-        for column in values.columns:
-            coords = {
-                dim: [coord]
-                for (dim, coord)
-                in zip(dims, re.split(r'\[|\]|\s*,\s*', column)[1:-1])
-            }
-            out.loc[coords] = np.expand_dims(
-                values[column].values,
-                axis=tuple(range(1, len(coords)+1))
-            )
-        return out
+        ds = xr.open_dataset(file_name)
+
+        if self.py_name in ds:
+            data = ds[self.py_name]
+            ds.close()
+
+            if (
+                "time" in data.dims
+                and list(self.coords).sort() == list(data.dims[1:]).sort()
+            ):
+                return data
+
+        ds.close()
+        return None

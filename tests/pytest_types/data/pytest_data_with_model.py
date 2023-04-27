@@ -38,14 +38,21 @@ times = np.arange(11)
 @pytest.mark.parametrize(
     "data_files_short,expected",
     [
-        (  # one_file
+        (  # one_file_tab
             "data1.tab",
             pd.DataFrame(
                 index=times,
                 data={'var1': times, "var2": 2*times, "var3": 3*times}
             )
         ),
-        (  # two_files
+        (  # one_file_netcdf
+            "all_data.nc",
+            pd.DataFrame(
+                index=times,
+                data={'var1': times, "var2": 2*times, "var3": 3*times}
+            )
+        ),
+        (  # two_files_tab
             ["data3.tab",
              "data1.tab"],
             pd.DataFrame(
@@ -53,6 +60,23 @@ times = np.arange(11)
                 data={'var1': -times, "var2": -2*times, "var3": 3*times}
             )
 
+        ),
+        (  # two_files_netcdf
+            ["data1.nc",
+             "all_data.nc"],
+            pd.DataFrame(
+                index=times,
+                data={'var1': -times, "var2": 2*times, "var3": -3*times}
+            )
+
+        ),
+        (  # two_files_mix
+            ["data3.tab",
+             "all_data.nc"],
+            pd.DataFrame(
+                index=times,
+                data={'var1': -times, "var2": -2*times, "var3": 3*times}
+            )
         ),
         (  # transposed_file
             ["data2.tab"],
@@ -72,7 +96,8 @@ times = np.arange(11)
         )
 
     ],
-    ids=["one_file", "two_files", "transposed_file", "dict_file"]
+    ids=["one_file_tab", "one_file_netcdf", "two_files_tab",
+         "two_files_netcdf", "two_files_mix", "transposed_file", "dict_file"]
 )
 class TestPySDData:
 

@@ -322,7 +322,7 @@ def load_outputs(file_name, transpose=False, columns=None, encoding=None):
 
     Parameters
     ----------
-    file_name: str
+    file_name: str or pathlib.Path
         Output file to read. Must be csv or tab.
 
     transpose: bool (optional)
@@ -348,8 +348,7 @@ def load_outputs(file_name, transpose=False, columns=None, encoding=None):
     """
     read_func = {'.csv': pd.read_csv, '.tab': pd.read_table}
 
-    if isinstance(file_name, str):
-        file_name = Path(file_name)
+    file_name = Path(file_name)
 
     if columns:
         columns = set(columns)
