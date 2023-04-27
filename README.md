@@ -60,3 +60,5 @@ PySD is currently a community-maintained project, any contribution is welcome.
 Many people have contributed to developing this project - by [submitting code](https://github.com/SDXorg/pysd/graphs/contributors), bug reports, and advice. Main historic changes in PySD are described in the [About PySD section](https://pysd.readthedocs.io/en/latest/about.html). The [Developer Documentation](https://pysd.readthedocs.io/en/latest/development/development_index.html) could help new developers.
 
 The code for this package is available at: https://github.com/SDXorg/pysd
+
+Join our slack channel in [sd-tools-and-methodology-community](https://slofile.com/slack/sdtoolsandmet-slj3251).
