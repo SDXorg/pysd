@@ -92,6 +92,8 @@ If you find any bug, or are interested in a particular feature, see :doc:`report
 
 If you are interested in contributing to the development of PySD, see the :doc:`developer documentation <../development/development_index>` listed above.
 
+Join our slack channel in `sd-tools-and-methodology-community <https://slofile.com/slack/sdtoolsandmet-slj3251>_`.
+
 Citing
 ^^^^^^
 If you use PySD in any published work, consider citing the `PySD Paper (2022) <https://doi.org/10.21105/joss.04329>`_:
@@ -147,7 +149,7 @@ You can also cite the library using the `DOI provided by Zenodo <https://doi.org
 
 Support
 ^^^^^^^
-For additional help or consulting, contact james.p.houghton@gmail.com or eneko.martin.martinez@gmail.com.
+For additional help or consulting, join our slack channel in `sd-tools-and-methodology-community <https://slofile.com/slack/sdtoolsandmet-slj3251>`_.
 
 
 .. toctree::

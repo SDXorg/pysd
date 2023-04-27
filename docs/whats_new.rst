@@ -4,9 +4,9 @@ v3.10.0 (2023/??/??)
 --------------------
 New Features
 ~~~~~~~~~~~~
-- Parse TABBED ARRAYS Vensim function (`@rogersamso <https://github.com/rogersamso>`_)
-- Add support for Vensim's `POWER <https://www.vensim.com/documentation/fn_power.html>`_ function (`@rogersamso <https://github.com/rogersamso>`_)
-- Add possibility to pass data_files in netCDF format (`@rogersamso <https://github.com/rogersamso>`_)
+- Parse TABBED ARRAYS Vensim function. (`@rogersamso <https://github.com/rogersamso>`_)
+- Add support for Vensim's `POWER <https://www.vensim.com/documentation/fn_power.html>`_ function. (`@rogersamso <https://github.com/rogersamso>`_)
+- Add possibility to pass data_files in netCDF format. (`@rogersamso <https://github.com/rogersamso>`_)
 
 Breaking changes
 ~~~~~~~~~~~~~~~~
@@ -16,18 +16,20 @@ Deprecations
 
 Bug fixes
 ~~~~~~~~~
-- Set the final_subscripts to an empty dictionary for ELMCOUNT function in :py:meth:`pysd.builders.python_exressions_builder.CallBuilder.build_function_call` (`@rogersamso <https://github.com/rogersamso>`_)
-- Define comp_subtype of Unchangeable tabbed arrays as Unchangeable. This is done in :py:meth:`pysd.builders.python.python_expressions_builder.ArrayBuilder.build` (`@rogersamso <https://github.com/rogersamso>`_)
+- Set the final_subscripts to an empty dictionary for ELMCOUNT function in :py:meth:`pysd.builders.python_exressions_builder.CallBuilder.build_function_call`. (`@rogersamso <https://github.com/rogersamso>`_)
+- Define comp_subtype of Unchangeable tabbed arrays as Unchangeable. This is done in :py:meth:`pysd.builders.python.python_expressions_builder.ArrayBuilder.build`. (`@rogersamso <https://github.com/rogersamso>`_)
 
 Documentation
 ~~~~~~~~~~~~~
+- Add information about slack channel https://slofile.com/slack/sdtoolsandmet-slj3251. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 Performance
 ~~~~~~~~~~~
 
 Internal Changes
 ~~~~~~~~~~~~~~~~
-- Add a weekly scheduled run to all CI workflows, which run each Monday at 06:00 UTC (`@EwoutH <https://github.com/EwoutH>`_)
+- Add a weekly scheduled run to all CI workflows, which run each Monday at 06:00 UTC. (`@EwoutH <https://github.com/EwoutH>`_)
+- Fix CI pipeline for Python 3.11 and remove Python 3.10 pipeline in favour of 3.11. (`@kinow <https://github.com/kinow>`_)
 
 v3.9.1 (2023/03/11)
 -------------------
