@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: ['3.7', '3.10']
+        python-version: ['3.7', '3.10', '3.11']
 
     steps:
       - uses: actions/checkout@v3
@@ -27,8 +27,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          pip install -r tests/requirements.txt
-          pip install -e .
+          pip install -U pip
+          pip install -U wheel
+          pip install --prefer-binary -r tests/requirements.txt
+          pip install --prefer-binary -e .
       - name: Test and coverage
         run: pytest tests/ --cov=pysd -n 2
       - name: Coveralls
