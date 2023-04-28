@@ -37,7 +37,7 @@ Xmile element
 ^^^^^^^^^^^^^
 
 .. automodule:: pysd.translators.xmile.xmile_element
-   :members: SubscriptRange, Element, Flaux, Gf, Stock
+   :members: SubscriptRange, Element, Aux, Flow, Gf, Stock
    :undoc-members:
 
 
@@ -79,7 +79,7 @@ Not all the Xmile functions are included yet. The list of supported functions is
 
 Stocks
 ^^^^^^
-Stocks are supported with any number of inflows and outflows. Stocks are translated to the AST as `IntegStructure(flows, initial_value)`.
+Stocks are supported with any number of inflows and outflows. Stocks are translated to the AST as `IntegStructure(flows, initial_value, non_negative)`. Non-negative flag is parsed for both stocks and flows, this can be set element by element or using the `behavior section <http://docs.oasis-open.org/xmile/xmile/v1.0/errata01/csprd01/xmile-v1.0-errata01-csprd01-complete.html#_Toc442104128>`_. Flows with non-negative flags are read as flows with a maximum condition, while for stocks this information is saved in the :py:class:`pysd.translators.structures.abstract_expressions.IntegStructure` object.
 
 Subscripts
 ^^^^^^^^^^

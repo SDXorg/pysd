@@ -131,9 +131,37 @@ xmile_test = {
         "folder": "macro_stock",
         "file": "test_macro_stock.xmile"
     },  marks=pytest.mark.xfail(reason="failing originally")),
+    "min_max_1arg": {
+        "folder": "min_max_1arg",
+        "file": "test_min_max_1arg.xmile"
+    },
     "model_doc": {
         "folder": "model_doc",
         "file": "model_doc.xmile"
+    },
+    "non_negative_all1": {
+        "folder": "non_negative_all",
+        "file": "test_non_negative_all1.xmile"
+    },
+    "non_negative_all2": {
+        "folder": "non_negative_all",
+        "file": "test_non_negative_all2.xmile"
+    },
+    "non_negative_flows": {
+        "folder": "non_negative_flows",
+        "file": "test_non_negative_flows.xmile"
+    },
+    "non_negative_flows_behavior": {
+        "folder": "non_negative_flows",
+        "file": "test_non_negative_flows_behavior.xmile"
+    },
+    "non_negative_stocks": {
+        "folder": "non_negative_stocks",
+        "file": "test_non_negative_stocks.xmile"
+    },
+    "non_negative_stocks_behavior": {
+        "folder": "non_negative_stocks",
+        "file": "test_non_negative_stocks_behavior.xmile"
     },
     "number_handling": {
         "folder": "number_handling",

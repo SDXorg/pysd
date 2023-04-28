@@ -10,7 +10,7 @@ from pathlib import Path
 
 from ..structures.abstract_model import AbstractSection
 
-from .xmile_element import ControlElement, SubscriptRange, Flaux, Gf, Stock
+from .xmile_element import ControlElement, SubscriptRange, Aux, Flow, Gf, Stock
 
 
 class Section():
@@ -69,6 +69,7 @@ class Section():
         self.split = split
         self.views_dict = views_dict
         self.elements = None
+        self.behaviors = {}
 
     def __str__(self):  # pragma: no cover
         return "\nSection: %s\n" % self.name
@@ -113,11 +114,40 @@ class Section():
             # parse control variables
             self.components += self._parse_control_vars()
 
+        # Parse behavior section
+        self.behaviors.update(self._parse_behavior())
+
         if parse_all:
-            [component.parse() for component in self.components]
+            [component.parse(self.behaviors) for component in self.components]
 
         # define elements for printting information
         self.elements = self.subscripts + self.components
+
+    def _parse_behavior(self) -> List[SubscriptRange]:
+        """Parse the behavior the section."""
+        behaviors = {
+            'non_negative_stock': False,
+            'non_negative_flow': False
+        }
+        parsed_bhs = self.content.xpath("ns:behavior", namespaces=self.ns)
+        if not parsed_bhs:
+            return behaviors
+
+        if parsed_bhs[0].xpath('ns:non_negative', namespaces=self.ns):
+            behaviors['non_negative_stock'] = True
+            behaviors['non_negative_flow'] = True
+            return behaviors
+
+        bhs_stock = parsed_bhs[0].xpath('ns:stock', namespaces=self.ns)
+        bhs_flow = parsed_bhs[0].xpath('ns:flow', namespaces=self.ns)
+
+        if bhs_stock and bhs_stock[0].xpath('ns:non_negative', namespaces=self.ns):
+            behaviors['non_negative_stock'] = True
+
+        if bhs_flow and bhs_flow[0].xpath('ns:non_negative', namespaces=self.ns):
+            behaviors['non_negative_flow'] = True
+
+        return behaviors
 
     def _parse_subscripts(self) -> List[SubscriptRange]:
         """Parse the subscripts of the section."""
@@ -136,19 +166,29 @@ class Section():
             subr.name: subr.definition for subr in subscripts}
         return subscripts
 
-    def _parse_components(self) -> List[Union[Flaux, Gf, Stock]]:
+    def _parse_components(self) -> List[Union[Flow, Aux, Gf, Stock]]:
         """
-        Parse model components. Three groups defined:
-        Flaux: flows and auxiliary variables
+        Parse model components. Four groups defined:
+        Aux: auxiliary variables
+        Flow: flows
         Gf: lookups
         Stock: integs
 
         """
-        # Add flows and auxiliary variables
+        # Add auxiliary variables
         components = [
-            Flaux(node, self.ns, self.subscripts_dict)
+            Aux(node, self.ns, self.subscripts_dict)
             for node in self.content.xpath(
-                "ns:model/ns:variables/ns:aux|ns:model/ns:variables/ns:flow",
+                "ns:model/ns:variables/ns:aux",
+                namespaces=self.ns)
+            if node.attrib["name"].lower().replace(" ", "_")
+            not in self._control_vars]
+
+        # Add flows
+        components += [
+            Flow(node, self.ns, self.subscripts_dict)
+            for node in self.content.xpath(
+                "ns:model/ns:variables/ns:flow",
                 namespaces=self.ns)
             if node.attrib["name"].lower().replace(" ", "_")
             not in self._control_vars]

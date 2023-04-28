@@ -65,6 +65,18 @@ structures = {
             ae.ReferenceStructure("Xpulse_train"), (start, interval, magnitude)
             )
     },
+    "max": {
+        1: lambda x: ae.CallStructure(
+            ae.ReferenceStructure("vmax_xmile"), (x,)),
+        2: lambda x, y: ae.CallStructure(
+            ae.ReferenceStructure("max"), (x, y))
+    },
+    "min": {
+        1: lambda x: ae.CallStructure(
+            ae.ReferenceStructure("vmin_xmile"), (x,)),
+        2: lambda x, y: ae.CallStructure(
+            ae.ReferenceStructure("min"), (x, y))
+    },
     "negative": lambda x: ae.ArithmeticStructure(["negative"], (x,)),
     "int": lambda x: ae.CallStructure(
             ae.ReferenceStructure("integer"), (x,))
