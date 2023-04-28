@@ -1,12 +1,14 @@
 What's New
 ==========
-v3.10.0 (2023/??/??)
+v3.10.0 (2023/04/28)
 --------------------
 New Features
 ~~~~~~~~~~~~
 - Parse TABBED ARRAYS Vensim function. (`@rogersamso <https://github.com/rogersamso>`_)
 - Add support for Vensim's `POWER <https://www.vensim.com/documentation/fn_power.html>`_ function. (`@rogersamso <https://github.com/rogersamso>`_)
 - Add possibility to pass data_files in netCDF format. (`@rogersamso <https://github.com/rogersamso>`_)
+- Add support for XMILE's non-negative flows and stocks. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Add support for XMILE's MIN and MAX functions with one argument. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 Breaking changes
 ~~~~~~~~~~~~~~~~
@@ -22,6 +24,7 @@ Bug fixes
 Documentation
 ~~~~~~~~~~~~~
 - Add information about slack channel https://slofile.com/slack/sdtoolsandmet-slj3251. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Update XMILE stocks section. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 Performance
 ~~~~~~~~~~~
@@ -30,6 +33,7 @@ Internal Changes
 ~~~~~~~~~~~~~~~~
 - Add a weekly scheduled run to all CI workflows, which run each Monday at 06:00 UTC. (`@EwoutH <https://github.com/EwoutH>`_)
 - Fix CI pipeline for Python 3.11 and remove Python 3.10 pipeline in favour of 3.11. (`@kinow <https://github.com/kinow>`_)
+- Add non_negative argument in :py:class:`pysd.translators.structures.abstract_expressions.IntegStructure`. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 v3.9.1 (2023/03/11)
 -------------------

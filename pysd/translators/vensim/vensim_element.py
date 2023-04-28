@@ -1,7 +1,7 @@
 """
 The Element class allows parsing the LHS of a model equation.
 Depending on the LHS value, either a SubscriptRange object or a Component
-object will be returned. There are 4 components types:
+object will be returned. There are four components types:
 
 - Component: Regular component, defined with '='.
 - UnchangeableConstant: Unchangeable constant, defined with '=='.

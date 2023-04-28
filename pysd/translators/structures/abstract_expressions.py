@@ -9,7 +9,7 @@ because it has to appear after the '=' sign in Vensim and not be followed by
 anything else.
 """
 from dataclasses import dataclass
-from typing import Union
+from typing import Union, Optional
 
 
 class AbstractSyntax:
@@ -230,10 +230,13 @@ class IntegStructure(AbstractSyntax):
         The flow of the stock.
     initial: AST
         The initial value of the stock.
+    non_negative: bool (optional)
+        If True the stock cannot be negative. Default is False.
 
     """
     flow: Union[AbstractSyntax, float]
     initial: Union[AbstractSyntax, float]
+    non_negative: Optional[bool] = False
 
     def __str__(self) -> str:  # pragma: no cover
         return "IntegStructure:\n\t%s,\n\t%s" % (

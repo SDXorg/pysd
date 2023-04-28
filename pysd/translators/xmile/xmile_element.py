@@ -1,13 +1,13 @@
 """
 The Element class child classes alow parsing the expressions of a
-given model element. There are 3 tipes of elements:
+given model element. There are four tipes of elements:
 
-- Flows and auxiliars (Flaux class): Regular elements, defined with
-  <flow> or <aux>.
+- Auxiliars (Aux class): Auxiliary elements, defined with <aux>.
+- Flows (Flow class): Flow elements, defined with <flow>.
 - Gfs (Gf class): Lookup elements, defined with <gf>.
 - Stocks (Stock class): Data component, defined with <stock>
 
-Moreover, a 4 type element is defined ControlElement, which allows parsing
+Moreover, a fith type element is defined ControlElement, which allows parsing
 the values of the model control variables (time step, initialtime, final time).
 
 The final result from a parsed element can be exported to an
@@ -23,7 +23,8 @@ from ..structures.abstract_model import\
     AbstractElement, AbstractControlElement,\
     AbstractLookup, AbstractComponent, AbstractSubscriptRange
 
-from ..structures.abstract_expressions import AbstractSyntax
+from ..structures.abstract_expressions import\
+    AbstractSyntax, CallStructure, ReferenceStructure
 
 from . import xmile_utils as vu
 from .xmile_structures import structures, parsing_ops
@@ -32,7 +33,7 @@ from .xmile_structures import structures, parsing_ops
 class Element():
     """
     Element class. This class provides the shared methods for its
-    children: Flaux, Gf, Stock, and ControlElement.
+    children: Aux, Flow, Gf, Stock, and ControlElement.
 
     Parameters
     ----------
@@ -115,6 +116,15 @@ class Element():
         )
         return tuple(float(x) if x is not None else x for x in lims)
 
+    def _get_non_negative(self, behavior):
+        non_negative = behavior or bool(
+            self.node.xpath('ns:non_negative', namespaces=self.ns)
+        )
+        boolean = self._get_xpath_text(self.node, 'ns:non_negative')
+        if boolean is not None:
+            non_negative = 'false' not in boolean.lower()
+        return non_negative
+
     def _parse_lookup_xml_node(self, node: etree._Element) -> AbstractSyntax:
         """
         Parse lookup definition
@@ -153,14 +163,28 @@ class Element():
             type=self._interp_methods[interp]
         )
 
-    def parse(self) -> None:
-        """Parse all the components of an element"""
+    def parse(self, behaviors: dict) -> None:
+        """
+        Parse all the components of an element
+
+        Parameters
+        ----------
+        behaviors: dict
+            Dictionary with keys 'non_negative_flow' and 'non_negative_stock'
+            and boolean values defining the global behavior for the
+            stocks and flows.
+
+        Returns
+        -------
+        None
+
+        """
         if self.node.xpath("ns:element", namespaces=self.ns):
             # defined in several equations each with one subscript
             for subnode in self.node.xpath("ns:element", namespaces=self.ns):
                 self.components.append(
                     ((subnode.attrib["subscript"].split(","), []),
-                     self._parse_component(subnode)[0])
+                     self._parse_component(subnode, behaviors)[0])
                 )
         else:
             # get the subscripts from element
@@ -169,7 +193,7 @@ class Element():
                 for subnode
                 in self.node.xpath("ns:dimensions/ns:dim", namespaces=self.ns)
             ]
-            parsed = self._parse_component(self.node)
+            parsed = self._parse_component(self.node, behaviors)
             if len(parsed) == 1:
                 # element defined with one equation
                 self.components = [((subscripts, []),  parsed[0])]
@@ -212,9 +236,9 @@ class Element():
             components=[])
 
 
-class Flaux(Element):
+class Aux(Element):
     """
-    Flow or auxiliary variable definde by <flow> or <aux> in Xmile.
+    Auxiliary variable defined by <aux> in Xmile.
 
     Parameters
     ----------
@@ -229,15 +253,16 @@ class Flaux(Element):
         some subscripted elements.
 
     """
-    _kind = "Flaux"
+    _kind = "Flow"
 
     def __init__(self, node, ns, subscripts):
         super().__init__(node, ns, subscripts)
         self.limits = self._get_limits()
 
-    def _parse_component(self, node: etree._Element) -> List[AbstractSyntax]:
+    def _parse_component(self, node: etree._Element,
+                         behaviors: dict) -> List[AbstractSyntax]:
         """
-        Parse one Flaux component
+        Parse one Aux component
 
         Returns
         -------
@@ -282,9 +307,54 @@ class Flaux(Element):
         return ae
 
 
+class Flow(Aux):
+    """
+    Flow defined by <flow> in Xmile.
+
+    Parameters
+    ----------
+    node: etree._Element
+        The element node content.
+
+    ns: dict
+        The namespace of the section.
+
+    subscripts: dict
+        The subscript dictionary of the section, necessary to parse
+        some subscripted elements.
+
+    """
+    _kind = "Flow"
+
+    def __init__(self, node, ns, subscripts):
+        super().__init__(node, ns, subscripts)
+
+    def _parse_component(self, node: etree._Element,
+                         behaviors: dict) -> List[AbstractSyntax]:
+        """
+        Parse one Flow component
+
+        Returns
+        -------
+        AST: AbstractSyntax
+
+        """
+        asts = super()._parse_component(node, behaviors)
+        if self._get_non_negative(behaviors['non_negative_flow']):
+            # non_negative flows
+            asts = [
+                CallStructure(
+                    ReferenceStructure("max"), (ast, 0)
+                )
+                for ast in asts
+            ]
+
+        return asts
+
+
 class Gf(Element):
     """
-    Gf variable (lookup) definde by <gf> in Xmile.
+    Gf variable (lookup) defined by <gf> in Xmile.
 
     Parameters
     ----------
@@ -313,7 +383,8 @@ class Gf(Element):
         )
         return tuple(float(x) if x is not None else x for x in lims)
 
-    def _parse_component(self, node: etree._Element) -> AbstractSyntax:
+    def _parse_component(self, node: etree._Element,
+                         behaviors: dict) -> AbstractSyntax:
         """
         Parse one Gf component
 
@@ -348,7 +419,7 @@ class Gf(Element):
 
 class Stock(Element):
     """
-    Stock variable definde by <stock> in Xmile.
+    Stock variable defined by <stock> in Xmile.
 
     Parameters
     ----------
@@ -370,7 +441,7 @@ class Stock(Element):
         super().__init__(node, ns, subscripts)
         self.limits = self._get_limits()
 
-    def _parse_component(self, node) -> AbstractSyntax:
+    def _parse_component(self, node, behaviors: dict) -> AbstractSyntax:
         """
         Parse one Stock component
 
@@ -409,7 +480,10 @@ class Stock(Element):
         # Read the initial value equation for stock element
         initial = self._smile_parser(self._get_xpath_text(self.node, 'ns:eqn'))
 
-        return [structures["stock"](flows, initial)]
+        # Get non-negative information
+        non_negative = self._get_non_negative(behaviors['non_negative_stock'])
+
+        return [structures["stock"](flows, initial, non_negative)]
 
     def get_abstract_element(self) -> AbstractElement:
         """
@@ -444,13 +518,20 @@ class ControlElement(Element):
         self.limits = (None, None)
         self.eqn = eqn
 
-    def parse(self) -> None:
+    def parse(self, behaviors: dict) -> None:
         """
         Parse control elment.
 
+        Parameters
+        ----------
+        behaviors: dict
+            Dictionary with keys 'non_negative_flow' and 'non_negative_stock'
+            and boolean values defining the global behavior for the
+            stocks and flows.
+
         Returns
         -------
-        AST: AbstractSyntax
+        None
 
         """
         self.ast = self._smile_parser(self.eqn)

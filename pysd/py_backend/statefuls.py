@@ -98,6 +98,32 @@ class Integ(DynamicStateful):
         return {'state': self.state, 'shape_info': self.shape_info}
 
 
+class NonNegativeInteg(Integ):
+    """
+    Implements non negative INTEG function.
+
+    Parameters
+    ----------
+    ddt: callable
+        Derivate to integrate.
+    initial_value: callable
+        Initial value.
+    py_name: str
+        Python name to identify the object.
+
+    Attributes
+    ----------
+    state: float or xarray.DataArray
+        Current state of the object. Value of the stock.
+
+    """
+    def __init__(self, ddt, initial_value, py_name):
+        super().__init__(ddt, initial_value, py_name)
+
+    def update(self, state):
+        self.state = np.maximum(state, 0)
+
+
 class Delay(DynamicStateful):
     """
     Implements DELAY function.

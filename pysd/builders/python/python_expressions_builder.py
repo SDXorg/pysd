@@ -1195,6 +1195,7 @@ class IntegBuilder(StructureBuilder):
             "flow": integ_str.flow,
             "initial": integ_str.initial
         }
+        self.non_negative = integ_str.non_negative
 
     def build(self, arguments: dict) -> BuildAST:
         """
@@ -1213,7 +1214,6 @@ class IntegBuilder(StructureBuilder):
         """
         self.component.type = "Stateful"
         self.component.subtype = "Integ"
-        self.section.imports.add("statefuls", "Integ")
 
         arguments["initial"].reshape(
             self.section.subscripts, self.def_subs, True)
@@ -1224,11 +1224,24 @@ class IntegBuilder(StructureBuilder):
             self.element.identifier, prefix="_integ")
 
         # Create the object
-        self.element.objects[arguments["name"]] = {
-            "name": arguments["name"],
-            "expression": "%(name)s = Integ(lambda: %(flow)s, "
-                          "lambda: %(initial)s, '%(name)s')" % arguments
-        }
+        if self.non_negative:
+            # Non-negative stocks
+            self.section.imports.add("statefuls", "NonNegativeInteg")
+            self.element.objects[arguments["name"]] = {
+                "name": arguments["name"],
+                "expression": "%(name)s = NonNegativeInteg("
+                              "lambda: %(flow)s, "
+                              "lambda: %(initial)s, '%(name)s')" % arguments
+            }
+        else:
+            # Regular stocks
+            self.section.imports.add("statefuls", "Integ")
+            self.element.objects[arguments["name"]] = {
+                "name": arguments["name"],
+                "expression": "%(name)s = Integ(lambda: %(flow)s, "
+                              "lambda: %(initial)s, '%(name)s')" % arguments
+            }
+
         # Add other dependencies
         self.element.other_dependencies[arguments["name"]] = {
             "initial": arguments["initial"].calls,
