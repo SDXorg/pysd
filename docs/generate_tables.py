@@ -11,7 +11,7 @@ def generate(table, columns, output):
     subtable = subtable[~subtable[columns[0]].isna()]
 
     if all(subtable[columns[-1]].isna()):
-        # if the commnets columns (last) is all na, do not save it
+        # if the comments columns (last) is all na, do not save it
         subtable = subtable[columns[:-1]]
 
     # Place an empty string where na values

@@ -9,7 +9,7 @@ To get started, you can fork the repository and make contributions to your own v
 When you are happy with your edits, submit a pull request to the main branch.
 
 .. note::
-  In order to open a pull request, the new features and changes should be througly tested.
+  In order to open a pull request, the new features and changes should be thoroughly tested.
   To do so, unit tests of new features or translated functions should be added, please check the Development Tools section below. When opening a pull request all tests are run and the coverage and pep8 style are checked.
 
 Development Tools
@@ -20,7 +20,7 @@ Test Suite
 ^^^^^^^^^^
 PySD uses the common model test suite found `on github <https://github.com/SDXorg/test-models>`_
 which are run using `pytest_integration_test_vensim_pathway.py`  and `pytest_integration_test_xmile_pathway.py`.
-PySD also has own tests for internal funtionality, `pytest_*.py` files
+PySD also has own tests for internal functionality, `pytest_*.py` files
 of the `/tests/` directory.
 
 In order to run all the tests :py:mod:`pytest` should be used.
@@ -35,7 +35,7 @@ complementary tests in the corresponding `pytest_*.py` file.
 
 .. note::
   If your changes correct some existing bug related to the translation or running
-  of a Vensim (or Xmile) model. You should add a new test in the `test suite repo <https://github.com/SDXorg/test-models>`_ reproducing the solved bug and addthe necessary lines in `pytest_integration/pytest_integration_test_vensim_pathway.py` (or `pytest_integration/pytest_integration_test_xmile_pathway.py`) to run the new test. Then, it is encouraged to add also unit test in `pytest_translators` reproducing the translation of the new function and test of the workflow in
+  of a Vensim (or Xmile) model. You should add a new test in the `test suite repo <https://github.com/SDXorg/test-models>`_ reproducing the solved bug and add the necessary lines in `pytest_integration/pytest_integration_test_vensim_pathway.py` (or `pytest_integration/pytest_integration_test_xmile_pathway.py`) to run the new test. Then, it is encouraged to add also unit test in `pytest_translators` reproducing the translation of the new function and test of the workflow in
   `pytest_types/functions/pytest_functions.py` (or `pytest_types/statefuls/pytest_statefuls.py`).
 
 Speed Tests

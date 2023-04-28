@@ -196,7 +196,7 @@ Alternately, if we want the room temperature to vary over the course of the simu
    >>> temp = pd.Series(index=range(30), data=range(20, 80, 2))
    >>> model.run(params={'Room Temperature': temp})
 
-If the parameter value to change is a subscripted variable (vector, matrix...), there are three different options to set the new value. Suposse we have ‘Subscripted var’ with dims :py:data:`['dim1', 'dim2']` and coordinates :py:data:`{'dim1': [1, 2], 'dim2': [1, 2]}`. A constant value can be used and all the values will be replaced::
+If the parameter value to change is a subscripted variable (vector, matrix...), there are three different options to set the new value. Supposse we have ‘Subscripted var’ with dims :py:data:`['dim1', 'dim2']` and coordinates :py:data:`{'dim1': [1, 2], 'dim2': [1, 2]}`. A constant value can be used and all the values will be replaced::
 
    >>> model.run(params={'Subscripted var': 0})
 

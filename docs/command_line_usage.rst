@@ -31,7 +31,7 @@ In order to set the output file path, the *-o/--output-file* argument can be use
 .. note::
     If *-o/--output-file* is not given, the output will be saved in a *.tab*
     file that starts with the model file name followed by a time stamp to avoid
-    overwritting files.
+    overwriting files.
 
 Activate progress bar
 ^^^^^^^^^^^^^^^^^^^^^
@@ -46,7 +46,7 @@ Translation options
 
 Only translate the model file
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-To translate the model file and not run the model, the *-t/--trasnlate* command is provided:
+To translate the model file and not run the model, the *-t/--translate* command is provided:
 
 .. code-block:: text
 
@@ -79,7 +79,7 @@ The number of output variables can be modified by passing them as arguments sepa
 
 Note that the a single string must be passed after the *-r/return_columns* argument, containing the names of the variables separated by commas.
 
-Sometimes, variable names have special characteres, such as commas, which can happen when trying to return a variable with subscripts.
+Sometimes, variable names have special characters, such as commas, which can happen when trying to return a variable with subscripts.
 In this case we can save a *.txt* file with one variable name per row and use it as an argument:
 
 .. code-block:: text
@@ -148,7 +148,7 @@ Several variables can be changed at the same time, e.g.:
 
 Modify initial conditions of model variables
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Sometimes we do not want to change the actual value of a variable but we want to change its initial value instead. An example of this would be changing the initial value of a stock object. This can be done similarly to what was shown in the previos case, but using ':' instead of '=':
+Sometimes we do not want to change the actual value of a variable but we want to change its initial value instead. An example of this would be changing the initial value of a stock object. This can be done similarly to what was shown in the previous case, but using ':' instead of '=':
 
 .. code-block:: text
 

@@ -1,10 +1,10 @@
 Arithmetic order	Operators	Operations
 0	"(), None"	"parenthesis, function call, references, no-operations"
 1	"\-"	negative value
-2	^	exponentation
+2	^	exponentiation
 3	"\*, /"	"multiplication, division"
 4	"%"	modulo
-5	"+, -"	"addition, substraction"
+5	"+, -"	"addition, subtraction"
 6	"=, <>, <, <=, >, >="	comparison
 7	"not"	unary logical operation
 8	"and, or"	binary logical operations

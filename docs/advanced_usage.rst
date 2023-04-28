@@ -130,11 +130,11 @@ In order to preview the needed exogenous variables, the :py:meth:`.get_dependenc
 Initializing external data from netCDF file
 -------------------------------------------
 
-IO operations are expensive, especially when reading non-binary files. This makes the model initialization process slow when lots of datasets need to be read from spreadhseet files.
+IO operations are expensive, especially when reading non-binary files. This makes the model initialization process slow when lots of datasets need to be read from spreadsheet files.
 
 From PySD 3.8, users can export a subset or all model external data to a netCDF file, and use this file for subsequent model initializations.
 
-Supose we have a model (*my_model.mdl*) that loads *param_1* from *parameters_1.xls*, *param_2* from *parameters_2.xls*, and *policy_1* and *policy_2* from *scenario.xls*. Imagine we want to test different policy configurations, by changing the values of *policy_1* and *policy_2*, while keeping all other parameters unchanged.
+Suppose we have a model (*my_model.mdl*) that loads *param_1* from *parameters_1.xls*, *param_2* from *parameters_2.xls*, and *policy_1* and *policy_2* from *scenario.xls*. Imagine we want to test different policy configurations, by changing the values of *policy_1* and *policy_2*, while keeping all other parameters unchanged.
 In this case, we might want to export the external objects that we do not intend to modify (*param_1* and *param_2*) to a netCDF file, so that they are initialized instantaneously:
 
 The code below shows how this can be achieved::
@@ -167,7 +167,7 @@ Or even::
                                                  "parameters_2.xls"],
                               exclude_externals=None)
 
-Or we could have also combined variable names and spreadhseet files in the **include_externals** arugment, the **exclude_externals** argument or both::
+Or we could have also combined variable names and spreadsheet files in the **include_externals** argument, the **exclude_externals** argument or both::
 
     import pysd
 

@@ -6,7 +6,7 @@ Before reporting any bug, please make sure that you are using the latest version
 All bugs must be reported in the project's `issue tracker on github <https://github.com/SDXorg/pysd/issues>`_.
 
 .. note::
-  Not all the features and functions are implemented. If you are in trouble while translating or running a Vensim or Xmile model check the :ref:`Vensim supported functions <Vensim supported functions>` or :ref:`Xmile supported functions <Xmile supported functions>` and consider that when openning a new issue.
+  Not all the features and functions are implemented. If you are in trouble while translating or running a Vensim or Xmile model check the :ref:`Vensim supported functions <Vensim supported functions>` or :ref:`Xmile supported functions <Xmile supported functions>` and consider that when opening a new issue.
 
 Bugs during translation
 -----------------------

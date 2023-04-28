@@ -18,7 +18,7 @@ Deprecations
 
 Bug fixes
 ~~~~~~~~~
-- Set the final_subscripts to an empty dictionary for ELMCOUNT function in :py:meth:`pysd.builders.python_exressions_builder.CallBuilder.build_function_call`. (`@rogersamso <https://github.com/rogersamso>`_)
+- Set the final_subscripts to an empty dictionary for ELMCOUNT function in :py:meth:`pysd.builders.python_expressions_builder.CallBuilder.build_function_call`. (`@rogersamso <https://github.com/rogersamso>`_)
 - Define comp_subtype of Unchangeable tabbed arrays as Unchangeable. This is done in :py:meth:`pysd.builders.python.python_expressions_builder.ArrayBuilder.build`. (`@rogersamso <https://github.com/rogersamso>`_)
 
 Documentation
@@ -180,7 +180,7 @@ Deprecations
 Bug fixes
 ~~~~~~~~~
 - Fix bug when a WITH LOOKUPS argument has subscripts. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
-- Fix bug of exportig csv files with multiple subscripts variables. (`@rogersamso <https://github.com/rogersamso>`_)
+- Fix bug of exporting csv files with multiple subscripts variables. (`@rogersamso <https://github.com/rogersamso>`_)
 - Fix bug of missing dimensions in variables defined with not all the subscripts of a range (:issue:`364`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 - Fix bug when running a model with variable final time or time step and progressbar (:issue:`361`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
@@ -533,14 +533,14 @@ Deprecations
 Bug fixes
 ~~~~~~~~~
 
-- Generate the documentation of the model when loading it to avoid lossing information when replacing a variable value (:issue:`310`, :pull:`312`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Generate the documentation of the model when loading it to avoid losing information when replacing a variable value (:issue:`310`, :pull:`312`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 - Make random functions return arrays of the same shape as the variable, to avoid repeating values over a dimension (:issue:`309`, :pull:`312`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 - Fix bug when Vensim's :MACRO: definition is not at the top of the model file (:issue:`306`, :pull:`312`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 - Make builder identify the subscripts using a main range and subrange to allow using subscripts as numeric values as Vensim does (:issue:`296`, :issue:`301`, :pull:`312`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 - Fix bug of missmatching of functions and lookups names (:issue:`116`, :pull:`312`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 - Parse Xmile models case insensitively and ignoring the new lines characters (:issue:`203`, :issue:`253`, :pull:`312`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 - Add support for Vensim's `\:EXCEPT\: keyword <https://www.vensim.com/documentation/exceptionequations.html>`_ (:issue:`168`, :issue:`253`, :pull:`312`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
-- Add spport for Xmile's FORCST and SAFEDIV functions (:issue:`154`, :pull:`312`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Add support for Xmile's FORCST and SAFEDIV functions (:issue:`154`, :pull:`312`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 - Add subscripts support for Xmile (:issue:`289`, :pull:`312`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 - Fix numeric error bug when using :py:data:`return_timestamps` and time step with non-integer values. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
