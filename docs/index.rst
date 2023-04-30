@@ -92,7 +92,7 @@ If you find any bug, or are interested in a particular feature, see :doc:`report
 
 If you are interested in contributing to the development of PySD, see the :doc:`developer documentation <../development/development_index>` listed above.
 
-Join our slack channel in `sd-tools-and-methodology-community <https://slofile.com/slack/sdtoolsandmet-slj3251>_`.
+Join our slack channel in `sd-tools-and-methodology-community <https://slofile.com/slack/sdtoolsandmet-slj3251>`_.
 
 Citing
 ^^^^^^
