@@ -12,7 +12,7 @@
 
 ![PySD Logo](https://raw.githubusercontent.com/SDXorg/pysd/5cc4fe5dc65e6b5140a00e87a1be9d261570ee8d/docs/images/PySD_Logo_letters.svg?style=centerme)
 
-This project is a library for running [System Dynamics](http://en.wikipedia.org/wiki/System_dynamics) models in Python, with the purpose of improving integration of *Big Data* and *Machine Learning* into the SD workflow.
+This project is a library for running [System Dynamics](http://en.wikipedia.org/wiki/System_dynamics) (SD) models in Python, with the purpose of improving integration of *Big Data* and *Machine Learning* into the SD workflow.
 
 **The current version needs to run at least Python 3.7.**
 
@@ -51,7 +51,7 @@ git clone --recursive https://github.com/SDXorg/pysd.git
 
 ## Extensions
 
-You can use PySD in [R](https://www.r-project.org/) via the [PySD2R](https://github.com/JimDuggan/pysd2r) package, also available on [cran](https://CRAN.R-project.org/package=pysd2r).
+You can use PySD in [R](https://www.r-project.org/) via the [PySD2R](https://github.com/JimDuggan/pysd2r) package, also available on [CRAN](https://CRAN.R-project.org/package=pysd2r).
 
 ## Contributing
 

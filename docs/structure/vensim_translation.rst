@@ -9,9 +9,9 @@ Translation workflow
 The following translation workflow allows splitting the Vensim file while parsing its contents in order to build an :py:class:`AbstractModel` object. The workflow may be summarized as follows:
 
 1. **Vensim file**: splits the model equations from the sketch and allows splitting the model in sections (main section and macro sections).
-2. **Vensim section**: is a full set of varibles and definitions that is integrable. The Vensim section can then be split into model expressions.
-3. **Vensim element**: a definition in the mdl file which could be a subscript (sub)range definition or a variable definition. It includes units and comments. Definitions for the same variable are grouped after in the same :py:class:`AbstractElement` object. Allows parsing its left hand side (LHS) to get the name of the subscript (sub)range or variable and it is returned as a specific type of component depending on the used assing operator (=, ==, :=, (), :)
-4. **Vensim component**: the classified object for a variable definition, it depends on the opperator used to define the variable. Its right hand side (RHS) can be parsed to get the Abstract Syntax Tree (AST) of the expression.
+2. **Vensim section**: is a full set of variables and definitions that is integrable. The Vensim section can then be split into model expressions.
+3. **Vensim element**: a definition in the mdl file which could be a subscript (sub)range definition or a variable definition. It includes units and comments. Definitions for the same variable are grouped after in the same :py:class:`AbstractElement` object. Allows parsing its left hand side (LHS) to get the name of the subscript (sub)range or variable and it is returned as a specific type of component depending on the used assign operator (=, ==, :=, (), :)
+4. **Vensim component**: the classified object for a variable definition, it depends on the operator used to define the variable. Its right hand side (RHS) can be parsed to get the Abstract Syntax Tree (AST) of the expression.
 
 Once the model is parsed and broken following the previous steps, the :py:class:`AbstractModel` is returned.
 
@@ -66,7 +66,7 @@ Moreover, the Vensim :EXCEPT: operator is also supported to manage exceptions in
 
 Functions
 ^^^^^^^^^
-The list of currentlty supported Vensim functions are detailed below:
+The list of currently supported Vensim functions are detailed below:
 
 .. csv-table:: Supported basic functions
    :file: ../tables/functions_vensim.csv
@@ -90,7 +90,7 @@ Stocks defined in Vensim as `INTEG(flow, initial_value)` are supported and are t
 
 Subscripts
 ^^^^^^^^^^
-Several subscript related features are also supported. Thiese include:
+Several subscript related features are also supported. These include:
 
 - Basic subscript operations with different ranges.
 - Subscript ranges and subranges definitions.
@@ -98,7 +98,7 @@ Several subscript related features are also supported. Thiese include:
 - Subscript copy (e.g. new_dim <-> dim).
 - \:EXCEPT: operator with any number of arguments.
 - Subscript usage as a variable (e.g. my_var[dim] = another var * dim).
-- Subscript vectorial opperations (e.g. SUM(my var[dim, dim!])).
+- Subscript vectorial operations (e.g. SUM(my var[dim, dim!])).
 
 Lookups
 ^^^^^^^
@@ -108,11 +108,11 @@ Data
 ^^^^
 Data definitions with GET functions and empty data definitions (no expressions, Vensim uses a VDF file) are supported. These definitions may or may not include any of the possible interpolation keywords: :INTERPOLATE:, :LOOK FORWARD:, :HOLD BACKWARD:, :RAW:. These keywords will be stored in the 'keyword' argument of :py:class:`AbstractData` as 'interpolate', 'look_forward', 'hold_backward' and 'raw', respectively. The Abstract Structure for GET XLS/DATA is given in the supported GET functions table. The Abstract Structure for the empty Data declarations is a :py:class:`DataStructure`.
 
-For the moment, any specific functions applying over data are supported (e.g. SHIFT IF TRUE, TIME SHIFT...), but new ones may be includded in the future.
+For the moment, any specific functions applying over data are supported (e.g. SHIFT IF TRUE, TIME SHIFT...), but new ones may be included in the future.
 
 Macro
 ^^^^^
-Vensim macros are supported. The macro content between the keywords \:MACRO: and \:END OF MACRO: is classified as a section of the model and is subsequently sused to build an independent section from the rest of the model.
+Vensim macros are supported. The macro content between the keywords \:MACRO: and \:END OF MACRO: is classified as a section of the model and is subsequently used to build an independent section from the rest of the model.
 
 Planed New Functions and Features
 ---------------------------------

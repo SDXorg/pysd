@@ -46,14 +46,14 @@ In order to finish the contribution, we should update the documentation. The tab
      - CallStructure('abs', (A,))
      - numpy.abs(A)
 
-To finish, we create a new release notes block at the top of `docs/whats_new.rst` file and update the software version. Commit all the changes, includying the test-models repo, and open a new PR.
+To finish, we create a new release notes block at the top of `docs/whats_new.rst` file and update the software version. Commit all the changes, including the test-models repo, and open a new PR.
 
 
 Adding a simple function
 ------------------------
 Sometimes, it would be preferable to define own Python functions. This could help to keep similar grammar to the source code, making the final model file content simpler. This example focus on a function where we are still able to use the Abstract Structure :py:class:`pysd.translators.structures.abstract_expressions.CallStructure`, but we will include a function defined in :py:mod:`pysd.py_backend.functions`.
 
-Let's suppose we want to add support for `Vensim's VECTOR SORT ORDER function <https://www.vensim.com/documentation/fn_vector_sort_order.html>`_. First of all, we may need to check Vensim's documentation to see how this function works and try to think what is the fatest way to solve it. VECTOR SORT ORDER function takes two arguments, `vector` and `direction`. The function returns the order of the elements of the `vector` based on the `direction`. Therefore, we do not need to save previous states information or to pass other information as arguments, we should have enough with a basic Python function that takes the same arguments.
+Let's suppose we want to add support for `Vensim's VECTOR SORT ORDER function <https://www.vensim.com/documentation/fn_vector_sort_order.html>`_. First of all, we may need to check Vensim's documentation to see how this function works and try to think what is the fastest way to solve it. VECTOR SORT ORDER function takes two arguments, `vector` and `direction`. The function returns the order of the elements of the `vector` based on the `direction`. Therefore, we do not need to save previous states information or to pass other information as arguments, we should have enough with a basic Python function that takes the same arguments.
 
 Then, we define the Python function based on the Vensim's documentation. We also include the docstring (with the same style as other functions) and add this function to the file :py:mod:`pysd.py_backend.functions`::
 
@@ -84,7 +84,7 @@ Then, we define the Python function based on the Vensim's documentation. We also
             return xr.DataArray(flip.values, vector.coords, vector.dims)
         return vector.argsort()
 
-Now, we need to link the defined function with its corresponent abstract representation. So we include the following entry in the :py:data:`functionspace` dictionary from :py:mod:`pysd.builders.python.python_functions.py`::
+Now, we need to link the defined function with its correspondent abstract representation. So we include the following entry in the :py:data:`functionspace` dictionary from :py:mod:`pysd.builders.python.python_functions.py`::
 
     "vector_sort_order": (
         "vector_sort_order(%(0)s, %(1)s)",
@@ -119,4 +119,4 @@ In order to finish the contribution, we should update the documentation by addin
      - CallStructure('vector_sort_order', (vec, direction))
      - vector_sort_order(vec, direction)
 
-To finish, we create a new release notes block at the top of `docs/whats_new.rst` file and update the software version. Commit all the changes, includying the test-models repo, and open a new PR.
+To finish, we create a new release notes block at the top of `docs/whats_new.rst` file and update the software version. Commit all the changes, including the test-models repo, and open a new PR.

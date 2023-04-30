@@ -9,7 +9,7 @@ The "4+1" Model View of Software Architecture
 
 The `4+1 model view`_, designed by Philippe Krutchen, presents a way to describe the architecture of software systems, using multiple and concurrent views. This use of multiple views allows to address separately the concerns of the various 'stakeholders' of the architecture such as end-user, developers, systems engineers, project managers, etc.
 
-The software architecture deals with abstraction, with decomposition and composition, with style and system's esthetic. To describe a software architecture, we use a model formed by multiple views or perspectives. That model is made up of five main views: logical view, development view, process view, physical view and scenarios or user cases.
+The software architecture deals with abstraction, with decomposition and composition, with style and system's aesthetic. To describe a software architecture, we use a model formed by multiple views or perspectives. That model is made up of five main views: logical view, development view, process view, physical view and scenarios or user cases.
 
 * The Physical View: describes the mapping of the software onto the hardware and reflects its distributed aspect
 
@@ -37,7 +37,7 @@ A package diagram, represented in the figure `PySD development view`_, is used t
 
    PySD development view
 
-**pysd** is the main package that includes all the others and all the logic of the system. It is necessary to differentiate between the package called **pysd** and the module called pysd. The latter allows the user to interact with the system and has the appropiate functions to be able to translate a Vensim or XMILE model and, in addition, to execute the generated translation. However, the XMILE translation process is not defined in this document.
+**pysd** is the main package that includes all the others and all the logic of the system. It is necessary to differentiate between the package called **pysd** and the module called pysd. The latter allows the user to interact with the system and has the appropriate functions to be able to translate a Vensim or XMILE model and, in addition, to execute the generated translation. However, the XMILE translation process is not defined in this document.
 
 The **pysd** module interacts with the modules of the **py_backend** package. This package has two sub-packages: **vensim** and **xmile**. The **vensim** package contains all the logic needed to translate *Vensim* models.
 
@@ -156,7 +156,7 @@ Next, in `Builder module`_ figures the **builder** module. There is no class def
 
 The main function of the **builder** module is :py:func:`.build`. That function builds and writes the Python representation of the model. It is called from the **vensim2py** module after finishing the whole process  of translating the Vensim model. As parameters it is passed the different elements of the model that have been parsed, subscripts, namespace and the name of the file where the result of the Python representation should be written. This function has certain permanent lines of code that are always write in the models created, but then, there are certain lines of code that are completed with the translation generated before in the **vensim2py** module.
 
-In image `Utils module`_ is found the **utils** module. The main purpose of utils is to bring together in a single module all the functions that are useful for the project. Many of these functions are used many times during the translation process. So, as already presented in `PySD relationships between modules`_, this module is used by the **builder**, **functions**, **external** and **vensim2py** modules. In turn, the accesible names of the **decorators**, **external** and **functions** modules are imported into the **utils** modules to define a list of the names that have already been used and that have a particular meaning in the model being translated.
+In image `Utils module`_ is found the **utils** module. The main purpose of utils is to bring together in a single module all the functions that are useful for the project. Many of these functions are used many times during the translation process. So, as already presented in `PySD relationships between modules`_, this module is used by the **builder**, **functions**, **external** and **vensim2py** modules. In turn, the accessible names of the **decorators**, **external** and **functions** modules are imported into the **utils** modules to define a list of the names that have already been used and that have a particular meaning in the model being translated.
 
 .. _Utils module:
 

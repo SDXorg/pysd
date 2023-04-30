@@ -49,7 +49,7 @@ This project is a simple library for running System Dynamics models in Python, w
 
 PySD translates :doc:`Vensim <structure/vensim_translation>` or
 :doc:`XMILE <structure/xmile_translation>` model files into Python modules,
-and provides methods to modify, simulate, and observe those translated models. The translation is done throught an intermediate :doc:`Abstract Synatax Tree representation <structure/structure_index>`,
+and provides methods to modify, simulate, and observe those translated models. The translation is done through an intermediate :doc:`Abstract Syntax Tree representation <structure/structure_index>`,
 which makes it possible to add builders in other languages in a simpler way
 
 Why create a new SD simulation engine?
@@ -92,7 +92,7 @@ If you find any bug, or are interested in a particular feature, see :doc:`report
 
 If you are interested in contributing to the development of PySD, see the :doc:`developer documentation <../development/development_index>` listed above.
 
-Join our slack channel in `sd-tools-and-methodology-community <https://slofile.com/slack/sdtoolsandmet-slj3251>_`.
+Join our slack channel in `sd-tools-and-methodology-community <https://slofile.com/slack/sdtoolsandmet-slj3251>`_.
 
 Citing
 ^^^^^^
@@ -143,7 +143,7 @@ Please, also add the `PySD Introductory Paper (2015) <https://github.com/SDXorg/
       keywords = {System Dynamics, Vensim, Python}
    }
 
-You can also cite the library using the `DOI provided by Zenodo <https://doi.org/10.5281/zenodo.5654824>`_. It is recomendable to specify the used PySD version and its correspondent DOI. If you want to cite all versions you can use the generic DOI for PySD instead:
+You can also cite the library using the `DOI provided by Zenodo <https://doi.org/10.5281/zenodo.5654824>`_. It is recommendable to specify the used PySD version and its correspondent DOI. If you want to cite all versions you can use the generic DOI for PySD instead:
 
 |DOI|
 

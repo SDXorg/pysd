@@ -1,11 +1,11 @@
 Xmile Translation
 =================
 
-PySD allows parsing a Xmile file and translates the result to an :py:class:`AbstractModel` object that can be used to builde the model.
+PySD allows parsing a Xmile file and translates the result to an :py:class:`AbstractModel` object that can be used to build the model.
 
 
 .. warning::
-    Currently no Xmile users are working on the development of PySD. This is causing a gap between the Xmile and Vensim developments. Stella users are encouraged to take part in the development of PySD by includying new `test models <https://github.com/SDXorg/test-models>`_ and adding support for new functions and features.
+    Currently no Xmile users are working on the development of PySD. This is causing a gap between the Xmile and Vensim developments. Stella users are encouraged to take part in the development of PySD by including new `test models <https://github.com/SDXorg/test-models>`_ and adding support for new functions and features.
 
 
 The translation workflow
@@ -13,8 +13,8 @@ The translation workflow
 The following translation workflow allows splitting the Xmile file while parsing each part of it to build an :py:class:`AbstractModel` type object. The workflow may be summarized as follows:
 
 1. **Xmile file**: Parses the file with etree library and creates a section for the model.
-2. **Xmile section**: Full set of varibles and definitions that can be integrated. Allows splitting the model elements.
-3. **Xmile element**: A variable definition. It includes units and commnets. Allows parsing the expressions it contains and saving them inside AbstractComponents, that are part of an AbstractElement.
+2. **Xmile section**: Full set of variables and definitions that can be integrated. Allows splitting the model elements.
+3. **Xmile element**: A variable definition. It includes units and comments. Allows parsing the expressions it contains and saving them inside AbstractComponents, that are part of an AbstractElement.
 
 Once the model is parsed and split following the previous steps. The :py:class:`AbstractModel` can be returned.
 
@@ -83,7 +83,7 @@ Stocks are supported with any number of inflows and outflows. Stocks are transla
 
 Subscripts
 ^^^^^^^^^^
-Several subscript related features are supported. Thiese include:
+Several subscript related features are supported. These include:
 
 - Basic subscript operations with different ranges.
 - Subscript ranges and subranges definitions.

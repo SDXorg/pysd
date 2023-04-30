@@ -13,7 +13,7 @@ The :py:class:`AbstractModel` object should retain as much information from the
 original model as possible. Although the information is not used
 in the output code, it may be necessary for other future output languages
 or for improvements in the currently supported outputs. For example, currently
-unchangeable constansts (== defined in Vensim) are treated as regular
+unchangeable constants (== defined in Vensim) are treated as regular
 components with Python, but in the future we may want to protect them
 from user interaction.
 
@@ -25,7 +25,7 @@ Main abstract structures
 .. automodule:: pysd.translators.structures.abstract_model
    :members:
 
-Abstrat structures for the AST
-------------------------------
+Abstract structures for the AST
+-------------------------------
 .. automodule:: pysd.translators.structures.abstract_expressions
    :members:

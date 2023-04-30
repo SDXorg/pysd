@@ -7,8 +7,8 @@ A Python library for analyzing system dynamics models called the `Exploratory Mo
 
 An excellent JavaScript library called `sd.js <https://github.com/bpowers/sd.js/tree/master>`_ created by Bobby Powers at `SDlabs <http://sdlabs.io/>`_ exists as a standalone SD engine, and provides a beautiful front end. This front end could be rendered as an iPython widget to facilitate display of SD models.
 
-The `Behavior Analysis and Testing Software(BATS) <http://www.ie.boun.edu.tr/labs/sesdyn/projects/bats/index.html>`_ delveloped by `Gönenç Yücel <http://www.ie.boun.edu.tr/people/pages/yucel.html>`_ includes a really neat method for categorizing behavior modes and exploring parameter space to determine the boundaries between them.
+The `Behavior Analysis and Testing Software(BATS) <http://www.ie.boun.edu.tr/labs/sesdyn/projects/bats/index.html>`_ developed by `Gönenç Yücel <http://www.ie.boun.edu.tr/people/pages/yucel.html>`_ includes a really neat method for categorizing behavior modes and exploring parameter space to determine the boundaries between them.
 
-The `SDQC library <https://sdqc.readthedocs.io>`_ developed by Eneko Martin Martinez may be used to check the quality of the data imported by Vensim models from speadsheet files.
+The `SDQC library <https://sdqc.readthedocs.io>`_ developed by Eneko Martin Martinez may be used to check the quality of the data imported by Vensim models from spreadsheet files.
 
 The `excels2vensim library <https://excels2vensim.readthedocs.io>`_, also developed by Eneko Martin Martinez, aims to simplify the incorporation of equations from external data into Vensim.
