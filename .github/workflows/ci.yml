@@ -32,9 +32,13 @@ jobs:
           pip install --prefer-binary -r tests/requirements.txt
           pip install --prefer-binary -e .
       - name: Test and coverage
-        run: pytest tests/ --cov=pysd -n 2
+        run: |
+          pytest tests/ --cov=pysd -n 2
+          coverage xml
       - name: Coveralls
         uses: coverallsapp/github-action@v2
+        with:
+          file: coverage.xml
         if: ${{ matrix.python-version == 3.7 && matrix.os == 'ubuntu-latest' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
