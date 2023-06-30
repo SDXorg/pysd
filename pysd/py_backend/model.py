@@ -1311,6 +1311,8 @@ class Model(Macro):
         self.data_files = data_files
         self.missing_values = missing_values
         self.progress = None
+        self.output = None
+
         if initialize:
             self.initialize()
 
@@ -1420,17 +1422,8 @@ class Model(Macro):
         if reload:
             self.reload()
 
-        self.time.add_return_timestamps(return_timestamps)
-        if self.time.return_timestamps is not None and not final_time:
-            # if not final time given the model will end in the list
-            # return timestamp (the list is reversed for popping)
-            if self.time.return_timestamps:
-                final_time = self.time.return_timestamps[0]
-            else:
-                final_time = self.time.next_return
-
-        self.time.set_control_vars(
-            final_time=final_time, time_step=time_step, saveper=saveper)
+        self._set_control_vars(return_timestamps, final_time, time_step,
+                               saveper)
 
         if params:
             self.set_components(params)
@@ -1441,6 +1434,59 @@ class Model(Macro):
         self.set_initial_condition(initial_condition)
 
         # set progressbar
+        self._set_progressbar(progress)
+
+        # updates the capture_elements, return_addresses attributes
+        self._set_capture_elements(return_columns)
+
+        # include outputs in cache if needed
+        self._dependencies["OUTPUTS"] = {
+            element: 1 for element in self.capture_elements["step"]
+        }
+
+        if cache_output:
+            # udate the cache type taking into account the outputs
+            self._assign_cache_type()
+
+        # check validitty of output_file
+        if output_file:
+            output_file = ModelOutput.check_output_file_path(
+                output_file)
+
+        # add constant cache to thosa variable that are constants
+        self._add_constant_cache()
+
+        # Run the model
+        self.time.stage = 'Run'
+        # need to clean cache to remove the values from active_initial
+        self.clean_caches()
+
+        # instantiating output object
+        self.output = ModelOutput(self, self.capture_elements['step'],
+                                  output_file)
+
+        self._integrate()
+
+        del self._dependencies["OUTPUTS"]
+
+        self.output.add_run_elements(self, self.capture_elements['run'])
+
+        self._remove_constant_cache()
+
+        return self.output.postprocess(
+            return_addresses=self.return_addresses, flatten=flatten_output)
+
+    def _set_capture_elements(self, return_columns):
+        if return_columns is None or isinstance(return_columns, str):
+            return_columns = self._default_return_columns(return_columns)
+
+        capture_elements, self.return_addresses = utils.get_return_elements(
+            return_columns, self._namespace)
+
+        # create a dictionary splitting run cached and others
+        self.capture_elements = self._split_capture_elements(capture_elements)
+
+    def _set_progressbar(self, progress):
         if progress and (self.cache_type["final_time"] == "step" or
                          self.cache_type["time_step"] == "step"):
             warnings.warn(
@@ -1452,39 +1498,73 @@ class Model(Macro):
 
         self.progress = progress
 
-        if return_columns is None or isinstance(return_columns, str):
-            return_columns = self._default_return_columns(return_columns)
+    def set_stepper(self, params=None, step_vars=[], return_columns=None,
+                    return_timestamps=None, initial_condition='original',
+                    final_time=None, time_step=None, saveper=None,
+                    cache_output=True, output_file=None):
 
-        capture_elements, return_addresses = utils.get_return_elements(
-            return_columns, self._namespace)
+        """
+        Configure the model stepping behavior.
 
-        # create a dictionary splitting run cached and others
-        capture_elements = self._split_capture_elements(capture_elements)
+        Parameters
+        ----------
+        params: dict (optional)
+            Keys are strings of model component names.
+            Values are numeric or pandas Series.
+            Numeric values represent constants over the model integration.
+            Timeseries will be interpolated to give time-varying input.
+
+        return_timestamps: list, numeric, ndarray (1D) (optional)
+            Timestamps in model execution at which to return state information.
+            Defaults to model-file specified timesteps.
+
+        initial_condition: str or (float, dict) (optional)
+            The starting time, and the state of the system (the values of
+            all the stocks) at that starting time. 'original' or 'o'uses
+            model-file specified initial condition. 'current' or 'c' uses
+            the state of the model after the previous execution. Other str
+            objects, loads initial conditions from the pickle file with the
+            given name.(float, dict) tuple lets the user specify a starting
+            time (float) and (possibly partial) dictionary of initial values
+            for stock (stateful) objects. Default is 'original'.
+
+        cache_output: bool (optional)
+           If True, the number of calls of outputs variables will be increased
+           in 1. This helps caching output variables if they are called only
+           once. For performance reasons, if time step = saveper it is
+           recommended to activate this feature, if time step << saveper
+           it is recommended to deactivate it. Default is True.
+        """
+
+        self._set_control_vars(return_timestamps, final_time, time_step,
+                               saveper)
+
+        if params:
+            self.set_components(params)
+
+        for step_var in step_vars:
+            self.dependencies[step_var]["time"] = 1
+
+        # update cache types after setting params
+        self._assign_cache_type()
+
+        self.set_initial_condition(initial_condition)
+
+        self._set_capture_elements(return_columns)
 
         # include outputs in cache if needed
         self._dependencies["OUTPUTS"] = {
-            element: 1 for element in capture_elements["step"]
+            element: 1 for element in self.capture_elements["step"]
         }
 
         if cache_output:
             # udate the cache type taking into account the outputs
             self._assign_cache_type()
 
-        # check validitty of output_file. This could be done inside the
-        # ModelOutput class, but it feels too late
+        # check validitty of output_file
         if output_file:
-            if not isinstance(output_file, (str, Path)):
-                raise TypeError(
-                        "Paths must be strings or pathlib Path objects.")
-
-            if isinstance(output_file, str):
-                output_file = Path(output_file)
-
-            file_extension = output_file.suffix
-
-            if file_extension not in ModelOutput.valid_output_files:
-                raise ValueError(
-                        f"Unsupported output file format {file_extension}")
+            output_file = ModelOutput.check_output_file_path(
+                output_file)
 
         # add constant cache to thosa variable that are constants
         self._add_constant_cache()
@@ -1495,18 +1575,50 @@ class Model(Macro):
         self.clean_caches()
 
         # instantiating output object
-        output = ModelOutput(self, capture_elements['step'], output_file)
+        self.output = ModelOutput(
+            self, self.capture_elements['step'], output_file)
 
-        self._integrate(output)
+    def step(self, num_steps=1, step_vars={}):
+        """
+        Update model variables and run any number of model steps.
+
+        Parameters:
+
+        num_steps: int
+        """
+        # TODO warn the user if we exceeded the final_time??
+        self.set_components(step_vars)
+
+        for _ in range(num_steps):
+            self._integrate()
+
+    def collect(self, flatten_output=True):
+        """
+        Collect results after one or more steps, and save to file.
+        """
 
         del self._dependencies["OUTPUTS"]
 
-        output.add_run_elements(self, capture_elements['run'])
+        self.output.add_run_elements(self, self.capture_elements['run'])
 
         self._remove_constant_cache()
 
-        return output.postprocess(
-            return_addresses=return_addresses, flatten=flatten_output)
+        return self.output.postprocess(
+            return_addresses=self.return_addresses, flatten=flatten_output)
+
+    def _set_control_vars(self, return_timestamps, final_time, time_step,
+                          saveper):
+        self.time.add_return_timestamps(return_timestamps)
+        if self.time.return_timestamps is not None and not final_time:
+            # if not final time given the model will end in the list
+            # return timestamp (the list is reversed for popping)
+            if self.time.return_timestamps:
+                final_time = self.time.return_timestamps[0]
+            else:
+                final_time = self.time.next_return
+
+        self.time.set_control_vars(
+            final_time=final_time, time_step=time_step, saveper=saveper)
 
     def select_submodel(self, vars=[], modules=[], exogenous_components={}):
         """
@@ -1927,13 +2039,9 @@ class Model(Macro):
         """
         self.state = self.state + self.ddt() * dt
 
-    def _integrate(self, out_obj):
+    def _integrate(self):
         """
         Performs euler integration and writes results to the out_obj.
-
-        Parameters
-        ----------
-        out_obj: pysd.ModelOutput
 
         Returns
         -------
@@ -1953,7 +2061,7 @@ class Model(Macro):
         # performs the time stepping
         while self.time.in_bounds():
             if self.time.in_return():
-                out_obj.update(self)
+                self.output.update(self)
 
             self._euler_step(self.time.time_step())
             self.time.update(self.time()+self.time.time_step())
@@ -1963,6 +2071,6 @@ class Model(Macro):
         # need to add one more time step, because we run only the state
         # updates in the previous loop and thus may be one short.
         if self.time.in_return():
-            out_obj.update(self)
+            self.output.update(self)
 
         progressbar.finish()
