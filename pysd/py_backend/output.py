@@ -9,6 +9,7 @@ import abc
 import time as t
 
 from csv import QUOTE_NONE
+from pathlib import Path
 
 import regex as re
 
@@ -68,6 +69,22 @@ class ModelOutput():
         """ Delegating the addition of results with run cache in the output
         object to the appropriate handler."""
         self.handler.add_run_elements(model, run_elements)
+
+    @staticmethod
+    def check_output_file_path(output_file):
+
+        if not isinstance(output_file, (str, Path)):
+            raise TypeError(
+                    "Paths must be strings or pathlib Path objects.")
+
+        output_file = Path(output_file)
+
+        file_extension = output_file.suffix
+        if file_extension not in ModelOutput.valid_output_files:
+            raise ValueError(
+                    f"Unsupported output file format {file_extension}")
+
+        return output_file
 
 
 class OutputHandlerInterface(metaclass=abc.ABCMeta):
