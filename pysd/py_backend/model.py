@@ -1312,6 +1312,7 @@ class Model(Macro):
         self.missing_values = missing_values
         self.progress = None
         self.output = None
+        self._simulation_stepper = False
 
         if initialize:
             self.initialize()
@@ -1422,81 +1423,13 @@ class Model(Macro):
         if reload:
             self.reload()
 
-        self._set_control_vars(return_timestamps, final_time, time_step,
-                               saveper)
-
-        if params:
-            self.set_components(params)
-
-        # update cache types after setting params
-        self._assign_cache_type()
-
-        self.set_initial_condition(initial_condition)
-
-        # set progressbar
-        self._set_progressbar(progress)
-
-        # updates the capture_elements, return_addresses attributes
-        self._set_capture_elements(return_columns)
-
-        # include outputs in cache if needed
-        self._dependencies["OUTPUTS"] = {
-            element: 1 for element in self.capture_elements["step"]
-        }
-
-        if cache_output:
-            # udate the cache type taking into account the outputs
-            self._assign_cache_type()
-
-        # check validitty of output_file
-        if output_file:
-            output_file = ModelOutput.check_output_file_path(
-                output_file)
-
-        # add constant cache to thosa variable that are constants
-        self._add_constant_cache()
-
-        # Run the model
-        self.time.stage = 'Run'
-        # need to clean cache to remove the values from active_initial
-        self.clean_caches()
-
-        # instantiating output object
-        self.output = ModelOutput(self, self.capture_elements['step'],
-                                  output_file)
-
+        self._config_simulation(params, return_columns, return_timestamps,
+                                initial_condition, final_time, time_step,
+                                saveper, cache_output, output_file,
+                                progress=progress)
         self._integrate()
 
-        del self._dependencies["OUTPUTS"]
-
-        self.output.add_run_elements(self, self.capture_elements['run'])
-
-        self._remove_constant_cache()
-
-        return self.output.postprocess(
-            return_addresses=self.return_addresses, flatten=flatten_output)
-
-    def _set_capture_elements(self, return_columns):
-        if return_columns is None or isinstance(return_columns, str):
-            return_columns = self._default_return_columns(return_columns)
-
-        capture_elements, self.return_addresses = utils.get_return_elements(
-            return_columns, self._namespace)
-
-        # create a dictionary splitting run cached and others
-        self.capture_elements = self._split_capture_elements(capture_elements)
-
-    def _set_progressbar(self, progress):
-        if progress and (self.cache_type["final_time"] == "step" or
-                         self.cache_type["time_step"] == "step"):
-            warnings.warn(
-                "The progressbar is not compatible with dynamic "
-                "final time or time step. Both variables must be "
-                "constants to prompt progress."
-            )
-            progress = False
-
-        self.progress = progress
+        return self.collect(flatten_output)
 
     def set_stepper(self, params=None, step_vars=[], return_columns=None,
                     return_timestamps=None, initial_condition='original',
@@ -1536,19 +1469,67 @@ class Model(Macro):
            it is recommended to deactivate it. Default is True.
         """
 
+        self._simulation_stepper = True
+
+        self._config_simulation(params, return_columns, return_timestamps,
+                                initial_condition, final_time, time_step,
+                                saveper, cache_output, output_file,
+                                step_vars=step_vars)
+
+        self.output.update(self)
+
+    def step(self, num_steps=1, step_vars={}):
+        """
+        Update model variables and run any number of model steps.
+
+        Parameters:
+
+        num_steps: int
+        """
+        # TODO warn the user if we exceeded the final_time??
+        self.set_components(step_vars)
+
+        for _ in range(num_steps):
+            if self.time.in_return():
+                self._integrate_step()
+                self.output.update(self)
+
+    def collect(self, flatten_output=True):
+        """
+        Collect results after one or more simulation steps, and save to
+        desired output format.
+        """
+
+        del self._dependencies["OUTPUTS"]
+
+        self.output.add_run_elements(self, self.capture_elements['run'])
+
+        self._remove_constant_cache()
+
+        return self.output.postprocess(
+            return_addresses=self.return_addresses, flatten=flatten_output)
+
+    def _config_simulation(self, params, return_columns, return_timestamps,
+                           initial_condition, final_time, time_step, saveper,
+                           cache_output, output_file, **kwargs):
+
         self._set_control_vars(return_timestamps, final_time, time_step,
                                saveper)
 
         if params:
             self.set_components(params)
 
-        for step_var in step_vars:
-            self.dependencies[step_var]["time"] = 1
+        if self._simulation_stepper:
+            for step_var in kwargs["step_vars"]:
+                self.dependencies[step_var]["time"] = 1
 
         # update cache types after setting params
         self._assign_cache_type()
 
         self.set_initial_condition(initial_condition)
+
+        if not self._simulation_stepper:
+            self._set_progressbar(kwargs["progress"])
 
         self._set_capture_elements(return_columns)
 
@@ -1575,40 +1556,30 @@ class Model(Macro):
         self.clean_caches()
 
         # instantiating output object
-        self.output = ModelOutput(
-            self, self.capture_elements['step'], output_file)
+        self.output = ModelOutput(self, self.capture_elements['step'],
+                                  output_file)
 
-        self.output.update(self)
+    def _set_capture_elements(self, return_columns):
+        if return_columns is None or isinstance(return_columns, str):
+            return_columns = self._default_return_columns(return_columns)
 
-    def step(self, num_steps=1, step_vars={}):
-        """
-        Update model variables and run any number of model steps.
+        capture_elements, self.return_addresses = utils.get_return_elements(
+            return_columns, self._namespace)
 
-        Parameters:
+        # create a dictionary splitting run cached and others
+        self.capture_elements = self._split_capture_elements(capture_elements)
 
-        num_steps: int
-        """
-        # TODO warn the user if we exceeded the final_time??
-        self.set_components(step_vars)
+    def _set_progressbar(self, progress):
+        if progress and (self.cache_type["final_time"] == "step" or
+                         self.cache_type["time_step"] == "step"):
+            warnings.warn(
+                "The progressbar is not compatible with dynamic "
+                "final time or time step. Both variables must be "
+                "constants to prompt progress."
+            )
+            progress = False
 
-        for _ in range(num_steps):
-            if self.time.in_return():
-                self._integrate_step()
-                self.output.update(self)
-
-    def collect(self, flatten_output=True):
-        """
-        Collect results after one or more steps, and save to file.
-        """
-
-        del self._dependencies["OUTPUTS"]
-
-        self.output.add_run_elements(self, self.capture_elements['run'])
-
-        self._remove_constant_cache()
-
-        return self.output.postprocess(
-            return_addresses=self.return_addresses, flatten=flatten_output)
+        self.progress = progress
 
     def _set_control_vars(self, return_timestamps, final_time, time_step,
                           saveper):
