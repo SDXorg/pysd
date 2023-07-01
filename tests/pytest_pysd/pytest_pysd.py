@@ -1480,6 +1480,25 @@ class TestDependencies():
         assert\
             (out2["constant3"] == (5*new_var.values-1)*new_var.values).all()
 
+    @pytest.mark.parametrize("model_path", [test_model])
+    def test_stepper(self, model):
+
+        model.set_stepper(step_vars=["room_temperature"],
+                          final_time=5)
+
+        assert model.cache_type["room_temperature"] == "step"
+
+        result_temperatures = np.arange(70, 111)
+
+        # run 40 steps
+        for _ in range(len(result_temperatures) - 1):
+            model.step(1, {"room_temperature": model["room_temperature"] + 1})
+
+        res = model.collect()
+
+        np.array_equal(res["Room Temperature"].values, result_temperatures)
+        assert np.floor(res.loc[5, "Teacup Temperature"]) == 144
+
 
 class TestExportImport():
 
