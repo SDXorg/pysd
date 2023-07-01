@@ -1578,6 +1578,8 @@ class Model(Macro):
         self.output = ModelOutput(
             self, self.capture_elements['step'], output_file)
 
+        self.output.update(self)
+
     def step(self, num_steps=1, step_vars={}):
         """
         Update model variables and run any number of model steps.
@@ -1590,7 +1592,9 @@ class Model(Macro):
         self.set_components(step_vars)
 
         for _ in range(num_steps):
-            self._integrate()
+            if self.time.in_return():
+                self._integrate_step()
+                self.output.update(self)
 
     def collect(self, flatten_output=True):
         """
@@ -2063,9 +2067,7 @@ class Model(Macro):
             if self.time.in_return():
                 self.output.update(self)
 
-            self._euler_step(self.time.time_step())
-            self.time.update(self.time()+self.time.time_step())
-            self.clean_caches()
+            self._integrate_step()
             progressbar.update()
 
         # need to add one more time step, because we run only the state
@@ -2074,3 +2076,9 @@ class Model(Macro):
             self.output.update(self)
 
         progressbar.finish()
+
+    def _integrate_step(self):
+
+        self._euler_step(self.time.time_step())
+        self.time.update(self.time()+self.time.time_step())
+        self.clean_caches()
