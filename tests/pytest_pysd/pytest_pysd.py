@@ -1220,20 +1220,20 @@ class TestPySD():
         model.time.add_return_timestamps(list(range(0, 5, 2)))
         capture_elements = ['teacup_temperature']
 
-        out = ModelOutput(model, capture_elements, None)
-        model._integrate(out)
-        res = out.handler.ds
+        model.output = ModelOutput(model, capture_elements, None)
+        model._integrate()
+        res = model.output.handler.ds
         assert isinstance(res, pd.DataFrame)
         assert 'teacup_temperature' in res
         assert all(res.index.values == list(range(0, 5, 2)))
 
         model.reload()
         model.time.add_return_timestamps(list(range(0, 5, 2)))
-        out = ModelOutput(model,
-                          capture_elements,
-                          tmp_path.joinpath("output.nc"))
-        model._integrate(out)
-        res = out.handler.ds
+        model.output = ModelOutput(model,
+                                   capture_elements,
+                                   tmp_path.joinpath("output.nc"))
+        model._integrate()
+        res = model.output.handler.ds
         assert isinstance(res, nc.Dataset)
         assert 'teacup_temperature' in res.variables
         assert np.array_equal(res["time"][:].data, np.arange(0, 5, 2))
