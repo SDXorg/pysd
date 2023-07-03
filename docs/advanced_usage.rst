@@ -9,6 +9,8 @@ Running models one (or more) step(s) at a time
 Coupling different models requires the exchange of certain variables between them. This is only possible if a stepping mechanism is available, which allows for running any number of steps with certain boundary conditions that evolve along time.
 In this section, we show how the teacup model may be run in a for loop using the :py:meth:`.step` function (rather than the :py:meth:`.run` function) and update the value of a model variable before each step::
 
+   from pysd.py_backend.output import ModelOutput
+   
    # instantiate ModelOutput object
    output = ModelOutput()
 
