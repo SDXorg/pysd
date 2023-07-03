@@ -1312,7 +1312,7 @@ class Model(Macro):
         self.missing_values = missing_values
         self.progress = None
         self.output = None
-        self._simulation_stepper = False
+        self._stepper_mode = False
 
         if initialize:
             self.initialize()
@@ -1425,27 +1425,46 @@ class Model(Macro):
 
         self._config_simulation(params, return_columns, return_timestamps,
                                 initial_condition, final_time, time_step,
-                                saveper, cache_output, output_file,
-                                progress=progress)
+                                saveper, cache_output, progress=progress)
+
+        # instante output object
+        self.output = ModelOutput(output_file)
+        self.output.set_capture_elements(self.capture_elements)
+        self.output.initialize(self)
+
         self._integrate()
 
-        return self.collect(flatten_output)
+        return self.output.collect(self, flatten_output)
 
-    def set_stepper(self, params=None, step_vars=[], return_columns=None,
-                    return_timestamps=None, initial_condition='original',
-                    final_time=None, time_step=None, saveper=None,
-                    cache_output=True, output_file=None):
+    def set_stepper(self, output_obj, params=None, step_vars=[],
+                    return_columns=None, return_timestamps=None,
+                    initial_condition='original', final_time=None,
+                    time_step=None, saveper=None, cache_output=True):
 
         """
         Configure the model stepping behavior.
 
         Parameters
         ----------
+        output_obj: ModelOutput
+            Instance of ModelOutput where the simulation results will be
+            stored.
+
         params: dict (optional)
             Keys are strings of model component names.
             Values are numeric or pandas Series.
             Numeric values represent constants over the model integration.
             Timeseries will be interpolated to give time-varying input.
+
+        step_vars: list
+            List of variable or parameter names whose values might be updated
+            after one or more simulation steps.
+
+        return_columns:list, 'step' or None (optional)
+            List of string model component names, returned dataframe
+            will have corresponding columns. If 'step' only variables with
+            cache step will be returned. If None, variables with cache step
+            and run will be returned. Default is None.
 
         return_timestamps: list, numeric, ndarray (1D) (optional)
             Timestamps in model execution at which to return state information.
@@ -1461,30 +1480,65 @@ class Model(Macro):
             time (float) and (possibly partial) dictionary of initial values
             for stock (stateful) objects. Default is 'original'.
 
+        final_time: float or None
+            Final time of the simulation. If float, the given value will be
+            used to compute the return_timestamps (if not given) and as a
+            final time. If None the last value of return_timestamps will be
+            used as a final time. Default is None.
+
+        time_step: float or None
+            Time step of the simulation. If float, the given value will be
+            used to compute the return_timestamps (if not given) and
+            euler time series. If None the default value from components
+            will be used. Default is None.
+
+        saveper: float or None
+            Saving step of the simulation. If float, the given value will be
+            used to compute the return_timestamps (if not given). If None
+            the default value from components will be used. Default is None.
+
         cache_output: bool (optional)
            If True, the number of calls of outputs variables will be increased
            in 1. This helps caching output variables if they are called only
            once. For performance reasons, if time step = saveper it is
            recommended to activate this feature, if time step << saveper
            it is recommended to deactivate it. Default is True.
-        """
 
-        self._simulation_stepper = True
+        """
+        self.output = output_obj
+
+        self._stepper_mode = True
 
         self._config_simulation(params, return_columns, return_timestamps,
                                 initial_condition, final_time, time_step,
-                                saveper, cache_output, output_file,
-                                step_vars=step_vars)
+                                saveper, cache_output, step_vars=step_vars)
+
+        self.output.set_capture_elements(self.capture_elements)
+
+        self.output.initialize(self)
 
         self.output.update(self)
 
     def step(self, num_steps=1, step_vars={}):
         """
-        Update model variables and run any number of model steps.
+        Run a model step. Updates model variables first (optional), and then
+        runs any number of model steps. To collect the outputs after one or
+        more steps, use the collect method of the ModelOutput class.
 
-        Parameters:
-
+        Parameters
+        ----------
         num_steps: int
+            Number of steps that the iterator should run with the values of
+            variables defined in step_vars argument.
+
+        step_vars: dict
+            Varibale names that should be updated before running the step
+            as keys, and the actual values of the variables as values.
+
+        Returns
+        -------
+        None
+
         """
         # TODO warn the user if we exceeded the final_time??
         self.set_components(step_vars)
@@ -1494,24 +1548,13 @@ class Model(Macro):
                 self._integrate_step()
                 self.output.update(self)
 
-    def collect(self, flatten_output=True):
-        """
-        Collect results after one or more simulation steps, and save to
-        desired output format.
-        """
-
-        del self._dependencies["OUTPUTS"]
-
-        self.output.add_run_elements(self, self.capture_elements['run'])
-
-        self._remove_constant_cache()
-
-        return self.output.postprocess(
-            return_addresses=self.return_addresses, flatten=flatten_output)
-
     def _config_simulation(self, params, return_columns, return_timestamps,
                            initial_condition, final_time, time_step, saveper,
-                           cache_output, output_file, **kwargs):
+                           cache_output, **kwargs):
+        """
+        Internal method to set all simulation config parameters. Arguments to
+        this function are those of the run and set_stepper methods.
+        """
 
         self._set_control_vars(return_timestamps, final_time, time_step,
                                saveper)
@@ -1519,7 +1562,7 @@ class Model(Macro):
         if params:
             self.set_components(params)
 
-        if self._simulation_stepper:
+        if self._stepper_mode:
             for step_var in kwargs["step_vars"]:
                 self.dependencies[step_var]["time"] = 1
 
@@ -1528,10 +1571,11 @@ class Model(Macro):
 
         self.set_initial_condition(initial_condition)
 
-        if not self._simulation_stepper:
-            self._set_progressbar(kwargs["progress"])
+        # progressbar only makes sense when not running step by step
+        if not self._stepper_mode:
+            self.progress = self._set_progressbar(kwargs["progress"])
 
-        self._set_capture_elements(return_columns)
+        self.capture_elements = self._set_capture_elements(return_columns)
 
         # include outputs in cache if needed
         self._dependencies["OUTPUTS"] = {
@@ -1542,24 +1586,37 @@ class Model(Macro):
             # udate the cache type taking into account the outputs
             self._assign_cache_type()
 
-        # check validitty of output_file
-        if output_file:
-            output_file = ModelOutput.check_output_file_path(
-                output_file)
-
         # add constant cache to thosa variable that are constants
         self._add_constant_cache()
 
-        # Run the model
+        # set Run mode
         self.time.stage = 'Run'
+
         # need to clean cache to remove the values from active_initial
         self.clean_caches()
 
-        # instantiating output object
-        self.output = ModelOutput(self, self.capture_elements['step'],
-                                  output_file)
-
     def _set_capture_elements(self, return_columns):
+        """
+        Define which variables will be stored in the output object, according
+        to the return_columns passed by the user. The list is stored in the
+        capture_elements attribute, which is a dictionary with keys "run" and
+        "step".
+
+        Parameters
+        ----------
+
+        return_columns:list, 'step' or None (optional)
+            List of string model component names, returned dataframe
+            will have corresponding columns. If 'step' only variables with
+            cache step will be returned. If None, variables with cache step
+            and run will be returned. Default is None.
+
+        Returns
+        -------
+        capture_elements: dict
+            Dictionary of list with keywords step and run.
+
+        """
         if return_columns is None or isinstance(return_columns, str):
             return_columns = self._default_return_columns(return_columns)
 
@@ -1567,9 +1624,22 @@ class Model(Macro):
             return_columns, self._namespace)
 
         # create a dictionary splitting run cached and others
-        self.capture_elements = self._split_capture_elements(capture_elements)
+        capture_elements = self._split_capture_elements(capture_elements)
+
+        return capture_elements
 
     def _set_progressbar(self, progress):
+        """
+        Configures the progressbar, according to the user provided argument.
+        If final_time or time_step are functions, then the progressbar is
+        automatically disabled, regardless of the value of the progress
+        argument.
+
+        Parameters
+        ----------
+        progress: bool
+
+        """
         if progress and (self.cache_type["final_time"] == "step" or
                          self.cache_type["time_step"] == "step"):
             warnings.warn(
@@ -1579,7 +1649,7 @@ class Model(Macro):
             )
             progress = False
 
-        self.progress = progress
+        return progress
 
     def _set_control_vars(self, return_timestamps, final_time, time_step,
                           saveper):
