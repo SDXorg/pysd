@@ -7,6 +7,7 @@ import xarray as xr
 import netCDF4 as nc
 
 from pysd.tools.benchmarking import assert_frames_close
+from pysd.py_backend.output import ModelOutput
 
 import pysd
 
@@ -1215,12 +1216,15 @@ class TestPySD():
 
     @pytest.mark.parametrize("model_path", [test_model])
     def test__integrate(self, tmp_path, model):
-        from pysd.py_backend.model import ModelOutput
+
         # TODO: think through a stronger test here...
         model.time.add_return_timestamps(list(range(0, 5, 2)))
-        capture_elements = ['teacup_temperature']
+        capture_elements = {"run": [], "step": ['teacup_temperature']}
 
-        model.output = ModelOutput(model, capture_elements, None)
+        output = ModelOutput()
+        output.set_capture_elements(capture_elements=capture_elements)
+        output.initialize(model)
+        model.output = output
         model._integrate()
         res = model.output.handler.ds
         assert isinstance(res, pd.DataFrame)
@@ -1229,9 +1233,10 @@ class TestPySD():
 
         model.reload()
         model.time.add_return_timestamps(list(range(0, 5, 2)))
-        model.output = ModelOutput(model,
-                                   capture_elements,
-                                   tmp_path.joinpath("output.nc"))
+        output = ModelOutput(tmp_path.joinpath("output.nc"))
+        output.set_capture_elements(capture_elements=capture_elements)
+        output.initialize(model)
+        model.output = output
         model._integrate()
         res = model.output.handler.ds
         assert isinstance(res, nc.Dataset)
@@ -1483,7 +1488,9 @@ class TestDependencies():
     @pytest.mark.parametrize("model_path", [test_model])
     def test_stepper(self, model):
 
-        model.set_stepper(step_vars=["room_temperature"],
+        output = ModelOutput()
+
+        model.set_stepper(output, step_vars=["room_temperature"],
                           final_time=5)
 
         assert model.cache_type["room_temperature"] == "step"
@@ -1494,10 +1501,10 @@ class TestDependencies():
         for _ in range(len(result_temperatures) - 1):
             model.step(1, {"room_temperature": model["room_temperature"] + 1})
 
-        res = model.collect()
+        result_df = output.collect(model)
 
-        np.array_equal(res["Room Temperature"].values, result_temperatures)
-        assert np.floor(res.loc[5, "Teacup Temperature"]) == 144
+        np.array_equal(result_df["Room Temperature"].values, result_temperatures)
+        assert np.floor(result_df.loc[5, "Teacup Temperature"]) == 144
 
 
 class TestExportImport():

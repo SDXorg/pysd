@@ -51,16 +51,16 @@ class TestOutput():
             def process_output(self, out_file):
                 pass
 
-            def initialize(self, model, capture_elements):
+            def initialize(self, model):
                 pass
 
-            def update(self, model, capture_elements):
+            def update(self, model):
                 pass
 
             def postprocess(self, **kwargs):
                 pass
 
-            def add_run_elements(self, capture_elemetns):
+            def add_run_elements(self):
                 pass
 
         # eventhough it does not inherit from OutputHandlerInterface, it is
@@ -105,20 +105,20 @@ class TestOutput():
         # this should never happen, because these methods are instance methods,
         # therefore the class needs to be instantiated first
         with pytest.raises(NotImplementedError):
-            EmptyHandler.initialize(EmptyHandler, "model", "capture")
+            EmptyHandler.initialize(EmptyHandler, "model")
 
         with pytest.raises(NotImplementedError):
             EmptyHandler.process_output(EmptyHandler, "out_file")
 
         with pytest.raises(NotImplementedError):
-            EmptyHandler.update(EmptyHandler, "model", "capture")
+            EmptyHandler.update(EmptyHandler, "model")
 
         with pytest.raises(NotImplementedError):
             EmptyHandler.postprocess(EmptyHandler)
 
         with pytest.raises(NotImplementedError):
             EmptyHandler.add_run_elements(
-                EmptyHandler, "model", "capture")
+                EmptyHandler, "model")
 
     @pytest.mark.parametrize("model_path", [test_model_look])
     def test_invalid_output_file(self, model):
@@ -306,9 +306,11 @@ class TestOutput():
 
     @pytest.mark.parametrize("model_path", [test_model_look])
     def test_dataset_handler_step_setter(self, tmp_path, model):
-        capture_elements = []
+        capture_elements = {"run": [], "step": []}
         results = tmp_path.joinpath("results.nc")
-        output = ModelOutput(model, capture_elements, results)
+        output = ModelOutput(results)
+        output.set_capture_elements(capture_elements)
+        output.initialize(model)
 
         # Dataset handler step cannot be modified from the outside
         with pytest.raises(AttributeError):

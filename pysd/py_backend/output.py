@@ -25,50 +25,50 @@ from . utils import xrsplit
 
 class ModelOutput():
     """
-    Handles different types of outputs by dispatchinging the tasks
-    to adequate object handlers.
+    Manages outputs from simulations. Handles different types of outputs by
+    dispatchinging the tasks to adequate object handlers.
 
     Parameters
     ----------
-    model: pysd.Model
-        PySD Model object
-    capture_elements: list
-        Which model elements to capture - uses pysafe names.
     out_file: str or pathlib.Path
         Path to the file where the results will be written.
 
     """
     valid_output_files = [".nc", ".csv", ".tab"]
 
-    def __init__(self, model, capture_elements, out_file=None):
+    def __init__(self, out_file=None):
+
+        if out_file:
+            ModelOutput.check_output_file_path(out_file)
 
         # Add any other handlers that you write here, in the order you
         # want them to run (DataFrameHandler runs first)
         self.handler = DataFrameHandler(DatasetHandler(None)).handle(out_file)
 
-        self.capture_elements = capture_elements + ["time"]
-
-        self.initialize(model)
+    def set_capture_elements(self, capture_elements):
+        self.handler.capture_elements_step = capture_elements["step"] + \
+            ["time"]
+        self.handler.capture_elements_run = capture_elements["run"]
 
     def initialize(self, model):
         """ Delegating the creation of the results object and its elements to
         the appropriate handler."""
-        self.handler.initialize(model, self.capture_elements)
+        self.handler.initialize(model)
 
     def update(self, model):
         """ Delegating the update of the results object and its elements to the
         appropriate handler."""
-        self.handler.update(model, self.capture_elements)
+        self.handler.update(model)
 
     def postprocess(self, **kwargs):
         """ Delegating the postprocessing of the results object to the
         appropriate handler."""
         return self.handler.postprocess(**kwargs)
 
-    def add_run_elements(self, model, run_elements):
+    def add_run_elements(self, model):
         """ Delegating the addition of results with run cache in the output
         object to the appropriate handler."""
-        self.handler.add_run_elements(model, run_elements)
+        self.handler.add_run_elements(model)
 
     @staticmethod
     def check_output_file_path(output_file):
@@ -85,6 +85,36 @@ class ModelOutput():
                     f"Unsupported output file format {file_extension}")
 
         return output_file
+
+    @staticmethod
+    def collect(model, flatten_output=True):
+        """
+        Collect results after one or more simulation steps, and save to
+        desired output format (DataFrame, csv, tab or netCDF).
+
+        Parameters
+        ----------
+        model: pysd.py_backend.model.Model
+            PySD Model object.
+
+
+        flatten_output: bool (optional)
+            If True, once the output dataframe has been formatted will
+            split the xarrays in new columns following Vensim's naming
+            to make a totally flat output. Default is True.
+            This argument will be ignored when passing a netCDF4 file
+            path in the output_file argument.
+
+        """
+
+        del model._dependencies["OUTPUTS"]
+
+        model.output.add_run_elements(model)
+
+        model._remove_constant_cache()
+
+        return model.output.postprocess(
+            return_addresses=model.return_addresses, flatten=flatten_output)
 
 
 class OutputHandlerInterface(metaclass=abc.ABCMeta):
@@ -139,14 +169,14 @@ class OutputHandlerInterface(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def initialize(self, model, capture_elements):
+    def initialize(self, model):
         """
         Create the results object and its elements based on capture_elemetns.
         """
         raise NotImplementedError
 
     @abc.abstractmethod
-    def update(self, model, capture_elements):
+    def update(self, model):
         """
         Update the results object at each iteration at which resutls are
         stored.
@@ -161,7 +191,7 @@ class OutputHandlerInterface(metaclass=abc.ABCMeta):
         raise NotImplementedError
 
     @abc.abstractmethod
-    def add_run_elements(self, model, capture_elements):
+    def add_run_elements(self, model):
         """
         Add elements with run cache to the results object.
         """
@@ -210,11 +240,12 @@ class DatasetHandler(OutputHandlerInterface):
 
         """
         if out_file:
+            out_file = Path(out_file)
             if out_file.suffix == ".nc":
                 self.out_file = out_file
                 return self
 
-    def initialize(self, model, capture_elements):
+    def initialize(self, model):
         """
         Creates a netCDF4 Dataset and adds model dimensions and variables
         present in the capture elements to it.
@@ -223,8 +254,6 @@ class DatasetHandler(OutputHandlerInterface):
         ----------
         model: pysd.Model
             PySD Model object
-        capture_elements: list
-            Which model elements to capture - uses pysafe names.
 
         Returns
         -------
@@ -259,9 +288,9 @@ class DatasetHandler(OutputHandlerInterface):
         # creating the time dimension as unlimited
         self.ds.createDimension("time", None)
         # creating variables
-        self.__create_ds_vars(model, capture_elements)
+        self.__create_ds_vars(model, self.capture_elements_step)
 
-    def update(self, model, capture_elements):
+    def update(self, model):
         """
         Writes values of cache step variables from the capture_elements
         list in the netCDF4 Dataset.
@@ -270,15 +299,13 @@ class DatasetHandler(OutputHandlerInterface):
         ----------
         model: pysd.Model
             PySD Model object
-        capture_elements: list
-            Which model elements to capture - uses pysafe names.
 
         Returns
         -------
         None
 
         """
-        for key in capture_elements:
+        for key in self.capture_elements_step:
             comp = model[key]
             if isinstance(comp, xr.DataArray):
                 self.ds[key][self.step, :] = comp.values
@@ -287,7 +314,7 @@ class DatasetHandler(OutputHandlerInterface):
 
         self.__update_step()
 
-    def __update_run_elements(self, model, capture_elements):
+    def __update_run_elements(self, model):
         """
         Writes values of cache run elements from the cature_elements set
         in the netCDF4 Dataset.
@@ -297,15 +324,13 @@ class DatasetHandler(OutputHandlerInterface):
         ----------
         model: pysd.Model
             PySD Model object
-        capture_elements: list
-            Which model elements to capture - uses pysafe names.
 
         Returns
         -------
         None
 
         """
-        for key in capture_elements:
+        for key in self.capture_elements_run:
             comp = model[key]
             if isinstance(comp, xr.DataArray):
                 self.ds[key][:] = comp.values
@@ -323,7 +348,7 @@ class DatasetHandler(OutputHandlerInterface):
         self.ds.close()
         print(f"Results stored in {self.out_file}")
 
-    def add_run_elements(self, model, capture_elements):
+    def add_run_elements(self, model):
         """
         Adds constant elements to netCDF4 Dataset.
 
@@ -331,8 +356,6 @@ class DatasetHandler(OutputHandlerInterface):
         ----------
         model: pysd.Model
             PySD Model object
-        capture_elements: list
-            List of constant elements
 
         Returns
         -------
@@ -340,8 +363,8 @@ class DatasetHandler(OutputHandlerInterface):
 
         """
         # creating variables in capture_elements
-        self.__create_ds_vars(model, capture_elements, time_dim=False)
-        self.__update_run_elements(model, capture_elements)
+        self.__create_ds_vars(model, self.capture_elements_run, time_dim=False)
+        self.__update_run_elements(model)
 
     def __create_ds_vars(self, model, capture_elements, time_dim=True):
         """
@@ -351,9 +374,10 @@ class DatasetHandler(OutputHandlerInterface):
         Parameters
         ----------
         model: pysd.Model
-            PySD Model object
+            PySD Model object.
         capture_elements: list
-            Which model elements to capture - uses pysafe names.
+            List of variable or parameter names to include as variables in the
+            dataset.
         time_dim: bool
             Whether to add time as the first dimension for the variable.
 
@@ -414,15 +438,17 @@ class DataFrameHandler(OutputHandlerInterface):
         None or DataFrameHandler instance
 
         """
-        self.out_file = out_file
 
         if not out_file:
+            self.out_file = None
             return self
 
-        if out_file.suffix in [".csv", ".tab"]:
+        self.out_file = Path(out_file)
+
+        if self.out_file.suffix in [".csv", ".tab"]:
             return self
 
-    def initialize(self, model, capture_elements):
+    def initialize(self, model):
         """
         Creates a pandas DataFrame and adds model variables as columns.
 
@@ -430,17 +456,15 @@ class DataFrameHandler(OutputHandlerInterface):
         ----------
         model: pysd.Model
             PySD Model object
-        capture_elements: list
-            Which model elements to capture - uses pysafe names.
 
         Returns
         -------
         None
 
         """
-        self.ds = pd.DataFrame(columns=capture_elements)
+        self.ds = pd.DataFrame(columns=self.capture_elements_step)
 
-    def update(self, model, capture_elements):
+    def update(self, model):
         """
         Add a row to the results pandas DataFrame with the values of the
         variables listed in capture_elements.
@@ -449,8 +473,6 @@ class DataFrameHandler(OutputHandlerInterface):
         ----------
         model: pysd.Model
             PySD Model object
-        capture_elements: list
-            Which model elements to capture - uses pysafe names.
 
         Returns
         -------
@@ -459,7 +481,7 @@ class DataFrameHandler(OutputHandlerInterface):
         """
         self.ds.loc[model.time.round()] = [
             getattr(model.components, key)()
-            for key in capture_elements]
+            for key in self.capture_elements_step]
 
     def postprocess(self, **kwargs):
         """
@@ -487,7 +509,7 @@ class DataFrameHandler(OutputHandlerInterface):
 
         return df
 
-    def add_run_elements(self, model, capture_elements):
+    def add_run_elements(self, model):
         """
         Adds constant elements to a dataframe.
 
@@ -495,8 +517,6 @@ class DataFrameHandler(OutputHandlerInterface):
         ----------
         model: pysd.Model
             PySD Model object
-        capture_elements: list
-            Which model elements to capture - uses pysafe names.
 
         Returns
         -------
@@ -504,7 +524,7 @@ class DataFrameHandler(OutputHandlerInterface):
 
         """
         nx = len(self.ds.index)
-        for element in capture_elements:
+        for element in self.capture_elements_run:
             self.ds[element] = [getattr(model.components, element)()] * nx
 
     @staticmethod
