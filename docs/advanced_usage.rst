@@ -3,6 +3,29 @@ Advanced Usage
 
 The power of PySD, and its motivation for existence, is its ability to tie in to other models and analysis packages in the Python environment. In this section we discuss how those connections happen.
 
+Running models one (or more) step(s) at a time
+----------------------------------------------
+
+Coupling different models requires the exchange of certain variables between them. This is only possible if a stepping mechanism is available, which allows for running any number of steps with certain boundary conditions that evolve along time.
+In this section, we show how the teacup model may be run in a for loop using the :py:meth:`.step` function (rather than the :py:meth:`.run` function) and update the value of a model variable before each step::
+
+   # instantiate ModelOutput object
+   output = ModelOutput()
+
+   # configure the stepper behavior, passing a list of the variables that
+   # will be updated before running each model step in the step_vars argument
+   model.set_stepper(output,
+                     step_vars=["room_temperature"],
+                     final_time=5)
+
+   # run 40 steps increasing the room_temperature by one degree at each step
+   for _ in range(40):
+      model.step(1, {"room_temperature": model["room_temperature"] + 1})
+
+   # store model results in a pandas DataFrame (default unless a file name
+   # is passed when instantiating the ModelOutput object)
+   result_df = output.collect(model)
+
 
 Replacing model components with more complex objects
 ----------------------------------------------------
