@@ -1544,8 +1544,8 @@ class Model(Macro):
         self.set_components(step_vars)
 
         for _ in range(num_steps):
+            self._integrate_step()
             if self.time.in_return():
-                self._integrate_step()
                 self.output.update(self)
 
     def _config_simulation(self, params, return_columns, return_timestamps,
