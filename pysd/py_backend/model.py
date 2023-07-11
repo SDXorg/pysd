@@ -1312,7 +1312,6 @@ class Model(Macro):
         self.missing_values = missing_values
         self.progress = None
         self.output = None
-        self._stepper_mode = False
 
         if initialize:
             self.initialize()
@@ -1420,6 +1419,8 @@ class Model(Macro):
         pysd.set_initial_condition : handles setting initial conditions
 
         """
+        self._stepper_mode = False
+
         if reload:
             self.reload()
 
@@ -1440,7 +1441,6 @@ class Model(Macro):
                     return_columns=None, return_timestamps=None,
                     initial_condition='original', final_time=None,
                     time_step=None, saveper=None, cache_output=True):
-
         """
         Configure the model stepping behavior.
 
@@ -1460,7 +1460,7 @@ class Model(Macro):
             List of variable or parameter names whose values might be updated
             after one or more simulation steps.
 
-        return_columns:list, 'step' or None (optional)
+        return_columns: list, 'step' or None (optional)
             List of string model component names, returned dataframe
             will have corresponding columns. If 'step' only variables with
             cache step will be returned. If None, variables with cache step
@@ -1564,7 +1564,7 @@ class Model(Macro):
 
         if self._stepper_mode:
             for step_var in kwargs["step_vars"]:
-                self.dependencies[step_var]["time"] = 1
+                self._dependencies[step_var]["time"] = 1
 
         # update cache types after setting params
         self._assign_cache_type()
