@@ -28,6 +28,8 @@ more_tests = Path("more-tests")
 test_model_constant_pipe = more_tests.joinpath(
     "constant_pipeline/test_constant_pipeline.mdl")
 
+test_model_stepper = more_tests.joinpath(
+    "stepper_cache/stepper_cache.mdl")
 
 class TestPySD():
 
@@ -1484,57 +1486,6 @@ class TestDependencies():
         assert\
             (out2["constant3"] == (5*new_var.values-1)*new_var.values).all()
 
-    @pytest.mark.parametrize("model_path", [test_model])
-    def test_stepper_workflow(self, model):
-
-        output = ModelOutput()
-
-        model.set_stepper(output, step_vars=["room_temperature"],
-                          final_time=5)
-
-        assert model.cache_type["room_temperature"] == "step"
-
-        result_temperatures = np.arange(70, 111)
-
-        # run 40 steps
-        for _ in range(len(result_temperatures) - 1):
-            model.step(1, {"room_temperature": model["room_temperature"] + 1})
-
-        result_df = output.collect(model)
-
-        np.array_equal(result_df["Room Temperature"].values, result_temperatures)
-        assert np.floor(result_df.loc[5, "Teacup Temperature"]) == 144
-
-    def test_stepper_cache_assignment(self, _root):
-
-        test_model_stepper = _root.joinpath(
-            "more-tests/stepper_cache/stepper_cache.mdl")
-
-        model = pysd.read_vensim(test_model_stepper)
-
-        assert model.cache_type["foo"] == "run"
-        assert model.cache_type["bar"] == "run"
-        assert model.cache_type["foobar"] == "run"
-
-        output = ModelOutput()
-
-        model.set_stepper(output, params={"foo": 0}, time_step=0.2,
-                          saveper=0.2, final_time=5, step_vars=["foo"])
-
-        assert model.cache_type["foo"] == "step"
-        assert model.cache_type["bar"] == "step"
-        assert model.cache_type["foobar"] == "step"
-
-        steps = int((model["final_time"] - model["initial_time"]) /
-                    model["time_step"])
-
-        for i in range(1,steps + 1):
-            model.step(1, {"foo": i})
-
-        res = output.collect(model)
-
-        assert np.floor(res.loc[5, "foobar"]) == 100
-
 
 class TestExportImport():
 
@@ -1630,3 +1581,54 @@ class TestExportImport():
             assert_frames_close(stocks1, stocks.loc[return_ts[1]])
         if return_ts[2]:
             assert_frames_close(stocks2, stocks.loc[return_ts[2]])
+
+class TestStepper():
+
+    @pytest.mark.parametrize("model_path", [test_model_stepper])
+    def test_stepper_cache_assignment(self, model):
+
+        assert model.cache_type["foo"] == "run"
+        assert model.cache_type["bar"] == "run"
+        assert model.cache_type["foobar"] == "run"
+
+        output = ModelOutput()
+
+        model.set_stepper(output, params={"foo": 0}, time_step=0.2,
+                          saveper=0.2, final_time=5, step_vars=["foo"])
+
+        assert model.cache_type["foo"] == "step"
+        assert model.cache_type["bar"] == "step"
+        assert model.cache_type["foobar"] == "step"
+
+        steps = int((model["final_time"] - model["initial_time"]) /
+                    model["time_step"])
+
+        for i in range(1,steps + 1):
+            model.step(1, {"foo": i})
+
+        res = output.collect(model)
+
+        assert np.floor(res.loc[5, "foobar"]) == 100
+
+    @pytest.mark.parametrize("model_path", [test_model])
+    def test_stepper_workflow(self, model):
+
+        assert model.cache_type["room_temperature"] == "run"
+
+        output = ModelOutput()
+
+        model.set_stepper(output, step_vars=["room_temperature"],
+                          final_time=5)
+
+        assert model.cache_type["room_temperature"] == "step"
+
+        result_temperatures = np.arange(70, 111)
+
+        # run 40 steps
+        for _ in range(len(result_temperatures) - 1):
+            model.step(1, {"room_temperature": model["room_temperature"] + 1})
+
+        result_df = output.collect(model)
+
+        np.array_equal(result_df["Room Temperature"].values, result_temperatures)
+        assert np.floor(result_df.loc[5, "Teacup Temperature"]) == 144
