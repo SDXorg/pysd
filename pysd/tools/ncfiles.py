@@ -88,8 +88,8 @@ class NCFile():
         -------
         df: pandas.DataFrame
             Dataframe with all colums specified in subset.
-        """
 
+        """
         return NCFile.ds_to_df(self.ds, subset, self.parallel)
 
     def open_nc(self) -> xr.Dataset:

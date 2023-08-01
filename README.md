@@ -14,7 +14,7 @@
 
 This project is a library for running [System Dynamics](http://en.wikipedia.org/wiki/System_dynamics) (SD) models in Python, with the purpose of improving integration of *Big Data* and *Machine Learning* into the SD workflow.
 
-**The current version needs to run at least Python 3.7.**
+**The current version needs to run at least Python 3.8.**
 
 ## Resources
 
