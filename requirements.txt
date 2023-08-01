@@ -7,7 +7,7 @@ lxml
 regex
 chardet
 black
-openpyxl<3.1
+openpyxl>=3.1
 scipy
 progressbar2
 portion

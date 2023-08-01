@@ -1,5 +1,31 @@
 What's New
 ==========
+v3.12.0 (2023/XX/XX)
+--------------------
+New Features
+~~~~~~~~~~~~
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+- Remove support for Python 3.7. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Update the cellrange retrievel to be compatible with :py:mod:`openpyxl` >= 3.1. It breaks the code for lower versions. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+
+Documentation
+~~~~~~~~~~~~~
+- Update requirements. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+
 v3.11.0 (2023/08/01)
 --------------------
 New Features

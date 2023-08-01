@@ -157,13 +157,16 @@ class External(object):
         """
         # read data
         excel = Excels.read_opyxl(self.file)
-        try:
-            # Get the local id of the sheet
-            # needed for searching in locals names
-            # need to lower the sheetnames as Vensim has no case sensitivity
-            sheetId = [sheetname_wb.lower() for sheetname_wb
-                       in excel.sheetnames].index(self.sheet.lower())
-        except ValueError:
+        # Get global and local cellrange names
+        global_cellranges = excel.defined_names
+        local_cellranges = None
+        # need to lower the sheetnames as Vensim has no case sensitivity
+        for sheet in excel.sheetnames:
+            if sheet.lower() == self.sheet.lower():
+                local_cellranges = excel[sheet].defined_names
+                break
+
+        if local_cellranges is None:
             # Error if it is not able to get the localSheetId
             raise ValueError(
                 self.py_name + "\n"
@@ -172,8 +175,8 @@ class External(object):
             )
         try:
             # Search for local and global names
-            cellrange = excel.defined_names.get(cellname, sheetId)\
-                        or excel.defined_names.get(cellname)
+            cellrange = local_cellranges.get(cellname)\
+                        or global_cellranges.get(cellname)
             sheet, cells = next(cellrange.destinations)
 
             assert sheet.lower() == self.sheet.lower()

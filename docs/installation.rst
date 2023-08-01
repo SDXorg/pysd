@@ -37,11 +37,11 @@ In the source directory use the command:
 
 Required Dependencies
 ---------------------
-PySD requires **Python 3.7** or above.
+PySD requires **Python 3.8** or above.
 
 PySD builds on the core Python data analytics stack, and the following third party libraries:
 
-* Numpy
+* Numpy < 1.24
 * Scipy
 * Pandas
 * Parsimonious
@@ -51,7 +51,7 @@ PySD builds on the core Python data analytics stack, and the following third par
 * regex
 * chardet
 * black
-* openpyxl
+* openpyxl >= 3.1
 * progressbar2
 * portion
 
@@ -69,7 +69,6 @@ In order to plot model outputs as shown in :doc:`Getting started <../getting_sta
 To export data to netCDF (*.nc*) files:
 
 * netCDF4
-* importlib-metadata==2.0 (only for Python 3.7)
 
 To export netCDF data to comma or tab separated files with parallel processing:
 
