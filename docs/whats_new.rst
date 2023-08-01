@@ -1,7 +1,7 @@
 What's New
 ==========
-v3.11.0 (2023/07)
------------------
+v3.11.0 (2023/08/01)
+--------------------
 New Features
 ~~~~~~~~~~~~
 - Add the possibility to run a model one or several steps at a time, updating model variables in the process. (`@rogersamso <https://github.com/rogersamso>`_)
@@ -28,6 +28,7 @@ Internal Changes
 - Add the :py:meth:`pysd.py_backend.output.ModelOutput.collect` method to the :py:class:`pysd.py_backend.output.ModelOutput` class. (`@rogersamso <https://github.com/rogersamso>`_)
 - Add the :py:meth:`pysd.py_backend.model.Model.set_stepper` and :py:meth:`pysd.py_backend.model.Model.step` methods to the :py:class:`pysd.py_backend.model.Model` class. (`@rogersamso <https://github.com/rogersamso>`_)
 - Add several internal methods to the :py:class:`pysd.py_backend.model.Model` class, to avoid code repetition. (`@rogersamso <https://github.com/rogersamso>`_)
+- Add :py:class:`FutureWarning` for Python 3.7 support deprecation. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 
 v3.10.0 (2023/04/28)
