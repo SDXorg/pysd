@@ -6,6 +6,7 @@ normal operation.
 """
 
 import sys
+from warnings import warn
 
 from pysd.py_backend.model import Model
 
@@ -14,13 +15,24 @@ if sys.version_info[:2] < (3, 7):  # pragma: no cover
     raise RuntimeError(
         "\n\n"
         + "Your Python version is no longer supported by PySD.\n"
-        + "The current version needs to run at least Python 3.7."
+        + "The current version needs to run at least Python 3.7"
+        + "(we recommend running at least Python 3.8)."
         + " You are running:\n\tPython "
         + sys.version
-        + "."
         + "\nPlease update your Python version or use the last "
         + " supported version:\n\t"
         + "https://github.com/SDXorg/pysd/releases/tag/LastPy2"
+    )
+elif sys.version_info[:2] == (3, 7):  # pragma: no cover
+    warn(
+        "\n\n"
+        + "Python 3.7 will no longer be supported by PySD in future "
+        + "releases.\n"
+        + " You are running:\n\tPython "
+        + sys.version
+        + "\nPlease update your Python version to 3.8 or higher to "
+        + " be able to continue running PySD in the future.",
+        FutureWarning
     )
 
 

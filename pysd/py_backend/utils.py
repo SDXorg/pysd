@@ -134,13 +134,6 @@ def compute_shape(coords, reshape_len=None, py_name=""):
     shape: list
       Shape of the ordered dictionary or of the desired table or vector.
 
-    Note
-    ----
-    Dictionaries in Python >= 3.7 are ordered, which means that
-    we could remove dims if there is a not backward compatible
-    version of the library which only works in Python 3.7+. For now,
-    the dimensions list is passed to make it work properly for all the users.
-
     """
     if not reshape_len:
         return [len(coord) for coord in coords.values()]
