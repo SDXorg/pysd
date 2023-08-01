@@ -25,8 +25,8 @@ from . utils import xrsplit
 
 class ModelOutput():
     """
-    Manages outputs from simulations. Handles different types of outputs by
-    dispatchinging the tasks to adequate object handlers.
+    Manages outputs from simulations. Handles different types of outputs
+    by dispatchinging the tasks to adequate object handlers.
 
     Parameters
     ----------
@@ -51,23 +51,31 @@ class ModelOutput():
         self.handler.capture_elements_run = capture_elements["run"]
 
     def initialize(self, model):
-        """ Delegating the creation of the results object and its elements to
-        the appropriate handler."""
+        """
+        Delegating the creation of the results object and its elements
+        to the appropriate handler.
+        """
         self.handler.initialize(model)
 
     def update(self, model):
-        """ Delegating the update of the results object and its elements to the
-        appropriate handler."""
+        """
+        Delegating the update of the results object and its elements
+        to the appropriate handler.
+        """
         self.handler.update(model)
 
     def postprocess(self, **kwargs):
-        """ Delegating the postprocessing of the results object to the
-        appropriate handler."""
+        """
+        Delegating the postprocessing of the results object
+        to the appropriate handler.
+        """
         return self.handler.postprocess(**kwargs)
 
     def add_run_elements(self, model):
-        """ Delegating the addition of results with run cache in the output
-        object to the appropriate handler."""
+        """
+        Delegating the addition of results with run cache in the
+        output object to the appropriate handler.
+        """
         self.handler.add_run_elements(model)
 
     @staticmethod
@@ -97,7 +105,6 @@ class ModelOutput():
         model: pysd.py_backend.model.Model
             PySD Model object.
 
-
         flatten_output: bool (optional)
             If True, once the output dataframe has been formatted will
             split the xarrays in new columns following Vensim's naming
@@ -106,7 +113,6 @@ class ModelOutput():
             path in the output_file argument.
 
         """
-
         del model._dependencies["OUTPUTS"]
 
         model.output.add_run_elements(model)
@@ -126,8 +132,9 @@ class OutputHandlerInterface(metaclass=abc.ABCMeta):
 
     def handle(self, out_file):
         """
-        If the concrete handler can write on the output file type passed by the
-        user, it returns the handler itself, else it goes to the next handler.
+        If the concrete handler can write on the output file type passed
+        by the user, it returns the handler itself, else it goes to the
+        next handler.
 
         Parameters
         ----------
@@ -213,8 +220,8 @@ class DatasetHandler(OutputHandlerInterface):
     @property
     def step(self):
         """
-        Used as time index for the output Dataset. Increases by one at each
-        iteration.
+        Used as time index for the output Dataset. Increases by one
+        at each iteration.
         """
         return self._step
 
@@ -226,8 +233,8 @@ class DatasetHandler(OutputHandlerInterface):
 
     def process_output(self, out_file):
         """
-        If out_file can be handled by this concrete handler, it returns the
-        handler instance, else it returns None.
+        If out_file can be handled by this concrete handler, it returns
+        the handler instance, else it returns None.
 
         Parameters
         ----------
@@ -247,8 +254,8 @@ class DatasetHandler(OutputHandlerInterface):
 
     def initialize(self, model):
         """
-        Creates a netCDF4 Dataset and adds model dimensions and variables
-        present in the capture elements to it.
+        Creates a netCDF4 Dataset and adds model dimensions and
+        variables present in the capture elements to it.
 
         Parameters
         ----------
@@ -344,6 +351,7 @@ class DatasetHandler(OutputHandlerInterface):
         Returns
         -------
         None
+
         """
         self.ds.close()
         print(f"Results stored in {self.out_file}")
@@ -438,7 +446,6 @@ class DataFrameHandler(OutputHandlerInterface):
         None or DataFrameHandler instance
 
         """
-
         if not out_file:
             self.out_file = None
             return self
@@ -485,8 +492,8 @@ class DataFrameHandler(OutputHandlerInterface):
 
     def postprocess(self, **kwargs):
         """
-        Delete time column from the pandas DataFrame and flatten xarrays if
-        required.
+        Delete time column from the pandas DataFrame and flatten
+        xarrays if required.
 
         Returns
         -------
@@ -531,8 +538,8 @@ class DataFrameHandler(OutputHandlerInterface):
     def make_flat_df(df, return_addresses, flatten=False):
         """
         Takes a dataframe from the outputs of the integration processes,
-        renames the columns as the given return_adresses and splits xarrays
-        if needed.
+        renames the columns as the given return_adresses and splits
+        xarrays if needed.
 
         Parameters
         ----------

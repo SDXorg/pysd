@@ -1457,44 +1457,45 @@ class Model(Macro):
             Timeseries will be interpolated to give time-varying input.
 
         step_vars: list
-            List of variable or parameter names whose values might be updated
-            after one or more simulation steps.
+            List of variable or parameter names whose values might be
+            updated after one or more simulation steps.
 
         return_columns: list, 'step' or None (optional)
             List of string model component names, returned dataframe
-            will have corresponding columns. If 'step' only variables with
-            cache step will be returned. If None, variables with cache step
-            and run will be returned. Default is None.
+            will have corresponding columns. If 'step' only variables
+            with cache step will be returned. If None, variables with
+            cache step and run will be returned. Default is None.
 
         return_timestamps: list, numeric, ndarray (1D) (optional)
-            Timestamps in model execution at which to return state information.
-            Defaults to model-file specified timesteps.
+            Timestamps in model execution at which to return state
+            information. Defaults to model-file specified timesteps.
 
         initial_condition: str or (float, dict) (optional)
-            The starting time, and the state of the system (the values of
-            all the stocks) at that starting time. 'original' or 'o'uses
-            model-file specified initial condition. 'current' or 'c' uses
-            the state of the model after the previous execution. Other str
-            objects, loads initial conditions from the pickle file with the
-            given name.(float, dict) tuple lets the user specify a starting
-            time (float) and (possibly partial) dictionary of initial values
-            for stock (stateful) objects. Default is 'original'.
+            The starting time, and the state of the system (the values
+            of all the stocks) at that starting time. 'original' or 'o'
+            uses model-file specified initial condition. 'current' or
+            'c' uses the state of the model after the previous
+            execution. Other str objects, loads initial conditions from
+            the pickle file with the given name.(float, dict) tuple lets
+            the user specify a starting time (float) and (possibly
+            partial) dictionary of initial values for stock (stateful)
+            objects. Default is 'original'.
 
         final_time: float or None
-            Final time of the simulation. If float, the given value will be
-            used to compute the return_timestamps (if not given) and as a
-            final time. If None the last value of return_timestamps will be
-            used as a final time. Default is None.
+            Final time of the simulation. If float, the given value will
+            be used to compute the return_timestamps (if not given) and
+            as a final time. If None the last value of return_timestamps
+            will be used as a final time. Default is None.
 
         time_step: float or None
-            Time step of the simulation. If float, the given value will be
-            used to compute the return_timestamps (if not given) and
+            Time step of the simulation. If float, the given value will
+            be used to compute the return_timestamps (if not given) and
             euler time series. If None the default value from components
             will be used. Default is None.
 
         saveper: float or None
-            Saving step of the simulation. If float, the given value will be
-            used to compute the return_timestamps (if not given). If None
+            Saving step of the simulation. If float, the given value will
+            be used to compute the return_timestamps (if not given). If None
             the default value from components will be used. Default is None.
 
         cache_output: bool (optional)
@@ -1514,9 +1515,7 @@ class Model(Macro):
                                 saveper, cache_output, step_vars=step_vars)
 
         self.output.set_capture_elements(self.capture_elements)
-
         self.output.initialize(self)
-
         self.output.update(self)
 
     def step(self, num_steps=1, step_vars={}):
@@ -1528,8 +1527,8 @@ class Model(Macro):
         Parameters
         ----------
         num_steps: int
-            Number of steps that the iterator should run with the values of
-            variables defined in step_vars argument.
+            Number of steps that the iterator should run with the values
+            of variables defined in step_vars argument.
 
         step_vars: dict
             Varibale names that should be updated before running the step
@@ -1549,11 +1548,11 @@ class Model(Macro):
                 self.output.update(self)
 
     def _config_simulation(self, params, return_columns, return_timestamps,
-                           initial_condition, final_time, time_step, saveper,
-                           cache_output, **kwargs):
+                           initial_condition, final_time, time_step,
+                           saveper, cache_output, **kwargs):
         """
-        Internal method to set all simulation config parameters. Arguments to
-        this function are those of the run and set_stepper methods.
+        Internal method to set all simulation config parameters. Arguments
+        to this function are those of the run and set_stepper methods.
         """
 
         self._set_control_vars(return_timestamps, final_time, time_step,
