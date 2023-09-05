@@ -293,6 +293,5 @@ def _remove_constant_nan(df):
     """
     Removes nana values in constant value columns produced by Vensim
     """
-    nan_cols = np.isnan(df.iloc[1:, :]).all()
-    cols = nan_cols[nan_cols].index
-    df[cols] = df[cols].apply(lambda x: x.iloc[0])
+    nan_cols = np.isnan(df.iloc[1:, :]).all().values
+    df.loc[:, nan_cols] = df.loc[:, nan_cols].iloc[0].values
