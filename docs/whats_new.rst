@@ -15,6 +15,7 @@ Deprecations
 
 Bug fixes
 ~~~~~~~~~
+- Update benchmarking tools to avoid :py:class:`FutureWarning` for positional keys from :py:mod:`pandas`. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 Documentation
 ~~~~~~~~~~~~~
