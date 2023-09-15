@@ -26,6 +26,8 @@ Performance
 
 Internal Changes
 ~~~~~~~~~~~~~~~~
+- Update libraries used for building documentation and `.readthedocs.yml` . (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+
 
 v3.11.0 (2023/08/01)
 --------------------
