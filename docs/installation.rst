@@ -43,10 +43,9 @@ PySD builds on the core Python data analytics stack, and the following third par
 
 * Numpy < 1.24
 * Scipy
-* Pandas
+* Pandas (with Excel support: `pip install pandas[excel]`)
 * Parsimonious
 * xarray
-* xlrd
 * lxml
 * regex
 * chardet
