@@ -21,8 +21,7 @@ class Lookups(object):
 
             for index, value in values.items():
                 if isinstance(values.values[0], xr.DataArray):
-                    self.data.loc[index].loc[value.coords] =\
-                        value
+                    self.data.loc[index].loc[value.coords] = value
                 else:
                     self.data.loc[index] = value
         else:

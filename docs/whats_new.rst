@@ -1,6 +1,6 @@
 What's New
 ==========
-v3.12.0 (2023/XX/XX)
+v3.12.0 (2023/10/02)
 --------------------
 New Features
 ~~~~~~~~~~~~
@@ -26,7 +26,9 @@ Performance
 
 Internal Changes
 ~~~~~~~~~~~~~~~~
-- Update libraries used for building documentation and `.readthedocs.yml` . (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Update libraries used for building documentation and `.readthedocs.yml`. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Avoid conflicting :py:mod:`xarray` versions. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Use `pandas[excel]` instead of xlrd dependency in the requirements. (`@gdrosos <https://github.com/gdrosos>`_)
 
 
 v3.11.0 (2023/08/01)
