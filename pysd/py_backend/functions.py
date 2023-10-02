@@ -648,7 +648,7 @@ def vector_sort_order(vector, direction):
     vector: xarray.DataArray
         The vector to sort.
     direction: float
-        The direction to sort the vector. If direction > 1 it will sort
+        The direction to sort the vector. If direction > 0 it will sort
         the vector entries from smallest to biggest, otherwise from
         biggest to smallest.
 

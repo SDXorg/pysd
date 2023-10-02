@@ -524,10 +524,10 @@ class TestPySD():
 
         out = subprocess.run(split_bash(command), capture_output=True)
         assert out.returncode == 0
-        stocks = load_outputs(out_tab)
         canon = load_outputs(test_copy.parent / "output.tab")
+        stocks = load_outputs(out_tab)[canon.columns]
 
-        assert_frames_close(stocks[canon.columns], canon)
+        assert_frames_close(stocks, canon)
 
         # invalid data file
         command = f"{call} -o {out_tab} -D my_file.txt"\
