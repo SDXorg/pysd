@@ -7,7 +7,7 @@ New Features
 
 Breaking changes
 ~~~~~~~~~~~~~~~~
-- Remove support for Python 3.7. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Remove support for Python 3.7 and 3.8. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 - Update the cellrange retrievel to be compatible with :py:mod:`openpyxl` >= 3.1. It breaks the code for lower versions. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 Deprecations
@@ -27,7 +27,7 @@ Performance
 Internal Changes
 ~~~~~~~~~~~~~~~~
 - Update libraries used for building documentation and `.readthedocs.yml`. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
-- Avoid conflicting :py:mod:`xarray` versions. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Force to use :py:mod:`xarray` >= 2023.09. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 - Use `pandas[excel]` instead of xlrd dependency in the requirements. (`@gdrosos <https://github.com/gdrosos>`_)
 
 

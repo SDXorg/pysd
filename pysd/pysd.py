@@ -11,11 +11,11 @@ from warnings import warn
 from pysd.py_backend.model import Model
 
 
-if sys.version_info[:2] < (3, 8):  # pragma: no cover
+if sys.version_info[:2] < (3, 9):  # pragma: no cover
     raise RuntimeError(
         "\n\n"
         + "Your Python version is no longer supported by PySD.\n"
-        + "The current version needs to run at least Python 3.8."
+        + "The current version needs to run at least Python 3.9."
         + " You are running:\n\tPython "
         + sys.version
         + "\nPlease update your Python version or use the last "

@@ -1,7 +1,7 @@
 numpy<1.24
 pandas[excel]
 parsimonious
-xarray!=2023.8,!=2023.9
+xarray>=2023.9
 lxml
 regex
 chardet

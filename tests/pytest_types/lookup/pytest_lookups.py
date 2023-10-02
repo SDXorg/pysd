@@ -68,7 +68,7 @@ from pysd.py_backend.lookups import Lookups, HardcodedLookups
                 xr.DataArray([1, 2], {"dim": ["A", "B"]}, ["dim"])
             ]),
             xr.DataArray(
-                [[[1, 2], [1, 2]], [[10, 20], [10, 20]], [[1, 2], [1, 2]]],
+                [[[1, 1], [2, 2]], [[10, 10], [20, 20]], [[1, 1], [2, 2]]],
                 {
                     "lookup_dim": [1, 20, 40],
                     "dim":["A", "B"],

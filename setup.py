@@ -6,7 +6,7 @@ print(__version__)
 setup(
     name='pysd',
     version=__version__,
-    python_requires='>=3.8',
+    python_requires='>=3.9',
     author='PySD contributors',
     packages=find_packages(exclude=['docs', 'tests', 'dist', 'build']),
     url='https://github.com/SDXorg/pysd',
@@ -22,7 +22,6 @@ setup(
         'Topic :: Scientific/Engineering :: Information Analysis',
         'Intended Audience :: Science/Research',
 
-        'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',

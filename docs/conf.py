@@ -152,7 +152,7 @@ texinfo_documents = [
 ]
 
 intersphinx_mapping = {
-    'python': ('https://docs.python.org/3.8', None),
+    'python': ('https://docs.python.org/3.9', None),
     'pysdcookbook': ('http://pysd-cookbook.readthedocs.org/en/latest/', None),
     'pandas': ('https://pandas.pydata.org/docs/', None),
     'xarray': ('https://docs.xarray.dev/en/stable/', None),

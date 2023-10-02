@@ -37,7 +37,7 @@ In the source directory use the command:
 
 Required Dependencies
 ---------------------
-PySD requires **Python 3.8** or above.
+PySD requires **Python 3.9** or above.
 
 PySD builds on the core Python data analytics stack, and the following third party libraries:
 
@@ -45,7 +45,7 @@ PySD builds on the core Python data analytics stack, and the following third par
 * Scipy
 * Pandas (with Excel support: `pip install pandas[excel]`)
 * Parsimonious
-* xarray
+* xarray >= 2023.09
 * lxml
 * regex
 * chardet

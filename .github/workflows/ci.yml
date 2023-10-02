@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest]
-        python-version: ['3.8', '3.11']
+        python-version: ['3.9', '3.11']
 
     steps:
       - uses: actions/checkout@v4
@@ -39,7 +39,7 @@ jobs:
         uses: coverallsapp/github-action@v2
         with:
           file: coverage.xml
-        if: ${{ matrix.python-version == 3.8 && matrix.os == 'ubuntu-latest' }}
+        if: ${{ matrix.python-version == 3.9 && matrix.os == 'ubuntu-latest' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
