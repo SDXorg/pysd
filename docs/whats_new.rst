@@ -1,5 +1,29 @@
 What's New
 ==========
+v3.12.1 (2023/12/XX)
+--------------------
+New Features
+~~~~~~~~~~~~
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+- Set the pointer of :py:class:`pysd.py_backend.statefuls.DelayFixed` to 0 during initialization (:issue:`427`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+
+Documentation
+~~~~~~~~~~~~~
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+
 v3.12.0 (2023/10/02)
 --------------------
 New Features

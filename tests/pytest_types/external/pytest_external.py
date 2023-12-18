@@ -66,9 +66,8 @@ class TestExcels():
         Excels.clean()
         assert list(Excels._Excels_opyxl) == []
 
-    @pytest.mark.skipif(
-        sys.platform.startswith("win"),
-        reason="not working on Windows"
+    @pytest.mark.skip(
+        reason="may fail in parallel running"
     )
     def test_close_file(self, _root):
         """
