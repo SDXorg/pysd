@@ -1,5 +1,6 @@
 import pytest
 
+import numpy as np
 import xarray as xr
 
 from pysd.py_backend.statefuls import Stateful, Integ, Delay, DelayN,\
@@ -95,6 +96,22 @@ class TestStateful():
 
         delay_c.initialize(6)
         assert delay_c() == 6
+
+        for p, i in enumerate(np.arange(0, 2.5, 0.5)):
+            delay_c.update(None)
+            assert delay_c() == 6
+            assert delay_c.pointer == p+1
+
+        delay_c.update(None)
+        assert delay_c() == 5
+        assert delay_c.pointer == 0
+
+        # check that the pointer is set to 0 after initialization
+        delay_c.update(None)
+        assert delay_c.pointer != 0
+        delay_c.initialize()
+        assert delay_c.pointer == 0
+
 
     def test_delay_subscript(self):
         """

@@ -384,6 +384,9 @@ class DelayFixed(DynamicStateful):
         # The order can only be set once
         self.order = round(order + SMALL_VENSIM)
 
+        # set the pointer to 0
+        self.pointer = 0
+
         if init_val is None:
             init_state_value = self.init_func()
         else:
