@@ -312,15 +312,6 @@ class TestOutput():
         output.set_capture_elements(capture_elements)
         output.initialize(model)
 
-        # Dataset handler step cannot be modified from the outside
-        with pytest.raises(AttributeError):
-            output.handler.step = 5
-
-        with pytest.raises(AttributeError):
-            output.handler.__update_step()
-
-        assert output.handler.step == 0
-
     def test_make_flat_df(self):
 
         df = pd.DataFrame(index=[1], columns=['elem1'])

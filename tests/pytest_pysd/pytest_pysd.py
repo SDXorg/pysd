@@ -1228,9 +1228,9 @@ class TestPySD():
         model.output = output
         model._integrate()
         res = model.output.handler.ds
-        assert isinstance(res, pd.DataFrame)
+        assert isinstance(res, dict)
         assert 'teacup_temperature' in res
-        assert all(res.index.values == list(range(0, 5, 2)))
+        assert np.array_equal(res['time'], list(range(0, 5, 2)))
 
         model.reload()
         model.time.add_return_timestamps(list(range(0, 5, 2)))

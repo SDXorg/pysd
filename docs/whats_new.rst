@@ -20,6 +20,7 @@ Documentation
 
 Performance
 ~~~~~~~~~~~
+- Improved performace of :py:class:`pysd.py_backend.output.DataFrameHandler` by creating the dataframe at the end of the run (:issue:`374`). (`@easyas314159 <https://github.com/easyas314159>`_ and `@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 Internal Changes
 ~~~~~~~~~~~~~~~~
