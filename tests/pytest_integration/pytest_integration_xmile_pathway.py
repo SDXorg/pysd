@@ -186,10 +186,10 @@ xmile_test = {
         "folder": "smooth_and_stock",
         "file": "test_smooth_and_stock.xmile"
     },  marks=pytest.mark.xfail(reason="failing originally")),
-    "special_characters": pytest.param({
-        "folder": "special_characters",
+    "special_characters": {
+        "folder": "special_characters_xmile",
         "file": "test_special_variable_names.xmile"
-    }, marks=pytest.mark.xfail(reason="failing originally")),
+    },
     "sqrt": {
         "folder": "sqrt",
         "file": "test_sqrt.xmile"
