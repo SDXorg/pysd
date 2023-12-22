@@ -1,10 +1,9 @@
-import warnings
+import re
 import shutil
 import pytest
 
 from pysd.tools.benchmarking import runner, assert_frames_close
 
-# TODO add warnings catcher per test
 
 vensim_test = {
     "abs": {
@@ -22,7 +21,10 @@ vensim_test = {
     "allocate_available": {
         "folder": "allocate_available",
         "file": "test_allocate_available.mdl",
-        "rtol": 2e-2
+        "rtol": 2e-2,
+        "warns": [
+            "Variable '.*' is defined with different .*types: '.*'",
+        ]
     },
     "allocate_by_priority": {
         "folder": "allocate_by_priority",
@@ -39,7 +41,10 @@ vensim_test = {
     "arguments": {
         "folder": "arguments",
         "file": "test_arguments.mdl",
-        "rtol": 1e-2  # TODO test why it is failing with smaller tolerance
+        "rtol": 1e-2,  # TODO test why it is failing with smaller tolerance
+        "warns": [
+            "_delay.*\nDelay time very small, casting delay order from .*"
+        ]
     },
     "array_with_line_break": {
         "folder": "array_with_line_break",
@@ -76,7 +81,10 @@ vensim_test = {
     },
     "delay_fixed": {
         "folder": "delay_fixed",
-        "file": "test_delay_fixed.mdl"
+        "file": "test_delay_fixed.mdl",
+        "warns": [
+            ".*\nCasting delay order from.*"
+        ]
     },
     "delay_numeric_error": {
         "folder": "delay_numeric_error",
@@ -88,7 +96,11 @@ vensim_test = {
     },
     "delay_pipeline": {
         "folder": "delay_pipeline",
-        "file": "test_pipeline_delays.mdl"
+        "file": "test_pipeline_delays.mdl",
+        "warns": [
+            "_delay.*\nDelay time very small, casting delay order from .*",
+            ".*\nCasting delay order from.*"
+        ]
     },
     "delays": {
         "folder": "delays",
@@ -116,7 +128,10 @@ vensim_test = {
     },
     "except_subranges": {
         "folder": "except_subranges",
-        "file": "test_except_subranges.mdl"
+        "file": "test_except_subranges.mdl",
+        "warns": [
+            "Variable '.*' is defined with different .*types: '.*'",
+        ]
     },
     "exp": {
         "folder": "exp",
@@ -148,7 +163,10 @@ vensim_test = {
     },  marks=pytest.mark.xfail(reason="csv files not implemented")),
     "get_constants_subranges": {
         "folder": "get_constants_subranges",
-        "file": "test_get_constants_subranges.mdl"
+        "file": "test_get_constants_subranges.mdl",
+        "warns": [
+            "Variable '.*' is defined with different .*types: '.*'",
+        ]
     },
     "get_data": pytest.param({
         "folder": "get_data",
@@ -164,7 +182,10 @@ vensim_test = {
     },
     "get_lookups_subscripted_args": {
         "folder": "get_lookups_subscripted_args",
-        "file": "test_get_lookups_subscripted_args.mdl"
+        "file": "test_get_lookups_subscripted_args.mdl",
+        "warns": [
+            "_ext.*\nextrapolating data .* the m.*mum value of the .*",
+        ]
     },
     "get_lookups_subset": {
         "folder": "get_lookups_subset",
@@ -172,7 +193,11 @@ vensim_test = {
     },
     "get_mixed_definitions": {
         "folder": "get_mixed_definitions",
-        "file": "test_get_mixed_definitions.mdl"
+        "file": "test_get_mixed_definitions.mdl",
+        "warns": [
+            "Variable '.*' is defined with different .*types: '.*'",
+            "_ext.*\nextrapolating data .* the m.*mum value of the .*",
+        ]
     },
     "get_subscript_3d_arrays_xls": {
         "folder": "get_subscript_3d_arrays_xls",
@@ -188,7 +213,11 @@ vensim_test = {
     },
     "get_with_missing_values_xlsx": {
         "folder": "get_with_missing_values_xlsx",
-        "file": "test_get_with_missing_values_xlsx.mdl"
+        "file": "test_get_with_missing_values_xlsx.mdl",
+        "warns": [
+            "_ext.*\nD.* value missing or non-valid in:.*",
+            "_ext.*\nextrapolating data .* the m.*mum value of the .*",
+        ]
     },
     "get_xls_cellrange": {
         "folder": "get_xls_cellrange",
@@ -308,7 +337,11 @@ vensim_test = {
     },
     "odd_number_quotes": {
         "folder": "odd_number_quotes",
-        "file": "teacup_3quotes.mdl"
+        "file": "teacup_3quotes.mdl",
+        "warns": [
+            "No encoding specified or detected to translate the model "
+            "file. 'UTF-8' encoding will be used."
+        ]
     },
     "parentheses": {
         "folder": "parentheses",
@@ -316,7 +349,10 @@ vensim_test = {
     },
     "partial_range_definitions": {
         "folder": "partial_range_definitions",
-        "file": "test_partial_range_definitions.mdl"
+        "file": "test_partial_range_definitions.mdl",
+        "warns": [
+            "\nDimension given by subscripts.*"
+        ]
     },
     "power": {
         "folder": "power",
@@ -324,7 +360,11 @@ vensim_test = {
     },
     "reality_checks": {
         "folder": "reality_checks",
-        "file": "test_reality_checks.mdl"
+        "file": "test_reality_checks.mdl",
+        "warns": [
+            "':.*:' detected. The expression content is not parsed and "
+            "will be ignored.",
+        ]
     },
     "reference_capitalization": {
         "folder": "reference_capitalization",
@@ -332,7 +372,10 @@ vensim_test = {
     },
     "repeated_subscript": {
         "folder": "repeated_subscript",
-        "file": "test_repeated_subscript.mdl"
+        "file": "test_repeated_subscript.mdl",
+        "warns": [
+            "\nAdding new subscript range to subscript_dict:.*"
+        ]
     },
     "rounding": {
         "folder": "rounding",
@@ -344,7 +387,12 @@ vensim_test = {
     },
     "smaller_range": {
         "folder": "smaller_range",
-        "file": "test_smaller_range.mdl"
+        "file": "test_smaller_range.mdl",
+        "warns": [
+            "\nDimension given by subscripts.*",
+            "\nAdding new subscript range to subscript_dict:.*",
+            "Variable '.*' is defined with different .*types: '.*'",
+        ]
     },
     "smooth": {
         "folder": "smooth",
@@ -364,7 +412,10 @@ vensim_test = {
     },
     "subrange_merge": {
         "folder": "subrange_merge",
-        "file": "test_subrange_merge.mdl"
+        "file": "test_subrange_merge.mdl",
+        "warns": [
+            "Variable '.*' is defined with different .*types: '.*'",
+        ]
     },
     "subscript_1d_arrays": {
         "folder": "subscript_1d_arrays",
@@ -444,7 +495,10 @@ vensim_test = {
     },
     "subscript_mixed_assembly": {
         "folder": "subscript_mixed_assembly",
-        "file": "test_subscript_mixed_assembly.mdl"
+        "file": "test_subscript_mixed_assembly.mdl",
+        "warns": [
+            "Variable '.*' is defined with different .*types: '.*'",
+        ]
     },
     "subscript_multiples": {
         "folder": "subscript_multiples",
@@ -496,7 +550,10 @@ vensim_test = {
     },
     "subscripted_lookups": {
         "folder": "subscripted_lookups",
-        "file": "test_subscripted_lookups.mdl"
+        "file": "test_subscripted_lookups.mdl",
+        "warns": [
+            "_.*\nextrapolating data .* the m.*mum value of the .*",
+        ]
     },
     "subscripted_ramp_step": {
         "folder": "subscripted_ramp_step",
@@ -504,7 +561,10 @@ vensim_test = {
     },
     "subscripted_round": {
         "folder": "subscripted_round",
-        "file": "test_subscripted_round.mdl"
+        "file": "test_subscripted_round.mdl",
+        "warns": [
+            "Variable '.*' is defined with different .*types: '.*'",
+        ]
     },
     "subscripted_smooth": {
         "folder": "subscripted_smooth",
@@ -560,7 +620,11 @@ vensim_test = {
     },
     "vector_select": {
         "folder": "vector_select",
-        "file": "test_vector_select.mdl"
+        "file": "test_vector_select.mdl",
+        "warns": [
+            "Vensim's help says that numerical_action=5 computes the "
+            "product of selection_array . expression_array..*"
+        ]
     },
     "with_lookup": {
         "folder": "with_lookup",
@@ -624,6 +688,11 @@ class TestIntegrateVensim:
             return None
 
     @pytest.fixture
+    def warns(self, test_data, ignore_warns):
+        ign_warns = test_data.get('warns', []) + ignore_warns
+        return [re.compile(w) for w in ign_warns]
+
+    @pytest.fixture
     def kwargs(self, test_data):
         """Fixture for atol and rtol"""
         kwargs = {}
@@ -633,8 +702,12 @@ class TestIntegrateVensim:
             kwargs["rtol"] = test_data["rtol"]
         return kwargs
 
-    def test_read_vensim_file(self, model_path, data_path, kwargs):
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            output, canon = runner(model_path, data_files=data_path)
+    def test_read_vensim_file(self, model_path, data_path, kwargs,
+                              recwarn, warns):
+        output, canon = runner(model_path, data_files=data_path)
+        for warn in recwarn:
+            warn = str(warn.message)
+            assert any([re.match(pwarn, warn) for pwarn in warns]), \
+                f"Couldn't match warning:\n{warn}"
+
         assert_frames_close(output, canon, verbose=True, **kwargs)

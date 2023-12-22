@@ -46,3 +46,12 @@ def model(_root, tmp_path, model_path):
         return load(new_path)
     else:
         return ValueError("Invalid model")
+
+
+@pytest.fixture(scope="session")
+def ignore_warns():
+    # warnings to be ignored in the integration tests
+    return [
+        "numpy.ndarray size changed, may indicate binary incompatibility.",
+        "Creating an ndarray from ragged nested sequences.*"
+    ]

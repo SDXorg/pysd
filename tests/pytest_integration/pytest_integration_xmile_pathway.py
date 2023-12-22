@@ -1,10 +1,9 @@
-import warnings
+import re
 import shutil
 import pytest
 
 from pysd.tools.benchmarking import runner, assert_frames_close
 
-# TODO add warnings catcher per test
 
 xmile_test = {
     "abs": {
@@ -279,6 +278,11 @@ class TestIntegrateXmile:
         return test_folder.joinpath(test_data["file"])
 
     @pytest.fixture
+    def warns(self, test_data, ignore_warns):
+        ign_warns = test_data.get('warns', []) + ignore_warns
+        return [re.compile(w) for w in ign_warns]
+
+    @pytest.fixture
     def kwargs(self, test_data):
         """Fixture for atol and rtol"""
         kwargs = {}
@@ -288,8 +292,11 @@ class TestIntegrateXmile:
             kwargs["rtol"] = test_data["rtol"]
         return kwargs
 
-    def test_read_vensim_file(self, model_path, kwargs):
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            output, canon = runner(model_path)
+    def test_read_xmile_file(self, model_path, kwargs, recwarn, warns):
+        output, canon = runner(model_path)
+        for warn in recwarn:
+            warn = str(warn.message)
+            assert any([re.match(pwarn, warn) for pwarn in warns]), \
+                f"Couldn't match warning:\n{warn}"
+
         assert_frames_close(output, canon, **kwargs)

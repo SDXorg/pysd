@@ -663,7 +663,7 @@ class ElementBuilder:
         if ", " in self.type:
             warn(
                 f"Variable '{self.name}' is defined with different types:"
-                f" '{self.type}'. This may cause bugs when trying to"
+                f" '{self.type}'. This may cause bugs when trying to "
                 "change its value or applying other methods from the "
                 "pysd.py_backend.model.Model class. Running the model "
                 "without modifying this variable should not cause any "
@@ -672,7 +672,7 @@ class ElementBuilder:
         elif ", " in self.subtype:
             warn(
                 f"Variable '{self.name}' is defined with different subtypes:"
-                f" '{self.subtype}'. This may cause bugs when trying to"
+                f" '{self.subtype}'. This may cause bugs when trying to "
                 "change its value or applying other methods from the "
                 "pysd.py_backend.model.Model class. Running the model "
                 "without modifying this variable should not cause any "
