@@ -17,6 +17,7 @@ Bug fixes
 
 Documentation
 ~~~~~~~~~~~~~
+- Improve documentation of methods in :py:class:`pysd.py_backend.model.Model` and :py:class:`pysd.py_backend.model.Macro` includying cross-references and rewrite the one from :py:meth:`pysd.py_backend.model.Macro.set_components`. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 Performance
 ~~~~~~~~~~~
@@ -24,6 +25,9 @@ Performance
 
 Internal Changes
 ~~~~~~~~~~~~~~~~
+- Move old :py:meth:`pysd.py_backend.model.Macro.set_components` to :py:meth:`pysd.py_backend.model.Macro._set_components`, and create new method with the same name without the `new` argument.
+
+- Move old :py:meth:`pysd.py_backend.model.Macro.set_stateful` to :py:meth:`pysd.py_backend.model.Macro._set_stateful`.
 
 v3.12.0 (2023/10/02)
 --------------------
