@@ -65,6 +65,10 @@ class Macro(DynamicStateful):
     py_name: str or None
         The name of the Macro object. Default is None.
 
+    See also
+    --------
+    :class:`pysd.py_backend.model.Model`
+
     """
     def __init__(self, py_model_file, params=None, return_func=None,
                  time=None, time_initialization=None, data_files=None,
@@ -111,7 +115,7 @@ class Macro(DynamicStateful):
             # add params to namespace
             self._namespace.update(self.components._components._params)
             # create new components with the params
-            self.set_components(params, new=True)
+            self._set_components(params, new=True)
             # update dependencies
             for param in params:
                 self._dependencies[
@@ -487,6 +491,10 @@ class Macro(DynamicStateful):
         file_name: str or pathlib.Path
           Name of the file to export the values.
 
+        See also
+        --------
+        :func:`pysd.py_backend.model.Macro.import_pickle`
+
         """
         warnings.warn(
             "\nCompatibility of exported states could be broken between"
@@ -514,6 +522,10 @@ class Macro(DynamicStateful):
         file_name: str or pathlib.Path
           Name of the file to import the values from.
 
+        See also
+        --------
+        :func:`pysd.py_backend.model.Macro.export`
+
         """
         with open(file_name, 'rb') as file:
             time, stateful_dict, metadata = pickle.load(file)
@@ -528,7 +540,7 @@ class Macro(DynamicStateful):
                 f"\tPySD {metadata['pysd']}\n\txarray {metadata['xarray']}\n"
                 )
 
-        self.set_stateful(stateful_dict)
+        self._set_stateful(stateful_dict)
         self.time.set_control_vars(initial_time=time)
 
     def initialize_external_data(self, externals=None):
@@ -543,6 +555,9 @@ class Macro(DynamicStateful):
         To get the full performance gain of loading the externals from a netCDF
         file, the model should be loaded with initialize=False first.
 
+        Examples of usage are available at
+        `Advanced Usage <https://pysd.readthedocs.io/en/master/advanced_usage.html#initializing-external-data-from-netcdf-file>`__.
+
         Parameters
         ----------
         externals: str or pathlib.Path (optional)
@@ -551,6 +566,10 @@ class Macro(DynamicStateful):
         Returns
         -------
         None
+
+        See also
+        --------
+        :func:`pysd.py_backend.model.Macro.serialize_externals`
 
         """
 
@@ -612,6 +631,9 @@ class Macro(DynamicStateful):
         Names of variables should be those in the model (python safe,
         without the _ext_type_ string in front).
 
+        Examples of usage are available at
+        `Advanced Usage <https://pysd.readthedocs.io/en/master/advanced_usage.html#initializing-external-data-from-netcdf-file>`__.
+
         Parameters
         ----------
         export_path: str or pathlib.Path (optional)
@@ -635,6 +657,10 @@ class Macro(DynamicStateful):
         Returns
         -------
         None
+
+        See also
+        --------
+        :func:`pysd.py_backend.model.Macro.initialize_external_data`
 
         """
         data = {}
@@ -726,7 +752,9 @@ class Macro(DynamicStateful):
         all ExtData objects to have many nans when stored in a xarray Dataset.
         It does the same for the "lookup_dim" of all ExtLookup objects.
 
-        NOTE: Though subscripts can be read from Excel, they are hardcoded
+        Note
+        ----
+        Though subscripts can be read from Excel, they are hardcoded
         during the model building process. Therefore they will not be
         serialized.
 
@@ -835,6 +863,10 @@ class Macro(DynamicStateful):
         >>> model.get_args('birth_rate')
         >>> model.get_args('Birth Rate')
 
+        See also
+        --------
+        :func:`pysd.py_backend.model.Macro.get_coords`
+
         """
         if isinstance(param, str):
             func_name = utils.get_key_and_value_by_insensitive_key_or_value(
@@ -874,6 +906,10 @@ class Macro(DynamicStateful):
         --------
         >>> model.get_coords('birth_rate')
         >>> model.get_coords('Birth Rate')
+
+        See also
+        --------
+        :func:`pysd.py_backend.model.Macro.get_args`
 
         """
         if isinstance(param, str):
@@ -925,6 +961,10 @@ class Macro(DynamicStateful):
         Note
         ----
         It will crash if the model component takes arguments.
+
+        See also
+        --------
+        :func:`pysd.py_backend.model.Macro.get_series_data`
 
         """
         func_name = utils.get_key_and_value_by_insensitive_key_or_value(
@@ -981,25 +1021,77 @@ class Macro(DynamicStateful):
                 "Trying to get the values of a constant variable. "
                 "'model.get_series_data' only works lookups/data objects.\n\n")
 
-    def set_components(self, params, new=False):
-        """ Set the value of exogenous model elements.
-        Element values can be passed as keyword=value pairs in the
+    def set_components(self, params):
+        """
+        Set the value of exogenous model elements.
+        Element values should be passed with a dictionary in the
         function call. Values can be numeric type or pandas Series.
         Series will be interpolated by integrator.
+
+        Parameters
+        ----------
+        params: dict
+            Dictionary with the name of the elements to modify and the
+            value that they would take. If the passed value is a
+            :class:`float` or a :class:`xarray.DataArray` (must be
+            compatible with the dimensions of the variable). In this
+            case, the variable will have a constant value, returning
+            the past value and broadcasting to all dimensions, if
+            necessary. If a :class:`pandas.Series` is passed, the
+            variable will be of type data and will use the time of the
+            model to interpolate the result having as reference the
+            indexes of the series. In this case, the series 'data' can
+            also be a :class:`float` or a :class:`xarray.DataArray`,
+            as with constant values. In the case of the target using
+            a :class:`pysd.py_backend.lookups.Lookup` object, it will
+            modify the object values to use the original arguments when
+            being call. More detailed information and examples of usage
+            are available at
+            `Getting Started <https://pysd.readthedocs.io/en/master/getting_started.html#setting-parameter-values>`__.
+
+            To write more complex relationships, which may or may not
+            include other model variables, a callable, e.g. a function,
+            can be passed that takes the same arguments as the original
+            function and returns a :class:`float` or a
+            :class:`xarray.DataArray` with exactly the same dimensions
+            as the original function. More detailed information and
+            examples of usage are available at
+            `Advanced Usage <https://pysd.readthedocs.io/en/master/advanced_usage.html#replacing-model-components-with-more-complex-objects>`__.
+
+
+        Note
+        ----
+        This function is to modify the value or equations of the
+        variables, it won't work properly with Stateful objects, e.g.
+        Integ, DelayFixed... In order to modify them it will be
+        necessary to do it manually, if you have other inputs it is
+        recommended to modify these ones. To change their initial
+        value :func:`pysd.py_backend.model.Model.set_initial_condition`
+        method could be used.
+
 
         Examples
         --------
         >>> model.set_components({'birth_rate': 10})
         >>> model.set_components({'Birth Rate': 10})
 
-        >>> br = pandas.Series(index=range(30), values=np.sin(range(30))
+        >>> br = pandas.Series(index=range(30), data=np.sin(range(30))
         >>> model.set_components({'birth_rate': br})
 
+        See also
+        --------
+        :func:`pysd.py_backend.model.Model.set_initial_condition`
+        :func:`pysd.py_backend.model.Macro.get_coords`
+        :func:`pysd.py_backend.model.Macro.get_args`
+
         """
-        # TODO: allow the params argument to take a pandas dataframe, where
-        # column names are variable names. However some variables may be
-        # constant or have no values for some index. This should be processed.
-        # TODO: make this compatible with loading outputs from other files
+        self._set_components(params, new=False)
+
+    def _set_components(self, params, new):
+        """
+        Set the value of exogenous model elements, giving the option to
+        set new components (used in Macros).
+        """
 
         for key, value in params.items():
             func_name = utils.get_key_and_value_by_insensitive_key_or_value(
@@ -1115,21 +1207,26 @@ class Macro(DynamicStateful):
         else:
             return lambda: value
 
-    def set_initial_value(self, t, initial_value):
-        """ Set the system initial value.
+    def set_initial_value(self, time, initial_value):
+        """
+        Set the system initial value.
 
         Parameters
         ----------
-        t : numeric
-            The system time
+        time : float or int
+            The system intial time to be set.
 
         initial_value : dict
             A (possibly partial) dictionary of the system initial values.
             The keys to this dictionary may be either pysafe names or
-            original model file names
+            original model file names.
+
+        See also
+        --------
+        :func:`pysd.py_backend.model.Model.set_initial_condition`
 
         """
-        self.time.set_control_vars(initial_time=t)
+        self.time.set_control_vars(initial_time=time)
         stateful_name = "_NONE"
         modified_statefuls = set()
 
@@ -1209,7 +1306,7 @@ class Macro(DynamicStateful):
 
         return elements_to_initialize
 
-    def set_stateful(self, stateful_dict):
+    def _set_stateful(self, stateful_dict):
         """
         Set stateful values.
 
@@ -1301,6 +1398,10 @@ class Model(Macro):
         the missing values, this option may cause the integration to
         fail, but it may be used to check the quality of the data.
 
+    See also
+    --------
+    :class:`pysd.py_backend.model.Macro`
+
     """
     def __init__(self, py_model_file, data_files, initialize, missing_values):
         """ Sets up the Python objects """
@@ -1317,7 +1418,15 @@ class Model(Macro):
             self.initialize()
 
     def initialize(self):
-        """ Initializes the simulation model """
+        """
+        Initializes the simulation model.
+
+        See also
+        --------
+        :func:`pysd.py_backend.model.Macro.initialize`
+        :func:`pysd.py_backend.model.Model.reload`
+
+        """
         self.time.stage = 'Initialization'
         External.missing = self.missing_values
         super().initialize()
@@ -1328,8 +1437,10 @@ class Model(Macro):
             cache_output=True, output_file=None):
         """
         Simulate the model's behavior over time.
-        Return a pandas dataframe with timestamps as rows,
-        model elements as columns.
+        Return a pandas dataframe with timestamps as rows and model
+        elements as columns. More detailed information and examples
+        of usage are available at
+        `Getting Started <https://pysd.readthedocs.io/en/master/getting_started.html#running-the-model>`__.
 
         Parameters
         ----------
@@ -1338,6 +1449,8 @@ class Model(Macro):
             Values are numeric or pandas Series.
             Numeric values represent constants over the model integration.
             Timeseries will be interpolated to give time-varying input.
+            For more information, check the documentation of
+            :func:`pysd.py_backend.model.Macro.set_components`.
 
         return_timestamps: list, numeric, ndarray (1D) (optional)
             Timestamps in model execution at which to return state information.
@@ -1351,13 +1464,15 @@ class Model(Macro):
 
         initial_condition: str or (float, dict) (optional)
             The starting time, and the state of the system (the values of
-            all the stocks) at that starting time. 'original' or 'o'uses
+            all the stocks) at that starting time. 'original' or 'o' uses
             model-file specified initial condition. 'current' or 'c' uses
             the state of the model after the previous execution. Other str
             objects, loads initial conditions from the pickle file with the
             given name.(float, dict) tuple lets the user specify a starting
             time (float) and (possibly partial) dictionary of initial values
             for stock (stateful) objects. Default is 'original'.
+            For more information, check the documentation of
+            :func:`pysd.py_backend.model.Model.set_initial_condition`
 
         final_time: float or None
             Final time of the simulation. If float, the given value will be
@@ -1412,11 +1527,11 @@ class Model(Macro):
         >>> model.run(return_timestamps=np.linspace(1, 10, 20))
         >>> model.run(output_file="results.nc")
 
-
-        See Also
+        See also
         --------
-        pysd.set_components : handles setting model parameters
-        pysd.set_initial_condition : handles setting initial conditions
+        :func:`pysd.py_backend.model.Macro.set_components`
+        :func:`pysd.py_backend.model.Model.set_initial_condition`
+        :func:`pysd.py_backend.model.Model.reload`
 
         """
         self._stepper_mode = False
@@ -1442,7 +1557,9 @@ class Model(Macro):
                     initial_condition='original', final_time=None,
                     time_step=None, saveper=None, cache_output=True):
         """
-        Configure the model stepping behavior.
+        Configure the model stepping behavior. Examples of usage are
+        available at
+        `Advanced Usage <https://pysd.readthedocs.io/en/master/advanced_usage.html#running-models-one-or-more-step-s-at-a-time>`__.
 
         Parameters
         ----------
@@ -1505,6 +1622,10 @@ class Model(Macro):
            recommended to activate this feature, if time step << saveper
            it is recommended to deactivate it. Default is True.
 
+        See also
+        --------
+        :func:`pysd.py_backend.model.Model.step`
+
         """
         self.output = output_obj
 
@@ -1523,6 +1644,8 @@ class Model(Macro):
         Run a model step. Updates model variables first (optional), and then
         runs any number of model steps. To collect the outputs after one or
         more steps, use the collect method of the ModelOutput class.
+        Examples of usage are available at
+        `Advanced Usage <https://pysd.readthedocs.io/en/master/advanced_usage.html#running-models-one-or-more-step-s-at-a-time>`__
 
         Parameters
         ----------
@@ -1538,9 +1661,13 @@ class Model(Macro):
         -------
         None
 
+        See also
+        --------
+        :func:`pysd.py_backend.model.Model.set_stepper`
+
         """
         # TODO warn the user if we exceeded the final_time??
-        self.set_components(step_vars)
+        self._set_components(step_vars, new=False)
 
         for _ in range(num_steps):
             self._integrate_step()
@@ -1559,7 +1686,7 @@ class Model(Macro):
                                saveper)
 
         if params:
-            self.set_components(params)
+            self._set_components(params, new=False)
 
         if self._stepper_mode:
             for step_var in kwargs["step_vars"]:
@@ -1668,7 +1795,8 @@ class Model(Macro):
         """
         Select a submodel from the original model. After selecting a submodel
         only the necessary stateful objects for integrating this submodel will
-        be computed.
+        be computed. Examples of usage are available at
+        `Advanced Usage <https://pysd.readthedocs.io/en/master/advanced_usage.html#selecting-and-running-a-submodel>`__.
 
         Parameters
         ----------
@@ -1695,8 +1823,8 @@ class Model(Macro):
         -------
         None
 
-        Notes
-        -----
+        Note
+        ----
         modules can be only passed when the model has been split in
         different files during translation.
 
@@ -1727,6 +1855,11 @@ class Model(Macro):
         ...         "initial_value_stock1": 3,
         ...         "initial_value_stock3": 5})
         UserWarning: Selecting submodel, to run the full model again use model.reload()
+
+        See also
+        --------
+        :func:`pysd.py_backend.model.Model.get_vars_in_module`
+        :func:`pysd.py_backend.model.Model.get_dependencies`
 
         """
         deps = self.get_dependencies(vars, modules)
@@ -1798,7 +1931,7 @@ class Model(Macro):
                     self._namespace)[1]: value
             }) for key, value in exogenous_components.items()]
 
-        self.set_components(new_components)
+        self._set_components(new_components, new=False)
 
         # show a warning message if exogenous values are needed for a
         # dependency
@@ -1837,8 +1970,8 @@ class Model(Macro):
         dependencies: pysd.py_backend.utils.Dependencies
             Dependencies data object.
 
-        Notes
-        -----
+        Note
+        ----
         modules can be only passed when the model has been split in
         different files during translation.
 
@@ -1871,6 +2004,10 @@ class Model(Macro):
             initial_value_stock1, initial_value_stock3
         Stateful objects integrated with the selected variables (total 1):
             _integ_stock1, _integ_stock3, _delay_fixed_delay1
+
+        See also
+        --------
+        :func:`pysd.py_backend.model.Model.get_vars_in_module`
 
         """
         def check_dep(deps_obj, deps, initial=False):
@@ -1928,6 +2065,10 @@ class Model(Macro):
         vars: set
             Set of varible names in the given module.
 
+        See also
+        --------
+        :func:`pysd.py_backend.model.Model.get_dependencies`
+
         """
         if self._modules:
             module_content = self._modules.copy()
@@ -1962,6 +2103,11 @@ class Model(Macro):
         """
         Reloads the model from the translated model file, so that all the
         parameters are back to their original value.
+
+        See also
+        --------
+        :func:`pysd.py_backend.model.Model.initialize`
+
         """
         self.__init__(self.py_model_file, data_files=self.data_files,
                       initialize=True,
@@ -2044,9 +2190,9 @@ class Model(Macro):
         >>> model.set_initial_condition('exported_pickle.pic')
         >>> model.set_initial_condition((10, {'teacup_temperature': 50}))
 
-        See Also
+        See also
         --------
-        model.set_initial_value()
+        :func:`pysd.py_backend.model.Macro.set_initial_value`
 
         """
         if isinstance(initial_condition, str)\
@@ -2118,7 +2264,6 @@ class Model(Macro):
         progressbar.finish()
 
     def _integrate_step(self):
-
         self._euler_step(self.time.time_step())
         self.time.update(self.time()+self.time.time_step())
         self.clean_caches()
