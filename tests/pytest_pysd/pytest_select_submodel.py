@@ -177,7 +177,10 @@ class TestSubmodel:
                 assert var in str(record[-1].message)
             assert np.any(np.isnan(model.run()))
             # redefine dependencies
-            assert not np.any(np.isnan(model.run(params=dep_vars)))
+            warn_message = "Replacing a variable by a constant value."
+            with pytest.warns(UserWarning, match=warn_message):
+                out = model.run(params=dep_vars)
+            assert not np.any(np.isnan(out))
 
         # select submodel using contour values
         model.reload()

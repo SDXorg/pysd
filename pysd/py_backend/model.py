@@ -1129,6 +1129,10 @@ class Macro(DynamicStateful):
                     obj
                 ).set_values(value)
 
+                if not isinstance(value, pd.Series):
+                    warnings.warn(
+                        "Replacing interpolation data with constant values.")
+
                 # Update dependencies
                 if func_type == "Data":
                     if isinstance(value, pd.Series):
@@ -1140,11 +1144,29 @@ class Macro(DynamicStateful):
 
                 continue
 
+            if func_type == "Stateful":
+                warnings.warn(
+                    "Replacing the value of Stateful variable with "
+                    "an expression. To set initial conditions use "
+                    "`set_initial_condition` instead..."
+                )
+
             if isinstance(value, pd.Series):
+                if func_type == "Constant":
+                    warnings.warn(
+                        "Replacing a constant value with a "
+                        "time-dependent value. The value will be "
+                        "interpolated over time."
+                    )
                 new_function, deps = self._timeseries_component(
                     value, dims)
                 self._dependencies[func_name] = deps
             elif callable(value):
+                if func_type == "Constant":
+                    warnings.warn(
+                        "Replacing a constant value with a callable. "
+                        "The value may not be constant anymore."
+                    )
                 new_function = value
                 # Using step cache adding time as dependency
                 # TODO it would be better if we can parse the content
@@ -1152,6 +1174,8 @@ class Macro(DynamicStateful):
                 self._dependencies[func_name] = {"time": 1}
 
             else:
+                if func_type != "Constant":
+                    warnings.warn("Replacing a variable by a constant value.")
                 new_function = self._constant_component(value, dims)
                 self._dependencies[func_name] = {}
 

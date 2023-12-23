@@ -120,10 +120,11 @@ class TestPySDData:
             expected)
 
     def test_modify_data(self, model, expected):
-        out = model.run(params={
-            "var1": pd.Series(index=[1, 3, 7], data=[10, 20, 30]),
-            "var2": 10
-        })
+        with pytest.warns(UserWarning, match="Replacing .*"):
+            out = model.run(params={
+                "var1": pd.Series(index=[1, 3, 7], data=[10, 20, 30]),
+                "var2": 10
+            })
 
         assert (out["var2"] == 10).all()
         assert (

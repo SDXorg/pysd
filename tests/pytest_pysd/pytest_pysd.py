@@ -309,11 +309,14 @@ class TestPySD():
             index=timeseries,
             data=(50 + np.random.rand(len(timeseries)).cumsum())
         )
-        res = model.run(
-            params={"room_temperature": temp_timeseries},
-            return_columns=["room_temperature"],
-            return_timestamps=timeseries,
-        )
+        warn_message = "Replacing a constant value with a time-dependent "\
+                       "value. The value will be interpolated over time."
+        with pytest.warns(UserWarning, match=warn_message):
+            res = model.run(
+                params={"room_temperature": temp_timeseries},
+                return_columns=["room_temperature"],
+                return_timestamps=timeseries,
+            )
         assert (res["room_temperature"] == temp_timeseries).all()
 
     @pytest.mark.parametrize("model_path", [test_model])
@@ -323,7 +326,11 @@ class TestPySD():
             index=timeseries,
             data=(50 + np.random.rand(len(timeseries)).cumsum())
         )
-        model.components.room_temperature = temp_timeseries
+        warn_message = "Replacing a constant value with a time-dependent "\
+                       "value. The value will be interpolated over time."
+        with pytest.warns(UserWarning, match=warn_message):
+            model.components.room_temperature = temp_timeseries
+
         res = model.run(
             return_columns=["room_temperature"],
             return_timestamps=timeseries,
@@ -352,8 +359,10 @@ class TestPySD():
     def test_set_components_with_function(self, model):
         def test_func():
             return 5
-
-        model.set_components({"Room Temperature": test_func})
+        warn_message = "Replacing a constant value with a callable. "\
+                       "The value may not be constant anymore."
+        with pytest.warns(UserWarning, match=warn_message):
+            model.set_components({"Room Temperature": test_func})
         res = model.run(return_columns=["Room Temperature"])
         assert test_func() == res["Room Temperature"].iloc[0]
 
@@ -549,12 +558,15 @@ class TestPySD():
         xr_series = [xr.DataArray(val, coords, dims) for val in val_series]
 
         temp_timeseries = pd.Series(index=timeseries, data=val_series)
-        res = model.run(
-            params={"initial_values": temp_timeseries, "final_time": 10},
-            return_columns=["initial_values"],
-            return_timestamps=timeseries,
-            flatten_output=False
-        )
+        warn_message = "Replacing a constant value with a time-dependent "\
+                       "value. The value will be interpolated over time."
+        with pytest.warns(UserWarning, match=warn_message):
+            res = model.run(
+                params={"initial_values": temp_timeseries, "final_time": 10},
+                return_columns=["initial_values"],
+                return_timestamps=timeseries,
+                flatten_output=False
+            )
 
         assert np.all(
             [
@@ -583,8 +595,11 @@ class TestPySD():
                                                               ).cumsum()]
         temp_timeseries = pd.Series(index=timeseries, data=val_series)
         out_series = [out_b + val for val in val_series]
-        model.set_components({"initial_values": temp_timeseries,
-                              "final_time": 10})
+        warn_message = "Replacing a constant value with a time-dependent "\
+                       "value. The value will be interpolated over time."
+        with pytest.warns(UserWarning, match=warn_message):
+            model.set_components({"initial_values": temp_timeseries,
+                                  "final_time": 10})
         res = model.run(
             return_columns=["initial_values"], flatten_output=False)
         assert np.all(
@@ -610,12 +625,15 @@ class TestPySD():
             data=[init_val + rd for rd in np.random.rand(len(timeseries)
                                                          ).cumsum()],
         )
-        res = model.run(
-            params={"initial_values": temp_timeseries, "final_time": 10},
-            return_columns=["initial_values"],
-            return_timestamps=timeseries,
-            flatten_output=False
-        )
+        warn_message = "Replacing a constant value with a time-dependent "\
+                       "value. The value will be interpolated over time."
+        with pytest.warns(UserWarning, match=warn_message):
+            res = model.run(
+                params={"initial_values": temp_timeseries, "final_time": 10},
+                return_columns=["initial_values"],
+                return_timestamps=timeseries,
+                flatten_output=False
+            )
 
         assert np.all(
             [
@@ -948,9 +966,23 @@ class TestPySD():
             model.set_initial_value(new_time + 2, {'_integ_stock_a': input3})
 
     @pytest.mark.parametrize("model_path", [test_model])
+    def test_replace_stateful(self, model):
+        warn_message = "Replacing the value of Stateful variable with "\
+                       "an expression. To set initial conditions use "\
+                       "`set_initial_condition` instead..."
+        with pytest.warns(UserWarning, match=warn_message):
+            model.components.teacup_temperature = 3
+
+        stocks = model.run()
+        assert np.all(stocks["Teacup Temperature"] == 3)
+
+    @pytest.mark.parametrize("model_path", [test_model])
     def test_replace_element(self, model):
         stocks1 = model.run()
-        model.components.characteristic_time = lambda: 3
+        warn_message = "Replacing a constant value with a callable. "\
+                       "The value may not be constant anymore."
+        with pytest.warns(UserWarning, match=warn_message):
+            model.components.characteristic_time = lambda: 3
         stocks2 = model.run()
         assert stocks1["Teacup Temperature"].loc[10]\
             > stocks2["Teacup Temperature"].loc[10]
@@ -1341,7 +1373,10 @@ class TestModelInteraction():
         model_2 = pysd.read_vensim(
             _root.joinpath("test-models/samples/SIR/SIR.mdl"))
 
-        model_1.components.initial_time = lambda: 10
+        warn_message = "Replacing a constant value with a callable. "\
+                       "The value may not be constant anymore."
+        with pytest.warns(UserWarning, match=warn_message):
+            model_1.components.initial_time = lambda: 10
         assert model_2.components.initial_time != 10
 
         # check that the model time is not shared between the two objects
@@ -1480,9 +1515,13 @@ class TestDependencies():
 
         # we should ensure that the constant_cache is removed
         # when passing new param
-        out2 = model.run(params={"constant1": new_var})
+        warn_message = "Replacing a constant value with a "\
+                       "time-dependent value. The value will "\
+                       "be interpolated over time."
+        with pytest.warns(UserWarning, match=warn_message):
+            out2 = model.run(params={"constant1": new_var})
 
-        assert not np.all(out1 - out2 == 0)
+        assert not np.array_equal(out1, out2)
 
         for key in pipe:
             assert model.cache_type[key] == "step"
