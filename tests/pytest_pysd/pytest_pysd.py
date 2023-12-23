@@ -23,6 +23,8 @@ test_model_look = Path(
 test_model_data = Path(
     "test-models/tests/get_data_args_3d_xls/test_get_data_args_3d_xls.mdl")
 
+test_model_query = Path("test-models/samples/Query_file/Query_file.mdl")
+
 more_tests = Path("more-tests")
 
 test_model_constant_pipe = more_tests.joinpath(
@@ -30,6 +32,7 @@ test_model_constant_pipe = more_tests.joinpath(
 
 test_model_stepper = more_tests.joinpath(
     "stepper_cache/stepper_cache.mdl")
+
 
 class TestPySD():
 
@@ -964,12 +967,12 @@ class TestPySD():
         set_temp = model.components.teacup_temperature()
         set_time = model.components.time()
 
-        assert set_temp != initial_temp,\
+        assert set_temp != initial_temp, \
             "Test definition is wrong, please change configuration"
 
         assert set_temp == 500
 
-        assert initial_time != new_time,\
+        assert initial_time != new_time, \
             "Test definition is wrong, please change configuration"
         assert new_time == set_time
 
@@ -992,12 +995,12 @@ class TestPySD():
         set_temp = model.components.teacup_temperature()
         set_time = model.components.time()
 
-        assert set_temp != initial_temp,\
+        assert set_temp != initial_temp, \
             "Test definition is wrong, please change configuration"
 
         assert set_temp == 500
 
-        assert initial_time != new_time,\
+        assert initial_time != new_time, \
             "Test definition is wrong, please change configuration"
         assert new_time == set_time
 
@@ -1020,12 +1023,12 @@ class TestPySD():
         set_temp = model.components.teacup_temperature()
         set_time = model.components.time()
 
-        assert set_temp != initial_temp,\
+        assert set_temp != initial_temp, \
             "Test definition is wrong, please change configuration"
 
         assert set_temp == 500
 
-        assert initial_time != 10,\
+        assert initial_time != 10, \
             "Test definition is wrong, please change configuration"
 
         assert set_time == 10
@@ -1087,27 +1090,27 @@ class TestPySD():
                     "Initial Values": {
                         "One Dimensional Subscript": ["Entry 1", "Entry 2",
                                                       "Entry 3"],
-                        "Second Dimension Subscript":["Column 1", "Column 2"]
+                        "Second Dimension Subscript": ["Column 1", "Column 2"]
                     },
                     "initial_values": {
                         "One Dimensional Subscript": ["Entry 1", "Entry 2",
                                                       "Entry 3"],
-                        "Second Dimension Subscript":["Column 1", "Column 2"]
+                        "Second Dimension Subscript": ["Column 1", "Column 2"]
                     },
                     "Stock A": {
                         "One Dimensional Subscript": ["Entry 1", "Entry 2",
                                                       "Entry 3"],
-                        "Second Dimension Subscript":["Column 1", "Column 2"]
+                        "Second Dimension Subscript": ["Column 1", "Column 2"]
                     },
                     "stock_a": {
                         "One Dimensional Subscript": ["Entry 1", "Entry 2",
                                                       "Entry 3"],
-                        "Second Dimension Subscript":["Column 1", "Column 2"]
+                        "Second Dimension Subscript": ["Column 1", "Column 2"]
                     },
                     "_integ_stock_a": {
                         "One Dimensional Subscript": ["Entry 1", "Entry 2",
                                                       "Entry 3"],
-                        "Second Dimension Subscript":["Column 1", "Column 2"]
+                        "Second Dimension Subscript": ["Column 1", "Column 2"]
                     }
                 }
             )
@@ -1230,7 +1233,7 @@ class TestPySD():
         res = model.output.handler.ds
         assert isinstance(res, dict)
         assert 'teacup_temperature' in res
-        assert np.array_equal(res['time'], list(range(0, 5, 2)))
+        assert np.array_equal(res['time'], np.arange(0, 5, 2))
 
         model.reload()
         model.time.add_return_timestamps(list(range(0, 5, 2)))
@@ -1289,6 +1292,10 @@ class TestPySD():
         assert model.py_model_file == str(path.with_suffix(".py"))
         # Check mdl_file
         assert model.mdl_file == str(path)
+
+    @pytest.mark.parametrize("model_path", [test_model_query])
+    def test_performance_dataframe(self, model):
+        model.run()
 
 
 class TestModelInteraction():
@@ -1582,6 +1589,7 @@ class TestExportImport():
         if return_ts[2]:
             assert_frames_close(stocks2, stocks.loc[return_ts[2]])
 
+
 class TestStepper():
 
     @pytest.mark.parametrize("model_path", [test_model_stepper])
@@ -1603,7 +1611,7 @@ class TestStepper():
         steps = int((model["final_time"] - model["initial_time"]) /
                     model["time_step"])
 
-        for i in range(1,steps + 1):
+        for i in range(1, steps+1):
             model.step(1, {"foo": i})
 
         res = output.collect(model)
@@ -1630,5 +1638,6 @@ class TestStepper():
 
         result_df = output.collect(model)
 
-        np.array_equal(result_df["Room Temperature"].values, result_temperatures)
+        np.array_equal(
+            result_df["Room Temperature"].values, result_temperatures)
         assert np.floor(result_df.loc[5, "Teacup Temperature"]) == 144
