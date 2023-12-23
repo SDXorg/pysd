@@ -21,13 +21,15 @@ Documentation
 
 Performance
 ~~~~~~~~~~~
-- Improved performace of :py:class:`pysd.py_backend.output.DataFrameHandler` by creating the dataframe at the end of the run (:issue:`374`). (`@easyas314159 <https://github.com/easyas314159>`_ and `@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Improved performace of :py:class:`pysd.py_backend.output.DataFrameHandler` by creating the dataframe at the end of the run (:issue:`374` and :issue:`330`). (`@easyas314159 <https://github.com/easyas314159>`_ and `@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 Internal Changes
 ~~~~~~~~~~~~~~~~
 - Move old :py:meth:`pysd.py_backend.model.Macro.set_components` to :py:meth:`pysd.py_backend.model.Macro._set_components`, and create new method with the same name without the `new` argument. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 - Move old :py:meth:`pysd.py_backend.model.Macro.set_stateful` to :py:meth:`pysd.py_backend.model.Macro._set_stateful`. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 - Make integration tests filter only specific warnings. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Include warnings in :py:meth:`pysd.py_backend.model.Macro.set_components` when changing the behaviour of the component (:issue:`58`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+
 
 v3.12.0 (2023/10/02)
 --------------------
