@@ -190,6 +190,111 @@ class TestSubmodel:
 
         assert not np.any(np.isnan(model.run()))
 
+    def test_select_submodel_copy(self, model, variables, modules,
+                                  n_deps, dep_vars):
+
+        # assert original stateful elements
+        assert len(model._dynamicstateful_elements) == 2
+        assert "_integ_other_stock" in model._stateful_elements
+        assert "_integ_other_stock" in model._dependencies
+        assert "other_stock" in model._dependencies
+        assert "other stock" in model._namespace
+        assert "other stock" in model._doc["Real Name"].to_list()
+        assert "other_stock" in model._doc["Py Name"].to_list()
+        assert "_integ_stock" in model._stateful_elements
+        assert "_integ_stock" in model._dependencies
+        assert "stock" in model._dependencies
+        assert "Stock" in model._namespace
+        assert "Stock" in model._doc["Real Name"].to_list()
+        assert "stock" in model._doc["Py Name"].to_list()
+
+        # select submodel
+        with pytest.warns(UserWarning) as record:
+            model2 = model.select_submodel(vars=variables, modules=modules,
+                                           inplace=False)
+
+        # assert warning
+        assert str(record[0].message) == self.warning
+
+        # assert original stateful elements
+        assert len(model._dynamicstateful_elements) == 2
+        assert "_integ_other_stock" in model._stateful_elements
+        assert "_integ_other_stock" in model._dependencies
+        assert "other_stock" in model._dependencies
+        assert "other stock" in model._namespace
+        assert "other stock" in model._doc["Real Name"].to_list()
+        assert "other_stock" in model._doc["Py Name"].to_list()
+        assert "_integ_stock" in model._stateful_elements
+        assert "_integ_stock" in model._dependencies
+        assert "stock" in model._dependencies
+        assert "Stock" in model._namespace
+        assert "Stock" in model._doc["Real Name"].to_list()
+        assert "stock" in model._doc["Py Name"].to_list()
+
+        # assert stateful elements change
+        assert len(model2._dynamicstateful_elements) == 1
+        assert "_integ_other_stock" not in model2._stateful_elements
+        assert "_integ_other_stock" not in model2._dependencies
+        assert "other_stock" not in model2._dependencies
+        assert "other stock" not in model2._namespace
+        assert "other stock" not in model2._doc["Real Name"].to_list()
+        assert "other_stock" not in model2._doc["Py Name"].to_list()
+        assert "_integ_stock" in model2._stateful_elements
+        assert "_integ_stock" in model2._dependencies
+        assert "stock" in model2._dependencies
+        assert "Stock" in model2._namespace
+        assert "Stock" in model2._doc["Real Name"].to_list()
+        assert "stock" in model2._doc["Py Name"].to_list()
+
+        if not dep_vars:
+            # totally independent submodels can run without producing
+            # nan values
+            assert not np.any(np.isnan(model2.run()))
+        else:
+            # running the model without redefining dependencies will
+            # produce nan values
+            assert "Exogenous components for the following variables are"\
+                + " necessary but not given:" in str(record[-1].message)
+            assert "Please, set them before running the model using "\
+                + "set_components method..." in str(record[-1].message)
+            for var in dep_vars:
+                assert var in str(record[-1].message)
+            assert np.any(np.isnan(model2.run()))
+            # redefine dependencies
+            warn_message = "Replacing a variable by a constant value."
+            with pytest.warns(UserWarning, match=warn_message):
+                out = model2.run(params=dep_vars)
+            assert not np.any(np.isnan(out))
+
+        # select submodel using contour values
+        with pytest.warns(UserWarning) as record:
+            model2 = model.select_submodel(vars=variables, modules=modules,
+                                           exogenous_components=dep_vars,
+                                           inplace=False)
+
+        assert not np.any(np.isnan(model2.run()))
+
+        # copy of submodel
+        model3 = model2.copy()
+        # assert stateful elements change
+        assert len(model3._dynamicstateful_elements) == 1
+        assert "_integ_other_stock" not in model3._stateful_elements
+        assert "_integ_other_stock" not in model3._dependencies
+        assert "other_stock" not in model3._dependencies
+        assert "other stock" not in model3._namespace
+        assert "other stock" not in model3._doc["Real Name"].to_list()
+        assert "other_stock" not in model3._doc["Py Name"].to_list()
+        assert "_integ_stock" in model3._stateful_elements
+        assert "_integ_stock" in model3._dependencies
+        assert "stock" in model3._dependencies
+        assert "Stock" in model3._namespace
+        assert "Stock" in model3._doc["Real Name"].to_list()
+        assert "stock" in model3._doc["Py Name"].to_list()
+
+        # dep_vars should be already set
+        out = model3.run()
+        assert not np.any(np.isnan(out))
+
 
 @pytest.mark.parametrize(
     "model_path,split_views,module,raise_type,error_message",

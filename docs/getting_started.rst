@@ -272,3 +272,11 @@ We can easily access the current value of a model component using square bracket
 If you try to get the current values of a lookup variable, the previous method will fail, as lookup variables take arguments. However, it is possible to get the full series of a lookup or data object with :py:meth:`.get_series_data` method::
 
    >>> model.get_series_data('Growth lookup')
+
+
+Copying a model
+---------------
+Sometimes, you may want to run several versions of a model. For this purpose, copying an already-loaded model to make changes while keeping an untouched one is useful. The :py:meth:`.copy` method will help do that; it will load a new model from the translated file and apply to it the same changes that have been applied to the original model (modifying components, selecting submodels, etc.). You can also load a copy of the source model (without applying) any change setting the argument :py:data:`reload=True`.
+
+.. warning::
+   The copy function will load a new model from the file and apply the same changes to it. If any of these changes have replaced a variable with a function that references other variables in the model, the copy will not work properly since the function will still reference the variables in the original model, in which case the function should be redefined.

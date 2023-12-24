@@ -22,7 +22,7 @@ test_model_look = Path(
     + "test_get_lookups_subscripted_args.mdl")
 test_model_data = Path(
     "test-models/tests/get_data_args_3d_xls/test_get_data_args_3d_xls.mdl")
-
+test_macro_stock = Path("test-models/tests/macro_stock/test_macro_stock.mdl")
 test_model_query = Path("test-models/samples/Query_file/Query_file.mdl")
 
 more_tests = Path("more-tests")
@@ -1329,6 +1329,58 @@ class TestPySD():
     def test_performance_dataframe(self, model):
         model.run()
 
+    @pytest.mark.parametrize("model_path", [test_model])
+    def test_copy(self, model):
+        # check copying the model and running one of them
+        model2 = model.copy()
+        assert model['room_temperature'] == model2['room_temperature']
+        assert model['room_temperature'] != 3
+        model2.components.room_temperature = 3
+        assert model['room_temperature'] != model2['room_temperature']
+        model.run()
+        assert model.time() == 30
+        assert np.isclose(model['teacup_temperature'], 75.374)
+        assert model2.time() == 0
+        assert np.isclose(model2['teacup_temperature'], 180)
+
+        # check that time is copied
+        model3 = model.copy()
+        assert model3.time() == 30
+        assert np.isclose(model3['teacup_temperature'], 75.374)
+
+        # check that changes in variables are done again
+        assert model['room_temperature'] == 70
+        model.components.room_temperature = 200
+        model4 = model.copy()
+        assert model4['room_temperature'] == 200
+
+        # check that changes in control vars are copied
+        model.run(initial_condition=(3, {}), final_time=5)
+        model5 = model.copy()
+        assert model5.time.initial_time() == 3
+        assert model5.time.final_time() == 5
+        assert model5.time.time_step() == model.time.time_step()
+        assert model5.time.saveper() == model.time.saveper()
+        model.run(time_step=3, saveper=6, final_time=16)
+        model6 = model.copy()
+        assert model6.time.initial_time() == model.time.initial_time()
+        assert model6.time.final_time() == 16
+        assert model6.time.time_step() == 3
+        assert model6.time.saveper() == 6
+
+        # check a reloaded model
+        modelr = model.copy(reload=True)
+        assert modelr['room_temperature'] == 70
+        assert modelr['teacup_temperature'] == 180
+        assert modelr.time() == 0
+
+    @pytest.mark.parametrize("model_path", [test_macro_stock])
+    def test_copy_macro(self, model):
+        # check that macro's statefuls are copied recursively
+        out1 = model.run(return_columns=['macro_output']).values[-1]
+        model2 = model.copy()
+        assert model2['macro_output'] == out1
+
 
 class TestModelInteraction():
     """ The tests in this class test pysd's interaction with itself
@@ -1582,10 +1634,15 @@ class TestExportImport():
                 Path('test-models/tests/initial_function/test_initial.mdl'),
                 ([8, 20], [8], [20]),
                 (None, 15, None)
+            ),
+            (
+                test_macro_stock,
+                ([8, 20], [8], [20]),
+                (None, 15, None)
             )
         ],
         ids=["integ", "delays", "delay_fixed", "forecast", "sample_if_true",
-             "smooth", "trend", "initial"]
+             "smooth", "trend", "initial", "macro_stock"]
     )
     @pytest.mark.filterwarnings("ignore")
     def test_run_export_import(self, tmp_path, model, return_ts, final_t):
@@ -1627,6 +1684,15 @@ class TestExportImport():
             assert_frames_close(stocks1, stocks.loc[return_ts[1]])
         if return_ts[2]:
             assert_frames_close(stocks2, stocks.loc[return_ts[2]])
+
+        # test that time component is exported
+        model.export(export_path)
+        model.reload()
+        model.import_pickle(export_path)
+        assert model.time._time == finals[2]
+        assert model.time.final_time() == finals[2]
+        assert model.time.initial_time() == finals[1]
+        assert model.time.stage == "Run"
 
 
 class TestStepper():

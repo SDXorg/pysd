@@ -11,3 +11,4 @@ Macro class
 -----------
 .. autoclass:: pysd.py_backend.model.Macro
     :members:
+    :exclude-members: export
