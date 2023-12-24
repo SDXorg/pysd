@@ -1,9 +1,12 @@
 What's New
 ==========
-v3.12.1 (2023/12/XX)
+v3.13.0 (2023/12/25)
 --------------------
 New Features
 ~~~~~~~~~~~~
+- Include new method :py:meth:`pysd.py_backend.model.Model.copy` which allows copying a model (:issue:`131`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- :py:meth:`pysd.py_backend.model.Model.select_submodel` now  takes an optional argument `inplace` when set to :py:data:`False` it will return a modified copy of the model instead of modifying the original model (:issue:`131`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- :py:meth:`pysd.py_backend.model.Model.export` will now save also time component information if changed (e.g. final time, time step...). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 Breaking changes
 ~~~~~~~~~~~~~~~~
@@ -14,10 +17,12 @@ Deprecations
 Bug fixes
 ~~~~~~~~~
 - Set the pointer of :py:class:`pysd.py_backend.statefuls.DelayFixed` to 0 during initialization (:issue:`427`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- :py:meth:`pysd.py_backend.model.Model.export` now works with Macros. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 Documentation
 ~~~~~~~~~~~~~
 - Improve documentation of methods in :py:class:`pysd.py_backend.model.Model` and :py:class:`pysd.py_backend.model.Macro` includying cross-references and rewrite the one from :py:meth:`pysd.py_backend.model.Macro.set_components`. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Include documentation about the new method :py:meth:`pysd.py_backend.model.Model.copy` and update documentation from :py:meth:`pysd.py_backend.model.Model.select_submodel`. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 Performance
 ~~~~~~~~~~~

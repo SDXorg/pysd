@@ -7,6 +7,7 @@ import os
 import random
 import inspect
 import importlib.util
+from copy import deepcopy
 
 import numpy as np
 
@@ -129,13 +130,45 @@ class Time(object):
         self._time = None
         self.stage = None
         self.return_timestamps = None
+        self._next_return = None
+        self._control_vars_tracker = {}
 
     def __call__(self):
         return self._time
 
+    def export(self):
+        """Exports time values to a dictionary."""
+        return {
+            "control_vars": self._get_control_vars(),
+            "stage": self.stage,
+            "_time": self._time,
+            "return_timestamps": self.return_timestamps,
+            "_next_return": self._next_return
+        }
+
+    def _get_control_vars(self):
+        """
+        Make control vars changes exportable.
+        """
+        out = {}
+        for cvar, value in self._control_vars_tracker.items():
+            if callable(value):
+                out[cvar] = value()
+            else:
+                out[cvar] = value
+        return out
+
+    def _set_time(self, time_dict):
+        """Copy values from other Time object, used by Model.copy"""
+        self.set_control_vars(**time_dict['control_vars'])
+        for key, value in time_dict.items():
+            if key == 'control_vars':
+                continue
+            setattr(self, key, value)
+
     def set_control_vars(self, **kwargs):
         """
-        Set the control variables valies
+        Set the control variables values
 
         Parameters
         ----------
@@ -150,6 +183,20 @@ class Time(object):
                 Saveper.
 
         """
+        # filter None values
+        kwargs = {
+                key: value for key, value in kwargs.items()
+                if value is not None
+        }
+        # track changes
+        self._control_vars_tracker.update(kwargs)
+        self._set_control_vars(**kwargs)
+
+    def _set_control_vars(self, **kwargs):
+        """
+        Set the control variables values. Private version to be used
+        to avoid tracking changes.
+        """
         def _convert_value(value):
             # this function is necessary to avoid copying the pointer in the
             # lambda function.
@@ -159,8 +206,7 @@ class Time(object):
                 return lambda: value
 
         for key, value in kwargs.items():
-            if value is not None:
-                setattr(self, key, _convert_value(value))
+            setattr(self, key, _convert_value(value))
 
         if "initial_time" in kwargs:
             self._initial_time = self.initial_time()
@@ -184,16 +230,16 @@ class Time(object):
 
         if self.return_timestamps is not None:
             # this allows managing float precision error
-            if self.next_return is None:
+            if self._next_return is None:
                 return False
-            if np.isclose(self._time, self.next_return, prec):
+            if np.isclose(self._time, self._next_return, prec):
                 self._update_next_return()
                 return True
             else:
-                while self.next_return is not None\
-                      and self._time > self.next_return:
+                while self._next_return is not None\
+                      and self._time > self._next_return:
                     warn(
-                        f"The returning time stamp '{self.next_return}' "
+                        f"The returning time stamp '{self._next_return}' "
                         "seems to not be a multiple of the time step. "
                         "This value will not be saved in the output. "
                         "Please, modify the returning timestamps or the "
@@ -218,12 +264,12 @@ class Time(object):
            and len(return_timestamps) > 0:
             self.return_timestamps = list(return_timestamps)
             self.return_timestamps.sort(reverse=True)
-            self.next_return = self.return_timestamps.pop()
+            self._next_return = self.return_timestamps.pop()
         elif isinstance(return_timestamps, (float, int)):
-            self.next_return = return_timestamps
+            self._next_return = return_timestamps
             self.return_timestamps = []
         else:
-            self.next_return = None
+            self._next_return = None
             self.return_timestamps = None
 
     def update(self, value):
@@ -233,9 +279,9 @@ class Time(object):
     def _update_next_return(self):
         """ Update the next_return value """
         if self.return_timestamps:
-            self.next_return = self.return_timestamps.pop()
+            self._next_return = self.return_timestamps.pop()
         else:
-            self.next_return = None
+            self._next_return = None
 
     def reset(self):
         """ Reset time value to the initial """

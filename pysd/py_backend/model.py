@@ -10,6 +10,7 @@ import warnings
 import inspect
 import pickle
 from pathlib import Path
+from copy import deepcopy
 from typing import Union
 
 import numpy as np
@@ -85,6 +86,11 @@ class Macro(DynamicStateful):
         self.lookups_loaded = False
         # Functions with constant cache
         self._constant_funcs = set()
+        # Attributes that are set later
+        self.stateful_initial_dependencies = None
+        self.initialize_order = None
+        self.cache_type = None
+        self._components_setter_tracker = {}
         # Load model/macro from file and save in components
         self.components = Components(str(py_model_file), self.set_components)
 
@@ -208,7 +214,7 @@ class Macro(DynamicStateful):
 
     def clean_caches(self):
         """
-        Clean the cahce of the object and the macros objects that it
+        Clean the cache of the object and the macros objects that it
         contains
         """
         self.cache.clean()
@@ -481,67 +487,6 @@ class Macro(DynamicStateful):
     def state(self, new_value):
         [component.update(val) for component, val
          in zip(self._dynamicstateful_elements, new_value)]
-
-    def export(self, file_name):
-        """
-        Export stateful values to pickle file.
-
-        Parameters
-        ----------
-        file_name: str or pathlib.Path
-          Name of the file to export the values.
-
-        See also
-        --------
-        :func:`pysd.py_backend.model.Macro.import_pickle`
-
-        """
-        warnings.warn(
-            "\nCompatibility of exported states could be broken between"
-            " different versions of PySD or xarray, current versions:\n"
-            f"\tPySD {__version__}\n\txarray {xr.__version__}\n"
-        )
-        stateful_elements = {
-            name: element.export()
-            for name, element in self._stateful_elements.items()
-        }
-
-        with open(file_name, 'wb') as file:
-            pickle.dump(
-                (self.time(),
-                 stateful_elements,
-                 {'pysd': __version__, 'xarray': xr.__version__}
-                 ), file)
-
-    def import_pickle(self, file_name):
-        """
-        Import stateful values from pickle file.
-
-        Parameters
-        ----------
-        file_name: str or pathlib.Path
-          Name of the file to import the values from.
-
-        See also
-        --------
-        :func:`pysd.py_backend.model.Macro.export`
-
-        """
-        with open(file_name, 'rb') as file:
-            time, stateful_dict, metadata = pickle.load(file)
-
-        if __version__ != metadata['pysd']\
-           or xr.__version__ != metadata['xarray']:  # pragma: no cover
-            warnings.warn(
-                "\nCompatibility of exported states could be broken between"
-                " different versions of PySD or xarray. Current versions:\n"
-                f"\tPySD {__version__}\n\txarray {xr.__version__}\n"
-                "Loaded versions:\n"
-                f"\tPySD {metadata['pysd']}\n\txarray {metadata['xarray']}\n"
-                )
-
-        self._set_stateful(stateful_dict)
-        self.time.set_control_vars(initial_time=time)
 
     def initialize_external_data(self, externals=None):
 
@@ -1085,6 +1030,7 @@ class Macro(DynamicStateful):
         :func:`pysd.py_backend.model.Macro.get_args`
 
         """
+        self._components_setter_tracker.update(params)
         self._set_components(params, new=False)
 
     def _set_components(self, params, new):
@@ -1218,9 +1164,9 @@ class Macro(DynamicStateful):
 
         else:
             # the interpolation will be time dependent
-            return lambda:\
-                np.interp(self.time(), series.index, series.values),\
-                {'time': 1}
+            return lambda: np.interp(
+                self.time(), series.index, series.values
+                ), {'time': 1}
 
     def _constant_component(self, value, dims):
         """ Internal function for creating a constant model element """
@@ -1330,6 +1276,13 @@ class Macro(DynamicStateful):
 
         return elements_to_initialize
 
+    def export(self):
+        """Exports stateful values to a dictionary."""
+        return {
+            name: element.export()
+            for name, element in self._stateful_elements.items()
+        }
+
     def _set_stateful(self, stateful_dict):
         """
         Set stateful values.
@@ -1341,8 +1294,14 @@ class Macro(DynamicStateful):
 
         """
         for element, attrs in stateful_dict.items():
-            for attr, value in attrs.items():
-                setattr(getattr(self.components, element), attr, value)
+            component = getattr(self.components, element)
+            if hasattr(component, '_set_stateful'):
+                component._set_stateful(attrs)
+            else:
+                [
+                    setattr(component, attr, value)
+                    for attr, value in attrs.items()
+                ]
 
     def _build_doc(self):
         """
@@ -1431,12 +1390,19 @@ class Model(Macro):
         """ Sets up the Python objects """
         super().__init__(py_model_file, None, None, Time(),
                          data_files=data_files)
-        self.time.stage = 'Load'
-        self.time.set_control_vars(**self.components._control_vars)
         self.data_files = data_files
         self.missing_values = missing_values
+        # set time component
+        self.time.stage = 'Load'
+        # set control var privately to do not change it when copying
+        self.time._set_control_vars(**self.components._control_vars)
+        # Attributes that are set later
         self.progress = None
         self.output = None
+        self.capture_elements = None
+        self.return_addresses = None
+        self._stepper_mode = None
+        self._submodel_tracker = {}
 
         if initialize:
             self.initialize()
@@ -1705,12 +1671,13 @@ class Model(Macro):
         Internal method to set all simulation config parameters. Arguments
         to this function are those of the run and set_stepper methods.
         """
-
+        # set control var at the beginning in case they are needed to
+        # initialize any object
         self._set_control_vars(return_timestamps, final_time, time_step,
                                saveper)
 
         if params:
-            self._set_components(params, new=False)
+            self.set_components(params)
 
         if self._stepper_mode:
             for step_var in kwargs["step_vars"]:
@@ -1719,7 +1686,11 @@ class Model(Macro):
         # update cache types after setting params
         self._assign_cache_type()
 
+        # set initial conditions
         self.set_initial_condition(initial_condition)
+        # set control vars again in case a pickle has been used
+        self._set_control_vars(return_timestamps, final_time, time_step,
+                               saveper)
 
         # progressbar only makes sense when not running step by step
         if not self._stepper_mode:
@@ -1810,12 +1781,13 @@ class Model(Macro):
             if self.time.return_timestamps:
                 final_time = self.time.return_timestamps[0]
             else:
-                final_time = self.time.next_return
+                final_time = self.time._next_return
 
         self.time.set_control_vars(
             final_time=final_time, time_step=time_step, saveper=saveper)
 
-    def select_submodel(self, vars=[], modules=[], exogenous_components={}):
+    def select_submodel(self, vars=[], modules=[], exogenous_components={},
+                        inplace=True):
         """
         Select a submodel from the original model. After selecting a submodel
         only the necessary stateful objects for integrating this submodel will
@@ -1843,9 +1815,16 @@ class Model(Macro):
             set_components method. By default it is an empty dict and
             the needed exogenous components will be set to a numpy.nan value.
 
+        inplace: bool (optional)
+            If True it will modify current object and will return None.
+            If False it will create a copy of the model and return it
+            keeping the original model unchange. Default is True.
+
         Returns
         -------
-        None
+        None or pysd.py_backend.model.Model
+            If inplace=False it will return a modified copy of the
+            original model.
 
         Note
         ----
@@ -1886,6 +1865,17 @@ class Model(Macro):
         :func:`pysd.py_backend.model.Model.get_dependencies`
 
         """
+        if inplace:
+            self._select_submodel(vars, modules, exogenous_components)
+        else:
+            return self.copy()._select_submodel(
+                vars, modules, exogenous_components)
+
+    def _select_submodel(self, vars, modules, exogenous_components={}):
+        self._submodel_tracker = {
+            "vars": vars,
+            "modules": modules
+        }
         deps = self.get_dependencies(vars, modules)
         warnings.warn(
             "Selecting submodel, "
@@ -1955,7 +1945,7 @@ class Model(Macro):
                     self._namespace)[1]: value
             }) for key, value in exogenous_components.items()]
 
-        self._set_components(new_components, new=False)
+        self.set_components(new_components)
 
         # show a warning message if exogenous values are needed for a
         # dependency
@@ -1971,6 +1961,7 @@ class Model(Macro):
         # re-assign the cache_type and initialization order
         self._assign_cache_type()
         self._get_initialize_order()
+        return self
 
     def get_dependencies(self, vars=[], modules=[]):
         """
@@ -2123,6 +2114,64 @@ class Model(Macro):
 
         return vars
 
+    def copy(self, reload=False):
+        """
+        Create a copy of the current model.
+
+        Parameters
+        ----------
+        reload: bool (optional)
+            If True the model will be copied without applying to it any
+            change, the copy will simply load the model again from the
+            translated file. This would be equivalent to doing
+            :py:func:`pysd.load` with the same arguments. Otherwise, it
+            will apply the same changes that have been applied to the
+            original model and update the states (faithful copy).
+            Default is False.
+
+        Warning
+        -------
+        The copy function will load a new model from the file and apply
+        the same changes to it. If any of these changes have replaced a
+        variable with a function that references other variables in the
+        model, the copy will not work properly since the function will
+        still reference the variables in the original model, in which
+        case the function should be redefined.
+
+        See also
+        --------
+        :func:`pysd.py_backend.model.Model.reload`
+
+        """
+        # initialize the new model?
+        initialize = self.time.stage != 'Load'
+        # create a new model
+        new_model = type(self)(
+            py_model_file=deepcopy(self.py_model_file),
+            data_files=deepcopy(self.data_files),
+            initialize=initialize,
+            missing_values=deepcopy(self.missing_values)
+        )
+        if reload:
+            # return reloaded copy
+            return new_model
+        # copy the values of the stateful objects
+        if initialize:
+            new_model._set_stateful(deepcopy(super().export()))
+        # copy time object values
+        new_model.time._set_time(deepcopy(self.time.export()))
+        # set other components
+        with warnings.catch_warnings():
+            # filter warnings that have been already shown in original model
+            warnings.simplefilter("ignore")
+            # substract submodel
+            if self._submodel_tracker:
+                new_model._select_submodel(**self._submodel_tracker)
+            # copy modified parameters
+            new_model.set_components(self._components_setter_tracker)
+
+        return new_model
+
     def reload(self):
         """
         Reloads the model from the translated model file, so that all the
@@ -2130,6 +2179,7 @@ class Model(Macro):
 
         See also
         --------
+        :func:`pysd.py_backend.model.Model.copy`
         :func:`pysd.py_backend.model.Model.initialize`
 
         """
@@ -2229,6 +2279,7 @@ class Model(Macro):
             self.set_initial_value(*initial_condition)
         elif isinstance(initial_condition, Path):
             self.import_pickle(initial_condition)
+            self.time.set_control_vars(initial_time=self.time())
         elif isinstance(initial_condition, str):
             if initial_condition.lower() in ["original", "o"]:
                 self.time.set_control_vars(
@@ -2291,3 +2342,59 @@ class Model(Macro):
         self._euler_step(self.time.time_step())
         self.time.update(self.time()+self.time.time_step())
         self.clean_caches()
+
+    def export(self, file_name):
+        """
+        Export stateful values to pickle file.
+
+        Parameters
+        ----------
+        file_name: str or pathlib.Path
+          Name of the file to export the values.
+
+        See also
+        --------
+        :func:`pysd.py_backend.model.Model.import_pickle`
+
+        """
+        warnings.warn(
+            "\nCompatibility of exported states could be broken between"
+            " different versions of PySD or xarray, current versions:\n"
+            f"\tPySD {__version__}\n\txarray {xr.__version__}\n"
+        )
+        with open(file_name, 'wb') as file:
+            pickle.dump(
+                (self.time.export(),
+                 super().export(),
+                 {'pysd': __version__, 'xarray': xr.__version__}
+                 ), file)
+
+    def import_pickle(self, file_name):
+        """
+        Import stateful values from pickle file.
+
+        Parameters
+        ----------
+        file_name: str or pathlib.Path
+          Name of the file to import the values from.
+
+        See also
+        --------
+        :func:`pysd.py_backend.model.Model.export_pickle`
+
+        """
+        with open(file_name, 'rb') as file:
+            time_dict, stateful_dict, metadata = pickle.load(file)
+
+        if __version__ != metadata['pysd']\
+           or xr.__version__ != metadata['xarray']:  # pragma: no cover
+            warnings.warn(
+                "\nCompatibility of exported states could be broken between"
+                " different versions of PySD or xarray. Current versions:\n"
+                f"\tPySD {__version__}\n\txarray {xr.__version__}\n"
+                "Loaded versions:\n"
+                f"\tPySD {metadata['pysd']}\n\txarray {metadata['xarray']}\n"
+                )
+
+        self.time._set_time(time_dict)
+        self._set_stateful(stateful_dict)

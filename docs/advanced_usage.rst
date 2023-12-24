@@ -145,6 +145,8 @@ A submodel of a translated model can be run as a standalone model. This can be d
 .. automethod:: pysd.py_backend.model.Model.select_submodel
    :noindex:
 
+.. note::
+   This method will mutate the original model. If you want to have a copy of the model with the selected variables/modules you can use :py:data:`inplace=False` argument.
 
 In order to preview the needed exogenous variables, the :py:meth:`.get_dependencies` method can be used:
 
