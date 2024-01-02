@@ -48,9 +48,6 @@ class TestOutput():
             This class does not inherit from OutputHandlerInterface, but it
             overrides all its methods (it follows the interface).
             """
-            def process_output(self, out_file):
-                pass
-
             def initialize(self, model):
                 pass
 
@@ -108,9 +105,6 @@ class TestOutput():
             EmptyHandler.initialize(EmptyHandler, "model")
 
         with pytest.raises(NotImplementedError):
-            EmptyHandler.process_output(EmptyHandler, "out_file")
-
-        with pytest.raises(NotImplementedError):
             EmptyHandler.update(EmptyHandler, "model")
 
         with pytest.raises(NotImplementedError):
@@ -122,7 +116,7 @@ class TestOutput():
 
     @pytest.mark.parametrize("model_path", [test_model_look])
     def test_invalid_output_file(self, model):
-        error_message = "Paths must be strings or pathlib Path objects."
+        error_message = "expected str, bytes or os.PathLike object, not int"
         with pytest.raises(TypeError, match=error_message):
             model.run(output_file=1234)
 

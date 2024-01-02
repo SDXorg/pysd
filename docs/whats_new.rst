@@ -1,5 +1,29 @@
 What's New
 ==========
+v3.13.1 (2024/01/02)
+--------------------
+New Features
+~~~~~~~~~~~~
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+- Fix bug with :py:class:`pysd.py_backend.output.ModelOutput` initializing all the handlers, and thus, importing `netCDF4` when unnecessary (:issue:`431`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+
+Documentation
+~~~~~~~~~~~~~
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+
 v3.13.0 (2023/12/25)
 --------------------
 New Features

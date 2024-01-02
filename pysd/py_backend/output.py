@@ -24,140 +24,14 @@ from pysd.tools.ncfiles import NCFile
 from . utils import xrsplit
 
 
-class ModelOutput():
-    """
-    Manages outputs from simulations. Handles different types of outputs
-    by dispatchinging the tasks to adequate object handlers.
-
-    Parameters
-    ----------
-    out_file: str or pathlib.Path
-        Path to the file where the results will be written.
-
-    """
-    valid_output_files = [".nc", ".csv", ".tab"]
-
-    def __init__(self, out_file=None):
-
-        if out_file:
-            ModelOutput.check_output_file_path(out_file)
-
-        # Add any other handlers that you write here, in the order you
-        # want them to run (DataFrameHandler runs first)
-        self.handler = DataFrameHandler(DatasetHandler(None)).handle(out_file)
-
-    def set_capture_elements(self, capture_elements):
-        self.handler.capture_elements_step = capture_elements["step"]
-        self.handler.capture_elements_run = capture_elements["run"]
-
-    def initialize(self, model):
-        """
-        Delegating the creation of the results object and its elements
-        to the appropriate handler.
-        """
-        self.handler.initialize(model)
-
-    def update(self, model):
-        """
-        Delegating the update of the results object and its elements
-        to the appropriate handler.
-        """
-        self.handler.update(model)
-
-    def postprocess(self, **kwargs):
-        """
-        Delegating the postprocessing of the results object
-        to the appropriate handler.
-        """
-        return self.handler.postprocess(**kwargs)
-
-    def add_run_elements(self, model):
-        """
-        Delegating the addition of results with run cache in the
-        output object to the appropriate handler.
-        """
-        self.handler.add_run_elements(model)
-
-    @staticmethod
-    def check_output_file_path(output_file):
-
-        if not isinstance(output_file, (str, Path)):
-            raise TypeError(
-                    "Paths must be strings or pathlib Path objects.")
-
-        output_file = Path(output_file)
-
-        file_extension = output_file.suffix
-        if file_extension not in ModelOutput.valid_output_files:
-            raise ValueError(
-                    f"Unsupported output file format {file_extension}")
-
-        return output_file
-
-    @staticmethod
-    def collect(model, flatten_output=True):
-        """
-        Collect results after one or more simulation steps, and save to
-        desired output format (DataFrame, csv, tab or netCDF).
-
-        Parameters
-        ----------
-        model: pysd.py_backend.model.Model
-            PySD Model object.
-
-        flatten_output: bool (optional)
-            If True, once the output dataframe has been formatted will
-            split the xarrays in new columns following Vensim's naming
-            to make a totally flat output. Default is True.
-            This argument will be ignored when passing a netCDF4 file
-            path in the output_file argument.
-
-        """
-        del model._dependencies["OUTPUTS"]
-
-        model.output.add_run_elements(model)
-
-        model._remove_constant_cache()
-
-        return model.output.postprocess(
-            return_addresses=model.return_addresses, flatten=flatten_output)
-
-
 class OutputHandlerInterface(metaclass=abc.ABCMeta):
     """
     Interface for the creation of different output handlers.
     """
-    def __init__(self, next=None):
-        self._next = next
-
-    def handle(self, out_file):
-        """
-        If the concrete handler can write on the output file type passed
-        by the user, it returns the handler itself, else it goes to the
-        next handler.
-
-        Parameters
-        ----------
-        out_file: str or pathlib.Path
-            Path to the file where the results will be written.
-
-        Returns
-        -------
-        handler
-
-        """
-        handler = self.process_output(out_file)
-
-        if handler is not None:  # the handler can write the out_file type.
-            return handler
-        else:
-            return self._next.handle(out_file)
 
     @classmethod
     def __subclasshook__(cls, subclass):
-        return (hasattr(subclass, 'process_output') and
-                callable(subclass.process_output) and
-                hasattr(subclass, 'initialize') and
+        return (hasattr(subclass, 'initialize') and
                 callable(subclass.initialize) and
                 hasattr(subclass, 'update') and
                 callable(subclass.update) and
@@ -166,14 +40,6 @@ class OutputHandlerInterface(metaclass=abc.ABCMeta):
                 hasattr(subclass, 'add_run_elements') and
                 callable(subclass.add_run_elements) or
                 NotImplemented)
-
-    @abc.abstractmethod
-    def process_output(self, out_file):
-        """
-        If concrete handler can process out_file, returns it, else returns
-        None.
-        """
-        raise NotImplementedError
 
     @abc.abstractmethod
     def initialize(self, model):
@@ -210,33 +76,11 @@ class DatasetHandler(OutputHandlerInterface):
     Manages simulation results stored as netCDF4 Dataset.
     """
 
-    def __init__(self, next):
-        super().__init__(next)
-        self.out_file = None
+    def __init__(self, out_file):
+        self.out_file = out_file
         self.ds = None
         self.__step = 0
         self.nc = __import__("netCDF4")
-
-    def process_output(self, out_file):
-        """
-        If out_file can be handled by this concrete handler, it returns
-        the handler instance, else it returns None.
-
-        Parameters
-        ----------
-        out_file: str or pathlib.Path
-            Path to the file where the results will be written.
-
-        Returns
-        -------
-        None or DatasetHandler instance
-
-        """
-        if out_file:
-            out_file = Path(out_file)
-            if out_file.suffix == ".nc":
-                self.out_file = out_file
-                return self
 
     def initialize(self, model):
         """
@@ -413,36 +257,10 @@ class DataFrameHandler(OutputHandlerInterface):
     """
     Manages simulation results stored as pandas DataFrame.
     """
-    def __init__(self, next):
-        super().__init__(next)
+    def __init__(self, out_file):
+        self.out_file = out_file
         self.ds = None
-        self.out_file = None
         self.__step = 0
-
-    def process_output(self, out_file):
-        """
-        If this handler can process out_file, it returns True, else False.
-        DataFrameHandler handles outputs to be saved as *.csv or *.tab files,
-        and is the default handler when no output file is passed by the user.
-
-        Parameters
-        ----------
-        out_file: str or pathlib.Path
-            Path to the file where the results will be written.
-
-        Returns
-        -------
-        None or DataFrameHandler instance
-
-        """
-        if not out_file:
-            self.out_file = None
-            return self
-
-        self.out_file = Path(out_file)
-
-        if self.out_file.suffix in [".csv", ".tab"]:
-            return self
 
     def initialize(self, model):
         """
@@ -610,3 +428,98 @@ class DataFrameHandler(OutputHandlerInterface):
             subs = '[' + ','.join([str(ar.coords[dim].values)
                                    for dim in dims]) + ']'
             savedict[name+subs] = vals
+
+
+class ModelOutput():
+    """
+    Manages outputs from simulations. Handles different types of outputs
+    by dispatchinging the tasks to adequate object handlers.
+
+    Parameters
+    ----------
+    out_file: str or pathlib.Path
+        Path to the file where the results will be written.
+
+    """
+    out_handlers = {
+        "__default__": DataFrameHandler,
+        ".csv": DataFrameHandler,
+        ".tab": DataFrameHandler,
+        ".nc": DatasetHandler,
+    }
+
+    def __init__(self, out_file=None):
+        self.handler = ModelOutput.get_handler(out_file)
+
+    @staticmethod
+    def get_handler(out_file):
+        if out_file is None:
+            return ModelOutput.out_handlers["__default__"](None)
+
+        out_file = Path(out_file)
+
+        try:
+            return ModelOutput.out_handlers[out_file.suffix](out_file)
+        except KeyError:
+            raise ValueError(
+                f"Unsupported output file format {out_file.suffix}")
+
+    def set_capture_elements(self, capture_elements):
+        self.handler.capture_elements_step = capture_elements["step"]
+        self.handler.capture_elements_run = capture_elements["run"]
+
+    def initialize(self, model):
+        """
+        Delegating the creation of the results object and its elements
+        to the appropriate handler.
+        """
+        self.handler.initialize(model)
+
+    def update(self, model):
+        """
+        Delegating the update of the results object and its elements
+        to the appropriate handler.
+        """
+        self.handler.update(model)
+
+    def postprocess(self, **kwargs):
+        """
+        Delegating the postprocessing of the results object
+        to the appropriate handler.
+        """
+        return self.handler.postprocess(**kwargs)
+
+    def add_run_elements(self, model):
+        """
+        Delegating the addition of results with run cache in the
+        output object to the appropriate handler.
+        """
+        self.handler.add_run_elements(model)
+
+    @staticmethod
+    def collect(model, flatten_output=True):
+        """
+        Collect results after one or more simulation steps, and save to
+        desired output format (DataFrame, csv, tab or netCDF).
+
+        Parameters
+        ----------
+        model: pysd.py_backend.model.Model
+            PySD Model object.
+
+        flatten_output: bool (optional)
+            If True, once the output dataframe has been formatted will
+            split the xarrays in new columns following Vensim's naming
+            to make a totally flat output. Default is True.
+            This argument will be ignored when passing a netCDF4 file
+            path in the output_file argument.
+
+        """
+        del model._dependencies["OUTPUTS"]
+
+        model.output.add_run_elements(model)
+
+        model._remove_constant_cache()
+
+        return model.output.postprocess(
+            return_addresses=model.return_addresses, flatten=flatten_output)
