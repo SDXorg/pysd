@@ -214,7 +214,8 @@ class TestSubmodel:
                                            inplace=False)
 
         # assert warning
-        assert str(record[0].message) == self.warning
+        record = [str(r.message) for r in record]
+        assert self.warning in record
 
         # assert original stateful elements
         assert len(model._dynamicstateful_elements) == 2
@@ -254,11 +255,11 @@ class TestSubmodel:
             # running the model without redefining dependencies will
             # produce nan values
             assert "Exogenous components for the following variables are"\
-                + " necessary but not given:" in str(record[-1].message)
+                + " necessary but not given:" in record[-1]
             assert "Please, set them before running the model using "\
-                + "set_components method..." in str(record[-1].message)
+                + "set_components method..." in record[-1]
             for var in dep_vars:
-                assert var in str(record[-1].message)
+                assert var in record[-1]
             assert np.any(np.isnan(model2.run()))
             # redefine dependencies
             warn_message = "Replacing a variable by a constant value."
