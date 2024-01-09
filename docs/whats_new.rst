@@ -1,5 +1,29 @@
 What's New
 ==========
+v3.13.2 (2024/01/09)
+--------------------
+New Features
+~~~~~~~~~~~~
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+- Add support for XMILE's DELAY function through `DelayFixed` (:issue:`433`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+
+Documentation
+~~~~~~~~~~~~~
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+
 v3.13.1 (2024/01/02)
 --------------------
 New Features

@@ -38,6 +38,10 @@ xmile_test = {
         "folder": "constant_expressions",
         "file": "test_constant_expressions.xmile"
     },
+    "delay_xmile": {
+        "folder": "delay_xmile",
+        "file": "test_delay_xmile.xmile"
+    },
     "eval_order": {
         "folder": "eval_order",
         "file": "eval_order.xmile"
