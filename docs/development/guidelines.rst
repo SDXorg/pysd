@@ -54,7 +54,7 @@ The profiler depends on :py:mod:`cProfile` and `cprofilev <https://github.com/ym
 
 Python Linter
 ^^^^^^^^^^^^^
-`Pylint <http://docs.pylint.org/>`_ is a module that checks that your code meets proper Python
+`Pylint <https://pylint.readthedocs.io>`_ is a module that checks that your code meets proper Python
 coding practices. It is helpful for making sure that the code will be easy for other people to read,
 and also is good fast feedback for improving your coding practice. The lint checker can be run for
 the entire packages, and for individual Python modules or classes. It should be run at a local level

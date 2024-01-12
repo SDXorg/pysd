@@ -5,7 +5,8 @@ DELAY3I	"DELAY3I(input, delay_time, initial_value)"	delay3	"delay3(input, delay_
 DELAY3	"DELAY3(input, delay_time)"	delay3	"delay3(input, delay_time)"	"DelayStructure(input, delay_time, input, 3)"	pysd.statefuls.Delay(...)		Not tested for Xmile!
 DELAY N	"DELAY N(input, delay_time, initial_value, n)"	delayn	"delayn(input, delay_time,  n, initial_value)"	"DelayNStructure(input, delay_time, initial_value, n)"	pysd.statefuls.DelayN(...)		Not tested for Xmile!
 		delayn	"delayn(input, delay_time, n)"	"DelayNStructure(input, delay_time, input, n)"	pysd.statefuls.DelayN(...)		Not tested for Xmile!
-DELAY FIXED	"DELAY FIXED(input, delay_time, initial_value)"			"DelayFixed(input, delay_time, initial_value)"	pysd.statefuls.DelayFixed(...)		Not tested for Xmile!
+DELAY FIXED	"DELAY FIXED(input, delay_time, initial_value)"	delay	"delay(input, delay_time, initial_value)"	"DelayFixed(input, delay_time, initial_value)"	pysd.statefuls.DelayFixed(...)
+		delay	"delay(input, delay_time)"	"DelayFixed(input, delay_time, input)"	pysd.statefuls.DelayFixed(...)
 SMOOTHI	"SMOOTH1I(input, delay_time, initial_value)"	smth1	"smth1(input, smth_time, initial_value)"	"SmoothStructure(input, smth_time, initial_value, 1)"	pysd.statefuls.Smooth(...)		Not tested for Xmile!
 SMOOTH	"SMOOTH1(input, delay_time)"	smth1	"smth1(input, smth_time)"	"SmoothStructure(input, smth_time, input, 1)"	pysd.statefuls.Smooth(...)		Not tested for Xmile!
 SMOOTH3I	"SMOOTH3I(input, delay_time, initial_value)"	smth3	"smth3(input, smth_time, initial_value)"	"SmoothStructure(input, smth_time, initial_value, 3)"	pysd.statefuls.Smooth(...)		Not tested for Xmile!

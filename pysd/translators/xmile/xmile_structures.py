@@ -12,6 +12,10 @@ structures = {
     "call": ae.CallStructure,
     "init": ae.InitialStructure,
     "stock": ae.IntegStructure,
+    "delay": {
+        2: lambda x, y: ae.DelayFixedStructure(x, y, x),
+        3: lambda x, y, z: ae.DelayFixedStructure(x, y, z)
+    },
     "delay1": {
         2: lambda x, y: ae.DelayStructure(x, y, x, 1),
         3: lambda x, y, z: ae.DelayStructure(x, y, z, 1)
