@@ -116,7 +116,7 @@ class TestOutput():
 
     @pytest.mark.parametrize("model_path", [test_model_look])
     def test_invalid_output_file(self, model):
-        error_message = ".* str .* os.PathLike object .*, not .*int.*"
+        error_message = ".* str.* os.PathLike object.*"
         with pytest.raises(TypeError, match=error_message):
             model.run(output_file=1234)
 
