@@ -1,9 +1,9 @@
-
-import pytest
+import re
 import shutil
 from pathlib import Path
-import numpy as np
 
+import pytest
+import numpy as np
 
 import pysd
 from pysd.translators.vensim.vensim_file import VensimFile
@@ -60,7 +60,7 @@ class TestSubmodel:
             "Lookup table dependencies",
             "Stateful objects integrated with the selected variables"
             ]
-    warning = "Selecting submodel, "\
+    warn_message = "Selecting submodel, "\
         + "to run the full model again use model.reload()"
     common_vars = {
         'initial_time', 'time_step', 'final_time', 'time', 'saveper', 'stock'
@@ -141,11 +141,12 @@ class TestSubmodel:
         assert "stock" in model._doc["Py Name"].to_list()
 
         # select submodel
-        with pytest.warns(UserWarning) as record:
+        with pytest.warns() as record:
             model.select_submodel(vars=variables, modules=modules)
 
         # assert warning
-        assert str(record[0].message) == self.warning
+        record = [str(r.message) for r in record]
+        assert self.warn_message in record
 
         # assert stateful elements change
         assert len(model._dynamicstateful_elements) == 1
@@ -170,16 +171,20 @@ class TestSubmodel:
             # running the model without redefining dependencies will
             # produce nan values
             assert "Exogenous components for the following variables are"\
-                + " necessary but not given:" in str(record[-1].message)
+                + " necessary but not given:" in record[-1]
             assert "Please, set them before running the model using "\
-                + "set_components method..." in str(record[-1].message)
+                + "set_components method..." in record[-1]
             for var in dep_vars:
-                assert var in str(record[-1].message)
+                assert var in record[-1]
             assert np.any(np.isnan(model.run()))
             # redefine dependencies
             warn_message = "Replacing a variable by a constant value."
-            with pytest.warns(UserWarning, match=warn_message):
+            with pytest.warns(UserWarning) as record:
                 out = model.run(params=dep_vars)
+            assert any([
+                re.match(warn_message, str(warn.message))
+                for warn in record
+            ]), f"Couldn't match warning:\n{warn_message}"
             assert not np.any(np.isnan(out))
 
         # select submodel using contour values
@@ -215,7 +220,7 @@ class TestSubmodel:
 
         # assert warning
         record = [str(r.message) for r in record]
-        assert self.warning in record
+        assert self.warn_message in record
 
         # assert original stateful elements
         assert len(model._dynamicstateful_elements) == 2
@@ -263,8 +268,12 @@ class TestSubmodel:
             assert np.any(np.isnan(model2.run()))
             # redefine dependencies
             warn_message = "Replacing a variable by a constant value."
-            with pytest.warns(UserWarning, match=warn_message):
+            with pytest.warns(UserWarning) as record:
                 out = model2.run(params=dep_vars)
+            assert any([
+                re.match(warn_message, str(warn.message))
+                for warn in record
+            ]), f"Couldn't match warning:\n{warn_message}"
             assert not np.any(np.isnan(out))
 
         # select submodel using contour values

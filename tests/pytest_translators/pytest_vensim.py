@@ -1,9 +1,10 @@
-import pytest
 from pathlib import Path
+
+import pytest
+
 from parsimonious import VisitationError
 
 import pysd
-
 from pysd.translators.vensim.vensim_file import VensimFile
 from pysd.translators.vensim.vensim_element import Element
 
@@ -113,9 +114,9 @@ class TestElements:
     )
     def test_complex_mapping(self, element, mapping):
         # parse the mapping
-        warning_message = r"Subscript mapping detected\. "\
+        warn_message = r"Subscript mapping detected\. "\
             r"This feature works only for simple cases\."
-        with pytest.warns(UserWarning, match=warning_message):
+        with pytest.warns(UserWarning, match=warn_message):
             out = element.parse()
 
         assert out.mapping == mapping

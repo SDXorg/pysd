@@ -273,7 +273,7 @@ class TestSplitViews:
 
 
 @pytest.mark.parametrize(
-    "model_path,subview_sep,warning_message",
+    "model_path,subview_sep,warn_message",
     [
         (  # warning_noviews
             Path("test-models/samples/teacup/teacup.mdl"),
@@ -306,6 +306,10 @@ class TestSplitViewsWarnings:
         shutil.copy(_root.joinpath(model_path), file)
         return file
 
-    def test_split_view_warnings(self, model, subview_sep, warning_message):
-        with pytest.warns(UserWarning, match=warning_message):
+    def test_split_view_warnings(self, model, subview_sep, warn_message):
+        with pytest.warns() as record:
             pysd.read_vensim(model, split_views=True, subview_sep=subview_sep)
+        assert any([
+            re.match(warn_message, str(warn.message))
+            for warn in record
+        ]), f"Couldn't match warning:\n{warn_message}"

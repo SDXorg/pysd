@@ -516,6 +516,11 @@ class Macro(DynamicStateful):
         --------
         :func:`pysd.py_backend.model.Macro.serialize_externals`
 
+        Note
+        ----
+        To load externals from a netCDF file you need to have installed
+        the optional dependency `netCDF4`.
+
         """
 
         if not externals:
@@ -606,6 +611,11 @@ class Macro(DynamicStateful):
         See also
         --------
         :func:`pysd.py_backend.model.Macro.initialize_external_data`
+
+        Note
+        ----
+        To run this function you need to have installed the optional
+        dependency `netCDF4`.
 
         """
         data = {}
@@ -1124,12 +1134,6 @@ class Macro(DynamicStateful):
                     warnings.warn("Replacing a variable by a constant value.")
                 new_function = self._constant_component(value, dims)
                 self._dependencies[func_name] = {}
-
-            # this won't handle other statefuls...
-            if '_integ_' + func_name in dir(self.components):
-                warnings.warn("Replacing the equation of stock "
-                              "'{}' with params...".format(key),
-                              stacklevel=2)
 
             # copy attributes from the original object to proper working
             # of internal functions
