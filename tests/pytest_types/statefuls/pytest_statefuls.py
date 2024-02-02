@@ -178,26 +178,22 @@ class TestStateful():
                             tstep=lambda: 0.5,
                             py_name='delay5')
 
-        warning_message = "Delay time very small, casting delay order "\
-            "from 3 to 2"
-        with pytest.warns(UserWarning, match=warning_message):
+        warn_message = "Delay time very small, casting delay order from 3 to 2"
+        with pytest.warns(UserWarning, match=warn_message):
             delay1.initialize()
 
-        warning_message = "Delay time very small, casting delay order "\
-            "from 3 to 2"
-        with pytest.warns(UserWarning, match=warning_message):
+        with pytest.warns(UserWarning, match=warn_message):
             delay2.initialize()
 
-        warning_message = r"Casting delay order from 1\.5 to 1"
-        with pytest.warns(UserWarning, match=warning_message):
+        warn_message = r"Casting delay order from 1\.5 to 1"
+        with pytest.warns(UserWarning, match=warn_message):
             delay3.initialize()
 
-        warning_message = r"Casting delay order from 1\.5 to 1"
-        with pytest.warns(UserWarning, match=warning_message):
+        with pytest.warns(UserWarning, match=warn_message):
             delay4.initialize()
 
-        warning_message = r"Casting delay order from 1\.500000 to 2"
-        with pytest.warns(UserWarning, match=warning_message):
+        warn_message = r"Casting delay order from 1\.500000 to 2"
+        with pytest.warns(UserWarning, match=warn_message):
             delay5.initialize()
 
     def test_forecast(self):

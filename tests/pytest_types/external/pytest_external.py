@@ -1,7 +1,9 @@
 import sys
+import re
+import importlib.util
+
 import pytest
 
-import importlib.util
 import numpy as np
 import xarray as xr
 
@@ -1974,8 +1976,14 @@ class TestWarningsErrors():
                                      final_coords=coords,
                                      py_name=py_name)
 
-        with pytest.warns(UserWarning, match="Not able to interpolate"):
+        with pytest.warns(UserWarning) as record:
             data.initialize()
+
+        warn_message = "Not able to interpolate"
+        assert any([
+            re.match(warn_message, str(warn.message))
+            for warn in record
+        ]), f"Couldn't match warning:\n{warn_message}"
 
         assert all(np.isnan(data.data.values))
 
@@ -2006,8 +2014,14 @@ class TestWarningsErrors():
                                      final_coords=coords,
                                      py_name=py_name)
 
-        with pytest.warns(UserWarning, match="Not able to interpolate"):
+        with pytest.warns(UserWarning) as record:
             data.initialize()
+
+        warn_message = "Not able to interpolate"
+        assert any([
+            re.match(warn_message, str(warn.message))
+            for warn in record
+        ]), f"Couldn't match warning:\n{warn_message}"
 
         assert not any(np.isnan(data.data.loc[:, "B"].values))
         assert not any(np.isnan(data.data.loc[:, "C"].values))

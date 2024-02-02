@@ -53,5 +53,8 @@ def ignore_warns():
     # warnings to be ignored in the integration tests
     return [
         "numpy.ndarray size changed, may indicate binary incompatibility.",
-        "Creating an ndarray from ragged nested sequences.*"
+        "Creating an ndarray from ragged nested sequences.*",
+        "datetime.datetime.* is deprecated and scheduled for removal in a "
+        "future version. Use timezone-aware objects to represent datetimes "
+        "in UTC.*",
     ]

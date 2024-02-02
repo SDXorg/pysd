@@ -106,7 +106,11 @@ class Priorities:
             interval = interval.union(i)
 
         # Full allocation function -> function to solve
-        def full_allocation(x): return np.sum([func(x) for func in functions])
+        def full_allocation(x):
+            if isinstance(x, np.ndarray):
+                # Fix to solve issues in the newest numpy versions
+                x = x.squeeze()[()]
+            return np.sum([func(x) for func in functions])
 
         def_intervals = []
         for subinterval in interval:

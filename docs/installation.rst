@@ -41,7 +41,7 @@ PySD requires **Python 3.9** or above.
 
 PySD builds on the core Python data analytics stack, and the following third party libraries:
 
-* Numpy < 1.24
+* Numpy >= 1.23
 * Scipy
 * Pandas (with Excel support: `pip install pandas[excel]`)
 * Parsimonious
@@ -65,7 +65,7 @@ In order to plot model outputs as shown in :doc:`Getting started <../getting_sta
 
 * Matplotlib
 
-To export data to netCDF (*.nc*) files:
+To export data to netCDF (*.nc*) files or to serialize external objects:
 
 * netCDF4
 

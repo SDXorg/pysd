@@ -460,10 +460,9 @@ class CallBuilder(StructureBuilder):
         """
         final_subscripts = self.reorder(arguments)
         warnings.warn(
-            "\n\nTrying to translate '"
-            + self.function.upper().replace("_", " ")
+            "Trying to translate '" + self.function.upper().replace("_", " ")
             + "' which it is not implemented on PySD. The translated "
-            + "model will crash... "
+            + "model will crash..."
         )
         self.section.imports.add("functions", "not_implemented_function")
 
