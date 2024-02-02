@@ -1,4 +1,4 @@
-numpy<1.24
+numpy>=1.23
 pandas[excel]
 parsimonious
 xarray>=2023.9

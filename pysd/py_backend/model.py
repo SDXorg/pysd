@@ -516,6 +516,11 @@ class Macro(DynamicStateful):
         --------
         :func:`pysd.py_backend.model.Macro.serialize_externals`
 
+        Note
+        ----
+        To load externals from a netCDF file you need to have installed
+        the optional dependency `netCDF4`.
+
         """
 
         if not externals:
@@ -534,7 +539,11 @@ class Macro(DynamicStateful):
         if not externals.is_file():
             raise FileNotFoundError(f"Invalid file path ({str(externals)})")
 
-        ds = xr.open_dataset(externals)
+        try:
+            ds = xr.open_dataset(externals)
+        except ValueError:  # pragma: no cover
+            raise ModuleNotFoundError("No module named 'netCDF4'")
+
 
         for ext in self._external_elements:
             if ext.py_name in ds.data_vars.keys():
@@ -606,6 +615,11 @@ class Macro(DynamicStateful):
         See also
         --------
         :func:`pysd.py_backend.model.Macro.initialize_external_data`
+
+        Note
+        ----
+        To run this function you need to have installed the optional
+        dependency `netCDF4`.
 
         """
         data = {}
@@ -679,7 +693,10 @@ class Macro(DynamicStateful):
         for key, values in metadata.items():
             ds[key].attrs = values
 
-        ds.to_netcdf(export_path)
+        try:
+            ds.to_netcdf(export_path)
+        except KeyError:  # pragma: no cover
+            raise ModuleNotFoundError("No module named 'netCDF4'")
 
     def __include_for_serialization(self, ext, py_name_clean, data, metadata,
                                     lookup_dims, data_dims):
@@ -1124,12 +1141,6 @@ class Macro(DynamicStateful):
                     warnings.warn("Replacing a variable by a constant value.")
                 new_function = self._constant_component(value, dims)
                 self._dependencies[func_name] = {}
-
-            # this won't handle other statefuls...
-            if '_integ_' + func_name in dir(self.components):
-                warnings.warn("Replacing the equation of stock "
-                              "'{}' with params...".format(key),
-                              stacklevel=2)
 
             # copy attributes from the original object to proper working
             # of internal functions

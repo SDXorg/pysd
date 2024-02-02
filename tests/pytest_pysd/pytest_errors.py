@@ -1,5 +1,7 @@
-import pytest
+import re
 import shutil
+
+import pytest
 
 from pysd import read_vensim, read_xmile, load
 
@@ -92,13 +94,21 @@ def test_loading_error(loader, model_path, raise_type, error_message):
     ]
 )
 def test_not_implemented_and_incomplete(model_path):
-    with pytest.warns(UserWarning) as ws:
+    with pytest.warns() as record:
         model = read_vensim(model_path)
-        assert "'incomplete var' has no equation specified"\
-            in str(ws[0].message)
-        assert "Trying to translate 'MY FUNC' which it is not implemented"\
-            " on PySD. The translated model will crash..."\
-            in str(ws[1].message)
+
+    warn_message = "'incomplete var' has no equation specified"
+    assert any([
+        re.match(warn_message, str(warn.message))
+        for warn in record
+    ]), f"Couldn't match warning:\n{warn_message}"
+
+    warn_message = "Trying to translate 'MY FUNC' which it is "\
+        "not implemented on PySD. The translated model will crash..."
+    assert any([
+        re.match(warn_message, str(warn.message))
+        for warn in record
+    ]), f"Couldn't match warning:\n{warn_message}"
 
     with pytest.warns(RuntimeWarning,
          match="Call to undefined function, calling dependencies "

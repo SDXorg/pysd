@@ -1,5 +1,34 @@
 What's New
 ==========
+v3.13.3 (2024/02/02)
+--------------------
+New Features
+~~~~~~~~~~~~
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+
+Documentation
+~~~~~~~~~~~~~
+- Improve documentation for :py:mod:`netCDF4` dependency. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- Support for Python 3.12. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Support for :py:mod:`numpy` >= 1.24. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Correct some warnings management in the tests. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Set :py:mod:`numpy` requirements to >= 1.23 to follow `NEP29 <https://numpy.org/neps/nep-0029-deprecation_policy.html>`_. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Custom error messages when :py:mod:`netCDF4` is missing (:issue:`435`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+
 v3.13.2 (2024/01/09)
 --------------------
 New Features

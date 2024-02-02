@@ -386,7 +386,7 @@ class DataFrameHandler(OutputHandlerInterface):
             if is_dataarray and values[0].size == 1:
                 # some elements are returned as 0-d arrays, convert
                 # them to float
-                values = [float(x) for x in values]
+                values = [x.squeeze().values[()] for x in values]
                 is_dataarray = False
 
             if flatten and is_dataarray:

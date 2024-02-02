@@ -158,7 +158,7 @@ intersphinx_mapping = {
     'xarray': ('https://docs.xarray.dev/en/stable/', None),
     'numpy': ('https://numpy.org/doc/stable/', None),
     'scipy': ('https://docs.scipy.org/doc/scipy/', None),
-    'pytest': ('https://docs.pytest.org/en/7.1.x/', None),
+    'pytest': ('https://docs.pytest.org/en/8.0.x/', None),
     'openpyxl': ('https://openpyxl.readthedocs.io/en/stable', None)
 }
 

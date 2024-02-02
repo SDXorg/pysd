@@ -564,6 +564,7 @@ vensim_test = {
         "file": "test_subscripted_round.mdl",
         "warns": [
             "Variable '.*' is defined with different .*types: '.*'",
+            "invalid value encountered in cast"
         ]
     },
     "subscripted_smooth": {

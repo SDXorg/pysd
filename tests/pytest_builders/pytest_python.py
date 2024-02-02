@@ -1,5 +1,6 @@
-import pytest
 from pathlib import Path
+
+import pytest
 
 from pysd.builders.python.namespace import NamespaceManager
 from pysd.builders.python.subscripts import SubscriptManager
@@ -147,13 +148,13 @@ class TestStructureBuilder:
         component.section.subscripts.mapping = {
             dim: [] for dim in subscripts}
         component.section.namespace.namespace = namespace
-        warning_message =\
+        warn_message =\
             f"The reference to '{origin_name}' in variable 'My Var' has "\
             r"duplicated subscript ranges\. If mapping is used in one "\
             r"of them, please, rewrite reference subscripts to avoid "\
             r"duplicates\. Otherwise, the final model may crash\.\.\."\
 
-        with pytest.warns(UserWarning, match=warning_message):
+        with pytest.warns(UserWarning, match=warn_message):
             ReferenceBuilder(reference_str, component)
 
     @pytest.mark.parametrize(

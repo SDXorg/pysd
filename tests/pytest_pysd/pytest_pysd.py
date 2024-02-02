@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 
 import pytest
@@ -140,13 +141,13 @@ class TestPySD():
 
         # assert one timestamp is not returned because is not multiple of
         # the time step
-        warning_message =\
+        warn_message =\
             "The returning time stamp '%s' seems to not be a multiple "\
             "of the time step. This value will not be saved in the output. "\
             "Please, modify the returning timestamps or the integration "\
             "time step to avoid this."
         # assert that return_timestamps works with float error
-        with pytest.warns(UserWarning, match=warning_message % 0.55):
+        with pytest.warns(UserWarning, match=warn_message % 0.55):
             stocks = model.run(
                 time_step=0.1, return_timestamps=[0.3, 0.1, 0.55, 0.9])
         assert 0.1 in stocks.index
@@ -155,7 +156,7 @@ class TestPySD():
         assert 0.55 not in stocks.index
 
         with pytest.warns(UserWarning,
-                          match=warning_message % "(0.15|0.55|0.95)"):
+                          match=warn_message % "(0.15|0.55|0.95)"):
             stocks = model.run(
                 time_step=0.1, return_timestamps=[0.3, 0.15, 0.55, 0.95])
         assert 0.15 not in stocks.index
@@ -348,12 +349,18 @@ class TestPySD():
     @pytest.mark.parametrize("model_path", [test_model])
     def test_set_components_warnings(self, model):
         """Addresses https://github.com/SDXorg/pysd/issues/80"""
-        warn_message = r"Replacing the equation of stock "\
-                       r"'Teacup Temperature' with params\.\.\."
-        with pytest.warns(UserWarning, match=warn_message):
+        warn_message = r"Replacing the value of Stateful variable with "\
+            r"an expression\. To set initial conditions use "\
+            r"`set_initial_condition` instead\.\.\."
+        with pytest.warns() as record:
             model.set_components(
                 {"Teacup Temperature": 20, "Characteristic Time": 15}
             )  # set stock value using params
+
+        assert any([
+            re.match(warn_message, str(warn.message))
+            for warn in record
+        ]), f"Couldn't match warning:\n{warn_message}"
 
     @pytest.mark.parametrize("model_path", [test_model])
     def test_set_components_with_function(self, model):
@@ -967,11 +974,16 @@ class TestPySD():
 
     @pytest.mark.parametrize("model_path", [test_model])
     def test_replace_stateful(self, model):
-        warn_message = "Replacing the value of Stateful variable with "\
-                       "an expression. To set initial conditions use "\
-                       "`set_initial_condition` instead..."
-        with pytest.warns(UserWarning, match=warn_message):
+        warn_message = r"Replacing the value of Stateful variable with "\
+            r"an expression\. To set initial conditions use "\
+            r"`set_initial_condition` instead\.\.\."
+        with pytest.warns() as record:
             model.components.teacup_temperature = 3
+
+        assert any([
+            re.match(warn_message, str(warn.message))
+            for warn in record
+        ]), f"Couldn't match warning:\n{warn_message}"
 
         stocks = model.run()
         assert np.all(stocks["Teacup Temperature"] == 3)

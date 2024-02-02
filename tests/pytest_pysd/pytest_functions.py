@@ -574,7 +574,7 @@ class TestFunctions():
                 lambda: 0, relativeto, np.random.randint(-100, 100), measure)
 
     def test_vector_select(self):
-        warning_message =\
+        warn_message =\
             r"Vensim's help says that numerical_action=5 computes the "\
             r"product of selection_array \^ expression_array\. But, in fact,"\
             r" Vensim is computing the product of expression_array \^ "\
@@ -584,7 +584,7 @@ class TestFunctions():
         array = xr.DataArray([3, 10, 2], {'dim': ["A", "B", "C"]})
         sarray = xr.DataArray([1, 0, 2], {'dim': ["A", "B", "C"]})
 
-        with pytest.warns(UserWarning, match=warning_message):
+        with pytest.warns(UserWarning, match=warn_message):
             assert vector_select(sarray, array, ["dim"], np.nan, 5, 1)\
                 == 12
 
