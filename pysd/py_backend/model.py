@@ -539,7 +539,11 @@ class Macro(DynamicStateful):
         if not externals.is_file():
             raise FileNotFoundError(f"Invalid file path ({str(externals)})")
 
-        ds = xr.open_dataset(externals)
+        try:
+            ds = xr.open_dataset(externals)
+        except ValueError:  # pragma: no cover
+            raise ModuleNotFoundError("No module named 'netCDF4'")
+
 
         for ext in self._external_elements:
             if ext.py_name in ds.data_vars.keys():
@@ -689,7 +693,10 @@ class Macro(DynamicStateful):
         for key, values in metadata.items():
             ds[key].attrs = values
 
-        ds.to_netcdf(export_path)
+        try:
+            ds.to_netcdf(export_path)
+        except KeyError:  # pragma: no cover
+            raise ModuleNotFoundError("No module named 'netCDF4'")
 
     def __include_for_serialization(self, ext, py_name_clean, data, metadata,
                                     lookup_dims, data_dims):
