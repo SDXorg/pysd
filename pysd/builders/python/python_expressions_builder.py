@@ -1442,7 +1442,6 @@ class SmoothBuilder(StructureBuilder):
         self.element.other_dependencies[arguments["name"]] = {
             "initial": merge_dependencies(
                 arguments["initial"].calls,
-                arguments["smooth_time"].calls,
                 arguments["order"].calls),
             "step": merge_dependencies(
                 arguments["input"].calls,

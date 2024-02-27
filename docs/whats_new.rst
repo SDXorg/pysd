@@ -1,5 +1,29 @@
 What's New
 ==========
+v3.13.4 (2024/02/29)
+--------------------
+New Features
+~~~~~~~~~~~~
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+- Fix initialization dependencies for :py:class:`pysd.py_backend.statefuls.Smooth` in the builder :py:class:`pysd.builders.python.python_expressions_builder.SmoothBuilder` (:issue:`440`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+
+Documentation
+~~~~~~~~~~~~~
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+
 v3.13.3 (2024/02/02)
 --------------------
 New Features
