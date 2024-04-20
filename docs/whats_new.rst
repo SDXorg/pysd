@@ -1,5 +1,33 @@
 What's New
 ==========
+v3.14.0 (2024/04/24)
+--------------------
+New Features
+~~~~~~~~~~~~
+- Support Vensim's `RANDOM EXPONENTIAL <https://www.vensim.com/documentation/fn_random.html>`_ function (:issue:`107`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+- Fix truncation in Vensim's `RANDOM NORMAL <https://www.vensim.com/documentation/fn_random.html>`_ function translation. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+
+Documentation
+~~~~~~~~~~~~~
+- Add supported random functions to the documentation tables. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- Add test for random functions inlcuying comparison with Vensim outputs and expected values (:issue:`107`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Allow to add multiple imports by the python function call builder. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+
 v3.13.4 (2024/02/29)
 --------------------
 New Features

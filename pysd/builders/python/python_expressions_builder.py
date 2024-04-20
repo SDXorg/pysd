@@ -606,9 +606,9 @@ class CallBuilder(StructureBuilder):
         """
         # Get the function expression from the functionspace
         expression, modules = functionspace[self.function]
-        if modules:
+        for module in modules:
             # Update module dependencies in imports
-            self.section.imports.add(*modules)
+            self.section.imports.add(*module)
 
         calls = self.join_calls(arguments)
 
