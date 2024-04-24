@@ -46,3 +46,7 @@ ALLOCATE AVAILABLE	"ALLOCATE AVAILABLE(request, pp, avail)"			"AllocateAvailable
 ALLOCATE BY PRIORITY	"ALLOCATE BY PRIORITY(request, priority, size, width, supply)"			"AllocateByPriorityStructure(request, priority, size, width, supply)"	allocate_by_priority(request, priority, width, supply)
 INITIAL	INITIAL(value)	init	init(value)	InitialStructure(value)	pysd.statefuls.Initial
 SAMPLE IF TRUE	"SAMPLE IF TRUE(condition, input, initial_value)"			"SampleIfTrueStructure(condition, input, initial_value)"	pysd.statefuls.SampleIfTrue(...)
+RANDOM 0 1	"RANDOM 0 1()"			"CallStructure('random_0_1', ())"	np.random.uniform(0, 1, size=final_shape)
+RANDOM UNIFORM	"RANDOM UNIFORM(m, x, s)"			"CallStructure('random_uniform', (m, x, s))"	np.random.uniform(m, x, size=final_shape)
+RANDOM NORMAL	"RANDOM NORMAL(m, x, h, r, s)"			"CallStructure('random_normal', (m, x, h, r, s))"	stats.truncnorm.rvs((m-h)/r, (x-h)/r, loc=h, scale=r, size=final_shape)
+RANDOM EXPONENTIAL	"RANDOM EXPONENTIAL(m, x, h, r, s)"			"CallStructure('random_exponential', (m, x, h, r, s))"	stats.truncexpon.rvs((x-np.maximum(m, h))/r, loc=np.maximum(m, h), scale=r, size=final_shape)
