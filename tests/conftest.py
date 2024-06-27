@@ -68,6 +68,9 @@ def ignore_warns():
         "datetime.datetime.* is deprecated and scheduled for removal in a "
         "future version. Use timezone-aware objects to represent datetimes "
         "in UTC.*",
+        "__array__ implementation doesn't accept a copy keyword, so passing "
+        "copy=False failed. __array__ must implement 'dtype' and 'copy' "
+        "keyword arguments.",
     ]
 
 
