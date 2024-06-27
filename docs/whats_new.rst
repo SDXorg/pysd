@@ -1,5 +1,32 @@
 What's New
 ==========
+v3.14.1 (2024/06/XX)
+--------------------
+New Features
+~~~~~~~~~~~~
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+- Support for :py:mod:`numpy` 2. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Allow multiple font styles in var names (:issue:`443`). (`@rogersamso <https://github.com/rogersamso>`_)
+
+Documentation
+~~~~~~~~~~~~~
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- Fix CI tests. (`@rogersamso <https://github.com/rogersamso>`_)
+- Run CI coverage only on ubuntu and lowest Python. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+
 v3.14.0 (2024/04/24)
 --------------------
 New Features
@@ -267,7 +294,7 @@ v3.9.1 (2023/03/11)
 
 New Features
 ~~~~~~~~~~~~
-- Add :py:const:`numpy.py` as translation for the call to the function `PI()`. (`@lionel42 <https://github.com/lionel42>`_)
+- Add :py:const:`numpy.pi` as translation for the call to the function `PI()`. (`@lionel42 <https://github.com/lionel42>`_)
 
 Breaking changes
 ~~~~~~~~~~~~~~~~
