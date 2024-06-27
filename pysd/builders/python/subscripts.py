@@ -294,6 +294,14 @@ class SubscriptManager:
         ['all']
 
         """
+        def _to_list(dim):
+            try:
+                # convert array of dimension to a list
+                return dim.tolist()
+            except AttributeError:
+                # few specific cases input is a string
+                return dim
+
         coords_set = [set() for i in range(len(subs_list[0]))]
         coords_list = [
             self.make_coord_dict(subs)
@@ -313,7 +321,7 @@ class SubscriptManager:
 
         for i, coord2 in enumerate(coords_set):
             dims1 = [
-                dim for dim in dims_list[i]
+                _to_list(dim) for dim in dims_list[i]
                 if dim is not None and set(self.subscripts[dim]) == coord2
             ]
             if dims1:
