@@ -7,7 +7,7 @@ pytest-xdist
 coverage
 coveralls
 psutil
-netCDF4>=1.6.*
+netCDF4>=1.6
 dask[array]
 dask[diagnostics]
 dask[distributed]
