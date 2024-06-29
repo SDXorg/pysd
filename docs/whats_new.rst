@@ -1,6 +1,6 @@
 What's New
 ==========
-v3.14.1 (2024/06/XX)
+v3.14.1 (2024/07/XX)
 --------------------
 New Features
 ~~~~~~~~~~~~
@@ -15,6 +15,8 @@ Bug fixes
 ~~~~~~~~~
 - Support for :py:mod:`numpy` 2. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 - Allow multiple font styles in var names (:issue:`443`). (`@rogersamso <https://github.com/rogersamso>`_)
+- Allow Vensims GET DIRECT/XLS SUBSCRIPT when lastcell is not a cell value  (:issue:`443`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Allow Vensims GET DIRECT/XLS SUBSCRIPT defined with cell range names  (:issue:`261`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 Documentation
 ~~~~~~~~~~~~~
