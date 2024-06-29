@@ -195,7 +195,7 @@ class External(object):
                 cols[1] = self._col_to_num(cells[4])+1
                 rows[1] = int(cells[5])
             # Use pandas to read the data and return its original shape
-            return self._get_data_from_file(rows, cols),\
+            return self._get_data_from_file(rows, cols), \
                 [rows[1]-rows[0], cols[1]-cols[0]]
 
         except (AttributeError, AssertionError):
@@ -753,7 +753,7 @@ class ExtData(External, Data):
         """
         if not self.coordss[0]:
             # Just load one value (no add)
-            for self.file, self.sheet, self.x_row_or_col,\
+            for self.file, self.sheet, self.x_row_or_col, \
                 self.cell, self.coords\
                 in zip(self.files, self.sheets, self.time_row_or_cols,
                        self.cells, self.coordss):
@@ -763,7 +763,7 @@ class ExtData(External, Data):
             self.data = xr.DataArray(
                 np.nan, self.final_coords, list(self.final_coords))
 
-            for self.file, self.sheet, self.x_row_or_col,\
+            for self.file, self.sheet, self.x_row_or_col, \
                 self.cell, self.coords\
                 in zip(self.files, self.sheets, self.time_row_or_cols,
                        self.cells, self.coordss):
@@ -822,7 +822,7 @@ class ExtLookup(External, Lookups):
         """
         if not self.coordss[0]:
             # Just loag one value (no add)
-            for self.file, self.sheet, self.x_row_or_col,\
+            for self.file, self.sheet, self.x_row_or_col, \
                 self.cell, self.coords\
                 in zip(self.files, self.sheets, self.x_row_or_cols,
                        self.cells, self.coordss):
@@ -832,7 +832,7 @@ class ExtLookup(External, Lookups):
             self.data = xr.DataArray(
                 np.nan, self.final_coords, list(self.final_coords))
 
-            for self.file, self.sheet, self.x_row_or_col,\
+            for self.file, self.sheet, self.x_row_or_col, \
                 self.cell, self.coords\
                 in zip(self.files, self.sheets, self.x_row_or_cols,
                        self.cells, self.coordss):
@@ -1016,15 +1016,64 @@ class ExtSubscript(External):
         super().__init__("Hardcoded external subscript")
         self.file = file_name
         self.sheet = sheet
+        self.prefix = prefix
         self._resolve_file(root=root)
+        split = self._split_excel_cell(firstcell)
+        if split:
+            subs = self.get_subscripts_cell(*split, lastcell)
+        else:
+            subs = self.get_subscripts_name(firstcell)
 
-        row_first, col_first = self._split_excel_cell(firstcell)
-        row_last, col_last = self._split_excel_cell(lastcell)
+        self.subscript = [
+            self.prefix + str(d) for d in subs.flatten()
+            if self._not_nan(d)
+            ]
+
+    def get_subscripts_cell(self, row_first, col_first, lastcell):
+        """Get subscripts from common cell definition"""
+        if not lastcell:
+            row_last, col_last = None, None
+        else:
+            split = self._split_excel_cell(lastcell)
+            if split:
+                # last cell is col and row
+                row_last, col_last = split
+            elif lastcell.isdigit():
+                # last cell is row number only
+                row_last = int(lastcell)-1
+                col_last = None
+            else:
+                # last cell is a col value only
+                row_last = None
+                col_last = self._col_to_num(lastcell)
+
+        # update read keywargs for rows and columns to read
+        read_kwargs = {}
+        if row_last is not None:
+            read_kwargs['nrows'] = row_last-row_first+1
+        if col_last is not None:
+            read_kwargs['usecols'] = np.arange(col_first, col_last+1)
+
         data = pd.read_excel(
-            self.file, sheet,
+            self.file, self.sheet,
             skiprows=row_first-1,
-            nrows=row_last-row_first+1,
-            usecols=np.arange(col_first, col_last+1)
-            )
+            dtype=object,
+            **read_kwargs
+            ).values
 
-        self.subscript = [prefix + str(d) for d in data.values.flatten()]
+        # skip columns if usecols couldn't be used
+        if col_last is None:
+            data = data[:, col_first:]
+
+        return data
+
+    def get_subscripts_name(self, name):
+        """Get subscripts from cell range name definition"""
+        raise NotImplementedError
+
+    @staticmethod
+    def _not_nan(value):
+        """Check if a value is not nan"""
+        if isinstance(value, str):
+            return True
+        return not np.isnan(value)

@@ -1212,7 +1212,7 @@ class TestLookup():
 
         with pytest.warns(UserWarning):
             for x, y in zip(_exp.xpts, _exp.interp_3d):
-                assert y.equals(data(xr.DataArray(x))),\
+                assert y.equals(data(xr.DataArray(x))), \
                     "Wrong result at X=" + str(x)
 
     def test_lookup_vn2d_xarray(self, _root):
@@ -1784,6 +1784,29 @@ class TestSubscript():
 
         assert data.subscript == expected
 
+    def test_subscript_h2(self, _root):
+        """
+        ExtSubscript test for horizontal subscripts
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        sheet = "Horizontal missing"
+        firstcell = "C4"
+        lastcell = "4"
+        prefix = 'v'
+        expected = ['v0', 'v1', 'v2', 'v3',
+                    'v5', 'v6', 'v7', 'v8']
+
+        data = pysd.external.ExtSubscript(file_name=file_name,
+                                          sheet=sheet,
+                                          root=_root,
+                                          firstcell=firstcell,
+                                          lastcell=lastcell,
+                                          prefix=prefix)
+
+        assert data.subscript == expected
+
     def test_subscript_v(self, _root):
         """
         ExtSubscript test for vertical subscripts
@@ -1796,6 +1819,72 @@ class TestSubscript():
         lastcell = "B7"
         prefix = ''
         expected = ['A', 'B', 'C']
+
+        data = pysd.external.ExtSubscript(file_name=file_name,
+                                          sheet=sheet,
+                                          root=_root,
+                                          firstcell=firstcell,
+                                          lastcell=lastcell,
+                                          prefix=prefix)
+
+        assert data.subscript == expected
+
+    def test_subscript_v2(self, _root):
+        """
+        ExtSubscript test for vertical subscripts
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        sheet = "Horizontal"
+        firstcell = "B8"
+        lastcell = "B"
+        prefix = ''
+        expected = ['A', 'B', 'C', '4', '5']
+
+        data = pysd.external.ExtSubscript(file_name=file_name,
+                                          sheet=sheet,
+                                          root=_root,
+                                          firstcell=firstcell,
+                                          lastcell=lastcell,
+                                          prefix=prefix)
+
+        assert data.subscript == expected
+
+    def test_subscript_d(self, _root):
+        """
+        ExtSubscript test for diagonal subscripts
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        sheet = "Horizontal"
+        firstcell = "A5"
+        lastcell = "B10"
+        prefix = ''
+        expected = ['X', 'A', 'B', 'C', 'Y', 'A', 'B', 'C']
+
+        data = pysd.external.ExtSubscript(file_name=file_name,
+                                          sheet=sheet,
+                                          root=_root,
+                                          firstcell=firstcell,
+                                          lastcell=lastcell,
+                                          prefix=prefix)
+
+        assert data.subscript == expected
+
+    def test_subscript_d2(self, _root):
+        """
+        ExtSubscript test for diagonal subscripts
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        sheet = "No monotonous"
+        firstcell = "H10"
+        lastcell = ""
+        prefix = 'j'
+        expected = ['j3', 'j2', 'j1', 'j6', 'j4', 'j8', 'j-1', 'j3', 'j2']
 
         data = pysd.external.ExtSubscript(file_name=file_name,
                                           sheet=sheet,
