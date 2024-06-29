@@ -1067,9 +1067,45 @@ class ExtSubscript(External):
 
         return data
 
-    def get_subscripts_name(self, name):
+    def get_subscripts_name(self, cellname):
         """Get subscripts from cell range name definition"""
-        raise NotImplementedError
+        excel = load_workbook(self.file, read_only=True, data_only=True)
+        global_cellranges = excel.defined_names
+        local_cellranges = None
+        # need to lower the sheetnames as Vensim has no case sensitivity
+        for sheet in excel.sheetnames:
+            if sheet.lower() == self.sheet.lower():
+                local_cellranges = excel[sheet].defined_names
+                break
+
+        if local_cellranges is None:
+            # Error if it is not able to get the localSheetId
+            raise ValueError(
+                self.py_name + "\n"
+                "The sheet doesn't exist...\n"
+                + self._file_sheet
+            )
+        try:
+            # Search for local and global names
+            cellrange = local_cellranges.get(cellname)\
+                        or global_cellranges.get(cellname)
+            sheet, cells = next(cellrange.destinations)
+
+            assert sheet.lower() == self.sheet.lower()
+            self.sheet = sheet  # case insensitivity in sheet name
+
+            # Get the cells where the cellrange is defined
+            first_cell, last_cell = cells.replace("$", '').split(":")
+        except (AttributeError, AssertionError):
+            # key error if the cellrange doesn't exist in the file or sheet
+            raise AttributeError(
+               self.py_name + "\n"
+               f"The cellrange name '{cellname}'\n"
+               "Doesn't exist in:\n" + self._file_sheet
+               )
+        else:
+            return self.get_subscripts_cell(
+                *self._split_excel_cell(first_cell), last_cell)
 
     @staticmethod
     def _not_nan(value):

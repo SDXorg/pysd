@@ -1883,8 +1883,75 @@ class TestSubscript():
         sheet = "No monotonous"
         firstcell = "H10"
         lastcell = ""
-        prefix = 'j'
+        prefix = "j"
         expected = ['j3', 'j2', 'j1', 'j6', 'j4', 'j8', 'j-1', 'j3', 'j2']
+
+        data = pysd.external.ExtSubscript(file_name=file_name,
+                                          sheet=sheet,
+                                          root=_root,
+                                          firstcell=firstcell,
+                                          lastcell=lastcell,
+                                          prefix=prefix)
+
+        assert data.subscript == expected
+
+    def test_subscript_name_h(self, _root):
+        """
+        ExtSubscript test for horizontal subscripts
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        sheet = "Horizontal missing"
+        firstcell = "time_missing"
+        lastcell = "B7"
+        prefix = "l"
+        expected = ['l0', 'l1', 'l2', 'l3',
+                    'l5', 'l6', 'l7', 'l8']
+
+        data = pysd.external.ExtSubscript(file_name=file_name,
+                                          sheet=sheet,
+                                          root=_root,
+                                          firstcell=firstcell,
+                                          lastcell=lastcell,
+                                          prefix=prefix)
+
+        assert data.subscript == expected
+
+    def test_subscript_name_v(self, _root):
+        """
+        ExtSubscript test for vertical subscripts
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        sheet = "Horizontal"
+        firstcell = "vertical_index"
+        lastcell = ""
+        prefix = "p"
+        expected = ['pA', 'pB', 'pC']
+
+        data = pysd.external.ExtSubscript(file_name=file_name,
+                                          sheet=sheet,
+                                          root=_root,
+                                          firstcell=firstcell,
+                                          lastcell=lastcell,
+                                          prefix=prefix)
+
+        assert data.subscript == expected
+
+    def test_subscript_name_d(self, _root):
+        """
+        ExtSubscript test for diagonal subscripts
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        sheet = "Horizontal missing"
+        firstcell = "d_names"
+        lastcell = None
+        prefix = ""
+        expected = ['X', 'A', '0', 'B', '0', 'C', '1']
 
         data = pysd.external.ExtSubscript(file_name=file_name,
                                           sheet=sheet,
@@ -2008,7 +2075,7 @@ class TestWarningsErrors():
                                      final_coords=coords,
                                      py_name=py_name)
 
-        error_message = "The cellrange name '.*'\nDoesn't exist in"
+        error_message = "The cellrange name 'non_exixtent'\nDoesn't exist in"
         with pytest.raises(AttributeError, match=error_message):
             data.initialize()
 
@@ -2032,7 +2099,7 @@ class TestWarningsErrors():
                                          final_coords=coords,
                                          py_name=py_name)
 
-        error_message = "The cellrange name '.*'\nDoesn't exist in"
+        error_message = "The cellrange name 'constant'\nDoesn't exist in"
         with pytest.raises(AttributeError, match=error_message):
             data.initialize()
 
@@ -3230,6 +3297,48 @@ class TestWarningsErrors():
         data.initialize()
 
         assert np.isnan(data.data)
+
+    def test_subscript_name_non_existent_sheet(self, _root):
+        """
+        ExtSubscript test for diagonal subscripts
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        sheet = "No exit"
+        firstcell = "d_names"
+        lastcell = None
+        prefix = ""
+
+        error_message = r"The sheet doesn't exist\.\.\."
+        with pytest.raises(ValueError, match=error_message):
+            pysd.external.ExtSubscript(file_name=file_name,
+                                       sheet=sheet,
+                                       root=_root,
+                                       firstcell=firstcell,
+                                       lastcell=lastcell,
+                                       prefix=prefix)
+
+    def test_subscript_name_non_existent_cellrange_name(self, _root):
+        """
+        Test for non-existent cellrange name with openpyxl
+        """
+        import pysd
+
+        file_name = "data/input.xlsx"
+        sheet = "Horizontal"
+        firstcell = "fake-cell"
+        lastcell = None
+        prefix = ""
+
+        error_message = "The cellrange name 'fake-cell'\nDoesn't exist in"
+        with pytest.raises(AttributeError, match=error_message):
+            pysd.external.ExtSubscript(file_name=file_name,
+                                       sheet=sheet,
+                                       root=_root,
+                                       firstcell=firstcell,
+                                       lastcell=lastcell,
+                                       prefix=prefix)
 
 
 class DownwardCompatibility():
