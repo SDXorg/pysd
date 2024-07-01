@@ -1072,8 +1072,9 @@ class ExtSubscript(External):
         # read the data
         data = read_func(
             self.file,
-            skiprows=row_first-1,
+            skiprows=row_first,
             dtype=object,
+            header=None,
             **read_kwargs
             ).values
 

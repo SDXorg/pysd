@@ -1807,6 +1807,29 @@ class TestSubscript():
 
         assert data.subscript == expected
 
+    def test_subscript_h_csv(self, _root):
+        """
+        ExtSubscript test for horizontal subscripts
+        """
+        import pysd
+
+        file_name = "data/input.csv"
+        sheet = ""
+        firstcell = "A1"
+        lastcell = "1"
+        prefix = 'h'
+        expected = ['h1', 'h2', 'h3', 'h4', 'h5',
+                    'h6', 'h7', 'h8', 'h9', 'h10']
+
+        data = pysd.external.ExtSubscript(file_name=file_name,
+                                          sheet=sheet,
+                                          root=_root,
+                                          firstcell=firstcell,
+                                          lastcell=lastcell,
+                                          prefix=prefix)
+
+        assert data.subscript == expected
+
     def test_subscript_v(self, _root):
         """
         ExtSubscript test for vertical subscripts
