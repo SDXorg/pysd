@@ -29,11 +29,23 @@ class Excels():
         if file_name.joinpath(sheet_name) in cls._Excels:
             return cls._Excels[file_name.joinpath(sheet_name)]
         else:
+            # get the function to read the data based on its extension
+            read_kwargs = {}
+            ext = file_name.suffix.lower()
+            if ext in ['.xls', '.xlsx', '.xlsm', 'xlsb', 'odf', 'ods', 'odt']:
+                read_func = pd.read_excel
+                read_kwargs['sheet_name'] = sheet_name
+            elif ext == '.csv':
+                read_func = pd.read_csv
+            else:
+                read_func = pd.read_table
+            # read the data
             excel = np.array([
                 pd.to_numeric(ex, errors='coerce')
                 for ex in
-                pd.read_excel(file_name, sheet_name, header=None).values
+                read_func(file_name, header=None, **read_kwargs).values
                 ])
+            # save data for future retrievals
             cls._Excels[file_name.joinpath(sheet_name)] = excel
             return excel
 
@@ -109,34 +121,27 @@ class External(object):
             depending on the shape of the requested data
 
         """
-        ext = self.file.suffix.lower()
-        if ext in ['.xls', '.xlsx', '.xlsm']:
-            # read data
-            data = Excels.read(
-                self.file,
-                self.sheet)[rows[0]:rows[1], cols[0]:cols[1]].copy()
+        # read data
+        data = Excels.read(
+            self.file,
+            self.sheet)[rows[0]:rows[1], cols[0]:cols[1]].copy()
 
-            shape = data.shape
+        shape = data.shape
 
-            # empty cells
-            if shape[0] == 0 or shape[1] == 0:
-                raise ValueError(
-                    self.py_name + "\n"
-                    "The cells are empty.\n"
-                    + self._file_sheet
-                )
+        # empty cells
+        if shape[0] == 0 or shape[1] == 0:
+            raise ValueError(
+                self.py_name + "\n"
+                "The cells are empty.\n"
+                + self._file_sheet
+            )
 
-            # if it is a single row remove its dimension
-            if shape[1] == 1:
-                data = data[:, 0]
-            if shape[0] == 1:
-                data = data[0]
-            return data
-
-        raise NotImplementedError(
-            self.py_name + "\n"
-            f"The files with extension {ext} are not implemented"
-        )
+        # if it is a single row remove its dimension
+        if shape[1] == 1:
+            data = data[:, 0]
+        if shape[0] == 1:
+            data = data[0]
+        return data
 
     def _get_data_from_file_opyxl(self, cellname):
         """
@@ -1054,8 +1059,19 @@ class ExtSubscript(External):
         if col_last is not None:
             read_kwargs['usecols'] = np.arange(col_first, col_last+1)
 
-        data = pd.read_excel(
-            self.file, self.sheet,
+        # get the function to read the data based on its extension
+        ext = self.file.suffix.lower()
+        if ext in ['.xls', '.xlsx', '.xlsm', 'xlsb', 'odf', 'ods', 'odt']:
+            read_func = pd.read_excel
+            read_kwargs['sheet_name'] = self.sheet
+        elif ext == '.csv':
+            read_func = pd.read_csv
+        else:
+            read_func = pd.read_table
+
+        # read the data
+        data = read_func(
+            self.file,
             skiprows=row_first-1,
             dtype=object,
             **read_kwargs
