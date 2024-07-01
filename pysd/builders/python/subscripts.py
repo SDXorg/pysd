@@ -64,6 +64,10 @@ class SubscriptManager:
                     lastcell=sub.subscripts["lastcell"],
                     prefix=sub.subscripts["prefix"],
                     root=self._root).subscript
+
+                if not self._subscripts[sub.name]:
+                    raise ValueError(
+                        "Subscript range empty:\n%s" % sub.subscripts)
             else:
                 raise ValueError(
                     f"Invalid definition of subscript '{sub.name}':\n\t"
