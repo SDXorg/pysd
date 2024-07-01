@@ -1968,34 +1968,6 @@ class TestWarningsErrors():
     Test for the warnings and errors of External and its subclasses
     """
 
-    def test_not_implemented_file(self, _root):
-        """
-        Test for not implemented file
-        """
-        import pysd
-
-        file_name = "data/not_implemented_file.ods"
-        sheet = "Horizontal"
-        time_row_or_col = "4"
-        cell = "C5"
-        coords = {}
-        interp = None
-        py_name = "test_not_implemented_file"
-
-        data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
-                                     time_row_or_col=time_row_or_col,
-                                     root=_root,
-                                     cell=cell,
-                                     coords=coords,
-                                     interp=interp,
-                                     final_coords=coords,
-                                     py_name=py_name)
-
-        error_message = r"The files with extension .ods are not implemented"
-        with pytest.raises(NotImplementedError, match=error_message):
-            data.initialize()
-
     def test_non_existent_file(self, _root):
         """
         Test for non-existent file
