@@ -891,7 +891,7 @@ class ExtLookupBuilder(StructureBuilder):
         """
         self.component.type = "Lookup"
         self.component.subtype = "External"
-        arguments["params"] = "'%s', '%s', '%s', '%s'" % (
+        arguments["params"] = "r'%s', '%s', '%s', '%s'" % (
             self.file, self.tab, self.x_row_or_col, self.cell
         )
         final_subs, arguments["subscripts"] =\
@@ -966,7 +966,7 @@ class ExtDataBuilder(StructureBuilder):
         """
         self.component.type = "Data"
         self.component.subtype = "External"
-        arguments["params"] = "'%s', '%s', '%s', '%s'" % (
+        arguments["params"] = "r'%s', '%s', '%s', '%s'" % (
             self.file, self.tab, self.time_row_or_col, self.cell
         )
         final_subs, arguments["subscripts"] =\
@@ -1041,7 +1041,7 @@ class ExtConstantBuilder(StructureBuilder):
         """
         self.component.type = "Constant"
         self.component.subtype = "External"
-        arguments["params"] = "'%s', '%s', '%s'" % (
+        arguments["params"] = "r'%s', '%s', '%s'" % (
             self.file, self.tab, self.cell
         )
         final_subs, arguments["subscripts"] =\
