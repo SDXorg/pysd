@@ -50,7 +50,7 @@ class TestSerialization():
         assert "description" in ds.attrs.keys()
         assert all(map(
             lambda x: x in ds.data_vars["_ext_data_data_forward"].attrs.keys(),
-            ["Py Name", "sheets", "files"]))
+            ["Py Name", "tabs", "files"]))
 
     @pytest.mark.parametrize(
         "model_path,include,exclude",

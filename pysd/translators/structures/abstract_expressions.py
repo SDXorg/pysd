@@ -558,7 +558,8 @@ class GetLookupsStructure(AbstractSyntax):
     file: str
         The file path where the data is.
     tab: str
-        The sheetname where the data is.
+        Tab name from which the data is read. If file type is not a
+        spreadsheet this will be used as a separator.
     x_row_or_col: str
         The pointer to the cell or cellrange name that defines the
         interpolation series data.
@@ -587,7 +588,8 @@ class GetDataStructure(AbstractSyntax):
     file: str
         The file path where the data is.
     tab: str
-        The sheetname where the data is.
+        Tab name from which the data is read. If file type is not a
+        spreadsheet this will be used as a separator.
     time_row_or_col: str
         The pointer to the cell or cellrange name that defines the
         interpolation time series data.
@@ -616,7 +618,8 @@ class GetConstantsStructure(AbstractSyntax):
     file: str
         The file path where the data is.
     tab: str
-        The sheetname where the data is.
+        Tab name from which the data is read. If file type is not a
+        spreadsheet this will be used as a separator.
     cell: str
         The pointer to the cell or the cellrange name that defines the data.
 

@@ -753,7 +753,7 @@ class Macro(DynamicStateful):
             for col in self._doc.columns
         }
         var_meta["files"] = ";".join(ext.files)
-        var_meta["sheets"] = ";".join(ext.sheets)
+        var_meta["tabs"] = ";".join(ext.tabs)
         var_meta["cells"] = ";".join(ext.cells)
         # TODO: add also time_row_or_cols
 
