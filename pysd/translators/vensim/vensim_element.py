@@ -124,6 +124,7 @@ class ElementsComponentVisitor(parsimonious.NodeVisitor):
         self.subscripts = []
         self.subscripts_except = []
         self.subscripts_except_groups = []
+        self.qargs = []
         self.name = None
         self.expression = None
         self.keyword = None
@@ -166,14 +167,17 @@ class ElementsComponentVisitor(parsimonious.NodeVisitor):
         self.keyword = n.text.strip()[1:-1].lower().replace(" ", "_")
 
     def visit_imported_subscript(self, n, vc):
-        self.subscripts = {
-            arg_name: argument.strip().strip("'")
-            for arg_name, argument
-            in zip(
-                ("file", "tab", "firstcell", "lastcell", "prefix"),
-                vc[4].split(",")
-            )
-        }
+        self.subscripts = dict(
+            file=self.qargs[0],
+            tab=self.qargs[1],
+            firstcell=self.qargs[2],
+            lastcell=self.qargs[3],
+            prefix=self.qargs[4]
+        )
+
+    def visit_string(self, n, vc):
+        self.qargs.append(vc[1])
+        return vc[1]
 
     def visit_subscript_copy(self, n, vc):
         self.component = SubscriptRange(self.name, vc[4].strip())
@@ -635,6 +639,7 @@ class LookupsVisitor(parsimonious.NodeVisitor):
     """Visit the elements of a lookups to get the AST"""
     def __init__(self, ast):
         self.translation = None
+        self.qargs = []
         self.visit(ast)
 
     def visit_limits(self, n, vc):
@@ -658,14 +663,16 @@ class LookupsVisitor(parsimonious.NodeVisitor):
         )
 
     def visit_excelLookup(self, n, vc):
-        arglist = vc[3].split(",")
-
         self.translation = structures["get_xls_lookups"](
-            file=eval(arglist[0]),
-            tab=eval(arglist[1]),
-            x_row_or_col=eval(arglist[2]),
-            cell=eval(arglist[3])
+            file=self.qargs[0],
+            tab=self.qargs[1],
+            x_row_or_col=self.qargs[2],
+            cell=self.qargs[3]
         )
+
+    def visit_string(self, n, vc):
+        self.qargs.append(vc[1])
+        return vc[1]
 
     def generic_visit(self, n, vc):
         return "".join(filter(None, vc)) or n.text
