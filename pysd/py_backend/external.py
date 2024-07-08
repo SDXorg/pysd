@@ -94,8 +94,9 @@ class External(object):
         fail, but it may be used to check the quality of the data.
     file: str
         File name from which the data is read.
-    sheet: str
-        Sheet name from which the data is read.
+    tab: str
+        Tab name from which the data is read. If file type is not a
+        spreadsheet this will be used as a separator.
 
     """
     missing = "warning"
