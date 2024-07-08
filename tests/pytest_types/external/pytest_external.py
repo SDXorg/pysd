@@ -275,7 +275,7 @@ class TestExternalMethods():
 
         ext = External("external")
         ext.file = "data/input.xlsx"
-        ext.sheet = "Horizontal missing"
+        ext.tab = "Horizontal missing"
         ext._resolve_file(root=_root)
 
         error_message = r"external\nThe cells are empty\.\n"\
@@ -294,7 +294,7 @@ class TestExternalMethods():
 
         ext = External("external")
         ext.file = "data/input.xlsx"
-        ext.sheet = "Horizontal missing"
+        ext.tab = "Horizontal missing"
         ext._resolve_file(root=_root)
 
         error_message = r"external\nThe cells are empty\.\n"
@@ -339,7 +339,7 @@ class TestData():
         py_name = "test_data_interp_h1d_1"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -372,7 +372,7 @@ class TestData():
         py_name = "test_data_interp_h1d_1"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -402,7 +402,7 @@ class TestData():
         py_name = "test_data_interp_h1d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -432,7 +432,7 @@ class TestData():
         py_name = "test_data_interp_v1d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -462,7 +462,7 @@ class TestData():
         py_name = "test_data_interp_h1nd"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -492,7 +492,7 @@ class TestData():
         py_name = "test_data_interp_vn1d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -522,7 +522,7 @@ class TestData():
         py_name = "test_data_forward_h1d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -552,7 +552,7 @@ class TestData():
         py_name = "test_data_forward_v1d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -582,7 +582,7 @@ class TestData():
         py_name = "test_data_forward_hn1d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -612,7 +612,7 @@ class TestData():
         py_name = "test_data_forward_vn1d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -642,7 +642,7 @@ class TestData():
         py_name = "test_data_backward_h1d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -672,7 +672,7 @@ class TestData():
         py_name = "test_data_backward_v1d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -702,7 +702,7 @@ class TestData():
         py_name = "test_data_backward_hn1d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -732,7 +732,7 @@ class TestData():
         py_name = "test_data_backward_vn1d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -762,7 +762,7 @@ class TestData():
         py_name = "test_data_interp_vn2d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -791,7 +791,7 @@ class TestData():
         py_name = "test_data_forward_hn2d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -820,7 +820,7 @@ class TestData():
         py_name = "test_data_backward_v2d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -853,7 +853,7 @@ class TestData():
         py_name = "test_data_interp_h3d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell_1,
@@ -863,7 +863,7 @@ class TestData():
                                      py_name=py_name)
 
         data.add(file_name=file_name,
-                 sheet=sheet,
+                 tab=sheet,
                  time_row_or_col=time_row_or_col,
                  cell=cell_2,
                  coords=coords_2,
@@ -893,7 +893,7 @@ class TestData():
         py_name = "test_data_forward_v3d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell_1,
@@ -903,7 +903,7 @@ class TestData():
                                      py_name=py_name)
 
         data.add(file_name=file_name,
-                 sheet=sheet,
+                 tab=sheet,
                  time_row_or_col=time_row_or_col,
                  cell=cell_2,
                  coords=coords_2,
@@ -933,7 +933,7 @@ class TestData():
         py_name = "test_data_backward_hn3d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell_1,
@@ -943,7 +943,7 @@ class TestData():
                                      py_name=py_name)
 
         data.add(file_name=file_name,
-                 sheet=sheet,
+                 tab=sheet,
                  time_row_or_col=time_row_or_col,
                  cell=cell_2,
                  coords=coords_2,
@@ -970,7 +970,7 @@ class TestData():
         py_name = "test_data_forward_h1d"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -1013,7 +1013,7 @@ class TestLookup():
         py_name = "test_lookup_h1d"
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                       sheet=sheet,
+                                       tab=sheet,
                                        x_row_or_col=x_row_or_col,
                                        root=_root,
                                        cell=cell,
@@ -1041,7 +1041,7 @@ class TestLookup():
         py_name = "test_lookup_v1d"
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                       sheet=sheet,
+                                       tab=sheet,
                                        x_row_or_col=x_row_or_col,
                                        root=_root,
                                        cell=cell,
@@ -1069,7 +1069,7 @@ class TestLookup():
         py_name = "test_lookup_h1nd"
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                       sheet=sheet,
+                                       tab=sheet,
                                        x_row_or_col=x_row_or_col,
                                        root=_root,
                                        cell=cell,
@@ -1097,7 +1097,7 @@ class TestLookup():
         py_name = "test_lookup_vn1d"
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                       sheet=sheet,
+                                       tab=sheet,
                                        x_row_or_col=x_row_or_col,
                                        root=_root,
                                        cell=cell,
@@ -1125,7 +1125,7 @@ class TestLookup():
         py_name = "test_lookup_h2d"
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                       sheet=sheet,
+                                       tab=sheet,
                                        x_row_or_col=x_row_or_col,
                                        root=_root,
                                        cell=cell,
@@ -1156,7 +1156,7 @@ class TestLookup():
         py_name = "test_lookup_vn3d"
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                       sheet=sheet,
+                                       tab=sheet,
                                        x_row_or_col=x_row_or_col,
                                        root=_root,
                                        cell=cell_1,
@@ -1165,7 +1165,7 @@ class TestLookup():
                                        py_name=py_name)
 
         data.add(file_name=file_name,
-                 sheet=sheet,
+                 tab=sheet,
                  x_row_or_col=x_row_or_col,
                  cell=cell_2,
                  coords=coords_2)
@@ -1194,7 +1194,7 @@ class TestLookup():
         py_name = "test_lookup_vn3d_shape0"
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                       sheet=sheet,
+                                       tab=sheet,
                                        x_row_or_col=x_row_or_col,
                                        root=_root,
                                        cell=cell_1,
@@ -1203,7 +1203,7 @@ class TestLookup():
                                        py_name=py_name)
 
         data.add(file_name=file_name,
-                 sheet=sheet,
+                 tab=sheet,
                  x_row_or_col=x_row_or_col,
                  cell=cell_2,
                  coords=coords_2)
@@ -1230,7 +1230,7 @@ class TestLookup():
         py_name = "test_lookup_vn2d_xarray"
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                       sheet=sheet,
+                                       tab=sheet,
                                        x_row_or_col=x_row_or_col,
                                        root=_root,
                                        cell=cell_1,
@@ -1293,7 +1293,7 @@ class TestLookup():
         py_name = "test_lookup_vn3d_xarray"
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                       sheet=sheet,
+                                       tab=sheet,
                                        x_row_or_col=x_row_or_col,
                                        root=_root,
                                        cell=cell_1,
@@ -1302,7 +1302,7 @@ class TestLookup():
                                        py_name=py_name)
 
         data.add(file_name=file_name,
-                 sheet=sheet,
+                 tab=sheet,
                  x_row_or_col=x_row_or_col,
                  cell=cell_2,
                  coords=coords_2)
@@ -1364,7 +1364,7 @@ class TestConstant():
         py_name = "test_constant_0d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         sheet=sheet,
+                                         tab=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
@@ -1372,7 +1372,7 @@ class TestConstant():
                                          py_name=py_name)
 
         data2 = pysd.external.ExtConstant(file_name=file_name,
-                                          sheet=sheet,
+                                          tab=sheet,
                                           root=_root,
                                           cell=cell2,
                                           coords=coords,
@@ -1398,7 +1398,7 @@ class TestConstant():
         py_name = "test_constant_0d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         sheet=sheet,
+                                         tab=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
@@ -1406,7 +1406,7 @@ class TestConstant():
                                          py_name=py_name)
 
         data2 = pysd.external.ExtConstant(file_name=file_name,
-                                          sheet=sheet,
+                                          tab=sheet,
                                           root=_root,
                                           cell=cell2,
                                           coords=coords,
@@ -1431,7 +1431,7 @@ class TestConstant():
         py_name = "test_constant_h1d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         sheet=sheet,
+                                         tab=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
@@ -1454,7 +1454,7 @@ class TestConstant():
         py_name = "test_constant_v1d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         sheet=sheet,
+                                         tab=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
@@ -1477,7 +1477,7 @@ class TestConstant():
         py_name = "test_constant_hn1d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         sheet=sheet,
+                                         tab=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
@@ -1500,7 +1500,7 @@ class TestConstant():
         py_name = "test_constant_vn1d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         sheet=sheet,
+                                         tab=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
@@ -1523,7 +1523,7 @@ class TestConstant():
         py_name = "test_constant_h2d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         sheet=sheet,
+                                         tab=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
@@ -1546,7 +1546,7 @@ class TestConstant():
         py_name = "test_constant_v2d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         sheet=sheet,
+                                         tab=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
@@ -1569,7 +1569,7 @@ class TestConstant():
         py_name = "test_constant_hn2d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         sheet=sheet,
+                                         tab=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
@@ -1592,7 +1592,7 @@ class TestConstant():
         py_name = "test_constant_vn2d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         sheet=sheet,
+                                         tab=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
@@ -1624,7 +1624,7 @@ class TestConstant():
         py_name = "test_constant_h3d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         sheet=sheet,
+                                         tab=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
@@ -1632,7 +1632,7 @@ class TestConstant():
                                          py_name=py_name)
 
         data.add(file_name=file_name,
-                 sheet=sheet,
+                 tab=sheet,
                  cell=cell2,
                  coords=coords2)
 
@@ -1662,7 +1662,7 @@ class TestConstant():
         py_name = "test_constant_v3d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         sheet=sheet,
+                                         tab=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
@@ -1670,7 +1670,7 @@ class TestConstant():
                                          py_name=py_name)
 
         data.add(file_name=file_name,
-                 sheet=sheet,
+                 tab=sheet,
                  cell=cell2,
                  coords=coords2)
 
@@ -1700,7 +1700,7 @@ class TestConstant():
         py_name = "test_constant_hn3d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         sheet=sheet,
+                                         tab=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
@@ -1708,7 +1708,7 @@ class TestConstant():
                                          py_name=py_name)
 
         data.add(file_name=file_name,
-                 sheet=sheet,
+                 tab=sheet,
                  cell=cell2,
                  coords=coords2)
 
@@ -1738,7 +1738,7 @@ class TestConstant():
         py_name = "test_constant_vn2d"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         sheet=sheet,
+                                         tab=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
@@ -1746,7 +1746,7 @@ class TestConstant():
                                          py_name=py_name)
 
         data.add(file_name=file_name,
-                 sheet=sheet,
+                 tab=sheet,
                  cell=cell2,
                  coords=coords2)
 
@@ -1776,7 +1776,7 @@ class TestSubscript():
                     'val5', 'val6', 'val7', 'val8']
 
         data = pysd.external.ExtSubscript(file_name=file_name,
-                                          sheet=sheet,
+                                          tab=sheet,
                                           root=_root,
                                           firstcell=firstcell,
                                           lastcell=lastcell,
@@ -1799,7 +1799,7 @@ class TestSubscript():
                     'v5', 'v6', 'v7', 'v8']
 
         data = pysd.external.ExtSubscript(file_name=file_name,
-                                          sheet=sheet,
+                                          tab=sheet,
                                           root=_root,
                                           firstcell=firstcell,
                                           lastcell=lastcell,
@@ -1822,7 +1822,7 @@ class TestSubscript():
                     'h6', 'h7', 'h8', 'h9', 'h10']
 
         data = pysd.external.ExtSubscript(file_name=file_name,
-                                          sheet=sheet,
+                                          tab=sheet,
                                           root=_root,
                                           firstcell=firstcell,
                                           lastcell=lastcell,
@@ -1844,7 +1844,7 @@ class TestSubscript():
         expected = ['A', 'B', 'C']
 
         data = pysd.external.ExtSubscript(file_name=file_name,
-                                          sheet=sheet,
+                                          tab=sheet,
                                           root=_root,
                                           firstcell=firstcell,
                                           lastcell=lastcell,
@@ -1866,7 +1866,7 @@ class TestSubscript():
         expected = ['A', 'B', 'C', '4', '5']
 
         data = pysd.external.ExtSubscript(file_name=file_name,
-                                          sheet=sheet,
+                                          tab=sheet,
                                           root=_root,
                                           firstcell=firstcell,
                                           lastcell=lastcell,
@@ -1888,7 +1888,7 @@ class TestSubscript():
         expected = ['X', 'A', 'B', 'C', 'Y', 'A', 'B', 'C']
 
         data = pysd.external.ExtSubscript(file_name=file_name,
-                                          sheet=sheet,
+                                          tab=sheet,
                                           root=_root,
                                           firstcell=firstcell,
                                           lastcell=lastcell,
@@ -1910,7 +1910,7 @@ class TestSubscript():
         expected = ['j3', 'j2', 'j1', 'j6', 'j4', 'j8', 'j-1', 'j3', 'j2']
 
         data = pysd.external.ExtSubscript(file_name=file_name,
-                                          sheet=sheet,
+                                          tab=sheet,
                                           root=_root,
                                           firstcell=firstcell,
                                           lastcell=lastcell,
@@ -1933,7 +1933,7 @@ class TestSubscript():
                     'l5', 'l6', 'l7', 'l8']
 
         data = pysd.external.ExtSubscript(file_name=file_name,
-                                          sheet=sheet,
+                                          tab=sheet,
                                           root=_root,
                                           firstcell=firstcell,
                                           lastcell=lastcell,
@@ -1955,7 +1955,7 @@ class TestSubscript():
         expected = ['pA', 'pB', 'pC']
 
         data = pysd.external.ExtSubscript(file_name=file_name,
-                                          sheet=sheet,
+                                          tab=sheet,
                                           root=_root,
                                           firstcell=firstcell,
                                           lastcell=lastcell,
@@ -1977,7 +1977,7 @@ class TestSubscript():
         expected = ['X', 'A', '0', 'B', '0', 'C', '1']
 
         data = pysd.external.ExtSubscript(file_name=file_name,
-                                          sheet=sheet,
+                                          tab=sheet,
                                           root=_root,
                                           firstcell=firstcell,
                                           lastcell=lastcell,
@@ -2006,7 +2006,7 @@ class TestWarningsErrors():
         py_name = "test_non_existent_file"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -2033,7 +2033,7 @@ class TestWarningsErrors():
         py_name = "test_non_existent_sheet_pyxl"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -2061,7 +2061,7 @@ class TestWarningsErrors():
         py_name = "test_non_existent_cellrange_name_pyxl"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -2087,7 +2087,7 @@ class TestWarningsErrors():
         py_name = "est_non_existent_cellrange_name_in_sheet_pyxl"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         sheet=sheet,
+                                         tab=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
@@ -2118,7 +2118,7 @@ class TestWarningsErrors():
         pysd.external.External.missing = "warning"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -2156,7 +2156,7 @@ class TestWarningsErrors():
         pysd.external.External.missing = "warning"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -2196,7 +2196,7 @@ class TestWarningsErrors():
         pysd.external.External.missing = "warning"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -2232,7 +2232,7 @@ class TestWarningsErrors():
         pysd.external.External.missing = "ignore"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -2267,7 +2267,7 @@ class TestWarningsErrors():
         pysd.external.External.missing = "raise"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -2298,7 +2298,7 @@ class TestWarningsErrors():
         pysd.external.External.missing = "warning"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -2334,7 +2334,7 @@ class TestWarningsErrors():
         pysd.external.External.missing = "ignore"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -2369,7 +2369,7 @@ class TestWarningsErrors():
         pysd.external.External.missing = "raise"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -2400,7 +2400,7 @@ class TestWarningsErrors():
         pysd.external.External.missing = "warning"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -2436,7 +2436,7 @@ class TestWarningsErrors():
         pysd.external.External.missing = "ignore"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -2471,7 +2471,7 @@ class TestWarningsErrors():
         pysd.external.External.missing = "raise"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -2505,7 +2505,7 @@ class TestWarningsErrors():
         pysd.external.External.missing = "warning"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell_1,
@@ -2515,7 +2515,7 @@ class TestWarningsErrors():
                                      py_name=py_name)
 
         data.add(file_name=file_name,
-                 sheet=sheet,
+                 tab=sheet,
                  time_row_or_col=time_row_or_col,
                  cell=cell_2,
                  interp=interp,
@@ -2551,7 +2551,7 @@ class TestWarningsErrors():
         pysd.external.External.missing = "warning"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell_1,
@@ -2561,7 +2561,7 @@ class TestWarningsErrors():
                                      py_name=py_name)
 
         data.add(file_name=file_name,
-                 sheet=sheet,
+                 tab=sheet,
                  time_row_or_col=time_row_or_col,
                  cell=cell_2,
                  interp=interp,
@@ -2589,7 +2589,7 @@ class TestWarningsErrors():
         pysd.external.External.missing = "raise"
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                       sheet=sheet,
+                                       tab=sheet,
                                        x_row_or_col=x_row_or_col,
                                        root=_root,
                                        cell=cell_1,
@@ -2598,7 +2598,7 @@ class TestWarningsErrors():
                                        py_name=py_name)
 
         data.add(file_name=file_name,
-                 sheet=sheet,
+                 tab=sheet,
                  x_row_or_col=x_row_or_col,
                  cell=cell_2,
                  coords=coords_2)
@@ -2626,7 +2626,7 @@ class TestWarningsErrors():
         pysd.external.External.missing = "ignore"
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                       sheet=sheet,
+                                       tab=sheet,
                                        x_row_or_col=x_row_or_col,
                                        root=_root,
                                        cell=cell_1,
@@ -2635,7 +2635,7 @@ class TestWarningsErrors():
                                        py_name=py_name)
 
         data.add(file_name=file_name,
-                 sheet=sheet,
+                 tab=sheet,
                  x_row_or_col=x_row_or_col,
                  cell=cell_2,
                  coords=coords_2)
@@ -2669,7 +2669,7 @@ class TestWarningsErrors():
         pysd.external.External.missing = "warning"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         sheet=sheet,
+                                         tab=sheet,
                                          root=_root,
                                          cell=cell_1,
                                          coords=coords_1,
@@ -2677,7 +2677,7 @@ class TestWarningsErrors():
                                          py_name=py_name)
 
         data.add(file_name=file_name,
-                 sheet=sheet,
+                 tab=sheet,
                  cell=cell_2,
                  coords=coords_2)
 
@@ -2705,7 +2705,7 @@ class TestWarningsErrors():
         pysd.external.External.missing = "ignore"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         sheet=sheet,
+                                         tab=sheet,
                                          root=_root,
                                          cell=cell_1,
                                          coords=coords_1,
@@ -2713,7 +2713,7 @@ class TestWarningsErrors():
                                          py_name=py_name)
 
         data.add(file_name=file_name,
-                 sheet=sheet,
+                 tab=sheet,
                  cell=cell_2,
                  coords=coords_2)
 
@@ -2739,7 +2739,7 @@ class TestWarningsErrors():
         pysd.external.External.missing = "raise"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         sheet=sheet,
+                                         tab=sheet,
                                          root=_root,
                                          cell=cell_1,
                                          coords=coords_1,
@@ -2747,7 +2747,7 @@ class TestWarningsErrors():
                                          py_name=py_name)
 
         data.add(file_name=file_name,
-                 sheet=sheet,
+                 tab=sheet,
                  cell=cell_2,
                  coords=coords_2)
 
@@ -2776,7 +2776,7 @@ class TestWarningsErrors():
         pysd.external.External.missing = "raise"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         sheet=sheet,
+                                         tab=sheet,
                                          root=_root,
                                          cell=cell_1,
                                          coords=coords_1,
@@ -2784,7 +2784,7 @@ class TestWarningsErrors():
                                          py_name=py_name)
 
         data.add(file_name=file_name,
-                 sheet=sheet,
+                 tab=sheet,
                  cell=cell_2,
                  coords=coords_2)
 
@@ -2807,7 +2807,7 @@ class TestWarningsErrors():
         py_name = "test_data_interp_h1d0"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -2835,7 +2835,7 @@ class TestWarningsErrors():
         py_name = "test_data_interp_v1d0"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -2865,7 +2865,7 @@ class TestWarningsErrors():
         pysd.external.External.missing = "warning"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -2894,7 +2894,7 @@ class TestWarningsErrors():
         py_name = "test_data_interp_h1dt"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -2923,7 +2923,7 @@ class TestWarningsErrors():
         py_name = "test_data_interp_hns"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -2952,7 +2952,7 @@ class TestWarningsErrors():
         py_name = "test_data_interp_vnss"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -2982,7 +2982,7 @@ class TestWarningsErrors():
         py_name = "test_data_interp_hnnwd"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -3009,7 +3009,7 @@ class TestWarningsErrors():
         py_name = "test_data_interp_hnnm"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -3032,7 +3032,7 @@ class TestWarningsErrors():
         py_name = "test_data_interp_hnnnm2"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -3069,7 +3069,7 @@ class TestWarningsErrors():
             r"'raw', 'interpolate', 'look_forward' or 'hold_backward'"
         with pytest.raises(ValueError, match=error_message):
             pysd.external.ExtData(file_name=file_name,
-                                  sheet=sheet,
+                                  tab=sheet,
                                   time_row_or_col=time_row_or_col,
                                   root=_root,
                                   cell=cell,
@@ -3097,7 +3097,7 @@ class TestWarningsErrors():
         py_name = "test_data_h3d_interp"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell_1,
@@ -3110,7 +3110,7 @@ class TestWarningsErrors():
             "previously defined one"
         with pytest.raises(ValueError, match=error_message):
             data.add(file_name=file_name,
-                     sheet=sheet,
+                     tab=sheet,
                      time_row_or_col=time_row_or_col,
                      cell=cell_2,
                      coords=coords_2,
@@ -3134,7 +3134,7 @@ class TestWarningsErrors():
         py_name = "test_data_h3d_add"
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell_1,
@@ -3146,7 +3146,7 @@ class TestWarningsErrors():
         error_message = "Error matching dimensions with previous data"
         with pytest.raises(ValueError, match=error_message):
             data.add(file_name=file_name,
-                     sheet=sheet,
+                     tab=sheet,
                      time_row_or_col=time_row_or_col,
                      cell=cell_2,
                      coords=coords_2,
@@ -3169,7 +3169,7 @@ class TestWarningsErrors():
         py_name = "test_lookup_h3d_add"
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                       sheet=sheet,
+                                       tab=sheet,
                                        x_row_or_col=x_row_or_col,
                                        root=_root,
                                        cell=cell_1,
@@ -3180,7 +3180,7 @@ class TestWarningsErrors():
         error_message = "Error matching dimensions with previous data"
         with pytest.raises(ValueError, match=error_message):
             data.add(file_name=file_name,
-                     sheet=sheet,
+                     tab=sheet,
                      x_row_or_col=x_row_or_col,
                      cell=cell_2,
                      coords=coords_2)
@@ -3206,7 +3206,7 @@ class TestWarningsErrors():
         py_name = "test_constant_h3d_add"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         sheet=sheet,
+                                         tab=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
@@ -3216,7 +3216,7 @@ class TestWarningsErrors():
         error_message = "Error matching dimensions with previous data"
         with pytest.raises(ValueError, match=error_message):
             data.add(file_name=file_name,
-                     sheet=sheet,
+                     tab=sheet,
                      cell=cell2,
                      coords=coords2)
 
@@ -3234,7 +3234,7 @@ class TestWarningsErrors():
         py_name = "test_constant_hns"
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         sheet=sheet,
+                                         tab=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
@@ -3261,7 +3261,7 @@ class TestWarningsErrors():
         py_name = "test_openpyxl_str"
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                       sheet=sheet,
+                                       tab=sheet,
                                        x_row_or_col=x_row_or_col,
                                        root=_root,
                                        cell=cell,
@@ -3282,7 +3282,7 @@ class TestWarningsErrors():
         sheet = "caSE anD NON V"  # test case insensitivity
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         sheet=sheet,
+                                         tab=sheet,
                                          root=_root,
                                          cell=cell,
                                          coords=coords,
@@ -3308,7 +3308,7 @@ class TestWarningsErrors():
         error_message = r"The sheet doesn't exist\.\.\."
         with pytest.raises(ValueError, match=error_message):
             pysd.external.ExtSubscript(file_name=file_name,
-                                       sheet=sheet,
+                                       tab=sheet,
                                        root=_root,
                                        firstcell=firstcell,
                                        lastcell=lastcell,
@@ -3329,7 +3329,7 @@ class TestWarningsErrors():
         error_message = "The cellrange name 'fake-cell'\nDoesn't exist in"
         with pytest.raises(AttributeError, match=error_message):
             pysd.external.ExtSubscript(file_name=file_name,
-                                       sheet=sheet,
+                                       tab=sheet,
                                        root=_root,
                                        firstcell=firstcell,
                                        lastcell=lastcell,
@@ -3374,7 +3374,7 @@ class DownwardCompatibility():
             ['XY', 'ABC', 'val'])
 
         data = pysd.external.ExtConstant(file_name=file_name,
-                                         sheet=sheet,
+                                         tab=sheet,
                                          root=_root,
                                          cell=cell_1,
                                          coords=coords_1,
@@ -3382,7 +3382,7 @@ class DownwardCompatibility():
                                          py_name=py_name)
 
         data.add(file_name=file_name,
-                 sheet=sheet,
+                 tab=sheet,
                  cell=cell_2,
                  coords=coords_2)
 
@@ -3430,7 +3430,7 @@ class DownwardCompatibility():
             ['lookup_dim', 'XY', 'ABC'])
 
         data = pysd.external.ExtLookup(file_name=file_name,
-                                       sheet=sheet,
+                                       tab=sheet,
                                        x_row_or_col=x_row_or_col,
                                        root=_root,
                                        cell=cell_1,
@@ -3439,7 +3439,7 @@ class DownwardCompatibility():
                                        py_name=py_name)
 
         data.add(file_name=file_name,
-                 sheet=sheet,
+                 tab=sheet,
                  x_row_or_col=x_row_or_col,
                  cell=cell_2,
                  coords=coords_2)
@@ -3471,7 +3471,7 @@ class DownwardCompatibility():
             ['time'])
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -3507,7 +3507,7 @@ class DownwardCompatibility():
             ['time'])
 
         data = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -3536,7 +3536,7 @@ class DownwardCompatibility():
         py_name = "test_data_interp_hnnm"
 
         datD = pysd.external.ExtData(file_name=file_name,
-                                     sheet=sheet,
+                                     tab=sheet,
                                      time_row_or_col=time_row_or_col,
                                      root=_root,
                                      cell=cell,
@@ -3546,7 +3546,7 @@ class DownwardCompatibility():
                                      py_name=py_name)
 
         datL = pysd.external.ExtLookup(file_name=file_name,
-                                       sheet=sheet,
+                                       tab=sheet,
                                        x_row_or_col=time_row_or_col,
                                        root=_root,
                                        cell=cell,
