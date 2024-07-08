@@ -59,7 +59,7 @@ class SubscriptManager:
                 # subscript from file
                 self._subscripts[sub.name] = ExtSubscript(
                     file_name=sub.subscripts["file"],
-                    sheet=sub.subscripts["tab"],
+                    tab=sub.subscripts["tab"],
                     firstcell=sub.subscripts["firstcell"],
                     lastcell=sub.subscripts["lastcell"],
                     prefix=sub.subscripts["prefix"],

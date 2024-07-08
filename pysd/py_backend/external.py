@@ -22,23 +22,27 @@ class Excels():
     _Excels, _Excels_opyxl = {}, {}
 
     @classmethod
-    def read(cls, file_name, sheet_name):
+    def read(cls, file_name, tab):
         """
         Read the Excel file or return the previously read one
         """
-        if file_name.joinpath(sheet_name) in cls._Excels:
-            return cls._Excels[file_name.joinpath(sheet_name)]
+        if file_name.joinpath(tab) in cls._Excels:
+            return cls._Excels[file_name.joinpath(tab)]
         else:
             # get the function to read the data based on its extension
             read_kwargs = {}
             ext = file_name.suffix.lower()
             if ext in ['.xls', '.xlsx', '.xlsm', 'xlsb', 'odf', 'ods', 'odt']:
                 read_func = pd.read_excel
-                read_kwargs['sheet_name'] = sheet_name
+                read_kwargs['sheet_name'] = tab
             elif ext == '.csv':
                 read_func = pd.read_csv
+                if tab and not tab[0].isalnum():
+                    read_kwargs['sep'] = tab
             else:
                 read_func = pd.read_table
+                if tab and not tab[0].isalnum():
+                    read_kwargs['sep'] = tab
             # read the data
             excel = np.array([
                 pd.to_numeric(ex, errors='coerce')
@@ -46,7 +50,7 @@ class Excels():
                 read_func(file_name, header=None, **read_kwargs).values
                 ])
             # save data for future retrievals
-            cls._Excels[file_name.joinpath(sheet_name)] = excel
+            cls._Excels[file_name.joinpath(tab)] = excel
             return excel
 
     @classmethod
@@ -99,7 +103,7 @@ class External(object):
     def __init__(self, py_name):
         self.py_name = py_name
         self.file = None
-        self.sheet = None
+        self.tab = None
 
     def __str__(self):
         return self.py_name
@@ -124,7 +128,7 @@ class External(object):
         # read data
         data = Excels.read(
             self.file,
-            self.sheet)[rows[0]:rows[1], cols[0]:cols[1]].copy()
+            self.tab)[rows[0]:rows[1], cols[0]:cols[1]].copy()
 
         shape = data.shape
 
@@ -167,7 +171,7 @@ class External(object):
         local_cellranges = None
         # need to lower the sheetnames as Vensim has no case sensitivity
         for sheet in excel.sheetnames:
-            if sheet.lower() == self.sheet.lower():
+            if sheet.lower() == self.tab.lower():
                 local_cellranges = excel[sheet].defined_names
                 break
 
@@ -184,8 +188,8 @@ class External(object):
                         or global_cellranges.get(cellname)
             sheet, cells = next(cellrange.destinations)
 
-            assert sheet.lower() == self.sheet.lower()
-            self.sheet = sheet  # case insensitivity in sheet name
+            assert sheet.lower() == self.tab.lower()
+            self.tab = sheet  # case insensitivity in sheet name
 
             # Get the cells where the cellrange is defined
             cells = re.split(r":|\$", cells)
@@ -578,7 +582,7 @@ class External(object):
         Returns file and sheet name in a string
         """
         return "\tFile name:\t'{}'\n".format(self.file)\
-               + "\tSheet name:\t'{}'\n".format(self.sheet)
+               + "\tSheet name:\t'{}'\n".format(self.tab)
 
     @staticmethod
     def _col_to_num(col):
@@ -709,11 +713,11 @@ class ExtData(External, Data):
     Class for Vensim GET XLS DATA/GET DIRECT DATA
     """
 
-    def __init__(self, file_name, sheet, time_row_or_col, cell,
+    def __init__(self, file_name, tab, time_row_or_col, cell,
                  interp, coords, root, final_coords, py_name):
         super().__init__(py_name)
         self.files = [file_name]
-        self.sheets = [sheet]
+        self.tabs = [tab]
         self.time_row_or_cols = [time_row_or_col]
         self.cells = [cell]
         self.coordss = [coords]
@@ -730,13 +734,12 @@ class ExtData(External, Data):
                              + "'raw', 'interpolate', "
                              + "'look_forward' or 'hold_backward'")
 
-    def add(self, file_name, sheet, time_row_or_col, cell,
-            interp, coords):
+    def add(self, file_name, tab, time_row_or_col, cell, interp, coords):
         """
         Add information to retrieve new dimension in an already declared object
         """
         self.files.append(file_name)
-        self.sheets.append(sheet)
+        self.tabs.append(tab)
         self.time_row_or_cols.append(time_row_or_col)
         self.cells.append(cell)
         self.coordss.append(coords)
@@ -758,9 +761,9 @@ class ExtData(External, Data):
         """
         if not self.coordss[0]:
             # Just load one value (no add)
-            for self.file, self.sheet, self.x_row_or_col, \
+            for self.file, self.tab, self.x_row_or_col, \
                 self.cell, self.coords\
-                in zip(self.files, self.sheets, self.time_row_or_cols,
+                in zip(self.files, self.tabs, self.time_row_or_cols,
                        self.cells, self.coordss):
                 self.data = self._initialize_data("data")
         else:
@@ -768,9 +771,9 @@ class ExtData(External, Data):
             self.data = xr.DataArray(
                 np.nan, self.final_coords, list(self.final_coords))
 
-            for self.file, self.sheet, self.x_row_or_col, \
+            for self.file, self.tab, self.x_row_or_col, \
                 self.cell, self.coords\
-                in zip(self.files, self.sheets, self.time_row_or_cols,
+                in zip(self.files, self.tabs, self.time_row_or_cols,
                        self.cells, self.coordss):
                 values = self._initialize_data("data")
 
@@ -794,11 +797,11 @@ class ExtLookup(External, Lookups):
     Class for Vensim GET XLS LOOKUPS/GET DIRECT LOOKUPS
     """
 
-    def __init__(self, file_name, sheet, x_row_or_col, cell, coords,
+    def __init__(self, file_name, tab, x_row_or_col, cell, coords,
                  root, final_coords, py_name):
         super().__init__(py_name)
         self.files = [file_name]
-        self.sheets = [sheet]
+        self.tabs = [tab]
         self.x_row_or_cols = [x_row_or_col]
         self.cells = [cell]
         self.coordss = [coords]
@@ -807,12 +810,12 @@ class ExtLookup(External, Lookups):
         self.interp = "interpolate"
         self.is_float = not bool(coords)
 
-    def add(self, file_name, sheet, x_row_or_col, cell, coords):
+    def add(self, file_name, tab, x_row_or_col, cell, coords):
         """
         Add information to retrieve new dimension in an already declared object
         """
         self.files.append(file_name)
-        self.sheets.append(sheet)
+        self.tabs.append(tab)
         self.x_row_or_cols.append(x_row_or_col)
         self.cells.append(cell)
         self.coordss.append(coords)
@@ -827,9 +830,9 @@ class ExtLookup(External, Lookups):
         """
         if not self.coordss[0]:
             # Just loag one value (no add)
-            for self.file, self.sheet, self.x_row_or_col, \
+            for self.file, self.tab, self.x_row_or_col, \
                 self.cell, self.coords\
-                in zip(self.files, self.sheets, self.x_row_or_cols,
+                in zip(self.files, self.tabs, self.x_row_or_cols,
                        self.cells, self.coordss):
                 self.data = self._initialize_data("lookup")
         else:
@@ -837,9 +840,9 @@ class ExtLookup(External, Lookups):
             self.data = xr.DataArray(
                 np.nan, self.final_coords, list(self.final_coords))
 
-            for self.file, self.sheet, self.x_row_or_col, \
+            for self.file, self.tab, self.x_row_or_col, \
                 self.cell, self.coords\
-                in zip(self.files, self.sheets, self.x_row_or_cols,
+                in zip(self.files, self.tabs, self.x_row_or_cols,
                        self.cells, self.coordss):
                 values = self._initialize_data("lookup")
 
@@ -859,11 +862,11 @@ class ExtConstant(External):
     Class for Vensim GET XLS CONSTANTS/GET DIRECT CONSTANTS
     """
 
-    def __init__(self, file_name, sheet, cell, coords,
+    def __init__(self, file_name, tab, cell, coords,
                  root, final_coords, py_name):
         super().__init__(py_name)
         self.files = [file_name]
-        self.sheets = [sheet]
+        self.tabs = [tab]
         self.transposes = [
             cell[-1] == '*' and np.prod(utils.compute_shape(coords)) > 1]
         self.cells = [cell.strip('*')]
@@ -871,12 +874,12 @@ class ExtConstant(External):
         self.root = root
         self.final_coords = final_coords
 
-    def add(self, file_name, sheet, cell, coords):
+    def add(self, file_name, tab, cell, coords):
         """
         Add information to retrieve new dimension in an already declared object
         """
         self.files.append(file_name)
-        self.sheets.append(sheet)
+        self.tabs.append(tab)
         self.transposes.append(
             cell[-1] == '*' and np.prod(utils.compute_shape(coords)) > 1)
         self.cells.append(cell.strip('*'))
@@ -892,8 +895,8 @@ class ExtConstant(External):
         """
         if not self.coordss[0]:
             # Just loag one value (no add)
-            for self.file, self.sheet, self.transpose, self.cell, self.coords\
-                in zip(self.files, self.sheets, self.transposes,
+            for self.file, self.tab, self.transpose, self.cell, self.coords\
+                in zip(self.files, self.tabs, self.transposes,
                        self.cells, self.coordss):
                 self.data = self._initialize()
         else:
@@ -902,8 +905,8 @@ class ExtConstant(External):
             self.data = xr.DataArray(
                 np.nan, self.final_coords, list(self.final_coords))
 
-            for self.file, self.sheet, self.transpose, self.cell, self.coords\
-                in zip(self.files, self.sheets, self.transposes,
+            for self.file, self.tab, self.transpose, self.cell, self.coords\
+                in zip(self.files, self.tabs, self.transposes,
                        self.cells, self.coordss):
                 self.data.loc[self.coords] = self._initialize().values
 
@@ -1017,10 +1020,10 @@ class ExtSubscript(External):
     Class for Vensim GET XLS SUBSCRIPT/GET DIRECT SUBSCRIPT
     """
 
-    def __init__(self, file_name, sheet, firstcell, lastcell, prefix, root):
+    def __init__(self, file_name, tab, firstcell, lastcell, prefix, root):
         super().__init__("Hardcoded external subscript")
         self.file = file_name
-        self.sheet = sheet
+        self.tab = tab
         self.prefix = prefix
         self._resolve_file(root=root)
         split = self._split_excel_cell(firstcell)
@@ -1063,11 +1066,15 @@ class ExtSubscript(External):
         ext = self.file.suffix.lower()
         if ext in ['.xls', '.xlsx', '.xlsm', 'xlsb', 'odf', 'ods', 'odt']:
             read_func = pd.read_excel
-            read_kwargs['sheet_name'] = self.sheet
+            read_kwargs['sheet_name'] = self.tab
         elif ext == '.csv':
             read_func = pd.read_csv
+            if self.tab and not self.tab[0].isalnum():
+                read_kwargs['sep'] = self.tab
         else:
             read_func = pd.read_table
+            if self.tab and not self.tab[0].isalnum():
+                read_kwargs['sep'] = self.tab
 
         # read the data
         data = read_func(
@@ -1091,7 +1098,7 @@ class ExtSubscript(External):
         local_cellranges = None
         # need to lower the sheetnames as Vensim has no case sensitivity
         for sheet in excel.sheetnames:
-            if sheet.lower() == self.sheet.lower():
+            if sheet.lower() == self.tab.lower():
                 local_cellranges = excel[sheet].defined_names
                 break
 
@@ -1108,8 +1115,8 @@ class ExtSubscript(External):
                         or global_cellranges.get(cellname)
             sheet, cells = next(cellrange.destinations)
 
-            assert sheet.lower() == self.sheet.lower()
-            self.sheet = sheet  # case insensitivity in sheet name
+            assert sheet.lower() == self.tab.lower()
+            self.tab = sheet  # case insensitivity in sheet name
 
             # Get the cells where the cellrange is defined
             first_cell, last_cell = cells.replace("$", '').split(":")
