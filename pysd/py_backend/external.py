@@ -6,10 +6,14 @@ the Stateful objects by functions.Model.initialize.
 
 import re
 import warnings
-import pandas as pd
+
+from openpyxl import load_workbook
+from openpyxl.utils.exceptions import InvalidFileException
+
 import numpy as np
 import xarray as xr
-from openpyxl import load_workbook
+import pandas as pd
+
 from . import utils
 from .data import Data
 from .lookups import Lookups
@@ -36,12 +40,16 @@ class Excels():
                 read_func = pd.read_excel
                 read_kwargs['sheet_name'] = tab
             elif ext == '.csv':
+                # TODO test
                 read_func = pd.read_csv
                 if tab and not tab[0].isalnum():
+                    # TODO test
                     read_kwargs['sep'] = tab
             else:
+                # TODO test
                 read_func = pd.read_table
                 if tab and not tab[0].isalnum():
+                    # TODO test
                     read_kwargs['sep'] = tab
             # read the data
             excel = np.array([
@@ -166,7 +174,18 @@ class External(object):
 
         """
         # read data
-        excel = Excels.read_opyxl(self.file)
+        try:
+            excel = Excels.read_opyxl(self.file)
+        except InvalidFileException:
+            # TODO test
+            raise ValueError(
+                self.py_name + "\n"
+                f"Cannot read the file '{self.file}'...\n"
+                f"It could happen that cell='{cellname}' was "
+                "read as a cell range name due to a wrong "
+                "definition of cell value"
+            )
+
         # Get global and local cellrange names
         global_cellranges = excel.defined_names
         local_cellranges = None
@@ -1069,12 +1088,16 @@ class ExtSubscript(External):
             read_func = pd.read_excel
             read_kwargs['sheet_name'] = self.tab
         elif ext == '.csv':
+            # TODO test
             read_func = pd.read_csv
             if self.tab and not self.tab[0].isalnum():
+                # TODO test
                 read_kwargs['sep'] = self.tab
         else:
+            # TODO test
             read_func = pd.read_table
             if self.tab and not self.tab[0].isalnum():
+                # TODO test
                 read_kwargs['sep'] = self.tab
 
         # read the data
@@ -1094,7 +1117,17 @@ class ExtSubscript(External):
 
     def get_subscripts_name(self, cellname):
         """Get subscripts from cell range name definition"""
-        excel = load_workbook(self.file, read_only=True, data_only=True)
+        try:
+            excel = load_workbook(self.file, read_only=True, data_only=True)
+        except InvalidFileException:
+            # TODO test
+            raise ValueError(
+                self.py_name + "\n"
+                f"Cannot read the file '{self.file}'...\n"
+                f"It could happen that firstcell='{cellname}' was "
+                "read as a cell range name due to a wrong definition "
+                "of cell value"
+            )
         global_cellranges = excel.defined_names
         local_cellranges = None
         # need to lower the sheetnames as Vensim has no case sensitivity
