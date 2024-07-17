@@ -19,6 +19,9 @@ from .data import Data
 from .lookups import Lookups
 
 
+_SPREADSHEET_EXTS = {'.xls', '.xlsx', '.xlsm', '.xlsb', '.odf', '.ods', '.odt'}
+
+
 class Excels():
     """
     Class to save the read Excel files and thus avoid double reading
@@ -36,20 +39,16 @@ class Excels():
             # get the function to read the data based on its extension
             read_kwargs = {}
             ext = file_name.suffix.lower()
-            if ext in ['.xls', '.xlsx', '.xlsm', 'xlsb', 'odf', 'ods', 'odt']:
+            if ext in _SPREADSHEET_EXTS:
                 read_func = pd.read_excel
                 read_kwargs['sheet_name'] = tab
             elif ext == '.csv':
-                # TODO test
                 read_func = pd.read_csv
                 if tab and not tab[0].isalnum():
-                    # TODO test
                     read_kwargs['sep'] = tab
             else:
-                # TODO test
                 read_func = pd.read_table
                 if tab and not tab[0].isalnum():
-                    # TODO test
                     read_kwargs['sep'] = tab
             # read the data
             excel = np.array([
@@ -177,7 +176,6 @@ class External(object):
         try:
             excel = Excels.read_opyxl(self.file)
         except InvalidFileException:
-            # TODO test
             raise ValueError(
                 self.py_name + "\n"
                 f"Cannot read the file '{self.file}'...\n"
@@ -1084,20 +1082,16 @@ class ExtSubscript(External):
 
         # get the function to read the data based on its extension
         ext = self.file.suffix.lower()
-        if ext in ['.xls', '.xlsx', '.xlsm', 'xlsb', 'odf', 'ods', 'odt']:
+        if ext in _SPREADSHEET_EXTS:
             read_func = pd.read_excel
             read_kwargs['sheet_name'] = self.tab
         elif ext == '.csv':
-            # TODO test
             read_func = pd.read_csv
             if self.tab and not self.tab[0].isalnum():
-                # TODO test
                 read_kwargs['sep'] = self.tab
         else:
-            # TODO test
             read_func = pd.read_table
             if self.tab and not self.tab[0].isalnum():
-                # TODO test
                 read_kwargs['sep'] = self.tab
 
         # read the data
@@ -1120,7 +1114,6 @@ class ExtSubscript(External):
         try:
             excel = load_workbook(self.file, read_only=True, data_only=True)
         except InvalidFileException:
-            # TODO test
             raise ValueError(
                 self.py_name + "\n"
                 f"Cannot read the file '{self.file}'...\n"

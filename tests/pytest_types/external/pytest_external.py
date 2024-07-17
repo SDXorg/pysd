@@ -1754,6 +1754,189 @@ class TestConstant():
 
         assert data().equals(_exp.constant_3d)
 
+    def test_constant_h1d_csv(self, _root, _exp):
+        """
+        ExtConstant test for horizontal 1d data
+        """
+        import pysd
+
+        file_name = "data/input.csv"
+        sheet = ""
+        cell = "B2"
+        coords = {'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        py_name = "test_constant_h1d_csv"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         tab=sheet,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         final_coords=coords,
+                                         py_name=py_name)
+        data.initialize()
+
+        assert data().equals(_exp.constant_1d)
+
+    def test_constant_h2d_csv(self, _root, _exp):
+        """
+        ExtConstant test for horizontal 2d data
+        """
+        import pysd
+
+        file_name = "data/input.csv"
+        sheet = ","
+        cell = "B2"
+        coords = {'ABC': ['A', 'B', 'C'], 'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        py_name = "test_constant_h2d_csv"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         tab=sheet,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         final_coords=coords,
+                                         py_name=py_name)
+        data.initialize()
+
+        assert data().equals(_exp.constant_2d)
+
+    def test_constant_v2d_csv(self, _root, _exp):
+        """
+        ExtConstant test for vertical 2d data
+        """
+        import pysd
+
+        file_name = "data/input.csv"
+        sheet = "vertical"
+        cell = "B2*"
+        coords = {'val': [0, 1, 2, 3, 5, 6, 7, 8], 'ABC': ['A', 'B', 'C']}
+        py_name = "test_constant_v2d_csv"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         tab=sheet,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         final_coords=coords,
+                                         py_name=py_name)
+        data.initialize()
+
+        assert data().equals(_exp.constant_2d.transpose())
+
+    def test_constant_v2d_csv2(self, _root, _exp):
+        """
+        ExtConstant test for vertical 2d data
+        """
+        import pysd
+
+        file_name = "data/input2.csv"
+        sheet = ";"
+        cell = "B2*"
+        coords = {'val': [0, 1, 2, 3, 5, 6, 7, 8], 'ABC': ['A', 'B', 'C']}
+        py_name = "test_constant_v2d_csv2"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         tab=sheet,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         final_coords=coords,
+                                         py_name=py_name)
+        data.initialize()
+
+        assert data().equals(_exp.constant_2d.transpose())
+
+    def test_constant_h1d_tab(self, _root, _exp):
+        """
+        ExtConstant test for horizontal 1d data
+        """
+        import pysd
+
+        file_name = "data/input.tab"
+        sheet = ""
+        cell = "B2"
+        coords = {'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        py_name = "test_constant_h1d_tab"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         tab=sheet,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         final_coords=coords,
+                                         py_name=py_name)
+        data.initialize()
+
+        assert data().equals(_exp.constant_1d)
+
+    def test_constant_h2d_tab(self, _root, _exp):
+        """
+        ExtConstant test for horizontal 2d data
+        """
+        import pysd
+
+        file_name = "data/input.tab"
+        sheet = "\t"
+        cell = "B2"
+        coords = {'ABC': ['A', 'B', 'C'], 'val': [0, 1, 2, 3, 5, 6, 7, 8]}
+        py_name = "test_constant_h2d_tab"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         tab=sheet,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         final_coords=coords,
+                                         py_name=py_name)
+        data.initialize()
+
+        assert data().equals(_exp.constant_2d)
+
+    def test_constant_v2d_tab(self, _root, _exp):
+        """
+        ExtConstant test for vertical 2d data
+        """
+        import pysd
+
+        file_name = "data/input.tab"
+        sheet = "vertical"
+        cell = "B2*"
+        coords = {'val': [0, 1, 2, 3, 5, 6, 7, 8], 'ABC': ['A', 'B', 'C']}
+        py_name = "test_constant_v2d_tab"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         tab=sheet,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         final_coords=coords,
+                                         py_name=py_name)
+        data.initialize()
+
+        assert data().equals(_exp.constant_2d.transpose())
+
+    def test_constant_v2d_txt(self, _root, _exp):
+        """
+        ExtConstant test for vertical 2d data
+        """
+        import pysd
+
+        file_name = "data/input.txt"
+        sheet = "="
+        cell = "B2*"
+        coords = {'val': [0, 1, 2, 3, 5, 6, 7, 8], 'ABC': ['A', 'B', 'C']}
+        py_name = "test_constant_v2d_txt"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         tab=sheet,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         final_coords=coords,
+                                         py_name=py_name)
+        data.initialize()
+
+        assert data().equals(_exp.constant_2d.transpose())
 
 class TestSubscript():
     """
@@ -1830,6 +2013,52 @@ class TestSubscript():
 
         assert data.subscript == expected
 
+    def test_subscript_h_tab(self, _root):
+        """
+        ExtSubscript test for horizontal subscripts
+        """
+        import pysd
+
+        file_name = "data/input.tab"
+        sheet = ""
+        firstcell = "B1"
+        lastcell = "1"
+        prefix = 'h'
+        expected = ['h1', 'h2', 'h3', 'h4', 'h5',
+                    'h6', 'h7', 'h8', 'h9', 'h10']
+
+        data = pysd.external.ExtSubscript(file_name=file_name,
+                                          tab=sheet,
+                                          root=_root,
+                                          firstcell=firstcell,
+                                          lastcell=lastcell,
+                                          prefix=prefix)
+
+        assert data.subscript == expected
+
+    def test_subscript_h_txt(self, _root):
+        """
+        ExtSubscript test for horizontal subscripts
+        """
+        import pysd
+
+        file_name = "data/input.txt"
+        sheet = "="
+        firstcell = "B1"
+        lastcell = "1"
+        prefix = 'h'
+        expected = ['h1', 'h2', 'h3', 'h4', 'h5',
+                    'h6', 'h7', 'h8', 'h9', 'h10']
+
+        data = pysd.external.ExtSubscript(file_name=file_name,
+                                          tab=sheet,
+                                          root=_root,
+                                          firstcell=firstcell,
+                                          lastcell=lastcell,
+                                          prefix=prefix)
+
+        assert data.subscript == expected
+
     def test_subscript_v(self, _root):
         """
         ExtSubscript test for vertical subscripts
@@ -1874,6 +2103,72 @@ class TestSubscript():
 
         assert data.subscript == expected
 
+    def test_subscript_v_csv(self, _root):
+        """
+        ExtSubscript test for vertical subscripts
+        """
+        import pysd
+
+        file_name = "data/input.csv"
+        sheet = ","
+        firstcell = "A2"
+        lastcell = "A"
+        prefix = 'v'
+        expected = ['vA', 'vB', 'vC']
+
+        data = pysd.external.ExtSubscript(file_name=file_name,
+                                          tab=sheet,
+                                          root=_root,
+                                          firstcell=firstcell,
+                                          lastcell=lastcell,
+                                          prefix=prefix)
+
+        assert data.subscript == expected
+
+    def test_subscript_v_tab(self, _root):
+        """
+        ExtSubscript test for vertical subscripts
+        """
+        import pysd
+
+        file_name = "data/input.tab"
+        sheet = "\t"
+        firstcell = "A1"
+        lastcell = "A"
+        prefix = 'v'
+        expected = ['vA', 'vB', 'vC']
+
+        data = pysd.external.ExtSubscript(file_name=file_name,
+                                          tab=sheet,
+                                          root=_root,
+                                          firstcell=firstcell,
+                                          lastcell=lastcell,
+                                          prefix=prefix)
+
+        assert data.subscript == expected
+
+    def test_subscript_v_ncsv(self, _root):
+        """
+        ExtSubscript test for vertical subscripts
+        """
+        import pysd
+
+        file_name = "data/input2.csv"
+        sheet = ";"
+        firstcell = "A1"
+        lastcell = "A"
+        prefix = 'v'
+        expected = ['vA', 'vB', 'vC']
+
+        data = pysd.external.ExtSubscript(file_name=file_name,
+                                          tab=sheet,
+                                          root=_root,
+                                          firstcell=firstcell,
+                                          lastcell=lastcell,
+                                          prefix=prefix)
+
+        assert data.subscript == expected
+
     def test_subscript_d(self, _root):
         """
         ExtSubscript test for diagonal subscripts
@@ -1908,6 +2203,50 @@ class TestSubscript():
         lastcell = ""
         prefix = "j"
         expected = ['j3', 'j2', 'j1', 'j6', 'j4', 'j8', 'j-1', 'j3', 'j2']
+
+        data = pysd.external.ExtSubscript(file_name=file_name,
+                                          tab=sheet,
+                                          root=_root,
+                                          firstcell=firstcell,
+                                          lastcell=lastcell,
+                                          prefix=prefix)
+
+        assert data.subscript == expected
+
+    def test_subscript_d_csv(self, _root):
+        """
+        ExtSubscript test for diagonal subscripts
+        """
+        import pysd
+
+        file_name = "data/input.csv"
+        sheet = "123 name"
+        firstcell = "B1"
+        lastcell = "C2"
+        prefix = 'd'
+        expected = ['d1', 'd2', 'd0', 'd0']
+
+        data = pysd.external.ExtSubscript(file_name=file_name,
+                                          tab=sheet,
+                                          root=_root,
+                                          firstcell=firstcell,
+                                          lastcell=lastcell,
+                                          prefix=prefix)
+
+        assert data.subscript == expected
+
+    def test_subscript_d_tab(self, _root):
+        """
+        ExtSubscript test for diagonal subscripts
+        """
+        import pysd
+
+        file_name = "data/input.tab"
+        sheet = "sheet name!"
+        firstcell = "B1"
+        lastcell = "C2"
+        prefix = 'd'
+        expected = ['d1', 'd2', 'd0', 'd0']
 
         data = pysd.external.ExtSubscript(file_name=file_name,
                                           tab=sheet,
@@ -3334,6 +3673,70 @@ class TestWarningsErrors():
                                        firstcell=firstcell,
                                        lastcell=lastcell,
                                        prefix=prefix)
+
+    def test_name_in_tab(self, _root):
+        """
+        Test for cellrange input in cell for non spreadsheet file
+        """
+        import pysd
+
+        file_name = "data/input.csv"
+        sheet = ""
+        cell = "data"
+        coords = {}
+        py_name = "test_name_in_tab"
+
+        data = pysd.external.ExtConstant(file_name=file_name,
+                                         tab=sheet,
+                                         root=_root,
+                                         cell=cell,
+                                         coords=coords,
+                                         final_coords=coords,
+                                         py_name=py_name)
+
+        error_message = r"Cannot read the file '.*'...\n"\
+            "It could happen that cell='data' was read as a "\
+            "cell range name due to a wrong definition of cell value"
+        with pytest.raises(ValueError, match=error_message):
+            data.initialize()
+
+    def test_subscript_name_in_csv(self, _root):
+        """
+        Test for cellrange input in cell for non spreadsheet file
+        """
+        import pysd
+
+        file_name = "data/input.csv"
+        sheet = ""
+        firstcell = "fake-cell"
+        lastcell = ""
+        prefix = ""
+
+        error_message = r"Cannot read the file '.*'...\n"\
+            "It could happen that firstcell='fake-cell' was read as a "\
+            "cell range name due to a wrong definition of cell value"
+        with pytest.raises(ValueError, match=error_message):
+            pysd.external.ExtSubscript(file_name=file_name,
+                                       tab=sheet,
+                                       root=_root,
+                                       firstcell=firstcell,
+                                       lastcell=lastcell,
+                                       prefix=prefix)
+
+
+    # TODO
+    def test_empty_subscript_range(self, _root):
+        """
+        Test for an empty subscript range
+        """
+        import pysd
+
+        file_name = "data/input.csv"
+        sheet = ""
+        firstcell = "A5"
+        lastcell = "5"
+        prefix = "sr"
+
 
 
 class DownwardCompatibility():
