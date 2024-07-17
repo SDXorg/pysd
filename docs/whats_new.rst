@@ -1,6 +1,6 @@
 What's New
 ==========
-v3.14.1 (2024/07/XX)
+v3.14.1 (2024/07/18)
 --------------------
 New Features
 ~~~~~~~~~~~~
@@ -15,8 +15,11 @@ Bug fixes
 ~~~~~~~~~
 - Support for :py:mod:`numpy` 2. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 - Allow multiple font styles in var names (:issue:`443`). (`@rogersamso <https://github.com/rogersamso>`_)
-- Allow Vensims GET DIRECT/XLS SUBSCRIPT when lastcell is not a cell value  (:issue:`443`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
-- Allow Vensims GET DIRECT/XLS SUBSCRIPT defined with cell range names  (:issue:`261`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Allow Vensims GET DIRECT/XLS SUBSCRIPT when lastcell is not a cell value (:issue:`443`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Allow Vensims GET DIRECT/XLS SUBSCRIPT defined with cell range names (:issue:`261`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Translate filenames as raw :py:class:`str` to made them work properly for Windows paths (:issue:`443`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Improve support for reading :py:class:`pysd.py_backend.external.External` from all the spreadsheet files includying those types from open software ('.odf', '.ods', '.odt'). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Improve support for reading :py:class:`pysd.py_backend.external.External` from CSV, TAB and any other kind of text file. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 Documentation
 ~~~~~~~~~~~~~
@@ -28,6 +31,10 @@ Internal Changes
 ~~~~~~~~~~~~~~~~
 - Fix CI tests. (`@rogersamso <https://github.com/rogersamso>`_)
 - Run CI coverage only on ubuntu and lowest Python. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Rename 'sheet' by 'tab' in :py:class:`pysd.py_backend.external.External` and related functions and classes to follow Vensim's nomenclature. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Add error message when no subscripts are read from :py:class:`pysd.py_backend.external.ExtSubscript` during the model building. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Add error message when a :py:class:`pysd.py_backend.external.External` cell/firstcell is interpreted as cellrange name but the input file is not a spreadsheet. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Improve parsing of quoted arguments in the vensim translator for external lookups and external subscripts. (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 v3.14.0 (2024/04/24)
 --------------------
