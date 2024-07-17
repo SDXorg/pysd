@@ -190,19 +190,32 @@ class TestStructureBuilder:
 
 class TestSubscriptManager:
     @pytest.mark.parametrize(
-        "arguments,raise_type,error_message",
+        "asrs,raise_type,error_message",
         [
             (  # invalid definition
-                [[AbstractSubscriptRange("my subs", 5, [])], Path("here")],
+                [AbstractSubscriptRange("my subs", 5, [])],
                 ValueError,
                 "Invalid definition of subscript 'my subs':\n\t5"
             ),
+            (  # empty range exts
+                [AbstractSubscriptRange("my subs", dict(
+                    file="data/input.csv",
+                    tab="",
+                    firstcell="A5",
+                    lastcell="5",
+                    prefix="sr"
+                    ), [])],
+                ValueError,
+                "Subscript range 'my subs' empty:\n\t"
+                "{'file': 'data/input.csv', 'tab': '', "
+                "'firstcell': 'A5', 'lastcell': '5', 'prefix': 'sr'}"
+            ),
         ],
-        ids=["invalid definition"]
+        ids=["invalid definition", "empty range exts"]
     )
-    def test_invalid_subscripts(self, arguments, raise_type, error_message):
+    def test_invalid_subscripts(self, asrs, raise_type, error_message, _root):
         with pytest.raises(raise_type, match=error_message):
-            SubscriptManager(*arguments)
+            SubscriptManager(asrs, _root)
 
 
 class TestNamespaceManager:

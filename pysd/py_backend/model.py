@@ -544,7 +544,6 @@ class Macro(DynamicStateful):
         except ValueError:  # pragma: no cover
             raise ModuleNotFoundError("No module named 'netCDF4'")
 
-
         for ext in self._external_elements:
             if ext.py_name in ds.data_vars.keys():
                 # Initialize external from nc file
