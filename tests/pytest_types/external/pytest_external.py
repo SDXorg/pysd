@@ -3724,21 +3724,6 @@ class TestWarningsErrors():
                                        prefix=prefix)
 
 
-    # TODO
-    def test_empty_subscript_range(self, _root):
-        """
-        Test for an empty subscript range
-        """
-        import pysd
-
-        file_name = "data/input.csv"
-        sheet = ""
-        firstcell = "A5"
-        lastcell = "5"
-        prefix = "sr"
-
-
-
 class DownwardCompatibility():
     """
     These tests are defined to make the external objects compatible
