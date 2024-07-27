@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<xmile version="1.0" xmlns="http://docs.oasis-open.org/xmile/ns/XMILE/v1.0">
+	<header>
+		<product version="1.0" lang="en">Vensim</product>
+		<vendor>Ventana Systems, Inc.</vendor>
+		<created>
+		</created>
+		<modified>
+		</modified>
+		<name>
+		</name>
+		<caption>
+		</caption>
+	</header>
+	<sim_specs method="RK4" time_units="Month">
+		<start> 0</start>
+		<stop> 100</stop>
+		<dt> 1</dt>
+	</sim_specs>
+	<model>
+		<variables>
+			<stock name="Backlog">
+				<units>Widget</units>
+				<doc></doc>
+					<eqn>
+					Backlog_Desired + Order_Rate * Backlog_Adj_Time
+					</eqn>
+					<inflow>
+					Order Rate
+					</inflow>
+					<outflow>
+					Order Fulfillment Rate
+					</outflow>
+			</stock>
+			<stock name="Forecasted_Demand_Rate">
+				<units>Widget</units>
+				<doc></doc>
+					<eqn>
+					Demand_Rate
+					</eqn>
+					<inflow>
+					Demand Rate Adj Rate
+					</inflow>
+			</stock>
+			<stock name="Inventory">
+				<units>Widget</units>
+				<doc></doc>
+					<eqn>
+					Inventory_Desired
+					</eqn>
+					<inflow>
+					Supply Rate
+					</inflow>
+					<outflow>
+					Shipment Rate
+					</outflow>
+			</stock>
+			<stock name="Supply_Line">
+				<units></units>
+				<doc></doc>
+					<eqn>
+					Supply_Line_Desired
+					</eqn>
+					<inflow>
+					Supply Start Rate
+					</inflow>
+					<outflow>
+					Supply Rate
+					</outflow>
+			</stock>
+			<aux name="Backlog_Adj_Rate_Desired">
+				<units>Widget/Month</units>
+				<doc>For backlog, unlike `supply line adj rate` and `inventory adj rate`,
+x-coor of `adj_rate` locates between [`desired_state`,`current_state`] and [`adj_time`]
+y-coor of `adj_rate` locates between [`adj_time`] and [`desired_state`,`current_state`] (preferrably adj_time is the highest as being nonnegtive)</doc>
+					<eqn>
+	(Backlog - Backlog_Desired)/Backlog_Adj_Time					</eqn>
+			</aux>
+			<aux name="Demand_Rate">
+				<units>Widget/Month</units>
+				<doc>= Desired Shipment. Exogenous. The generated value above does not have any affect as it will be replaced by time series data randomly generated on python platform.</doc>
+					<eqn>
+	RANDOM_NORMAL( 0, 200, 100, 10, 1111)					</eqn>
+			</aux>
+			<aux name="Demand_Rate_Adj_Rate">
+				<units>Widget/(Month*Month)</units>
+				<doc>Actual demand rate is the desired, forecasted demand rate is the current state. So their difference divided by the adj time becomed adj rate.</doc>
+					<eqn>
+	(Demand_Rate-Forecasted_Demand_Rate)/Demand_Adj_Time					</eqn>
+			</aux>
+			<aux name="Inventory_Adj_Rate">
+				<units>Widget/Month</units>
+				<doc>x-coor of `adj_rate` locates before [`desired_state`,`current_state`, `adj_time`] (which shares x-coor)
+y-coor of `adj_rate` locates between [`desired_state`,`current_state`] and [`adj_time`]</doc>
+					<eqn>
+	(Inventory_Desired-Inventory)/Inventory_Adj_Time					</eqn>
+			</aux>
+			<aux name="Inventory_Desired">
+				<units>Widget/Month</units>
+				<doc></doc>
+					<eqn>
+	Forecasted_Demand_Rate*Inventory_Safety_Time_Desired					</eqn>
+			</aux>
+			<aux name="Inventory_Safety_Time_Desired">
+				<units>Month</units>
+				<doc></doc>
+					<eqn>
+	Shipment_Lead_Time + Safety_Stock_Coverage					</eqn>
+			</aux>
+			<aux name="Max_Shipment_Rate">
+				<units>Widget/Month</units>
+				<doc>a.k.a. Backlog Adj Rate Desired. John has Inventory/Minimum Order Processing Time but the denominator (MOPT) can be seen as Shipment LT. Wish to argue this is symmetric with Demand Adj Rate</doc>
+					<eqn>
+	Inventory/Shipment_Lead_Time					</eqn>
+			</aux>
+			<aux name="Order_Fulfillment_Rate">
+				<units>Widget/Month</units>
+				<doc></doc>
+					<eqn>
+	Shipment_Rate					</eqn>
+			</aux>
+			<aux name="Order_Fulfilment_Ratio">
+				<units>Dmnl</units>
+				<doc>SKU multiscale issues</doc>
+					<eqn>
+	Order_Fullfilemt_Ratio_Table(Max_Shipment_Rate/Backlog_Adj_Rate_Desired)					</eqn>
+			</aux>
+			<aux name="Order_Rate">
+				<units>Widget/Month</units>
+				<doc></doc>
+					<eqn>
+	Demand_Rate					</eqn>
+			</aux>
+			<aux name="Safety_Stock_Coverage">
+				<units>Month</units>
+				<doc>proportional to CR? -> 10 * CR??</doc>
+					<eqn>
+	3 * Critical_Ratio					</eqn>
+			</aux>
+			<aux name="Shipment_Rate">
+				<units>Widget/Month</units>
+				<doc>WRONG: Desired Shipment*Fulfilment Ratio (has to be the rate), Inventory/Shipment Lead Time</doc>
+					<eqn>
+	Backlog_Adj_Rate_Desired*Order_Fulfilment_Ratio					</eqn>
+			</aux>
+			<aux name="Supply_Line_Adj_Rate">
+				<units>Widget/Month</units>
+				<doc>x-coor of `adj_rate` locates before [`desired_state`,`current_state`, `adj_time`] (which shares x-coor)
+y-coor of `adj_rate` locates between [`desired_state`,`current_state`] and [`adj_time`]</doc>
+					<eqn>
+	(Supply_Line_Desired-Supply_Line)/Supply_Line_Adj_Time					</eqn>
+			</aux>
+			<aux name="Supply_Line_Desired">
+				<units>Widget</units>
+				<doc></doc>
+					<eqn>
+	Forecasted_Demand_Rate*Supply_Lead_Time					</eqn>
+			</aux>
+			<aux name="Supply_Rate">
+				<units></units>
+				<doc>can be modeled as DELAY3(Supply Start Rate, Lead Time) but as its stan transition is not implemented yet, we are using first order delay.</doc>
+					<eqn>
+	Supply_Line/Supply_Lead_Time					</eqn>
+			</aux>
+			<aux name="Supply_Rate_Desired">
+				<units>Widget/Month</units>
+				<doc></doc>
+					<eqn>
+	Forecasted_Demand_Rate + Inventory_Adj_Rate					</eqn>
+			</aux>
+			<aux name="Supply_Start_Rate">
+				<units>Widget/Month</units>
+				<doc></doc>
+					<eqn>
+	Supply_Start_Rate_Desired					</eqn>
+			</aux>
+			<aux name="Supply_Start_Rate_Desired">
+				<units>Widget/Month</units>
+				<doc></doc>
+					<eqn>
+	MAX(0, Supply_Rate_Desired + Supply_Line_Adj_Rate)					</eqn>
+			</aux>
+			<aux name="Order_Fullfilemt_Ratio_Table">
+				<units></units>
+				<doc></doc>
+<gf>
+<xpts>0.000000,0.200000,0.400000,0.600000,0.800000,1.000000,1.200000,1.400000,1.600000,1.800000,2.000000,2.000000</xpts>
+<ypts>0.000000,0.200000,0.400000,0.580000,0.730000,0.850000,0.930000,0.970000,0.990000,1.000000,1.000000,1.000000</ypts>
+</gf>
+			</aux>
+			<aux name="Backlog_Adj_Time">
+				<units>Month</units>
+				<doc>Desired Shipment Delay by HR</doc>
+					<eqn>
+	3					</eqn>
+			</aux>
+			<aux name="Backlog_Desired">
+				<units>Widget</units>
+				<doc></doc>
+					<eqn>
+	0					</eqn>
+			</aux>
+			<aux name="Critical_Ratio">
+				<units></units>
+				<doc>Ratios are aggregated result and hence we don't need time delay for this information diffusion.</doc>
+					<eqn>
+	0.8					</eqn>
+			</aux>
+			<aux name="Demand_Adj_Time">
+				<units></units>
+				<doc></doc>
+					<eqn>
+	3					</eqn>
+			</aux>
+			<aux name="Inventory_Adj_Time">
+				<units>Month</units>
+				<doc></doc>
+					<eqn>
+	3					</eqn>
+			</aux>
+			<aux name="Shipment_Lead_Time">
+				<units>Month</units>
+				<doc>Min Shipment Time??</doc>
+					<eqn>
+	3					</eqn>
+			</aux>
+			<aux name="Supply_Lead_Time">
+				<units></units>
+				<doc></doc>
+					<eqn>
+	3					</eqn>
+			</aux>
+			<aux name="Supply_Line_Adj_Time">
+				<units></units>
+				<doc></doc>
+					<eqn>
+	3					</eqn>
+			</aux>
+		</variables>
+	</model>
+</xmile>
