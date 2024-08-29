@@ -1,5 +1,35 @@
 What's New
 ==========
+v3.14.2 (2024/08/29)
+--------------------
+New Features
+~~~~~~~~~~~~
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+
+Documentation
+~~~~~~~~~~~~~
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- Several changes to allow compatibility with latest versions of :py:mod:`numpy` and :py:mod:`xarray`:
+
+  - Ensure that :py:class:`float` objects evaluated with :py:mod:`numpy` are converted to :py:class:`float`.
+
+  - Ensure proper shape of inputs when loading external data.
+
+- Avoid :py:class:`DeprecationWarning` raised in `invert_matrix`` test.
+
 v3.14.1 (2024/07/18)
 --------------------
 New Features

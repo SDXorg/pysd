@@ -445,27 +445,29 @@ class TestFunctions():
         for data in [data1, data2, data3]:
             datai = invert_matrix(data)
             assert data.dims == datai.dims
+            data_v = data.values
+            datai_v = datai.values
 
             if len(data.shape) == 2:
                 # two dimensions xarrays
                 assert (
-                    abs(np.dot(data, datai) - np.dot(datai, data))
+                    abs(np.dot(data_v, datai_v) - np.dot(datai_v, data_v))
                     < 1e-14
                     ).all()
                 assert (
-                    abs(np.dot(data, datai) - np.identity(data.shape[-1]))
+                    abs(np.dot(data_v, datai_v) - np.identity(data.shape[-1]))
                     < 1e-14
                     ).all()
             else:
                 # three dimensions xarrays
                 for i in range(data.shape[0]):
                     assert (
-                        abs(np.dot(data[i], datai[i])
-                            - np.dot(datai[i], data[i]))
+                        abs(np.dot(data_v[i], datai_v[i])
+                            - np.dot(datai_v[i], data_v[i]))
                         < 1e-14
                         ).all()
                     assert (
-                        abs(np.dot(data[i], datai[i])
+                        abs(np.dot(data_v[i], datai_v[i])
                             - np.identity(data.shape[-1]))
                         < 1e-14
                         ).all()
