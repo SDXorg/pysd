@@ -502,10 +502,9 @@ class External(object):
             if self.interp != "raw":
                 self._fill_missing(series, data)
 
+        # reshape the data to fit in the xarray.DataArray
         reshape_dims = tuple([len(series)] + utils.compute_shape(self.coords))
-
-        if len(reshape_dims) > 1:
-            data = self._reshape(data, reshape_dims)
+        data = self._reshape(data, reshape_dims)
 
         if element_type == "lookup":
             dim_name = "lookup_dim"
@@ -977,10 +976,7 @@ class ExtConstant(External):
         # Create only an xarray if the data is not 0 dimensional
         if len(self.coords) > 0:
             reshape_dims = tuple(utils.compute_shape(self.coords))
-
-            if len(reshape_dims) > 1:
-                data = self._reshape(data, reshape_dims)
-
+            data = self._reshape(data, reshape_dims)
             data = xr.DataArray(
                 data=data, coords=self.coords, dims=list(self.coords)
             )
