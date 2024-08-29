@@ -16,13 +16,13 @@ import numpy as np
 from pysd.py_backend.utils import compute_shape
 
 from pysd.translators.structures.abstract_expressions import\
-    AbstractSyntax, AllocateAvailableStructure, AllocateByPriorityStructure,\
-    ArithmeticStructure, CallStructure, DataStructure, DelayFixedStructure,\
-    DelayStructure, DelayNStructure, ForecastStructure, GameStructure,\
-    GetConstantsStructure, GetDataStructure, GetLookupsStructure,\
-    InitialStructure, InlineLookupsStructure, IntegStructure,\
-    LogicStructure, LookupsStructure, ReferenceStructure,\
-    SampleIfTrueStructure, SmoothNStructure, SmoothStructure,\
+    AbstractSyntax, AllocateAvailableStructure, AllocateByPriorityStructure, \
+    ArithmeticStructure, CallStructure, DataStructure, DelayFixedStructure, \
+    DelayStructure, DelayNStructure, ForecastStructure, GameStructure, \
+    GetConstantsStructure, GetDataStructure, GetLookupsStructure, \
+    InitialStructure, InlineLookupsStructure, IntegStructure, \
+    LogicStructure, LookupsStructure, ReferenceStructure, \
+    SampleIfTrueStructure, SmoothNStructure, SmoothStructure, \
     SubscriptsReferenceStructure, TrendStructure
 
 from .python_functions import functionspace
@@ -693,6 +693,10 @@ class CallBuilder(StructureBuilder):
                     [arguments[i].reshape(
                         self.section.subscripts, final_subscripts, True)
                      for i in ["0", "1", "2"]]
+
+        # ensure numpy outputs of floats being floats
+        if "np." in expression and not final_subscripts:
+            expression = "float(" + expression + ")"
 
         return BuildAST(
             expression=expression % arguments,

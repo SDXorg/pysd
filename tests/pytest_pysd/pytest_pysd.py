@@ -561,7 +561,7 @@ class TestPySD():
 
         timeseries = list(range(10))
         val_series = [50 + rd for rd in np.random.rand(len(timeseries)
-                                                       ).cumsum()]
+                                                       ).cumsum().tolist()]
         xr_series = [xr.DataArray(val, coords, dims) for val in val_series]
 
         temp_timeseries = pd.Series(index=timeseries, data=val_series)

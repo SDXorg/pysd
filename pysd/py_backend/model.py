@@ -1169,14 +1169,14 @@ class Macro(DynamicStateful):
         elif dims:
             # the interpolation will be time dependent
             return lambda: utils.rearrange(
-                np.interp(self.time(), series.index, series.values),
+                float(np.interp(self.time(), series.index, series.values)),
                 dims, self._subscript_dict), {'time': 1}
 
         else:
             # the interpolation will be time dependent
-            return lambda: np.interp(
+            return lambda: float(np.interp(
                 self.time(), series.index, series.values
-                ), {'time': 1}
+                )), {'time': 1}
 
     def _constant_component(self, value, dims):
         """ Internal function for creating a constant model element """

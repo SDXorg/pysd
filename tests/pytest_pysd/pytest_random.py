@@ -99,6 +99,9 @@ class TestRandomVensim():
             }
             expr = builder.build(args).expression
             expr = expr.replace('()', str(random_size))
+            if expr.startswith('float'):
+                # remove float conversion as size is set bigger than 1
+                expr = expr.replace('float(', '')[:-1]
             out[col] = eval(expr)
 
         return pd.DataFrame(out)

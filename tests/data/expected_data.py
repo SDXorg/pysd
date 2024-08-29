@@ -38,7 +38,7 @@ dims_1dl = ['ABC']
 coords_2dl = {'ABC': ['A', 'B', 'C'], 'XY': ['X', 'Y']}
 dims_2dl = ['XY', 'ABC']
 
-xpts = np.arange(-0.5, 8.6, 0.5)
+xpts = np.arange(-0.5, 8.6, 0.5).tolist()
 
 # 1d lookup/data
 
@@ -246,4 +246,3 @@ backward_3d = [xr.DataArray(data, coords_2dl, dims_2dl)
 
 forward_3d = [xr.DataArray(data, coords_2dl, dims_2dl)
               for data in forward_3dl]
-
