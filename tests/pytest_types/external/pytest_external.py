@@ -1382,7 +1382,9 @@ class TestConstant():
         data2.initialize()
 
         assert data() == -1
+        assert type(data()) == float
         assert data2() == 0
+        assert type(data2()) == float
 
     def test_constant_n0d(self, _root):
         """
