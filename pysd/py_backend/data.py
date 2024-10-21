@@ -125,8 +125,9 @@ class Columns():
         file_name: str
             Output file to read. Must be csv or tab.
 
-        vars: list
-            List of var names to find in the file.
+        vars: list or None (optional)
+            List of var names to find in the file. If None all variables
+            will be returned. Default is None.
 
         encoding: str or None (optional)
             Encoding type to read output file. Needed if the file has special
@@ -268,7 +269,7 @@ class TabData(Data):
                              + "'raw', 'interpolate', "
                              + "'look_forward' or 'hold_backward'")
 
-    def load_data(self, file_names):
+    def load_data(self, file_names, encoding=None):
         """
         Load data values from files.
 
@@ -276,6 +277,12 @@ class TabData(Data):
         ----------
         file_names: list or str or pathlib.Path
             Name of the files to search the variable in.
+        encoding: list or str or None (optional)
+            Encoding to be used by the data readers. If a list is given,
+            then file_names should be a list of the same lenght. If
+            None or a string is given, this value will be used for all
+            of them. See documentation from pandas.read_table for
+            further information. Default is None.
 
         Returns
         -------
@@ -285,9 +292,11 @@ class TabData(Data):
         """
         if isinstance(file_names, (str, Path)):
             file_names = [file_names]
+        if isinstance(encoding, str) or encoding is None:
+            encoding = [encoding]*len(file_names)
 
-        for file_name in file_names:
-            self.data = self._load_data(Path(file_name))
+        for file_name, encoding_df in zip(file_names, encoding):
+            self.data = self._load_data(Path(file_name), encoding_df)
             if self.data is not None:
                 break
 
@@ -297,7 +306,7 @@ class TabData(Data):
                 f"Data for {self.real_name} not found in "
                 f"{', '.join([str(file_name) for file_name in file_names])}")
 
-    def _load_data(self, file_name):
+    def _load_data(self, file_name, encoding):
         """
         Load data values from output
 
@@ -317,7 +326,10 @@ class TabData(Data):
         if file_name.suffix in [".csv", ".tab"]:
 
             columns, transpose = Columns.get_columns(
-                file_name, vars=[self.real_name, self.py_name])
+                file_name,
+                vars=[self.real_name, self.py_name],
+                encoding=encoding
+            )
 
             if not columns:
                 # the variable is not in the passed file
