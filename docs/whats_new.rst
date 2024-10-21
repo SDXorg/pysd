@@ -29,6 +29,7 @@ Internal Changes
   - Ensure proper shape of inputs when loading external data.
 
 - Avoid :py:class:`DeprecationWarning` raised in `invert_matrix`` test.
+- Remove `get_html_theme_path` from docs conf.
 
 v3.14.1 (2024/07/18)
 --------------------
