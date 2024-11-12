@@ -977,11 +977,12 @@ class ExtConstant(External):
         if len(self.coords) > 0:
             reshape_dims = tuple(utils.compute_shape(self.coords))
             data = self._reshape(data, reshape_dims)
-            data = xr.DataArray(
+            return xr.DataArray(
                 data=data, coords=self.coords, dims=list(self.coords)
             )
-
-        return data
+        else:
+            # need to ensure float is returned and not numpy.float
+            return float(data)
 
     def _get_constant_data(self, data_across, cell, shape):
         """
