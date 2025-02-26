@@ -1,5 +1,60 @@
 What's New
 ==========
+v3.14.3 (2025/XX/XX)
+--------------------
+New Features
+~~~~~~~~~~~~
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+- Make XMILE operator parsing case-insensitive (:issue:`463`). (`@benslavin <https://github.com/benslavin>`_)
+
+Documentation
+~~~~~~~~~~~~~
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+
+v3.14.2 (2024/11/12)
+--------------------
+New Features
+~~~~~~~~~~~~
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+
+Documentation
+~~~~~~~~~~~~~
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- Several changes to allow compatibility with latest versions of :py:mod:`numpy` and :py:mod:`xarray`:
+
+  - Ensure that :py:class:`float` objects evaluated with :py:mod:`numpy` are converted to :py:class:`float`.
+
+  - Ensure proper shape of inputs when loading external data.
+
+- Avoid :py:class:`DeprecationWarning` raised in `invert_matrix`` test.
+- Remove `get_html_theme_path` from docs conf.
+
 v3.14.2 (2024/11/12)
 --------------------
 New Features
