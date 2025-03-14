@@ -1,6 +1,31 @@
 What's New
 ==========
-v3.14.2 (2024/10/21)
+v3.14.3 (2025/03/XX)
+--------------------
+New Features
+~~~~~~~~~~~~
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+- Make XMILE operator parsing case-insensitive (:issue:`463`). (`@benslavin <https://github.com/benslavin>`_)
+
+Documentation
+~~~~~~~~~~~~~
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+- Allow passing encoding for TabData files (:issue:`455`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+
+v3.14.2 (2024/11/12)
 --------------------
 New Features
 ~~~~~~~~~~~~

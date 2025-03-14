@@ -94,6 +94,10 @@ xmile_test = {
         "folder": "logicals",
         "file": "test_logicals.xmile"
     },
+    "logicals_caseinsensitive": {
+        "folder": "logicals",
+        "file": "test_logicals_caseinsensitive.xmile"
+    },
     "lookups": {
         "folder": "lookups",
         "file": "test_lookups.xmile"
