@@ -73,7 +73,7 @@ class Macro(DynamicStateful):
     """
     def __init__(self, py_model_file, params=None, return_func=None,
                  time=None, time_initialization=None, data_files=None,
-                 py_name=None):
+                 data_files_encoding=None, py_name=None):
         super().__init__()
         self.time = time
         self.time_initialization = time_initialization
@@ -158,7 +158,7 @@ class Macro(DynamicStateful):
 
         # Load data files
         if data_files:
-            self._get_data(data_files)
+            self._get_data(data_files, data_files_encoding)
 
         # Assign the cache type to each variable
         self._assign_cache_type()
@@ -221,14 +221,19 @@ class Macro(DynamicStateful):
         # if nested macros
         [macro.clean_caches() for macro in self._macro_elements]
 
-    def _get_data(self, data_files):
+    def _get_data(self, data_files, encoding):
+        """Load Data for TabData objects"""
         if isinstance(data_files, dict):
             for data_file, vars in data_files.items():
+                if isinstance(encoding, dict):
+                    encoding_df = encoding.get(data_file, None)
+                else:
+                    encoding_df = encoding
                 for var in vars:
                     found = False
                     for element in self._data_elements:
                         if var in [element.py_name, element.real_name]:
-                            element.load_data(data_file)
+                            element.load_data(data_file, encoding_df)
                             found = True
                             break
                     if not found:
@@ -237,7 +242,7 @@ class Macro(DynamicStateful):
 
         else:
             for element in self._data_elements:
-                element.load_data(data_files)
+                element.load_data(data_files, encoding)
 
     def _get_initialize_order(self):
         """
@@ -1396,11 +1401,13 @@ class Model(Macro):
     :class:`pysd.py_backend.model.Macro`
 
     """
-    def __init__(self, py_model_file, data_files, initialize, missing_values):
+    def __init__(self, py_model_file, data_files, data_files_encoding,
+                 initialize, missing_values):
         """ Sets up the Python objects """
         super().__init__(py_model_file, None, None, Time(),
                          data_files=data_files)
         self.data_files = data_files
+        self.data_files_encoding = data_files_encoding
         self.missing_values = missing_values
         # set time component
         self.time.stage = 'Load'
@@ -2159,6 +2166,7 @@ class Model(Macro):
         new_model = type(self)(
             py_model_file=deepcopy(self.py_model_file),
             data_files=deepcopy(self.data_files),
+            data_files_encoding=deepcopy(self.data_files_encoding),
             initialize=initialize,
             missing_values=deepcopy(self.missing_values)
         )
@@ -2194,6 +2202,7 @@ class Model(Macro):
 
         """
         self.__init__(self.py_model_file, data_files=self.data_files,
+                      data_files_encoding=self.data_files_encoding,
                       initialize=True,
                       missing_values=self.missing_values)
 

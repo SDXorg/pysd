@@ -1,6 +1,6 @@
 What's New
 ==========
-v3.14.3 (2025/XX/XX)
+v3.14.3 (2025/03/XX)
 --------------------
 New Features
 ~~~~~~~~~~~~
@@ -23,6 +23,7 @@ Performance
 
 Internal Changes
 ~~~~~~~~~~~~~~~~
+- Allow passing encoding for TabData files (:issue:`455`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 v3.14.2 (2024/11/12)
 --------------------
