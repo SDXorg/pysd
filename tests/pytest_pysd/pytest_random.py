@@ -7,6 +7,7 @@ import pandas as pd
 from scipy import stats
 
 import pysd
+from pysd.py_backend.functions import xidz
 from pysd.translators.vensim.vensim_element import Component
 from pysd.builders.python.python_expressions_builder import\
     CallBuilder, NumericBuilder
