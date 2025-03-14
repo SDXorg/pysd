@@ -65,11 +65,14 @@ def split_arithmetic(structure: object, parsing_ops: dict,
         no operations are performed.
 
     """
-    pattern = re.compile(parsing_ops)
+    pattern = re.compile(parsing_ops, re.IGNORECASE)
     parts = pattern.split(expression)  # list of elements ids
     ops = pattern.findall(expression)  # operators list
     ops = list(map(
-        lambda x: x.replace('and', ':AND:').replace('or', ':OR:'), ops))
+        lambda x: re.sub(r'(?i)and', ':AND:',
+                         re.sub(r'(?i)or', ':OR:', x)),
+        ops
+    ))
     if not ops:
         # no operators return original object
         if parts[0] in negatives:

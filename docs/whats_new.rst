@@ -1,5 +1,29 @@
 What's New
 ==========
+v3.14.3 (2025/XX/XX)
+--------------------
+New Features
+~~~~~~~~~~~~
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+- Make XMILE operator parsing case-insensitive (:issue:`463`). (`@benslavin <https://github.com/benslavin>`_)
+
+Documentation
+~~~~~~~~~~~~~
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+
 v3.14.2 (2024/11/12)
 --------------------
 New Features
