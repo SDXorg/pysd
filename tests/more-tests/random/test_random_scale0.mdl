@@ -1,0 +1,48 @@
+{UTF-8}
+
+normal1=
+	RANDOM NORMAL(-1, 10, 5, 0, 1)
+	~
+	~		|
+
+normal2=
+	RANDOM NORMAL(5, 7, 6, 0, 1)
+	~
+	~		|
+
+exponential1=
+	RANDOM EXPONENTIAL(1, 3, 0, 0, 1)
+	~
+	~		|
+
+exponential2=
+	RANDOM EXPONENTIAL(0, 10, 7, 0, 1)
+	~
+	~		|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 2
+	~	Month
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Month
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  =
+        TIME STEP
+	~	Month [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 1
+	~	Month [0,?]
+	~	The time step for the simulation.
+	|
