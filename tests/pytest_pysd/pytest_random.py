@@ -7,6 +7,7 @@ import pandas as pd
 from scipy import stats
 
 import pysd
+from pysd.py_backend.functions import xidz
 from pysd.translators.vensim.vensim_element import Component
 from pysd.builders.python.python_expressions_builder import\
     CallBuilder, NumericBuilder
@@ -76,6 +77,42 @@ class TestRandomModel:
                 values = out[var].values
             # assert all values are different in each dimension and time step
             assert len(np.unique(values)) == np.prod(values.shape)
+
+
+class TestRandomScale0Model:
+    """Submodel selecting class"""
+    # messages for selecting submodules
+    @pytest.fixture(scope="class")
+    def model_path(self, shared_tmpdir, _root):
+        """
+        Copy test folder to a temporary folder therefore we avoid creating
+        PySD model files in the original folder
+        """
+        new_file = shared_tmpdir.joinpath("test_random_scale0.mdl")
+        shutil.copy(
+            _root.joinpath("more-tests/random/test_random_scale0.mdl"),
+            new_file
+        )
+        return new_file
+
+    def test_translate_run(self, model_path):
+        """
+        Translate the model and run it.
+        """
+        # expected file
+        model = pysd.read_vensim(model_path)
+        random_vars = [
+            "normal1",
+            "normal2",
+            "exponential1",
+            "exponential2"
+        ]
+        out = model.run(return_columns=random_vars, flatten_output=False)
+        # expected values
+        assert np.all(out['normal1'] == 5)
+        assert np.all(out['normal2'] == 6)
+        assert np.all(out['exponential1'] == 1)
+        assert np.all(out['exponential2'] == 7)
 
 
 class TestRandomVensim():
