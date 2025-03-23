@@ -1,6 +1,6 @@
 What's New
 ==========
-v3.14.3 (2025/03/XX)
+v3.14.3 (2025/03/23)
 --------------------
 New Features
 ~~~~~~~~~~~~
@@ -14,6 +14,7 @@ Deprecations
 Bug fixes
 ~~~~~~~~~
 - Make XMILE operator parsing case-insensitive (:issue:`463`). (`@benslavin <https://github.com/benslavin>`_)
+- Avoid :py:class:`ZeroDivisionError` when stretch is 0 in RANDOM NORMAL and RANDOM EXPONENTIAL (:issue:`465`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 Documentation
 ~~~~~~~~~~~~~

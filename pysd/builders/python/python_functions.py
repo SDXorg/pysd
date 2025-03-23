@@ -111,11 +111,14 @@ functionspace = {
         "np.random.uniform(%(0)s, %(1)s, size=%(size)s)",
         (("numpy",),)),
     "random_normal": (
-        "stats.truncnorm.rvs((%(0)s-%(2)s)/%(3)s, (%(1)s-%(2)s)/%(3)s,"
-        " loc=%(2)s, scale=%(3)s, size=%(size)s)",
-        (("scipy", "stats"),)),
+        "stats.truncnorm.rvs("
+        "xidz(%(0)s-%(2)s, %(3)s, -np.inf),"
+        "xidz(%(1)s-%(2)s, %(3)s, np.inf),"
+        "loc=%(2)s, scale=%(3)s, size=%(size)s)",
+        (("scipy", "stats"), ("numpy",), ("functions", "xidz"))),
     "random_exponential": (
-        "stats.truncexpon.rvs((%(1)s-np.maximum(%(0)s, %(2)s))/%(3)s,"
-        " loc=np.maximum(%(0)s, %(2)s), scale=%(3)s, size=%(size)s)",
-        (("scipy", "stats"), ("numpy",),)),
+        "stats.truncexpon.rvs("
+        "xidz(%(1)s-np.maximum(%(0)s, %(2)s), %(3)s, np.inf),"
+        "loc=np.maximum(%(0)s, %(2)s), scale=%(3)s, size=%(size)s)",
+        (("scipy", "stats"), ("numpy",), ("functions", "xidz"))),
 }
