@@ -24,8 +24,8 @@ if sys.version_info[:2] < (3, 9):  # pragma: no cover
     )
 
 
-def read_xmile(xmile_file, data_files=None, initialize=True,
-               missing_values="warning"):
+def read_xmile(xmile_file, data_files=None, data_files_encoding=None,
+               initialize=True, missing_values="warning"):
     """
     Construct a model from a Xmile file.
 
@@ -38,9 +38,20 @@ def read_xmile(xmile_file, data_files=None, initialize=True,
         If False, the model will not be initialize when it is loaded.
         Default is True.
 
-    data_files: list or str or None (optional)
-        If given the list of files where the necessary data to run the model
-        is given. Default is None.
+    data_files: dict or list or str or None
+        The dictionary with keys the name of file and variables to
+        load the data from there. Or the list of names or name of the
+        file to search the data in. Only works for TabData type object
+        and it is neccessary to provide it. Default is None.
+
+    data_files_encoding: list or str or dict or None (optional)
+        Encoding for data_files. If a string or None is passed this
+        value will be used for all the files. If data_files is a list,
+        a list of the same length could be used to specify different
+        encodings. If data_files is a dictionary, a dictionary with the
+        same keys could be used, being the values the encodings. See
+        documentation from pandas.read_table for further information.
+        Default is None.
 
     missing_values: str ("warning", "error", "ignore", "keep") (optional)
         What to do with missing values. If "warning" (default)
@@ -75,15 +86,20 @@ def read_xmile(xmile_file, data_files=None, initialize=True,
     py_model_file = ModelBuilder(abs_model).build_model()
 
     # load Python file
-    model = load(py_model_file, data_files, initialize, missing_values)
+    model = load(
+        py_model_file,
+        data_files, data_files_encoding,
+        initialize,
+        missing_values
+    )
     model.xmile_file = str(xmile_file)
 
     return model
 
 
-def read_vensim(mdl_file, data_files=None, initialize=True,
-                missing_values="warning", split_views=False,
-                encoding=None, **kwargs):
+def read_vensim(mdl_file, data_files=None, data_files_encoding=None,
+                initialize=True, missing_values="warning",
+                split_views=False, encoding=None, **kwargs):
     """
     Construct a model from Vensim `.mdl` file.
 
@@ -96,9 +112,29 @@ def read_vensim(mdl_file, data_files=None, initialize=True,
         If False, the model will not be initialize when it is loaded.
         Default is True.
 
-    data_files: list or str or None (optional)
-        If given the list of files where the necessary data to run the model
-        is given. Default is None.
+    data_files: dict or list or str or None
+        The dictionary with keys the name of file and variables to
+        load the data from there. Or the list of names or name of the
+        file to search the data in. Only works for TabData type object
+        and it is neccessary to provide it. Default is None.
+
+    data_files_encoding: list or str or dict or None (optional)
+        Encoding for data_files. If a string or None is passed this
+        value will be used for all the files. If data_files is a list,
+        a list of the same length could be used to specify different
+        encodings. If data_files is a dictionary, a dictionary with the
+        same keys could be used, being the values the encodings. See
+        documentation from pandas.read_table for further information.
+        Default is None.
+
+    data_files_encoding: list or str or dict or None (optional)
+        Encoding for data_files. If a string or None is passed this
+        value will be used for all the files. If data_files is a list,
+        a list of the same length could be used to specify different
+        encodings. If data_files is a dictionary, a dictionary with the
+        same keys could be used, being the values the encodings. See
+        documentation from pandas.read_table for further information.
+        Default is None.
 
     missing_values: str ("warning", "error", "ignore", "keep") (optional)
         What to do with missing values. If "warning" (default)
@@ -155,14 +191,19 @@ def read_vensim(mdl_file, data_files=None, initialize=True,
     py_model_file = ModelBuilder(abs_model).build_model()
 
     # load Python file
-    model = load(py_model_file, data_files, initialize, missing_values)
+    model = load(
+        py_model_file,
+        data_files, data_files_encoding,
+        initialize,
+        missing_values
+    )
     model.mdl_file = str(mdl_file)
 
     return model
 
 
-def load(py_model_file, data_files=None, initialize=True,
-         missing_values="warning"):
+def load(py_model_file, data_files=None, data_files_encoding=None,
+         initialize=True, missing_values="warning"):
     """
     Load a Python-converted model file.
 
@@ -182,6 +223,15 @@ def load(py_model_file, data_files=None, initialize=True,
         file to search the data in. Only works for TabData type object
         and it is neccessary to provide it. Default is None.
 
+    data_files_encoding: list or str or dict or None (optional)
+        Encoding for data_files. If a string or None is passed this
+        value will be used for all the files. If data_files is a list,
+        a list of the same length could be used to specify different
+        encodings. If data_files is a dictionary, a dictionary with the
+        same keys could be used, being the values the encodings. See
+        documentation from pandas.read_table for further information.
+        Default is None.
+
     missing_values : str ("warning", "error", "ignore", "keep") (optional)
         What to do with missing values. If "warning" (default)
         shows a warning message and interpolates the values.
@@ -195,4 +245,9 @@ def load(py_model_file, data_files=None, initialize=True,
     >>> model = load('../tests/test-models/samples/teacup/teacup.py')
 
     """
-    return Model(py_model_file, data_files, initialize, missing_values)
+    return Model(
+        py_model_file,
+        data_files, data_files_encoding,
+        initialize,
+        missing_values
+    )
