@@ -125,6 +125,10 @@ class Element():
             non_negative = 'false' not in boolean.lower()
         return non_negative
 
+    def _get_subscripts(self, subnode: etree._Element) -> List:
+        # TODO what about case sensitivity?
+        return re.split(r"\s*,\s*", subnode.attrib["subscript"])
+
     def _parse_lookup_xml_node(self, node: etree._Element) -> AbstractSyntax:
         """
         Parse lookup definition
@@ -179,12 +183,15 @@ class Element():
         None
 
         """
+        # get eqn if defined in main level
+        asts = self._parse_component(self.node, behaviors)
+
         if self.node.xpath("ns:element", namespaces=self.ns):
             # defined in several equations each with one subscript
             for subnode in self.node.xpath("ns:element", namespaces=self.ns):
                 self.components.append(
-                    ((subnode.attrib["subscript"].split(","), []),
-                     self._parse_component(subnode, behaviors)[0])
+                    ((self._get_subscripts(subnode), []),
+                     self._parse_component(subnode, behaviors, asts=asts)[0])
                 )
         else:
             # get the subscripts from element
@@ -193,18 +200,17 @@ class Element():
                 for subnode
                 in self.node.xpath("ns:dimensions/ns:dim", namespaces=self.ns)
             ]
-            parsed = self._parse_component(self.node, behaviors)
-            if len(parsed) == 1:
+            if len(asts) == 1:
                 # element defined with one equation
-                self.components = [((subscripts, []),  parsed[0])]
+                self.components = [((subscripts, []),  asts[0])]
             else:
                 # element defined in several equations, but only the general
                 # subscripts are given, save each equation with its
                 # subscrtipts
                 subs_list = self.subscripts[subscripts[0]]
                 self.components = [
-                    (([subs], []), parsed_i) for subs, parsed_i in
-                    zip(subs_list, parsed)
+                    (([subs], []), ast)
+                    for subs, ast in zip(subs_list, asts)
                 ]
 
     def _smile_parser(self, expression: str) -> AbstractSyntax:
@@ -259,8 +265,8 @@ class Aux(Element):
         super().__init__(node, ns, subscripts)
         self.limits = self._get_limits()
 
-    def _parse_component(self, node: etree._Element,
-                         behaviors: dict) -> List[AbstractSyntax]:
+    def _parse_component(self, node: etree._Element, behaviors: dict,
+                         asts: List[ReferenceStructure] = None) -> List[AbstractSyntax]:
         """
         Parse one Aux component
 
@@ -269,6 +275,14 @@ class Aux(Element):
         AST: AbstractSyntax
 
         """
+        if asts:
+            # Subscript element with eqn defined in parent node
+            gf_node = node.xpath("ns:gf", namespaces=self.ns)
+            if len(gf_node) > 0:
+                asts = [structures["inline_lookup"](
+                    asts[0], self._parse_lookup_xml_node(gf_node[0]))]
+            return asts
+
         asts = []
         for eqn in node.xpath('ns:eqn', namespaces=self.ns):
             # Replace new lines with space, and replace 2 or more spaces with
@@ -277,7 +291,7 @@ class Aux(Element):
             eqn = re.sub(r"(\s{2,})", " ", eqn.text.replace("\n", ' ')).strip()
             ast = self._smile_parser(eqn)
 
-            gf_node = self.node.xpath("ns:gf", namespaces=self.ns)
+            gf_node = node.xpath("ns:gf", namespaces=self.ns)
             if len(gf_node) > 0:
                 ast = structures["inline_lookup"](
                     ast, self._parse_lookup_xml_node(gf_node[0]))

@@ -151,14 +151,25 @@ class Section():
 
     def _parse_subscripts(self) -> List[SubscriptRange]:
         """Parse the subscripts of the section."""
-        subscripts = [
-            SubscriptRange(
-                node.attrib["name"],
-                [
+
+        def get_subs(dim_node: etree._Element) -> List[str]:
+            """get the subscripts of a given dimension node"""
+            if 'size' in dim_node.attrib:
+                # subscripts defined with size, no name given
+                return [
+                    str(i)
+                    for i in range(1, int(dim_node.attrib['size'])+1)
+                ]
+            else:
+                # subscripts defined with names
+                return [
                     sub.attrib["name"]
-                    for sub in node.xpath("ns:elem", namespaces=self.ns)
-                ],
-                [])   # no subscript mapping implemented
+                    for sub in dim_node.xpath("ns:elem", namespaces=self.ns)
+                ]
+
+        subscripts = [
+            SubscriptRange(node.attrib["name"], get_subs(node), [])
+            # no subscript mapping implemented
             for node
             in self.content.xpath("ns:dimensions/ns:dim", namespaces=self.ns)
         ]
