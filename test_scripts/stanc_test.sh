@@ -1,0 +1,1 @@
+~/.cmdstan/cmdstan-2.30.1/bin/stanc ds_white_sterman_data2draws.stan --include-paths ./
