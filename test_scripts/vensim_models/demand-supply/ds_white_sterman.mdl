@@ -1,0 +1,365 @@
+{UTF-8}
+Adjustment for WIP = (Desired WIP - Work in Process Inventory)/WIP Adjustment Time
+	~	Widgets/Week
+	~	The adjustment to the production start rate from the adequacy of WIP \
+		inventory.
+	|
+
+Change in Exp Orders = (Customer Order Rate-Expected Order Rate)/
+Time to Average Order Rate
+	~	(Widgets/Week)/Week
+	~	The demand forecast adjusts to the actual order rate over a time period determined \
+		by the Time to
+		        Average Order Rate.  The demand forecast is formed by first-order \
+		exponential smoothing,
+		         a widely used forecasting technique.
+	|
+
+Customer Order Rate=
+	10000
+	~	Widgets/Week
+	~	Customer order rate is exogenous.  A variety of test inputs allow users to try \
+		different patterns,
+		         including a step, pulse, sine wave, and random noise.
+		Initial Customer Order Rate*Input
+	|
+
+Desired Inventory = Desired Inventory Coverage*Expected Order Rate
+	~	Widgets
+	~	The desired inventory level sought by the plant.  Experience suggests that to \
+		maintain customer
+		        service by providing full and reliable deliveries, the plant must maintain a \
+		certain
+		         coverage of throughput (demand), estimated by the demand forecast.
+	|
+
+Desired Inventory Coverage=
+	 Minimum Order Processing Time + Safety Stock Coverage
+	~	Weeks
+	~	Desired inventory coverage is the number of weeks of the demand forecast the plant \
+		seeks to maintain
+		        in inventory.  This inventory coverage is required to maintain delivery \
+		reliability by
+		         buffering the plant against unforeseen variations in demand or \
+		production.  It consists of the normal order processing time plus an \
+		additional term representing the coverage desired to maintain safety \
+		stocks.
+	|
+
+Desired Production = MAX(0,Expected Order Rate+Production Adjustment from Inventory)
+	~	Widgets/Week
+	~	Desired Production is the demand forecast (Expected Order Rate) adjusted to bring \
+		the inventory
+		         position in line with the target inventory level.
+	|
+
+Desired Production Start Rate = Desired Production + Adjustment for WIP
+	~	Widgets/Week
+	~	The desired rate of production starts, equal to the desired production rate adjusted \
+		by the adequacy
+		         of the WIP inventory.
+	|
+
+Desired Shipment Rate=
+	Customer Order Rate
+	~	Widgets/Week
+	~	The desired shipment rate equals the customer order rate.  In this model \
+		there is no backlog of unfilled orders:  unfilled orders are lost as \
+		customers seek alternate sources of supply.
+	|
+
+Desired WIP = Manufacturing Cycle Time*Desired Production
+	~	Widgets
+	~	The desired quantity of work in process inventory.  Proportional to the \
+		manufacturing cycle time and
+		         the desired rate of production.
+	|
+
+Expected Order Rate = INTEG(Change in Exp Orders,Customer Order Rate)
+	~	Widgets/Week
+	~	The demand forecast is formed by adaptive expectations, using exponential smoothing, \
+		a common
+		         forecasting technique.  The initial forecast is equal to the \
+		initial customer order rate.
+	|
+
+Inventory = INTEG(Production Rate-Shipment Rate,Desired Inventory)
+	~	Widgets
+	~	The level of finished goods inventory in the plant.  Increased by production and \
+		decreased by
+		         shipments.  Initially set to the desired inventory level.
+	|
+
+Inventory Adjustment Time = 8
+	~	Weeks
+	~	The inventory adjustment time is the time period over which the plant seeks to bring \
+		inventory in
+		         balance with the desired level.  Initially set to 8 weeks.
+	|
+
+Inventory Coverage=
+	Inventory/Shipment Rate
+	~	Weeks
+	~	Inventory coverage is given by the ratio of inventory to shipments.
+	|
+
+Manufacturing Cycle Time=
+	8
+	~	Weeks
+	~	The average delay between the start and completion of production
+	|
+
+Maximum Shipment Rate=
+	Inventory/Minimum Order Processing Time
+	~	Widgets/Week
+	~	The maximum rate of shipments the firm can achieve given their current \
+		inventory level and the minimum order processing time.
+	|
+
+Minimum Order Processing Time=
+	2
+	~	Weeks
+	~	The minimum time required to process and ship an order.
+	|
+
+Order Fulfillment Ratio=
+	 Table for Order Fulfillment(Maximum Shipment Rate/Desired Shipment Rate)
+	~	Dimensionless
+	~	The Fraction of customer orders filled is determined by the ratio of the \
+		normal shipment rate to the desired rate.  The normal rate is the rate \
+		current inventory permits under normal circumstances.  Low inventory \
+		availability reduces shipments below customer orders.  Unfilled customer \
+		orders are lost.
+	|
+
+Production Adjustment from Inventory = (Desired Inventory - Inventory)/
+Inventory Adjustment Time
+	~	Widgets/Week
+	~	The desired production rate is adjusted above or below the forecast based on the \
+		inventory position
+		        of the plant.  When desired inventory > inventory, desired production is \
+		increased (and
+		         vice-versa).  Inventory gaps are corrected over the inv. adj. \
+		time.
+	|
+
+Production Rate=
+	Work in Process Inventory/Manufacturing Cycle Time
+	~	Widgets/Week
+	~	Used to be delay3 but changed to first order delay
+		DELAY3(Production Start Rate,Manufacturing Cycle Time)
+		Production is a third order delay of the production start rate, with the delay time \
+		determined by
+		         the manufacturing cycle time.
+	|
+
+Production Start Rate = MAX(0,Desired Production Start Rate)
+	~	Widgets/Week
+	~	The production start rate is the desired production start rate, \
+		constrained to be nonnegative.
+	|
+
+Safety Stock Coverage=
+	2
+	~	Weeks
+	~	Safety stock coverage is the number of weeks of the expected order rate \
+		the firm would like to maintain in inventory over and above the normal \
+		order processing time.  The safety stock provides a buffer against the \
+		possibility that unforeseen variations in demand will cause shipments to \
+		fall below orders.
+	|
+
+Shipment Rate=
+	Desired Shipment Rate*Order Fulfillment Ratio
+	~	Widgets/Week
+	~	The shipment rate is the desired shipment rate multiplied by the fraction \
+		of orders filled (the order fulfillment ratio.   Shipments fall below \
+		desired shipments when the feasible shipment rate falls below the desired \
+		rate, indicating that some products are unavailable.
+	|
+
+Table for Order Fulfillment(
+	[(0,0)-(2,1)],(0,0),(0.2,0.2),(0.4,0.4),(0.6,0.58),(0.8,0.73),(1,0.85),(1.2,0.93),(1.4\
+		,0.97),(1.6,0.99),(1.8,1),(2,1))
+	~	Dimensionless
+	~	The ability to ship is constrained by inventory availability.  As the inventory \
+		level drops, the 
+		        fraction of customer orders that can be filled decreases.  When inventory is \
+		zero, shipments
+		         cease.  Unfilled customer orders are lost.\!\!\!
+	|
+
+Time to Average Order Rate = 8
+	~	Weeks
+	~	The demand forecast adjusts to actual customer orders over this time \
+		period.
+	|
+
+WIP Adjustment Time = 2
+	~	Weeks
+	~	The time required to adjust the WIP inventory to the desired level.
+	|
+
+Work in Process Inventory = INTEG(Production Start Rate - Production Rate,Desired WIP\
+		)
+	~	Widgets
+	~	WIP inventory accumulates the difference between production starts and \
+		completions.
+	|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 50
+	~	Week
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Week
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 
+        TIME STEP 
+	~	Week [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 0.125
+	~	Week [0,?]
+	~	The time step for the simulation.
+	|
+
+\\\---/// Sketch information - do not modify anything except names
+V300  Do not put anything below this section - it will be ignored
+*View 1
+$-1--1--1,0,|10||-1--1--1|-1--1--1|-1--1--1|-1--1--1|-1--1--1|96,96,100,0
+10,1,Inventory,586,375,40,20,3,3,0,50,0,0,0,0,-1--1--1,0-0-0,Helvetica||B|0-0-0,0,0,0,0,0,0
+12,2,48,54,375,10,8,0,3,0,32,-1,0,0,0,0-0-0,0-0-0,Helvetica|||0-0-0,0,0,0,0,0,0
+11,3,0,436,374,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,4,Production Rate,436,388,41,6,40,3,0,50,0,0,0,0,-1--1--1,0-0-0,Helvetica||B|0-0-0,0,0,0,0,0,0
+12,5,48,1016,376,10,8,0,3,0,50,-1,0,0,0,-1--1--1,0-0-0,Helvetica||B|0-0-0,0,0,0,0,0,0
+11,6,0,790,376,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,7,Shipment Rate,790,390,37,6,40,3,0,50,0,0,0,0,-1--1--1,0-0-0,Helvetica||B|0-0-0,0,0,0,0,0,0
+10,8,Desired Production,293,747,48,6,8,3,0,50,0,0,0,0,-1--1--1,0-0-0,Helvetica||B|0-0-0,0,0,0,0,0,0
+10,9,Production Adjustment from Inventory,557,574,43,15,8,3,0,50,0,0,0,0,-1--1--1,0-0-0,Helvetica||B|0-0-0,0,0,0,0,0,0
+10,10,Desired Inventory,647,636,44,6,8,3,0,50,0,0,0,0,-1--1--1,0-0-0,Helvetica||B|0-0-0,0,0,0,0,0,0
+10,11,Expected Order Rate,646,728,40,20,3,3,0,50,0,0,0,0,-1--1--1,0-0-0,Helvetica||B|0-0-0,0,0,0,0,0,0
+12,12,48,850,727,10,8,0,3,0,50,-1,0,0,0,-1--1--1,0-0-0,Helvetica||B|0-0-0,0,0,0,0,0,0
+11,13,0,765,727,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,14,Change in Exp Orders,765,741,55,6,40,3,0,50,0,0,0,0,-1--1--1,0-0-0,Helvetica||B|0-0-0,0,0,0,0,0,0
+10,15,Inventory Adjustment Time,497,513,43,10,8,3,0,50,0,0,0,0,-1--1--1,0-0-0,Helvetica||B|0-0-0,0,0,0,0,0,0
+10,16,Desired Inventory Coverage,762,653,25,15,8,3,0,50,0,0,0,0,-1--1--1,0-0-0,Helvetica||B|0-0-0,0,0,0,0,0,0
+10,17,Time to Average Order Rate,761,832,37,15,8,3,0,50,0,0,0,0,-1--1--1,0-0-0,Helvetica||B|0-0-0,0,0,0,0,0,0
+10,18,Order Fulfillment Ratio,782,486,52,6,8,3,0,32,0,0,0,0,0-0-0,0-0-0,Helvetica|||0-0-0,0,0,0,0,0,0
+10,19,Table for Order Fulfillment,851,569,60,6,8,3,0,32,0,0,0,0,0-0-0,0-0-0,Helvetica|||0-0-0,0,0,0,0,0,0
+10,20,Work in Process Inventory,292,375,40,20,3,3,0,32,0,0,0,0,0-0-0,0-0-0,Helvetica|||0-0-0,0,0,0,0,0,0
+11,21,0,174,375,6,8,34,3,0,0,1,0,0,0,0,0,0,0,0,0
+10,22,Production Start Rate,174,389,50,6,40,3,0,32,0,0,0,0,0-0-0,0-0-0,Helvetica|||0-0-0,0,0,0,0,0,0
+10,23,Manufacturing Cycle Time,398,480,34,10,8,3,0,32,0,0,0,0,0-0-0,0-0-0,Helvetica|||0-0-0,0,0,0,0,0,0
+10,24,Adjustment for WIP,299,534,45,6,8,3,0,32,0,0,0,0,0-0-0,0-0-0,Helvetica|||0-0-0,0,0,0,0,0,0
+10,25,Desired WIP,403,588,30,6,8,3,0,32,0,0,0,0,0-0-0,0-0-0,Helvetica|||0-0-0,0,0,0,0,0,0
+10,26,Desired Production Start Rate,131,541,39,15,8,3,0,32,0,0,0,0,0-0-0,0-0-0,Helvetica|||0-0-0,0,0,0,0,0,0
+10,27,WIP Adjustment Time,285,615,50,6,8,3,0,32,0,0,0,0,0-0-0,0-0-0,Helvetica|||0-0-0,0,0,0,0,0,0
+10,28,Customer Order Rate,1024,575,50,6,8,3,0,32,0,0,0,0,0-0-0,0-0-0,Helvetica|||0-0-0,0,0,0,0,0,0
+12,29,0,685,428,20,20,5,4,0,50,0,0,0,0,-1--1--1,0-0-0,Helvetica||B|0-0-0,0,0,0,0,0,0
+B
+12,30,0,687,465,39,13,8,4,0,40,0,0,0,0,0-0-0,0-0-0,Helvetica|8|B|0-0-0,0,0,0,0,0,0
+Order Fulfillment
+12,31,0,517,430,20,20,4,4,0,32,0,0,0,0,0-0-0,0-0-0,Helvetica|||0-0-0,0,0,0,0,0,0
+B
+12,32,0,519,467,39,13,8,4,0,50,0,0,0,0,-1--1--1,0-0-0,Helvetica||B|0-0-0,0,0,0,0,0,0
+Inventory Control
+12,33,0,216,490,20,20,4,4,0,32,0,0,0,0,0-0-0,0-0-0,Helvetica|||0-0-0,0,0,0,0,0,0
+B
+12,34,0,218,527,39,13,8,4,0,50,0,0,0,0,-1--1--1,0-0-0,Helvetica||B|0-0-0,0,0,0,0,0,0
+WIP Control
+1,35,3,1,4,0,0,22,0,0,0,-1--1--1,,1|(494,374)|
+1,36,3,20,100,0,0,22,0,0,0,-1--1--1,,1|(381,374)|
+1,37,6,5,4,0,0,22,0,0,0,-1--1--1,,1|(901,376)|
+1,38,6,1,100,0,0,22,0,0,0,-1--1--1,,1|(705,376)|
+1,39,13,11,4,0,0,22,0,0,0,-1--1--1,,1|(722,727)|
+1,40,13,12,100,0,0,22,0,0,0,-1--1--1,,1|(805,727)|
+1,41,15,9,2,0,45,0,0,192,0,-1--1--1,,1|(494,553)|
+1,42,1,9,2,0,45,0,0,192,0,-1--1--1,,1|(577,509)|
+1,43,10,9,2,0,43,0,0,192,0,-1--1--1,,1|(623,592)|
+1,44,16,10,2,0,43,0,0,0,0,-1--1--1,,1|(681,648)|
+1,45,11,10,2,0,43,0,0,192,0,-1--1--1,,1|(651,647)|
+1,46,9,8,2,0,43,0,0,192,0,-1--1--1,,1|(393,733)|
+1,47,11,8,2,0,43,0,0,192,0,-1--1--1,,1|(469,777)|
+1,48,11,14,2,0,45,0,0,192,0,-1--1--1,,1|(693,771)|
+1,49,17,14,1,0,45,0,0,192,0,-1--1--1,,1|(812,770)|
+1,50,18,7,2,0,43,0,0,192,0,-1--1--1,,1|(791,428)|
+1,51,19,18,1,0,0,0,0,0,0,-1--1--1,,1|(792,518)|
+1,52,28,14,2,0,43,0,0,128,0,-1--1--1,,1|(813,744)|
+1,53,21,20,4,0,0,22,0,0,0,-1--1--1,,1|(216,375)|
+1,54,21,2,100,0,0,22,0,0,0,-1--1--1,,1|(116,375)|
+1,55,23,4,2,0,45,0,0,192,0,-1--1--1,,1|(410,416)|
+1,56,20,24,2,0,45,0,0,192,0,-1--1--1,,1|(320,475)|
+1,57,25,24,2,0,43,0,0,192,0,-1--1--1,,1|(335,534)|
+1,58,23,25,2,0,43,0,0,192,0,-1--1--1,,1|(422,541)|
+1,59,8,26,2,0,43,0,0,192,0,-1--1--1,,1|(146,602)|
+1,60,26,22,2,0,43,0,0,192,0,-1--1--1,,1|(145,421)|
+1,61,8,25,2,0,43,0,0,192,0,-1--1--1,,1|(397,619)|
+1,62,24,26,2,0,43,0,0,192,0,-1--1--1,,1|(207,579)|
+1,63,27,24,1,0,45,0,0,192,0,-1--1--1,,1|(309,569)|
+10,64,Desired Shipment Rate,889,451,54,6,8,3,0,32,0,0,0,0,0-0-0,0-0-0,Helvetica|||0-0-0,0,0,0,0,0,0
+1,65,28,64,1,0,43,0,0,192,0,-1--1--1,,1|(911,458)|
+1,66,64,7,1,0,43,0,0,192,0,-1--1--1,,1|(836,396)|
+10,67,Maximum Shipment Rate,634,512,58,6,8,3,0,32,0,0,0,0,0-0-0,0-0-0,Helvetica|||0-0-0,0,0,0,0,0,0
+10,68,Minimum Order Processing Time,721,571,40,10,8,3,0,32,0,0,0,0,0-0-0,0-0-0,Helvetica|||0-0-0,0,0,0,0,0,0
+1,69,1,67,1,0,43,0,0,192,0,-1--1--1,,1|(606,470)|
+1,70,67,18,1,0,43,0,0,192,0,-1--1--1,,1|(723,511)|
+1,71,64,18,1,0,45,0,0,192,0,-1--1--1,,1|(836,492)|
+1,72,68,67,1,0,45,0,0,192,0,-1--1--1,,1|(652,560)|
+1,73,68,16,1,0,43,0,0,192,0,-1--1--1,,1|(765,605)|
+10,74,Inventory Coverage,689,310,46,6,8,3,0,32,0,0,0,0,0-0-0,0-0-0,Helvetica|||0-0-0,0,0,0,0,0,0
+1,75,1,74,1,0,43,0,0,192,0,-1--1--1,,1|(616,325)|
+1,76,6,74,1,0,45,0,0,192,0,-1--1--1,,1|(745,317)|
+10,77,Safety Stock Coverage,874,637,53,6,8,3,0,32,0,0,0,0,0-0-0,0-0-0,Helvetica|||0-0-0,0,0,0,0,0,0
+1,78,77,16,1,0,43,0,0,192,0,-1--1--1,,1|(825,665)|
+1,79,10,1,0,0,0,0,0,64,1,-1--1--1,,1|(0,0)|
+1,80,28,11,0,0,0,0,0,64,1,-1--1--1,,1|(0,0)|
+1,81,25,20,0,0,0,0,0,64,1,-1--1--1,,1|(0,0)|
+1,82,20,4,0,0,0,0,0,64,0,-1--1--1,,1|(0,0)|
+///---\\\
+:L<%^E!@
+5:FINAL TIME
+19:100,0
+24:0
+25:0
+26:0
+15:0,0,0,0,0,0
+27:0,
+34:0,
+42:1
+72:0
+73:0
+35:Date
+36:YYYY-MM-DD
+37:2000
+38:1
+39:1
+40:3
+41:0
+95:0
+96:0
+97:0
+77:0
+78:0
+102:1
+93:0
+94:0
+92:0
+91:0
+90:0
+87:0
+75:
+43:
+103:8,8,8,3,8
+105:0,0,0,0,0,0,0,0,0,0
+104:Helvetica|10||0-0-0|0-0-0|-1--1--1|0-0-0|192-192-192|-1--1--1
