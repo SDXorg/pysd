@@ -1476,6 +1476,45 @@ class TestModelInteraction():
         with pytest.raises(ValueError, match=error_message):
             integ.update(np.array([[1, 2], [3, 4]]))
 
+    def test_subscript_params_setting(self, _root):
+        model_py = _root.joinpath(
+            'more-tests/subscripts_params/model_subscripts_params.py')
+        model = pysd.load(model_py)
+
+        params = {'Stock': 5}
+        expected = xr.DataArray(
+            data=[[5., 5.], [5., 5.]],
+            dims=['sex', 'education'],
+            coords={'sex': ['Female', 'Male'], 'education': ['Low', 'High']}
+        )
+        model.set_components(params=params)
+        assert model['Stock'].equals(expected)
+
+        params = {'Stock': xr.DataArray(
+            data=[[3, 1], [4, 2]],
+            dims=['sex', 'education'],
+            coords={'sex': ['Female', 'Male'], 'education': ['High', 'Low']}
+        )}
+        expected = xr.DataArray(
+            data=[[1., 3.], [2., 4.]],
+            dims=['sex', 'education'],
+            coords={'sex': ['Female', 'Male'], 'education': ['Low', 'High']}
+        )
+        model.set_components(params=params)
+        assert model['Stock'].equals(expected)
+
+        params = {'Stock': xr.DataArray(
+            data=[3, 1],
+            dims=['sex'],
+            coords={'sex': ['Male', 'Female']}
+        )}
+        expected = xr.DataArray(
+            data=[[1., 1.], [3., 3.]],
+            dims=['sex', 'education'],
+            coords={'sex': ['Female', 'Male'], 'education': ['Low', 'High']}
+        )
+        model.set_components(params=params)
+        assert model['Stock'].equals(expected)
 
 class TestMultiRun():
     def test_delay_reinitializes(self, _root):

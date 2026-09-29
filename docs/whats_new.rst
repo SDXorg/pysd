@@ -49,6 +49,7 @@ Deprecations
 
 Bug fixes
 ~~~~~~~~~
+- Fix setting parmas with dimensions (:issue:`484`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
 
 Documentation
 ~~~~~~~~~~~~~
