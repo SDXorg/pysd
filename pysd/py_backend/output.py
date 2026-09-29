@@ -246,11 +246,8 @@ class DatasetHandler(OutputHandlerInterface):
                 if col in ["Subscripts", "Limits"]:
                     # pass those that cannot be saved as attributes
                     continue
-                var.setncattr(
-                    col,
-                    model.doc.loc[model.doc["Py Name"] == key, col].values[0]
-                    or "Missing"
-                    )
+                _v = model.doc.loc[model.doc["Py Name"] == key, col].values[0]
+                var.setncattr(col, "Missing" if pd.isna(_v) else (_v or "Missing"))
 
 
 class DataFrameHandler(OutputHandlerInterface):

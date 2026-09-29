@@ -1,0 +1,46 @@
+{UTF-8}
+Request=
+	10
+	~
+	~	Requests from consumers.	|
+
+Available=
+	50
+	~
+	~	Available supply.	|
+
+Priority=
+	1
+	~
+	~	Priority level.	|
+
+Allocated=
+	ALLOCATE AVAILABLE(Request, PRIORITIZE(Priority), Available)
+	~
+	~	Allocated supply using priority-based allocation.	|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 10
+	~	Year
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Year
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 1
+	~	Year [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 1
+	~	Year [0,?]
+	~	The time step for the simulation.
+	|

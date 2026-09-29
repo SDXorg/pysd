@@ -1,0 +1,46 @@
+{UTF-8}
+Input=
+	1 + 0.1 * Time
+	~
+	~	Linearly growing input.	|
+
+Average Time=
+	5
+	~
+	~	Trend averaging time.	|
+
+Initial Trend=
+	0.1
+	~
+	~	Initial trend value.	|
+
+Trend Output=
+	TREND(Input, Average Time, Initial Trend)
+	~
+	~	Trend of input.	|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 20
+	~	Year
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Year
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 1
+	~	Year [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 0.0625
+	~	Year [0,?]
+	~	The time step for the simulation.
+	|

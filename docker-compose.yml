@@ -1,0 +1,26 @@
+# Local development: run Julia builder tests in a container.
+#
+# Usage:
+#   docker-compose run julia-tests          # run @pytest.mark.julia tests
+#   docker-compose run julia-unit-tests     # run all pytest_julia.py tests
+
+version: '3.8'
+
+services:
+  julia-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.julia
+    volumes:
+      - .:/pysd
+    command: >
+      pytest tests/pytest_builders/ -m julia -v --tb=short
+
+  julia-unit-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.julia
+    volumes:
+      - .:/pysd
+    command: >
+      pytest tests/pytest_builders/pytest_julia.py -v --tb=short

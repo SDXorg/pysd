@@ -272,8 +272,10 @@ class TestOutput():
                 if doc.loc[var, "Type"] == "Lookup":
                     continue
                 for key in doc.columns:
-                    assert getattr(ds[var], key) == (doc.loc[var, key]
-                                                     or "Missing")
+                    _v = doc.loc[var, key]
+                    assert getattr(ds[var], key) == (
+                        "Missing" if pd.isna(_v) else (_v or "Missing")
+                    )
 
     @pytest.mark.parametrize(
         "model_path,fmt,sep",

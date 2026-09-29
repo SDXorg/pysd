@@ -1,3 +1,6 @@
 [submodule "tests/test-models"]
 	path = tests/test-models
 	url = https://github.com/SDXorg/test-models
+[submodule "pysd/builders/julia/PySD.jl"]
+	path = pysd/builders/julia/PySD.jl
+	url = git@github.com:rogersamso/PySD.jl.git

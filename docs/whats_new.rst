@@ -1,5 +1,64 @@
 What's New
 ==========
+
+v3.15.0 (unreleased)
+--------------------
+New Features
+~~~~~~~~~~~~
+- **Experimental Julia/ModelingToolkit backend.** New ``pysd.translate_to_julia()``
+  function translates Vensim ``.mdl`` files to standalone Julia scripts that use
+  `ModelingToolkit.jl <https://github.com/SciML/ModelingToolkit.jl>`_ and
+  `OrdinaryDiffEq.jl <https://github.com/SciML/OrdinaryDiffEq.jl>`_ for ODE solving.
+  This is an **experimental** feature targeting users who need faster simulation of
+  large system dynamics models. Key capabilities:
+
+  - Translates auxiliaries, stocks (INTEG), lookups, GET DATA, GET CONSTANTS,
+    GET LOOKUPS, DELAY1/3/N, DELAY FIXED, SAMPLE IF TRUE, TREND, FORECAST,
+    SMOOTH/SMOOTHI, INITIAL, and ALLOCATE AVAILABLE/BY PRIORITY.
+  - Full subscript support including multi-dimensional arrays, subscript mapping,
+    element-level definitions, and aggregation subscripts (``!``).
+  - Optional modular output (``split_views=True``) generating one ``.jl`` file per
+    Vensim view.
+  - Results saved to NetCDF via NCDatasets.jl.
+  - Supported Vensim functions: ABS, EXP, LN, LOG, SQRT, SIN, COS, TAN, ARCSIN,
+    ARCCOS, ARCTAN, SINH, COSH, TANH, POWER, INTEGER, MIN, MAX, MODULO, QUANTUM,
+    PI, XIDZ, ZIDZ, IF THEN ELSE, SUM, PROD, VMAX, VMIN, ELMCOUNT, INVERT MATRIX,
+    TRANSPOSE, ACTIVE INITIAL, PULSE, PULSE TRAIN, RAMP, STEP, WITH LOOKUP,
+    RANDOM 0 1, RANDOM UNIFORM, RANDOM NORMAL, RANDOM EXPONENTIAL, VECTOR SELECT,
+    VECTOR SORT ORDER, VECTOR REORDER, VECTOR RANK, and GET TIME VALUE.
+  - ``GET DIRECT SUBSCRIPT`` (subscript ranges from Excel) is now resolved at
+    translation time, so multi-dimensional constants with externally-defined subscript
+    sizes produce correctly shaped arrays.
+  - XMILE ``MIN``/``MAX`` whole-array aggregations (internally ``vmin_xmile`` /
+    ``vmax_xmile``) are now mapped to Julia's ``minimum`` / ``maximum``.
+  - XMILE ``DELAY`` constructs that appear embedded inside arithmetic expressions
+    (rather than as top-level element equations) are now correctly lifted to dedicated
+    pipeline auxiliary stocks in the ODE state vector.
+  - ``DATA`` variables can now be driven from another Julia model's NetCDF output:
+    pass ``nc_data_files=["other_model_results.nc"]`` to ``run_model()``.  Scalar
+    and subscripted DATA variables (up to 3D) are supported; subscript indexing
+    matches the integer-based key scheme used by the existing ``.tab`` file path.
+
+  (`@rogersamso <https://github.com/rogersamso>`_)
+
+Breaking changes
+~~~~~~~~~~~~~~~~
+
+Deprecations
+~~~~~~~~~~~~
+
+Bug fixes
+~~~~~~~~~
+
+Documentation
+~~~~~~~~~~~~~
+
+Performance
+~~~~~~~~~~~
+
+Internal Changes
+~~~~~~~~~~~~~~~~
+
 v3.14.3 (2025/03/23)
 --------------------
 New Features

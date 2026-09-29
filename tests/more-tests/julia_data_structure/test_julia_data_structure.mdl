@@ -1,0 +1,40 @@
+{UTF-8}
+Input=
+	5
+	~
+	~	A simple constant input.	|
+
+Extern Data := Input
+	~
+	~	An empty DATA variable (DataStructure) — unsupported in Julia builder.	|
+
+Output=
+	Input + 1
+	~
+	~	A simple output.	|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 10
+	~	Year
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Year
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 1
+	~	Year [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 1
+	~	Year [0,?]
+	~	The time step for the simulation.
+	|

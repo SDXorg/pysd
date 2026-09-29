@@ -1,0 +1,46 @@
+{UTF-8}
+Condition=
+	IF THEN ELSE(Time >= 5, 1, 0)
+	~
+	~	True after t=5.	|
+
+Input=
+	Time * 2
+	~
+	~	Input signal.	|
+
+Initial=
+	0
+	~
+	~	Initial held value.	|
+
+Sampled Value=
+	SAMPLE IF TRUE(Condition, Input, Initial)
+	~
+	~	Sampled value: holds input when condition is true.	|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 10
+	~	Year
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Year
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 1
+	~	Year [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 0.0625
+	~	Year [0,?]
+	~	The time step for the simulation.
+	|

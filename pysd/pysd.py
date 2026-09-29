@@ -202,6 +202,86 @@ def read_vensim(mdl_file, data_files=None, data_files_encoding=None,
     return model
 
 
+def translate_to_julia(
+    model_file,
+    split_views=False,
+    encoding=None,
+    data_format="hardcoded",
+    backend="ode",
+    **kwargs,
+):
+    """
+    Translate a Vensim or Stella model to a standalone Julia file.
+    The output requires no PySD or Python at runtime.
+
+    Parameters
+    ----------
+    model_file: str or pathlib.Path
+        Path to a Vensim ``.mdl`` or Stella ``.xmile`` / ``.stmx`` file.
+
+    split_views: bool (optional)
+        If True and the model has multiple views, the output is split into
+        a main ``.jl`` file and one module file per view (under
+        ``modules_<name>/``).  Default is False.
+
+    encoding: str or None (optional)
+        Source file encoding (Vensim only).  If None the encoding is read
+        from the model file header; defaults to ``'UTF-8'``.
+
+    data_format: str (optional)
+        How to store external numeric data in the generated file.
+        ``"hardcoded"`` (default) reads Excel files at Julia load time via
+        ``PySD.jl`` helpers.  ``"json"`` writes a companion
+        ``<model>_data.json`` file and reads it at startup via ``JSON3.jl``.
+
+    backend: str (optional)
+        Julia ODE backend.  ``"ode"`` (default) emits a plain ``rhs!``
+        function solved by ``OrdinaryDiffEq.jl``.  ``"mtk"`` emits a
+        ``ModelingToolkit.jl`` ``ODESystem``.
+
+    subview_sep: list (optional)
+        Passed to ``parse_sketch`` when ``split_views=True`` (Vensim only).
+        Characters used to separate view/subview names.
+
+    Returns
+    -------
+    path: pathlib.Path
+        Path to the generated ``.jl`` file.
+
+    Examples
+    --------
+    >>> path = translate_to_julia('my_model.mdl')
+    >>> path = translate_to_julia('my_model.mdl', backend='mtk')
+    >>> path = translate_to_julia('my_model.mdl', data_format='json')
+    """
+    from pathlib import Path as _Path
+    from pysd.builders.julia.julia_model_builder import JuliaModelBuilder
+
+    model_path = _Path(model_file)
+    suffix = model_path.suffix.lower()
+
+    if suffix == ".mdl":
+        from pysd.translators.vensim.vensim_file import VensimFile
+        file_obj = VensimFile(model_path, encoding=encoding)
+        file_obj.parse()
+        if split_views:
+            subview_sep = kwargs.get("subview_sep", "")
+            file_obj.parse_sketch(subview_sep)
+        abs_model = file_obj.get_abstract_model()
+    elif suffix in (".xmile", ".stmx", ".xml"):
+        from pysd.translators.xmile.xmile_file import XmileFile
+        file_obj = XmileFile(model_path)
+        file_obj.parse()
+        abs_model = file_obj.get_abstract_model()
+    else:
+        raise ValueError(
+            f"Unsupported model format '{suffix}'. "
+            "Supported formats: .mdl, .xmile, .stmx"
+        )
+
+    return JuliaModelBuilder(abs_model, data_format=data_format, backend=backend).build_model()
+
+
 def load(py_model_file, data_files=None, data_files_encoding=None,
          initialize=True, missing_values="warning"):
     """

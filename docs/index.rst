@@ -55,7 +55,7 @@ which makes it possible to add builders in other languages in a simpler way
 Why create a new SD simulation engine?
 --------------------------------------
 
-There are a number of great SD programs out there (`Vensim <http://vensim.com/>`_, `iThink <http://www.iseesystems.com/Softwares/Business/ithinkSoftware.aspx>`_, `AnyLogic <http://www.anylogic.com/system-dynamics>`_, `Insight Maker <http://insightmaker.com/>`_, and `others <http://en.wikipedia.org/wiki/List_of_system_dynamics_software>`_). In order not to waste our effort, or fall victim to the `Not-Invented-Here <http://en.wikipedia.org/wiki/Not_invented_here>`_ fallacy, we should have a very good reason for starting a new project.
+There are a number of great SD programs out there (`Vensim <http://vensim.com/>`_, `iThink <http://www.iseesystems.com/Softwares/Business/ithinkSoftware.aspx>`_, `AnyLogic <https://www.anylogic.com/system-dynamics/>`_, `Insight Maker <http://insightmaker.com/>`_, and `others <http://en.wikipedia.org/wiki/List_of_system_dynamics_software>`_). In order not to waste our effort, or fall victim to the `Not-Invented-Here <http://en.wikipedia.org/wiki/Not_invented_here>`_ fallacy, we should have a very good reason for starting a new project.
 
 That reason is this: There is a whole world of computational tools being developed in the larger data science community. **System dynamicists should directly use the tools that other people are building, instead of replicating their functionality in SD specific software.** The best way to do this is to bring specific SD functionality to the domain where those other tools are being developed.
 
@@ -158,6 +158,7 @@ For additional help or consulting, join our slack channel in `sd-tools-and-metho
    installation
    getting_started
    advanced_usage
+   julia_builder
    command_line_usage
    python_api/python_api_index
    tools

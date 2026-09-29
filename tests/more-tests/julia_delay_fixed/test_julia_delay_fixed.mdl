@@ -1,0 +1,46 @@
+{UTF-8}
+Input=
+	5
+	~
+	~	Constant input to delay.	|
+
+Delay Time=
+	2
+	~
+	~	Delay time.	|
+
+Initial Value=
+	0
+	~
+	~	Initial value.	|
+
+Output=
+	DELAY FIXED(Input, Delay Time, Initial Value)
+	~
+	~	Output of delay fixed.	|
+
+********************************************************
+	.Control
+********************************************************~
+		Simulation Control Parameters
+	|
+
+FINAL TIME  = 10
+	~	Year
+	~	The final time for the simulation.
+	|
+
+INITIAL TIME  = 0
+	~	Year
+	~	The initial time for the simulation.
+	|
+
+SAVEPER  = 1
+	~	Year [0,?]
+	~	The frequency with which output is stored.
+	|
+
+TIME STEP  = 0.0625
+	~	Year [0,?]
+	~	The time step for the simulation.
+	|

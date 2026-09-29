@@ -1,0 +1,137 @@
+# CI for Julia builder tests.
+#
+# Split into two jobs:
+#   1. julia-python-tests — runs the unit tests and the translation-only
+#      integration tests. No Julia binary needed; these are pure-Python tests
+#      that generate .jl files.
+#   2. julia-numerical-tests — runs only the 27 @pytest.mark.julia tests
+#      that actually execute Julia.
+#
+# The numerical job uses julia-actions/setup-julia + julia-actions/cache,
+# which is the standard pattern across the Julia ecosystem. Cold runs take
+# ~15-20 min; warm cache (subsequent runs on the same Julia version) take
+# ~3-5 min. This avoids the GitHub Actions HOME=/github/home override that
+# breaks Docker-container-based approaches.
+
+name: Julia CI
+
+on:
+  push:
+    paths:
+      - 'pysd/builders/julia/**'
+      - 'tests/pytest_builders/pytest_julia*.py'
+      - '.github/workflows/julia-ci.yml'
+  pull_request:
+    paths:
+      - 'pysd/builders/julia/**'
+      - 'tests/pytest_builders/pytest_julia*.py'
+      - '.github/workflows/julia-ci.yml'
+  workflow_dispatch:
+  schedule:
+    # Run weekly to catch upstream Julia/package breakage
+    - cron: '0 8 * * 1'
+
+jobs:
+  # -------------------------------------------------------------------------
+  # Job 1: unit tests + translation integration tests (no Julia binary needed)
+  # -------------------------------------------------------------------------
+  julia-python-tests:
+    name: Julia builder — Python-only tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          pip install -U pip wheel
+          pip install --prefer-binary -r tests/requirements.txt
+          pip install --prefer-binary -e .
+
+      - name: Run unit tests
+        run: |
+          pytest tests/pytest_builders/pytest_julia.py -v --tb=short
+
+      - name: Run translation integration tests (no Julia runtime needed)
+        run: |
+          pytest tests/pytest_builders/pytest_julia_integration.py -m "not julia" -v --tb=short
+
+  # -------------------------------------------------------------------------
+  # Job 2: numerical tests (require Julia runtime)
+  #
+  # Standard julia-actions pattern: setup-julia installs Julia, cache restores
+  # the depot (~/.julia) between runs. PySD.jl is added to JULIA_LOAD_PATH
+  # so it is visible without Pkg.develop (which would modify the global env).
+  # -------------------------------------------------------------------------
+  julia-numerical-tests:
+    name: Julia builder — numerical tests (Julia ${{ matrix.julia-version }})
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: write  # allows julia-actions/cache to evict stale caches
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        julia-version: ['1.10', '1.11']
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set up Julia
+        uses: julia-actions/setup-julia@v3
+        with:
+          version: ${{ matrix.julia-version }}
+
+      - name: Cache Julia depot
+        uses: julia-actions/cache@v3
+
+      - name: Install Julia packages
+        run: |
+          julia --startup-file=no -e '
+            using Pkg
+            # Use a shared named env so all packages (PySD.jl + ODE deps) live
+            # together and JULIA_PROJECT can select it by name in later steps.
+            # Pkg.develop reads PySD.jl/Project.toml (not Manifest.toml), so
+            # it resolves fresh versions compatible with the running Julia version.
+            Pkg.activate("pysd_ci", shared=true)
+            Pkg.develop(PackageSpec(path="pysd/builders/julia/PySD.jl"))
+            # DataInterpolations and NCDatasets are deps of PySD.jl but must
+            # also be direct deps of this env so generated model files can
+            # `using DataInterpolations` / `using NCDatasets` directly.
+            Pkg.add([
+              "OrdinaryDiffEq",
+              "OrdinaryDiffEqLowOrderRK",
+              "DataInterpolations",
+              "NCDatasets",
+              "JSON3",
+            ])
+            Pkg.precompile()
+          '
+
+      - name: Install Python dependencies
+        run: |
+          pip install -U pip wheel
+          pip install --prefer-binary -r tests/requirements.txt
+          pip install --prefer-binary -e .
+
+      - name: Run numerical integration tests
+        env:
+          JULIA_PROJECT: "@pysd_ci"
+        run: |
+          pytest tests/pytest_builders/pytest_julia_integration.py -m julia -v --tb=short

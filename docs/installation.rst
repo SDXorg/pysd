@@ -89,6 +89,40 @@ translating models from other system dynamics formats into the XMILE standard, t
 These modules can be installed using pip with a syntax similar to the above.
 
 
+Julia Builder (optional)
+------------------------
+
+To translate models to standalone Julia files, you need Julia 1.10 or later.
+Install via `juliaup <https://github.com/JuliaLang/juliaup>`_:
+
+.. code-block:: bash
+
+   curl -fsSL https://install.julialang.org | sh
+
+Then install the required Julia packages:
+
+.. code-block:: bash
+
+   julia -e 'using Pkg; Pkg.add([
+       "OrdinaryDiffEq",
+       "OrdinaryDiffEqLowOrderRK",
+       "DataInterpolations",
+       "NCDatasets",
+       "ModelingToolkit",
+       "Symbolics",
+       "JSON3",
+   ])'
+
+Finally, install the ``PySD.jl`` companion library from the PySD submodule:
+
+.. code-block:: bash
+
+   git submodule update --init pysd/builders/julia/PySD.jl
+   julia -e 'using Pkg; Pkg.develop(path="pysd/builders/julia/PySD.jl")'
+
+See :doc:`julia_builder` for full usage documentation.
+
+
 Additional Resources
 --------------------
 The `PySD Cookbook <https://github.com/SDXorg/PySD-Cookbook>`_ contains recipes that can help you get set up with PySD.

@@ -12,7 +12,7 @@ Some other contributions until release 3.0.0 were:
 - `Julien Malard-Adam <https://github.com/julienmalard>`_ added unicode support for the Vensim parser.
 - `sdCloud.io <http://sdcloud.io>`_ development team made great contributions to improve XMILE support and integrated PySD into their cloud-based model simulation environment.
 - `Eneko Martin-Martinez <https://github.com/enekomartinmartinez>`_ pushed forward the subscripts capabilities for both Vensim and XMILE and included support for several Vensim functions and improved the performance.
-- `Roger Samsó <https://github.com/rogersamso>`_ included a parser for the Vensim sketch and added the option to split a Vensim model per view based on the sketch information.
+- `Roger Samsó <https://github.com/rogersamso>`_ included a parser for the Vensim sketch and added the option to split a Vensim model per view based on the sketch information, and later developed the standalone Julia builder (ODE and MTK backends) together with Claude Code.
 
 The changes made since release 3.0.0 are tracked in the :doc:`whats_new` section.
 
