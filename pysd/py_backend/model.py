@@ -1165,7 +1165,7 @@ class Macro(DynamicStateful):
 
         if isinstance(series.values[0], xr.DataArray):
             # the interpolation will be time dependent
-            return lambda: utils.rearrange(xr.concat(
+            return lambda: self._rearrange_params(xr.concat(
                 series.values,
                 series.index).interp(concat_dim=self.time()).reset_coords(
                 'concat_dim', drop=True),
@@ -1173,7 +1173,7 @@ class Macro(DynamicStateful):
 
         elif dims:
             # the interpolation will be time dependent
-            return lambda: utils.rearrange(
+            return lambda: self._rearrange_params(
                 float(np.interp(self.time(), series.index, series.values)),
                 dims, self._subscript_dict), {'time': 1}
 
@@ -1186,11 +1186,41 @@ class Macro(DynamicStateful):
     def _constant_component(self, value, dims):
         """ Internal function for creating a constant model element """
         if dims:
-            return lambda: utils.rearrange(
+            return lambda: self._rearrange_params(
                 value, dims, self._subscript_dict)
 
         else:
             return lambda: value
+
+    @staticmethod
+    def _rearrange_params(data, dims, coords):
+        """
+        Returns a xarray.DataArray object with the rearranged coords and dims,
+        without replacing the values
+
+        Parameters
+        ---------
+        data: float or xarray.DataArray
+            The input data to rearrange.
+
+        dims: list
+            Ordered list of the dimensions.
+
+        coords: dict
+            Dictionary of the dimension names as a keys with their values.
+
+        Returns
+        -------
+        xarray.DataArray
+
+        """
+        # subset used coords in general coords will be the subscript_dict
+        coords = {dim: coords[dim] for dim in dims}
+        if isinstance(data, xr.DataArray):
+            # The coordinates are expanded or transposed
+            return xr.DataArray(0., coords, dims) + data
+
+        return xr.DataArray(data, coords, dims)
 
     def set_initial_value(self, time, initial_value):
         """
