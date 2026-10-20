@@ -50,6 +50,10 @@ Deprecations
 Bug fixes
 ~~~~~~~~~
 - Fix setting parmas with dimensions (:issue:`484`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Fix ``Model.state`` / ``Model.ddt()`` failing with "could not broadcast" when
+  stock states share their leading dimensions but differ after that, e.g. a
+  ``(3, 2)`` stock next to a 3D stock defined element by element on its last
+  dimension (:issue:`497`). (`@rogersamso <https://github.com/rogersamso>`_)
 
 Documentation
 ~~~~~~~~~~~~~

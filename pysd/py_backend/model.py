@@ -479,14 +479,28 @@ class Macro(DynamicStateful):
         for element_name in self.initialize_order:
             self._stateful_elements[element_name].initialize()
 
+    @staticmethod
+    def _object_array(values):
+        """
+        Return a 1-D object array with one entry per value.
+
+        np.array(values, dtype=object) tries to stack the values when
+        their shapes share leading dimensions, e.g. a (3, 2) state next
+        to a (3, 2, 1) one, and then fails to broadcast them.
+        """
+        array = np.empty(len(values), dtype=object)
+        for i, value in enumerate(values):
+            array[i] = value
+        return array
+
     def ddt(self):
-        return np.array([component.ddt() for component
-                         in self._dynamicstateful_elements], dtype=object)
+        return self._object_array([component.ddt() for component
+                                   in self._dynamicstateful_elements])
 
     @property
     def state(self):
-        return np.array([component.state for component
-                         in self._dynamicstateful_elements], dtype=object)
+        return self._object_array([component.state for component
+                                   in self._dynamicstateful_elements])
 
     @state.setter
     def state(self, new_value):
