@@ -79,6 +79,14 @@ vensim_test = {
         "file": "test_data_from_other_model.mdl",
         "data_files": "data.tab"
     },
+    "data_from_other_model_generator": {
+        "folder": "data_from_other_model",
+        "file": "model_to_generate_data.mdl",
+        "canonical_file": "data.tab",
+        "warns": [
+            "Variable .* is defined with different .*types: .*",
+        ]
+    },
     "delay_fixed": {
         "folder": "delay_fixed",
         "file": "test_delay_fixed.mdl",
@@ -689,6 +697,13 @@ class TestIntegrateVensim:
             return None
 
     @pytest.fixture
+    def canonical_path(self, test_folder, test_data):
+        """Fixture for models whose reference output is not output.csv/tab"""
+        if "canonical_file" in test_data:
+            return test_folder.joinpath(test_data["canonical_file"])
+        return None
+
+    @pytest.fixture
     def warns(self, test_data, ignore_warns):
         ign_warns = test_data.get('warns', []) + ignore_warns
         return [re.compile(w) for w in ign_warns]
@@ -703,9 +718,10 @@ class TestIntegrateVensim:
             kwargs["rtol"] = test_data["rtol"]
         return kwargs
 
-    def test_read_vensim_file(self, model_path, data_path, kwargs,
-                              recwarn, warns):
-        output, canon = runner(model_path, data_files=data_path)
+    def test_read_vensim_file(self, model_path, data_path, canonical_path,
+                              kwargs, recwarn, warns):
+        output, canon = runner(
+            model_path, canonical_file=canonical_path, data_files=data_path)
         for warn in recwarn:
             warn = str(warn.message)
             assert any([re.match(pwarn, warn) for pwarn in warns]), \
