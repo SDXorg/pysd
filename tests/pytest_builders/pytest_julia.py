@@ -7420,3 +7420,57 @@ class TestNdArrayLayout:
             subscripts=SubscriptsReferenceStructure(subscripts=["sector1", "sector!"]),
         )
         assert v.visit(node) == "[io_matrix[_i0, _ii0] for _ii0 in 1:N_SECTOR]"
+
+    def test_aggregation_falls_back_to_size_match_when_not_positional(self):
+        """When a position can't be resolved (a range that is neither active nor
+        aggregated), indices fall back to matching the declared dims by size."""
+        ns = JuliaNamespaceManager()
+        ns.add_to_namespace("io matrix")
+        v = JuliaASTVisitor(
+            ns, InlineLookupRegistry(), set(),
+            var_dims={"io_matrix": ["sector", "region"]},
+            subs_sizes={"sector": 3, "sector_x": 3, "region": 2},
+            subs_elems={"sector": ["a", "b", "c"], "sector_x": ["a", "b", "c"],
+                        "region": ["r1", "r2"]},
+        )
+        node = ReferenceStructure(
+            "io matrix",
+            subscripts=SubscriptsReferenceStructure(subscripts=["sector_x!", "region"]),
+        )
+        assert v.visit(node) == "[io_matrix[_ii0] for _ii0 in 1:N_SECTOR_X]"
+
+    def test_aggregation_element_label_found_in_another_declared_dim(self):
+        """An element label that doesn't belong to the dim at its position is
+        resolved in whichever declared dim contains it."""
+        ns = JuliaNamespaceManager()
+        ns.add_to_namespace("energy")
+        v = JuliaASTVisitor(
+            ns, InlineLookupRegistry(), set(),
+            var_dims={"energy": ["fuels", "modes"]},
+            subs_sizes={"fuels": 2, "modes": 3},
+            subs_elems={"fuels": ["heat", "gas"], "modes": ["car", "bus", "train"]},
+        )
+        node = ReferenceStructure(
+            "energy",
+            subscripts=SubscriptsReferenceStructure(subscripts=["bus", "fuels!"]),
+        )
+        # "bus" is element 2 of modes; positions are kept as written
+        assert v.visit(node) == "[energy[2, _ii0] for _ii0 in 1:N_FUELS]"
+
+    def test_aggregation_falls_back_to_position_when_no_size_matches(self):
+        """Last resort: neither name nor size identifies the declared dim, so
+        the aggregation loop variable is used in declaration order."""
+        ns = JuliaNamespaceManager()
+        ns.add_to_namespace("io matrix")
+        v = JuliaASTVisitor(
+            ns, InlineLookupRegistry(), set(),
+            var_dims={"io_matrix": ["sector", "region"]},
+            subs_sizes={"sector": 3, "sector_y": 4, "region": 2},
+            subs_elems={"sector": ["a", "b", "c"], "sector_y": ["a", "b", "c", "d"],
+                        "region": ["r1", "r2"]},
+        )
+        node = ReferenceStructure(
+            "io matrix",
+            subscripts=SubscriptsReferenceStructure(subscripts=["sector_y!", "region"]),
+        )
+        assert v.visit(node) == "[io_matrix[_ii0] for _ii0 in 1:N_SECTOR_Y]"
