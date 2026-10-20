@@ -208,6 +208,12 @@ also call it manually:
    # MTK backend
    save_results(sol, sys, _dim_labels, "output.nc")
 
+With the ODE backend the file holds the model's stocks. A subscripted stock
+gets one NetCDF dimension per subscript range, named after the range and
+holding its element labels, in the order ``(time, dim_1, ..., dim_n)`` (the
+same layout as PySD's Python NetCDF output, so the file can be passed to
+another model's ``run_model(nc_data_files=[...])``).
+
 Read the results with any NetCDF library, e.g. in Python:
 
 .. code-block:: python
@@ -315,7 +321,7 @@ Supported Vensim features
    * - Constants / parameters
      - Supported
      - Supported
-   * - Subscripts / arrays (1D, 2D)
+   * - Subscripts / arrays (1D, 2D, 3D; numerically validated against Vensim)
      - Supported
      - Supported
    * - Lookup tables (inline)

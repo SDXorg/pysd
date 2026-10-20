@@ -50,6 +50,14 @@ Deprecations
 Bug fixes
 ~~~~~~~~~
 - Fix setting parmas with dimensions (:issue:`484`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- Julia builder: fix multi-dimensional (2D/3D) subscripted variables, which ran
+  with wrong values or failed to run. Multi-dimensional stocks are now laid out
+  in Julia's column-major order, elements defined one subscript element at a time
+  work in any dimension (constants and stocks), aggregation references such as
+  ``io_matrix[sector1, sector!]`` keep their subscript order, and ``save_results``
+  writes one NetCDF dimension per subscript range (``(time, dim_1, ..., dim_n)``,
+  with element labels), which ``nc_data_files`` reads back. The numerical tests
+  now compare 2D/3D test models with their Vensim output (:issue:`494`). (`@rogersamso <https://github.com/rogersamso>`_)
 
 Documentation
 ~~~~~~~~~~~~~

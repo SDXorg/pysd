@@ -7353,3 +7353,70 @@ class TestSectionBuilderHelpers:
         assert not any("99.0" in e for e in eqs)
         # comp1's equations must appear
         assert any("1.0" in e for e in eqs)
+
+
+class TestNdArrayLayout:
+    """Multi-dimensional arrays: state layout, per-element arrays, positional subscripts."""
+
+    def _sb(self):
+        return _section_builder_from_elements([_make_element("x", 1.0)])
+
+    def test_u0_entries_sorted_column_major(self):
+        """Multi-dim stock u0 entries follow Julia's column-major reshape order."""
+        sb = self._sb()
+        sb.u0_entries = [
+            "s[1, 1] => 1.0", "s[1, 2] => 2.0",
+            "s[2, 1] => 3.0", "s[2, 2] => 4.0",
+        ]
+        sb._sort_u0_entries()
+        assert sb.u0_entries == [
+            "s[1, 1] => 1.0", "s[2, 1] => 3.0",
+            "s[1, 2] => 2.0", "s[2, 2] => 4.0",
+        ]
+
+    def test_u0_entries_grouped_per_stock(self):
+        """Entries of one stock end up contiguous; stocks keep first-appearance order."""
+        sb = self._sb()
+        sb.u0_entries = ["a[1] => 1.0", "b => 5.0", "a[2] => 2.0"]
+        sb._sort_u0_entries()
+        assert sb.u0_entries == ["a[1] => 1.0", "a[2] => 2.0", "b => 5.0"]
+
+    def test_ndarray_component_eqs_maps_values_to_covered_cells(self):
+        """A (3, 2) array defined for x[A, B, e2] fills cells [i, j, 2] in order."""
+        import numpy as np
+        eqs = JuliaSectionBuilder._ndarray_component_eqs(
+            "x", np.array([[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]),
+            [[1, 2, 3], [1, 2], [2]],
+        )
+        assert eqs == [
+            "x[1, 1, 2] ~ 1.0", "x[1, 2, 2] ~ 2.0",
+            "x[2, 1, 2] ~ 3.0", "x[2, 2, 2] ~ 4.0",
+            "x[3, 1, 2] ~ 5.0", "x[3, 2, 2] ~ 6.0",
+        ]
+
+    def test_ndarray_component_eqs_rejects_non_arrays_and_wrong_sizes(self):
+        """Scalars and arrays that don't fit the covered cells fall back (None)."""
+        import numpy as np
+        assert JuliaSectionBuilder._ndarray_component_eqs("x", 1.0, [[1], [1, 2]]) is None
+        assert JuliaSectionBuilder._ndarray_component_eqs(
+            "x", np.array([1.0, 2.0, 3.0]), [[1], [1, 2]]) is None
+
+    def test_aggregation_subscripts_are_positional(self):
+        """io_matrix[sector1, sector!] keeps the reference's order even when the
+        declaration is [sector, sector1] and both ranges have the same elements
+        (transposition: output2[sector1] = SUM(input[sector!]*io_matrix[sector1, sector!]))."""
+        ns = JuliaNamespaceManager()
+        ns.add_to_namespace("io matrix")
+        elems = ["agriculture", "industry", "transport"]
+        v = JuliaASTVisitor(
+            ns, InlineLookupRegistry(), set(),
+            active_subs={"sector1": "_i0"},
+            var_dims={"io_matrix": ["sector", "sector1"]},
+            subs_sizes={"sector": 3, "sector1": 3},
+            subs_elems={"sector": elems, "sector1": elems},
+        )
+        node = ReferenceStructure(
+            "io matrix",
+            subscripts=SubscriptsReferenceStructure(subscripts=["sector1", "sector!"]),
+        )
+        assert v.visit(node) == "[io_matrix[_i0, _ii0] for _ii0 in 1:N_SECTOR]"

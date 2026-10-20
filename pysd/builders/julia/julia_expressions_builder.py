@@ -634,8 +634,13 @@ class JuliaASTVisitor:
                 bang_ranges: List[str] = []
                 ii_count = 0
                 dim_to_idx: Dict[str, str] = {}
+                # Index of each reference position (None = unresolved).  Vensim
+                # subscripts are positional: in io_matrix[sector1, sector!] the
+                # first index is sector1 whatever the declaration order.
+                pos_idx: List[Optional[str]] = []
 
-                for sub in node_subs:
+                for pos, sub in enumerate(node_subs):
+                    pos_idx.append(None)
                     clean_sub = re.sub(r"[^a-z0-9_]", "_", sub.lower())
                     if sub.endswith("!"):
                         bare = sub[:-1]
@@ -645,6 +650,7 @@ class JuliaASTVisitor:
                             # handler) — reuse the existing loop variable.
                             iv = self._clean_active_subs[clean_bare]
                             dim_to_idx[clean_bare] = iv
+                            pos_idx[pos] = iv
                         else:
                             # Find the matching dim in var_dims_list (by normalised name)
                             dim_name = next(
@@ -656,8 +662,10 @@ class JuliaASTVisitor:
                             ii_count += 1
                             dim_to_idx[re.sub(r"[^a-z0-9_]", "_", dim_name.lower())] = iv
                             bang_ranges.append(f"{iv} in 1:{self._jl_n(dim_name)}")
+                            pos_idx[pos] = iv
                     elif sub in self.active_subs:
                         dim_to_idx[clean_sub] = self.active_subs[sub]
+                        pos_idx[pos] = self.active_subs[sub]
                     elif sub in self.subs_elems:
                         idx_var = self.active_subs.get(sub)
                         if idx_var:  # pragma: no cover  # unreachable: elif subs_elems only runs when sub not in active_subs
@@ -669,14 +677,18 @@ class JuliaASTVisitor:
                             # var_dims_list can find it.  Also prefer the variable's
                             # own declared dim to avoid picking a larger parent range.
                             target_dim = None
+                            if (pos < len(var_dims_list)
+                                    and var_dims_list[pos] in self._elem_index[sub]):
+                                target_dim = var_dims_list[pos]
                             for d in var_dims_list:
-                                if d in self._elem_index[sub]:
+                                if target_dim is None and d in self._elem_index[sub]:
                                     target_dim = d
                                     break
                             if target_dim is None:
                                 target_dim = next(iter(self._elem_index[sub]))
                             clean_dim = re.sub(r"[^a-z0-9_]", "_", target_dim.lower())
                             dim_to_idx[clean_dim] = str(self._elem_index[sub][target_dim])
+                            pos_idx[pos] = dim_to_idx[clean_dim]
 
                 # Assemble indices in var_dims_list (declaration) order.
                 # When a dim name doesn't match any key in dim_to_idx (common when
@@ -689,7 +701,9 @@ class JuliaASTVisitor:
                     and re.sub(r"[^a-z0-9_]", "_", sub[:-1].lower()) in dim_to_idx
                 ]
                 used_ivars: set = set()
-                if var_dims_list:
+                if len(pos_idx) == len(var_dims_list) and None not in pos_idx:
+                    indices = pos_idx
+                elif var_dims_list:
                     indices = []
                     for d in var_dims_list:
                         clean_d = re.sub(r"[^a-z0-9_]", "_", d.lower())

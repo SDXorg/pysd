@@ -97,6 +97,30 @@ def _read_csv(path: Path) -> Dict[str, List[float]]:
     return result
 
 
+def _ref_file(folder: Path) -> Optional[Path]:
+    """Return the reference output file of a test-model folder (csv or tab)."""
+    for name in ("output.csv", "output.tab"):
+        if (folder / name).exists():
+            return folder / name
+    return None
+
+
+def _read_ref(folder: Path) -> Dict[str, List[float]]:
+    """Read a test-model reference output (``output.csv`` or tab-separated ``output.tab``)."""
+    path = _ref_file(folder)
+    if path.suffix == ".csv":
+        return _read_csv(path)
+    result: Dict[str, List[float]] = {}
+    with path.open(newline="") as fh:
+        for row in csv.DictReader(fh, delimiter="\t"):
+            for k, v in row.items():
+                if k:
+                    # constants (FINAL TIME, ...) only fill the first row
+                    result.setdefault(k.strip(), []).append(
+                        float(v) if v and v.strip() else float("nan"))
+    return result
+
+
 def _isclose(a: float, b: float, rtol: float = 1e-3, atol: float = 1e-4) -> bool:
     """Return True if a ≈ b within the tolerances used by the test-models suite.
 
@@ -267,6 +291,23 @@ CLEAN_MODELS: List[str] = [
     "with_lookup",
     "xidz_zidz",
     "zeroled_decimals",
+]
+
+#: Multi-dimensional subscript models (reference in output.tab), validated
+#: element by element: every reference column must be found in the Julia output.
+ND_NUMERICAL_MODELS: List[str] = [
+    "subscript_2d_arrays",
+    "subscript_3d_arrays",
+    "subscript_3d_arrays_lengthwise",
+    "subscript_3d_arrays_widthwise",
+    "subscript_individually_defined_1_of_2d_arrays",
+    "subscript_individually_defined_1_of_2d_arrays_from_floats",
+    "subscript_transposition",
+    "subscript_updimensioning",
+    "subscript_copy",
+    "subscript_mixed_assembly",
+    "subscripted_flows",
+    "subscript_individually_defined_stocks",
 ]
 
 #: Models that have an output.csv and are fully supported (clean translation).
@@ -684,11 +725,11 @@ _JL_PACKAGES = (
 
 _BATCH_GET_SERIES = """\
 function _batch_get_series(sol, mod, id_str)
-    # Parse optional array subscript: "stock_a[2]" → base="stock_a", elem_idx=2
-    m = match(r"^(\\w+)\\[(\\d+)\\]$", id_str)
+    # Parse optional array subscript: "stock_a[2]" or "stock_a[2, 1]"
+    m = match(r"^(\\w+)\\[([\\d, ]+)\\]$", id_str)
     base_id  = m === nothing ? id_str : m.captures[1]
-    elem_idx = m === nothing ? nothing : parse(Int, m.captures[2])
-    _extract(val) = elem_idx === nothing ? Float64(val) : Float64(val[elem_idx])
+    elem_idx = m === nothing ? nothing : parse.(Int, split(m.captures[2], ","))
+    _extract(val) = elem_idx === nothing ? Float64(val) : Float64(val[elem_idx...])
 
     # ODE backend: use observe(u, t) to reconstruct all variables
     if isdefined(mod, :observe)
@@ -744,15 +785,17 @@ def _julia_batch_script(
             f"# --- {name} ---",
             f"module _M_{safe}",
             f"    using {_JL_PACKAGES}",
-            f'    include("{jl_path.as_posix()}")',
+            f"    load_error = nothing",
+            f'    try include("{jl_path.as_posix()}") catch e; global load_error = e end',
             f"end",
-            f"let",
+            f"try",
+            f"    _M_{safe}.load_error === nothing || throw(_M_{safe}.load_error)",
             f"    local sol = _M_{safe}.run_model(; solver=Euler())",
             f"    local julia_ids = [{id_strs}]",
             f"    local t_ref = {t_arr}",
             f'    println("===MODEL={name}===")',
             f'    print("Time")',
-            f"    for c in [{col_hdr}]; print(\",\", c); end",
+            f"    for c in [{col_hdr}]; print(\",\\\"\", c, \"\\\"\"); end",
             f"    println()",
             f"    for t in t_ref",
             f"        @printf(\"%g\", t)",
@@ -764,6 +807,8 @@ def _julia_batch_script(
             f"        println()",
             f"    end",
             f'    println("===ENDMODEL===")',
+            f"catch e",
+            f'    println("===MODELERROR={name}===", replace(sprint(showerror, e), "\\n" => " ")[1:min(end, 400)])',
             f"end",
             "",
         ]
@@ -777,7 +822,11 @@ def _parse_batch_output(stdout: str) -> "Dict[str, Dict[str, List[float]]]":
     current: Optional[str] = None
     buf: List[str] = []
     for line in stdout.splitlines():
-        if line.startswith("===MODEL=") and line.endswith("==="):
+        if line.startswith("===MODELERROR="):
+            name, _, msg = line[len("===MODELERROR="):].partition("===")
+            results[name] = {"__error__": msg}
+            current = None
+        elif line.startswith("===MODEL=") and line.endswith("==="):
             current = line[9:-3]
             buf = []
         elif line == "===ENDMODEL===":
@@ -837,12 +886,12 @@ def _build_id_map(mdl: Path, ref_cols: List[str]) -> Dict[str, str]:
             continue
         if "[" in col:
             base, rest = col.split("[", 1)
-            label = rest.rstrip("]").strip()
+            labels = rest.rstrip("]").split(",")
             julia_id = ns.get(base.strip())
             if julia_id is not None:
-                idx = label_to_idx.get(label.lower().strip())
-                if idx is not None:
-                    result[col] = f"{julia_id}[{idx}]"
+                idxs = [label_to_idx.get(lb.lower().strip()) for lb in labels]
+                if None not in idxs:
+                    result[col] = f"{julia_id}[{', '.join(map(str, idxs))}]"
         else:
             julia_id = ns.get(col)
             if julia_id is not None:
@@ -873,12 +922,12 @@ def julia_numerical_results(tmp_path_factory):
         "smooth", "sqrt", "subscript_1d_arrays",
         "subscript_individually_defined_1d_arrays", "subscripted_delays",
         "trend", "trig",
-    ]
+    ] + ND_NUMERICAL_MODELS
 
     models = []
     for folder in folders:
         mdl = _find_model_file(TEST_MODELS_DIR / folder)
-        if mdl is None or not (TEST_MODELS_DIR / folder / "output.csv").exists():
+        if mdl is None or _ref_file(TEST_MODELS_DIR / folder) is None:
             continue
         dst = tmp / folder / mdl.name
         dst.parent.mkdir(exist_ok=True)
@@ -886,7 +935,7 @@ def julia_numerical_results(tmp_path_factory):
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             jl_path = translate_to_julia(dst)
-            ref = _read_csv(TEST_MODELS_DIR / folder / "output.csv")
+            ref = _read_ref(TEST_MODELS_DIR / folder)
             id_map = _build_id_map(mdl, list(ref.keys()))
         if not id_map:
             continue
@@ -1025,6 +1074,8 @@ class TestNumericalValidation:
                 continue
 
             for i, (r, s) in enumerate(zip(ref_vals, sim_vals)):
+                if r != r:  # empty reference cell (Vensim saves constants once)
+                    continue
                 if not _isclose(r, s, rtol=rtol, atol=atol):
                     failures.append(
                         f"{col}[{i}]: expected {r}, got {s} (t={ref['Time'][i]})"
@@ -1042,8 +1093,22 @@ class TestNumericalValidation:
     def _sim(self, folder: str, results: Dict) -> Tuple[Dict, Dict]:
         if folder not in results:
             pytest.skip(f"{folder}: not in batch results (model may not be available)")
-        ref = _read_csv(TEST_MODELS_DIR / folder / "output.csv")
+        if "__error__" in results[folder]:
+            pytest.fail(f"{folder}: Julia model failed: {results[folder]['__error__']}")
+        ref = _read_ref(TEST_MODELS_DIR / folder)
         return ref, results[folder]
+
+    @pytest.mark.parametrize("folder", ND_NUMERICAL_MODELS)
+    def test_nd_subscripts(self, folder, julia_numerical_results):
+        """N-D subscripted models match Vensim for every element of every variable."""
+        ref, sim = self._sim(folder, julia_numerical_results)
+        consts = {"FINAL TIME", "INITIAL TIME", "SAVEPER", "TIME STEP"}
+        missing = [c for c in ref if c != "Time" and c.upper() not in consts and c not in sim]
+        assert not missing, f"{folder}: columns not found in Julia output: {missing[:10]}"
+        nan_cols = [c for c, v in sim.items()
+                    if c.upper() not in consts and any(x != x for x in v)]
+        assert not nan_cols, f"{folder}: NaN in Julia output: {nan_cols[:10]}"
+        self._compare(folder, ref, sim)
 
     def test_abs(self, julia_numerical_results):
         self._compare("abs", *self._sim("abs", julia_numerical_results))

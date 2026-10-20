@@ -529,6 +529,8 @@ class JuliaSectionBuilder:
             eqs = self._process_element(elem, identifier, is_control)
             self.built_elements[identifier] = (eqs, is_control)
 
+        self._sort_u0_entries()
+
         # Register any inline lookups collected while visiting ASTs
         for lut_name, xs, ys, itp_type in self.inline_registry.entries:
             const_decl, func_decl, reg_decl = lookup_interpolation_code(lut_name, xs, ys, itp_type)
@@ -898,10 +900,9 @@ class JuliaSectionBuilder:
                 for c in elem.components
             )
             _has_per_elem = not _is_external and any(
-                c.subscripts and c.subscripts[0]
-                and c.subscripts[0][0] not in self._subs_elems
-                and c.subscripts[0][0] in self._elem_to_range
-                for c in elem.components
+                sub not in self._subs_elems and sub in self._elem_to_range
+                for c in elem.components if c.subscripts
+                for sub in c.subscripts[0]
             )
             # Multi-component inline lookup tables (e.g. lookup1dim[A](...) ~~|
             # lookup1dim[B](...)) are all AbstractLookup + LookupsStructure.
@@ -1642,6 +1643,13 @@ class JuliaSectionBuilder:
                 full_col_range = list(range(1, len(dim1_elems) + 1))
                 use_full_cols = final1 == full_col_range
 
+                arr_eqs = self._ndarray_component_eqs(
+                    identifier, comp.ast, [final0, final1]
+                )
+                if arr_eqs is not None:
+                    equations.extend(arr_eqs)
+                    continue
+
                 vnd = self._nd_visitor(dims, ["_i0", "_i1"])
                 rhs_expr = vnd.visit(comp.ast)
 
@@ -1672,6 +1680,31 @@ class JuliaSectionBuilder:
                 )
         return equations
 
+    @staticmethod
+    def _ndarray_component_eqs(
+        identifier: str, value, covered: List[List[int]]
+    ) -> Optional[List[str]]:
+        """Per-element equations for a component whose value is a numpy array.
+
+        *covered* holds, per dimension, the 1-based indices the component
+        defines (e.g. ``[[1, 2, 3], [1, 2], [2]]`` for ``x[A, B, b2]``).  The
+        array holds one value per covered element (dimensions of length 1 may
+        be dropped), so it is reshaped to the covered shape and walked in the
+        same order as the index combinations.  Returns ``None`` when *value*
+        is not an array of matching size.
+        """
+        import numpy as _np
+        if not isinstance(value, _np.ndarray):
+            return None
+        shape = [len(c) for c in covered]
+        if value.size != int(_np.prod(shape)):
+            return None
+        arr = value.astype(float).reshape(shape)
+        return [
+            f"{identifier}[{', '.join(map(str, idx))}] ~ {format_number(float(arr[pos]))}"
+            for pos, idx in zip(_np.ndindex(*shape), itertools.product(*covered))
+        ]
+
     def _process_except_element_3d(
         self,
         elem: "AbstractElement",
@@ -1700,6 +1733,7 @@ class JuliaSectionBuilder:
             return [i + 1 for i, e in enumerate(dim_elems) if e == spec]
 
         equations: List[str] = []
+        has_integ = False
 
         for comp in elem.components:
             s0 = comp.subscripts[0][0] if len(comp.subscripts[0]) > 0 else dim0_name
@@ -1735,8 +1769,14 @@ class JuliaSectionBuilder:
             if not final0 or not final1 or not final2:
                 continue
 
+            arr_eqs = self._ndarray_component_eqs(
+                identifier, comp.ast, [final0, final1, final2]
+            )
+            if arr_eqs is not None:
+                equations.extend(arr_eqs)
+                continue
+
             vnd = self._nd_visitor(dims, ["_i0", "_i1", "_i2"])
-            rhs_expr = vnd.visit(comp.ast)
 
             def _idx_str(indices: List[int], dim_elems: List[str], dim_name: str) -> str:
                 full = list(range(1, len(dim_elems) + 1))
@@ -1747,14 +1787,33 @@ class JuliaSectionBuilder:
             d0_str = _idx_str(final0, dim0_elems, dim0_name)
             d1_str = _idx_str(final1, dim1_elems, dim1_name)
             d2_str = _idx_str(final2, dim2_elems, dim2_name)
+            for_clause = f"for _i0 in {d0_str}, _i1 in {d1_str}, _i2 in {d2_str}"
 
+            if isinstance(comp.ast, IntegStructure):
+                # Stock component (e.g. Stock A[A, B, Depth 1] = INTEG(...)):
+                # one u0 entry per covered element, flows as a comprehension.
+                has_integ = True
+                flow_expr = vnd.visit(comp.ast.flow)
+                init_expr = vnd.visit(comp.ast.initial)
+                for combo in itertools.product(final0, final1, final2):
+                    init_val = init_expr
+                    for var, val in zip(("_i0", "_i1", "_i2"), combo):
+                        init_val = re.sub(rf"\b{var}\b", str(val), init_val)
+                    idx_s = ", ".join(str(i) for i in combo)
+                    self.u0_entries.append(f"{identifier}[{idx_s}] => {init_val}")
+                equations.append(
+                    f"[D({identifier}[_i0, _i1, _i2]) ~ {flow_expr} {for_clause}]..."
+                )
+                continue
+
+            rhs_expr = vnd.visit(comp.ast)
             equations.append(
-                f"[{identifier}[_i0, _i1, _i2] ~ {rhs_expr} "
-                f"for _i0 in {d0_str}, _i1 in {d1_str}, _i2 in {d2_str}]..."
+                f"[{identifier}[_i0, _i1, _i2] ~ {rhs_expr} {for_clause}]..."
             )
 
         if not is_control:
-            self.aux_decls.append(
+            decls = self.stock_decls if has_integ else self.aux_decls
+            decls.append(
                 f"@variables {identifier}(t)[{self._range_str(dims)}]"
             )
         return equations
@@ -4033,7 +4092,10 @@ class JuliaSectionBuilder:
         lines.append("            for (varname, (method, nd)) in _nc_data_registry")
         lines.append("                haskey(ds, varname) || continue")
         lines.append("                try")
+        # NetCDF files list time first (PySD/xarray layout); NCDatasets returns
+        # the dimensions reversed, so flip back to (time, dim_1, ..., dim_n).
         lines.append("                    data = Array(ds[varname])")
+        lines.append("                    data = permutedims(data, ndims(data):-1:1)")
         lines.append("                    if nd == 0")
         lines.append("                        _tab_data[varname] = pysd_build_tab_itp(Float64.(vec(data)), ts, method)")
         lines.append("                    elseif nd == 1")
@@ -4215,8 +4277,15 @@ class JuliaSectionBuilder:
             else:
                 alg_lines.append(eq)
 
-        # Detect stock dimensionality from ODE equations
+        # Detect stock dimensionality: declarations first (always the full
+        # ranges), then the ODE equations' for-clauses.
         stock_dims: Dict[str, List[str]] = {}
+        for decl in self.stock_decls:
+            m_sd = re.match(r"@variables\s+(\w+)\(t\)\[([^\]]+)\]", decl.strip())
+            if m_sd:
+                ranges = [r.strip() for r in m_sd.group(2).split(",")]
+                if len(ranges) >= 2 and all(r.startswith("1:") for r in ranges):
+                    stock_dims[m_sd.group(1)] = [r[2:] for r in ranges]
         for eq in ode_lines:
             eq_s = eq.strip().rstrip(",")
             if eq_s.startswith("["):
@@ -4225,7 +4294,7 @@ class JuliaSectionBuilder:
                 if m:
                     name = m.group(1)
                     idx_parts = [x.strip() for x in m.group(2).split(",")]
-                    if name not in stock_dims or len(idx_parts) > len(stock_dims[name]):
+                    if name not in stock_dims:
                         # Find dims from for clause
                         ranges = re.findall(r"in\s+\d+:(\w+)", eq_s)
                         if ranges:
@@ -4685,6 +4754,29 @@ class JuliaSectionBuilder:
                 idx = stock_indices.get(var_name, 1)
                 return [f"du[{idx}] = {expr}"]
         return [eq.replace(" ~ ", " = ", 1)]
+
+    def _sort_u0_entries(self) -> None:
+        """Order ``u0_entries`` the way the ODE state vector is read back.
+
+        Entries of each stock are kept together (stocks in first-appearance
+        order) and multi-dimensional stocks are listed in Julia's column-major
+        order, so ``reshape(@view(u[a:b]), n0, n1, ...)`` in ``rhs!`` and
+        ``observe`` maps every element to its own initial value.
+        """
+        groups: Dict[str, List[Tuple[Tuple[int, ...], str]]] = {}
+        for entry in self.u0_entries:
+            lhs = entry.split("=>", 1)[0].strip()
+            base, _, idx = lhs.partition("[")
+            try:
+                key = tuple(int(i) for i in idx.rstrip("]").split(",")) if idx else ()
+            except ValueError:  # pragma: no cover  # u0 indices are always integer literals
+                key = ()
+            groups.setdefault(base, []).append((key[::-1], entry))
+        self.u0_entries = [
+            entry
+            for items in groups.values()
+            for _, entry in sorted(items, key=lambda item: item[0])
+        ]
 
     def _u0_block(self) -> str:
         if self.backend == "mtk":
