@@ -71,7 +71,9 @@ jobs:
       - name: Set up Julia
         uses: julia-actions/setup-julia@v3
         with:
-          version: '1'
+          # 1.12: on 1.13, ModelingToolkit 10 resolves OrdinaryDiffEq 6.x, whose
+          # install fails ("Unknown package: OrdinaryDiffEqDefault")
+          version: '1.12'
       - name: Cache Julia depot
         uses: julia-actions/cache@v3
       - name: Install Julia packages
@@ -92,6 +94,7 @@ jobs:
       - name: Test and coverage
         env:
           JULIA_PROJECT: "@pysd_ci"
+          PYSD_JULIA_REQUIRED: "1"
           PYSD_JULIA_BACKENDS: ode,mtk
           PYSD_JULIA_MTK: subset  # full MTK set: julia-mtk-full.yml
         run: |
