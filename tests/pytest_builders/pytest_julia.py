@@ -1438,7 +1438,7 @@ class TestJuliaASTVisitorExtended:
             ],
         )
         result = v.visit(node)
-        assert result == "sum([historic_labour_compensation(_ii0, t) for _ii0 in 1:N_SECTORS])"
+        assert result == "sum(historic_labour_compensation(_ii0, t) for _ii0 in 1:N_SECTORS)"
 
 
 # ===========================================================================
@@ -7473,3 +7473,46 @@ class TestNdArrayLayout:
             subscripts=SubscriptsReferenceStructure(subscripts=["sector_y!", "region"]),
         )
         assert v.visit(node) == "[io_matrix[_ii0] for _ii0 in 1:N_SECTOR_Y]"
+
+
+class TestAggregationOverEquationDims:
+    """SUM(x[B!]) inside an equation over B sums the whole dimension (SDXorg/pysd#504)."""
+
+    def _visitor(self, names, active, var_dims, sizes):
+        ns = JuliaNamespaceManager()
+        for n in names:
+            ns.add_to_namespace(n)
+        return JuliaASTVisitor(
+            ns, InlineLookupRegistry(), set(),
+            active_subs=active, var_dims=var_dims, subs_sizes=sizes,
+        )
+
+    @staticmethod
+    def _sum(arg):
+        return CallStructure(function=ReferenceStructure("SUM"), arguments=[arg])
+
+    @staticmethod
+    def _ref(name, *subs):
+        return ReferenceStructure(name, subscripts=SubscriptsReferenceStructure(subscripts=subs))
+
+    def test_sum_over_the_equation_dimension_gets_its_own_index(self):
+        """share[A,B] = weight[B] / SUM(weight[B!]): the SUM loops over all of B."""
+        v = self._visitor(["weight"], {"A": "_i0", "B": "_i1"},
+                          {"weight": ["B"]}, {"A": 2, "B": 3})
+        assert v.visit(self._sum(self._ref("weight", "B!"))) == \
+            "sum(weight[_ii0] for _ii0 in 1:N_B)"
+
+    def test_plain_reference_inside_the_sum_keeps_the_equation_index(self):
+        """Inside SUM(x[A, B!] * y[B]), y[B] is the equation's B, B! the summed one."""
+        v = self._visitor(["x", "y"], {"A": "_i0", "B": "_i1"},
+                          {"x": ["A", "B"], "y": ["B"]}, {"A": 2, "B": 3})
+        node = self._sum(ArithmeticStructure(
+            operators=["*"], arguments=[self._ref("x", "A", "B!"), self._ref("y", "B")]))
+        assert v.visit(node) == "sum((x[_i0, _ii0] * y[_i1]) for _ii0 in 1:N_B)"
+
+    def test_bang_function_call_over_the_equation_dimension(self):
+        """A subscripted call f[B!](...) in an equation over B loops over all of B."""
+        v = self._visitor(["f"], {"B": "_i1"}, {"f": ["B"]}, {"B": 3})
+        node = CallStructure(function=self._ref("f", "B!"), arguments=[1.0])
+        result = v.visit(node)
+        assert "_ii0 in 1:N_B" in result and "_i1" not in result

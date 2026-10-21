@@ -116,7 +116,6 @@ KNOWN_FAILURES = {
     ("vensim:smaller_range", "ode"): "values differ from the reference (#499)",
     ("vensim:smooth_and_stock", "ode"): "values differ from the reference (#499)",
     ("vensim:subrange_merge", "ode"): "values differ from the reference (#499)",
-    ("vensim:subscript_aggregation", "ode"): "values differ from the reference (#499)",
     ("vensim:subscript_definition", "ode"): "values differ from the reference (#499)",
     ("vensim:subscript_mapping_simple", "mtk"): "values differ from the reference (#499)",
     ("vensim:subscript_mapping_simple", "ode"): "values differ from the reference (#499)",

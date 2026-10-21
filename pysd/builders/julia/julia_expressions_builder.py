@@ -288,6 +288,7 @@ class JuliaASTVisitor:
         lookup_names: Optional[Set[str]] = None,
         root=None,
         macro_names: Optional[Set[str]] = None,
+        bang_subs: Optional[Dict[str, str]] = None,
     ) -> None:
         self.namespace = namespace
         self.registry = inline_registry
@@ -299,6 +300,14 @@ class JuliaASTVisitor:
         self._clean_active_subs = {
             re.sub(r"[^a-z0-9_]", "_", k.lower()): v
             for k, v in self.active_subs.items()
+        }
+        # _bang_subs: normalised-dim-name -> summation index of an enclosing
+        # SUM/PROD/VMAX/VMIN.  Separate from active_subs, which holds the
+        # equation's own loop variables: in share[A,B] = w[B] / SUM(w[B!]),
+        # B is _i1 but B! must be a summation index of its own.
+        self._bang_subs = {
+            re.sub(r"[^a-z0-9_]", "_", k.lower()): v
+            for k, v in (bang_subs or {}).items()
         }
         # var_dims: julia identifier -> list of dim names it is subscripted over
         self.var_dims = var_dims or {}
@@ -390,7 +399,30 @@ class JuliaASTVisitor:
             lookup_names=self.lookup_names,
             root=self._root,
             macro_names=self._macro_names,
+            bang_subs=self._bang_subs,
         )
+
+    def _with_bang_subs(self, extra: Dict[str, str]) -> "JuliaASTVisitor":
+        """Return a child visitor for an aggregation's argument: *extra* maps
+        the aggregated ('!') dimensions to their summation indices; the
+        equation's own loop variables (active_subs) are unchanged."""
+        return JuliaASTVisitor(
+            self.namespace,
+            self.registry,
+            self.needed_helpers,
+            active_subs=self.active_subs,
+            var_dims=self.var_dims,
+            subs_sizes=self.subs_sizes,
+            subs_elems=self.subs_elems,
+            lookup_names=self.lookup_names,
+            root=self._root,
+            macro_names=self._macro_names,
+            bang_subs={**self._bang_subs, **extra},
+        )
+
+    def _next_ii(self) -> int:
+        """First free summation-index number (nested aggregations don't shadow)."""
+        return len(set(self._bang_subs.values()))
 
     # ------------------------------------------------------------------
     # Dispatch
@@ -645,10 +677,10 @@ class JuliaASTVisitor:
                     if sub.endswith("!"):
                         bare = sub[:-1]
                         clean_bare = re.sub(r"[^a-z0-9_]", "_", bare.lower())
-                        if clean_bare in self._clean_active_subs:
-                            # Already being iterated by an outer loop (added by sum
-                            # handler) — reuse the existing loop variable.
-                            iv = self._clean_active_subs[clean_bare]
+                        if clean_bare in self._bang_subs:
+                            # Summed by the enclosing SUM/PROD/VMAX/VMIN:
+                            # reuse its summation index.
+                            iv = self._bang_subs[clean_bare]
                             dim_to_idx[clean_bare] = iv
                             pos_idx[pos] = iv
                         else:
@@ -873,10 +905,10 @@ class JuliaASTVisitor:
                         if sub.endswith("!"):
                             bare = sub[:-1]
                             clean_bare = re.sub(r"[^a-z0-9_]", "_", bare.lower())
-                            if clean_bare in self._clean_active_subs:
-                                # Already iterated by an outer SUM comprehension —
-                                # reuse the existing loop variable, don't add a new range.
-                                iv = self._clean_active_subs[clean_bare]
+                            if clean_bare in self._bang_subs:
+                                # Summed by the enclosing SUM comprehension —
+                                # reuse its index, don't add a new range.
+                                iv = self._bang_subs[clean_bare]
                                 dim_to_idx_c[clean_bare] = iv
                             else:
                                 dim_name = next(
@@ -1079,12 +1111,12 @@ class JuliaASTVisitor:
             new_bang_subs = [
                 s for s in bang_subs
                 if re.sub(r"[^a-z0-9_]", "_", s[:-1].lower())
-                not in self._clean_active_subs
+                not in self._bang_subs
             ]
             if new_bang_subs:
                 extra_subs: Dict[str, str] = {}
                 agg_ranges: List[str] = []
-                ii_cnt = 0
+                ii_cnt = self._next_ii()
                 for sub in new_bang_subs:
                     bare = sub[:-1]
                     clean_bare = re.sub(r"[^a-z0-9_]", "_", bare.lower())
@@ -1093,10 +1125,10 @@ class JuliaASTVisitor:
                     extra_subs[bare] = iv
                     extra_subs[clean_bare] = iv
                     agg_ranges.append(f"{iv} in 1:{self._jl_n(bare)}")
-                child = self._with_extra_subs(extra_subs)
+                child = self._with_bang_subs(extra_subs)
                 arg_expr = child.visit(node.arguments[0])
                 for_clause_agg = ", ".join(agg_ranges)
-                return f"{julia_func}([{arg_expr} for {for_clause_agg}])"
+                return f"{julia_func}({arg_expr} for {for_clause_agg})"
 
         args = [self.visit(a) for a in node.arguments]
 

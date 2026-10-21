@@ -59,6 +59,28 @@ from .julia_expressions_builder import (
 )
 from .namespace import JuliaNamespaceManager
 
+def _outer_for_clause(eq: str) -> str:
+    """Return the for-clause of the comprehension equation ``[lhs ~ rhs for ...]...``.
+
+    Only the outer clause (at bracket depth 0) counts: the right-hand side may
+    contain aggregations with their own loops, e.g. ``sum(w[_ii0] for _ii0 in 1:N_B)``.
+    Returns "" when there is none.
+    """
+    inner = eq.strip().rstrip(",")
+    inner = inner[:-3] if inner.endswith("...") else inner
+    inner = inner[1:-1] if inner.startswith("[") and inner.endswith("]") else inner
+    depth = 0
+    for i in range(len(inner) - 1, 3, -1):
+        c = inner[i]
+        if c in ")]":
+            depth += 1
+        elif c in "([":
+            depth -= 1
+        elif depth == 0 and inner[i:i + 4] == "for " and inner[i - 1] == " ":
+            return inner[i + 4:]
+    return ""
+
+
 #: PySD.jl version the generated models are written for (checked on load).
 PYSD_JL_VERSION = "0.2.0"
 
@@ -4299,7 +4321,7 @@ class JuliaSectionBuilder:
                     idx_parts = [x.strip() for x in m.group(2).split(",")]
                     if name not in stock_dims:
                         # Find dims from for clause
-                        ranges = re.findall(r"in\s+\d+:(\w+)", eq_s)
+                        ranges = re.findall(r"in\s+\d+:(\w+)", _outer_for_clause(eq_s))
                         if ranges:
                             stock_dims[name] = ranges
 
@@ -4367,7 +4389,7 @@ class JuliaSectionBuilder:
                     if name not in stock_indices:
                         all_dims = []
                         # Reconstruct dimension order from for clause
-                        for m_for in re.finditer(r"in\s+(?:(\d+:\w+)|\[([^\]]+)\])", eq_s):
+                        for m_for in re.finditer(r"in\s+(?:(\d+:\w+)|\[([^\]]+)\])", _outer_for_clause(eq_s)):
                             if m_for.group(1):
                                 all_dims.append(m_for.group(1).split(":")[1])
                             elif m_for.group(2):
