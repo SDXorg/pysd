@@ -6471,8 +6471,9 @@ class TestSubscriptedExpansions:
     # Subscripted DELAY FIXED via MTK backend (lines 2134-2159)
     # ------------------------------------------------------------------
 
-    def test_subscripted_delay_fixed_mtk_emits_array_ode(self):
-        """DELAY FIXED on subscripted element with MTK backend uses array ODE (not pipeline)."""
+    def test_subscripted_delay_fixed_mtk_emits_pipeline(self):
+        """DELAY FIXED on a subscripted element with the MTK backend uses the
+        exact pipeline too (delay 2, time step 1 -> 2 stages)."""
         sr = self._sr("sector", ["S1", "S2"])
         ast = DelayFixedStructure(input=5.0, delay_time=2.0, initial=5.0)
         comp = self._sub_comp(["sector"], ast)
@@ -6480,10 +6481,28 @@ class TestSubscriptedExpansions:
         sb = _section_builder_from_elements([elem], subscripts=[sr], backend="mtk")
         sb.build_section()
         eqs = [e for eqs, _ in sb.built_elements.values() for e in eqs]
-        assert any("_df_df_sub" in e for e in eqs), f"Expected delay-fixed array ODE, got {eqs}"
+        assert any("_df_pipe_2_df_sub" in e for e in eqs), eqs
         assert any("[" in d for d in sb.stock_decls)
-        u0_entries = [e for e in sb.u0_entries if "_df_df_sub" in e]
-        assert len(u0_entries) == 2, f"Expected 2 u0 entries for 2-element dim, got {sb.u0_entries}"
+        u0_entries = [e for e in sb.u0_entries if "_df_pipe_" in e]
+        assert len(u0_entries) == 4, sb.u0_entries   # 2 stages x 2 elements
+
+    def test_delay_fixed_delay_time_evaluated_at_initial_time(self):
+        """As Python PySD, a changing delay time is read at the initial time:
+        2 + 2*SIN(Time) at t = 0 is 2 -> 2 stages with time step 1."""
+        sin_time = CallStructure(function=ReferenceStructure("sin"),
+                                 arguments=(ReferenceStructure("time"),))
+        delay = ArithmeticStructure(operators=["+"], arguments=(
+            2, ArithmeticStructure(operators=["*"], arguments=(2, sin_time))))
+        ast = DelayFixedStructure(input=5.0, delay_time=delay, initial=5.0)
+        elem = AbstractElement(name="DST", components=[
+            AbstractComponent(subscripts=[[], []], ast=ast)])
+        sb = _section_builder_from_elements(
+            [elem, _make_control_element("INITIAL TIME", 0.0),
+             _make_control_element("TIME STEP", 1.0)])
+        sb.build_section()
+        eqs = [e for eqs, _ in sb.built_elements.values() for e in eqs]
+        assert any("_df_pipe_2_dst" in e for e in eqs), eqs
+        assert not any("_df_pipe_3_dst" in e for e in eqs), eqs
 
     # ------------------------------------------------------------------
     # Subscripted SAMPLE IF TRUE (lines 2388-2415)

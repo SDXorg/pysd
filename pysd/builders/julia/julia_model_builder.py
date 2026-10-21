@@ -10,6 +10,7 @@ Entry point::
 from __future__ import annotations
 
 import itertools
+import math
 import re
 import textwrap
 from pathlib import Path
@@ -109,6 +110,14 @@ _UNSUPPORTED_STRUCTURES = ()
 # ---------------------------------------------------------------------------
 # Top-level builder
 # ---------------------------------------------------------------------------
+
+
+#: Functions _eval_ast_at_t0 can evaluate on numbers (Vensim names, lower case)
+_T0_MATH = {
+    "sin": math.sin, "cos": math.cos, "tan": math.tan, "exp": math.exp,
+    "ln": math.log, "log": math.log10, "sqrt": math.sqrt, "abs": abs,
+    "integer": math.trunc, "max": max, "min": min,
+}
 
 
 def _non_negative_flow(ast: IntegStructure, flow_expr: str, stock_ref: str) -> str:
@@ -1108,14 +1117,22 @@ class JuliaSectionBuilder:
             except (TypeError, ValueError):
                 order = None
                 if isinstance(ast, DelayNStructure):
+                    # the order is read once, at the initial time, and truncated
                     t0_val = self._eval_ast_at_t0(ast.order)
                     if t0_val is not None:
-                        order = max(1, round(t0_val))
+                        order = max(1, int(t0_val))
                 if order is None:
                     warn(
                         f"DELAY with non-integer order for '{elem.name}'; defaulting to 3."
                     )
                     order = 3
+            # As Python PySD: lower the order while order * time_step exceeds
+            # the delay time (at the initial time)
+            delay0 = self._eval_ast_at_t0(ast.delay_time)
+            ts0 = self._eval_ast_at_t0(ReferenceStructure("time_step"))
+            if delay0 is not None and ts0:
+                while order > 1 and order * ts0 > delay0:
+                    order -= 1
             return self._expand_delay(identifier, ast, visitor, order=order, dims=dims)
 
         # ---- DELAY FIXED ------------------------------------------------
@@ -2014,9 +2031,13 @@ class JuliaSectionBuilder:
             for_clause = self._for_clause(dims, idx_vars)
             ranges_list = [range(1, size + 1) for _, size in dims]
 
-            rate_nd = f"({order} / ({delay_time_nd}))"
+            stage_times, out_time = self._delay_stage_times(
+                identifier, ast, delay_time_nd, delay_time_nd, order, eqs,
+                dims=dims, idx=idx_str_t, for_clause=for_clause,
+                ranges=ranges_list, idx_vars=idx_vars)
             prev_nd = input_nd
             for stage in range(1, order + 1):
+                rate_nd = f"({order} / ({stage_times[stage - 1]}))"
                 lv_name = f"_dl{stage}_{identifier}"
                 self.namespace.namespace[f"__internal_dl{stage}_{identifier}"] = lv_name
                 self.stock_decls.append(
@@ -2041,13 +2062,15 @@ class JuliaSectionBuilder:
             self.aux_decls.append(
                 f"@variables {identifier}(t)[{self._range_str(dims)}]"
             )
-            eqs.append(f"[{identifier}[{idx_str_t}] ~ {prev_nd} for {for_clause}]...")
+            out_nd = f"_dl{order}_{identifier}[{idx_str_t}] .* ({order} / ({out_time}))"
+            eqs.append(f"[{identifier}[{idx_str_t}] ~ {out_nd} for {for_clause}]...")
             return eqs
 
         input_expr = visitor.visit(ast.input)
         delay_time_expr = visitor.visit(ast.delay_time)
         initial_expr = visitor.visit(ast.initial)
-        rate_expr = f"({order} / {delay_time_expr})"
+        stage_times, out_time = self._delay_stage_times(
+            identifier, ast, delay_time_expr, delay_time_expr, order, eqs)
         prev_outflow = input_expr
         for i in range(1, order + 1):
             lv_name = f"_dl{i}_{identifier}"
@@ -2056,14 +2079,55 @@ class JuliaSectionBuilder:
             self.u0_entries.append(
                 f"{lv_name} => {initial_expr} * {delay_time_expr} / {order}"
             )
+            rate_i = f"({order} / {stage_times[i - 1]})"
             eqs.append(
-                f"D({lv_name}) ~ ({prev_outflow} - {lv_name} * {rate_expr})"
+                f"D({lv_name}) ~ ({prev_outflow} - {lv_name} * {rate_i})"
             )
-            prev_outflow = f"{lv_name} * {rate_expr}"
+            prev_outflow = f"{lv_name} * {rate_i}"
 
         self.aux_decls.append(f"@variables {identifier}(t)")
-        eqs.append(f"{identifier} ~ {prev_outflow}")
+        eqs.append(f"{identifier} ~ _dl{order}_{identifier} * ({order} / {out_time})")
         return eqs
+
+    def _delay_stage_times(self, identifier, ast, delay_time_expr, u0_delay_expr,
+                           order, eqs, dims=None, idx=None, for_clause=None,
+                           ranges=None, idx_vars=None):
+        """Delay times of a DELAY N: one per stage, and one for the output.
+
+        As Python PySD (DelayN), when the delay time changes stage k uses the
+        delay time of k - 1 time steps ago, and the output the one of the
+        previous time step; for a constant delay time, or DELAY1/DELAY3, all
+        use the current one.  The past values are kept in a pipeline of states
+        (exact with Euler, as DELAY FIXED), whose equations are appended to
+        *eqs*.
+        """
+        constant = self._try_eval_as_float(delay_time_expr) is not None
+        if not isinstance(ast, DelayNStructure) or constant:
+            return [delay_time_expr] * order, delay_time_expr
+        ts_expr = self.control_vals.get("time_step") or "time_step"
+        times = [delay_time_expr]
+        prev = delay_time_expr
+        for k in range(1, max(order, 2)):
+            name = f"_dlt{k}_{identifier}"
+            self.namespace.namespace[f"__internal_dlt{k}_{identifier}"] = name
+            if dims:
+                self.stock_decls.append(f"@variables {name}(t)[{self._range_str(dims)}]")
+                for combo in itertools.product(*ranges):
+                    expr_i = u0_delay_expr
+                    for iv, val in zip(idx_vars, combo):
+                        expr_i = expr_i.replace(iv, str(val))
+                    idx_s = ", ".join(str(v) for v in combo)
+                    self.u0_entries.append(f"{name}[{idx_s}] => {expr_i}")
+                ref = f"{name}[{idx}]"
+                eqs.append(f"[D({ref}) ~ ({prev} - {ref}) / ({ts_expr}) for {for_clause}]...")
+            else:
+                self.stock_decls.append(f"@variables {name}(t)")
+                self.u0_entries.append(f"{name} => {u0_delay_expr}")
+                ref = name
+                eqs.append(f"D({ref}) ~ ({prev} - {ref}) / ({ts_expr})")
+            times.append(ref)
+            prev = ref
+        return times[:order], times[1]
 
     # ------------------------------------------------------------------
     # DELAY FIXED expansion
@@ -2109,8 +2173,18 @@ class JuliaSectionBuilder:
             # Functions that are zero at t=0
             if func_name in ("step", "ramp", "pulse", "pulse train"):
                 return 0.0
+            if func_name in _T0_MATH:
+                args = [self._eval_ast_at_t0(a) for a in node.arguments]
+                if any(v is None for v in args):
+                    return None
+                try:
+                    return float(_T0_MATH[func_name](*args))
+                except (TypeError, ValueError, ZeroDivisionError, OverflowError):
+                    return None
             return None
         if isinstance(node, ReferenceStructure):
+            if node.reference.lower() == "time":
+                return self._eval_ast_at_t0(ReferenceStructure("initial_time"))
             julia_id = self.namespace.get(node.reference)
             if julia_id is not None:
                 val = self._try_eval_as_float(julia_id)
@@ -2209,29 +2283,29 @@ class JuliaSectionBuilder:
         delay_time_expr = visitor.visit(ast.delay_time)
         initial_expr = visitor.visit(ast.initial)
 
-        # ---- Attempt N-stage pipeline (ODE backend, constant delay_time) ----
-        if self.backend == "ode":
-            ts_str = self.control_vals.get("time_step")
-            ts_val = float(ts_str) if ts_str is not None else None
-            if ts_val is None:
-                try:
-                    ts_val = float(ts_str or "1.0")
-                except (ValueError, TypeError):  # pragma: no cover  # ts_str is None → "1.0" always valid
-                    ts_val = None
-            dt_val = self._try_eval_as_float(delay_time_expr)
-            if dt_val is not None and ts_val is not None and ts_val > 0:
-                N = max(round(dt_val / ts_val + 1e-6), 1)
-                return self._expand_delay_fixed_pipeline(
-                    identifier, input_expr, initial_expr, N, dims
-                )
-            else:
-                warn(
-                    f"DELAY FIXED for '{identifier}': delay time '{delay_time_expr}' "
-                    "cannot be evaluated at translation time — "
-                    "falling back to first-order ODE approximation."
-                )
+        # ---- N-stage pipeline, both backends ----
+        # As Python PySD (DelayFixed), the number of stages comes from the delay
+        # time at the initial time; with Euler and dt = time_step the pipeline
+        # is exact.
+        ts_val = self._eval_ast_at_t0(ReferenceStructure("time_step"))
+        if ts_val is None:
+            ts_val = 1.0  # Vensim's default TIME STEP
+        dt_val = self._try_eval_as_float(delay_time_expr)
+        if dt_val is None:
+            dt_val = self._eval_ast_at_t0(ast.delay_time)
+        if dt_val is not None and ts_val is not None and ts_val > 0:
+            N = max(round(dt_val / ts_val + 1e-6), 1)
+            return self._expand_delay_fixed_pipeline(
+                identifier, input_expr, initial_expr, N, dims
+            )
+        else:
+            warn(
+                f"DELAY FIXED for '{identifier}': delay time '{delay_time_expr}' "
+                "cannot be evaluated at translation time — "
+                "falling back to first-order ODE approximation."
+            )
 
-        # ---- MTK / fallback: single first-order ODE approximation ----
+        # ---- Fallback: single first-order ODE approximation ----
         lv_name = f"_df_{identifier}"
         self.namespace.namespace[f"__internal_df_{identifier}"] = lv_name
 
@@ -4862,19 +4936,32 @@ class JuliaSectionBuilder:
                             tokens.discard(tok)
                     dynamic_tokens |= tokens - {"time_step", "initial_time", "final_time", "t"}
 
+            # Initial values may depend on stocks (e.g. DELAY(stock, 1) starts at
+            # the stock's initial value), so evaluate them from the state they
+            # define, starting from zeros, until it no longer changes.
             n = len(self.u0_entries)
-            lines = [f"u0 = let _obs_init = observe(zeros(Float64, {n}), initial_time)"]
+            lines = [
+                f"u0 = let _u = zeros(Float64, {n})",
+                f"    for _ in 1:{n + 1}",
+                "        _obs_init = observe(_u, initial_time)",
+            ]
             for tok in sorted(dynamic_tokens):
-                lines.append(f"    {tok} = get(_obs_init, \"{tok}\", 0.0)")
-            lines.append("    Float64[")
+                lines.append(f"        {tok} = get(_obs_init, \"{tok}\", 0.0)")
+            lines.append("        _next = Float64[")
             for entry in self.u0_entries:
                 if "=>" in entry:
                     lhs, rhs = entry.split("=>", 1)
-                    lines.append(f"        {rhs.strip()},  # {lhs.strip()}")
+                    lines.append(f"            {rhs.strip()},  # {lhs.strip()}")
                 else:  # pragma: no cover  # all u0_entries use "name => expr" format
-                    lines.append(f"        {entry},")
-            lines.append("    ]")
-            lines.append("end")
+                    lines.append(f"            {entry},")
+            lines += [
+                "        ]",
+                "        isequal(_next, _u) && break",
+                "        _u = _next",
+                "    end",
+                "    _u",
+                "end",
+            ]
             return "\n".join(lines) + "\n"
         else:
             lines = []
