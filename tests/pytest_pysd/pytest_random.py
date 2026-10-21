@@ -116,6 +116,17 @@ class TestRandomScale0Model:
 
 
 class TestRandomVensim():
+    @pytest.fixture(autouse=True)
+    def seed(self):
+        # The statistics of 1e6 draws still vary from run to run: unseeded,
+        # about 1 run in 40 fell outside the tolerances (normal kurtosis,
+        # exponential variance). Seed NumPy, which the generated code draws
+        # from, and restore its state for the other tests.
+        state = np.random.get_state()
+        np.random.seed(0)
+        yield
+        np.random.set_state(state)
+
     @pytest.fixture(scope="function")
     def data_raw(self, input_file, _test_random):
         file = _test_random.joinpath(input_file)
