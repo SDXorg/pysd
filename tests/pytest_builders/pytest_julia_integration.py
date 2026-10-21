@@ -1,46 +1,21 @@
 """
-Integration tests for the Julia/ModelingToolkit builder.
+Translation tests for the Julia builder (no Julia required).
 
-Two tiers:
+Parametrised over every model in tests/test-models/tests/: translate_to_julia()
+must produce a .jl file with the expected structural markers.  Models that emit
+UserWarnings for unsupported constructs are accepted; the test only fails if an
+unexpected exception is raised.  A stricter subset (CLEAN_MODELS) must translate
+without any warning.
 
-Tier 1 — Translation tests (no Julia required, always run in CI)
-    Parametrised over every .mdl file in tests/test-models/tests/.
-    Checks that translate_to_julia() produces a .jl file with the
-    expected structural markers.  Models that emit UserWarnings for
-    unsupported constructs are accepted; the test only fails if an
-    unexpected exception is raised.
-
-    A separate, stricter sub-set checks the 53 models that are fully
-    supported (no warnings at all) to guard against regressions.
-
-Tier 2 — Numerical validation (requires Julia + ModelingToolkit.jl)
-    Marked with @pytest.mark.julia — skipped automatically when the
-    julia binary is not found.
-    For each model that has an output.csv reference file the test:
-      1. translates the .mdl to .jl
-      2. generates a small Julia driver script that runs the model and
-         writes results to CSV via stdout
-      3. executes the driver with subprocess and parses the CSV
-      4. compares every column against the reference within tolerance
-
-    Variable names in output.csv are mapped to Julia identifiers via the
-    same JuliaNamespaceManager used by the builder, so the comparison is
-    exact (no manual name mapping required).
-
-To run only the numerical tier:
-    pytest tests/pytest_builders/pytest_julia_integration.py -m julia -v
+Numerical validation (running the generated Julia and comparing with the
+reference outputs, for each backend) is in pytest_julia_reference.py.
 """
 from __future__ import annotations
 
-import csv
-import io
-import re
 import shutil
-import subprocess
-import tempfile
 import warnings
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import List, Tuple
 
 import pytest
 
@@ -78,66 +53,6 @@ def _all_mdl_files() -> List[Tuple[str, Path]]:
         if folder not in mdl_folders:
             results.append((folder, xmile))
     return sorted(results)
-
-
-def _output_csv_path(folder: str) -> Path | None:
-    """Return the output.csv path for *folder*, or None if it does not exist."""
-    p = TEST_MODELS_DIR / folder / "output.csv"
-    return p if p.exists() else None
-
-
-def _read_csv(path: Path) -> Dict[str, List[float]]:
-    """Read a CSV into {column_name: [float, ...]}."""
-    result: Dict[str, List[float]] = {}
-    with path.open(newline="") as fh:
-        reader = csv.DictReader(fh)
-        for row in reader:
-            for k, v in row.items():
-                result.setdefault(k, []).append(float(v))
-    return result
-
-
-def _ref_file(folder: Path) -> Optional[Path]:
-    """Return the reference output file of a test-model folder (csv or tab)."""
-    for name in ("output.csv", "output.tab"):
-        if (folder / name).exists():
-            return folder / name
-    return None
-
-
-def _read_ref(folder: Path) -> Dict[str, List[float]]:
-    """Read a test-model reference output (``output.csv`` or tab-separated ``output.tab``)."""
-    path = _ref_file(folder)
-    if path.suffix == ".csv":
-        return _read_csv(path)
-    result: Dict[str, List[float]] = {}
-    with path.open(newline="") as fh:
-        for row in csv.DictReader(fh, delimiter="\t"):
-            for k, v in row.items():
-                if k:
-                    # constants (FINAL TIME, ...) only fill the first row
-                    result.setdefault(k.strip(), []).append(
-                        float(v) if v and v.strip() else float("nan"))
-    return result
-
-
-def _isclose(a: float, b: float, rtol: float = 1e-3, atol: float = 1e-4) -> bool:
-    """Return True if a ≈ b within the tolerances used by the test-models suite.
-
-    Passes when EITHER:
-    * both values are near zero (< atol), OR
-    * relative difference ≤ rtol, OR
-    * absolute difference ≤ atol  (covers small values where rtol is too strict,
-      e.g. interpolation differences on values close to but above atol)
-    """
-    if a == b:
-        return True
-    near_zero = abs(a) < atol and abs(b) < atol
-    return (
-        near_zero
-        or abs(a - b) <= rtol * max(abs(a), abs(b))
-        or abs(a - b) <= atol
-    )
 
 
 # ---------------------------------------------------------------------------
@@ -292,74 +207,6 @@ CLEAN_MODELS: List[str] = [
     "xidz_zidz",
     "zeroled_decimals",
 ]
-
-#: Multi-dimensional subscript models (reference in output.tab), validated
-#: element by element: every reference column must be found in the Julia output.
-ND_NUMERICAL_MODELS: List[str] = [
-    "subscript_2d_arrays",
-    "subscript_3d_arrays",
-    "subscript_3d_arrays_lengthwise",
-    "subscript_3d_arrays_widthwise",
-    "subscript_individually_defined_1_of_2d_arrays",
-    "subscript_individually_defined_1_of_2d_arrays_from_floats",
-    "subscript_transposition",
-    "subscript_updimensioning",
-    "subscript_copy",
-    "subscript_mixed_assembly",
-    "subscripted_flows",
-    "subscript_individually_defined_stocks",
-]
-
-#: Models that have an output.csv and are fully supported (clean translation).
-#: Used for numerical validation tests.
-NUMERICAL_MODELS: List[str] = [
-    "abs",
-    "builtin_max",
-    "builtin_min",
-    "case_sensitive_extension",
-    "comparisons",
-    "delay_fixed",
-    "delays",
-    "eval_order",
-    "exp",
-    "if_stmt",
-    "initial_function",
-    "input_functions",
-    "logicals",
-    "lookups_with_expr",
-    "number_handling",
-    "odd_number_quotes",
-    "smooth",
-    "sqrt",
-    "subscript_1d_arrays",
-    "subscript_individually_defined_1d_arrays",
-    "subscripted_delays",
-    "trend",
-    "trig",
-]
-
-# Cache the result so the subprocess is only run once per session.
-_julia_mtk_available_cache: bool | None = None
-
-
-def _julia_mtk_available() -> bool:
-    """Return True iff Julia is on PATH and OrdinaryDiffEq is loadable."""
-    global _julia_mtk_available_cache
-    if _julia_mtk_available_cache is not None:
-        return _julia_mtk_available_cache
-    if shutil.which("julia") is None:
-        _julia_mtk_available_cache = False
-        return False
-    try:
-        result = subprocess.run(
-            ["julia", "--startup-file=no", "-e", "using OrdinaryDiffEq"],
-            capture_output=True,
-            timeout=60,
-        )
-        _julia_mtk_available_cache = result.returncode == 0
-    except (subprocess.TimeoutExpired, OSError):
-        _julia_mtk_available_cache = False
-    return _julia_mtk_available_cache
 
 
 # ---------------------------------------------------------------------------
@@ -619,602 +466,10 @@ class TestModularTranslation:
 
 
 # ---------------------------------------------------------------------------
-# Tier 2 — Numerical validation (requires Julia)
-# ---------------------------------------------------------------------------
-
-def _julia_runner_script(model_jl: Path, col_names: List[str],
-                         julia_ids: List[str], t_ref: List[float]) -> str:
-    """
-    Generate a self-contained Julia script that:
-      1. includes the generated model file
-      2. runs the model with the Euler solver
-      3. prints a CSV with Time + one column per variable
-         (using MTK symbolic indexing — works for both stocks and observed vars)
-    """
-    t_array = "[" + ", ".join(str(t) for t in t_ref) + "]"
-
-    col_header = ", ".join(f'"{c}"' for c in col_names)
-    julia_id_strs = ", ".join(f'"{j}"' for j in julia_ids)
-
-    return f"""\
-include("{model_jl.as_posix()}")
-
-using Printf
-
-sol = run_model(; solver=Euler())
-
-col_display = [{col_header}]
-julia_ids   = [{julia_id_strs}]
-t_ref       = {t_array}
-
-# Build time-series for each variable.
-# Handles: ODE states, observed (algebraic) auxiliaries, and global @parameters
-# (which live at module scope, not in sys, so sys.name would throw).
-function _get_series(sol, id_str)
-    sym = nothing
-    try; sym = getproperty(sys, Symbol(id_str)); catch; end
-
-    if sym !== nothing
-        try; return Float64.(sol[sym, :]); catch; end
-        try; return fill(Float64(sol.prob.ps[sym]), length(sol.t)); catch; end
-    end
-    # Bare global @parameters (not included in ODESystem equations).
-    # Use ModelingToolkit.getdefault() to extract the concrete default value.
-    try
-        p = Base.eval(Main, Symbol(id_str))
-        val = Float64(ModelingToolkit.getdefault(p))
-        return fill(val, length(sol.t))
-    catch
-    end
-    return fill(NaN, length(sol.t))
-end
-
-col_series = [_get_series(sol, id) for id in julia_ids]
-
-# CSV output: header uses original column names; rows sampled at t_ref
-print("Time")
-for n in col_display; print(",", n); end
-println()
-
-for t in t_ref
-    @printf("%g", t)
-    idx = argmin(abs.(sol.t .- t))
-    for vals in col_series; @printf(",%g", vals[idx]); end
-    println()
-end
-"""
-
-
-def _run_julia(script_path: Path, timeout: int = 120) -> str:
-    """Run a Julia script and return its stdout, raising on non-zero exit."""
-    result = subprocess.run(
-        ["julia", "--startup-file=no", str(script_path)],
-        capture_output=True,
-        text=True,
-        timeout=timeout,
-    )
-    if result.returncode != 0:
-        raise RuntimeError(
-            f"Julia script failed (exit {result.returncode}):\n"
-            f"STDOUT: {result.stdout[:500]}\n"
-            f"STDERR: {result.stderr[:500]}"
-        )
-    return result.stdout
-
-
-def _parse_csv_from_string(text: str) -> Dict[str, List[float]]:
-    result: Dict[str, List[float]] = {}
-    reader = csv.DictReader(io.StringIO(text.strip()))
-    for row in reader:
-        for k, v in row.items():
-            try:
-                result.setdefault(k, []).append(float(v))
-            except ValueError:
-                result.setdefault(k, []).append(float("nan"))
-    return result
-
-
-# ---------------------------------------------------------------------------
-# Batch Julia runner — runs all models in ONE Julia process
-# ---------------------------------------------------------------------------
-
-_JL_PACKAGES = (
-    "OrdinaryDiffEq, OrdinaryDiffEqLowOrderRK, "
-    "DataInterpolations, NCDatasets, Printf"
-)
-
-_BATCH_GET_SERIES = """\
-function _batch_get_series(sol, mod, id_str)
-    # Parse optional array subscript: "stock_a[2]" or "stock_a[2, 1]"
-    m = match(r"^(\\w+)\\[([\\d, ]+)\\]$", id_str)
-    base_id  = m === nothing ? id_str : m.captures[1]
-    elem_idx = m === nothing ? nothing : parse.(Int, split(m.captures[2], ","))
-    _extract(val) = elem_idx === nothing ? Float64(val) : Float64(val[elem_idx...])
-
-    # ODE backend: use observe(u, t) to reconstruct all variables
-    if isdefined(mod, :observe)
-        try
-            return [let obs = mod.observe(sol.u[i], sol.t[i])
-                        haskey(obs, base_id) ? _extract(obs[base_id]) : NaN
-                    end for i in eachindex(sol.t)]
-        catch
-        end
-    end
-    # MTK backend: use sys for symbolic access
-    sym = nothing
-    try; sym = getproperty(mod.sys, Symbol(base_id)); catch; end
-    if sym !== nothing
-        try; return Float64.(sol[sym, :]); catch; end
-        try; return fill(Float64(sol.prob.ps[sym]), length(sol.t)); catch; end
-    end
-    return fill(NaN, length(sol.t))
-end
-"""
-
-
-def _julia_batch_script(
-    models: "List[Tuple[str, Path, List[str], List[str], List[float]]]",
-) -> str:
-    """
-    Build a Julia script that runs *all* models in one process.
-
-    Each model is isolated in its own ``module`` block so that symbol names
-    (sys, u0, eqs, run_model …) cannot clash between models.  Packages are
-    loaded once at the top level; the per-module ``using`` statements just
-    re-import already-loaded names into the module's namespace (microseconds).
-
-    Output format
-    -------------
-    For each model the script prints::
-
-        ===MODEL=<name>===
-        Time,ColA,ColB,...
-        0.0,v0a,v0b,...
-        ...
-        ===ENDMODEL===
-    """
-    lines = [f"using {_JL_PACKAGES}", "", _BATCH_GET_SERIES]
-
-    for name, jl_path, col_names, julia_ids, t_ref in models:
-        safe = re.sub(r"[^a-zA-Z0-9_]", "_", name)
-        t_arr = "[" + ", ".join(str(t) for t in t_ref) + "]"
-        col_hdr = ", ".join(f'"{c}"' for c in col_names)
-        id_strs = ", ".join(f'"{j}"' for j in julia_ids)
-
-        lines += [
-            f"# --- {name} ---",
-            f"module _M_{safe}",
-            f"    using {_JL_PACKAGES}",
-            f"    load_error = nothing",
-            f'    try include("{jl_path.as_posix()}") catch e; global load_error = e end',
-            f"end",
-            f"try",
-            f"    _M_{safe}.load_error === nothing || throw(_M_{safe}.load_error)",
-            f"    local sol = _M_{safe}.run_model(; solver=Euler())",
-            f"    local julia_ids = [{id_strs}]",
-            f"    local t_ref = {t_arr}",
-            f'    println("===MODEL={name}===")',
-            f'    print("Time")',
-            f"    for c in [{col_hdr}]; print(\",\\\"\", c, \"\\\"\"); end",
-            f"    println()",
-            f"    for t in t_ref",
-            f"        @printf(\"%g\", t)",
-            f"        local idx = argmin(abs.(sol.t .- t))",
-            f"        for id in julia_ids",
-            f"            local vals = _batch_get_series(sol, _M_{safe}, id)",
-            f"            @printf(\",%g\", vals[idx])",
-            f"        end",
-            f"        println()",
-            f"    end",
-            f'    println("===ENDMODEL===")',
-            f"catch e",
-            f'    println("===MODELERROR={name}===", replace(sprint(showerror, e), "\\n" => " ")[1:min(end, 400)])',
-            f"end",
-            "",
-        ]
-
-    return "\n".join(lines)
-
-
-def _parse_batch_output(stdout: str) -> "Dict[str, Dict[str, List[float]]]":
-    """Split batch output by model markers and parse each CSV block."""
-    results: Dict[str, Dict[str, List[float]]] = {}
-    current: Optional[str] = None
-    buf: List[str] = []
-    for line in stdout.splitlines():
-        if line.startswith("===MODELERROR="):
-            name, _, msg = line[len("===MODELERROR="):].partition("===")
-            results[name] = {"__error__": msg}
-            current = None
-        elif line.startswith("===MODEL=") and line.endswith("==="):
-            current = line[9:-3]
-            buf = []
-        elif line == "===ENDMODEL===":
-            if current is not None and buf:
-                results[current] = _parse_csv_from_string("\n".join(buf))
-            current = None
-            buf = []
-        elif current is not None:
-            buf.append(line)
-    return results
-
-
-def _find_model_file(folder: Path) -> Optional[Path]:
-    """Return the first supported model file in *folder* (MDL or XMILE, any case)."""
-    for pattern in ("*.mdl", "*.MDL", "*.xmile", "*.stmx"):
-        m = next(folder.glob(pattern), None)
-        if m is not None:
-            return m
-    return None
-
-
-def _build_id_map(mdl: Path, ref_cols: List[str]) -> Dict[str, str]:
-    """Map ref CSV column names → Julia identifiers.
-
-    Handles plain columns ('Stock A' → 'stock_a') and subscripted columns
-    ('Stock A[Entry 1]' → 'stock_a[1]') using the model's subscript ranges.
-    """
-    from pysd.builders.julia.namespace import JuliaNamespaceManager
-
-    suffix = mdl.suffix.lower()
-    if suffix in (".xmile", ".stmx", ".xml"):
-        from pysd.translators.xmile.xmile_file import XmileFile
-        vf = XmileFile(mdl)
-    else:
-        from pysd.translators.vensim.vensim_file import VensimFile
-        vf = VensimFile(mdl)
-
-    vf.parse()
-    am = vf.get_abstract_model()
-    ns = JuliaNamespaceManager()
-    for section in am.sections:
-        for elem in section.elements:
-            ns.add_to_namespace(elem.name)
-
-    # Flat label→1-based-index from all subscript ranges.
-    # Later ranges overwrite earlier ones for the same label — fine in practice
-    # because element labels are unique across dimensions within a model.
-    label_to_idx: Dict[str, int] = {}
-    for section in am.sections:
-        for sr in section.subscripts:
-            for i, label in enumerate(sr.subscripts):
-                label_to_idx[label.lower().strip()] = i + 1
-
-    result: Dict[str, str] = {}
-    for col in ref_cols:
-        if col.lower() == "time":
-            continue
-        if "[" in col:
-            base, rest = col.split("[", 1)
-            labels = rest.rstrip("]").split(",")
-            julia_id = ns.get(base.strip())
-            if julia_id is not None:
-                idxs = [label_to_idx.get(lb.lower().strip()) for lb in labels]
-                if None not in idxs:
-                    result[col] = f"{julia_id}[{', '.join(map(str, idxs))}]"
-        else:
-            julia_id = ns.get(col)
-            if julia_id is not None:
-                result[col] = julia_id
-    return result
-
-
-# ---------------------------------------------------------------------------
-# Session fixtures — translate + run all models in one Julia call
-# ---------------------------------------------------------------------------
-
-@pytest.fixture(scope="session")
-def julia_numerical_results(tmp_path_factory):
-    """Translate & run all TestNumericalValidation models in a single Julia process."""
-    if not _julia_mtk_available():
-        pytest.skip("Julia not available")
-
-    import shutil as _sh
-    import warnings
-    from pysd import translate_to_julia
-
-    tmp = tmp_path_factory.mktemp("julia_numerical")
-    folders = [
-        "abs", "builtin_max", "builtin_min", "case_sensitive_extension",
-        "comparisons", "delay_fixed", "delays", "eval_order", "exp",
-        "if_stmt", "initial_function", "input_functions", "logicals",
-        "lookups_with_expr", "number_handling", "odd_number_quotes",
-        "smooth", "sqrt", "subscript_1d_arrays",
-        "subscript_individually_defined_1d_arrays", "subscripted_delays",
-        "trend", "trig",
-    ] + ND_NUMERICAL_MODELS
-
-    models = []
-    for folder in folders:
-        mdl = _find_model_file(TEST_MODELS_DIR / folder)
-        if mdl is None or _ref_file(TEST_MODELS_DIR / folder) is None:
-            continue
-        dst = tmp / folder / mdl.name
-        dst.parent.mkdir(exist_ok=True)
-        _sh.copy(mdl, dst)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            jl_path = translate_to_julia(dst)
-            ref = _read_ref(TEST_MODELS_DIR / folder)
-            id_map = _build_id_map(mdl, list(ref.keys()))
-        if not id_map:
-            continue
-        col_names = list(id_map.keys())
-        julia_ids = [id_map[c] for c in col_names]
-        models.append((folder, jl_path, col_names, julia_ids, ref["Time"]))
-
-    if not models:
-        pytest.skip("No numerical test models found")
-
-    script_path = tmp / "_batch_numerical.jl"
-    script_path.write_text(_julia_batch_script(models))
-    stdout = _run_julia(script_path, timeout=1800)
-    return _parse_batch_output(stdout)
-
-
-@pytest.fixture(scope="session")
-def julia_constructs_results(tmp_path_factory):
-    """Translate & run all TestNewConstructsNumerical models in one Julia process."""
-    if not _julia_mtk_available():
-        pytest.skip("Julia not available")
-
-    import shutil as _sh
-    import warnings
-    from pysd import translate_to_julia
-    from pysd.builders.julia.namespace import JuliaNamespaceManager
-    from pysd.translators.vensim.vensim_file import VensimFile
-
-    tmp = tmp_path_factory.mktemp("julia_constructs")
-    t_ref = list(range(0, 11))
-
-    specs = [
-        ("delay_fixed",  MORE_TESTS_DIR / "julia_delay_fixed"    / "test_julia_delay_fixed.mdl",    ["Output"]),
-        ("trend",        MORE_TESTS_DIR / "julia_trend"           / "test_julia_trend.mdl",          ["Trend Output"]),
-        ("forecast",     MORE_TESTS_DIR / "julia_forecast"        / "test_julia_forecast.mdl",       ["Forecast Output", "Input"]),
-        ("sample_if_true", MORE_TESTS_DIR / "julia_sample_if_true" / "test_julia_sample_if_true.mdl", ["Sampled Value"]),
-    ]
-
-    models = []
-    for name, mdl, var_names in specs:
-        if not mdl.exists():
-            continue
-        dst = tmp / mdl.name
-        _sh.copy(mdl, dst)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            jl_path = translate_to_julia(dst)
-        vf = VensimFile(dst)
-        vf.parse()
-        am = vf.get_abstract_model()
-        ns = JuliaNamespaceManager()
-        for section in am.sections:
-            for elem in section.elements:
-                ns.add_to_namespace(elem.name)
-        julia_ids = [ns.get(v) or v for v in var_names]
-        models.append((name, jl_path, var_names, julia_ids, t_ref))
-
-    if not models:
-        pytest.skip("No construct test models found")
-
-    script_path = tmp / "_batch_constructs.jl"
-    script_path.write_text(_julia_batch_script(models))
-    stdout = _run_julia(script_path, timeout=1800)
-    return _parse_batch_output(stdout)
-
-
-# ---------------------------------------------------------------------------
-# Tier 2 — Numerical validation
-# ---------------------------------------------------------------------------
-
-@pytest.mark.julia
-@pytest.mark.skipif(
-    not _julia_mtk_available(),
-    reason="julia binary not found or ModelingToolkit.jl / OrdinaryDiffEq.jl not installed",
-)
-class TestNumericalValidation:
-    """
-    Numerical validation against output.csv reference values.
-
-    All models are run in a single Julia process (session fixture) so
-    package JIT cost is paid once, not once per test.
-    """
-
-    def _get_julia_ids(self, folder: str, ref_cols: List[str]) -> Dict[str, str]:
-        """
-        Map output.csv column names → Julia identifiers via JuliaNamespaceManager.
-        Build the namespace by running the parser on the model (without writing
-        the .jl file) so we get the exact same namespace the builder uses.
-        """
-        from pysd.builders.julia.namespace import JuliaNamespaceManager
-        from pysd.translators.vensim.vensim_file import VensimFile
-
-        mdl = next((TEST_MODELS_DIR / folder).glob("*.mdl"))
-        vf = VensimFile(mdl)
-        vf.parse()
-        am = vf.get_abstract_model()
-
-        ns = JuliaNamespaceManager()
-        for section in am.sections:
-            for elem in section.elements:
-                ns.add_to_namespace(elem.name)
-
-        mapping = {}
-        for col in ref_cols:
-            if col.lower() == "time":
-                continue
-            julia_id = ns.get(col)
-            if julia_id:
-                mapping[col] = julia_id
-        return mapping
-
-    def _compare(self, folder: str, ref: Dict, sim: Dict,
-                 rtol: float = 1e-3, atol: float = 1e-4,
-                 extra_ignore: set = None) -> None:
-        """Assert all shared columns match within tolerance."""
-        IGNORABLE = {
-            "saveper", "initial_time", "final_time", "time_step", "time",
-            # Vensim CSV headers use spaces; normalise both forms
-            "initial time", "final time", "time step",
-        }
-        if extra_ignore:
-            IGNORABLE = IGNORABLE | {c.lower() for c in extra_ignore}
-        failures = []
-
-        for col, ref_vals in ref.items():
-            if col.lower() in IGNORABLE:
-                continue
-            if col not in sim:
-                continue  # variable not accessible — skip rather than fail
-
-            sim_vals = sim[col]
-            if len(ref_vals) != len(sim_vals):
-                failures.append(
-                    f"{col}: length mismatch ({len(ref_vals)} vs {len(sim_vals)})"
-                )
-                continue
-
-            for i, (r, s) in enumerate(zip(ref_vals, sim_vals)):
-                if r != r:  # empty reference cell (Vensim saves constants once)
-                    continue
-                if not _isclose(r, s, rtol=rtol, atol=atol):
-                    failures.append(
-                        f"{col}[{i}]: expected {r}, got {s} (t={ref['Time'][i]})"
-                    )
-
-        assert not failures, (
-            f"{folder}: {len(failures)} comparison failure(s):\n"
-            + "\n".join(failures[:10])
-            + ("\n..." if len(failures) > 10 else "")
-        )
-
-    # --- one test method per numerical model ---
-    # Each test pulls results from the session fixture (one Julia process total).
-
-    def _sim(self, folder: str, results: Dict) -> Tuple[Dict, Dict]:
-        if folder not in results:
-            pytest.skip(f"{folder}: not in batch results (model may not be available)")
-        if "__error__" in results[folder]:
-            pytest.fail(f"{folder}: Julia model failed: {results[folder]['__error__']}")
-        ref = _read_ref(TEST_MODELS_DIR / folder)
-        return ref, results[folder]
-
-    @pytest.mark.parametrize("folder", ND_NUMERICAL_MODELS)
-    def test_nd_subscripts(self, folder, julia_numerical_results):
-        """N-D subscripted models match Vensim for every element of every variable."""
-        ref, sim = self._sim(folder, julia_numerical_results)
-        consts = {"FINAL TIME", "INITIAL TIME", "SAVEPER", "TIME STEP"}
-        missing = [c for c in ref if c != "Time" and c.upper() not in consts and c not in sim]
-        assert not missing, f"{folder}: columns not found in Julia output: {missing[:10]}"
-        nan_cols = [c for c, v in sim.items()
-                    if c.upper() not in consts and any(x != x for x in v)]
-        assert not nan_cols, f"{folder}: NaN in Julia output: {nan_cols[:10]}"
-        self._compare(folder, ref, sim)
-
-    def test_abs(self, julia_numerical_results):
-        self._compare("abs", *self._sim("abs", julia_numerical_results))
-
-    def test_builtin_max(self, julia_numerical_results):
-        self._compare("builtin_max", *self._sim("builtin_max", julia_numerical_results))
-
-    def test_builtin_min(self, julia_numerical_results):
-        self._compare("builtin_min", *self._sim("builtin_min", julia_numerical_results))
-
-    def test_exp(self, julia_numerical_results):
-        self._compare("exp", *self._sim("exp", julia_numerical_results))
-
-    def test_if_stmt(self, julia_numerical_results):
-        self._compare("if_stmt", *self._sim("if_stmt", julia_numerical_results))
-
-    def test_initial_function(self, julia_numerical_results):
-        self._compare("initial_function", *self._sim("initial_function", julia_numerical_results))
-
-    def test_input_functions(self, julia_numerical_results):
-        """PULSE, RAMP, STEP helpers produce correct time series."""
-        self._compare("input_functions", *self._sim("input_functions", julia_numerical_results))
-
-    def test_logicals(self, julia_numerical_results):
-        self._compare("logicals", *self._sim("logicals", julia_numerical_results))
-
-    def test_lookups_with_expr(self, julia_numerical_results):
-        self._compare("lookups_with_expr", *self._sim("lookups_with_expr", julia_numerical_results))
-
-    def test_number_handling(self, julia_numerical_results):
-        """XIDZ / ZIDZ and numeric edge cases produce correct values."""
-        self._compare("number_handling", *self._sim("number_handling", julia_numerical_results))
-
-    def test_sqrt(self, julia_numerical_results):
-        self._compare("sqrt", *self._sim("sqrt", julia_numerical_results))
-
-    def test_trig(self, julia_numerical_results):
-        self._compare("trig", *self._sim("trig", julia_numerical_results))
-
-    def test_case_sensitive_extension(self, julia_numerical_results):
-        """Model with uppercase .MDL extension translates and runs correctly."""
-        self._compare("case_sensitive_extension", *self._sim("case_sensitive_extension", julia_numerical_results))
-
-    def test_comparisons(self, julia_numerical_results):
-        """Comparison operators (eq, gt, gte, lt, lte, neq) produce correct values."""
-        self._compare("comparisons", *self._sim("comparisons", julia_numerical_results))
-
-    def test_eval_order(self, julia_numerical_results):
-        """Auxiliary evaluation order produces correct result."""
-        self._compare("eval_order", *self._sim("eval_order", julia_numerical_results))
-
-    def test_odd_number_quotes(self, julia_numerical_results):
-        """Model with unusual quoting in identifiers translates and runs correctly."""
-        self._compare("odd_number_quotes", *self._sim("odd_number_quotes", julia_numerical_results))
-
-    def test_trend_numerical(self, julia_numerical_results):
-        """TREND construct produces correct time series against reference output."""
-        self._compare("trend", *self._sim("trend", julia_numerical_results))
-
-    def test_subscript_1d_arrays(self, julia_numerical_results):
-        """1-D subscripted arrays (Stock A[Entry 1..3]) produce correct element series."""
-        self._compare("subscript_1d_arrays", *self._sim("subscript_1d_arrays", julia_numerical_results))
-
-    def test_subscript_individually_defined_1d_arrays(self, julia_numerical_results):
-        """Individually-defined 1-D subscripts produce correct element series."""
-        self._compare(
-            "subscript_individually_defined_1d_arrays",
-            *self._sim("subscript_individually_defined_1d_arrays", julia_numerical_results),
-        )
-
-    def test_delays(self, julia_numerical_results):
-        """DELAY1 / DELAY3 / DELAYN produce correct time series against Python reference."""
-        ref, sim = self._sim("delays", julia_numerical_results)
-        # OutputDelayN uses DELAY N with a time-varying order (2 + STEP(1, 10)).
-        # Julia's ODE builder uses the initial order (2) for the whole run; after
-        # t=10 the Vensim order jumps to 3 causing unavoidable divergence.
-        self._compare("delays", ref, sim, extra_ignore={"OutputDelayN"})
-
-    def test_smooth(self, julia_numerical_results):
-        """SMOOTH / SMOOTH3 / SMOOTHN produce correct time series against Python reference."""
-        self._compare("smooth", *self._sim("smooth", julia_numerical_results))
-
-    def test_delay_fixed(self, julia_numerical_results):
-        """DELAY FIXED with static delay time produces correct transport delay."""
-        ref, sim = self._sim("delay_fixed", julia_numerical_results)
-        # DST and DT2 use dynamic (time-varying) delay times which fall back to
-        # a first-order ODE in the Julia builder; their values differ from Python.
-        self._compare(
-            "delay_fixed", ref, sim,
-            extra_ignore={"DST", "DT2"},
-        )
-
-    def test_subscripted_delays(self, julia_numerical_results):
-        """Subscripted DELAY1 / DELAY3 / DELAYN produce correct 1-D element series."""
-        self._compare(
-            "subscripted_delays",
-            *self._sim("subscripted_delays", julia_numerical_results),
-        )
-
-
-# ---------------------------------------------------------------------------
 # Tier 1 — Feature-specific translation tests for newly implemented constructs
 # ---------------------------------------------------------------------------
 
 #: Directory containing the hand-crafted minimal models for new constructs.
-MORE_TESTS_DIR = Path("tests/more-tests")
 
 
 class TestNewConstructsTranslation:
@@ -1238,17 +493,17 @@ class TestNewConstructsTranslation:
 
     # --- DELAY FIXED ---
 
-    def test_delay_fixed_translates_without_warning(self, tmp_path):
+    def test_delay_fixed_translates_without_warning(self, tmp_path, julia_model):
         """DELAY FIXED must translate without any UserWarning."""
-        mdl = MORE_TESTS_DIR / "julia_delay_fixed" / "test_julia_delay_fixed.mdl"
+        mdl = julia_model("delay_fixed_constant")
         if not mdl.exists():
             pytest.skip("julia_delay_fixed test model not found")
         content = self._translate(mdl, tmp_path)
         assert "function rhs!" in content
 
-    def test_delay_fixed_emits_pipeline_stages(self, tmp_path):
+    def test_delay_fixed_emits_pipeline_stages(self, tmp_path, julia_model):
         """DELAY FIXED must expand into N Euler pipeline stages (exact transport delay)."""
-        mdl = MORE_TESTS_DIR / "julia_delay_fixed" / "test_julia_delay_fixed.mdl"
+        mdl = julia_model("delay_fixed_constant")
         if not mdl.exists():
             pytest.skip("julia_delay_fixed test model not found")
         content = self._translate(mdl, tmp_path)
@@ -1265,17 +520,17 @@ class TestNewConstructsTranslation:
 
     # --- TREND ---
 
-    def test_trend_translates_without_warning(self, tmp_path):
+    def test_trend_translates_without_warning(self, tmp_path, julia_model):
         """TREND must translate without any UserWarning."""
-        mdl = MORE_TESTS_DIR / "julia_trend" / "test_julia_trend.mdl"
+        mdl = julia_model("trend")
         if not mdl.exists():
             pytest.skip("julia_trend test model not found")
         content = self._translate(mdl, tmp_path)
         assert "function rhs!" in content
 
-    def test_trend_emits_smooth_stock_and_output(self, tmp_path):
+    def test_trend_emits_smooth_stock_and_output(self, tmp_path, julia_model):
         """TREND must introduce a smooth level stock and an algebraic output."""
-        mdl = MORE_TESTS_DIR / "julia_trend" / "test_julia_trend.mdl"
+        mdl = julia_model("trend")
         if not mdl.exists():
             pytest.skip("julia_trend test model not found")
         content = self._translate(mdl, tmp_path)
@@ -1283,21 +538,21 @@ class TestNewConstructsTranslation:
         assert "_sm_" in content, "TREND must declare a _sm_ smooth stock"
         assert "du[" in content, "TREND must produce a du[i] = ... ODE derivative"
         # Output must be computed (not another ODE)
-        assert "trend_output" in content
+        assert "trend_of_input" in content
 
     # --- FORECAST ---
 
-    def test_forecast_translates_without_warning(self, tmp_path):
+    def test_forecast_translates_without_warning(self, tmp_path, julia_model):
         """FORECAST must translate without any UserWarning."""
-        mdl = MORE_TESTS_DIR / "julia_forecast" / "test_julia_forecast.mdl"
+        mdl = julia_model("forecast")
         if not mdl.exists():
             pytest.skip("julia_forecast test model not found")
         content = self._translate(mdl, tmp_path)
         assert "function rhs!" in content
 
-    def test_forecast_emits_smooth_stock_and_projection(self, tmp_path):
+    def test_forecast_emits_smooth_stock_and_projection(self, tmp_path, julia_model):
         """FORECAST must introduce a smooth level and project input forward."""
-        mdl = MORE_TESTS_DIR / "julia_forecast" / "test_julia_forecast.mdl"
+        mdl = julia_model("forecast")
         if not mdl.exists():
             pytest.skip("julia_forecast test model not found")
         content = self._translate(mdl, tmp_path)
@@ -1309,17 +564,17 @@ class TestNewConstructsTranslation:
 
     # --- SAMPLE IF TRUE ---
 
-    def test_sample_if_true_translates_without_warning(self, tmp_path):
+    def test_sample_if_true_translates_without_warning(self, tmp_path, julia_model):
         """SAMPLE IF TRUE must translate without any UserWarning."""
-        mdl = MORE_TESTS_DIR / "julia_sample_if_true" / "test_julia_sample_if_true.mdl"
+        mdl = julia_model("sample_if_true")
         if not mdl.exists():
             pytest.skip("julia_sample_if_true test model not found")
         content = self._translate(mdl, tmp_path)
         assert "function rhs!" in content
 
-    def test_sample_if_true_emits_conditional_stock(self, tmp_path):
+    def test_sample_if_true_emits_conditional_stock(self, tmp_path, julia_model):
         """SAMPLE IF TRUE must expand into a hold stock with correct instantaneous output."""
-        mdl = MORE_TESTS_DIR / "julia_sample_if_true" / "test_julia_sample_if_true.mdl"
+        mdl = julia_model("sample_if_true")
         if not mdl.exists():
             pytest.skip("julia_sample_if_true test model not found")
         content = self._translate(mdl, tmp_path)
@@ -1331,16 +586,16 @@ class TestNewConstructsTranslation:
         assert "ifelse" in content, "SAMPLE IF TRUE ODE must use ifelse for condition"
         # The output variable must use the instantaneous conditional expression,
         # NOT just read the stock directly (fixes off-by-one for the "true" branch)
-        # i.e. sampled_value = ifelse(condition, input, _sit_sampled_value)
-        assert "sampled_value = ifelse(" in content or "_sit_sampled_value" in content, \
+        # i.e. sample_simple = ifelse(condition, input, _sit_sample_simple)
+        assert "_sit_sample_simple" in content, \
             "Output must use conditional ifelse(condition, input, hold_state)"
 
     # --- Built-in function expansions ---
 
-    def test_sum_builtin_resolves_to_julia_sum(self, tmp_path):
+    def test_sum_builtin_resolves_to_julia_sum(self, tmp_path, julia_model):
         """SUM(subscripted_var) must map to Julia's built-in sum()."""
         # Build a minimal model with SUM inline
-        mdl_src = MORE_TESTS_DIR / "julia_delay_fixed" / "test_julia_delay_fixed.mdl"
+        mdl_src = julia_model("delay_fixed_constant")
         if not mdl_src.exists():
             pytest.skip("test model not found for SUM regression check")
         # Just translate any model and verify the builder doesn't warn about 'sum'
@@ -1355,9 +610,9 @@ class TestNewConstructsTranslation:
                    if "Unknown Vensim function 'sum'" in str(x.message)]
         assert not unknown, f"SUM should not produce an 'Unknown function' warning: {unknown}"
 
-    def test_delay_fixed_no_unsupported_warning(self, tmp_path):
+    def test_delay_fixed_no_unsupported_warning(self, tmp_path, julia_model):
         """DELAY FIXED must not emit an 'is not supported' UserWarning."""
-        mdl = MORE_TESTS_DIR / "julia_delay_fixed" / "test_julia_delay_fixed.mdl"
+        mdl = julia_model("delay_fixed_constant")
         if not mdl.exists():
             pytest.skip("julia_delay_fixed test model not found")
         import shutil as _sh, warnings as _w
@@ -1437,84 +692,6 @@ TIME STEP  = 1
         # The result variable should reference the lookup function
         assert "population_table" in content
 
-
-# ---------------------------------------------------------------------------
-# Tier 2 — Numerical validation tests for new constructs (requires Julia)
-# ---------------------------------------------------------------------------
-
-@pytest.mark.julia
-@pytest.mark.skipif(
-    not _julia_mtk_available(),
-    reason="julia binary not found or ModelingToolkit.jl / OrdinaryDiffEq.jl not installed",
-)
-class TestNewConstructsNumerical:
-    """Numerical validation for newly implemented constructs.
-
-    All models run in a single Julia process (session fixture) so package
-    JIT compilation is paid once for the whole class.
-    """
-
-    def test_delay_fixed_exact_pipeline_behavior(self, julia_constructs_results):
-        """DELAY FIXED pipeline: output must equal 0 before delay_time, then exactly 5.
-
-        Model: Input=5 (const), Delay Time=2, Initial Value=0, TIME STEP=0.0625.
-        Expected: output=0 for t in [0,2), output=5 for t in [2,10].
-        """
-        result = julia_constructs_results.get("delay_fixed", {})
-        vals = result.get("Output", [])
-        assert vals, "Output variable not in Julia result (delay_fixed)"
-        # t=0 through t=1 (inclusive): output should be 0 (initial value held)
-        # t=2 onward: output should be 5 (input value, exactly, not exponential)
-        t_ref = list(range(0, 11))
-        for t, v in zip(t_ref, vals):
-            if t < 2:
-                assert abs(v) < 1e-6, \
-                    f"DELAY FIXED output at t={t} should be 0 (hold initial), got {v}"
-            elif t >= 2:
-                assert abs(v - 5.0) < 1e-6, \
-                    f"DELAY FIXED output at t={t} should be exactly 5.0, got {v}"
-
-    def test_trend_qualitative_behaviour(self, julia_constructs_results):
-        """TREND of a linearly growing input should produce a positive trend."""
-        result = julia_constructs_results.get("trend", {})
-        vals = result.get("Trend Output", [])
-        assert vals, "Trend Output variable not in Julia result (trend)"
-        assert any(v > 0.0 for v in vals[2:]), \
-            "TREND of growing input should be positive"
-
-    def test_forecast_qualitative_behaviour(self, julia_constructs_results):
-        """FORECAST of growing input should project input above current value."""
-        result = julia_constructs_results.get("forecast", {})
-        forecast_vals = result.get("Forecast Output", [])
-        input_vals = result.get("Input", [])
-        assert forecast_vals and input_vals, "Variables not in Julia result (forecast)"
-        for f, inp in zip(forecast_vals[5:], input_vals[5:]):
-            assert f >= inp * 0.9, \
-                f"FORECAST should be >= input after transient: forecast={f}, input={inp}"
-
-    def test_sample_if_true_exact_behavior(self, julia_constructs_results):
-        """SAMPLE IF TRUE: output must be 0 before t=5, then equal Input=2*t after t>=5.
-
-        Model: Condition=IF THEN ELSE(Time>=5,1,0), Input=Time*2, Initial=0.
-        Expected: sampled_value=0 for t<5, sampled_value=Input(t)=2*t for t>=5.
-        """
-        result = julia_constructs_results.get("sample_if_true", {})
-        vals = result.get("Sampled Value", [])
-        assert vals, "Sampled Value variable not in Julia result (sample_if_true)"
-        t_ref = list(range(0, 11))
-        for t, v in zip(t_ref, vals):
-            if t < 5:
-                assert abs(v) < 1e-6, \
-                    f"Sampled Value at t={t} should be 0 (before condition), got {v}"
-            else:
-                expected = 2.0 * t
-                assert abs(v - expected) < 0.1, \
-                    f"Sampled Value at t={t} should be ~{expected} (Input=2*t), got {v}"
-
-
-# ===========================================================================
-# New feature integration tests (Phase 4)
-# ===========================================================================
 
 class TestNewFeatureIntegration:
     """Integration tests for features added in the feature-parity work:
@@ -1816,9 +993,9 @@ class TestNewFeatureIntegration:
     # -----------------------------------------------------------------------
     # DataStructure unsupported — integration (using julia_data_structure model)
 
-    def test_data_structure_model_translates_with_warning(self, tmp_path):
+    def test_data_structure_model_translates_with_warning(self, tmp_path, julia_model):
         """Model with DataStructure emits UserWarning and produces a placeholder."""
-        mdl = MORE_TESTS_DIR / "julia_data_structure" / "test_julia_data_structure.mdl"
+        mdl = julia_model("data_equation")
         if not mdl.exists():
             pytest.skip("julia_data_structure test model not found")
         import shutil, warnings
@@ -1865,9 +1042,9 @@ class TestNewFeatureIntegration:
     # -----------------------------------------------------------------------
     # ALLOCATE AVAILABLE / ALLOCATE BY PRIORITY translation tests
 
-    def test_allocate_available_emits_helper_call(self, tmp_path):
+    def test_allocate_available_emits_helper_call(self, tmp_path, julia_model):
         """ALLOCATE AVAILABLE must translate to pysd_allocate_available(), not proportional."""
-        mdl = MORE_TESTS_DIR / "julia_allocate" / "test_julia_allocate.mdl"
+        mdl = julia_model("allocate_available")
         if not mdl.exists():
             pytest.skip("julia_allocate test model not found")
         import shutil, warnings

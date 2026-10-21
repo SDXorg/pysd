@@ -4842,7 +4842,7 @@ class JuliaSectionBuilder:
 
     def _u0_block_mtk(self) -> str:
         if not self.u0_entries:
-            return "u0 = []\n"
+            return "u0 = Pair{Num, Float64}[]\n"
         # Build param name → numeric value map from param_decls
         # "@parameters name = value" entries
         param_values: Dict[str, str] = {}
@@ -4869,11 +4869,13 @@ class JuliaSectionBuilder:
         it = self.control_vals.get("initial_time") or "0.0"
         ft = self.control_vals.get("final_time") or "100.0"
         ts = self.control_vals.get("time_step") or "1.0"
+        sp = self.control_vals.get("saveper") or "time_step"
         return (
             "# Simulation control\n"
             f"initial_time = {it}\n"
             f"final_time   = {ft}\n"
             f"time_step    = {ts}\n"
+            f"saveper      = {sp}\n"
             "tspan = (initial_time, final_time)\n"
         )
 
@@ -4892,15 +4894,20 @@ class JuliaSectionBuilder:
 
             function run_model(; u0=u0, tspan=tspan, dt={ts}, solver=Euler(){tab_param}){tab_load}
                 prob_local = remake(prob; u0=u0, tspan=tspan)
-                solve(prob_local, solver; dt=dt, saveat=tspan[1]:dt:tspan[2], adaptive=false)
+                solve(prob_local, solver; dt=dt, adaptive=false)
             end
             """)
 
     def _run_function_mtk(self) -> str:
         ts = self.control_vals.get("time_step") or "time_step"
+        # The unknowns are matched to u0 by name (structural_simplify may
+        # reorder them, and may add unknowns from algebraic loops, which start
+        # at 0.0).  saveat is needed so that a system without unknowns is
+        # still saved at every step.
         return textwrap.dedent(f"""\
-            u0_dict = Dict(x => v for (x, v) in zip(unknowns(sys), u0))
-            u0_full = [get(u0_dict, x, 0.0) for x in unknowns(sys)]
+            u0_map = Dict(Symbolics.unwrap(k) => v for (k, v) in u0)
+            u0_full = isempty(unknowns(sys)) ? u0 :
+                [x => get(u0_map, x, 0.0) for x in unknowns(sys)]
             prob = ODEProblem(sys, u0_full, tspan; build_initializeprob = false)
 
             function run_model(; u0=u0_full, tspan=tspan, dt={ts}, solver=Euler())
@@ -4910,18 +4917,24 @@ class JuliaSectionBuilder:
             """)
 
     def _entrypoint_block(self) -> str:
-        """Generate the top-level calls that run the model and save results."""
+        """Generate the calls that run the model and save results.
+
+        They only run when the file is executed (``julia model.jl``), so
+        ``include("model.jl")`` defines the model without simulating it.
+        """
         nc_name = f"{self.model_name}_results.nc"
         if self.backend == "mtk":
             save_call = f'save_results(sol, sys, _dim_labels, joinpath(@__DIR__, "{nc_name}"))'
         else:
             save_call = f'save_results(sol, _state_map, _dim_labels, joinpath(@__DIR__, "{nc_name}"))'
         return textwrap.dedent(f"""\
-            println("Running model…")
-            sol = run_model()
-            println("Saving results to {nc_name}…")
-            {save_call}
-            println("Done.")
+            if abspath(PROGRAM_FILE) == @__FILE__
+                println("Running model…")
+                sol = run_model()
+                println("Saving results to {nc_name}…")
+                {save_call}
+                println("Done.")
+            end
             """)
 
     def _dim_labels_block(self) -> str:

@@ -970,7 +970,7 @@ class TestJuliaModelBuilder:
         content = path.read_text()
         assert "build_initializeprob = false" in content
         assert "unknowns(sys)" in content
-        assert "get(u0_dict, x, 0.0)" in content
+        assert "get(u0_map, x, 0.0)" in content
 
     def test_output_contains_entrypoint_invocations(self, tmp_path):
         """Generated script must actually call run_model() and save_results() so
@@ -2225,7 +2225,7 @@ class TestJuliaFileGeneration:
         sb.build_section()
         sb.u0_entries.clear()
         block = sb._u0_block()
-        assert block == "u0 = []\n"
+        assert block == "u0 = Pair{Num, Float64}[]\n"
 
     def test_ext_const_in_declarations_block(self, tmp_path):
         sb = self._minimal_sb(tmp_path)
@@ -4864,7 +4864,6 @@ class TestMdlFileTranslation:
     requiring a Julia runtime.
     """
 
-    MORE_TESTS = Path("tests/more-tests")
 
     def _translate(self, mdl_path, tmp_path):
         import shutil
@@ -4877,17 +4876,17 @@ class TestMdlFileTranslation:
             jl_path = translate_to_julia(dst)
         return jl_path
 
-    def test_julia_data_structure_creates_jl_file(self, tmp_path):
-        mdl = self.MORE_TESTS / "julia_data_structure" / "test_julia_data_structure.mdl"
+    def test_julia_data_structure_creates_jl_file(self, tmp_path, julia_model):
+        mdl = julia_model("data_equation")
         if not mdl.exists():
             pytest.skip("julia_data_structure test model not found")
         jl_path = self._translate(mdl, tmp_path)
         assert jl_path.exists()
         assert jl_path.suffix == ".jl"
 
-    def test_julia_data_structure_emits_data_override_warning(self, tmp_path):
+    def test_julia_data_structure_emits_data_override_warning(self, tmp_path, julia_model):
         """AbstractData with a non-GET DATA equation (data-override) still warns."""
-        mdl = self.MORE_TESTS / "julia_data_structure" / "test_julia_data_structure.mdl"
+        mdl = julia_model("data_equation")
         if not mdl.exists():
             pytest.skip("julia_data_structure test model not found")
         import shutil, warnings
@@ -5016,8 +5015,8 @@ class TestMdlFileTranslation:
                           if "falling back to first-order ODE approximation" in str(w.message)]
         assert not fallback_warns, f"DELAY FIXED with constant delay time should not fall back: {fallback_warns}"
 
-    def test_julia_delay_fixed_no_warning(self, tmp_path):
-        mdl = self.MORE_TESTS / "julia_delay_fixed" / "test_julia_delay_fixed.mdl"
+    def test_julia_delay_fixed_no_warning(self, tmp_path, julia_model):
+        mdl = julia_model("delay_fixed_constant")
         if not mdl.exists():
             pytest.skip("julia_delay_fixed test model not found")
         import shutil, warnings
@@ -5030,32 +5029,32 @@ class TestMdlFileTranslation:
         user_warns = [w for w in captured if issubclass(w.category, UserWarning)]
         assert not user_warns, f"Expected no UserWarning, got: {user_warns}"
 
-    def test_julia_delay_fixed_emits_ode(self, tmp_path):
-        mdl = self.MORE_TESTS / "julia_delay_fixed" / "test_julia_delay_fixed.mdl"
+    def test_julia_delay_fixed_emits_ode(self, tmp_path, julia_model):
+        mdl = julia_model("delay_fixed_constant")
         if not mdl.exists():
             pytest.skip("julia_delay_fixed test model not found")
         jl_path = self._translate(mdl, tmp_path)
         content = jl_path.read_text()
         assert "_df_" in content
 
-    def test_julia_trend_emits_smooth_stock(self, tmp_path):
-        mdl = self.MORE_TESTS / "julia_trend" / "test_julia_trend.mdl"
+    def test_julia_trend_emits_smooth_stock(self, tmp_path, julia_model):
+        mdl = julia_model("trend")
         if not mdl.exists():
             pytest.skip("julia_trend test model not found")
         jl_path = self._translate(mdl, tmp_path)
         content = jl_path.read_text()
         assert "_sm_" in content
 
-    def test_julia_forecast_emits_smooth_stock(self, tmp_path):
-        mdl = self.MORE_TESTS / "julia_forecast" / "test_julia_forecast.mdl"
+    def test_julia_forecast_emits_smooth_stock(self, tmp_path, julia_model):
+        mdl = julia_model("forecast")
         if not mdl.exists():
             pytest.skip("julia_forecast test model not found")
         jl_path = self._translate(mdl, tmp_path)
         content = jl_path.read_text()
         assert "_sm_" in content
 
-    def test_julia_sample_if_true_emits_stock(self, tmp_path):
-        mdl = self.MORE_TESTS / "julia_sample_if_true" / "test_julia_sample_if_true.mdl"
+    def test_julia_sample_if_true_emits_stock(self, tmp_path, julia_model):
+        mdl = julia_model("sample_if_true")
         if not mdl.exists():
             pytest.skip("julia_sample_if_true test model not found")
         jl_path = self._translate(mdl, tmp_path)
@@ -5178,9 +5177,9 @@ class TestMdlFileTranslation:
         # Should have delay pipeline variables from the inner DELAY3
         assert "_lv" in content, "Expected delay level variables from inner DELAY3"
 
-    def test_json_mode_produces_data_file(self, tmp_path):
+    def test_json_mode_produces_data_file(self, tmp_path, julia_model):
         """translate_to_julia with data_format=json creates a .json companion."""
-        mdl = self.MORE_TESTS / "julia_delay_fixed" / "test_julia_delay_fixed.mdl"
+        mdl = julia_model("delay_fixed_constant")
         if not mdl.exists():
             pytest.skip("julia_delay_fixed test model not found")
         import shutil, warnings
