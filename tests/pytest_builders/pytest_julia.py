@@ -7545,3 +7545,37 @@ class TestPowerPrecedence:
         v, *_ = _visitor_with_namespace(["x"])
         node = ArithmeticStructure(operators=["^"], arguments=[ReferenceStructure("x"), 2])
         assert v.visit(node) == "pysd_power(x, 2.0)"
+
+
+class TestNonNegativeStocks:
+    """XMILE non-negative stocks: the flow is limited to -stock / time_step,
+    so an Euler step never takes the stock below zero (as NonNegativeInteg)."""
+
+    @staticmethod
+    def _equations(elements, name, **kwargs):
+        sb = _section_builder_from_elements(elements, **kwargs)
+        sb.build_section()
+        return sb.built_elements[name][0]
+
+    def test_scalar_non_negative_stock_limits_its_flow(self):
+        integ = IntegStructure(flow=ReferenceStructure("Outflow"), initial=10.0,
+                               non_negative=True)
+        stock = AbstractElement(name="Stock", components=[
+            AbstractComponent(subscripts=[[], []], ast=integ)])
+        eqs = self._equations([stock, _make_element("Outflow", -3.0)], "stock")
+        assert "D(stock) ~ max(outflow, -stock / time_step)" in eqs
+
+    def test_regular_stock_is_unchanged(self):
+        stock = _make_stock_element("Stock", ReferenceStructure("Outflow"), 10.0)
+        eqs = self._equations([stock, _make_element("Outflow", -3.0)], "stock")
+        assert "D(stock) ~ outflow" in eqs
+
+    def test_subscripted_non_negative_stock_limits_each_element(self):
+        integ = IntegStructure(
+            flow=ReferenceStructure("Outflow", subscripts=(["dim"],)),
+            initial=10.0, non_negative=True)
+        stock = _make_subscripted_element("Stock", integ, "dim")
+        outflow = _make_subscripted_element("Outflow", -3.0, "dim")
+        eqs = self._equations([stock, outflow], "stock",
+                              subscripts=[_make_subscript_range("dim", ["a", "b"])])
+        assert any("max(" in e and "-stock[_i0] / time_step)" in e for e in eqs), eqs

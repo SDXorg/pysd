@@ -110,6 +110,18 @@ _UNSUPPORTED_STRUCTURES = ()
 # Top-level builder
 # ---------------------------------------------------------------------------
 
+
+def _non_negative_flow(ast: IntegStructure, flow_expr: str, stock_ref: str) -> str:
+    """Flow of a stock, limited so a non-negative stock (XMILE) stays >= 0.
+
+    PySD's NonNegativeInteg sets the stock to max(stock + dt * flow, 0) after
+    each Euler step; with a fixed step that is the same as limiting the flow
+    to -stock / dt.
+    """
+    if getattr(ast, "non_negative", False):
+        return f"max({flow_expr}, -{stock_ref} / time_step)"
+    return flow_expr
+
 class JuliaModelBuilder:
     """Build a standalone Julia/ModelingToolkit model from an AbstractModel.
 
@@ -996,6 +1008,7 @@ class JuliaSectionBuilder:
             if ndim == 0:
                 self.stock_decls.append(f"@variables {identifier}(t)")
                 self.u0_entries.append(f"{identifier} => {initial_expr}")
+                flow_expr = _non_negative_flow(ast, flow_expr, identifier)
                 return [f"D({identifier}) ~ {flow_expr}"]
             elif ndim == 1:
                 (d0, n0) = dims[0]
@@ -1021,6 +1034,7 @@ class JuliaSectionBuilder:
                         self.u0_entries.append(
                             f"{identifier}[{i}] => {init_nd1.replace('_i0', str(i))}"
                         )
+                flow_nd1 = _non_negative_flow(ast, flow_nd1, f"{identifier}[_i0]")
                 return [
                     f"[D({identifier}[_i0]) ~ {flow_nd1} "
                     f"for _i0 in 1:{self._jl_n(d0)}]..."
@@ -1060,6 +1074,7 @@ class JuliaSectionBuilder:
                         for var, val in zip(idx_vars, idx_combo):
                             init_val = init_val.replace(var, str(val))
                         self.u0_entries.append(f"{identifier}[{idx_s}] => {init_val}")
+                flow_nd = _non_negative_flow(ast, flow_nd, f"{identifier}[{idx_str}]")
                 return [
                     f"[D({identifier}[{idx_str}]) ~ {flow_nd} "
                     f"for {self._for_clause(dims, idx_vars)}]..."
@@ -1532,6 +1547,8 @@ class JuliaSectionBuilder:
                     flow_expr = vis_idx.visit(comp.ast.flow)
                     init_expr = vis_idx.visit(comp.ast.initial)
                     self.u0_entries.append(f"{identifier}[{idx}] => {init_expr}")
+                    flow_expr = _non_negative_flow(
+                        comp.ast, flow_expr, f"{identifier}[{idx}]")
                     equations.append(f"D({identifier}[{idx}]) ~ {flow_expr}")
 
             elif isinstance(comp.ast, DelayFixedStructure):
@@ -1660,6 +1677,8 @@ class JuliaSectionBuilder:
                         flow_expr = vis_ij.visit(comp.ast.flow)
                         init_expr = vis_ij.visit(comp.ast.initial)
                         self.u0_entries.append(f"{identifier}[{i0}, {i1}] => {init_expr}")
+                        flow_expr = _non_negative_flow(
+                            comp.ast, flow_expr, f"{identifier}[{i0}, {i1}]")
                         equations.append(f"D({identifier}[{i0}, {i1}]) ~ {flow_expr}")
             else:
                 # Auxiliary component — use comprehension over remaining index ranges.
@@ -1826,6 +1845,8 @@ class JuliaSectionBuilder:
                         init_val = re.sub(rf"\b{var}\b", str(val), init_val)
                     idx_s = ", ".join(str(i) for i in combo)
                     self.u0_entries.append(f"{identifier}[{idx_s}] => {init_val}")
+                flow_expr = _non_negative_flow(
+                    comp.ast, flow_expr, f"{identifier}[_i0, _i1, _i2]")
                 equations.append(
                     f"[D({identifier}[_i0, _i1, _i2]) ~ {flow_expr} {for_clause}]..."
                 )
