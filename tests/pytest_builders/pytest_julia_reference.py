@@ -20,9 +20,12 @@ Environment variables:
     PYSD_JULIA_TIMEOUT   per-model timeout in seconds (default 600)
     PYSD_JULIA_STARTUP   extra seconds for the first model of each Julia
                          process, which loads the packages (default 600)
+    PYSD_JULIA_REQUIRED  if set, fail (instead of skip) when Julia or the
+                         packages a backend needs are not found
 
 Julia's output is written to ``_julia.log`` in each backend's work folder.
 """
+import functools
 import os
 import queue
 import re
@@ -242,8 +245,43 @@ def _cases():
 CASES, PYTHON_XFAIL = _cases()
 
 
-def _julia_available():
-    return shutil.which("julia") is not None
+#: Julia packages the generated models load, per backend.
+JULIA_PACKAGES = {
+    "ode": ["PySD", "OrdinaryDiffEq", "NCDatasets", "DataInterpolations"],
+    "mtk": ["PySD", "OrdinaryDiffEq", "NCDatasets", "DataInterpolations",
+            "ModelingToolkit", "Symbolics"],
+}
+
+
+@functools.lru_cache(maxsize=None)
+def _missing_julia_packages():
+    """Packages of JULIA_PACKAGES that Julia cannot find (None: no julia binary).
+
+    GitHub's runner images ship Julia without these packages, so checking the
+    binary alone is not enough.
+    """
+    if shutil.which("julia") is None:
+        return None
+    wanted = sorted(set().union(*JULIA_PACKAGES.values()))
+    script = "for p in ARGS; Base.find_package(p) === nothing && println(p); end"
+    try:
+        out = subprocess.run(
+            ["julia", "--startup-file=no", "-e", script, *wanted],
+            capture_output=True, text=True, timeout=300, check=True).stdout
+    except (subprocess.SubprocessError, OSError):
+        return frozenset(wanted)
+    return frozenset(out.split())
+
+
+def _julia_unavailable(backend):
+    """Why *backend* cannot run here, or None if it can."""
+    missing = _missing_julia_packages()
+    if missing is None:
+        return "julia binary not found"
+    missing = [p for p in JULIA_PACKAGES[backend] if p in missing]
+    if missing:
+        return f"Julia packages not found: {', '.join(missing)}"
+    return None
 
 
 def _cases_for(backend):
@@ -557,9 +595,14 @@ def julia_reference(tmp_path_factory):
     return _Batch(tmp_path_factory)
 
 
-@pytest.mark.skipif(not _julia_available(), reason="julia binary not found")
 @pytest.mark.parametrize("case,backend", list(_params()))
 def test_reference_output(case, backend, julia_reference):
+    unavailable = _julia_unavailable(backend)
+    if unavailable:
+        # CI's Julia job sets PYSD_JULIA_REQUIRED, so it cannot pass untested.
+        if os.environ.get("PYSD_JULIA_REQUIRED"):
+            pytest.fail(f"{backend}: {unavailable}", pytrace=False)
+        pytest.skip(unavailable)
     results = julia_reference.get(backend)
     result = results[case]
     if isinstance(result, str):
