@@ -59,6 +59,9 @@ from .julia_expressions_builder import (
 )
 from .namespace import JuliaNamespaceManager
 
+#: PySD.jl version the generated models are written for (checked on load).
+PYSD_JL_VERSION = "0.2.0"
+
 # Control variable identifiers produced by Vensim
 _CONTROL_IDENTIFIERS = frozenset(
     {"initial_time", "final_time", "time_step", "saveper"}
@@ -3975,7 +3978,7 @@ class JuliaSectionBuilder:
             f"# Model {self.model_name}\n"
             f"# Translated using PySD version {__version__}\n\n"
             f"using {', '.join(uses)}\n\n"
-            f'check_compat(v"0.1.0")\n\n'
+            f'check_compat(v"{PYSD_JL_VERSION}")\n\n'
         )
         if self.data_format == "json":
             json_fname = f"{self.path.stem}_data.json"
@@ -3995,7 +3998,7 @@ class JuliaSectionBuilder:
             f"# Model {self.model_name}\n"
             f"# Translated using PySD version {__version__}\n\n"
             f"using {', '.join(uses)}\n\n"
-            f'check_compat(v"0.1.0")\n\n'
+            f'check_compat(v"{PYSD_JL_VERSION}")\n\n'
             "@independent_variables t\n"
             "D = Differential(t)\n\n"
         )

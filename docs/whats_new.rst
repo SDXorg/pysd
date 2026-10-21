@@ -67,6 +67,11 @@ Performance
 
 Internal Changes
 ~~~~~~~~~~~~~~~~
+- Julia builder: reference tests for every test model of the Python integration
+  pathways, with both Julia backends (ODE and MTK), compared with the reference
+  outputs; known failures are tracked in :issue:`499`, :issue:`500`, :issue:`501`
+  and :issue:`502`.  Generated models run and save only when executed as a
+  script, and now require PySD.jl 0.2.0. (`@rogersamso <https://github.com/rogersamso>`_)
 
 v3.14.3 (2025/03/23)
 --------------------
