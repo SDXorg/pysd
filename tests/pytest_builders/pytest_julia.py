@@ -658,6 +658,15 @@ class TestJuliaASTVisitor:
         result = v.visit(node)
         assert result.startswith("pysd_xpulse(t,")
 
+    def test_xpulse_passes_time_step(self):
+        """XMILE PULSE gives magnitude / time_step during one step: PySD.jl needs time_step."""
+        v, *_ = _visitor_with_namespace()
+        node = CallStructure(function=ReferenceStructure(reference="Xpulse"), arguments=(10.0, 5.0))
+        assert v.visit(node) == "pysd_xpulse(t, 10.0, 5.0, time_step)"
+        node = CallStructure(function=ReferenceStructure(reference="Xpulse_train"),
+                             arguments=(10.0, 3.0, 5.0))
+        assert v.visit(node) == "pysd_xpulse_train(t, 10.0, 3.0, 5.0, time_step)"
+
     def test_xramp_prepends_t(self):
         v, *_ = _visitor_with_namespace()
         node = CallStructure(
@@ -7516,3 +7525,23 @@ class TestAggregationOverEquationDims:
         node = CallStructure(function=self._ref("f", "B!"), arguments=[1.0])
         result = v.visit(node)
         assert "_ii0 in 1:N_B" in result and "_i1" not in result
+
+
+class TestPowerPrecedence:
+    """Vensim reads -2^2 as -(2^2) = -4; PySD's parser folds the literal into -2."""
+
+    def test_negative_literal_base_is_negated_after_the_power(self):
+        v, *_ = _visitor_with_namespace()
+        node = ArithmeticStructure(operators=["^"], arguments=[-2, 2])
+        assert v.visit(node) == "(-pysd_power(2.0, 2.0))"
+
+    def test_positive_literal_base_unchanged(self):
+        v, *_ = _visitor_with_namespace()
+        node = ArithmeticStructure(operators=["^"], arguments=[2, 3])
+        assert v.visit(node) == "pysd_power(2.0, 3.0)"
+
+    def test_variable_base_is_not_negated(self):
+        """x^2 with x = -2 is 4 (pysd_power handles the sign of a variable base)."""
+        v, *_ = _visitor_with_namespace(["x"])
+        node = ArithmeticStructure(operators=["^"], arguments=[ReferenceStructure("x"), 2])
+        assert v.visit(node) == "pysd_power(x, 2.0)"

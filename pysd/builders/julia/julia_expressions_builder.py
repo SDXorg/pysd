@@ -550,12 +550,18 @@ class JuliaASTVisitor:
             op = ARITHMETIC_OPS.get(ops[0], ops[0])
             return f"({op}{args[0]})"
 
-        # Build expression, using pysd_power for ^ to handle negative bases
+        # Build expression, using pysd_power for ^ (Vensim POWER semantics)
         result = args[0]
-        for op, arg in zip(ops, args[1:]):
+        base = node.arguments[0]
+        for i, (op, arg) in enumerate(zip(ops, args[1:])):
             julia_op = ARITHMETIC_OPS.get(op, op)
             if julia_op == "^":
-                result = f"pysd_power({result}, {arg})"
+                if i == 0 and isinstance(base, (int, float)) and base < 0:
+                    # Vensim reads -2^2 as -(2^2), but the parser folds the
+                    # literal into -2: negate after the power.
+                    result = f"(-pysd_power({self.visit(-base)}, {arg}))"
+                else:
+                    result = f"pysd_power({result}, {arg})"
             else:
                 result = f"({result} {julia_op} {arg})"
         return result
@@ -1141,8 +1147,11 @@ class JuliaASTVisitor:
             if not isinstance(node.arguments[0], LogicStructure):
                 args[0] = f"({args[0]} != 0)"
 
-        # Time-dependent helpers receive the symbolic *t* as their first arg
+        # Time-dependent helpers receive the symbolic *t* as their first arg;
+        # XMILE pulses (magnitude / time_step during one step) also the time step
         if julia_func in _TIME_HELPERS:
+            if julia_func in ("pysd_xpulse", "pysd_xpulse_train"):
+                args = args + ["time_step"]
             return f"{julia_func}(t, {', '.join(args)})"
 
         return f"{julia_func}({', '.join(args)})"

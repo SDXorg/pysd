@@ -109,8 +109,6 @@ KNOWN_FAILURES = {
     ("vensim:get_xls_cellrange", "ode"): "values differ from the reference (#499)",
     ("vensim:lookups_inline_spaces", "mtk"): "values differ from the reference (#499)",
     ("vensim:macro_stock", "ode"): "values differ from the reference (#499)",
-    ("vensim:power", "mtk"): "values differ from the reference (#499)",
-    ("vensim:power", "ode"): "values differ from the reference (#499)",
     ("vensim:rounding", "mtk"): "values differ from the reference (#499)",
     ("vensim:rounding", "ode"): "values differ from the reference (#499)",
     ("vensim:smaller_range", "ode"): "values differ from the reference (#499)",
