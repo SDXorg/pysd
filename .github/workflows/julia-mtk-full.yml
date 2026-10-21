@@ -1,0 +1,62 @@
+# Full ModelingToolkit validation of the Julia builder: every Python-pathway
+# test model translated with the MTK backend, run and compared with its
+# reference output.  Pull requests only run a representative MTK subset (see
+# the julia job in ci.yml); this workflow runs the whole set weekly, on demand,
+# and on pull requests labelled "test-mtk".
+
+name: Julia MTK (full)
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+  pull_request:
+    types: [labeled, synchronize]
+
+jobs:
+  mtk:
+    name: Julia builder, MTK backend (all reference models)
+    if: >-
+      github.event_name != 'pull_request' ||
+      contains(github.event.pull_request.labels.*.name, 'test-mtk')
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    permissions:
+      actions: write  # lets julia-actions/cache delete old caches
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.11'
+      - name: Set up Julia
+        uses: julia-actions/setup-julia@v3
+        with:
+          version: '1'
+      - name: Cache Julia depot
+        uses: julia-actions/cache@v3
+      - name: Install Julia packages
+        run: |
+          julia --startup-file=no -e '
+            using Pkg
+            Pkg.activate("pysd_ci", shared=true)
+            Pkg.develop(PackageSpec(path="pysd/builders/julia/PySD.jl"))
+            Pkg.add(["OrdinaryDiffEq", "OrdinaryDiffEqLowOrderRK", "ModelingToolkit",
+                     "Symbolics", "DataInterpolations", "NCDatasets", "JSON3"])
+            Pkg.precompile()
+          '
+      - name: Install Python dependencies
+        run: |
+          pip install -U pip wheel
+          pip install --prefer-binary -r tests/requirements.txt
+          pip install --prefer-binary -e .
+      - name: Test
+        env:
+          JULIA_PROJECT: "@pysd_ci"
+          PYSD_JULIA_BACKENDS: mtk
+          PYSD_JULIA_MTK: all
+        run: |
+          pytest tests/pytest_builders/pytest_julia_reference.py -rfxX
