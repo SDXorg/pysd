@@ -43,7 +43,7 @@ New Features
 - Julia builder: ``GET XLS`` / ``GET DIRECT`` functions read ``.xls`` files
   and delimited text files (``.csv``, ``.tab``, ...), as the Python builder
   does, and subscripted variables read one row or column per element in
-  row/column mode (:issue:`501`). (`@rogersamso <https://github.com/rogersamso>`_)
+  row/column mode; generated models require PySD.jl 0.2.2 (:issue:`501`). (`@rogersamso <https://github.com/rogersamso>`_)
 
 Breaking changes
 ~~~~~~~~~~~~~~~~
