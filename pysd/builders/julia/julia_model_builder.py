@@ -603,6 +603,22 @@ class JuliaSectionBuilder:
     # Subscript helpers
     # ------------------------------------------------------------------
 
+    def _dispatch_n(self, comp: "AbstractComponent") -> str:
+        """Keyword arguments for pysd_xlsx_build_lookup_dispatch: ``n``, the
+        number of series (rows or columns from the start cell) that *comp*
+        covers, which PySD.jl needs in row and column mode; and ``method``,
+        the DATA keyword (HOLD BACKWARD, LOOK FORWARD), when given."""
+        kwargs = []
+        n = 1
+        for labels in self._comp_coords(comp).values():
+            n *= max(len(labels), 1)
+        if n > 1:
+            kwargs.append(f"n={n}")
+        keyword = getattr(comp, "keyword", None)
+        if keyword in ("hold_backward", "look_forward"):
+            kwargs.append(f"method=:{keyword}")
+        return "; " + ", ".join(kwargs) if kwargs else ""
+
     def _comp_coords(self, comp: "AbstractComponent") -> Dict[str, list]:
         """Build an ``{range_name: [element_labels]}`` coords dict for *comp*.
 
@@ -2950,7 +2966,8 @@ class JuliaSectionBuilder:
             file_expr = f'joinpath(@__DIR__, "{ast0.file}")'
             self.lookup_const_decls.append(
                 f"const {identifier}_fns = pysd_xlsx_build_lookup_dispatch("
-                f'{file_expr}, "{ast0.tab}", "{ast0.x_row_or_col}", "{ast0.cell}")'
+                f'{file_expr}, "{ast0.tab}", "{ast0.x_row_or_col}", "{ast0.cell}"'
+                f"{self._dispatch_n(comp0)})"
             )
             self.lookup_func_decls.append(
                 f"{identifier}(i, x) = {identifier}_fns[i](x)"
@@ -2965,10 +2982,9 @@ class JuliaSectionBuilder:
         if self.data_format != "json" and len(elem.components) > 1:
             ast0 = elem.components[0].ast
             file_expr = f'joinpath(@__DIR__, "{ast0.file}")'
-            y_names = []
-            for comp in elem.components:
-                if isinstance(comp.ast, GetLookupsStructure):
-                    y_names.append(comp.ast.cell)
+            y_comps = [comp for comp in elem.components
+                       if isinstance(comp.ast, GetLookupsStructure)]
+            y_names = [comp.ast.cell for comp in y_comps]
             if y_names:
                 # Each component may produce a 1D or 2D lookup.
                 # Use pysd_xlsx_build_lookup_dispatch per component to get
@@ -2978,7 +2994,8 @@ class JuliaSectionBuilder:
                     sub_name = f"{identifier}_{k + 1}"
                     self.lookup_const_decls.append(
                         f"const {sub_name}_fns = pysd_xlsx_build_lookup_dispatch("
-                        f'{file_expr}, "{ast0.tab}", "{ast0.x_row_or_col}", "{y_name}")'
+                        f'{file_expr}, "{ast0.tab}", "{ast0.x_row_or_col}", "{y_name}"'
+                        f"{self._dispatch_n(y_comps[k])})"
                     )
                     sub_dispatch_names.append(f"{sub_name}_fns")
 
@@ -3265,7 +3282,8 @@ class JuliaSectionBuilder:
             file_expr = f'joinpath(@__DIR__, "{ast0.file}")'
             self.lookup_const_decls.append(
                 f"const {identifier}_fns = pysd_xlsx_build_lookup_dispatch("
-                f'{file_expr}, "{ast0.tab}", "{ast0.time_row_or_col}", "{ast0.cell}")'
+                f'{file_expr}, "{ast0.tab}", "{ast0.time_row_or_col}", "{ast0.cell}"'
+                f"{self._dispatch_n(comp0)})"
             )
             self.lookup_func_decls.append(
                 f"{identifier}(i, x) = {identifier}_fns[i](x)"
@@ -3284,7 +3302,8 @@ class JuliaSectionBuilder:
                 sub_name = f"{identifier}_{k + 1}"
                 self.lookup_const_decls.append(
                     f"const {sub_name}_fns = pysd_xlsx_build_lookup_dispatch("
-                    f'{file_expr}, "{dc.ast.tab}", "{dc.ast.time_row_or_col}", "{dc.ast.cell}")'
+                    f'{file_expr}, "{dc.ast.tab}", "{dc.ast.time_row_or_col}", "{dc.ast.cell}"'
+                    f"{self._dispatch_n(dc)})"
                 )
                 sub_dispatch_names.append(f"{sub_name}_fns")
 

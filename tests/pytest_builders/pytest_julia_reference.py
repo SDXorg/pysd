@@ -122,15 +122,6 @@ KNOWN_FAILURES = {
     ("vensim:macro_multi_macros", "mtk"): "generated code refers to an undefined name (#500)",
     ("vensim:macro_stock", "mtk"): "generated code refers to an undefined name (#500)",
     ("vensim:macro_trailing_definition", "mtk"): "generated code refers to an undefined name (#500)",
-    # .xls input files not supported (XLSX.jl reads .xlsx only) (#501)
-    ("vensim:get_data_args_3d_xls", "mtk"): ".xls input files not supported (XLSX.jl reads .xlsx only) (#501)",
-    ("vensim:get_data_args_3d_xls", "ode"): ".xls input files not supported (XLSX.jl reads .xlsx only) (#501)",
-    ("vensim:get_lookups_data_3d_xls", "mtk"): ".xls input files not supported (XLSX.jl reads .xlsx only) (#501)",
-    ("vensim:get_lookups_data_3d_xls", "ode"): ".xls input files not supported (XLSX.jl reads .xlsx only) (#501)",
-    ("vensim:get_lookups_subscripted_args", "mtk"): ".xls input files not supported (XLSX.jl reads .xlsx only) (#501)",
-    ("vensim:get_lookups_subscripted_args", "ode"): ".xls input files not supported (XLSX.jl reads .xlsx only) (#501)",
-    ("vensim:get_lookups_subset", "mtk"): ".xls input files not supported (XLSX.jl reads .xlsx only) (#501)",
-    ("vensim:get_lookups_subset", "ode"): ".xls input files not supported (XLSX.jl reads .xlsx only) (#501)",
     # variables missing from the Julia output (#499)
     ("vensim:except", "mtk"): "variables missing from the Julia output (#499)",
     ("vensim:except_multiple", "mtk"): "variables missing from the Julia output (#499)",
@@ -143,11 +134,11 @@ KNOWN_FAILURES = {
     ("vensim:except_subranges", "mtk"): "MTK: indexing a symbolic array out of its declared shape (#502)",
     ("vensim:subrange_merge", "mtk"): "MTK: indexing a symbolic array out of its declared shape (#502)",
     ("vensim:subscript_definition", "mtk"): "MTK: indexing a symbolic array out of its declared shape (#502)",
-    # Excel data referenced by row/column number not supported (#501)
-    ("vensim:get_mixed_definitions", "mtk"): "Excel data referenced by row/column number not supported (#501)",
-    ("vensim:get_mixed_definitions", "ode"): "Excel data referenced by row/column number not supported (#501)",
-    ("vensim:partial_range_definitions", "mtk"): "Excel data referenced by row/column number not supported (#501)",
-    ("vensim:partial_range_definitions", "ode"): "Excel data referenced by row/column number not supported (#501)",
+    # partially defined variables (#500)
+    ("vensim:get_mixed_definitions", "mtk"): "GET DATA and GET CONSTANTS in one variable: call with the wrong arguments (#500)",
+    ("vensim:get_mixed_definitions", "ode"): "GET DATA and GET CONSTANTS in one variable: call with the wrong arguments (#500)",
+    ("vensim:partial_range_definitions", "mtk"): "partially defined lookups and data: placeholders and element mapping (#500)",
+    ("vensim:partial_range_definitions", "ode"): "partially defined lookups and data: placeholders and element mapping (#500)",
     # lookup emitted as a constant but called as a function (#500)
     ("vensim:lookups_funcnames", "ode"): "lookup emitted as a constant but called as a function (#500)",
     # MTK: symbolic value in an if/else condition (#502)
