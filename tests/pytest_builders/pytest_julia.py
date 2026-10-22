@@ -498,7 +498,6 @@ class TestJuliaASTVisitor:
         ("ARCTAN", "atan"),
         ("MIN", "min"),
         ("MAX", "max"),
-        ("MODULO", "mod"),
         ("INTEGER", "trunc"),
     ])
     def test_builtin_functions(self, vensim_name, julia_name):
@@ -7361,6 +7360,17 @@ class TestAggregationOverEquationDims:
         assert "_ii0 in 1:N_B" in result and "_i1" not in result
 
 
+class TestModulo:
+    """Vensim MODULO keeps the sign of x (Python PySD: x - QUANTUM(x, m))."""
+
+    def test_modulo_is_x_minus_quantum(self):
+        v, *_ = _visitor_with_namespace(["stocka"])
+        node = CallStructure(
+            function=ReferenceStructure(reference="MODULO"),
+            arguments=[ReferenceStructure("stocka"), 3])
+        assert v.visit(node) == "(stocka - pysd_quantum(stocka, 3.0))"
+
+
 class TestPowerPrecedence:
     """Vensim reads -2^2 as -(2^2) = -4; PySD's parser folds the literal into -2."""
 
@@ -7721,3 +7731,16 @@ class TestVectorSelect:
         assert v.visit(node) == (
             "pysd_vector_select([sel[_ii0] for _ii0 in 1:N_DIM1, _ii1 in 1:N_DIM2], "
             "[expr[_ii1] for _ii0 in 1:N_DIM1, _ii1 in 1:N_DIM2], -1.0, 0.0, 0.0)")
+    def test_power_chain_is_right_associative(self):
+        """Vensim (like Python's **) reads 30^c^c as 30^(c^c)."""
+        v, *_ = _visitor_with_namespace(["cons"])
+        node = ArithmeticStructure(
+            operators=["^", "^"],
+            arguments=[30, ReferenceStructure("cons"), ReferenceStructure("cons")])
+        assert v.visit(node) == "pysd_power(30.0, pysd_power(cons, cons))"
+
+    def test_power_chain_with_negative_literal_base(self):
+        """-2^3^2 is -(2^(3^2))."""
+        v, *_ = _visitor_with_namespace()
+        node = ArithmeticStructure(operators=["^", "^"], arguments=[-2, 3, 2])
+        assert v.visit(node) == "(-pysd_power(2.0, pysd_power(3.0, 2.0)))"

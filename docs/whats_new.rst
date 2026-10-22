@@ -96,6 +96,10 @@ Bug fixes
   macros with stocks give the right results and the MTK backend can run
   models with macros; the companion function files are gone
   (:issue:`510`). (`@rogersamso <https://github.com/rogersamso>`_)
+- Julia builder: chains of powers are right-associative as in Vensim
+  (``a^b^c = a^(b^c)``), and ``MODULO`` keeps the sign of its first argument
+  as in Vensim and the Python builder (Julia's ``mod`` did not)
+  (:issue:`516`). (`@rogersamso <https://github.com/rogersamso>`_)
 
 Documentation
 ~~~~~~~~~~~~~

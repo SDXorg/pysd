@@ -88,18 +88,12 @@ MTK_SCOPE = os.environ.get("PYSD_JULIA_MTK", "all")
 KNOWN_FAILURES = {
     # values differ from the reference (#499)
     ("vensim:active_initial", "mtk"): "values differ from the reference (#499)",
-    ("vensim:arithmetics", "mtk"): "values differ from the reference (#499)",
-    ("vensim:arithmetics", "ode"): "values differ from the reference (#499)",
-    ("vensim:arithmetics_exp", "mtk"): "values differ from the reference (#499)",
-    ("vensim:arithmetics_exp", "ode"): "values differ from the reference (#499)",
     ("vensim:elm_count", "ode"): "values differ from the reference (#499)",
     ("vensim:except_multiple", "ode"): "values differ from the reference (#499)",
     ("vensim:except_subranges", "ode"): "values differ from the reference (#499)",
     ("vensim:get_constants_subranges", "mtk"): "values differ from the reference (#499)",
     ("vensim:get_constants_subranges", "ode"): "values differ from the reference (#499)",
     ("vensim:lookups_inline_spaces", "mtk"): "values differ from the reference (#499)",
-    ("vensim:rounding", "mtk"): "values differ from the reference (#499)",
-    ("vensim:rounding", "ode"): "values differ from the reference (#499)",
     ("vensim:smaller_range", "ode"): "values differ from the reference (#499)",
     ("vensim:subrange_merge", "ode"): "values differ from the reference (#499)",
     ("vensim:subscript_definition", "ode"): "values differ from the reference (#499)",
@@ -107,12 +101,6 @@ KNOWN_FAILURES = {
     ("vensim:subscript_mapping_simple", "ode"): "values differ from the reference (#499)",
     ("vensim:subscript_mapping_vensim", "mtk"): "values differ from the reference (#499)",
     ("vensim:subscript_mapping_vensim", "ode"): "values differ from the reference (#499)",
-    ("vensim:subscripted_round", "mtk"): "values differ from the reference (#499)",
-    ("vensim:subscripted_round", "ode"): "values differ from the reference (#499)",
-    ("xmile:arithmetics_exp", "mtk"): "values differ from the reference (#499)",
-    ("xmile:arithmetics_exp", "ode"): "values differ from the reference (#499)",
-    ("xmile:rounding", "mtk"): "values differ from the reference (#499)",
-    ("xmile:rounding", "ode"): "values differ from the reference (#499)",
     # generated code refers to an undefined name (#500)
     ("vensim:data_from_other_model", "mtk"): "generated code refers to an undefined name (#500)",
     # variables missing from the Julia output (#499)
@@ -133,7 +121,6 @@ KNOWN_FAILURES = {
     ("vensim:partial_range_definitions", "mtk"): "partially defined lookups and data: placeholders and element mapping (#500)",
     ("vensim:partial_range_definitions", "ode"): "partially defined lookups and data: placeholders and element mapping (#500)",
     # lookup emitted as a constant but called as a function (#500)
-    ("vensim:lookups_funcnames", "ode"): "lookup emitted as a constant but called as a function (#500)",
     # MTK: symbolic value in an if/else condition (#502)
     ("vensim:control_vars", "mtk"): "MTK: symbolic value in an if/else condition (#502)",
     ("vensim:dynamic_final_time", "mtk"): "MTK: symbolic value in an if/else condition (#502)",
@@ -146,8 +133,8 @@ KNOWN_FAILURES = {
     ("vensim:get_with_missing_values_xlsx", "ode"): "lookup x values not sorted (#500)",
     # EXCEPT on stocks generates invalid Julia (#500)
     ("vensim:except", "ode"): "EXCEPT on stocks generates invalid Julia (#500)",
-    # MTK: MODULO not callable on symbolic values (#502)
-    ("vensim:lookups_funcnames", "mtk"): "MTK: MODULO not callable on symbolic values (#502)",
+    # MTK: symbolic simplification changes rounding at integer boundaries (#502)
+    ("vensim:subscripted_round", "mtk"): "MTK: symbolic simplification changes rounding at integer boundaries (#502)",
     # MTK: initial value depends on other variables (#502)
     ("vensim:active_initial_circular", "mtk"): "MTK: initial value depends on other variables (#502)",
     # MTK: numeric conversion of a symbolic value (#502)
