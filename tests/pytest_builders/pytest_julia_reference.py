@@ -143,17 +143,13 @@ KNOWN_FAILURES = {
     ("vensim:except_multiple", "mtk"): "variables missing from the Julia output (#499)",
     ("vensim:get_subscript_3d_arrays_xls", "mtk"): "variables missing from the Julia output (#499)",
     ("vensim:get_subscript_3d_arrays_xls", "ode"): "variables missing from the Julia output (#499)",
-    ("vensim:initial_function", "mtk"): "variables missing from the Julia output (#499)",
     ("vensim:subscripted_xidz", "mtk"): "variables missing from the Julia output (#499)",
-    ("vensim:unchangeable_constant", "mtk"): "variables missing from the Julia output (#499)",
-    ("xmile:initial_function", "mtk"): "variables missing from the Julia output (#499)",
     # MTK: indexing a symbolic array out of its declared shape (#502)
     ("vensim:allocate_available", "mtk"): "MTK: indexing a symbolic array out of its declared shape (#502)",
     ("vensim:elm_count", "mtk"): "MTK: indexing a symbolic array out of its declared shape (#502)",
     ("vensim:except_subranges", "mtk"): "MTK: indexing a symbolic array out of its declared shape (#502)",
     ("vensim:subrange_merge", "mtk"): "MTK: indexing a symbolic array out of its declared shape (#502)",
     ("vensim:subscript_definition", "mtk"): "MTK: indexing a symbolic array out of its declared shape (#502)",
-    ("vensim:subscripted_smooth", "mtk"): "MTK: indexing a symbolic array out of its declared shape (#502)",
     # Excel data referenced by row/column number not supported (#501)
     ("vensim:get_mixed_definitions", "mtk"): "Excel data referenced by row/column number not supported (#501)",
     ("vensim:get_mixed_definitions", "ode"): "Excel data referenced by row/column number not supported (#501)",
@@ -166,9 +162,6 @@ KNOWN_FAILURES = {
     # ALLOCATE with subscripted arguments not supported (#500)
     ("vensim:allocate_available", "ode"): "ALLOCATE with subscripted arguments not supported (#500)",
     ("vensim:allocate_by_priority", "ode"): "ALLOCATE with subscripted arguments not supported (#500)",
-    # MTK: array minus scalar in symbolic equations (#502)
-    ("vensim:forecast", "mtk"): "MTK: array minus scalar in symbolic equations (#502)",
-    ("vensim:subscripted_trend", "mtk"): "MTK: array minus scalar in symbolic equations (#502)",
     # MTK: symbolic value in an if/else condition (#502)
     ("vensim:control_vars", "mtk"): "MTK: symbolic value in an if/else condition (#502)",
     ("vensim:dynamic_final_time", "mtk"): "MTK: symbolic value in an if/else condition (#502)",
@@ -189,8 +182,6 @@ KNOWN_FAILURES = {
     ("vensim:active_initial_circular", "mtk"): "MTK: initial value depends on other variables (#502)",
     # MTK: numeric conversion of a symbolic value (#502)
     ("vensim:allocate_by_priority", "mtk"): "MTK: numeric conversion of a symbolic value (#502)",
-    # MTK: unbalanced system (#502)
-    ("vensim:tabbed_arrays", "mtk"): "MTK: unbalanced system (#502)",
     # macro: variable from another macro expression (#500)
     ("vensim:macro_multi_expression", "ode"): "macro: variable from another macro expression (#500)",
 }
@@ -359,7 +350,13 @@ function _pysd_values(m, sol, ids::Vector{String}, t_ref::Vector{Float64})
             series = try
                 sol[target]
             catch
-                try fill(sol.ps[target], length(sol.t)) catch; nothing end
+                try
+                    fill(sol.ps[target], length(sol.t))
+                catch
+                    # a parameter no equation uses is not in the simplified
+                    # system: its value is its default
+                    try fill(Float64(m.ModelingToolkit.getdefault(target)), length(sol.t)) catch; nothing end
+                end
             end
             series === nothing && continue
             for (r, i) in enumerate(rows)

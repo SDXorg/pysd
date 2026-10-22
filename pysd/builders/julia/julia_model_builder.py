@@ -1270,6 +1270,15 @@ class JuliaSectionBuilder:
                     except (ValueError, TypeError):
                         pass
             else:
+                import numpy as _np
+                if isinstance(ast, _np.ndarray) and ndim >= 2:
+                    # The values as a Julia array of the variable's shape, from
+                    # Vensim's row-major order (Julia arrays are column-major)
+                    flat = ", ".join(format_number(float(v)) for v in ast.flatten())
+                    sizes = [self._jl_n(d) for d, _ in dims]
+                    perm = ", ".join(str(k) for k in range(ndim, 0, -1))
+                    value_expr = (f"permutedims(reshape(Float64[{flat}], "
+                                  f"{', '.join(reversed(sizes))}), ({perm}))")
                 self.param_decls.append(
                     f"@parameters {identifier}[{self._range_str(dims)}] = {value_expr}{lim_comment}"
                 )
@@ -4660,6 +4669,10 @@ class JuliaSectionBuilder:
         sizes = [r.split(":", 1)[-1].strip() for r in spec.rstrip("]").split(",")]
         values, _, comment = val.partition(" #")
         values = values.strip()
+        if values.startswith("permutedims("):
+            # already an array of the right shape
+            comment = f"  #{comment}" if comment else ""
+            return f"const {base} = {values}{comment}"
         if values.startswith("[") and not values.startswith("Float64["):
             values = "Float64" + values
         comment = f"  #{comment}" if comment else ""
