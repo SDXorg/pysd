@@ -7817,3 +7817,72 @@ class TestSubscriptedAllocation:
         content = JuliaModelBuilder(model).build_model().read_text()
         assert ("allocation[_i0] = pysd_allocate_available([demand[_v] for _v in 1:N_BRANCH], "
                 "[priority[_v, _p] for _v in 1:N_BRANCH, _p in 1:4], 10.0)[_i0]") in content
+
+
+class TestModuleConstantsNotShadowed:
+    """var2[Dim1, Dim2] = WITH LOOKUP(var1[Dim1, Dim2], …) with var1 a GET DIRECT
+    CONSTANTS array (test-models with_lookup): var1 is read from the module-level
+    constant, not from a local array of zeros."""
+
+    def test_external_constant_is_not_reallocated(self, tmp_path):
+        import shutil, warnings
+        src = Path("tests/test-models/tests/with_lookup")
+        if not src.exists():
+            pytest.skip("with_lookup test model not found")
+        for f in src.iterdir():
+            shutil.copy(f, tmp_path / f.name)
+        from pysd import translate_to_julia
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            content = translate_to_julia(tmp_path / "test_with_lookup.mdl").read_text()
+        assert "const var1 = " in content
+        assert "var1 = pysd_safe(zeros(" not in content
+
+
+class TestActiveInitialOde:
+    """Stock A = INTEG(1, Value A), Value A = ACTIVE INITIAL(Time, 45)
+    (test-models active_initial): the stock starts at 45."""
+
+    def test_initial_value_while_initialising(self, tmp_path):
+        import shutil, warnings
+        mdl = Path("tests/test-models/tests/active_initial/test_active_initial.mdl")
+        if not mdl.exists():
+            pytest.skip("active_initial test model not found")
+        shutil.copy(mdl, tmp_path / mdl.name)
+        from pysd import translate_to_julia
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            content = translate_to_julia(tmp_path / mdl.name).read_text()
+        assert "_active_initial(expr, initial) = _initialising[] ? initial : expr" in content
+        assert "value_a = _active_initial(t, 45.0)" in content
+        assert content.index("_initialising[] = true") < content.index("u0 = ")
+        assert content.index("u0 = ") < content.index("_initialising[] = false")
+
+
+class TestConstantsDefinedInParts:
+    """var4[t2] = GET DIRECT CONSTANTS(…), var4[subdim] = …, var4[t4] = …
+    with subdim: t3, t1 (test-models get_values_order): each definition goes
+    to its elements' positions, whatever order they are written in."""
+
+    def test_parts_are_placed_by_element(self, tmp_path):
+        dim = _make_subscript_range("Dimension", ["t1", "t2", "t3", "t4"])
+        sub = _make_subscript_range("subdim", ["t3", "t1"])
+        gcs = lambda cell: GetConstantsStructure("inputs.xlsx", "Sheet1", cell)
+        elem = AbstractElement(name="var4", components=[
+            AbstractComponent(subscripts=(["t2"], []), ast=gcs("var2t2")),
+            AbstractComponent(subscripts=(["subdim"], []), ast=gcs("var4subdim*")),
+            AbstractComponent(subscripts=(["t4"], []), ast=7.0),
+        ])
+        controls = [
+            _make_control_element("INITIAL TIME", 0.0),
+            _make_control_element("FINAL TIME", 1.0),
+            _make_control_element("TIME STEP", 1.0),
+            _make_control_element("SAVEPER", 1.0),
+        ]
+        section = _make_section(elements=[elem] + controls,
+                                subscripts=[dim, sub], path=tmp_path / "m.mdl")
+        model = AbstractModel(original_path=tmp_path / "m.mdl", sections=(section,))
+        content = JuliaModelBuilder(model).build_model().read_text()
+        assert "_v[[2]] .= pysd_xlsx_read_constant(" in content
+        assert '_v[[3, 1]] .= pysd_xlsx_read_constant(joinpath(@__DIR__, "inputs.xlsx"), "Sheet1", "var4subdim"; transpose=true)' in content
+        assert "_v[[4]] .= 7.0" in content

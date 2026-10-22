@@ -88,8 +88,6 @@ MTK_SCOPE = os.environ.get("PYSD_JULIA_MTK", "all")
 KNOWN_FAILURES = {
     # values differ from the reference (#499)
     ("vensim:active_initial", "mtk"): "values differ from the reference (#499)",
-    ("vensim:active_initial", "ode"): "values differ from the reference (#499)",
-    ("vensim:active_initial_circular", "ode"): "values differ from the reference (#499)",
     ("vensim:arithmetics", "mtk"): "values differ from the reference (#499)",
     ("vensim:arithmetics", "ode"): "values differ from the reference (#499)",
     ("vensim:arithmetics_exp", "mtk"): "values differ from the reference (#499)",
@@ -101,8 +99,6 @@ KNOWN_FAILURES = {
     ("vensim:get_constants_subranges", "mtk"): "values differ from the reference (#499)",
     ("vensim:get_constants_subranges", "ode"): "values differ from the reference (#499)",
     ("vensim:get_values_order", "mtk"): "values differ from the reference (#499)",
-    ("vensim:get_values_order", "ode"): "values differ from the reference (#499)",
-    ("vensim:get_xls_cellrange", "ode"): "values differ from the reference (#499)",
     ("vensim:lookups_inline_spaces", "mtk"): "values differ from the reference (#499)",
     ("vensim:macro_stock", "ode"): "values differ from the reference (#499)",
     ("vensim:rounding", "mtk"): "values differ from the reference (#499)",
@@ -116,7 +112,6 @@ KNOWN_FAILURES = {
     ("vensim:subscript_mapping_vensim", "ode"): "values differ from the reference (#499)",
     ("vensim:subscripted_round", "mtk"): "values differ from the reference (#499)",
     ("vensim:subscripted_round", "ode"): "values differ from the reference (#499)",
-    ("vensim:with_lookup", "ode"): "values differ from the reference (#499)",
     ("xmile:arithmetics_exp", "mtk"): "values differ from the reference (#499)",
     ("xmile:arithmetics_exp", "ode"): "values differ from the reference (#499)",
     ("xmile:rounding", "mtk"): "values differ from the reference (#499)",

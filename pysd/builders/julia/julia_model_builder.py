@@ -3658,6 +3658,14 @@ class JuliaSectionBuilder:
                 f'"{ast0.tab}", "{clean_cell}"{kw})'
             )
 
+        # ----- Multi-component 1-D: each definition at its own elements -----
+        # var2[t2] = GET DIRECT CONSTANTS(…), var2[t3] = …, var2[subdim] = …:
+        # the definitions are written in any order, so each one is assigned
+        # to the positions of its elements in the variable's range.
+        placed = self._placed_constants_1d(elem)
+        if placed is not None:
+            return placed
+
         # ----- Multi-component with 2D+ subscripts: fall back to baked-in -----
         comp0_coords = self._comp_coords(elem.components[0])
         if len(comp0_coords) >= 2 and len(elem.components) > 1:
@@ -3720,6 +3728,40 @@ class JuliaSectionBuilder:
             f'pysd_xlsx_read_constant({file_expr}, '
             f'"{tab}", [{specs_str}]{kw})'
         )
+
+    def _placed_constants_1d(self, elem: AbstractElement) -> Optional[str]:
+        """A 1-D constant defined in parts, as a ``let`` block that fills
+        each part's positions (None if the definitions are not 1-D parts of
+        one range, or the JSON data format is used)."""
+        if self.data_format == "json" or len(elem.components) < 2:
+            return None
+        parts = []
+        covered: List[str] = []
+        for comp in elem.components:
+            coords = self._comp_coords(comp)
+            if len(coords) != 1:
+                return None
+            elems = list(next(iter(coords.values())))
+            covered.extend(elems)
+            parts.append((comp, elems))
+        target = next((r for r, e in self._subs_elems.items()
+                       if isinstance(e, list) and sorted(e) == sorted(covered)), None)
+        if target is None:
+            return None
+        order = self._subs_elems[target]
+        lines = [f"let _v = zeros({len(order)})"]
+        for comp, elems in parts:
+            positions = ", ".join(str(order.index(e) + 1) for e in elems)
+            if isinstance(comp.ast, GetConstantsStructure):
+                cell = comp.ast.cell
+                kw = "; transpose=true" if cell.endswith("*") else ""
+                value = (f'pysd_xlsx_read_constant(joinpath(@__DIR__, "{comp.ast.file}"), '
+                         f'"{comp.ast.tab}", "{cell.rstrip("*")}"{kw})')
+            else:
+                value = format_number(comp.ast)
+            lines.append(f"    _v[[{positions}]] .= {value}")
+        lines += ["    _v", "end"]
+        return "\n".join(lines)
 
     def _read_get_constants_baked(
         self, elem: "AbstractElement", identifier: str
@@ -4566,9 +4608,14 @@ class JuliaSectionBuilder:
 
         # First pass: scan ALL equations (LHS AND RHS) for max literal indices
         all_eq_text = "\n".join(alg_lines)
+        # Module-level constants (e.g. GET DIRECT CONSTANTS arrays) are read,
+        # not allocated: a local array would hide them
+        module_names = set(self._const_names_for_observe(set()))
         for m in re.finditer(r"\b(\w+)\[([^\]]+)\]", all_eq_text):
             name = m.group(1)
             if name in stock_indices or name.startswith("du") or name.startswith("u"):
+                continue
+            if name in module_names:
                 continue
             indices = [x.strip() for x in m.group(2).split(",")]
             cur = alloc_needed.get(name, [])
@@ -5371,6 +5418,22 @@ class JuliaSectionBuilder:
 
     def _full_file_content(self, equations: List[str]) -> str:
         needs_di = bool(self.lookup_const_decls)
+        equations_block = self._equations_block(equations)
+        u0_block = self._u0_block()
+        active_initial = ""
+        if self.backend == "ode" and "pysd_active_initial(" in equations_block:
+            # ACTIVE INITIAL(expr, initial) is `initial` while the initial
+            # values are computed and `expr` afterwards, as in Python PySD
+            active_initial = (
+                "# ACTIVE INITIAL: its initial value while the initial values\n"
+                "# are computed, its active value afterwards\n"
+                "const _initialising = Ref(false)\n"
+                "_active_initial(expr, initial) = _initialising[] ? initial : expr\n\n"
+            )
+            equations_block = equations_block.replace("pysd_active_initial(", "_active_initial(")
+            u0_block = ("_initialising[] = true\n"
+                        + u0_block.replace("pysd_active_initial(", "_active_initial(")
+                        + "_initialising[] = false\n")
         return "".join([
             self._file_header(extra_packages=needs_di),
             self._helpers_block(),
@@ -5380,9 +5443,10 @@ class JuliaSectionBuilder:
             self._declarations_block(),
             self._control_block(),
             "\n",
-            self._equations_block(equations),
+            active_initial,
+            equations_block,
             "\n",
-            self._u0_block(),
+            u0_block,
             "\n",
             self._system_block(),
             "\n",

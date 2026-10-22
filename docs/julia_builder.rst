@@ -361,6 +361,9 @@ Supported Vensim features
    * - ``INITIAL``
      - Supported
      - Supported
+   * - ``ACTIVE INITIAL``
+     - Supported (its initial value while the initial values are computed)
+     - Partial (the active value is used)
    * - ``IF THEN ELSE``
      - Supported (``ifelse``)
      - Supported (``ifelse``)

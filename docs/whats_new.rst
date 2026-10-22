@@ -79,7 +79,11 @@ Bug fixes
   subscripted variables, ``VECTOR SORT ORDER``, ``VECTOR RANK`` and ``VECTOR
   REORDER`` (along the last subscript), ``GET TIME VALUE`` of the current
   time, and data defined element by element over several dimensions, as in
-  the Python builder (:issue:`ISSUE3`). (`@rogersamso <https://github.com/rogersamso>`_)
+  the Python builder.  With the ODE backend, ``ACTIVE INITIAL`` gives its
+  initial value while the initial values are computed, constants defined
+  element by element are placed at their elements whatever the order of the
+  definitions, and ``GET DIRECT CONSTANTS`` arrays are no longer hidden by
+  local arrays of zeros (:issue:`ISSUE3`). (`@rogersamso <https://github.com/rogersamso>`_)
 
 Documentation
 ~~~~~~~~~~~~~
