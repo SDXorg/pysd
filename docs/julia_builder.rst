@@ -410,6 +410,11 @@ Supported Vensim features
    * - ``ALLOCATE AVAILABLE`` / ``ALLOCATE BY PRIORITY``
      - Supported (exact Vensim algorithm via PySD.jl helpers)
      - Supported
+   * - Control variables that change during the run (``FINAL TIME``,
+       ``TIME STEP``, ``SAVEPER`` depending on ``Time`` or on model variables)
+     - Supported (as the Python builder: evaluated at every step; ``run_model``
+       takes Euler steps)
+     - Not supported
 
 .. note::
    When the builder encounters an unsupported or partially-supported construct

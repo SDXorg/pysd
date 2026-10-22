@@ -4615,9 +4615,24 @@ class JuliaSectionBuilder:
         # observe because they are module globals — just reference them by name.
         const_names = self._const_names_for_observe(set(stock_indices) | seen_aux)
         obs_lines.append("")
+        dynamic = self._dynamic_controls()
+        if dynamic:
+            def ctrl(expr: str) -> str:
+                # INITIAL TIME is reported as evaluated at this time, as
+                # Vensim does; the run keeps the value it started from.
+                return re.sub(r"\b(time_step|saveper|final_time)\b", r"_ctrl_\1", expr)
+            obs_lines.append("    # Control variables at this time")
+            for name, default in (("initial_time", "initial_time"), ("time_step", "1.0"),
+                                  ("saveper", "time_step"), ("final_time", "100.0")):
+                expr = self.control_vals.get(name) or default
+                obs_lines.append(f"    _ctrl_{name} = {ctrl(expr)}")
+            obs_lines.append("")
         obs_lines.append("    return Dict{String,Any}(")
         for name in list(stock_indices.keys()) + list(alloc_needed.keys()) + scalar_aux_names + const_names:
             obs_lines.append(f'        "{name}" => {name},')
+        if dynamic:
+            for name in ("initial_time", "time_step", "saveper", "final_time"):
+                obs_lines.append(f'        "{name}" => _ctrl_{name},')
         obs_lines.append("    )")
         obs_lines.append("end")
 
@@ -4902,13 +4917,25 @@ class JuliaSectionBuilder:
         if not self.u0_entries:
             return "u0 = Float64[]\n"
 
+        # Initial values are evaluated at the initial time: Time (t) in them,
+        # e.g. DELAY1(Time, d) starting at Time * d, is the initial time
+        u0_entries = [
+            entry if "=>" not in entry else
+            entry.split("=>", 1)[0] + "=> "
+            + re.sub(r"\bt\b", "initial_time", entry.split("=>", 1)[1].strip())
+            for entry in self.u0_entries
+        ]
+        # Names of variables in an expression; names that are called
+        # (abs(...), mod(...)) are functions
+        var_re = r"\b([a-z_]\w*)\b(?!\s*\()"
+
         # Check if any u0 values reference non-constant expressions
         needs_init_fn = False
-        for entry in self.u0_entries:
+        for entry in u0_entries:
             if "=>" in entry:
                 rhs = entry.split("=>", 1)[1].strip()
                 # If RHS contains variable references (not just numbers/params)
-                tokens = set(re.findall(r"\b([a-z_]\w*)\b", rhs))
+                tokens = set(re.findall(var_re, rhs))
                 # Remove known constants/params
                 for t in list(tokens):
                     if any(f" {t} =" in d or f" {t}[" in d
@@ -4924,10 +4951,10 @@ class JuliaSectionBuilder:
             # evaluate them at t=0 so stocks depending on auxiliaries initialise
             # correctly (e.g. TREND smooth stocks that depend on a dynamic input).
             dynamic_tokens: set = set()
-            for entry in self.u0_entries:
+            for entry in u0_entries:
                 if "=>" in entry:
                     rhs = entry.split("=>", 1)[1].strip()
-                    tokens = set(re.findall(r"\b([a-z_]\w*)\b", rhs))
+                    tokens = set(re.findall(var_re, rhs))
                     for tok in list(tokens):
                         if any(f" {tok} =" in d or f" {tok}[" in d
                                for d in self.param_decls + self.ext_const_decls):
@@ -4937,7 +4964,7 @@ class JuliaSectionBuilder:
             # Initial values may depend on stocks (e.g. DELAY(stock, 1) starts at
             # the stock's initial value), so evaluate them from the state they
             # define, starting from zeros, until it no longer changes.
-            n = len(self.u0_entries)
+            n = len(u0_entries)
             lines = [
                 f"u0 = let _u = zeros(Float64, {n})",
                 f"    for _ in 1:{n + 1}",
@@ -4946,7 +4973,7 @@ class JuliaSectionBuilder:
             for tok in sorted(dynamic_tokens):
                 lines.append(f"        {tok} = get(_obs_init, \"{tok}\", 0.0)")
             lines.append("        _next = Float64[")
-            for entry in self.u0_entries:
+            for entry in u0_entries:
                 if "=>" in entry:
                     lhs, rhs = entry.split("=>", 1)
                     lines.append(f"            {rhs.strip()},  # {lhs.strip()}")
@@ -4963,7 +4990,7 @@ class JuliaSectionBuilder:
             return "\n".join(lines) + "\n"
         else:
             lines = []
-            for entry in self.u0_entries:
+            for entry in u0_entries:
                 if "=>" in entry:
                     lhs, rhs = entry.split("=>", 1)
                     lines.append(f"    {rhs.strip()},  # {lhs.strip()}")
@@ -4996,11 +5023,43 @@ class JuliaSectionBuilder:
                 lines.append(f"    {entry},")
         return "u0 = [\n" + "\n".join(lines) + "\n]\n"
 
+    _CONTROL_NAMES = ("initial_time", "final_time", "time_step", "saveper")
+
+    def _control_unknowns(self, expr: str) -> set:
+        """Names in a control expression that are not module-level values."""
+        module_names = set(self._const_names_for_observe(set()))
+        names = set(re.findall(r"\b([a-z_]\w*)\b(?!\s*\()", expr))
+        return names - set(self._CONTROL_NAMES) - module_names
+
+    def _dynamic_controls(self) -> bool:
+        """Whether a control variable depends on Time or on model variables
+        (e.g. FINAL TIME = IF THEN ELSE(x > 50, Time, 100)).  The ODE
+        backend then evaluates them at every step, as Python PySD."""
+        return self.backend == "ode" and any(
+            self._control_unknowns(self.control_vals.get(name) or "")
+            for name in self._CONTROL_NAMES
+        )
+
     def _control_block(self) -> str:
         it = self.control_vals.get("initial_time") or "0.0"
         ft = self.control_vals.get("final_time") or "100.0"
         ts = self.control_vals.get("time_step") or "1.0"
         sp = self.control_vals.get("saveper") or "time_step"
+        if self._dynamic_controls():
+            def at_start(expr: str, when: str, default: str) -> str:
+                if self._control_unknowns(expr) <= {"t"}:
+                    return re.sub(r"\bt\b", when, expr)
+                return default
+            return (
+                "# Simulation control.  These change during the run: observe and\n"
+                "# run_model evaluate them at every time; the values here are the\n"
+                "# ones at the initial time (set again from the initial state below).\n"
+                f"initial_time = {at_start(it, '0.0', '0.0')}\n"
+                f"time_step    = {at_start(ts, 'initial_time', '1.0')}\n"
+                f"saveper      = {at_start(sp, 'initial_time', 'time_step')}\n"
+                f"final_time   = {at_start(ft, 'initial_time', 'initial_time')}\n"
+                "tspan = (initial_time, final_time)\n"
+            )
         return (
             "# Simulation control\n"
             f"initial_time = {it}\n"
@@ -5020,6 +5079,42 @@ class JuliaSectionBuilder:
             "\n    isempty(tab_data_files) || _load_tab_data!(tab_data_files)"
             "\n    isempty(nc_data_files) || _load_nc_data!(nc_data_files)"
         ) if has_tab else ""
+        if self._dynamic_controls():
+            return textwrap.dedent(f"""\
+                let _c = observe(u0, initial_time)
+                    global time_step = _c["time_step"]
+                    global saveper = _c["saveper"]
+                    global final_time = _c["final_time"]
+                end
+                tspan = (initial_time, final_time)
+                prob = ODEProblem(rhs!, u0, tspan)
+
+                # The control variables change during the run, so (as Python
+                # PySD) the model takes Euler steps of the current TIME STEP
+                # until Time reaches the current FINAL TIME, and saves every
+                # current SAVEPER from the initial time.
+                function run_model(; u0=u0{tab_param}){tab_load}
+                    u = copy(u0)
+                    du = similar(u)
+                    t = initial_time
+                    ts = Float64[]
+                    us = Vector{{typeof(u)}}()
+                    while true
+                        c = observe(u, t)
+                        prec = c["time_step"] * 1e-5
+                        elapsed = t - initial_time
+                        if mod(elapsed, c["saveper"]) < prec || mod(-elapsed, c["saveper"]) < prec
+                            push!(ts, t)
+                            push!(us, copy(u))
+                        end
+                        t + prec < c["final_time"] || break
+                        rhs!(du, u, prob.p, t)
+                        u .+= c["time_step"] .* du
+                        t += c["time_step"]
+                    end
+                    return OrdinaryDiffEq.SciMLBase.DiffEqArray(us, ts)
+                end
+                """)
         return textwrap.dedent(f"""\
             prob = ODEProblem(rhs!, u0, tspan)
 

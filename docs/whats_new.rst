@@ -65,6 +65,11 @@ Bug fixes
   when order × TIME STEP exceeds the delay time.  With the ODE backend,
   initial values that depend on stocks no longer start from zero
   (:issue:`511`). (`@rogersamso <https://github.com/rogersamso>`_)
+- Julia builder (ODE backend): control variables that depend on ``Time`` or
+  on model variables (e.g. ``FINAL TIME = IF THEN ELSE(x > 50, Time, 100)``)
+  are evaluated at every step, as in the Python builder; initial values that
+  use ``Time`` or call functions with the same name as a variable no longer
+  fail (:issue:`520`). (`@rogersamso <https://github.com/rogersamso>`_)
 
 Documentation
 ~~~~~~~~~~~~~

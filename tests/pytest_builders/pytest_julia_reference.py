@@ -122,10 +122,7 @@ KNOWN_FAILURES = {
     ("xmile:rounding", "mtk"): "values differ from the reference (#499)",
     ("xmile:rounding", "ode"): "values differ from the reference (#499)",
     # generated code refers to an undefined name (#500)
-    ("vensim:arguments", "ode"): "generated code refers to an undefined name (#500)",
-    ("vensim:control_vars", "ode"): "generated code refers to an undefined name (#500)",
     ("vensim:data_from_other_model", "mtk"): "generated code refers to an undefined name (#500)",
-    ("vensim:dynamic_final_time", "ode"): "generated code refers to an undefined name (#500)",
     ("vensim:macro_cross_reference", "mtk"): "generated code refers to an undefined name (#500)",
     ("vensim:macro_expression", "mtk"): "generated code refers to an undefined name (#500)",
     ("vensim:macro_multi_expression", "mtk"): "generated code refers to an undefined name (#500)",

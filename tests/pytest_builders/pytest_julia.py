@@ -7598,3 +7598,65 @@ class TestNonNegativeStocks:
         eqs = self._equations([stock, outflow], "stock",
                               subscripts=[_make_subscript_range("dim", ["a", "b"])])
         assert any("max(" in e and "-stock[_i0] / time_step)" in e for e in eqs), eqs
+
+
+class TestInitialValuesOfTimeAndFunctions:
+    """DELAY1(Time, ABS(constant)) (test-models arguments): its initial value
+    uses Time, which is the initial time there, and calls functions whose
+    names must not be bound as variables in the initial-value block."""
+
+    def test_time_is_initial_time_and_functions_are_not_bound(self, tmp_path):
+        import shutil, warnings
+        mdl = Path("tests/test-models/tests/arguments/test_arguments.mdl")
+        if not mdl.exists():
+            pytest.skip("arguments test model not found")
+        dst = tmp_path / mdl.name
+        shutil.copy(mdl, dst)
+        from pysd import translate_to_julia
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            content = translate_to_julia(dst).read_text()
+        u0 = content[content.index("u0 = "):]
+        u0 = u0[:u0.index("\nend\n")]
+        assert "initial_time * abs(constant) / 3" in u0
+        assert "pysd_pulse(initial_time, constant, 2.0)" in u0
+        assert "abs = get(" not in u0 and "mod = get(" not in u0
+        assert "pysd_pulse = get(" not in u0
+
+
+class TestDynamicControlVariables:
+    """FINAL TIME, TIME STEP and SAVEPER that depend on Time or on model
+    variables (test-models control_vars, dynamic_final_time) are evaluated at
+    every step, as Python PySD."""
+
+    def _translate(self, tmp_path, folder, name, kind="tests"):
+        import shutil, warnings
+        mdl = Path(f"tests/test-models/{kind}/{folder}/{name}")
+        if not mdl.exists():
+            pytest.skip(f"{folder} test model not found")
+        dst = tmp_path / mdl.name
+        shutil.copy(mdl, dst)
+        from pysd import translate_to_julia
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            return translate_to_julia(dst).read_text()
+
+    def test_controls_depending_on_time(self, tmp_path):
+        content = self._translate(tmp_path, "control_vars", "test_control_vars.mdl")
+        assert "time_step    = pysd_ifelse((initial_time < 4.0), 1.0, 0.5)" in content
+        assert "_ctrl_saveper = pysd_ifelse((t < 10.0), _ctrl_time_step, 5.0)" in content
+        assert '"final_time" => _ctrl_final_time,' in content
+        assert "t + prec < c[\"final_time\"] || break" in content
+        assert "DiffEqArray(us, ts)" in content
+
+    def test_final_time_depending_on_a_variable(self, tmp_path):
+        content = self._translate(tmp_path, "dynamic_final_time", "test_dynamic_final_time.mdl")
+        assert "_ctrl_final_time = pysd_ifelse((my_control_var > 50.0), t, max_time)" in content
+        # at module level the variable is not known: the start value comes from observe
+        assert "final_time   = initial_time" in content
+        assert 'global final_time = _c["final_time"]' in content
+
+    def test_constant_controls_keep_the_solver(self, tmp_path):
+        content = self._translate(tmp_path, "teacup", "teacup.mdl", kind="samples")
+        assert "_ctrl_" not in content
+        assert "solve(prob_local, solver; dt=dt, adaptive=false)" in content
