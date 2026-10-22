@@ -14,6 +14,7 @@ Tests are organised into classes that mirror the modules they exercise:
 """
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 from pysd.builders.julia.namespace import JuliaNamespaceManager, JULIA_KEYWORDS
@@ -7660,3 +7661,79 @@ class TestDynamicControlVariables:
         content = self._translate(tmp_path, "teacup", "teacup.mdl", kind="samples")
         assert "_ctrl_" not in content
         assert "solve(prob_local, solver; dt=dt, adaptive=false)" in content
+
+class TestArrayConstantOde:
+    """unchangeable tabbed array[country, blood type] == TABBED ARRAY(...)
+    (test-models tabbed_arrays): the ODE backend writes a plain constant
+    array, in Julia's column-major layout."""
+
+    def test_2d_unchangeable_constant_is_a_matrix(self, tmp_path):
+        rows = _make_subscript_range("country", ["c1", "c2", "c3"])
+        cols = _make_subscript_range("blood", ["b1", "b2", "b3", "b4"])
+        elem = AbstractElement(name="unchangeable tabbed array", components=[
+            AbstractUnchangeableConstant(subscripts=(["country", "blood"], []),
+                                         ast=np.arange(1.0, 13.0).reshape(3, 4))])
+        controls = [
+            _make_control_element("INITIAL TIME", 0.0),
+            _make_control_element("FINAL TIME", 1.0),
+            _make_control_element("TIME STEP", 1.0),
+            _make_control_element("SAVEPER", 1.0),
+        ]
+        section = _make_section(elements=[elem] + controls,
+                                subscripts=[rows, cols], path=tmp_path / "m.mdl")
+        model = AbstractModel(original_path=tmp_path / "m.mdl", sections=(section,))
+        content = JuliaModelBuilder(model).build_model().read_text()
+        assert ("const unchangeable_tabbed_array = permutedims(reshape("
+                "Float64[1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0], "
+                "N_BLOOD, N_COUNTRY), (2, 1))") in content
+
+
+class TestSubscriptedDelayFixedArguments:
+    """R delayed subs[Dim1] = DELAY FIXED(R subs[Dim1], 7, R subs[Dim1])
+    (test-models forecast): input and initial value are read per element."""
+
+    def test_pipeline_reads_each_element(self, tmp_path):
+        dim1 = _make_subscript_range("Dim1", ["A", "B"])
+        r = AbstractElement(name="R subs", components=[
+            AbstractComponent(subscripts=(["Dim1"], []), ast=np.array([1.0, 2.0]))])
+        ref = ReferenceStructure("R subs", SubscriptsReferenceStructure(("Dim1",)))
+        delayed = AbstractElement(name="R delayed subs", components=[
+            AbstractComponent(subscripts=(["Dim1"], []),
+                              ast=DelayFixedStructure(ref, 2.0, ref))])
+        controls = [
+            _make_control_element("INITIAL TIME", 0.0),
+            _make_control_element("FINAL TIME", 4.0),
+            _make_control_element("TIME STEP", 1.0),
+            _make_control_element("SAVEPER", 1.0),
+        ]
+        section = _make_section(elements=[r, delayed] + controls,
+                                subscripts=[dim1], path=tmp_path / "m.mdl")
+        model = AbstractModel(original_path=tmp_path / "m.mdl", sections=(section,))
+        content = JuliaModelBuilder(model).build_model().read_text()
+        assert "(r_subs[_i0] - _df_pipe_1_r_delayed_subs[_i0])" in content
+        assert "r_subs[1],  # _df_pipe_1_r_delayed_subs[1]" in content
+        assert "r_subs[2],  # _df_pipe_1_r_delayed_subs[2]" in content
+
+
+class TestFlatArrayAuxiliary:
+    """initial population tabbed array[country, blood] = TABBED ARRAY(...)
+    (test-models tabbed_arrays): a flat list of values fills the array row by row."""
+
+    def test_flat_values_fill_rows(self, tmp_path):
+        rows = _make_subscript_range("country", ["c1", "c2"])
+        cols = _make_subscript_range("blood", ["b1", "b2", "b3"])
+        elem = AbstractElement(name="tabbed", components=[
+            AbstractComponent(subscripts=(["country", "blood"], []),
+                              ast=np.arange(1.0, 7.0))])
+        controls = [
+            _make_control_element("INITIAL TIME", 0.0),
+            _make_control_element("FINAL TIME", 1.0),
+            _make_control_element("TIME STEP", 1.0),
+            _make_control_element("SAVEPER", 1.0),
+        ]
+        section = _make_section(elements=[elem] + controls,
+                                subscripts=[rows, cols], path=tmp_path / "m.mdl")
+        model = AbstractModel(original_path=tmp_path / "m.mdl", sections=(section,))
+        content = JuliaModelBuilder(model).build_model().read_text()
+        assert "tabbed[1, 3] = 3.0" in content
+        assert "tabbed[2, 1] = 4.0" in content

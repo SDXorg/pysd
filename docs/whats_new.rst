@@ -70,6 +70,11 @@ Bug fixes
   are evaluated at every step, as in the Python builder; initial values that
   use ``Time`` or call functions with the same name as a variable no longer
   fail (:issue:`520`). (`@rogersamso <https://github.com/rogersamso>`_)
+- Julia builder: subscripted ``SMOOTH`` over several dimensions, subscripted
+  ``TREND`` and ``FORECAST`` (with the Python builder's formulas), subscripted
+  ``DELAY FIXED`` inputs, and array constants and ``TABBED ARRAY`` values in
+  the ODE backend now generate valid Julia (:issue:`521`).
+  (`@rogersamso <https://github.com/rogersamso>`_)
 
 Documentation
 ~~~~~~~~~~~~~

@@ -853,6 +853,16 @@ class JuliaSectionBuilder:
             f"{iv} in 1:{self._jl_n(d)}" for (d, _), iv in zip(dims, idx_vars)
         )
 
+    @staticmethod
+    def _nd_cells(dims: List[Tuple[str, int]], idx_vars: List[str], expr: str):
+        """Yield ``(index, expr)`` for every cell of *dims*, with the loop
+        variables in *expr* replaced by that cell's indices."""
+        for combo in itertools.product(*[range(1, n + 1) for _, n in dims]):
+            cell_expr = expr
+            for iv, val in zip(idx_vars, combo):
+                cell_expr = re.sub(rf"\b{iv}\b", str(val), cell_expr)
+            yield ", ".join(map(str, combo)), cell_expr
+
     def _nd_visitor(self, dims: List[Tuple[str, int]], idx_vars: List[str]) -> "JuliaASTVisitor":
         """Return a visitor with active subscript index context for N dims."""
         active_subs = {d: iv for (d, _), iv in zip(dims, idx_vars)}
@@ -1199,11 +1209,11 @@ class JuliaSectionBuilder:
 
         # ---- TREND ------------------------------------------------------
         if isinstance(ast, TrendStructure):
-            return self._expand_trend(identifier, ast, visitor)
+            return self._expand_trend(identifier, ast, visitor, dims=dims)
 
         # ---- FORECAST ---------------------------------------------------
         if isinstance(ast, ForecastStructure):
-            return self._expand_forecast(identifier, ast, visitor)
+            return self._expand_forecast(identifier, ast, visitor, dims=dims)
 
         # ---- SAMPLE IF TRUE ---------------------------------------------
         if isinstance(ast, SampleIfTrueStructure):
@@ -1322,6 +1332,10 @@ class JuliaSectionBuilder:
             try:
                 import numpy as _np
                 expected_shape = tuple(n for _, n in dims)
+                if (isinstance(ast, _np.ndarray) and ast.shape != expected_shape
+                        and ast.size == int(_np.prod(expected_shape))):
+                    # e.g. TABBED ARRAY gives the values as one row-major list
+                    ast = ast.reshape(expected_shape)
                 if isinstance(ast, _np.ndarray) and ast.shape == expected_shape:
                     if is_control:
                         return []
@@ -1944,12 +1958,15 @@ class JuliaSectionBuilder:
         eqs: List[str] = []
 
         if dims:
-            # Subscripted SMOOTH — each internal level is an array.
-            (d0, n0) = dims[0]
-            vnd = self._nd_visitor(dims, ["_i0"])
+            # Subscripted SMOOTH — each internal level is an array over the
+            # variable's dimensions (any number of them).
+            idx = self._idx_vars(len(dims))
+            vnd = self._nd_visitor(dims, idx)
             input_nd = vnd.visit(ast.input)
             st_nd = vnd.visit(ast.smooth_time)
             init_nd = vnd.visit(ast.initial)
+            for_clause = self._for_clause(dims, idx)
+            cell = ", ".join(idx)
 
             prev_nd = input_nd
             for i in range(1, order + 1):
@@ -1958,20 +1975,19 @@ class JuliaSectionBuilder:
                 self.stock_decls.append(
                     f"@variables {lv_name}(t)[{self._range_str(dims)}]"
                 )
-                for idx in range(1, n0 + 1):
-                    init_i = init_nd.replace("_i0", str(idx))
-                    self.u0_entries.append(f"{lv_name}[{idx}] => {init_i}")
-                lv_ref = f"{lv_name}[_i0]"
+                for index, init_i in self._nd_cells(dims, idx, init_nd):
+                    self.u0_entries.append(f"{lv_name}[{index}] => {init_i}")
+                lv_ref = f"{lv_name}[{cell}]"
                 eqs.append(
                     f"[D({lv_ref}) ~ ({prev_nd} - {lv_ref}) / "
-                    f"({st_nd} / {order}) for _i0 in 1:{self._jl_n(d0)}]..."
+                    f"({st_nd} / {order}) for {for_clause}]..."
                 )
                 prev_nd = lv_ref
             self.aux_decls.append(
                 f"@variables {identifier}(t)[{self._range_str(dims)}]"
             )
             eqs.append(
-                f"[{identifier}[_i0] ~ {prev_nd} for _i0 in 1:{self._jl_n(d0)}]..."
+                f"[{identifier}[{cell}] ~ {prev_nd} for {for_clause}]..."
             )
         else:
             # Materialise the input: if it's itself a complex structure (e.g.
@@ -2277,6 +2293,10 @@ class JuliaSectionBuilder:
         time) a single first-order ODE approximation is emitted instead.
         """
         dims = dims or []
+        if dims:
+            # x[Dim1] = DELAY FIXED(y[Dim1], …): the arguments are read
+            # inside the loop over the variable's dimensions
+            visitor = self._nd_visitor(dims, self._idx_vars(len(dims)))
         input_expr = visitor.visit(ast.input)
         delay_time_expr = visitor.visit(ast.delay_time)
         initial_expr = visitor.visit(ast.initial)
@@ -2433,52 +2453,16 @@ class JuliaSectionBuilder:
         identifier: str,
         ast,
         visitor: "JuliaASTVisitor",
+        dims: Optional[List[Tuple[str, int]]] = None,
     ) -> List[str]:
-        """Expand TREND(input, average_time, initial_trend) into an ODE.
+        """Expand TREND(input, average_time, initial_trend), as Python PySD
+        (``Trend``): a smooth level ``_sm`` with
 
-        Introduces a smooth level ``_sm_{identifier}`` that tracks the
-        exponential moving average of the input:
-
-            D(_sm) ~ (input - _sm) / average_time
-
-        Then the trend (fractional growth rate) is:
-
-            output ~ (input - _sm) / (average_time * _sm)
-
-        The smooth level is initialised so that at t=0 the output equals
-        ``initial_trend``:
-
-            _sm(0) = input(0) / (1 + initial_trend * average_time)
-
-        We use the simpler ``input(0)`` approximation (same as PySD's
-        Trend stateful initialisation) and rely on the model's initial
-        conditions to provide a consistent starting point.
+            _sm(0) = input / (1 + initial_trend * average_time)
+            D(_sm) = (input - _sm) / average_time
+            output = ZIDZ(input - _sm, average_time * |_sm|)
         """
-        input_expr = visitor.visit(ast.input)
-        avg_time_expr = visitor.visit(ast.average_time)
-        initial_trend_expr = visitor.visit(ast.initial_trend)
-
-        sm_name = f"_sm_{identifier}"
-        self.namespace.namespace[f"__internal_sm_{identifier}"] = sm_name
-        self.stock_decls.append(f"@variables {sm_name}(t)")
-        # u0: _sm = input / (1 + initial_trend * average_time)
-        # We approximate the initial input as the initial_trend expression;
-        # a better approximation requires evaluating the input at t0.
-        # Use the same formula as PySD: sm0 = input0 (the Trend stateful
-        # initialises its smooth to input/1 when initial_trend is given).
-        # We store the initial as a formula that Julia will evaluate at t=0.
-        self.u0_entries.append(
-            f"{sm_name} => {input_expr} / (1.0 + ({initial_trend_expr}) * ({avg_time_expr}))"
-        )
-
-        self.aux_decls.append(f"@variables {identifier}(t)")
-        return [
-            f"D({sm_name}) ~ ({input_expr} - {sm_name}) / ({avg_time_expr})",
-            (
-                f"{identifier} ~ ifelse(iszero({sm_name}), {initial_trend_expr}, "
-                f"({input_expr} - {sm_name}) / (({avg_time_expr}) * {sm_name}))"
-            ),
-        ]
+        return self._expand_trend_like(identifier, ast, visitor, dims, forecast=False)
 
     # ------------------------------------------------------------------
     # Forecast expansion
@@ -2489,36 +2473,53 @@ class JuliaSectionBuilder:
         identifier: str,
         ast,
         visitor: "JuliaASTVisitor",
+        dims: Optional[List[Tuple[str, int]]] = None,
     ) -> List[str]:
-        """Expand FORECAST(input, average_time, horizon) = input*(1 + TREND*horizon).
+        """Expand FORECAST(input, average_time, horizon, initial_trend), as
+        Python PySD (``Forecast``): the same smooth level as TREND, with
 
-        FORECAST internally computes a TREND and projects it forward by
-        *horizon*.  We expand it inline, introducing the same internal
-        smooth level as ``_expand_trend``.
+            _sm(0) = input / (1 + initial_trend)
+            output = input * (1 + ZIDZ(input - _sm, average_time * _sm) * horizon)
         """
-        input_expr = visitor.visit(ast.input)
-        avg_time_expr = visitor.visit(ast.average_time)
-        horizon_expr = visitor.visit(ast.horizon)
-        initial_trend_expr = visitor.visit(ast.initial_trend)
+        return self._expand_trend_like(identifier, ast, visitor, dims, forecast=True)
+
+    def _expand_trend_like(self, identifier, ast, visitor, dims, forecast: bool) -> List[str]:
+        """TREND and FORECAST, scalar or over any number of dimensions."""
+        dims = dims or []
+        idx = self._idx_vars(len(dims))
+        vis = self._nd_visitor(dims, idx) if dims else visitor
+        input_expr = vis.visit(ast.input)
+        avg_time_expr = vis.visit(ast.average_time)
+        initial_trend_expr = vis.visit(ast.initial_trend)
 
         sm_name = f"_sm_{identifier}"
         self.namespace.namespace[f"__internal_sm_{identifier}"] = sm_name
-        self.stock_decls.append(f"@variables {sm_name}(t)")
-        self.u0_entries.append(
-            f"{sm_name} => {input_expr} / (1.0 + ({initial_trend_expr}) * ({avg_time_expr}))"
-        )
+        self.needed_helpers.add("pysd_zidz")
+        cell = ", ".join(idx)
+        sm = f"{sm_name}[{cell}]" if dims else sm_name
+        if forecast:
+            start = f"{input_expr} / (1.0 + ({initial_trend_expr}))"
+            out = (f"{input_expr} * (1.0 + pysd_zidz({input_expr} - {sm}, "
+                   f"({avg_time_expr}) * {sm}) * ({vis.visit(ast.horizon)}))")
+        else:
+            start = f"{input_expr} / (1.0 + ({initial_trend_expr}) * ({avg_time_expr}))"
+            out = f"pysd_zidz({input_expr} - {sm}, ({avg_time_expr}) * abs({sm}))"
+        rate = f"({input_expr} - {sm}) / ({avg_time_expr})"
 
-        # trend = (input - sm) / (avg_time * sm)
-        # forecast = input * (1 + trend * horizon)
-        self.aux_decls.append(f"@variables {identifier}(t)")
+        if not dims:
+            self.stock_decls.append(f"@variables {sm_name}(t)")
+            self.u0_entries.append(f"{sm_name} => {start}")
+            self.aux_decls.append(f"@variables {identifier}(t)")
+            return [f"D({sm_name}) ~ {rate}", f"{identifier} ~ {out}"]
+
+        for_clause = self._for_clause(dims, idx)
+        self.stock_decls.append(f"@variables {sm_name}(t)[{self._range_str(dims)}]")
+        for index, start_i in self._nd_cells(dims, idx, start):
+            self.u0_entries.append(f"{sm_name}[{index}] => {start_i}")
+        self.aux_decls.append(f"@variables {identifier}(t)[{self._range_str(dims)}]")
         return [
-            f"D({sm_name}) ~ ({input_expr} - {sm_name}) / ({avg_time_expr})",
-            (
-                f"{identifier} ~ {input_expr} * (1.0 + "
-                f"ifelse(iszero({sm_name}), {initial_trend_expr}, "
-                f"({input_expr} - {sm_name}) / (({avg_time_expr}) * {sm_name})) "
-                f"* ({horizon_expr}))"
-            ),
+            f"[D({sm}) ~ {rate} for {for_clause}]...",
+            f"[{identifier}[{cell}] ~ {out} for {for_clause}]...",
         ]
 
     # ------------------------------------------------------------------
@@ -4308,6 +4309,8 @@ class JuliaSectionBuilder:
                                 )
                         elif "pysd_xlsx_read_constant" in val:
                             lines.append(f"const {name} = pysd_safe({val})")
+                        elif "[" in name:
+                            lines.append(self._ode_array_constant(name, val))
                         else:
                             lines.append("const " + val_part)
                     else:  # pragma: no cover  # all @parameters entries include "= value"
@@ -4643,6 +4646,28 @@ class JuliaSectionBuilder:
             return "eqs = Equation[]\n"
         eq_lines = ",\n    ".join(equations)
         return f"eqs = Equation[\n    {eq_lines},\n]\n"
+
+    @staticmethod
+    def _ode_array_constant(name: str, val: str) -> str:
+        """``const x = …`` for an array constant declared MTK-style.
+
+        ``name`` is ``x[1:N_A, 1:N_B]`` and ``val`` the values in row-major
+        order (as Vensim writes them), possibly followed by a comment.  The
+        ODE backend needs a plain Julia array, which is column-major, so the
+        values are reshaped with the dimensions reversed and permuted back.
+        """
+        base, _, spec = name.partition("[")
+        sizes = [r.split(":", 1)[-1].strip() for r in spec.rstrip("]").split(",")]
+        values, _, comment = val.partition(" #")
+        values = values.strip()
+        if values.startswith("[") and not values.startswith("Float64["):
+            values = "Float64" + values
+        comment = f"  #{comment}" if comment else ""
+        if len(sizes) == 1:
+            return f"const {base} = {values}{comment}"
+        perm = ", ".join(str(k) for k in range(len(sizes), 0, -1))
+        return (f"const {base} = permutedims(reshape({values}, "
+                f"{', '.join(reversed(sizes))}), ({perm})){comment}")
 
     def _const_names_for_observe(self, already_known: set) -> List[str]:
         """Return names of module-level consts not yet in the observe Dict.

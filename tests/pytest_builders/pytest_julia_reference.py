@@ -181,9 +181,6 @@ KNOWN_FAILURES = {
     # lookup x values not sorted (#500)
     ("vensim:get_with_missing_values_xlsx", "mtk"): "lookup x values not sorted (#500)",
     ("vensim:get_with_missing_values_xlsx", "ode"): "lookup x values not sorted (#500)",
-    # subscripted TREND/FORECAST: array minus scalar (#500)
-    ("vensim:forecast", "ode"): "subscripted TREND/FORECAST: array minus scalar (#500)",
-    ("vensim:subscripted_trend", "ode"): "subscripted TREND/FORECAST: array minus scalar (#500)",
     # EXCEPT on stocks generates invalid Julia (#500)
     ("vensim:except", "ode"): "EXCEPT on stocks generates invalid Julia (#500)",
     # MTK: MODULO not callable on symbolic values (#502)
@@ -196,10 +193,6 @@ KNOWN_FAILURES = {
     ("vensim:tabbed_arrays", "mtk"): "MTK: unbalanced system (#502)",
     # macro: variable from another macro expression (#500)
     ("vensim:macro_multi_expression", "ode"): "macro: variable from another macro expression (#500)",
-    # subscripted SMOOTH: wrong state shape (#500)
-    ("vensim:subscripted_smooth", "ode"): "subscripted SMOOTH: wrong state shape (#500)",
-    # tabbed array constant generates invalid Julia (#500)
-    ("vensim:tabbed_arrays", "ode"): "tabbed array constant generates invalid Julia (#500)",
 }
 
 

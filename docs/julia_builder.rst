@@ -340,7 +340,7 @@ Supported Vensim features
      - Supported
      - Supported (read at translation time; correct array shapes)
    * - ``SMOOTH`` / ``SMOOTH3`` / ``SMOOTHN``
-     - Supported
+     - Supported (also over several subscript dimensions)
      - Supported
    * - ``DELAY1`` / ``DELAY3`` / ``DELAYN``
      - Supported (as the Python builder: the order is read at the initial
@@ -353,7 +353,7 @@ Supported Vensim features
        the initial time, as in the Python builder)
      - Supported (same pipeline)
    * - ``TREND``, ``FORECAST``
-     - Supported
+     - Supported (as the Python builder, also subscripted)
      - Supported
    * - ``SAMPLE IF TRUE``
      - Supported (instantaneous ifelse output)
