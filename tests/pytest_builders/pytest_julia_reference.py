@@ -98,7 +98,6 @@ KNOWN_FAILURES = {
     ("vensim:get_constants_subranges", "mtk"): "values differ from the reference (#499)",
     ("vensim:get_constants_subranges", "ode"): "values differ from the reference (#499)",
     ("vensim:lookups_inline_spaces", "mtk"): "values differ from the reference (#499)",
-    ("vensim:macro_stock", "ode"): "values differ from the reference (#499)",
     ("vensim:rounding", "mtk"): "values differ from the reference (#499)",
     ("vensim:rounding", "ode"): "values differ from the reference (#499)",
     ("vensim:smaller_range", "ode"): "values differ from the reference (#499)",
@@ -116,12 +115,6 @@ KNOWN_FAILURES = {
     ("xmile:rounding", "ode"): "values differ from the reference (#499)",
     # generated code refers to an undefined name (#500)
     ("vensim:data_from_other_model", "mtk"): "generated code refers to an undefined name (#500)",
-    ("vensim:macro_cross_reference", "mtk"): "generated code refers to an undefined name (#500)",
-    ("vensim:macro_expression", "mtk"): "generated code refers to an undefined name (#500)",
-    ("vensim:macro_multi_expression", "mtk"): "generated code refers to an undefined name (#500)",
-    ("vensim:macro_multi_macros", "mtk"): "generated code refers to an undefined name (#500)",
-    ("vensim:macro_stock", "mtk"): "generated code refers to an undefined name (#500)",
-    ("vensim:macro_trailing_definition", "mtk"): "generated code refers to an undefined name (#500)",
     # variables missing from the Julia output (#499)
     ("vensim:except", "mtk"): "variables missing from the Julia output (#499)",
     ("vensim:except_multiple", "mtk"): "variables missing from the Julia output (#499)",
@@ -159,8 +152,6 @@ KNOWN_FAILURES = {
     ("vensim:active_initial_circular", "mtk"): "MTK: initial value depends on other variables (#502)",
     # MTK: numeric conversion of a symbolic value (#502)
     ("vensim:allocate_by_priority", "mtk"): "MTK: numeric conversion of a symbolic value (#502)",
-    # macro: variable from another macro expression (#500)
-    ("vensim:macro_multi_expression", "ode"): "macro: variable from another macro expression (#500)",
 }
 
 

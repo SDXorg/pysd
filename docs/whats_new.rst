@@ -92,6 +92,10 @@ Bug fixes
   actions, also when the selection and the expression run over different
   dimensions, and ``:RAW:`` DATA (a value at the data times only), with
   PySD.jl 0.2.3 (:issue:`522`). (`@rogersamso <https://github.com/rogersamso>`_)
+- Julia builder: Vensim macros are expanded in place before building, so
+  macros with stocks give the right results and the MTK backend can run
+  models with macros; the companion function files are gone
+  (:issue:`510`). (`@rogersamso <https://github.com/rogersamso>`_)
 
 Documentation
 ~~~~~~~~~~~~~

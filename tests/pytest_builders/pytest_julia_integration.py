@@ -873,68 +873,6 @@ class TestNewFeatureIntegration:
         assert "my_var[1]" in content
         assert "my_var[3]" in content
 
-    # -----------------------------------------------------------------------
-    # Macro support — integration
-
-    def test_macro_section_creates_companion_jl_file(self, tmp_path):
-        """A two-section model creates a companion macro .jl file."""
-        from pysd.builders.julia.julia_model_builder import JuliaModelBuilder
-        from pysd.translators.structures.abstract_model import (
-            AbstractComponent, AbstractElement, AbstractSection, AbstractModel,
-            AbstractUnchangeableConstant,
-        )
-        from pathlib import Path
-
-        macro_comp = AbstractUnchangeableConstant(subscripts=[[], []], ast=42.0)
-        macro_elem = AbstractElement(name="Macro Const", components=[macro_comp])
-
-        stock_comp = AbstractComponent(
-            subscripts=[[], []],
-            ast=__import__("pysd.translators.structures.abstract_expressions",
-                           fromlist=["IntegStructure"]).IntegStructure(flow=1.0, initial=0.0),
-        )
-        stock_elem = AbstractElement(name="Level", components=[stock_comp])
-
-        main_section = AbstractSection(
-            name="__main__",
-            path=tmp_path / "macro_model.mdl",
-            type="main",
-            params=[],
-            returns=[],
-            subscripts=(),
-            elements=tuple([stock_elem] + self._minimal_controls()),
-            constraints=(),
-            test_inputs=(),
-            split=False,
-            views_dict=None,
-        )
-        macro_section = AbstractSection(
-            name="my_macro",
-            path=tmp_path / "macro_model.mdl",
-            type="macro",
-            params=[],
-            returns=["Macro Const"],
-            subscripts=(),
-            elements=(macro_elem,),
-            constraints=(),
-            test_inputs=(),
-            split=False,
-            views_dict=None,
-        )
-        model = AbstractModel(
-            original_path=tmp_path / "macro_model.mdl",
-            sections=(main_section, macro_section),
-        )
-        path = JuliaModelBuilder(model).build_model()
-        assert path.exists()
-        macro_path = tmp_path / "macro_model_my_macro.jl"
-        assert macro_path.exists()
-        content = macro_path.read_text(encoding="utf-8")
-        assert "function my_macro(" in content
-
-    # -----------------------------------------------------------------------
-    # Variable descriptions and units as comments
-
     def test_description_and_units_emitted_as_comments(self, tmp_path):
         """Variables with documentation and/or units must have them as # comments."""
         from pysd.builders.julia.julia_model_builder import JuliaModelBuilder

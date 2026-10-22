@@ -26,6 +26,7 @@ from pysd.builders.julia.julia_expressions_builder import (
     format_vector,
     lookup_interpolation_code,
 )
+from pysd.builders.julia.macro_inliner import inline_macros
 from pysd.builders.julia.julia_model_builder import (
     JuliaModelBuilder,
     JuliaSectionBuilder,
@@ -4368,104 +4369,116 @@ class TestExceptSubscriptExclusion:
 # Phase 3E — Macro support
 # ===========================================================================
 
-class TestMacroSupport:
+class TestMacroExpansion:
+    """Macros are expanded in place (macro_inliner): each call gets renamed
+    copies of the macro's elements, with the call's arguments for its params."""
 
-    def _two_section_model(self, tmp_path):
-        """AbstractModel with a main section and one macro section.
-
-        The macro element name 'My Macro' normalises to 'my_macro', matching
-        the section name, so it is correctly identified as the return value.
-        """
-        # Main section: simple stock
-        pop = _make_stock_element("Population", 1.0, 100.0)
-        controls = [
+    @staticmethod
+    def _controls():
+        return [
             _make_control_element("INITIAL TIME", 0.0),
             _make_control_element("FINAL TIME", 10.0),
             _make_control_element("TIME STEP", 1.0),
             _make_control_element("SAVEPER", 1.0),
         ]
-        main_section = _make_section(
-            elements=[pop] + controls,
-            path=tmp_path / "my_model.mdl",
-        )
 
-        # Macro section: element name matches macro name so it's the return value
-        macro_aux = _make_element("My Macro", 42.0)
-        macro_section = AbstractSection(
-            name="my_macro",
-            path=tmp_path / "my_model.mdl",
-            type="macro",
-            params=["Input"],
-            returns=["My Macro"],
-            subscripts=(),
-            elements=(macro_aux,),
-            constraints=(),
-            test_inputs=(),
-            split=False,
-            views_dict=None,
-        )
+    @staticmethod
+    def _macro(name, params, elements):
+        return AbstractSection(
+            name=name, path=Path("m.mdl"), type="macro", params=params,
+            returns=[], subscripts=(), elements=tuple(elements), constraints=(),
+            test_inputs=(), split=False, views_dict=None)
 
-        return AbstractModel(
-            original_path=tmp_path / "my_model.mdl",
-            sections=(main_section, macro_section),
-        )
+    @staticmethod
+    def _call(macro, *args):
+        return CallStructure(function=ReferenceStructure(macro), arguments=args)
 
-    def test_build_model_creates_main_jl(self, tmp_path):
-        model = self._two_section_model(tmp_path)
-        path = JuliaModelBuilder(model).build_model()
-        assert path.exists()
-        assert path.suffix == ".jl"
+    def _model(self, tmp_path, main_elements, macros):
+        main = _make_section(elements=list(main_elements) + self._controls(),
+                             path=tmp_path / "my_model.mdl")
+        return AbstractModel(original_path=tmp_path / "my_model.mdl",
+                             sections=(main, *macros))
 
-    def test_macro_section_creates_companion_file(self, tmp_path):
-        model = self._two_section_model(tmp_path)
-        JuliaModelBuilder(model).build_model()
-        macro_file = tmp_path / "my_model_my_macro.jl"
-        assert macro_file.exists()
+    def _double_macro(self):
+        """MY MACRO(input) = input * 2"""
+        body = ArithmeticStructure(operators=["*"],
+                                   arguments=(ReferenceStructure("input"), 2))
+        return self._macro("my_macro", ["input"], [_make_element("MY MACRO", body)])
 
-    def test_macro_file_contains_julia_function(self, tmp_path):
-        """ODE backend companion file defines a Julia function, not MTK equations."""
-        model = self._two_section_model(tmp_path)
-        JuliaModelBuilder(model).build_model()
-        macro_file = tmp_path / "my_model_my_macro.jl"
-        content = macro_file.read_text()
-        assert "function my_macro(" in content
+    def _stock_macro(self):
+        """STOCK MACRO(input, init) = INTEG(input, init)"""
+        integ = IntegStructure(flow=ReferenceStructure("input"),
+                               initial=ReferenceStructure("init"))
+        return self._macro("stock_macro", ["input", "init"],
+                           [_make_element("STOCK MACRO", integ)])
 
-    def test_macro_function_takes_params_as_args(self, tmp_path):
-        """Companion function signature includes macro params."""
-        model = self._two_section_model(tmp_path)
-        JuliaModelBuilder(model).build_model()
-        macro_file = tmp_path / "my_model_my_macro.jl"
-        content = macro_file.read_text()
-        assert "function my_macro(input)" in content
+    def test_inline_macros_substitutes_arguments(self, tmp_path):
+        model = self._model(tmp_path, [
+            _make_element("Rate", 3.0),
+            _make_element("Out", self._call("my_macro", ReferenceStructure("rate"))),
+        ], [self._double_macro()])
+        new = inline_macros(model)
+        assert len(new.sections) == 1
+        elements = {e.name: e.components[0].ast for e in new.sections[0].elements}
+        assert elements["Out"] == ReferenceStructure("out_my_macro_my_macro")
+        assert elements["out_my_macro_my_macro"] == ArithmeticStructure(
+            operators=["*"], arguments=(ReferenceStructure("rate"), 2))
 
-    def test_macro_file_contains_macro_name_comment(self, tmp_path):
-        model = self._two_section_model(tmp_path)
-        JuliaModelBuilder(model).build_model()
-        macro_file = tmp_path / "my_model_my_macro.jl"
-        content = macro_file.read_text()
-        assert "Macro my_macro" in content
+    def test_model_without_macros_is_unchanged(self, tmp_path):
+        model = self._model(tmp_path, [_make_element("Rate", 3.0)], [])
+        assert inline_macros(model) is model
 
-    def test_main_file_unaffected_by_macro(self, tmp_path):
-        """Main model still contains rhs! function even with a macro section."""
-        model = self._two_section_model(tmp_path)
+    def test_no_companion_file_and_no_function(self, tmp_path):
+        model = self._model(tmp_path, [
+            _make_element("Rate", 3.0),
+            _make_element("Out", self._call("my_macro", ReferenceStructure("rate"))),
+        ], [self._double_macro()])
         path = JuliaModelBuilder(model).build_model()
         content = path.read_text()
-        assert "function rhs!" in content
-        assert "population" in content
+        assert not (tmp_path / "my_model_my_macro.jl").exists()
+        assert "function my_macro" not in content and "include(" not in content
+        assert "out_my_macro_my_macro = rate * 2" in content.replace("(", "").replace(")", "")
 
-    def test_main_file_includes_macro_companion(self, tmp_path):
-        """Main model has an include() statement for the macro companion file."""
-        model = self._two_section_model(tmp_path)
-        path = JuliaModelBuilder(model).build_model()
-        content = path.read_text()
-        assert 'include(' in content
-        assert 'my_macro' in content
+    @pytest.mark.parametrize("backend", ["ode", "mtk"])
+    def test_stock_in_macro_becomes_a_model_stock(self, tmp_path, backend):
+        model = self._model(tmp_path, [
+            _make_element("Inflow", 5.0),
+            _make_element("Level", self._call("stock_macro", ReferenceStructure("inflow"), 1.1)),
+        ], [self._stock_macro()])
+        content = JuliaModelBuilder(model, backend=backend).build_model().read_text()
+        stock = "level_stock_macro_stock_macro"
+        assert "return 0.0" not in content
+        if backend == "ode":
+            assert f"1.1,  # {stock}" in content                # initial value
+            assert f'("{stock}", 1, String[])' in content       # state map
+        else:
+            assert f"{stock} => 1.1" in content
+            assert f"D({stock}) ~ inflow" in content
 
-    def test_macro_params_no_namespace_warning(self, tmp_path):
-        """Macro params are in namespace; no 'not found' warning during translation."""
-        import warnings
-        from pathlib import Path
+    def test_macro_calling_macro(self, tmp_path):
+        outer = self._macro("outer_macro", ["x"], [
+            _make_element("OUTER MACRO", self._call("my_macro", ReferenceStructure("x")))])
+        model = self._model(tmp_path, [
+            _make_element("Out", self._call("outer_macro", 4.0)),
+        ], [self._double_macro(), outer])
+        names = [e.name for e in inline_macros(model).sections[0].elements]
+        assert "out_outer_macro_outer_macro" in names
+        assert "out_outer_macro_outer_macro_my_macro_my_macro" in names
+
+    def test_two_calls_in_one_equation_get_distinct_copies(self, tmp_path):
+        both = ArithmeticStructure(operators=["+"], arguments=(
+            self._call("my_macro", 1.0), self._call("my_macro", 2.0)))
+        model = self._model(tmp_path, [_make_element("Out", both)],
+                            [self._double_macro()])
+        elements = {e.name: e.components[0].ast for e in inline_macros(model).sections[0].elements}
+        assert elements["Out"] == ArithmeticStructure(operators=["+"], arguments=(
+            ReferenceStructure("out_my_macro_my_macro"),
+            ReferenceStructure("out_my_macro_2_my_macro")))
+
+    def test_macro_model_translates_without_warnings(self, tmp_path):
+        """No 'not found in namespace' or 'Unknown Vensim function' warnings."""
         import shutil
+        import warnings
         mdl_src = Path("tests/test-models/tests/macro_expression/test_macro_expression.mdl")
         if not mdl_src.exists():
             pytest.skip("macro_expression model not found")
@@ -4475,207 +4488,9 @@ class TestMacroSupport:
             warnings.simplefilter("always")
             import pysd
             pysd.translate_to_julia(str(dst))
-        ns_warnings = [x for x in w if "not found in namespace" in str(x.message)]
-        assert not ns_warnings, f"Unexpected namespace warnings: {ns_warnings}"
-
-    def test_macro_call_no_unknown_function_warning(self, tmp_path):
-        """Calling a macro from the main section does not emit 'Unknown Vensim function'."""
-        import warnings
-        from pathlib import Path
-        import shutil
-        mdl_src = Path("tests/test-models/tests/macro_expression/test_macro_expression.mdl")
-        if not mdl_src.exists():
-            pytest.skip("macro_expression model not found")
-        dst = tmp_path / "test_macro_expression.mdl"
-        shutil.copy(mdl_src, dst)
-        with warnings.catch_warnings(record=True) as w:
-            warnings.simplefilter("always")
-            import pysd
-            pysd.translate_to_julia(str(dst))
-        unk_warnings = [x for x in w if "Unknown Vensim function" in str(x.message)]
-        assert not unk_warnings, f"Unexpected unknown-function warnings: {unk_warnings}"
-
-    def test_mtk_macro_companion_uses_equations_array(self, tmp_path):
-        """MTK backend macro companion file emits an Equation[] array, not a function."""
-        model = self._two_section_model(tmp_path)
-        JuliaModelBuilder(model, backend="mtk").build_model()
-        macro_file = tmp_path / "my_model_my_macro.jl"
-        assert macro_file.exists()
-        content = macro_file.read_text()
-        assert "my_macro_eqs = Equation[" in content
-        assert "ModelingToolkit" in content
-        assert "function my_macro(" not in content
-
-
-class TestMacroSupportCoverage:
-    """Cover remaining macro-section code paths."""
-
-    def test_macro_with_inline_lookup_and_json(self, tmp_path):
-        """Macro with inline lookup (json mode): companion file has DataInterpolations."""
-        lut_ast = InlineLookupsStructure(
-            argument=1.0,
-            lookups=LookupsStructure(
-                x=(0.0, 1.0), y=(0.0, 2.0),
-                x_limits=(0.0, 1.0), y_limits=(0.0, 2.0),
-                type="interpolate",
-            ),
-        )
-        comp = AbstractComponent(subscripts=[[], []], ast=lut_ast)
-        lut_elem = AbstractElement(name="Macro LUT", components=[comp])
-        main_section = _make_section(
-            elements=[
-                _make_stock_element("S", 1.0, 1.0),
-                _make_control_element("INITIAL TIME", 0.0),
-                _make_control_element("FINAL TIME", 10.0),
-                _make_control_element("TIME STEP", 1.0),
-                _make_control_element("SAVEPER", 1.0),
-            ],
-            path=tmp_path / "m.mdl",
-        )
-        macro_section = AbstractSection(
-            name="lookup_macro", path=tmp_path / "m.mdl",
-            type="macro", params=[], returns=["Macro LUT"],
-            subscripts=(), elements=(lut_elem,),
-            constraints=(), test_inputs=(),
-            split=False, views_dict=None,
-        )
-        model = AbstractModel(
-            original_path=tmp_path / "m.mdl",
-            sections=(main_section, macro_section),
-        )
-        JuliaModelBuilder(model, data_format="json").build_model()
-        macro_path = tmp_path / "m_lookup_macro.jl"
-        assert macro_path.exists()
-        content = macro_path.read_text()
-        assert "DataInterpolations" in content
-        assert "function lookup_macro(" in content
-        assert (tmp_path / "m_lookup_macro_data.json").exists()
-
-    def test_macro_with_const_only_emits_bare_return(self, tmp_path):
-        """ODE macro where all elements are constants → empty body_lines → line 396."""
-        const_elem = _make_element("My Const", 7.0, comp_class=AbstractUnchangeableConstant)
-        main_section = _make_section(
-            elements=[
-                _make_stock_element("S", 1.0, 1.0),
-                _make_control_element("INITIAL TIME", 0.0),
-                _make_control_element("FINAL TIME", 10.0),
-                _make_control_element("TIME STEP", 1.0),
-                _make_control_element("SAVEPER", 1.0),
-            ],
-            path=tmp_path / "m.mdl",
-        )
-        macro_section = AbstractSection(
-            name="const_macro", path=tmp_path / "m.mdl",
-            type="macro", params=[], returns=["My Const"],
-            subscripts=(), elements=(const_elem,),
-            constraints=(), test_inputs=(), split=False, views_dict=None,
-        )
-        model = AbstractModel(
-            original_path=tmp_path / "m.mdl",
-            sections=(main_section, macro_section),
-        )
-        JuliaModelBuilder(model).build_model()
-        content = (tmp_path / "m_const_macro.jl").read_text()
-        assert "function const_macro(" in content
-        assert "return " in content
-
-    def test_macro_with_stock_emits_placeholder_return(self, tmp_path):
-        """ODE macro containing a stock emits a 'return 0.0' placeholder (lines 368-373)."""
-        import warnings
-        stock_elem = _make_stock_element("My Level", 1.0, 0.0)
-        main_section = _make_section(
-            elements=[
-                _make_stock_element("S", 1.0, 1.0),
-                _make_control_element("INITIAL TIME", 0.0),
-                _make_control_element("FINAL TIME", 10.0),
-                _make_control_element("TIME STEP", 1.0),
-                _make_control_element("SAVEPER", 1.0),
-            ],
-            path=tmp_path / "m.mdl",
-        )
-        macro_section = AbstractSection(
-            name="stateful_macro", path=tmp_path / "m.mdl",
-            type="macro", params=[], returns=["My Level"],
-            subscripts=(), elements=(stock_elem,),
-            constraints=(), test_inputs=(), split=False, views_dict=None,
-        )
-        model = AbstractModel(
-            original_path=tmp_path / "m.mdl",
-            sections=(main_section, macro_section),
-        )
-        with warnings.catch_warnings(record=True):
-            warnings.simplefilter("always")
-            JuliaModelBuilder(model).build_model()
-        content = (tmp_path / "m_stateful_macro.jl").read_text()
-        assert "return 0.0" in content
-        assert "function stateful_macro(" in content
-
-    def test_mtk_macro_with_lookup_includes_datainterpolations(self, tmp_path):
-        """MTK macro with inline lookup includes DataInterpolations (line 427)."""
-        lut_ast = InlineLookupsStructure(
-            argument=1.0,
-            lookups=LookupsStructure(
-                x=(0.0, 1.0), y=(0.0, 2.0),
-                x_limits=(0.0, 1.0), y_limits=(0.0, 2.0),
-                type="interpolate",
-            ),
-        )
-        lut_elem = AbstractElement(
-            name="Lut Var",
-            components=[AbstractComponent(subscripts=[[], []], ast=lut_ast)],
-        )
-        main_section = _make_section(
-            elements=[
-                _make_stock_element("S", 1.0, 1.0),
-                _make_control_element("INITIAL TIME", 0.0),
-                _make_control_element("FINAL TIME", 10.0),
-                _make_control_element("TIME STEP", 1.0),
-                _make_control_element("SAVEPER", 1.0),
-            ],
-            path=tmp_path / "m.mdl",
-        )
-        macro_section = AbstractSection(
-            name="lut_macro", path=tmp_path / "m.mdl",
-            type="macro", params=[], returns=["Lut Var"],
-            subscripts=(), elements=(lut_elem,),
-            constraints=(), test_inputs=(), split=False, views_dict=None,
-        )
-        model = AbstractModel(
-            original_path=tmp_path / "m.mdl",
-            sections=(main_section, macro_section),
-        )
-        JuliaModelBuilder(model, backend="mtk").build_model()
-        content = (tmp_path / "m_lut_macro.jl").read_text()
-        assert "DataInterpolations" in content
-        assert "ModelingToolkit" in content
-
-    def test_mtk_macro_with_json_includes_json3(self, tmp_path):
-        """MTK macro with json data_format includes JSON3 (line 429)."""
-        aux_elem = _make_element("Macro Var", 42.0)
-        main_section = _make_section(
-            elements=[
-                _make_stock_element("S", 1.0, 1.0),
-                _make_control_element("INITIAL TIME", 0.0),
-                _make_control_element("FINAL TIME", 10.0),
-                _make_control_element("TIME STEP", 1.0),
-                _make_control_element("SAVEPER", 1.0),
-            ],
-            path=tmp_path / "m.mdl",
-        )
-        macro_section = AbstractSection(
-            name="json_macro", path=tmp_path / "m.mdl",
-            type="macro", params=[], returns=["Macro Var"],
-            subscripts=(), elements=(aux_elem,),
-            constraints=(), test_inputs=(), split=False, views_dict=None,
-        )
-        model = AbstractModel(
-            original_path=tmp_path / "m.mdl",
-            sections=(main_section, macro_section),
-        )
-        JuliaModelBuilder(model, backend="mtk", data_format="json").build_model()
-        content = (tmp_path / "m_json_macro.jl").read_text()
-        assert "JSON3" in content
-        assert "ModelingToolkit" in content
+        messages = [str(x.message) for x in w]
+        assert not [m for m in messages
+                    if "not found in namespace" in m or "Unknown Vensim function" in m]
 
 
 class TestGetConstantsPiecewise1D:

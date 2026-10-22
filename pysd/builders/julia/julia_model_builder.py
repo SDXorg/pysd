@@ -58,6 +58,7 @@ from .julia_expressions_builder import (
     format_number,
     lookup_interpolation_code,
 )
+from .macro_inliner import inline_macros
 from .namespace import JuliaNamespaceManager
 
 def _outer_for_clause(eq: str) -> str:
@@ -160,42 +161,16 @@ class JuliaModelBuilder:
                 f"backend must be 'ode' or 'mtk', got {backend!r}"
             )
         self.original_path = abstract_model.original_path
+        # Macros are expanded in place (macro_inliner), leaving the main section
+        abstract_model = inline_macros(abstract_model)
         self.sections = [
             JuliaSectionBuilder(section, data_format=data_format, backend=backend)
             for section in abstract_model.sections
         ]
 
     def build_model(self) -> Path:
-        """Translate all sections and return the path to the main ``.jl`` file.
-
-        The first section is always the main model.  Any additional sections
-        are Vensim macros; each gets its own ``<macro_name>.jl`` companion file.
-
-        Macro sections are built first so the main section knows their names
-        (to suppress spurious "Unknown Vensim function" warnings) and companion
-        file paths (to emit ``include()`` statements).
-        """
-        # Collect all macro Julia identifiers up-front so every section
-        # (including other macros doing cross-reference calls) can suppress
-        # "Unknown Vensim function" warnings for macro calls.
-        macro_names: Set[str] = {
-            re.sub(r"[^a-z0-9_]", "_", s.name.lower())
-            for s in self.sections[1:]
-        }
-
-        # Build macro sections first.
-        for section in self.sections[1:]:
-            section._known_macro_names = macro_names
-            section.build_section()
-
-        # Build main section with knowledge of all macro names + companion paths.
+        """Translate the model and return the path to the main ``.jl`` file."""
         main = self.sections[0]
-        main._known_macro_names = macro_names
-        main._macro_companion_paths = [
-            s._macro_companion_path
-            for s in self.sections[1:]
-            if getattr(s, "_macro_companion_path", None) is not None
-        ]
         main.build_section()
         return main.path
 
@@ -232,14 +207,8 @@ class JuliaSectionBuilder:
         self.views_dict: Optional[dict] = abstract_section.views_dict
         self.abstract_elements: List[AbstractElement] = list(abstract_section.elements)
         self._abstract_subscripts = abstract_section.subscripts
-        # Macro parameters (populated from abstract_section.params for macro sections)
-        self._macro_params: List[str] = list(abstract_section.params)
-        # Set by JuliaModelBuilder before building: Julia ids of known macros
+        # Julia ids of macros, for the visitor (empty: macros are expanded in place)
         self._known_macro_names: Set[str] = set()
-        # Set by JuliaModelBuilder before building: companion paths of macro sections
-        self._macro_companion_paths: List[Path] = []
-        # Set by _build_macro_section: path to this section's companion .jl file
-        self._macro_companion_path: Optional[Path] = None
         self.data_format: str = data_format
         # JSON data accumulator — populated when data_format == "json"
         self._json_data: Dict[str, dict] = {
@@ -337,172 +306,8 @@ class JuliaSectionBuilder:
     # Public interface
     # ------------------------------------------------------------------
 
-    def _build_macro_section(self) -> None:
-        """Generate a companion ``.jl`` file for a Vensim macro section.
-
-        **ODE backend**: emits a Julia function ``macro_name(params...)`` that
-        evaluates the macro's algebraic body and returns the output variable.
-        Stateful macros (containing INTEG stocks) are flagged with a warning
-        and a placeholder ``return 0.0`` is emitted.
-
-        **MTK backend**: emits the previous-style ``Equation[]`` vector
-        (``{macro_name}_eqs``) for use in ``ODESystem`` composition.
-        """
-        macro_jl_name = re.sub(r"[^a-z0-9_]", "_", self.name.lower())
-
-        # Add macro params to namespace so references to them inside the macro
-        # body don't produce "not found in namespace" warnings.
-        for param in self._macro_params:
-            clean = re.sub(r"[^a-z0-9_]", "_", param.lower())
-            self.namespace.namespace[param] = clean
-
-        # Populate namespace with element names
-        for elem in self.abstract_elements:
-            self.namespace.add_to_namespace(elem.name)
-
-        # Process all elements (macros have no control elements)
-        for elem in self.abstract_elements:
-            identifier = self.namespace.namespace[elem.name]
-            eqs = self._process_element(elem, identifier, is_control=False)
-            self.built_elements[identifier] = (eqs, False)
-
-        # Register inline lookups
-        for lut_name, xs, ys, itp_type in self.inline_registry.entries:
-            const_decl, func_decl, reg_decl = lookup_interpolation_code(
-                lut_name, xs, ys, itp_type
-            )
-            self.lookup_const_decls.append(const_decl)
-            self.lookup_func_decls.append(func_decl)
-            self.lookup_register_decls.append(reg_decl)
-
-        # Determine companion file path and write it
-        self.path = self.path.with_name(
-            f"{self.path.stem}_{macro_jl_name}.jl"
-        )
-        if self.data_format == "json":
-            self._write_data_json()
-
-        if self.backend == "ode":
-            text = self._build_macro_ode_text(macro_jl_name)
-        else:
-            text = self._build_macro_mtk_text(macro_jl_name)
-
-        self.path.write_text(text, encoding="UTF-8")
-        self._macro_companion_path = self.path
-
-    def _build_macro_ode_text(self, macro_jl_name: str) -> str:
-        """Return the companion file content for a macro in ODE-backend mode.
-
-        Generates a plain Julia function ``macro_name(params...)`` that
-        evaluates the macro body and returns the output variable.
-        """
-        all_eqs: List[str] = []
-        for eqs, _ in self.built_elements.values():
-            all_eqs.extend(eqs)
-
-        # Detect stateful macros (contain ODE equations D(x) ~ ...)
-        has_ode = any(
-            eq.strip().startswith("D(") or eq.strip().startswith("[D(")
-            for eq in all_eqs
-        )
-
-        param_list = ", ".join(
-            re.sub(r"[^a-z0-9_]", "_", p.lower()) for p in self._macro_params
-        )
-
-        if has_ode:
-            warn(
-                f"Macro '{macro_jl_name}' contains stocks (INTEG); "
-                "the ODE backend cannot inline stateful macros. "
-                "A placeholder function returning 0.0 is generated."
-            )
-            body = "    # Stateful macro — ODE stocks cannot be inlined; placeholder only.\n    return 0.0"
-        else:
-            # Collect algebraic equations and convert ~ → =
-            alg_eqs = [
-                eq for eq in all_eqs
-                if eq.strip() and not eq.strip().startswith("D(")
-                and not eq.strip().startswith("[D(")
-            ]
-            body_lines: List[str] = []
-            for eq in alg_eqs:
-                converted = self._convert_eq_to_assignment(eq.strip().rstrip(","))
-                body_lines.extend(f"    {line}" for line in converted)
-
-            # Return value: element whose Julia id matches the macro name,
-            # or the last element if no match.
-            return_id = macro_jl_name
-            if macro_jl_name not in self.built_elements:
-                ids = list(self.built_elements.keys())
-                return_id = ids[-1] if ids else macro_jl_name
-
-            if body_lines:
-                body = "\n".join(body_lines) + f"\n    return {return_id}"
-            else:
-                body = f"    return {return_id}"
-
-        # Build using/lookup preamble (DataInterpolations for inline lookups)
-        uses: List[str] = []
-        if self.lookup_const_decls:
-            uses.append("DataInterpolations")
-        if self.data_format == "json":
-            uses.append("JSON3")
-        using_line = f"using {', '.join(uses)}\n\n" if uses else ""
-        lookup_block = self._lookup_block() if self.lookup_const_decls else ""
-
-        return (
-            f"# Macro {self.name}\n"
-            f"# Translated using PySD version {__version__}\n\n"
-            f"{using_line}"
-            f"{lookup_block}"
-            f"function {macro_jl_name}({param_list})\n"
-            f"{body}\n"
-            f"end\n"
-        )
-
-    def _build_macro_mtk_text(self, macro_jl_name: str) -> str:
-        """Return the companion file content for a macro in MTK-backend mode."""
-        all_eqs: List[str] = []
-        for eqs, _ in self.built_elements.values():
-            all_eqs.extend(eqs)
-
-        eq_var = f"{macro_jl_name}_eqs"
-        eq_lines = ",\n    ".join(all_eqs) if all_eqs else ""
-        uses = ["ModelingToolkit", "Symbolics"]
-        if self.lookup_const_decls:
-            uses.append("DataInterpolations")
-        if self.data_format == "json":
-            uses.append("JSON3")
-        using_line = f"using {', '.join(uses)}"
-
-        return textwrap.dedent(f"""\
-            # Macro {self.name}
-            # Translated using PySD version {__version__}
-
-            {using_line}
-
-            {self._helpers_block()}
-            {self._lookup_block()}
-            {self._declarations_block()}
-            {eq_var} = Equation[
-                {eq_lines}
-            ]
-            """)
-
     def build_section(self) -> None:
-        """Build the section, writing one or more ``.jl`` files.
-
-        For macro sections (``type == 'macro'``) a standalone companion
-        ``.jl`` file is generated containing the macro's equations as a
-        Julia ``Equation`` vector named ``{macro_name}_eqs``.  The file
-        is written next to the main model file.
-        """
-        is_macro = (self.name != "__main__")
-
-        if is_macro:
-            self._build_macro_section()
-            return
-
+        """Build the section, writing its ``.jl`` file."""
         # First pass: populate the namespace with all element names
         for elem in self.abstract_elements:
             self.namespace.add_to_namespace(elem.name)
@@ -5425,16 +5230,6 @@ class JuliaSectionBuilder:
             )
         return ""
 
-    def _macro_includes_block(self) -> str:
-        """Return ``include(...)`` statements for macro companion files."""
-        if not self._macro_companion_paths:
-            return ""
-        lines = [
-            f'include(joinpath(@__DIR__, "{p.name}"))'
-            for p in self._macro_companion_paths
-        ]
-        return "\n# Macro companion files\n" + "\n".join(lines) + "\n"
-
     def _full_file_content(self, equations: List[str]) -> str:
         needs_di = bool(self.lookup_const_decls)
         equations_block = self._equations_block(equations)
@@ -5458,7 +5253,6 @@ class JuliaSectionBuilder:
             self._helpers_block(),
             self._tab_data_block(),
             self._lookup_block(),
-            self._macro_includes_block(),
             self._declarations_block(),
             self._control_block(),
             "\n",
