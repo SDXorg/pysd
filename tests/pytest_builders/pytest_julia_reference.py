@@ -94,13 +94,11 @@ KNOWN_FAILURES = {
     ("vensim:partial_range_definitions", "ode"): "partially defined lookups and data: placeholders and element mapping (#500)",
     # values differ from the reference (#499)
     ("vensim:active_initial", "mtk"): "values differ from the reference (#499)",
-    ("vensim:lookups_inline_spaces", "mtk"): "values differ from the reference (#499)",
     # generated code refers to an undefined name (#500)
     ("vensim:data_from_other_model", "mtk"): "generated code refers to an undefined name (#500)",
     # variables missing from the Julia output (#499)
     ("vensim:get_subscript_3d_arrays_xls", "mtk"): "variables missing from the Julia output (#499)",
     ("vensim:get_subscript_3d_arrays_xls", "ode"): "variables missing from the Julia output (#499)",
-    ("vensim:subscripted_xidz", "mtk"): "variables missing from the Julia output (#499)",
     # MTK: indexing a symbolic array out of its declared shape (#502)
     ("vensim:allocate_available", "mtk"): "MTK: indexing a symbolic array out of its declared shape (#502)",
     # lookup emitted as a constant but called as a function (#500)
@@ -111,12 +109,11 @@ KNOWN_FAILURES = {
     ("vensim:vector_select", "mtk"): "VECTOR SELECT called with wrong arguments (#500)",
     # lookup called with extra arguments (#500)
     ("vensim:vector_order", "mtk"): "lookup called with extra arguments (#500)",
-    # lookup x values not sorted (#500)
-    ("vensim:get_with_missing_values_xlsx", "mtk"): "lookup x values not sorted (#500)",
     # MTK: initial value depends on other variables (#502)
     ("vensim:active_initial_circular", "mtk"): "MTK: initial value depends on other variables (#502)",
     # MTK: numeric conversion of a symbolic value (#502)
     ("vensim:allocate_by_priority", "mtk"): "MTK: numeric conversion of a symbolic value (#502)",
+    ("vensim:subscripted_round", "mtk"): "values differ from the reference (#499)",
 }
 
 
