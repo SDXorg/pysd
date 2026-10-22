@@ -58,6 +58,13 @@ Bug fixes
   writes one NetCDF dimension per subscript range (``(time, dim_1, ..., dim_n)``,
   with element labels), which ``nc_data_files`` reads back. The numerical tests
   now compare 2D/3D test models with their Vensim output (:issue:`494`). (`@rogersamso <https://github.com/rogersamso>`_)
+- Julia builder: delays as in the Python builder.  DELAY FIXED takes its
+  number of stages from the delay time at the initial time (also when it is
+  an expression) and uses the exact pipeline with both backends; DELAY N
+  follows a changing delay time stage by stage; DELAY1/3/N lower their order
+  when order × TIME STEP exceeds the delay time.  With the ODE backend,
+  initial values that depend on stocks no longer start from zero
+  (:issue:`511`). (`@rogersamso <https://github.com/rogersamso>`_)
 
 Documentation
 ~~~~~~~~~~~~~

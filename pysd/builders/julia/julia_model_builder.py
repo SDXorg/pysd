@@ -1136,10 +1136,8 @@ class JuliaSectionBuilder:
             return self._expand_delay(identifier, ast, visitor, order=order, dims=dims)
 
         # ---- DELAY FIXED ------------------------------------------------
-        # Approximate DELAY FIXED as a first-order ODE delay (same formula
-        # as DELAY1 with order=1).  True fixed delays need a DDE solver
-        # that ModelingToolkit/OrdinaryDiffEq does not support, so this is
-        # the best we can do in the MTK ODE framework.
+        # N-stage pipeline, N from the delay time at the initial time (first-order
+        # approximation only if that cannot be evaluated); see _expand_delay_fixed.
         if isinstance(ast, DelayFixedStructure):
             return self._expand_delay_fixed(identifier, ast, visitor, dims=dims)
 

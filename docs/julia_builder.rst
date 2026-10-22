@@ -343,11 +343,15 @@ Supported Vensim features
      - Supported
      - Supported
    * - ``DELAY1`` / ``DELAY3`` / ``DELAYN``
-     - Supported
+     - Supported (as the Python builder: the order is read at the initial
+       time and truncated, and lowered while order × TIME STEP exceeds the
+       delay time; with a changing delay time each stage keeps the delay
+       time it started with)
      - Supported
    * - ``DELAY FIXED``
-     - Supported (exact N-stage Euler pipeline; falls back to first-order ODE if delay time is dynamic)
-     - Supported
+     - Supported (exact N-stage Euler pipeline; N comes from the delay time at
+       the initial time, as in the Python builder)
+     - Supported (same pipeline)
    * - ``TREND``, ``FORECAST``
      - Supported
      - Supported
@@ -385,8 +389,8 @@ Supported Vensim features
    * - Subscripted ``GET DIRECT LOOKUPS`` > 2D
      - Partial (flattened to first column with warning)
      - Partial
-   * - ``SMOOTH``/``DELAY`` with non-integer order
-     - Partial (order rounded to nearest integer with warning)
+   * - ``SMOOTH N`` with non-integer order
+     - Partial (order rounded to the nearest integer)
      - Partial
    * - ``EXCEPT`` exclusion on 3-D subscripts
      - Supported (per-index comprehension equations)
@@ -449,9 +453,9 @@ parse.  The Julia builder does not yet cover:
    * - Subscripted lookups with > 2 subscript dimensions
      - Full
      - Flattened to first column (with warning)
-   * - ``SMOOTH``/``DELAY`` with non-integer order
+   * - ``SMOOTH N`` with non-integer order
      - Full (arbitrary real order)
-     - Order rounded to nearest integer (with warning)
+     - Order rounded to the nearest integer
    * - ``EXCEPT`` exclusion on 3-D subscripts
      - Full
      - Supported (per-index comprehension equations, same as 1-D and 2-D)
@@ -466,7 +470,8 @@ parse.  The Julia builder does not yet cover:
      - Passes through; interactive value ignored in batch simulation
    * - ``DELAY FIXED`` exact semantics
      - Full (discrete transport delay)
-     - Supported (exact N-stage Euler pipeline matching Vensim ring-buffer semantics); dynamic delay times fall back to a first-order ODE approximation with a warning
+     - Supported (exact N-stage Euler pipeline matching Vensim ring-buffer
+       semantics; N comes from the delay time at the initial time)
    * - ``SAMPLE IF TRUE`` exact semantics
      - Full (holds last-true value)
      - Supported (instantaneous ifelse output; hold stock updated each step)
@@ -489,15 +494,17 @@ Limitations
   Behaviour matches Vensim exactly when using the Euler solver.
 
 - **DELAY FIXED** is implemented as an exact N-stage Euler pipeline
-  (``N = round(delay_time / time_step)``), which matches Vensim's ring-buffer
-  transport delay exactly when the delay time is a static constant.  If the
-  delay time cannot be evaluated at translation time (e.g. it is a dynamic
-  expression), the builder falls back to a first-order ODE approximation and
-  emits a warning.
+  (``N = round(delay_time / time_step)``), with both backends.  As in Vensim
+  and the Python builder, N is fixed by the delay time at the initial time,
+  which may be an expression (e.g. ``2.5 * TIME STEP`` or
+  ``4 + STEP(2, 15)``).  Only if the delay time cannot be evaluated at
+  translation time (e.g. it depends on external data) does the builder fall
+  back to a first-order ODE approximation, with a warning.
 
-- **Non-integer SMOOTH/DELAY order** is rounded to the nearest integer
-  (defaulting to 3) with a warning; the Python builder supports arbitrary
-  real-valued orders.
+- **Non-integer SMOOTH N order** is rounded to the nearest integer; the
+  Python builder supports arbitrary real-valued orders.  A SMOOTH N or
+  DELAY N order that cannot be evaluated at translation time defaults to 3,
+  with a warning.  DELAY N orders are truncated, as in the Python builder.
 
 - **Tab-delimited DATA variables** (``.tab`` file sources) are supported for
   the ODE backend.  Pass the file paths as ``run_model(tab_data_files=["data.tab"])``;
