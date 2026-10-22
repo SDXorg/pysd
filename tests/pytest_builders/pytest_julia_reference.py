@@ -215,15 +215,21 @@ def _own_ranges(elem, ranges):
     subs = [c.subscripts[0] for c in elem.components]
     out = []
     for i in range(min(map(len, subs), default=0)):
-        names = [s[i].lower() for s in subs]
+        names = [_plain_name(s[i]) for s in subs]
         covered = set()
         for name in names:
-            covered |= set(ranges.get(name, [name.strip()]))
+            covered |= set(ranges.get(name, [name]))
         own = next((ranges[n] for n in names if n in ranges and set(ranges[n]) == covered), None)
         if own is None:
             own = next((r for r in ranges.values() if set(r) == covered), None)
         out.append(own)
     return out
+
+
+def _plain_name(name):
+    """A variable name as Vensim writes it in outputs: no quotes, spaces for
+    underscores, single spaces, lower case."""
+    return " ".join(name.strip().strip('"').replace("_", " ").split()).lower()
 
 
 def _id_map(model_file, columns):
@@ -239,36 +245,41 @@ def _id_map(model_file, columns):
     labels = {}
     ranges = {}
     own_ranges = {}
+    plain = {}
     for section in am.sections:
         for sr in section.subscripts:
             if isinstance(sr.subscripts, list):
-                ranges[sr.name.lower()] = [s.lower().strip() for s in sr.subscripts]
+                ranges[_plain_name(sr.name)] = [_plain_name(s) for s in sr.subscripts]
                 for i, label in enumerate(sr.subscripts):
-                    labels.setdefault(label.lower().strip(), i + 1)
+                    labels.setdefault(_plain_name(label), i + 1)
     for section in am.sections:
         for sr in section.subscripts:
             # an alias (subdim1 copy <-> subdim1) has the elements of its range
-            if isinstance(sr.subscripts, str) and sr.subscripts.lower() in ranges:
-                ranges[sr.name.lower()] = ranges[sr.subscripts.lower()]
+            if isinstance(sr.subscripts, str) and _plain_name(sr.subscripts) in ranges:
+                ranges[_plain_name(sr.name)] = ranges[_plain_name(sr.subscripts)]
     for section in am.sections:
         for elem in section.elements:
             ns.add_to_namespace(elem.name)
             own_ranges[elem.name.lower().strip()] = _own_ranges(elem, ranges)
+            # Vensim writes "Stock_A" and "Stock A" for the same variable, and
+            # quotes names with special characters; outputs use the plain form
+            plain[_plain_name(elem.name)] = elem.name
     ids = {}
     for col in columns:
         if col.upper() in CONTROL_COLUMNS:
             ids[col] = CONTROL_COLUMNS[col.upper()]
             continue
         base, _, rest = col.partition("[")
-        jl = ns.get(base.strip())
+        name = plain.get(_plain_name(base), base.strip())
+        jl = ns.get(name)
         if jl is None:
             continue
         if rest:
-            own = own_ranges.get(base.strip().lower(), [])
+            own = own_ranges.get(name.strip().lower(), [])
             idx = [
                 own[i].index(lb) + 1 if i < len(own) and own[i] and lb in own[i]
                 else labels.get(lb)
-                for i, lb in enumerate(s.lower().strip() for s in rest.rstrip("]").split(","))
+                for i, lb in enumerate(_plain_name(s) for s in rest.rstrip("]").split(","))
             ]
             if None in idx:
                 continue
