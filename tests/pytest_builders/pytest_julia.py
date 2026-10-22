@@ -7886,3 +7886,23 @@ class TestConstantsDefinedInParts:
         assert "_v[[2]] .= pysd_xlsx_read_constant(" in content
         assert '_v[[3, 1]] .= pysd_xlsx_read_constant(joinpath(@__DIR__, "inputs.xlsx"), "Sheet1", "var4subdim"; transpose=true)' in content
         assert "_v[[4]] .= 7.0" in content
+
+
+class TestVectorSelect:
+    """VECTOR SELECT(selection[dim1!], expression[dim2!], -1, 0, 0) (test-models
+    vector_select): both arrays cover dim1 x dim2, as in Python PySD."""
+
+    def test_selection_and_expression_over_different_dimensions(self):
+        v = JuliaASTVisitor(
+            JuliaNamespaceManager(), InlineLookupRegistry(), set(),
+            subs_elems={"dim1": ["a", "b", "c"], "dim2": ["x", "y"]},
+            var_dims={"sel": ["dim1"], "expr": ["dim2"]})
+        v.namespace.add_to_namespace("sel")
+        v.namespace.add_to_namespace("expr")
+        node = CallStructure(function=ReferenceStructure("VECTOR SELECT"), arguments=[
+            ReferenceStructure("sel", SubscriptsReferenceStructure(("dim1!",))),
+            ReferenceStructure("expr", SubscriptsReferenceStructure(("dim2!",))),
+            -1, 0, 0])
+        assert v.visit(node) == (
+            "pysd_vector_select([sel[_ii0] for _ii0 in 1:N_DIM1, _ii1 in 1:N_DIM2], "
+            "[expr[_ii1] for _ii0 in 1:N_DIM1, _ii1 in 1:N_DIM2], -1.0, 0.0, 0.0)")

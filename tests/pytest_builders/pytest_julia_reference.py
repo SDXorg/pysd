@@ -92,7 +92,6 @@ KNOWN_FAILURES = {
     ("vensim:arithmetics", "ode"): "values differ from the reference (#499)",
     ("vensim:arithmetics_exp", "mtk"): "values differ from the reference (#499)",
     ("vensim:arithmetics_exp", "ode"): "values differ from the reference (#499)",
-    ("vensim:data_from_other_model", "ode"): "values differ from the reference (#499)",
     ("vensim:elm_count", "ode"): "values differ from the reference (#499)",
     ("vensim:except_multiple", "ode"): "values differ from the reference (#499)",
     ("vensim:except_subranges", "ode"): "values differ from the reference (#499)",
@@ -158,7 +157,6 @@ KNOWN_FAILURES = {
     ("vensim:dynamic_final_time", "mtk"): "MTK: symbolic value in an if/else condition (#502)",
     # VECTOR SELECT called with wrong arguments (#500)
     ("vensim:vector_select", "mtk"): "VECTOR SELECT called with wrong arguments (#500)",
-    ("vensim:vector_select", "ode"): "VECTOR SELECT called with wrong arguments (#500)",
     # lookup called with extra arguments (#500)
     ("vensim:vector_order", "mtk"): "lookup called with extra arguments (#500)",
     # lookup x values not sorted (#500)

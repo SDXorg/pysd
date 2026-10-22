@@ -928,6 +928,34 @@ class JuliaASTVisitor:
         rest = [self.visit(a) for a in node.arguments[n_vectors:]]
         return f"{julia_func}({', '.join(vectors + rest)})[{out_index}]"
 
+    def _vector_select(self, node: CallStructure) -> str:
+        """VECTOR SELECT(selection[dim!], expression[dim!], missing, action,
+        error), as Python PySD: the selection and the expression are combined
+        over all the '!' dimensions of either (a selection over dim1! with an
+        expression over dim2! covers dim1 x dim2), so both are built as
+        arrays over the same dimensions, in the order they appear."""
+        sel, expr = node.arguments[0], node.arguments[1]
+        bangs: List[str] = []
+        for arg in (sel, expr):
+            for s in self._collect_bang_subs(arg):
+                dim = re.sub(r"[^a-z0-9_]", "_", s[:-1].lower())
+                if dim not in bangs:
+                    bangs.append(dim)
+        start = self._next_ii()
+        index = {dim: f"_ii{start + k}" for k, dim in enumerate(bangs)}
+        names = {re.sub(r"[^a-z0-9_]", "_", s[:-1].lower()): s[:-1]
+                 for arg in (sel, expr) for s in self._collect_bang_subs(arg)}
+        for_clause = ", ".join(f"{iv} in 1:{self._jl_n(names[d])}" for d, iv in index.items())
+        inner = self._with_bang_subs(index)
+
+        def array(arg) -> str:
+            value = inner.visit(arg)
+            return f"[{value} for {for_clause}]" if for_clause else value
+
+        rest = [self.visit(a) for a in node.arguments[2:]]
+        self.needed_helpers.add("pysd_vector_select")
+        return f"pysd_vector_select({array(sel)}, {array(expr)}, {', '.join(rest)})"
+
     def _get_time_value(self, node: CallStructure) -> str:
         """GET TIME VALUE(relative to, offset, measure), as Python PySD:
         relative to 0 (the current time) with measure 0 (the model's time
@@ -947,6 +975,8 @@ class JuliaASTVisitor:
         func_upper = node.function.reference.upper()
         if func_upper in ("GET TIME VALUE", "GET_TIME_VALUE"):
             return self._get_time_value(node)
+        if func_upper.replace("_", " ") == "VECTOR SELECT":
+            return self._vector_select(node)
         vector_func = {
             "VECTOR SORT ORDER": "pysd_vector_sort_order",
             "VECTOR RANK": "pysd_vector_rank",
