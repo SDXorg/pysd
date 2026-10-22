@@ -206,8 +206,8 @@ def _own_ranges(elem, ranges):
     It is the range whose elements are exactly the ones the variable's
     definitions cover (e.g. `lower` for a variable defined over `lower`,
     the parent for one defined over `lower` and `Layer1`, `dim2: c, b` for
-    one defined for `c` and `b`), or None (numbered by the first range
-    listing each element).
+    one defined for `c` and `b`), else the smallest range containing them,
+    or None (numbered by the first range listing each element).
     """
     subs = [c.subscripts[0] for c in elem.components]
     out = []
@@ -219,6 +219,11 @@ def _own_ranges(elem, ranges):
         own = next((ranges[n] for n in names if n in ranges and set(ranges[n]) == covered), None)
         if own is None:
             own = next((r for r in ranges.values() if set(r) == covered), None)
+        if own is None:
+            # elements of a larger range (x[liquids], x[gases], x[electricity]):
+            # laid out over the smallest range containing them, as the builder
+            own = min((r for r in ranges.values() if covered <= set(r)),
+                      key=len, default=None)
         out.append(own)
     return out
 

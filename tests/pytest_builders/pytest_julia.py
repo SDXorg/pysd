@@ -7627,6 +7627,62 @@ class TestPartsOverSubranges:
                 in content), content
 
 
+class TestConstantAndEquationParts:
+    """x[A] = GET DIRECT CONSTANTS(...); x[B] = y * 2; ... (pymedeas: max
+    potential RES elec TWe): every element gets its own part, instead of
+    the first constant everywhere."""
+
+    def test_each_element_gets_its_part(self, tmp_path):
+        tech = _make_subscript_range("Tech", ["A", "B", "C"])
+        y = AbstractElement(name="Y", components=[
+            AbstractComponent(subscripts=([], []), ast=5.0)])
+        x = AbstractElement(name="X", components=[
+            AbstractComponent(subscripts=(["A"], []), ast=GetConstantsStructure(
+                file="data.xlsx", tab="S", cell="B2")),
+            AbstractComponent(subscripts=(["B"], []), ast=ArithmeticStructure(
+                operators=["*"], arguments=(ReferenceStructure("Y"), 2.0))),
+            AbstractComponent(subscripts=(["C"], []), ast=GetConstantsStructure(
+                file="data.xlsx", tab="S", cell="B3")),
+        ])
+        controls = [
+            _make_control_element("INITIAL TIME", 0.0),
+            _make_control_element("FINAL TIME", 1.0),
+            _make_control_element("TIME STEP", 1.0),
+            _make_control_element("SAVEPER", 1.0),
+        ]
+        section = _make_section(elements=[y, x] + controls,
+                                subscripts=[tech], path=tmp_path / "m.mdl")
+        model = AbstractModel(original_path=tmp_path / "m.mdl", sections=(section,))
+        content = JuliaModelBuilder(model).build_model().read_text()
+        assert 'const _x_constant_0 = pysd_safe(pysd_xlsx_read_constant(' \
+            'joinpath(@__DIR__, "data.xlsx"), "S", "B2"))' in content, content
+        assert "x[1] = _x_constant_0" in content
+        assert "x[2] = (y * 2.0)" in content
+        assert "x[3] = _x_constant_2" in content
+
+
+class TestDataPartsOrder:
+    """share[liquids] = GET DIRECT DATA(...), share[solids] = ...,
+    share[gases] = ... over a range (liquids, gases, solids) (pymedeas:
+    historic share of losses vs extraction): each series sits at its
+    element's position, not in definition order."""
+
+    def test_series_at_element_positions(self, tmp_path):
+        fuels = _make_subscript_range("Fuels", ["liquids", "gases", "solids", "heat"])
+
+        def part(label, cell):
+            return AbstractData(subscripts=([label], []), ast=GetDataStructure(
+                file="data.xlsx", tab="S", time_row_or_col="time", cell=cell))
+
+        elem = AbstractElement(name="Share", components=[
+            part("liquids", "l"), part("solids", "s"), part("gases", "g")])
+        sb = _section_builder_from_elements([elem], subscripts=[fuels],
+                                            path=tmp_path / "m.mdl")
+        sb.build_section()
+        assert "const share_fns = [share_1_fns, share_3_fns, share_2_fns, [_ -> NaN]]" \
+            in sb.lookup_const_decls, sb.lookup_const_decls
+
+
 class TestFlatArrayAuxiliary:
     """initial population tabbed array[country, blood] = TABBED ARRAY(...)
     (test-models tabbed_arrays): a flat list of values fills the array row by row."""

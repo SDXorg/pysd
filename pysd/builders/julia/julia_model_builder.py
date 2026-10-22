@@ -9,6 +9,7 @@ Entry point::
 """
 from __future__ import annotations
 
+import dataclasses
 import itertools
 import math
 import re
@@ -864,6 +865,7 @@ class JuliaSectionBuilder:
         #     piecewise-defined auxiliaries (e.g. hist_share[elec]=0, [heat]=0,
         #     [liquids]=f(...)).
         if len(elem.components) > 1:
+            elem = self._lift_mixed_constants(elem, identifier)
             _has_except = any(comp.subscripts[1] for comp in elem.components)
             # Only apply per-element detection to plain auxiliary/constant
             # components — skip when the element uses external structures
@@ -1373,6 +1375,31 @@ class JuliaSectionBuilder:
     # ------------------------------------------------------------------
     # EXCEPT subscript exclusion
     # ------------------------------------------------------------------
+
+    def _lift_mixed_constants(
+        self, elem: AbstractElement, identifier: str
+    ) -> AbstractElement:
+        """A variable defined in parts where some parts are GET CONSTANTS and
+        others are equations (pymedeas: ``max potential RES elec TWe[hydro] =
+        GET DIRECT CONSTANTS(...)``, ``[geot elec] = ...``): each constant
+        part is read into its own module constant and referenced from that
+        part, so the variable is built like any variable defined in parts."""
+        comps = elem.components
+        if not any(isinstance(c.ast, GetConstantsStructure) for c in comps) or all(
+            isinstance(c.ast, (GetConstantsStructure, int, float)) for c in comps
+        ):
+            return elem
+        lifted = []
+        for k, comp in enumerate(comps):
+            if isinstance(comp.ast, GetConstantsStructure):
+                name = f"_{identifier}_constant_{k}"
+                part = AbstractElement(name=name, components=[comp])
+                value = self._read_get_constants(part, name)
+                self.namespace.namespace[name] = name
+                self.ext_const_decls.append(f"const {name} = {value}")
+                comp = dataclasses.replace(comp, ast=ReferenceStructure(name))
+            lifted.append(comp)
+        return dataclasses.replace(elem, components=lifted)
 
     def _process_except_element(
         self,
@@ -3089,6 +3116,27 @@ class JuliaSectionBuilder:
     # GET DATA processing
     # ------------------------------------------------------------------
 
+    def _place_data_parts_1d(self, identifier: str, data_comps, names) -> Optional[List[str]]:
+        """Data defined one element at a time (pymedeas: historic share of
+        losses vs extraction[liquids], [solids], [gases]): each part's series
+        at its element's position in the variable's range, which is how the
+        equations index it, whatever the order of the definitions.  Elements
+        with no definition give NaN."""
+        subs = [list(dc.subscripts[0]) for dc in data_comps]
+        if any(len(s) != 1 or s[0] not in self._elem_to_range for s in subs):
+            return None
+        labels = [s[0] for s in subs]
+        dim = (self._var_dims.get(identifier) or [None])[0]
+        if dim not in self._subs_elems:
+            dim = self._infer_parent_range(labels)
+        elems = self._subs_elems.get(dim, []) if dim else []
+        if not elems or any(lb not in elems for lb in labels):
+            return None
+        placed = ["[_ -> NaN]"] * len(elems)
+        for lb, name in zip(labels, names):
+            placed[elems.index(lb)] = name
+        return placed
+
     def _keyed_dispatch(self, identifier: str, data_comps) -> Optional[tuple]:
         """Index the data definitions of a variable by the elements they fix.
 
@@ -3232,11 +3280,12 @@ class JuliaSectionBuilder:
                 self.lookup_identifiers.add(identifier)
                 return []
 
-            fn_list = ", ".join(sub_dispatch_names)
+            n_sub_dims = len(self._comp_coords(data_comps[0]))
+            placed = self._place_data_parts_1d(identifier, data_comps, sub_dispatch_names)
+            fn_list = ", ".join(placed or sub_dispatch_names)
             self.lookup_const_decls.append(
                 f"const {identifier}_fns = [{fn_list}]"
             )
-            n_sub_dims = len(self._comp_coords(data_comps[0]))
             if n_sub_dims >= 2:
                 self.lookup_func_decls.append(
                     f"{identifier}(i, j, x) = (i <= length({identifier}_fns) && j <= length({identifier}_fns[i])) ? {identifier}_fns[i][j](x) : {identifier}_fns[j][i](x)"

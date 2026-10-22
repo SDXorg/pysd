@@ -112,7 +112,10 @@ Bug fixes
   are computed; ``SUM`` (and ``PROD``, ``VMIN``, ``VMAX``) over a subrange
   reads the subrange's elements of a variable defined over the full range;
   a variable defined in parts over different subranges (``x[A1, B] = 0``,
-  ``x[A2, B] = ...``) gets all its parts; with PySD.jl 0.2.4, ``XIDZ`` and
+  ``x[A2, B] = ...``) gets all its parts, also when some parts are
+  ``GET CONSTANTS`` and others equations; data defined one element at a
+  time is read at each element's position, whatever the order of the
+  definitions; with PySD.jl 0.2.4, ``XIDZ`` and
   ``ZIDZ`` treat denominators below 1e-6 as zero (also in the MTK backend),
   and Excel numbers stored as text and square blocks of series are read as
   in the Python builder. (`@rogersamso <https://github.com/rogersamso>`_)
