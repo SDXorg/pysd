@@ -406,6 +406,10 @@ Supported Vensim features
    * - ``ALLOCATE AVAILABLE`` / ``ALLOCATE BY PRIORITY``
      - Supported (exact Vensim algorithm via PySD.jl helpers)
      - Supported
+   * - XMILE non-negative stocks
+     - Supported (the net flow is limited to ``-stock / TIME STEP``, so the
+       stock never goes below zero, as in the Python builder)
+     - Supported
 
 .. note::
    When the builder encounters an unsupported or partially-supported construct

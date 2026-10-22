@@ -58,6 +58,8 @@ Bug fixes
   writes one NetCDF dimension per subscript range (``(time, dim_1, ..., dim_n)``,
   with element labels), which ``nc_data_files`` reads back. The numerical tests
   now compare 2D/3D test models with their Vensim output (:issue:`494`). (`@rogersamso <https://github.com/rogersamso>`_)
+- Julia builder: XMILE non-negative stocks no longer go below zero; the net
+  flow is limited as in the Python builder (:issue:`509`). (`@rogersamso <https://github.com/rogersamso>`_)
 
 Documentation
 ~~~~~~~~~~~~~
