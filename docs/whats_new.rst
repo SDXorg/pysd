@@ -100,6 +100,13 @@ Bug fixes
   (``a^b^c = a^(b^c)``), and ``MODULO`` keeps the sign of its first argument
   as in Vensim and the Python builder (Julia's ``mod`` did not)
   (:issue:`516`). (`@rogersamso <https://github.com/rogersamso>`_)
+- Julia builder: subranges and subscript mapping as in the Python builder.
+  A variable defined over a subrange reads variables over the full range at
+  the right elements; ranges defined with other ranges are expanded;
+  subscripts used as values (and compared) are positions in their main
+  range; ``EXCEPT`` removes single cells, also for stocks; ``GET DIRECT
+  CONSTANTS`` with a top-left cell reads the whole block (:issue:`518`).
+  (`@rogersamso <https://github.com/rogersamso>`_)
 
 Documentation
 ~~~~~~~~~~~~~

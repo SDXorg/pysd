@@ -12,6 +12,7 @@ Tests are organised into classes that mirror the modules they exercise:
 * ``TestModularBuild``            — modular file generation
 * ``TestTranslateToJulia``        — pysd.translate_to_julia entry point
 """
+import itertools
 from pathlib import Path
 
 import numpy as np
@@ -28,6 +29,9 @@ from pysd.builders.julia.julia_expressions_builder import (
 )
 from pysd.builders.julia.macro_inliner import inline_macros
 from pysd.builders.julia.julia_model_builder import (
+    expand_subscript_ranges,
+    _cell_blocks,
+    _cell_block,
     JuliaModelBuilder,
     JuliaSectionBuilder,
     _path_to_eq_var,
@@ -4904,8 +4908,9 @@ class TestMdlFileTranslation:
         assert not integ_warns, f"IntegStructure must not warn as unsupported: {integ_warns}"
 
     def test_except_2d_integ_emits_ode_equations(self, tmp_path):
-        """The generated Julia for a 2D stock with EXCEPT must contain D(inventory[...]) ODE
-        equations, not placeholder 0.0 assignments.
+        """The generated Julia for a 2D stock with EXCEPT writes the rates of
+        change of every cell (as loops over blocks of cells), not placeholder
+        0.0 assignments.
         """
         import shutil, warnings
         mdl = Path("tests/test-models/tests/except/test_except.mdl")
@@ -4918,7 +4923,8 @@ class TestMdlFileTranslation:
             warnings.simplefilter("always")
             jl_path = translate_to_julia(dst)
         content = jl_path.read_text()
-        assert "D(inventory[" in content, "Expected ODE equations for inventory stock"
+        assert "for _i0 in [3], _i1 in [5]\n        du_inventory[_i0, _i1] = " in content
+        assert "D(inventory[" not in content      # not valid Julia in the ODE backend
 
     def test_subscripted_inline_lookup_no_unsupported_warning(self, tmp_path):
         """Inline lookup tables with per-element subscript assignments (e.g.
@@ -7744,3 +7750,258 @@ class TestVectorSelect:
         v, *_ = _visitor_with_namespace()
         node = ArithmeticStructure(operators=["^", "^"], arguments=[-2, 3, 2])
         assert v.visit(node) == "(-pysd_power(2.0, pysd_power(3.0, 2.0)))"
+
+
+class TestCellBlock:
+    """A top-left cell becomes the block of cells the variable reads (as Python PySD)."""
+
+    def test_1d_reads_a_row(self):
+        assert _cell_block("A1", {"dim1c": ["C", "D", "E"]}, False) == "A1:C1"
+
+    def test_1d_transposed_reads_a_column(self):
+        assert _cell_block("B2", {"d": ["x", "y", "z"]}, True) == "B2:B4"
+
+    def test_2d_reads_rows_by_columns(self):
+        assert _cell_block("C3", {"r": ["a", "b"], "c": ["x", "y", "z"]}, False) == "C3:E4"
+
+    def test_2d_transposed(self):
+        assert _cell_block("C3", {"r": ["a", "b"], "c": ["x", "y", "z"]}, True) == "C3:D5"
+
+    def test_length_one_dimensions_are_ignored(self):
+        assert _cell_block("A1", {"one": ["a"], "d": ["x", "y"]}, False) == "A1:B1"
+
+    def test_columns_past_z(self):
+        assert _cell_block("Y1", {"d": list("abcd")}, False) == "Y1:AB1"
+
+    def test_named_range_and_scalars_unchanged(self):
+        assert _cell_block("my_range", {"d": ["x", "y"]}, False) == "my_range"
+        assert _cell_block("A1", {}, False) == "A1"
+        assert _cell_block("$B$2", {"d": ["x", "y"]}, False) == "B2:C2"
+
+
+class TestSubrangeIndexInParentVariable:
+    """POPULATION[ALL BUT YOUNGEST] = INTEG(aging[PREVIOUS COHORT] - aging[ALL BUT YOUNGEST], …)
+    with aging over the whole AGE range (test-models subscript_mapping_simple):
+    the subrange element must index aging by its position in AGE."""
+
+    def test_stock_over_subrange_reads_parent_variable(self, tmp_path):
+        age = _make_subscript_range("AGE", ["INFANT", "CHILD", "TEEN"])
+        older = _make_subscript_range("ALL BUT YOUNGEST", ["CHILD", "TEEN"])
+        previous = AbstractSubscriptRange(
+            name="PREVIOUS COHORT", subscripts=["INFANT", "CHILD"],
+            mapping=["ALL BUT YOUNGEST"])
+
+        def ref(name, sub):
+            return ReferenceStructure(name, SubscriptsReferenceStructure((sub,)))
+
+        aging = AbstractElement(name="aging", components=[
+            AbstractComponent(subscripts=(["AGE"], []), ast=np.array([300.0, 280.0, 200.0]))])
+        population = AbstractElement(name="POPULATION", components=[
+            AbstractComponent(subscripts=(["INFANT"], []), ast=IntegStructure(
+                flow=ArithmeticStructure(["-"], [10.0, ref("aging", "INFANT")]), initial=1.0)),
+            AbstractComponent(subscripts=(["ALL BUT YOUNGEST"], []), ast=IntegStructure(
+                flow=ArithmeticStructure(["-"], [ref("aging", "PREVIOUS COHORT"),
+                                                 ref("aging", "ALL BUT YOUNGEST")]),
+                initial=1.0)),
+        ])
+        controls = [
+            _make_control_element("INITIAL TIME", 0.0),
+            _make_control_element("FINAL TIME", 10.0),
+            _make_control_element("TIME STEP", 1.0),
+            _make_control_element("SAVEPER", 1.0),
+        ]
+        section = _make_section(
+            elements=[aging, population] + controls,
+            subscripts=[age, older, previous], path=tmp_path / "m.mdl")
+        model = AbstractModel(original_path=tmp_path / "m.mdl", sections=(section,))
+        content = JuliaModelBuilder(model).build_model().read_text()
+        assert "(aging[1] - aging[2])" in content      # CHILD: from INFANT, to TEEN
+        assert "(aging[2] - aging[3])" in content      # TEEN: from CHILD, out of TEEN
+
+
+class TestSubrangeLoopIndexInParentVariable:
+    """lower values[lower] = value per layer[lower] with value per layer over Layers
+    (test-models subrange_merge): the loop over `lower` must be shifted into Layers."""
+
+    def _build(self, tmp_path, sub_elems):
+        layers = _make_subscript_range("Layers", ["L1", "L2", "L3", "L4"])
+        sub = _make_subscript_range("sub", sub_elems)
+        values = AbstractElement(name="value per layer", components=[
+            AbstractComponent(subscripts=(["Layers"], []), ast=np.array([1.0, 2.0, 3.0, 4.0]))])
+        target = AbstractElement(name="sub values", components=[
+            AbstractComponent(subscripts=(["sub"], []), ast=ReferenceStructure(
+                "value per layer", SubscriptsReferenceStructure(("sub",))))])
+        controls = [
+            _make_control_element("INITIAL TIME", 0.0),
+            _make_control_element("FINAL TIME", 1.0),
+            _make_control_element("TIME STEP", 1.0),
+            _make_control_element("SAVEPER", 1.0),
+        ]
+        section = _make_section(
+            elements=[values, target] + controls,
+            subscripts=[layers, sub], path=tmp_path / "m.mdl")
+        model = AbstractModel(original_path=tmp_path / "m.mdl", sections=(section,))
+        return JuliaModelBuilder(model).build_model().read_text()
+
+    def test_contiguous_subrange_is_an_offset(self, tmp_path):
+        content = self._build(tmp_path, ["L2", "L3", "L4"])
+        assert "sub_values[_i0] = value_per_layer[_i0 + 1]" in content
+
+    def test_subrange_at_the_start_needs_no_offset(self, tmp_path):
+        content = self._build(tmp_path, ["L1", "L2", "L3"])
+        assert "sub_values[_i0] = value_per_layer[_i0]" in content
+
+    def test_scattered_subrange_uses_a_position_table(self, tmp_path):
+        content = self._build(tmp_path, ["L1", "L3"])
+        assert "sub_values[_i0] = value_per_layer[(1, 3)[_i0]]" in content
+
+
+class TestSubscriptsAsValues:
+    """A dimension or element used as a value is its position in the main
+    range (the largest range containing it), as in Python PySD: so
+    IF THEN ELSE(dim1 = dim3, 1, 0) compares elements also when dim3 orders
+    them differently (test-models subscript_logicals), and subdim1 values
+    count within dim (subscript_definition)."""
+
+    def _visitor(self, ranges):
+        return JuliaASTVisitor(
+            JuliaNamespaceManager(), InlineLookupRegistry(), set(),
+            active_subs={name: f"_i{k}" for k, name in enumerate(ranges)},
+            subs_elems=dict(ranges))
+
+    def test_reordered_range_is_mapped(self):
+        v = self._visitor({"dim1": ["A", "B", "C"], "dim3": ["A", "C", "B"]})
+        node = LogicStructure(["="], [ReferenceStructure("dim1"), ReferenceStructure("dim3")])
+        assert v.visit(node) == "(_i0 == (1, 3, 2)[_i1])"
+
+    def test_subrange_on_the_left(self):
+        v = self._visitor({"subA": ["B", "A"], "dimA": ["A", "B", "C"]})
+        node = LogicStructure(["<>"], [ReferenceStructure("subA"), ReferenceStructure("dimA")])
+        assert v.visit(node) == "((2, 1)[_i0] != _i1)"
+
+    def test_same_order_is_unchanged(self):
+        v = self._visitor({"dim1": ["A", "B"], "dim2": ["A", "B"]})
+        node = LogicStructure(["="], [ReferenceStructure("dim1"), ReferenceStructure("dim2")])
+        assert v.visit(node) == "(_i0 == _i1)"
+
+    def test_element_label_is_its_main_range_position(self):
+        v = self._visitor({"dim1": ["A", "B", "C"], "dim3": ["A", "C", "B"]})
+        node = LogicStructure(["="], [ReferenceStructure("dim3"), ReferenceStructure("B")])
+        assert v.visit(node) == "((1, 3, 2)[_i1] == 2)"
+
+    def test_contiguous_subrange_is_offset_in_its_main_range(self):
+        v = self._visitor({"subdim1": ["ab1", "ab2"], "dim": ["A", "ab1", "ab2", "B"]})
+        assert v.visit(ReferenceStructure("subdim1")) == "(_i0 + 1)"
+
+
+class TestExpandSubscriptRanges:
+    """dim: A, subdim1, B, subdim2, C (test-models subscript_definition)."""
+
+    def _model(self, tmp_path, ranges):
+        section = _make_section(elements=[], subscripts=ranges, path=tmp_path / "m.mdl")
+        return AbstractModel(original_path=tmp_path / "m.mdl", sections=(section,))
+
+    def _ranges(self, model):
+        return {sr.name: sr.subscripts for sr in model.sections[0].subscripts}
+
+    def test_nested_ranges_are_expanded(self, tmp_path):
+        model = self._model(tmp_path, [
+            _make_subscript_range("dim", ["A", "sub1", "B", "sub2", "C"]),
+            _make_subscript_range("sub1", ["x1", "x2"]),
+            _make_subscript_range("sub2", ["y1", "subsub", "y2"]),
+            _make_subscript_range("subsub", ["z1", "z2"]),
+        ])
+        ranges = self._ranges(expand_subscript_ranges(model))
+        assert ranges["dim"] == ["A", "x1", "x2", "B", "y1", "z1", "z2", "y2", "C"]
+        assert ranges["sub2"] == ["y1", "z1", "z2", "y2"]
+        assert ranges["sub1"] == ["x1", "x2"]
+
+    def test_copy_definition_takes_the_elements(self, tmp_path):
+        model = self._model(tmp_path, [
+            _make_subscript_range("sub2", ["y1", "y2"]),
+            _make_subscript_range("sub2 copy", ["sub2"]),
+            AbstractSubscriptRange(name="alias", subscripts="sub2", mapping=[]),
+        ])
+        ranges = self._ranges(expand_subscript_ranges(model))
+        assert ranges["sub2 copy"] == ["y1", "y2"]
+        assert ranges["alias"] == "sub2"            # aliases are left to the builder
+
+    def test_builder_sizes_the_expanded_range(self, tmp_path):
+        ranges = [
+            _make_subscript_range("dim", ["A", "sub1", "B"]),
+            _make_subscript_range("sub1", ["x1", "x2"]),
+        ]
+        elem = AbstractElement(name="dim values", components=[
+            AbstractComponent(subscripts=(["dim"], []), ast=ReferenceStructure("dim"))])
+        controls = [
+            _make_control_element("INITIAL TIME", 0.0),
+            _make_control_element("FINAL TIME", 1.0),
+            _make_control_element("TIME STEP", 1.0),
+            _make_control_element("SAVEPER", 1.0),
+        ]
+        section = _make_section(elements=[elem] + controls, subscripts=ranges, path=tmp_path / "m.mdl")
+        model = AbstractModel(original_path=tmp_path / "m.mdl", sections=(section,))
+        content = JuliaModelBuilder(model).build_model().read_text()
+        assert "const N_DIM = 4" in content
+
+
+class TestExcept2DCells:
+    """x[dim1, dim2] :EXCEPT: [sub, d1], [sub, d3] = Time; x[sub, d1] = y[sub]
+    (test-models except_multiple): EXCEPT removes single cells, not whole rows,
+    and y[sub] is read with the row index."""
+
+    def test_except_removes_cells_and_subrange_reads_rows(self, tmp_path):
+        dim1 = _make_subscript_range("dim1", ["s1", "s2", "s3"])
+        sub = _make_subscript_range("sub", ["s1", "s2"])
+        dim2 = _make_subscript_range("dim2", ["d1", "d2", "d3"])
+        y = AbstractElement(name="y", components=[
+            AbstractComponent(subscripts=(["dim1"], []), ast=ReferenceStructure("dim1"))])
+        x = AbstractElement(name="x", components=[
+            AbstractComponent(subscripts=(["dim1", "dim2"], [["sub", "d1"], ["sub", "d3"]]),
+                              ast=ReferenceStructure("time")),
+            AbstractComponent(subscripts=(["sub", "d1"], []), ast=ReferenceStructure(
+                "y", SubscriptsReferenceStructure(("sub",)))),
+            AbstractComponent(subscripts=(["sub", "d3"], []), ast=2.0),
+        ])
+        controls = [
+            _make_control_element("INITIAL TIME", 0.0),
+            _make_control_element("FINAL TIME", 1.0),
+            _make_control_element("TIME STEP", 1.0),
+            _make_control_element("SAVEPER", 1.0),
+        ]
+        section = _make_section(elements=[y, x] + controls,
+                                subscripts=[dim1, sub, dim2], path=tmp_path / "m.mdl")
+        model = AbstractModel(original_path=tmp_path / "m.mdl", sections=(section,))
+        content = JuliaModelBuilder(model).build_model().read_text()
+        assert "for _i0 in [1, 2], _i1 in [2]\n        x[_i0, _i1] = t" in content
+        assert "for _i0 in [3], _i1 in 1:N_DIM2\n        x[_i0, _i1] = t" in content
+        assert "for _i0 in [1, 2], _i1 in [1]\n        x[_i0, _i1] = y[_i0]" in content
+
+
+class TestCellBlocks:
+    """Exact rectangular cover of the cells an EXCEPT definition leaves."""
+
+    def test_full_product_is_one_block(self):
+        cells = {(i, j) for i in (1, 2) for j in (1, 2, 3)}
+        assert _cell_blocks(cells) == [([1, 2], [1, 2, 3])]
+
+    def test_single_cells_removed(self):
+        cells = {(i, j) for i in (1, 2, 3) for j in (1, 2, 3)} - {(1, 1), (2, 1)}
+        blocks = _cell_blocks(cells)
+        covered = {(i, j) for rows, cols in blocks for i in rows for j in cols}
+        assert covered == cells
+        assert sorted(blocks) == [([1, 2], [2, 3]), ([3], [1, 2, 3])]
+
+    def test_three_dimensions(self):
+        cells = {(i, j, k) for i in (1, 2) for j in (1, 2) for k in (1, 2)} - {(2, 2, 2)}
+        blocks = _cell_blocks(cells)
+        covered = {c for b in blocks for c in itertools.product(*b)}
+        assert covered == cells
+
+    def test_loop_over_parent_reads_subrange_variable(self):
+        v = JuliaASTVisitor(
+            JuliaNamespaceManager(), InlineLookupRegistry(), set(),
+            active_subs={"SEC ALL": "_i1"},
+            subs_elems={"SEC ALL": ["X", "Y", "W", "Z"], "SEC A": ["X", "Z"]},
+            var_dims={"origin": ["SEC A"]})
+        assert v._index_in_var_dim("_i1", "SEC ALL", ["SEC A"], 0) == "(1, 0, 0, 2)[_i1]"

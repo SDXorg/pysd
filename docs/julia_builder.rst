@@ -418,6 +418,13 @@ Supported Vensim features
      - Supported (expanded in place before building: each call gets its own
        copies of the macro's variables, named
        ``<variable>_<macro>_<element>``)
+   * - Subranges, subscript mapping, ranges defined with other ranges,
+       subscripts used as values
+     - Supported (as the Python builder: a subscript used as a value is its
+       position in the largest range containing it)
+     - Supported
+   * - Macros (stateless)
+     - Supported (companion ``.jl`` function file per macro)
      - Supported
    * - XMILE ``MIN``/``MAX`` aggregation (``vmin_xmile``, ``vmax_xmile``)
      - Supported
