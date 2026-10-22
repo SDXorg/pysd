@@ -107,6 +107,15 @@ Bug fixes
   range; ``EXCEPT`` removes single cells, also for stocks; ``GET DIRECT
   CONSTANTS`` with a top-left cell reads the whole block (:issue:`518`).
   (`@rogersamso <https://github.com/rogersamso>`_)
+- Julia builder: fixes found by running the pymedeas world model.  A
+  variable defined element by element is used only after all its elements
+  are computed; ``SUM`` (and ``PROD``, ``VMIN``, ``VMAX``) over a subrange
+  reads the subrange's elements of a variable defined over the full range;
+  a variable defined in parts over different subranges (``x[A1, B] = 0``,
+  ``x[A2, B] = ...``) gets all its parts; with PySD.jl 0.2.4, ``XIDZ`` and
+  ``ZIDZ`` treat denominators below 1e-6 as zero (also in the MTK backend),
+  and Excel numbers stored as text and square blocks of series are read as
+  in the Python builder. (`@rogersamso <https://github.com/rogersamso>`_)
 
 Documentation
 ~~~~~~~~~~~~~

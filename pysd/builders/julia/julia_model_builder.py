@@ -888,7 +888,12 @@ class JuliaSectionBuilder:
             if _all_inline_lookups:
                 return self._process_subscripted_inline_lookup(elem, identifier)
 
-            if _has_except or _has_per_elem:
+            # Components over different subranges (x[Disp, Mat] = 0;
+            # x[Var, Mat] = ...): each covers its own elements
+            _subs_lists = [tuple(c.subscripts[0]) for c in elem.components if c.subscripts]
+            _has_subrange_split = not _is_external and len(set(_subs_lists)) > 1
+
+            if _has_except or _has_per_elem or _has_subrange_split:
                 return self._process_except_element(elem, identifier, is_control)
 
         comp = elem.components[0]
@@ -4863,11 +4868,13 @@ class JuliaSectionBuilder:
             eq_lhs.append(lhs)
             eq_deps.append(deps)
 
-        # Build name -> equation index map
-        name_to_idx: Dict[str, int] = {}
+        # Build name -> equation indices map: a variable defined element by
+        # element has one equation per part, and all of them come before
+        # the equations that use it
+        name_to_idx: Dict[str, List[int]] = {}
         for i, lhs in enumerate(eq_lhs):
-            if lhs and lhs not in name_to_idx:
-                name_to_idx[lhs] = i
+            if lhs:
+                name_to_idx.setdefault(lhs, []).append(i)
 
         # Kahn's algorithm for topological sort
         n = len(equations)
@@ -4877,8 +4884,10 @@ class JuliaSectionBuilder:
         for i in range(n):
             resolved_deps = set()
             for dep in eq_deps[i]:
-                if dep in name_to_idx:
-                    j = name_to_idx[dep]
+                for j in name_to_idx.get(dep, ()):
+                    # parts of the same variable keep their order
+                    if dep == eq_lhs[i] and j > i:
+                        continue
                     if j != i and j not in resolved_deps:
                         dependents[j].append(i)
                         in_degree[i] += 1

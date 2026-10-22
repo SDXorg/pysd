@@ -702,7 +702,10 @@ class JuliaASTVisitor:
                             # reuse its summation index.
                             iv = self._bang_subs[clean_bare]
                             dim_to_idx[clean_bare] = iv
-                            pos_idx[pos] = iv
+                            # a subrange's elements at their positions in the
+                            # variable's range
+                            pos_idx[pos] = self._index_in_var_dim(
+                                iv, bare, var_dims_list, pos)
                         else:
                             # Find the matching dim in var_dims_list (by normalised name)
                             dim_name = next(
@@ -714,7 +717,8 @@ class JuliaASTVisitor:
                             ii_count += 1
                             dim_to_idx[re.sub(r"[^a-z0-9_]", "_", dim_name.lower())] = iv
                             bang_ranges.append(f"{iv} in 1:{self._jl_n(dim_name)}")
-                            pos_idx[pos] = iv
+                            pos_idx[pos] = self._index_in_var_dim(
+                                iv, bare, var_dims_list, pos)
                     elif sub in self.active_subs:
                         dim_to_idx[clean_sub] = self.active_subs[sub]
                         pos_idx[pos] = self.active_subs[sub]

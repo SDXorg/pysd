@@ -6640,6 +6640,25 @@ class TestSectionBuilderHelpers:
         assert len(sorted_eqs) == 2
         assert set(sorted_eqs) == set(eqs)
 
+    def test_topo_sort_waits_for_every_part(self):
+        """A variable defined element by element is used only after all its
+        parts (pymedeas: max FE potential RES for heat read the PE potential
+        before its 2nd and 3rd elements were set)."""
+        sb = self._sb()
+        eqs = [
+            "pe[1] ~ 55.0",
+            "fe[_i0] ~ pe[_i0] * 2.0",
+            "pe[2] ~ geot",
+            "geot ~ 9.5",
+            "pe[3] ~ pe[1] + pe[2]",
+        ]
+        order = sb._topo_sort_equations(eqs, stock_names={})
+        assert order.index("fe[_i0] ~ pe[_i0] * 2.0") == 4, order
+        assert order.index("geot ~ 9.5") < order.index("pe[2] ~ geot")
+        # parts of one variable keep their order
+        assert order.index("pe[1] ~ 55.0") < order.index("pe[2] ~ geot") \
+            < order.index("pe[3] ~ pe[1] + pe[2]")
+
     # ------------------------------------------------------------------
     # _convert_eq_to_assignment malformed comprehension (line 4621)
     # ------------------------------------------------------------------
@@ -7544,6 +7563,68 @@ class TestSubscriptedDelayFixedArguments:
                 in content)
         assert "fill(r_subs[1], 2)...,  # _df_pipe_r_delayed_subs[1:2, 1]" in content
         assert "fill(r_subs[2], 2)...,  # _df_pipe_r_delayed_subs[1:2, 2]" in content
+
+
+class TestSumOverSubrange:
+    """Elec variable = SUM(Generation[RES VARIABLE!]) (pymedeas): the sum
+    over a subrange reads the subrange's elements of a variable defined over
+    the full range, not its first elements."""
+
+    def test_sum_reads_subrange_elements(self, tmp_path):
+        tech = _make_subscript_range("Tech", ["A", "B", "C", "D"])
+        var = _make_subscript_range("Var", ["C", "D"])
+        gen = AbstractElement(name="Gen", components=[
+            AbstractComponent(subscripts=(["Tech"], []),
+                              ast=np.array([1.0, 2.0, 3.0, 4.0]))])
+        total = AbstractElement(name="Total", components=[
+            AbstractComponent(subscripts=([], []), ast=CallStructure(
+                ReferenceStructure("sum"),
+                (ReferenceStructure("Gen", SubscriptsReferenceStructure(("Var!",))),)))])
+        controls = [
+            _make_control_element("INITIAL TIME", 0.0),
+            _make_control_element("FINAL TIME", 1.0),
+            _make_control_element("TIME STEP", 1.0),
+            _make_control_element("SAVEPER", 1.0),
+        ]
+        section = _make_section(elements=[gen, total] + controls,
+                                subscripts=[tech, var], path=tmp_path / "m.mdl")
+        model = AbstractModel(original_path=tmp_path / "m.mdl", sections=(section,))
+        content = JuliaModelBuilder(model).build_model().read_text()
+        assert "sum(gen[_ii0 + 2] for _ii0 in 1:N_VAR)" in content, content
+
+
+class TestPartsOverSubranges:
+    """x[Disp, Mat] = 0; x[Var, Mat] = y[Var, Mat] + 1 (pymedeas: materials
+    for new RES elec per capacity installed): each part covers its own
+    subrange; the second part used to be dropped."""
+
+    def test_each_part_covers_its_subrange(self, tmp_path):
+        tech = _make_subscript_range("Tech", ["A", "B", "C", "D"])
+        disp = _make_subscript_range("Disp", ["A", "B"])
+        var = _make_subscript_range("Var", ["C", "D"])
+        mat = _make_subscript_range("Mat", ["m1", "m2"])
+        y = AbstractElement(name="Y", components=[
+            AbstractComponent(subscripts=(["Tech", "Mat"], []),
+                              ast=np.arange(1.0, 9.0).reshape(4, 2))])
+        x = AbstractElement(name="X", components=[
+            AbstractComponent(subscripts=(["Disp", "Mat"], []), ast=0.0),
+            AbstractComponent(subscripts=(["Var", "Mat"], []), ast=ArithmeticStructure(
+                operators=["+"], arguments=(
+                    ReferenceStructure("Y", SubscriptsReferenceStructure(("Var", "Mat"))),
+                    1.0)))])
+        controls = [
+            _make_control_element("INITIAL TIME", 0.0),
+            _make_control_element("FINAL TIME", 1.0),
+            _make_control_element("TIME STEP", 1.0),
+            _make_control_element("SAVEPER", 1.0),
+        ]
+        section = _make_section(elements=[y, x] + controls,
+                                subscripts=[tech, disp, var, mat], path=tmp_path / "m.mdl")
+        model = AbstractModel(original_path=tmp_path / "m.mdl", sections=(section,))
+        content = JuliaModelBuilder(model).build_model().read_text()
+        assert "for _i0 in [1, 2], _i1 in 1:N_MAT\n        x[_i0, _i1] = 0.0" in content, content
+        assert ("for _i0 in [3, 4], _i1 in 1:N_MAT\n        x[_i0, _i1] = (y[_i0, _i1] + 1.0)"
+                in content), content
 
 
 class TestFlatArrayAuxiliary:
