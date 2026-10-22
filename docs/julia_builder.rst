@@ -223,13 +223,20 @@ Read the results with any NetCDF library, e.g. in Python:
    print(ds["population"])
 
 
-External data (Excel files)
-----------------------------
+External data (Excel and text files)
+-------------------------------------
 
-Models that use ``GET DIRECT CONSTANTS``, ``GET DIRECT LOOKUPS``, or
-``GET DIRECT DATA`` are fully supported.  The translated Julia model reads
-from the **same Excel files at runtime** — no intermediate conversion is
-needed.
+Models that use ``GET XLS`` / ``GET DIRECT`` ``CONSTANTS``, ``LOOKUPS`` or
+``DATA`` are fully supported.  The translated Julia model reads from the
+**same files at runtime** — no intermediate conversion is needed.  The same
+file formats as in the Python builder are read:
+
+- ``.xlsx`` / ``.xlsm`` (with XLSX.jl);
+- ``.xls``, the Excel 97-2003 format (with LibXLS.jl);
+- any other file as delimited text (``.csv``, ``.tab``, ...).  The sheet
+  argument is the separator when it is not alphanumeric (e.g. ``','`` or
+  ``';'``); otherwise the separator is ``,`` for ``.csv`` files and a tab
+  for any other extension.
 
 Excel file paths in the generated code are relative to the ``.jl`` file
 (via ``@__DIR__``), so Excel files must remain at their original locations
@@ -237,11 +244,15 @@ relative to the model.
 
 All Vensim cell reference modes are supported:
 
-- **Named ranges** — ``GET DIRECT CONSTANTS('data.xlsx', 'Sheet1', 'param_name')``
+- **Named ranges** (``.xlsx`` only) — ``GET DIRECT CONSTANTS('data.xlsx', 'Sheet1', 'param_name')``
 - **Cell references** — ``GET DIRECT CONSTANTS('data.xlsx', 'Sheet1', 'B2')``
 - **Row/column mode** — ``GET DIRECT LOOKUPS('data.xlsx', 'Sheet1', '4', 'C5')``
 
-Excel files are cached in memory after the first read.
+A named range takes precedence over a cell or column reference that looks
+the same (e.g. a range named ``xs``).  In row/column mode, a subscripted
+variable reads one row (or column) per element, starting at the given cell.
+
+Files are read once, when the model is loaded, and cached in memory.
 
 
 PySD.jl companion library
@@ -270,7 +281,11 @@ runtime helper functions used by generated models, imported via
 
 - ``pysd_xlsx_read_constant(path, sheet, name)``
 - ``pysd_xlsx_read_series(path, sheet, x_ref, y_ref)``
-- ``pysd_xlsx_build_lookup_dispatch(path, sheet, x_ref, y_ref)``
+- ``pysd_xlsx_build_lookup_dispatch(path, sheet, x_ref, y_ref; n=1, method=:interpolate)``
+  — ``n`` is the number of series to read in row/column mode; ``method`` is
+  the DATA keyword (``:interpolate``, ``:hold_backward``, ``:look_forward``)
+
+These read ``.xlsx``, ``.xlsm``, ``.xls`` and delimited text files.
 
 **Result writer**
 

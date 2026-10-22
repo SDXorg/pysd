@@ -40,6 +40,10 @@ New Features
     matches the integer-based key scheme used by the existing ``.tab`` file path.
 
   (`@rogersamso <https://github.com/rogersamso>`_)
+- Julia builder: ``GET XLS`` / ``GET DIRECT`` functions read ``.xls`` files
+  and delimited text files (``.csv``, ``.tab``, ...), as the Python builder
+  does, and subscripted variables read one row or column per element in
+  row/column mode (:issue:`501`). (`@rogersamso <https://github.com/rogersamso>`_)
 
 Breaking changes
 ~~~~~~~~~~~~~~~~
