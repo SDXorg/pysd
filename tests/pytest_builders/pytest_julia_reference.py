@@ -87,6 +87,11 @@ MTK_SCOPE = os.environ.get("PYSD_JULIA_MTK", "all")
 
 #: (case, backend) -> reason.  Strict xfail: remove the entry once it passes.
 KNOWN_FAILURES = {
+    # partially defined variables (#500)
+    ("vensim:get_mixed_definitions", "mtk"): "GET DATA and GET CONSTANTS in one variable: call with the wrong arguments (#500)",
+    ("vensim:get_mixed_definitions", "ode"): "GET DATA and GET CONSTANTS in one variable: call with the wrong arguments (#500)",
+    ("vensim:partial_range_definitions", "mtk"): "partially defined lookups and data: placeholders and element mapping (#500)",
+    ("vensim:partial_range_definitions", "ode"): "partially defined lookups and data: placeholders and element mapping (#500)",
     # values differ from the reference (#499)
     ("vensim:active_initial", "mtk"): "values differ from the reference (#499)",
     ("vensim:lookups_inline_spaces", "mtk"): "values differ from the reference (#499)",
@@ -108,7 +113,6 @@ KNOWN_FAILURES = {
     ("vensim:vector_order", "mtk"): "lookup called with extra arguments (#500)",
     # lookup x values not sorted (#500)
     ("vensim:get_with_missing_values_xlsx", "mtk"): "lookup x values not sorted (#500)",
-    ("vensim:get_with_missing_values_xlsx", "ode"): "lookup x values not sorted (#500)",
     # MTK: initial value depends on other variables (#502)
     ("vensim:active_initial_circular", "mtk"): "MTK: initial value depends on other variables (#502)",
     # MTK: numeric conversion of a symbolic value (#502)
