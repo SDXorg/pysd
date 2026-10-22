@@ -83,7 +83,7 @@ def _outer_for_clause(eq: str) -> str:
 
 
 #: PySD.jl version the generated models are written for (checked on load).
-PYSD_JL_VERSION = "0.2.1"
+PYSD_JL_VERSION = "0.2.3"
 
 # Control variable identifiers produced by Vensim
 _CONTROL_IDENTIFIERS = frozenset(

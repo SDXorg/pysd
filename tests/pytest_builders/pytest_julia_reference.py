@@ -97,7 +97,6 @@ KNOWN_FAILURES = {
     ("vensim:except_subranges", "ode"): "values differ from the reference (#499)",
     ("vensim:get_constants_subranges", "mtk"): "values differ from the reference (#499)",
     ("vensim:get_constants_subranges", "ode"): "values differ from the reference (#499)",
-    ("vensim:get_values_order", "mtk"): "values differ from the reference (#499)",
     ("vensim:lookups_inline_spaces", "mtk"): "values differ from the reference (#499)",
     ("vensim:macro_stock", "ode"): "values differ from the reference (#499)",
     ("vensim:rounding", "mtk"): "values differ from the reference (#499)",
@@ -150,7 +149,6 @@ KNOWN_FAILURES = {
     ("vensim:partial_range_definitions", "mtk"): "Excel data referenced by row/column number not supported (#501)",
     ("vensim:partial_range_definitions", "ode"): "Excel data referenced by row/column number not supported (#501)",
     # lookup emitted as a constant but called as a function (#500)
-    ("vensim:get_time_value", "mtk"): "lookup emitted as a constant but called as a function (#500)",
     ("vensim:lookups_funcnames", "ode"): "lookup emitted as a constant but called as a function (#500)",
     # MTK: symbolic value in an if/else condition (#502)
     ("vensim:control_vars", "mtk"): "MTK: symbolic value in an if/else condition (#502)",

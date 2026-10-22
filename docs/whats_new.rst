@@ -83,11 +83,11 @@ Bug fixes
   initial value while the initial values are computed, constants defined
   element by element are placed at their elements whatever the order of the
   definitions, and ``GET DIRECT CONSTANTS`` arrays are no longer hidden by
-  local arrays of zeros (:issue:`ISSUE3`). (`@rogersamso <https://github.com/rogersamso>`_)
+  local arrays of zeros (:issue:`522`). (`@rogersamso <https://github.com/rogersamso>`_)
 - Julia builder: ``VECTOR SELECT`` with Vensim's arguments and numerical
   actions, also when the selection and the expression run over different
   dimensions, and ``:RAW:`` DATA (a value at the data times only), with
-  PySD.jl 0.2.3 (:issue:`ISSUE3`). (`@rogersamso <https://github.com/rogersamso>`_)
+  PySD.jl 0.2.3 (:issue:`522`). (`@rogersamso <https://github.com/rogersamso>`_)
 
 Documentation
 ~~~~~~~~~~~~~
