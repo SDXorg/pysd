@@ -408,7 +408,16 @@ Supported Vensim features
      - Supported (lifted to pipeline auxiliary stocks)
      - Supported
    * - ``ALLOCATE AVAILABLE`` / ``ALLOCATE BY PRIORITY``
-     - Supported (exact Vensim algorithm via PySD.jl helpers)
+     - Supported (exact Vensim algorithm via PySD.jl helpers; subscripted
+       variables allocate along their last dimension, as the Python builder)
+     - Supported
+   * - ``VECTOR SORT ORDER``, ``VECTOR RANK``, ``VECTOR REORDER``
+     - Supported (along the last subscript of the argument, as the Python
+       builder)
+     - Supported
+   * - ``GET TIME VALUE``
+     - Supported for the current time plus an offset (``GET TIME VALUE(0,
+       offset, 0)``), as the Python builder
      - Supported
    * - Control variables that change during the run (``FINAL TIME``,
        ``TIME STEP``, ``SAVEPER`` depending on ``Time`` or on model variables)

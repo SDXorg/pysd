@@ -140,8 +140,6 @@ BUILTIN_FUNCTIONS: dict = {
     "VECTOR RANK": "pysd_vector_rank",
     "VECTOR_RANK": "pysd_vector_rank",
     # Time value
-    "GET TIME VALUE": "pysd_get_time_value",
-    "GET_TIME_VALUE": "pysd_get_time_value",
 }
 
 # Names of helper functions provided by the PySD.jl companion package.
@@ -879,8 +877,85 @@ class JuliaASTVisitor:
 
         return julia_name
 
+    def bound_visit(self, node, bindings: Dict[str, str]) -> str:
+        """Visit *node* with some subscript ranges bound to other loop
+        variables (e.g. {"company": "_v"} to read a vector along company)."""
+        saved = (self.active_subs, self._clean_active_subs)
+        self.active_subs = {**self.active_subs, **bindings}
+        self._clean_active_subs = {
+            **self._clean_active_subs,
+            **{re.sub(r"[^a-z0-9_]", "_", k.lower()): v for k, v in bindings.items()},
+        }
+        try:
+            return self.visit(node)
+        finally:
+            self.active_subs, self._clean_active_subs = saved
+
+    def _vector_call(self, node: CallStructure, julia_func: str) -> Optional[str]:
+        """VECTOR SORT ORDER / RANK / REORDER on a subscripted variable.
+
+        As Python PySD, they work on the vector along the last subscript of
+        their first argument (``revenue[Region, company]``: along company).
+        The vector is built with a comprehension over that subscript, and the
+        element of this cell is taken with the variable's own last loop index
+        (``ranks[Region, scompany]``: scompany).
+        """
+        first = node.arguments[0]
+        subs = (first.subscripts.subscripts
+                if isinstance(first, ReferenceStructure) and first.subscripts is not None
+                else ())
+        if not subs or not self.active_subs or subs[-1] not in self.subs_elems:
+            return None
+        n = self._jl_n(subs[-1])
+        out_index = list(self.active_subs.values())[-1]
+
+        def as_vector(arg) -> str:
+            # the argument along its own last subscript, as [… for _v in 1:n]
+            last = (arg.subscripts.subscripts[-1]
+                    if isinstance(arg, ReferenceStructure) and arg.subscripts is not None
+                    else subs[-1])
+            saved = (self.active_subs, self._clean_active_subs)
+            clean = re.sub(r"[^a-z0-9_]", "_", last.lower())
+            self.active_subs = {**self.active_subs, last: "_v"}
+            self._clean_active_subs = {**self._clean_active_subs, clean: "_v"}
+            try:
+                return f"[{self.visit(arg)} for _v in 1:{n}]"
+            finally:
+                self.active_subs, self._clean_active_subs = saved
+
+        n_vectors = 2 if julia_func == "pysd_vector_reorder" else 1
+        vectors = [as_vector(a) for a in node.arguments[:n_vectors]]
+        rest = [self.visit(a) for a in node.arguments[n_vectors:]]
+        return f"{julia_func}({', '.join(vectors + rest)})[{out_index}]"
+
+    def _get_time_value(self, node: CallStructure) -> str:
+        """GET TIME VALUE(relative to, offset, measure), as Python PySD:
+        relative to 0 (the current time) with measure 0 (the model's time
+        units) is the current time plus the offset.  Python PySD does not
+        implement the other combinations (calendar or computer-clock
+        values) for simulated time either."""
+        relativeto, offset, measure = node.arguments
+        if relativeto == 0 and measure == 0:
+            return f"(t + {self.visit(offset)})"
+        warn(
+            f"GET TIME VALUE({relativeto}, …, {measure}) is not supported by "
+            "the Julia builder (only relative to 0 with measure 0); emitting NaN."
+        )
+        return "NaN"
+
     def _call(self, node: CallStructure) -> str:
         func_upper = node.function.reference.upper()
+        if func_upper in ("GET TIME VALUE", "GET_TIME_VALUE"):
+            return self._get_time_value(node)
+        vector_func = {
+            "VECTOR SORT ORDER": "pysd_vector_sort_order",
+            "VECTOR RANK": "pysd_vector_rank",
+            "VECTOR REORDER": "pysd_vector_reorder",
+        }.get(func_upper.replace("_", " "))
+        if vector_func is not None:
+            vector_call = self._vector_call(node, vector_func)
+            if vector_call is not None:
+                return vector_call
         julia_func = BUILTIN_FUNCTIONS.get(func_upper)
 
         if julia_func is None:

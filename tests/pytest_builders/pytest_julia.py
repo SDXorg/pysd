@@ -641,14 +641,13 @@ class TestJuliaASTVisitor:
         assert "pysd_vector_sort_order" in result
         assert "pysd_vector_sort_order" in needed
 
-    def test_get_time_value_prepends_t(self):
+    def test_get_time_value_is_current_time_plus_offset(self):
         v, *_ = _visitor_with_namespace()
         node = CallStructure(
             function=ReferenceStructure(reference="get_time_value"),
-            arguments=(1.0, 2.0, 3.0),
+            arguments=(0, 2.0, 0),
         )
-        result = v.visit(node)
-        assert result.startswith("pysd_get_time_value(t,")
+        assert v.visit(node) == "(t + 2.0)"
 
     def test_xpulse_prepends_t(self):
         v, *_ = _visitor_with_namespace()
@@ -7737,3 +7736,84 @@ class TestFlatArrayAuxiliary:
         content = JuliaModelBuilder(model).build_model().read_text()
         assert "tabbed[1, 3] = 3.0" in content
         assert "tabbed[2, 1] = 4.0" in content
+
+
+class TestGetTimeValue:
+    """GET TIME VALUE(0, (dim - 20)/3, 0) (test-models get_time_value): the
+    current time plus the offset, as Python PySD."""
+
+    def test_current_time_plus_offset(self):
+        v, *_ = _visitor_with_namespace(["offset"])
+        node = CallStructure(function=ReferenceStructure("GET TIME VALUE"),
+                             arguments=[0, ReferenceStructure("offset"), 0])
+        assert v.visit(node) == "(t + offset)"
+
+    def test_unsupported_combination_warns(self):
+        v, *_ = _visitor_with_namespace()
+        node = CallStructure(function=ReferenceStructure("GET TIME VALUE"),
+                             arguments=[2, 0, 1])
+        with pytest.warns(UserWarning, match="GET TIME VALUE"):
+            assert v.visit(node) == "NaN"
+
+
+class TestVectorFunctions:
+    """VECTOR RANK(revenue[Region, company], 1) in ranks[Region, scompany]
+    (test-models vector_order): ranks along the last subscript."""
+
+    def _visitor(self):
+        v = JuliaASTVisitor(
+            JuliaNamespaceManager(), InlineLookupRegistry(), set(),
+            active_subs={"Region": "_i0", "scompany": "_i1"},
+            subs_elems={"Region": ["r1", "r2"], "company": ["a", "b", "c"],
+                        "scompany": ["s1", "s2", "s3"]},
+            var_dims={"revenue": ["Region", "company"], "order": ["Region", "scompany"]})
+        v.namespace.add_to_namespace("revenue")
+        v.namespace.add_to_namespace("order")
+        return v
+
+    def test_rank_along_the_last_subscript(self):
+        v = self._visitor()
+        node = CallStructure(function=ReferenceStructure("VECTOR RANK"), arguments=[
+            ReferenceStructure("revenue", SubscriptsReferenceStructure(("Region", "company"))), 1])
+        assert v.visit(node) == (
+            "pysd_vector_rank([revenue[_i0, _v] for _v in 1:N_COMPANY], 1.0)[_i1]")
+
+    def test_reorder_builds_both_vectors(self):
+        v = self._visitor()
+        node = CallStructure(function=ReferenceStructure("VECTOR REORDER"), arguments=[
+            ReferenceStructure("revenue", SubscriptsReferenceStructure(("Region", "company"))),
+            ReferenceStructure("order", SubscriptsReferenceStructure(("Region", "scompany")))])
+        assert v.visit(node) == (
+            "pysd_vector_reorder([revenue[_i0, _v] for _v in 1:N_COMPANY], "
+            "[order[_i0, _v] for _v in 1:N_COMPANY])[_i1]")
+
+
+class TestSubscriptedAllocation:
+    """allocation[branch] = ALLOCATE AVAILABLE(demand[branch], priority[branch, ptype], 10)
+    (test-models allocate_available): the request is a vector along branch, the
+    priority profiles a branch x profile matrix, and each cell takes its share."""
+
+    def test_allocate_available_along_the_last_dimension(self, tmp_path):
+        branch = _make_subscript_range("branch", ["Boston", "Dayton"])
+        profile = _make_subscript_range("pprofile", ["ptype", "ppriority", "pwidth", "pextra"])
+        demand = AbstractElement(name="demand", components=[
+            AbstractComponent(subscripts=(["branch"], []), ast=np.array([5.0, 7.0]))])
+        priority = AbstractElement(name="priority", components=[
+            AbstractComponent(subscripts=(["branch", "pprofile"], []),
+                              ast=np.array([[1.0, 5.0, 2.0, 0.0], [1.0, 7.0, 2.0, 0.0]]))])
+        ref = lambda name, subs: ReferenceStructure(name, SubscriptsReferenceStructure(subs))
+        allocation = AbstractElement(name="allocation", components=[
+            AbstractComponent(subscripts=(["branch"], []), ast=AllocateAvailableStructure(
+                ref("demand", ("branch",)), ref("priority", ("branch", "ptype")), 10.0))])
+        controls = [
+            _make_control_element("INITIAL TIME", 0.0),
+            _make_control_element("FINAL TIME", 1.0),
+            _make_control_element("TIME STEP", 1.0),
+            _make_control_element("SAVEPER", 1.0),
+        ]
+        section = _make_section(elements=[demand, priority, allocation] + controls,
+                                subscripts=[branch, profile], path=tmp_path / "m.mdl")
+        model = AbstractModel(original_path=tmp_path / "m.mdl", sections=(section,))
+        content = JuliaModelBuilder(model).build_model().read_text()
+        assert ("allocation[_i0] = pysd_allocate_available([demand[_v] for _v in 1:N_BRANCH], "
+                "[priority[_v, _p] for _v in 1:N_BRANCH, _p in 1:4], 10.0)[_i0]") in content

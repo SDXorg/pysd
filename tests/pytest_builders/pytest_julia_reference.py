@@ -157,11 +157,7 @@ KNOWN_FAILURES = {
     ("vensim:partial_range_definitions", "ode"): "Excel data referenced by row/column number not supported (#501)",
     # lookup emitted as a constant but called as a function (#500)
     ("vensim:get_time_value", "mtk"): "lookup emitted as a constant but called as a function (#500)",
-    ("vensim:get_time_value", "ode"): "lookup emitted as a constant but called as a function (#500)",
     ("vensim:lookups_funcnames", "ode"): "lookup emitted as a constant but called as a function (#500)",
-    # ALLOCATE with subscripted arguments not supported (#500)
-    ("vensim:allocate_available", "ode"): "ALLOCATE with subscripted arguments not supported (#500)",
-    ("vensim:allocate_by_priority", "ode"): "ALLOCATE with subscripted arguments not supported (#500)",
     # MTK: symbolic value in an if/else condition (#502)
     ("vensim:control_vars", "mtk"): "MTK: symbolic value in an if/else condition (#502)",
     ("vensim:dynamic_final_time", "mtk"): "MTK: symbolic value in an if/else condition (#502)",
@@ -170,7 +166,6 @@ KNOWN_FAILURES = {
     ("vensim:vector_select", "ode"): "VECTOR SELECT called with wrong arguments (#500)",
     # lookup called with extra arguments (#500)
     ("vensim:vector_order", "mtk"): "lookup called with extra arguments (#500)",
-    ("vensim:vector_order", "ode"): "lookup called with extra arguments (#500)",
     # lookup x values not sorted (#500)
     ("vensim:get_with_missing_values_xlsx", "mtk"): "lookup x values not sorted (#500)",
     ("vensim:get_with_missing_values_xlsx", "ode"): "lookup x values not sorted (#500)",

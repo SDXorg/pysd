@@ -1221,7 +1221,7 @@ class JuliaSectionBuilder:
 
         # ---- ALLOCATE AVAILABLE / ALLOCATE BY PRIORITY ------------------
         if isinstance(ast, (AllocateAvailableStructure, AllocateByPriorityStructure)):
-            return self._expand_allocate(identifier, ast, visitor)
+            return self._expand_allocate(identifier, ast, visitor, dims=dims)
 
         # ---- DataStructure (tab-file DATA variable) ----------------------
         # AbstractData + DataStructure = DATA variable reading from a .tab file
@@ -2622,34 +2622,73 @@ class JuliaSectionBuilder:
         identifier: str,
         ast,
         visitor: "JuliaASTVisitor",
+        dims: Optional[List[Tuple[str, int]]] = None,
     ) -> List[str]:
         """Emit PySD.jl allocation helper calls.
 
         ALLOCATE BY PRIORITY → pysd_allocate_by_priority(request, priority, width, supply)
         ALLOCATE AVAILABLE   → pysd_allocate_available(request, pp, avail)
 
-        Both helpers implement the exact Vensim algorithm (not proportional
-        approximation).  They work on concrete Julia vectors at solve time and
-        are compatible with the ODE backend.
+        As in Python PySD, the allocation is along the last dimension: the
+        request (and priority) are vectors along their last subscript, and
+        the priority profiles of ALLOCATE AVAILABLE a matrix (the allocation
+        dimension by the profile, its last subscript).  Each cell of the
+        result takes its element of the allocation with the last loop index;
+        the other subscripts select which allocation it belongs to.
         """
-        self.aux_decls.append(f"@variables {identifier}(t)")
-        if isinstance(ast, AllocateAvailableStructure):
-            request_expr = visitor.visit(ast.request)
-            pp_expr = visitor.visit(ast.pp)
-            avail_expr = visitor.visit(ast.avail)
-            rhs = f"pysd_allocate_available({request_expr}, {pp_expr}, {avail_expr})"
-        else:
-            # AllocateByPriorityStructure
-            request_expr = visitor.visit(ast.request)
-            priority_expr = visitor.visit(ast.priority)
-            width_expr = visitor.visit(ast.width)
-            supply_expr = visitor.visit(ast.supply)
-            rhs = (
-                f"pysd_allocate_by_priority("
-                f"{request_expr}, {priority_expr}, {width_expr}, {supply_expr})"
-            )
+        dims = dims or []
+        if not dims:
+            self.aux_decls.append(f"@variables {identifier}(t)")
+            if isinstance(ast, AllocateAvailableStructure):
+                rhs = (f"pysd_allocate_available({visitor.visit(ast.request)}, "
+                       f"{visitor.visit(ast.pp)}, {visitor.visit(ast.avail)})")
+            else:
+                rhs = (f"pysd_allocate_by_priority({visitor.visit(ast.request)}, "
+                       f"{visitor.visit(ast.priority)}, {visitor.visit(ast.width)}, "
+                       f"{visitor.visit(ast.supply)})")
+            return [f"{identifier} ~ {rhs}"]
 
-        return [f"{identifier} ~ {rhs}"]
+        idx = self._idx_vars(len(dims))
+        vnd = self._nd_visitor(dims, idx)
+        last_dim = dims[-1][0]
+        n = self._jl_n(last_dim)
+
+        def subs_of(arg) -> tuple:
+            if isinstance(arg, ReferenceStructure) and arg.subscripts is not None:
+                return tuple(arg.subscripts.subscripts)
+            return ()
+
+        def vector(arg) -> str:
+            s = subs_of(arg)
+            last = s[-1] if s else last_dim
+            return f"[{vnd.bound_visit(arg, {last: '_v'})} for _v in 1:{n}]"
+
+        if isinstance(ast, AllocateAvailableStructure):
+            s = subs_of(ast.pp)
+            profile = s[-1] if s else None
+            along = s[-2] if len(s) >= 2 else last_dim
+            if profile:
+                # Vensim writes the profile as its first element (pp[branch,
+                # ptype] with pprofile: ptype, ppriority, pwidth, pextra): the
+                # profile dimension is that element's range, by size since it
+                # may have no N_ constant
+                if profile not in self._subs_elems and profile in self._elem_to_range:
+                    profile_range = self._elem_to_range[profile]
+                else:
+                    profile_range = profile
+                n_profile = len(self._subs_elems.get(profile_range, [])) or self._jl_n(profile_range)
+                pp = (f"[{vnd.bound_visit(ast.pp, {along: '_v', profile: '_p'})} "
+                      f"for _v in 1:{n}, _p in 1:{n_profile}]")
+            else:
+                pp = vnd.visit(ast.pp)
+            rhs = (f"pysd_allocate_available({vector(ast.request)}, {pp}, "
+                   f"{vnd.visit(ast.avail)})[{idx[-1]}]")
+        else:
+            rhs = (f"pysd_allocate_by_priority({vector(ast.request)}, "
+                   f"{vector(ast.priority)}, {vnd.visit(ast.width)}, "
+                   f"{vnd.visit(ast.supply)})[{idx[-1]}]")
+        self.aux_decls.append(f"@variables {identifier}(t)[{self._range_str(dims)}]")
+        return [f"[{identifier}[{', '.join(idx)}] ~ {rhs} for {self._for_clause(dims, idx)}]..."]
 
     # ------------------------------------------------------------------
     # DataStructure (tab-file DATA variable) processing
@@ -3129,6 +3168,48 @@ class JuliaSectionBuilder:
     # GET DATA processing
     # ------------------------------------------------------------------
 
+    def _keyed_dispatch(self, identifier: str, data_comps) -> Optional[tuple]:
+        """Index the data definitions of a variable by the elements they fix.
+
+        For revenue3[A, X, company] = GET DIRECT DATA(…), revenue3[B, X,
+        company] = …: each definition fixes some subscripts to one element
+        and leaves at most one as a range (read from the columns of its
+        data), at the same position in every definition.  Returns the
+        indices each definition fixes (in the variable's dimensions), the
+        number of subscripts and the position of the range (or None), or
+        None when the definitions do not have that shape.
+        """
+        subs_lists = [list(dc.subscripts[0]) for dc in data_comps]
+        n_pos = len(subs_lists[0])
+        if n_pos < 2 or any(len(s) != n_pos for s in subs_lists):
+            return None
+        dims = list(self._var_dims.get(identifier) or [])
+        if len(dims) != n_pos:
+            dims = []
+            for p in range(n_pos):
+                ranges = [s[p] for s in subs_lists if s[p] in self._subs_elems]
+                dims.append(ranges[0] if ranges else self._elem_to_range.get(subs_lists[0][p]))
+        range_pos = None
+        keys = []
+        for subs in subs_lists:
+            rp = [p for p, s in enumerate(subs) if s in self._subs_elems]
+            if len(rp) > 1 or (rp and range_pos is not None and rp[0] != range_pos):
+                return None
+            if rp:
+                range_pos = rp[0]
+            key = []
+            for p, s in enumerate(subs):
+                if p == range_pos:
+                    continue
+                elems = self._subs_elems.get(dims[p], []) if dims[p] else []
+                if s not in elems:
+                    return None
+                key.append(elems.index(s) + 1)
+            keys.append(tuple(key))
+        if len(set(keys)) != len(keys):
+            return None
+        return keys, n_pos, range_pos
+
     def _process_get_data(
         self,
         elem: "AbstractElement",
@@ -3206,6 +3287,27 @@ class JuliaSectionBuilder:
                     f'{file_expr}, "{dc.ast.tab}", "{dc.ast.time_row_or_col}", "{dc.ast.cell}")'
                 )
                 sub_dispatch_names.append(f"{sub_name}_fns")
+
+            keyed = self._keyed_dispatch(identifier, data_comps)
+            if keyed is not None:
+                entries, n_pos, range_pos = keyed
+                args = [f"a{p + 1}" for p in range(n_pos)]
+                key = ", ".join(a for p, a in enumerate(args) if p != range_pos)
+                series = args[range_pos] if range_pos is not None else "1"
+                pairs = ", ".join(
+                    f"({', '.join(map(str, k))},) => {name}"
+                    for k, name in zip(entries, sub_dispatch_names)
+                )
+                self.lookup_const_decls.append(f"const {identifier}_fns = Dict({pairs})")
+                self.lookup_func_decls.append(
+                    f"{identifier}({', '.join(args)}, x) = {identifier}_fns[({key},)][{series}](x)"
+                )
+                self.lookup_register_decls.append(
+                    f"@register_symbolic {identifier}("
+                    + ", ".join(f"{a}::Integer" for a in args) + ", x::Real)"
+                )
+                self.lookup_identifiers.add(identifier)
+                return []
 
             fn_list = ", ".join(sub_dispatch_names)
             self.lookup_const_decls.append(

@@ -75,6 +75,11 @@ Bug fixes
   ``DELAY FIXED`` inputs, and array constants and ``TABBED ARRAY`` values in
   the ODE backend now generate valid Julia (:issue:`521`).
   (`@rogersamso <https://github.com/rogersamso>`_)
+- Julia builder: ``ALLOCATE AVAILABLE`` and ``ALLOCATE BY PRIORITY`` on
+  subscripted variables, ``VECTOR SORT ORDER``, ``VECTOR RANK`` and ``VECTOR
+  REORDER`` (along the last subscript), ``GET TIME VALUE`` of the current
+  time, and data defined element by element over several dimensions, as in
+  the Python builder (:issue:`ISSUE3`). (`@rogersamso <https://github.com/rogersamso>`_)
 
 Documentation
 ~~~~~~~~~~~~~
