@@ -58,6 +58,10 @@ Bug fixes
   writes one NetCDF dimension per subscript range (``(time, dim_1, ..., dim_n)``,
   with element labels), which ``nc_data_files`` reads back. The numerical tests
   now compare 2D/3D test models with their Vensim output (:issue:`494`). (`@rogersamso <https://github.com/rogersamso>`_)
+- Julia builder: Vensim macros are expanded in place before building, so
+  macros with stocks give the right results and the MTK backend can run
+  models with macros; the companion function files are gone
+  (:issue:`510`). (`@rogersamso <https://github.com/rogersamso>`_)
 
 Documentation
 ~~~~~~~~~~~~~

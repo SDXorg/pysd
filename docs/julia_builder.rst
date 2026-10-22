@@ -391,12 +391,12 @@ Supported Vensim features
    * - ``EXCEPT`` exclusion on 3-D subscripts
      - Supported (per-index comprehension equations)
      - Supported
-   * - Macros (stateless)
-     - Supported (companion ``.jl`` function file per macro)
+   * - Macros (``MACRO`` … ``END OF MACRO``, including stocks and macros
+       calling other macros)
+     - Supported (expanded in place before building: each call gets its own
+       copies of the macro's variables, named
+       ``<variable>_<macro>_<element>``)
      - Supported
-   * - Macros (stateful — ``INTEG`` inside macro)
-     - Not supported (placeholder ``return 0.0`` with warning)
-     - Not supported
    * - XMILE ``MIN``/``MAX`` aggregation (``vmin_xmile``, ``vmax_xmile``)
      - Supported
      - Supported
@@ -455,12 +455,9 @@ parse.  The Julia builder does not yet cover:
    * - ``EXCEPT`` exclusion on 3-D subscripts
      - Full
      - Supported (per-index comprehension equations, same as 1-D and 2-D)
-   * - Stateless macros (``MACRO`` … ``END OF MACRO`` without ``INTEG``)
-     - Full (inlined)
-     - Companion ``.jl`` function file generated; included via ``include``
-   * - Stateful macros (``INTEG`` inside ``MACRO`` … ``END OF MACRO``)
+   * - Macros (``MACRO`` … ``END OF MACRO``)
      - Full
-     - Not supported; placeholder ``return 0.0`` emitted with warning
+     - Supported; expanded in place before building, stocks included
    * - ``GAME`` interactive input
      - Full
      - Passes through; interactive value ignored in batch simulation
