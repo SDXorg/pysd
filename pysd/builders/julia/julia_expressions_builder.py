@@ -295,6 +295,10 @@ class JuliaASTVisitor:
         self.needed_helpers = needed_helpers
         # active_subs: dim_name -> julia index variable (e.g. {"sector": "_i"})
         self.active_subs = active_subs or {}
+        # Ranges of a definition that stand for the loop over another range,
+        # e.g. {"dim1up": "dim1"} for x[dim1up, d3] = ... inside x[dim1, dim2]:
+        # a reference y[dim1up] is then read as y[dim1].
+        self.sub_aliases: Dict[str, str] = {}
         # _clean_active_subs: normalised-dim-name -> julia index variable, for
         # case-insensitive lookup when subscript names appear as bare references.
         self._clean_active_subs = {
@@ -599,11 +603,19 @@ class JuliaASTVisitor:
         # Subscript dimension names appear as bare references in equations like
         # I_Matrix[s, s1] = IF_THEN_ELSE(s = s1, 1, 0).  When inside an active
         # subscript loop, emit the corresponding loop-index variable directly.
+        # As Python PySD, its value is the element's position in the *main*
+        # range (the largest range containing it), so subranges and ranges
+        # with another order compare and count like their main range.
         if self._clean_active_subs:
             clean_ref = re.sub(r"[^a-z0-9_]", "_", node.reference.lower())
-            idx_var = self._clean_active_subs.get(clean_ref)
-            if idx_var is not None:
-                return idx_var
+            alias = next((target for a, target in self.sub_aliases.items()
+                          if re.sub(r"[^a-z0-9_]", "_", a.lower()) == clean_ref), None)
+            if alias is not None:
+                clean_ref = re.sub(r"[^a-z0-9_]", "_", alias.lower())
+            dim = next((d for d in self.active_subs
+                        if re.sub(r"[^a-z0-9_]", "_", d.lower()) == clean_ref), None)
+            if dim is not None:
+                return self._main_position(dim, self.active_subs[dim])
 
         julia_name = self.namespace.get(node.reference)
         if julia_name is None:
@@ -612,17 +624,9 @@ class JuliaASTVisitor:
             # dimA: A, B, C).  When it is, emit the 1-based integer index so
             # comparisons like "dimA = B" become "_i0 == 2" in generated Julia.
             if clean_ref in self._clean_elem_index:
+                # Its position in its main range, as Python PySD
                 ranges_map = self._clean_elem_index[clean_ref]
-                # Prefer a range that is currently being iterated (active dim)
-                idx = None
-                for rng, pos in ranges_map.items():
-                    clean_rng = re.sub(r"[^a-z0-9_]", "_", rng.lower())
-                    if clean_rng in self._clean_active_subs:
-                        idx = pos
-                        break
-                if idx is None:
-                    idx = next(iter(ranges_map.values()))
-                return str(idx)
+                return str(ranges_map[self._largest_range(ranges_map)])
             warn(
                 f"Variable '{node.reference}' not found in namespace; "
                 "using a sanitised fallback identifier."
@@ -803,11 +807,12 @@ class JuliaASTVisitor:
             # both resolve to the same variable.
             used_align_vars: set = set()
             for pos, sub in enumerate(node_subs):
+                sub = self.sub_aliases.get(sub, sub)
                 if sub in self.active_subs:
                     # Range name matching an active loop variable
                     lv = self.active_subs[sub]
-                    indices.append(lv)
                     used_align_vars.add(lv)
+                    indices.append(self._index_in_var_dim(lv, sub, var_dims_list, pos))
                 elif sub in self.subs_elems:
                     # Range name with all elements — use active loop var if available.
                     # First try direct name match, then fall back to element-set
@@ -878,6 +883,76 @@ class JuliaASTVisitor:
                 julia_name = julia_name + "[" + ", ".join(indices) + "]"
 
         return julia_name
+
+    def _index_in_var_dim(self, idx: str, sub: str, var_dims_list: List[str],
+                          pos: int) -> str:
+        """Index into the referenced variable's own dimension.
+
+        ``idx`` is the 1-based position of the current element within the
+        range ``sub``: a number in per-element expansion, or a loop variable
+        over ``sub``.  When the variable is
+        declared over another range containing that element (e.g.
+        ``aging[AGE]`` read as ``aging[ALL BUT YOUNGEST]``), the index is
+        the element's position in that range.
+        """
+        if pos >= len(var_dims_list):
+            return idx
+        target = var_dims_list[pos]
+        sub_elems = self.subs_elems.get(sub, [])
+        target_elems = self.subs_elems.get(target, [])
+        if target == sub or not sub_elems or not target_elems:
+            return idx
+        if any(e not in target_elems for e in sub_elems):
+            if all(e in sub_elems for e in target_elems) and not idx.isdigit():
+                # A loop over a larger range reading a variable defined over
+                # part of it (only the elements it has are reached)
+                table = [target_elems.index(e) + 1 if e in target_elems else 0
+                         for e in sub_elems]
+                return f"({', '.join(map(str, table))})[{idx}]"
+            return idx
+        positions = [target_elems.index(e) + 1 for e in sub_elems]
+        if idx.isdigit():
+            k = int(idx) - 1
+            return str(positions[k]) if 0 <= k < len(positions) else idx
+        # A loop variable over `sub`: shift it, or look it up when the
+        # elements are not contiguous in `target`
+        if positions == list(range(positions[0], positions[0] + len(positions))):
+            offset = positions[0] - 1
+            return f"{idx} + {offset}" if offset else idx
+        return f"({', '.join(map(str, positions))})[{idx}]"
+
+    def _main_range(self, name: str) -> str:
+        """The main range of a range, as Python PySD's subscript manager: the
+        largest range containing all its elements; between ranges with the
+        same elements, the first in alphabetical order."""
+        elems = set(self.subs_elems.get(name, []))
+        candidates = [
+            r for r, e in self.subs_elems.items()
+            if isinstance(e, list) and elems and elems <= set(e)
+        ]
+        return self._largest_range(candidates) or name
+
+    def _largest_range(self, candidates) -> Optional[str]:
+        candidates = list(candidates)
+        if not candidates:
+            return None
+        return min(candidates, key=lambda r: (-len(self.subs_elems.get(r, [])), r.lower()))
+
+    def _main_position(self, dim: str, idx: str) -> str:
+        """Position in the main range of the element at ``idx`` in ``dim``."""
+        main = self._main_range(dim)
+        dim_elems = self.subs_elems.get(dim, [])
+        main_elems = self.subs_elems.get(main, [])
+        if main == dim or not dim_elems:
+            return idx
+        positions = [main_elems.index(e) + 1 for e in dim_elems]
+        if idx.isdigit():
+            k = int(idx) - 1
+            return str(positions[k]) if 0 <= k < len(positions) else idx
+        if positions == list(range(positions[0], positions[0] + len(positions))):
+            offset = positions[0] - 1
+            return f"({idx} + {offset})" if offset else idx
+        return f"({', '.join(map(str, positions))})[{idx}]"
 
     def _call(self, node: CallStructure) -> str:
         func_upper = node.function.reference.upper()

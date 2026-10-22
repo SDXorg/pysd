@@ -59,6 +59,64 @@ from .julia_expressions_builder import (
 )
 from .namespace import JuliaNamespaceManager
 
+
+_CELL_REF_RE = re.compile(r"^\$?([A-Za-z]{1,3})\$?([0-9]+)$")
+
+
+def _cell_block(cell: str, coords: dict, transpose: bool) -> str:
+    """Turn a top-left cell into the block of cells a variable reads.
+
+    As Python PySD (``ExtConstant``): the shape is the variable's
+    dimensions without the ones of length 1, completed to 2D with a 1 on
+    the left (so a 1D variable reads one row), and reversed when the
+    reference is transposed (``*``).  Named ranges and single-element
+    variables are returned unchanged.
+    """
+    m = _CELL_REF_RE.match(cell)
+    sizes = [len(v) for v in coords.values() if len(v) > 1]
+    if not m or not sizes or len(sizes) > 2:
+        return cell
+    shape = [1] * (2 - len(sizes)) + sizes
+    if transpose:
+        shape.reverse()
+    col = 0
+    for ch in m.group(1).upper():
+        col = col * 26 + ord(ch) - ord("A") + 1
+    row = int(m.group(2))
+    last_col, last_row = col + shape[1] - 1, row + shape[0] - 1
+    letters = ""
+    while last_col:
+        last_col, rem = divmod(last_col - 1, 26)
+        letters = chr(ord("A") + rem) + letters
+    return f"{m.group(1).upper()}{row}:{letters}{last_row}"
+
+
+
+def _cell_blocks(cells) -> List[Tuple[List[int], ...]]:
+    """Split a set of index tuples into rectangular blocks (one list of
+    indices per dimension) that cover exactly those cells.
+
+    Values of the first index with the same remaining cells share a block;
+    the remaining cells are split the same way, dimension by dimension.
+    """
+    cells = set(cells)
+    if not cells:
+        return []
+    if len(next(iter(cells))) == 1:
+        return [(sorted(c[0] for c in cells),)]
+    rest: Dict[int, frozenset] = {}
+    for c in cells:
+        rest.setdefault(c[0], set()).add(c[1:])
+    groups: Dict[frozenset, List[int]] = {}
+    for i, sub in sorted(rest.items()):
+        groups.setdefault(frozenset(sub), []).append(i)
+    return [
+        (firsts, *block)
+        for sub, firsts in groups.items()
+        for block in _cell_blocks(sub)
+    ]
+
+
 def _outer_for_clause(eq: str) -> str:
     """Return the for-clause of the comprehension equation ``[lhs ~ rhs for ...]...``.
 
@@ -110,6 +168,44 @@ _UNSUPPORTED_STRUCTURES = ()
 # Top-level builder
 # ---------------------------------------------------------------------------
 
+
+def expand_subscript_ranges(model: AbstractModel) -> AbstractModel:
+    """Expand subscript ranges defined with other ranges.
+
+    Vensim allows ``dim: A, subdim1, B`` where ``subdim1`` is itself a range;
+    the parser keeps the range name.  As Python PySD, the range is the list
+    of elements with each nested range replaced by its elements (recursively),
+    so ``dim`` has 2 + len(subdim1) elements.  Copy definitions such as
+    ``subdim2 copy: subdim2`` become the elements of the copied range.
+    """
+    import dataclasses
+
+    lists = {
+        sr.name: sr.subscripts
+        for section in model.sections for sr in section.subscripts
+        if isinstance(sr.subscripts, list)
+    }
+
+    def expand(name: str, seen: tuple) -> list:
+        out = []
+        for entry in lists[name]:
+            if entry in lists and entry not in seen:
+                out.extend(expand(entry, seen + (entry,)))
+            else:
+                out.append(entry)
+        return out
+
+    sections = []
+    for section in model.sections:
+        ranges = tuple(
+            dataclasses.replace(sr, subscripts=expand(sr.name, (sr.name,)))
+            if isinstance(sr.subscripts, list) else sr
+            for sr in section.subscripts
+        )
+        sections.append(dataclasses.replace(section, subscripts=ranges))
+    return dataclasses.replace(model, sections=tuple(sections))
+
+
 class JuliaModelBuilder:
     """Build a standalone Julia/ModelingToolkit model from an AbstractModel.
 
@@ -138,6 +234,7 @@ class JuliaModelBuilder:
             raise ValueError(
                 f"backend must be 'ode' or 'mtk', got {backend!r}"
             )
+        abstract_model = expand_subscript_ranges(abstract_model)
         self.original_path = abstract_model.original_path
         self.sections = [
             JuliaSectionBuilder(section, data_format=data_format, backend=backend)
@@ -1638,61 +1735,75 @@ class JuliaSectionBuilder:
                     for j in exc1_idx:
                         excluded.add((i, j))
 
-            final0 = [i for i in covered0 if all((i, j) not in excluded for j in covered1)]
-            final1 = covered1  # column coverage doesn't change
-
-            if not final0 or not final1:
+            # The cells this component defines, grouped into blocks of rows
+            # that cover the same columns (EXCEPT may remove single cells)
+            row_cols: Dict[int, Tuple[int, ...]] = {}
+            for i in covered0:
+                cols = tuple(j for j in covered1 if (i, j) not in excluded)
+                if cols:
+                    row_cols[i] = cols
+            blocks: Dict[Tuple[int, ...], List[int]] = {}
+            for i, cols in row_cols.items():
+                blocks.setdefault(cols, []).append(i)
+            if not blocks:
                 continue
+            # Ranges of this component that stand for the loops over the
+            # variable's dimensions (x[dim1up, d3] inside x[dim1, dim2])
+            aliases = {
+                spec: dim for spec, dim in ((sub0_spec, dim0_name), (sub1_spec, dim1_name))
+                if spec != dim and spec in self._subs_sizes
+            }
 
             if isinstance(comp.ast, IntegStructure):
-                # Stock component — emit per-pair D(identifier[i,j]) ODE equations.
-                for i0 in final0:
-                    for i1 in final1:
-                        if (i0, i1) in excluded:  # pragma: no cover  # unreachable: final0 only contains rows unexcluded for all cols
-                            continue
-                        vis_ij = JuliaASTVisitor(
-                            self.namespace, self.inline_registry, self.needed_helpers,
-                            active_subs={dim0_name: str(i0), dim1_name: str(i1)},
-                            var_dims=self._var_dims, subs_sizes=self._subs_sizes,
-                            subs_elems=self._subs_elems, lookup_names=self._lookup_func_names,
-                            root=self.root, macro_names=self._known_macro_names,
-                        )
-                        flow_expr = vis_ij.visit(comp.ast.flow)
-                        init_expr = vis_ij.visit(comp.ast.initial)
-                        self.u0_entries.append(f"{identifier}[{i0}, {i1}] => {init_expr}")
-                        equations.append(f"D({identifier}[{i0}, {i1}]) ~ {flow_expr}")
+                # Stock component: one u0 entry per cell, and the flows as one
+                # comprehension per block of rows that cover the same columns
+                vnd = self._nd_visitor(dims, ["_i0", "_i1"])
+                vnd.sub_aliases = aliases
+                flow_expr = vnd.visit(comp.ast.flow)
+                init_expr = vnd.visit(comp.ast.initial)
+                for i0, cols in row_cols.items():
+                    for i1 in cols:
+                        init_val = re.sub(r"\b_i0\b", str(i0), init_expr)
+                        init_val = re.sub(r"\b_i1\b", str(i1), init_val)
+                        self.u0_entries.append(f"{identifier}[{i0}, {i1}] => {init_val}")
+                for cols, rows in blocks.items():
+                    row_str = "[" + ", ".join(str(i) for i in rows) + "]"
+                    col_str = "[" + ", ".join(str(j) for j in cols) + "]"
+                    equations.append(
+                        f"[D({identifier}[_i0, _i1]) ~ {flow_expr} "
+                        f"for _i0 in {row_str}, _i1 in {col_str}]..."
+                    )
             else:
-                # Auxiliary component — use comprehension over remaining index ranges.
-                # Check if all remaining rows still cover the full column range
-                # (so we can use a range expression rather than an explicit list).
-                full_col_range = list(range(1, len(dim1_elems) + 1))
-                use_full_cols = final1 == full_col_range
-
-                arr_eqs = self._ndarray_component_eqs(
-                    identifier, comp.ast, [final0, final1]
-                )
-                if arr_eqs is not None:
-                    equations.extend(arr_eqs)
-                    continue
+                # Auxiliary component — one comprehension per block of rows
+                # that cover the same columns.
+                full_rows = list(range(1, len(dim0_elems) + 1))
+                full_cols = list(range(1, len(dim1_elems) + 1))
+                if len(blocks) == 1:
+                    (cols, rows), = blocks.items()
+                    arr_eqs = self._ndarray_component_eqs(
+                        identifier, comp.ast, [rows, list(cols)]
+                    )
+                    if arr_eqs is not None:
+                        equations.extend(arr_eqs)
+                        continue
 
                 vnd = self._nd_visitor(dims, ["_i0", "_i1"])
+                vnd.sub_aliases = aliases
                 rhs_expr = vnd.visit(comp.ast)
 
-                row_str = (
-                    f"1:{self._jl_n(dim0_name)}"
-                    if final0 == list(range(1, len(dim0_elems) + 1))
-                    else "[" + ", ".join(str(i) for i in final0) + "]"
-                )
-                col_str = (
-                    f"1:{self._jl_n(dim1_name)}"
-                    if use_full_cols
-                    else "[" + ", ".join(str(j) for j in final1) + "]"
-                )
-
-                equations.append(
-                    f"[{identifier}[_i0, _i1] ~ {rhs_expr} "
-                    f"for _i0 in {row_str}, _i1 in {col_str}]..."
-                )
+                for cols, rows in blocks.items():
+                    row_str = (
+                        f"1:{self._jl_n(dim0_name)}" if rows == full_rows
+                        else "[" + ", ".join(str(i) for i in rows) + "]"
+                    )
+                    col_str = (
+                        f"1:{self._jl_n(dim1_name)}" if list(cols) == full_cols
+                        else "[" + ", ".join(str(j) for j in cols) + "]"
+                    )
+                    equations.append(
+                        f"[{identifier}[_i0, _i1] ~ {rhs_expr} "
+                        f"for _i0 in {row_str}, _i1 in {col_str}]..."
+                    )
 
         if not is_control:
             if has_integ_2d:
@@ -1783,25 +1894,28 @@ class JuliaSectionBuilder:
                         for k in exc2:
                             excluded.add((i, j, k))
 
-            # Apply exclusion to dim0; keep dim1 and dim2 as-is
-            final0 = [
-                i for i in covered0
-                if not all((i, j, k) in excluded for j in covered1 for k in covered2)
-            ]
-            final1 = covered1
-            final2 = covered2
-
-            if not final0 or not final1 or not final2:
+            # The cells this component defines (EXCEPT may remove single
+            # cells), as rectangular blocks
+            cells = set(itertools.product(covered0, covered1, covered2)) - excluded
+            blocks = _cell_blocks(cells)
+            if not blocks:
                 continue
 
-            arr_eqs = self._ndarray_component_eqs(
-                identifier, comp.ast, [final0, final1, final2]
-            )
-            if arr_eqs is not None:
-                equations.extend(arr_eqs)
-                continue
+            if len(blocks) == 1:
+                arr_eqs = self._ndarray_component_eqs(
+                    identifier, comp.ast, list(blocks[0])
+                )
+                if arr_eqs is not None:
+                    equations.extend(arr_eqs)
+                    continue
 
             vnd = self._nd_visitor(dims, ["_i0", "_i1", "_i2"])
+            # Ranges of this component that stand for the loops over the
+            # variable's dimensions (x[REGION, SEC A, …] inside x[REGION, SEC ALL, …])
+            vnd.sub_aliases = {
+                spec: dim for spec, dim in ((s0, dim0_name), (s1, dim1_name), (s2, dim2_name))
+                if spec != dim and spec in self._subs_sizes
+            }
 
             def _idx_str(indices: List[int], dim_elems: List[str], dim_name: str) -> str:
                 full = list(range(1, len(dim_elems) + 1))
@@ -1809,10 +1923,13 @@ class JuliaSectionBuilder:
                     return f"1:{self._jl_n(dim_name)}"
                 return "[" + ", ".join(str(i) for i in indices) + "]"
 
-            d0_str = _idx_str(final0, dim0_elems, dim0_name)
-            d1_str = _idx_str(final1, dim1_elems, dim1_name)
-            d2_str = _idx_str(final2, dim2_elems, dim2_name)
-            for_clause = f"for _i0 in {d0_str}, _i1 in {d1_str}, _i2 in {d2_str}"
+            def _for_clause(block) -> str:
+                return "for " + ", ".join(
+                    f"{iv} in {_idx_str(idx, elems, name)}"
+                    for iv, idx, elems, name in zip(
+                        ("_i0", "_i1", "_i2"), block,
+                        (dim0_elems, dim1_elems, dim2_elems),
+                        (dim0_name, dim1_name, dim2_name)))
 
             if isinstance(comp.ast, IntegStructure):
                 # Stock component (e.g. Stock A[A, B, Depth 1] = INTEG(...)):
@@ -1820,21 +1937,23 @@ class JuliaSectionBuilder:
                 has_integ = True
                 flow_expr = vnd.visit(comp.ast.flow)
                 init_expr = vnd.visit(comp.ast.initial)
-                for combo in itertools.product(final0, final1, final2):
+                for combo in sorted(cells):
                     init_val = init_expr
                     for var, val in zip(("_i0", "_i1", "_i2"), combo):
                         init_val = re.sub(rf"\b{var}\b", str(val), init_val)
                     idx_s = ", ".join(str(i) for i in combo)
                     self.u0_entries.append(f"{identifier}[{idx_s}] => {init_val}")
-                equations.append(
-                    f"[D({identifier}[_i0, _i1, _i2]) ~ {flow_expr} {for_clause}]..."
-                )
+                for block in blocks:
+                    equations.append(
+                        f"[D({identifier}[_i0, _i1, _i2]) ~ {flow_expr} {_for_clause(block)}]..."
+                    )
                 continue
 
             rhs_expr = vnd.visit(comp.ast)
-            equations.append(
-                f"[{identifier}[_i0, _i1, _i2] ~ {rhs_expr} {for_clause}]..."
-            )
+            for block in blocks:
+                equations.append(
+                    f"[{identifier}[_i0, _i1, _i2] ~ {rhs_expr} {_for_clause(block)}]..."
+                )
 
         if not is_control:
             decls = self.stock_decls if has_integ else self.aux_decls
@@ -3442,7 +3561,8 @@ class JuliaSectionBuilder:
         if len(elem.components) == 1 and isinstance(ast0, GetConstantsStructure):
             cell = ast0.cell
             transpose = cell.endswith('*')
-            clean_cell = cell.rstrip('*')
+            clean_cell = _cell_block(
+                cell.rstrip('*'), self._comp_coords(comp0), transpose)
             file_expr = f'joinpath(@__DIR__, "{ast0.file}")'
             kw_parts = []
             if transpose:
@@ -3470,7 +3590,8 @@ class JuliaSectionBuilder:
                 cell = comp.ast.cell
                 if cell.endswith('*'):
                     transpose = True
-                clean_cell = cell.rstrip('*')
+                clean_cell = _cell_block(
+                    cell.rstrip('*'), self._comp_coords(comp), cell.endswith('*'))
                 if file_expr is None:
                     file_expr = f'joinpath(@__DIR__, "{comp.ast.file}")'
                     tab = comp.ast.tab
@@ -4363,6 +4484,10 @@ class JuliaSectionBuilder:
             name = m.group(1)
             if name in stock_indices or name.startswith("du") or name.startswith("u"):
                 continue
+            if "(" in m.group(2):
+                # an index expression such as (1, 0, 0, 2)[_i1]: its commas
+                # are not dimensions, and it has no literal index to size by
+                continue
             indices = [x.strip() for x in m.group(2).split(",")]
             cur = alloc_needed.get(name, [])
             while len(cur) < len(indices):
@@ -4393,7 +4518,14 @@ class JuliaSectionBuilder:
                             if m_for.group(1):
                                 all_dims.append(m_for.group(1).split(":")[1])
                             elif m_for.group(2):
-                                all_dims.append(str(len(m_for.group(2).split(","))))
+                                # A list of element indices ("in [3]" or
+                                # "in [1, 3]"): the array needs room up to the
+                                # largest one, not one row per listed element.
+                                listed = [x.strip() for x in m_for.group(2).split(",")]
+                                if all(x.isdigit() for x in listed):
+                                    all_dims.append(str(max(int(x) for x in listed)))
+                                else:
+                                    all_dims.append(str(len(listed)))
                         cur = alloc_needed.get(name, [])
                         if len(all_dims) >= len(cur):
                             # Merge: symbolic N_* wins over literal; larger literal wins

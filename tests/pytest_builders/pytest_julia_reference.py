@@ -41,6 +41,7 @@ import pandas as pd
 import pytest
 from _pytest.mark.structures import ParameterSet
 
+from pysd.builders.julia.julia_model_builder import expand_subscript_ranges
 from pysd.builders.julia.namespace import JuliaNamespaceManager
 from pysd.py_backend.utils import detect_encoding, load_outputs
 from pysd.tools.benchmarking import assert_frames_close
@@ -102,11 +103,6 @@ KNOWN_FAILURES = {
     ("vensim:delay_pipeline", "ode"): "values differ from the reference (#499)",
     ("vensim:delays", "mtk"): "values differ from the reference (#499)",
     ("vensim:delays", "ode"): "values differ from the reference (#499)",
-    ("vensim:elm_count", "ode"): "values differ from the reference (#499)",
-    ("vensim:except_multiple", "ode"): "values differ from the reference (#499)",
-    ("vensim:except_subranges", "ode"): "values differ from the reference (#499)",
-    ("vensim:get_constants_subranges", "mtk"): "values differ from the reference (#499)",
-    ("vensim:get_constants_subranges", "ode"): "values differ from the reference (#499)",
     ("vensim:get_values_order", "mtk"): "values differ from the reference (#499)",
     ("vensim:get_values_order", "ode"): "values differ from the reference (#499)",
     ("vensim:get_xls_cellrange", "ode"): "values differ from the reference (#499)",
@@ -114,14 +110,7 @@ KNOWN_FAILURES = {
     ("vensim:macro_stock", "ode"): "values differ from the reference (#499)",
     ("vensim:rounding", "mtk"): "values differ from the reference (#499)",
     ("vensim:rounding", "ode"): "values differ from the reference (#499)",
-    ("vensim:smaller_range", "ode"): "values differ from the reference (#499)",
     ("vensim:smooth_and_stock", "ode"): "values differ from the reference (#499)",
-    ("vensim:subrange_merge", "ode"): "values differ from the reference (#499)",
-    ("vensim:subscript_definition", "ode"): "values differ from the reference (#499)",
-    ("vensim:subscript_mapping_simple", "mtk"): "values differ from the reference (#499)",
-    ("vensim:subscript_mapping_simple", "ode"): "values differ from the reference (#499)",
-    ("vensim:subscript_mapping_vensim", "mtk"): "values differ from the reference (#499)",
-    ("vensim:subscript_mapping_vensim", "ode"): "values differ from the reference (#499)",
     ("vensim:subscripted_round", "mtk"): "values differ from the reference (#499)",
     ("vensim:subscripted_round", "ode"): "values differ from the reference (#499)",
     ("vensim:with_lookup", "ode"): "values differ from the reference (#499)",
@@ -161,8 +150,6 @@ KNOWN_FAILURES = {
     ("vensim:get_lookups_subset", "mtk"): ".xls input files not supported (XLSX.jl reads .xlsx only) (#501)",
     ("vensim:get_lookups_subset", "ode"): ".xls input files not supported (XLSX.jl reads .xlsx only) (#501)",
     # variables missing from the Julia output (#499)
-    ("vensim:except", "mtk"): "variables missing from the Julia output (#499)",
-    ("vensim:except_multiple", "mtk"): "variables missing from the Julia output (#499)",
     ("vensim:get_subscript_3d_arrays_xls", "mtk"): "variables missing from the Julia output (#499)",
     ("vensim:get_subscript_3d_arrays_xls", "ode"): "variables missing from the Julia output (#499)",
     ("vensim:initial_function", "mtk"): "variables missing from the Julia output (#499)",
@@ -171,10 +158,6 @@ KNOWN_FAILURES = {
     ("xmile:initial_function", "mtk"): "variables missing from the Julia output (#499)",
     # MTK: indexing a symbolic array out of its declared shape (#502)
     ("vensim:allocate_available", "mtk"): "MTK: indexing a symbolic array out of its declared shape (#502)",
-    ("vensim:elm_count", "mtk"): "MTK: indexing a symbolic array out of its declared shape (#502)",
-    ("vensim:except_subranges", "mtk"): "MTK: indexing a symbolic array out of its declared shape (#502)",
-    ("vensim:subrange_merge", "mtk"): "MTK: indexing a symbolic array out of its declared shape (#502)",
-    ("vensim:subscript_definition", "mtk"): "MTK: indexing a symbolic array out of its declared shape (#502)",
     ("vensim:subscripted_smooth", "mtk"): "MTK: indexing a symbolic array out of its declared shape (#502)",
     # Excel data referenced by row/column number not supported (#501)
     ("vensim:get_mixed_definitions", "mtk"): "Excel data referenced by row/column number not supported (#501)",
@@ -206,8 +189,6 @@ KNOWN_FAILURES = {
     # subscripted TREND/FORECAST: array minus scalar (#500)
     ("vensim:forecast", "ode"): "subscripted TREND/FORECAST: array minus scalar (#500)",
     ("vensim:subscripted_trend", "ode"): "subscripted TREND/FORECAST: array minus scalar (#500)",
-    # EXCEPT on stocks generates invalid Julia (#500)
-    ("vensim:except", "ode"): "EXCEPT on stocks generates invalid Julia (#500)",
     # MTK: MODULO not callable on symbolic values (#502)
     ("vensim:lookups_funcnames", "mtk"): "MTK: MODULO not callable on symbolic values (#502)",
     # MTK: initial value depends on other variables (#502)
@@ -308,6 +289,29 @@ def _params():
 # Translation and Julia batch runner
 # ---------------------------------------------------------------------------
 
+def _own_ranges(elem, ranges):
+    """The range a variable is laid out over, at each subscript position.
+
+    It is the range whose elements are exactly the ones the variable's
+    definitions cover (e.g. `lower` for a variable defined over `lower`,
+    the parent for one defined over `lower` and `Layer1`, `dim2: c, b` for
+    one defined for `c` and `b`), or None (numbered by the first range
+    listing each element).
+    """
+    subs = [c.subscripts[0] for c in elem.components]
+    out = []
+    for i in range(min(map(len, subs), default=0)):
+        names = [s[i].lower() for s in subs]
+        covered = set()
+        for name in names:
+            covered |= set(ranges.get(name, [name.strip()]))
+        own = next((ranges[n] for n in names if n in ranges and set(ranges[n]) == covered), None)
+        if own is None:
+            own = next((r for r in ranges.values() if set(r) == covered), None)
+        out.append(own)
+    return out
+
+
 def _id_map(model_file, columns):
     """Reference column -> Julia identifier ('Stock A[B1,C2]' -> 'stock_a[1, 2]')."""
     if model_file.suffix.lower() in (".xmile", ".stmx", ".xml"):
@@ -316,16 +320,26 @@ def _id_map(model_file, columns):
         from pysd.translators.vensim.vensim_file import VensimFile as File
     vf = File(model_file)
     vf.parse()
-    am = vf.get_abstract_model()
+    am = expand_subscript_ranges(vf.get_abstract_model())
     ns = JuliaNamespaceManager()
     labels = {}
+    ranges = {}
+    own_ranges = {}
+    for section in am.sections:
+        for sr in section.subscripts:
+            if isinstance(sr.subscripts, list):
+                ranges[sr.name.lower()] = [s.lower().strip() for s in sr.subscripts]
+                for i, label in enumerate(sr.subscripts):
+                    labels.setdefault(label.lower().strip(), i + 1)
+    for section in am.sections:
+        for sr in section.subscripts:
+            # an alias (subdim1 copy <-> subdim1) has the elements of its range
+            if isinstance(sr.subscripts, str) and sr.subscripts.lower() in ranges:
+                ranges[sr.name.lower()] = ranges[sr.subscripts.lower()]
     for section in am.sections:
         for elem in section.elements:
             ns.add_to_namespace(elem.name)
-        for sr in section.subscripts:
-            if isinstance(sr.subscripts, list):
-                for i, label in enumerate(sr.subscripts):
-                    labels.setdefault(label.lower().strip(), i + 1)
+            own_ranges[elem.name.lower().strip()] = _own_ranges(elem, ranges)
     ids = {}
     for col in columns:
         if col.upper() in CONTROL_COLUMNS:
@@ -336,7 +350,12 @@ def _id_map(model_file, columns):
         if jl is None:
             continue
         if rest:
-            idx = [labels.get(lb.lower().strip()) for lb in rest.rstrip("]").split(",")]
+            own = own_ranges.get(base.strip().lower(), [])
+            idx = [
+                own[i].index(lb) + 1 if i < len(own) and own[i] and lb in own[i]
+                else labels.get(lb)
+                for i, lb in enumerate(s.lower().strip() for s in rest.rstrip("]").split(","))
+            ]
             if None in idx:
                 continue
             jl += "[" + ", ".join(map(str, idx)) + "]"

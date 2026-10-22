@@ -391,6 +391,11 @@ Supported Vensim features
    * - ``EXCEPT`` exclusion on 3-D subscripts
      - Supported (per-index comprehension equations)
      - Supported
+   * - Subranges, subscript mapping, ranges defined with other ranges,
+       subscripts used as values
+     - Supported (as the Python builder: a subscript used as a value is its
+       position in the largest range containing it)
+     - Supported
    * - Macros (stateless)
      - Supported (companion ``.jl`` function file per macro)
      - Supported
