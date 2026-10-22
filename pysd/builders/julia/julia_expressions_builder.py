@@ -85,7 +85,6 @@ BUILTIN_FUNCTIONS: dict = {
     "POWER": "pysd_power",
     "MIN": "min",
     "MAX": "max",
-    "MODULO": "mod",
     "QUANTUM": "pysd_quantum",
     "PI": "pysd_pi",
     # Control flow — parser stores as "if_then_else" (underscores).
@@ -550,6 +549,19 @@ class JuliaASTVisitor:
             op = ARITHMETIC_OPS.get(ops[0], ops[0])
             return f"({op}{args[0]})"
 
+        if all(op == "^" for op in ops):
+            # A chain of powers is right-associative, as in Vensim and
+            # Python: a^b^c = a^(b^c)
+            exponent = args[-1]
+            for arg in reversed(args[1:-1]):
+                exponent = f"pysd_power({arg}, {exponent})"
+            base = node.arguments[0]
+            if isinstance(base, (int, float)) and base < 0:
+                # Vensim reads -2^2 as -(2^2), but the parser folds the
+                # literal into -2: negate after the power.
+                return f"(-pysd_power({self.visit(-base)}, {exponent}))"
+            return f"pysd_power({args[0]}, {exponent})"
+
         # Build expression, using pysd_power for ^ (Vensim POWER semantics)
         result = args[0]
         base = node.arguments[0]
@@ -881,6 +893,11 @@ class JuliaASTVisitor:
 
     def _call(self, node: CallStructure) -> str:
         func_upper = node.function.reference.upper()
+        if func_upper == "MODULO":
+            # Vensim's MODULO keeps the sign of x, in (-m, 0] for x < 0, as in
+            # Python PySD: x - QUANTUM(x, m) (Julia's mod would be in [0, m))
+            x, m = (self.visit(a) for a in node.arguments)
+            return f"({x} - pysd_quantum({x}, {m}))"
         julia_func = BUILTIN_FUNCTIONS.get(func_upper)
 
         if julia_func is None:

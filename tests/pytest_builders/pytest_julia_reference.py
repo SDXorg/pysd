@@ -90,10 +90,6 @@ KNOWN_FAILURES = {
     ("vensim:active_initial", "mtk"): "values differ from the reference (#499)",
     ("vensim:active_initial", "ode"): "values differ from the reference (#499)",
     ("vensim:active_initial_circular", "ode"): "values differ from the reference (#499)",
-    ("vensim:arithmetics", "mtk"): "values differ from the reference (#499)",
-    ("vensim:arithmetics", "ode"): "values differ from the reference (#499)",
-    ("vensim:arithmetics_exp", "mtk"): "values differ from the reference (#499)",
-    ("vensim:arithmetics_exp", "ode"): "values differ from the reference (#499)",
     ("vensim:chained_initialization", "ode"): "values differ from the reference (#499)",
     ("vensim:data_from_other_model", "ode"): "values differ from the reference (#499)",
     ("vensim:delay_fixed", "mtk"): "values differ from the reference (#499)",
@@ -112,8 +108,6 @@ KNOWN_FAILURES = {
     ("vensim:get_xls_cellrange", "ode"): "values differ from the reference (#499)",
     ("vensim:lookups_inline_spaces", "mtk"): "values differ from the reference (#499)",
     ("vensim:macro_stock", "ode"): "values differ from the reference (#499)",
-    ("vensim:rounding", "mtk"): "values differ from the reference (#499)",
-    ("vensim:rounding", "ode"): "values differ from the reference (#499)",
     ("vensim:smaller_range", "ode"): "values differ from the reference (#499)",
     ("vensim:smooth_and_stock", "ode"): "values differ from the reference (#499)",
     ("vensim:subrange_merge", "ode"): "values differ from the reference (#499)",
@@ -122,11 +116,7 @@ KNOWN_FAILURES = {
     ("vensim:subscript_mapping_simple", "ode"): "values differ from the reference (#499)",
     ("vensim:subscript_mapping_vensim", "mtk"): "values differ from the reference (#499)",
     ("vensim:subscript_mapping_vensim", "ode"): "values differ from the reference (#499)",
-    ("vensim:subscripted_round", "mtk"): "values differ from the reference (#499)",
-    ("vensim:subscripted_round", "ode"): "values differ from the reference (#499)",
     ("vensim:with_lookup", "ode"): "values differ from the reference (#499)",
-    ("xmile:arithmetics_exp", "mtk"): "values differ from the reference (#499)",
-    ("xmile:arithmetics_exp", "ode"): "values differ from the reference (#499)",
     ("xmile:chained_initialization", "ode"): "values differ from the reference (#499)",
     ("xmile:delay_xmile", "mtk"): "values differ from the reference (#499)",
     ("xmile:delay_xmile", "ode"): "values differ from the reference (#499)",
@@ -138,8 +128,6 @@ KNOWN_FAILURES = {
     ("xmile:non_negative_stocks", "ode"): "values differ from the reference (#499)",
     ("xmile:non_negative_stocks_behavior", "mtk"): "values differ from the reference (#499)",
     ("xmile:non_negative_stocks_behavior", "ode"): "values differ from the reference (#499)",
-    ("xmile:rounding", "mtk"): "values differ from the reference (#499)",
-    ("xmile:rounding", "ode"): "values differ from the reference (#499)",
     # generated code refers to an undefined name (#500)
     ("vensim:arguments", "ode"): "generated code refers to an undefined name (#500)",
     ("vensim:control_vars", "ode"): "generated code refers to an undefined name (#500)",
@@ -184,7 +172,6 @@ KNOWN_FAILURES = {
     # lookup emitted as a constant but called as a function (#500)
     ("vensim:get_time_value", "mtk"): "lookup emitted as a constant but called as a function (#500)",
     ("vensim:get_time_value", "ode"): "lookup emitted as a constant but called as a function (#500)",
-    ("vensim:lookups_funcnames", "ode"): "lookup emitted as a constant but called as a function (#500)",
     # ALLOCATE with subscripted arguments not supported (#500)
     ("vensim:allocate_available", "ode"): "ALLOCATE with subscripted arguments not supported (#500)",
     ("vensim:allocate_by_priority", "ode"): "ALLOCATE with subscripted arguments not supported (#500)",
@@ -208,8 +195,8 @@ KNOWN_FAILURES = {
     ("vensim:subscripted_trend", "ode"): "subscripted TREND/FORECAST: array minus scalar (#500)",
     # EXCEPT on stocks generates invalid Julia (#500)
     ("vensim:except", "ode"): "EXCEPT on stocks generates invalid Julia (#500)",
-    # MTK: MODULO not callable on symbolic values (#502)
-    ("vensim:lookups_funcnames", "mtk"): "MTK: MODULO not callable on symbolic values (#502)",
+    # MTK: symbolic simplification changes rounding at integer boundaries (#502)
+    ("vensim:subscripted_round", "mtk"): "MTK: symbolic simplification changes rounding at integer boundaries (#502)",
     # MTK: initial value depends on other variables (#502)
     ("vensim:active_initial_circular", "mtk"): "MTK: initial value depends on other variables (#502)",
     # MTK: numeric conversion of a symbolic value (#502)

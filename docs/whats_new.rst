@@ -58,6 +58,10 @@ Bug fixes
   writes one NetCDF dimension per subscript range (``(time, dim_1, ..., dim_n)``,
   with element labels), which ``nc_data_files`` reads back. The numerical tests
   now compare 2D/3D test models with their Vensim output (:issue:`494`). (`@rogersamso <https://github.com/rogersamso>`_)
+- Julia builder: chains of powers are right-associative as in Vensim
+  (``a^b^c = a^(b^c)``), and ``MODULO`` keeps the sign of its first argument
+  as in Vensim and the Python builder (Julia's ``mod`` did not)
+  (:issue:`516`). (`@rogersamso <https://github.com/rogersamso>`_)
 
 Documentation
 ~~~~~~~~~~~~~
