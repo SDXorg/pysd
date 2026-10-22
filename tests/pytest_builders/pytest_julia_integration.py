@@ -520,9 +520,9 @@ class TestNewConstructsTranslation:
         # Must NOT emit a 'not supported' warning marker in generated code
         assert "DELAY FIXED is not supported" not in content
         # The model has delay_time=2 and time_step=0.0625 → N=32 stages
-        # Check at least a few stage declarations appear
-        assert "_df_pipe_1_output" in content, "First pipeline stage must appear"
-        assert "_df_pipe_32_output" in content, "Last pipeline stage (N=32) must appear"
+        # The 32 stages are one array stock
+        assert "_df_pipe_output[1:32]" in content, "Pipeline must have 32 stages"
+        assert "_k in 1:32" in content
 
     # --- TREND ---
 

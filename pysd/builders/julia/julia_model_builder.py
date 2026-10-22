@@ -2320,77 +2320,52 @@ class JuliaSectionBuilder:
         N: int,
         dims: Optional[List[Tuple[str, int]]] = None,
     ) -> List[str]:
-        """Emit N pipeline stages for an exact DELAY FIXED with Euler integration.
+        """Emit an N-stage pipeline for an exact DELAY FIXED with Euler integration.
 
-        With Euler solver and dt = time_step, each stage shifts a value by exactly
-        one time step, giving a total transport delay of N * time_step.
-        All stages are initialised to ``initial_expr``.
+        The stages are one array stock ``_df_pipe_<identifier>`` with the stage
+        as its first index (then the variable's dimensions), so that a long
+        delay (a delay time of hundreds of time steps) is one comprehension
+        and not hundreds of variables.  With Euler and dt = time_step, each
+        stage shifts a value by exactly one time step, giving a total
+        transport delay of N * time_step.  All stages start at
+        ``initial_expr``.
         """
         dims = dims or []
-        equations: List[str] = []
         ts_expr = self.control_vals.get("time_step") or "time_step"
+        pipe_name = f"_df_pipe_{identifier}"
+        self.namespace.namespace[f"__internal_df_pipe_{identifier}"] = pipe_name
+        idx_vars = self._idx_vars(len(dims))
+        cells = ", ".join(["_k"] + idx_vars)
+        prev = ", ".join(["_k - 1"] + idx_vars)
+        last = ", ".join([str(N)] + idx_vars)
+        for_clause = ", ".join(
+            ["_k in 1:" + str(N)] + ([self._for_clause(dims, idx_vars)] if dims else [])
+        )
+        ranges = ", ".join([f"1:{N}"] + ([self._range_str(dims)] if dims else []))
+        self.stock_decls.append(f"@variables {pipe_name}(t)[{ranges}]")
+        # One u0 entry per cell of the variable, for all its stages
+        for idx_combo in itertools.product(*[range(1, size + 1) for _, size in dims]):
+            expr_i = initial_expr
+            for iv, idx in zip(idx_vars, idx_combo):
+                expr_i = expr_i.replace(iv, str(idx))
+            idx_s = ", ".join([f"1:{N}"] + [str(i) for i in idx_combo])
+            self.u0_entries.append(f"{pipe_name}[{idx_s}] => {expr_i}")
 
+        equations = [
+            f"[D({pipe_name}[{cells}]) ~ "
+            f"((_k == 1 ? {input_expr} : {pipe_name}[{prev}]) - {pipe_name}[{cells}]) "
+            f"/ ({ts_expr}) for {for_clause}]..."
+        ]
         if dims:
-            ndim = len(dims)
-            idx_vars = self._idx_vars(ndim)
-            for_clause = self._for_clause(dims, idx_vars)
             idx_str_t = ", ".join(idx_vars)
-            ranges_list = [range(1, size + 1) for _, size in dims]
-
-            prev_expr_template = input_expr  # pipe_0 = input
-            for k in range(1, N + 1):
-                pipe_name = f"_df_pipe_{k}_{identifier}"
-                self.namespace.namespace[f"__internal_df_pipe_{k}_{identifier}"] = pipe_name
-                self.stock_decls.append(
-                    f"@variables {pipe_name}(t)[{self._range_str(dims)}]"
-                )
-                # Inline the initial_expr directly — it's already the Julia expression
-                for idx_combo in itertools.product(*ranges_list):
-                    expr_i = initial_expr
-                    for iv, idx in zip(idx_vars, idx_combo):
-                        expr_i = expr_i.replace(iv, str(idx))
-                    idx_s = ", ".join(str(v) for v in idx_combo)
-                    self.u0_entries.append(f"{pipe_name}[{idx_s}] => {expr_i}")
-
-                if k < N:
-                    # Intermediate stage: D(pipe_k) ~ (prev - pipe_k) / time_step
-                    equations.append(
-                        f"[D({pipe_name}[{idx_str_t}]) ~ "
-                        f"({prev_expr_template.replace(idx_str_t, idx_str_t)} - {pipe_name}[{idx_str_t}]) / ({ts_expr}) "
-                        f"for {for_clause}]..."
-                    )
-                else:
-                    # Last stage feeds the output identifier directly
-                    self.aux_decls.append(
-                        f"@variables {identifier}(t)[{self._range_str(dims)}]"
-                    )
-                    equations.append(
-                        f"[D({pipe_name}[{idx_str_t}]) ~ "
-                        f"({prev_expr_template} - {pipe_name}[{idx_str_t}]) / ({ts_expr}) "
-                        f"for {for_clause}]..."
-                    )
-                    equations.append(
-                        f"[{identifier}[{idx_str_t}] ~ {pipe_name}[{idx_str_t}] for {for_clause}]..."
-                    )
-
-                prev_expr_template = f"{pipe_name}[{idx_str_t}]"
-            return equations
-
-        # ---- Scalar case ----
-        prev_expr = input_expr
-        for k in range(1, N + 1):
-            pipe_name = f"_df_pipe_{k}_{identifier}"
-            self.namespace.namespace[f"__internal_df_pipe_{k}_{identifier}"] = pipe_name
-            self.stock_decls.append(f"@variables {pipe_name}(t)")
-            self.u0_entries.append(f"{pipe_name} => {initial_expr}")
+            self.aux_decls.append(f"@variables {identifier}(t)[{self._range_str(dims)}]")
             equations.append(
-                f"D({pipe_name}) ~ ({prev_expr} - {pipe_name}) / ({ts_expr})"
+                f"[{identifier}[{idx_str_t}] ~ {pipe_name}[{last}] "
+                f"for {self._for_clause(dims, idx_vars)}]..."
             )
-            prev_expr = pipe_name
-
-        # Output variable is the last pipeline stage
-        self.aux_decls.append(f"@variables {identifier}(t)")
-        equations.append(f"{identifier} ~ {prev_expr}")
+        else:
+            self.aux_decls.append(f"@variables {identifier}(t)")
+            equations.append(f"{identifier} ~ {pipe_name}[{N}]")
         return equations
 
     # ------------------------------------------------------------------
@@ -4469,7 +4444,7 @@ class JuliaSectionBuilder:
         for entry in self.u0_entries:
             name = entry.split("=>")[0].strip()
             base = name.split("[")[0]
-            stock_info[base] = stock_info.get(base, 0) + 1
+            stock_info[base] = stock_info.get(base, 0) + self._u0_size(entry)
 
         # Build state variable index map: name -> (start_idx, size)
         stock_indices: Dict[str, int] = {}
@@ -5032,6 +5007,16 @@ class JuliaSectionBuilder:
                 return [f"du[{idx}] = {expr}"]
         return [eq.replace(" ~ ", " = ", 1)]
 
+    @staticmethod
+    def _u0_size(entry: str) -> int:
+        """Number of state cells of a u0 entry: ``x[1:N, 2] => v`` gives N
+        cells (all stages of a DELAY FIXED pipeline), other entries one."""
+        lhs = entry.split("=>", 1)[0]
+        size = 1
+        for a, b in re.findall(r"\b(\d+):(\d+)\b", lhs):
+            size *= int(b) - int(a) + 1
+        return size
+
     def _sort_u0_entries(self) -> None:
         """Order ``u0_entries`` the way the ODE state vector is read back.
 
@@ -5045,7 +5030,9 @@ class JuliaSectionBuilder:
             lhs = entry.split("=>", 1)[0].strip()
             base, _, idx = lhs.partition("[")
             try:
-                key = tuple(int(i) for i in idx.rstrip("]").split(",")) if idx else ()
+                key = tuple(
+                    0 if ":" in i else int(i) for i in idx.rstrip("]").split(",")
+                ) if idx else ()
             except ValueError:  # pragma: no cover  # u0 indices are always integer literals
                 key = ()
             groups.setdefault(base, []).append((key[::-1], entry))
@@ -5054,6 +5041,13 @@ class JuliaSectionBuilder:
             for items in groups.values()
             for _, entry in sorted(items, key=lambda item: item[0])
         ]
+
+    def _u0_value(self, entry: str) -> str:
+        """The value of a u0 entry inside ``Float64[...]``: repeated for
+        entries over several cells."""
+        rhs = entry.split("=>", 1)[1].strip()
+        size = self._u0_size(entry)
+        return rhs if size == 1 else f"fill({rhs}, {size})..."
 
     def _u0_block(self) -> str:
         if self.backend == "mtk":
@@ -5108,7 +5102,7 @@ class JuliaSectionBuilder:
             # Initial values may depend on stocks (e.g. DELAY(stock, 1) starts at
             # the stock's initial value), so evaluate them from the state they
             # define, starting from zeros, until it no longer changes.
-            n = len(u0_entries)
+            n = sum(self._u0_size(entry) for entry in u0_entries)
             lines = [
                 f"u0 = let _u = zeros(Float64, {n})",
                 f"    for _ in 1:{n + 1}",
@@ -5120,7 +5114,7 @@ class JuliaSectionBuilder:
             for entry in u0_entries:
                 if "=>" in entry:
                     lhs, rhs = entry.split("=>", 1)
-                    lines.append(f"            {rhs.strip()},  # {lhs.strip()}")
+                    lines.append(f"            {self._u0_value(entry)},  # {lhs.strip()}")
                 else:  # pragma: no cover  # all u0_entries use "name => expr" format
                     lines.append(f"            {entry},")
             lines += [
@@ -5137,7 +5131,7 @@ class JuliaSectionBuilder:
             for entry in u0_entries:
                 if "=>" in entry:
                     lhs, rhs = entry.split("=>", 1)
-                    lines.append(f"    {rhs.strip()},  # {lhs.strip()}")
+                    lines.append(f"    {self._u0_value(entry)},  # {lhs.strip()}")
                 else:  # pragma: no cover  # all u0_entries use "name => expr" format
                     lines.append(f"    {entry},")
             return "u0 = Float64[\n" + "\n".join(lines) + "\n]\n"
@@ -5159,6 +5153,14 @@ class JuliaSectionBuilder:
             if "=>" in entry:
                 lhs, rhs = entry.split("=>", 1)
                 rhs = rhs.strip()
+                m_rng = re.match(r"\s*(\w+)\[(\d+):(\d+)(.*)\]\s*$", lhs)
+                if m_rng:  # all stages of a pipeline cell
+                    for pname, pval in param_values.items():
+                        rhs = re.sub(rf"\b{re.escape(pname)}\b", pval, rhs)
+                    name, a, b, rest = m_rng.groups()
+                    for k in range(int(a), int(b) + 1):
+                        lines.append(f"    {name}[{k}{rest}] => {rhs},")
+                    continue
                 # Substitute param references with numeric values
                 for pname, pval in param_values.items():
                     rhs = re.sub(rf"\b{re.escape(pname)}\b", pval, rhs)
@@ -5335,7 +5337,7 @@ class JuliaSectionBuilder:
             if base not in stock_sizes:
                 stock_order.append(base)
                 stock_sizes[base] = 0
-            stock_sizes[base] += 1
+            stock_sizes[base] += self._u0_size(entry)
 
         lines = ["const _state_map = ["]
         idx = 1

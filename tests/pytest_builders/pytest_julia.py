@@ -5080,9 +5080,9 @@ class TestXmileDelayFixed:
             jl_path = translate_to_julia(xmile)
         content = jl_path.read_text()
         # The embedded delay must be lifted: _edf0 becomes an auxiliary backed
-        # by a pipeline stock (_df_pipe_1__edf0 etc.) in the ODE state vector.
+        # by a pipeline stock (_df_pipe__edf0) in the ODE state vector.
         assert "_edf0" in content
-        assert "_df_pipe_1__edf0" in content
+        assert "_df_pipe__edf0" in content
 
 
 class TestEmbeddedDelayDrain2D:
@@ -6301,10 +6301,12 @@ class TestSubscriptedExpansions:
         sb = _section_builder_from_elements([elem], subscripts=[sr], backend="mtk")
         sb.build_section()
         eqs = [e for eqs, _ in sb.built_elements.values() for e in eqs]
-        assert any("_df_pipe_2_df_sub" in e for e in eqs), eqs
-        assert any("[" in d for d in sb.stock_decls)
+        assert any("_df_pipe_df_sub[_k - 1, _i0]" in e for e in eqs), eqs
+        assert "@variables _df_pipe_df_sub(t)[1:2, 1:N_SECTOR]" in sb.stock_decls
+        # one entry per element, for its 2 stages
         u0_entries = [e for e in sb.u0_entries if "_df_pipe_" in e]
-        assert len(u0_entries) == 4, sb.u0_entries   # 2 stages x 2 elements
+        assert u0_entries == ["_df_pipe_df_sub[1:2, 1] => 5.0",
+                              "_df_pipe_df_sub[1:2, 2] => 5.0"], sb.u0_entries
 
     def test_delay_fixed_delay_time_evaluated_at_initial_time(self):
         """As Python PySD, a changing delay time is read at the initial time:
@@ -6320,9 +6322,7 @@ class TestSubscriptedExpansions:
             [elem, _make_control_element("INITIAL TIME", 0.0),
              _make_control_element("TIME STEP", 1.0)])
         sb.build_section()
-        eqs = [e for eqs, _ in sb.built_elements.values() for e in eqs]
-        assert any("_df_pipe_2_dst" in e for e in eqs), eqs
-        assert not any("_df_pipe_3_dst" in e for e in eqs), eqs
+        assert "@variables _df_pipe_dst(t)[1:2]" in sb.stock_decls, sb.stock_decls
 
     # ------------------------------------------------------------------
     # Subscripted SAMPLE IF TRUE (lines 2388-2415)
@@ -7540,9 +7540,10 @@ class TestSubscriptedDelayFixedArguments:
                                 subscripts=[dim1], path=tmp_path / "m.mdl")
         model = AbstractModel(original_path=tmp_path / "m.mdl", sections=(section,))
         content = JuliaModelBuilder(model).build_model().read_text()
-        assert "(r_subs[_i0] - _df_pipe_1_r_delayed_subs[_i0])" in content
-        assert "r_subs[1],  # _df_pipe_1_r_delayed_subs[1]" in content
-        assert "r_subs[2],  # _df_pipe_1_r_delayed_subs[2]" in content
+        assert ("(_k == 1 ? r_subs[_i0] : _df_pipe_r_delayed_subs[_k - 1, _i0])"
+                in content)
+        assert "fill(r_subs[1], 2)...,  # _df_pipe_r_delayed_subs[1:2, 1]" in content
+        assert "fill(r_subs[2], 2)...,  # _df_pipe_r_delayed_subs[1:2, 2]" in content
 
 
 class TestFlatArrayAuxiliary:

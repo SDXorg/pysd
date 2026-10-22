@@ -113,6 +113,11 @@ Documentation
 
 Performance
 ~~~~~~~~~~~
+- Julia builder: the stages of a ``DELAY FIXED`` are one array stock and one
+  loop in the generated code, instead of one variable and one equation per
+  stage.  Models with long fixed delays generate far less code (a large model
+  with 1,760-stage delays went from about 400,000 to 12,000 lines), which
+  Julia can compile. (`@rogersamso <https://github.com/rogersamso>`_)
 
 Internal Changes
 ~~~~~~~~~~~~~~~~

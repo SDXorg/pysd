@@ -418,13 +418,11 @@ Supported Vensim features
      - Supported (expanded in place before building: each call gets its own
        copies of the macro's variables, named
        ``<variable>_<macro>_<element>``)
+     - Supported
    * - Subranges, subscript mapping, ranges defined with other ranges,
        subscripts used as values
      - Supported (as the Python builder: a subscript used as a value is its
        position in the largest range containing it)
-     - Supported
-   * - Macros (stateless)
-     - Supported (companion ``.jl`` function file per macro)
      - Supported
    * - XMILE ``MIN``/``MAX`` aggregation (``vmin_xmile``, ``vmax_xmile``)
      - Supported
@@ -536,6 +534,9 @@ Limitations
   ``4 + STEP(2, 15)``).  Only if the delay time cannot be evaluated at
   translation time (e.g. it depends on external data) does the builder fall
   back to a first-order ODE approximation, with a warning.
+  The stages of each delay are one array stock (``_df_pipe_<name>``, with
+  the stage as its first index), so long delays (hundreds of time steps)
+  add one loop to the generated code, not one variable per stage.
 
 - **Non-integer SMOOTH N order** is rounded to the nearest integer; the
   Python builder supports arbitrary real-valued orders.  A SMOOTH N or
