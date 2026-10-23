@@ -522,7 +522,7 @@ class TestNewConstructsTranslation:
         assert "DELAY FIXED is not supported" not in content
         # The model has delay_time=2 and time_step=0.0625 → N=32 stages
         # The 32 stages are one array stock
-        assert "_df_pipe_output[1:32]" in content, "Pipeline must have 32 stages"
+        assert "_df_pipe_output = zeros(32)" in content, "Pipeline must have 32 stages"
         assert "_k in 1:32" in content
 
     # --- TREND ---

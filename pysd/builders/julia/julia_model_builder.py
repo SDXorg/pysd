@@ -299,6 +299,7 @@ class JuliaSectionBuilder:
         self.backend: str = backend
         self._ode_active_initial: bool = False
         self._ode_p_names: Set[str] = set()
+        self._ode_stock_ndims: Dict[str, int] = {}
         # constants whose value the translation used: name -> what it fixed
         self._fixed_inputs: Dict[str, str] = {}
         self._fix_reason: Optional[str] = None
@@ -4975,14 +4976,18 @@ class JuliaSectionBuilder:
 
         # State: named, shaped
         axes = []
+        self._ode_stock_ndims = {}
         for name in stock_indices:
             size = stock_sizes[name]
             if size == 1:
                 axes.append(f"{name} = 0.0")
+                self._ode_stock_ndims[name] = 0
             elif name in stock_dims and len(stock_dims[name]) >= 2:
                 axes.append(f"{name} = zeros({', '.join(stock_dims[name])})")
+                self._ode_stock_ndims[name] = len(stock_dims[name])
             else:
                 axes.append(f"{name} = zeros({size})")
+                self._ode_stock_ndims[name] = 1
         lines.append("# Stocks by name and shape; the solver sees one flat vector")
         lines.append("const _state_axes = getaxes(ComponentArray(; " + ", ".join(axes) + "))")
         lines.append("_named(u) = u isa ComponentArray ? u : ComponentArray(u, _state_axes)")
@@ -5414,66 +5419,105 @@ class JuliaSectionBuilder:
         size = self._u0_size(entry)
         return rhs if size == 1 else f"fill({rhs}, {size})..."
 
-    def _u0_value_lines(self, u0_entries: List[str]) -> List[str]:
-        """The initial values inside ``Float64[...]``, one line per stock
-        when its cells follow one formula: ``fill(0.0, 58)...`` or
-        ``[src[_i0] for _i0 in 1:14]...`` (a comprehension lists its cells
-        first index fastest, the order of the state vector); otherwise one
-        line per entry."""
-        groups: List[Tuple[str, List[Tuple[List[str], str, str]]]] = []
+    def _u0_assignments(self, u0_entries: List[str], target: str) -> List[str]:
+        """``target.stock = value`` for every stock: the model's stocks, then
+        the internal ones.  A stock whose cells follow one formula is one
+        line (``target.x .= 0.0``, ``target.x .= [src[i] for i in 1:14]``);
+        otherwise one line per cell."""
+        groups: List[Tuple[str, List[Tuple[List[str], str]]]] = []
         for entry in u0_entries:
             lhs, rhs = (x.strip() for x in entry.split("=>", 1))
             base, _, idx = lhs.partition("[")
             index = [i.strip() for i in idx.rstrip("]").split(",")] if idx else []
             if not groups or groups[-1][0] != base:
                 groups.append((base, []))
-            groups[-1][1].append((index, rhs, entry))
+            groups[-1][1].append((index, rhs))
+        own = [g for g in groups if not g[0].startswith("_")]
+        internal = [g for g in groups if g[0].startswith("_")]
         lines: List[str] = []
-        for base, cells in groups:
-            compact = self._u0_compact(cells) if len(cells) > 1 else None
-            if compact is None:
-                lines += [f"{self._u0_value(e)},  # {e.split('=>', 1)[0].strip()}"
-                          for _, _, e in cells]
-            else:
-                lines.append(f"{compact},  # {base}")
+        for base, cells in own:
+            lines += self._u0_stock_lines(target, base, cells)
+        if internal:
+            lines.append("# the translation's own stocks (DELAY FIXED stages, SAMPLE IF TRUE, ...)")
+            for base, cells in internal:
+                lines += self._u0_stock_lines(target, base, cells)
         return lines
 
+    def _u0_stock_lines(self, target: str, base: str, cells) -> List[str]:
+        ndims = self._ode_stock_ndims.get(base, 1)
+        name = f"{target}.{base}"
+        if ndims == 0:
+            return [f"{name} = {cells[0][1]}"]
+        pattern = self._u0_pattern(cells)
+        if pattern is not None:
+            kind, value, iterators = pattern
+            if kind == "same":
+                return [f"{name} .= {value}"]
+            if kind == "numbers":
+                return [f"{name} .= [{value}]"]
+            comprehension = f"[{value} for {', '.join(iterators)}]"
+            if ndims != len(iterators):
+                comprehension = f"vec({comprehension})"
+            return [f"{name} .= {comprehension}"]
+        # one line per cell, by its indices (or its position in a flat stock)
+        out, position = [], 1
+        for index, rhs in cells:
+            size = 1
+            for i in index:
+                if ":" in i:
+                    a, _, b = i.partition(":")
+                    size *= int(b) - int(a) + 1
+            if ndims == len(index):
+                op = " .= " if size > 1 else " = "
+                out.append(f"{name}[{', '.join(index)}]{op}{rhs}")
+            elif size > 1:
+                out.append(f"{name}[{position}:{position + size - 1}] .= {rhs}")
+            else:
+                out.append(f"{name}[{position}] = {rhs}")
+            position += size
+        return out
+
     @staticmethod
-    def _u0_compact(cells) -> Optional[str]:
-        """One expression for the cells of a stock, or None."""
+    def _u0_pattern(cells):
+        """The cells of a stock as one formula: ("same", value, []) when all
+        are the same value, ("each", formula, iterators) when they follow one
+        formula of their indices (i, j, k; the first index fastest, the order
+        of the stock's cells), ("numbers", "1.0, 2.0", []) for different
+        numbers of a vector; or None."""
         first = cells[0][0]
         n = len(first)
-        if n == 0 or any(len(index) != n for index, _, _ in cells):
+        if n == 0 or any(len(index) != n for index, _ in cells):
             return None
         ranges = {k: v for k, v in enumerate(first) if ":" in v}
         if any(any((":" in index[k]) != (k in ranges) or (k in ranges and index[k] != ranges[k])
-                   for k in range(n)) for index, _, _ in cells):
+                   for k in range(n)) for index, _ in cells):
             return None
         ints = [k for k in range(n) if k not in ranges]
         try:
-            values = [[int(index[k]) for k in ints] for index, _, _ in cells]
+            values = [[int(index[k]) for k in ints] for index, _ in cells]
         except ValueError:
             return None
         extents = [max(v[j] for v in values) for j in range(len(ints))]
-        # the cells, first index fastest, over 1..extent of each index
         expected = [list(reversed(c)) for c in itertools.product(
             *[range(1, e + 1) for e in reversed(extents)])]
         if values != expected:
             return None
-        loop = {k: f"_i{j}" for j, k in enumerate(ints)}
-        # The formula of every cell, with its integers taken out: each
-        # integer is the same in every cell (a number of the formula) or
-        # the cell's index at some position (a loop variable)
+        # each integer of the formulas is the same in every cell (a number of
+        # the formula) or the cell's index at some position (a loop variable)
         token = r"(?<![\w.])\d+(?![\w.])"
-        skeletons = {re.sub(token, "#", rhs) for _, rhs, _ in cells}
         number = r"-?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?"
-        if len(skeletons) != 1:
-            if all(re.fullmatch(number, rhs) for _, rhs, _ in cells) and not ranges:
-                return "Float64[" + ", ".join(rhs for _, rhs, _ in cells) + "]..."
+        if len({re.sub(token, "#", rhs) for _, rhs in cells}) != 1:
+            if not ranges and len(ints) == 1 and all(re.fullmatch(number, rhs) for _, rhs in cells):
+                return ("numbers", ", ".join(rhs for _, rhs in cells), [])
             return None
-        found = [[int(x) for x in re.findall(token, rhs)] for _, rhs, _ in cells]
+        names = ["i", "j", "k", "l"]
+        if len(ints) > len(names) or any(re.search(rf"\b{v}\b", cells[0][1]) for v in names):
+            names = [f"_i{j}" for j in range(len(ints))]
+        loop = {k: names[j] for j, k in enumerate(ints)}
+        found = [[int(x) for x in re.findall(token, rhs)] for _, rhs in cells]
         parts = re.split(token, cells[0][1])
-        template = parts[0]
+        formula = parts[0]
+        used = False
         for j in range(len(found[0])):
             column = [f[j] for f in found]
             if len(set(column)) == 1:
@@ -5483,19 +5527,13 @@ class JuliaSectionBuilder:
                           if all(c == v[ints.index(k)] for c, v in zip(column, values))), None)
                 if k is None:
                     return None
-                text = loop[k]
-            template += text + parts[j + 1]
-        iterators = []
-        for k in range(n):
-            if k in ranges:
-                iterators.append(f"_r{k} in {ranges[k]}")
-            else:
-                iterators.append(f"{loop[k]} in 1:{extents[ints.index(k)]}")
-        if not re.search(r"\b_i\d+\b", template):
-            sizes = [str(int(b) - int(a) + 1) if k in ranges else str(extents[ints.index(k)])
-                     for k, (a, _, b) in ((k, ranges.get(k, "1:1").partition(":")) for k in range(n))]
-            return f"fill({template}, {', '.join(sizes)})..."
-        return f"[{template} for {', '.join(iterators)}]..."
+                text, used = loop[k], True
+            formula += text + parts[j + 1]
+        if not used:
+            return ("same", formula, [])
+        iterators = [f"_ in {ranges[k]}" if k in ranges
+                     else f"{loop[k]} in 1:{extents[ints.index(k)]}" for k in range(n)]
+        return ("each", formula, iterators)
 
     def _u0_block(self) -> str:
         if self.backend == "mtk":
@@ -5531,44 +5569,35 @@ class JuliaSectionBuilder:
         # changes.
         from_observe = sorted(used - inputs - controls)
 
+        # local names for the state: s and next, unless the model uses them
+        taken = used | called | set(from_p) | set(from_observe)
+        sv, nv = ("s", "next") if not {"s", "next"} & taken else ("_s", "_next")
         n = sum(self._u0_size(entry) for entry in u0_entries)
-        values = self._u0_value_lines(u0_entries)
         lines = [
             "# The stocks at the initial time, with the constants p",
             "function initial_state(p = _params)",
         ]
+        body: List[str] = []
         if from_p:
-            lines.append("    (; " + ", ".join(from_p) + ") = p")
+            body.append("(; " + ", ".join(from_p) + ") = p")
+        body.append(f"{sv} = ComponentArray(zeros({n}), _state_axes)")
         if not from_observe:
-            lines.append("    return Float64[")
-            lines += [f"        {v}" for v in values]
-            lines += ["    ]", "end"]
+            body += self._u0_assignments(u0_entries, sv)
         else:
-            lines += [
-                f"    _u = zeros(Float64, {n})",
-                f"    for _ in 1:{n + 1}",
-                "        _obs_init = observe(_u, initial_time; p = p)",
+            body += [
+                f"for _ in 1:{n + 1}",
+                f"    _obs_init = observe({sv}, initial_time; p = p)",
             ]
-            for tok in from_observe:
-                lines.append(f"        {tok} = get(_obs_init, \"{tok}\", 0.0)")
-            lines.append("        _next = Float64[")
-            lines += [f"            {v}" for v in values]
-            lines += [
-                "        ]",
-                "        isequal(_next, _u) && break",
-                "        _u = _next",
-                "    end",
-                "    return _u",
-                "end",
-            ]
+            body += [f"    {tok} = get(_obs_init, \"{tok}\", 0.0)" for tok in from_observe]
+            body.append(f"    {nv} = zero({sv})")
+            body += ["    " + ln for ln in self._u0_assignments(u0_entries, nv)]
+            body += [f"    isequal({nv}, {sv}) && break", f"    {sv} = {nv}", "end"]
+        body.append(f"return getdata({sv})")
         if self._ode_active_initial:
             # ACTIVE INITIAL gives its initial value while the stocks start
-            lines[1:2] = ["function initial_state(p = _params)",
-                          "    _initialising[] = true",
-                          "    try"]
-            k = len(lines) - 1
-            lines[4:k] = ["    " + ln for ln in lines[4:k]]
-            lines[k:] = ["    finally", "        _initialising[] = false", "    end", "end"]
+            body = (["_initialising[] = true", "try"] + ["    " + ln for ln in body]
+                    + ["finally", "    _initialising[] = false", "end"])
+        lines += ["    " + ln for ln in body] + ["end"]
         lines += ["", "u0 = initial_state()"]
         return "\n".join(lines) + "\n"
 

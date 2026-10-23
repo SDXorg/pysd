@@ -4458,7 +4458,7 @@ class TestMacroExpansion:
         stock = "level_stock_macro_stock_macro"
         assert "return 0.0" not in content
         if backend == "ode":
-            assert f"1.1,  # {stock}" in content                # initial value
+            assert f"s.{stock} = 1.1" in content                # initial value
             assert f'("{stock}", 1, String[])' in content       # state map
         else:
             assert f"{stock} => 1.1" in content
@@ -5482,7 +5482,7 @@ class TestBackendDispatch:
     def test_ode_u0_is_float64_array(self, tmp_path):
         content = self._build(tmp_path, "ode")
         assert "function initial_state(p = _params)" in content
-        assert "return Float64[" in content or "_next = Float64[" in content
+        assert "s = ComponentArray(zeros(" in content and "return getdata(s)" in content
 
     def test_ode_u0_has_numeric_initial(self, tmp_path):
         content = self._build(tmp_path, "ode")
@@ -7570,7 +7570,7 @@ class TestSubscriptedDelayFixedArguments:
                 in content)
         # every stage of each element starts at that element: one line, the
         # stage first (the order of the state vector)
-        assert "[r_subs[_i0] for _r0 in 1:2, _i0 in 1:2]...,  # _df_pipe_r_delayed_subs" in content
+        assert "s._df_pipe_r_delayed_subs .= [r_subs[i] for _ in 1:2, i in 1:2]" in content
 
 
 class TestSumOverSubrange:
@@ -8283,7 +8283,7 @@ effect(
         content = _translate_mdl(tmp_path, self.MODEL)
         init = _block(content, "function initial_state(p = _params)")
         assert "    (; twice_start) = p" in init
-        assert "        twice_start,  # stock" in init
+        assert "    s.stock = twice_start" in init
         assert "observe(" not in init                 # no auxiliary needed
         assert "\nu0 = initial_state()\n" in content
         assert content.index("const _params = params()") < content.index("u0 = initial_state()")
@@ -8319,8 +8319,8 @@ initial number=
 	~		|
 """)
         init = _block(content, "function initial_state(p = _params)")
-        assert "inflow,  # initial_inflow" in init
-        assert "(rate * 10.0),  # initial_rate" in init
+        assert re.search(r"(s|next)\.initial_inflow = inflow\n", init)
+        assert re.search(r"(s|next)\.initial_rate = \(rate \* 10\.0\)\n", init)
         assert "initial_number = pysd_input(_given, :initial_number, 7.0)" in content
         assert "d.initial_inflow = 0.0" in content
 
@@ -8482,7 +8482,7 @@ stock= INTEG (
 """)
         init = _block(content, "function initial_state(p = _params)")
         assert "    (; table) = p" in init
-        assert "table(5.0),  # stock" in init
+        assert "    s.stock = table(5.0)" in init
 
 
 class TestObserveReportsDataAndControls:
@@ -8608,19 +8608,61 @@ numbers[c]= INTEG (1, 5)
 	~		|
 """)
         init = _block(content, "function initial_state(p = _params)")
-        assert "fill(0.0, 3)...,  # zeros" in init
-        assert "[source[_i0, _i1] for _i0 in 1:3, _i1 in 1:2]...,  # copy" in init
-        assert "[source[_i1, _i0] for _i0 in 1:2, _i1 in 1:3]...,  # swapped" in init
-        assert "Float64[7.0, 3.0, 5.0]...,  # numbers" in init
+        assert "    s.zeros .= 0.0" in init
+        assert "    s.copy .= [source[i, j] for i in 1:3, j in 1:2]" in init
+        assert "    s.swapped .= [source[j, i] for i in 1:2, j in 1:3]" in init
+        assert "    s.numbers .= [7.0, 3.0, 5.0]" in init
+        assert "    return getdata(s)" in init
 
     def test_cells_that_do_not_follow_one_formula(self):
-        compact = JuliaSectionBuilder._u0_compact
-        cells = [(["1"], "a[1]", ""), (["2"], "b[2]", "")]
-        assert compact(cells) is None
-        cells = [(["2"], "a[2]", ""), (["1"], "a[1]", "")]       # not in order
-        assert compact(cells) is None
-        cells = [(["1"], "f(1) + 1", ""), (["2"], "f(2) + 1", ""), (["3"], "f(3) + 1", "")]
-        assert compact(cells) == "[f(_i0) + 1 for _i0 in 1:3]..."
+        pattern = JuliaSectionBuilder._u0_pattern
+        assert pattern([(["1"], "a[1]"), (["2"], "b[2]")]) is None
+        assert pattern([(["2"], "a[2]"), (["1"], "a[1]")]) is None       # not in order
+        assert (pattern([(["1"], "f(1) + 1"), (["2"], "f(2) + 1"), (["3"], "f(3) + 1")])
+                == ("each", "f(i) + 1", ["i in 1:3"]))
+        # a model variable called i: other loop names
+        assert pattern([(["1"], "i * a[1]"), (["2"], "i * a[2]")]) == (
+            "each", "i * a[_i0]", ["_i0 in 1:2"])
+        assert pattern([(["1:32"], "1.0")]) == ("same", "1.0", [])
+
+    def test_names_of_the_model_are_kept_apart(self, tmp_path):
+        """A model variable called s: the state is _s."""
+        content = _translate_mdl(tmp_path, """
+s=
+	3
+	~
+	~		|
+
+stock= INTEG (
+	1,
+		s)
+	~
+	~		|
+""")
+        init = _block(content, "function initial_state(p = _params)")
+        assert "    _s.stock = s" in init and "return getdata(_s)" in init
+
+    def test_internal_stocks_come_last(self, tmp_path):
+        content = _translate_mdl(tmp_path, """
+inflow=
+	2
+	~
+	~		|
+
+delayed=
+	DELAY FIXED(inflow, 1, 0)
+	~
+	~		|
+
+level= INTEG (
+	delayed,
+		5)
+	~
+	~		|
+""")
+        init = _block(content, "function initial_state(p = _params)")
+        assert init.index("s.level = 5.0") < init.index("# the translation's own stocks")
+        assert init.index("# the translation's own stocks") < init.index("s._df_pipe_delayed")
 
 
 class TestStateMapHasTheModelsStocks:
