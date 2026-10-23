@@ -72,6 +72,10 @@ Deprecations
 Bug fixes
 ~~~~~~~~~
 - Fix setting parmas with dimensions (:issue:`484`). (`@enekomartinmartinez <https://github.com/enekomartinmartinez>`_)
+- No deprecation warnings with pandas 3.1: results are indexed by time
+  without ``inplace``, and spreadsheets are read with an explicit engine
+  (openpyxl for ``.xlsx``/``.xlsm``, as before; calamine for ``.xls`` when
+  available, as xlrd is deprecated).
 - Julia builder: ``SUM`` (and ``PROD``, ``VMIN``, ``VMAX``) over a
   subscripted ``GET DATA`` or ``GET LOOKUPS`` variable reads the data
   (``x(i, t)``) instead of an array of zeros.

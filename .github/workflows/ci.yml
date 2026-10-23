@@ -83,7 +83,8 @@ jobs:
             Pkg.activate("pysd_ci", shared=true)
             Pkg.develop(PackageSpec(path="pysd/builders/julia/PySD.jl"))
             Pkg.add(["OrdinaryDiffEq", "OrdinaryDiffEqLowOrderRK", "ModelingToolkit",
-                     "Symbolics", "DataInterpolations", "NCDatasets", "JSON3"])
+                     "Symbolics", "DataInterpolations", "NCDatasets", "JSON3",
+                     "ComponentArrays"])
             Pkg.precompile()
           '
       - name: Install Python dependencies
@@ -98,7 +99,9 @@ jobs:
           PYSD_JULIA_BACKENDS: ode,mtk
           PYSD_JULIA_MTK: subset  # full MTK set: julia-mtk-full.yml
         run: |
-          pytest tests/pytest_builders/pytest_julia_reference.py --cov=pysd
+          pytest tests/pytest_builders/pytest_julia_reference.py \
+                 tests/pytest_builders/pytest_julia_params.py \
+                 "tests/pytest_builders/pytest_julia.py::TestTidy" --cov=pysd
           coverage xml
       - name: Coveralls
         uses: coverallsapp/github-action@v2

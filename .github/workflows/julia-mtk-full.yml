@@ -47,7 +47,8 @@ jobs:
             Pkg.activate("pysd_ci", shared=true)
             Pkg.develop(PackageSpec(path="pysd/builders/julia/PySD.jl"))
             Pkg.add(["OrdinaryDiffEq", "OrdinaryDiffEqLowOrderRK", "ModelingToolkit",
-                     "Symbolics", "DataInterpolations", "NCDatasets", "JSON3"])
+                     "Symbolics", "DataInterpolations", "NCDatasets", "JSON3",
+                     "ComponentArrays"])
             Pkg.precompile()
           '
       - name: Install Python dependencies
