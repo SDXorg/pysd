@@ -12,6 +12,7 @@ reference outputs, for each backend) is in pytest_julia_reference.py.
 """
 from __future__ import annotations
 
+import re
 import shutil
 import warnings
 from pathlib import Path
@@ -258,7 +259,7 @@ class TestTranslationAllModels:
         content = jl_path.read_text(encoding="utf-8")
 
         assert "using OrdinaryDiffEq" in content, f"{folder}: missing 'using OrdinaryDiffEq'"
-        assert "function rhs!" in content, f"{folder}: missing 'function rhs!'"
+        assert "function model!" in content, f"{folder}: missing 'function model!'"
         assert "run_model" in content, f"{folder}: missing 'run_model'"
         assert "function observe" in content, f"{folder}: missing 'function observe'"
 
@@ -302,7 +303,7 @@ class TestTranslationCleanModels:
         jl_path = translate_to_julia(dst)
         content = jl_path.read_text(encoding="utf-8")
         # Every model has at minimum the ODE boilerplate
-        assert "function rhs!" in content
+        assert "function model!" in content
 
     @pytest.mark.parametrize(
         "folder,mdl_path",
@@ -342,7 +343,7 @@ class TestTranslationFeatures:
 
     def test_integ_emits_ode(self, tmp_path):
         content = self._translate("abs", tmp_path)
-        assert "du[" in content, "INTEG must produce du[i] = ... ODE derivative"
+        assert re.search(r"\bd\.\w+", content), "INTEG must produce d.<stock> = ... rates of change"
 
     def test_lookup_emits_interpolation(self, tmp_path):
         content = self._translate("lookups_inline", tmp_path)
@@ -377,14 +378,14 @@ class TestTranslationFeatures:
     def test_game_passthrough(self, tmp_path):
         """GAME should not break translation."""
         content = self._translate("game", tmp_path)
-        assert "function rhs!" in content
+        assert "function model!" in content
 
     @pytest.mark.filterwarnings("ignore::UserWarning")
     def test_delay_emits_pipeline_levels(self, tmp_path):
         """DELAY1 / DELAY3 expand into auxiliary _dl level stocks."""
         content = self._translate("delays", tmp_path)
         assert "_dl" in content, "DELAY must introduce pipeline level variables"
-        assert "du[" in content, "each DELAY level must have its own ODE derivative"
+        assert re.search(r"\bd\.\w+", content), "each DELAY level must have its own rate of change"
 
 
 # ---------------------------------------------------------------------------
@@ -505,7 +506,7 @@ class TestNewConstructsTranslation:
         if not mdl.exists():
             pytest.skip("julia_delay_fixed test model not found")
         content = self._translate(mdl, tmp_path)
-        assert "function rhs!" in content
+        assert "function model!" in content
 
     def test_delay_fixed_emits_pipeline_stages(self, tmp_path, julia_model):
         """DELAY FIXED must expand into N Euler pipeline stages (exact transport delay)."""
@@ -516,7 +517,7 @@ class TestNewConstructsTranslation:
         # Must declare internal pipeline stocks (prefix _df_pipe_)
         assert "_df_pipe_" in content, "DELAY FIXED must declare _df_pipe_ pipeline stocks"
         # Must produce ODE derivatives
-        assert "du[" in content, "DELAY FIXED must produce du[i] = ... ODE derivatives"
+        assert re.search(r"\bd\.\w+", content), "DELAY FIXED must produce d.<stock> = ... rates of change"
         # Must NOT emit a 'not supported' warning marker in generated code
         assert "DELAY FIXED is not supported" not in content
         # The model has delay_time=2 and time_step=0.0625 → N=32 stages
@@ -532,7 +533,7 @@ class TestNewConstructsTranslation:
         if not mdl.exists():
             pytest.skip("julia_trend test model not found")
         content = self._translate(mdl, tmp_path)
-        assert "function rhs!" in content
+        assert "function model!" in content
 
     def test_trend_emits_smooth_stock_and_output(self, tmp_path, julia_model):
         """TREND must introduce a smooth level stock and an algebraic output."""
@@ -542,7 +543,7 @@ class TestNewConstructsTranslation:
         content = self._translate(mdl, tmp_path)
         # Internal smooth level
         assert "_sm_" in content, "TREND must declare a _sm_ smooth stock"
-        assert "du[" in content, "TREND must produce a du[i] = ... ODE derivative"
+        assert re.search(r"\bd\.\w+", content), "TREND must produce a d.<stock> = ... rate of change"
         # Output must be computed (not another ODE)
         assert "trend_of_input" in content
 
@@ -554,7 +555,7 @@ class TestNewConstructsTranslation:
         if not mdl.exists():
             pytest.skip("julia_forecast test model not found")
         content = self._translate(mdl, tmp_path)
-        assert "function rhs!" in content
+        assert "function model!" in content
 
     def test_forecast_emits_smooth_stock_and_projection(self, tmp_path, julia_model):
         """FORECAST must introduce a smooth level and project input forward."""
@@ -563,7 +564,7 @@ class TestNewConstructsTranslation:
             pytest.skip("julia_forecast test model not found")
         content = self._translate(mdl, tmp_path)
         assert "_sm_" in content, "FORECAST must declare a _sm_ smooth stock"
-        assert "du[" in content, "FORECAST must produce a du[i] = ... ODE derivative"
+        assert re.search(r"\bd\.\w+", content), "FORECAST must produce a d.<stock> = ... rate of change"
         # Projection formula: input * (1.0 + trend * horizon)
         assert "* (1.0 +" in content or "*(1.0 +" in content, \
             "FORECAST output must multiply input by (1 + trend*horizon)"
@@ -576,7 +577,7 @@ class TestNewConstructsTranslation:
         if not mdl.exists():
             pytest.skip("julia_sample_if_true test model not found")
         content = self._translate(mdl, tmp_path)
-        assert "function rhs!" in content
+        assert "function model!" in content
 
     def test_sample_if_true_emits_conditional_stock(self, tmp_path, julia_model):
         """SAMPLE IF TRUE must expand into a hold stock with correct instantaneous output."""
@@ -587,7 +588,7 @@ class TestNewConstructsTranslation:
         # Must declare a hold stock
         assert "_sit_" in content, "SAMPLE IF TRUE must declare a _sit_ hold stock"
         # Must produce a conditional ODE for the hold stock
-        assert "du[" in content, "SAMPLE IF TRUE must produce a du[i] = ... ODE derivative"
+        assert re.search(r"\bd\.\w+", content), "SAMPLE IF TRUE must produce a d.<stock> = ... rate of change"
         # Condition must appear in the ODE
         assert "ifelse" in content, "SAMPLE IF TRUE ODE must use ifelse for condition"
         # The output variable must use the instantaneous conditional expression,
@@ -870,8 +871,9 @@ class TestNewFeatureIntegration:
         )
         path = JuliaModelBuilder(model).build_model()
         content = path.read_text(encoding="utf-8")
-        assert "my_var[1]" in content
-        assert "my_var[3]" in content
+        # numbers for every element: one array (the second component, over
+        # the whole range, is the last one to set each element)
+        assert "my_var = pysd_input(_given, :my_var, pysd_safe(fill(2.0, 3)))" in content
 
     def test_description_and_units_emitted_as_comments(self, tmp_path):
         """Variables with documentation and/or units must have them as # comments."""

@@ -143,7 +143,7 @@ def _outer_for_clause(eq: str) -> str:
 
 
 #: PySD.jl version the generated models are written for (checked on load).
-PYSD_JL_VERSION = "0.2.4"
+PYSD_JL_VERSION = "0.2.5"
 
 # Control variable identifiers produced by Vensim
 _CONTROL_IDENTIFIERS = frozenset(
@@ -297,6 +297,11 @@ class JuliaSectionBuilder:
         backend: str = "ode",
     ) -> None:
         self.backend: str = backend
+        self._ode_active_initial: bool = False
+        self._ode_p_names: Set[str] = set()
+        # constants whose value the translation used: name -> what it fixed
+        self._fixed_inputs: Dict[str, str] = {}
+        self._fix_reason: Optional[str] = None
         self.name: str = abstract_section.name
         self.path: Path = abstract_section.path.with_suffix(".jl")
         self.root: Path = self.path.parent
@@ -378,6 +383,8 @@ class JuliaSectionBuilder:
         self._var_dims: Dict[str, List[str]] = {}
         # Names of identifiers that are lookup/data functions (need `(t)` when referenced bare)
         self._lookup_func_names: Set[str] = set()
+        # GET DATA variables (functions of time in params), reported by observe
+        self._data_names: Set[str] = set()
         # Tab-data entries: list of (julia_id, real_name, method_sym, dim_elem_lists)
         # where dim_elem_lists is a list of element-label lists (one per subscript dim)
         self._tab_data_entries: List[Tuple[str, str, str, List[List[str]]]] = []
@@ -428,6 +435,8 @@ class JuliaSectionBuilder:
                 if all(isinstance(c.ast, GetLookupsStructure) for c in elem.components) or \
                    any(isinstance(c.ast, GetDataStructure) for c in elem.components):
                     self._lookup_func_names.add(identifier)
+                if any(isinstance(c.ast, GetDataStructure) for c in elem.components):
+                    self._data_names.add(identifier)
 
         # Emit subscript size constants (const N_DIMNAME = n)
         for name, size in sorted(self._subs_sizes.items()):
@@ -935,7 +944,12 @@ class JuliaSectionBuilder:
         #     the initial condition at t0 and holds it constant:
         #       D(initial_var) ~ 0.0 ; initial_var(t0) = inner_expr
         if isinstance(ast, InitialStructure):
-            val = self._resolve_initial_value(ast.initial)
+            if self.backend == "ode" and not isinstance(ast.initial, (int, float)):
+                # evaluated by initial_state from the parameters, so that it
+                # follows the constants given to params()
+                val = None
+            else:
+                val = self._resolve_initial_value(ast.initial)
             if val is not None:
                 if not is_control:
                     self.param_decls.append(f"@parameters {identifier} = {val}")
@@ -1035,7 +1049,7 @@ class JuliaSectionBuilder:
             except (TypeError, ValueError):
                 order = None
                 if isinstance(ast, SmoothNStructure):
-                    t0_val = self._eval_ast_at_t0(ast.order)
+                    t0_val = self._eval_fixing(ast.order, f"the order of SMOOTH N in {identifier}")
                     if t0_val is not None:
                         order = max(1, round(t0_val))
                 if order is None:
@@ -1053,7 +1067,7 @@ class JuliaSectionBuilder:
                 order = None
                 if isinstance(ast, DelayNStructure):
                     # the order is read once, at the initial time, and truncated
-                    t0_val = self._eval_ast_at_t0(ast.order)
+                    t0_val = self._eval_fixing(ast.order, f"the order of DELAY N in {identifier}")
                     if t0_val is not None:
                         order = max(1, int(t0_val))
                 if order is None:
@@ -1065,6 +1079,9 @@ class JuliaSectionBuilder:
             # the delay time (at the initial time)
             delay0 = self._eval_ast_at_t0(ast.delay_time)
             ts0 = self._eval_ast_at_t0(ReferenceStructure("time_step"))
+            if delay0 is not None and ts0 and order > 1 and order * ts0 > delay0:
+                # the order depends on the delay time
+                self._eval_fixing(ast.delay_time, f"the order of the delay in {identifier}")
             if delay0 is not None and ts0:
                 while order > 1 and order * ts0 > delay0:
                     order -= 1
@@ -1380,8 +1397,8 @@ class JuliaSectionBuilder:
         self, elem: AbstractElement, identifier: str
     ) -> AbstractElement:
         """A variable defined in parts where some parts are GET CONSTANTS and
-        others are equations (pymedeas: ``max potential RES elec TWe[hydro] =
-        GET DIRECT CONSTANTS(...)``, ``[geot elec] = ...``): each constant
+        others are equations (``x[a1] = GET DIRECT CONSTANTS(...)``,
+        ``x[a2] = y * 2``): each constant
         part is read into its own module constant and referenced from that
         part, so the variable is built like any variable defined in parts."""
         comps = elem.components
@@ -1561,6 +1578,17 @@ class JuliaSectionBuilder:
                         f"({input_expr} - {df_name}[{idx}]) / {delay_expr}"
                     )
                     equations.append(f"{identifier}[{idx}] ~ {df_name}[{idx}]")
+
+            elif (def_subs and def_subs[0] == dim_name and covered_indices
+                  and not isinstance(comp.ast, (int, float))):
+                # Auxiliary component over the full range (but the excluded
+                # elements): one loop over its elements, as without EXCEPT
+                rhs_expr = self._nd_visitor(dims, ["_i0"]).visit(comp.ast)
+                index_list = (f"1:{self._jl_n(dim_name)}"
+                              if covered_indices == list(range(1, len(dim_elems) + 1))
+                              else "[" + ", ".join(str(i) for i in covered_indices) + "]")
+                equations.append(
+                    f"[{identifier}[_i0] ~ {rhs_expr} for _i0 in {index_list}]...")
 
             else:
                 # Auxiliary component — use a per-index visitor with aligned
@@ -2128,6 +2156,16 @@ class JuliaSectionBuilder:
     # DELAY FIXED expansion
     # ------------------------------------------------------------------
 
+    def _eval_fixing(self, node, reason: str) -> Optional[float]:
+        """``_eval_ast_at_t0``, recording the constants it reads as fixed by
+        the translation (for *reason*): ``params()`` refuses new values for
+        them, which would need the model translated again."""
+        saved, self._fix_reason = self._fix_reason, reason
+        try:
+            return self._eval_ast_at_t0(node)
+        finally:
+            self._fix_reason = saved
+
     def _eval_ast_at_t0(self, node) -> Optional[float]:
         """Evaluate an abstract-expression AST node at t=0.
 
@@ -2181,6 +2219,8 @@ class JuliaSectionBuilder:
             if node.reference.lower() == "time":
                 return self._eval_ast_at_t0(ReferenceStructure("initial_time"))
             julia_id = self.namespace.get(node.reference)
+            if julia_id is not None and self._fix_reason:
+                self._fixed_inputs.setdefault(julia_id, self._fix_reason)
             if julia_id is not None:
                 val = self._try_eval_as_float(julia_id)
                 if val is not None:
@@ -2218,6 +2258,8 @@ class JuliaSectionBuilder:
             return float(expr)
         except ValueError:
             pass
+        if self._fix_reason and re.fullmatch(r"[a-z_]\w*", expr):
+            self._fixed_inputs.setdefault(expr, self._fix_reason)
         # Check pre-scanned constants (covers forward references — constants not
         # yet processed at the time this DELAY FIXED element is being built).
         if hasattr(self, "_prescanned_const_vals") and expr in self._prescanned_const_vals:
@@ -2289,9 +2331,14 @@ class JuliaSectionBuilder:
         ts_val = self._eval_ast_at_t0(ReferenceStructure("time_step"))
         if ts_val is None:
             ts_val = 1.0  # Vensim's default TIME STEP
-        dt_val = self._try_eval_as_float(delay_time_expr)
+        reason = f"the number of stages of DELAY FIXED in {identifier}"
+        self._fix_reason = reason
+        try:
+            dt_val = self._try_eval_as_float(delay_time_expr)
+        finally:
+            self._fix_reason = None
         if dt_val is None:
-            dt_val = self._eval_ast_at_t0(ast.delay_time)
+            dt_val = self._eval_fixing(ast.delay_time, reason)
         if dt_val is not None and ts_val is not None and ts_val > 0:
             N = max(round(dt_val / ts_val + 1e-6), 1)
             return self._expand_delay_fixed_pipeline(
@@ -3117,8 +3164,8 @@ class JuliaSectionBuilder:
     # ------------------------------------------------------------------
 
     def _place_data_parts_1d(self, identifier: str, data_comps, names) -> Optional[List[str]]:
-        """Data defined one element at a time (pymedeas: historic share of
-        losses vs extraction[liquids], [solids], [gases]): each part's series
+        """Data defined one element at a time (``x[a1]``, ``x[a3]``, ``x[a2]``,
+        in any order): each part's series
         at its element's position in the variable's range, which is how the
         equations index it, whatever the order of the definitions.  Elements
         with no definition give NaN."""
@@ -3895,10 +3942,10 @@ class JuliaSectionBuilder:
         a mix of GCS and literal-value components, each covering a different
         sub-range of one dimension while sharing all other dimensions.
 
-        Example (pymedeas world model):
-            materials_for_o_m_per_capacity_installed_res_elec[RES_ELEC, materials]
-              [RES_ELEC_DISPATCHABLE, materials] = 0   (literal)
-              [RES_ELEC_VARIABLE,     materials] = GCS (Excel data)
+        Example:
+            x[DIM, other]
+              [SUB1, other] = 0   (literal)
+              [SUB2, other] = GCS (Excel data)
 
         The full parent dims are determined by _element_dims, then a numpy
         array is allocated and each component fills its slice.
@@ -4212,7 +4259,7 @@ class JuliaSectionBuilder:
         # OrdinaryDiffEq v7 split Euler into OrdinaryDiffEqLowOrderRK.
         # PySD re-exports the helper functions (pysd_*), the Excel readers
         # (pysd_xlsx_read_*) and DataInterpolations, so it is always imported.
-        uses = ["OrdinaryDiffEq", "PySD", "NCDatasets"]
+        uses = ["OrdinaryDiffEq", "PySD", "NCDatasets", "ComponentArrays"]
         has_lookups = bool(self.lookup_const_decls)
         if has_lookups or extra_packages:
             uses.append("DataInterpolations")
@@ -4370,6 +4417,8 @@ class JuliaSectionBuilder:
         if not self.lookup_const_decls and not self._json_data.get("lookups") \
                 and not self._json_data.get("data"):
             return ""
+        if self.backend == "ode":
+            return ""  # in params()
         lines = ["# Lookup tables"]
         emit_register = (self.backend == "mtk")
         if self.data_format == "json":
@@ -4412,51 +4461,51 @@ class JuliaSectionBuilder:
             lines.append("# Subscript dimension sizes")
             lines.extend(self.subs_const_decls)
             lines.append("")
-        if self.param_decls:
-            lines.append("# Parameters")
-            for decl in self.param_decls:
-                # Convert "@parameters name = value" to "const name = value"
-                if decl.startswith("@parameters "):
-                    val_part = decl[len("@parameters "):]
-                    if " = " in val_part:
-                        name, val = val_part.split(" = ", 1)
-                        name = name.strip()
-                        val = val.strip()
-                        json_consts = self._json_data.get("constants", {})
-                        if self.data_format == "json" and name in json_consts:
-                            entry = json_consts[name]
-                            if entry.get("dims"):
-                                lines.append(
-                                    f'const {name} = pysd_safe(Float64.'
-                                    f'(_model_data["constants"]["{name}"]["values"]))'
-                                )
-                            else:
-                                lines.append(
-                                    f'const {name} = Float64('
-                                    f'_model_data["constants"]["{name}"]["values"])'
-                                )
-                        elif "pysd_xlsx_read_constant" in val:
-                            lines.append(f"const {name} = pysd_safe({val})")
-                        elif "[" in name:
-                            lines.append(self._ode_array_constant(name, val))
-                        else:
-                            lines.append("const " + val_part)
-                    else:  # pragma: no cover  # all @parameters entries include "= value"
-                        lines.append("const " + val_part)
-                elif decl.startswith("#"):
-                    lines.append(decl)
-                else:  # pragma: no cover  # param_decls only contains @parameters or # prefixed entries
-                    lines.append(decl)
-        if self.ext_const_decls:
-            lines.append("\n# External constants")
-            for decl in self.ext_const_decls:
-                name_eq = decl.split(" = ", 1)
-                if len(name_eq) == 2 and ("pysd_xlsx_read_constant" in decl
-                                          or decl.strip().startswith("const") and "[" in name_eq[1]):
-                    lines.append(f"{name_eq[0]} = pysd_safe({name_eq[1]})")
-                else:
-                    lines.append(decl)
         return "\n".join(lines) + "\n"
+
+    def _ode_constant_decls(self) -> List[str]:
+        """The constants and external constants as ``const name = value``
+        declarations (or ``# comment`` lines), in model order."""
+        lines: List[str] = []
+        for decl in self.param_decls:
+            # "@parameters name = value" -> "const name = value"
+            if decl.startswith("@parameters "):
+                val_part = decl[len("@parameters "):]
+                if " = " in val_part:
+                    name, val = val_part.split(" = ", 1)
+                    name = name.strip()
+                    val = val.strip()
+                    json_consts = self._json_data.get("constants", {})
+                    if self.data_format == "json" and name in json_consts:
+                        entry = json_consts[name]
+                        if entry.get("dims"):
+                            lines.append(
+                                f'const {name} = pysd_safe(Float64.'
+                                f'(_model_data["constants"]["{name}"]["values"]))'
+                            )
+                        else:
+                            lines.append(
+                                f'const {name} = Float64('
+                                f'_model_data["constants"]["{name}"]["values"])'
+                            )
+                    elif "pysd_xlsx_read_constant" in val:
+                        lines.append(f"const {name} = pysd_safe({val})")
+                    elif "[" in name:
+                        lines.append(self._ode_array_constant(name, val))
+                    else:
+                        lines.append("const " + val_part)
+                else:  # pragma: no cover  # all @parameters entries include "= value"
+                    lines.append("const " + val_part)
+            else:
+                lines.append(decl)
+        for decl in self.ext_const_decls:
+            name_eq = decl.split(" = ", 1)
+            if len(name_eq) == 2 and ("pysd_xlsx_read_constant" in decl
+                                      or decl.strip().startswith("const") and "[" in name_eq[1]):
+                lines.append(f"{name_eq[0]} = pysd_safe({name_eq[1]})")
+            else:
+                lines.append(decl)
+        return lines
 
     def _declarations_block_mtk(self) -> str:
         lines: List[str] = []
@@ -4486,12 +4535,6 @@ class JuliaSectionBuilder:
     def _equations_block(self, equations: List[str]) -> str:
         if self.backend == "mtk":
             return self._equations_block_mtk(equations)
-        if not equations:
-            return (
-                "function rhs!(du, u, p, t)\nend\n\n"
-                "function observe(u, t)\n    return Dict{String,Any}()\nend\n"
-            )
-
         # Collect stock names and sizes from u0_entries
         # Each entry is "var => init" or "var[idx] => init"
         stock_info: Dict[str, int] = {}  # name -> count
@@ -4548,22 +4591,6 @@ class JuliaSectionBuilder:
                         ranges = re.findall(r"in\s+\d+:(\w+)", _outer_for_clause(eq_s))
                         if ranges:
                             stock_dims[name] = ranges
-
-        # Build state-variable unpacking lines (shared by rhs! and observe)
-        state_lines: List[str] = []
-        for name in stock_indices:
-            idx = stock_indices[name]
-            size = stock_sizes[name]
-            if size == 1:
-                state_lines.append(f"    {name} = u[{idx}]")
-            elif name in stock_dims and len(stock_dims[name]) >= 2:
-                dims = stock_dims[name]
-                dims_str = ", ".join(dims)
-                state_lines.append(
-                    f"    {name} = reshape(@view(u[{idx}:{idx + size - 1}]), {dims_str})"
-                )
-            else:
-                state_lines.append(f"    {name} = @view u[{idx}:{idx + size - 1}]")
 
         # Pre-allocate auxiliary arrays
         # Scan equations for indexed assignments like "var[i] = ..."
@@ -4681,109 +4708,389 @@ class JuliaSectionBuilder:
                 dims_str = ", ".join(dims)
                 alloc_lines.append(f"    {name} = pysd_safe(zeros({dims_str}))")
 
-        # Build aux assignment lines (shared by rhs! and observe), collecting names
         sorted_alg = self._topo_sort_equations(alg_lines, stock_indices)
-        aux_assign_lines: List[str] = []
-        scalar_aux_names: List[str] = []
-        seen_aux: set = set(alloc_needed.keys())
+        return self._ode_model_block(
+            stock_indices, stock_sizes, stock_dims, alloc_needed,
+            alloc_lines, sorted_alg, ode_lines)
+
+    # ------------------------------------------------------------------
+    # ODE model: params(), model!, rhs!, observe
+    # ------------------------------------------------------------------
+
+    def _literal_arrays(self, eqs, dynamic, alloc_needed) -> Dict[str, str]:
+        """Constants defined element by element with plain numbers covering
+        every element (``x[1] = 0.0``, ``x[2] = 1.0``, ...): name -> the
+        whole array as one Julia value (``fill(0.0, N_A)`` when all the
+        numbers are the same, ``Float64[...]`` otherwise; 1-D and 2-D)."""
+        sizes = {}
+        for decl in self.subs_const_decls:
+            m = re.match(r"const (\w+) = (\d+)", decl)
+            if m:
+                sizes[m.group(1)] = int(m.group(2))
+        number = r"-?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?"
+        parts: Dict[str, Dict[Tuple[int, ...], str]] = {}
+        bad: set = set()
+        for lhs, _, _, converted, _ in eqs:
+            if not lhs or lhs in dynamic or lhs not in alloc_needed:
+                continue
+            for ln in converted:
+                m = re.fullmatch(rf"{lhs}\[(\d+(?:, \d+)*)\] = ({number})", ln.strip())
+                if not m:
+                    bad.add(lhs)
+                    break
+                idx = tuple(int(i) for i in m.group(1).split(", "))
+                parts.setdefault(lhs, {})[idx] = m.group(2)
+        out: Dict[str, str] = {}
+        for lhs, cells in parts.items():
+            dims = alloc_needed[lhs]
+            if lhs in bad or len(dims) > 2:
+                continue
+            n = [int(d) if d.isdigit() else sizes.get(d) for d in dims]
+            if None in n or len(cells) != math.prod(n) or any(len(i) != len(n) for i in cells):
+                continue
+            if any(not 1 <= i[k] <= n[k] for i in cells for k in range(len(n))):
+                continue
+            values = {float(v) for v in cells.values()}
+            if len(values) == 1:
+                out[lhs] = f"pysd_safe(fill({format_number(values.pop())}, {', '.join(dims)}))"
+            elif len(n) == 1:
+                out[lhs] = "pysd_safe(Float64[" + ", ".join(
+                    cells[(i,)] for i in range(1, n[0] + 1)) + "])"
+            else:
+                rows = ["  ".join(cells[(i, j)] for j in range(1, n[1] + 1))
+                        for i in range(1, n[0] + 1)]
+                out[lhs] = "pysd_safe(Float64[" + "; ".join(r.replace("  ", " ") for r in rows) + "])"
+        return out
+
+    @staticmethod
+    def _split_trailing_comment(text: str) -> Tuple[str, str]:
+        """``code  # comment`` -> (code, "  # comment"), for a one-line
+        declaration; a ``#`` inside a string is not a comment."""
+        if "\n" in text:
+            return text, ""
+        in_str = False
+        for k, ch in enumerate(text):
+            if ch == '"' and (k == 0 or text[k - 1] != "\\"):
+                in_str = not in_str
+            elif ch == "#" and not in_str:
+                return text[:k].rstrip(), "  " + text[k:]
+        return text, ""
+
+    @staticmethod
+    def _external_paths(code: str) -> str:
+        """Excel and data file paths through ``_file`` and Excel sheets
+        through ``_sheet``, so that ``params(sheets=..., files=...)`` can
+        read the inputs from other sheets or files."""
+        string = r'"(?:[^"\\]|\\.)*"'
+        code = re.sub(rf"joinpath\(@__DIR__, ({string})\)", r"_file(\1)", code)
+        return re.sub(rf"(pysd_xlsx_\w+\()_file\(({string})\), ({string})",
+                      r"\1_file(\2), _sheet(\3)", code)
+
+    def _ode_input_decls(self) -> List[Tuple[Optional[str], str]]:
+        """The model's inputs as ``(name, value)``: lookups and data
+        (``value`` an anonymous function), then constants and external
+        constants.  ``(None, line)`` is a line kept as it is: a comment, or
+        an internal value such as an interpolation the lookup calls."""
+        out: List[Tuple[Optional[str], str]] = []
+
+        def const(decl: str, internal: bool = False) -> None:
+            if decl.startswith("#"):
+                out.append((None, decl))
+                return
+            m = re.match(r"(?:const\s+)?(\w+)\s*=\s*(.*)", decl, re.S)
+            if not m:  # pragma: no cover  # every declaration is "name = value"
+                out.append((None, decl))
+                return
+            name, value = m.group(1), m.group(2)
+            if internal:
+                out.append((None, f"{name} = {value}"))
+            else:
+                out.append((name, value))
+
+        consts, funcs = self._lookup_decls()
+        if consts or funcs:
+            out.append((None, "# Lookups and data"))
+        for decl in consts:
+            const(decl, internal=True)
+        for decl in funcs:
+            m = re.match(r"(\w+)\((.*?)\)\s*=\s*(.*)", decl, re.S)
+            out.append((m.group(1), f"({m.group(2)}) -> {m.group(3)}"))
+        decls = self._ode_constant_decls()
+        if decls:
+            out.append((None, "# Constants"))
+        for decl in decls:
+            const(decl)
+        return out
+
+    def _lookup_decls(self) -> Tuple[List[str], List[str]]:
+        """Lookup and data declarations: (``const x_itp = …``, ``x(x) = …``)."""
+        if self.data_format != "json":
+            return list(self.lookup_const_decls), list(self.lookup_func_decls)
+        consts, funcs = [], []
+        for kind, xs, ys in (("lookups", "x", "y"), ("data", "time", "values")):
+            for key in self._json_data.get(kind, {}):
+                consts.append(
+                    f'const {key}_itp = LinearInterpolation('
+                    f'Float64.(_model_data["{kind}"]["{key}"]["{ys}"]), '
+                    f'Float64.(_model_data["{kind}"]["{key}"]["{xs}"]))')
+                funcs.append(f"{key}(x) = {key}_itp(x)")
+        return consts, funcs
+
+    def _ode_dynamic_names(self, eqs, stock_indices) -> Set[str]:
+        """Variables that change during the run: they depend on time, on a
+        stock, on random numbers or on the ACTIVE INITIAL switch, directly
+        or through other variables.  A variable defined in parts is dynamic
+        if any part is."""
+        dynamic = set(stock_indices) | {"t"}
+        changed = True
+        while changed:
+            changed = False
+            for lhs, rhs_ids, eq, _, _ in eqs:
+                if lhs in dynamic:
+                    continue
+                if (rhs_ids & dynamic or "random" in eq or "_active_initial" in eq
+                        or "pysd_active_initial" in eq or re.search(r"\bt\b", eq)):
+                    dynamic.add(lhs)
+                    changed = True
+        return dynamic
+
+    def _ode_model_block(self, stock_indices, stock_sizes, stock_dims,
+                         alloc_needed, alloc_lines, sorted_alg, ode_lines) -> str:
+        """The ODE model:
+
+        - ``params(; sheets, files, values...)``: the lookups, data and
+          constants, and the equations computed from them alone, as a
+          NamedTuple; any of them can be given by name;
+        - ``_state_axes``: the stocks by name and shape (ComponentArrays);
+        - ``model!(d, s, p, t)``: the other equations; writes the rates of
+          change into ``d`` (unless ``d`` is ``nothing``) and returns the
+          auxiliaries;
+        - ``rhs!`` (for the solver) and ``observe`` (every variable at a
+          state and time), both over ``model!``.
+        """
+        eqs = []
         for eq in sorted_alg:
-            if "Symbolics.scalarize" in eq or ".~" in eq:  # pragma: no cover  # scalarize/.~ equations route to ode_lines at line 4208, never appear in alg_lines
-                continue
             converted = self._convert_eq_to_assignment(eq)
-            # Collect scalar aux variable name from first converted line
-            if converted:
-                m_lhs = re.match(r"\s*(\w+)\s*=", converted[0])
-                if m_lhs:
-                    vname = m_lhs.group(1)
-                    if vname in self._var_comments:
-                        aux_assign_lines.append(f"    # {self._var_comments[vname]}")
-                    if vname not in stock_indices and vname not in seen_aux:
-                        seen_aux.add(vname)
-                        scalar_aux_names.append(vname)
-            aux_assign_lines.extend(f"    {line}" for line in converted)
+            lhs = self._extract_lhs_name(eq)
+            comment = self._var_comments.get(lhs) if lhs else None
+            eqs.append((lhs, self._extract_rhs_identifiers(eq), eq, converted, comment))
+        dynamic = self._ode_dynamic_names(eqs, stock_indices)
 
-        # ------------------------------------------------------------------ #
-        # rhs!(du, u, p, t)                                                  #
-        # ------------------------------------------------------------------ #
-        func_lines = ["function rhs!(du, u, p, t)"]
-        func_lines.append("    # State variables")
-        func_lines.extend(state_lines)
-        func_lines.append("")
-        func_lines.append("    # Auxiliaries")
-        if alloc_lines:
-            func_lines.extend(alloc_lines)
-            func_lines.append("")
-        func_lines.extend(aux_assign_lines)
-
-        # Create reshaped views of du for multi-dimensional stocks
-        func_lines.append("")
-        func_lines.append("    # Derivatives")
-        for name in stock_indices:
-            if name in stock_dims and len(stock_dims[name]) >= 2:
-                idx = stock_indices[name]
-                size = stock_sizes[name]
-                dims = stock_dims[name]
-                dims_str = ", ".join(dims)
-                func_lines.append(
-                    f"    du_{name} = reshape(@view(du[{idx}:{idx + size - 1}]), {dims_str})"
-                )
-        _emitted_stock_comments: set = set()
-        for eq in ode_lines:
-            if "Symbolics.scalarize" in eq or ".~" in eq:  # pragma: no cover  # these forms only appear in alg_lines, not ode_lines
+        const_alloc = [ln for ln in alloc_lines
+                       if re.match(r"\s*(\w+)", ln).group(1) not in dynamic]
+        dyn_alloc = [ln for ln in alloc_lines
+                     if re.match(r"\s*(\w+)", ln).group(1) in dynamic]
+        computed, dyn_names = [], []
+        for lhs, _, _, _, _ in eqs:
+            if not lhs:
                 continue
-            # Prepend comment for the stock variable (once per stock)
-            m_stock = re.match(r"\[?D\((\w+)", eq.strip())
-            if m_stock:
-                sname = m_stock.group(1)
-                if sname in self._var_comments and sname not in _emitted_stock_comments:
-                    func_lines.append(f"    # {self._var_comments[sname]}")
-                    _emitted_stock_comments.add(sname)
-            converted = self._convert_ode_to_du(eq, stock_indices)
-            for line in converted:
-                func_lines.append(f"    {line}")
+            target = dyn_names if lhs in dynamic else computed
+            if lhs not in target and lhs not in stock_indices:
+                target.append(lhs)
+        for name in alloc_needed:
+            if name in stock_indices:
+                continue
+            target = dyn_names if name in dynamic else computed
+            if name not in target:
+                target.append(name)
 
-        func_lines.append("    return nothing")
-        func_lines.append("end")
+        inputs = self._ode_input_decls()
+        input_names = [name for name, _ in inputs if name]
+        p_names = input_names + [n for n in computed if n not in input_names]
+        self._ode_p_names = set(p_names)
 
-        # ------------------------------------------------------------------ #
-        # observe(u, t) — reconstruct every variable at a given state/time   #
-        # ------------------------------------------------------------------ #
-        obs_lines = ["function observe(u, t)"]
-        obs_lines.append("    # State variables")
-        obs_lines.extend(state_lines)
-        obs_lines.append("")
-        obs_lines.append("    # Auxiliaries")
-        if alloc_lines:
-            obs_lines.extend(alloc_lines)
-            obs_lines.append("")
-        obs_lines.extend(aux_assign_lines)
-        obs_lines.append("")
-        # Module-level consts (INITIAL, GET CONSTANTS, etc.) are in scope inside
-        # observe because they are module globals — just reference them by name.
-        const_names = self._const_names_for_observe(set(stock_indices) | seen_aux)
-        obs_lines.append("")
-        dynamic = self._dynamic_controls()
-        if dynamic:
+        # params(): inputs, then what is computed from them alone
+        lines = [
+            '"""',
+            "    params(; sheets = Dict(), files = Dict(), values...)",
+            "",
+            "The model's lookups, data and constants, and the variables computed",
+            "from them alone, by name.  `values` gives any of them another value",
+            "(`name = value`: a number or an array of the variable's size for a",
+            "constant; a function, an `(x, y)` series or an interpolation for a",
+            "lookup or data); what is computed from them follows.  `sheets` and",
+            "`files` read the Excel inputs from other sheets or files (a Dict from",
+            "the name in the model to the new one).",
+            '"""',
+            "function params(; sheets = Dict{String,String}(), files = Dict{String,String}(), values...)",
+            "    _given = Dict{Symbol,Any}(values)",
+            "    _sheets, _files = Dict{String,String}(sheets), Dict{String,String}(files)",
+            "    _file(f) = pysd_file(@__DIR__, f, _files)",
+            "    _sheet(s) = get(_sheets, s, s)",
+            "",
+        ]
+        for name, value in inputs:
+            value = self._external_paths(value)
+            if name is None:
+                lines.extend("    " + ln for ln in value.split("\n"))
+                continue
+            value, comment = self._split_trailing_comment(value)
+            text = f"{name} = pysd_input(_given, :{name}, {value}){comment}"
+            lines.extend("    " + ln for ln in text.split("\n"))
+        last_part = {lhs: k for k, (lhs, *_rest) in enumerate(eqs) if lhs}
+        literal = self._literal_arrays(eqs, dynamic, alloc_needed)
+        const_alloc = [ln for ln in const_alloc
+                       if re.match(r"\s*(\w+)", ln).group(1) not in literal]
+        body: List[str] = []
+        commented: set = set()
+        for k, (lhs, _, _, converted, comment) in enumerate(eqs):
+            if lhs in dynamic:
+                continue
+            if comment and lhs not in commented:
+                # a variable defined in parts: its description once
+                commented.add(lhs)
+                body.append(f"    # {comment}")
+            if lhs in literal:
+                # numbers for every element: one array
+                if last_part[lhs] == k:
+                    body.append(f"    {lhs} = pysd_input(_given, :{lhs}, {literal[lhs]})")
+                continue
+            last = lhs and last_part[lhs] == k and lhs not in stock_indices
+            single = (last and len(converted) == 1 and lhs not in alloc_needed
+                      and converted[0].startswith(f"{lhs} = ")
+                      and [e[0] for e in eqs].count(lhs) == 1)
+            if single:
+                # one line: the value is the default of the input
+                value, trailing = self._split_trailing_comment(converted[0][len(lhs) + 3:])
+                body.append(f"    {lhs} = pysd_input(_given, :{lhs}, {value}){trailing}")
+                continue
+            body.extend(f"    {ln}" for ln in converted)
+            if last:
+                body.append(f"    {lhs} = pysd_input(_given, :{lhs}, {lhs})")
+        if const_alloc or body:
+            if lines[-1] != "":
+                lines.append("")
+            lines.append("    # Computed from the constants")
+            lines += const_alloc + body
+        lines.append("")
+        lines.append("    p = (; " + ", ".join(p_names) + ")")
+        lines.append("    pysd_check_inputs(_given, p)")
+        fixed = {k: v for k, v in self._fixed_inputs.items() if k in p_names}
+        if fixed:
+            # values the translation used: a new one needs a new translation
+            lines.append("    pysd_check_fixed(_given, (; " + ", ".join(
+                f'{k} = "{v}"' for k, v in sorted(fixed.items())) + "))")
+        lines.append("    return p")
+        lines += ["end", ""]
+
+        # State: named, shaped
+        axes = []
+        for name in stock_indices:
+            size = stock_sizes[name]
+            if size == 1:
+                axes.append(f"{name} = 0.0")
+            elif name in stock_dims and len(stock_dims[name]) >= 2:
+                axes.append(f"{name} = zeros({', '.join(stock_dims[name])})")
+            else:
+                axes.append(f"{name} = zeros({size})")
+        lines.append("# Stocks by name and shape; the solver sees one flat vector")
+        lines.append("const _state_axes = getaxes(ComponentArray(; " + ", ".join(axes) + "))")
+        lines.append("_named(u) = u isa ComponentArray ? u : ComponentArray(u, _state_axes)")
+        lines.append("")
+
+        lines.append("# The rates of change of the stocks (into d, unless it is nothing) and")
+        lines.append("# the variables that change during the run, at the state s and time t")
+        lines.append("function model!(d, s, p, t)")
+        if p_names:
+            lines.append("    (; " + ", ".join(p_names) + ") = p")
+        for name in stock_indices:
+            lines.append(f"    {name} = s.{name}")
+        lines.append("")
+        lines += dyn_alloc
+        commented = set()
+        for lhs, _, _, converted, comment in eqs:
+            if lhs not in dynamic:
+                continue
+            if comment and lhs not in commented:
+                commented.add(lhs)
+                lines.append(f"    # {comment}")
+            lines.extend(f"    {ln}" for ln in converted)
+        if ode_lines:
+            lines.append("")
+            lines.append("    # Rates of change")
+            lines.append("    if d !== nothing")
+            for name in stock_indices:
+                if name in stock_dims and len(stock_dims[name]) >= 2:
+                    lines.append(f"        du_{name} = d.{name}")
+            commented: set = set()
+            for eq in ode_lines:
+                m_stock = re.match(r"\[?D\((\w+)", eq.strip())
+                if m_stock and m_stock.group(1) not in commented:
+                    commented.add(m_stock.group(1))
+                    if m_stock.group(1) in self._var_comments:
+                        lines.append(f"        # {self._var_comments[m_stock.group(1)]}")
+                for ln in self._convert_ode_to_du(eq, stock_indices):
+                    lines.append("        " + self._du_to_named(ln, stock_indices, stock_sizes))
+            lines.append("    end")
+        returned = list(dyn_names)
+        if self._dynamic_controls():
+            # Control variables that change during the run, at this time;
+            # INITIAL TIME is the one the run started from
             def ctrl(expr: str) -> str:
-                # INITIAL TIME is reported as evaluated at this time, as
-                # Vensim does; the run keeps the value it started from.
                 return re.sub(r"\b(time_step|saveper|final_time)\b", r"_ctrl_\1", expr)
-            obs_lines.append("    # Control variables at this time")
             for name, default in (("initial_time", "initial_time"), ("time_step", "1.0"),
                                   ("saveper", "time_step"), ("final_time", "100.0")):
                 expr = self.control_vals.get(name) or default
-                obs_lines.append(f"    _ctrl_{name} = {ctrl(expr)}")
-            obs_lines.append("")
-        obs_lines.append("    return Dict{String,Any}(")
-        for name in list(stock_indices.keys()) + list(alloc_needed.keys()) + scalar_aux_names + const_names:
-            obs_lines.append(f'        "{name}" => {name},')
-        if dynamic:
-            for name in ("initial_time", "time_step", "saveper", "final_time"):
-                obs_lines.append(f'        "{name}" => _ctrl_{name},')
-        obs_lines.append("    )")
-        obs_lines.append("end")
+                lines.append(f"    _ctrl_{name} = {ctrl(expr)}")
+                returned.append(f"{name} = _ctrl_{name}")
+        lines.append("    return (; " + ", ".join(returned) + ")")
+        lines += ["end", ""]
 
-        return "\n".join(func_lines) + "\n\n" + "\n".join(obs_lines) + "\n"
+        lines += [
+            "rhs!(du, u, p, t) = (model!(_named(du), _named(u), p isa NamedTuple ? p : _params, t); nothing)",
+            "# the solver's parameters (SciML takes no parameters as NullParameters)",
+            "_problem_p(p) = isempty(p) ? OrdinaryDiffEq.SciMLBase.NullParameters() : p",
+            "",
+            "# Every variable at a state and time, by name",
+            "function observe(u, t; p = _params)",
+            "    s = _named(u)",
+            "    out = Dict{String,Any}(String(k) => v for (k, v) in pairs(p) if !(v isa Function))",
+            "    for k in propertynames(s)",
+            "        out[String(k)] = s[k]",
+            "    end",
+            "    for (k, v) in pairs(model!(nothing, s, p, t))",
+            "        out[String(k)] = v",
+            "    end",
+        ]
+        data = sorted(n for n in self._data_names if n in p_names)
+        if data:
+            lines.append("    # data at this time")
+            for name in data:
+                dims = self._var_dims.get(name, [])
+                if not dims:
+                    lines.append(f'    out["{name}"] = p.{name}(t)')
+                else:
+                    idx = [f"_i{k}" for k in range(len(dims))]
+                    ranges = ", ".join(f"{i} in 1:{self._jl_n(d)}" for i, d in zip(idx, dims))
+                    lines.append(f'    out["{name}"] = [p.{name}({", ".join(idx)}, t) for {ranges}]')
+        if not self._dynamic_controls():
+            lines.append("    # simulation control")
+            for name in self._CONTROL_NAMES:
+                lines.append(f'    out["{name}"] = {name}')
+        lines += ["    return out", "end"]
+        return "\n".join(lines) + "\n"
+
+    @staticmethod
+    def _du_to_named(line: str, stock_indices, stock_sizes) -> str:
+        """A derivative assignment by position (``du[12] = …``,
+        ``du[35 - 1 + _i0] = …``) written by stock name."""
+        starts = {idx: name for name, idx in stock_indices.items()}
+        m = re.match(r"(\s*)du\[(\d+) - 1 \+ (.+?)\] = (.*)$", line)
+        if m and int(m.group(2)) in starts:
+            name = starts[int(m.group(2))]
+            if stock_sizes[name] == 1:   # a one-stage pipeline is a scalar stock
+                return f"{m.group(1)}d.{name} = {m.group(4)}"
+            return f"{m.group(1)}d.{name}[{m.group(3)}] = {m.group(4)}"
+        m = re.match(r"(\s*)du\[(\d+)\] = (.*)$", line)
+        if m:
+            k = int(m.group(2))
+            for name, idx in stock_indices.items():
+                size = stock_sizes[name]
+                if idx <= k < idx + size:
+                    if size == 1:
+                        return f"{m.group(1)}d.{name} = {m.group(3)}"
+                    return f"{m.group(1)}d.{name}[{k - idx + 1}] = {m.group(3)}"
+        return line
 
     def _equations_block_mtk(self, equations: List[str]) -> str:
         if not equations:
@@ -5107,11 +5414,95 @@ class JuliaSectionBuilder:
         size = self._u0_size(entry)
         return rhs if size == 1 else f"fill({rhs}, {size})..."
 
+    def _u0_value_lines(self, u0_entries: List[str]) -> List[str]:
+        """The initial values inside ``Float64[...]``, one line per stock
+        when its cells follow one formula: ``fill(0.0, 58)...`` or
+        ``[src[_i0] for _i0 in 1:14]...`` (a comprehension lists its cells
+        first index fastest, the order of the state vector); otherwise one
+        line per entry."""
+        groups: List[Tuple[str, List[Tuple[List[str], str, str]]]] = []
+        for entry in u0_entries:
+            lhs, rhs = (x.strip() for x in entry.split("=>", 1))
+            base, _, idx = lhs.partition("[")
+            index = [i.strip() for i in idx.rstrip("]").split(",")] if idx else []
+            if not groups or groups[-1][0] != base:
+                groups.append((base, []))
+            groups[-1][1].append((index, rhs, entry))
+        lines: List[str] = []
+        for base, cells in groups:
+            compact = self._u0_compact(cells) if len(cells) > 1 else None
+            if compact is None:
+                lines += [f"{self._u0_value(e)},  # {e.split('=>', 1)[0].strip()}"
+                          for _, _, e in cells]
+            else:
+                lines.append(f"{compact},  # {base}")
+        return lines
+
+    @staticmethod
+    def _u0_compact(cells) -> Optional[str]:
+        """One expression for the cells of a stock, or None."""
+        first = cells[0][0]
+        n = len(first)
+        if n == 0 or any(len(index) != n for index, _, _ in cells):
+            return None
+        ranges = {k: v for k, v in enumerate(first) if ":" in v}
+        if any(any((":" in index[k]) != (k in ranges) or (k in ranges and index[k] != ranges[k])
+                   for k in range(n)) for index, _, _ in cells):
+            return None
+        ints = [k for k in range(n) if k not in ranges]
+        try:
+            values = [[int(index[k]) for k in ints] for index, _, _ in cells]
+        except ValueError:
+            return None
+        extents = [max(v[j] for v in values) for j in range(len(ints))]
+        # the cells, first index fastest, over 1..extent of each index
+        expected = [list(reversed(c)) for c in itertools.product(
+            *[range(1, e + 1) for e in reversed(extents)])]
+        if values != expected:
+            return None
+        loop = {k: f"_i{j}" for j, k in enumerate(ints)}
+        # The formula of every cell, with its integers taken out: each
+        # integer is the same in every cell (a number of the formula) or
+        # the cell's index at some position (a loop variable)
+        token = r"(?<![\w.])\d+(?![\w.])"
+        skeletons = {re.sub(token, "#", rhs) for _, rhs, _ in cells}
+        number = r"-?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?"
+        if len(skeletons) != 1:
+            if all(re.fullmatch(number, rhs) for _, rhs, _ in cells) and not ranges:
+                return "Float64[" + ", ".join(rhs for _, rhs, _ in cells) + "]..."
+            return None
+        found = [[int(x) for x in re.findall(token, rhs)] for _, rhs, _ in cells]
+        parts = re.split(token, cells[0][1])
+        template = parts[0]
+        for j in range(len(found[0])):
+            column = [f[j] for f in found]
+            if len(set(column)) == 1:
+                text = str(column[0])
+            else:
+                k = next((k for k in ints
+                          if all(c == v[ints.index(k)] for c, v in zip(column, values))), None)
+                if k is None:
+                    return None
+                text = loop[k]
+            template += text + parts[j + 1]
+        iterators = []
+        for k in range(n):
+            if k in ranges:
+                iterators.append(f"_r{k} in {ranges[k]}")
+            else:
+                iterators.append(f"{loop[k]} in 1:{extents[ints.index(k)]}")
+        if not re.search(r"\b_i\d+\b", template):
+            sizes = [str(int(b) - int(a) + 1) if k in ranges else str(extents[ints.index(k)])
+                     for k, (a, _, b) in ((k, ranges.get(k, "1:1").partition(":")) for k in range(n))]
+            return f"fill({template}, {', '.join(sizes)})..."
+        return f"[{template} for {', '.join(iterators)}]..."
+
     def _u0_block(self) -> str:
         if self.backend == "mtk":
             return self._u0_block_mtk()
         if not self.u0_entries:
-            return "u0 = Float64[]\n"
+            return ("initial_state(p = _params) = Float64[]\n\n"
+                    "u0 = initial_state()\n")
 
         # Initial values are evaluated at the initial time: Time (t) in them,
         # e.g. DELAY1(Time, d) starting at Time * d, is the initial time
@@ -5124,75 +5515,62 @@ class JuliaSectionBuilder:
         # Names of variables in an expression; names that are called
         # (abs(...), mod(...)) are functions
         var_re = r"\b([a-z_]\w*)\b(?!\s*\()"
-
-        # Check if any u0 values reference non-constant expressions
-        needs_init_fn = False
+        inputs = self._ode_p_names | {name for name, _ in self._ode_input_decls() if name}
+        controls = {"time_step", "initial_time", "final_time", "saveper", "t"}
+        used: set = set()
+        called: set = set()      # lookups and data, called as functions
         for entry in u0_entries:
-            if "=>" in entry:
-                rhs = entry.split("=>", 1)[1].strip()
-                # If RHS contains variable references (not just numbers/params)
-                tokens = set(re.findall(var_re, rhs))
-                # Remove known constants/params
-                for t in list(tokens):
-                    if any(f" {t} =" in d or f" {t}[" in d
-                           for d in self.param_decls + self.ext_const_decls):
-                        tokens.discard(t)
-                if tokens - {"time_step", "initial_time", "final_time", "t"}:
-                    needs_init_fn = True
-                    break
+            value = entry.split("=>", 1)[1]
+            used |= set(re.findall(var_re, value))
+            called |= set(re.findall(r"\b([a-z_]\w*)\s*\(", value))
+        from_p = sorted((used | called) & inputs)
+        # Other variables (auxiliaries, stocks) are read from observe at the
+        # initial time.  Initial values may depend on stocks (e.g. DELAY(stock,
+        # 1) starts at the stock's initial value), so they are evaluated from
+        # the state they define, starting from zeros, until it no longer
+        # changes.
+        from_observe = sorted(used - inputs - controls)
 
-        if needs_init_fn:
-            # Collect all auxiliary identifiers referenced in u0 expressions that
-            # are not module-level constants.  Use observe(zeros, initial_time) to
-            # evaluate them at t=0 so stocks depending on auxiliaries initialise
-            # correctly (e.g. TREND smooth stocks that depend on a dynamic input).
-            dynamic_tokens: set = set()
-            for entry in u0_entries:
-                if "=>" in entry:
-                    rhs = entry.split("=>", 1)[1].strip()
-                    tokens = set(re.findall(var_re, rhs))
-                    for tok in list(tokens):
-                        if any(f" {tok} =" in d or f" {tok}[" in d
-                               for d in self.param_decls + self.ext_const_decls):
-                            tokens.discard(tok)
-                    dynamic_tokens |= tokens - {"time_step", "initial_time", "final_time", "t"}
-
-            # Initial values may depend on stocks (e.g. DELAY(stock, 1) starts at
-            # the stock's initial value), so evaluate them from the state they
-            # define, starting from zeros, until it no longer changes.
-            n = sum(self._u0_size(entry) for entry in u0_entries)
-            lines = [
-                f"u0 = let _u = zeros(Float64, {n})",
+        n = sum(self._u0_size(entry) for entry in u0_entries)
+        values = self._u0_value_lines(u0_entries)
+        lines = [
+            "# The stocks at the initial time, with the constants p",
+            "function initial_state(p = _params)",
+        ]
+        if from_p:
+            lines.append("    (; " + ", ".join(from_p) + ") = p")
+        if not from_observe:
+            lines.append("    return Float64[")
+            lines += [f"        {v}" for v in values]
+            lines += ["    ]", "end"]
+        else:
+            lines += [
+                f"    _u = zeros(Float64, {n})",
                 f"    for _ in 1:{n + 1}",
-                "        _obs_init = observe(_u, initial_time)",
+                "        _obs_init = observe(_u, initial_time; p = p)",
             ]
-            for tok in sorted(dynamic_tokens):
+            for tok in from_observe:
                 lines.append(f"        {tok} = get(_obs_init, \"{tok}\", 0.0)")
             lines.append("        _next = Float64[")
-            for entry in u0_entries:
-                if "=>" in entry:
-                    lhs, rhs = entry.split("=>", 1)
-                    lines.append(f"            {self._u0_value(entry)},  # {lhs.strip()}")
-                else:  # pragma: no cover  # all u0_entries use "name => expr" format
-                    lines.append(f"            {entry},")
+            lines += [f"            {v}" for v in values]
             lines += [
                 "        ]",
                 "        isequal(_next, _u) && break",
                 "        _u = _next",
                 "    end",
-                "    _u",
+                "    return _u",
                 "end",
             ]
-            return "\n".join(lines) + "\n"
-        else:
-            lines = []
-            for entry in u0_entries:
-                if "=>" in entry:
-                    lhs, rhs = entry.split("=>", 1)
-                    lines.append(f"    {self._u0_value(entry)},  # {lhs.strip()}")
-                else:  # pragma: no cover  # all u0_entries use "name => expr" format
-                    lines.append(f"    {entry},")
-            return "u0 = Float64[\n" + "\n".join(lines) + "\n]\n"
+        if self._ode_active_initial:
+            # ACTIVE INITIAL gives its initial value while the stocks start
+            lines[1:2] = ["function initial_state(p = _params)",
+                          "    _initialising[] = true",
+                          "    try"]
+            k = len(lines) - 1
+            lines[4:k] = ["    " + ln for ln in lines[4:k]]
+            lines[k:] = ["    finally", "        _initialising[] = false", "    end", "end"]
+        lines += ["", "u0 = initial_state()"]
+        return "\n".join(lines) + "\n"
 
     def _u0_block_mtk(self) -> str:
         if not self.u0_entries:
@@ -5279,10 +5657,21 @@ class JuliaSectionBuilder:
         ts = self.control_vals.get("time_step") or "time_step"
         has_tab = bool(self._tab_data_entries)
         tab_param = ", tab_data_files=String[], nc_data_files=String[]" if has_tab else ""
-        tab_load = (
+        tab_load = "{TAB_LOAD}" if has_tab else ""
+        tab_lines = (
             "\n    isempty(tab_data_files) || _load_tab_data!(tab_data_files)"
             "\n    isempty(nc_data_files) || _load_nc_data!(nc_data_files)"
-        ) if has_tab else ""
+        )
+        doc = textwrap.dedent("""\
+            \"\"\"
+                run_model(; params = _params, u0 = initial_state(params), ...)
+
+            Simulate the model.  `params` are its constants, lookups and data:
+            `run_model(params = params(name = value, ...))` runs it with other
+            values.  The stocks start from `initial_state(params)` unless `u0`
+            is given.  Other keywords go to `solve` (e.g. `saveat`).
+            \"\"\"
+            """)
         if self._dynamic_controls():
             return textwrap.dedent(f"""\
                 let _c = observe(u0, initial_time)
@@ -5291,20 +5680,21 @@ class JuliaSectionBuilder:
                     global final_time = _c["final_time"]
                 end
                 tspan = (initial_time, final_time)
-                prob = ODEProblem(rhs!, u0, tspan)
+                prob = ODEProblem(rhs!, u0, tspan, _problem_p(_params))
 
                 # The control variables change during the run, so (as Python
                 # PySD) the model takes Euler steps of the current TIME STEP
                 # until Time reaches the current FINAL TIME, and saves every
                 # current SAVEPER from the initial time.
-                function run_model(; u0=u0{tab_param}){tab_load}
-                    u = copy(u0)
+                """) + doc + textwrap.dedent(f"""\
+                function run_model(; params=_params, u0=nothing{tab_param}){tab_load}
+                    u = u0 === nothing ? initial_state(params) : copy(u0)
                     du = similar(u)
                     t = initial_time
                     ts = Float64[]
                     us = Vector{{typeof(u)}}()
                     while true
-                        c = observe(u, t)
+                        c = observe(u, t; p = params)
                         prec = c["time_step"] * 1e-5
                         elapsed = t - initial_time
                         if mod(elapsed, c["saveper"]) < prec || mod(-elapsed, c["saveper"]) < prec
@@ -5312,21 +5702,19 @@ class JuliaSectionBuilder:
                             push!(us, copy(u))
                         end
                         t + prec < c["final_time"] || break
-                        rhs!(du, u, prob.p, t)
+                        rhs!(du, u, params, t)
                         u .+= c["time_step"] .* du
                         t += c["time_step"]
                     end
                     return OrdinaryDiffEq.SciMLBase.DiffEqArray(us, ts)
                 end
-                """)
-        return textwrap.dedent(f"""\
-            prob = ODEProblem(rhs!, u0, tspan)
-
-            function run_model(; u0=u0, tspan=tspan, dt={ts}, solver=Euler(){tab_param}){tab_load}
-                prob_local = remake(prob; u0=u0, tspan=tspan)
-                solve(prob_local, solver; dt=dt, adaptive=false)
+                """).replace("{TAB_LOAD}", tab_lines)
+        return "prob = ODEProblem(rhs!, u0, tspan, _problem_p(_params))\n\n" + doc + textwrap.dedent(f"""\
+            function run_model(; params=_params, u0=nothing, tspan=tspan, dt={ts}, solver=Euler(){tab_param}, kwargs...){tab_load}
+                u0 === nothing && (u0 = initial_state(params))
+                solve(ODEProblem(rhs!, u0, tspan, _problem_p(params)), solver; dt=dt, adaptive=false, kwargs...)
             end
-            """)
+            """).replace("{TAB_LOAD}", tab_lines)
 
     def _run_function_mtk(self) -> str:
         ts = self.control_vals.get("time_step") or "time_step"
@@ -5426,9 +5814,11 @@ class JuliaSectionBuilder:
     def _full_file_content(self, equations: List[str]) -> str:
         needs_di = bool(self.lookup_const_decls)
         equations_block = self._equations_block(equations)
+        self._ode_active_initial = (self.backend == "ode"
+                                    and "pysd_active_initial(" in equations_block)
         u0_block = self._u0_block()
         active_initial = ""
-        if self.backend == "ode" and "pysd_active_initial(" in equations_block:
+        if self._ode_active_initial:
             # ACTIVE INITIAL(expr, initial) is `initial` while the initial
             # values are computed and `expr` afterwards, as in Python PySD
             active_initial = (
@@ -5438,9 +5828,11 @@ class JuliaSectionBuilder:
                 "_active_initial(expr, initial) = _initialising[] ? initial : expr\n\n"
             )
             equations_block = equations_block.replace("pysd_active_initial(", "_active_initial(")
-            u0_block = ("_initialising[] = true\n"
-                        + u0_block.replace("pysd_active_initial(", "_active_initial(")
-                        + "_initialising[] = false\n")
+            u0_block = u0_block.replace("pysd_active_initial(", "_active_initial(")
+        if self.backend == "ode":
+            # the constants are computed once, after the simulation control
+            # (which equations may use)
+            u0_block = "const _params = params()\n\n" + u0_block
         return "".join([
             self._file_header(extra_packages=needs_di),
             self._helpers_block(),

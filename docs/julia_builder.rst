@@ -13,8 +13,9 @@ Two backends are available:
      - How it works
      - When to use
    * - ``"ode"`` *(default)*
-     - Emits a plain ``rhs!(du, u, p, t)`` function solved by
-       ``OrdinaryDiffEq.jl``
+     - Emits plain Julia functions (``params()``, ``model!``) solved by
+       ``OrdinaryDiffEq.jl``; constants, lookups and data can be changed
+       between runs (see `Scenarios`_)
      - General use; fast startup, full subscript support
    * - ``"mtk"``
      - Emits a ``ModelingToolkit.ODESystem``; ModelingToolkit performs
@@ -41,6 +42,7 @@ Install the required Julia packages once::
        "OrdinaryDiffEq",
        "OrdinaryDiffEqLowOrderRK",
        "DataInterpolations",
+       "ComponentArrays",
        "NCDatasets",
        "JSON3",
        "ModelingToolkit",   # only needed for the mtk backend
@@ -138,6 +140,96 @@ The ``run_model`` function accepts keyword arguments:
    # Custom initial conditions
    sol = run_model(u0=my_u0)
 
+   # Other constants, lookups or data (see Scenarios below)
+   sol = run_model(params=params(growth_rate=0.1))
+
+   # Other keywords go to OrdinaryDiffEq's solve, e.g. save whole years only
+   sol = run_model(saveat=1995.0:1.0:2050.0)
+
+
+Structure of the generated model (ODE backend)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The generated file has these parts, in this order:
+
+``params(; sheets, files, values...)``
+   The model's lookups, data and constants, and every variable computed
+   from them alone (not from time or the stocks), as a ``NamedTuple``.
+   They are computed once, when the model is loaded (``_params``), not at
+   every time step.
+
+``_state_axes``
+   The stocks by name and shape.  The solver works on one flat vector;
+   `ComponentArrays.jl <https://github.com/SciML/ComponentArrays.jl>`_
+   gives each stock its name and shape on top of it (``s.population``,
+   ``s.inventory[2, 3]``) without copying.
+
+``model!(d, s, p, t)``
+   The equations of the variables that change during the run.  It writes
+   each stock's rate of change into ``d`` (``d.population = births``) and
+   returns the other variables, by name.  ``rhs!(du, u, p, t)``, the
+   function the solver calls, and ``observe`` both use it, so every
+   equation is written once.
+
+``initial_state(p)``
+   The stocks at the initial time, computed from the constants ``p``.
+
+``run_model(; params, u0, tspan, dt, solver)``
+   Builds the ``ODEProblem`` and solves it.
+
+
+Scenarios
+^^^^^^^^^
+
+``params()`` takes new values for any lookup, data series or constant,
+by name (the Julia name: lower case, spaces as underscores).  Everything
+computed from them follows: other constants, and the initial values of the
+stocks.  The model's own values are not changed, so several scenarios can
+be run one after the other:
+
+.. code-block:: julia
+
+   include("model.jl")
+
+   base = run_model()
+
+   # A constant, and a subscripted constant (an array of its size, or a
+   # number for all elements)
+   p = params(growth_rate = 0.1, weights = [3.0, 2.0, 1.0])
+   high = run_model(params = p)
+
+   # A lookup or data series: (x, y) vectors, interpolated linearly and
+   # held constant outside x (one column of y per element for a
+   # subscripted one), any function, or an interpolation from
+   # DataInterpolations.jl
+   p = params(effect = ([0.0, 10.0], [1.0, 2.0]))
+   p = params(policy = t -> t < 2030 ? 0.0 : 1.0)
+
+   # A constant computed from others can be given too
+   p = params(initial_population = 50.0)
+
+   # Excel inputs from other sheets or files: a Dict from the name in the
+   # model to the new one (a file by its path as written in the model, or
+   # its name)
+   p = params(sheets = Dict("BAU" => "high growth"))
+   p = params(files = Dict("inputs.xlsx" => "inputs_2050.xlsx"))
+
+   # Read the results of a scenario with its own values
+   o = observe(high.u[end], high.t[end]; p = p)
+
+New values keep the types of the model's own (lookups and data are all
+``PySDFunction``, whatever function they hold), so a scenario runs without
+compiling the model again: only the first run after loading compiles.
+
+A name that is not a lookup, data series or constant of the model (for
+instance a misspelt one, or a variable that changes during the run), or an
+array of the wrong size, is an error.  So is a new value for a constant the
+translation used, such as the delay time that sets the number of stages of
+a ``DELAY FIXED`` or the order of a ``SMOOTH N``: translate the model again
+with the new value instead.  This is the equivalent of Python
+PySD's ``model.run(params={...})`` (between runs; changing a value in the
+middle of a run is not supported).
+
 
 Choosing a solver
 ^^^^^^^^^^^^^^^^^
@@ -168,7 +260,7 @@ Accessing results
 `DiffEq solution object <https://docs.sciml.ai/DiffEqDocs/stable/basics/solution/>`_.
 
 **ODE backend** — use ``observe(u, t)`` to read any variable at any saved
-time step:
+time step (``observe(u, t; p = p)`` for a run with other ``params``):
 
 .. code-block:: julia
 
@@ -478,9 +570,10 @@ parse.  The Julia builder does not yet cover:
    * - Step-by-step execution (``model.step()``)
      - Full — essential for ABM coupling (e.g. Mesa)
      - Not supported — ``run_model()`` always runs the full simulation in one call
-   * - Mid-run parameter injection (``model.set_components()``)
-     - Full — swap variable equations between steps
-     - Not supported — parameters can only be changed before calling ``run_model()``
+   * - Changing constants, lookups and data (``model.run(params=...)``)
+     - Full — also in the middle of a run, and any variable's equation
+     - Between runs: ``run_model(params=params(name=value, ...))`` for
+       constants, lookups and data (see `Scenarios`_)
    * - State export/import (``model.export()`` / ``model.import_()``)
      - Full — snapshot and restore model state for warm restarts or ensemble branching
      - Not supported
@@ -555,11 +648,12 @@ Limitations
   equivalent — ``run_model()`` always executes the full simulation in a single
   call.
 
-- **Mid-run parameter injection** is not available.  The Python builder's
-  ``model.set_components()`` can replace any variable's equation with a new
-  function or constant value at any point during a run.  In the Julia builder,
-  parameters can only be changed before calling ``run_model()`` (e.g. by
-  modifying ``u0`` or editing the generated constants).
+- **Changing values in the middle of a run** is not available.  The Python
+  builder's ``model.set_components()`` can replace any variable's equation
+  with a new function or constant value at any point during a run.  In the
+  Julia builder, constants, lookups and data are changed between runs with
+  ``params()`` (see `Scenarios`_); variables that change during the run
+  cannot be replaced.
 
 - **State export/import** is not available.  The Python builder's
   ``model.export()`` / ``model.import_()`` snapshot and restore the full model

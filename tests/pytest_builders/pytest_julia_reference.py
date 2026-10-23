@@ -139,7 +139,7 @@ CASES, PYTHON_XFAIL = _cases()
 
 #: Julia packages the generated models load, per backend.
 JULIA_PACKAGES = {
-    "ode": ["PySD", "OrdinaryDiffEq", "NCDatasets", "DataInterpolations"],
+    "ode": ["PySD", "OrdinaryDiffEq", "NCDatasets", "DataInterpolations", "ComponentArrays"],
     "mtk": ["PySD", "OrdinaryDiffEq", "NCDatasets", "DataInterpolations",
             "ModelingToolkit", "Symbolics"],
 }

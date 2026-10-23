@@ -806,7 +806,11 @@ class JuliaASTVisitor:
                         if key in dim_to_idx:
                             indices.append(dim_to_idx[key])
 
-                inner = f"{julia_name}[{', '.join(indices)}]"
+                if julia_name in self.lookup_names:
+                    # GET DATA / LOOKUPS functions are called, f(i, t)
+                    inner = f"{julia_name}({', '.join(indices + ['t'])})"
+                else:
+                    inner = f"{julia_name}[{', '.join(indices)}]"
                 if bang_ranges:
                     for_clause = ", ".join(bang_ranges)
                     return f"[{inner} for {for_clause}]"
